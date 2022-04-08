@@ -1,0 +1,56 @@
+variables:
+- name: 'SourceDirectory'
+  value: 'Source/Agv'
+- name: 'Build.Target'
+  value: 'CompileAgv.sln'
+- name: 'Build.Configuration'
+  value: 'Release'
+
+stages:
+- stage: Build
+  jobs:
+  ################################################
+  # ReShaper
+  ################################################
+  - job: CodeAnalysis
+    pool:
+      vmImage: windows-latest 
+    steps:
+      - task: DotNetCoreCLI@2
+        displayName: 'Build Target ($(Build.Target))'
+        inputs:
+          command: build
+          projects: '$(SourceDirectory)/$(Build.Target)'
+          arguments: '--configuration $(Build.Configuration)'
+
+      - task: ResharperCli@2
+        inputs:
+          solutionOrProjectPath: '$(SourceDirectory)/$(Build.Target)'
+          additionalArguments: '--no-build'
+          failBuildLevelSelector: Suggestion
+  ################################################
+  # Run Tests and Coverage
+  ################################################  
+  - job: UnitTests_and_Coverage
+    pool:
+      vmImage: windows-latest
+    steps:
+    - task: DotNetCoreCLI@2
+      displayName: 'Run All tests'
+      inputs:
+        command: 'test'
+        projects: '$(SourceDirectory)/**/*[Tt]est*/*.csproj'
+        publishTestResults: true
+        arguments: '--configuration $(BuildConfiguration) --collect:"XPlat Code Coverage"'
+    
+    - task: reportgenerator@4
+      inputs:
+        reports: '$(Agent.WorkFolder)/**/coverage.cobertura.xml'
+        targetdir: '$(Build.SourcesDirectory)/CoverageResults'
+        reporttypes: 'Cobertura'
+        
+    - task: PublishCodeCoverageResults@1
+      displayName: 'Publish code coverage report'
+      inputs:
+        codeCoverageTool: 'Cobertura'
+        summaryFileLocation: '$(Build.SourcesDirectory)/CoverageResults/Cobertura.xml'
