@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+	<AssemblyName>Gebhardt.StoreWare.Agv.Common</AssemblyName>
+	<Description></Description>
+    <OutputType>Library</OutputType>
+    <AssemblyVersion>0.0.1</AssemblyVersion>
+  </PropertyGroup>
+  <Import Project="..\SharedProjectSettings.csproj" />
+  <ItemGroup>
+    <PackageReference Include="JetBrains.Annotations" Version="2021.3.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="6.0.0" />
+  </ItemGroup>
+</Project>

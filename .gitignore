@@ -86,3 +86,7 @@ bld/
 **/.idea/**/contentModel.xml
 **/.idea/**/modules.xml
 *.bak
+
+
+# IRS/Kn
+**/Properties/launchSettings.json
