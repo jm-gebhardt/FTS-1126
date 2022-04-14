@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-
+using static System.String;
 
 namespace Gebhardt.StoreWare.Agv.Common
 {
@@ -19,10 +19,16 @@ namespace Gebhardt.StoreWare.Agv.Common
         [JetBrains.Annotations.PublicAPI]
         public static void Run<T>(string[] args)
         {
-            if (!typeof(IWorker).IsAssignableFrom(typeof(T))) throw new InvalidCastException("Service implementation cast failure.");
+	        if (!typeof(IWorker).IsAssignableFrom(typeof(T)))
+	        {
+		        throw new InvalidCastException("Service implementation cast failure.");
+	        }
 
             string? serviceName = Assembly.GetEntryAssembly()?.GetName().Name;
-            if (String.IsNullOrEmpty(serviceName)) throw new InvalidOperationException("Service name information missing.");
+            if (IsNullOrEmpty(serviceName))
+            {
+	            throw new InvalidOperationException("Service name information missing.");
+            }
 
             using IHost host = Host.CreateDefaultBuilder(args)
                 .UseWindowsService(options =>

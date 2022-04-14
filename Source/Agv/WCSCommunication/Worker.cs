@@ -7,7 +7,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication
     internal class Worker : Common.IWorker
     {
         [JetBrains.Annotations.UsedImplicitly]
-        IConfiguration _config;
+        private readonly IConfiguration _config;
 
         /// <summary />
         public Worker(IConfiguration config)
