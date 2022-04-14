@@ -1,18 +1,27 @@
 ﻿using Microsoft.Extensions.Configuration;
-
+using MassTransit;
+using Gebhardt.StoreWare.Agv.Common.Messages;
+using Gebhardt.StoreWare.Agv.Common.Consumers;
 
 namespace Gebhardt.StoreWare.Agv.WCSCommunication
 {
     /// <summary />
-    internal class Worker : Common.IWorker
+    internal class Worker : Common.IMassTransitWorker
     {
-        [JetBrains.Annotations.UsedImplicitly]
-        private readonly IConfiguration _config;
+        private readonly IBus _bus;
 
         /// <summary />
-        public Worker(IConfiguration config)
+        [JetBrains.Annotations.UsedImplicitly]
+        public Worker(IConfiguration config, IBus bus)
         {
-            _config = config;
+            _bus = bus;
+
+            Common.DummyReplyHandler handler = new();
+
+            bus.ConnectReceiveEndpoint("DummyQueue", x =>
+            {
+                x.Consumer(() => new DummyConsumer(handler));
+            });
         }
 
         /// <summary />
@@ -24,8 +33,13 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication
         /// <summary />
         public async Task Run(CancellationToken stoppingToken)
         {
+            int id = 0;
             while (!stoppingToken.IsCancellationRequested)
             {
+                DummyRequest request = new() { Id = id++, Content = "HostOrder Request" };
+                await _bus.Publish(request, stoppingToken);
+                Console.WriteLine($"Request send: {request}");
+
                 Console.WriteLine("TODO: Implement service execution stuff (main loop) here.");
                 await Task.Delay(TimeSpan.FromSeconds(20), stoppingToken);
             }

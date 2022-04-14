@@ -35,7 +35,7 @@ namespace Gebhardt.StoreWare.Agv.Common
                 {
                     options.ServiceName = serviceName;
                 })
-                .ConfigureServices(services =>
+                .ConfigureServices((context, services) =>
                 {
                     services.AddSingleton(typeof(IWorker), typeof(T));
                     services.AddHostedService<GebhardtBackgroundService>();
@@ -43,6 +43,12 @@ namespace Gebhardt.StoreWare.Agv.Common
                     {
                         settings.SourceName = serviceName;
                     });
+
+                    // Configure MassTransit with RabbitMQ if the worker requires it
+                    if (typeof(IMassTransitWorker).IsAssignableFrom(typeof(T)))
+                    {
+                        ConfigureServicesMassTransit.ConfigureServices(services, context.Configuration);
+                    }
                 })
                 .Build();
 

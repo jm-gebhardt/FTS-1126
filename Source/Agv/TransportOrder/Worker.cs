@@ -1,18 +1,22 @@
 ﻿using Microsoft.Extensions.Configuration;
-
+using MassTransit;
+using Gebhardt.StoreWare.Agv.Common.Consumers;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder
 {
     /// <summary />
-    internal class Worker : Common.IWorker
+    internal class Worker : Common.IMassTransitWorker
     {
-        [JetBrains.Annotations.UsedImplicitly]
-        private readonly IConfiguration _config;
-
         /// <summary />
-        public Worker(IConfiguration config)
+        [JetBrains.Annotations.UsedImplicitly]
+        public Worker(IConfiguration config, IBus bus)
         {
-            _config = config;
+            Common.DummyRequestHandler handler = new(bus);
+
+            bus.ConnectReceiveEndpoint("DummyQueue", x =>
+            {
+                x.Consumer(() => new DummyConsumer(handler));
+            });
         }
 
         /// <summary />
