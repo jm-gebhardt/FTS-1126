@@ -1,4 +1,3 @@
-﻿using Microsoft.Extensions.Configuration;
 using MassTransit;
 using Gebhardt.StoreWare.Agv.Common.Messages;
 using Gebhardt.StoreWare.Agv.Common.Consumers;
@@ -11,8 +10,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication
         private readonly IBus _bus;
 
         /// <summary />
-        [JetBrains.Annotations.UsedImplicitly]
-        public Worker(IConfiguration config, IBus bus)
+        public Worker(IBus bus)
         {
             _bus = bus;
 

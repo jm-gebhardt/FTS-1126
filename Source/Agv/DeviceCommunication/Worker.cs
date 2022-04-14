@@ -1,19 +1,9 @@
-﻿using Microsoft.Extensions.Configuration;
-using MassTransit;
-
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication
 {
     /// <summary />
     internal class Worker : Common.IMassTransitWorker
     {
-        /// <summary />
-        [JetBrains.Annotations.UsedImplicitly]
-        public Worker(IConfiguration config, IBus bus)
-        {
-
-        }
-
         /// <summary />
         public void Start()
         {

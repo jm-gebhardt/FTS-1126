@@ -12,7 +12,6 @@ namespace Gebhardt.StoreWare.Agv.Common
     /// Runs service implementation inherited from <see cref="IWorker"/>.
     /// Responsible to handle initialization and failures at the moment when base infrastructure is not present (Gebhardt logger, ...).
     /// </remarks>
-    [JetBrains.Annotations.PublicAPI]
     public sealed class GebhardtBackgroundService : BackgroundService
     {
         private readonly IWorker _worker;
@@ -22,7 +21,7 @@ namespace Gebhardt.StoreWare.Agv.Common
         /// <summary>
         /// Constructor called by default host builder.
         /// </summary>
-        /// <param name="service">Service singleton (see <see cref="GebhardtStartup.Run{T}(string[])"/>.</param>
+        /// <param name="service">Service singleton (see <see cref="GebhardtStartup.BuildHost{T}"/>.</param>
         /// <param name="logger">Logger provided by default host builder.</param>
         public GebhardtBackgroundService(IWorker service, ILogger<GebhardtBackgroundService> logger)
         {
@@ -36,7 +35,7 @@ namespace Gebhardt.StoreWare.Agv.Common
         /// </summary>
         /// <param name="cancellationToken">Signaling when cancellation is requested.</param>
         /// <returns>Task</returns>
-        public override Task StartAsync(CancellationToken cancellationToken)
+        public override Task  StartAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation($"{_entryAssemblyName} starting ...");
             try

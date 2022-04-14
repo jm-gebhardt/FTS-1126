@@ -17,20 +17,15 @@ namespace Gebhardt.StoreWare.Agv.Common
         /// <typeparam name="T">Service implementation type (need to be derived from <see cref="IWorker"/>).</typeparam>
         /// <param name="args">Command line arguments.</param>
         [JetBrains.Annotations.PublicAPI]
-        public static void Run<T>(string[] args)
+        public static IHost BuildHost<T>(string[] args) where T : IWorker
         {
-	        if (!typeof(IWorker).IsAssignableFrom(typeof(T)))
-	        {
-		        throw new InvalidCastException("Service implementation cast failure.");
-	        }
-
             string? serviceName = Assembly.GetEntryAssembly()?.GetName().Name;
             if (IsNullOrEmpty(serviceName))
             {
 	            throw new InvalidOperationException("Service name information missing.");
             }
 
-            using IHost host = Host.CreateDefaultBuilder(args)
+            IHost host = Host.CreateDefaultBuilder(args)
                 .UseWindowsService(options =>
                 {
                     options.ServiceName = serviceName;
@@ -51,8 +46,7 @@ namespace Gebhardt.StoreWare.Agv.Common
                     }
                 })
                 .Build();
-
-            host.Run();
+            return host;
         }
     }
 }

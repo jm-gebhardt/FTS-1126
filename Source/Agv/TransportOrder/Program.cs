@@ -1,6 +1,9 @@
-﻿try
+﻿using Microsoft.Extensions.Hosting;
+
+try
 {
-    Gebhardt.StoreWare.Agv.Common.GebhardtStartup.Run<Gebhardt.StoreWare.Agv.TransportOrder.Worker>(args);
+    using IHost host = Gebhardt.StoreWare.Agv.Common.GebhardtStartup.BuildHost<Gebhardt.StoreWare.Agv.TransportOrder.Worker>(args);
+    host.Run();
 }
 catch (Exception ex)
 {

@@ -1,4 +1,3 @@
-﻿using Microsoft.Extensions.Configuration;
 using MassTransit;
 using Gebhardt.StoreWare.Agv.Common.Consumers;
 
@@ -8,8 +7,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder
     internal class Worker : Common.IMassTransitWorker
     {
         /// <summary />
-        [JetBrains.Annotations.UsedImplicitly]
-        public Worker(IConfiguration config, IBus bus)
+        public Worker(IBus bus)
         {
             Common.DummyRequestHandler handler = new(bus);
 

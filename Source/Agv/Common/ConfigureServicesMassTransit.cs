@@ -9,6 +9,38 @@ namespace Gebhardt.StoreWare.Agv.Common
     /// </summary>
     public static class ConfigureServicesMassTransit
     {
+  
+        /// <summary>
+        /// MassTransit Configuration required for RabbitMQ
+        /// </summary>
+        public record MassTransitConfiguration
+        {
+            /// <summary>
+            /// Host
+            /// </summary>
+            public string? Host { get; set; }
+            /// <summary>
+            /// User
+            /// </summary>
+            public string? User { get; set; }
+            /// <summary>
+            /// Password
+            /// </summary>
+            public string? Password { get; set; }
+            /// <summary>
+            /// Port
+            /// </summary>
+            public string? Port { get; set; }
+            /// <summary>
+            /// Create RabbitMQ URL
+            /// </summary>
+            public string Url => $"amqp://{User}:{Password}@{Host}:{Port}";
+        }
+
+        /// <summary>
+        /// Expected configuration section name for MassTransit
+        /// </summary>
+        public const string ConfigSectionName = "RabbitMQ";
         /// <summary>
         /// ConfigureServices
         /// </summary>
@@ -16,17 +48,13 @@ namespace Gebhardt.StoreWare.Agv.Common
         /// <param name="config">Configuration</param>
         public static void ConfigureServices(IServiceCollection services, IConfiguration config)
         {
-            string user = config["RabbitMQ:User"];
-            string password = config["RabbitMQ:Password"];
-            string address = config["RabbitMQ:Host"];
-            string port = config["RabbitMQ:Port"];
-
+            MassTransitConfiguration massTransitConfig = config.GetRequiredSection(ConfigSectionName).Get<MassTransitConfiguration>();
             services.AddMassTransit(x =>
             {
                 x.UsingRabbitMq((context, cfg) =>
                 {
                     cfg.ConfigureEndpoints(context);
-                    cfg.Host($"amqp://{user}:{password}@{address}:{port}");
+                    cfg.Host(massTransitConfig.Url);
                 });                
             });
         }

@@ -1,6 +1,9 @@
-﻿try
+﻿using Microsoft.Extensions.Hosting;
+
+try
 {
-    Gebhardt.StoreWare.Agv.Common.GebhardtStartup.Run<Gebhardt.StoreWare.Agv.WCSCommunication.Worker>(args);
+    using IHost host = Gebhardt.StoreWare.Agv.Common.GebhardtStartup.BuildHost<Gebhardt.StoreWare.Agv.WCSCommunication.Worker>(args);
+    host.Run();
 }
 catch (Exception ex)
 {
