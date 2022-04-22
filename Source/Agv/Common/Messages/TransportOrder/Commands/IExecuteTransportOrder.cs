@@ -1,11 +1,13 @@
-﻿namespace Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Commands
+﻿using MassTransit;
+
+namespace Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Commands
 {
 
 	/// <summary>
 	/// A command from the transport order module to the agv communication module to execute an order
 	/// </summary>
 	[JetBrains.Annotations.PublicAPI]
-	public interface IExecuteTransportOrder
+	public interface IExecuteTransportOrder: CorrelatedBy<Guid>
 	{
 		/// <summary>
 		/// The unique ID of the order known by the host system
@@ -20,11 +22,11 @@
 		/// <summary>
 		/// The source station of the order in the format that is known by the agv 
 		/// </summary>
-		string SourceId { get; }
+		string Source { get; }
 
 		/// <summary>
 		/// The destination station of the order in the format that is known by the agv
 		/// </summary>
-		string DestinationId { get; }
+		string Destination { get; }
 	}
 }

@@ -1,11 +1,13 @@
-﻿namespace Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Commands
+﻿using MassTransit;
+
+namespace Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Commands
 {
 
 	/// <summary>
 	/// A command from the transport order module to the agv communication module to cancel an order
 	/// </summary>
 	[JetBrains.Annotations.PublicAPI]
-	public interface ICancelTransportOrder
+	public interface ICancelTransportOrder: CorrelatedBy<Guid>
 	{
 		/// <summary>
 		/// The unique ID of the order known by the host system

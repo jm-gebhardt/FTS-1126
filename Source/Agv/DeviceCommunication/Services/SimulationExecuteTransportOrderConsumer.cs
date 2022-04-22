@@ -5,16 +5,16 @@ using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Events;
 using JetBrains.Annotations;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Consumers
+namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
 {
     /// <summary>
     /// Simulate processing of transport order messages.
     /// </summary>
     [UsedImplicitly]
-    public class ExecuteTransportOrderConsumerSim :
+    public class SimulationExecuteTransportOrderConsumer :
         IConsumer<IExecuteTransportOrder>
     {
-	    private readonly ILogger<ExecuteTransportOrderConsumerSim> _logger;
+	    private readonly ILogger<SimulationExecuteTransportOrderConsumer> _logger;
 
         private readonly Random _simInterval;
         private readonly int _minInterval;
@@ -24,7 +24,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Consumers
         /// <summary>
         /// Create dummy consumer with message handler delegate
         /// </summary>
-        public ExecuteTransportOrderConsumerSim(ILogger<ExecuteTransportOrderConsumerSim> logger, SimulateOptions simulationOptions)
+        public SimulationExecuteTransportOrderConsumer(ILogger<SimulationExecuteTransportOrderConsumer> logger, SimulateOptions simulationOptions)
         {
 	        _logger = logger;
 	        if (simulationOptions.Interval != null)

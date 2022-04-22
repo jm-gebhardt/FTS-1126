@@ -1,4 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Definitions;
+using MassTransit;
 
 namespace Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events
 {
@@ -6,7 +7,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events
 	/// An event that reports a failed order update
 	/// </summary>
 	[JetBrains.Annotations.PublicAPI]
-	public interface IHostOrderUpdateFailed
+	public interface IHostOrderUpdateFailed: CorrelatedBy<Guid>
 	{
 		/// <summary>
 		/// The unique ID of the order known by the host system

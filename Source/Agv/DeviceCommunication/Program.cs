@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using CommandLine;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication
 {
@@ -22,7 +23,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication
 							// Configure MassTransit with RabbitMQ if the worker requires it
 							Common.ConfigureServicesMassTransit.ConfigureServices(services, context.Configuration, x =>
 							{
-								x.AddConsumer<Consumers.ExecuteTransportOrderConsumerSim>();
+								x.AddConsumer<SimulationExecuteTransportOrderConsumer>();
 							});
 						})
 						.Build();

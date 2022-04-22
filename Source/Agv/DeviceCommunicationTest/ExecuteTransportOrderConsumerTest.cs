@@ -2,7 +2,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Extensions.DependencyInjection;
 using MassTransit;
 using MassTransit.Testing;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Consumers;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
 using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Events;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
@@ -22,7 +22,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest
         {
             await using var provider = new ServiceCollection()
                 .AddScoped(_ => new SimulateOptions() {Interval = new[] {1, 5}})
-                .AddMassTransitTestHarness(cfg => { cfg.AddConsumer<ExecuteTransportOrderConsumerSim>(); })
+                .AddMassTransitTestHarness(cfg => { cfg.AddConsumer<SimulationExecuteTransportOrderConsumer>(); })
                 .BuildServiceProvider(true);
 
             var harness = provider.GetRequiredService<ITestHarness>();
@@ -40,7 +40,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest
 
             Assert.IsTrue(await harness.Published.Any<IExecuteTransportOrder>());
 
-            IConsumerTestHarness<ExecuteTransportOrderConsumerSim> consumerHarness = harness.GetConsumerHarness<ExecuteTransportOrderConsumerSim>();
+            IConsumerTestHarness<SimulationExecuteTransportOrderConsumer> consumerHarness = harness.GetConsumerHarness<SimulationExecuteTransportOrderConsumer>();
 
             Assert.IsTrue(await consumerHarness.Consumed.Any<IExecuteTransportOrder>());
 

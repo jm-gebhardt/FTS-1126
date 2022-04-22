@@ -25,6 +25,14 @@ Each Service is build as a separate projects.
 dotnet build Source/Agv/CompileAgv.sln
 ```
 
+## Run Simulation
+```
+export RABBITMQ__HOST=localhost
+dotnet run --project WCSCommunication simulate --interval=10
+dotnet run --project TransportOrder simulate --agvs=2
+dotnet run --project DeviceCommunication simulate --interval=5,10
+```
+
 ## Run UnitTests
 
 ```
