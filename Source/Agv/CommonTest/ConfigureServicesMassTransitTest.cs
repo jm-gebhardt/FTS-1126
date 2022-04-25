@@ -13,7 +13,7 @@ namespace Gebhardt.StoreWare.Agv.CommonTest
     {
 
         /// <summary>
-        /// Test no rabbitmq config provided
+        /// Test no RabbitMQ config provided
         /// </summary>
         [TestMethod]
         [ExpectedException(typeof(InvalidOperationException))]
@@ -27,7 +27,7 @@ namespace Gebhardt.StoreWare.Agv.CommonTest
         }
 
         /// <summary>
-        /// Test valid rabbitmq config provided
+        /// Test valid RabbitMQ config provided
         /// </summary>
         [TestMethod]
         public void ConfigureServices_ValidConfigProvided()
