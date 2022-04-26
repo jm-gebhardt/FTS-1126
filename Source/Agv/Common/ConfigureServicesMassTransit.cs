@@ -48,7 +48,7 @@ namespace Gebhardt.StoreWare.Agv.Common
         /// <param name="config">Configuration</param>
         public static void ConfigureServices(IServiceCollection services, IConfiguration config)
         {
-            MassTransitConfiguration massTransitConfig = config.GetRequiredSection(ConfigSectionName).Get<MassTransitConfiguration>();
+            var massTransitConfig = config.GetRequiredSection(ConfigSectionName).Get<MassTransitConfiguration>();
             services.AddMassTransit(x =>
             {
                 x.UsingRabbitMq((context, cfg) =>

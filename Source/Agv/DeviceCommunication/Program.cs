@@ -2,7 +2,7 @@
 
 try
 {
-    using IHost host = Gebhardt.StoreWare.Agv.Common.GebhardtStartup.BuildHost<Gebhardt.StoreWare.Agv.DeviceCommunication.Worker>(args);
+    using var host = Gebhardt.StoreWare.Agv.Common.GebhardtStartup.BuildHost<Gebhardt.StoreWare.Agv.DeviceCommunication.Worker>(args);
     host.Run();
 }
 catch (Exception ex)

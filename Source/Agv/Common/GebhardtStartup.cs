@@ -25,7 +25,7 @@ namespace Gebhardt.StoreWare.Agv.Common
 	            throw new InvalidOperationException("Service name information missing.");
             }
 
-            IHost host = Host.CreateDefaultBuilder(args)
+            var host = Host.CreateDefaultBuilder(args)
                 .UseWindowsService(options =>
                 {
                     options.ServiceName = serviceName;

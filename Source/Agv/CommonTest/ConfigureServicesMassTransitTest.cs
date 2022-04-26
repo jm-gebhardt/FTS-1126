@@ -19,7 +19,7 @@ namespace Gebhardt.StoreWare.Agv.CommonTest
         [ExpectedException(typeof(InvalidOperationException))]
         public void ConfigureServices_NoConfigProvided()
         {
-            IConfigurationRoot configuration = new ConfigurationBuilder().AddInMemoryCollection(
+            var configuration = new ConfigurationBuilder().AddInMemoryCollection(
                 new Dictionary<string, string>()
                 ).Build();
             ServiceCollection services = new ();
@@ -32,7 +32,7 @@ namespace Gebhardt.StoreWare.Agv.CommonTest
         [TestMethod]
         public void ConfigureServices_ValidConfigProvided()
         {
-            IConfigurationRoot configuration = new ConfigurationBuilder().AddInMemoryCollection(
+            var configuration = new ConfigurationBuilder().AddInMemoryCollection(
                 new Dictionary<string, string> {{ConfigureServicesMassTransit.ConfigSectionName, ""}}
                 ).Build();
             ServiceCollection services = new ();

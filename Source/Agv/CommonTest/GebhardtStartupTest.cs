@@ -43,7 +43,7 @@ namespace Gebhardt.StoreWare.Agv.CommonTest
         [TestMethod]
         public void BuildHost_IWorker_EmptyArgs_AllServicesRegistered()
         {
-            using IHost host = GebhardtStartup.BuildHost<TestWorker>(Array.Empty<string>());
+            using var host = GebhardtStartup.BuildHost<TestWorker>(Array.Empty<string>());
             Assert.IsInstanceOfType(host.Services.GetService<IWorker>(), typeof(TestWorker));
             IEnumerable<IHostedService> hostedServices = host.Services.GetServices<IHostedService>().ToArray();
             Assert.IsTrue(hostedServices.OfType<GebhardtBackgroundService>().Any());
@@ -57,7 +57,7 @@ namespace Gebhardt.StoreWare.Agv.CommonTest
         [TestMethod]
         public void BuildHost_TestMassTransitWorker_EmptyArgs_AllServicesRegistered()
         {
-            using IHost host = GebhardtStartup.BuildHost<TestMassTransitWorker>(Array.Empty<string>());
+            using var host = GebhardtStartup.BuildHost<TestMassTransitWorker>(Array.Empty<string>());
             Assert.IsInstanceOfType(host.Services.GetService<IWorker>(), typeof(TestMassTransitWorker));
             IEnumerable<IHostedService> hostedServices = host.Services.GetServices<IHostedService>().ToArray();
             Assert.IsTrue(hostedServices.OfType<GebhardtBackgroundService>().Any());

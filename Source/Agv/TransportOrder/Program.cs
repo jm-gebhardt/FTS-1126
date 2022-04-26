@@ -2,7 +2,7 @@
 
 try
 {
-    using IHost host = Gebhardt.StoreWare.Agv.Common.GebhardtStartup.BuildHost<Gebhardt.StoreWare.Agv.TransportOrder.Worker>(args);
+    using var host = Gebhardt.StoreWare.Agv.Common.GebhardtStartup.BuildHost<Gebhardt.StoreWare.Agv.TransportOrder.Worker>(args);
     host.Run();
 }
 catch (Exception ex)
