@@ -1,0 +1,59 @@
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
+using MassTransit;
+using MassTransit.Testing;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Consumers;
+using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Commands;
+using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Events;
+
+namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest
+{
+    /// <summary>
+    /// Test consumer for transport orders..
+    /// </summary>
+    [TestClass]
+    public class ExecuteTransportOrderConsumerSimTest
+    {
+        /// <summary>
+        /// Test if consumer responds to transport order.
+        /// </summary>
+        [TestMethod]
+        public async Task SimulatedReceivePublishTransportOrder()
+        {
+            await using var provider = new ServiceCollection()
+                .AddTransient<IConfiguration>(_ =>
+                {
+                    IConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
+                    configurationBuilder.AddCommandLine(new[] { "--interval", "1,2" });
+                    return configurationBuilder.Build();
+                })
+                .AddMassTransitTestHarness(cfg =>
+                {
+                    cfg.AddConsumer<ExecuteTransportOrderConsumerSim>();
+                })
+                .BuildServiceProvider(true);
+
+            var harness = provider.GetRequiredService<ITestHarness>();
+
+            await harness.Start();
+
+            string orderId = "TestOrder123";
+            await harness.Bus.Publish<IExecuteTransportOrder>(new
+            {
+                OrderId = orderId,
+                AssignedAgv = string.Empty,
+                SourceId = string.Empty,
+                DestinationId = string.Empty
+            });
+
+            Assert.IsTrue(await harness.Published.Any<IExecuteTransportOrder>());
+
+            IConsumerTestHarness<ExecuteTransportOrderConsumerSim> consumerHarness = harness.GetConsumerHarness<ExecuteTransportOrderConsumerSim>();
+
+            Assert.IsTrue(await consumerHarness.Consumed.Any<IExecuteTransportOrder>());
+
+            Assert.AreEqual(orderId, harness.Published.Select<ITransportOrderCompleted>().First().Context.Message.OrderId);
+        }
+    }
+}

@@ -9,7 +9,6 @@ namespace Gebhardt.StoreWare.Agv.Common
     /// </summary>
     public static class ConfigureServicesMassTransit
     {
-  
         /// <summary>
         /// MassTransit Configuration required for RabbitMQ
         /// </summary>
@@ -40,13 +39,17 @@ namespace Gebhardt.StoreWare.Agv.Common
         /// <summary>
         /// Expected configuration section name for MassTransit
         /// </summary>
+        [JetBrains.Annotations.PublicAPI] 
         public const string ConfigSectionName = "RabbitMQ";
+
         /// <summary>
         /// ConfigureServices
         /// </summary>
         /// <param name="services">Service collection</param>
         /// <param name="config">Configuration</param>
-        public static void ConfigureServices(IServiceCollection services, IConfiguration config)
+        /// <param name="busRegistrationConfiguration">xxx</param>
+        [JetBrains.Annotations.PublicAPI]
+        public static void ConfigureServices(IServiceCollection services, IConfiguration config, Action<IBusRegistrationConfigurator>? busRegistrationConfiguration = null)
         {
             var massTransitConfig = config.GetRequiredSection(ConfigSectionName).Get<MassTransitConfiguration>();
             services.AddMassTransit(x =>
@@ -55,7 +58,8 @@ namespace Gebhardt.StoreWare.Agv.Common
                 {
                     cfg.ConfigureEndpoints(context);
                     cfg.Host(massTransitConfig.Url);
-                });                
+                });
+                busRegistrationConfiguration?.Invoke(x);
             });
         }
     }

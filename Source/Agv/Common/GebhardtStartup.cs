@@ -6,7 +6,7 @@ using static System.String;
 namespace Gebhardt.StoreWare.Agv.Common
 {
     /// <summary>
-    /// Encapsulates startup procedure for <see cref="GebhardtBackgroundService"/>.
+    /// Encapsulates startup procedure.
     /// </summary>
     [JetBrains.Annotations.PublicAPI]
     public static class GebhardtStartup
@@ -14,10 +14,9 @@ namespace Gebhardt.StoreWare.Agv.Common
         /// <summary>
         /// Create default host and create singleton worker implementation.
         /// </summary>
-        /// <typeparam name="T">Service implementation type (need to be derived from <see cref="IWorker"/>).</typeparam>
         /// <param name="args">Command line arguments.</param>
         [JetBrains.Annotations.PublicAPI]
-        public static IHost BuildHost<T>(string[] args) where T : IWorker
+        public static IHostBuilder CreateHostBuilder(string[] args)
         {
             string? serviceName = Assembly.GetEntryAssembly()?.GetName().Name;
             if (IsNullOrEmpty(serviceName))
@@ -30,22 +29,13 @@ namespace Gebhardt.StoreWare.Agv.Common
                 {
                     options.ServiceName = serviceName;
                 })
-                .ConfigureServices((context, services) =>
+                .ConfigureServices(services =>
                 {
-                    services.AddSingleton(typeof(IWorker), typeof(T));
-                    services.AddHostedService<GebhardtBackgroundService>();
                     services.Configure<Microsoft.Extensions.Logging.EventLog.EventLogSettings>(settings =>
                     {
                         settings.SourceName = serviceName;
                     });
-
-                    // Configure MassTransit with RabbitMQ if the worker requires it
-                    if (typeof(IMassTransitWorker).IsAssignableFrom(typeof(T)))
-                    {
-                        ConfigureServicesMassTransit.ConfigureServices(services, context.Configuration);
-                    }
-                })
-                .Build();
+                });
             return host;
         }
     }

@@ -1,9 +1,15 @@
 ﻿using Microsoft.Extensions.Hosting;
+using Gebhardt.StoreWare.Agv.Common;
 
 try
 {
-    using var host = Gebhardt.StoreWare.Agv.Common.GebhardtStartup.BuildHost<Gebhardt.StoreWare.Agv.WCSCommunication.Worker>(args);
-    host.Run();
+    using var host = GebhardtStartup.CreateHostBuilder(args)
+        .ConfigureServices((context, services) =>
+        {
+            // Configure MassTransit with RabbitMQ if the worker requires it
+            ConfigureServicesMassTransit.ConfigureServices(services, context.Configuration);
+        }).Build();
+   host.Run();
 }
 catch (Exception ex)
 {
