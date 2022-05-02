@@ -1,15 +1,24 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using CommandLine;
 using Gebhardt.StoreWare.Agv.Common;
+using Gebhardt.StoreWare.Agv.WCSCommunication.CmdOptions;
+using Gebhardt.StoreWare.Agv.WCSCommunication.Services;
 
 try
 {
-    using var host = GebhardtStartup.CreateHostBuilder(args)
-        .ConfigureServices((context, services) =>
+    Parser.Default.ParseArguments<SimulateOptions>(args)
+        .WithParsed(simulationOptions =>
         {
-            // Configure MassTransit with RabbitMQ if the worker requires it
-            ConfigureServicesMassTransit.ConfigureServices(services, context.Configuration);
-        }).Build();
-   host.Run();
+            using var host = GebhardtStartup.CreateHostBuilder(args)
+                .ConfigureServices((context, services) =>
+                {
+                    services.AddSingleton(_ => simulationOptions);
+                    services.AddHostedService<SimulationHostOrderService>();
+                    ConfigureServicesMassTransit.ConfigureServices(services, context.Configuration);
+                }).Build();
+            host.Run();
+        });
 }
 catch (Exception ex)
 {
