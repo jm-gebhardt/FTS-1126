@@ -1,12 +1,11 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Configuration;
 using MassTransit;
 using MassTransit.Testing;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Consumers;
 using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Events;
-
+using Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
 namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest
 {
     /// <summary>
@@ -22,16 +21,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest
         public async Task SimulatedReceivePublishTransportOrder()
         {
             await using var provider = new ServiceCollection()
-                .AddTransient<IConfiguration>(_ =>
-                {
-                    IConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
-                    configurationBuilder.AddCommandLine(new[] { "--interval", "1,2" });
-                    return configurationBuilder.Build();
-                })
-                .AddMassTransitTestHarness(cfg =>
-                {
-                    cfg.AddConsumer<ExecuteTransportOrderConsumerSim>();
-                })
+                .AddScoped(_ => new SimulateOptions() {Interval = new[] {1, 5}})
+                .AddMassTransitTestHarness(cfg => { cfg.AddConsumer<ExecuteTransportOrderConsumerSim>(); })
                 .BuildServiceProvider(true);
 
             var harness = provider.GetRequiredService<ITestHarness>();

@@ -1,26 +1,49 @@
 ﻿using Microsoft.Extensions.Hosting;
-using Gebhardt.StoreWare.Agv.Common;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Consumers;
+using Microsoft.Extensions.DependencyInjection;
+using CommandLine;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
 
-try
+namespace Gebhardt.StoreWare.Agv.DeviceCommunication
 {
-    using var host = GebhardtStartup.CreateHostBuilder(args)
-        .ConfigureServices((context, services) =>
-        {
-            //services.AddOptions<>()
+	internal static class Program
+	{
+		private static int Main(string[] args)
+		{
+			IHost? host = null;
+	
+			Parser.Default.ParseArguments<SimulateOptions, ProductionOptions>(args)
+				.WithParsed<SimulateOptions>(simulationOptions
+					=>
+				{
+					host = Common.GebhardtStartup.CreateHostBuilder(args)
+						.ConfigureServices((context, services) =>
+						{
+							services.AddScoped(_ => simulationOptions);
+							// Configure MassTransit with RabbitMQ if the worker requires it
+							Common.ConfigureServicesMassTransit.ConfigureServices(services, context.Configuration, x =>
+							{
+								x.AddConsumer<Consumers.ExecuteTransportOrderConsumerSim>();
+							});
+						})
+						.Build();
+				})
+				.WithParsed<ProductionOptions>(productionOptions =>
+				{
+					host = Common.GebhardtStartup.CreateHostBuilder(args)
+						.ConfigureServices((context, services) =>
+						{
+							services.AddScoped(_ => productionOptions);
+							// Configure MassTransit with RabbitMQ if the worker requires it
+							Common.ConfigureServicesMassTransit.ConfigureServices(services, context.Configuration);
+						})
+						.Build();
+				});
 
-            // Configure MassTransit with RabbitMQ if the worker requires it
-            ConfigureServicesMassTransit.ConfigureServices(services, context.Configuration, x =>
-            {
-                x.AddConsumer<ExecuteTransportOrderConsumerSim>();
-            });
-        }).Build();
-    host.Run();
-}
-catch (Exception ex)
-{
-    Console.Error.WriteLine(ex.Message);
-    return 1;
+			host?.Run();
+			
+			return 0;
+        }
+	}
+
 }
 
-return 0;
