@@ -1,6 +1,7 @@
-﻿using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using CommandLine;
+using Gebhardt.StoreWare.Agv.Common;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
 
@@ -16,12 +17,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication
 				.WithParsed<SimulateOptions>(simulationOptions
 					=>
 				{
-					host = Common.GebhardtStartup.CreateHostBuilder(args)
+					host = GebhardtStartup.CreateHostBuilder(args)
 						.ConfigureServices((context, services) =>
 						{
 							services.AddScoped(_ => simulationOptions);
-							// Configure MassTransit with RabbitMQ if the worker requires it
-							Common.ConfigureServicesMassTransit.ConfigureServices(services, context.Configuration, x =>
+							ConfigureServicesMassTransit.ConfigureServices(services, context.Configuration, x =>
 							{
 								x.AddConsumer<SimulationExecuteTransportOrderConsumer>();
 							});
@@ -30,12 +30,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication
 				})
 				.WithParsed<ProductionOptions>(productionOptions =>
 				{
-					host = Common.GebhardtStartup.CreateHostBuilder(args)
+					host = GebhardtStartup.CreateHostBuilder(args)
 						.ConfigureServices((context, services) =>
 						{
 							services.AddScoped(_ => productionOptions);
-							// Configure MassTransit with RabbitMQ if the worker requires it
-							Common.ConfigureServicesMassTransit.ConfigureServices(services, context.Configuration);
+							ConfigureServicesMassTransit.ConfigureServices(services, context.Configuration);
 						})
 						.Build();
 				});

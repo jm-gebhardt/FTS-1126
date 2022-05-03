@@ -15,7 +15,10 @@ try
                 {
                     services.AddSingleton(_ => simulationOptions);
                     services.AddHostedService<SimulationHostOrderService>();
-                    ConfigureServicesMassTransit.ConfigureServices(services, context.Configuration);
+                    ConfigureServicesMassTransit.ConfigureServices(services, context.Configuration, x =>
+                    {
+                        x.AddConsumer<SimulationConfirmHostOrderConsumer>();
+                    });
                 }).Build();
             host.Run();
         });

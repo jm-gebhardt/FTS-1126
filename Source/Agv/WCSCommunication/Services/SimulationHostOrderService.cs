@@ -67,7 +67,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
                     Creator = HostOrderCreator.Simulation
                 }, cancellationToken);
 
-                _logger.Log(LogLevel.Debug, $"Simulation HostOrder created: OrderId = {orderId}, Source = {src}, Dest = {dst}, LeNo = {leNo}");
+                _logger.LogInformation($"Simulation HostOrder created: OrderId = {orderId}, Source = {src}, Dest = {dst}, LeNo = {leNo}");
                 await Task.Delay(_simInterval * 1000, cancellationToken);
             }
         }

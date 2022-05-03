@@ -6,7 +6,7 @@ using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Events;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest
+namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
 {
     /// <summary>
     /// Test consumer for transport orders..

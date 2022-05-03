@@ -78,10 +78,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// <returns>Event Binding for IHandleHostOrder</returns>
         private EventActivityBinder<OrderSaga, IHandleHostOrder> SetHandleHostOrderHandler() =>
             When(HandleHostOrderEvent)
-                .Then(c => _logger.LogInformation($"Order {c.Message.OrderId}/{c.Saga.CorrelationId} received"))
+                .Then(c =>
+                    _logger.LogInformation($"Order {c.Message.OrderId}/{c.Saga.CorrelationId} received"))
                 .Then(c => UpdateSagaSate(c.Saga, c.Message))
                 .PublishAsync(c =>
-                    c.Init<IAssignAgv>(new {c.Saga.OrderId, c.Saga.Source, c.Saga.Destination})
+                    c.Init<IAssignAgv>(new {c.Saga.CorrelationId, c.Saga.OrderId, c.Saga.Source, c.Saga.Destination})
                 )
                 .TransitionTo(AgvRequested);
 
@@ -91,10 +92,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// <returns>Event Binding for IAgvAssignSucceeded</returns>
         private EventActivityBinder<OrderSaga, IAgvAssignSucceeded> SetAgvAssignSucceededHandler() =>
             When(AgvAssignSucceededEvent)
-                .Then(c => _logger.LogInformation($"Order {c.Message.OrderId}/{c.Saga.CorrelationId} has been assigned to {c.Message.AssignedAgv}"))
+                .Then(c => 
+                    _logger.LogInformation($"Order {c.Message.OrderId}/{c.Saga.CorrelationId} has been assigned to {c.Message.AssignedAgv}")
+                 )
                 .Then(c => UpdateSagaSate(c.Saga, c.Message))
                 .PublishAsync(c =>
-                    c.Init<IExecuteTransportOrder>(new {c.Saga.OrderId, c.Message.AssignedAgv, c.Saga.Source, c.Saga.Destination})
+                    c.Init<IExecuteTransportOrder>(new { c.Saga.CorrelationId, c.Saga.OrderId, c.Message.AssignedAgv, c.Saga.Source, c.Saga.Destination})
                 )
                 .TransitionTo(TransportOrderSend);
 
@@ -105,8 +108,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// <returns>Event Binding for IAgvAssignSucceeded</returns>
         private EventActivityBinder<OrderSaga, ITransportOrderCompleted> SetTransportOrderCompletedHandler() =>
             When(TransportOrderCompletedEvent)
-                .Then(c => _logger.LogInformation($"Order {c.Saga.OrderId}/{c.Saga.CorrelationId} has been completed"))
-                .PublishAsync(c => c.Init<IHostOrderHandlingSucceeded>(new {c.Saga.OrderId}))
+                .Then(c =>
+                    _logger.LogInformation($"Order {c.Saga.OrderId}/{c.Saga.CorrelationId} has been completed")
+                 )
+                .PublishAsync(c => c.Init<IHostOrderHandlingSucceeded>(new { c.Saga.CorrelationId, c.Saga.OrderId}))
                 .Finalize();
 
         private void UpdateSagaSate(OrderSaga saga, IHandleHostOrder hostOrder)

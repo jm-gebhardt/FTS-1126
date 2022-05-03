@@ -8,7 +8,7 @@ using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Commands;
 using Gebhardt.StoreWare.Agv.WCSCommunication.CmdOptions;
 using Gebhardt.StoreWare.Agv.WCSCommunication.Services;
 
-namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest
+namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services
 {
     /// <summary>
     /// Test for WorkerHostOrderSim

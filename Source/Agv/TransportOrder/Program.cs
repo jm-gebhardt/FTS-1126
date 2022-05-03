@@ -1,11 +1,11 @@
-using MassTransit;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using CommandLine;
+using MassTransit;
 using Gebhardt.StoreWare.Agv.Common;
+using Gebhardt.StoreWare.Agv.TransportOrder.CmdOptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.States;
-using CommandLine;
-using Gebhardt.StoreWare.Agv.TransportOrder.CmdOptions;
-using Microsoft.Extensions.DependencyInjection;
 
 try
 {
