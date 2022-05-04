@@ -46,11 +46,19 @@ stages:
     - task: reportgenerator@4
       inputs:
         reports: '$(Agent.TempDirectory)/**/coverage.cobertura.xml'
-        targetdir: '$(Build.SourcesDirectory)/CoverageResults'
+        targetdir: '$(Agent.TempDirectory)/CoverageResults'
         reporttypes: 'Cobertura'
         
     - task: PublishCodeCoverageResults@1
       displayName: 'Publish code coverage report'
       inputs:
         codeCoverageTool: 'Cobertura'
-        summaryFileLocation: '$(Build.SourcesDirectory)/CoverageResults/Cobertura.xml'
+        summaryFileLocation: '$(Agent.TempDirectory)/CoverageResults/Cobertura.xml'
+        
+    - task: BuildQualityChecks@8
+      displayName: 'Check build quality'
+      inputs:
+        checkCoverage: true
+        coverageType: lines
+        coverageThreshold: 70
+        coverageFailOption: fixed
