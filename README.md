@@ -6,7 +6,7 @@ Orders are managed by the TransportOrder Service e.g. to maximize AGV productivi
 This software is organizes as MicroServices communicating using MassTransit and RabbitMQ.  
 All outside communication with an ERP/StoreWare or AGVs is done using separate services.
 
-This projects is using .NET 6 and requires a running [RabbitMQ](https://www.rabbitmq.com/) instance. Install guide can be found win the [wiki](https://dev.azure.com/GebhardtGroup/StoreWare/_wiki/wikis/StoreWare.wiki/134/RabbitMQ)
+This projects is using .NET 6 and requires a running [RabbitMQ](https://www.rabbitmq.com/) instance. Install guide can be found in the [wiki](https://dev.azure.com/GebhardtGroup/StoreWare/_wiki/wikis/StoreWare.wiki/134/RabbitMQ)
 
 
 ## Structure
@@ -26,8 +26,10 @@ dotnet build Source/Agv/CompileAgv.sln
 ```
 
 ## Run Simulation
+In Bash
+```export RABBITMQ__HOST=localhost```
+or in Windows Command Line: ```set RABBITMQ__HOST=localhost```
 ```
-export RABBITMQ__HOST=localhost
 dotnet run --project WCSCommunication simulate --interval=10 --sources='S1,S2', --destinations='D1,D2,D3'
 dotnet run --project TransportOrder simulate --agvs=2
 dotnet run --project DeviceCommunication simulate --interval=5,10
