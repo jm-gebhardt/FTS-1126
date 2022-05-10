@@ -25,10 +25,24 @@ Each Service is build as a separate project.
 dotnet build Source/Agv/CompileAgv.sln
 ```
 
+## Expected Configuration Variables (ENVS)
+Configurations may be passed in as environment variables or any other configuration provider loaded by [CreateDefaultBuilder](https://docs.microsoft.com/en-us/dotnet/api/microsoft.extensions.hosting.host.createdefaultbuilder?view=dotnet-plat-ext-6.0#microsoft-extensions-hosting-host-createdefaultbuilder)
+
+* In Bash: `export RABBITMQ__HOST=localhost`
+* In Windows Command Line: `set RABBITMQ__HOST=localhost`
+
+### All Services
+```
+RABBITMQ__HOST=localhost
+```
+
+### WCSCommunication (Production only)
+```
+CONNECTIONSTRINGS__WCS="Server=127.0.0.1,1433;Database=master;User Id=MyDbUser;Password=MyStrongPassword;"
+```
+
 ## Run Simulation
-In Bash
-```export RABBITMQ__HOST=localhost```
-or in Windows Command Line: ```set RABBITMQ__HOST=localhost```
+Ensure that `RABBITMQ__HOST` is set
 ```
 dotnet run --project WCSCommunication simulate --interval=10 --sources='S1,S2', --destinations='D1,D2,D3'
 dotnet run --project TransportOrder simulate --agvs=2

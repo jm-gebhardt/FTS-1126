@@ -24,16 +24,16 @@ namespace Gebhardt.StoreWare.Agv.Common.Logging
 		/// <summary>
 		/// Key to folder path in appsettings.json
 		/// </summary>
-		public const string SettingKeyFolderPath = "Settings:folderPath";
+		public const string SettingKeyFolderPath = "Logging:TextLogger:folderPath";
 
 		/// <summary>
 		/// Key to padding value in appsettings.json
 		/// </summary>
-		public const string SettingKeyPaddingRight = "Settings:paddingRight";
+		public const string SettingKeyPaddingRight = "Logging:TextLogger:paddingRight";
 
 		/// <summary>
 		/// Key to padding value in appsettings.json targeting the eventId
 		/// </summary>
-		public const string SettingKeyEventIdPaddingRight = "Settings:eventIdPaddingRight";
+		public const string SettingKeyEventIdPaddingRight = "Logging:TextLogger:eventIdPaddingRight";
 	}
 }

@@ -31,7 +31,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
         {
             await Task.Run(() => // Await Task to satisfy async
             {
-                _logger.LogInformation("HostOrder handling succeeded for OrderId {0}", context.Message.OrderId);
+                _logger.LogInformation("HostOrder handling succeeded for OrderId {OrderId}", context.Message.OrderId);
             });
         }
     }

@@ -9,18 +9,8 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Commands
 	public interface IUpdateHostOrder: CorrelatedBy<Guid>
 	{
 		/// <summary>
-		/// The unique ID of the order known by the host system
+		/// Updated order details
 		/// </summary>
-		string OrderId { get; }
-
-		/// <summary>
-		/// The source where to pick up the order
-		/// </summary>
-		string Source { get; }
-
-		/// <summary>
-		/// The destination where to drop the order
-		/// </summary>
-		string Destination { get; }
+		Order Order { get; }
 	}
 }

@@ -32,6 +32,6 @@ try
 }
 catch (Exception ex)
 {
-    initialLogger.LogError(ex, "Unhandled exception.");
+    initialLogger.LogError(ex, "Unhandled exception");
     return 1;
 }

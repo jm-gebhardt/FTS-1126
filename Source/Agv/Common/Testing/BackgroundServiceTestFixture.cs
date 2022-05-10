@@ -29,7 +29,7 @@ public class BackgroundServiceTestFixture<TBackgroundService> where TBackgroundS
     public readonly TBackgroundService? HostedService;
 
     /// <summary>
-    /// Consumer Test Fixture to be used for background service tests
+    /// Test Fixture to be used for background service tests
     /// </summary>
     /// <param name="services">Service Collection instance with MassTransitTestHarness added</param>
     /// <param name="busRegistrationConfigurator">MassTransit Registration with consumer already added</param>

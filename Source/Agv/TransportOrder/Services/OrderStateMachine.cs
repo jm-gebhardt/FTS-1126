@@ -60,15 +60,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         }
 
         /// <summary>
-        /// IHandleHostOrder may not have a correlation Id
+        /// IHandleHostOrder may not provide a CorrelationId, if CorrelationId is empty, a new one is assigned
         /// Correlation is then performed using OrderId or a new CorrelationId is assigned
         /// <see href="https://masstransit-project.com/usage/sagas/automatonymous.html#event-2" />
         /// </summary>
         private void SetupInitialCorrelation()
         {
+            // Initial creation
             Event(() => HandleHostOrderEvent, e =>
-                e.CorrelateBy(i => i.OrderId, x => x.Message.OrderId)
-                    .SelectId(x => x.CorrelationId ?? NewId.NextGuid())
+                e.SetSagaFactory(context => new OrderSaga(context.Message.Order, context.Message.CorrelationId))
             );
         }
 
@@ -79,10 +79,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         private EventActivityBinder<OrderSaga, IHandleHostOrder> SetHandleHostOrderHandler() =>
             When(HandleHostOrderEvent)
                 .Then(c =>
-                    _logger.LogInformation($"Order {c.Message.OrderId}/{c.Saga.CorrelationId} received"))
-                .Then(c => UpdateSagaSate(c.Saga, c.Message))
+                    _logger.LogInformation("Order {OrderId}/{CorrelationId} received", c.Message.Order.OrderId, c.Saga.CorrelationId))
                 .PublishAsync(c =>
-                    c.Init<IAssignAgv>(new {c.Saga.CorrelationId, c.Saga.OrderId, c.Saga.Source, c.Saga.Destination})
+                    c.Init<IAssignAgv>(new {c.Saga.CorrelationId, c.Saga.Order})
                 )
                 .TransitionTo(AgvRequested);
 
@@ -93,11 +92,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         private EventActivityBinder<OrderSaga, IAgvAssignSucceeded> SetAgvAssignSucceededHandler() =>
             When(AgvAssignSucceededEvent)
                 .Then(c => 
-                    _logger.LogInformation($"Order {c.Message.OrderId}/{c.Saga.CorrelationId} has been assigned to {c.Message.AssignedAgv}")
+                    _logger.LogInformation("Order {OrderId}/{CorrelationId} has been assigned to {AssignedAgv}", 
+                        c.Message.OrderId, c.Saga.CorrelationId, c.Message.AssignedAgv)
                  )
                 .Then(c => UpdateSagaSate(c.Saga, c.Message))
                 .PublishAsync(c =>
-                    c.Init<IExecuteTransportOrder>(new { c.Saga.CorrelationId, c.Saga.OrderId, c.Message.AssignedAgv, c.Saga.Source, c.Saga.Destination})
+                    c.Init<IExecuteTransportOrder>(new { c.Saga.CorrelationId, c.Saga.Order, c.Message.AssignedAgv})
+                )
+                .PublishAsync( c =>
+                    c.Init<IHostOrderStarted>(new {c.Saga.CorrelationId, c.Saga.Order.OrderId,  c.Message.AssignedAgv})
                 )
                 .TransitionTo(TransportOrderSend);
 
@@ -109,17 +112,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         private EventActivityBinder<OrderSaga, ITransportOrderCompleted> SetTransportOrderCompletedHandler() =>
             When(TransportOrderCompletedEvent)
                 .Then(c =>
-                    _logger.LogInformation($"Order {c.Saga.OrderId}/{c.Saga.CorrelationId} has been completed")
+                    _logger.LogInformation("Order {OrderId}/{CorrelationId} has been completed",c.Saga.Order.OrderId, c.Saga.CorrelationId )
                  )
-                .PublishAsync(c => c.Init<IHostOrderHandlingSucceeded>(new { c.Saga.CorrelationId, c.Saga.OrderId}))
+                .PublishAsync(c => c.Init<IHostOrderHandlingSucceeded>(new
+                {
+                    c.Saga.CorrelationId, c.Saga.Order.OrderId
+                }))
                 .Finalize();
-
-        private void UpdateSagaSate(OrderSaga saga, IHandleHostOrder hostOrder)
-        {
-            saga.OrderId = hostOrder.OrderId;
-            saga.Source = hostOrder.Source;
-            saga.Destination = hostOrder.Destination;
-        }
 
         private void UpdateSagaSate(OrderSaga saga, IAgvAssignSucceeded agvAssignSucceeded)
         {

@@ -1,3 +1,4 @@
+using Gebhardt.StoreWare.Agv.Common.Messages;
 using JetBrains.Annotations;
 using MassTransit;
 
@@ -13,6 +14,17 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.States
         SagaStateMachineInstance, CorrelatedBy<Guid>
     {
         /// <summary>
+        /// Create new OrderSaga
+        /// </summary>
+        /// <param name="order">The order related to this Saga</param>
+        /// <param name="correlationId">If the correlationId is empty, a new Id will be generated</param>
+        public OrderSaga(Order order, Guid correlationId = default)
+        {
+            CorrelationId = correlationId == Guid.Empty ? NewId.NextGuid() : correlationId;
+            Order = order;
+        }
+
+        /// <summary>
         /// Current State
         /// </summary>
         public State CurrentState { get; set; } = default!;
@@ -22,25 +34,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.States
         /// <see href="https://masstransit-project.com//usage/correlation.html" />
         /// </summary>
         public Guid CorrelationId { get; set; }
-
+        
         /// <summary>
-        ///  Order ID
-        /// </summary>
-        public string OrderId { get; set; } = default!;
-
-        /// <summary>
-        /// Source
-        /// </summary>
-        public string? Source { get; set; }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public string? Destination { get; set; }
-
-        /// <summary>
-        /// Destination
+        /// AssignedAgv
         /// </summary>
         public string? AssignedAgv { get; set; }
+
+        /// <summary>
+        /// The order details of this saga
+        /// </summary>
+        public Order Order { get; set; }
     }
 }

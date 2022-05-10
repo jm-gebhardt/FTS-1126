@@ -1,5 +1,4 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Definitions;
-using MassTransit;
+﻿using MassTransit;
 
 namespace Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Commands
 {
@@ -10,28 +9,9 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Commands
 	public interface IHandleHostOrder: CorrelatedBy<Guid>
 	{
 		/// <summary>
-		/// The unique ID of the order known by the host system
+		/// Order Details
 		/// </summary>
-		string OrderId { get; }
-
-		/// <summary>
-		/// The source where to pick up the order
-		/// </summary>
-		string Source { get; }
-
-		/// <summary>
-		/// The destination where to drop the order
-		/// </summary>
-		string Destination { get; }
-
-		/// <summary>
-		/// The LeNo of the orders handled box or transportation good
-		/// </summary>
-		string LeNo { get; }
-
-		/// <summary>
-		/// The creator of the host order
-		/// </summary>
-		HostOrderCreator Creator { get; }
+		Order Order { get; }
 	}
 }
+

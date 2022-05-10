@@ -24,7 +24,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Logging
 		{
 			if (logger != null)
 			{
-				logger.Log(logLevel, eventId, $"Method:{memberName}|Line:{lineNumber}|{filePath}|{message}");
+				logger.Log(logLevel, eventId, "Method:{MemberName}|Line:{LineNumber}|{FilePath}|{Message}", memberName, lineNumber, filePath, message);
 			}
 			else
 			{

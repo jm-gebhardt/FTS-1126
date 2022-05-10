@@ -34,7 +34,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
             await context.Publish<IAgvAssignSucceeded>(new
             {
                 context.Message.CorrelationId,
-                context.Message.OrderId,
+                context.Message.Order.OrderId,
                 AssignedAgv = ChooseAgv()
             });
         }

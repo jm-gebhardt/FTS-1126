@@ -8,6 +8,15 @@ services:
     environment:
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_PID=Express
+      - SA_PASSWORD=${MSSQL_SA_PASSWORD}
+    ports:
+      - "127.0.0.1:1433:1433"
+    
   wcscommunication:
     build:
       context: ./Source/Agv
@@ -18,9 +27,11 @@ services:
       - RABBITMQ__HOST=rabbitmq
       - RABBITMQ__USER=${RABBITMQ_USER}
       - RABBITMQ__PASSWORD=${RABBITMQ_PASSWORD}
-    command: dotnet /app/Gebhardt.StoreWare.Agv.WCSCommunication.dll simulate -i 10 -s S1,S2 -d D1,D2,D3
+      - "CONNECTIONSTRINGS__WCS=Server=mssql;Database=master;User Id=sa;Password=${MSSQL_SA_PASSWORD}"
+    command: dotnet /app/Gebhardt.StoreWare.Agv.WCSCommunication.dll ${WCSCOMMUNICATION_ARGS}
     depends_on:
       - rabbitmq
+      - mssql
   devicecommunication:
     build:
       context: ./Source/Agv
@@ -31,7 +42,7 @@ services:
       - RABBITMQ__HOST=rabbitmq
       - RABBITMQ__USER=${RABBITMQ_USER}
       - RABBITMQ__PASSWORD=${RABBITMQ_PASSWORD}
-    command: dotnet /app/Gebhardt.StoreWare.Agv.DeviceCommunication.dll simulate -i 3,15
+    command: dotnet /app/Gebhardt.StoreWare.Agv.DeviceCommunication.dll ${DEVICECOMMUNICATION_ARGS}
     depends_on:
       - rabbitmq
   transportorder:
@@ -44,6 +55,6 @@ services:
       - RABBITMQ__HOST=rabbitmq
       - RABBITMQ__USER=${RABBITMQ_USER}
       - RABBITMQ__PASSWORD=${RABBITMQ_PASSWORD}
-    command: dotnet /app/Gebhardt.StoreWare.Agv.TransportOrder.dll simulate -c 3
+    command: dotnet /app/Gebhardt.StoreWare.Agv.TransportOrder.dll ${TRANSPORTORDER_ARGS}
     depends_on:
       - rabbitmq

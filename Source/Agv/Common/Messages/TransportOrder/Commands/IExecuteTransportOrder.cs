@@ -10,23 +10,14 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Commands
 	public interface IExecuteTransportOrder: CorrelatedBy<Guid>
 	{
 		/// <summary>
-		/// The unique ID of the order known by the host system
+		/// Order Details
 		/// </summary>
-		string OrderId { get; }
+		Order Order { get; }
 
 		/// <summary>
-		/// 
+		/// The assigned AGV
 		/// </summary>
 		string AssignedAgv { get; }
 
-		/// <summary>
-		/// The source station of the order in the format that is known by the agv 
-		/// </summary>
-		string Source { get; }
-
-		/// <summary>
-		/// The destination station of the order in the format that is known by the agv
-		/// </summary>
-		string Destination { get; }
 	}
 }

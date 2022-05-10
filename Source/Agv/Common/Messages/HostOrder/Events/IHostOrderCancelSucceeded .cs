@@ -9,7 +9,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events
 	public interface IHostOrderCancelSucceeded: CorrelatedBy<Guid>
 	{
 		/// <summary>
-		/// The unique order ID
+		/// The unique ID of the order known by the host system
 		/// </summary>
 		string OrderId { get; }
 	}

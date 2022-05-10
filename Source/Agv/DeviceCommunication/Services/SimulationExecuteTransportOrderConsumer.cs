@@ -49,8 +49,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
             await Task.Delay(1000 * _simInterval.Next(_minInterval, _maxInterval + 1), context.CancellationToken)
                .ContinueWith(_ =>
                {
-                   context.Publish<ITransportOrderCompleted>(new { context.Message.CorrelationId, context.Message.OrderId }, context.CancellationToken);
-                   _logger.LogInformation("TransportOrderCompleted: {0}", context.Message.OrderId);
+                   context.Publish<ITransportOrderCompleted>(new { context.Message.CorrelationId, context.Message.Order.OrderId }, context.CancellationToken);
+                   _logger.LogInformation("TransportOrderCompleted: {OrderId}", context.Message.Order.OrderId);
                });
         }
     }

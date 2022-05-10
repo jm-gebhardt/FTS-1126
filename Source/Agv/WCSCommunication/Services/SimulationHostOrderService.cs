@@ -1,8 +1,9 @@
-﻿using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using MassTransit;
 using Gebhardt.StoreWare.Agv.Common.Definitions;
+using Gebhardt.StoreWare.Agv.Common.Messages;
 using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Commands;
+using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.WCSCommunication.CmdOptions;
 
 namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
@@ -10,14 +11,20 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
     /// <summary>
     /// Simulates the creation of host orders
     /// </summary>
-    public class SimulationHostOrderService : BackgroundService
+    public class SimulationHostOrderService : IPollable
     {
+        /// <summary>
+        /// IPollable interval
+        /// </summary>
+        public int PollingInterval  { get; }
+        
         private readonly ILogger<SimulationHostOrderService> _logger;
         private readonly IBus _bus;
         private readonly string[] _simSources;
         private readonly string[] _simDestinations;
-        private readonly int _simInterval;
-
+        private readonly Random _random = new();
+        private int _orderIdCounter;
+        
         /// <summary>
         /// Create simulator for creating host order
         /// </summary>
@@ -31,15 +38,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
 
             _simSources = simulationOptions.Sources != null ? simulationOptions.Sources.ToArray() : Array.Empty<string>();
             _simDestinations = simulationOptions.Destinations != null ? simulationOptions.Destinations.ToArray() : Array.Empty<string>();
-            _simInterval = simulationOptions.Interval;
-        }
-
-        /// <summary>
-        /// Execute background service
-        /// </summary>
-        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
-        {
-            await SimulateHostOrders(cancellationToken);
+            PollingInterval = simulationOptions.Interval * 1000;  // simulation options is specified in seconds
         }
 
         /// <summary>
@@ -47,29 +46,33 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
         /// </summary>
         private async Task SimulateHostOrders(CancellationToken cancellationToken)
         {
-            Random rnd = new();
-            int id = 0;
+            
+            string orderId = $"{_orderIdCounter++ % 9999 + 1:D4}"; // Cycle order id [0001..9999]
+            string src = _simSources[_random.Next(_simSources.Length)]; // Get random source and destination
+            string dst = _simDestinations[_random.Next(_simDestinations.Length)];
+            string leNo = "9999";
 
-            while (!cancellationToken.IsCancellationRequested)
+            // Send message
+            await _bus.Publish<IHandleHostOrder>(new
             {
-                string orderId = $"{id++ % 9999 + 1:D4}"; // Cycle order id [0001..9999]
-                string src = _simSources[rnd.Next(_simSources.Length)]; // Get random source and destination
-                string dst = _simDestinations[rnd.Next(_simDestinations.Length)];
-                string leNo = "9999";
+                Order = new Order(
+                orderId,
+                src,
+                dst,
+                leNo,
+                HostOrderCreator.Simulation)
+            }, cancellationToken);
 
-                // Send message
-                await _bus.Publish<IHandleHostOrder>(new
-                {
-                    OrderId = orderId,
-                    Source = src,
-                    Dest = dst,
-                    LeNo = leNo,
-                    Creator = HostOrderCreator.Simulation
-                }, cancellationToken);
-
-                _logger.LogInformation($"Simulation HostOrder created: OrderId = {orderId}, Source = {src}, Dest = {dst}, LeNo = {leNo}");
-                await Task.Delay(_simInterval * 1000, cancellationToken);
-            }
+            _logger.LogInformation("Simulation HostOrder created: OrderId = {OrderId}, Source = {Src}, Dest = {Dst}, LeNo = {LeNo}", orderId, src, dst, leNo);
+        }
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        public async Task Poll(CancellationToken cancellationToken = default)
+        {
+            await SimulateHostOrders(cancellationToken);
         }
     }
 }

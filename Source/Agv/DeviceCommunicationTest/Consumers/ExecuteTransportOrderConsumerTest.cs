@@ -1,3 +1,5 @@
+using Gebhardt.StoreWare.Agv.Common.Definitions;
+using Gebhardt.StoreWare.Agv.Common.Messages;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Extensions.DependencyInjection;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
@@ -28,10 +30,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
             string orderId = "TestOrder123";
             await fixture.TestHarness.Bus.Publish<IExecuteTransportOrder>(new
             {
-                OrderId = orderId,
-                AssignedAgv = string.Empty,
-                SourceId = string.Empty,
-                DestinationId = string.Empty
+                Order = new Order(orderId,  "SRC1", "DST1", "LeNo123", HostOrderCreator.Simulation),
+                AssignedAgv = "AGV_0"
             });
 
             Assert.IsTrue(await fixture.TestHarness.Published.Any<IExecuteTransportOrder>());

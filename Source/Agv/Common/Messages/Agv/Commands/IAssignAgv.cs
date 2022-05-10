@@ -10,18 +10,8 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Agv.Commands
     public interface IAssignAgv : CorrelatedBy<Guid>
     {
         /// <summary>
-        /// The unique ID of the order known by the host system
+        /// Order Details
         /// </summary>
-        string OrderId { get; }
-
-        /// <summary>
-        /// The source station of the order in the format that is known by the agv 
-        /// </summary>
-        string Source { get; }
-
-        /// <summary>
-        /// The destination station of the order in the format that is known by the agv
-        /// </summary>
-        string Destination { get; }
+        Order Order { get; }
     }
 }

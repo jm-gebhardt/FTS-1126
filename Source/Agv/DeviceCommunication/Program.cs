@@ -45,12 +45,12 @@ try
 	}
 	else
     {
-		initialLogger.LogWarning("Invalid command line argument(s).");
+		initialLogger.LogWarning("Invalid command line argument(s)");
 		return 1;
     }
 }
 catch (Exception ex)
 {
-	initialLogger.LogError(ex, "Unhandled exception.");
+	initialLogger.LogError(ex, "Unhandled exception");
 	return 1;
 }

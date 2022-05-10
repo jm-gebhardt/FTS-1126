@@ -3,33 +3,70 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using CommandLine;
 using Gebhardt.StoreWare.Agv.Common;
+using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.WCSCommunication.CmdOptions;
+using Gebhardt.StoreWare.Agv.WCSCommunication.Db;
 using Gebhardt.StoreWare.Agv.WCSCommunication.Services;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 
 var initialLogger = Gebhardt.StoreWare.Agv.Common.Logging.InitialLogger.Create<Program>();
 try
 {
-    Parser.Default.ParseArguments<SimulateOptions>(args)
-        .WithParsed(simulationOptions =>
+    IHost? host = null;
+    
+    Parser.Default.ParseArguments<ProductionOptions, SimulateOptions>(args)
+        // Simulation Mode
+        .WithParsed<SimulateOptions>(simulationOptions =>
         {
-            using var host = GebhardtStartup.CreateHostBuilder(args)
+            host = GebhardtStartup.CreateHostBuilder(args)
                 .ConfigureServices((context, services) =>
                 {
                     services.AddSingleton(_ => simulationOptions);
-                    services.AddHostedService<SimulationHostOrderService>();
+                    services.AddHostedService<PollingBackgroundService<SimulationHostOrderService>>();
+                    services.AddSingleton<SimulationHostOrderService>();
                     ConfigureServicesMassTransit.ConfigureServices(services, context.Configuration, x =>
                     {
                         x.AddConsumer<SimulationConfirmHostOrderConsumer>();
                     });
                 }).Build();
             host.Run();
+        })
+        // Production Mode
+        .WithParsed<ProductionOptions>( _ => {
+            host = GebhardtStartup.CreateHostBuilder(args)
+                .ConfigureServices((context, services) =>
+            {
+                services.AddDbContextFactory<WcsDbContext>(options =>
+                {
+                    options.UseSqlServer(
+                        context.Configuration.GetConnectionString(WcsDbContext.ConfigSectionName)
+                    );
+                } );
+                services.AddHostedService<PollingBackgroundService<WcsOrderHandler>>();
+                services.AddSingleton<WcsOrderHandler>();
+                ConfigureServicesMassTransit.ConfigureServices(services, context.Configuration, x =>
+                {
+                    x.AddConsumer<WcsHostOrderConsumer>();
+                });
+            })
+            .Build();
         });
-
-    return 0;
+    // By using the generic overload of WithParsed above host will be null for invalid command line arguments.
+    if (host != null)
+    {
+        host.Run();
+        return 0;
+    }
+    else
+    {
+        initialLogger.LogWarning("Invalid command line argument(s)");
+        return 1;
+    }
 }
 catch (Exception ex)
 {
-    initialLogger.LogError(ex, "Unhandled exception.");
+    initialLogger.LogError(ex, "Unhandled exception");
     return 1;
 }
