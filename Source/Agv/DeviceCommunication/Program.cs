@@ -4,10 +4,11 @@ using CommandLine;
 using Gebhardt.StoreWare.Agv.Common;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
+using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication
 {
-	internal static class Program
+	internal class Program
 	{
 		private static int Main(string[] args)
 		{
@@ -38,6 +39,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication
 						})
 						.Build();
 				});
+
+			var logger = host?.Services.GetRequiredService<ILogger<Program>>();
+			logger?.LogInformation("Starting program...");
 
 			host?.Run();
 			
