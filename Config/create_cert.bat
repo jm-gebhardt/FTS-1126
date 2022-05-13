@@ -51,11 +51,6 @@ exit /b 1
 
 if not [%~1] == [] goto usage
 
-if not exist ..\AgvDev (
-	echo Current directory need to be repository base folder. 1>&2
-	goto usage
-)
-
 if defined AGV_SUBJ_SERVER (
 	set OPENSSL_SUBJ_SERVER=%AGV_SUBJ_SERVER%
 )

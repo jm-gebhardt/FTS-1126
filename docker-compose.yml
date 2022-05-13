@@ -27,11 +27,7 @@ services:
       - "127.0.0.1:1433:1433"
     
   wcscommunication:
-    build:
-      context: ./Source/Agv
-      args:
-        - PROJECT=WCSCommunication
-    image: wcscommunication:latest
+    image: storeware.azurecr.io/agv/wcscommunication:latest
     environment:
       - RABBITMQ__HOST=rabbitmq
       - RABBITMQ__USER=${RABBITMQ_USER}
@@ -42,11 +38,7 @@ services:
       - rabbitmq
       - mssql
   devicecommunication:
-    build:
-      context: ./Source/Agv
-      args:
-        - PROJECT=DeviceCommunication
-    image: devicecommunication:latest
+    image: storeware.azurecr.io/agv/devicecommunication:latest
     environment:
       - RABBITMQ__HOST=rabbitmq
       - RABBITMQ__USER=${RABBITMQ_USER}
@@ -55,18 +47,14 @@ services:
     depends_on:
       - rabbitmq
   transportorder:
-    build:
-      context: ./Source/Agv
-      args:
-        - PROJECT=TransportOrder
-    image: transportorder:latest
+    image: storeware.azurecr.io/agv/transportorder:latest
     environment:
       - RABBITMQ__HOST=rabbitmq
       - RABBITMQ__USER=${RABBITMQ_USER}
       - RABBITMQ__PASSWORD=${RABBITMQ_PASSWORD}
     command: dotnet /app/Gebhardt.StoreWare.Agv.TransportOrder.dll ${TRANSPORTORDER_ARGS}
     depends_on:
-      - rabbitmq
+      - rabbitmq    
   taragv:
     image: registry.gitlab.com/tar4/karis_virtual
     hostname: agv0

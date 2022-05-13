@@ -1,0 +1,16 @@
+services:
+  wcscommunication:
+    build:
+      context: ./Source/Agv
+      args:
+        - PROJECT=WCSCommunication
+  devicecommunication:
+    build:
+      context: ./Source/Agv
+      args:
+        - PROJECT=DeviceCommunication
+  transportorder:
+    build:
+      context: ./Source/Agv
+      args:
+        - PROJECT=TransportOrder
