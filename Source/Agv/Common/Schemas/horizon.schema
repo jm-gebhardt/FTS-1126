@@ -1,0 +1,33 @@
+﻿{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"title": "horizon",
+	"description": "New horizon for the AGV to which it is allowed to travel",
+	"subtopic": "/horizon",
+	"type": "object",
+	"properties": {
+		"Identifier": {
+			"type": "string",
+			"description": "The unique identifier of the agv",
+			"examples": [
+				"AGV1",
+				"AGV2"
+			]
+		},
+		"OrderId": {
+			"type": "integer",
+			"description": "The unique ID of the current order"
+		},
+		"Horizon": {
+			"type": "array",
+			"description": "The list of cleared points for the agv to pass",
+			"items": {
+				"type": "integer"
+			}
+		}
+	},
+	"required": [
+		"Identifier",
+		"OrderId",
+		"Horizon"
+	]
+}

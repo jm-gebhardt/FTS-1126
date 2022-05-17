@@ -1,0 +1,84 @@
+﻿{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"title": "requestRoutingCosts",
+	"description": "A routing cost request",
+	"subtopic": "/requestRoutingCosts",
+	"type": "object",
+	"properties": {
+		"Identifier": {
+			"type": "string",
+			"description": "The unique identifier of the agv",
+			"examples": [
+				"AGV1",
+				"AGV2"
+			]
+		},
+		"RequestId": {
+			"type": "integer",
+			"description": "A unique request ID"
+		},
+		"stations": {
+			"type": "object",
+			"properties": {
+				"FromStationIdentifier": {
+					"type": "string",
+					"description": "The unique identifier of the station where to pick from",
+					"examples": [
+						"Source1",
+						"Source31"
+					]
+				},
+				"ToStationIdentifier": {
+					"type": "string",
+					"description": "The unique identifier of the station where to drop",
+					"examples": [
+						"Destination2",
+						"Destination42"
+					]
+				}
+			},
+			"required": [
+				"FromStationIdentifier",
+				"ToStationIdentifier"
+			]
+		},
+		"coordinates": {
+			"type": "object",
+			"description": "The coordinates of the point where to go to",
+			"properties": {
+				"ToX": {
+					"type": "number"
+				},
+				"ToY": {
+					"type": "number"
+				},
+				"ToTheta": {
+					"type": "number"
+				}
+			},
+			"required": [
+				"ToX",
+				"ToY",
+				"ToTheta"
+			]
+		}
+	},
+	"required": [
+		"Identifier",
+		"RequestId",
+		"FromStationIdentifier",
+		"ToStationIdentifier"
+	],
+	"oneOf": [
+		{
+			"required": [
+				"stations"
+			]
+		},
+		{
+			"required": [
+				"coordinates"
+			]
+		}
+	]
+}

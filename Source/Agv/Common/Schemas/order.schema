@@ -1,0 +1,128 @@
+﻿{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "order",
+    "description": "New Order for the AGV",
+    "subtopic": "/order",
+    "type": "object",
+    "properties": {
+        "Identifier": {
+            "description": "The unique identifier of the agv",
+            "type": "string",
+            "examples": [
+                "AGV1",
+                "AGV2"
+            ]
+        },
+        "OrderId": {
+            "type": "integer",
+            "description": "The unique ID of the order"
+        },
+        "OrderType": {
+            "type": "string",
+            "description": "The type of the order. Pick/Drop/Transport",
+            "examples": [
+                "Pick",
+                "Drop",
+                "Transport"
+            ]
+        },
+        "RecordType": {
+            "type": "string",
+            "description": "The type of the order. Order/OrderUpdate/OrderCancel",
+            "examples": [
+                "Order",
+                "OrderUpdate",
+                "OrderCancel"
+            ]
+        },
+        "stations": {
+            "type": "object",
+            "properties": {
+                "FromStationIdentifier": {
+                    "type": "string",
+                    "description": "The unique identifier of the station where to pick from",
+                    "examples": [
+                        "Source1",
+                        "Source31"
+                    ]
+                },
+                "ToStationIdentifier": {
+                    "type": "string",
+                    "description": "The unique identifier of the station where to drop",
+                    "examples": [
+                        "Destination2",
+                        "Destination42"
+                    ]
+                }
+            },
+            "oneOf": [
+                {
+                    "required": [
+                        "FromStationIdentifier"
+                    ]
+                },
+                {
+                    "required": [
+                        "ToStationIdentifier"
+                    ]
+                }
+            ]
+        },
+        "coordinates": {
+            "type": "object",
+            "description": "The coordinates of the point where to go to",
+            "properties": {
+                "ToX": {
+                    "type": "number"
+                },
+                "ToY": {
+                    "type": "number"
+                },
+                "ToTheta": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "ToX",
+                "ToY",
+                "ToTheta"
+            ]
+        },
+        "route": {
+            "type": "object",
+            "description": "The route to travel set by the master control expressed in nodes and edges",
+            "properties": {
+                "Nodes": {
+                    "type": "array",
+                    "items": {}
+                },
+                "Edges": {
+                    "type": "array",
+                    "items": {}
+                }
+            },
+            "required": [
+                "Nodes",
+                "Edges"
+            ]
+        }
+    },
+    "required": [
+        "Identifier",
+        "OrderId",
+        "RecordType",
+        "OrderType"
+    ],
+    "oneOf": [
+        {
+            "required": [
+                "stations"
+            ]
+        },
+        {
+            "required": [
+                "coordinates"
+            ]
+        }
+    ]
+}

@@ -1,0 +1,35 @@
+﻿{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"title": "requestSensorStates",
+	"description": "A request to send sensor states in the state message",
+	"subtopic": "/requestSensorStates",
+	"type": "object",
+	"properties": {
+		"Identifier": {
+			"type": "string",
+			"description": "The unique identifier of the agv",
+			"examples": [
+				"AGV1",
+				"AGV2"
+			]
+		},
+		"RequestId": {
+			"type": "integer",
+			"description": "A unique ID for the request"
+		},
+		"Send": {
+			"type": "string",
+			"description": "true/false. Send sensor data in state telegram."
+		},
+		"Interval": {
+			"type": "integer",
+			"description": "Interval how long the states are going to be sent in seconds. -1 is infinite."
+		}
+	},
+	"required": [
+		"Identifier",
+		"RequestId",
+		"Send",
+		"Interval"
+	]
+}

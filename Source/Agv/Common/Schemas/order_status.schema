@@ -1,0 +1,113 @@
+﻿{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"title": "orderStatus",
+	"description": "Order status of an ongoing order",
+	"subtopic": "/orderStatus",
+	"type": "object",
+	"properties": {
+		"Identifier": {
+			"description": "The unique identifier of the agv",
+			"type": "string",
+			"examples": [
+				"AGV1",
+				"AGV2"
+			]
+		},
+		"OrderId": {
+			"type": "integer",
+			"description": "The unique ID of the order"
+		},
+		"stations": {
+			"type": "object",
+			"properties": {
+				"FromStationIdentifier": {
+					"type": "string",
+					"description": "The unique identifier of the station where to pick from",
+					"examples": [
+						"Source1",
+						"Source31"
+					]
+				},
+				"ToStationIdentifier": {
+					"type": "string",
+					"description": "The unique identifier of the station where to drop",
+					"examples": [
+						"Destination2",
+						"Destination42"
+					]
+				}
+			},
+			"oneOf": [
+				{
+					"required": [
+						"FromStationIdentifier"
+					]
+				},
+				{
+					"required": [
+						"ToStationIdentifier"
+					]
+				}
+			]
+		},
+		"coordinates": {
+			"type": "object",
+			"description": "The coordinates of the point where to go to",
+			"properties": {
+				"ToX": {
+					"type": "number"
+				},
+				"ToY": {
+					"type": "number"
+				},
+				"ToTheta": {
+					"type": "number"
+				}
+			},
+			"required": [
+				"ToX",
+				"ToY",
+				"ToTheta"
+			]
+		},
+		"Blocked": {
+			"type": "string",
+			"description": "Indicates a temporary block of the execution of the order due to some obstacles on the path or manual interference",
+			"examples": [
+				"true",
+				"false"
+			]
+		},
+		"CurrentPath": {
+			"type": "array",
+			"description": "The remaining path expressed as an array of nodes to travel over",
+			"items": {
+				"type": "integer"
+			}
+		},
+		"EstimatedRemainingExecutionTime": {
+			"type": "number",
+			"description": "The remaining execution time of the order in seconds"
+		}
+	},
+	"required": [
+		"Identifier",
+		"OrderId",
+		"OrderType",
+		"Blocked",
+		"CurrentPath",
+		"EstimatedRemainingExecutionTime"
+	],
+	"oneOf": [
+		{
+			"required": [
+				"stations"
+			]
+		},
+		{
+			"required": [
+				"coordinates"
+			]
+		}
+	]
+}

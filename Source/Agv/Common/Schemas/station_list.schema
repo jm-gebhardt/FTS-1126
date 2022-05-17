@@ -1,0 +1,64 @@
+﻿{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "stationList",
+    "description": "A list of all stations",
+    "subtopic": "/stationList",
+    "type": "object",
+    "properties": {
+        "stations": {
+            "type": "array",
+            "items": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "function": {
+                            "type": "string",
+                            "description": "The function of the station e.g. Pick/drop",
+                            "examples": [
+                                "Pick",
+                                "Drop",
+                                "Both"
+                            ]
+                        },
+                        "identifier": {
+                            "type": "string",
+                            "description": "The unique identifier of the station"
+                        },
+                        "position": {
+                            "type": "object",
+                            "description": "The position and rotation of the station based on to the maps/graphs coordinate system",
+                            "properties": {
+                                "theta": {
+                                    "type": "number"
+                                },
+                                "x": {
+                                    "type": "number"
+                                },
+                                "y": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "theta",
+                                "x",
+                                "y"
+                            ]
+                        },
+                        "type_id": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "function",
+                        "identifier",
+                        "position",
+                        "type_id"
+                    ]
+                }
+            ]
+        }
+    },
+    "required": [
+        "stations"
+    ]
+}

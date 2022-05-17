@@ -1,0 +1,46 @@
+﻿{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "map",
+    "description": "Information about scale of the map and where to get it",
+    "subtopic": "/map",
+    "type": "object",
+    "properties": {
+        "ModificationDate": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The modification date of the map. Timestamp in ISO8601 format.",
+            "examples": [
+                "1991-03-11T11:40:03.12Z"
+            ]
+        },
+        "URL": {
+            "type": "string",
+            "description": "The URL where to get the map as an image",
+            "examples": [
+                "http://agv1:8081/api/map/map.png"
+            ]
+        },
+        "Resolution": {
+            "type": "number",
+            "description": "The resolution of the maps image. Expressed as how many [m] per pixel are represented",
+            "examples": [
+                0.01
+            ]
+        },
+        "XOffset": {
+            "type": "integer",
+            "description": "The x offset of the map (from the left upper corner) where the mapped graph coordinate system starts"
+        },
+        "YOffset": {
+            "type": "integer",
+            "description": "The y offset of the map (from the left upper corner) where the mapped graph coordinate system starts"
+        }
+    },
+    "required": [
+        "ModificationDate",
+        "URL",
+        "Resolution",
+        "XOffset",
+        "YOffset"
+    ]
+}
