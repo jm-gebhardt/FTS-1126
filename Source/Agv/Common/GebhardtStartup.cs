@@ -2,7 +2,6 @@
 using Gebhardt.StoreWare.Agv.Common.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using static System.String;
 
 namespace Gebhardt.StoreWare.Agv.Common
@@ -40,10 +39,7 @@ namespace Gebhardt.StoreWare.Agv.Common
                 })
                 .ConfigureLogging(conf =>
                 {
-	                // Eradicate the default logging provider
-	                conf.ClearProviders();
 	                // Add our custom logging providers - more than one possible
-	                conf.AddColorConsoleLogger();
 	                conf.AddTextLogger();
                 });
             return host;

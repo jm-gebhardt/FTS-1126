@@ -34,12 +34,12 @@ namespace Gebhardt.StoreWare.Agv.Common.Logging
 		/// <summary>
 		/// Padding parameter for the log message's string
 		/// </summary>
-		public int PadRight = 40;
+		public int PadRight = 60;
 
 		/// <summary>
 		/// Padding parameter for the log message's eventId
 		/// </summary>
-		public int EventIdPaddingRight = 5;
+		public int EventIdPaddingRight = 27;
 
 		/// <summary>
 		/// Default path of the text log folder

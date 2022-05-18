@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Hosting;
 using CommandLine;
 using Gebhardt.StoreWare.Agv.Common;
+using Gebhardt.StoreWare.Agv.Common.Logging;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
 using Microsoft.Extensions.Logging;
@@ -41,7 +42,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication
 				});
 
 			var logger = host?.Services.GetRequiredService<ILogger<Program>>();
-			logger?.LogInformation("Starting program...");
+			LogWithCallerAttributes.Write(logger, "Starting program...");
 
 			host?.Run();
 			

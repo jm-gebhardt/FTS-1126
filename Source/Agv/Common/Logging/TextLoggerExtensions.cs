@@ -27,7 +27,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Logging
 
 			builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<ILoggerProvider, TextLoggerProvider>());
 
-			LoggerProviderOptions.RegisterProviderOptions<ColorConsoleLoggerConfiguration, TextLoggerProvider>(builder.Services);
+			LoggerProviderOptions.RegisterProviderOptions<TextLoggerConfiguration, TextLoggerProvider>(builder.Services);
 
 			return builder;
 		}

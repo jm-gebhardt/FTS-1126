@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Text;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Gebhardt.StoreWare.Agv.Common.Logging
@@ -67,9 +68,14 @@ namespace Gebhardt.StoreWare.Agv.Common.Logging
 			if (config.EventId == 0 || config.EventId == eventId.Id)
 			{
 				var timeNow = DateTime.Now;
-				string logMsgFirstPart = $"{ eventId.Id.ToString().PadRight(_eventIdPaddingRight) }|{ timeNow.ToString(LoggingConstants.LoggingDateFormat)} | { _name} | {logLevel} |";
+				
+				var logMessage = new StringBuilder();
+				logMessage.Append($"{logLevel}|EventId:{eventId.Id}".PadRight(_eventIdPaddingRight));
+				logMessage.Append($"|{timeNow.ToString(LoggingConstants.LoggingDateFormat)}|");
+				logMessage.Append($"{_name.PadRight(_padRight)}|");
+				logMessage.Append(formatter(state, exception));
 
-				Write(logLevel, $"{logMsgFirstPart.PadRight(_padRight)} {formatter(state, exception)}");
+				Write(logLevel, logMessage.ToString());
 			}
 		}
 

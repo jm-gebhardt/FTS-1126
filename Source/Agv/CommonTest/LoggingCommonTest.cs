@@ -7,19 +7,29 @@ using Moq;
 
 namespace Gebhardt.StoreWare.Agv.CommonTest
 {
-	/// <summary />
+	/// <summary>
+	/// Dummy class for logging mocks
+	/// </summary>
 	public class DummyColorConsoleTestClass
 	{
 		private readonly ILogger _logger;
 
-		/// <summary />
+		/// <summary>
+		/// Constructor of dummy class
+		/// </summary>
+		/// <param name="logger"></param>
 		public DummyColorConsoleTestClass(ILogger<DummyColorConsoleTestClass> logger)
 		{
 			_logger = logger;
 		}
 		
 
-		/// <summary />
+		/// <summary>
+		/// Method to be called when mocking
+		/// </summary>
+		/// <param name="logLevel"></param>
+		/// <param name="logEventId"></param>
+		/// <param name="logMsg"></param>
 		public void PleaseLogAnythingIMayGive(LogLevel logLevel, int logEventId, string logMsg)
 		{
 			_logger.Log(logLevel, logEventId, logMsg);
@@ -37,11 +47,10 @@ namespace Gebhardt.StoreWare.Agv.CommonTest
 		private Mock<ILogger<DummyColorConsoleTestClass>>? _loggerMock;
 		private DummyColorConsoleTestClass? _colorConsole;
 
-		private readonly ColorConsoleLoggerConfiguration _colorConsoleLoggerConfiguration = new();
 		private readonly TextLoggerConfiguration _textLoggerConfiguration = new();
 
 		/// <summary>
-		/// 
+		/// Create mock instances first
 		/// </summary>
 		[TestInitialize]
 		public void Setup()
@@ -52,7 +61,7 @@ namespace Gebhardt.StoreWare.Agv.CommonTest
 
 		
 		/// <summary>
-		/// 
+		/// Injecting each logging provider
 		/// </summary>
 		[TestMethod]
 		public void AddAllLoggingProvidersToMyHost_ThenGetTheServices()
@@ -60,10 +69,7 @@ namespace Gebhardt.StoreWare.Agv.CommonTest
 			var hostBuilder = Host.CreateDefaultBuilder()
 				.ConfigureLogging(conf =>
 				{
-					// Eradicate the default logging provider
-					conf.ClearProviders();
 					// Add our custom logging providers - more than one possible
-					conf.AddColorConsoleLogger();
 					conf.AddTextLogger();
 				});
 
@@ -79,7 +85,7 @@ namespace Gebhardt.StoreWare.Agv.CommonTest
 		
 
 		/// <summary>
-		/// 
+		/// Testing the log method only once
 		/// </summary>
 		[TestMethod]
 		[DataRow(LogLevel.Information, 6546, "Log a piece of information")]
@@ -90,7 +96,7 @@ namespace Gebhardt.StoreWare.Agv.CommonTest
 		{
 			if (_colorConsole != null && _loggerMock != null)
 			{
-				if (_colorConsoleLoggerConfiguration.LogLevels.ContainsKey(logLevel) && _textLoggerConfiguration.LogLevels.ContainsKey(logLevel))
+				if (_textLoggerConfiguration.LogLevels.ContainsKey(logLevel))
 				{
 					_colorConsole.PleaseLogAnythingIMayGive(logLevel, logEventId, logMsg);
 					_loggerMock.Verify(l => l.Log(
@@ -109,6 +115,48 @@ namespace Gebhardt.StoreWare.Agv.CommonTest
 			{
 				throw new NullReferenceException("Mock instance and colorConsole instance are null.");
 			}
+		}
+
+		/// <summary>
+		/// Testing the method invocation when a non-null logger mock object is given
+		/// </summary>
+		[TestMethod]
+		public void Test_Initialized_Logger_With_CallerAttributes()
+		{
+			// Arrange & Act
+			if (_loggerMock != null)
+			{
+				LogWithCallerAttributes.Write(_loggerMock.Object, It.IsAny<string>());
+			}
+
+			// Assert
+			_loggerMock?.Verify(l => l.Log(
+				LogLevel.Information,
+				0,
+				It.IsAny<It.IsAnyType>(),
+				It.IsAny<Exception>(),
+				((Func<It.IsAnyType, Exception, string>)It.IsAny<object>())!), Times.Exactly(1));
+		}
+
+		/// <summary>
+		/// Handling the case: logger mock object is null
+		/// </summary>
+		[TestMethod]
+		public void Test_NullLogger_With_CallerAttributes()
+		{
+			// Arrange
+			_loggerMock = null;
+
+			// Act
+			LogWithCallerAttributes.Write(_loggerMock?.Object, It.IsAny<string>());
+
+			// Assert
+			_loggerMock?.Verify(l => l.Log(
+				LogLevel.Information,
+				0,
+				It.IsAny<It.IsAnyType>(),
+				It.IsAny<Exception>(),
+				((Func<It.IsAnyType, Exception, string>)It.IsAny<object>())!), Times.Never);
 		}
 	}
 }
