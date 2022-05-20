@@ -1,0 +1,49 @@
+version: '3.8'
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "127.0.0.1:15672:15672"
+      - "127.0.0.1:5672:5672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
+  wcscommunication:
+    build:
+      context: ./Source/Agv
+      args:
+        - PROJECT=WCSCommunication
+    image: wcscommunication:latest
+    environment:
+      - RABBITMQ__HOST=rabbitmq
+      - RABBITMQ__USER=${RABBITMQ_USER}
+      - RABBITMQ__PASSWORD=${RABBITMQ_PASSWORD}
+    command: dotnet /app/Gebhardt.StoreWare.Agv.WCSCommunication.dll simulate -i 10 -s S1,S2 -d D1,D2,D3
+    depends_on:
+      - rabbitmq
+  devicecommunication:
+    build:
+      context: ./Source/Agv
+      args:
+        - PROJECT=DeviceCommunication
+    image: devicecommunication:latest
+    environment:
+      - RABBITMQ__HOST=rabbitmq
+      - RABBITMQ__USER=${RABBITMQ_USER}
+      - RABBITMQ__PASSWORD=${RABBITMQ_PASSWORD}
+    command: dotnet /app/Gebhardt.StoreWare.Agv.DeviceCommunication.dll simulate -i 3,15
+    depends_on:
+      - rabbitmq
+  transportorder:
+    build:
+      context: ./Source/Agv
+      args:
+        - PROJECT=TransportOrder
+    image: transportorder:latest
+    environment:
+      - RABBITMQ__HOST=rabbitmq
+      - RABBITMQ__USER=${RABBITMQ_USER}
+      - RABBITMQ__PASSWORD=${RABBITMQ_PASSWORD}
+    command: dotnet /app/Gebhardt.StoreWare.Agv.TransportOrder.dll simulate -c 3
+    depends_on:
+      - rabbitmq

@@ -10,6 +10,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Logging
 	/// <remarks>
 	///	Focus on method's caller attributes
 	/// </remarks>
+	[JetBrains.Annotations.PublicAPI]
 	public static class LogWithCallerAttributes	
 	{
 		/// <summary>
@@ -18,6 +19,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Logging
 		/// <remarks>
 		///	An ILogger implementation is needed
 		/// </remarks>
+		[JetBrains.Annotations.PublicAPI]
 		public static void Write(ILogger? logger, string message, LogLevel logLevel = LogLevel.Information, int eventId = 0, [CallerMemberName] string memberName = "", [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0)
 		{
 			if (logger != null)
