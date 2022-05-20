@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using CommandLine;
@@ -7,6 +8,8 @@ using Gebhardt.StoreWare.Agv.TransportOrder.CmdOptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.States;
 
+
+var initialLogger = Gebhardt.StoreWare.Agv.Common.Logging.InitialLogger.Create<Program>();
 try
 {
     Parser.Default.ParseArguments<SimulateOptions>(args)
@@ -24,11 +27,11 @@ try
                 }).Build();
             host.Run();
         });
+
+    return 0;
 }
 catch (Exception ex)
 {
-    Console.Error.WriteLine(ex.Message);
+    initialLogger.LogError(ex, "Unhandled exception.");
     return 1;
 }
-
-return 0;
