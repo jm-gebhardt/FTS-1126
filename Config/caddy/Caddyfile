@@ -1,0 +1,47 @@
+{
+	admin off
+	local_certs
+	ocsp_stapling off
+	auto_https disable_redirects
+}
+
+# manually expose metrics as we disabled the admin API
+:2019 {
+	metrics /metrics
+}
+
+(log_and_errors) {
+	log {
+		output file /var/log/caddy/{args.0}.json
+	}
+	handle_errors {
+		header Content-Type text/plain
+		respond "{http.error.status_code} {http.error.status_text}"
+	}
+}
+
+agv.localhost:80 {
+	root * /etc/caddy/html
+	file_server
+}
+
+(proxy) {
+	{args.0}:80 {
+		import log_and_errors {args.0}
+		reverse_proxy {args.1}
+	}
+}
+
+import proxy prometheus.agv.localhost prometheus.agv:9090
+import proxy cadvisor.agv.localhost cadvisor.agv:8080
+import proxy grafana.agv.localhost grafana.agv:3000
+import proxy loki.agv.localhost loki.agv:3100
+import proxy prom.rabbitmq.agv.localhost rabbitmq.agv:15692
+import proxy rabbitmq.agv.localhost rabbitmq.agv:15672
+import proxy fluent.agv.localhost fluent.agv:2020
+import proxy node.fluent.agv.localhost fluent.agv:2021
+import proxy caddy.agv.localhost caddy.agv:2019
+
+import proxy wcscommunication.agv.localhost wcscommunication.agv
+import proxy transportorder.agv.localhost transportorder.agv
+import proxy devicecommunication.agv.localhost devicecommunication.agv

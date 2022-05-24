@@ -65,6 +65,33 @@ dotnet run --project DeviceCommunication simulate --interval=5,10
 dotnet test Source/Agv/CompileAgv.sln
 ```
 
+## Docker
+
+The software is designed to run within docker optionally.
+Orchestration is done using ```docker compose```.
+You must create a certificate first by running `.\Config\create_cert.bat`
+
+### Docker environment
+
+Docker environment is set using the environment file ```.env```.
+There is a template ```.env.template``` that can be used as a template. Copy this file to ```.env``` and set the environment variables provided within that file.
+
+### Build images
+```
+docker compose build
+```
+
+### Run containers
+```
+docker compose up
+```
+
+You can now access the Web Service under: http://agv.localhost
+
+#### Check console logs
+```
+docker compose logs -f [service (wcscommunication|devicecommunication|transportorder|rabbitmq)]
+```
 
 ## Windows Service
 The software is designed to run as a Windows Service.
@@ -80,28 +107,3 @@ admin> sc.exe delete "Gebhardt.StoreWare.Agv.<service>"
 
 Note: If MMC/Taskmgr/ProcExp are running, service removal may not have immediate effect and the following message will be shown "Der angegebene Dienst wurde zum Löschen markiert."
 
-
-## Docker
-
-The software is designed to run within docker optionally.
-Orchestration is done using ```docker-compose```.
-
-### Docker environment
-
-Docker environment is set using the environment file ```.env```.
-There is a template ```.env.template``` that can be used as a template. Copy this file to ```.env``` and set the environment variables provided within that file.
-
-### Build images
-```
-docker-compose build
-```
-
-### Run containers
-```
-docker-compose up
-```
-
-#### Check console logs
-```
-docker-compose logs -f [service (wcscommunication|devicecommunication|transportorder|rabbitmq)]
-```

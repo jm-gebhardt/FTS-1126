@@ -64,6 +64,7 @@ namespace Gebhardt.StoreWare.Agv.Common
                     rabbitMqConfiguration?.Invoke(context, cfg);
                     cfg.ConfigureEndpoints(context);
                     cfg.Host(massTransitConfig.Url);
+                    cfg.UsePrometheusMetrics();
                 });
                 busRegistrationConfiguration?.Invoke(x);
             });

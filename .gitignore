@@ -96,4 +96,4 @@ bld/
 
 # IRS/Kn
 /Certs
-/Config/rabbitmq.conf
+/Config/rabbitmq/rabbitmq.conf

@@ -137,15 +137,15 @@ popd
 set "OPENSSL_CERTS_SERVER_DIR=%OPENSSL_CERTS_SERVER_DIR:\=/%"
 
 REM Generate "rabbitmq.conf" from template.
-del .\Config\rabbitmq.conf
+del .\Config\rabbitmq\rabbitmq.conf
 goto build_rabbitmq_cnf
 :eval_rabbitmq_cnf
-echo %~1 >> .\Config\rabbitmq.conf
+echo %~1 >> .\Config\rabbitmq\rabbitmq.conf
 goto:eof
 :build_rabbitmq_cnf
-echo # Generated from rabbitmq.conf.template by create_cert.bat > .\Config\rabbitmq.docker.conf
-for /f "delims=" %%i in (.\Config\rabbitmq.conf.template) do call:eval_rabbitmq_cnf "%%i"
-if not exist .\Config\rabbitmq.conf (
+echo # Generated from rabbitmq.conf.template by create_cert.bat > .\Config\rabbitmq\rabbitmq.docker.conf
+for /f "delims=" %%i in (.\Config\rabbitmq\rabbitmq.conf.template) do call:eval_rabbitmq_cnf "%%i"
+if not exist .\Config\rabbitmq\rabbitmq.conf (
 	echo Failed to build RabbitMQ configuration. 1>&2
 	exit /b 1
 )
@@ -154,15 +154,15 @@ REM Prepare replacement for configuration (unix path within RabbitMQ container)
 set OPENSSL_CERTS_SERVER_DIR=/etc/rabbitmq/certs
 
 REM Generate "rabbitmq.docker.conf" from template.
-del .\Config\rabbitmq.docker.conf
+del .\Config\rabbitmq\rabbitmq.docker.conf
 goto build_rabbitmq_dockercnf
 :eval_rabbitmq_dockercnf
-echo %~1 >> .\Config\rabbitmq.docker.conf
+echo %~1 >> .\Config\rabbitmq\rabbitmq.docker.conf
 goto:eof
 :build_rabbitmq_dockercnf
-echo # Generated from rabbitmq.conf.template by create_cert.bat > .\Config\rabbitmq.docker.conf
-for /f "delims=" %%i in (.\Config\rabbitmq.conf.template) do call:eval_rabbitmq_dockercnf "%%i"
-if not exist .\Config\rabbitmq.docker.conf (
+echo # Generated from rabbitmq.conf.template by create_cert.bat > .\Config\rabbitmq\rabbitmq.docker.conf
+for /f "delims=" %%i in (.\Config\rabbitmq\rabbitmq.conf.template) do call:eval_rabbitmq_dockercnf "%%i"
+if not exist .\Config\rabbitmq\rabbitmq.docker.conf (
 	echo Failed to build RabbitMQ configuration for docker. 1>&2
 	exit /b 1
 )
@@ -251,7 +251,7 @@ if %ERRCNT% EQU 0 (
 	echo.
 	echo.
 	echo RabbitMQ configuration ======================================================
-	echo A configuration template has been generated at .\Config\rabbitmq.conf
+	echo A configuration template has been generated at .\Config\rabbitmq\rabbitmq.conf
 	echo CN of the following DN is used for authorization:
 	"%OPENSSL_PATH%openssl.exe" x509 -in "%OPENSSL_CERTS_DIR%\client\client_certificate.pem" -nameopt RFC2253 -subject -noout
 	echo For more information see https://dev.azure.com/GebhardtGroup/StoreWare/_wiki/wikis/StoreWare.wiki/167/Transportsicherheit-(TLS-Transport-Layer-Security)

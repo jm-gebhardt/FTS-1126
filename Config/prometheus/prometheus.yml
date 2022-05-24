@@ -1,0 +1,39 @@
+# https://raw.githubusercontent.com/vegasbrianc/prometheus/master/prometheus/prometheus.yml
+global:
+  scrape_interval:     15s
+  evaluation_interval: 15s
+
+  external_labels:
+      monitor: 'agv.localhost'
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['prometheus.agv.localhost']
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor.agv.localhost']
+  - job_name: 'rabbitmq'
+    static_configs:
+      - targets: [ 'prom.rabbitmq.agv.localhost' ]
+  - job_name: 'fluent'
+    metrics_path: /api/v1/metrics/prometheus
+    static_configs: 
+      - targets: [ 'fluent.agv.localhost' ]
+  - job_name: 'fluent.node'
+    static_configs:
+      - targets: [ 'node.fluent.agv.localhost' ]
+  - job_name: 'Caddy'
+    static_configs:
+      - targets: [ 'caddy.agv.localhost' ]
+        
+  ####################
+  - job_name: 'WCSCommunication'
+    static_configs:
+      - targets: [ 'wcscommunication.agv.localhost' ]
+  - job_name: 'Transpororder'
+    static_configs:
+      - targets: [ 'transportorder.agv.localhost' ]        
+  - job_name: 'DeviceCommunication'
+    static_configs:
+      - targets: [ 'devicecommunication.agv.localhost' ]          

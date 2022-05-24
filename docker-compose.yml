@@ -1,22 +1,142 @@
 version: '3.8'
-services:
+
+########################################################################################################################
+# Volumes 
+########################################################################################################################
+volumes:
+  grafana_data: {}
+  prometheus_data: {}
+  loki_data: {}
+
+########################################################################################################################
+# x-def
+########################################################################################################################
+x-aliases: &aliases
+  - prometheus.agv.localhost
+  - node.agv.localhost
+  - cadvisor.agv.localhost
+  - grafana.agv.localhost
+  - loki.agv.localhost
+  - rabbitmq.agv.localhost
+  - prom.rabbitmq.agv.localhost
+  - fluent.agv.localhost
+  - node.fluent.agv.localhost
+  - caddy.agv.localhost
+  - wcscommunication.agv.localhost
+  - transportorder.agv.localhost
+  - devicecommunication.agv.localhost
+
+x-fluent-json-logging: &fluent-json-logging
+  driver: "fluentd"
+  options:
+    fluentd-address: 127.0.0.1:24224
+    tag: json
+
+x-fluent-logging: &fluent-logging
+  driver: "fluentd"
+  options:
+    fluentd-address: 127.0.0.1:24224
+    tag: log
+
+########################################################################################################################
+# Services 
+########################################################################################################################
+services:    
+  ######################################## AGV Services ################################################################
+  wcscommunication:
+    image: storeware.azurecr.io/agv/wcscommunication:latest
+    hostname: wcscommunication.agv
+    environment:
+      - RABBITMQ__HOST=rabbitmq
+      - RABBITMQ__USER=${RABBITMQ_USER}
+      - RABBITMQ__PASSWORD=${RABBITMQ_PASSWORD}
+      - "CONNECTIONSTRINGS__WCS=Server=mssql;Database=master;User Id=sa;Password=${MSSQL_SA_PASSWORD}"
+    command: dotnet /app/Gebhardt.StoreWare.Agv.WCSCommunication.dll ${WCSCOMMUNICATION_ARGS}
+    restart: unless-stopped
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      fluent:
+        condition: service_started
+      mssql:
+        condition: service_healthy
+    logging: *fluent-json-logging
+    
+  devicecommunication:
+    image: storeware.azurecr.io/agv/devicecommunication:latest
+    hostname: devicecommunication.agv
+    environment:
+      - RABBITMQ__HOST=rabbitmq
+      - RABBITMQ__USER=${RABBITMQ_USER}
+      - RABBITMQ__PASSWORD=${RABBITMQ_PASSWORD}
+    command: dotnet /app/Gebhardt.StoreWare.Agv.DeviceCommunication.dll ${DEVICECOMMUNICATION_ARGS}
+    restart: unless-stopped
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      fluent:
+        condition: service_started
+    logging: *fluent-json-logging
+ 
+  transportorder:
+    image: storeware.azurecr.io/agv/transportorder:latest
+    hostname: transportorder.agv
+    environment:
+      - RABBITMQ__HOST=rabbitmq
+      - RABBITMQ__USER=${RABBITMQ_USER}
+      - RABBITMQ__PASSWORD=${RABBITMQ_PASSWORD}
+    command: dotnet /app/Gebhardt.StoreWare.Agv.TransportOrder.dll ${TRANSPORTORDER_ARGS}
+    restart: unless-stopped
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      fluent:
+        condition: service_started
+    logging: *fluent-json-logging
+    
+  taragv:
+    image: registry.gitlab.com/tar4/karis_virtual
+    hostname: agv0
+    environment:
+      - MQTT_BROKER=rabbitmq
+      - MQTT_USER=${RABBITMQ_USER}
+      - MQTT_PASSWORD=${RABBITMQ_PASSWORD} 
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      fluent:
+        condition: service_started
+    logging: *fluent-logging
+    
+  ######################################## RabbitMQ ####################################################################
+  
   rabbitmq:
+    hostname: rabbitmq.agv
     image: rabbitmq:3-management
-    hostname: rabbitmq
     ports:
       - "127.0.0.1:15672:15672"
+      - "127.0.0.1:5671:5671"
       - "127.0.0.1:5672:5672"
-      - "5671:5671"
-      - "127.0.0.1:1883:1883"
+      - "1883:1883"
     environment:
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
     volumes:
       - ./Certs/server:/etc/rabbitmq/certs
-      - ./Config/rabbitmq.docker.conf:/etc/rabbitmq/rabbitmq.conf
+      - ./Config/rabbitmq/rabbitmq.docker.conf:/etc/rabbitmq/rabbitmq.conf
     command: >
       sh -c "rabbitmq-plugins enable rabbitmq_mqtt &&
+             rabbitmq-plugins enable rabbitmq_prometheus &&
              rabbitmq-server"
+    restart: unless-stopped
+    depends_on:
+      fluent:
+        condition: service_started
+    healthcheck:
+      test: rabbitmq-diagnostics -q status
+    logging: *fluent-logging
+    
+  ######################################## Database ####################################################################
   mssql:
     image: mcr.microsoft.com/mssql/server:2019-latest
     environment:
@@ -25,40 +145,132 @@ services:
       - SA_PASSWORD=${MSSQL_SA_PASSWORD}
     ports:
       - "127.0.0.1:1433:1433"
+    restart: unless-stopped
+    depends_on:
+      fluent:
+        condition: service_started
+    healthcheck:
+      test: /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "$${SA_PASSWORD}" -Q "SELECT 1" -b -o /dev/null
+      start_period: 10s
+    logging: *fluent-logging
+
+  ######################################## Logging ####################################################################
+  fluent:
+    hostname: fluent.agv
+    image: fluent/fluent-bit:latest
+    command:
+      - /fluent-bit/bin/fluent-bit
+      - --config=/etc/fluent-bit/fluent-bit.conf
+    ports:
+      - "127.0.0.1:24224:24224"
+    restart: unless-stopped
+    volumes:
+      - ./Config/fluent-bit/conf/:/etc/fluent-bit/:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
     
-  wcscommunication:
-    image: storeware.azurecr.io/agv/wcscommunication:latest
+  loki:
+    hostname: loki.agv
+    image: grafana/loki:2.5.0
+    command:
+      - -config.file=/conf/config.yaml
+      - -log.level=warn
+    volumes:
+      - ./Config/loki/conf:/conf/
+      - loki_data:/loki
+    ports:
+      - "127.0.0.1:3100:3100"
+    restart: unless-stopped
+    healthcheck:
+      test: wget -q --tries=1 -O- http://127.0.0.1:3100/ready | grep -q "ready"
+    
+  grafana:
+    hostname: grafana.agv
+    image: grafana/grafana:8.5.3
+    volumes:
+      - ./Config/grafana/grafana.ini:/etc/grafana/grafana.ini:ro
+      - ./Config/grafana/provisioning:/etc/grafana/provisioning/
+      - grafana_data:/var/lib/grafana
     environment:
-      - RABBITMQ__HOST=rabbitmq
-      - RABBITMQ__USER=${RABBITMQ_USER}
-      - RABBITMQ__PASSWORD=${RABBITMQ_PASSWORD}
-      - "CONNECTIONSTRINGS__WCS=Server=mssql;Database=master;User Id=sa;Password=${MSSQL_SA_PASSWORD}"
-    command: dotnet /app/Gebhardt.StoreWare.Agv.WCSCommunication.dll ${WCSCOMMUNICATION_ARGS}
+      # GF_<SectionName>_<KeyName>
+      # https://grafana.com/docs/grafana/latest/administration/configuration/
+      - GF_SECURITY_ADMIN_PASSWORD
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+      - GF_LOG_LEVEL=warn
+    restart: unless-stopped
     depends_on:
-      - rabbitmq
-      - mssql
-  devicecommunication:
-    image: storeware.azurecr.io/agv/devicecommunication:latest
-    environment:
-      - RABBITMQ__HOST=rabbitmq
-      - RABBITMQ__USER=${RABBITMQ_USER}
-      - RABBITMQ__PASSWORD=${RABBITMQ_PASSWORD}
-    command: dotnet /app/Gebhardt.StoreWare.Agv.DeviceCommunication.dll ${DEVICECOMMUNICATION_ARGS}
+      fluent:
+        condition: service_started
+      prometheus:
+        condition: service_healthy
+      loki:
+        condition: service_healthy
+    logging: *fluent-logging
+    healthcheck:
+      test: wget --spider -q --tries=1 -O- http://127.0.0.1:3000/api/health || exit 1
+  
+  prometheus:
+    hostname: prometheus.agv
+    # https://hub.docker.com/r/prom/prometheus/tags
+    image: prom/prometheus:v2.33.4
+    volumes:
+      - ./Config/prometheus/:/etc/prometheus/
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - --log.level=warn
+    restart: unless-stopped
     depends_on:
-      - rabbitmq
-  transportorder:
-    image: storeware.azurecr.io/agv/transportorder:latest
-    environment:
-      - RABBITMQ__HOST=rabbitmq
-      - RABBITMQ__USER=${RABBITMQ_USER}
-      - RABBITMQ__PASSWORD=${RABBITMQ_PASSWORD}
-    command: dotnet /app/Gebhardt.StoreWare.Agv.TransportOrder.dll ${TRANSPORTORDER_ARGS}
+      caddy:
+        condition: service_healthy
+      fluent:
+        condition: service_started
+    logging: *fluent-logging
+    healthcheck:
+      test: wget --spider -q --tries=1 -O- http://localhost:9090 || exit 1
+      start_period: 30s
+  
+  cadvisor:
+    hostname: cadvisor.agv
+    # https://github.com/google/cadvisor/releases
+    # https://console.cloud.google.com/gcr/images/cadvisor/GLOBAL/cadvisor
+    # https://raw.githubusercontent.com/google/cadvisor/v0.36.0/deploy/Dockerfile
+    image: gcr.io/cadvisor/cadvisor:v0.39.3
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+      - /etc/machine-id:/etc/machine-id:ro
+    privileged: true
+    restart: unless-stopped
     depends_on:
-      - rabbitmq    
-  taragv:
-    image: registry.gitlab.com/tar4/karis_virtual
-    hostname: agv0
-    environment:
-        - MQTT_BROKER=rabbitmq
-        - MQTT_USER=${RABBITMQ_USER}
-        - MQTT_PASSWORD=${RABBITMQ_PASSWORD}
+      fluent:
+        condition: service_started
+    command:
+      - --docker_only=true
+    logging: *fluent-logging
+
+  caddy:
+    hostname: caddy.agv
+    networks:
+      default:
+        aliases: *aliases
+    image: caddy:2.4.6
+    volumes:
+      - ./Config/caddy/Caddyfile:/etc/caddy/Caddyfile
+      - ./Config/caddy/index.html:/etc/caddy/html/index.html
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      fluent:
+        condition: service_started
+    logging: *fluent-logging
+    healthcheck:
+      test:  wget --spider -q --tries=1 -O- http://localhost:2019/metrics || exit 1

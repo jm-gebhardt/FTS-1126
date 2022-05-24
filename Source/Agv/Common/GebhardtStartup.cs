@@ -1,7 +1,10 @@
 ﻿using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Logging;
 using static System.String;
+using Prometheus;
 
 namespace Gebhardt.StoreWare.Agv.Common
 {
@@ -11,6 +14,11 @@ namespace Gebhardt.StoreWare.Agv.Common
     [JetBrains.Annotations.PublicAPI]
     public static class GebhardtStartup
     {
+        /// <summary>
+        /// Check if we are running in Docker Container
+        /// </summary>
+        public static bool InDocker => Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true";
+        
         /// <summary>
         /// Create default host and create singleton worker implementation.
         /// </summary>
@@ -25,17 +33,36 @@ namespace Gebhardt.StoreWare.Agv.Common
             }
 
             var host = Host.CreateDefaultBuilder(args)
-	            .UseWindowsService(options =>
-	            {
-		            options.ServiceName = serviceName;
-	            })
-	            .ConfigureServices(services =>
-	            {
-		            services.Configure<Microsoft.Extensions.Logging.EventLog.EventLogSettings>(settings =>
-		            {
-			            settings.SourceName = serviceName;
-		            });
-	            });
+                .UseWindowsService(options =>
+                {
+                    options.ServiceName = serviceName;
+                })
+                .ConfigureServices(services =>
+                {
+                    services.Configure<Microsoft.Extensions.Logging.EventLog.EventLogSettings>(settings =>
+                    {
+                        settings.SourceName = serviceName;
+                    });
+                })
+                .ConfigureWebHost(host => 
+                {
+                    host.UseKestrel()
+                        .Configure(app =>
+                            {
+                                app.UseMetricServer();
+                            }
+                        );
+                })
+                .ConfigureLogging(conf =>
+                {
+                    // Use json output when running in Docker
+                    if(InDocker)
+                    {
+                        conf.AddJsonConsole();
+                    }
+                    // Disable info log for WebServer
+                    conf.AddFilter("Microsoft.AspNetCore.Hosting.Diagnostics", LogLevel.Warning);
+                });
             return host;
         }
     }

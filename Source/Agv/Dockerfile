@@ -29,5 +29,12 @@ FROM mcr.microsoft.com/dotnet/aspnet:6.0
 ARG PROJECT
 ENV PROJECT=${PROJECT}
 WORKDIR /app
+
+RUN apt update &&  \
+    apt install -y wget && \
+    rm -rf /var/lib/apt/lists/*
+EXPOSE 80/tcp    
+HEALTHCHECK --interval=1m --timeout=10s \
+    CMD wget --spider -q --tries=1 -O- http://localhost:80/metrics || exit 1
 COPY --from=build-env /app/out ./
 CMD dotnet /app/Gebhardt.StoreWare.Agv.$PROJECT.dll
