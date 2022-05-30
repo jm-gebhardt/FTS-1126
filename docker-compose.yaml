@@ -2,12 +2,20 @@ version: '3.8'
 services:
   rabbitmq:
     image: rabbitmq:3-management
+    hostname: rabbitmq
     ports:
       - "127.0.0.1:15672:15672"
       - "127.0.0.1:5672:5672"
+      - "5671:5671"
     environment:
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
+    volumes:
+      - ./Certs/server:/etc/rabbitmq/certs
+      - ./Config/rabbitmq.docker.conf:/etc/rabbitmq/rabbitmq.conf
+    command: >
+      sh -c "rabbitmq-plugins enable rabbitmq_mqtt &&
+             rabbitmq-server"
   mssql:
     image: mcr.microsoft.com/mssql/server:2019-latest
     environment:

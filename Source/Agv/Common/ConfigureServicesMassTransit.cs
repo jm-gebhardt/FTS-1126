@@ -39,7 +39,7 @@ namespace Gebhardt.StoreWare.Agv.Common
         /// <summary>
         /// Expected configuration section name for MassTransit
         /// </summary>
-        [JetBrains.Annotations.PublicAPI] 
+        [JetBrains.Annotations.PublicAPI]
         public const string ConfigSectionName = "RabbitMQ";
 
         /// <summary>

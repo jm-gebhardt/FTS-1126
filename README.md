@@ -1,5 +1,4 @@
 # AGV Master Control Module
-
 This is a master control module for [automated guided vehicles](https://en.wikipedia.org/wiki/Automated_guided_vehicle) (AGV).
 It is designed to take HostOrders from Gebhardt StoreWare and send TransportOrders to an AGV.
 Orders are managed by the TransportOrder Service e.g. to maximize AGV productivity.
@@ -17,8 +16,9 @@ Each Service is build as a separate project.
     - DeviceCommunication: The service is the proxy to the AGVs.
     - TransportOrder: Manage HostOrders and distribute resulting TransportOrders
     - WCSCommunication: Taking HostOrders from StoreWare and sending them to be managed by TransportOrder
-
 ```
+
+
 ## Build
 
 ```
@@ -41,6 +41,16 @@ RABBITMQ__HOST=localhost
 CONNECTIONSTRINGS__WCS="Server=127.0.0.1,1433;Database=master;User Id=MyDbUser;Password=MyStrongPassword;"
 ```
 
+
+## Provide certificates
+Quite now the system is using self-signed certificates.
+To create all required certificates and keys the following script need to be executed once:
+```
+.\Config\create_cert.bat
+```
+For a detailed description see [Transportsicherheit](https://dev.azure.com/GebhardtGroup/StoreWare/_wiki/wikis/StoreWare.wiki/167/Transportsicherheit-(TLS-Transport-Layer-Security)) in Wiki.
+
+
 ## Run Simulation
 Ensure that `RABBITMQ__HOST` is set
 ```
@@ -49,11 +59,12 @@ dotnet run --project TransportOrder simulate --agvs=2
 dotnet run --project DeviceCommunication simulate --interval=5,10
 ```
 
-## Run UnitTests
 
+## Run UnitTests
 ```
 dotnet test Source/Agv/CompileAgv.sln
 ```
+
 
 ## Windows Service
 The software is designed to run as a Windows Service.
@@ -69,27 +80,28 @@ admin> sc.exe delete "Gebhardt.StoreWare.Agv.<service>"
 
 Note: If MMC/Taskmgr/ProcExp are running, service removal may not have immediate effect and the following message will be shown "Der angegebene Dienst wurde zum Löschen markiert."
 
-## Docker ##
+
+## Docker
 
 The software is designed to run within docker optionally.
 Orchestration is done using ```docker-compose```.
 
-### Docker environment ###
+### Docker environment
 
 Docker environment is set using the environment file ```.env```.
 There is a template ```.env.template``` that can be used as a template. Copy this file to ```.env``` and set the environment variables provided within that file.
 
-### Build images ###
+### Build images
 ```
 docker-compose build
 ```
 
-### Run containers ###
+### Run containers
 ```
 docker-compose up
 ```
 
-#### Check console logs ####
+#### Check console logs
 ```
 docker-compose logs -f [service (wcscommunication|devicecommunication|transportorder|rabbitmq)]
 ```
