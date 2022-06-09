@@ -7,10 +7,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
 {
-    /// <summary>
-    /// Consumes HostOrder related messages from TransportOrder
-    /// </summary>
-    public class WcsHostOrderConsumer:
+	/// <summary>
+	/// Consumes HostOrder related messages from TransportOrder
+	/// </summary>
+	public class WcsHostOrderConsumer:
         IConsumer<IHostOrderHandlingSucceeded>,
         IConsumer<IHostOrderStarted>,
         IConsumer<IHostOrderHandlingFailed>

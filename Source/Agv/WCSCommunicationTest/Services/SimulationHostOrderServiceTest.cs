@@ -1,8 +1,8 @@
+using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Commands;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Gebhardt.StoreWare.Agv.Common.Testing;
-using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Commands;
 using Gebhardt.StoreWare.Agv.WCSCommunication.CmdOptions;
 using Gebhardt.StoreWare.Agv.WCSCommunication.Services;
 

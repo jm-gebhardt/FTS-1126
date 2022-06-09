@@ -4,7 +4,7 @@
 namespace Gebhardt.StoreWare.Agv.Common.Logging
 {
     /// <summary>
-    /// Factory to provide reliable logger instance used for inital logging
+    /// Factory to provide reliable logger instance used for initial logging
     /// instead of sending output directly to console.
     /// </summary>
     [JetBrains.Annotations.PublicAPI]

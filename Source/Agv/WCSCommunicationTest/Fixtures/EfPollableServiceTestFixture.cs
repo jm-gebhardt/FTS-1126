@@ -8,7 +8,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Fixtures
 {
 
     /// <summary>
-    ///  Masstransit BackgroundService test fixture with EF DbContextFactory services added
+    ///  MassTransit BackgroundService test fixture with EF DbContextFactory services added
     /// The factory automatically adds an in memory database with random name
     /// </summary>
     public class EfPollableServiceTestFixture<TPollable, TDbContext> : PollableServiceTestFixture<TPollable> 
@@ -21,7 +21,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Fixtures
         public readonly IDbContextFactory<TDbContext> DbContextFactory;
 
         /// <summary>
-        /// Masstransit BackgroundService test fixture with EF DbContextFactory services added
+        /// MassTransit BackgroundService test fixture with EF DbContextFactory services added
         /// </summary>
         /// <param name="services">Configure IServiceCollection</param>
         /// <param name="busRegistrationConfigurator">Configure IBusRegistrationConfigurator</param>

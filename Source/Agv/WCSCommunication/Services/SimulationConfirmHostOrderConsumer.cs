@@ -4,10 +4,10 @@ using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
 
 namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
 {
-    /// <summary>
-    /// Simulate finishing of host orders
-    /// </summary>
-    public class SimulationConfirmHostOrderConsumer :
+	/// <summary>
+	/// Simulate finishing of host orders
+	/// </summary>
+	public class SimulationConfirmHostOrderConsumer :
         IConsumer<IHostOrderHandlingSucceeded>
     {
         private readonly ILogger<SimulationConfirmHostOrderConsumer> _logger;

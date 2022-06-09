@@ -48,14 +48,20 @@ namespace Gebhardt.StoreWare.Agv.Common
         /// <param name="services">Service collection</param>
         /// <param name="config">Configuration</param>
         /// <param name="busRegistrationConfiguration">xxx</param>
+        /// <param name="rabbitMqConfiguration"></param>
         [JetBrains.Annotations.PublicAPI]
-        public static void ConfigureServices(IServiceCollection services, IConfiguration config, Action<IBusRegistrationConfigurator>? busRegistrationConfiguration = null)
+        public static void ConfigureServices(IServiceCollection services, 
+            IConfiguration config, 
+            Action<IBusRegistrationConfigurator>? busRegistrationConfiguration = null,
+            Action<IBusRegistrationContext, IRabbitMqBusFactoryConfigurator>? rabbitMqConfiguration = null
+            )
         {
             var massTransitConfig = config.GetRequiredSection(ConfigSectionName).Get<MassTransitConfiguration>();
             services.AddMassTransit(x =>
             {
                 x.UsingRabbitMq((context, cfg) =>
                 {
+                    rabbitMqConfiguration?.Invoke(context, cfg);
                     cfg.ConfigureEndpoints(context);
                     cfg.Host(massTransitConfig.Url);
                 });

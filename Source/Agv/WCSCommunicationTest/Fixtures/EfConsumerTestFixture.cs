@@ -7,7 +7,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Fixtures
 {
 
     /// <summary>
-    /// Masstransit consumer test fixture with EF DbContextFactory services added
+    /// MassTransit consumer test fixture with EF DbContextFactory services added
     /// The factory automatically adds an in memory database
     /// </summary>
     public class EfConsumerTestFixture<T, TDbContext> : ConsumerTestFixture<T> where T : class, IConsumer where TDbContext : DbContext
@@ -19,7 +19,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Fixtures
         public readonly IDbContextFactory<TDbContext> DbContextFactory;
 
         /// <summary>
-        /// Masstransit consumer test fixture with EF DbContextFactory services added
+        /// MassTransit consumer test fixture with EF DbContextFactory services added
         /// </summary>
         /// <param name="services">Configure IServiceCollection</param>
         /// <param name="busRegistrationConfigurator">Configure IBusRegistrationConfigurator</param>

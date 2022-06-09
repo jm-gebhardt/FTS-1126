@@ -1,10 +1,10 @@
 using Gebhardt.StoreWare.Agv.Common.Definitions;
 using Gebhardt.StoreWare.Agv.Common.Messages;
+using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Commands;
+using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Events;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Extensions.DependencyInjection;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
-using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Commands;
-using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Events;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 

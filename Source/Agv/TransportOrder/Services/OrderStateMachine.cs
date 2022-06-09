@@ -10,12 +10,12 @@ using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
 {
-    /// <summary>
-    /// Order State Machine to orchestrate AGV transport orders 
-    ///
-    /// This is implemented as a MassTransit StateMachine <see href="https://masstransit-project.com/usage/sagas/automatonymous.html"/>
-    /// </summary>
-    [JetBrains.Annotations.PublicAPI]
+	/// <summary>
+	/// Order State Machine to orchestrate AGV transport orders 
+	///
+	/// This is implemented as a MassTransit StateMachine <see href="https://masstransit-project.com/usage/sagas/automatonymous.html"/>
+	/// </summary>
+	[JetBrains.Annotations.PublicAPI]
     public sealed class OrderStateMachine : MassTransitStateMachine<OrderSaga>
     {
         /// <summary>

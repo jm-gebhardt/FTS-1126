@@ -7,6 +7,7 @@ services:
       - "127.0.0.1:15672:15672"
       - "127.0.0.1:5672:5672"
       - "5671:5671"
+      - "127.0.0.1:1883:1883"
     environment:
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
@@ -66,3 +67,10 @@ services:
     command: dotnet /app/Gebhardt.StoreWare.Agv.TransportOrder.dll ${TRANSPORTORDER_ARGS}
     depends_on:
       - rabbitmq
+  taragv:
+    image: registry.gitlab.com/tar4/karis_virtual
+    hostname: agv0
+    environment:
+        - MQTT_BROKER=rabbitmq
+        - MQTT_USER=${RABBITMQ_USER}
+        - MQTT_PASSWORD=${RABBITMQ_PASSWORD}

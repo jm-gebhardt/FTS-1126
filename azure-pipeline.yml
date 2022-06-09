@@ -16,13 +16,18 @@ stages:
     pool:
       vmImage: windows-latest 
     steps:
+      - task: UseDotNet@2
+        displayName: 'Install .NET 6 SDK'
+        inputs:
+          packageType: 'sdk'
+          version: '6.0.x'
+          performMultiLevelLookup: true
       - task: DotNetCoreCLI@2
         displayName: 'Build Target ($(Build.Target))'
         inputs:
           command: build
           projects: '$(SourceDirectory)/$(Build.Target)'
           arguments: '--configuration $(Build.Configuration)'
-
       - task: ResharperCli@2
         inputs:
           solutionOrProjectPath: '$(SourceDirectory)/$(Build.Target)'
@@ -35,30 +40,34 @@ stages:
     pool:
       vmImage: windows-latest
     steps:
-    - task: DotNetCoreCLI@2
-      displayName: 'Run All tests'
-      inputs:
-        command: 'test'
-        projects: '$(SourceDirectory)/**/*[Tt]est*/*.csproj'
-        publishTestResults: true
-        arguments: '--configuration $(BuildConfiguration) --collect:"XPlat Code Coverage"'
-    
-    - task: reportgenerator@4
-      inputs:
-        reports: '$(Agent.TempDirectory)/**/coverage.cobertura.xml'
-        targetdir: '$(Agent.TempDirectory)/CoverageResults'
-        reporttypes: 'Cobertura'
+      - task: UseDotNet@2
+        displayName: 'Install .NET 6 SDK'
+        inputs:
+          packageType: 'sdk'
+          version: '6.0.x'
+          performMultiLevelLookup: true
+      - task: DotNetCoreCLI@2
+        displayName: 'Run All tests'
+        inputs:
+          command: 'test'
+          projects: '$(SourceDirectory)/**/*[Tt]est*/*.csproj'
+          publishTestResults: true
+          arguments: '--configuration $(BuildConfiguration) --collect:"XPlat Code Coverage"'
+      - task: reportgenerator@4
+        inputs:
+          reports: '$(Agent.TempDirectory)/**/coverage.cobertura.xml'
+          targetdir: '$(Agent.TempDirectory)/CoverageResults'
+          reporttypes: 'Cobertura'
+      - task: PublishCodeCoverageResults@1
+        displayName: 'Publish code coverage report'
+        inputs:
+          codeCoverageTool: 'Cobertura'
+          summaryFileLocation: '$(Agent.TempDirectory)/CoverageResults/Cobertura.xml'
         
-    - task: PublishCodeCoverageResults@1
-      displayName: 'Publish code coverage report'
-      inputs:
-        codeCoverageTool: 'Cobertura'
-        summaryFileLocation: '$(Agent.TempDirectory)/CoverageResults/Cobertura.xml'
-        
-    - task: BuildQualityChecks@8
-      displayName: 'Check build quality'
-      inputs:
-        checkCoverage: true
-        coverageType: lines
-        coverageThreshold: 70
-        coverageFailOption: fixed
+      - task: BuildQualityChecks@8
+        displayName: 'Check build quality'
+        inputs:
+          checkCoverage: true
+          coverageType: lines
+          coverageThreshold: 70
+          coverageFailOption: fixed

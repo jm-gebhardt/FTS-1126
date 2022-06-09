@@ -1,5 +1,4 @@
 ﻿using System.Reflection;
-using Gebhardt.StoreWare.Agv.Common.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using static System.String;
@@ -26,22 +25,17 @@ namespace Gebhardt.StoreWare.Agv.Common
             }
 
             var host = Host.CreateDefaultBuilder(args)
-                .UseWindowsService(options =>
-                {
-                    options.ServiceName = serviceName;
-                })
-                .ConfigureServices(services =>
-                {
-                    services.Configure<Microsoft.Extensions.Logging.EventLog.EventLogSettings>(settings =>
-                    {
-                        settings.SourceName = serviceName;
-                    });
-                })
-                .ConfigureLogging(conf =>
-                {
-	                // Add our custom logging providers - more than one possible
-	                conf.AddTextLogger();
-                });
+	            .UseWindowsService(options =>
+	            {
+		            options.ServiceName = serviceName;
+	            })
+	            .ConfigureServices(services =>
+	            {
+		            services.Configure<Microsoft.Extensions.Logging.EventLog.EventLogSettings>(settings =>
+		            {
+			            settings.SourceName = serviceName;
+		            });
+	            });
             return host;
         }
     }

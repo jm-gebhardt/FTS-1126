@@ -1,7 +1,7 @@
-﻿using Microsoft.Extensions.Logging;
-using MassTransit;
-using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Commands;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Events;
+using Microsoft.Extensions.Logging;
+using MassTransit;
 using JetBrains.Annotations;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
 
@@ -49,7 +49,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
             await Task.Delay(1000 * _simInterval.Next(_minInterval, _maxInterval + 1), context.CancellationToken)
                .ContinueWith(_ =>
                {
-                   context.Publish<ITransportOrderCompleted>(new { context.Message.CorrelationId, context.Message.Order.OrderId }, context.CancellationToken);
+	               context.Publish<ITransportOrderCompleted>(new { context.Message.CorrelationId, context.Message.Order.OrderId }, context.CancellationToken);
                    _logger.LogInformation("TransportOrderCompleted: {OrderId}", context.Message.Order.OrderId);
                });
         }

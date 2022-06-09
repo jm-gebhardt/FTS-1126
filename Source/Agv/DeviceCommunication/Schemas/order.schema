@@ -14,7 +14,7 @@
             ]
         },
         "OrderId": {
-            "type": "integer",
+            "type": "string",
             "description": "The unique ID of the order"
         },
         "OrderType": {

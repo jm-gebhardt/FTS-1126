@@ -1,14 +1,14 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
 using Gebhardt.StoreWare.Agv.WCSCommunication.Services;
 using Gebhardt.StoreWare.Agv.Common.Testing;
+using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
 
 namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Consumers
 {
-    /// <summary>
-    /// Test for finishing host orders
-    /// </summary>
-    [TestClass]
+	/// <summary>
+	/// Test for finishing host orders
+	/// </summary>
+	[TestClass]
     public class ConfirmHostOrderConsumerSimTest
     {
         /// <summary>

@@ -11,13 +11,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeviceCommunication", "Devi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TransportOrder", "TransportOrder\TransportOrder.csproj", "{46E31FAD-3FA1-483A-B963-ECD6D6776B02}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonTest", "CommonTest\CommonTest.csproj", "{26DDCA1C-DDE0-4464-955A-A1D4CC5BB435}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommonTest", "CommonTest\CommonTest.csproj", "{26DDCA1C-DDE0-4464-955A-A1D4CC5BB435}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeviceCommunicationTest", "DeviceCommunicationTest\DeviceCommunicationTest.csproj", "{A6871DA8-3580-45AE-ADD7-F255A3FD5E10}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeviceCommunicationTest", "DeviceCommunicationTest\DeviceCommunicationTest.csproj", "{A6871DA8-3580-45AE-ADD7-F255A3FD5E10}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TransportOrderTest", "TransportOrderTest\TransportOrderTest.csproj", "{A14A7F30-583F-4930-8A6F-206FB3A2B955}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TransportOrderTest", "TransportOrderTest\TransportOrderTest.csproj", "{A14A7F30-583F-4930-8A6F-206FB3A2B955}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WCSCommunicationTest", "WCSCommunicationTest\WCSCommunicationTest.csproj", "{44DDC52B-1DB4-4723-AC97-4391E8BFBAE3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WCSCommunicationTest", "WCSCommunicationTest\WCSCommunicationTest.csproj", "{44DDC52B-1DB4-4723-AC97-4391E8BFBAE3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

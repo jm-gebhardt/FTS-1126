@@ -15,10 +15,10 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 {
 
-    /// <summary>
-    /// 
-    /// </summary>
-    [TestClass]
+	/// <summary>
+	/// 
+	/// </summary>
+	[TestClass]
     public class OrderStateMachineTest
     {
         /// <summary>
