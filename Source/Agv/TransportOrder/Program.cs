@@ -22,6 +22,7 @@ try
                     ConfigureServicesMassTransit.ConfigureServices(services, context.Configuration, x =>
                     {
                         x.AddSagaStateMachine<OrderStateMachine, OrderSaga>().InMemoryRepository();
+                        x.AddSaga<AgvConsumerSaga>().InMemoryRepository();
                         x.AddConsumer<RoundRobinAssignAgvConsumer>();
                     });
                 }).Build();

@@ -1,7 +1,9 @@
-namespace Gebhardt.StoreWare.Agv.WCSCommunication.Db.Models {
+namespace Gebhardt.StoreWare.Agv.WCSCommunication.Db.Models
+{
     /// <summary>
     /// WCS writes actions for us to consume into this table
     /// </summary>
+    [JetBrains.Annotations.UsedImplicitly]
     public class ToAgv : ToFromAgvBase
     {
         /// <summary>
@@ -11,6 +13,5 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Db.Models {
         public bool IsValid =>
             !string.IsNullOrEmpty(OrderId) &&
             (!string.IsNullOrEmpty(Source) || !string.IsNullOrEmpty(Destination));
-
     }
 }

@@ -6,6 +6,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Services {
     /// <summary>
     /// A Polling Background Service that calls <see cref="IPollable.Poll" /> and repeats every <see cref="IPollable.PollingInterval"/>
     /// </summary>
+    [JetBrains.Annotations.PublicAPI]
     public class PollingBackgroundService<T> : BackgroundService where T: IPollable
     {
         private readonly ILogger<PollingBackgroundService<T>> _logger;
@@ -13,7 +14,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Services {
         /// <summary>
         /// The Pollable called each interval
         /// </summary>
-        /// 
+        [JetBrains.Annotations.PublicAPI]
         public T Pollable { get; }
 
         /// <summary>

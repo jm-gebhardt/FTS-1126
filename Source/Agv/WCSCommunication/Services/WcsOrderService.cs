@@ -47,6 +47,7 @@ public class WcsOrderHandler: IPollable
     /// Handle new transport orders where RecordType == RecordType.TransportOrder
     /// </summary>
     /// <param name="cancellationToken"></param>
+    [JetBrains.Annotations.PublicAPI]
     public async Task HandleNewTransportOrders(CancellationToken cancellationToken = default)
     {
         await using var context = await _contextFactory.CreateDbContextAsync(cancellationToken);
