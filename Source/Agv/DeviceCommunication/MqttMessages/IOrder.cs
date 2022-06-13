@@ -22,7 +22,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
 		/// <summary>
 		/// The coordinates of the point where to go to
 		/// </summary>
-		public ICoordinates? Coordinates { get; set; }
+		public Coordinates? Coordinates { get; set; }
 
 		/// <summary>
 		/// The unique identifier of the agv
@@ -42,19 +42,19 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
 		/// <summary>
 		/// The route to travel set by the master control expressed in nodes and edges
 		/// </summary>
-		public IRoute? Route { get; set; }
+		public Route? Route { get; set; }
 
 		/// <summary>
 		/// The station object containing from and to station
 		/// </summary>
-		public IStations? Stations { get; set; }
+		public Stations? Stations { get; set; }
 	}
 
 	/// <summary>
 	/// The coordinates of the point where to go to
 	/// </summary>
 	[PublicAPI]
-	public interface ICoordinates
+	public class Coordinates
 	{
 		/// <summary>
 		/// The theta angle to go to
@@ -74,7 +74,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
 	/// The route to travel set by the master control expressed in nodes and edges
 	/// </summary>
 	[PublicAPI]
-	public interface IRoute
+	public class Route
 	{
 		/// <summary>
 		/// The list of edges to use/travel over for the order
@@ -90,7 +90,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
 	/// The station object containing from and to station
 	/// </summary>
 	[PublicAPI]
-	public interface IStations
+	public class Stations
 	{
 		/// <summary>
 		/// The unique identifier of the station where to pick from

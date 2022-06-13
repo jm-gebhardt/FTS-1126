@@ -45,6 +45,7 @@ try
 						{
 							//add consumers here
 							configurator.AddMqttConsumer<AgvStateConsumer>();
+							configurator.AddConsumer<ExecuteTransportOrderConsumer>();
 						},
 
 						// ReSharper disable once UnusedParameter.Local
