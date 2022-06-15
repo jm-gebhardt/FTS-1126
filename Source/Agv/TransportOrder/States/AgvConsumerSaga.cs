@@ -18,7 +18,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.States
         public enum AgvState
         {
             /// <summary>
-            /// New AGV discovered by receiving IAgvStatusReceived while missing informations evaluating the current state of the AGV.
+            /// New AGV discovered by receiving IAgvStatusReceived while missing information evaluating the current state of the AGV.
             /// </summary>
             /// <remarks>Hypothetical, receiving <see cref="IAgvStatusReceived"/> will lead to one of the subsequent states.</remarks>
             Discovered,

@@ -23,7 +23,9 @@
             "examples": [
                 "Pick",
                 "Drop",
-                "Transport"
+                "Transport",
+                "Move",
+                "Charge"
             ]
         },
         "RecordType": {

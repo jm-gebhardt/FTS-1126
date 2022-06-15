@@ -164,7 +164,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         /// Test for consuming empty AGV state message
         /// </summary>
         [TestMethod]
-        public async Task ConsumeEmptyagvState()
+        public async Task ConsumeEmptyAgvState()
         {
             var agvState = new DummyState();
 
@@ -173,7 +173,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
                 Agv = string.Empty,
                 OrderId = null,
                 Busy = false,
-                Automatic = true, // If not definend explicitly, the value of an enum will default to '0' which in this case is 'OperatingMode.Automatic'
+                Automatic = true, // If not defined explicitly, the value of an enum will default to '0' which in this case is 'OperatingMode.Automatic'
                 BatteryCharge = 0,
                 Charging = false,
                 Disturbed = false

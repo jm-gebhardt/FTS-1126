@@ -18,6 +18,7 @@ try
                 .ConfigureServices((context, services) =>
                 {
                     services.AddScoped(_ => simulationOptions);
+                    services.AddSingleton<RoundRobinAgvRegistry>();
                     ConfigureServicesMassTransit.ConfigureServices(services, context.Configuration, x =>
                     {
                         x.AddSagaStateMachine<OrderStateMachine, OrderSaga>().InMemoryRepository();

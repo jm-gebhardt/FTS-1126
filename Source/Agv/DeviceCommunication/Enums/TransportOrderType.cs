@@ -19,6 +19,14 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Enums
 		/// <summary>
 		/// Do pick at FromStation and drop at ToStation
 		/// </summary>
-		Transport
+		Transport,
+		/// <summary>
+		/// Simply drive to the ToStation
+		/// </summary>
+		Move,
+		/// <summary>
+		/// Drive to the ToStation, which is a charger and start charging
+		/// </summary>
+		Charge
 	}
 }

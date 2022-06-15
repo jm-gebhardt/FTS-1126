@@ -27,8 +27,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             var fixture = new ConsumerTestFixture<RoundRobinAssignAgvConsumer>(
                 services =>
                 {
-                    services.AddScoped(_ => new SimulateOptions() {Agvs = 1});
-                } 
+                    services.AddSingleton(new RoundRobinAgvRegistry(new SimulateOptions() { Agvs = 1 }));
+                }
             );
             // ----------- First Assignment ---------------------------------
             var correlationId = Guid.NewGuid();
@@ -73,8 +73,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             var fixture = new ConsumerTestFixture<RoundRobinAssignAgvConsumer>(
                 services =>
                 {
-                    services.AddScoped(_ => new SimulateOptions() {Agvs = 2});
-                } 
+                    services.AddSingleton(new RoundRobinAgvRegistry(new SimulateOptions() { Agvs = 2 }));
+                }
             );
             // ----------- First Assignment ---------------------------------
             var correlationId = Guid.NewGuid();

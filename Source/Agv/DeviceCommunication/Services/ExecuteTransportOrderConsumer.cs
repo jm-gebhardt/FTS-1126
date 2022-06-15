@@ -13,7 +13,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
 	/// </summary>
 	[UsedImplicitly]
 	public class ExecuteTransportOrderConsumer :
-		IConsumer<IExecuteTransportOrder>
+		IConsumer<IExecuteTransportOrder>,
+		IConsumer<ISendAgvChargeOrder>
 	{
 		private readonly ILogger<ExecuteTransportOrderConsumer> _logger;
 
@@ -31,7 +32,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
 		/// <param name="context">Context of the consumer wrapping details surrounding the inbound message.</param>
 		public async Task Consume(ConsumeContext<IExecuteTransportOrder> context)
 		{
-			await context.PublishMqtt<IOrder> (new
+			await context.PublishMqtt<IOrder>(new
 			{
 				context.Message.Order.OrderId,
 				Identifier = context.Message.AssignedAgv,
@@ -39,12 +40,38 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
 				RecordType = RecordType.Order.ToString(),
 				Stations = new Stations()
 				{
-					FromStationIdentifier = context.Message.Order.Source, 
+					FromStationIdentifier = context.Message.Order.Source,
 					ToStationIdentifier = context.Message.Order.Destination
 				}
 			}, context.CancellationToken);
 
 			_logger.LogInformation("Sent transport order: {OrderId} for AGV:{AssignedAgv} from {Source} to {Destination}", context.Message.Order.OrderId, context.Message.AssignedAgv, context.Message.Order.Source, context.Message.Order.Destination);
+
+		}
+
+		/// <summary>
+		/// Handle message <see cref="ISendAgvChargeOrder"/>. and send an order to the AGV of Type Charge, RecordType Order
+		/// </summary>
+		/// <param name="context">Context of the consumer wrapping details surrounding the inbound message.</param>
+		public async Task Consume(ConsumeContext<ISendAgvChargeOrder> context)
+		{
+			if (context.Message.CorrelationId == Guid.Empty)
+			{
+				_logger.LogWarning("Charge order for AGV:{AssignedAgv} to {Destination} has no GUID!", context.Message.AgvId, context.Message.ToCharger);
+			}
+			await context.PublishMqtt<IOrder>(new
+			{
+				OrderId = context.Message.CorrelationId.ToString(), //use correlation ID here, because we don't have an orderId here
+				Identifier = context.Message.AgvId,
+				OrderType = TransportOrderType.Charge.ToString(),
+				RecordType = RecordType.Order.ToString(),
+				Stations = new Stations()
+				{
+					ToStationIdentifier = context.Message.ToCharger
+				}
+			}, context.CancellationToken);
+
+			_logger.LogInformation("Sent charge order: {CorrelationId} for AGV:{AssignedAgv} to {Destination}", context.Message.CorrelationId, context.Message.AgvId, context.Message.ToCharger);
 
 		}
 	}

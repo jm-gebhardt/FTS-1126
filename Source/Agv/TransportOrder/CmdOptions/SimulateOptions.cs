@@ -13,7 +13,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CmdOptions
         /// Number of AGVs
         /// </summary>
         [UsedImplicitly]
+        // ReSharper disable once StringLiteralTypo
         [Option('c', "agvs", HelpText = "Number of simulated AGVs", Default=1)]
+        // ReSharper disable once IdentifierTypo
         public int Agvs { get;  init; }
     }
 }
