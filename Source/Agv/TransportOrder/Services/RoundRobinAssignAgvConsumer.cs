@@ -6,7 +6,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
 {
 
 	/// <summary>
-	/// Round Robin Agv Dispatcher responding to IAssignAGV
+	/// Round Robin AgvId Dispatcher responding to IAssignAGV
 	/// This is a very simple implementation which is not aware of the AGV current state
 	/// </summary>
 	[JetBrains.Annotations.PublicAPI]

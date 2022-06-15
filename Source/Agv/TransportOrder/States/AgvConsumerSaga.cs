@@ -94,7 +94,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.States
         /// <summary>
         /// Identifier of the AGV.
         /// </summary>
-        public string? Agv { get; private set; }
+        public string? AgvId { get; private set; }
 
 
         /// <summary>
@@ -104,7 +104,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.States
         /// <returns></returns>
         public async Task Consume(ConsumeContext<IAgvStatusReceived> c)
         {
-            Agv ??= c.Message.Agv;
+            AgvId ??= c.Message.AgvId;
 
             if (c.Message.Disturbed)
             {

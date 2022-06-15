@@ -6,6 +6,7 @@ using MassTransit.Configuration;
 using MassTransit.Serialization;
 using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages.Agv.Events;
+using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
 
@@ -21,7 +22,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
 
         private class DummyAgvStatusReceived : IAgvStatusReceived
         {
-            public string Agv { get; init; } = string.Empty;
+            public string AgvId { get; init; } = string.Empty;
             public string? OrderId { get; init; }
             public bool Busy { get; init; }
             public bool Automatic { get; init; }
@@ -97,10 +98,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
                 new DummyActionState { ActionStatus = ActionStatus.Running }
             }; // ReSharper restore All 
 
+            const string serialNumber = "AGV0";
+            const string orderId = "ORDER123";
             var agvState = new DummyState
             {
-                SerialNumber = "AGV123",
-                OrderId = "ORDER123",
+                SerialNumber = serialNumber,
+                OrderId = orderId,
                 ActionStates = actionStates,
                 OperatingMode = OperatingMode.Automatic,
                 BatteryState = new DummyBatteryState { BatteryCharge = 1.0, Charging = true },
@@ -109,14 +112,14 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
 
             var expectedReply = new DummyAgvStatusReceived
             {
-                Agv = "AGV123",
-                OrderId = "ORDER123",
+                AgvId = serialNumber,
+                OrderId = orderId,
                 Busy = true,
                 Automatic = true,
                 BatteryCharge = 100,
                 Charging = true,
                 Disturbed = true,
-                CorrelationId = Guid.NewGuid()
+                CorrelationId = serialNumber.ToGuid()
             };
 
             await ConsumeMessage(agvState, expectedReply);
@@ -126,7 +129,45 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         /// Test for consuming AGV state message the results in all properties of the reply set to false/0/empty
         /// </summary>
         [TestMethod]
-        public async Task ReceiveStateMessageWithAllFalseValues()
+        public async Task ReceiveStateMessageWithAllFalseValues_SerialNumberSet()
+        {
+            var actionStates = new List<IActionState>
+            { // ReSharper disable All 
+                new DummyActionState { ActionStatus = ActionStatus.Failed },
+                new DummyActionState { ActionStatus = ActionStatus.Finished },
+                new DummyActionState { ActionStatus = ActionStatus.Waiting }
+            }; // ReSharper restore All 
+            string serialNumber = "AGV0";
+            var agvState = new DummyState
+            {
+                SerialNumber = serialNumber,
+                OrderId = string.Empty,
+                ActionStates = actionStates,
+                OperatingMode = OperatingMode.Manual,
+                BatteryState = new DummyBatteryState { BatteryCharge = 0.0, Charging = false },
+                SafetyState = new DummySafetyState { EStop = EStop.None, FieldViolation = false }
+            };
+
+            var expectedReply = new DummyAgvStatusReceived
+            {
+                AgvId = serialNumber,
+                OrderId = string.Empty,
+                Busy = false,
+                Automatic = false,
+                BatteryCharge = 0,
+                Charging = false,
+                Disturbed = false,
+                CorrelationId = serialNumber.ToGuid()
+            };
+
+            await ConsumeMessage(agvState, expectedReply);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        [TestMethod]
+        public async Task ReceiveStateMessageWithEmptySerialNumber_NoMessageSend()
         {
             var actionStates = new List<IActionState>
             { // ReSharper disable All 
@@ -144,33 +185,22 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
                 BatteryState = new DummyBatteryState { BatteryCharge = 0.0, Charging = false },
                 SafetyState = new DummySafetyState { EStop = EStop.None, FieldViolation = false }
             };
-
-            var expectedReply = new DummyAgvStatusReceived
-            {
-                Agv = string.Empty,
-                OrderId = string.Empty,
-                Busy = false,
-                Automatic = false,
-                BatteryCharge = 0,
-                Charging = false,
-                Disturbed = false,
-                CorrelationId = Guid.Empty
-            };
-
-            await ConsumeMessage(agvState, expectedReply);
+            
+            await ConsumeMessage(agvState, null);
         }
 
         /// <summary>
         /// Test for consuming empty AGV state message
         /// </summary>
         [TestMethod]
-        public async Task ConsumeEmptyAgvState()
+        public async Task ConsumeEmptyAgvState_SerialNumberSet()
         {
-            var agvState = new DummyState();
-
+            const string serialNumber = "AGV0";
+            var agvState = new DummyState() { SerialNumber = serialNumber};
             var expectedReply = new DummyAgvStatusReceived
             {
-                Agv = string.Empty,
+                CorrelationId = serialNumber.ToGuid(),
+                AgvId = serialNumber,
                 OrderId = null,
                 Busy = false,
                 Automatic = true, // If not defined explicitly, the value of an enum will default to '0' which in this case is 'OperatingMode.Automatic'
@@ -185,7 +215,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         /// <summary>
         /// Consume AGV state message and check if the properties of the reply matches the expected values
         /// </summary>
-        private async Task ConsumeMessage(DummyState agvState, DummyAgvStatusReceived expectedReply)
+        private async Task ConsumeMessage(DummyState agvState, DummyAgvStatusReceived? expectedReply)
         {
             var collection = new ServiceCollection().
                 AddMassTransitTestHarness(x =>
@@ -249,15 +279,21 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
                 Assert.AreEqual(consumedMsg.SafetyState.FieldViolation, agvState.SafetyState.FieldViolation);
             }
 
-            var publishedMsg = testHarness.Published.Select<IAgvStatusReceived>().First().Context.Message;
-
-            Assert.AreEqual(publishedMsg.Agv, expectedReply.Agv);
-            Assert.AreEqual(publishedMsg.OrderId, expectedReply.OrderId);
-            Assert.AreEqual(publishedMsg.Busy, expectedReply.Busy);
-            Assert.AreEqual(publishedMsg.Automatic, expectedReply.Automatic);
-            Assert.AreEqual(publishedMsg.BatteryCharge, expectedReply.BatteryCharge);
-            Assert.AreEqual(publishedMsg.Charging, expectedReply.Charging);
-            Assert.AreEqual(publishedMsg.Disturbed, expectedReply.Disturbed);
+            if (expectedReply == null)
+            {
+                Assert.IsFalse(await testHarness.Published.Any<IAgvStatusReceived>());
+            }
+            else
+            {
+                var publishedMsg = testHarness.Published.Select<IAgvStatusReceived>().First().Context.Message;
+                Assert.AreEqual(expectedReply.AgvId, publishedMsg.AgvId);
+                Assert.AreEqual(expectedReply.OrderId, publishedMsg.OrderId);
+                Assert.AreEqual(expectedReply.Busy, publishedMsg.Busy);
+                Assert.AreEqual(expectedReply.Automatic, publishedMsg.Automatic);
+                Assert.AreEqual(expectedReply.BatteryCharge, publishedMsg.BatteryCharge);
+                Assert.AreEqual(expectedReply.Charging, publishedMsg.Charging);
+                Assert.AreEqual(expectedReply.Disturbed, publishedMsg.Disturbed);
+            }
         }
     }
 }

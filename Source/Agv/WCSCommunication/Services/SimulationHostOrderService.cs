@@ -4,6 +4,7 @@ using Gebhardt.StoreWare.Agv.Common.Definitions;
 using Gebhardt.StoreWare.Agv.Common.Messages;
 using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Commands;
 using Gebhardt.StoreWare.Agv.Common.Services;
+using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.WCSCommunication.CmdOptions;
 
 namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
@@ -51,10 +52,12 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
             string src = _simSources[_random.Next(_simSources.Length)]; // Get random source and destination
             string dst = _simDestinations[_random.Next(_simDestinations.Length)];
             string leNo = "9999";
+            var correlationId = orderId.ToGuid();
 
             // Send message
             await _bus.Publish<IHandleHostOrder>(new
             {
+                CorrelationId = correlationId,
                 Order = new Order(
                 orderId,
                 src,
@@ -63,7 +66,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
                 HostOrderCreator.Simulation)
             }, cancellationToken);
 
-            _logger.LogInformation("Simulation HostOrder created: OrderId = {OrderId}, Source = {Src}, Dest = {Dst}, LeNo = {LeNo}", orderId, src, dst, leNo);
+            _logger.LogInformation("Simulation HostOrder created: CorrelationId = {CorrelationId}, OrderId = {OrderId}, Source = {Src}, Dest = {Dst}, LeNo = {LeNo}", correlationId, orderId, src, dst, leNo);
         }
         
         /// <summary>

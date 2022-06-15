@@ -1,4 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.Agv.Events;
+using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 using JetBrains.Annotations;
 using MassTransit;
@@ -29,10 +30,18 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
         public async Task Consume(ConsumeContext<IState> context)
         {
             var message = context.Message;
+            string? serialNumber = GetSerialNumber(message);
 
+            if (string.IsNullOrEmpty(serialNumber))
+            {
+                _logger.LogError("Missing serialNumber in IState message: {Status}", context.Message);
+                throw new InvalidOperationException($"Cannot handle {typeof(IState)} message, serialNumber must not be null or empty"); 
+            }
+           
             await context.Publish<IAgvStatusReceived>(new
             {
-                Agv = GetAgv(message),
+                CorrelationId = serialNumber.ToGuid(),
+                AgvId = serialNumber,
                 OrderId = GetOrderId(message),
                 Busy = GetBusy(message),
                 Automatic = GetAutomatic(message),
@@ -40,16 +49,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
                 Charging = GetCharging(message),
                 Disturbed = GetDisturbed(message)
             });
+            
         }
 
-        private string GetAgv(IState message)
+        private string? GetSerialNumber(IState message)
         {
-            if (string.IsNullOrEmpty(message.SerialNumber))
-            {
-                _logger.LogWarning("Received AGV status without serial number");
-                return string.Empty;
-            }
-
             return message.SerialNumber;
         }
 

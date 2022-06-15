@@ -30,14 +30,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             var timeout = Task.Delay(5000);
             do
             {
-                sagaList = fixture.SagaHarness.Sagas.Select(s => s.Agv == expectedAgv && s.CurrentState == expectedState).ToList();
+                sagaList = fixture.SagaHarness.Sagas.Select(s => s.AgvId == expectedAgv && s.CurrentState == expectedState).ToList();
                 Thread.Sleep(1);
                 Assert.IsFalse(timeout.IsCompleted);
             } while (!sagaList.Any());
             Assert.AreEqual(1, sagaList.Count());
             var saga = sagaList.First().Saga;
             Assert.AreEqual(expectedState, saga.CurrentState);
-            Assert.AreEqual(expectedAgv, saga.Agv);
+            Assert.AreEqual(expectedAgv, saga.AgvId);
         }
 
         /// <summary>
@@ -54,7 +54,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                 new
                 {
                     CorrelationId = AgvTestIdentifier01.ToGuid(),
-                    Agv = AgvTestIdentifier01,
+                    AgvId = AgvTestIdentifier01,
                     Busy = false,
                     Automatic = true,
                     BatteryCharge = 0,
@@ -71,7 +71,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                 new
                 {
                     CorrelationId = AgvTestIdentifier01.ToGuid(),
-                    Agv = AgvTestIdentifier01,
+                    AgvId = AgvTestIdentifier01,
                     Busy = true,
                     Automatic = true,
                     BatteryCharge = IAgvStatusReceived.GoodBatteryLevel,
@@ -88,7 +88,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                 new
                 {
                     CorrelationId = AgvTestIdentifier01.ToGuid(),
-                    Agv = AgvTestIdentifier01,
+                    AgvId = AgvTestIdentifier01,
                     Busy = true,
                     Automatic = true,
                     BatteryCharge = IAgvStatusReceived.BadBatteryLevel - 1,
@@ -105,7 +105,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                 new
                 {
                     CorrelationId = AgvTestIdentifier02.ToGuid(),
-                    Agv = AgvTestIdentifier02,
+                    AgvId = AgvTestIdentifier02,
                     Busy = false,
                     Automatic = true,
                     BatteryCharge = 0,
@@ -122,7 +122,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                 new
                 {
                     CorrelationId = AgvTestIdentifier02.ToGuid(),
-                    Agv = AgvTestIdentifier02,
+                    AgvId = AgvTestIdentifier02,
                     Busy = false,
                     Automatic = true,
                     BatteryCharge = IAgvStatusReceived.BadBatteryLevel + 1,
@@ -139,7 +139,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                 new
                 {
                     CorrelationId = AgvTestIdentifier02.ToGuid(),
-                    Agv = AgvTestIdentifier02,
+                    AgvId = AgvTestIdentifier02,
                     Busy = false,
                     Automatic = false,
                     BatteryCharge = IAgvStatusReceived.BadBatteryLevel + (IAgvStatusReceived.GoodBatteryLevel - IAgvStatusReceived.BadBatteryLevel) / 2,

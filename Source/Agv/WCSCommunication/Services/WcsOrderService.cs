@@ -2,6 +2,7 @@ using Gebhardt.StoreWare.Agv.Common.Definitions;
 using Gebhardt.StoreWare.Agv.Common.Messages;
 using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Commands;
 using Gebhardt.StoreWare.Agv.Common.Services;
+using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.WCSCommunication.Db;
 using Gebhardt.StoreWare.Agv.WCSCommunication.Db.Models;
 using MassTransit;
@@ -60,9 +61,11 @@ public class WcsOrderHandler: IPollable
             }
             else
             {
-                _logger.LogInformation("New order in FromAgv: {OrderId}", order.OrderId);
+                var correlationId = order.OrderId.ToGuid();
+                _logger.LogInformation("New order in FromAgv: {OrderId} / {CorrelationId}", order.OrderId, correlationId);
                 await _bus.Publish<IHandleHostOrder>(new
                 {
+                    CorrelationId = correlationId,
                     Order = new Order(
                         order.OrderId,
                         order.Source,

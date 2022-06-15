@@ -53,7 +53,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         /// 
         /// </summary>
         [TestMethod]
-        public async Task When_HandleHostOrderWithoutCorrelationId_NewCorrelationIdAssignedIsAssigned()
+        public async Task When_HandleHostOrder_EmptyCorrelationId_NoSagaCreated()
         {
             var fixture = new StateMachineTestFixture<OrderStateMachine, OrderSaga>();
             string orderId = "Order123123";
@@ -64,7 +64,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                 }
             );
 
-            Assert.IsNotNull(await fixture.SagaHarness.Match(o => o.Order.OrderId == orderId));
+            Assert.IsNull(await fixture.SagaHarness.NotExists(Guid.Empty, TimeSpan.FromMilliseconds(10)));
         }
 
         /// <summary>
@@ -91,6 +91,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         {
             var fixture = new StateMachineTestFixture<OrderStateMachine, OrderSaga>();
             var orderSaga = new OrderSaga(
+                    Guid.NewGuid(),
                 new Order("Order123", "s1", "d2", "leno1", HostOrderCreator.Simulation)
                 ) 
                 { CurrentState = fixture.Machine.AgvRequested};
@@ -125,7 +126,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             string orderId = Guid.NewGuid().ToString();
 
             var orderState = new OrderSaga(
-                new Order(orderId, "s1", "d2", "leno1", HostOrderCreator.Simulation), correlationId) 
+                correlationId,
+                new Order(orderId, "s1", "d2", "leno1", HostOrderCreator.Simulation)
+                ) 
                 { CurrentState = fixture.Machine.TransportOrderSend };
 
             fixture.Add(orderState);

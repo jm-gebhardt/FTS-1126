@@ -46,7 +46,8 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
             }
             else
             {
-                _logger.LogError("Corresponding order with id {OrderId} could not be found in ToAgv", context.Message.OrderId);
+                _logger.LogError("Corresponding order with id {OrderId} / {CorrelationId} could not be found in ToAgv", 
+                    context.Message.OrderId, context.Message.CorrelationId);
             }
         }
         
@@ -68,7 +69,8 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
             }
             else
             {
-                _logger.LogError("Corresponding order with id {OrderId} could not be found in ToAgv", context.Message.OrderId);
+                _logger.LogError("Corresponding order with id {OrderId} / {CorrelationId} could not be found in ToAgv", 
+                    context.Message.OrderId, context.Message.CorrelationId);
             }
         }
         
@@ -90,7 +92,8 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
             }
             else
             {
-                _logger.LogError("Corresponding order with id {OrderId} could not be found in ToAgv", context.Message.OrderId);
+                _logger.LogError("Corresponding order with id {OrderId} / {CorrelationId} could not be found in ToAgv", 
+                    context.Message.OrderId, context.Message.CorrelationId);
             }
         }
     }

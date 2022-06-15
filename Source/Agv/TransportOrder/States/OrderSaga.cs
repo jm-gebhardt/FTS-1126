@@ -18,9 +18,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.States
         /// </summary>
         /// <param name="order">The order related to this Saga</param>
         /// <param name="correlationId">If the correlationId is empty, a new Id will be generated</param>
-        public OrderSaga(Order order, Guid correlationId = default)
+        public OrderSaga(Guid correlationId, Order order)
         {
-            CorrelationId = correlationId == Guid.Empty ? NewId.NextGuid() : correlationId;
+            if (correlationId == Guid.Empty)
+            {
+                throw new InvalidOperationException($"{this.GetType()} requires correlation ID.");
+            }
+            CorrelationId = correlationId;
             Order = order;
         }
 

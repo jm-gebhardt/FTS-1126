@@ -11,7 +11,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 {
     /// <summary>
-    /// Round Robin Agv Dispatcher Tests
+    /// Round Robin AgvId Dispatcher Tests
     /// </summary>
     [TestClass]
     public class RoundRobinAgvDispatcherTest

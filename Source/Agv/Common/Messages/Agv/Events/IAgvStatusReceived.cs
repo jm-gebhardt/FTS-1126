@@ -22,7 +22,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Agv.Events
         /// <summary>
         /// Identifier of the AGV.
         /// </summary>
-        string Agv { get; }
+        string AgvId { get; }
 
         /// <summary>
         /// Current or previous order ID.

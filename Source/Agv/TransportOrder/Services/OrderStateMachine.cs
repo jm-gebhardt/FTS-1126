@@ -68,7 +68,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         {
             // Initial creation
             Event(() => HandleHostOrderEvent, e =>
-                e.SetSagaFactory(context => new OrderSaga(context.Message.Order, context.Message.CorrelationId))
+                e.SetSagaFactory(context => new OrderSaga(context.Message.CorrelationId, context.Message.Order))
             );
         }
 
