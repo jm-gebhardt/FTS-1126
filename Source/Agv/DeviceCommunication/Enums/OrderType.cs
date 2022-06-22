@@ -6,7 +6,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Enums
 	/// The type of transport an order describes
 	/// </summary>
 	[PublicAPI]
-	public enum TransportOrderType
+	public enum OrderType
 	{
 		/// <summary>
 		/// Only pick at FromStation

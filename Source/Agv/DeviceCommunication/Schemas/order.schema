@@ -5,22 +5,22 @@
     "subtopic": "/order",
     "type": "object",
     "properties": {
-        "Identifier": {
-            "description": "The unique identifier of the agv",
-            "type": "string",
-            "examples": [
-                "AGV1",
-                "AGV2"
-            ]
-        },
+	    "SerialNumber": {
+		    "description": "Serial number of the AGV.",
+		    "type": "string",
+		    "examples": [
+			    "1234-5678",
+			    "AGV2034"
+		    ]
+	    },
         "OrderId": {
             "type": "string",
             "description": "The unique ID of the order"
         },
         "OrderType": {
             "type": "string",
-            "description": "The type of the order. Pick/Drop/Transport",
-            "examples": [
+            "description": "The type of the order. Pick/Drop/Transport/Move/Charge",
+            "enum": [
                 "Pick",
                 "Drop",
                 "Transport",
@@ -31,7 +31,7 @@
         "RecordType": {
             "type": "string",
             "description": "The type of the order. Order/OrderUpdate/OrderCancel",
-            "examples": [
+            "enum": [
                 "Order",
                 "OrderUpdate",
                 "OrderCancel"
@@ -110,7 +110,7 @@
         }
     },
     "required": [
-        "Identifier",
+        "SerialNumber",
         "OrderId",
         "RecordType",
         "OrderType"

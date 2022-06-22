@@ -1,4 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Extensions;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Enums;
 using JetBrains.Annotations;
 using MassTransit;
 
@@ -32,12 +33,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
 		/// <summary>
 		/// The type of the order. Pick/Drop/Transport
 		/// </summary>
-		public string? OrderType { get; set; }
+		public OrderType? OrderType { get; set; }
 
 		/// <summary>
 		/// The type of the order. Order/OrderUpdate/OrderCancel
 		/// </summary>
-		public string? RecordType { get; set; }
+		public OrderRecordType? RecordType { get; set; }
 
 		/// <summary>
 		/// The route to travel set by the master control expressed in nodes and edges

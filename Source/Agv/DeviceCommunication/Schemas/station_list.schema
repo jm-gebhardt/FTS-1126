@@ -14,10 +14,12 @@
                         "function": {
                             "type": "string",
                             "description": "The function of the station e.g. Pick/drop",
-                            "examples": [
+                            "enum": [
                                 "Pick",
                                 "Drop",
-                                "Both"
+                                "Both",
+                                "Charge",
+                                "Park"
                             ]
                         },
                         "identifier": {

@@ -5,12 +5,12 @@
 	"subtopic": "/requestSensorStates",
 	"type": "object",
 	"properties": {
-		"Identifier": {
+		"SerialNumber": {
+			"description": "Serial number of the AGV.",
 			"type": "string",
-			"description": "The unique identifier of the agv",
 			"examples": [
-				"AGV1",
-				"AGV2"
+				"1234-5678",
+				"AGV2034"
 			]
 		},
 		"RequestId": {
@@ -27,7 +27,7 @@
 		}
 	},
 	"required": [
-		"Identifier",
+		"SerialNumber",
 		"RequestId",
 		"Send",
 		"Interval"

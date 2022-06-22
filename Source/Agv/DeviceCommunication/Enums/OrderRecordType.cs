@@ -6,7 +6,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Enums
 	/// The record type of an order to the AGV
 	/// </summary>
 	[PublicAPI]
-	public enum RecordType
+	public enum OrderRecordType
 	{
 		/// <summary>
 		/// Normal/new order

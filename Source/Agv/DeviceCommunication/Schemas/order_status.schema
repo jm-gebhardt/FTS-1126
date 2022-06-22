@@ -17,6 +17,17 @@
 			"type": "string",
 			"description": "The unique ID of the order"
 		},
+		"OrderType": {
+			"type": "string",
+			"description": "The type of the order. Pick/Drop/Transport/Move/Charge",
+			"enum": [
+				"Pick",
+				"Drop",
+				"Transport",
+				"Move",
+				"Charge"
+			]
+		},
 		"stations": {
 			"type": "object",
 			"properties": {

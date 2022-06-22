@@ -36,8 +36,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
 			{
 				context.Message.Order.OrderId,
 				Identifier = context.Message.AssignedAgv,
-				OrderType = TransportOrderType.Transport.ToString(),
-				RecordType = RecordType.Order.ToString(),
+				OrderType = OrderType.Transport,
+				RecordType = OrderRecordType.Order,
 				Stations = new Stations()
 				{
 					FromStationIdentifier = context.Message.Order.Source,
@@ -63,8 +63,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
 			{
 				OrderId = context.Message.CorrelationId.ToString(), //use correlation ID here, because we don't have an orderId here
 				Identifier = context.Message.AgvId,
-				OrderType = TransportOrderType.Charge.ToString(),
-				RecordType = RecordType.Order.ToString(),
+				OrderType = OrderType.Charge,
+				RecordType = OrderRecordType.Order,
 				Stations = new Stations()
 				{
 					ToStationIdentifier = context.Message.ToCharger

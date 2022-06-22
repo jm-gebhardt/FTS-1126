@@ -12,6 +12,7 @@ using MassTransit.Testing.Implementations;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Reflection;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Enums;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
 {
@@ -91,6 +92,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
 
 				Assert.AreEqual(fromStationId, a.Context.Message.Stations?.FromStationIdentifier);
 				Assert.AreEqual(toStationId, a.Context.Message.Stations?.ToStationIdentifier);
+				Assert.AreEqual(OrderType.Transport, a.Context.Message.OrderType);
+				Assert.AreEqual(OrderRecordType.Order, a.Context.Message.RecordType);
 			}
 		}
 
