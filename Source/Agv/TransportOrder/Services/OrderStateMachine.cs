@@ -54,6 +54,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
             _logger = logger;
 
             SetupInitialCorrelation();
+            InstanceState(x => x.CurrentState);
             Initially(SetHandleHostOrderHandler());
             During(AgvRequested, SetAgvAssignSucceededHandler());
             During(TransportOrderSend, SetTransportOrderCompletedHandler());

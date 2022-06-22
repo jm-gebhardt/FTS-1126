@@ -48,7 +48,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             await fixture.TestHarness.Bus.Publish<IAssignAgv>(new
             {
                 CorrelationId = correlationId,
-                Order = new Order(orderId, "SRC1", "DST1", "LeNo123", HostOrderCreator.Simulation)
+                Order = new Order(correlationId, orderId, "SRC1", "DST1", "LeNo123", HostOrderCreator.Simulation)
             });
 
             Assert.IsTrue(await fixture.ConsumerHarness.Consumed.Any<IAssignAgv>());
@@ -75,7 +75,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             await fixture.TestHarness.Bus.Publish<IAssignAgv>(new
             {
                 CorrelationId = correlationId,
-                Order = new Order(orderId, "SRC1", "DST1", "LeNo123", HostOrderCreator.Simulation)
+                Order = new Order(correlationId, orderId, "SRC1", "DST1", "LeNo123", HostOrderCreator.Simulation)
             });
 
             Assert.IsTrue(await fixture.ConsumerHarness.Consumed.Any<IAssignAgv>());
@@ -102,7 +102,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             await fixture.TestHarness.Bus.Publish<IAssignAgv>(new
             {
                 CorrelationId = correlationId,
-                Order = new Order(orderId, "SRC1", "DST1", "LeNo123", HostOrderCreator.Simulation)
+                Order = new Order(correlationId, orderId, "SRC1", "DST1", "LeNo123", HostOrderCreator.Simulation)
             });
 
             Assert.IsTrue(await fixture.ConsumerHarness.Consumed.Any<IAssignAgv>());

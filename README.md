@@ -41,6 +41,13 @@ RABBITMQ__HOST=localhost
 CONNECTIONSTRINGS__WCS="Server=127.0.0.1,1433;Database=master;User Id=MyDbUser;Password=MyStrongPassword;"
 ```
 
+### TransportOrder
+```
+CONNECTIONSTRINGS__TO="Server=127.0.0.1,1433;Database=master;User Id=MyDbUser;Password=MyStrongPassword;"
+```
+Database persistence can be disabled using: `--enableInMemoryPersistence`
+
+
 
 ## Provide certificates
 Quite now the system is using self-signed certificates.
@@ -92,6 +99,25 @@ You can now access the Web Service under: http://agv.localhost
 ```
 docker compose logs -f [service (wcscommunication|devicecommunication|transportorder|rabbitmq)]
 ```
+
+### Database Migrations
+First, ensure that a ConnectionString is available as an ENV variable.
+#### Create Migrations
+Export required connection string, e.g:
+````
+export CONNECTIONSTRINGS__TO='Server=127.0.0.1;Database=master;User Id=sa;Password=<password>'
+````
+
+Apply existing migrations
+```
+dotnet ef database update
+```
+
+Add new migration
+```
+dotnet ef migrations add <MigrationName> 
+```
+
 
 ## Windows Service
 The software is designed to run as a Windows Service.

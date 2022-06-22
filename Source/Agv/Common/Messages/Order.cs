@@ -1,4 +1,5 @@
 using Gebhardt.StoreWare.Agv.Common.Definitions;
+using MassTransit;
 
 namespace Gebhardt.StoreWare.Agv.Common.Messages;
 
@@ -7,8 +8,14 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages;
 /// Order object used by all messages that require the order details
 /// </summary>
 [Serializable]
-public class Order
+public class Order: CorrelatedBy<Guid>
 {
+    
+    /// <summary>
+    /// Correlation Id
+    /// </summary>
+    public Guid CorrelationId { get; }
+    
     /// <summary>
     /// The unique ID of the order known by the host system
     /// </summary>
@@ -33,17 +40,19 @@ public class Order
     /// The creator of the host order
     /// </summary>
     public HostOrderCreator Creator { get; }
-
+    
     /// <summary>
     /// 
     /// </summary>
+    /// <param name="correlationId"></param>
     /// <param name="orderId"></param>
     /// <param name="source"></param>
     /// <param name="destination"></param>
     /// <param name="leNo"></param>
     /// <param name="creator"></param>
-    public Order(string orderId, string source, string destination, string leNo, HostOrderCreator creator)
+    public Order(Guid correlationId, string orderId, string source, string destination, string leNo, HostOrderCreator creator)
     {
+        CorrelationId = correlationId;
         OrderId = orderId;
         Source = source;
         Destination = destination;

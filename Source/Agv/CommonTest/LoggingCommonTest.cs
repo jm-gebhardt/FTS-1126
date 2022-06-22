@@ -32,6 +32,7 @@ namespace Gebhardt.StoreWare.Agv.CommonTest
 		/// <param name="logMsg"></param>
 		public void PleaseLogAnythingIMayGive(LogLevel logLevel, int logEventId, string logMsg)
 		{
+			// ReSharper disable once TemplateIsNotCompileTimeConstantProblem
 			_logger.Log(logLevel, logEventId, logMsg);
 		}
 

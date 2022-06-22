@@ -13,6 +13,28 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.States
     public class OrderSaga :
         SagaStateMachineInstance, CorrelatedBy<Guid>
     {
+
+        /// <summary>
+        /// Current State
+        /// </summary>
+        public string CurrentState { get; set; } = default!;
+
+        /// <summary>
+        /// CorrelationId
+        /// <see href="https://masstransit-project.com//usage/correlation.html" />
+        /// </summary>
+        public Guid CorrelationId { get; set; }
+        
+        /// <summary>
+        /// AssignedAgv
+        /// </summary>
+        public string? AssignedAgv { get; set; }
+
+        /// <summary>
+        /// The order details of this saga
+        /// </summary>
+        public Order Order { get; set; } = null!;
+
         /// <summary>
         /// Create new OrderSaga
         /// </summary>
@@ -29,24 +51,25 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.States
         }
 
         /// <summary>
-        /// Current State
+        /// OrderSaga constructor used to restore an instance from persistence
         /// </summary>
-        public State CurrentState { get; set; } = default!;
+        /// <param name="correlationId"></param>
+        /// <param name="order"></param>
+        /// <param name="currentState"></param>
+        /// <param name="assignedAgv"></param>
+        public OrderSaga(Guid correlationId, Order order, string currentState, string? assignedAgv): 
+            this(correlationId, order)
+        {
+            CurrentState = currentState;
+            AssignedAgv = assignedAgv;
+        }
 
-        /// <summary>
-        /// CorrelationId
-        /// <see href="https://masstransit-project.com//usage/correlation.html" />
-        /// </summary>
-        public Guid CorrelationId { get; set; }
-        
-        /// <summary>
-        /// AssignedAgv
-        /// </summary>
-        public string? AssignedAgv { get; set; }
-
-        /// <summary>
-        /// The order details of this saga
-        /// </summary>
-        public Order Order { get; set; }
+        // Private constructor for Entity Framework 
+        private OrderSaga(Guid correlationId, string currentState, string? assignedAgv)
+        {
+            CorrelationId = correlationId;
+            CurrentState = currentState;
+            AssignedAgv = assignedAgv;
+        } 
     }
 }

@@ -1,0 +1,3 @@
+root = true
+[**/Migrations/*.cs]
+generated_code = true

@@ -12,7 +12,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Services;
 namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 {
     /// <summary>
-    /// Test for handeling Handle IAssignAgv messages
+    /// Test for handling IAssignAgv messages
     /// </summary>
     [TestClass]
     public class AgvStateChangedConsumerTest
@@ -42,7 +42,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         {
             InitTestMembers(out var agvRegistry, out ConcurrentQueue<KeyValuePair<Guid, Order>> _, out ConsumerTestFixture<AgvStateChangedConsumer>  fixture);
 
-            string agvId = "AGV001";
+            const string agvId = "AGV001";
             await fixture.TestHarness.Bus.Publish<IAgvStateChanged>(new
             {
                 CorrelationId = agvId.ToGuid(),
@@ -66,7 +66,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         {
             InitTestMembers(out var agvRegistry, out ConcurrentQueue<KeyValuePair<Guid, Order>> _, out ConsumerTestFixture<AgvStateChangedConsumer> fixture);
 
-            string agvId = "AGV001"; // Add AGV with state Discovered
+            const string agvId = "AGV001"; // Add AGV with state Discovered
             agvRegistry.AddOrUpdate(agvId.ToGuid(), new Common.Messages.AgvManagement.Agv(agvId, AgvState.Discovered));
 
             await fixture.TestHarness.Bus.Publish<IAgvStateChanged>(new
@@ -91,15 +91,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         public async Task ConsumeStateForBusyAgv()
         {
             InitTestMembers(out var agvRegistry, out ConcurrentQueue<KeyValuePair<Guid, Order>> orderQueue, out ConsumerTestFixture<AgvStateChangedConsumer> fixture);
-
-            var order1 = new Order("0001", "", "", "", HostOrderCreator.Simulation);
-            var order2 = new Order("0002", "", "", "", HostOrderCreator.Simulation);
-
-            var correlationId1 = order1.OrderId.ToGuid();
-            var correlationId2 = order2.OrderId.ToGuid();
-
-            orderQueue.Enqueue(KeyValuePair.Create(correlationId1, order1));
-            orderQueue.Enqueue(KeyValuePair.Create(correlationId2, order2));
+            
+            const string orderId1 = "Order1";
+            const string orderId2 = "Order2";
+            
+            var order1 = new Order(orderId1.ToGuid(), orderId1, "", "", "", HostOrderCreator.Simulation);
+            var order2 = new Order(orderId2.ToGuid(),orderId2, "", "", "", HostOrderCreator.Simulation);
+            
+            orderQueue.Enqueue(KeyValuePair.Create(order1.CorrelationId, order1));
+            orderQueue.Enqueue(KeyValuePair.Create(order2.CorrelationId, order2));
             Assert.AreEqual(2, orderQueue.Count);
 
             string agvId = "AGV001";
@@ -126,14 +126,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         {
             InitTestMembers(out var agvRegistry, out ConcurrentQueue<KeyValuePair<Guid, Order>> orderQueue, out ConsumerTestFixture<AgvStateChangedConsumer> fixture);
 
-            var order1 = new Order("0001", "", "", "", HostOrderCreator.Simulation);
-            var order2 = new Order("0002", "", "", "", HostOrderCreator.Simulation);
+            const string orderId1 = "Order1";
+            const string orderId2 = "Order2";
 
-            var correlationId1 = order1.OrderId.ToGuid();
-            var correlationId2 = order2.OrderId.ToGuid();
-
-            orderQueue.Enqueue(KeyValuePair.Create(correlationId1, order1));
-            orderQueue.Enqueue(KeyValuePair.Create(correlationId2, order2));
+            var order1 = new Order(orderId1.ToGuid(), orderId1, "", "", "", HostOrderCreator.Simulation);
+            var order2 = new Order(orderId2.ToGuid(),orderId2, "", "", "", HostOrderCreator.Simulation);
+            
+            orderQueue.Enqueue(KeyValuePair.Create(order1.CorrelationId, order1));
+            orderQueue.Enqueue(KeyValuePair.Create(order1.CorrelationId, order2));
             Assert.AreEqual(2, orderQueue.Count);
 
             string agvId = "AGV001";

@@ -11,6 +11,7 @@ using MassTransit.Testing;
 using MassTransit.Testing.Implementations;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Reflection;
+using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Enums;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
@@ -36,6 +37,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
 			{
 				const string agvId = "agv0";
 				const string orderId = "1234";
+				var correlationId = orderId.ToGuid();
 				const string fromStationId = "Pick1"; 
 				const string toStationId = "Drop5";
 				const string leNo = "na";
@@ -45,7 +47,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
 					new
 					{
 						AssignedAgv = agvId,
-						Order = new Order(orderId,
+						Order = new Order(
+							correlationId,
+							orderId,
 							fromStationId,
 							toStationId,
 							leNo,

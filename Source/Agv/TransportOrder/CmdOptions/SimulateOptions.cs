@@ -7,7 +7,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CmdOptions
     /// RoundRobin AGV DispatcherOptions
     /// </summary>
     [Verb("simulate")]
-    public class SimulateOptions
+    public class SimulateOptions: SagaPersistenceOptions
     {
         /// <summary>
         /// Number of AGVs

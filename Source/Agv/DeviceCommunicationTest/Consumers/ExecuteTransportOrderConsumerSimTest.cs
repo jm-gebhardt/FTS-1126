@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
 using Gebhardt.StoreWare.Agv.Common.Testing;
+using Gebhardt.StoreWare.Agv.Common.Utilities;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
 {
@@ -28,9 +29,10 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
             });
 
             string orderId = "TestOrder123";
+            var correlationId = orderId.ToGuid();
             await fixture.TestHarness.Bus.Publish<IExecuteTransportOrder>(new
             {
-                Order = new Order(orderId,  "SRC1", "DST1", "LeNo123", HostOrderCreator.Simulation),
+                Order = new Order(correlationId, orderId,  "SRC1", "DST1", "LeNo123", HostOrderCreator.Simulation),
                 AssignedAgv = "AGV_0"
             });
 

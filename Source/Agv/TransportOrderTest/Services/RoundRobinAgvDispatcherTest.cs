@@ -3,6 +3,7 @@ using Gebhardt.StoreWare.Agv.Common.Messages;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Testing;
+using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.CmdOptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,13 +32,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                 }
             );
             // ----------- First Assignment ---------------------------------
-            var correlationId = Guid.NewGuid();
             string orderId = "OrderId123";
+            var correlationId = orderId.ToGuid();
             await fixture.TestHarness.Bus.Publish<IAssignAgv>(
                 new
                 {
                     CorrelationId = correlationId,
-                    Order = new Order(orderId,  "SRC1", "DST1", "LeNo123", HostOrderCreator.Simulation)
+                    Order = new Order(correlationId, orderId, "SRC1", "DST1", "LeNo123", HostOrderCreator.Simulation)
                 }
             );
 
@@ -48,13 +49,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             Assert.AreEqual(correlationId, responseMessage.CorrelationId);
             Assert.AreEqual(orderId, responseMessage.OrderId);
             Assert.AreEqual($"{AgvNamePrefix}_0", responseMessage.AssignedAgv);
+            const string secondOrderId = "Order#2";
+            var secondCorrelationId = secondOrderId.ToGuid();  
             
             // ----------- Second Assignment ---------------------------------
             await fixture.TestHarness.Bus.Publish<IAssignAgv>(
                 new
                 {
-                    CorrelationId = Guid.NewGuid(),
-                    Order = new Order("Order#2",  "SRC1", "DST1", "LeNo123", HostOrderCreator.Simulation)
+                    correlationId2 = secondCorrelationId,
+                    Order = new Order(secondCorrelationId,secondOrderId,  "SRC1", "DST1", "LeNo123", HostOrderCreator.Simulation)
                 }
             );
 
@@ -77,12 +80,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                 }
             );
             // ----------- First Assignment ---------------------------------
-            var correlationId = Guid.NewGuid();
+            const string orderId = "Order#1";
+            var correlationId = orderId.ToGuid();
             await fixture.TestHarness.Bus.Publish<IAssignAgv>(
                 new
                 {
                     CorrelationId = correlationId,
-                    Order = new Order("Order#1",  "SRC1", "DST1", "LeNo123", HostOrderCreator.Simulation)
+                    Order = new Order(correlationId, orderId,  "SRC1", "DST1", "LeNo123", HostOrderCreator.Simulation)
                 }
             );
 
@@ -91,12 +95,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             var responseMessage = fixture.TestHarness.Published.Select<IAgvAssignSucceeded>().First().Context.Message;
             Assert.AreEqual($"{AgvNamePrefix}_0", responseMessage.AssignedAgv);
             // ----------- Second Assignment ---------------------------------
-            var secondCorrelationId = Guid.NewGuid();
+            const string secondOrderId = "Order#2";
+            var secondCorrelationId = secondOrderId.ToGuid();
+            
             await fixture.TestHarness.Bus.Publish<IAssignAgv>(
                 new
                 {
                     CorrelationId = secondCorrelationId,
-                    Order = new Order("Order#2",  "SRC1", "DST1", "LeNo123", HostOrderCreator.Simulation)
+                    Order = new Order(secondCorrelationId,  secondOrderId, "SRC1", "DST1", "LeNo123", HostOrderCreator.Simulation)
                 }
             );
 
@@ -106,12 +112,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                 s=> s.Context.CorrelationId == secondCorrelationId).First().Context.Message;
             Assert.AreEqual($"{AgvNamePrefix}_1", responseMessage.AssignedAgv);
             // ----------- Third Assignment ---------------------------------
-            var thirdCorrelationId = Guid.NewGuid();
+            const string thirdOrderId = "Order#3";
+            var thirdCorrelationId = thirdOrderId.ToGuid();
+            
             await fixture.TestHarness.Bus.Publish<IAssignAgv>(
                 new
                 {
                     CorrelationId = thirdCorrelationId,
-                    Order = new Order("Order#3",  "SRC1", "DST1", "LeNo123", HostOrderCreator.Simulation)
+                    Order = new Order(thirdCorrelationId, thirdOrderId, "SRC1", "DST1", "LeNo123", HostOrderCreator.Simulation)
                 }
             );
 

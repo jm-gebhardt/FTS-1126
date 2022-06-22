@@ -85,6 +85,7 @@ services:
       - RABBITMQ__HOST=rabbitmq
       - RABBITMQ__USER=${RABBITMQ_USER}
       - RABBITMQ__PASSWORD=${RABBITMQ_PASSWORD}
+      - "CONNECTIONSTRINGS__TO=Server=mssql;Database=master;User Id=sa;Password=${MSSQL_SA_PASSWORD}"
     command: dotnet /app/Gebhardt.StoreWare.Agv.TransportOrder.dll ${TRANSPORTORDER_ARGS}
     restart: unless-stopped
     depends_on:
@@ -92,6 +93,8 @@ services:
         condition: service_healthy
       fluent:
         condition: service_started
+      mssql:
+        condition: service_healthy
     logging: *fluent-json-logging
     
   taragv:

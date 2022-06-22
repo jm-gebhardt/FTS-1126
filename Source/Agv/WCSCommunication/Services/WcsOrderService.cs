@@ -56,7 +56,7 @@ public class WcsOrderHandler: IPollable
         {
             if (!order.IsValid)
             {
-                _logger.LogError("Found invalid order in ToAgv with id={Id}", order.Id);
+                _logger.LogError("Found invalid order in ToAgv with id={OrderId}", order.Id);
                 order.MessageStatus = MessageStatus.Failed; // Mark Message as Failed
             }
             else
@@ -65,8 +65,8 @@ public class WcsOrderHandler: IPollable
                 _logger.LogInformation("New order in FromAgv: {OrderId} / {CorrelationId}", order.OrderId, correlationId);
                 await _bus.Publish<IHandleHostOrder>(new
                 {
-                    CorrelationId = correlationId,
                     Order = new Order(
+                        correlationId,
                         order.OrderId,
                         order.Source,
                         order.Destination,
