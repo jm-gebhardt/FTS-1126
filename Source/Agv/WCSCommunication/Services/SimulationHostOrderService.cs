@@ -17,15 +17,15 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
         /// <summary>
         /// IPollable interval
         /// </summary>
-        public int PollingInterval  { get; }
-        
+        public int PollingInterval { get; }
+
         private readonly ILogger<SimulationHostOrderService> _logger;
         private readonly IBus _bus;
         private readonly string[] _simSources;
         private readonly string[] _simDestinations;
         private readonly Random _random = new();
         private int _orderIdCounter;
-        
+
         /// <summary>
         /// Create simulator for creating host order
         /// </summary>
@@ -43,11 +43,19 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
         }
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        public async Task Poll(CancellationToken cancellationToken = default)
+        {
+            await SimulateHostOrders(cancellationToken);
+        }
+
+        /// <summary>
         /// Creates dummy HostOrders for simulation
         /// </summary>
         private async Task SimulateHostOrders(CancellationToken cancellationToken)
         {
-            
             string orderId = $"{_orderIdCounter++ % 9999 + 1:D4}"; // Cycle order id [0001..9999]
             string src = _simSources[_random.Next(_simSources.Length)]; // Get random source and destination
             string dst = _simDestinations[_random.Next(_simDestinations.Length)];
@@ -67,15 +75,6 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
             }, cancellationToken);
 
             _logger.LogInformation("Simulation HostOrder created: CorrelationId = {CorrelationId}, OrderId = {OrderId}, Source = {Src}, Dest = {Dst}, LeNo = {LeNo}", correlationId, orderId, src, dst, leNo);
-        }
-        
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="cancellationToken"></param>
-        public async Task Poll(CancellationToken cancellationToken = default)
-        {
-            await SimulateHostOrders(cancellationToken);
         }
     }
 }

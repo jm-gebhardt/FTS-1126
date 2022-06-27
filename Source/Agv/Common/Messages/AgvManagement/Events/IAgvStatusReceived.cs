@@ -1,7 +1,7 @@
 ﻿using MassTransit;
 
 
-namespace Gebhardt.StoreWare.Agv.Common.Messages.Agv.Events
+namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events
 {
     /// <summary>
     /// An event reporting the current status of an AGV.
@@ -17,7 +17,6 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Agv.Events
         /// Upper battery level in [%] for signaling "battery good" (defined by VDA5050).
         /// </summary>
         public const int GoodBatteryLevel = 80;
-
 
         /// <summary>
         /// Identifier of the AGV.

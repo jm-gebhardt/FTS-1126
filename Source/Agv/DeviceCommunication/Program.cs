@@ -12,7 +12,6 @@ using MassTransit.Serialization;
 using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 
-
 var initialLogger = Gebhardt.StoreWare.Agv.Common.Logging.InitialLogger.Create<Program>();
 try
 {

@@ -1,5 +1,5 @@
-using Gebhardt.StoreWare.Agv.Common.Messages.Agv.Commands;
-using Gebhardt.StoreWare.Agv.Common.Messages.Agv.Events;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using MassTransit;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Services

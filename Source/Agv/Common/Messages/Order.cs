@@ -7,7 +7,8 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages;
 /// Order object used by all messages that require the order details
 /// </summary>
 [Serializable]
-public class Order {
+public class Order
+{
     /// <summary>
     /// The unique ID of the order known by the host system
     /// </summary>
@@ -32,6 +33,7 @@ public class Order {
     /// The creator of the host order
     /// </summary>
     public HostOrderCreator Creator { get; }
+
     /// <summary>
     /// 
     /// </summary>

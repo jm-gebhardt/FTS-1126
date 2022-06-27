@@ -1,10 +1,10 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MassTransit.Testing;
-using Gebhardt.StoreWare.Agv.Common.Messages.Agv.Events;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.TransportOrder.States;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
-
 
 namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 {
@@ -21,7 +21,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             ConsumerSagaTestFixture<AgvConsumerSaga> fixture,
             object agvStatusReceived,
             string expectedAgv,
-            AgvConsumerSaga.AgvState expectedState)
+            AgvState expectedState)
         {
             IEnumerable<ISagaInstance<AgvConsumerSaga>> sagaList;
 
@@ -62,7 +62,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                     Disturbed = false
                 },
                 AgvTestIdentifier01,
-                AgvConsumerSaga.AgvState.Idle
+                AgvState.Idle
             );
 
             // Simulate state change for AGV 1 -> Busy
@@ -79,7 +79,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                     Disturbed = false
                 },
                 AgvTestIdentifier01,
-                AgvConsumerSaga.AgvState.Busy
+                AgvState.Busy
             );
 
             // Simulate state change for AGV 1 -> BusyRequestForCharging
@@ -96,7 +96,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                     Disturbed = false
                 },
                 AgvTestIdentifier01,
-                AgvConsumerSaga.AgvState.BusyRequestForCharging
+                AgvState.BusyRequestForCharging
             );
 
             // Simulate receive for AGV 2 -> Error
@@ -113,7 +113,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                     Disturbed = true
                 },
                 AgvTestIdentifier02,
-                AgvConsumerSaga.AgvState.Error
+                AgvState.Error
             );
 
             // Simulate receive for AGV 2 -> Charging
@@ -130,7 +130,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                     Disturbed = false
                 },
                 AgvTestIdentifier02,
-                AgvConsumerSaga.AgvState.Charging
+                AgvState.Charging
             );
 
             // Simulate receive for AGV 2 -> Maintenance
@@ -147,10 +147,66 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                     Disturbed = false
                 },
                 AgvTestIdentifier02,
-                AgvConsumerSaga.AgvState.Maintenance
+                AgvState.Maintenance
             );
 
             Assert.AreEqual(2, fixture.SagaHarness.Sagas.Count());
+        }
+
+        /// <summary>
+        /// Test ok-cases when status message is received.
+        /// </summary>
+        [TestMethod]
+        public async Task When_AgvStateIsUpdated_SendIAgvStateChanged()
+        {
+            var fixture = new ConsumerSagaTestFixture<AgvConsumerSaga>();
+
+            await TestPublishAndResult(
+                fixture,
+                new
+                {
+                    CorrelationId = AgvTestIdentifier01.ToGuid(),
+                    AgvId = AgvTestIdentifier01,
+                    Busy = false,
+                    Automatic = true,
+                    BatteryCharge = 0,
+                    Charging = false,
+                    Disturbed = false
+                },
+                AgvTestIdentifier01,
+                AgvState.Idle
+            );
+
+            // Simulate state change for AGV 1 -> Busy
+            await TestPublishAndResult(
+                fixture,
+                new
+                {
+                    CorrelationId = AgvTestIdentifier01.ToGuid(),
+                    AgvId = AgvTestIdentifier01,
+                    Busy = true,
+                    Automatic = true,
+                    BatteryCharge = IAgvStatusReceived.GoodBatteryLevel,
+                    Charging = false,
+                    Disturbed = false
+                },
+                AgvTestIdentifier01,
+                AgvState.Busy
+            );
+
+            List<IPublishedMessage<IAgvStateChanged>> messages = fixture.TestHarness.Published.Select<IAgvStateChanged>().OrderBy(s => s.Context.Message.CurrentState).ToList();
+            Assert.AreEqual(2, messages.Count);
+
+            var message1 = messages[0].Context.Message;
+            var message2 = messages[1].Context.Message;
+
+            Assert.AreEqual(AgvTestIdentifier01, message1.AgvId);
+            Assert.AreEqual(AgvState.Discovered, message1.PreviousState);
+            Assert.AreEqual(AgvState.Idle, message1.CurrentState);
+
+            Assert.AreEqual(AgvTestIdentifier01, message2.AgvId);
+            Assert.AreEqual(AgvState.Idle, message2.PreviousState);
+            Assert.AreEqual(AgvState.Busy, message2.CurrentState);
         }
     }
 }

@@ -1,7 +1,7 @@
 using JetBrains.Annotations;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.Common.Messages.Agv.Events
+namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events
 {
 
     /// <summary>

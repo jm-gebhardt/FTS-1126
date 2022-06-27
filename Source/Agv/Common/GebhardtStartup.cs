@@ -18,7 +18,7 @@ namespace Gebhardt.StoreWare.Agv.Common
         /// Check if we are running in Docker Container
         /// </summary>
         public static bool InDocker => Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true";
-        
+
         /// <summary>
         /// Create default host and create singleton worker implementation.
         /// </summary>
@@ -29,7 +29,7 @@ namespace Gebhardt.StoreWare.Agv.Common
             string? serviceName = Assembly.GetEntryAssembly()?.GetName().Name;
             if (IsNullOrEmpty(serviceName))
             {
-	            throw new InvalidOperationException("Service name information missing.");
+                throw new InvalidOperationException("Service name information missing.");
             }
 
             var host = Host.CreateDefaultBuilder(args)
@@ -44,7 +44,7 @@ namespace Gebhardt.StoreWare.Agv.Common
                         settings.SourceName = serviceName;
                     });
                 })
-                .ConfigureWebHost(host => 
+                .ConfigureWebHost(host =>
                 {
                     host.UseKestrel()
                         .Configure(app =>
@@ -56,7 +56,7 @@ namespace Gebhardt.StoreWare.Agv.Common
                 .ConfigureLogging(conf =>
                 {
                     // Use json output when running in Docker
-                    if(InDocker)
+                    if (InDocker)
                     {
                         conf.AddJsonConsole();
                     }

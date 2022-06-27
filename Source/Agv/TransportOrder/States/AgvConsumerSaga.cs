@@ -1,6 +1,6 @@
 ﻿using MassTransit;
-using Gebhardt.StoreWare.Agv.Common.Messages.Agv.Events;
-
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.States
 {
@@ -13,62 +13,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.States
     public class AgvConsumerSaga : ISaga, InitiatedByOrOrchestrates<IAgvStatusReceived>
     {
         /// <summary>
-        /// AGV states.
-        /// </summary>
-        public enum AgvState
-        {
-            /// <summary>
-            /// New AGV discovered by receiving IAgvStatusReceived while missing information evaluating the current state of the AGV.
-            /// </summary>
-            /// <remarks>Hypothetical, receiving <see cref="IAgvStatusReceived"/> will lead to one of the subsequent states.</remarks>
-            Discovered,
-
-            /// <summary>
-            /// Idle.
-            /// </summary>
-            Idle,
-
-            /// <summary>
-            /// Busy.
-            /// </summary>
-            Busy,
-
-            /// <summary>
-            /// Busy, maintenance requested.
-            /// </summary>
-            /// <remarks>Reserved, for future use.</remarks>
-            [JetBrains.Annotations.UsedImplicitly]
-            BusyRequestForMaintenance,
-
-            /// <summary>
-            /// Busy, charging requested.
-            /// </summary>
-            BusyRequestForCharging,
-
-            /// <summary>
-            /// Disturbed.
-            /// </summary>
-            Error,
-
-            /// <summary>
-            /// Charging.
-            /// </summary>
-            Charging,
-
-            /// <summary>
-            /// Maintaining.
-            /// </summary>
-            Maintenance,
-
-            /// <summary>
-            /// Disabled.
-            /// </summary>
-            /// <remarks>Reserved, for future use.</remarks>
-            [JetBrains.Annotations.UsedImplicitly]
-            Disabled
-        }
-
-        /// <summary>
         /// Default constructor required to connect.
         /// </summary>
         public AgvConsumerSaga(Guid correlationId)
@@ -79,7 +23,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.States
             }
             CorrelationId = correlationId;
         }
-
 
         /// <summary>
         /// Current state.
@@ -96,43 +39,54 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.States
         /// </summary>
         public string? AgvId { get; private set; }
 
-
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="c"></param>
+        /// <param name="context"></param>
         /// <returns></returns>
-        public async Task Consume(ConsumeContext<IAgvStatusReceived> c)
+        public async Task Consume(ConsumeContext<IAgvStatusReceived> context)
         {
-            AgvId ??= c.Message.AgvId;
+            AgvId ??= context.Message.AgvId;
+            var previousState = CurrentState;
 
-            if (c.Message.Disturbed)
+            if (context.Message.Disturbed)
             {
                 CurrentState = AgvState.Error;
             }
-            else if (!c.Message.Automatic)
+            else if (!context.Message.Automatic)
             {
                 CurrentState = AgvState.Maintenance;
             }
-            else if (c.Message.Charging)
+            else if (context.Message.Charging)
             {
                 CurrentState = AgvState.Charging;
             }
-            else if (c.Message.Busy && c.Message.BatteryCharge <= IAgvStatusReceived.BadBatteryLevel)
+            else if (context.Message.Busy && context.Message.BatteryCharge <= IAgvStatusReceived.BadBatteryLevel)
             {
                 CurrentState = AgvState.BusyRequestForCharging;
             }
-            else if (c.Message.Busy)
+            else if (context.Message.Busy)
             {
                 CurrentState = AgvState.Busy;
             }
-            else if (!c.Message.Busy)
+            else if (!context.Message.Busy)
             {
                 CurrentState = AgvState.Idle;
             }
             else
             {
                 CurrentState = AgvState.Discovered;
+            }
+
+            if (CurrentState == AgvState.Discovered || CurrentState != previousState) // New AGV or new state
+            {
+                await context.Publish<IAgvStateChanged>(new 
+                { 
+                    context.Message.CorrelationId,
+                    context.Message.AgvId,
+                    PreviousState = previousState,
+                    CurrentState
+                });
             }
 
             await Task.CompletedTask;
