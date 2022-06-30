@@ -6,11 +6,17 @@ variables:
 - name: 'Build.Configuration'
   value: 'Release'
 
+  # Please don't forget to set the variables the variable group inside your Az Devops Account
+  # Required denominations
+  # - CopiedFolderPath
+  # - IsSimulationRequested
+- group: BuildAgentSim              
+
 stages:
 - stage: Build
   jobs:
   ################################################
-  # ReShaper
+  # ReSharper
   ################################################
   - job: CodeAnalysis
     pool:
@@ -71,3 +77,34 @@ stages:
           coverageType: lines
           coverageThreshold: 70
           coverageFailOption: fixed
+  ################################################
+  # Sim on Build Agent 
+  ################################################
+- stage: Sim_on_UbuntuServer
+  condition: eq( variables['IsSimulationRequested'] , 'true')
+  pool:
+    name: AGVDev
+  jobs:
+  - job: PrepareSimulation
+    displayName: Copy files & Start docker compose
+    steps:
+    - task: CmdLine@2
+      displayName: docker compose down
+      inputs:
+        script: docker compose down
+        workingDirectory: '$(CopiedFolderPath)'
+    - task: CopyFiles@2
+      displayName: Copy files
+      inputs:
+        Contents: |
+          **/*
+          !.git/**/*
+        targetFolder: '$(CopiedFolderPath)'
+        overWrite: true
+    - task: CmdLine@2
+      displayName: docker compose up
+      inputs:
+        script: | 
+          docker compose up -d
+          exit 0
+        workingDirectory: '$(CopiedFolderPath)'
