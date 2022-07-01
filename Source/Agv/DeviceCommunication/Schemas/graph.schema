@@ -1,106 +1,145 @@
 ﻿{
-	"$schema": "https://json-schema.org/draft/2020-12/schema",
-    "title": "graph",
-    "description": "Graph representing the paths on which the AGV travels",
-    "subtopic": "/graph",
-    "type": "object",
-    "properties": {
-        "ModificationDate": {
-            "type": "string",
-            "description": "The modification date of the graph. Timestamp in ISO8601 format.",
-            "format": "date-time",
-            "examples": [
-                "1991-03-11T11:40:03.12Z"
-            ]
-        },
-        "NumberOfNodes": {
-            "type": "integer",
-            "description": "The total amount of nodes in the graph. Must correlate with list count of nodes in following parameter."
-        },
-        "NumberOfEdges": {
-            "type": "integer",
-            "description": "The total amount of edges in the graph. Must correlate with list count of edges in following parameter."
-        },
-        "Nodes": {
-            "type": "array",
-            "description": "The list of nodes in the graph",
-            "items": [
-                {
-                    "type": "object",
-                    "properties": {
-                        "NodeId": {
-                            "type": "integer",
-                            "description": "The unique ID of the node"
-                        },
-                        "X": {
-                            "type": "number",
-                            "description": "The x coordinate of the node"
-                        },
-                        "Y": {
-                            "type": "number",
-                            "description": "The y coordinate of the node"
-                        },
-                        "Z": {
-                            "type": "number",
-                            "description": "The z coordinate of the node. For example if there is a another floor. This field is not required"
-                        }
-                    },
-                    "required": [
-                        "NodeId",
-                        "X",
-                        "Y"
-                    ]
-                }
-            ]
-        },
-        "Edges": {
-            "type": "array",
-            "description": "The list of edges in the graph",
-            "items": [
-                {
-                    "type": "object",
-                    "properties": {
-                        "EdgeId": {
-                            "type": "integer",
-                            "description": "The unique ID of the edge"
-                        },
-                        "StartId": {
-                            "type": "integer",
-                            "description": "The ID of the node where the edge starts"
-                        },
-                        "EndId": {
-                            "type": "integer",
-                            "description": "The ID of the node where the edge ends"
-                        },
-                        "Bidirectional": {
-                            "type": "string",
-                            "description": "true/false. The edge can be traveled in both directions. If false, only from start to end is allowed.",
-                            "examples": [
-                                "true",
-                                "false"
-                            ]
-                        },
-                        "MaxVelocity": {
-                            "type": "integer",
-                            "description": "The maximum allowed velocity on that edge"
-                        }
-                    },
-                    "required": [
-                        "EdgeId",
-                        "Start_Id",
-                        "End_Id",
-                        "Bidirectional",
-                        "MaxVelocity"
-                    ]
-                }
-            ]
-        }
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "graph",
+  "description": "Graph representing the paths on which the AGV travels",
+  "subtopic": "/graph",
+  "type": "object",
+  "properties": {
+    "SerialNumber": {
+      "description": "Serial number of the AGV.",
+      "type": "string",
+      "examples": [
+        "1234-5678",
+        "AGV2034"
+      ]
     },
-    "required": [
-        "ModificationDate",
-        "NumberOfNodes",
-        "NumberOfEdges",
-        "Nodes",
-        "Edges"
-    ]
+    "ModificationDate": {
+      "type": "string",
+      "description": "The modification date of the graph. Timestamp in ISO8601 format.",
+      "format": "date-time",
+      "examples": [
+        "1991-03-11T11:40:03.12Z"
+      ]
+    },
+    "RequestId": {
+      "type": "integer",
+      "description": "A unique request ID"
+    },
+    "NumberOfNodes": {
+      "type": "integer",
+      "description": "The total amount of nodes in the graph. Must correlate with list count of nodes in following parameter."
+    },
+    "NumberOfEdges": {
+      "type": "integer",
+      "description": "The total amount of edges in the graph. Must correlate with list count of edges in following parameter."
+    },
+    "Nodes": {
+      "type": "array",
+      "description": "The list of nodes in the graph",
+      "items": [
+        {
+          "type": "object",
+          "description": "Node representation",
+          "properties": {
+            "NodeId": {
+              "type": "integer",
+              "description": "The unique ID of the node"
+            },
+            "X": {
+              "type": "number",
+              "description": "The x coordinate of the node"
+            },
+            "Y": {
+              "type": "number",
+              "description": "The y coordinate of the node"
+            },
+            "Z": {
+              "type": "number",
+              "description": "The z coordinate of the node. For example if there is a another floor. This field is not required"
+            },
+            "Attributes": {
+              "type": "array",
+              "description": "The list of attributes attached to the node",
+              "items": [
+                {
+                  "type": "object",
+                  "description": "Node attribute",
+                  "properties": {
+                    "Key": {
+                      "type": "string",
+                      "description": "The key (name) of the attribute"
+                    },
+                    "Value": {
+                      "type": "string",
+                      "description": "The value of the attribute"
+                    }
+                  },
+                  "required": [
+                    "Key",
+                    "Value"
+                  ]
+                }
+              ]
+            }
+          },
+          "required": [
+            "NodeId",
+            "X",
+            "Y"
+          ]
+        }
+      ]
+    },
+    "Edges": {
+      "type": "array",
+      "description": "The list of edges in the graph",
+      "items": [
+        {
+          "type": "object",
+          "description": "Edge representation",
+          "properties": {
+            "EdgeId": {
+              "type": "integer",
+              "description": "The unique ID of the edge"
+            },
+            "StartId": {
+              "type": "integer",
+              "description": "The ID of the node where the edge starts"
+            },
+            "EndId": {
+              "type": "integer",
+              "description": "The ID of the node where the edge ends"
+            },
+            "Bidirectional": {
+              "type": "string",
+              "description": "true/false. The edge can be traveled in both directions. If false, only from start to end is allowed.",
+              "examples": [
+                "true",
+                "false"
+              ]
+            },
+            "MaxVelocity": {
+              "type": "integer",
+              "description": "The maximum allowed velocity on that edge"
+            }
+          },
+          "required": [
+            "EdgeId",
+            "StartId",
+            "EndId",
+            "Bidirectional",
+            "MaxVelocity"
+          ]
+        }
+      ]
+    }
+  },
+  "required": [
+    "SerialNumber",
+    "ModificationDate",
+    "NumberOfNodes",
+    "NumberOfEdges",
+    "Nodes",
+    "Edges"
+  ]
 }

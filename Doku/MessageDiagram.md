@@ -4,11 +4,31 @@ sequenceDiagram
     participant TransportOrder
     participant AgvManagement
     participant DeviceCommunication
+    participant (AGV)
 
     Note over TransportOrder,AgvManagement: AgvManagement is currently<br>part of TransportOrder
 
+    Note left of (AGV): TAR: AgvId == SerialNumber
+
+    (AGV)->>DeviceCommunication: IState
+    activate DeviceCommunication
+    DeviceCommunication->>AgvManagement: IAgvStatusReceived
+    deactivate DeviceCommunication
+    activate AgvManagement
+    AgvManagement->>DeviceCommunication: IAgvRequestGraph
+    deactivate AgvManagement
+    activate DeviceCommunication
+    DeviceCommunication->>(AGV): IRequestGraph
+    deactivate DeviceCommunication
+    activate (AGV)
+    (AGV)->>DeviceCommunication: IGraph
+    deactivate (AGV)
+    activate DeviceCommunication
+    DeviceCommunication->>AgvManagement: IAgvGraphReceived
+    deactivate DeviceCommunication
+
     Note over WCSCommunication,DeviceCommunication: Handle HostOrder
-    
+
     WCSCommunication->>TransportOrder: IHandleHostOrder
 
     TransportOrder->>AgvManagement: IAssignAgv

@@ -48,7 +48,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
                 BatteryCharge = GetBatteryCharge(message),
                 Charging = GetCharging(message),
                 Disturbed = GetDisturbed(message)
-            });
+            }, context.CancellationToken);
             
         }
 

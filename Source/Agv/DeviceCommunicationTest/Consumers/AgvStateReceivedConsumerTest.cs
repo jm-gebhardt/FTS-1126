@@ -1,9 +1,5 @@
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MassTransit;
-using MassTransit.Testing;
-using MassTransit.Configuration;
-using MassTransit.Serialization;
+using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
@@ -86,6 +82,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         }
 
         #endregion
+
 
         /// <summary>
         /// Test for consuming AGV state message the results in all properties of the reply set to true/100/set
@@ -217,31 +214,16 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         /// </summary>
         private async Task ConsumeMessage(DummyState agvState, DummyAgvStatusReceived? expectedReply)
         {
-            var collection = new ServiceCollection().
-                AddMassTransitTestHarness(x =>
-                {
-                    x.AddMqttConsumer<AgvStateConsumer>();
-                    x.UsingInMemory((context, cfg) =>
-                    {
-                        cfg.AddSerializer(new SystemTextJsonRawMessageSerializerFactory());
-                        cfg.SerializerContentType = SystemTextJsonMessageSerializer.JsonContentType;
-                        cfg.ConfigureEndpoints(context);
-                    });
-                });
+            var fixture = new MqttConsumerTestFixture<AgvStateConsumer>();
 
-            var provider = collection?.BuildServiceProvider(true);
-            var testHarness = provider.GetTestHarness();
-            await testHarness.Start();
+            await fixture.TestHarness.Bus.PublishMqtt<IState>(agvState, null);
 
-            IConsumerTestHarness<AgvStateConsumer> consumerHarness = testHarness.GetConsumerHarness<AgvStateConsumer>();
-            await testHarness.Bus.PublishMqtt<IState>(agvState, null);
+            Assert.IsTrue(await fixture.TestHarness.Published.Any<IState>());
 
-            Assert.IsTrue(await testHarness.Published.Any<IState>());
+            var consumedMsg = fixture.ConsumerHarness.Consumed.Select<IState>().First().Context.Message;
 
-            var consumedMsg = consumerHarness.Consumed.Select<IState>().First().Context.Message;
-
-            Assert.AreEqual(consumedMsg.SerialNumber, agvState.SerialNumber);
-            Assert.AreEqual(consumedMsg.OrderId, agvState.OrderId);
+            Assert.AreEqual(agvState.SerialNumber, consumedMsg.SerialNumber);
+            Assert.AreEqual(agvState.OrderId, consumedMsg.OrderId);
 
             if (agvState.ActionStates == null)
             {
@@ -281,11 +263,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
 
             if (expectedReply == null)
             {
-                Assert.IsFalse(await testHarness.Published.Any<IAgvStatusReceived>());
+                Assert.IsFalse(await fixture.TestHarness.Published.Any<IAgvStatusReceived>());
             }
             else
             {
-                var publishedMsg = testHarness.Published.Select<IAgvStatusReceived>().First().Context.Message;
+                var publishedMsg = fixture.TestHarness.Published.Select<IAgvStatusReceived>().First().Context.Message;
                 Assert.AreEqual(expectedReply.AgvId, publishedMsg.AgvId);
                 Assert.AreEqual(expectedReply.OrderId, publishedMsg.OrderId);
                 Assert.AreEqual(expectedReply.Busy, publishedMsg.Busy);

@@ -17,7 +17,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         private const string AgvTestIdentifier01 = "#2410#";
         private const string AgvTestIdentifier02 = "#0815#";
 
-        private async Task TestPublishAndResult(
+        private async Task TestAgvStatusPublishAndResult(
             ConsumerSagaTestFixture<AgvConsumerSaga> fixture,
             object agvStatusReceived,
             string expectedAgv,
@@ -49,7 +49,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             var fixture = new ConsumerSagaTestFixture<AgvConsumerSaga>();
 
             // Simulate receive for AGV 1 -> Idle
-            await TestPublishAndResult(
+            await TestAgvStatusPublishAndResult(
                 fixture,
                 new
                 {
@@ -66,7 +66,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             );
 
             // Simulate state change for AGV 1 -> Busy
-            await TestPublishAndResult(
+            await TestAgvStatusPublishAndResult(
                 fixture,
                 new
                 {
@@ -83,7 +83,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             );
 
             // Simulate state change for AGV 1 -> BusyRequestForCharging
-            await TestPublishAndResult(
+            await TestAgvStatusPublishAndResult(
                 fixture,
                 new
                 {
@@ -100,7 +100,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             );
 
             // Simulate receive for AGV 2 -> Error
-            await TestPublishAndResult(
+            await TestAgvStatusPublishAndResult(
                 fixture,
                 new
                 {
@@ -117,7 +117,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             );
 
             // Simulate receive for AGV 2 -> Charging
-            await TestPublishAndResult(
+            await TestAgvStatusPublishAndResult(
                 fixture,
                 new
                 {
@@ -134,7 +134,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             );
 
             // Simulate receive for AGV 2 -> Maintenance
-            await TestPublishAndResult(
+            await TestAgvStatusPublishAndResult(
                 fixture,
                 new
                 {
@@ -161,7 +161,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         {
             var fixture = new ConsumerSagaTestFixture<AgvConsumerSaga>();
 
-            await TestPublishAndResult(
+            await TestAgvStatusPublishAndResult(
                 fixture,
                 new
                 {
@@ -178,7 +178,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             );
 
             // Simulate state change for AGV 1 -> Busy
-            await TestPublishAndResult(
+            await TestAgvStatusPublishAndResult(
                 fixture,
                 new
                 {

@@ -5,7 +5,7 @@ using Gebhardt.StoreWare.Agv.Common.Utilities;
 namespace Gebhardt.StoreWare.Agv.CommonTest
 {
     /// <summary>
-    /// GebhardtStartup Test
+    /// Test for utility <see cref="StringExtensions"/>.
     /// </summary>
     [TestClass]
     public class UtilitiesTest

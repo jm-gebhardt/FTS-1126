@@ -10,7 +10,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.States
     /// This is built as a consumer saga (<see href="https://masstransit-project.com/usage/sagas/consumer-saga.html" />).
     /// </para></summary>
     [JetBrains.Annotations.PublicAPI]
-    public class AgvConsumerSaga : ISaga, InitiatedByOrOrchestrates<IAgvStatusReceived>
+    public class AgvConsumerSaga : ISaga, 
+        InitiatedByOrOrchestrates<IAgvStatusReceived>,
+        Orchestrates<IAgvGraphReceived>
     {
         /// <summary>
         /// Default constructor required to connect.
@@ -40,7 +42,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.States
         public string? AgvId { get; private set; }
 
         /// <summary>
-        /// 
+        /// Handle <see cref="IAgvStatusReceived"/>.
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
@@ -89,6 +91,16 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.States
                 });
             }
 
+            await Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Handle <see cref="IAgvGraphReceived"/>.
+        /// </summary>
+        /// <param name="c"></param>
+        /// <returns></returns>
+        public async Task Consume(ConsumeContext<IAgvGraphReceived> c)
+        {
             await Task.CompletedTask;
         }
     }

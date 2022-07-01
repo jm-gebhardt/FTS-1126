@@ -1,15 +1,14 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Definitions;
+﻿using Gebhardt.StoreWare.Agv.Common.Testing;
+using Gebhardt.StoreWare.Agv.Common.Definitions;
 using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages;
 using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Commands;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
 using MassTransit;
-using MassTransit.Configuration;
 using MassTransit.Serialization;
 using MassTransit.Testing;
 using MassTransit.Testing.Implementations;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Reflection;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Enums;
@@ -29,25 +28,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
 		[TestMethod]
 		public async Task Test_Send_TransportOrder_To_AGV_Via_MQTT()
 		{
-			var collection = new ServiceCollection()
-				.AddMassTransitTestHarness(x =>
-				{
-					x.AddConsumer<ExecuteTransportOrderConsumer>();
-					x.UsingInMemory((context, cfg) =>
-					{
-						var serializerFactory = new SystemTextJsonRawMessageSerializerFactory();
-						cfg.AddSerializer(serializerFactory);
-						cfg.SerializerContentType = SystemTextJsonMessageSerializer.JsonContentType;
-						cfg.ConfigureEndpoints(context);
-					});
-				});
-			var provider = collection?.BuildServiceProvider(true);
-			var testHarness = provider.GetTestHarness();
-			await testHarness.Start();
+			var fixture = new MqttConsumerTestFixture<ExecuteTransportOrderConsumer>();
 
 			//Create a publish observer
 			var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
-			using (testHarness.Bus.ConnectPublishObserver(publishObserver))
+			using (fixture.TestHarness.Bus.ConnectPublishObserver(publishObserver))
 			{
 				const string agvId = "agv0";
 				const string orderId = "1234";
@@ -56,7 +41,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
 				const string leNo = "na";
 
 				//Publish IExecuteTransportOrder
-				await testHarness.Bus.Publish<IExecuteTransportOrder>(
+				await fixture.TestHarness.Bus.Publish<IExecuteTransportOrder>(
 					new
 					{
 						AssignedAgv = agvId,
@@ -67,10 +52,10 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
 							HostOrderCreator.Simulation)
 					});
 				//Check if sent
-				Assert.IsTrue(await testHarness.Published.Any<IExecuteTransportOrder>());
+				Assert.IsTrue(await fixture.TestHarness.Published.Any<IExecuteTransportOrder>());
 
 				//Get Consumer Harness
-				IConsumerTestHarness<ExecuteTransportOrderConsumer> consumerHarness = testHarness.GetConsumerHarness<ExecuteTransportOrderConsumer>();
+				IConsumerTestHarness<ExecuteTransportOrderConsumer> consumerHarness = fixture.TestHarness.GetConsumerHarness<ExecuteTransportOrderConsumer>();
 				//Check if consumed
 				Assert.IsTrue(await consumerHarness.Consumed.Any<IExecuteTransportOrder>());
 				//Get consumed message
@@ -104,35 +89,21 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
 		[TestMethod]
 		public async Task Test_Send_ChargeOrder_To_AGV_Via_MQTT()
 		{
-			var collection = new ServiceCollection()
-				.AddMassTransitTestHarness(x =>
-				{
-					x.AddConsumer<ExecuteTransportOrderConsumer>();
-					x.UsingInMemory((context, cfg) =>
-					{
-						var serializerFactory = new SystemTextJsonRawMessageSerializerFactory();
-						cfg.AddSerializer(serializerFactory);
-						cfg.SerializerContentType = SystemTextJsonMessageSerializer.JsonContentType;
-						cfg.ConfigureEndpoints(context);
-					});
-				});
-			var provider = collection?.BuildServiceProvider(true);
-			var testHarness = provider.GetTestHarness();
-			await testHarness.Start();
+			var fixture = new MqttConsumerTestFixture<ExecuteTransportOrderConsumer>();
 
 			//Create a publish observer
 			var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
-			using (testHarness.Bus.ConnectPublishObserver(publishObserver))
+			using (fixture.TestHarness.Bus.ConnectPublishObserver(publishObserver))
 			{
 				const string agvId = "agv0";
 				const string chargerId = "CHG1";
 				//Publish IExecuteTransportOrder
-				await testHarness.Bus.Publish<ISendAgvChargeOrder>(new { CorrelationId = Guid.NewGuid(), AgvId = agvId, ToCharger = chargerId });
+				await fixture.TestHarness.Bus.Publish<ISendAgvChargeOrder>(new { CorrelationId = Guid.NewGuid(), AgvId = agvId, ToCharger = chargerId });
 				//Check if sent
-				Assert.IsTrue(await testHarness.Published.Any<ISendAgvChargeOrder>());
+				Assert.IsTrue(await fixture.TestHarness.Published.Any<ISendAgvChargeOrder>());
 
 				//Get Consumer Harness
-				IConsumerTestHarness<ExecuteTransportOrderConsumer> consumerHarness = testHarness.GetConsumerHarness<ExecuteTransportOrderConsumer>();
+				IConsumerTestHarness<ExecuteTransportOrderConsumer> consumerHarness = fixture.TestHarness.GetConsumerHarness<ExecuteTransportOrderConsumer>();
 				//Check if consumed
 				Assert.IsTrue(await consumerHarness.Consumed.Any<ISendAgvChargeOrder>());
 				//Get consumed message

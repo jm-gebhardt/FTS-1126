@@ -1,12 +1,11 @@
 ﻿using System.Reflection;
+using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 using MassTransit;
-using MassTransit.Configuration;
 using MassTransit.Serialization;
 using MassTransit.Testing;
 using MassTransit.Testing.Implementations;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Publish
@@ -24,27 +23,13 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Publish
 		[TestMethod]
 		public async Task TestPublishMqttMessageAndBusConfiguration()
 		{
-			var collection = new ServiceCollection()
-					.AddMassTransitTestHarness(x =>
-					{
-						x.UsingInMemory((context, cfg) =>
-						{
-							cfg.ConfigureEndpoints(context);
-							var serializerFactory = new SystemTextJsonRawMessageSerializerFactory();
-							cfg.AddSerializer(serializerFactory);
-							cfg.SerializerContentType = SystemTextJsonMessageSerializer.JsonContentType;
-						});
-					});
-
-			var provider = collection.BuildServiceProvider(true);
-			var testHarness = provider.GetTestHarness();
-			await testHarness.Start();
+			var fixture = new MqttTestFixture();
 
 			var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
 
-			using (testHarness.Bus.ConnectPublishObserver(publishObserver))
+			using (fixture.TestHarness.Bus.ConnectPublishObserver(publishObserver))
 			{
-				await testHarness.Bus.PublishMqtt<IState>(new { OrderId = "1234", OperatingMode = "AUTOMATIC"}, null);
+				await fixture.TestHarness.Bus.PublishMqtt<IState>(new { OrderId = "1234", OperatingMode = "AUTOMATIC"}, null);
 
 				IPublishedMessage<IState> a = publishObserver.Messages.Select<IState>().First();
 

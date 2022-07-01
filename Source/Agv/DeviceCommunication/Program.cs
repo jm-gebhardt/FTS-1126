@@ -45,6 +45,8 @@ try
 						{
 							//add consumers here
 							configurator.AddMqttConsumer<AgvStateConsumer>();
+							configurator.AddMqttConsumer<AgvGraphConsumer>();
+							configurator.AddConsumer<AgvRequestGraphConsumer>();
 							configurator.AddConsumer<ExecuteTransportOrderConsumer>();
 						},
 
@@ -52,6 +54,7 @@ try
 						rabbitMqConfiguration: (registrationContext, configurator) =>
 						{
 							//for outgoing MQTT messages the message topology needs to be configured
+							configurator.ConfigureMessageTopology<IRequestGraph>();
 							configurator.ConfigureMessageTopology<IOrder>();
 
 							//for incoming MQTT messages the raw JSON serializer/deserializer needs to be added
