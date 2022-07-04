@@ -15,7 +15,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
         private readonly ILogger<AgvStateConsumer> _logger;
 
         /// <summary>
-        /// Create consumer with message handler delegate for simulation.
+        /// Create consumer for agv status message (<see cref="IState"/>)
         /// </summary>
         /// <param name="logger">Mandatory logger facility.</param>
         [PublicAPI]

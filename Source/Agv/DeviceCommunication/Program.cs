@@ -46,6 +46,7 @@ try
 							//add consumers here
 							configurator.AddMqttConsumer<AgvStateConsumer>();
 							configurator.AddMqttConsumer<AgvGraphConsumer>();
+							configurator.AddMqttConsumer<OrderEventConsumer>();
 							configurator.AddConsumer<AgvRequestGraphConsumer>();
 							configurator.AddConsumer<ExecuteTransportOrderConsumer>();
 						},

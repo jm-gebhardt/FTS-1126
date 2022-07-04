@@ -6,13 +6,13 @@ using MassTransit;
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
 {
 	/// <summary>
-	/// The order object to be sent to the TAR/Karis AGV
+	/// The order object to be sent to the TAR/Karis AGV ((see 'order.schema'))
 	/// </summary>
 	[PublicAPI]
 	//Specifies the RabbitMq exchange where the message is published
 	[EntityName("amq.topic")]
 	//Specifies the topic where subscribers can receive the message
-	[RoutingKey("Order")]
+	[RoutingKey("agv.order")]
 	public interface IOrder
 	{
 		/// <summary>
@@ -26,9 +26,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
 		public Coordinates? Coordinates { get; set; }
 
 		/// <summary>
-		/// The unique identifier of the agv
+		/// The unique serialnumber of the agv
 		/// </summary>
-		public string? Identifier { get; set; }
+		public string? SerialNumber { get; set; }
 
 		/// <summary>
 		/// The type of the order. Pick/Drop/Transport

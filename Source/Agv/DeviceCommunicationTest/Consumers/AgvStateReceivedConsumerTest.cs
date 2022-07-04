@@ -232,10 +232,10 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
             else
             {
                 Assert.IsNotNull(consumedMsg.ActionStates);
-                Assert.AreEqual(consumedMsg.ActionStates.Count, agvState.ActionStates.Count);
+                Assert.AreEqual(agvState.ActionStates.Count, consumedMsg.ActionStates.Count);
                 for (int i = 0; i < consumedMsg.ActionStates.Count; i++)
                 {
-                    Assert.AreEqual(consumedMsg.ActionStates[i].ActionStatus, agvState.ActionStates[i].ActionStatus);
+                    Assert.AreEqual(agvState.ActionStates[i].ActionStatus, consumedMsg.ActionStates[i].ActionStatus);
                 }
             }
 
@@ -246,8 +246,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
             else
             {
                 Assert.IsNotNull(consumedMsg.BatteryState);
-                Assert.AreEqual(consumedMsg.BatteryState.BatteryCharge, agvState.BatteryState.BatteryCharge);
-                Assert.AreEqual(consumedMsg.BatteryState.Charging, agvState.BatteryState.Charging);
+                Assert.AreEqual(agvState.BatteryState.BatteryCharge, consumedMsg.BatteryState.BatteryCharge);
+                Assert.AreEqual(agvState.BatteryState.Charging, consumedMsg.BatteryState.Charging);
             }
 
             if (agvState.SafetyState == null)
@@ -257,8 +257,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
             else
             {
                 Assert.IsNotNull(consumedMsg.SafetyState);
-                Assert.AreEqual(consumedMsg.SafetyState.EStop, agvState.SafetyState.EStop);
-                Assert.AreEqual(consumedMsg.SafetyState.FieldViolation, agvState.SafetyState.FieldViolation);
+                Assert.AreEqual(agvState.SafetyState.EStop, consumedMsg.SafetyState.EStop);
+                Assert.AreEqual(agvState.SafetyState.FieldViolation, consumedMsg.SafetyState.FieldViolation);
             }
 
             if (expectedReply == null)

@@ -77,7 +77,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
 				Assert.AreEqual(SystemTextJsonRawMessageSerializer.JsonContentType, a.Context.ContentType);
 
 				//Check content
-				Assert.AreEqual(agvId, a.Context.Message.Identifier);
+				Assert.AreEqual(agvId, a.Context.Message.SerialNumber);
 
 				Assert.AreEqual(fromStationId, a.Context.Message.Stations?.FromStationIdentifier);
 				Assert.AreEqual(toStationId, a.Context.Message.Stations?.ToStationIdentifier);
@@ -125,7 +125,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
 				Assert.AreEqual(SystemTextJsonRawMessageSerializer.JsonContentType, a.Context.ContentType);
 
 				//Check content
-				Assert.AreEqual(agvId, a.Context.Message.Identifier);
+				Assert.AreEqual(agvId, a.Context.Message.SerialNumber);
 				Assert.AreEqual(guid.ToString(), a.Context.Message.OrderId);
 				Assert.AreEqual(chargerId, a.Context.Message.Stations?.ToStationIdentifier);
 			}

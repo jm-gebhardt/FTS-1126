@@ -35,7 +35,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
 			await context.PublishMqtt<IOrder>(new
 			{
 				context.Message.Order.OrderId,
-				Identifier = context.Message.AssignedAgv,
+				SerialNumber = context.Message.AssignedAgv,
 				OrderType = OrderType.Transport,
 				RecordType = OrderRecordType.Order,
 				Stations = new Stations()
@@ -62,7 +62,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
 			await context.PublishMqtt<IOrder>(new
 			{
 				OrderId = context.Message.CorrelationId.ToString(), //use correlation ID here, because we don't have an orderId here
-				Identifier = context.Message.AgvId,
+				SerialNumber = context.Message.AgvId,
 				OrderType = OrderType.Charge,
 				RecordType = OrderRecordType.Order,
 				Stations = new Stations()

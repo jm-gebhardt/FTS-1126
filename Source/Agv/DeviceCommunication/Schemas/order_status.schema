@@ -5,7 +5,7 @@
 	"subtopic": "/orderStatus",
 	"type": "object",
 	"properties": {
-		"Identifier": {
+		"SerialNumber": {
 			"description": "The unique identifier of the agv",
 			"type": "string",
 			"examples": [
@@ -102,7 +102,7 @@
 		}
 	},
 	"required": [
-		"Identifier",
+		"SerialNumber",
 		"OrderId",
 		"OrderType",
 		"Blocked",
