@@ -42,13 +42,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
                 {
                     CorrelationId = parser.SerialNumber.ToGuid(),
                     AgvId = parser.SerialNumber,
-                    Nodes = parser.Nodes.ToArray(),
-                    Edges = parser.Edges.ToArray()
+                    parser.Graph
                 }, context.CancellationToken);
             }
             catch (InvalidOperationException ex)
             {
-                _logger.LogError(ex, "Message IGraph has invalid content: {Graph}.", context.Message);
+                _logger.LogError(ex, "Message IGraph has invalid content: {Graph}", context.Message);
                 throw;
             }
         }

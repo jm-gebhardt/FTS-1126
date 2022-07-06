@@ -10,6 +10,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Persistence;
 using Gebhardt.StoreWare.Agv.TransportOrder.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.States;
 using Gebhardt.StoreWare.Agv.Common.Messages;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
@@ -27,56 +28,50 @@ try
                 {
                     services.AddScoped(_ => options);
                     services.AddSingleton<RoundRobinAgvRegistry>();
-                    if (!options.EnableInMemoryPersistence)
+                    
+                    services.AddDbContextFactory<SagaPersistenceDbContext>(builder =>
                     {
-                        services.AddDbContextFactory<SagaPersistenceDbContext>(builder =>
+                        builder.UseSqlServer(context.Configuration.GetConnectionString(SagaPersistenceDbContext.ConfigSectionName), m =>
                         {
-                            builder.UseSqlServer(context.Configuration.GetConnectionString(SagaPersistenceDbContext.ConfigSectionName), m =>
-                            {
-                                m.MigrationsHistoryTable(SagaPersistenceDbContext.MigrationTableName);
-                            });
+                            m.MigrationsHistoryTable(SagaPersistenceDbContext.MigrationTableName);
                         });
-                    }
+                    });
+                    
                     ConfigureServicesMassTransit.ConfigureServices(services, context.Configuration, x =>
                     {
                         x.AddSagaStateMachine<OrderStateMachine, OrderSaga>()
-                            .AddPersistence<OrderSaga, SagaPersistenceDbContext>(options.EnableInMemoryPersistence);
-
-                        x.AddSaga<AgvConsumerSaga>()
-                            .AddPersistence<AgvConsumerSaga, SagaPersistenceDbContext>(options.EnableInMemoryPersistence);
+                            .AddPersistence<OrderSaga, SagaPersistenceDbContext>();
                         x.AddConsumer<RoundRobinAssignAgvConsumer>();
                     });
                 }).Build();
 
         })
-        .WithParsed<ProductionOptions>(options =>
+        .WithParsed<ProductionOptions>(_ =>
         {
             host = GebhardtStartup.CreateHostBuilder(args)
                 .ConfigureServices((context, services) =>
                 {
                     services.AddSingleton<ConcurrentQueue<KeyValuePair<Guid, Order>>>();
-                    services.AddSingleton<IAgvRegistry>((_) => new InMemoryAgvRegistry());
+                    services.AddTransient<IAgvRegistry, EfAgvRegistry>();
                     
-                    if (!options.EnableInMemoryPersistence)
-                    {
-                        services.AddDbContextFactory<SagaPersistenceDbContext>(builder => 
-                        { 
-                            builder.UseSqlServer(context.Configuration.GetConnectionString(SagaPersistenceDbContext.ConfigSectionName), m =>
-                            {
-                                m.MigrationsHistoryTable(SagaPersistenceDbContext.MigrationTableName);
-                            }); 
-                        });
-                    }
+                    services.AddDbContextFactory<SagaPersistenceDbContext>(builder => 
+                    { 
+                        builder.UseSqlServer(context.Configuration.GetConnectionString(SagaPersistenceDbContext.ConfigSectionName), m =>
+                        {
+                            m.MigrationsHistoryTable(SagaPersistenceDbContext.MigrationTableName);
+                        }); 
+                    });
+              
                     try
                     {
                         ConfigureServicesMassTransit.ConfigureServices(services, context.Configuration, x =>
                         {
                             x.AddSagaStateMachine<OrderStateMachine, OrderSaga>()
-                                .AddPersistence<OrderSaga, SagaPersistenceDbContext>(options.EnableInMemoryPersistence);
-                            x.AddSaga<AgvConsumerSaga>()
-                                .AddPersistence<AgvConsumerSaga, SagaPersistenceDbContext>(options.EnableInMemoryPersistence);
+                                .AddPersistence<OrderSaga, SagaPersistenceDbContext>();
+                            x.AddSagaStateMachine<AgvStateMachine, AgvSaga>()
+                                .AddPersistence<AgvSaga, SagaPersistenceDbContext>();
                             x.AddConsumer<AssignAgvConsumer>();
-                            x.AddConsumer<AgvStateChangedConsumer>();
+                            x.AddRequestClient<ReserveAgv>();
                         });
                     }
                     catch (InvalidOperationException e)

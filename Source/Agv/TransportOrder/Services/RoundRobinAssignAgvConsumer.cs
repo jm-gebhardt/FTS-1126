@@ -28,11 +28,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
 		/// <param name="context"></param>
 		public async Task Consume(ConsumeContext<IAssignAgv> context)
 		{
-			await context.Publish<IAgvAssignSucceeded>(new
+			await context.Publish<IAgvAssignmentSucceeded>(new
 			{
 				context.Message.CorrelationId,
-				context.Message.Order.OrderId,
-				AssignedAgv = ChooseAgv()
+				AgvId = ChooseAgv()
 			});
 		}
 

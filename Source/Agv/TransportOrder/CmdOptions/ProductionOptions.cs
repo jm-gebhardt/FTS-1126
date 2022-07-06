@@ -8,7 +8,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CmdOptions
     /// </summary>
     [UsedImplicitly]
     [Verb("production", isDefault: true)]
-    public sealed class ProductionOptions: SagaPersistenceOptions
+    public sealed class ProductionOptions
     {
         /// <summary>
         /// This is required for `dotnet ef migrations` to work.

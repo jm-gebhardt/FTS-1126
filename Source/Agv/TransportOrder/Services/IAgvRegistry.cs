@@ -1,4 +1,5 @@
-﻿
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
 {
     /// <summary>
@@ -20,7 +21,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// <summary>
         /// Get list of idle AGVs
         /// </summary>
-        public IEnumerable<Common.Messages.AgvManagement.Agv> GetIdleAgvs();
+        public IEnumerable<IAgv> GetIdleAgvs();
 
     }
 }

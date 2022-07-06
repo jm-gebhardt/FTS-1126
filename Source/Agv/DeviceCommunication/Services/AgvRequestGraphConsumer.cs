@@ -36,7 +36,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
 				RequestId = context.Message.CorrelationId
 			}, context.CancellationToken);
 
-			_logger.LogInformation("Requesting AGV graph from AGV {AgvId}.", context.Message.AgvId);
+			_logger.LogInformation("Requesting AGV graph from AGV {AgvId}", context.Message.AgvId);
 
 		}
 	}

@@ -46,7 +46,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
 				await fixture.TestHarness.Bus.Publish<IExecuteTransportOrder>(
 					new
 					{
-						AssignedAgv = agvId,
+						correlationId = agvId.ToGuid(),
+						AgvId = agvId,
 						Order = new Order(
 							correlationId,
 							orderId,
@@ -65,7 +66,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
 				//Get consumed message
 				IReceivedMessage<IExecuteTransportOrder> consumedMessage = consumerHarness.Consumed.Select<IExecuteTransportOrder>().First();
 				//Check consumed message
-				Assert.AreEqual(agvId, consumedMessage.Context.Message.AssignedAgv);
+				Assert.AreEqual(agvId, consumedMessage.Context.Message.AgvId);
 				Assert.AreEqual(orderId, consumedMessage.Context.Message.Order.OrderId);
 				Assert.AreEqual(fromStationId, consumedMessage.Context.Message.Order.Source);
 				

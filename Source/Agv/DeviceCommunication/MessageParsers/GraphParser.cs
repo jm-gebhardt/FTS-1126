@@ -1,4 +1,6 @@
-﻿using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Utilities;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
@@ -12,8 +14,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
 
         private bool _checkedVelocity;
         private bool _haveVelocity;
-        private List<Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events.Node>? _nodes;
-        private List<Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events.Edge>? _edges;
+        private List<AgvGraph.Node>? _nodes;
+        private List<AgvGraph.Edge>? _edges;
 
 
         /// <summary>
@@ -98,13 +100,13 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
             ParseVelocity();
             if (_edges == null)
             {
-                _edges = new List<Common.Messages.AgvManagement.Events.Edge>();
+                _edges = new List<AgvGraph.Edge>();
 
                 foreach (var edge in _graph.Edges!)
                 {
                     float metric = CalculateMetric(edge, _graph.Nodes!, _haveVelocity);
 
-                    _edges.Add(new Common.Messages.AgvManagement.Events.Edge
+                    _edges.Add(new AgvGraph.Edge
                     {
                         From = edge.StartId.ToString(),
                         To = edge.EndId.ToString(),
@@ -117,7 +119,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
                     if (edge.Bidirectional)
                     {
                         // Build reversed edge by swapping From and To.
-                        _edges.Add(new Common.Messages.AgvManagement.Events.Edge
+                        _edges.Add(new AgvGraph.Edge
                         {
                             From = edge.EndId.ToString(),
                             To = edge.StartId.ToString(),
@@ -146,16 +148,16 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
             ParseEdges();
             if (_nodes == null)
             {
-                _nodes = new List<Common.Messages.AgvManagement.Events.Node>();
+                _nodes = new List<AgvGraph.Node>();
 
                 foreach (var node in _graph.Nodes!)
                 {
-                    _nodes.Add(new Common.Messages.AgvManagement.Events.Node
+                    _nodes.Add(new AgvGraph.Node
                     {
                         Id = node.NodeId.ToString(),
                         Enabled = true,
 
-                        Type = Common.Messages.AgvManagement.Events.NodeType.WayPoint,
+                        Type = AgvGraph.NodeType.WayPoint,
                         X = node.X,
                         Y = node.Y,
                         Z = node.Z ?? 0f
@@ -168,19 +170,19 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
                             Node.WellKnownAttributes unused;
                             if (Enum.TryParse(attr.Key, false, out unused))
                             {
-                                _nodes.Add(new Common.Messages.AgvManagement.Events.Node
+                                _nodes.Add(new AgvGraph.Node
                                 {
                                     Id = attr.Value,
                                     Enabled = true,
 
-                                    Type = Common.Messages.AgvManagement.Events.NodeType.Station,
+                                    Type = AgvGraph.NodeType.Station,
                                     X = node.X,
                                     Y = node.Y,
                                     Z = node.Z ?? 0f
                                 });
 
                                 // Add corresponding internal edges
-                                _edges!.Add(new Common.Messages.AgvManagement.Events.Edge
+                                _edges!.Add(new AgvGraph.Edge
                                 {
                                     From = attr.Value,
                                     To = node.NodeId.ToString(),
@@ -189,7 +191,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
                                     Bidirectional = true,
                                     MaxVelocity = 0
                                 });
-                                _edges!.Add(new Common.Messages.AgvManagement.Events.Edge
+                                _edges!.Add(new AgvGraph.Edge
                                 {
                                     From = node.NodeId.ToString(),
                                     To = attr.Value,
@@ -262,7 +264,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
         /// nodes do not match edges or
         /// node IDs are not unique..</exception>
         [JetBrains.Annotations.PublicAPI]
-        public List<Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events.Edge> Edges
+        public List<AgvGraph.Edge> Edges
         {
             get
             {
@@ -277,7 +279,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
         /// <exception cref="InvalidOperationException">Nodes are not valid (see <see cref="NodesValid"/>) or
         /// edges are not valid (see <see cref="EdgesValid"/>).</exception>
         [JetBrains.Annotations.PublicAPI]
-        public List<Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events.Node> Nodes
+        public List<AgvGraph.Node> Nodes
         {
             get
             {
@@ -285,5 +287,14 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
                 return _nodes!;
             }
         }
+
+        /// <summary>
+        /// Create AgvGraph
+        /// </summary>
+        public AgvGraph Graph =>
+            new(SerialNumber.ToGuid(),
+                Nodes.ToArray(),
+                Edges.ToArray()
+            );
     }
 }

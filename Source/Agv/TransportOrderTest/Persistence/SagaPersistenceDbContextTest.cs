@@ -1,5 +1,6 @@
 using Gebhardt.StoreWare.Agv.Common.Definitions;
 using Gebhardt.StoreWare.Agv.Common.Messages;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence;
 using Gebhardt.StoreWare.Agv.TransportOrder.States;
@@ -21,7 +22,7 @@ public class SagaPersistenceDbContextTest
         // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
         public DbSet<OrderSaga> OrderSagas { get; set; }  = null!;
         // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
-        public DbSet<AgvConsumerSaga> AgvConsumerSagas { get; set; }  = null!;
+        public DbSet<AgvSaga> AgvSagas { get; set; }  = null!;
 
         public DbSetSagaPersistenceDbContext(): this(new DbContextOptions<DbSetSagaPersistenceDbContext>())
         {
@@ -87,20 +88,25 @@ public class SagaPersistenceDbContextTest
         var provider = collection.BuildServiceProvider(true);
         var dbContextFactory = provider.GetService<IDbContextFactory<DbSetSagaPersistenceDbContext>>()!;
         
-        string orderId = "Order123";
-        var correlationId = orderId.ToGuid();
-        var agvSaga = new AgvConsumerSaga(correlationId);
+        const string agvId = "AGV1";
+        var correlationId = agvId.ToGuid();
+        var agvSaga = new AgvSaga(correlationId, agvId, "TestState", 
+            new AgvStatus(Guid.NewGuid(), "123", true, true, 10,false, false),
+            new AgvGraph(Guid.NewGuid(), 
+                new AgvGraph.Node[] { new()}, 
+                new AgvGraph.Edge[] { new()})
+            );
         using (var dbContext = dbContextFactory.CreateDbContext())
         {
             dbContext.Database.EnsureCreated();
             
-            dbContext.AgvConsumerSagas.Add(agvSaga);
+            dbContext.AgvSagas.Add(agvSaga);
             dbContext.SaveChanges();
         }
 
         using (var dbContext = dbContextFactory.CreateDbContext())
         {
-            var restoredAgvSaga = dbContext.AgvConsumerSagas.First();
+            var restoredAgvSaga = dbContext.AgvSagas.First();
             // Test if restore objects contains all properties by comparing JSON converted
             Assert.AreEqual(JsonConvert.SerializeObject(agvSaga), JsonConvert.SerializeObject(restoredAgvSaga));
         }

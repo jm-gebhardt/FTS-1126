@@ -35,7 +35,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
 			await context.PublishMqtt<IOrder>(new
 			{
 				context.Message.Order.OrderId,
-				SerialNumber = context.Message.AssignedAgv,
+				SerialNumber = context.Message.AgvId,
 				OrderType = OrderType.Transport,
 				RecordType = OrderRecordType.Order,
 				Stations = new Stations()
@@ -45,7 +45,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
 				}
 			}, context.CancellationToken);
 
-			_logger.LogInformation("Sent transport order: {OrderId} for AGV:{AssignedAgv} from {Source} to {Destination}", context.Message.Order.OrderId, context.Message.AssignedAgv, context.Message.Order.Source, context.Message.Order.Destination);
+			_logger.LogInformation("Sent transport order: {OrderId} for AGV:{AgvId} from {Source} to {Destination}", context.Message.Order.OrderId, context.Message.AgvId, context.Message.Order.Source, context.Message.Order.Destination);
 
 		}
 
@@ -57,7 +57,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
 		{
 			if (context.Message.CorrelationId == Guid.Empty)
 			{
-				_logger.LogWarning("Charge order for AGV:{AssignedAgv} to {Destination} has no GUID!", context.Message.AgvId, context.Message.ToCharger);
+				_logger.LogWarning("Charge order for AGV:{AgvId} to {Destination} has no GUID!", context.Message.AgvId, context.Message.ToCharger);
 			}
 			await context.PublishMqtt<IOrder>(new
 			{
@@ -71,7 +71,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
 				}
 			}, context.CancellationToken);
 
-			_logger.LogInformation("Sent charge order: {CorrelationId} for AGV:{AssignedAgv} to {Destination}", context.Message.CorrelationId, context.Message.AgvId, context.Message.ToCharger);
+			_logger.LogInformation("Sent charge order: {CorrelationId} for AGV:{AgvId} to {Destination}", context.Message.CorrelationId, context.Message.AgvId, context.Message.ToCharger);
 
 		}
 	}

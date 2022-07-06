@@ -26,9 +26,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.States
         public Guid CorrelationId { get; set; }
         
         /// <summary>
-        /// AssignedAgv
+        /// AgvId
         /// </summary>
-        public string? AssignedAgv { get; set; }
+        public Guid? AssignedAgv { get; set; }
 
         /// <summary>
         /// The order details of this saga
@@ -57,7 +57,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.States
         /// <param name="order"></param>
         /// <param name="currentState"></param>
         /// <param name="assignedAgv"></param>
-        public OrderSaga(Guid correlationId, Order order, string currentState, string? assignedAgv): 
+        public OrderSaga(Guid correlationId, Order order, string currentState, Guid? assignedAgv): 
             this(correlationId, order)
         {
             CurrentState = currentState;
@@ -65,7 +65,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.States
         }
 
         // Private constructor for Entity Framework 
-        private OrderSaga(Guid correlationId, string currentState, string? assignedAgv)
+        private OrderSaga(Guid correlationId, string currentState, Guid? assignedAgv)
         {
             CorrelationId = correlationId;
             CurrentState = currentState;

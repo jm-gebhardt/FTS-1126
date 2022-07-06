@@ -1,4 +1,5 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 using JetBrains.Annotations;
@@ -38,16 +39,20 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
                 throw new InvalidOperationException($"Cannot handle {typeof(IState)} message, serialNumber must not be null or empty"); 
             }
            
+            
             await context.Publish<IAgvStatusReceived>(new
             {
                 CorrelationId = serialNumber.ToGuid(),
                 AgvId = serialNumber,
-                OrderId = GetOrderId(message),
-                Busy = GetBusy(message),
-                Automatic = GetAutomatic(message),
-                BatteryCharge = GetBatteryCharge(message),
-                Charging = GetCharging(message),
-                Disturbed = GetDisturbed(message)
+                AgvStatus = new AgvStatus(
+                    serialNumber.ToGuid(),
+                    GetOrderId(message),
+                    GetBusy(message),
+                    GetAutomatic(message),
+                    GetBatteryCharge(message),
+                    GetCharging(message),
+                    GetDisturbed(message)
+                )
             }, context.CancellationToken);
             
         }

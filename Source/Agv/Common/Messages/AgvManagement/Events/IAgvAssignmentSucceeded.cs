@@ -8,16 +8,16 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events
     /// An event that provides a assigned AGV for an order 
     /// </summary>
     [PublicAPI]
-    public interface IAgvAssignSucceeded : CorrelatedBy<Guid>
+    public interface IAgvAssignmentSucceeded : CorrelatedBy<Guid>
     {
-        /// <summary>
-        /// The unique ID of the order known by the host system
-        /// </summary>
-        string OrderId { get; }
-
         /// <summary>
         /// Identifier of the Assigned AGV
         /// </summary>
-        string AssignedAgv { get; }
+        string AgvId { get; }
+        
+        /// <summary>
+        /// The AGV correlation id 
+        /// </summary>
+        Guid AgvCorrelationId { get;  }
     }
 }

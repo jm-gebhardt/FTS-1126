@@ -27,13 +27,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence
             // set table names
             entity.ToTable(OrderSagaTableName);
             model.Entity<Order>().ToTable(OrderTableName);
-            
+
             // Restrict CurrenState length
             entity.Property(x => x.CurrentState).HasMaxLength(CurrenStateMaxLength);
             
             // Specify Primary Keys
             entity.HasKey(x => x.CorrelationId);
             model.Entity<Order>().HasKey(o => o.CorrelationId);
+            
+            entity.Property(x => x.AssignedAgv);
             
             // Specify One-to-One relationship between OrderSaga and Order
             entity.HasOne(x => x.Order)

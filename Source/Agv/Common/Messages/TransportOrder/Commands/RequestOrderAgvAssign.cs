@@ -1,0 +1,25 @@
+using MassTransit;
+
+namespace Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Commands
+{
+
+    /// <summary>
+    /// Request the assignment of an agv for given correlationId
+    /// </summary>
+    public class RequestOrderAgvAssign : CorrelatedBy<Guid>
+    {
+        /// <summary>
+        /// CorrelationId
+        /// </summary>
+        public Guid CorrelationId { get; }
+
+        /// <summary>
+        ///  RequestOrderAgvAssign Constructor
+        /// </summary>
+        /// <param name="correlationId"></param>
+        public RequestOrderAgvAssign(Guid correlationId)
+        {
+            CorrelationId = correlationId;
+        }
+    }
+}

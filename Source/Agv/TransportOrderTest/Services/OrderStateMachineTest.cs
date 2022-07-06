@@ -26,7 +26,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         /// When HostOrder received agv Is requested
         /// </summary>
         [TestMethod]
-        public async Task When_HostOrderReceived_AgvIsRequested()
+        public async Task When_HostOrderReceived_OrderReceived_RequestOrderAgvAssign_Published()
         {
             var fixture = new StateMachineTestFixture<OrderStateMachine, OrderSaga>();
             const string orderId = "Order#1";
@@ -43,7 +43,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<IHandleHostOrder>());
 
             var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
-            Assert.AreEqual(fixture.SagaHarness.StateMachine.AgvRequested.Name, saga.CurrentState);
+            Assert.AreEqual(fixture.SagaHarness.StateMachine.OrderReceived.Name, saga.CurrentState);
+            Assert.IsTrue(await fixture.TestHarness.Published.Any<RequestOrderAgvAssign>());
             Assert.IsNull(saga.AssignedAgv);
             Assert.IsNotNull(saga.Order.OrderId);
             Assert.IsNotNull(saga.Order.Source);
@@ -66,6 +67,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                     Order = new Order(correlationId, orderId,  "SRC1", "DST1", "LeNo123", HostOrderCreator.Simulation)
                 }
             );
+            
+            Assert.IsTrue(await fixture.TestHarness.Published.Any<IHandleHostOrder>());
 
             Assert.IsNull(await fixture.SagaHarness.NotExists(Guid.Empty, TimeSpan.FromMilliseconds(10)));
         }
@@ -103,19 +106,21 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 
             fixture.Add(orderSaga);
 
-            const string assignedAgv = "AGV1";
-            await fixture.TestHarness.Bus.Publish<IAgvAssignSucceeded>(
+            const string assignedAgvId = "AGV1";
+            var assignedAgvCorrelationId = assignedAgvId.ToGuid();
+            await fixture.TestHarness.Bus.Publish<IAgvAssignmentSucceeded>(
                 new
                 {
                     orderSaga.CorrelationId,
                     orderSaga.Order.OrderId,
-                    AssignedAgv = assignedAgv
+                    AgvId = assignedAgvId,
+                    AgvCorrelationId =  assignedAgvCorrelationId
                 }
             );
-            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<IAgvAssignSucceeded>());
+            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<IAgvAssignmentSucceeded>());
             
             Assert.AreEqual(fixture.SagaHarness.StateMachine.TransportOrderSend.Name, orderSaga.CurrentState);
-            Assert.AreEqual(assignedAgv, orderSaga.AssignedAgv);
+            Assert.AreEqual(assignedAgvCorrelationId, orderSaga.AssignedAgv);
             Assert.IsTrue(await fixture.TestHarness.Published.Any<IExecuteTransportOrder>());
             Assert.IsTrue(await fixture.TestHarness.Published.Any<IHostOrderStarted>());
         }

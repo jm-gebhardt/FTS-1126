@@ -44,11 +44,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 
             Assert.IsTrue(await fixture.ConsumerHarness.Consumed.Any<IAssignAgv>());
 
-            var responseMessage = fixture.TestHarness.Published.Select<IAgvAssignSucceeded>().First().Context.Message;
+            var responseMessage = fixture.TestHarness.Published.Select<IAgvAssignmentSucceeded>().First().Context.Message;
             Assert.IsNotNull(responseMessage);
             Assert.AreEqual(correlationId, responseMessage.CorrelationId);
-            Assert.AreEqual(orderId, responseMessage.OrderId);
-            Assert.AreEqual($"{AgvNamePrefix}_0", responseMessage.AssignedAgv);
+            Assert.AreEqual($"{AgvNamePrefix}_0", responseMessage.AgvId);
             const string secondOrderId = "Order#2";
             var secondCorrelationId = secondOrderId.ToGuid();  
             
@@ -63,8 +62,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 
             Assert.IsTrue(await fixture.ConsumerHarness.Consumed.Any<IAssignAgv>());
 
-            responseMessage = fixture.TestHarness.Published.Select<IAgvAssignSucceeded>().First().Context.Message;
-            Assert.AreEqual($"{AgvNamePrefix}_0", responseMessage.AssignedAgv);
+            responseMessage = fixture.TestHarness.Published.Select<IAgvAssignmentSucceeded>().First().Context.Message;
+            Assert.AreEqual($"{AgvNamePrefix}_0", responseMessage.AgvId);
         }
         
         /// <summary>
@@ -92,8 +91,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 
             Assert.IsTrue(await fixture.ConsumerHarness.Consumed.Any<IAssignAgv>());
 
-            var responseMessage = fixture.TestHarness.Published.Select<IAgvAssignSucceeded>().First().Context.Message;
-            Assert.AreEqual($"{AgvNamePrefix}_0", responseMessage.AssignedAgv);
+            var responseMessage = fixture.TestHarness.Published.Select<IAgvAssignmentSucceeded>().First().Context.Message;
+            Assert.AreEqual($"{AgvNamePrefix}_0", responseMessage.AgvId);
             // ----------- Second Assignment ---------------------------------
             const string secondOrderId = "Order#2";
             var secondCorrelationId = secondOrderId.ToGuid();
@@ -108,9 +107,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 
             Assert.IsTrue(await fixture.ConsumerHarness.Consumed.Any<IAssignAgv>());
 
-            responseMessage = fixture.TestHarness.Published.Select<IAgvAssignSucceeded>(
+            responseMessage = fixture.TestHarness.Published.Select<IAgvAssignmentSucceeded>(
                 s=> s.Context.CorrelationId == secondCorrelationId).First().Context.Message;
-            Assert.AreEqual($"{AgvNamePrefix}_1", responseMessage.AssignedAgv);
+            Assert.AreEqual($"{AgvNamePrefix}_1", responseMessage.AgvId);
             // ----------- Third Assignment ---------------------------------
             const string thirdOrderId = "Order#3";
             var thirdCorrelationId = thirdOrderId.ToGuid();
@@ -125,9 +124,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 
             Assert.IsTrue(await fixture.ConsumerHarness.Consumed.Any<IAssignAgv>());
 
-            responseMessage = fixture.TestHarness.Published.Select<IAgvAssignSucceeded>(
+            responseMessage = fixture.TestHarness.Published.Select<IAgvAssignmentSucceeded>(
                 s=> s.Context.CorrelationId == thirdCorrelationId).First().Context.Message;
-            Assert.AreEqual($"{AgvNamePrefix}_0", responseMessage.AssignedAgv);
+            Assert.AreEqual($"{AgvNamePrefix}_0", responseMessage.AgvId);
         }
     }
 }

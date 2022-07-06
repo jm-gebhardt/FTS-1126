@@ -15,9 +15,13 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Commands
 		Order Order { get; }
 
 		/// <summary>
-		/// The assigned AGV
+		/// The assigned AGV ID
 		/// </summary>
-		string AssignedAgv { get; }
-
+		string AgvId { get; }
+		
+		/// <summary>
+		/// The assigned AGV CorrelationId
+		/// </summary>
+		Guid AgvCorrelationId { get; }
 	}
 }

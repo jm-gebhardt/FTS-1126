@@ -23,7 +23,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Persistence
             /// </summary>
             public void CallConfiguration()
             {
-                Configure(_builder.Entity<AgvConsumerSaga>(), _builder);
+                Configure(_builder.Entity<AgvSaga>(), _builder);
             }
         } 
 
