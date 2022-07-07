@@ -2,11 +2,11 @@
 	admin off
 	local_certs
 	ocsp_stapling off
-	auto_https disable_redirects
+	auto_https off
 }
 
 # manually expose metrics as we disabled the admin API
-:2019 {
+caddy.agv.localhost:80 {
 	metrics /metrics
 }
 
@@ -40,7 +40,6 @@ import proxy prom.rabbitmq.agv.localhost rabbitmq.agv:15692
 import proxy rabbitmq.agv.localhost rabbitmq.agv:15672
 import proxy fluent.agv.localhost fluent.agv:2020
 import proxy node.fluent.agv.localhost fluent.agv:2021
-import proxy caddy.agv.localhost caddy.agv:2019
 
 import proxy wcscommunication.agv.localhost wcscommunication.agv
 import proxy transportorder.agv.localhost transportorder.agv

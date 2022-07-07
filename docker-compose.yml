@@ -276,4 +276,4 @@ services:
         condition: service_started
     logging: *fluent-logging
     healthcheck:
-      test:  wget --spider -q --tries=1 -O- http://localhost:2019/metrics || exit 1
+      test:  wget --spider -q --tries=1 -O- http://localhost/metrics || exit 1
