@@ -21,12 +21,11 @@
       }
     ]
   },
-  "description": "",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 7,
-  "iteration": 1654855548221,
+  "id": 4,
+  "iteration": 1657271313574,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -40,7 +39,7 @@
       },
       "id": 6,
       "panels": [],
-      "title": "Simplistic overview",
+      "title": "Log metrics",
       "type": "row"
     },
     {
@@ -48,18 +47,17 @@
         "type": "loki",
         "uid": "P8E80F9AEF21F6940"
       },
-      "description": "",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "palette-classic"
           },
           "custom": {
-            "axisLabel": "Entries",
+            "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
             "drawStyle": "line",
-            "fillOpacity": 2,
+            "fillOpacity": 0,
             "gradientMode": "none",
             "hideFrom": {
               "legend": false,
@@ -70,7 +68,7 @@
             "lineStyle": {
               "fill": "solid"
             },
-            "lineWidth": 1,
+            "lineWidth": 2,
             "pointSize": 5,
             "scaleDistribution": {
               "type": "linear"
@@ -92,28 +90,145 @@
               {
                 "color": "green",
                 "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
               }
             ]
           },
-          "unit": "min⁻¹"
+          "unit": "min⁻1"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*[Cc]addy.*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "caddy"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*[Cc]advisor.*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "cadvisor"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*[Dd]evice[Cc]ommunication.*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "devicecommunication"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*[Gg]rafana.*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "grafana"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*[Mm]ssql.*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "mssql"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*[Pp]rometheus.*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "prometheus"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*[Rr]abbit[Mm][Qq].*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "rabbitmq"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*[Tt]ar[Aa]gv.*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "taragv"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*[Tt]ransport[Oo]rder.*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "transportorder"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*[Ww]cs[Cc]ommunication.*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "wcscommunication"
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
-        "h": 8,
+        "h": 6,
         "w": 18,
         "x": 0,
         "y": 1
       },
-      "id": 8,
+      "id": 2,
       "options": {
         "legend": {
           "calcs": [],
-          "displayMode": "list",
+          "displayMode": "table",
           "placement": "right"
         },
         "tooltip": {
@@ -127,12 +242,13 @@
             "type": "loki",
             "uid": "P8E80F9AEF21F6940"
           },
-          "expr": "rate({container_name=~\"/agvdev.*\" }[1m])*60",
+          "editorMode": "builder",
+          "expr": "sum by(container_name) (rate({container_name=~\".+\"} [1m])) * 60",
           "queryType": "range",
           "refId": "A"
         }
       ],
-      "title": "Incoming Entries per minute",
+      "title": "Incoming Entries per Minute",
       "type": "timeseries"
     },
     {
@@ -187,17 +303,138 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "Entries"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*[Cc]addy.*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "caddy"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*[Cc]advisor.*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "cadvisor"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*[Dd]evice[Cc]ommunication.*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "devicecommunication"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*[Gg]rafana.*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "grafana"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*[Mm]ssql.*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "mssql"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*[Pp]rometheus.*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "prometheus"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*[Rr]abbit[Mm][Qq].*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "rabbitmq"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*[Tt]ar[Aa]gv.*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "taragv"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*[Tt]ransport[Oo]rder.*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "transportorder"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*[Ww]cs[Cc]ommunication.*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "wcscommunication"
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
-        "h": 8,
+        "h": 6,
         "w": 18,
         "x": 0,
-        "y": 9
+        "y": 7
       },
-      "id": 50,
+      "id": 4,
       "options": {
         "legend": {
           "calcs": [],
@@ -216,12 +453,13 @@
             "type": "loki",
             "uid": "P8E80F9AEF21F6940"
           },
-          "expr": "sum(count_over_time({container_name=~\"/agvdev.*\" }[7d])) by (container_name,log_level)",
+          "editorMode": "code",
+          "expr": "sum by(container_name, log_level) (count_over_time({container_name=~\".+\"} [$__range]))",
           "queryType": "range",
           "refId": "A"
         }
       ],
-      "title": "Inbound Entries (not stacked)",
+      "title": "Number of inbound Entries (not stacked)",
       "type": "timeseries"
     },
     {
@@ -229,7 +467,7 @@
         "type": "loki",
         "uid": "P8E80F9AEF21F6940"
       },
-      "description": "Total bytes sent in the past 7 days.",
+      "description": "Total bytes sent in the past interval (TimeFrame).",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -247,15 +485,136 @@
           },
           "unit": "decbytes"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*[Cc]addy.*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "caddy"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*[Cc]advisor.*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "cadvisor"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*[Dd]evice[Cc]ommunication.*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "devicecommunication"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*[Gg]rafana.*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "grafana"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*[Mm]ssql.*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "mssql"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*[Pp]rometheus.*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "prometheus"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*[Rr]abbit[Mm][Qq].*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "rabbitmq"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*[Tt]ar[Aa]gv.*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "taragv"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*[Tt]ransport[Oo]rder.*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "transportorder"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*[Ww]cs[Cc]ommunication.*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "wcscommunication"
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
-        "h": 8,
+        "h": 6,
         "w": 18,
         "x": 0,
-        "y": 17
+        "y": 13
       },
-      "id": 22,
+      "id": 8,
       "options": {
         "displayMode": "gradient",
         "minVizHeight": 10,
@@ -270,14 +629,15 @@
         },
         "showUnfilled": true
       },
-      "pluginVersion": "8.5.3",
+      "pluginVersion": "9.0.2",
       "targets": [
         {
           "datasource": {
             "type": "loki",
             "uid": "P8E80F9AEF21F6940"
           },
-          "expr": "sum(bytes_over_time({container_name=~\"/agvdev.*\" }[7d])) by (container_name)",
+          "editorMode": "code",
+          "expr": "sum by(container_name) (bytes_over_time({container_name=~\".+\"} [$__range]))",
           "queryType": "range",
           "refId": "A"
         }
@@ -295,9 +655,9 @@
         "h": 14,
         "w": 18,
         "x": 0,
-        "y": 25
+        "y": 19
       },
-      "id": 24,
+      "id": 10,
       "options": {
         "dedupStrategy": "none",
         "enableLogDetails": true,
@@ -314,12 +674,13 @@
             "type": "loki",
             "uid": "P8E80F9AEF21F6940"
           },
-          "expr": "{log_level=\"Information\",container_name=${Containers}} | json | line_format \"Module= {{.container_name}} ||| Message = {{.Message}}\"",
+          "editorMode": "builder",
+          "expr": "{container_name=~\"$ServiceGroup|$Service\"} | json | line_format `Module= {{.container_name}} | Level= {{.LogLevel}}| Message= {{.Message}}| Log= {{.log}}`",
           "queryType": "range",
           "refId": "A"
         }
       ],
-      "title": "Information - Log entries",
+      "title": "Container - Log entries",
       "transformations": [],
       "type": "logs"
     },
@@ -329,11 +690,11 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 39
+        "y": 33
       },
-      "id": 4,
+      "id": 12,
       "panels": [],
-      "title": "Order assignment",
+      "title": "AGV Orders",
       "type": "row"
     },
     {
@@ -341,73 +702,23 @@
         "type": "loki",
         "uid": "P8E80F9AEF21F6940"
       },
-      "description": "How many transport orders have been assigned to which AGV?",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 25,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "normal"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
+      "description": "Show the json logs of a specific AGV though above mentioned variable.",
       "gridPos": {
         "h": 9,
-        "w": 7,
+        "w": 18,
         "x": 0,
-        "y": 40
+        "y": 34
       },
-      "id": 52,
+      "id": 16,
       "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": false
       },
       "targets": [
         {
@@ -415,101 +726,16 @@
             "type": "loki",
             "uid": "P8E80F9AEF21F6940"
           },
-          "expr": "sum(count_over_time({log_level=~\"Error|Information|Warning\"} |~ \"assigned to\" | json [7d])) by (State_AssignedAgv)",
+          "editorMode": "builder",
+          "expr": "{AgvId=~\"$Agv\"} | json | line_format `{{indent 10 .container_name }} {{indent 10 .Message }}`",
+          "hide": false,
           "queryType": "range",
-          "refId": "A"
+          "refId": "B"
         }
       ],
-      "title": "Transport Order distribution",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
-      },
-      "description": "How many incomplete simulated HostOrders are there?",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "continuous-BlYlRd"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "axisSoftMin": 0,
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 20,
-            "gradientMode": "scheme",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "stepBefore",
-            "lineStyle": {
-              "fill": "solid"
-            },
-            "lineWidth": 3,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 9,
-        "w": 11,
-        "x": 7,
-        "y": 40
-      },
-      "id": 54,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "8.5.3",
-      "targets": [
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
-          },
-          "expr": "sum( count_over_time( {container_name=\"/agvdev-wcscommunication-1\"} |~ \"Simulation HostOrder created\" | json [7d] ) ) by (LogLevel) - \nsum( count_over_time( {container_name=\"/agvdev-devicecommunication-1\"} |~ \"TransportOrderCompleted\" | json [7d] ) ) by (LogLevel)",
-          "queryType": "range",
-          "refId": "A"
-        }
-      ],
-      "title": "Balance - Simulated HostOrder",
-      "type": "timeseries"
+      "title": "AGV json logs",
+      "transformations": [],
+      "type": "logs"
     },
     {
       "datasource": {
@@ -521,9 +747,9 @@
         "h": 8,
         "w": 18,
         "x": 0,
-        "y": 49
+        "y": 43
       },
-      "id": 40,
+      "id": 14,
       "options": {
         "dedupStrategy": "none",
         "enableLogDetails": true,
@@ -540,279 +766,15 @@
             "type": "loki",
             "uid": "P8E80F9AEF21F6940"
           },
-          "expr": "{log_level=~\"Information|Warning\"} | json | State_OrderId=${OrderIdTextBox} | line_format \"{{.container_name }} {{ nindent 20 .Message }}\"",
+          "editorMode": "builder",
+          "expr": "{OrderId=\"$OrderId\"} | json | line_format `{{.container_name }} {{ nindent 20 .Message }}`",
+          "hide": false,
           "queryType": "range",
-          "refId": "A"
+          "refId": "C"
         }
       ],
       "title": "Logs of a single Transport Order",
       "transformations": [],
-      "type": "logs"
-    },
-    {
-      "datasource": {
-        "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
-      },
-      "description": "Show the json logs of a specific AGV though above mentioned variable.",
-      "gridPos": {
-        "h": 9,
-        "w": 18,
-        "x": 0,
-        "y": 57
-      },
-      "id": 42,
-      "options": {
-        "dedupStrategy": "none",
-        "enableLogDetails": true,
-        "prettifyLogMessage": false,
-        "showCommonLabels": false,
-        "showLabels": false,
-        "showTime": true,
-        "sortOrder": "Descending",
-        "wrapLogMessage": false
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
-          },
-          "expr": "{log_level=~\"Information|Warning\"} | json   | State_AssignedAgv=${AGVs} | line_format \"{{indent 10 .container_name }} {{indent 10 .Message }}\"",
-          "maxLines": 15,
-          "queryType": "range",
-          "refId": "A"
-        }
-      ],
-      "title": "AGV json logs",
-      "transformations": [],
-      "type": "logs"
-    },
-    {
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 66
-      },
-      "id": 2,
-      "title": "Error registration",
-      "type": "row"
-    },
-    {
-      "datasource": {
-        "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
-      },
-      "description": "Show the peaks of every error raised by its running container.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "bars",
-            "fillOpacity": 100,
-            "gradientMode": "hue",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "normal"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 11,
-        "w": 18,
-        "x": 0,
-        "y": 67
-      },
-      "id": 48,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "table",
-          "placement": "right"
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
-          },
-          "expr": "rate({container_name=~\"/agvdev.*\"}\n|~ \"[Ee]rror|ERROR|[Ff]ail|FAIL|Exception\" \n[1m] ) * 60",
-          "queryType": "range",
-          "refId": "A"
-        }
-      ],
-      "title": "Error emission rate",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
-      },
-      "description": "How many Errors or Exceptions have been thrown in the past interval?",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "continuous-GrYlRd"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 11,
-        "w": 6,
-        "x": 18,
-        "y": 67
-      },
-      "id": 46,
-      "options": {
-        "displayMode": "basic",
-        "minVizHeight": 10,
-        "minVizWidth": 0,
-        "orientation": "horizontal",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showUnfilled": true
-      },
-      "pluginVersion": "8.5.3",
-      "targets": [
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
-          },
-          "expr": "{container_name=~\"/agvdev-caddy-1|/agvdev-cadvisor-1|/agvdev-devicecommunication-1|/agvdev-fluent-1|/agvdev-mssql-1|/agvdev-rabbitmq-1|/agvdev-taragv-1|/agvdev-transportorder-1|/agvdev-wcscommunication-1\"} |~ \"[Ee]rror|ERROR|[Ff]ail|FAIL|Exception\"",
-          "hide": true,
-          "queryType": "range",
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
-          },
-          "expr": "sum(count_over_time({container_name=~\"/agvdev-caddy-1|/agvdev-cadvisor-1|/agvdev-devicecommunication-1|/agvdev-fluent-1|/agvdev-mssql-1|/agvdev-rabbitmq-1|/agvdev-taragv-1|/agvdev-transportorder-1|/agvdev-wcscommunication-1\"}\n|~ \"[Ee]rror|ERROR|[Ff]ail|FAIL|Exception\" \n[24h] )) \nby (container_name)",
-          "hide": false,
-          "refId": "B"
-        }
-      ],
-      "title": "Number of Errors/Exceptions",
-      "type": "bargauge"
-    },
-    {
-      "datasource": {
-        "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
-      },
-      "description": "Show error logs raised by its running container specified by above mentioned variable.",
-      "gridPos": {
-        "h": 21,
-        "w": 24,
-        "x": 0,
-        "y": 78
-      },
-      "id": 44,
-      "options": {
-        "dedupStrategy": "none",
-        "enableLogDetails": true,
-        "prettifyLogMessage": false,
-        "showCommonLabels": false,
-        "showLabels": false,
-        "showTime": true,
-        "sortOrder": "Descending",
-        "wrapLogMessage": false
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
-          },
-          "expr": "{container_name=~\"/agvdev.*\" } |~ \"[Ee]rror|ERROR|[Ff]ail|FAIL|Exception\" | json | container_name =~ ${Containers}",
-          "hide": true,
-          "queryType": "range",
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
-          },
-          "expr": "{container_name=~ ${Containers:raw} } |~ \"[Ee]rror|ERROR|[Ff]ail|FAIL|Exception\"",
-          "hide": false,
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
-          },
-          "expr": "{container_name=~\"/agvdev-cadvisor-1|/agvdev-caddy-1\"}",
-          "hide": true,
-          "refId": "D"
-        }
-      ],
-      "title": "Error log panel",
       "type": "logs"
     }
   ],
@@ -825,116 +787,103 @@
       {
         "current": {
           "selected": true,
-          "text": "\"AGV_2\"",
-          "value": "\"AGV_2\""
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
         },
-        "description": "",
-        "hide": 0,
-        "includeAll": false,
-        "label": "",
-        "multi": false,
-        "name": "AGVs",
-        "options": [
-          {
-            "selected": false,
-            "text": "\"AGV_0\"",
-            "value": "\"AGV_0\""
-          },
-          {
-            "selected": false,
-            "text": "\"AGV_1\"",
-            "value": "\"AGV_1\""
-          },
-          {
-            "selected": true,
-            "text": "\"AGV_2\"",
-            "value": "\"AGV_2\""
-          }
-        ],
-        "query": "\"AGV_0\",\"AGV_1\",\"AGV_2\"",
-        "queryValue": "",
-        "skipUrlSync": false,
-        "type": "custom"
-      },
-      {
-        "current": {
-          "selected": false,
-          "text": "",
-          "value": ""
+        "datasource": {
+          "type": "loki",
+          "uid": "P8E80F9AEF21F6940"
         },
-        "description": "",
+        "definition": "label_values(AgvId)",
         "hide": 0,
-        "label": "",
-        "name": "OrderIdTextBox",
-        "options": [
-          {
-            "selected": true,
-            "text": "",
-            "value": ""
-          }
-        ],
-        "query": "",
+        "includeAll": true,
+        "multi": true,
+        "name": "Agv",
+        "options": [],
+        "query": "label_values(AgvId)",
+        "refresh": 1,
+        "regex": "",
         "skipUrlSync": false,
-        "type": "textbox"
+        "sort": 0,
+        "type": "query"
       },
       {
         "current": {
           "selected": true,
-          "text": "\"/agvdev-mssql-1\"",
-          "value": "\"/agvdev-mssql-1\""
+          "text": [
+            "/agvdev-taragv-1"
+          ],
+          "value": [
+            "/agvdev-taragv-1"
+          ]
+        },
+        "datasource": {
+          "type": "loki",
+          "uid": "P8E80F9AEF21F6940"
+        },
+        "definition": "label_values(container_name)",
+        "hide": 0,
+        "includeAll": true,
+        "multi": true,
+        "name": "Service",
+        "options": [],
+        "query": "label_values(container_name)",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "loki",
+          "uid": "P8E80F9AEF21F6940"
+        },
+        "definition": "label_values(OrderId)",
+        "hide": 0,
+        "includeAll": true,
+        "multi": false,
+        "name": "OrderId",
+        "options": [],
+        "query": "label_values(OrderId)",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "Microservices",
+          "value": ".*[Dd]evice[Cc]ommunication.*|.*[Ww]cs[Cc]ommunication.*|.*[Tt]ransp[Oo]rtorder.*"
         },
         "hide": 0,
         "includeAll": false,
         "multi": false,
-        "name": "Containers",
+        "name": "ServiceGroup",
         "options": [
           {
-            "selected": false,
-            "text": "\"/agvdev-caddy-1\"",
-            "value": "\"/agvdev-caddy-1\""
-          },
-          {
-            "selected": false,
-            "text": "\"/agvdev-cadvisor-1\"",
-            "value": "\"/agvdev-cadvisor-1\""
-          },
-          {
-            "selected": false,
-            "text": "\"/agvdev-devicecommunication-1\"",
-            "value": "\"/agvdev-devicecommunication-1\""
-          },
-          {
-            "selected": false,
-            "text": "\"/agvdev-fluent-1\"",
-            "value": "\"/agvdev-fluent-1\""
-          },
-          {
             "selected": true,
-            "text": "\"/agvdev-mssql-1\"",
-            "value": "\"/agvdev-mssql-1\""
+            "text": "Microservices",
+            "value": ".*[Dd]evice[Cc]ommunication.*|.*[Ww]cs[Cc]ommunication.*|.*[Tt]ransp[Oo]rtorder.*"
           },
           {
             "selected": false,
-            "text": "\"/agvdev-rabbitmq-1\"",
-            "value": "\"/agvdev-rabbitmq-1\""
-          },
-          {
-            "selected": false,
-            "text": "\"/agvdev-taragv-1\"",
-            "value": "\"/agvdev-taragv-1\""
-          },
-          {
-            "selected": false,
-            "text": "\"/agvdev-transportorder-1\"",
-            "value": "\"/agvdev-transportorder-1\""
-          },
-          {
-            "selected": false,
-            "text": "\"/agvdev-wcscommunication-1\"",
-            "value": "\"/agvdev-wcscommunication-1\""
+            "text": "Logservers",
+            "value": ".*caddy.*|.*cadvisor.*|.*prometheus.*|.*grafana.*|.*mssql.*|.*rabbitmq.*|.*taragv.*"
           }
         ],
-        "query": "\"/agvdev-caddy-1\",\"/agvdev-cadvisor-1\",\"/agvdev-devicecommunication-1\",\"/agvdev-fluent-1\",\"/agvdev-mssql-1\",\"/agvdev-rabbitmq-1\",\"/agvdev-taragv-1\",\"/agvdev-transportorder-1\",\"/agvdev-wcscommunication-1\"",
+        "query": "Microservices : .*[Dd]evice[Cc]ommunication.*|.*[Ww]cs[Cc]ommunication.*|.*[Tt]ransp[Oo]rtorder.* , Logservers : .*caddy.*|.*cadvisor.*|.*prometheus.*|.*grafana.*|.*mssql.*|.*rabbitmq.*|.*taragv.*",
         "queryValue": "",
         "skipUrlSync": false,
         "type": "custom"
@@ -942,15 +891,13 @@
     ]
   },
   "time": {
-    "from": "now-6h",
+    "from": "now-15m",
     "to": "now"
   },
-  "timepicker": {
-    "hidden": false
-  },
+  "timepicker": {},
   "timezone": "",
-  "title": "AGV Dashboard",
-  "uid": "2HWQXkj7z",
-  "version": 21,
+  "title": "Log metrics & AGV",
+  "uid": "nKF-6Ve7k",
+  "version": 2,
   "weekStart": ""
 }
