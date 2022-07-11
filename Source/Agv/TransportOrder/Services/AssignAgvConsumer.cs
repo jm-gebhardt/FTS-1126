@@ -36,32 +36,33 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         public async Task Consume(ConsumeContext<IAssignAgv> context)
         {
             _logger.LogInformation("Order {OrderId}/{CorrelationId} requests assignment to an AGV", context.Message.Order.OrderId, context.Message.CorrelationId);
-            
+
+            var agvChooser = new AgvChooser<AStar>();
             IAgv? assignedAgv = null;
             List<IAgv> idleAgvs = _agvRegistry.GetIdleAgvs().ToList();
             
-            while (assignedAgv == null)
+            while (idleAgvs.Count > 0)
             {
-                // Simply take the first AGV, algorithm needed
-                var agv = idleAgvs.FirstOrDefault();
-                if (agv == null)
+                Guid? agvGuid = agvChooser.ChooseAgv(idleAgvs, context.Message.Order);
+
+                if (agvGuid == null)
                 {
-                    // No agv left to try
+                    _logger.LogInformation("Could not find any AGV to handle {OrderId}", context.Message.Order.OrderId);
                     break;
                 }
-                idleAgvs.Remove(agv);
-                
+
                 Response<AgvReservationSucceeded, AgvReservationRejected> response = await _client.GetResponse<AgvReservationSucceeded, AgvReservationRejected>(
-                    new ReserveAgv(agv.CorrelationId), 
+                    new ReserveAgv(agvGuid.Value),
                     context.CancellationToken);
-                
                 if (response.Message is AgvReservationSucceeded)
                 {
-                    assignedAgv = agv;
+                    assignedAgv = idleAgvs.Single(x => x.CorrelationId == agvGuid);
+                    break;
                 }
                 else
                 {
-                    _logger.LogInformation("Could not reserve Agv {CorrelationId}, trying next", agv.CorrelationId);
+                    _logger.LogInformation("Could not reserve Agv {CorrelationId}, trying next", agvGuid);
+                    idleAgvs.RemoveAll(x => x.CorrelationId == agvGuid);
                 }
             }
 

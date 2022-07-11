@@ -1,0 +1,25 @@
+{
+  "SerialNumber": "AGV-01",
+  "ModificationDate": "2022-07-06T13:14:15",
+  "NumberOfNodes": 1,
+  "NumberOfEdges": 1,
+  "Nodes": [
+    {
+      "NodeId": 1,
+      "X": -69.5,
+      "Y": 576.5,
+      "Z": 264.75,
+      "Attributes": []
+    }
+  ],
+  "Edges": [
+    {
+      "EdgeId": 1,
+      "StartId": 1,
+      "EndId": 1,
+      "Bidirectional": true,
+      "MaxVelocity": 1
+    }
+  ],
+  "RequestId": 467
+}

@@ -4,9 +4,9 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 /// <summary>
 /// AGV Graph
 /// </summary>
+[JetBrains.Annotations.PublicAPI]
 public class AgvGraph: CorrelatedBy<Guid>
 {
-            
     /// <summary>
     ///  AGV correlation ID
     /// </summary>
@@ -77,7 +77,7 @@ public class AgvGraph: CorrelatedBy<Guid>
         /// Usually this is the (numeric) ID passed by the AGV vendor.
         /// For internal reasons it can be necessary to build/combine an internal identification.
         /// </remarks>
-        public string? Id { get; set; }
+        public string Id { get; set; }
 
         /// <summary>
         /// Node enabled/disabled.
@@ -105,22 +105,37 @@ public class AgvGraph: CorrelatedBy<Guid>
         /// Set to default 0 when not needed.
         /// </para></summary>
         public float Z { get; set; }
+
+        /// <summary>
+        /// Simple string representation.
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString() => $"{Id} [X={X}/Y={Y}/Z={Z}]";
+
+        /// <summary>
+        /// todo
+        /// </summary>
+        /// <param name="id"></param>
+        public Node(string id)
+        {
+            Id = id;
+        }
     }
 
     /// <summary>
     /// Edge representation
     /// </summary>
 	[JetBrains.Annotations.PublicAPI]
-    public class Edge
+    public class Edge : ICloneable
     {
         /// <summary>
         /// The ID of the node where the edge starts.
         /// </summary>
-        public string? From { get; set; }
+        public string From { get; set; }
         /// <summary>
         /// The ID of the node where the edge ends.
         /// </summary>
-        public string? To { get; set; }
+        public string To { get; set; }
 
         /// <summary>
         /// Distance/costs to travel this edge (unitless quantifier).
@@ -128,13 +143,32 @@ public class AgvGraph: CorrelatedBy<Guid>
         public float Metric { get; set; }
 
         /// <summary>
-        /// When true there is a sibling edge with <see cref="From"/> and <see cref="To"/> swapped.
+        /// Todo
         /// </summary>
-        public bool Bidirectional { get; set; }
+        /// <param name="from"></param>
+        /// <param name="to"></param>
+        public Edge(string from, string to)
+        {
+            From = from;
+            To = to;
+        }
 
         /// <summary>
-        /// The maximum allowed velocity on that edge.
+        /// Deep copy.
         /// </summary>
-        public float MaxVelocity { get; set; }
+        /// <returns></returns>
+        public object Clone()
+        {
+            return new Edge(this.From, this.To)
+            {
+                Metric = this.Metric
+            };
+        }
+
+        /// <summary>
+        /// Simple string representation.
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString() => $"{From} -- {Metric} --> {To}";
     }
 }

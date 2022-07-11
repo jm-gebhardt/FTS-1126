@@ -29,7 +29,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
         }
 
         /// <summary>
-        /// Consume graph message from AGV and transform this to an internal <see cref="IAgvGraphReceived"/>.
+        /// Consume graph message from AGV and transform this to an internal <see cref="AgvGraphReceived"/>.
         /// </summary>
         /// <exception cref="InvalidOperationException">Message content is invalid and cannot be processed.</exception>
         public async Task Consume(ConsumeContext<IGraph> context)
@@ -38,12 +38,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
 
             try
             {
-                await context.Publish<IAgvGraphReceived>(new
-                {
-                    CorrelationId = parser.SerialNumber.ToGuid(),
-                    AgvId = parser.SerialNumber,
-                    parser.Graph
-                }, context.CancellationToken);
+                await context.Publish(new AgvGraphReceived(
+                    correlationId: parser.SerialNumber.ToGuid(),
+                    agvId: parser.SerialNumber,
+                    graph: parser.Graph
+                ), context.CancellationToken);
             }
             catch (InvalidOperationException ex)
             {

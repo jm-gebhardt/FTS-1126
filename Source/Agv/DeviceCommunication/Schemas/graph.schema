@@ -111,11 +111,11 @@
               "description": "The ID of the node where the edge ends"
             },
             "Bidirectional": {
-              "type": "string",
+              "type": "boolean",
               "description": "true/false. The edge can be traveled in both directions. If false, only from start to end is allowed.",
               "examples": [
-                "true",
-                "false"
+                true,
+                false
               ]
             },
             "MaxVelocity": {

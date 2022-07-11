@@ -232,8 +232,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
 
             // Edge has to be dublicated because it is bidirectional.
             Assert.AreEqual(2, parser.Edges.Count);
-            Assert.IsTrue(parser.Edges.Single(x => x.From == "1" && x.To == "2").Bidirectional);
-            Assert.IsTrue(parser.Edges.Single(x => x.From == "2" && x.To == "1").Bidirectional);
         }
 
         /// <summary>
@@ -286,14 +284,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
 
             // 2 (bidirectional edge) + 2 (bidirectional edge) * 3 (internal nodes).
             Assert.AreEqual(8, parser.Edges.Count);
-            Assert.IsTrue(parser.Edges.Single(x => x.From == "1" && x.To == "2").Bidirectional);
-            Assert.IsTrue(parser.Edges.Single(x => x.From == "2" && x.To == "1").Bidirectional);
-            Assert.IsTrue(parser.Edges.Single(x => x.From == "1" && x.To == "11").Bidirectional);
-            Assert.IsTrue(parser.Edges.Single(x => x.From == "11" && x.To == "1").Bidirectional);
-            Assert.IsTrue(parser.Edges.Single(x => x.From == "1" && x.To == "12").Bidirectional);
-            Assert.IsTrue(parser.Edges.Single(x => x.From == "12" && x.To == "1").Bidirectional);
-            Assert.IsTrue(parser.Edges.Single(x => x.From == "2" && x.To == "21").Bidirectional);
-            Assert.IsTrue(parser.Edges.Single(x => x.From == "21" && x.To == "2").Bidirectional);
         }
     }
 }

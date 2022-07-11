@@ -5,6 +5,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 /// <summary>
 /// AGV reservation request was successful
 /// </summary>
+[JetBrains.Annotations.PublicAPI]
 public sealed class AgvReservationSucceeded: CorrelatedBy<Guid>
 {
     

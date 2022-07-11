@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -33,8 +32,8 @@ try
 		})
 		.WithParsed<ProductionOptions>(productionOptions =>
 		{
-			//Add CamelCase converter to standard JSOnSerializer to read MQTT messages correctly
-			SystemTextJsonMessageSerializer.Options.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
+			// Enable serialization/deserialization of enum values as string.
+			SystemTextJsonMessageSerializer.Options.Converters.Add(new JsonStringEnumConverter());
 
 			host = GebhardtStartup.CreateHostBuilder(args)
 				.ConfigureServices((context, services) =>

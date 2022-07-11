@@ -12,7 +12,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
 	/// Execute processing of a transport order messages.
 	/// </summary>
 	[JetBrains.Annotations.UsedImplicitly]
-	public class AgvRequestGraphConsumer : IConsumer<IRequestAgvGraph>
+	public class AgvRequestGraphConsumer : IConsumer<RequestAgvGraph>
 	{
 		private readonly ILogger<AgvRequestGraphConsumer> _logger;
 
@@ -25,10 +25,10 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
 		}
 
 		/// <summary>
-		/// Handle requesting AGV graph on receiving message <see cref="IRequestAgvGraph"/> from master control.
+		/// Handle requesting AGV graph on receiving message <see cref="RequestAgvGraph"/> from master control.
 		/// </summary>
 		/// <param name="context">Context of the consumer wrapping details surrounding the inbound message.</param>
-		public async Task Consume(ConsumeContext<IRequestAgvGraph> context)
+		public async Task Consume(ConsumeContext<RequestAgvGraph> context)
 		{
 			await context.PublishMqtt<IRequestGraph>(new
 			{

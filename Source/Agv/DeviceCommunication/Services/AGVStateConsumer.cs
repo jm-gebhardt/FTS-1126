@@ -97,7 +97,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
                 case OperatingMode.Manual: return false;
                 case OperatingMode.Semiautomatic: return false;
                 case OperatingMode.Service: return false;
-                case OperatingMode.TeachIn: return false;
+                case OperatingMode.Teachin: return false;
                 default: return false;
             }
         }
@@ -109,7 +109,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
                 return 0;
             }
 
-            return (int)(message.BatteryState.BatteryCharge * 100);
+            return (int)(message.BatteryState.BatteryCharge + 0.5);
         }
 
         private bool GetCharging(IState message)

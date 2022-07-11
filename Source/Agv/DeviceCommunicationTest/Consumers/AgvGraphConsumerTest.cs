@@ -10,7 +10,7 @@ using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
 namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
 {
     /// <summary>
-    /// Tests for <see cref="IGraph"/> and <see cref="IAgvGraphReceived"/>.
+    /// Tests for <see cref="IGraph"/> and <see cref="AgvGraphReceived"/>.
     /// </summary>
     [TestClass]
     public class AgvGraphConsumerTest
@@ -33,7 +33,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
                     ModificationDate = DateTimeOffset.UtcNow
                 }, null);
 
-            Assert.IsFalse(await fixture.TestHarness.Published.Any<IAgvGraphReceived>());
+            Assert.IsFalse(await fixture.TestHarness.Published.Any<AgvGraphReceived>());
         }
 
         /// <summary>
@@ -68,9 +68,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
             var consumedGraph = fixture.ConsumerHarness.Consumed.Select<IGraph>().First().Context.Message;
             Assert.AreEqual(AgvTestIdentifier02, consumedGraph.SerialNumber);
 
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<IAgvGraphReceived>());
+            Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvGraphReceived>());
 
-            var publishedGraph = fixture.TestHarness.Published.Select<IAgvGraphReceived>().First().Context.Message;
+            var publishedGraph = fixture.TestHarness.Published.Select<AgvGraphReceived>().First().Context.Message;
             Assert.AreEqual(AgvTestIdentifier02.ToGuid(), publishedGraph.CorrelationId);
             Assert.AreEqual(AgvTestIdentifier02, publishedGraph.AgvId);
             Assert.AreEqual(2, publishedGraph.Graph.Nodes.Length);

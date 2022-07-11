@@ -25,7 +25,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         [TestMethod]
         public async Task Respond_To_AgvAssigned_Using_SingleAGV()
         {
-            var fixture = new ConsumerTestFixture<RoundRobinAssignAgvConsumer>(
+            var fixture = new MassTransitTestFixture<RoundRobinAssignAgvConsumer>(
                 services =>
                 {
                     services.AddSingleton(new RoundRobinAgvRegistry(new SimulateOptions() { Agvs = 1 }));
@@ -72,7 +72,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         [TestMethod]
         public async Task Respond_To_AgvAssigned_MultipleAgvCheckRoundRobinOverFlow()
         {
-            var fixture = new ConsumerTestFixture<RoundRobinAssignAgvConsumer>(
+            var fixture = new MassTransitTestFixture<RoundRobinAssignAgvConsumer>(
                 services =>
                 {
                     services.AddSingleton(new RoundRobinAgvRegistry(new SimulateOptions() { Agvs = 2 }));

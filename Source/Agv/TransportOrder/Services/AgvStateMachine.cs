@@ -55,7 +55,7 @@ public class AgvStateMachine: MassTransitStateMachine<AgvSaga>
     /// <summary>
     /// Send AGV back to idle
     /// </summary>
-    public Event<IAgvGraphReceived> AgvGraphReceivedEvent { get; private set; } = default!;
+    public Event<AgvGraphReceived> AgvGraphReceivedEvent { get; private set; } = default!;
     
     
     /// <summary>
@@ -128,7 +128,7 @@ public class AgvStateMachine: MassTransitStateMachine<AgvSaga>
                 _logger.LogTrace("AgvStatus {AgvId}/{CorrelationId} received", c.Message.AgvId, c.Saga.CorrelationId))
             .Then(c => c.Saga.AgvStatus = c.Message.AgvStatus);
 
-    private EventActivityBinder<AgvSaga, IAgvGraphReceived> AgvGraphReceivedHandler() =>
+    private EventActivityBinder<AgvSaga, AgvGraphReceived> AgvGraphReceivedHandler() =>
         When(AgvGraphReceivedEvent)
             .Then(c =>
                 _logger.LogTrace("AgvGraph {AgvId}/{CorrelationId} received", c.Message.AgvId, c.Saga.CorrelationId))

@@ -5,6 +5,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 /// <summary>
 /// Request an AGV to be reserved
 /// </summary>
+[JetBrains.Annotations.PublicAPI]
 public sealed class ReserveAgv: CorrelatedBy<Guid>
 {
     /// <summary>
@@ -13,7 +14,7 @@ public sealed class ReserveAgv: CorrelatedBy<Guid>
     public Guid CorrelationId { get; }
 
     /// <summary>
-    /// ReserveAgv
+    /// Build message.
     /// </summary>
     /// <param name="correlationId"></param>
     public ReserveAgv(Guid correlationId)

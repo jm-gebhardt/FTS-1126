@@ -21,7 +21,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.States
         public Guid CorrelationId { get; set; }
         
         /// <summary>
-        /// Agv Serial Number
+        /// AGV Serial Number
         /// </summary>
         public string AgvId { get; set; }
 

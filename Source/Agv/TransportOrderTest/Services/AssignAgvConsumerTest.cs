@@ -39,6 +39,40 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
     [TestClass]
     public class AssignAgvConsumerTest
     {
+        private const string Src01 = "SRC1";
+        private const string Dst01 = "DST1";
+
+        private static AgvGraph? _graph;
+
+
+        /// <summary>
+        /// Test initialization.
+        /// </summary>
+        /// <param name="context"></param>
+        [ClassInitialize]
+        public static void ClassInitialize(TestContext context)
+        {
+            _graph = new AgvGraph(Guid.Empty,
+                new[]
+                {
+                    new AgvGraph.Node(Src01) { Enabled = true, Type = AgvGraph.NodeType.Station, X = 0f, Y = 0f, Z = 0f },
+                    new AgvGraph.Node(Dst01) { Enabled = true, Type = AgvGraph.NodeType.Station, X = 1f, Y = 1f, Z = 0f }
+                },
+                new[]
+                {
+                   new AgvGraph.Edge(Src01, Dst01) { Metric = 1f }
+                });
+        }
+
+        /// <summary>
+        /// Test cleanup.
+        /// </summary>
+        [ClassCleanup]
+        public static void ClassCleanup()
+        {
+        }
+
+
         /// <summary>
         /// Receive IAssignAgv message when no Idle AGV is available
         /// </summary>
@@ -47,7 +81,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         {
             var mockRegistry = new Mock<IAgvRegistry>();
             mockRegistry.Setup(s => s.GetIdleAgvs()).Returns(new List<IAgv>());
-            var fixture = new ConsumerTestFixture<AssignAgvConsumer>( 
+            var fixture = new MassTransitTestFixture<AssignAgvConsumer>( 
                 services: s => { s.AddTransient(_ => mockRegistry.Object); }
                 );
 
@@ -56,7 +90,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             await fixture.TestHarness.Bus.Publish<IAssignAgv>(new
             {
                 CorrelationId = correlationId,
-                Order = new Order(correlationId, orderId, "SRC1", "DST1", "LeNo123", HostOrderCreator.Simulation)
+                Order = new Order(correlationId, orderId, Src01, Dst01, "LeNo123", HostOrderCreator.Simulation)
             });
 
             Assert.IsTrue(await fixture.ConsumerHarness.Consumed.Any<IAssignAgv>());
@@ -77,10 +111,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             var mockRegistry = new Mock<IAgvRegistry>();
             mockRegistry.Setup(s => s.GetIdleAgvs()).Returns(new List<IAgv>
             {
-                new AgvSaga(agvCorrelationId, agvId, nameof(AgvStateMachine.Idle))
+                new AgvSaga(agvCorrelationId, agvId, nameof(AgvStateMachine.Idle), agvGraph: _graph)
             });
       
-            var fixture = new ConsumerTestFixture<AssignAgvConsumer>( 
+            var fixture = new MassTransitTestFixture<AssignAgvConsumer>( 
                 services: s => { s.AddSingleton((_) => mockRegistry.Object); },
                 busRegistrationConfigurator: x =>
                 {
@@ -94,7 +128,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             await fixture.TestHarness.Bus.Publish<IAssignAgv>(new
             {
                 CorrelationId = correlationId,
-                Order = new Order(correlationId, orderId, "SRC1", "DST1", "LeNo123", HostOrderCreator.Simulation)
+                Order = new Order(correlationId, orderId, Src01, Dst01, "LeNo123", HostOrderCreator.Simulation)
             });
         
             Assert.IsTrue(await fixture.ConsumerHarness.Consumed.Any<IAssignAgv>());
@@ -116,10 +150,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             var mockRegistry = new Mock<IAgvRegistry>();
             mockRegistry.Setup(s => s.GetIdleAgvs()).Returns(new List<IAgv>
             {
-                new AgvSaga(agvCorrelationId, agvId, nameof(AgvStateMachine.Idle))
+                new AgvSaga(agvCorrelationId, agvId, nameof(AgvStateMachine.Idle), agvGraph: _graph)
             });
           
-            var fixture = new ConsumerTestFixture<AssignAgvConsumer>( 
+            var fixture = new MassTransitTestFixture<AssignAgvConsumer>( 
                 services: s => { s.AddSingleton((_) => mockRegistry.Object); },
                 busRegistrationConfigurator: x =>
                 {
@@ -133,7 +167,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             await fixture.TestHarness.Bus.Publish<IAssignAgv>(new
             {
                 CorrelationId = correlationId,
-                Order = new Order(correlationId, orderId, "SRC1", "DST1", "LeNo123", HostOrderCreator.Simulation)
+                Order = new Order(correlationId, orderId, Src01, Dst01, "LeNo123", HostOrderCreator.Simulation)
             });
         
             Assert.IsTrue(await fixture.ConsumerHarness.Consumed.Any<IAssignAgv>());

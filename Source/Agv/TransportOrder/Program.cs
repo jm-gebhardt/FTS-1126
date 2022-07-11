@@ -3,7 +3,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using CommandLine;
-
+using System.Text.Json.Serialization;
+using MassTransit.Serialization;
 using Gebhardt.StoreWare.Agv.Common;
 using Gebhardt.StoreWare.Agv.TransportOrder.CmdOptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence;
@@ -23,6 +24,9 @@ try
         // Simulation Mode
         .WithParsed<SimulateOptions>(options =>
         {
+            // Enable serialization/deserialization of enum values as string.
+            SystemTextJsonMessageSerializer.Options.Converters.Add(new JsonStringEnumConverter());
+
             host = GebhardtStartup.CreateHostBuilder(args)
                 .ConfigureServices((context, services) =>
                 {
@@ -48,6 +52,9 @@ try
         })
         .WithParsed<ProductionOptions>(_ =>
         {
+            // Enable serialization/deserialization of enum values as string.
+            SystemTextJsonMessageSerializer.Options.Converters.Add(new JsonStringEnumConverter());
+
             host = GebhardtStartup.CreateHostBuilder(args)
                 .ConfigureServices((context, services) =>
                 {

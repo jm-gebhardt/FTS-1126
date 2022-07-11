@@ -23,7 +23,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         [TestMethod]
         public async Task SimulatedReceivePublishTransportOrder()
         {
-            var fixture = new ConsumerTestFixture<SimulationExecuteTransportOrderConsumer>(services =>
+            var fixture = new MassTransitTestFixture<SimulationExecuteTransportOrderConsumer>(services =>
             {
                 services.AddSingleton(_ => new SimulateOptions() { Interval = new[] { 1, 5 } });
             });

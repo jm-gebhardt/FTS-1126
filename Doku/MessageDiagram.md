@@ -15,7 +15,7 @@ sequenceDiagram
     DeviceCommunication->>AgvManagement: IAgvStatusReceived
     deactivate DeviceCommunication
     activate AgvManagement
-    AgvManagement->>DeviceCommunication: IAgvRequestGraph
+    AgvManagement->>DeviceCommunication: AgvRequestGraph
     deactivate AgvManagement
     activate DeviceCommunication
     DeviceCommunication->>(AGV): IRequestGraph
@@ -24,7 +24,7 @@ sequenceDiagram
     (AGV)->>DeviceCommunication: IGraph
     deactivate (AGV)
     activate DeviceCommunication
-    DeviceCommunication->>AgvManagement: IAgvGraphReceived
+    DeviceCommunication->>AgvManagement: AgvGraphReceived
     deactivate DeviceCommunication
 
     Note over WCSCommunication,DeviceCommunication: Handle HostOrder

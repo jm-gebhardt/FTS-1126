@@ -93,8 +93,8 @@ public class SagaPersistenceDbContextTest
         var agvSaga = new AgvSaga(correlationId, agvId, "TestState", 
             new AgvStatus(Guid.NewGuid(), "123", true, true, 10,false, false),
             new AgvGraph(Guid.NewGuid(), 
-                new AgvGraph.Node[] { new()}, 
-                new AgvGraph.Edge[] { new()})
+                new AgvGraph.Node[] { new("id") }, 
+                new AgvGraph.Edge[] { new("from", "to") })
             );
         using (var dbContext = dbContextFactory.CreateDbContext())
         {

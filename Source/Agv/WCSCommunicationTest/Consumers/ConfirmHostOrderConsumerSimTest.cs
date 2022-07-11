@@ -17,7 +17,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Consumers
         [TestMethod]
         public async Task SimulationConfirmHostOrderConsumerTest()
         {
-            var fixture = new ConsumerTestFixture<SimulationConfirmHostOrderConsumer>();
+            var fixture = new MassTransitTestFixture<SimulationConfirmHostOrderConsumer>();
            
             string orderId = "TestOrder123";
             await fixture.TestHarness.Bus.Publish<IHostOrderHandlingSucceeded>(new { OrderId = orderId });

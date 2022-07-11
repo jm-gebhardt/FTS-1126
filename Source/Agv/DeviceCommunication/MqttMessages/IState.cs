@@ -37,7 +37,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         /// last NodeId.
         /// Distance is in meters
         /// </summary>
-        public double? DistanceSinceLastNode { get; set; }
+        public float? DistanceSinceLastNode { get; set; }
 
         /// <summary>
         /// True: indicates that the AGV is driving and/or rotating. Other movements of the AGV (e.g.
@@ -61,7 +61,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         /// headerId of the message. The headerId is defined per topic and incremented by 1 with each
         /// sent (but not necessarily received) message.
         /// </summary>
-        public long HeaderId { get; set; }
+        public int HeaderId { get; set; }
 
         /// <summary>
         /// Array of information messages. Messages are only for visualization/debugging. There's no
@@ -80,7 +80,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         /// current node.
         /// â€œ0â€ if no lastNodeSequenceId is available.
         /// </summary>
-        public long LastNodeSequenceId { get; set; }
+        public int LastNodeSequenceId { get; set; }
 
         /// <summary>
         /// Array for information about the loads that an AGV currently carries, if the AGV has any
@@ -123,7 +123,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         /// Order Update Identification to identify that an order update has been accepted by the
         /// AGV. â€œ0â€ if no previous orderUpdateId is available.
         /// </summary>
-        public long OrderUpdateId { get; set; }
+        public int OrderUpdateId { get; set; }
 
         /// <summary>
         /// True: AGV is currently in a paused state, either because of the push of a physical button
@@ -208,7 +208,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         /// <summary>
         /// Value for position deviation range in meters. Can be used if the AGV is able to derive it.
         /// </summary>
-        public double? DeviationRange { get; set; }
+        public float? DeviationRange { get; set; }
 
         /// <summary>
         /// Describes the quality of the localization and therefore, can be used e. g. by SLAM-AGVs
@@ -218,7 +218,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         /// Optional for vehicles that cannot estimate their localization score.
         /// Only for logging and visualization purposes
         /// </summary>
-        public double? LocalizationScore { get; set; }
+        public float? LocalizationScore { get; set; }
 
         /// <summary>
         /// 
@@ -238,15 +238,15 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         /// <summary>
         /// 
         /// </summary>
-        public double Theta { get; set; }
+        public float Theta { get; set; }
         /// <summary>
         /// 
         /// </summary>
-        public double X { get; set; }
+        public float X { get; set; }
         /// <summary>
         /// 
         /// </summary>
-        public double Y { get; set; }
+        public float Y { get; set; }
     }
 
     /// <summary>
@@ -260,17 +260,17 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         /// If AGV only provides values for good or bad battery levels, these will be indicated as
         /// 20% (bad) and 80% (good).
         /// </summary>
-        public double BatteryCharge { get; set; }
+        public float BatteryCharge { get; set; }
 
         /// <summary>
         /// State of health in percent.
         /// </summary>
-        public long? BatteryHealth { get; set; }
+        public float? BatteryHealth { get; set; }
 
         /// <summary>
         /// Battery voltage
         /// </summary>
-        public double? BatteryVoltage { get; set; }
+        public float? BatteryVoltage { get; set; }
 
         /// <summary>
         /// If true: Charging in progress.
@@ -280,7 +280,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         /// <summary>
         /// estimated reach with actual State of Charge
         /// </summary>
-        public long? Reach { get; set; }
+        public float? Reach { get; set; }
     }
 
     /// <summary>
@@ -307,7 +307,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         /// <summary>
         /// sequenceId of the edge.
         /// </summary>
-        public long SequenceId { get; set; }
+        public int SequenceId { get; set; }
 
         /// <summary>
         /// The trajectory is to be communicated as a NURBS and is defined in chapter 5.4 Topic:
@@ -336,13 +336,13 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         /// <summary>
         /// The degree of the NURBS.
         /// </summary>
-        public long Degree { get; set; }
+        public int Degree { get; set; }
 
         /// <summary>
         /// Sequence of parameter values that determine where and how the control points affect the
         /// NURBS curve. knotVector has size of number of control points + degree + 1
         /// </summary>
-        public List<double>? KnotVector { get; set; }
+        public List<float>? KnotVector { get; set; }
     }
 
     /// <summary>
@@ -355,16 +355,16 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         /// The weight with which this control point pulls no the curve.
         /// When not defined, the default will be 1.0.
         /// </summary>
-        public double Weight { get; set; }
+        public float Weight { get; set; }
 
         /// <summary>
         /// The x coordinate of the control point
         /// </summary>
-        public double X { get; set; }
+        public float X { get; set; }
         /// <summary>
         /// The y coordinate of the control point
         /// </summary>
-        public double Y { get; set; }
+        public float Y { get; set; }
     }
 
     /// <summary>
@@ -497,7 +497,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         /// <summary>
         /// Weight of load in kg
         /// </summary>
-        public double? Weight { get; set; }
+        public float? Weight { get; set; }
     }
 
     /// <summary>
@@ -511,19 +511,19 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         /// <summary>
         /// 
         /// </summary>
-        public double? Theta { get; set; }
+        public float? Theta { get; set; }
         /// <summary>
         /// 
         /// </summary>
-        public double X { get; set; }
+        public float X { get; set; }
         /// <summary>
         /// 
         /// </summary>
-        public double Y { get; set; }
+        public float Y { get; set; }
         /// <summary>
         /// 
         /// </summary>
-        public double Z { get; set; }
+        public float Z { get; set; }
     }
 
     /// <summary>
@@ -537,17 +537,17 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         /// Optional:
         /// Set value only if known.
         /// </summary>
-        public double? Height { get; set; }
+        public float? Height { get; set; }
 
         /// <summary>
         /// Absolute length of the loads bounding box in meter.
         /// </summary>
-        public double Length { get; set; }
+        public float Length { get; set; }
 
         /// <summary>
         /// Absolute width of the loads bounding box in meter.
         /// </summary>
-        public double Width { get; set; }
+        public float Width { get; set; }
     }
 
     /// <summary>
@@ -584,7 +584,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         /// <summary>
         /// sequenceId of the node.
         /// </summary>
-        public long SequenceId { get; set; }
+        public int SequenceId { get; set; }
     }
 
     /// <summary>
@@ -604,15 +604,15 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         /// <summary>
         /// Orientation of the node in the map
         /// </summary>
-        public double Theta { get; set; }
+        public float Theta { get; set; }
         /// <summary>
         /// X coordinate of the node in the map
         /// </summary>
-        public double X { get; set; }
+        public float X { get; set; }
         /// <summary>
         /// Y coordinate of the node in the map
         /// </summary>
-        public double Y { get; set; }
+        public float Y { get; set; }
     }
 
     /// <summary>
@@ -641,15 +641,15 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
 	    /// <summary>
 	    /// The direction of the velocity vector
 	    /// </summary>
-        public double? Omega { get; set; }
+        public float? Omega { get; set; }
         /// <summary>
         /// The x value of the velocity vector
 	    /// </summary>
-        public double? Vx { get; set; }
+        public float? Vx { get; set; }
         /// <summary>
         /// The y value of the velocity vector
         /// </summary>
-        public double? Vy { get; set; }
+        public float? Vy { get; set; }
     }
 
     /// <summary>
@@ -739,7 +739,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         /// <summary>
         /// 
         /// </summary>
-        TeachIn
+        Teachin
     };
 
     /// <summary>

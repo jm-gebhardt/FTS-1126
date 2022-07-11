@@ -13,7 +13,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
         private readonly IGraph _graph;
 
         private bool _checkedVelocity;
-        private bool _haveVelocity;
+        private bool _considerVelocity;
         private List<AgvGraph.Node>? _nodes;
         private List<AgvGraph.Edge>? _edges;
 
@@ -33,13 +33,13 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
         /// </summary>
         /// <param name="edge">The edge for which the metric will be calculated.</param>
         /// <param name="nodes">List of nodes e.g. required for getting coordinates.</param>
-        /// <param name="haveVelocity">When set to true the calculation expects to have a velocity
+        /// <param name="considerVelocity">When set to true the calculation expects to have a velocity
         /// and therefore metric is somehow time based.
         /// When set to false just the distance is used as metric.</param>
         /// <returns>Metric in a kind of distance/costs to travel this edge (unitless quantifier).</returns>
         /// <exception cref="InvalidOperationException">Nodes addressed by the edge cannot be found
         /// in the nodes listing or isn't unique..</exception>
-        private static float CalculateMetric(Edge edge, Node[] nodes, bool haveVelocity)
+        private static float CalculateMetric(Edge edge, Node[] nodes, bool considerVelocity)
         {
             var start = nodes.SingleOrDefault(x => x.NodeId == edge.StartId);
             var end = nodes.SingleOrDefault(x => x.NodeId == edge.EndId);
@@ -52,7 +52,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
             var vectorStart = new System.Numerics.Vector3(start.X, start.Y, start.Z ?? 0f);
             var vectorEnd = new System.Numerics.Vector3(end.X, end.Y, end.Z ?? 0f);
 
-            if (haveVelocity)
+            if (considerVelocity)
             {
                 // Calculate time based costs by distance divided by velocity.
                 return (vectorStart - vectorEnd).Length() / edge.MaxVelocity;
@@ -78,7 +78,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
             if (!_checkedVelocity)
             {
                 _checkedVelocity = true;
-                _haveVelocity = _graph.Edges!.All(x => x.MaxVelocity > 0.00001f); // Precision of single is about 6 to 9 digits.
+                _considerVelocity = _graph.Edges!.All(x => x.MaxVelocity > 0.00001f); // Precision of single is about 6 to 9 digits.
             }
 
         }
@@ -104,29 +104,19 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
 
                 foreach (var edge in _graph.Edges!)
                 {
-                    float metric = CalculateMetric(edge, _graph.Nodes!, _haveVelocity);
+                    float metric = CalculateMetric(edge, _graph.Nodes!, _considerVelocity);
 
-                    _edges.Add(new AgvGraph.Edge
+                    _edges.Add(new AgvGraph.Edge(edge.StartId.ToString(), edge.EndId.ToString())
                     {
-                        From = edge.StartId.ToString(),
-                        To = edge.EndId.ToString(),
-                        Metric = metric,
-
-                        Bidirectional = edge.Bidirectional,
-                        MaxVelocity = edge.MaxVelocity
+                        Metric = metric
                     });
 
                     if (edge.Bidirectional)
                     {
                         // Build reversed edge by swapping From and To.
-                        _edges.Add(new AgvGraph.Edge
+                        _edges.Add(new AgvGraph.Edge(edge.EndId.ToString(), edge.StartId.ToString())
                         {
-                            From = edge.EndId.ToString(),
-                            To = edge.StartId.ToString(),
-                            Metric = metric,
-
-                            Bidirectional = edge.Bidirectional,
-                            MaxVelocity = edge.MaxVelocity
+                            Metric = metric
                         });
                     }
                 }
@@ -152,9 +142,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
 
                 foreach (var node in _graph.Nodes!)
                 {
-                    _nodes.Add(new AgvGraph.Node
+                    _nodes.Add(new AgvGraph.Node(node.NodeId.ToString())
                     {
-                        Id = node.NodeId.ToString(),
                         Enabled = true,
 
                         Type = AgvGraph.NodeType.WayPoint,
@@ -170,9 +159,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
                             Node.WellKnownAttributes unused;
                             if (Enum.TryParse(attr.Key, false, out unused))
                             {
-                                _nodes.Add(new AgvGraph.Node
+                                _nodes.Add(new AgvGraph.Node(attr.Value)
                                 {
-                                    Id = attr.Value,
                                     Enabled = true,
 
                                     Type = AgvGraph.NodeType.Station,
@@ -182,23 +170,13 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
                                 });
 
                                 // Add corresponding internal edges
-                                _edges!.Add(new AgvGraph.Edge
+                                _edges!.Add(new AgvGraph.Edge(attr.Value, node.NodeId.ToString())
                                 {
-                                    From = attr.Value,
-                                    To = node.NodeId.ToString(),
-                                    Metric = 0f,
-
-                                    Bidirectional = true,
-                                    MaxVelocity = 0
+                                    Metric = 0f
                                 });
-                                _edges!.Add(new AgvGraph.Edge
+                                _edges!.Add(new AgvGraph.Edge(node.NodeId.ToString(), attr.Value)
                                 {
-                                    From = node.NodeId.ToString(),
-                                    To = attr.Value,
-                                    Metric = 0f,
-
-                                    Bidirectional = true,
-                                    MaxVelocity = 0
+                                    Metric = 0f
                                 });
                             }
                         }
@@ -230,12 +208,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
         /// </summary>
         /// <exception cref="InvalidOperationException">Edges are not valid (see <see cref="EdgesValid"/>).</exception>
         [JetBrains.Annotations.PublicAPI]
-        public bool HaveVelocity
+        public bool ConsiderVelocity
         {
             get
             {
                 ParseVelocity();
-                return _haveVelocity;
+                return _considerVelocity;
             }
         }
 

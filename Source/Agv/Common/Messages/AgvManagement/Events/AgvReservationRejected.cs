@@ -5,6 +5,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 /// <summary>
 /// Agv reservation request was rejected
 /// </summary>
+[JetBrains.Annotations.PublicAPI]
 public sealed class AgvReservationRejected : CorrelatedBy<Guid>
 {
     /// <summary>
