@@ -15,7 +15,19 @@ sequenceDiagram
     DeviceCommunication->>AgvManagement: IAgvStatusReceived
     deactivate DeviceCommunication
     activate AgvManagement
-    AgvManagement->>DeviceCommunication: AgvRequestGraph
+    AgvManagement->>DeviceCommunication: IAgvRequestAgvData
+    deactivate AgvManagement
+    activate DeviceCommunication
+    DeviceCommunication->>(AGV): IRequestData
+    deactivate DeviceCommunication
+    activate (AGV)
+    (AGV)->>DeviceCommunication: IAgvData
+    deactivate (AGV)
+    activate DeviceCommunication
+    DeviceCommunication->>AgvManagement: IAgvDataReceived
+    deactivate DeviceCommunication
+    activate AgvManagement
+    AgvManagement->>DeviceCommunication: IAgvRequestGraph
     deactivate AgvManagement
     activate DeviceCommunication
     DeviceCommunication->>(AGV): IRequestGraph

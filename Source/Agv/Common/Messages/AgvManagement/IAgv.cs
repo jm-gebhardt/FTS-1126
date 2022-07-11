@@ -16,7 +16,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
         string AgvId { get; }
 
         /// <summary>
-        /// 
+        /// The current state of the AGV
         /// </summary>
         public string CurrentState { get; }
 
@@ -29,5 +29,10 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
         /// AGV Graph
         /// </summary>
         public AgvGraph? AgvGraph { get; }
+
+        /// <summary>
+        /// AGV Data
+        /// </summary>
+        public AgvData? AgvData { get; }
     }
 }

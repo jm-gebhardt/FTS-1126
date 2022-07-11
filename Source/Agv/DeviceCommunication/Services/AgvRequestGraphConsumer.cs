@@ -9,7 +9,7 @@ using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
 {
 	/// <summary>
-	/// Execute processing of a transport order messages.
+	/// Execute processing of a agv graph request.
 	/// </summary>
 	[JetBrains.Annotations.UsedImplicitly]
 	public class AgvRequestGraphConsumer : IConsumer<RequestAgvGraph>
@@ -36,7 +36,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
 				RequestId = context.Message.CorrelationId
 			}, context.CancellationToken);
 
-			_logger.LogInformation("Requesting AGV graph from AGV {AgvId}", context.Message.AgvId);
+			_logger.LogInformation("Requesting AGV graph from AGV {AgvId} / {CorrelationId}", context.Message.AgvId, context.CorrelationId);
 
 		}
 	}

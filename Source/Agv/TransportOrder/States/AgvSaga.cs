@@ -39,22 +39,32 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.States
         /// Last Received AgvGraph
         /// </summary>
         public AgvGraph? AgvGraph { get; set; }
-        
-        
+
         /// <summary>
-        /// Default constructor required to connect.
+        /// Last Received AgvData
         /// </summary>
-        public AgvSaga(Guid correlationId, string agvId, string? currentState = null, AgvStatus? agvStatus = null, AgvGraph? agvGraph = null)
-        {
-            if (correlationId == Guid.Empty)
-            {
-                throw new InvalidOperationException($"{this.GetType()} requires correlation ID.");
-            }
-            CorrelationId = correlationId;
-            AgvStatus = agvStatus;
-            AgvGraph = agvGraph;
-            AgvId = agvId;
-            CurrentState = currentState ?? default!;
-        }
-    }
+        public AgvData? AgvData { get; set; }
+
+        /// <summary>
+		/// Default constructor required to connect.
+		/// </summary>
+		public AgvSaga(Guid correlationId, 
+            string agvId, 
+            string? currentState = null, 
+            AgvStatus? agvStatus = null, 
+            AgvGraph? agvGraph = null, 
+            AgvData? agvData = null)
+		{
+			if (correlationId == Guid.Empty)
+			{
+				throw new InvalidOperationException($"{this.GetType()} requires correlation ID.");
+			}
+			CorrelationId = correlationId;
+			AgvStatus = agvStatus;
+			AgvGraph = agvGraph;
+			AgvId = agvId;
+			CurrentState = currentState ?? default!;
+			AgvData = agvData;
+		}
+	}
 }

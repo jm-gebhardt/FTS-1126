@@ -53,11 +53,17 @@ public class AgvStateMachine: MassTransitStateMachine<AgvSaga>
     
     
     /// <summary>
-    /// Send AGV back to idle
+    /// The graph of the Agv was received
     /// </summary>
     public Event<AgvGraphReceived> AgvGraphReceivedEvent { get; private set; } = default!;
     
     
+
+    /// <summary>
+    /// The data of the Agv was received
+    /// </summary>
+    public Event<AgvDataReceived> AgvDataReceivedEvent { get; private set; } = default!;
+
     /// <summary>
     /// If true, AGV are automatically moved from Discovered to Idle
     /// </summary>
@@ -81,6 +87,7 @@ public class AgvStateMachine: MassTransitStateMachine<AgvSaga>
         
         DuringAny(AgvStatusReceivedHandler());
         DuringAny(AgvGraphReceivedHandler());
+        DuringAny(AgvDataReceivedHandler());
     }
     
     /// <summary>
@@ -133,6 +140,12 @@ public class AgvStateMachine: MassTransitStateMachine<AgvSaga>
             .Then(c =>
                 _logger.LogTrace("AgvGraph {AgvId}/{CorrelationId} received", c.Message.AgvId, c.Saga.CorrelationId))
             .Then(c => c.Saga.AgvGraph = c.Message.Graph);
+
+    private EventActivityBinder<AgvSaga, AgvDataReceived> AgvDataReceivedHandler() =>
+	    When(AgvDataReceivedEvent)
+		    .Then(c =>
+			    _logger.LogTrace("AgvData {AgvId}/{CorrelationId} received", c.Message.AgvId, c.Saga.CorrelationId))
+		    .Then(c => c.Saga.AgvData = c.Message.Data);
 
     private EventActivityBinder<AgvSaga, ReleaseAgv> ReleaseAgvHandler() =>
         When(ReleaseAgvEvent)

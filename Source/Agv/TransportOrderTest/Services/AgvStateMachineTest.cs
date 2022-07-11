@@ -48,8 +48,9 @@ public class AgvStateMachineTest
         Assert.AreEqual(agvId, saga.AgvId);
         Assert.IsNotNull(saga.AgvStatus);
         Assert.IsNull(saga.AgvGraph);
+        Assert.IsNull(saga.AgvData);
     }
-    
+
     /// <summary>
     /// When_AgvStatusReceived_EmptyCorrelationId_NoSagaCreated
     /// </summary>

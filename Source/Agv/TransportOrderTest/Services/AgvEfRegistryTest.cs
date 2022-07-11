@@ -75,6 +75,7 @@ public class AgvEfRegistryTest
         Assert.AreEqual(agvSaga.AgvId, idleAgv.AgvId);
         Assert.AreEqual(agvSaga.AgvStatus, idleAgv.AgvStatus);
         Assert.AreEqual(agvSaga.AgvGraph, idleAgv.AgvGraph);
+        Assert.AreEqual(agvSaga.AgvData, idleAgv.AgvData);
     }
     
     /// <summary>
@@ -97,5 +98,6 @@ public class AgvEfRegistryTest
         Assert.AreEqual(agvSaga.AgvId, idleAgv.AgvId);
         Assert.AreEqual(agvSaga.AgvStatus, idleAgv.AgvStatus);
         Assert.AreEqual(agvSaga.AgvGraph, idleAgv.AgvGraph);
+        Assert.AreEqual(agvSaga.AgvData, idleAgv.AgvData);
     }
 }

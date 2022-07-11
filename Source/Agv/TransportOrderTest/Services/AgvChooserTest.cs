@@ -21,6 +21,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         public AgvStatus? AgvStatus { get; set; }
         /// <summary/>
         public AgvGraph? AgvGraph { get; init; }
+        /// <summary/>
+        public AgvData? AgvData { get; init; }
     }
 
 
@@ -250,7 +252,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             var chooser = new AgvChooser<RandomGraphAlgorithm>();
             var agvData = new List<Agv>
             {
-                new() { AgvGraph = _graphWikipedia }
+                new() { AgvGraph = _graphWikipedia, AgvData = null}
             };
             chooser.ChooseAgv(agvData, _nullOrder!);
         }
