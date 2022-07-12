@@ -1,0 +1,42 @@
+pool:
+  vmImage: ubuntu-latest
+
+schedules:
+  - cron: "0 4 * * *"
+    displayName: Daily midnight build
+    branches:
+      include:
+        - main
+        - master
+trigger: none
+
+steps:
+  - task: UseDotNet@2
+    displayName: 'Install .NET 6 SDK'
+    inputs:
+      packageType: 'sdk'
+      version: '6.0.x'
+      performMultiLevelLookup: true
+  - task: DotNetCoreCLI@2
+    displayName: 'dotnet restore'
+    inputs:
+      command: restore
+      projects: '**/*.csproj'
+  - task: Bash@3
+    displayName: 'Check for vulnerabilities in dependencies'
+    inputs:
+      targetType: 'inline'
+      script: |
+        set -e
+        OUTPUT=$(dotnet list package --vulnerable --include-transitive)
+        echo "${OUTPUT}"
+        VULNERABLE_PROJECTS=($(echo "${OUTPUT}" | awk '/Project `[A-z]+` has the following vulnerable packages/{ print $2}'))
+        for i in "${VULNERABLE_PROJECTS[@]}"
+        do
+        	echo "##vso[task.logissue type=error]${i} has vulnerable dependencies" >&2
+        done
+        if [ -n "${VULNERABLE_PROJECTS}" ]; then
+          exit 1;
+        fi
+      workingDirectory: 'Source/Agv'
+      
