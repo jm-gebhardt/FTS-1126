@@ -60,7 +60,11 @@ sequenceDiagram
         TransportOrder->>WCSCommunication: IHostOrderHandlingSucceeded
     else failed
         DeviceCommunication->>TransportOrder: ITransportOrderFailed
-        TransportOrder->>WCSCommunication: IHostOrderHandlingFailed
+        critical Transport Order failed
+            TransportOrder->>TransportOrder: Wait for user input
+        option User input "NOK"
+            TransportOrder->>WCSCommunication: IHostOrderHandlingFailed
+        end
     end
         
     Note over WCSCommunication,DeviceCommunication : Cancel HostOrder
