@@ -48,10 +48,9 @@ namespace Gebhardt.StoreWare.Agv.Common
                 {
                     host.UseKestrel()
                         .Configure(app =>
-                            {
-                                app.UseMetricServer();
-                            }
-                        );
+                        {
+                            app.UseMetricServer();
+                        });
                 })
                 .ConfigureLogging(conf =>
                 {

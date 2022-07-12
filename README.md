@@ -31,6 +31,8 @@ Configurations may be passed in as environment variables or any other configurat
 * In Bash: `export RABBITMQ__HOST=localhost`
 * In Windows Command Line: `set RABBITMQ__HOST=localhost`
 
+
+
 ### All Services
 ```
 RABBITMQ__HOST=localhost
@@ -48,6 +50,35 @@ CONNECTIONSTRINGS__TO="Server=127.0.0.1,1433;Database=master;User Id=MyDbUser;Pa
 Database persistence can be disabled using: `--enableInMemoryPersistence`
 
 
+### Webserver
+Each module is hosting a metric server via a Kestrel web host.
+The default URL for the Kestral web host is `http:////127.0.0.1:5000`.
+In order to run multiple processes, you need to define a seprate listening port for each proceess.
+This can be done with the envirnment variable `ASPNETCORE_URLS`.
+
+Typical values:
+```
+WCSCommunication:
+(use default, ASPNETCORE_URLS not set)
+
+TransportOrder:
+ASPNETCORE_URLS=http://127.0.0.1:5010
+
+DeviceCommunication:
+ASPNETCORE_URLS=http://127.0.0.1:5020
+```
+
+#### WebAPI
+The TransportOrder module runs a web API in order to monitor the service from outside.
+You can access the UI with this URL
+```
+ASPNETCORE_URLS/swagger (typically http://127.0.0.1:5010/swagger)
+```
+
+If you are running the service in docker, you need to expose the swagger URL to the outside via caddy.
+```
+transportorder.agv.localhost/swagger/
+```
 
 ## Provide certificates
 Quite now the system is using self-signed certificates.

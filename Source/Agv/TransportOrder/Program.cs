@@ -1,25 +1,29 @@
+using System.Reflection;
 using System.Collections.Concurrent;
+using System.Text.Json.Serialization;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.OpenApi.Models;
 using CommandLine;
-using System.Text.Json.Serialization;
 using MassTransit.Serialization;
 using Gebhardt.StoreWare.Agv.Common;
+using Gebhardt.StoreWare.Agv.Common.Messages;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.TransportOrder.CmdOptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence;
 using Gebhardt.StoreWare.Agv.TransportOrder.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.States;
-using Gebhardt.StoreWare.Agv.Common.Messages;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 
 var initialLogger = Gebhardt.StoreWare.Agv.Common.Logging.InitialLogger.Create<Program>();
 try
 {
-    IHost? host = null;
-    
+    IHostBuilder? hostBuilder = null;
+
     Parser.Default.ParseArguments<ProductionOptions, SimulateOptions>(args)
         // Simulation Mode
         .WithParsed<SimulateOptions>(options =>
@@ -27,12 +31,12 @@ try
             // Enable serialization/deserialization of enum values as string.
             SystemTextJsonMessageSerializer.Options.Converters.Add(new JsonStringEnumConverter());
 
-            host = GebhardtStartup.CreateHostBuilder(args)
+            hostBuilder = GebhardtStartup.CreateHostBuilder(args)
                 .ConfigureServices((context, services) =>
                 {
                     services.AddScoped(_ => options);
                     services.AddSingleton<RoundRobinAgvRegistry>();
-                    
+
                     services.AddDbContextFactory<SagaPersistenceDbContext>(builder =>
                     {
                         builder.UseSqlServer(context.Configuration.GetConnectionString(SagaPersistenceDbContext.ConfigSectionName), m =>
@@ -40,35 +44,34 @@ try
                             m.MigrationsHistoryTable(SagaPersistenceDbContext.MigrationTableName);
                         });
                     });
-                    
+
                     ConfigureServicesMassTransit.ConfigureServices(services, context.Configuration, x =>
                     {
                         x.AddSagaStateMachine<OrderStateMachine, OrderSaga>()
                             .AddPersistence<OrderSaga, SagaPersistenceDbContext>();
                         x.AddConsumer<RoundRobinAssignAgvConsumer>();
                     });
-                }).Build();
-
+                });
         })
         .WithParsed<ProductionOptions>(_ =>
         {
             // Enable serialization/deserialization of enum values as string.
             SystemTextJsonMessageSerializer.Options.Converters.Add(new JsonStringEnumConverter());
 
-            host = GebhardtStartup.CreateHostBuilder(args)
+            hostBuilder = GebhardtStartup.CreateHostBuilder(args)
                 .ConfigureServices((context, services) =>
                 {
                     services.AddSingleton<ConcurrentQueue<KeyValuePair<Guid, Order>>>();
                     services.AddTransient<IAgvRegistry, EfAgvRegistry>();
-                    
-                    services.AddDbContextFactory<SagaPersistenceDbContext>(builder => 
-                    { 
+
+                    services.AddDbContextFactory<SagaPersistenceDbContext>(builder =>
+                    {
                         builder.UseSqlServer(context.Configuration.GetConnectionString(SagaPersistenceDbContext.ConfigSectionName), m =>
                         {
                             m.MigrationsHistoryTable(SagaPersistenceDbContext.MigrationTableName);
-                        }); 
+                        });
                     });
-              
+
                     try
                     {
                         ConfigureServicesMassTransit.ConfigureServices(services, context.Configuration, x =>
@@ -85,18 +88,67 @@ try
                     {
                         initialLogger.LogError(e, "MassTransit could not be started");
                     }
-                }).Build();
+                });
         });
-    // By using the generic overload of WithParsed above host will be null for invalid command line arguments.
-    if (host != null)
+
+    // By using the generic overload of WithParsed above hostBuilder will be null for invalid command line arguments.
+    if (hostBuilder != null)
     {
+        hostBuilder.ConfigureWebHost(host =>
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+            host.UseKestrel().ConfigureServices(services =>
+            {
+                services.AddMvc();
+
+                services.AddControllers().AddApplicationPart(assembly);
+
+                services.Configure<Microsoft.Extensions.Logging.EventLog.EventLogSettings>(settings =>
+                {
+                    settings.SourceName = assembly.GetName().Name ?? "WebService";
+                });
+                services.AddSwaggerGen(options =>
+                {
+                    options.SwaggerDoc("v1", new OpenApiInfo
+                    {
+                        Version = "v1",
+                        Title = "Monitoring API"
+                    });
+
+                    // Set the comments path for the Swagger JSON and UI.
+                    string xmlFile = $"{assembly.GetName().Name}.xml";
+                    string xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+                    options.IncludeXmlComments(xmlPath);
+                });
+            })
+            .Configure(app =>
+            {
+                app.UseDefaultFiles(); // Serve Default.htm/html, Index.htm/html by default, without having to explicitly qualify the URL.
+                app.UseStaticFiles(); // Allow html, images, etc. in wwwroot directory to be served. (use UseWebRoot to change folder)
+                app.UseRouting();
+                app.UseCors();
+                app.UseAuthentication(); // verify user
+                app.UseAuthorization(); // use security tokens
+
+                app.UseEndpoints(endpoints =>
+                {
+                    endpoints.MapControllers();
+                });
+
+                app.UseSwagger();
+                app.UseSwaggerUI();
+            });
+        });
+
+        var host = hostBuilder.Build();
+
         using (var scope = host.Services.CreateScope())
         {
             // Apply migrations if SagaPersistenceDbContext is available
             var db = scope.ServiceProvider.GetService<SagaPersistenceDbContext>();
             db?.Database.Migrate();
         }
-        
+
         host.Run();
         return 0;
     }

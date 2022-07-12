@@ -1,0 +1,73 @@
+###############################################################################
+# Edit:
+#   https://editor.swagger.io/
+# Build:
+#   MSBuild target OpenApiGeneration
+###############################################################################
+openapi: 3.0.1
+
+info:
+  title: AGV WEB API
+  description: REST API for AGV WEB Services.
+  version: "0"
+tags:
+  - name: TransportOrder
+    description: Server info/probing facilities.
+
+# -----------------------------------------------------------------------------
+paths:
+  /orders:
+    get:
+      tags:
+        - TransportOrder
+      summary: Get list of active transport orders
+      operationId: GetOrders
+      responses:
+        200:
+          description: ""
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/Order"
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+            text/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+
+# -----------------------------------------------------------------------------
+components:
+# -----------------------------------------------------------------------------
+  schemas:
+# -----------------------------------------------------------------------------
+    Order:
+      required:
+        - CorrelationId
+        - OrderId
+        - Source
+        - Destination
+        - LeNo
+        - Creator
+      type: object
+      properties:
+        CorrelationId:
+          type: string
+          description: Step name
+        OrderId:
+          type: string
+          description: Part ident.
+        Source:
+          type: string
+          description: Product
+        Destination:
+          type: string
+          description: Article number.
+        LeNo:
+          type: string
+          description: Alias ID
+        Creator:
+          type: string
+          description: Serial number
+      additionalProperties: false
+      description: Data structure for a transport order

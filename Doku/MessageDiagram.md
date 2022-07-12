@@ -60,9 +60,9 @@ sequenceDiagram
         TransportOrder->>WCSCommunication: IHostOrderHandlingSucceeded
     else failed
         DeviceCommunication->>TransportOrder: ITransportOrderFailed
-        critical Transport Order failed
+        alt No User input
             TransportOrder->>TransportOrder: Wait for user input
-        option User input "NOK"
+        else User input "NOK"
             TransportOrder->>WCSCommunication: IHostOrderHandlingFailed
         end
     end
