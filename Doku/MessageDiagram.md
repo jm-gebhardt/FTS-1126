@@ -14,9 +14,9 @@ sequenceDiagram
     activate DeviceCommunication
     DeviceCommunication->>AgvManagement: IAgvStatusReceived
     deactivate DeviceCommunication
-    activate AgvManagement
-    AgvManagement->>DeviceCommunication: IAgvRequestAgvData
-    deactivate AgvManagement
+    AgvManagement->>AgvManagement: ReleaseAgv
+
+    AgvManagement->>DeviceCommunication: RequestAgvData
     activate DeviceCommunication
     DeviceCommunication->>(AGV): IRequestData
     deactivate DeviceCommunication
@@ -24,11 +24,10 @@ sequenceDiagram
     (AGV)->>DeviceCommunication: IAgvData
     deactivate (AGV)
     activate DeviceCommunication
-    DeviceCommunication->>AgvManagement: IAgvDataReceived
+    DeviceCommunication->>AgvManagement: AgvDataReceived
     deactivate DeviceCommunication
-    activate AgvManagement
-    AgvManagement->>DeviceCommunication: IAgvRequestGraph
-    deactivate AgvManagement
+
+    AgvManagement->>DeviceCommunication: RequestAgvGraph
     activate DeviceCommunication
     DeviceCommunication->>(AGV): IRequestGraph
     deactivate DeviceCommunication
@@ -44,17 +43,17 @@ sequenceDiagram
     WCSCommunication->>TransportOrder: IHandleHostOrder
 
     TransportOrder->>AgvManagement: IAssignAgv
-    
+
     AgvManagement->>TransportOrder: IAgvAssignSucceeded
 
     TransportOrder->>DeviceCommunication: IExecuteTransportOrder
-    
+
     DeviceCommunication->>TransportOrder: ITransportOrderStarted
-    
+
     TransportOrder->>WCSCommunication: IHostOrderStarted
-    
+
     DeviceCommunication->>TransportOrder: ITransportOrderPickCompleted
-    
+
     alt success
         DeviceCommunication->>TransportOrder: ITransportOrderCompleted
         TransportOrder->>WCSCommunication: IHostOrderHandlingSucceeded
@@ -66,9 +65,9 @@ sequenceDiagram
             TransportOrder->>WCSCommunication: IHostOrderHandlingFailed
         end
     end
-        
+
     Note over WCSCommunication,DeviceCommunication : Cancel HostOrder
-    
+
     WCSCommunication->>TransportOrder: ICancelHostOrder
     TransportOrder->>DeviceCommunication: ICancelTransportOrder
 
@@ -79,11 +78,11 @@ sequenceDiagram
         DeviceCommunication->>TransportOrder: ITransportOrderCancelFailed
         TransportOrder->>WCSCommunication: IHostOrderCancelFailed
     end
-    
+
     Note over WCSCommunication,DeviceCommunication : Update HostOrder
-    
+
     WCSCommunication->>TransportOrder: IUpdateHostOrder
-    
+
     TransportOrder->>DeviceCommunication: IUpdateTransportOrder
     alt success
         DeviceCommunication->>TransportOrder: ITransportOrderUpdateSucceeded
