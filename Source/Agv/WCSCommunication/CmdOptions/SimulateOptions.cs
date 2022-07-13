@@ -29,5 +29,12 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.CmdOptions
         [UsedImplicitly]
         [Option('d', "destinations", HelpText = "List of simulation destinations", Required = true, Min = 1, Separator = ',')]
         public IEnumerable<string>? Destinations { get; init; }
+
+        /// <summary>
+        /// This is required for 'dotnet ef migrations' to work
+        /// </summary>
+        [UsedImplicitly]
+        [Option("applicationName", HelpText = "Ignore property only used by dotnet tools")]
+        public string? ApplicationName { get; init; }
     }
 }

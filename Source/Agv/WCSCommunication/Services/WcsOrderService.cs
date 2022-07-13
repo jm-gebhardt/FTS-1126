@@ -31,17 +31,6 @@ public class WcsOrderHandler: IPollable
         _logger = logger;
         _bus = bus;
         _contextFactory = contextFactory;
-        EnsureDbCreated();
-    }
-
-    /// <summary>
-    /// Ensure that the Database has been created
-    /// This can be removed when migrations are added
-    /// </summary>
-    private void EnsureDbCreated()
-    {
-         using var context = _contextFactory.CreateDbContext();
-         context.Database.EnsureCreated();
     }
 
     /// <summary>

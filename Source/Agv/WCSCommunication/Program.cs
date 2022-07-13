@@ -22,7 +22,7 @@ try
             host = GebhardtStartup.CreateHostBuilder(args)
                 .ConfigureServices((context, services) =>
                 {
-                    services.AddSingleton(_ => simulationOptions);
+					services.AddSingleton(_ => simulationOptions);
                     services.AddHostedService<PollingBackgroundService<SimulationHostOrderService>>();
                     services.AddSingleton<SimulationHostOrderService>();
                     ConfigureServicesMassTransit.ConfigureServices(services, context.Configuration, x =>
@@ -37,12 +37,10 @@ try
             host = GebhardtStartup.CreateHostBuilder(args)
                 .ConfigureServices((context, services) =>
             {
-                services.AddDbContextFactory<WcsDbContext>(options =>
+                services.AddDbContextFactory<WcsDbContext>(builder =>
                 {
-                    options.UseSqlServer(
-                        context.Configuration.GetConnectionString(WcsDbContext.ConfigSectionName)
-                    );
-                } );
+	                builder.UseSqlServer(context.Configuration.GetConnectionString(WcsDbContext.ConfigSectionName));
+                });
                 services.AddHostedService<PollingBackgroundService<WcsOrderHandler>>();
                 services.AddSingleton<WcsOrderHandler>();
                 ConfigureServicesMassTransit.ConfigureServices(services, context.Configuration, x =>
@@ -55,6 +53,11 @@ try
     // By using the generic overload of WithParsed above host will be null for invalid command line arguments.
     if (host != null)
     {
+	    using (var scope = host.Services.CreateScope())
+	    {
+		    var db = scope.ServiceProvider.GetService<WcsDbContext>();
+		    db?.Database.Migrate();
+	    }
         host.Run();
         return 0;
     }

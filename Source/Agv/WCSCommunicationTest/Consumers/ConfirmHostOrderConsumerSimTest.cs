@@ -23,6 +23,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Consumers
             await fixture.TestHarness.Bus.Publish<IHostOrderHandlingSucceeded>(new { OrderId = orderId });
 
             Assert.IsTrue(await fixture.TestHarness.Published.Any<IHostOrderHandlingSucceeded>());
+            Assert.IsTrue(await fixture.TestHarness.Consumed.Any<IHostOrderHandlingSucceeded>());
             Assert.AreEqual(orderId, fixture.ConsumerHarness.Consumed.Select<IHostOrderHandlingSucceeded>().First().Context.Message.OrderId);
         }
     }

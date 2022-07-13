@@ -12,12 +12,11 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Db
     /// </summary>
     public class WcsDbContext : DbContext
     {
-
         /// <summary>
         /// Configuration section where the ConnectionString is located
         /// </summary>
         public const string ConfigSectionName = "wcs";
-        
+
         /// <summary>
         /// Get all Orders with <see cref="MessageStatus.Pending" />
         /// </summary>
@@ -59,19 +58,13 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Db
         public DbSet<ToAgv> ToAgv { get; set; }  = null!;
         
         /// <summary>
-        /// Default WcsDbContext Constructor
-        /// </summary>
-        public WcsDbContext()
-        {
-        }
-        
-        /// <summary>
         /// WCSDbContext constructor with options
         /// </summary>
         /// <param name="options"></param>
         public WcsDbContext(DbContextOptions<WcsDbContext> options) : base(options)
         {
         }
+        
 
         /// <summary>
         /// Configure the DbContext
@@ -89,6 +82,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Db
                 // Logs from Microsoft.EntityFrameworkCore.Infrastructure
                 c.Log((CoreEventId.ContextInitialized, LogLevel.Debug));
             });
+
         }
     }
 }
