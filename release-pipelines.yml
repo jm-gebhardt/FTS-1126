@@ -7,6 +7,8 @@ resources:
 variables:
   - name: 'SourceDirectory'
     value: 'Source/Agv'
+  - name: 'releaseDate'
+    value: $[format('{0:yyyyMMdd}', pipeline.startTime)]
 
 parameters:
   - name: 'name'
@@ -24,6 +26,12 @@ stages:
         pool:
           vmImage: ubuntu-latest
         steps:
+          - bash: |
+              x=`echo "$(Build.SourceVersion)" | head -c 8`; echo "##vso[task.setvariable variable=SubstringSourceVersion;isoutput=true]$x"
+            name: BuildOutput
+          - bash: |
+              x=`echo "Agv_$(releaseDate)_$(BuildOutput.SubstringSourceVersion)"`; echo "##vso[task.setvariable variable=imageTag;isoutput=true]$x"
+            name: VersionOutput
           - task: CopyFiles@2
             inputs:
               SourceFolder: '$(Build.SourcesDirectory)'
@@ -34,14 +42,27 @@ stages:
               TargetFolder: '$(Build.ArtifactStagingDirectory)'
               CleanTargetFolder: true
               preserveTimestamp: true
+          - task: Bash@3
+            inputs:
+              targetType: 'inline'
+              script: |
+                # replace string literal
+                sed -i 's/wcscommunication:latest/wcscommunication:$(VersionOutput.imageTag)/g' docker-compose.yml
+                sed -i 's/transportorder:latest/transportorder:$(VersionOutput.imageTag)/g' docker-compose.yml
+                sed -i 's/devicecommunication:latest/devicecommunication:$(VersionOutput.imageTag)/g' docker-compose.yml
+              # no need for additional copy task
+              workingDirectory: '$(Build.ArtifactStagingDirectory)'
           - task: PublishBuildArtifacts@1
             inputs:
               PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-              ArtifactName: 'Agv'
+              ArtifactName: '$(VersionOutput.imageTag)'
               publishLocation: 'Container'
 
       - job: BuildingContainersOnLinux
         displayName: Build Container on Linux
+        dependsOn: ArchiveConfigurations
+        variables:
+          ImageTag: $[ dependencies.ArchiveConfigurations.outputs['VersionOutput.imageTag'] ]
         pool:
           vmImage: ubuntu-latest
         steps:
@@ -62,6 +83,7 @@ stages:
                   buildContext: ./Source/Agv
                   tags: |
                     latest
+                    $(ImageTag)
               
               - task: Docker@2
                 displayName: Push ${{ projectName }}
@@ -71,6 +93,7 @@ stages:
                   repository: 'agv/${{ projectName }}'
                   tags: |
                     latest
+                    $(ImageTag)
               - task: Docker@2
                 displayName: Logout ACR
                 inputs:
