@@ -33,9 +33,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
             var correlationId = orderId.ToGuid();
             var inputOrder = new Order(correlationId, orderId, "SRC1", "DST1", "LeNo123", HostOrderCreator.Simulation);
 
-            await fixture.TestHarness.Bus.Publish<IHandleHostOrder>(new { correlationId, Order = inputOrder });
+            await fixture.TestHarness.Bus.Publish(new HandleHostOrder(correlationId, inputOrder));
 
-            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<IHandleHostOrder>());
+            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<HandleHostOrder>());
 
             var result = await controller.GetOrders() as OkObjectResult;
             Assert.IsNotNull(result);

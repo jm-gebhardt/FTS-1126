@@ -11,7 +11,6 @@ namespace Gebhardt.StoreWare.Agv.CommonTest
     [TestClass]
     public class ConfigureServicesMassTransitTest
     {
-
         /// <summary>
         /// Test no RabbitMQ config provided
         /// </summary>

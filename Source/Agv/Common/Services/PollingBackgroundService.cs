@@ -1,13 +1,13 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.StoreWare.Agv.Common.Services {
-
+namespace Gebhardt.StoreWare.Agv.Common.Services
+{
     /// <summary>
     /// A Polling Background Service that calls <see cref="IPollable.Poll" /> and repeats every <see cref="IPollable.PollingInterval"/>
     /// </summary>
     [JetBrains.Annotations.PublicAPI]
-    public class PollingBackgroundService<T> : BackgroundService where T: IPollable
+    public class PollingBackgroundService<T> : BackgroundService where T : IPollable
     {
         private readonly ILogger<PollingBackgroundService<T>> _logger;
 
@@ -27,7 +27,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Services {
             _logger = logger;
             Pollable = pollable;
         }
-        
+
         /// <summary>
         /// Executes <see cref="IPollable.Poll" /> and waits for <see cref="IPollable.PollingInterval" /> seconds
         /// </summary>
@@ -46,8 +46,8 @@ namespace Gebhardt.StoreWare.Agv.Common.Services {
                 {
                     // Task.Delay exited via token cancellation
                     break;
-                } 
-                catch(Exception ex)
+                }
+                catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error occurred polling {Pollable}", Pollable);
                     break;

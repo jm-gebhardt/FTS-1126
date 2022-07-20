@@ -11,12 +11,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
     /// <summary>
     /// Simulate finishing of host orders
     /// </summary>
-    public class AgvStateConsumer : IConsumer<IState>
+    public class AgvStateConsumer : IConsumer<MqttState>
     {
         private readonly ILogger<AgvStateConsumer> _logger;
 
         /// <summary>
-        /// Create consumer for agv status message (<see cref="IState"/>)
+        /// Create consumer for agv status message (<see cref="MqttState"/>)
         /// </summary>
         /// <param name="logger">Mandatory logger facility.</param>
         [PublicAPI]
@@ -26,48 +26,42 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
         }
 
         /// <summary>
-        /// Translate to AGV status message to IAgvStatusReceived message
+        /// Translate to AGV status message to AgvStatusReceived message
         /// </summary>
-        public async Task Consume(ConsumeContext<IState> context)
+        public async Task Consume(ConsumeContext<MqttState> context)
         {
             var message = context.Message;
-            string? serialNumber = GetSerialNumber(message);
+            string serialNumber = GetSerialNumber(message);
 
             if (string.IsNullOrEmpty(serialNumber))
             {
-                _logger.LogError("Missing serialNumber in IState message: {Status}", context.Message);
-                throw new InvalidOperationException($"Cannot handle {typeof(IState)} message, serialNumber must not be null or empty"); 
+                _logger.LogError("Missing serialNumber in MqttState message: {Status}", context.Message);
+                throw new InvalidOperationException($"Cannot handle {typeof(MqttState)} message, serialNumber must not be null or empty");
             }
-           
-            
-            await context.Publish<IAgvStatusReceived>(new
-            {
-                CorrelationId = serialNumber.ToGuid(),
-                AgvId = serialNumber,
-                AgvStatus = new AgvStatus(
-                    serialNumber.ToGuid(),
-                    GetOrderId(message),
-                    GetBusy(message),
-                    GetAutomatic(message),
-                    GetBatteryCharge(message),
-                    GetCharging(message),
-                    GetDisturbed(message)
-                )
-            }, context.CancellationToken);
-            
+
+            var agvStatus = new AgvStatus(
+                serialNumber.ToGuid(),
+                GetOrderId(message),
+                GetBusy(message),
+                GetAutomatic(message),
+                GetBatteryCharge(message),
+                GetCharging(message),
+                GetDisturbed(message));
+
+            await context.Publish(new AgvStatusReceived(serialNumber.ToGuid(), serialNumber, agvStatus), context.CancellationToken);
         }
 
-        private string? GetSerialNumber(IState message)
+        private string GetSerialNumber(MqttState message)
         {
             return message.SerialNumber;
         }
 
-        private string? GetOrderId(IState message)
+        private string GetOrderId(MqttState message)
         {
             return message.OrderId;
         }
 
-        private bool GetBusy(IState message)
+        private bool GetBusy(MqttState message)
         {
             if (message.ActionStates == null)
             {
@@ -89,7 +83,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
             return false;
         }
 
-        private bool GetAutomatic(IState message)
+        private bool GetAutomatic(MqttState message)
         {
             switch (message.OperatingMode)
             {
@@ -102,7 +96,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
             }
         }
 
-        private int GetBatteryCharge(IState message)
+        private int GetBatteryCharge(MqttState message)
         {
             if (message.BatteryState == null)
             {
@@ -112,7 +106,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
             return (int)(message.BatteryState.BatteryCharge + 0.5);
         }
 
-        private bool GetCharging(IState message)
+        private bool GetCharging(MqttState message)
         {
             if (message.BatteryState == null)
             {
@@ -122,7 +116,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
             return message.BatteryState.Charging;
         }
 
-        private bool GetDisturbed(IState message)
+        private bool GetDisturbed(MqttState message)
         {
             if (message.SafetyState != null)
             {

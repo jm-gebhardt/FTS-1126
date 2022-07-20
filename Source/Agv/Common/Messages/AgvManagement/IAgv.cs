@@ -1,5 +1,6 @@
 using MassTransit;
 
+// ReSharper disable ConvertToPrimaryConstructor
 namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
 {
     /// <summary>
@@ -8,12 +9,11 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
     [JetBrains.Annotations.PublicAPI]
     public interface IAgv : CorrelatedBy<Guid>
     {
-
         /// <summary>
         /// Agv Serial Number
         /// </summary>
         [JetBrains.Annotations.PublicAPI]
-        string AgvId { get; }
+        public string AgvId { get; }
 
         /// <summary>
         /// The current state of the AGV
@@ -24,7 +24,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
         /// AGV Status
         /// </summary>
         public AgvStatus? AgvStatus { get; }
-        
+
         /// <summary>
         /// AGV Graph
         /// </summary>

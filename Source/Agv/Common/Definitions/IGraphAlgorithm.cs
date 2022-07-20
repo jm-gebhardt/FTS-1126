@@ -39,7 +39,6 @@
             }
         }
 
-
         /// <summary>
         /// Calculate route costs from <paramref name="source"/> to <paramref name="destination"/>.
         /// </summary>
@@ -59,5 +58,4 @@
         [JetBrains.Annotations.PublicAPI]
         public Route? CalculateRoute(string currentNode, string source, string destination);
     }
-
 }

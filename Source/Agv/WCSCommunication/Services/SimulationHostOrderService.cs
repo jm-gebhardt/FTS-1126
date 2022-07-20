@@ -18,15 +18,14 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
         /// IPollable interval
         /// </summary>
         public int PollingInterval { get; }
-        
-        private readonly string _runtimeIdentifierOrder =  DateTime.Now.ToString("yyyy-MM-ddTHH:mm");
+
+        private readonly string _runtimeIdentifierOrder = DateTime.Now.ToString("yyyy-MM-ddTHH:mm");
         private readonly ILogger<SimulationHostOrderService> _logger;
         private readonly IBus _bus;
         private readonly string[] _simSources;
         private readonly string[] _simDestinations;
         private readonly Random _random = new();
         private uint _orderIdCounter;
-        
 
         /// <summary>
         /// Create simulator for creating host order
@@ -45,6 +44,14 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
         }
 
         /// <summary>
+        /// Run simulation cycle
+        /// </summary>
+        public async Task Poll(CancellationToken cancellationToken = default)
+        {
+            await SimulateHostOrders(cancellationToken);
+        }
+
+        /// <summary>
         /// Creates dummy HostOrders for simulation
         /// </summary>
         private async Task SimulateHostOrders(CancellationToken cancellationToken)
@@ -54,32 +61,12 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
             string dst = _simDestinations[_random.Next(_simDestinations.Length)];
             const string leNo = "9999";
             var correlationId = orderId.ToGuid();
+            var order = new Order(correlationId, orderId, src, dst, leNo, HostOrderCreator.Simulation);
 
             // Send message
-            await _bus.Publish<IHandleHostOrder>(new
-            {
-                
-                correlationId,
-                Order = new Order(
-                    correlationId,
-                    orderId,
-                    src,
-                    dst,
-                    leNo,
-                    HostOrderCreator.Simulation
-                    )
-            }, cancellationToken);
+            await _bus.Publish(new HandleHostOrder(correlationId, order), cancellationToken);
 
             _logger.LogInformation("Simulation HostOrder created: CorrelationId = {CorrelationId}, OrderId = {OrderId}, Source = {Src}, Dest = {Dst}, LeNo = {LeNo}", correlationId, orderId, src, dst, leNo);
-        }
-        
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="cancellationToken"></param>
-        public async Task Poll(CancellationToken cancellationToken = default)
-        {
-            await SimulateHostOrders(cancellationToken);
         }
 
         private string NextOrderId()

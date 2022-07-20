@@ -13,10 +13,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
     /// This is passed to the service AgvManagement to have kept DeviceCommunication as a simple proxy.
     /// </remarks>
     [JetBrains.Annotations.UsedImplicitly]
-    public class AgvDataConsumer : IConsumer<IAgvData>
+    public class AgvDataConsumer : IConsumer<MqttAgvData>
     {
         private readonly ILogger<AgvDataConsumer> _logger;
-
 
         /// <summary>
         /// Create consumer with message handler delegate.
@@ -31,7 +30,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
         /// Consume data message from AGV and transform this to an internal <see cref="AgvDataReceived"/>.
         /// </summary>
         /// <exception cref="InvalidOperationException">Message content is invalid and cannot be processed.</exception>
-        public async Task Consume(ConsumeContext<IAgvData> context)
+        public async Task Consume(ConsumeContext<MqttAgvData> context)
         {
 	        var parser = new MessageParsers.AgvDataParser(context.Message);
 

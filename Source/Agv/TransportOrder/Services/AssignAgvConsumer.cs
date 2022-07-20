@@ -6,21 +6,20 @@ using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
 {
-
     /// <summary>
-    /// Consumer for <see cref="IAssignAgv"/> messages
+    /// Consumer for <see cref="AssignAgv"/> messages
     /// </summary>
     [JetBrains.Annotations.PublicAPI]
-    public class AssignAgvConsumer : IConsumer<IAssignAgv>
+    public class AssignAgvConsumer : IConsumer<AssignAgv>
     {
         private readonly ILogger<AssignAgvConsumer> _logger;
         private readonly IAgvRegistry _agvRegistry;
         private readonly IRequestClient<ReserveAgv> _client;
 
         /// <summary>
-        /// Consumer for <see cref="IAssignAgv"/> messages
+        /// Consumer for <see cref="AssignAgv"/> messages
         /// </summary>
-        public AssignAgvConsumer(ILogger<AssignAgvConsumer> logger, 
+        public AssignAgvConsumer(ILogger<AssignAgvConsumer> logger,
             IAgvRegistry agvRegistry,
             IRequestClient<ReserveAgv> client)
         {
@@ -30,17 +29,17 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         }
 
         /// <summary>
-        /// Respond to <see cref="IAssignAgv"/> message
+        /// Respond to <see cref="AssignAgv"/> message
         /// </summary>
         /// <param name="context"></param>
-        public async Task Consume(ConsumeContext<IAssignAgv> context)
+        public async Task Consume(ConsumeContext<AssignAgv> context)
         {
             _logger.LogInformation("Order {OrderId}/{CorrelationId} requests assignment to an AGV", context.Message.Order.OrderId, context.Message.CorrelationId);
 
             var agvChooser = new AgvChooser<AStar>();
             IAgv? assignedAgv = null;
             List<IAgv> idleAgvs = _agvRegistry.GetIdleAgvs().ToList();
-            
+
             while (idleAgvs.Count > 0)
             {
                 Guid? agvGuid = agvChooser.ChooseAgv(idleAgvs, context.Message.Order);
@@ -51,9 +50,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
                     break;
                 }
 
-                Response<AgvReservationSucceeded, AgvReservationRejected> response = await _client.GetResponse<AgvReservationSucceeded, AgvReservationRejected>(
-                    new ReserveAgv(agvGuid.Value),
-                    context.CancellationToken);
+                Response<AgvReservationSucceeded, AgvReservationRejected> response =
+                    await _client.GetResponse<AgvReservationSucceeded, AgvReservationRejected>(new ReserveAgv(agvGuid.Value), context.CancellationToken);
+
                 if (response.Message is AgvReservationSucceeded)
                 {
                     assignedAgv = idleAgvs.Single(x => x.CorrelationId == agvGuid);
@@ -68,16 +67,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
 
             if (assignedAgv != null)
             {
-                await context.Publish<IAgvAssignmentSucceeded>(new
-                {
-                    context.Message.CorrelationId,
-                    assignedAgv.AgvId,
-                    AgvCorrelationId = assignedAgv.CorrelationId
-                });    
+                await context.Publish(new AgvAssignmentSucceeded(context.Message.CorrelationId, assignedAgv.AgvId, assignedAgv.CorrelationId));
             }
             else
             {
-                await context.Publish(new AgvAssignmentFailed(context.Message.CorrelationId));    
+                await context.Publish(new AgvAssignmentFailed(context.Message.CorrelationId));
             }
         }
     }

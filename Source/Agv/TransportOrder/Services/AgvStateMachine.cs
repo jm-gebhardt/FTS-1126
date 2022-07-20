@@ -16,9 +16,9 @@ public class AgvStateMachine: MassTransitStateMachine<AgvSaga>
     private readonly ILogger<AgvStateMachine> _logger;
 
     /// <summary>
-    /// New AGV discovered by receiving IAgvStatusReceived while missing information evaluating the current state of the AGV.
+    /// New AGV discovered by receiving AgvStatusReceived while missing information evaluating the current state of the AGV.
     /// </summary>
-    /// <remarks>Hypothetical, receiving <see cref="IAgvStatusReceived"/> will lead to one of the subsequent states.</remarks>
+    /// <remarks>Hypothetical, receiving <see cref="AgvStatusReceived"/> will lead to one of the subsequent states.</remarks>
     public State Discovered { get; private set; } = default!;
     
     /// <summary>
@@ -39,7 +39,7 @@ public class AgvStateMachine: MassTransitStateMachine<AgvSaga>
     /// <summary>
     /// 
     /// </summary>
-    public Event<IAgvStatusReceived> AgvStatusReceivedEvent { get; private set; } = default!;
+    public Event<AgvStatusReceived> AgvStatusReceivedEvent { get; private set; } = default!;
     
     /// <summary>
     /// Request to reserve AGV 
@@ -105,8 +105,8 @@ public class AgvStateMachine: MassTransitStateMachine<AgvSaga>
     /// <summary>
     /// First message which creates a new agv saga instance
     /// </summary>
-    /// <returns>Event Binding for IHandleHostOrder</returns>
-    private EventActivityBinder<AgvSaga, IAgvStatusReceived> InitialAgvStatusReceivedHandler() =>
+    /// <returns>Event Binding for HandleHostOrder</returns>
+    private EventActivityBinder<AgvSaga, AgvStatusReceived> InitialAgvStatusReceivedHandler() =>
         When(AgvStatusReceivedEvent)
             .TransitionTo(Discovered)
             .Then(c =>
@@ -129,7 +129,7 @@ public class AgvStateMachine: MassTransitStateMachine<AgvSaga>
             .Then(c => _logger.LogTrace("Could not reserve {AgvId}/{CorrelationId} in state {State}", c.Saga.AgvId, c.Saga.CorrelationId, c.Saga.CurrentState))
             .Respond(c => new AgvReservationRejected(c.Message.CorrelationId));
 
-    private EventActivityBinder<AgvSaga, IAgvStatusReceived> AgvStatusReceivedHandler() =>
+    private EventActivityBinder<AgvSaga, AgvStatusReceived> AgvStatusReceivedHandler() =>
         When(AgvStatusReceivedEvent)
             .Then(c =>
                 _logger.LogTrace("AgvStatus {AgvId}/{CorrelationId} received", c.Message.AgvId, c.Saga.CorrelationId))

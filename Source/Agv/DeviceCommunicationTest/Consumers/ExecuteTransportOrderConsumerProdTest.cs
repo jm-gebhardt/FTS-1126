@@ -16,120 +16,126 @@ using Gebhardt.StoreWare.Agv.DeviceCommunication.Enums;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
 {
-	/// <summary>
-	/// Test class for consuming an IExecuteOrder message and publish an IOrder Mqtt message with proper bus configuration
-	/// </summary>
-	[TestClass]
-	public class ExecuteTransportOrderConsumerProdTest
-	{
-		/// <summary>
-		/// Test consuming a IExecuteOrder message and publish an IOrder Mqtt message with proper bus configuration
-		/// </summary>
-		/// <returns></returns>
-		[TestMethod]
-		public async Task Test_Send_TransportOrder_To_AGV_Via_MQTT()
-		{
-			var fixture = new MqttConsumerTestFixture<ExecuteTransportOrderConsumer>();
+    /// <summary>
+    /// Test class for consuming an ExecuteOrder message and publish an MqttOrder Mqtt message with proper bus configuration
+    /// </summary>
+    [TestClass]
+    public class ExecuteTransportOrderConsumerProdTest
+    {
+        /// <summary>
+        /// Test consuming a ExecuteOrder message and publish an MqttOrder Mqtt message with proper bus configuration
+        /// </summary>
+        /// <returns></returns>
+        [TestMethod]
+        public async Task Test_Send_TransportOrder_To_AGV_Via_MQTT()
+        {
+            var fixture = new MqttConsumerTestFixture<ExecuteTransportOrderConsumer>();
 
-			//Create a publish observer
-			var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
-			using (fixture.TestHarness.Bus.ConnectPublishObserver(publishObserver))
-			{
-				const string agvId = "agv0";
-				const string orderId = "1234";
-				var correlationId = orderId.ToGuid();
-				const string fromStationId = "Pick1"; 
-				const string toStationId = "Drop5";
-				const string leNo = "na";
+            // Create a publish observer
+            var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
+            using (fixture.TestHarness.Bus.ConnectPublishObserver(publishObserver))
+            {
+                const string orderId = "1234";
+                var correlationId = orderId.ToGuid();
+                const string agvId = "agv0";
+                var agvCorrelationId = agvId.ToGuid();
+                const string fromStationId = "Pick1";
+                const string toStationId = "Drop5";
+                const string leNo = "na";
 
-				//Publish IExecuteTransportOrder
-				await fixture.TestHarness.Bus.Publish<IExecuteTransportOrder>(
-					new
-					{
-						correlationId = agvId.ToGuid(),
-						AgvId = agvId,
-						Order = new Order(
-							correlationId,
-							orderId,
-							fromStationId,
-							toStationId,
-							leNo,
-							HostOrderCreator.Simulation)
-					});
-				//Check if sent
-				Assert.IsTrue(await fixture.TestHarness.Published.Any<IExecuteTransportOrder>());
+                var order = new Order(correlationId, orderId, fromStationId, toStationId, leNo, HostOrderCreator.Simulation);
+                var message = new ExecuteTransportOrder(correlationId, order, agvId, agvCorrelationId);
 
-				//Get Consumer Harness
-				IConsumerTestHarness<ExecuteTransportOrderConsumer> consumerHarness = fixture.TestHarness.GetConsumerHarness<ExecuteTransportOrderConsumer>();
-				//Check if consumed
-				Assert.IsTrue(await consumerHarness.Consumed.Any<IExecuteTransportOrder>());
-				//Get consumed message
-				IReceivedMessage<IExecuteTransportOrder> consumedMessage = consumerHarness.Consumed.Select<IExecuteTransportOrder>().First();
-				//Check consumed message
-				Assert.AreEqual(agvId, consumedMessage.Context.Message.AgvId);
-				Assert.AreEqual(orderId, consumedMessage.Context.Message.Order.OrderId);
-				Assert.AreEqual(fromStationId, consumedMessage.Context.Message.Order.Source);
-				
-				//Get published IOrder Mqtt message
-				IPublishedMessage<IOrder> a = publishObserver.Messages.Select<IOrder>().First();
-				//Check routing key and content type
-				var routingKeySpecified = typeof(IOrder).GetCustomAttribute(typeof(RoutingKey)) as RoutingKey;
-				Assert.AreEqual(routingKeySpecified?.RoutingKeyValue, a.Context.RoutingKey());
-				Assert.AreEqual(SystemTextJsonRawMessageSerializer.JsonContentType, a.Context.ContentType);
+                // Publish ExecuteTransportOrder
+                await fixture.TestHarness.Bus.Publish(message);
 
-				//Check content
-				Assert.AreEqual(agvId, a.Context.Message.SerialNumber);
+                // Check if sent
+                Assert.IsTrue(await fixture.TestHarness.Published.Any<ExecuteTransportOrder>());
 
-				Assert.AreEqual(fromStationId, a.Context.Message.Stations?.FromStationIdentifier);
-				Assert.AreEqual(toStationId, a.Context.Message.Stations?.ToStationIdentifier);
-				Assert.AreEqual(OrderType.Transport, a.Context.Message.OrderType);
-				Assert.AreEqual(OrderRecordType.Order, a.Context.Message.RecordType);
-			}
-		}
+                // Get Consumer Harness
+                IConsumerTestHarness<ExecuteTransportOrderConsumer> consumerHarness = fixture.TestHarness.GetConsumerHarness<ExecuteTransportOrderConsumer>();
 
-		/// <summary>
-		/// Test consuming an ISendAgvChargeOrder message and publish an IOrder Mqtt message with proper bus configuration
-		/// </summary>
-		/// <returns></returns>
-		[TestMethod]
-		public async Task Test_Send_ChargeOrder_To_AGV_Via_MQTT()
-		{
-			var fixture = new MqttConsumerTestFixture<ExecuteTransportOrderConsumer>();
+                // Check if consumed
+                Assert.IsTrue(await consumerHarness.Consumed.Any<ExecuteTransportOrder>());
 
-			//Create a publish observer
-			var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
-			using (fixture.TestHarness.Bus.ConnectPublishObserver(publishObserver))
-			{
-				const string agvId = "agv0";
-				const string chargerId = "CHG1";
-				//Publish IExecuteTransportOrder
-				await fixture.TestHarness.Bus.Publish<ISendAgvChargeOrder>(new { CorrelationId = Guid.NewGuid(), AgvId = agvId, ToCharger = chargerId });
-				//Check if sent
-				Assert.IsTrue(await fixture.TestHarness.Published.Any<ISendAgvChargeOrder>());
+                // Get consumed message
+                IReceivedMessage<ExecuteTransportOrder> consumedMessage = consumerHarness.Consumed.Select<ExecuteTransportOrder>().First();
 
-				//Get Consumer Harness
-				IConsumerTestHarness<ExecuteTransportOrderConsumer> consumerHarness = fixture.TestHarness.GetConsumerHarness<ExecuteTransportOrderConsumer>();
-				//Check if consumed
-				Assert.IsTrue(await consumerHarness.Consumed.Any<ISendAgvChargeOrder>());
-				//Get consumed message
-				IReceivedMessage<ISendAgvChargeOrder> consumedMessage = consumerHarness.Consumed.Select<ISendAgvChargeOrder>().First();
-				//Check consumed message
-				Assert.AreEqual(agvId, consumedMessage.Context.Message.AgvId);
-				Assert.AreEqual(chargerId, consumedMessage.Context.Message.ToCharger);
-				Guid? guid = consumedMessage.Context.CorrelationId;
+                // Check consumed message
+                Assert.AreEqual(correlationId, consumedMessage.Context.Message.CorrelationId);
+                Assert.AreEqual(agvId, consumedMessage.Context.Message.AgvId);
+                Assert.AreEqual(agvCorrelationId, consumedMessage.Context.Message.AgvCorrelationId);
+                Assert.AreEqual(orderId, consumedMessage.Context.Message.Order.OrderId);
+                Assert.AreEqual(fromStationId, consumedMessage.Context.Message.Order.Source);
 
-				//Get published IOrder Mqtt message
-				IPublishedMessage<IOrder> a = publishObserver.Messages.Select<IOrder>().First();
-				//Check routing key and content type
-				var routingKeySpecified = typeof(IOrder).GetCustomAttribute(typeof(RoutingKey)) as RoutingKey;
-				Assert.AreEqual(routingKeySpecified?.RoutingKeyValue, a.Context.RoutingKey());
-				Assert.AreEqual(SystemTextJsonRawMessageSerializer.JsonContentType, a.Context.ContentType);
+                // Get published MqttOrder Mqtt message
+                IPublishedMessage<MqttOrder> publishedMessage = publishObserver.Messages.Select<MqttOrder>().First();
 
-				//Check content
-				Assert.AreEqual(agvId, a.Context.Message.SerialNumber);
-				Assert.AreEqual(guid.ToString(), a.Context.Message.OrderId);
-				Assert.AreEqual(chargerId, a.Context.Message.Stations?.ToStationIdentifier);
-			}
-		}
-	}
+                // Check routing key and content type
+                var routingKeySpecified = typeof(MqttOrder).GetCustomAttribute(typeof(RoutingKey)) as RoutingKey;
+                Assert.AreEqual(routingKeySpecified?.RoutingKeyValue, publishedMessage.Context.RoutingKey());
+                Assert.AreEqual(SystemTextJsonRawMessageSerializer.JsonContentType, publishedMessage.Context.ContentType);
+
+                // Check content
+                var mqttMessage = publishedMessage.Context.Message;
+
+                Assert.AreEqual(agvId, mqttMessage.SerialNumber);
+                Assert.AreEqual(fromStationId, mqttMessage.Stations?.FromStationIdentifier);
+                Assert.AreEqual(toStationId, mqttMessage.Stations?.ToStationIdentifier);
+                Assert.AreEqual(OrderType.Transport, mqttMessage.OrderType);
+                Assert.AreEqual(OrderRecordType.Order, mqttMessage.RecordType);
+            }
+        }
+
+        /// <summary>
+        /// Test consuming an SendAgvChargeOrder message and publish an MqttOrder Mqtt message with proper bus configuration
+        /// </summary>
+        /// <returns></returns>
+        [TestMethod]
+        public async Task Test_Send_ChargeOrder_To_AGV_Via_MQTT()
+        {
+            var fixture = new MqttConsumerTestFixture<ExecuteTransportOrderConsumer>();
+
+            // Create a publish observer
+            var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
+            using (fixture.TestHarness.Bus.ConnectPublishObserver(publishObserver))
+            {
+                const string agvId = "agv0";
+                const string chargerId = "CHG1";
+
+                // Publish ExecuteTransportOrder
+                await fixture.TestHarness.Bus.Publish(new SendAgvChargeOrder(Guid.NewGuid(), agvId, chargerId));
+
+                // Check if sent
+                Assert.IsTrue(await fixture.TestHarness.Published.Any<SendAgvChargeOrder>());
+
+                // Get Consumer Harness
+                IConsumerTestHarness<ExecuteTransportOrderConsumer> consumerHarness = fixture.TestHarness.GetConsumerHarness<ExecuteTransportOrderConsumer>();
+
+                // Check if consumed
+                Assert.IsTrue(await consumerHarness.Consumed.Any<SendAgvChargeOrder>());
+
+                // Get consumed message
+                IReceivedMessage<SendAgvChargeOrder> consumedMessage = consumerHarness.Consumed.Select<SendAgvChargeOrder>().First();
+
+                // Check consumed message
+                Assert.AreEqual(agvId, consumedMessage.Context.Message.AgvId);
+                Assert.AreEqual(chargerId, consumedMessage.Context.Message.ToCharger);
+                Guid? correlationId = consumedMessage.Context.CorrelationId;
+
+                // Get published MqttOrder Mqtt message
+                IPublishedMessage<MqttOrder> publishedMessage = publishObserver.Messages.Select<MqttOrder>().First();
+
+                // Check routing key and content type
+                var routingKeySpecified = typeof(MqttOrder).GetCustomAttribute(typeof(RoutingKey)) as RoutingKey;
+                Assert.AreEqual(routingKeySpecified?.RoutingKeyValue, publishedMessage.Context.RoutingKey());
+                Assert.AreEqual(SystemTextJsonRawMessageSerializer.JsonContentType, publishedMessage.Context.ContentType);
+
+                // Check content
+                Assert.AreEqual(agvId, publishedMessage.Context.Message.SerialNumber);
+                Assert.AreEqual(correlationId.ToString(), publishedMessage.Context.Message.OrderId);
+                Assert.AreEqual(chargerId, publishedMessage.Context.Message.Stations?.ToStationIdentifier);
+            }
+        }
+    }
 }

@@ -3,7 +3,6 @@ using MassTransit;
 using MassTransit.Testing;
 using Gebhardt.StoreWare.Agv.Common.Extensions;
 
-
 namespace Gebhardt.StoreWare.Agv.Common.Testing
 {
     /// <summary>
@@ -28,7 +27,6 @@ namespace Gebhardt.StoreWare.Agv.Common.Testing
         /// Consumer test harness.
         /// </summary>
         public IConsumerTestHarness<TConsumer> ConsumerHarness;
-
 
         /// <summary>
         /// Consumer saga test fixture to be used for unit/integration tests.
@@ -74,7 +72,6 @@ namespace Gebhardt.StoreWare.Agv.Common.Testing
         /// Test harness.
         /// </summary>
         public readonly ITestHarness TestHarness;
-
 
         /// <summary>
         /// Consumer saga test fixture to be used for unit/integration tests.

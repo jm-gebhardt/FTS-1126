@@ -3,22 +3,18 @@ using Gebhardt.StoreWare.Agv.WCSCommunication.Db;
 using Gebhardt.StoreWare.Agv.WCSCommunication.Db.Models;
 using Gebhardt.StoreWare.Agv.WCSCommunication.Services;
 using Gebhardt.StoreWare.Agv.WCSCommunicationTest.Fixtures;
-
-using MassTransit.Testing;
-
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using MassTransit.Testing;
 using Moq;
 
 namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services
 {
-
     /// <summary>
     /// Wcs Host Order Service Tests
     /// </summary>
     [TestClass]
     public class WcsHostOrderServiceTest
     {
-        
         /// <summary>
         /// Invalid new order does not result in publishing a message or writing any entry
         /// </summary>
@@ -45,21 +41,19 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services
                 Assert.AreEqual(0, context.FromAgv.Count());
             }
         }
-        
-        
+
         /// <summary>
-        /// A valid new order was found in ToAgv which results in a IHandleHostOrder message
+        /// A valid new order was found in ToAgv which results in a HandleHostOrder message
         /// <param name="source"></param>
         /// <param name="destination"></param>
         /// </summary>
         [TestMethod]
-        [DataRow( "sc1", "")]
-        [DataRow( "", "dst1")]
-        [DataRow( "sc1", "dst1")]
-        public async Task ValidNewOrderFoundInToAgv_IHandleHostOrderWasPublished(string source, string destination)
+        [DataRow("sc1", "")]
+        [DataRow("", "dst1")]
+        [DataRow("sc1", "dst1")]
+        public async Task ValidNewOrderFoundInToAgv_HandleHostOrderWasPublished(string source, string destination)
         {
             var fixture = new EfPollableServiceTestFixture<WcsOrderHandler, WcsDbContext>();
-
 
             await using (var context = await fixture.DbContextFactory.CreateDbContextAsync())
             {
@@ -67,11 +61,10 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services
                 await context.SaveChangesAsync();
             }
 
- 
             await fixture.Pollable.HandleNewTransportOrders(It.IsAny<CancellationToken>());
-            
-            IPublishedMessage<IHandleHostOrder>? message = fixture.TestHarness.Published.Select<IHandleHostOrder>().First();
-            
+
+            IPublishedMessage<HandleHostOrder>? message = fixture.TestHarness.Published.Select<HandleHostOrder>().First();
+
             Assert.IsNotNull(message);
 
             await using (var context = await fixture.DbContextFactory.CreateDbContextAsync())
@@ -86,26 +79,26 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services
                 Assert.AreEqual(MessageStatus.Finished, toAgvEntry.MessageStatus);
             }
         }
-        
+
         /// <summary>
         /// A valid new order was found in ToAgv which results in a entry in FromAgv
         /// </summary>
         [TestMethod]
-        [DataRow( "sc1", "")]
-        [DataRow( "", "dst1")]
-        [DataRow( "sc1", "dst1")]
+        [DataRow("sc1", "")]
+        [DataRow("", "dst1")]
+        [DataRow("sc1", "dst1")]
         public async Task ValidNewOrderFoundInToAgv_FromAgvEntryCreated(string source, string destination)
         {
             var fixture = new EfPollableServiceTestFixture<WcsOrderHandler, WcsDbContext>();
-            
+
             await using (var context = await fixture.DbContextFactory.CreateDbContextAsync())
             {
                 context.ToAgv.Add(ToFromAgvGenerator.GenerateToAgvEntry(source: source, destination: destination));
                 await context.SaveChangesAsync();
             }
-            
+
             await fixture.Pollable.HandleNewTransportOrders(It.IsAny<CancellationToken>());
-            
+
             await using (var context = await fixture.DbContextFactory.CreateDbContextAsync())
             {
                 Assert.AreEqual(1, context.FromAgv.Count());

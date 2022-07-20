@@ -22,7 +22,6 @@ namespace Gebhardt.StoreWare.Agv.CommonTest
 		{
 			_logger = logger;
 		}
-		
 
 		/// <summary>
 		/// Method to be called when mocking
@@ -35,8 +34,6 @@ namespace Gebhardt.StoreWare.Agv.CommonTest
 			// ReSharper disable once TemplateIsNotCompileTimeConstantProblem
 			_logger.Log(logLevel, logEventId, logMsg);
 		}
-
-		
 	}
 
 	/// <summary>
@@ -59,7 +56,6 @@ namespace Gebhardt.StoreWare.Agv.CommonTest
 			_loggerMock = new Mock<ILogger<DummyColorConsoleTestClass>>();
 			_colorConsole = new DummyColorConsoleTestClass(_loggerMock.Object);
 		}
-
 		
 		/// <summary>
 		/// Injecting each logging provider
@@ -83,7 +79,6 @@ namespace Gebhardt.StoreWare.Agv.CommonTest
 				logger.LogError("Log error into console and text...");
 			}
 		}
-		
 
 		/// <summary>
 		/// Testing the log method only once

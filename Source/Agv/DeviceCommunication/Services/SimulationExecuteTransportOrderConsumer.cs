@@ -12,14 +12,13 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
     /// </summary>
     [UsedImplicitly]
     public class SimulationExecuteTransportOrderConsumer :
-        IConsumer<IExecuteTransportOrder>
+        IConsumer<ExecuteTransportOrder>
     {
 	    private readonly ILogger<SimulationExecuteTransportOrderConsumer> _logger;
 
         private readonly Random _simInterval;
         private readonly int _minInterval;
         private readonly int _maxInterval;
-
 
         /// <summary>
         /// Create dummy consumer with message handler delegate
@@ -40,16 +39,16 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
         }
 
         /// <summary>
-        /// Simulation: Handle message <see cref="IExecuteTransportOrder"/>.
-        /// <para>Responds with <see cref="ITransportOrderCompleted"/> after a random delay.</para>
+        /// Simulation: Handle message <see cref="ExecuteTransportOrder"/>.
+        /// <para>Responds with <see cref="TransportOrderCompleted"/> after a random delay.</para>
         /// </summary>
         /// <param name="context">Context of the consumer wrapping details surrounding the inbound message.</param>
-        public async Task Consume(ConsumeContext<IExecuteTransportOrder> context)
+        public async Task Consume(ConsumeContext<ExecuteTransportOrder> context)
         {
             await Task.Delay(1000 * _simInterval.Next(_minInterval, _maxInterval + 1), context.CancellationToken)
                .ContinueWith(_ =>
                {
-	               context.Publish<ITransportOrderCompleted>(new { context.Message.CorrelationId, context.Message.Order.OrderId }, context.CancellationToken);
+	               context.Publish(new TransportOrderCompleted(context.Message.CorrelationId, context.Message.Order.OrderId), context.CancellationToken);
                    _logger.LogInformation("TransportOrderCompleted: {OrderId}", context.Message.Order.OrderId);
                });
         }

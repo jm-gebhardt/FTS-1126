@@ -1,24 +1,24 @@
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
-
-/// <summary>
-/// Moves agv into idle state
-/// </summary>
-[JetBrains.Annotations.PublicAPI]
-public class ReleaseAgv: CorrelatedBy<Guid>
+// ReSharper disable ConvertToPrimaryConstructor
+namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands
 {
     /// <summary>
-    /// Agv Correlation ID
+    /// Moves agv into idle state
     /// </summary>
-    public Guid CorrelationId { get; }
-
-    /// <summary>
-    /// Build message.
-    /// </summary>
-    /// <param name="correlationId"></param>
-    public ReleaseAgv(Guid correlationId)
+    [JetBrains.Annotations.PublicAPI]
+    public record ReleaseAgv : CorrelatedBy<Guid>
     {
-        CorrelationId = correlationId;
+        /// <inheritdoc/>
+        public Guid CorrelationId { get; }
+
+        /// <summary>
+        /// Build message.
+        /// </summary>
+        /// <param name="correlationId"></param>
+        public ReleaseAgv(Guid correlationId)
+        {
+            CorrelationId = correlationId;
+        }
     }
 }

@@ -18,6 +18,5 @@ namespace Gebhardt.StoreWare.Agv.CommonTest
         {
             using var host = GebhardtStartup.CreateHostBuilder(Array.Empty<string>()).Build();
         }
-       
     }
 }

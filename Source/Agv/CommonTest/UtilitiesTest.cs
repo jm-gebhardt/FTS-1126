@@ -1,7 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 
-
 namespace Gebhardt.StoreWare.Agv.CommonTest
 {
     /// <summary>
@@ -12,7 +11,6 @@ namespace Gebhardt.StoreWare.Agv.CommonTest
     {
         private const string TestPattern = "#HashMe#";
         private const string HashPattern = "a53178cb-6f56-b8b8-638e-3a2447004b78";
-
 
         /// <summary>
         /// Start TestWorker with no arguments provided

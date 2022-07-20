@@ -15,14 +15,18 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
     [TestClass]
     public class OrderEventConsumerTest
     {
+        private const string SerialNumber = "AGV0";
+        private const string OrderId = "ORDER123";
+
         /// <summary>
         /// Test for consuming OrderEvent message with the event type 'Started'
         /// </summary>
         [TestMethod]
         public async Task ConsumeEventStarted()
         {
-            var published = await ConsumeMessage(OrderEventType.Started);
-            Assert.IsTrue(await published.Any<ITransportOrderStarted>());
+            var message = new MqttOrderEvent(SerialNumber, OrderId, OrderEventType.Started);
+            var published = await ConsumeMessage(message);
+            Assert.IsTrue(await published.Any<TransportOrderStarted>());
         }
 
         /// <summary>
@@ -31,8 +35,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         [TestMethod]
         public async Task ConsumeEventPicked()
         {
-            var published = await ConsumeMessage(OrderEventType.Picked);
-            Assert.IsTrue(await published.Any<ITransportOrderPickCompleted>());
+            var message = new MqttOrderEvent(SerialNumber, OrderId, OrderEventType.Picked);
+            var published = await ConsumeMessage(message);
+            Assert.IsTrue(await published.Any<TransportOrderPickCompleted>());
         }
 
         /// <summary>
@@ -41,8 +46,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         [TestMethod]
         public async Task ConsumeEventCompleted()
         {
-            var published = await ConsumeMessage(OrderEventType.Completed);
-            Assert.IsTrue(await published.Any<ITransportOrderCompleted>());
+            var message = new MqttOrderEvent(SerialNumber, OrderId, OrderEventType.Completed);
+            var published = await ConsumeMessage(message);
+            Assert.IsTrue(await published.Any<TransportOrderCompleted>());
         }
 
         /// <summary>
@@ -51,8 +57,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         [TestMethod]
         public async Task ConsumeEventCancelled()
         {
-            var published = await ConsumeMessage(OrderEventType.Cancelled);
-            Assert.IsTrue(await published.Any<ITransportOrderCancelSucceeded>());
+            var message = new MqttOrderEvent(SerialNumber, OrderId, OrderEventType.Cancelled);
+            var published = await ConsumeMessage(message);
+            Assert.IsTrue(await published.Any<TransportOrderCancelSucceeded>());
         }
 
         /// <summary>
@@ -61,8 +68,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         [TestMethod]
         public async Task ConsumeEventCancellFailed()
         {
-            var published = await ConsumeMessage(OrderEventType.CancellFailed);
-            Assert.IsTrue(await published.Any<ITransportOrderCancelFailed>());
+            var message = new MqttOrderEvent(SerialNumber, OrderId, OrderEventType.CancellFailed);
+            var published = await ConsumeMessage(message);
+            Assert.IsTrue(await published.Any<TransportOrderCancelFailed>());
         }
 
         /// <summary>
@@ -71,8 +79,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         [TestMethod]
         public async Task ConsumeEventFailed()
         {
-            var published = await ConsumeMessage(OrderEventType.Failed);
-            Assert.IsTrue(await published.Any<ITransportOrderFailed>());
+            var message = new MqttOrderEvent(SerialNumber, OrderId, OrderEventType.Failed);
+            var published = await ConsumeMessage(message);
+            Assert.IsTrue(await published.Any<TransportOrderFailed>());
         }
 
         /// <summary>
@@ -81,28 +90,22 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         [TestMethod]
         public async Task ConsumeUndefined()
         {
-            var published = await ConsumeMessage(null);
+            var message = new MqttOrderEvent(SerialNumber, OrderId, null);
+            var published = await ConsumeMessage(message);
             Thread.Sleep(1); // Wait 1ms before checking if message was published
-            Assert.IsFalse(await published.Any<ITransportOrderFailed>());
+            Assert.IsFalse(await published.Any<TransportOrderFailed>());
         }
 
-        private async Task<IPublishedMessageList> ConsumeMessage(OrderEventType? eventType)
+        private async Task<IPublishedMessageList> ConsumeMessage(MqttOrderEvent message)
         {
-            const string serialNumber = "AGV0";
-            const string orderId = "ORDER123";
-
             var fixture = new MqttConsumerTestFixture<OrderEventConsumer>();
-            await fixture.TestHarness.Bus.PublishMqtt<IOrderEvent>(new {
-                SerialNumber = serialNumber,
-                OrderId = orderId,
-                EventType = eventType
-            }, null);
+            await fixture.TestHarness.Bus.PublishMqtt(message, null);
 
-            var consumedMsg = fixture.ConsumerHarness.Consumed.Select<IOrderEvent>().First().Context.Message;
+            var consumedMsg = fixture.ConsumerHarness.Consumed.Select<MqttOrderEvent>().First().Context.Message;
 
-            Assert.AreEqual(serialNumber, consumedMsg.SerialNumber);
-            Assert.AreEqual(orderId, consumedMsg.OrderId);
-            Assert.AreEqual(eventType, consumedMsg.EventType);
+            Assert.AreEqual(message.SerialNumber, consumedMsg.SerialNumber);
+            Assert.AreEqual(message.OrderId, consumedMsg.OrderId);
+            Assert.AreEqual(message.EventType, consumedMsg.EventType);
 
             return fixture.TestHarness.Published;
         }

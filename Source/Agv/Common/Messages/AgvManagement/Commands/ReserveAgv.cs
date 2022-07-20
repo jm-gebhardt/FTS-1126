@@ -1,24 +1,24 @@
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
-
-/// <summary>
-/// Request an AGV to be reserved
-/// </summary>
-[JetBrains.Annotations.PublicAPI]
-public sealed class ReserveAgv: CorrelatedBy<Guid>
+// ReSharper disable ConvertToPrimaryConstructor
+namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands
 {
     /// <summary>
-    /// Agv Correlation ID
+    /// Request an AGV to be reserved
     /// </summary>
-    public Guid CorrelationId { get; }
-
-    /// <summary>
-    /// Build message.
-    /// </summary>
-    /// <param name="correlationId"></param>
-    public ReserveAgv(Guid correlationId)
+    [JetBrains.Annotations.PublicAPI]
+    public record ReserveAgv : CorrelatedBy<Guid>
     {
-        CorrelationId = correlationId;
+        /// <inheritdoc/>
+        public Guid CorrelationId { get; }
+
+        /// <summary>
+        /// Build message.
+        /// </summary>
+        /// <param name="correlationId"></param>
+        public ReserveAgv(Guid correlationId)
+        {
+            CorrelationId = correlationId;
+        }
     }
 }

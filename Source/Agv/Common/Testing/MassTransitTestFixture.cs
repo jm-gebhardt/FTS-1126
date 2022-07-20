@@ -10,7 +10,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Testing;
 /// </summary>
 /// <typeparam name="TConsumer"></typeparam>
 [PublicAPI]
-public class MassTransitTestFixture<TConsumer> where TConsumer: class, IConsumer
+public class MassTransitTestFixture<TConsumer> where TConsumer : class, IConsumer
 {
     /// <summary>
     /// Service provider
@@ -26,7 +26,7 @@ public class MassTransitTestFixture<TConsumer> where TConsumer: class, IConsumer
     /// Consumer Hardness
     /// </summary>
     public readonly IConsumerTestHarness<TConsumer> ConsumerHarness;
-    
+
     /// <summary>
     /// Consumer Test Fixture to be used for Consumer Unit/Integration tests
     /// </summary>
@@ -53,7 +53,6 @@ public class MassTransitTestFixture<TConsumer> where TConsumer: class, IConsumer
         ConsumerHarness = TestHarness.GetConsumerHarness<TConsumer>();
     }
 }
-
 
 /// <summary>
 /// Testing fixture to test MassTransit

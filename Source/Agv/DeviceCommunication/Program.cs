@@ -19,6 +19,9 @@ try
 	Parser.Default.ParseArguments<SimulateOptions, ProductionOptions>(args)
 		.WithParsed<SimulateOptions>(simulationOptions =>
 		{
+			// Enable serialization/deserialization of enum values as string.
+			SystemTextJsonMessageSerializer.Options.Converters.Add(new JsonStringEnumConverter());
+
 			host = GebhardtStartup.CreateHostBuilder(args)
 				.ConfigureServices((context, services) =>
 				{
@@ -54,8 +57,8 @@ try
 						rabbitMqConfiguration: (registrationContext, configurator) =>
 						{
 							//for outgoing MQTT messages the message topology needs to be configured
-							configurator.ConfigureMessageTopology<IRequestGraph>();
-							configurator.ConfigureMessageTopology<IOrder>();
+							configurator.ConfigureMessageTopology<MqttRequestGraph>();
+							configurator.ConfigureMessageTopology<MqttOrder>();
 
 							//for incoming MQTT messages the raw JSON serializer/deserializer needs to be added
 							var serializerFactory = new SystemTextJsonRawMessageSerializerFactory();

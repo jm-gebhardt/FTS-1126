@@ -14,9 +14,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
     [TestClass]
     public class AgvStateConsumerTest
     {
-        
-        private const string AgvTestIdentifier02 = "#0815#";
-        
         /// <summary>
         ///  Test for consuming invalid AGV status message.
         /// </summary>
@@ -25,16 +22,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         {
             var fixture = new MqttConsumerTestFixture<AgvStateConsumer>();
 
-            await fixture.TestHarness.Bus.PublishMqtt<IState>(
-                new
-                {
-                    SerialNumber = ""
-                }, null);
+            await fixture.TestHarness.Bus.PublishMqtt(new MqttState("", ""), null);
 
-            Assert.IsFalse(await fixture.TestHarness.Published.Any<IAgvStatusReceived>());
-            
+            Assert.IsFalse(await fixture.TestHarness.Published.Any<AgvStatusReceived>());
         }
-        
+
         /// <summary>
         /// Test for consuming AGV graph message.
         /// </summary>
@@ -42,26 +34,21 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         public async Task ReceiveGraphMessage_WithValidInput_ExpectMessage()
         {
             var fixture = new MqttConsumerTestFixture<AgvStateConsumer>();
+            const string agvTestIdentifier = "#0815#";
             const string orderId = "Order123";
-          
-            await fixture.TestHarness.Bus.PublishMqtt<IState>(
-                new
-                {
-                    SerialNumber = AgvTestIdentifier02,
-                    OrderId = orderId
-                }, null);
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<IState>());
 
-            var consumedGraph = fixture.ConsumerHarness.Consumed.Select<IState>().First().Context.Message;
-            Assert.AreEqual(AgvTestIdentifier02, consumedGraph.SerialNumber);
+            await fixture.TestHarness.Bus.PublishMqtt(new MqttState(agvTestIdentifier, orderId), null);
+            Assert.IsTrue(await fixture.TestHarness.Published.Any<MqttState>());
 
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<IAgvStatusReceived>());
+            var consumedGraph = fixture.ConsumerHarness.Consumed.Select<MqttState>().First().Context.Message;
+            Assert.AreEqual(agvTestIdentifier, consumedGraph.SerialNumber);
 
-            var publishedStatus = fixture.TestHarness.Published.Select<IAgvStatusReceived>().First().Context.Message;
-            Assert.AreEqual(AgvTestIdentifier02.ToGuid(), publishedStatus.CorrelationId);
-            Assert.AreEqual(AgvTestIdentifier02, publishedStatus.AgvId);
+            Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvStatusReceived>());
+
+            var publishedStatus = fixture.TestHarness.Published.Select<AgvStatusReceived>().First().Context.Message;
+            Assert.AreEqual(agvTestIdentifier.ToGuid(), publishedStatus.CorrelationId);
+            Assert.AreEqual(agvTestIdentifier, publishedStatus.AgvId);
             Assert.AreEqual(orderId, publishedStatus.AgvStatus.OrderId);
         }
     }
-
 }

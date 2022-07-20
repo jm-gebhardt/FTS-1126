@@ -1,17 +1,15 @@
 using MassTransit;
 
+// ReSharper disable ConvertToPrimaryConstructor
 namespace Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Commands
 {
-
     /// <summary>
     /// Request the assignment of an agv for given correlationId
     /// </summary>
     [JetBrains.Annotations.PublicAPI]
-    public class RequestOrderAgvAssign : CorrelatedBy<Guid>
+    public record RequestOrderAgvAssign : CorrelatedBy<Guid>
     {
-        /// <summary>
-        /// CorrelationId
-        /// </summary>
+        /// <inheritdoc/>
         public Guid CorrelationId { get; }
 
         /// <summary>

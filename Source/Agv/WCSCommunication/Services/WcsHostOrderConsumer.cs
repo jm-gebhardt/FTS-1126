@@ -11,9 +11,9 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
 	/// Consumes HostOrder related messages from TransportOrder
 	/// </summary>
 	public class WcsHostOrderConsumer:
-        IConsumer<IHostOrderHandlingSucceeded>,
-        IConsumer<IHostOrderStarted>,
-        IConsumer<IHostOrderHandlingFailed>
+        IConsumer<HostOrderHandlingSucceeded>,
+        IConsumer<HostOrderStarted>,
+        IConsumer<HostOrderHandlingFailed>
     {
         private readonly IDbContextFactory<WcsDbContext> _contextFactory;
         private readonly ILogger<WcsHostOrderConsumer> _logger;
@@ -31,11 +31,11 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
         }
 
         /// <summary>
-        /// Handle message <see cref="IHostOrderHandlingSucceeded"/> by writing to <see cref="FromAgv" /> table.
-        /// An order with <see cref="IHostOrderHandlingSucceeded.OrderId"/> must be available in <see cref="ToAgv"/>.
+        /// Handle message <see cref="HostOrderHandlingSucceeded"/> by writing to <see cref="FromAgv" /> table.
+        /// An order with <see cref="HostOrderHandlingSucceeded.OrderId"/> must be available in <see cref="ToAgv"/>.
         /// The <see cref="FromAgv" /> columns are filled with the information found in <see cref="ToAgv"/>.
         /// </summary>
-        public async Task Consume(ConsumeContext<IHostOrderHandlingSucceeded> context)
+        public async Task Consume(ConsumeContext<HostOrderHandlingSucceeded> context)
         {
             await using var dbContext = await _contextFactory.CreateDbContextAsync(context.CancellationToken);
             
@@ -52,11 +52,11 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
         }
         
         /// <summary>
-        /// Handle message <see cref="IHostOrderStarted"/> by writing to <see cref="FromAgv" /> table.
-        /// An order with <see cref="IHostOrderHandlingSucceeded.OrderId"/> must be available in <see cref="ToAgv"/>.
+        /// Handle message <see cref="HostOrderStarted"/> by writing to <see cref="FromAgv" /> table.
+        /// An order with <see cref="HostOrderHandlingSucceeded.OrderId"/> must be available in <see cref="ToAgv"/>.
         /// The <see cref="FromAgv" /> columns are filled with the information found in <see cref="ToAgv"/>.
         /// </summary>
-        public async Task Consume(ConsumeContext<IHostOrderStarted> context)
+        public async Task Consume(ConsumeContext<HostOrderStarted> context)
         {
             await using var dbContext = await _contextFactory.CreateDbContextAsync(context.CancellationToken);
             
@@ -75,11 +75,11 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
         }
         
         /// <summary>
-        /// Handle message <see cref="IHostOrderHandlingFailed"/> by writing to <see cref="FromAgv" /> table.
-        /// An order with <see cref="IHostOrderHandlingSucceeded.OrderId"/> must be available in <see cref="ToAgv"/>.
+        /// Handle message <see cref="HostOrderHandlingFailed"/> by writing to <see cref="FromAgv" /> table.
+        /// An order with <see cref="HostOrderHandlingSucceeded.OrderId"/> must be available in <see cref="ToAgv"/>.
         /// The <see cref="FromAgv" /> columns are filled with the information found in <see cref="ToAgv"/>.
         /// </summary>
-        public async Task Consume(ConsumeContext<IHostOrderHandlingFailed> context)
+        public async Task Consume(ConsumeContext<HostOrderHandlingFailed> context)
         {
             await using var dbContext = await _contextFactory.CreateDbContextAsync(context.CancellationToken);
             

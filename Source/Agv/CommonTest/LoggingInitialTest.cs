@@ -1,6 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-
 namespace Gebhardt.StoreWare.Agv.CommonTest
 {
 	/// <summary>

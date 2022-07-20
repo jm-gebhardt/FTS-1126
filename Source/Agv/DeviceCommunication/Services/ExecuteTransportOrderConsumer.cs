@@ -13,8 +13,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
 	/// </summary>
 	[UsedImplicitly]
 	public class ExecuteTransportOrderConsumer :
-		IConsumer<IExecuteTransportOrder>,
-		IConsumer<ISendAgvChargeOrder>
+		IConsumer<ExecuteTransportOrder>,
+		IConsumer<SendAgvChargeOrder>
 	{
 		private readonly ILogger<ExecuteTransportOrderConsumer> _logger;
 
@@ -27,14 +27,13 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
 		}
 
 		/// <summary>
-		/// Handle message <see cref="IExecuteTransportOrder"/>. and send an order to the AGV of Type Transport, RecordType Order
+		/// Handle message <see cref="ExecuteTransportOrder"/>. and send an order to the AGV of Type Transport, RecordType Order
 		/// </summary>
 		/// <param name="context">Context of the consumer wrapping details surrounding the inbound message.</param>
-		public async Task Consume(ConsumeContext<IExecuteTransportOrder> context)
+		public async Task Consume(ConsumeContext<ExecuteTransportOrder> context)
 		{
-			await context.PublishMqtt<IOrder>(new
+			await context.PublishMqtt(new MqttOrder(context.Message.Order.OrderId)
 			{
-				context.Message.Order.OrderId,
 				SerialNumber = context.Message.AgvId,
 				OrderType = OrderType.Transport,
 				RecordType = OrderRecordType.Order,
@@ -46,22 +45,20 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
 			}, context.CancellationToken);
 
 			_logger.LogInformation("Sent transport order: {OrderId} for AGV:{AgvId} from {Source} to {Destination}", context.Message.Order.OrderId, context.Message.AgvId, context.Message.Order.Source, context.Message.Order.Destination);
-
 		}
 
 		/// <summary>
-		/// Handle message <see cref="ISendAgvChargeOrder"/>. and send an order to the AGV of Type Charge, RecordType Order
+		/// Handle message <see cref="SendAgvChargeOrder"/>. and send an order to the AGV of Type Charge, RecordType Order
 		/// </summary>
 		/// <param name="context">Context of the consumer wrapping details surrounding the inbound message.</param>
-		public async Task Consume(ConsumeContext<ISendAgvChargeOrder> context)
+		public async Task Consume(ConsumeContext<SendAgvChargeOrder> context)
 		{
 			if (context.Message.CorrelationId == Guid.Empty)
 			{
 				_logger.LogWarning("Charge order for AGV:{AgvId} to {Destination} has no GUID!", context.Message.AgvId, context.Message.ToCharger);
 			}
-			await context.PublishMqtt<IOrder>(new
+			await context.PublishMqtt(new MqttOrder(context.Message.CorrelationId.ToString()) //use correlation ID here, because we don't have an orderId here
 			{
-				OrderId = context.Message.CorrelationId.ToString(), //use correlation ID here, because we don't have an orderId here
 				SerialNumber = context.Message.AgvId,
 				OrderType = OrderType.Charge,
 				RecordType = OrderRecordType.Order,
@@ -72,7 +69,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
 			}, context.CancellationToken);
 
 			_logger.LogInformation("Sent charge order: {CorrelationId} for AGV:{AgvId} to {Destination}", context.Message.CorrelationId, context.Message.AgvId, context.Message.ToCharger);
-
 		}
 	}
 }

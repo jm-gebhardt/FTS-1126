@@ -3,7 +3,6 @@ using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 
-
 namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 {
     /// <summary>
@@ -13,7 +12,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
     public class RequestAgvGraphTest
     {
         private const string AgvTestIdentifier01 = "#2410#";
-
 
         /// <summary>
         /// Test building and publishing of <see cref="RequestAgvGraph"/>.

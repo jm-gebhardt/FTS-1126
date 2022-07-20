@@ -23,7 +23,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             await context.RespondAsync(new AgvReservationSucceeded(context.Message.CorrelationId));
         }
     }
-    
+
     [UsedImplicitly]
     internal class AgvReservationRejectedConsumer : IConsumer<ReserveAgv>
     {
@@ -32,16 +32,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             await context.RespondAsync(new AgvReservationRejected(context.Message.CorrelationId));
         }
     }
-    
+
     /// <summary>
-    /// Test for handling Handle IAssignAgv messages
+    /// Test for handling Handle AssignAgv messages
     /// </summary>
     [TestClass]
     public class AssignAgvConsumerTest
     {
         private const string Src01 = "SRC1";
         private const string Dst01 = "DST1";
-
         private static AgvGraph? _graph;
 
 
@@ -72,31 +71,28 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         {
         }
 
-
         /// <summary>
-        /// Receive IAssignAgv message when no Idle AGV is available
+        /// Receive AssignAgv message when no Idle AGV is available
         /// </summary>
         [TestMethod]
         public async Task When_AgvRegistryIsEmpty_IAgvAssignFailed_isPublished()
         {
             var mockRegistry = new Mock<IAgvRegistry>();
             mockRegistry.Setup(s => s.GetIdleAgvs()).Returns(new List<IAgv>());
-            var fixture = new MassTransitTestFixture<AssignAgvConsumer>( 
+            var fixture = new MassTransitTestFixture<AssignAgvConsumer>(
                 services: s => { s.AddTransient(_ => mockRegistry.Object); }
                 );
 
             string orderId = "0001";
             var correlationId = orderId.ToGuid();
-            await fixture.TestHarness.Bus.Publish<IAssignAgv>(new
-            {
-                CorrelationId = correlationId,
-                Order = new Order(correlationId, orderId, Src01, Dst01, "LeNo123", HostOrderCreator.Simulation)
-            });
+            var order = new Order(correlationId, orderId, Src01, Dst01, "LeNo123", HostOrderCreator.Simulation);
 
-            Assert.IsTrue(await fixture.ConsumerHarness.Consumed.Any<IAssignAgv>());
+            await fixture.TestHarness.Bus.Publish(new AssignAgv(correlationId, order));
+
+            Assert.IsTrue(await fixture.ConsumerHarness.Consumed.Any<AssignAgv>());
 
             Thread.Sleep(1); // Wait 1ms before checking if message was published
-            Assert.IsFalse(await fixture.TestHarness.Published.Any<IAgvAssignmentSucceeded>());
+            Assert.IsFalse(await fixture.TestHarness.Published.Any<AgvAssignmentSucceeded>());
             Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvAssignmentFailed>());
         }
 
@@ -113,8 +109,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             {
                 new AgvSaga(agvCorrelationId, agvId, nameof(AgvStateMachine.Idle), agvGraph: _graph)
             });
-      
-            var fixture = new MassTransitTestFixture<AssignAgvConsumer>( 
+
+            var fixture = new MassTransitTestFixture<AssignAgvConsumer>(
                 services: s => { s.AddSingleton((_) => mockRegistry.Object); },
                 busRegistrationConfigurator: x =>
                 {
@@ -122,25 +118,23 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                     x.AddConsumer<AgvReservationRejectedConsumer>();
                 }
             );
-        
+
             const string orderId = "0001";
             var correlationId = orderId.ToGuid();
-            await fixture.TestHarness.Bus.Publish<IAssignAgv>(new
-            {
-                CorrelationId = correlationId,
-                Order = new Order(correlationId, orderId, Src01, Dst01, "LeNo123", HostOrderCreator.Simulation)
-            });
-        
-            Assert.IsTrue(await fixture.ConsumerHarness.Consumed.Any<IAssignAgv>());
-        
+            var order = new Order(correlationId, orderId, Src01, Dst01, "LeNo123", HostOrderCreator.Simulation);
+
+            await fixture.TestHarness.Bus.Publish(new AssignAgv(correlationId, order));
+
+            Assert.IsTrue(await fixture.ConsumerHarness.Consumed.Any<AssignAgv>());
+
             Thread.Sleep(1); // Wait 1ms before checking if message was published
-            Assert.IsFalse(await fixture.TestHarness.Published.Any<IAgvAssignmentSucceeded>());
-            
+            Assert.IsFalse(await fixture.TestHarness.Published.Any<AgvAssignmentSucceeded>());
+
             Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvAssignmentFailed>());
         }
-        
+
         /// <summary>
-        /// Receive IAssignAgv message and assign order to Idle AGV
+        /// Receive AssignAgv message and assign order to Idle AGV
         /// </summary>
         [TestMethod]
         public async Task When_IdleAgvIsAvailable_AgvAssignSucceededIsPublished()
@@ -152,8 +146,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             {
                 new AgvSaga(agvCorrelationId, agvId, nameof(AgvStateMachine.Idle), agvGraph: _graph)
             });
-          
-            var fixture = new MassTransitTestFixture<AssignAgvConsumer>( 
+
+            var fixture = new MassTransitTestFixture<AssignAgvConsumer>(
                 services: s => { s.AddSingleton((_) => mockRegistry.Object); },
                 busRegistrationConfigurator: x =>
                 {
@@ -161,18 +155,16 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                     x.AddConsumer<AgvReservationSucceededConsumer>();
                 }
             );
-            
+
             const string orderId = "0001";
             var correlationId = orderId.ToGuid();
-            await fixture.TestHarness.Bus.Publish<IAssignAgv>(new
-            {
-                CorrelationId = correlationId,
-                Order = new Order(correlationId, orderId, Src01, Dst01, "LeNo123", HostOrderCreator.Simulation)
-            });
-        
-            Assert.IsTrue(await fixture.ConsumerHarness.Consumed.Any<IAssignAgv>());
-        
-            var message = fixture.TestHarness.Published.Select<IAgvAssignmentSucceeded>(s => s.Context.CorrelationId == correlationId).First().Context.Message;
+            var order = new Order(correlationId, orderId, Src01, Dst01, "LeNo123", HostOrderCreator.Simulation);
+
+            await fixture.TestHarness.Bus.Publish(new AssignAgv(correlationId, order));
+
+            Assert.IsTrue(await fixture.ConsumerHarness.Consumed.Any<AssignAgv>());
+
+            var message = fixture.TestHarness.Published.Select<AgvAssignmentSucceeded>(s => s.Context.CorrelationId == correlationId).First().Context.Message;
             Assert.AreEqual(agvId, message.AgvId);
         }
     }

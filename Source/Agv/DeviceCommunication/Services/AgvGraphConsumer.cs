@@ -14,7 +14,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
     /// This is passed to the service AgvManagement to have kept DeviceCommunication as a simple proxy.
     /// </remarks>
     [JetBrains.Annotations.UsedImplicitly]
-    public class AgvGraphConsumer : IConsumer<IGraph>
+    public class AgvGraphConsumer : IConsumer<MqttGraph>
     {
         private readonly ILogger<AgvGraphConsumer> _logger;
 
@@ -32,7 +32,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
         /// Consume graph message from AGV and transform this to an internal <see cref="AgvGraphReceived"/>.
         /// </summary>
         /// <exception cref="InvalidOperationException">Message content is invalid and cannot be processed.</exception>
-        public async Task Consume(ConsumeContext<IGraph> context)
+        public async Task Consume(ConsumeContext<MqttGraph> context)
         {
             var parser = new MessageParsers.GraphParser(context.Message);
 
@@ -46,7 +46,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
             }
             catch (InvalidOperationException ex)
             {
-                _logger.LogError(ex, "Message IGraph has invalid content: {Graph}", context.Message);
+                _logger.LogError(ex, "Message MqttGraph has invalid content: {Graph}", context.Message);
                 throw;
             }
         }

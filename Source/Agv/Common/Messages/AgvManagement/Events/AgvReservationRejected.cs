@@ -1,24 +1,24 @@
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
-
-/// <summary>
-/// Agv reservation request was rejected
-/// </summary>
-[JetBrains.Annotations.PublicAPI]
-public sealed class AgvReservationRejected : CorrelatedBy<Guid>
+// ReSharper disable ConvertToPrimaryConstructor
+namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events
 {
     /// <summary>
-    /// Agv Correlation Id
+    /// Agv reservation request was rejected
     /// </summary>
-    public Guid CorrelationId { get; }
-
-    /// <summary>
-    /// AgvReservationRejected Constructor
-    /// </summary>
-    /// <param name="correlationId"></param>
-    public AgvReservationRejected(Guid correlationId)
+    [JetBrains.Annotations.PublicAPI]
+    public record AgvReservationRejected : CorrelatedBy<Guid>
     {
-        CorrelationId = correlationId;
+        /// <inheritdoc/>
+        public Guid CorrelationId { get; }
+
+        /// <summary>
+        /// AgvReservationRejected Constructor
+        /// </summary>
+        /// <param name="correlationId"></param>
+        public AgvReservationRejected(Guid correlationId)
+        {
+            CorrelationId = correlationId;
+        }
     }
 }

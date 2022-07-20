@@ -1,174 +1,175 @@
 using MassTransit;
-namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 
-/// <summary>
-/// AGV Graph
-/// </summary>
-[JetBrains.Annotations.PublicAPI]
-public class AgvGraph: CorrelatedBy<Guid>
+// ReSharper disable ConvertToPrimaryConstructor
+namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
 {
     /// <summary>
-    ///  AGV correlation ID
+    /// AGV Graph
     /// </summary>
-    public Guid CorrelationId { get; }
-
-    /// <summary>
-    /// The list of nodes in the graph.
-    /// </summary>
-    public Node[] Nodes { get; }
-
-    /// <summary>
-    /// The list of edges in the graph.
-    /// </summary>
-    public Edge[] Edges { get; }
-
-    /// <summary>
-    /// Agv Graph
-    /// </summary>
-    /// <param name="correlationId"></param>
-    /// <param name="nodes"></param>
-    /// <param name="edges"></param>
-    public AgvGraph(Guid correlationId, Node[] nodes, Edge[] edges)
+    [JetBrains.Annotations.PublicAPI]
+    public record AgvGraph : CorrelatedBy<Guid>
     {
-        CorrelationId = correlationId;
-        Nodes = nodes;
-        Edges = edges;
-    }
-    
-    /// <summary>
-    /// Node types.
-    /// <para>
-    /// These types are coming from the specification.
-    /// </para>
-    /// </summary>
-    [Flags]
-    public enum NodeType : short
-    {
-        /// <summary>Charging station</summary>
-        [JetBrains.Annotations.UsedImplicitly]
-        Charge = 0x0001,
-
-        /// <summary>General waypoint</summary>
-        [JetBrains.Annotations.UsedImplicitly]
-        WayPoint = 0x0002,
-
-        /// <summary>Rotation point</summary>
-        [JetBrains.Annotations.UsedImplicitly]
-        Turn = 0x0004,
-
-        /// <summary>Source or destination</summary>
-        [JetBrains.Annotations.UsedImplicitly]
-        Station = 0x0008,
-
-        /// <summary>Waiting point</summary>
-        [JetBrains.Annotations.UsedImplicitly]
-        Park = 0x0010
-    }
-
-    /// <summary>
-    /// Node representation.
-    /// </summary>
-	[JetBrains.Annotations.PublicAPI]
-    public class Node
-    {
-        /// <summary>
-        /// The unique ID of the node.
-        /// </summary><remarks>
-        /// Usually this is the (numeric) ID passed by the AGV vendor.
-        /// For internal reasons it can be necessary to build/combine an internal identification.
-        /// </remarks>
-        public string Id { get; set; }
+        /// <inheritdoc/>
+        public Guid CorrelationId { get; }
 
         /// <summary>
-        /// Node enabled/disabled.
+        /// The list of nodes in the graph.
         /// </summary>
-        public bool Enabled { get; set; } = true;
+        public Node[] Nodes { get; }
 
         /// <summary>
-        /// Node type of the node.
+        /// The list of edges in the graph.
         /// </summary>
-        public NodeType Type { get; set; }
+        public Edge[] Edges { get; }
 
         /// <summary>
-        /// The x coordinate of the node.
+        /// Agv Graph
         /// </summary>
-        public float X { get; set; }
+        /// <param name="correlationId"></param>
+        /// <param name="nodes"></param>
+        /// <param name="edges"></param>
+        public AgvGraph(Guid correlationId, Node[] nodes, Edge[] edges)
+        {
+            CorrelationId = correlationId;
+            Nodes = nodes;
+            Edges = edges;
+        }
 
         /// <summary>
-        /// The y coordinate of the node
-        /// </summary>
-        public float Y { get; set; }
-
-        /// <summary>
-        /// The z coordinate of the node.
+        /// Node types.
         /// <para>
-        /// Set to default 0 when not needed.
-        /// </para></summary>
-        public float Z { get; set; }
-
-        /// <summary>
-        /// Simple string representation.
+        /// These types are coming from the specification.
+        /// </para>
         /// </summary>
-        /// <returns></returns>
-        public override string ToString() => $"{Id} [X={X}/Y={Y}/Z={Z}]";
-
-        /// <summary>
-        /// todo
-        /// </summary>
-        /// <param name="id"></param>
-        public Node(string id)
+        [Flags]
+        public enum NodeType : short
         {
-            Id = id;
-        }
-    }
+            /// <summary>Charging station</summary>
+            [JetBrains.Annotations.UsedImplicitly]
+            Charge = 0x0001,
 
-    /// <summary>
-    /// Edge representation
-    /// </summary>
-	[JetBrains.Annotations.PublicAPI]
-    public class Edge : ICloneable
-    {
-        /// <summary>
-        /// The ID of the node where the edge starts.
-        /// </summary>
-        public string From { get; set; }
-        /// <summary>
-        /// The ID of the node where the edge ends.
-        /// </summary>
-        public string To { get; set; }
+            /// <summary>General waypoint</summary>
+            [JetBrains.Annotations.UsedImplicitly]
+            WayPoint = 0x0002,
 
-        /// <summary>
-        /// Distance/costs to travel this edge (unitless quantifier).
-        /// </summary>
-        public float Metric { get; set; }
+            /// <summary>Rotation point</summary>
+            [JetBrains.Annotations.UsedImplicitly]
+            Turn = 0x0004,
 
-        /// <summary>
-        /// Todo
-        /// </summary>
-        /// <param name="from"></param>
-        /// <param name="to"></param>
-        public Edge(string from, string to)
-        {
-            From = from;
-            To = to;
+            /// <summary>Source or destination</summary>
+            [JetBrains.Annotations.UsedImplicitly]
+            Station = 0x0008,
+
+            /// <summary>Waiting point</summary>
+            [JetBrains.Annotations.UsedImplicitly]
+            Park = 0x0010
         }
 
         /// <summary>
-        /// Deep copy.
+        /// Node representation.
         /// </summary>
-        /// <returns></returns>
-        public object Clone()
+        [JetBrains.Annotations.PublicAPI]
+        public class Node
         {
-            return new Edge(this.From, this.To)
+            /// <summary>
+            /// The unique ID of the node.
+            /// </summary><remarks>
+            /// Usually this is the (numeric) ID passed by the AGV vendor.
+            /// For internal reasons it can be necessary to build/combine an internal identification.
+            /// </remarks>
+            public string Id { get; set; }
+
+            /// <summary>
+            /// Node enabled/disabled.
+            /// </summary>
+            public bool Enabled { get; set; } = true;
+
+            /// <summary>
+            /// Node type of the node.
+            /// </summary>
+            public NodeType Type { get; set; }
+
+            /// <summary>
+            /// The x coordinate of the node.
+            /// </summary>
+            public float X { get; set; }
+
+            /// <summary>
+            /// The y coordinate of the node
+            /// </summary>
+            public float Y { get; set; }
+
+            /// <summary>
+            /// The z coordinate of the node.
+            /// <para>
+            /// Set to default 0 when not needed.
+            /// </para></summary>
+            public float Z { get; set; }
+
+            /// <summary>
+            /// Simple string representation.
+            /// </summary>
+            /// <returns></returns>
+            public override string ToString() => $"{Id} [X={X}/Y={Y}/Z={Z}]";
+
+            /// <summary>
+            /// todo
+            /// </summary>
+            /// <param name="id"></param>
+            public Node(string id)
             {
-                Metric = this.Metric
-            };
+                Id = id;
+            }
         }
 
         /// <summary>
-        /// Simple string representation.
+        /// Edge representation
         /// </summary>
-        /// <returns></returns>
-        public override string ToString() => $"{From} -- {Metric} --> {To}";
+        [JetBrains.Annotations.PublicAPI]
+        public class Edge : ICloneable
+        {
+            /// <summary>
+            /// The ID of the node where the edge starts.
+            /// </summary>
+            public string From { get; set; }
+            /// <summary>
+            /// The ID of the node where the edge ends.
+            /// </summary>
+            public string To { get; set; }
+
+            /// <summary>
+            /// Distance/costs to travel this edge (unitless quantifier).
+            /// </summary>
+            public float Metric { get; set; }
+
+            /// <summary>
+            /// Todo
+            /// </summary>
+            /// <param name="from"></param>
+            /// <param name="to"></param>
+            public Edge(string from, string to)
+            {
+                From = from;
+                To = to;
+            }
+
+            /// <summary>
+            /// Deep copy.
+            /// </summary>
+            /// <returns></returns>
+            public object Clone()
+            {
+                return new Edge(this.From, this.To)
+                {
+                    Metric = this.Metric
+                };
+            }
+
+            /// <summary>
+            /// Simple string representation.
+            /// </summary>
+            /// <returns></returns>
+            public override string ToString() => $"{From} -- {Metric} --> {To}";
+        }
     }
 }

@@ -8,7 +8,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
 	/// Simulate finishing of host orders
 	/// </summary>
 	public class SimulationConfirmHostOrderConsumer :
-        IConsumer<IHostOrderHandlingSucceeded>
+        IConsumer<HostOrderHandlingSucceeded>
     {
         private readonly ILogger<SimulationConfirmHostOrderConsumer> _logger;
 
@@ -23,11 +23,11 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
         }
 
         /// <summary>
-        /// Simulation: Handle message <see cref="IHostOrderHandlingSucceeded"/>.
+        /// Simulation: Handle message <see cref="HostOrderHandlingSucceeded"/>.
         /// <para>Logs received message and then discards it.</para>
         /// </summary>
         /// <param name="context">Context of the consumer wrapping details surrounding the inbound message.</param>
-        public async Task Consume(ConsumeContext<IHostOrderHandlingSucceeded> context)
+        public async Task Consume(ConsumeContext<HostOrderHandlingSucceeded> context)
         {
             await Task.Run(() => // Await Task to satisfy async
             {

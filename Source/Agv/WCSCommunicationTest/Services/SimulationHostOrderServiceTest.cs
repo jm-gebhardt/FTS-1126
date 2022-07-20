@@ -30,7 +30,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services
                 });
             });
             await fixture.Pollable.Poll(It.IsAny<CancellationToken>());
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<IHandleHostOrder>());
+            Assert.IsTrue(await fixture.TestHarness.Published.Any<HandleHostOrder>());
         }
     }
 }

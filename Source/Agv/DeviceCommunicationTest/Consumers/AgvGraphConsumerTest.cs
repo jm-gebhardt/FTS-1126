@@ -6,17 +6,15 @@ using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
 
-
 namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
 {
     /// <summary>
-    /// Tests for <see cref="IGraph"/> and <see cref="AgvGraphReceived"/>.
+    /// Tests for <see cref="MqttGraph"/> and <see cref="AgvGraphReceived"/>.
     /// </summary>
     [TestClass]
     public class AgvGraphConsumerTest
     {
-        private const string AgvTestIdentifier02 = "#0815#";
-
+        private const string AgvTestIdentifier = "#0815#";
 
         /// <summary>
         /// Test for consuming invalid AGV graph message.
@@ -26,12 +24,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         {
             var fixture = new MqttConsumerTestFixture<AgvGraphConsumer>();
 
-            await fixture.TestHarness.Bus.PublishMqtt<IGraph>(
-                new
-                {
-                    SerialNumber = "",
-                    ModificationDate = DateTimeOffset.UtcNow
-                }, null);
+            var message = new MqttGraph("", DateTimeOffset.UtcNow, 0, 0, Array.Empty<Node>(), Array.Empty<Edge>());
+
+            await fixture.TestHarness.Bus.PublishMqtt(message, null);
 
             Assert.IsFalse(await fixture.TestHarness.Published.Any<AgvGraphReceived>());
         }
@@ -44,35 +39,29 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         {
             var fixture = new MqttConsumerTestFixture<AgvGraphConsumer>();
 
-            await fixture.TestHarness.Bus.PublishMqtt<IGraph>(
-                new
-                {
-                    SerialNumber = AgvTestIdentifier02,
-                    ModificationDate = DateTimeOffset.UtcNow,
+            var nodes = new Node[] {
+                new() { NodeId = 1, X = 0f, Y = 0f, Z = 0f },
+                new() { NodeId = 2, X = 100f, Y = 100f, Z = 0f }
+            };
+            var edges = new Edge[]
+            {
+                new() { EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = false, MaxVelocity = 1 }
+            };
 
-                    NumberOfNodes = 2,
-                    Nodes = new[]
-                    {
-                        new Node() { NodeId = 1, X = 0f, Y = 0f, Z = 0f },
-                        new Node() { NodeId = 2, X = 100f, Y = 100f, Z = 0f }
-                    },
+            var message = new MqttGraph(AgvTestIdentifier, DateTimeOffset.UtcNow, 2, 1, nodes, edges);
 
-                    NumberofEdges = 1,
-                    Edges = new[]
-                    {
-                        new Edge() { EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = false, MaxVelocity = 1 }
-                    }
-                }, null);
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<IGraph>());
+            await fixture.TestHarness.Bus.PublishMqtt(message, null);
 
-            var consumedGraph = fixture.ConsumerHarness.Consumed.Select<IGraph>().First().Context.Message;
-            Assert.AreEqual(AgvTestIdentifier02, consumedGraph.SerialNumber);
+            Assert.IsTrue(await fixture.TestHarness.Published.Any<MqttGraph>());
+
+            var consumedGraph = fixture.ConsumerHarness.Consumed.Select<MqttGraph>().First().Context.Message;
+            Assert.AreEqual(AgvTestIdentifier, consumedGraph.SerialNumber);
 
             Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvGraphReceived>());
 
             var publishedGraph = fixture.TestHarness.Published.Select<AgvGraphReceived>().First().Context.Message;
-            Assert.AreEqual(AgvTestIdentifier02.ToGuid(), publishedGraph.CorrelationId);
-            Assert.AreEqual(AgvTestIdentifier02, publishedGraph.AgvId);
+            Assert.AreEqual(AgvTestIdentifier.ToGuid(), publishedGraph.CorrelationId);
+            Assert.AreEqual(AgvTestIdentifier, publishedGraph.AgvId);
             Assert.AreEqual(2, publishedGraph.Graph.Nodes.Length);
             Assert.AreEqual(1, publishedGraph.Graph.Edges.Length);
         }

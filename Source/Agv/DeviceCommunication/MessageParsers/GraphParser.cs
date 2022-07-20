@@ -6,11 +6,11 @@ using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
 {
     /// <summary>
-    /// Parse <see cref="IGraph"/> message.
+    /// Parse <see cref="MqttGraph"/> message.
     /// </summary>
     public class GraphParser
     {
-        private readonly IGraph _graph;
+        private readonly MqttGraph _graph;
 
         private bool _checkedVelocity;
         private bool _considerVelocity;
@@ -21,8 +21,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="graph"><see cref="IGraph"/> message.</param>
-        public GraphParser(IGraph graph)
+        /// <param name="graph"><see cref="MqttGraph"/> message.</param>
+        public GraphParser(MqttGraph graph)
         {
             _graph = graph;
         }
@@ -72,7 +72,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
         {
             if (!EdgesValid)
             {
-                throw new InvalidOperationException($"Cannot handle {typeof(IGraph)} message, invalid number of edges.");
+                throw new InvalidOperationException($"Cannot handle {typeof(MqttGraph)} message, invalid number of edges.");
             }
 
             if (!_checkedVelocity)
@@ -94,7 +94,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
         {
             if (!NodesValid)
             {
-                throw new InvalidOperationException($"Cannot handle {typeof(IGraph)} message, invalid number of nodes.");
+                throw new InvalidOperationException($"Cannot handle {typeof(MqttGraph)} message, invalid number of nodes.");
             }
 
             ParseVelocity();
@@ -132,7 +132,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
         {
             if (!NodesValid)
             {
-                throw new InvalidOperationException($"Cannot handle {typeof(IGraph)} message, invalid number of nodes.");
+                throw new InvalidOperationException($"Cannot handle {typeof(MqttGraph)} message, invalid number of nodes.");
             }
 
             ParseEdges();
@@ -228,7 +228,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
             {
                 if (!SerialNumberValid)
                 {
-                    throw new InvalidOperationException($"Cannot handle {typeof(IGraph)} message, serialNumber must not be null or empty.");
+                    throw new InvalidOperationException($"Cannot handle {typeof(MqttGraph)} message, serialNumber must not be null or empty.");
                 }
                 return _graph.SerialNumber;
             }
