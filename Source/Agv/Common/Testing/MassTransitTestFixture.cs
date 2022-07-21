@@ -3,95 +3,96 @@ using MassTransit;
 using MassTransit.Testing;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Gebhardt.StoreWare.Agv.Common.Testing;
-
-/// <summary>
-/// Testing fixture to test MassTransit Consumers
-/// </summary>
-/// <typeparam name="TConsumer"></typeparam>
-[PublicAPI]
-public class MassTransitTestFixture<TConsumer> where TConsumer : class, IConsumer
+namespace Gebhardt.StoreWare.Agv.Common.Testing
 {
     /// <summary>
-    /// Service provider
+    /// Testing fixture to test MassTransit Consumers
     /// </summary>
-    public readonly ServiceProvider Provider;
-
-    /// <summary>
-    /// Started TestHarness
-    /// </summary>
-    public readonly ITestHarness TestHarness;
-
-    /// <summary>
-    /// Consumer Hardness
-    /// </summary>
-    public readonly IConsumerTestHarness<TConsumer> ConsumerHarness;
-
-    /// <summary>
-    /// Consumer Test Fixture to be used for Consumer Unit/Integration tests
-    /// </summary>
-    /// <param name="services">Service Collection instance with MassTransitTestHarness added</param>
-    /// <param name="busRegistrationConfigurator">MassTransit Registration with consumer already added</param>
-    public MassTransitTestFixture(Action<IServiceCollection>? services = null, Action<IBusRegistrationConfigurator>? busRegistrationConfigurator = null)
+    /// <typeparam name="TConsumer"></typeparam>
+    [PublicAPI]
+    public class MassTransitTestFixture<TConsumer> where TConsumer : class, IConsumer
     {
-        var collection = new ServiceCollection()
-            .AddMassTransitTestHarness(x =>
-            {
-                x.AddConsumer<TConsumer>();
-                busRegistrationConfigurator?.Invoke(x);
-                x.UsingInMemory((context, cfg) =>
+        /// <summary>
+        /// Service provider
+        /// </summary>
+        public readonly ServiceProvider Provider;
+
+        /// <summary>
+        /// Started TestHarness
+        /// </summary>
+        public readonly ITestHarness TestHarness;
+
+        /// <summary>
+        /// Consumer Hardness
+        /// </summary>
+        public readonly IConsumerTestHarness<TConsumer> ConsumerHarness;
+
+        /// <summary>
+        /// Consumer Test Fixture to be used for Consumer Unit/Integration tests
+        /// </summary>
+        /// <param name="services">Service Collection instance with MassTransitTestHarness added</param>
+        /// <param name="busRegistrationConfigurator">MassTransit Registration with consumer already added</param>
+        public MassTransitTestFixture(Action<IServiceCollection>? services = null, Action<IBusRegistrationConfigurator>? busRegistrationConfigurator = null)
+        {
+            var collection = new ServiceCollection()
+                .AddMassTransitTestHarness(x =>
                 {
-                    cfg.ConfigureEndpoints(context);
+                    x.AddConsumer<TConsumer>();
+                    busRegistrationConfigurator?.Invoke(x);
+                    x.UsingInMemory((context, cfg) =>
+                    {
+                        cfg.ConfigureEndpoints(context);
+                    });
                 });
-            });
 
-        services?.Invoke(collection);
+            services?.Invoke(collection);
 
-        Provider = collection.BuildServiceProvider(true);
-        TestHarness = Provider.GetTestHarness();
-        TestHarness.Start();
-        ConsumerHarness = TestHarness.GetConsumerHarness<TConsumer>();
+            Provider = collection.BuildServiceProvider(true);
+            TestHarness = Provider.GetTestHarness();
+            TestHarness.Start();
+            ConsumerHarness = TestHarness.GetConsumerHarness<TConsumer>();
+        }
     }
-}
-
-/// <summary>
-/// Testing fixture to test MassTransit
-/// </summary>
-[PublicAPI]
-public class MassTransitTestFixture
-{
-    /// <summary>
-    /// Service provider
-    /// </summary>
-    public readonly ServiceProvider Provider;
 
     /// <summary>
-    /// Started TestHarness
+    /// Testing fixture to test MassTransit
     /// </summary>
-    public readonly ITestHarness TestHarness;
-
-
-    /// <summary>
-    /// Consumer Test Fixture to be used for Consumer Unit/Integration tests
-    /// </summary>
-    /// <param name="services">Service Collection instance with MassTransitTestHarness added</param>
-    /// <param name="busRegistrationConfigurator">MassTransit Registration with consumer already added</param>
-    public MassTransitTestFixture(Action<IServiceCollection>? services = null, Action<IBusRegistrationConfigurator>? busRegistrationConfigurator = null)
+    [PublicAPI]
+    public class MassTransitTestFixture
     {
-        var collection = new ServiceCollection()
-            .AddMassTransitTestHarness(x =>
-            {
-                busRegistrationConfigurator?.Invoke(x);
-                x.UsingInMemory((context, cfg) =>
+        /// <summary>
+        /// Service provider
+        /// </summary>
+        public readonly ServiceProvider Provider;
+
+        /// <summary>
+        /// Started TestHarness
+        /// </summary>
+        public readonly ITestHarness TestHarness;
+
+
+        /// <summary>
+        /// Consumer Test Fixture to be used for Consumer Unit/Integration tests
+        /// </summary>
+        /// <param name="services">Service Collection instance with MassTransitTestHarness added</param>
+        /// <param name="busRegistrationConfigurator">MassTransit Registration with consumer already added</param>
+        public MassTransitTestFixture(Action<IServiceCollection>? services = null, Action<IBusRegistrationConfigurator>? busRegistrationConfigurator = null)
+        {
+            var collection = new ServiceCollection()
+                .AddMassTransitTestHarness(x =>
                 {
-                    cfg.ConfigureEndpoints(context);
+                    busRegistrationConfigurator?.Invoke(x);
+                    x.UsingInMemory((context, cfg) =>
+                    {
+                        cfg.ConfigureEndpoints(context);
+                    });
                 });
-            });
 
-        services?.Invoke(collection);
+            services?.Invoke(collection);
 
-        Provider = collection.BuildServiceProvider(true);
-        TestHarness = Provider.GetTestHarness();
-        TestHarness.Start();
+            Provider = collection.BuildServiceProvider(true);
+            TestHarness = Provider.GetTestHarness();
+            TestHarness.Start();
+        }
     }
 }
