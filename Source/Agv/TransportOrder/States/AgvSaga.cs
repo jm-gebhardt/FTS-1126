@@ -29,7 +29,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.States
         /// Current State
         /// </summary>
         public string CurrentState { get; set; }
-        
+
         /// <summary>
         /// Last Received AgvStatus
         /// </summary>

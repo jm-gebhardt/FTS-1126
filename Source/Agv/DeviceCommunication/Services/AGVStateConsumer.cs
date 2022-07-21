@@ -38,17 +38,21 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
                 _logger.LogError("Missing serialNumber in MqttState message: {Status}", context.Message);
                 throw new InvalidOperationException($"Cannot handle {typeof(MqttState)} message, serialNumber must not be null or empty");
             }
-
-            var agvStatus = new AgvStatus(
-                serialNumber.ToGuid(),
-                GetOrderId(message),
-                GetBusy(message),
-                GetAutomatic(message),
-                GetBatteryCharge(message),
-                GetCharging(message),
-                GetDisturbed(message));
-
-            await context.Publish(new AgvStatusReceived(serialNumber.ToGuid(), serialNumber, agvStatus), context.CancellationToken);
+            
+            await context.Publish(new AgvStatusReceived(
+	            correlationId: serialNumber.ToGuid(),
+                agvId: serialNumber,
+                agvStatus: new AgvStatus(
+	                serialNumber.ToGuid(),
+	                GetOrderId(message),
+	                GetBusy(message),
+	                GetAutomatic(message),
+	                GetBatteryCharge(message),
+	                GetCharging(message),
+	                GetDisturbed(message),
+	                GetLastNodeId(message)
+                    )
+	            ), context.CancellationToken);
         }
 
         private string GetSerialNumber(MqttState message)
@@ -132,6 +136,18 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
             }
 
             return false;
+        }
+
+        private string? GetLastNodeId(MqttState message)
+        {
+	        if (!string.IsNullOrEmpty(message.LastNodeId))
+	        {
+		        return message.LastNodeId;
+            }
+	        else
+	        {
+		        return null;
+	        }
         }
     }
 }

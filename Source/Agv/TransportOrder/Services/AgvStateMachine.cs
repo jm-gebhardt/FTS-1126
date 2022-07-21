@@ -37,7 +37,7 @@ public class AgvStateMachine: MassTransitStateMachine<AgvSaga>
     public State Busy { get; private set; } = default!;
     
     /// <summary>
-    /// 
+    /// Agv status has been received
     /// </summary>
     public Event<AgvStatusReceived> AgvStatusReceivedEvent { get; private set; } = default!;
     
@@ -70,7 +70,7 @@ public class AgvStateMachine: MassTransitStateMachine<AgvSaga>
     private const bool AutoAcceptDiscoveredAgv = true;
 
     /// <summary>
-    /// 
+    /// Constructor of AgvStateMachine
     /// </summary>
     /// <param name="logger"></param>
     public AgvStateMachine(ILogger<AgvStateMachine> logger)

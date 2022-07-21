@@ -107,7 +107,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
             foreach (var agv in agvDataEnumeration)
             {
                 var algorithm = AlgorithmFactory(agv);
-                var route = algorithm.CalculateRoute(order.Source, order.Destination);
+                IGraphAlgorithm.Route? route;
+                if (agv.AgvStatus != null && !string.IsNullOrEmpty(agv.AgvStatus.LastNodeId))
+                {
+	                route = algorithm.CalculateRoute(agv.AgvStatus.LastNodeId, order.Source, order.Destination);
+                }
+                else
+                {
+	                route = algorithm.CalculateRoute(order.Source, order.Destination);
+                }
                 routeListing.Add(agv.CorrelationId, route);
             }
 

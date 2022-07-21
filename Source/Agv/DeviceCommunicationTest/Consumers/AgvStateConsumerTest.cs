@@ -14,6 +14,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
     [TestClass]
     public class AgvStateConsumerTest
     {
+	    private const string AgvTestIdentifier02 = "#0815#";
         /// <summary>
         ///  Test for consuming invalid AGV status message.
         /// </summary>
@@ -49,6 +50,32 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
             Assert.AreEqual(agvTestIdentifier.ToGuid(), publishedStatus.CorrelationId);
             Assert.AreEqual(agvTestIdentifier, publishedStatus.AgvId);
             Assert.AreEqual(orderId, publishedStatus.AgvStatus.OrderId);
+        }
+
+        /// <summary>
+        /// Test for publishing IAgvStatusReceived message with LastNodeId.
+        /// </summary>
+        [TestMethod]
+        [DataRow("Node01", "Node01")]
+        [DataRow(null, null)]
+        [DataRow("", null)]
+        public async Task PublishLastNodeId(string sentLastNodeId, string receivedLastNodeId)
+        {
+            var fixture = new MqttConsumerTestFixture<AgvStateConsumer>();
+	        const string orderId = "Order123";
+            
+			await fixture.TestHarness.Bus.PublishMqtt(new MqttState(AgvTestIdentifier02, orderId)
+			{
+				LastNodeId = sentLastNodeId
+			}, null);
+
+			Assert.IsTrue(await fixture.TestHarness.Published.Any<MqttState>());
+
+	        var consumedGraph = fixture.ConsumerHarness.Consumed.Select<MqttState>().First().Context.Message;
+	        Assert.AreEqual(sentLastNodeId, consumedGraph.LastNodeId);
+
+	        var publishedStatus = fixture.TestHarness.Published.Select<AgvStatusReceived>().First().Context.Message;
+	        Assert.AreEqual(receivedLastNodeId, publishedStatus.AgvStatus.LastNodeId);
         }
     }
 }

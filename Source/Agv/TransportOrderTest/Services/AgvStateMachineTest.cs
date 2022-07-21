@@ -10,110 +10,151 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 {
-    /// <summary>
-    /// AgvStateMachine Test
-    /// </summary>
-    [TestClass]
-    public class AgvStateMachineTest
-    {
-        /// <summary>
-        /// When_AgvStatusReceived_NewAgvSagaCreated
-        /// </summary>
-        [TestMethod]
-        public async Task When_AgvStatusReceived_NewAgvSagaCreated()
-        {
-            var fixture = new StateMachineTestFixture<AgvStateMachine, AgvSaga>();
+	/// <summary>
+	/// AgvStateMachine Test
+	/// </summary>
+	[TestClass]
+	public class AgvStateMachineTest
+	{
+		/// <summary>
+		/// When_AgvStatusReceived_NewAgvSagaCreated
+		/// </summary>
+		[TestMethod]
+		public async Task When_AgvStatusReceived_NewAgvSagaCreated()
+		{
+			var fixture = new StateMachineTestFixture<AgvStateMachine, AgvSaga>();
 
-            const string agvId = "Order#1";
-            var correlationId = agvId.ToGuid();
-            var agvStatus = new AgvStatus(correlationId, null, true, true, 10, true, true);
+			const string agvId = "Order#1";
+			var correlationId = agvId.ToGuid();
+			var agvStatus = new AgvStatus(correlationId, null, true, true, 10, true, true);
 
-            await fixture.TestHarness.Bus.Publish(new AgvStatusReceived(correlationId, agvId, agvStatus));
+			await fixture.TestHarness.Bus.Publish(new AgvStatusReceived(correlationId, agvId, agvStatus));
 
-            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvStatusReceived>());
+			Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvStatusReceived>());
 
-            var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<ReleaseAgv>());
-            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<ReleaseAgv>());
-            Assert.AreEqual(fixture.SagaHarness.StateMachine.Idle.Name, saga.CurrentState);
-            Assert.AreEqual(agvId, saga.AgvId);
-            Assert.IsNotNull(saga.AgvStatus);
-            Assert.IsNull(saga.AgvGraph);
-            Assert.IsNull(saga.AgvData);
-        }
+			var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
+			Assert.IsTrue(await fixture.TestHarness.Published.Any<ReleaseAgv>());
+			Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<ReleaseAgv>());
+			Assert.AreEqual(fixture.SagaHarness.StateMachine.Idle.Name, saga.CurrentState);
+			Assert.AreEqual(agvId, saga.AgvId);
+			Assert.IsNotNull(saga.AgvStatus);
+			Assert.IsNull(saga.AgvGraph);
+			Assert.IsNull(saga.AgvData);
+		}
 
-        /// <summary>
-        /// When_AgvStatusReceived_EmptyCorrelationId_NoSagaCreated
-        /// </summary>
-        [TestMethod]
-        public async Task When_AgvStatusReceived_EmptyCorrelationId_NoSagaCreated()
-        {
-            var fixture = new StateMachineTestFixture<AgvStateMachine, AgvSaga>();
+		/// <summary>
+		/// When_AgvStatusReceived_EmptyCorrelationId_NoSagaCreated
+		/// </summary>
+		[TestMethod]
+		public async Task When_AgvStatusReceived_EmptyCorrelationId_NoSagaCreated()
+		{
+			var fixture = new StateMachineTestFixture<AgvStateMachine, AgvSaga>();
 
-            const string agvId = "Order#1";
-            var correlationId = Guid.Empty;
-            var agvStatus = new AgvStatus(correlationId, null, true, true, 10, true, true);
+			const string agvId = "Order#1";
+			var correlationId = Guid.Empty;
+			var agvStatus = new AgvStatus(correlationId, null, true, true, 10, true, true);
 
-            await fixture.TestHarness.Bus.Publish(new AgvStatusReceived(correlationId, agvId, agvStatus));
+			await fixture.TestHarness.Bus.Publish(new AgvStatusReceived(correlationId, agvId, agvStatus));
 
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvStatusReceived>());
-            Assert.IsNull(await fixture.SagaHarness.NotExists(Guid.Empty, TimeSpan.FromMilliseconds(10)));
-        }
+			Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvStatusReceived>());
+			Assert.IsNull(await fixture.SagaHarness.NotExists(Guid.Empty, TimeSpan.FromMilliseconds(10)));
+		}
 
-        /// <summary>
-        /// When AgvReserve Requested Agv Is Idle AcceptAgvReservation
-        /// </summary>
-        [TestMethod]
-        public async Task When_AgvReservationRequested_AgvIsIdle_AcceptAgvReservation()
-        {
-            var fixture = new StateMachineTestFixture<AgvStateMachine, AgvSaga>(busRegistrationConfigurator: x =>
-            {
-                x.AddRequestClient<ReserveAgv>();
-            });
+		/// <summary>
+		/// When AgvReserve Requested Agv Is Idle AcceptAgvReservation
+		/// </summary>
+		[TestMethod]
+		public async Task When_AgvReservationRequested_AgvIsIdle_AcceptAgvReservation()
+		{
+			var fixture = new StateMachineTestFixture<AgvStateMachine, AgvSaga>(busRegistrationConfigurator: x => { x.AddRequestClient<ReserveAgv>(); });
 
-            const string agvId = "Order#1";
-            var correlationId = agvId.ToGuid();
-            var agvStatus = new AgvStatus(correlationId, null, true, true, 10, true, true);
-            var agvStage = new AgvSaga(correlationId, agvId, fixture.Machine.Idle.Name, agvStatus);
+			const string agvId = "Order#1";
+			var correlationId = agvId.ToGuid();
 
-            fixture.Add(agvStage);
+			var agvStage = new AgvSaga(
+				correlationId,
+				agvId,
+				fixture.Machine.Idle.Name,
+				new AgvStatus(correlationId, null, true, true, 10, true, true)
+			);
 
-            IRequestClient<ReserveAgv>? client = fixture.TestHarness.GetRequestClient<ReserveAgv>();
-            Response response = await client.GetResponse<AgvReservationSucceeded, AgvReservationRejected>(new ReserveAgv(correlationId));
-            Assert.IsInstanceOfType(response.Message, typeof(AgvReservationSucceeded));
+			fixture.Add(agvStage);
 
-            var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
-            Assert.AreEqual(fixture.Machine.Reserved.Name, saga.CurrentState);
-        }
+			IRequestClient<ReserveAgv>? client = fixture.TestHarness.GetRequestClient<ReserveAgv>();
+			Response response = await client.GetResponse<AgvReservationSucceeded, AgvReservationRejected>(
+				new ReserveAgv(correlationId));
+			Assert.IsInstanceOfType(response.Message, typeof(AgvReservationSucceeded));
 
-        /// <summary>
-        /// When AgvReservation Requested Agv Is Idle AcceptAgvReservation
-        /// </summary>
-        [DataRow(nameof(AgvStateMachine.Discovered))]
-        [DataRow(nameof(AgvStateMachine.Reserved))]
-        [DataRow(nameof(AgvStateMachine.Busy))]
-        [TestMethod]
-        public async Task When_AgvReservationRequested_AgvIsBusyDiscoveredReserved_RejectAgvReservation(string acceptedStates)
-        {
-            var fixture = new StateMachineTestFixture<AgvStateMachine, AgvSaga>(busRegistrationConfigurator: x =>
-            {
-                x.AddRequestClient<ReserveAgv>();
-            });
+			var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
+			Assert.AreEqual(fixture.Machine.Reserved.Name, saga.CurrentState);
 
-            const string agvId = "Order#1";
-            var correlationId = agvId.ToGuid();
-            var agvStatus = new AgvStatus(correlationId, null, true, true, 10, true, true);
-            var agvStage = new AgvSaga(correlationId, agvId, acceptedStates, agvStatus);
+		}
 
-            fixture.Add(agvStage);
+		/// <summary>
+		/// When AgvReservation Requested Agv Is Idle AcceptAgvReservation
+		/// </summary>
+		[DataRow(nameof(AgvStateMachine.Discovered))]
+		[DataRow(nameof(AgvStateMachine.Reserved))]
+		[DataRow(nameof(AgvStateMachine.Busy))]
+		[TestMethod]
+		public async Task When_AgvReservationRequested_AgvIsBusyDiscoveredReserved_RejectAgvReservation(string acceptedStates)
+		{
 
-            IRequestClient<ReserveAgv>? client = fixture.TestHarness.GetRequestClient<ReserveAgv>();
-            Response response = await client.GetResponse<AgvReservationSucceeded, AgvReservationRejected>(new ReserveAgv(correlationId));
+			var fixture = new StateMachineTestFixture<AgvStateMachine, AgvSaga>(busRegistrationConfigurator: x => { x.AddRequestClient<ReserveAgv>(); });
 
-            Assert.IsInstanceOfType(response.Message, typeof(AgvReservationRejected));
+			const string agvId = "Order#1";
+			var correlationId = agvId.ToGuid();
 
-            var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
-            Assert.AreEqual(acceptedStates, saga.CurrentState);
-        }
-    }
+			var agvStage = new AgvSaga(
+				correlationId,
+				agvId,
+				acceptedStates,
+				new AgvStatus(correlationId, null, true, true, 10, true, true)
+			);
+
+			fixture.Add(agvStage);
+
+			IRequestClient<ReserveAgv>? client = fixture.TestHarness.GetRequestClient<ReserveAgv>();
+			Response response = await client.GetResponse<AgvReservationSucceeded, AgvReservationRejected>(
+				new ReserveAgv(correlationId));
+
+			Assert.IsInstanceOfType(response.Message, typeof(AgvReservationRejected));
+
+			var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
+			Assert.AreEqual(acceptedStates, saga.CurrentState);
+		}
+
+		/// <summary>
+		/// Checks if IAgvStatusReceived is consumed with LastNodeId
+		/// </summary>
+		[TestMethod]
+		[DataRow(null)]
+		[DataRow("Node01")]
+		public async Task ConsumeAgvStatusReceived_with_LastNodeId(string inputLastNode)
+		{
+			// Arrange
+			var fixture = new StateMachineTestFixture<AgvStateMachine, AgvSaga>();
+
+			const string agvId = "AGV_01";
+			var correlationId = agvId.ToGuid();
+
+			// Act
+			await fixture.TestHarness.Bus.Publish(new AgvStatusReceived(
+				correlationId,
+				agvId,
+				new AgvStatus(correlationId, null, false, false, 50, true, false, inputLastNode)
+			));
+
+			// Assert
+			Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvStatusReceived>());
+			Assert.IsTrue(await fixture.TestHarness.Consumed.Any<AgvStatusReceived>());
+			var consumedMessage = fixture.TestHarness.Consumed.Select<AgvStatusReceived>().First().Context.Message;
+			Assert.AreEqual(inputLastNode, consumedMessage.AgvStatus.LastNodeId);
+
+			Assert.AreEqual(correlationId, await fixture.SagaHarness.Exists(correlationId));
+			var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
+			Assert.IsNotNull(saga.AgvStatus);
+			Assert.AreEqual(inputLastNode, saga.AgvStatus.LastNodeId);
+		}
+	}
 }

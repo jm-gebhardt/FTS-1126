@@ -36,7 +36,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         private readonly Random _random;
 
         /// <summary>
-        /// This algorithm is created usind defaultconstructor.
+        /// This algorithm is created using default constructor.
         /// </summary>
         public RandomGraphAlgorithm()
         {
@@ -403,7 +403,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         /// Test with a single graph.
         /// </summary>
         [TestMethod]
-        public void CallChooser_DifferenGraphs_UseFastest()
+        public void CallChooser_DifferentGraphs_UseFastest()
         {
             var chooser = new AgvChooser<AStar>();
 
