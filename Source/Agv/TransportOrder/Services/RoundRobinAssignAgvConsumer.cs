@@ -5,7 +5,6 @@ using MassTransit;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
 {
-
     /// <summary>
     /// Round Robin AgvId Dispatcher responding to AssignAgv
     /// This is a very simple implementation which is not aware of the AGV current state
@@ -13,14 +12,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
     [JetBrains.Annotations.PublicAPI]
     public class RoundRobinAssignAgvConsumer : IConsumer<AssignAgv>
     {
-        private const string AgvNamePrefix = "AGV";
         private readonly RoundRobinAgvRegistry _agvRegistry;
+
         /// <summary>
         /// Round Robin AGV Dispatcher
         /// </summary>
-        public RoundRobinAssignAgvConsumer(RoundRobinAgvRegistry registry)
+        public RoundRobinAssignAgvConsumer(IAgvRegistry registry)
         {
-            _agvRegistry = registry;
+            _agvRegistry = (RoundRobinAgvRegistry)registry;
         }
 
         /// <summary>
@@ -36,7 +35,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
 
         private string ChooseAgv()
         {
-            return $"{AgvNamePrefix}_{_agvRegistry.Next()}";
+            return _agvRegistry.Next();
         }
     }
 }

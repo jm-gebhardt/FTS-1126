@@ -19,9 +19,19 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         public int CountIdle { get; }
 
         /// <summary>
+        /// Get list of all AGVs
+        /// </summary>
+        public IEnumerable<IAgv> GetAllAgvs();
+
+        /// <summary>
         /// Get list of idle AGVs
         /// </summary>
         public IEnumerable<IAgv> GetIdleAgvs();
 
+        /// <summary>
+        /// Get specific AGV
+        /// </summary>
+        /// <returns>IAgv object or null if no AGV with the given correlationId was found</returns>
+        public IAgv? GetAgv(Guid correlationId);
     }
 }

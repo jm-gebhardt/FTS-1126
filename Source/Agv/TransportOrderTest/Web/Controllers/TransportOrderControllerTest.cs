@@ -42,11 +42,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
 
             var orders = result.Value as List<Order>;
             Assert.IsNotNull(orders);
-
             Assert.AreEqual(1, orders.Count);
 
             var resultOrder = orders[0];
-
             Assert.AreEqual(resultOrder.CorrelationId, inputOrder.CorrelationId);
             Assert.AreEqual(resultOrder.OrderId, inputOrder.OrderId);
             Assert.AreEqual(resultOrder.Source, inputOrder.Source);

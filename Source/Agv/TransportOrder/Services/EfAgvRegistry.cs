@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
 {
-
     /// <summary>
     /// Agv Registry using Entity Framework to access the AgvSaga persistence storage 
     /// </summary>
@@ -20,14 +19,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// Get count of idle AGVs in the registry
         /// </summary>
         public int CountIdle => GetIdleAgvs().Count();
-        
+
         private readonly IDbContextFactory<SagaPersistenceDbContext> _dbContextFactory;
 
         private IQueryable<AgvSaga> AgvSagas =>
             _dbContextFactory.CreateDbContext()
                 .Set<AgvSaga>()
                 .AsNoTracking(); // No need to track changes
-        
+
         /// <summary>
         /// 
         /// </summary>
@@ -37,17 +36,30 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
             _dbContextFactory = dbContextFactory;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        /// <exception cref="NotImplementedException"></exception>
+        /// <inheritdoc/>
+        public IEnumerable<IAgv> GetAllAgvs()
+        {
+            return AgvSagas
+                .Cast<IAgv>()
+                .AsEnumerable();
+        }
+
+        /// <inheritdoc/>
         public IEnumerable<IAgv> GetIdleAgvs()
         {
             return AgvSagas.
                 Where(x => x.CurrentState == nameof(AgvStateMachine.Idle))
                 .Cast<IAgv>()
                 .AsEnumerable();
+        }
+
+        /// <inheritdoc/>
+        public IAgv? GetAgv(Guid correlationId)
+        {
+            return AgvSagas
+                .Where(x => x.CorrelationId == correlationId)
+                .Cast<IAgv>()
+                .FirstOrDefault();
         }
     }
 }

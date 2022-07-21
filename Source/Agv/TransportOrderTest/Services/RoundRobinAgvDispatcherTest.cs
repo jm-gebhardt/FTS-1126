@@ -1,5 +1,6 @@
 using Gebhardt.StoreWare.Agv.Common.Definitions;
 using Gebhardt.StoreWare.Agv.Common.Messages;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Testing;
@@ -26,11 +27,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             var fixture = new MassTransitTestFixture<RoundRobinAssignAgvConsumer>(
                 services =>
                 {
-                    services.AddSingleton(new RoundRobinAgvRegistry(new SimulateOptions() { Agvs = 1 }));
+                    services.AddSingleton(typeof(IAgvRegistry), new RoundRobinAgvRegistry(new SimulateOptions() { Agvs = 1 }));
                 }
             );
 
-            const string agvId = $"{AgvNamePrefix}_0";
+            const string agvId = $"{AgvNamePrefix}_000";
             var agvCorrelationId = agvId.ToGuid();
 
             // ----------- First Assignment ---------------------------------
@@ -74,12 +75,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             var fixture = new MassTransitTestFixture<RoundRobinAssignAgvConsumer>(
                 services =>
                 {
-                    services.AddSingleton(new RoundRobinAgvRegistry(new SimulateOptions() { Agvs = 2 }));
+                    services.AddSingleton(typeof(IAgvRegistry), new RoundRobinAgvRegistry(new SimulateOptions() { Agvs = 2 }));
                 }
             );
 
-            const string agvId0 = $"{AgvNamePrefix}_0";
-            const string agvId1 = $"{AgvNamePrefix}_1";
+            const string agvId0 = $"{AgvNamePrefix}_000";
+            const string agvId1 = $"{AgvNamePrefix}_001";
 
             // ----------- First Assignment ---------------------------------
             const string orderId1 = "Order#1";
@@ -118,6 +119,41 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             responseMessage = fixture.TestHarness.Published.Select<AgvAssignmentSucceeded>(
                 s => s.Context.CorrelationId == correlationId3).First().Context.Message;
             Assert.AreEqual(agvId0, responseMessage.AgvId);
+        }
+
+        /// <summary>
+        /// Verfy_IAgvRegistry_Interface_Methods
+        /// </summary>
+        [TestMethod]
+        public void Verfy_IAgvRegistry_Interface_Methods()
+        {
+            var fixture = new MassTransitTestFixture<RoundRobinAssignAgvConsumer>(
+                services =>
+                {
+                    services.AddSingleton(typeof(IAgvRegistry), new RoundRobinAgvRegistry(new SimulateOptions() { Agvs = 2 }));
+                }
+            );
+
+            var agvRegistry = fixture.Provider.GetRequiredService<IAgvRegistry>();
+
+            Assert.AreEqual(2, agvRegistry.Count);
+            Assert.AreEqual(2, agvRegistry.CountIdle);
+
+            IEnumerable<IAgv> allAgvs = agvRegistry.GetAllAgvs();
+            IEnumerable<IAgv> idleAgvs = agvRegistry.GetIdleAgvs();
+
+            // ReSharper disable PossibleMultipleEnumeration
+            Assert.AreEqual(2, allAgvs.Count());
+            Assert.AreEqual(2, idleAgvs.Count());
+
+            foreach (var actualAgv in allAgvs)
+            {
+                var foundAgv = agvRegistry.GetAgv(actualAgv.CorrelationId);
+                Assert.IsNotNull(foundAgv);
+                Assert.AreEqual(actualAgv.AgvId, foundAgv.AgvId);
+            }
+
+            Assert.IsNull(agvRegistry.GetAgv(Guid.Empty));
         }
     }
 }

@@ -24,17 +24,96 @@ paths:
       operationId: GetOrders
       responses:
         200:
-          description: ""
+          description: "Ok"
           content:
-            text/plain:
-              schema:
-                $ref: "#/components/schemas/Order"
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Order"
             text/json:
               schema:
-                $ref: "#/components/schemas/Order"
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+  /agv:
+    get:
+      tags:
+      - Agv
+      summary: Retrieve active agvs
+      responses:
+        "200":
+          description: "Ok"
+          content:
+            text/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Agv'
+  /agv/{correlationId}/graph:
+    get:
+      tags:
+      - Agv
+      summary: Retrieve graph for agv
+      parameters:
+      - name: correlationId
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: "Ok"
+          content:
+            text/json:
+              schema:
+                $ref: '#/components/schemas/AgvGraph'
+        "404":
+          description: Not found
+  /agv/{correlationId}/status:
+    get:
+      tags:
+      - Agv
+      summary: Retrieve status for agv
+      parameters:
+      - name: correlationId
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: "Ok"
+          content:
+            text/json:
+              schema:
+                $ref: '#/components/schemas/AgvStatus'
+        "404":
+          description: Not found
+  /agv/{correlationId}/data:
+    get:
+      tags:
+      - Agv
+      summary: Retrieve data for agv
+      parameters:
+      - name: correlationId
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: "Ok"
+          content:
+            text/json:
+              schema:
+                $ref: '#/components/schemas/AgvData'
+        "404":
+          description: Not found
 
 # -----------------------------------------------------------------------------
 components:
@@ -53,21 +132,212 @@ components:
       properties:
         CorrelationId:
           type: string
-          description: Step name
+          description: Unique identifier for internal transport order
         OrderId:
           type: string
-          description: Part ident.
+          description: Order identifier used by the host system
         Source:
           type: string
-          description: Product
+          description: Name of source node
         Destination:
           type: string
-          description: Article number.
+          description: Name of destinion noe
         LeNo:
           type: string
-          description: Alias ID
+          description: LE number assigned be the host system
         Creator:
           type: string
-          description: Serial number
+          description: 'Creator (example: READY and PAUSED)'
       additionalProperties: false
       description: Data structure for a transport order
+
+    Agv:
+      required:
+        - CorrelationId
+        - AgvId
+        - CurrentState
+      type: object
+      properties:
+        CorrelationId:
+          type: string
+          description: Unique identifier for internal AGV
+        AgvId:
+          type: string
+          description: AGV id used be the hardware supplier
+        CurrentState:
+          type: string
+          description: Current state of AGV
+      additionalProperties: false
+      description: Data structure for an AGV
+
+    AgvGraph:
+      required:
+        - CorrelationId
+        - Nodes
+        - Edges
+      type: object
+      properties:
+        CorrelationId:
+          type: string
+          description: Unique identifier for internal transport order
+        Nodes:
+          type: array
+          items:
+              $ref: '#/components/schemas/Node'
+          description: The list of nodes in the graph.
+        Edges:
+          type: array
+          items:
+              $ref: '#/components/schemas/Sensor'
+          description: The list of edges in the graph.
+
+    AgvStatus:
+      required:
+        - CorrelationId
+        - Busy
+        - Automatic
+        - BatteryCharge
+        - Charging
+        - Disturbed
+      type: object
+      properties:
+        CorrelationId:
+          type: Guid
+          description:  AGV correlation ID
+        OrderId:
+          type: string
+          description: Current or previous order ID.
+        Busy:
+          type: bool
+          description: AGV is busy (not idle).
+        Automatic:
+          type: bool
+          description: AGV is in automatic mode.
+        BatteryCharge:
+          type: number
+          description: Battery charge.
+        Charging:
+          type: bool
+          description: AGV is charging.
+        Disturbed:
+          type: bool
+          description: AGV is disturbed.
+
+    AgvData:
+      required:
+        - Model
+        - Type
+        - CurrentState
+        - MaxVelocityStraight
+        - BatteryCapacity
+      type: object
+      properties:
+        CorrelationId:
+          type: string
+          description: Unique identifier
+        Model:
+          type: string
+          description: The model name of the AGV
+        Type:
+          type: string
+          description: The type of the AGV
+        IpV4Address:
+          type: string
+          description: The IP Address of the AGV
+        MaxVelocityStraight:
+          type: number
+          description: The maximum velocity of the AGV in straight direction [m/s]
+        BatteryCapacity:
+          type: number
+          description: The capacity of the AGVs battery in [Ah]
+        Length:
+          type: number
+          description: The length of the AGV in [m]
+        Width:
+          type: number
+          description: The width of the AGV in [m]
+        Acceleration:
+          type: number
+          description: The maximum velocity of the AGV while turning on spot [m/s^2]
+        axVelocityTurn:
+          type: number
+          description: The maximum velocity of the AGV in while turning [m/s]
+        axVelocityTurnOnSpot:
+          type: number
+          description: The maximum velocity of the AGV while turning on spot [rad/s]
+        Payload:
+          type: number
+          description: The max. payload of the AGV in [kg]
+        Sensors:
+          type: array
+          items:
+              $ref: '#/components/schemas/Sensor'
+          description: The list of sensors in the AGV
+
+    Sensor:
+      required:
+        - SensorIdentifier
+      type: object
+      properties:
+        SensorIdentifier:
+          type: string
+          description: Identifier of sensor type
+        AgvId:
+          type: string
+          description: AGV id used be the hardware supplier
+        CurrentState:
+          type: string
+          description: Current state of AGV
+      additionalProperties: false
+      description: Data structure for an AGV
+
+    Node:
+      required:
+       - From
+       - To
+      type: object
+      properties:
+        Id:
+          type: string
+          description: The unique ID of the node.
+        Enabled:
+          type: bool
+          description: 'Node enabled/disabled (default: true)'
+        NodeType:
+          enum:
+            - 1
+            - 2
+            - 4
+            - 8
+            - 16
+          type: integer
+          description: Node types.
+        X:
+          type: number
+          format: float
+          description: The x coordinate of the node.
+        Y:
+          type: number
+          format: float
+          description: The y coordinate of the node.
+        Z:
+          type: number
+          format: float
+          description: The z coordinate of the node.
+
+    Edge:
+      required:
+        - From
+        - To
+      type: object
+      properties:
+          From:
+            type: string
+            description: The ID of the node where the edge starts.
+          To:
+            type: string
+            description: The ID of the node where the edge ends.
+          Metric:
+            type: number
+            format: float
+            description: Distance/costs to travel this edge (unitless quantifier).

@@ -35,7 +35,7 @@ try
                 .ConfigureServices((context, services) =>
                 {
                     services.AddScoped(_ => options);
-                    services.AddSingleton<RoundRobinAgvRegistry>();
+                    services.AddSingleton<IAgvRegistry, RoundRobinAgvRegistry>();
 
                     services.AddDbContextFactory<SagaPersistenceDbContext>(builder =>
                     {
