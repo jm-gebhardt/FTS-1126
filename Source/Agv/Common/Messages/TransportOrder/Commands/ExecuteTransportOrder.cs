@@ -23,19 +23,19 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Commands
         public string AgvId { get; }
 
         /// <summary>
-        /// The AGV correlation id 
+        /// List of node ids that define the route
         /// </summary>
-        public Guid AgvCorrelationId { get; }
-
+        public string[] Nodes { get; set; }
+        
         /// <summary>
         /// Initializes a new instance of <see cref="ExecuteTransportOrder"/>
         /// </summary>
-        public ExecuteTransportOrder(Guid correlationId, Order order, string agvId, Guid agvCorrelationId)
+        public ExecuteTransportOrder(Guid correlationId, Order order, string agvId, string[] nodes)
         {
             CorrelationId = correlationId;
             Order = order;
             AgvId = agvId;
-            AgvCorrelationId = agvCorrelationId;
+            Nodes = nodes;
         }
     }
 }

@@ -93,8 +93,8 @@ For a detailed description see [Transportsicherheit](https://dev.azure.com/Gebha
 Ensure that `RABBITMQ__HOST` is set
 ```
 dotnet run --project WCSCommunication simulate --interval=10 --sources='S1,S2', --destinations='D1,D2,D3'
-dotnet run --project TransportOrder simulate --agvs=2
-dotnet run --project DeviceCommunication simulate --interval=5,10
+dotnet run --project TransportOrder 
+dotnet run --project DeviceCommunication simulate --sources='S1,S2', --destinations='D1,D2,D3' --agvs=3
 ```
 
 

@@ -1,6 +1,8 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System.Text.Json.Serialization;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using MassTransit;
+using MassTransit.Serialization;
 
 namespace Gebhardt.StoreWare.Agv.Common
 {
@@ -56,6 +58,9 @@ namespace Gebhardt.StoreWare.Agv.Common
             Action<IBusRegistrationContext, IRabbitMqBusFactoryConfigurator>? rabbitMqConfiguration = null
             )
         {
+            // Enable serialization/deserialization of enum values as string.
+            SystemTextJsonMessageSerializer.Options.Converters.Add(new JsonStringEnumConverter());
+            
             var massTransitConfig = config.GetRequiredSection(ConfigSectionName).Get<MassTransitConfiguration>();
             services.AddMassTransit(x =>
             {

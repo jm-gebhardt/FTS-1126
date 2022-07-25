@@ -251,6 +251,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvAssignmentSucceeded>());
             var response = fixture.TestHarness.Published.Select<AgvAssignmentSucceeded>().First().Context.Message;
             Assert.AreEqual(closestAgvCorrelationId, response.AgvCorrelationId);
+            CollectionAssert.AreEqual(new [] {agvStatus1.LastNodeId, node02, node01, node03},response.Nodes);
         }
     }
 }

@@ -113,7 +113,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
             public override string ToString() => $"{Id} [X={X}/Y={Y}/Z={Z}]";
 
             /// <summary>
-            /// todo
+            /// Node Constructor
             /// </summary>
             /// <param name="id"></param>
             public Node(string id)
@@ -143,7 +143,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
             public float Metric { get; set; }
 
             /// <summary>
-            /// Todo
+            /// Edge Constructor
             /// </summary>
             /// <param name="from"></param>
             /// <param name="to"></param>

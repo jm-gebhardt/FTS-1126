@@ -83,13 +83,13 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
                 _data.Model,
                 _data.Type,
                 _data.IpV4Address,
-                _data.MaxVelocityStraight,
                 _data.BatteryCapacity,
                 _data.Acceleration,
-                _data.Length,
-                _data.Width,
+                _data.MaxVelocityStraight,
                 _data.MaxVelocityTurn,
                 _data.MaxVelocityTurnOnSpot,
+                _data.Width,
+                _data.Length,
                 _data.Payload,
                 Sensors.ToArray()
             );

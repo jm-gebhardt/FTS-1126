@@ -123,8 +123,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
             .TransitionTo(Discovered)
             .Then(c =>
                 _logger.LogInformation("New AGV {AgvId}/{CorrelationId} discovered", c.Message.AgvId, c.Saga.CorrelationId))
-			.Publish(c => new RequestAgvData(c.Saga.CorrelationId, c.Message.AgvId))
-			.Publish(c => new RequestAgvGraph(c.Saga.CorrelationId, c.Message.AgvId))
+			.Publish(c => new RequestAgvData(c.Saga.CorrelationId, c.Saga.AgvId))
+			.Publish(c => new RequestAgvGraph(c.Saga.CorrelationId, c.Saga.AgvId))
 			// Lets have a auto-discover feature
 			.If(_ => AutoAcceptDiscoveredAgv, x => 
                 x.Publish(c => new ReleaseAgv(c.Saga.CorrelationId))

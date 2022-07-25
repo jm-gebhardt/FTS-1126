@@ -44,7 +44,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
                 const string leNo = "na";
 
                 var order = new Order(correlationId, orderId, fromStationId, toStationId, leNo, HostOrderCreator.Simulation);
-                var message = new ExecuteTransportOrder(correlationId, order, agvId, agvCorrelationId);
+                var message = new ExecuteTransportOrder(agvCorrelationId, order, agvId, Array.Empty<string>());
 
                 // Publish ExecuteTransportOrder
                 await fixture.TestHarness.Bus.Publish(message);
@@ -62,9 +62,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
                 IReceivedMessage<ExecuteTransportOrder> consumedMessage = consumerHarness.Consumed.Select<ExecuteTransportOrder>().First();
 
                 // Check consumed message
-                Assert.AreEqual(correlationId, consumedMessage.Context.Message.CorrelationId);
+                Assert.AreEqual(agvCorrelationId, consumedMessage.Context.Message.CorrelationId);
                 Assert.AreEqual(agvId, consumedMessage.Context.Message.AgvId);
-                Assert.AreEqual(agvCorrelationId, consumedMessage.Context.Message.AgvCorrelationId);
                 Assert.AreEqual(orderId, consumedMessage.Context.Message.Order.OrderId);
                 Assert.AreEqual(fromStationId, consumedMessage.Context.Message.Order.Source);
 

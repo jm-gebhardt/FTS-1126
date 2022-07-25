@@ -130,7 +130,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
                  )
                 .Then(UpdateSagaState)
                 .Publish(c =>
-                    new ExecuteTransportOrder(c.Saga.CorrelationId, c.Saga.Order, c.Message.AgvId, c.Message.AgvCorrelationId)
+                    new ExecuteTransportOrder(c.Message.AgvCorrelationId, c.Saga.Order, c.Message.AgvId, c.Message.Nodes)
                 )
                 .Publish(c =>
                     new HostOrderStarted(c.Saga.CorrelationId, c.Saga.Order.OrderId, c.Message.AgvId)
@@ -176,7 +176,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         {
             if (context.Saga.AssignedAgv != null)
             {
-                await context.Publish(new ReleaseAgv(context.Saga.CorrelationId));
+                await context.Publish(new ReleaseAgv(correlationId: context.Saga.AssignedAgv.Value));
             }
         }
 

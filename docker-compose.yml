@@ -115,7 +115,7 @@ services:
   
   rabbitmq:
     hostname: rabbitmq.agv
-    image: rabbitmq:3-management
+    image: rabbitmq:3.10-management
     ports:
       - "127.0.0.1:15672:15672"
       - "127.0.0.1:5671:5671"
@@ -127,10 +127,11 @@ services:
     volumes:
       - ./Certs/server:/etc/rabbitmq/certs
       - ./Config/rabbitmq/rabbitmq.docker.conf:/etc/rabbitmq/rabbitmq.conf
+      - ./Config/rabbitmq/plugins/rabbitmq_delayed_message_exchange-3.10.2.ez:/opt/rabbitmq/plugins/rabbitmq_delayed_message_exchange-3.10.2.ez
     command: >
-      sh -c "rabbitmq-plugins enable rabbitmq_mqtt &&
-             rabbitmq-plugins enable rabbitmq_prometheus &&
+      sh -c "rabbitmq-plugins enable rabbitmq_mqtt rabbitmq_prometheus rabbitmq_delayed_message_exchange &&
              rabbitmq-server"
+#     rabbitmq-plugins enable rabbitmq_delayed_message_exchange &&
     restart: unless-stopped
     depends_on:
       fluent:

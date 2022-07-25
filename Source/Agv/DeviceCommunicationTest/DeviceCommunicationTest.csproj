@@ -6,11 +6,6 @@
     </PropertyGroup>
     <Import Project="..\SharedProjectSettings.csproj" />
     <ItemGroup>
-      <Compile Remove="Services\**" />
-      <EmbeddedResource Remove="Services\**" />
-      <None Remove="Services\**" />
-    </ItemGroup>
-    <ItemGroup>
         <PackageReference Include="JetBrains.Annotations" Version="2022.1.0" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.2.0" />
         <PackageReference Include="moq" Version="4.18.1" />

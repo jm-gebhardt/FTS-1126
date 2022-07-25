@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Gebhardt.StoreWare.Agv.Common.Definitions;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.TransportOrder.Services;
 
@@ -121,15 +122,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         [TestMethod]
         public void Test_RouteComparable()
         {
-            var routes = new List<Common.Definitions.IGraphAlgorithm.Route?>
+            var routes = new List<IGraphAlgorithm.Route?>
             {
-                new() { Costs = 9f },
-                new() { Costs = 1f },
+                new(9f, Array.Empty<string>() ),
+                new(1f, Array.Empty<string>() ),
                 null,
-                new() { Costs = 5f }
+                new(5f, Array.Empty<string>() )
             };
 
-            List<Common.Definitions.IGraphAlgorithm.Route?> sorted = routes.OrderByDescending(n => n != null).ThenBy(n => n).ToList();
+            List<IGraphAlgorithm.Route?> sorted = routes.OrderByDescending(n => n != null).ThenBy(n => n).ToList();
             Assert.AreEqual(routes[1]!.Costs, sorted[0]!.Costs, 0.00001f);
             Assert.AreEqual(routes[3]!.Costs, sorted[1]!.Costs, 0.00001f);
             Assert.AreEqual(routes[0]!.Costs, sorted[2]!.Costs, 0.00001f);
@@ -166,8 +167,47 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                 });
             var aStar = new AStar(graph);
 
-            float? costs = aStar.Costs("Saarbrücken", "Würzburg");
-            Assert.AreEqual(289f, costs!.Value, 0.00001f);
+            var route = aStar.CalculateRoute("Saarbrücken", "Würzburg");
+            Assert.IsNotNull(route);
+            CollectionAssert.AreEqual(new[] {"Saarbrücken", "Kaiserslautern", "Frankfurt", "Würzburg" }, route.Nodes);
+            Assert.AreEqual(289f, route.Costs, 0.00001f);
+        }
+        
+        /// <summary>
+        /// Test_AStar_WikipediaExample_WithCurrentNode
+        /// </summary>
+        [TestMethod]
+        public void Test_AStar_WikipediaExample_WithCurrentNode()
+        {
+            var graph = new AgvGraph(Guid.Empty,
+                new[]
+                {
+                    new AgvGraph.Node("Saarbrücken") { Enabled = true, Type = AgvGraph.NodeType.Station, X = 0f, Y = 0f, Z = 0f },
+                    new AgvGraph.Node("Kaiserslautern") { Enabled = true, Type = AgvGraph.NodeType.Station, X = 42f, Y = 80f, Z = 0f },
+                    new AgvGraph.Node("Frankfurt") { Enabled = true, Type = AgvGraph.NodeType.Station, X = 104f, Y = 100f, Z = 0f },
+                    new AgvGraph.Node("Ludwigshafen") { Enabled = true, Type = AgvGraph.NodeType.Station, X = 96f, Y = 60f, Z = 0f },
+                    new AgvGraph.Node("Karlsruhe") { Enabled = true, Type = AgvGraph.NodeType.Station, X = 104f, Y = -10f, Z = 0f },
+                    new AgvGraph.Node("Heilbronn") { Enabled = true, Type = AgvGraph.NodeType.Station, X = 150f, Y = 20f, Z = 0f },
+                    new AgvGraph.Node("Würzburg") { Enabled = true, Type = AgvGraph.NodeType.Station, X = 200f, Y = 92f, Z = 0f }
+                },
+                new[]
+                {
+                   new AgvGraph.Edge("Saarbrücken", "Kaiserslautern") { Metric = 70f },
+                   new AgvGraph.Edge("Saarbrücken", "Karlsruhe") { Metric = 145f },
+                   new AgvGraph.Edge("Karlsruhe", "Saarbrücken") { Metric = 145f },
+                   new AgvGraph.Edge("Kaiserslautern", "Frankfurt") { Metric = 103f },
+                   new AgvGraph.Edge("Kaiserslautern", "Ludwigshafen") { Metric = 53f },
+                   new AgvGraph.Edge("Karlsruhe", "Heilbronn") { Metric = 84f },
+                   new AgvGraph.Edge("Frankfurt", "Würzburg") { Metric = 116f },
+                   new AgvGraph.Edge("Ludwigshafen", "Würzburg") { Metric = 183f },
+                   new AgvGraph.Edge("Heilbronn", "Würzburg") { Metric = 102f }
+                });
+            var aStar = new AStar(graph);
+
+            var route = aStar.CalculateRoute("Karlsruhe","Saarbrücken", "Würzburg");
+            Assert.IsNotNull(route);
+            CollectionAssert.AreEqual(new[] {"Karlsruhe", "Saarbrücken", "Kaiserslautern", "Frankfurt", "Würzburg" }, route.Nodes);
+            Assert.AreEqual(289f + 145f, route.Costs, 0.00001f);
         }
 
         /// <summary>
@@ -178,17 +218,19 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         {
             var aStar = new AStar(_graph!);
 
-            float? costs = aStar.Costs("1", "10");
-            Assert.AreEqual(18f, costs!.Value, 0.00001f);
+            var route = aStar.CalculateRoute("1", "10");
+            Assert.IsNotNull(route);
+            Assert.AreEqual(18f, route.Costs, 0.00001f);
 
-            costs = aStar.Costs("10", "1");
-            Assert.IsFalse(costs.HasValue);
+            route = aStar.CalculateRoute("10", "1");
+            Assert.IsNull(route);
 
-            costs = aStar.Costs("9", "5");
-            Assert.AreEqual(8f, costs!.Value, 0.00001f);
+            route = aStar.CalculateRoute("9", "5");
+            Assert.IsNotNull(route);
+            Assert.AreEqual(8f, route.Costs, 0.00001f);
 
-            costs = aStar.Costs("4", "9");
-            Assert.IsFalse(costs.HasValue);
+            route = aStar.CalculateRoute("4", "9");
+            Assert.IsNull(route);
         }
 
         /// <summary>
@@ -199,34 +241,34 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         {
             var aStar = new AStar(_grid!);
             // ReSharper disable JoinDeclarationAndInitializer
-            float? c1, c2, c3, c4, costs;
+            IGraphAlgorithm.Route? c1, c2, c3, c4, costs;
             // ReSharper restore JoinDeclarationAndInitializer
 
-            c1 = aStar.Costs("01/01", "11/01");
-            Assert.AreEqual(10f, c1!.Value, 0.00001f);
-            c2 = aStar.Costs("11/01", "11/02");
-            Assert.AreEqual(1f, c2!.Value, 0.00001f);
-            c3 = aStar.Costs("11/02", "50/02");
-            Assert.AreEqual(39f, c3!.Value, 0.00001f);
-            c4 = aStar.Costs("50/02", "50/01");
-            Assert.AreEqual(1f, c4!.Value, 0.00001f);
+            c1 = aStar.CalculateRoute("01/01", "11/01");
+            Assert.AreEqual(10f, c1!.Costs, 0.00001f);
+            c2 = aStar.CalculateRoute("11/01", "11/02");
+            Assert.AreEqual(1f, c2!.Costs, 0.00001f);
+            c3 = aStar.CalculateRoute("11/02", "50/02");
+            Assert.AreEqual(39f, c3!.Costs, 0.00001f);
+            c4 = aStar.CalculateRoute("50/02", "50/01");
+            Assert.AreEqual(1f, c4!.Costs, 0.00001f);
 
-            costs = aStar.Costs("01/01", "50/01");
-            Assert.AreEqual(c1.Value + c2.Value + c3.Value + c4.Value, costs!.Value, 0.00001f);
+            costs = aStar.CalculateRoute("01/01", "50/01");
+            Assert.AreEqual(c1.Costs + c2.Costs + c3.Costs + c4.Costs, costs!.Costs, 0.00001f);
 
-            c1 = aStar.Costs("50/01", "13/17");
-            Assert.AreEqual(57f, c1!.Value, 0.00001f);
-            c2 = aStar.Costs("13/17", "33/17");
-            Assert.AreEqual(10f * 13f, c2!.Value, 0.00001f);
-            c3 = aStar.Costs("33/17", "33/06");
-            Assert.AreEqual(11f, c3!.Value, 0.00001f);
+            c1 = aStar.CalculateRoute("50/01", "13/17");
+            Assert.AreEqual(57f, c1!.Costs, 0.00001f);
+            c2 = aStar.CalculateRoute("13/17", "33/17");
+            Assert.AreEqual(10f * 13f, c2!.Costs, 0.00001f);
+            c3 = aStar.CalculateRoute("33/17", "33/06");
+            Assert.AreEqual(11f, c3!.Costs, 0.00001f);
 
             var stopWatch = new System.Diagnostics.Stopwatch();
             stopWatch.Start();
-            costs = aStar.Costs("50/01", "33/06");
+            costs = aStar.CalculateRoute("50/01", "33/06");
             stopWatch.Stop();
             System.Diagnostics.Trace.WriteLine("Grid example duration: " + stopWatch.ElapsedMilliseconds.ToString() + "ms.");
-            Assert.AreEqual(c1.Value + c2.Value + c3.Value, costs!.Value, 0.00001f);
+            Assert.AreEqual(c1.Costs + c2.Costs + c3.Costs, costs!.Costs, 0.00001f);
         }
 
         /// <summary>
@@ -237,7 +279,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         public void Test_AStarGrid_NonExistentNode_ExpectException()
         {
             var aStar = new AStar(_grid!);
-            aStar.Costs("01/01", "49/24");
+            aStar.CalculateRoute("01/01", "49/24");
         }
 
         /// <summary>
@@ -247,8 +289,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         public void Test_AStarGrid_UnreachableNode_NoPath()
         {
             var aStar = new AStar(_grid!);
-            float? costs = aStar.Costs("01/01", "47/23");
-            Assert.IsFalse(costs.HasValue);
+            var route = aStar.CalculateRoute("01/01", "47/23");
+            Assert.IsNull(route);
         }
     }
 }

@@ -11,9 +11,26 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions
 	{
 		/// <summary>
 		/// Response delay interval (seconds) in which the ExecuteTransportOrder is completed by sending TransportOrderCompleted
+		/// Number of AGVs
 		/// </summary>
 		[JetBrains.Annotations.UsedImplicitly]
-		[Option('i', "interval", HelpText = "Response delay interval in seconds, e.g. \"5,10\".", Required = true, Min = 2, Max = 2, Separator = ',')]
-		public IEnumerable<int>? Interval { get; init; }
+		// ReSharper disable once StringLiteralTypo
+		[Option('c', "agvs", HelpText = "Number of simulated AGVs", Default=1)]
+		// ReSharper disable once IdentifierTypo
+		public int Agvs { get;  init; }
+		
+		/// <summary>
+		/// List of simulation sources
+		/// </summary>
+		[JetBrains.Annotations.UsedImplicitly]
+		[Option('s', "sources", HelpText = "List of simulation sources", Required = true, Min = 1, Separator = ',')]
+		public IEnumerable<string>? Sources { get; init; }
+
+		/// <summary>
+		/// List of simulation destinations
+		/// </summary>
+		[JetBrains.Annotations.UsedImplicitly]
+		[Option('d', "destinations", HelpText = "List of simulation destinations", Required = true, Min = 1, Separator = ',')]
+		public IEnumerable<string>? Destinations { get; init; }
 	}
 }

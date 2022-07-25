@@ -104,7 +104,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                 (
                     orderSaga.CorrelationId,
                     assignedAgvId,
-                    assignedAgvCorrelationId
+                    assignedAgvCorrelationId,
+                    Array.Empty<string>()
                 )
             );
             Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvAssignmentSucceeded>());

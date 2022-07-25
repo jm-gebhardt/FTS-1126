@@ -10,6 +10,9 @@ using MassTransit.Configuration;
 using MassTransit.Serialization;
 using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.States;
+using MassTransit;
 
 var initialLogger = Gebhardt.StoreWare.Agv.Common.Logging.InitialLogger.Create<Program>();
 try
@@ -26,18 +29,24 @@ try
 				.ConfigureServices((context, services) =>
 				{
 					services.AddScoped(_ => simulationOptions);
-					ConfigureServicesMassTransit.ConfigureServices(services, context.Configuration, x =>
+					services.AddTransient<SimulatedAgvProvider>();
+					ConfigureServicesMassTransit.ConfigureServices(services, context.Configuration, 
+						x =>
+						{
+							x.AddSagaStateMachine<SimulatedAgvStateMachine, SimulatedAgvSaga>()
+								.InMemoryRepository();
+						x.AddDelayedMessageScheduler();
+					}, rabbitMqConfiguration: (_, cfg) =>
 					{
-						x.AddConsumer<SimulationExecuteTransportOrderConsumer>();
+						cfg.UseDelayedMessageScheduler();
 					});
 				})
 				.Build();
+			// Create AGVs
+			host.Services.GetRequiredService<SimulatedAgvProvider>().Create();
 		})
 		.WithParsed<ProductionOptions>(productionOptions =>
 		{
-			// Enable serialization/deserialization of enum values as string.
-			SystemTextJsonMessageSerializer.Options.Converters.Add(new JsonStringEnumConverter());
-
 			host = GebhardtStartup.CreateHostBuilder(args)
 				.ConfigureServices((context, services) =>
 				{
@@ -63,7 +72,6 @@ try
 							//for incoming MQTT messages the raw JSON serializer/deserializer needs to be added
 							var serializerFactory = new SystemTextJsonRawMessageSerializerFactory();
 							configurator.AddSerializer(serializerFactory);
-							configurator.SerializerContentType = SystemTextJsonMessageSerializer.JsonContentType;
 						});
 				})
 				.Build();

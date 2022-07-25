@@ -3,7 +3,7 @@ using MassTransit;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
-
+using Gebhardt.StoreWare.Agv.Common.Definitions;
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
 {
     /// <summary>
@@ -38,36 +38,48 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
 
             var agvChooser = new AgvChooser<AStar>();
             IAgv? assignedAgv = null;
-            List<IAgv> idleAgvs = _agvRegistry.GetIdleAgvs().ToList();
-
+            IGraphAlgorithm.Route? route = null;
+            
+            List<IAgv> idleAgvs = _agvRegistry.GetIdleAgvs()
+                .Where(agv => agv.AgvGraph != null)
+                .ToList();
+            
             while (idleAgvs.Count > 0)
             {
-                Guid? agvGuid = agvChooser.ChooseAgv(idleAgvs, context.Message.Order);
-
-                if (agvGuid == null)
+                KeyValuePair<Guid, IGraphAlgorithm.Route>? chosenAgv = agvChooser.ChooseAgv(idleAgvs, context.Message.Order);
+                
+                if (chosenAgv == null)
                 {
                     _logger.LogInformation("Could not find any AGV to handle {OrderId}", context.Message.Order.OrderId);
                     break;
                 }
 
-                Response<AgvReservationSucceeded, AgvReservationRejected> response =
-                    await _client.GetResponse<AgvReservationSucceeded, AgvReservationRejected>(new ReserveAgv(agvGuid.Value), context.CancellationToken);
-
+                var correlationId = chosenAgv.Value.Key;
+                
+                Response<AgvReservationSucceeded, AgvReservationRejected> response = await _client.GetResponse<AgvReservationSucceeded, AgvReservationRejected>(
+                    new ReserveAgv(correlationId),
+                    context.CancellationToken);
                 if (response.Message is AgvReservationSucceeded)
                 {
-                    assignedAgv = idleAgvs.Single(x => x.CorrelationId == agvGuid);
+                    assignedAgv = idleAgvs.Single(x => x.CorrelationId == correlationId);
+                    route = chosenAgv.Value.Value;
                     break;
                 }
                 else
                 {
-                    _logger.LogInformation("Could not reserve Agv {CorrelationId}, trying next", agvGuid);
-                    idleAgvs.RemoveAll(x => x.CorrelationId == agvGuid);
+                    _logger.LogInformation("Could not reserve Agv {CorrelationId}, trying next", correlationId);
+                    idleAgvs.RemoveAll(x => x.CorrelationId == correlationId);
                 }
             }
 
-            if (assignedAgv != null)
+            if (assignedAgv != null && route != null)
             {
-                await context.Publish(new AgvAssignmentSucceeded(context.Message.CorrelationId, assignedAgv.AgvId, assignedAgv.CorrelationId));
+                await context.Publish( new AgvAssignmentSucceeded(
+                    context.Message.CorrelationId,
+                    assignedAgv.AgvId,
+                    assignedAgv.CorrelationId,
+                    route.Nodes
+                ));    
             }
             else
             {

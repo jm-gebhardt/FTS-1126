@@ -51,10 +51,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         /// <returns></returns>
         public IGraphAlgorithm.Route CalculateRoute(string source, string destination)
         {
-            return new IGraphAlgorithm.Route()
-            {
-                Costs = _random.NextSingle()
-            };
+            return new IGraphAlgorithm.Route(
+                costs: _random.NextSingle(),
+                nodes: new [] {source, destination}
+            );
         }
 
         /// <summary>
@@ -66,10 +66,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         /// <returns></returns>
         public IGraphAlgorithm.Route CalculateRoute(string currentNode, string source, string destination)
         {
-            return new IGraphAlgorithm.Route()
-            {
-                Costs = 2f * CalculateRoute(source, destination).Costs
-            };
+            var route = CalculateRoute(source, destination);
+            return new IGraphAlgorithm.Route(
+                costs: 2f * route.Costs,
+                nodes: new [] {currentNode}.Concat(route.Nodes).ToArray()
+            );
         }
     }
 
@@ -96,7 +97,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         /// <returns></returns>
         public IGraphAlgorithm.Route CalculateRoute(string source, string destination)
         {
-            return new IGraphAlgorithm.Route() { Costs = 0f };
+            return new IGraphAlgorithm.Route( 0f, new [] {source, destination} );
         }
 
         /// <summary>
@@ -108,7 +109,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         /// <returns></returns>
         public IGraphAlgorithm.Route CalculateRoute(string currentNode, string source, string destination)
         {
-            return new IGraphAlgorithm.Route() { Costs = 0f };
+            return new IGraphAlgorithm.Route( 0f, new [] {currentNode, source, destination} );
         }
     }
 
@@ -137,7 +138,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         /// <returns></returns>
         public IGraphAlgorithm.Route CalculateRoute(string source, string destination)
         {
-            return new IGraphAlgorithm.Route() { Costs = 0f };
+            return new IGraphAlgorithm.Route(0f, new []{source, destination});
         }
 
         /// <summary>
@@ -149,7 +150,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         /// <returns></returns>
         public IGraphAlgorithm.Route CalculateRoute(string currentNode, string source, string destination)
         {
-            return new IGraphAlgorithm.Route() { Costs = 0f };
+            return new IGraphAlgorithm.Route(0f, new []{currentNode, source, destination});
         }
     }
 
@@ -258,17 +259,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         }
 
         /// <summary>
-        /// Call chooser with empty AGV listing, expect exception.
+        /// Call chooser with empty AGV listing returns null
         /// </summary>
         [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
-        public void CallChooser_WithEmptyEnumeration_ExpectException()
+        public void CallChooser_WithEmptyEnumeration_Returns_Null()
         {
             var chooser = new AgvChooser<RandomGraphAlgorithm>();
-            // ReSharper disable All
-            var agvData = new List<Agv>();
-            chooser.ChooseAgv(agvData, _dummyOrder!);
-            // ReSharper restore All
+            Assert.IsNull(chooser.ChooseAgv(Array.Empty<Agv>(), _dummyOrder!));
         }
 
         /// <summary>
@@ -372,8 +369,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                 leNo: "don't care",
                 creator: HostOrderCreator.Simulation
             );
-            Guid? agvCorrelation = chooser.ChooseAgv(agvData, order);
-            Assert.AreEqual(agvData[0].CorrelationId, agvCorrelation);
+            KeyValuePair<Guid, IGraphAlgorithm.Route>? chosenAgv = chooser.ChooseAgv(agvData, order);
+            Assert.IsNotNull(chosenAgv);
+            Assert.AreEqual(agvData[0].CorrelationId, chosenAgv.Value.Key);
         }
 
         /// <summary>
@@ -395,8 +393,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                 leNo: "don't care",
                 creator: HostOrderCreator.Simulation
             );
-            Guid? agvCorrelation = chooser.ChooseAgv(agvData, order);
-            Assert.IsFalse(agvCorrelation.HasValue);
+            KeyValuePair<Guid, IGraphAlgorithm.Route>? chosenAgv = chooser.ChooseAgv(agvData, order);
+            Assert.IsFalse(chosenAgv.HasValue);
         }
 
         /// <summary>
@@ -423,8 +421,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                 leNo: "don't care",
                 creator: HostOrderCreator.Simulation
             );
-            Guid? agvCorrelation = chooser.ChooseAgv(agvData, order);
-            var agv = agvData.Single(x => x.CorrelationId == agvCorrelation);
+            KeyValuePair<Guid, IGraphAlgorithm.Route>? chosenAgv = chooser.ChooseAgv(agvData, order);
+            Assert.IsNotNull(chosenAgv);
+            var agv = agvData.Single(x => x.CorrelationId == chosenAgv.Value.Key);
             Assert.AreEqual("Fast", agv.AgvId);
         }
     }

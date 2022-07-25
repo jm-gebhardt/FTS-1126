@@ -1,6 +1,5 @@
 using System.Reflection;
 using System.Collections.Concurrent;
-using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -10,7 +9,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.OpenApi.Models;
 using CommandLine;
-using MassTransit.Serialization;
 using Gebhardt.StoreWare.Agv.Common;
 using Gebhardt.StoreWare.Agv.Common.Messages;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
@@ -24,40 +22,9 @@ try
 {
     IHostBuilder? hostBuilder = null;
 
-    Parser.Default.ParseArguments<ProductionOptions, SimulateOptions>(args)
-        // Simulation Mode
-        .WithParsed<SimulateOptions>(options =>
+    Parser.Default.ParseArguments<ProductionOptions>(args)
+        .WithParsed(_ =>
         {
-            // Enable serialization/deserialization of enum values as string.
-            SystemTextJsonMessageSerializer.Options.Converters.Add(new JsonStringEnumConverter());
-
-            hostBuilder = GebhardtStartup.CreateHostBuilder(args)
-                .ConfigureServices((context, services) =>
-                {
-                    services.AddScoped(_ => options);
-                    services.AddSingleton<IAgvRegistry, RoundRobinAgvRegistry>();
-
-                    services.AddDbContextFactory<SagaPersistenceDbContext>(builder =>
-                    {
-                        builder.UseSqlServer(context.Configuration.GetConnectionString(SagaPersistenceDbContext.ConfigSectionName), m =>
-                        {
-                            m.MigrationsHistoryTable(SagaPersistenceDbContext.MigrationTableName);
-                        });
-                    });
-
-                    ConfigureServicesMassTransit.ConfigureServices(services, context.Configuration, x =>
-                    {
-                        x.AddSagaStateMachine<OrderStateMachine, OrderSaga>()
-                            .AddPersistence<OrderSaga, SagaPersistenceDbContext>();
-                        x.AddConsumer<RoundRobinAssignAgvConsumer>();
-                    });
-                });
-        })
-        .WithParsed<ProductionOptions>(_ =>
-        {
-            // Enable serialization/deserialization of enum values as string.
-            SystemTextJsonMessageSerializer.Options.Converters.Add(new JsonStringEnumConverter());
-
             hostBuilder = GebhardtStartup.CreateHostBuilder(args)
                 .ConfigureServices((context, services) =>
                 {

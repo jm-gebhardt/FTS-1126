@@ -182,16 +182,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
                 }
             }
         }
-
-
+        
         /// <summary>
-        /// Calculate costs of best path from source to destination.
+        /// Calculate best route from <paramref name="source"/> to <paramref name="destination"/>.
         /// </summary>
         /// <param name="source">Node ID of the source.</param>
         /// <param name="destination">Node ID of the destination.</param>
-        /// <returns>Returns the costs as a comparable value or null when no path found.</returns>
+        /// <returns>Returns the route as a comparable value or null when no path found.</returns>
         /// <exception cref="KeyNotFoundException">Source or destination node not found.</exception>
-        public float? Costs(string source, string destination)
+        public IGraphAlgorithm.Route? CalculateRoute(string source, string destination)
         {
             _openList.Clear();
             _closedList.Clear();
@@ -222,76 +221,51 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
 
             if (end.Predecessor != "")
             {
-                #if DEBUG
+                var route = new List<string> {end.Node.Id};
                 current = end;
+                
                 // Write path found.
-                System.Diagnostics.Debug.WriteLine(current.Node.Id);
                 while (current.Node.Id != source)
                 {
                     current = _nodes[current.Predecessor];
-                    System.Diagnostics.Debug.WriteLine(current.Node.Id);
+                    route.Add(current.Node.Id);
                 }
-                #endif
 
-                return end.F;
+                route.Reverse();
+
+                return new IGraphAlgorithm.Route(end.F, route.ToArray());
             }
-            else
-            {
-                // No path found.
-                return null;
-            }
+            // No path found.
+            return null;
         }
 
         /// <summary>
-        /// Calculate route costs from <paramref name="source"/> to <paramref name="destination"/>.
-        /// </summary>
-        /// <param name="source">Node ID of the source.</param>
-        /// <param name="destination">Node ID of the destination.</param>
-        /// <returns>Returns the costs as a comparable value or null when no path found.</returns>
-        /// <exception cref="InvalidOperationException">Source or destination node not found.</exception>
-        public IGraphAlgorithm.Route? CalculateRoute(string source, string destination)
-        {
-            float? costs = Costs(source, destination);
-            if (costs != null)
-            {
-                return new IGraphAlgorithm.Route()
-                {
-                    Costs = costs.Value
-                };
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Calculate route costs from <paramref name="currentNode"/> to <paramref name="destination"/> via <paramref name="source"/>.
+        /// Calculate best route from <paramref name="currentNode"/> to <paramref name="destination"/> via <paramref name="source"/>.
         /// </summary>
         /// <param name="currentNode">Node ID of the current position.</param>
         /// <param name="source">Node ID of the source.</param>
         /// <param name="destination">Node ID of the destination.</param>
-        /// <returns>Returns the costs as a comparable value.</returns>
-        /// <exception cref="InvalidOperationException">Source or destination node not found.</exception>
+        /// <returns>Returns the route as a comparable value or null when no path found.</returns>
+        /// <exception cref="KeyNotFoundException">Source or destination node not found.</exception>
         public IGraphAlgorithm.Route? CalculateRoute(string currentNode, string source, string destination)
         {
-            float? costs = Costs(source, destination);
-            if (costs != null)
-            {
-                float? costsToStart = Costs(currentNode, source);
-                costs = costsToStart ?? costs + costsToStart;
-            }
-            if (costs != null)
-            {
-                return new IGraphAlgorithm.Route()
-                {
-                    Costs = costs.Value
-                };
-            }
-            else
+            // Get route to source
+            var routeToSource = CalculateRoute(currentNode, source);
+
+            if (routeToSource == null)
             {
                 return null;
             }
+            // Get route from source to destination
+            var route = CalculateRoute(source, destination);
+            
+            if (route == null)
+            {
+                return null;
+            }
+            
+            // Return combined routes
+            return routeToSource + route;
         }
     }
 }

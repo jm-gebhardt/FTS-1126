@@ -21,15 +21,21 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events
         /// The AGV correlation id 
         /// </summary>
         public Guid AgvCorrelationId { get; }
+        
+        /// <summary>
+        /// List of node ids that define the route
+        /// </summary>
+        public string[] Nodes { get; }
 
         /// <summary>
         /// Initializes a new instance of <see cref="AgvAssignmentSucceeded"/>
         /// </summary>
-        public AgvAssignmentSucceeded(Guid correlationId, string agvId, Guid agvCorrelationId)
+        public AgvAssignmentSucceeded(Guid correlationId, string agvId, Guid agvCorrelationId, string[] nodes)
         {
             CorrelationId = correlationId;
             AgvId = agvId;
             AgvCorrelationId = agvCorrelationId;
+            Nodes = nodes;
         }
     }
 }

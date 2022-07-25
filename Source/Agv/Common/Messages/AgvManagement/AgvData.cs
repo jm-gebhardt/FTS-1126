@@ -80,27 +80,28 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
             string model,
             string type,
             string? ipV4Address,
-            double maxVelocityStraight,
             double batteryCapacity,
-            double? length,
-            double? width,
-            double? acceleration,
-            double? maxVelocityTurn,
+            double? acceleration, 
+            double maxVelocityStraight, 
+            double? maxVelocityTurn, 
             double? maxVelocityTurnOnSpot,
+            double? width,
+            double? length,
             long? payload,
-            Sensor[] sensors)
+            Sensor[] sensors
+        )
         {
             CorrelationId = correlationId;
             Model = model;
             Type = type;
             IpV4Address = ipV4Address;
-            MaxVelocityStraight = maxVelocityStraight;
-            BatteryCapacity = batteryCapacity;
-            Length = length;
-            Width = width;
             Acceleration = acceleration;
+            BatteryCapacity = batteryCapacity;
+            MaxVelocityStraight = maxVelocityStraight;
             MaxVelocityTurn = maxVelocityTurn;
             MaxVelocityTurnOnSpot = maxVelocityTurnOnSpot;
+            Width = width;
+            Length = length;
             Payload = payload;
             Sensors = sensors;
         }

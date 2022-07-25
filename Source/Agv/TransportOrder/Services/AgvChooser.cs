@@ -83,7 +83,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// <exception cref="MissingMethodException">No fitting constructor for the graph algorithm found.</exception>
         /// <exception cref="System.Reflection.TargetInvocationException">The constructor of the algorithm has thrown an exception.</exception>
         [JetBrains.Annotations.PublicAPI]
-        public Guid? ChooseAgv(IEnumerable<IAgv> agvDataEnumeration, Order order)
+        public KeyValuePair<Guid, IGraphAlgorithm.Route>? ChooseAgv(IEnumerable<IAgv> agvDataEnumeration, Order order)
         {
             if (agvDataEnumeration == null)
             {
@@ -102,7 +102,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
                 throw new ArgumentException("Destination is missing in order.");
             }
 
-            var routeListing = new Dictionary<Guid, IGraphAlgorithm.Route?>();
+            var routeListing = new Dictionary<Guid, IGraphAlgorithm.Route>();
 
             foreach (var agv in agvDataEnumeration)
             {
@@ -116,20 +116,16 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
                 {
 	                route = algorithm.CalculateRoute(order.Source, order.Destination);
                 }
-                routeListing.Add(agv.CorrelationId, route);
+                if (route != null)
+                {
+                    routeListing.Add(agv.CorrelationId, route);
+                }
             }
-
-            if (routeListing.Count == 0)    // Checking here prevents trouble by double enumerating agvDataEnumeration.
+            if (!routeListing.Any())
             {
-                throw new ArgumentException("AGV enumeration is empty.");
+                return null;
             }
-
-            KeyValuePair<Guid, IGraphAlgorithm.Route?> first = routeListing.OrderByDescending(x => x.Value != null).ThenBy(x => x.Value).First();
-            if (first.Value != null)
-            {
-                return first.Key;
-            }
-            return null;
+            return routeListing.MinBy(x => x.Value);
         }
     }
 }

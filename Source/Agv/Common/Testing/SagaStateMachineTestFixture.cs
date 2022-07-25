@@ -42,7 +42,12 @@ namespace Gebhardt.StoreWare.Agv.Common.Testing
         /// </summary>
         /// <param name="services">IServiceCollection action</param>
         /// <param name="busRegistrationConfigurator">IBusRegistrationConfigurator action</param>
-        public StateMachineTestFixture(Action<IServiceCollection>? services = null, Action<IBusRegistrationConfigurator>? busRegistrationConfigurator = null)
+        /// <param name="inMemoryConfiguration">IBusRegistrationContext, IInMemoryBusFactoryConfigurator action</param>
+        public StateMachineTestFixture(
+            Action<IServiceCollection>? services = null, 
+            Action<IBusRegistrationConfigurator>? busRegistrationConfigurator = null,
+            Action<IBusRegistrationContext, IInMemoryBusFactoryConfigurator>? inMemoryConfiguration = null
+            )
         {
             var collection = new ServiceCollection()
                 .AddMassTransitTestHarness(x =>
@@ -53,6 +58,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Testing
                     x.UsingInMemory((context, cfg) =>
                     {
                         cfg.ConfigureEndpoints(context);
+                        inMemoryConfiguration?.Invoke(context, cfg);
                     });
                 });
 
