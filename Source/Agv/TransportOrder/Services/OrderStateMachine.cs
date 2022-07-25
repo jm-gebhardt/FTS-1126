@@ -19,7 +19,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
     public sealed class OrderStateMachine : MassTransitStateMachine<OrderSaga>
     {
         /// <summary>
-        /// 
+        /// State when Order has been received
         /// </summary>
         public State OrderReceived { get; private set; } = default!;
 

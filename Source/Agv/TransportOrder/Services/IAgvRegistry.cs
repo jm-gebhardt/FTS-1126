@@ -3,7 +3,7 @@
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
 {
     /// <summary>
-    /// Interaface for accessing the AGV registry
+    /// Interface for accessing the AGV registry
     /// </summary>
     [JetBrains.Annotations.PublicAPI]
     public interface IAgvRegistry

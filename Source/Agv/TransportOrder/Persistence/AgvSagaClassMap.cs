@@ -11,7 +11,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence
     public class AgvSagaClassMap : SagaClassMap<AgvSaga>
     {
         private const string AgvSagaTableName = "AgvSaga";
-        private const int CurrenStateMaxLength = 64;
+        private const int CurrentStateMaxLength = 64;
         
         /// <summary>
         /// <see cref="AgvSaga" /> entity configurations
@@ -27,8 +27,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence
             entity.Property(x => x.AgvGraph).HasJsonConversion();
             entity.Property(x => x.AgvData).HasJsonConversion();
 
-            // Restrict CurrenState length
-            entity.Property(x => x.CurrentState).HasMaxLength(CurrenStateMaxLength);
+            // Restrict CurrentState length
+            entity.Property(x => x.CurrentState).HasMaxLength(CurrentStateMaxLength);
         }
     }
 }

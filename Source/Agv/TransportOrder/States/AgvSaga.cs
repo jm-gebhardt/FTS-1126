@@ -46,6 +46,18 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.States
         public AgvData? AgvData { get; set; }
 
         /// <summary>
+        /// Timestamp when the Agv received its data the last time
+        /// </summary>
+        /// <remarks>Nullable declaration required to make data model mappable according to EF Core</remarks>
+        public DateTime? AgvDataReceivedLastTime { get; set; }
+
+        /// <summary>
+        /// Timestamp when the Agv received its graph the last time
+        /// </summary>
+        /// <remarks>Nullable declaration required to make data model mappable according to EF Core</remarks>
+        public DateTime? AgvGraphReceivedLastTime { get; set; }
+
+        /// <summary>
 		/// Default constructor required to connect.
 		/// </summary>
 		public AgvSaga(Guid correlationId, 
@@ -53,7 +65,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.States
             string? currentState = null, 
             AgvStatus? agvStatus = null, 
             AgvGraph? agvGraph = null, 
-            AgvData? agvData = null)
+            AgvData? agvData = null,
+            DateTime? agvDataReceivedLastTime = null,
+            DateTime? agvGraphReceivedLastTime = null)
 		{
 			if (correlationId == Guid.Empty)
 			{
@@ -65,6 +79,34 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.States
 			AgvId = agvId;
 			CurrentState = currentState ?? default!;
 			AgvData = agvData;
-		}
+			AgvDataReceivedLastTime = agvDataReceivedLastTime ?? DateTime.MinValue;
+			AgvGraphReceivedLastTime = agvGraphReceivedLastTime ?? DateTime.MinValue;
+        }
+
+        /// <summary>
+        /// Get interval since last update of AgvDate
+        /// </summary>
+        /// <returns>Time span between now and last update</returns>
+        public TimeSpan GetTimeSpanSinceLastUpdate_AgvData()
+        {
+			if (AgvDataReceivedLastTime != null)
+			{
+				return (TimeSpan)(DateTime.Now - AgvDataReceivedLastTime);
+			}
+			return TimeSpan.Zero;
+        }
+
+        /// <summary>
+        /// Get interval since last update of AgvGraph
+        /// </summary>
+        /// <returns>Time span between now and last update</returns>
+        public TimeSpan GetTimeSpanSinceLastUpdate_AgvGraph()
+        {
+	        if (AgvGraphReceivedLastTime != null)
+	        {
+		        return (TimeSpan)(DateTime.Now - AgvGraphReceivedLastTime);
+	        }
+	        return TimeSpan.Zero;
+        }
 	}
 }

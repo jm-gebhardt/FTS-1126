@@ -70,6 +70,18 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         private const bool AutoAcceptDiscoveredAgv = true;
 
         /// <summary>
+        /// Time that has to pass before resending a request telegram in case AgvGraph or AgvData are still null
+        /// </summary>
+        /// <remarks>Interval indicated in seconds</remarks>
+        private const int AgvRequestTimeout = 30;
+
+        /// <summary>
+        /// Time that has to pass before resending a request telegram in case AgvGraph or AgvData are already given
+        /// </summary>
+        /// <remarks>Interval indicated in seconds</remarks>
+        private const int DailyRequestUpdateInterval = 24 * 3600;
+
+        /// <summary>
         /// Constructor of AgvStateMachine
         /// </summary>
         /// <param name="logger"></param>
@@ -102,19 +114,21 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         }
     
 
-        /// <summary>
-        /// First message which creates a new agv saga instance
-        /// </summary>
-        /// <returns>Event Binding for HandleHostOrder</returns>
-        private EventActivityBinder<AgvSaga, AgvStatusReceived> InitialAgvStatusReceivedHandler() =>
-            When(AgvStatusReceivedEvent)
-                .TransitionTo(Discovered)
-                .Then(c =>
-                    _logger.LogInformation("New AGV {AgvId}/{CorrelationId} discovered", c.Message.AgvId, c.Saga.CorrelationId))
-                // Lets have a auto-discover feature
-                .If(_ => AutoAcceptDiscoveredAgv, x => 
-                    x.Publish(c => new ReleaseAgv(c.Saga.CorrelationId))
-                );
+    /// <summary>
+    /// First message which creates a new agv saga instance
+    /// </summary>
+    /// <returns>Event Binding for HandleHostOrder</returns>
+    private EventActivityBinder<AgvSaga, AgvStatusReceived> InitialAgvStatusReceivedHandler() =>
+        When(AgvStatusReceivedEvent)
+            .TransitionTo(Discovered)
+            .Then(c =>
+                _logger.LogInformation("New AGV {AgvId}/{CorrelationId} discovered", c.Message.AgvId, c.Saga.CorrelationId))
+			.Publish(c => new RequestAgvData(c.Saga.CorrelationId, c.Message.AgvId))
+			.Publish(c => new RequestAgvGraph(c.Saga.CorrelationId, c.Message.AgvId))
+			// Lets have a auto-discover feature
+			.If(_ => AutoAcceptDiscoveredAgv, x => 
+                x.Publish(c => new ReleaseAgv(c.Saga.CorrelationId))
+            );
 
         private EventActivityBinder<AgvSaga, ReserveAgv> AcceptReserveAgvRequestHandler() =>
             When(ReserveAgvEvent)
@@ -133,19 +147,29 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
             When(AgvStatusReceivedEvent)
                 .Then(c =>
                     _logger.LogTrace("AgvStatus {AgvId}/{CorrelationId} received", c.Message.AgvId, c.Saga.CorrelationId))
-                .Then(c => c.Saga.AgvStatus = c.Message.AgvStatus);
+                .Then(c => c.Saga.AgvStatus = c.Message.AgvStatus)
+                .If(cond => cond.Saga.AgvData == null && cond.Saga.GetTimeSpanSinceLastUpdate_AgvData().TotalSeconds > AgvRequestTimeout, 
+	                x => x.Publish(m => new RequestAgvData(m.Saga.CorrelationId, m.Saga.AgvId)))
+                .If(cond => cond.Saga.AgvGraph == null && cond.Saga.GetTimeSpanSinceLastUpdate_AgvGraph().TotalSeconds > AgvRequestTimeout,
+	                x => x.Publish(m => new RequestAgvGraph(m.Saga.CorrelationId, m.Saga.AgvId)))
+                .If(cond => cond.Saga.AgvData != null && cond.Saga.GetTimeSpanSinceLastUpdate_AgvData().TotalSeconds > DailyRequestUpdateInterval,
+	                x => x.Publish(m => new RequestAgvData(m.Saga.CorrelationId, m.Saga.AgvId)))
+                .If(cond => cond.Saga.AgvGraph != null && cond.Saga.GetTimeSpanSinceLastUpdate_AgvGraph().TotalSeconds > DailyRequestUpdateInterval,
+	                x => x.Publish(m => new RequestAgvGraph(m.Saga.CorrelationId, m.Saga.AgvId)));
 
         private EventActivityBinder<AgvSaga, AgvGraphReceived> AgvGraphReceivedHandler() =>
-            When(AgvGraphReceivedEvent)
-                .Then(c =>
-                    _logger.LogTrace("AgvGraph {AgvId}/{CorrelationId} received", c.Message.AgvId, c.Saga.CorrelationId))
-                .Then(c => c.Saga.AgvGraph = c.Message.Graph);
+	        When(AgvGraphReceivedEvent)
+		        .Then(c =>
+			        _logger.LogTrace("AgvGraph {AgvId}/{CorrelationId} received", c.Message.AgvId, c.Saga.CorrelationId))
+		        .Then(c => c.Saga.AgvGraph = c.Message.Graph)
+		        .Then(c => c.Saga.AgvGraphReceivedLastTime = DateTime.Now);
 
         private EventActivityBinder<AgvSaga, AgvDataReceived> AgvDataReceivedHandler() =>
             When(AgvDataReceivedEvent)
                 .Then(c =>
                     _logger.LogTrace("AgvData {AgvId}/{CorrelationId} received", c.Message.AgvId, c.Saga.CorrelationId))
-                .Then(c => c.Saga.AgvData = c.Message.Data);
+                .Then(c => c.Saga.AgvData = c.Message.Data)
+                .Then(c => c.Saga.AgvDataReceivedLastTime = DateTime.Now);
 
         private EventActivityBinder<AgvSaga, ReleaseAgv> ReleaseAgvHandler() =>
             When(ReleaseAgvEvent)

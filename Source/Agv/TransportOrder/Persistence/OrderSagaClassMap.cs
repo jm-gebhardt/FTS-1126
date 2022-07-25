@@ -15,7 +15,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence
     {
         private const string OrderSagaTableName = "OrderSaga";
         private const string OrderTableName = "OrderSaga_Order";
-        private const int CurrenStateMaxLength = 64;
+        private const int CurrentStateMaxLength = 64;
         
         /// <summary>
         /// <see cref="OrderSaga" /> entity configurations 
@@ -28,8 +28,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence
             entity.ToTable(OrderSagaTableName);
             model.Entity<Order>().ToTable(OrderTableName);
 
-            // Restrict CurrenState length
-            entity.Property(x => x.CurrentState).HasMaxLength(CurrenStateMaxLength);
+            // Restrict CurrentState length
+            entity.Property(x => x.CurrentState).HasMaxLength(CurrentStateMaxLength);
             
             // Specify Primary Keys
             entity.HasKey(x => x.CorrelationId);

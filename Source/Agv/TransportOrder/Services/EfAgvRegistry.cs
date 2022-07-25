@@ -28,7 +28,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
                 .AsNoTracking(); // No need to track changes
 
         /// <summary>
-        /// 
+        /// Constructor of the EF Agv Registry
         /// </summary>
         /// <param name="dbContextFactory"></param>
         public EfAgvRegistry(IDbContextFactory<SagaPersistenceDbContext> dbContextFactory)
