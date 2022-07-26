@@ -1,0 +1,17 @@
+{
+  "SerialNumber": "AGV-01",
+  "ModificationDate": "2022-07-06T13:14:15",
+  "Stations": [
+    {
+      "Function": "Drop",
+      "Identifier": "ABCDEFGHIJKLMNOPQRSTUVWXY",
+      "Position": {
+        "Theta": 220.25,
+        "X": 889.25,
+        "Y": 735.25
+      },
+      "typeId": "ABCDEFGHIJKLMNOPQRSTUVWXYZAB"
+    }
+  ],
+  "RequestId": "c2db5d8b-4802-4d9c-81e5-f7da9ca26893"
+}

@@ -22,8 +22,8 @@
       ]
     },
     "RequestId": {
-      "type": "integer",
-      "description": "A unique request ID"
+      "type": "string",
+      "description": "The unique ID replied from the request."
     },
     "NumberOfNodes": {
       "type": "integer",

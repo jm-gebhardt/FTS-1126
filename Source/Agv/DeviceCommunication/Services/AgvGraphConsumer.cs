@@ -1,18 +1,15 @@
 ﻿using Microsoft.Extensions.Logging;
 using MassTransit;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Events;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
 {
     /// <summary>
-    /// Handle graph information from AGV.
+    /// Transform graph information from AGV into MassTransit message.
     /// </summary>
-    /// <remarks>
-    /// This is passed to the service AgvManagement to have kept DeviceCommunication as a simple proxy.
-    /// </remarks>
     [JetBrains.Annotations.UsedImplicitly]
     public class AgvGraphConsumer : IConsumer<MqttGraph>
     {
@@ -29,26 +26,16 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
         }
 
         /// <summary>
-        /// Consume graph message from AGV and transform this to an internal <see cref="AgvGraphReceived"/>.
+        /// Consume graph message from AGV and transform this into <see cref="GraphReceived"/> message.
         /// </summary>
         /// <exception cref="InvalidOperationException">Message content is invalid and cannot be processed.</exception>
         public async Task Consume(ConsumeContext<MqttGraph> context)
         {
-            var parser = new MessageParsers.GraphParser(context.Message);
-
-            try
-            {
-                await context.Publish(new AgvGraphReceived(
-                    correlationId: parser.SerialNumber.ToGuid(),
-                    agvId: parser.SerialNumber,
-                    graph: parser.Graph
-                ), context.CancellationToken);
-            }
-            catch (InvalidOperationException ex)
-            {
-                _logger.LogError(ex, "Message MqttGraph has invalid content: {Graph}", context.Message);
-                throw;
-            }
+            _logger.LogInformation("MqttGraph for {AgvId} received.", context.Message.SerialNumber);
+            await context.Publish(new GraphReceived(
+                correlationId: context.Message.SerialNumber.ToGuid(),
+                mqttGraph: context.Message
+            ), context.CancellationToken);
         }
     }
 }

@@ -14,8 +14,8 @@
 			]
 		},
 		"RequestId": {
-			"type": "integer",
-			"description": "A unique ID for the request"
+			"type": "string",
+			"description": "A unique ID for that request."
 		}
 	},
 	"required": [

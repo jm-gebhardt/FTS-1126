@@ -13,7 +13,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
     //Specifies the RabbitMq exchange where the message is published
     [EntityName("amq.topic")]
     //Specifies the topic where subscribers can receive the message
-    [RoutingKey("agv.order_event")]
+    [RoutingKey("agv.orderEvent")]
     public record MqttOrderEvent
     {
         /// <summary>

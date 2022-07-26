@@ -1,66 +1,88 @@
 ﻿{
 	"$schema": "https://json-schema.org/draft/2020-12/schema",
-    "title": "stationList",
-    "description": "A list of all stations",
-    "subtopic": "/stationList",
-    "type": "object",
-    "properties": {
-        "stations": {
-            "type": "array",
-            "items": [
-                {
-                    "type": "object",
-                    "properties": {
-                        "function": {
-                            "type": "string",
-                            "description": "The function of the station e.g. Pick/drop",
-                            "enum": [
-                                "Pick",
-                                "Drop",
-                                "Both",
-                                "Charge",
-                                "Park"
-                            ]
-                        },
-                        "identifier": {
-                            "type": "string",
-                            "description": "The unique identifier of the station"
-                        },
-                        "position": {
-                            "type": "object",
-                            "description": "The position and rotation of the station based on to the maps/graphs coordinate system",
-                            "properties": {
-                                "theta": {
-                                    "type": "number"
-                                },
-                                "x": {
-                                    "type": "number"
-                                },
-                                "y": {
-                                    "type": "number"
-                                }
-                            },
-                            "required": [
-                                "theta",
-                                "x",
-                                "y"
-                            ]
-                        },
-                        "type_id": {
-                            "type": "string"
-                        }
-                    },
-                    "required": [
-                        "function",
-                        "identifier",
-                        "position",
-                        "type_id"
-                    ]
-                }
-            ]
-        }
+  "title": "stationList",
+  "description": "A list of all stations",
+  "subtopic": "/stationList",
+  "type": "object",
+  "properties": {
+    "SerialNumber": {
+      "description": "Serial number of the AGV.",
+      "type": "string",
+      "examples": [
+        "1234-5678",
+        "AGV2034"
+      ]
     },
-    "required": [
-        "stations"
-    ]
+    "ModificationDate": {
+      "type": "string",
+      "description": "The modification date of the graph. Timestamp in ISO8601 format.",
+      "format": "date-time",
+      "examples": [
+        "1991-03-11T11:40:03.12Z"
+      ]
+    },
+    "RequestId": {
+      "type": "string",
+      "description": "The unique ID replied from the request."
+    },
+    "stations": {
+      "type": "array",
+      "items": [
+        {
+          "type": "object",
+          "properties": {
+            "function": {
+              "type": "string",
+              "description": "The function of the station e.g. Pick/drop",
+              "enum": [
+                "Pick",
+                "Drop",
+                "Both",
+                "Charge",
+                "Park"
+              ]
+            },
+            "identifier": {
+              "type": "string",
+              "description": "The unique identifier of the station"
+            },
+            "position": {
+              "type": "object",
+              "description": "The position and rotation of the station based on to the maps/graphs coordinate system",
+              "properties": {
+                "theta": {
+                  "type": "number"
+                },
+                "x": {
+                  "type": "number"
+                },
+                "y": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "theta",
+                "x",
+                "y"
+              ]
+            },
+            "typeId": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "function",
+            "identifier",
+            "position",
+            "typeId"
+          ]
+        }
+      ]
+    }
+  },
+  "required": [
+    "SerialNumber",
+    "ModificationDate",
+    "stations"
+  ]
 }

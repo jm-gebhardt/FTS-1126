@@ -6,13 +6,13 @@ using CommandLine;
 using Gebhardt.StoreWare.Agv.Common;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.States;
+using MassTransit;
 using MassTransit.Configuration;
 using MassTransit.Serialization;
 using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.States;
-using MassTransit;
 
 var initialLogger = Gebhardt.StoreWare.Agv.Common.Logging.InitialLogger.Create<Program>();
 try
@@ -57,8 +57,9 @@ try
 							//add consumers here
 							configurator.AddMqttConsumer<AgvStateConsumer>();
 							configurator.AddMqttConsumer<AgvGraphConsumer>();
+							configurator.AddMqttConsumer<AgvStationListConsumer>();
 							configurator.AddMqttConsumer<OrderEventConsumer>();
-							configurator.AddConsumer<AgvRequestGraphConsumer>();
+							configurator.AddSagaStateMachine<AgvGraphBuilderStateMachine, AgvGraphBuilderSaga>().InMemoryRepository();
 							configurator.AddConsumer<ExecuteTransportOrderConsumer>();
 						},
 
@@ -68,6 +69,7 @@ try
 							//for outgoing MQTT messages the message topology needs to be configured
 							configurator.ConfigureMessageTopology<MqttRequestGraph>();
 							configurator.ConfigureMessageTopology<MqttOrder>();
+							configurator.ConfigureMessageTopology<MqttRequestStationList>();
 
 							//for incoming MQTT messages the raw JSON serializer/deserializer needs to be added
 							var serializerFactory = new SystemTextJsonRawMessageSerializerFactory();

@@ -19,6 +19,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         public string SerialNumber { get; set; }
 
         /// <summary>
+        /// The unique ID replied from the request.
+        /// </summary>
+        public Guid? RequestId { get; set; }
+
+        /// <summary>
         /// The model name of the AGV
         /// </summary>
         public string Model { get; set; }
@@ -34,16 +39,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         public string? IpV4Address { get; set; }
 
         /// <summary>
-        /// The maximum velocity of the AGV in straight direction [m/s]
-        /// </summary>
-        public double MaxVelocityStraight { get; set; }
-
-        /// <summary>
-        /// The capacity of the AGVs battery in [Ah]
-        /// </summary>
-        public double BatteryCapacity { get; set; }
-
-        /// <summary>
         /// The length of the AGV in [m]
         /// </summary>
         public double? Length { get; set; }
@@ -54,9 +49,19 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         public double? Width { get; set; }
 
         /// <summary>
-        /// The maximum acceleration of the AGV [m/s^2]
+        /// The max. payload of the AGV in [kg]
         /// </summary>
-        public double? Acceleration { get; set; }
+        public long? Payload { get; set; }
+
+        /// <summary>
+        /// The capacity of the AGVs battery in [Ah]
+        /// </summary>
+        public double BatteryCapacity { get; set; }
+
+        /// <summary>
+        /// The maximum velocity of the AGV in straight direction [m/s]
+        /// </summary>
+        public double MaxVelocityStraight { get; set; }
 
         /// <summary>
         /// The maximum velocity of the AGV in while turning [m/s]
@@ -69,9 +74,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         public double? MaxVelocityTurnOnSpot { get; set; }
 
         /// <summary>
-        /// The max. payload of the AGV in [kg]
+        /// The maximum acceleration of the AGV [m/s^2]
         /// </summary>
-        public long? Payload { get; set; }
+        public double? Acceleration { get; set; }
 
         /// <summary>
         /// The list of sensors in the agv

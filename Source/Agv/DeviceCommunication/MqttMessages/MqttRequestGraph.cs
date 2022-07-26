@@ -10,7 +10,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
     /// See "request_graph.schema".</para></summary>
 	[JetBrains.Annotations.PublicAPI]
     [EntityName("amq.topic")]           // Specifies the RabbitMq exchange where the message is published
-    [RoutingKey("agv.request_graph")]   // Specifies the topic where subscribers can receive the message
+    [RoutingKey("agv.requestGraph")]   // Specifies the topic where subscribers can receive the message
     public record MqttRequestGraph
     {
         /// <summary>
@@ -19,7 +19,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         public string SerialNumber { get; set; }
 
         /// <summary>
-        /// A unique ID for the request
+        /// A unique ID for that request.
         /// </summary>
         public Guid RequestId { get; set; }
 

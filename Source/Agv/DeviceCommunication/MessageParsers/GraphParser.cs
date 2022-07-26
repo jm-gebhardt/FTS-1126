@@ -16,6 +16,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
         private bool _considerVelocity;
         private List<AgvGraph.Node>? _nodes;
         private List<AgvGraph.Edge>? _edges;
+        private float _overallDistance;
+        private float _overallDuration;
 
 
         /// <summary>
@@ -29,17 +31,14 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
 
 
         /// <summary>
-        /// Calculate metric/costs for the <paramref name="edge"/>.
+        /// Calculate distance of the <paramref name="edge"/>.
         /// </summary>
         /// <param name="edge">The edge for which the metric will be calculated.</param>
         /// <param name="nodes">List of nodes e.g. required for getting coordinates.</param>
-        /// <param name="considerVelocity">When set to true the calculation expects to have a velocity
-        /// and therefore metric is somehow time based.
-        /// When set to false just the distance is used as metric.</param>
-        /// <returns>Metric in a kind of distance/costs to travel this edge (unitless quantifier).</returns>
+        /// <returns>Distance of the edge.</returns>
         /// <exception cref="InvalidOperationException">Nodes addressed by the edge cannot be found
         /// in the nodes listing or isn't unique..</exception>
-        private static float CalculateMetric(Edge edge, Node[] nodes, bool considerVelocity)
+        private static float CalculateDistance(Edge edge, Node[] nodes)
         {
             var start = nodes.SingleOrDefault(x => x.NodeId == edge.StartId);
             var end = nodes.SingleOrDefault(x => x.NodeId == edge.EndId);
@@ -52,16 +51,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
             var vectorStart = new System.Numerics.Vector3(start.X, start.Y, start.Z ?? 0f);
             var vectorEnd = new System.Numerics.Vector3(end.X, end.Y, end.Z ?? 0f);
 
-            if (considerVelocity)
-            {
-                // Calculate time based costs by distance divided by velocity.
-                return (vectorStart - vectorEnd).Length() / edge.MaxVelocity;
-            }
-            else
-            {
-                // Calculate costs based on distance.
-                return (vectorStart - vectorEnd).Length();
-            }
+            return (vectorStart - vectorEnd).Length();
         }
 
         /// <summary>
@@ -81,6 +71,24 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
                 _considerVelocity = _graph.Edges!.All(x => x.MaxVelocity > 0.00001f); // Precision of single is about 6 to 9 digits.
             }
 
+        }
+
+        /// <summary>
+        /// Helper to create new edge from AGV edge and calculate average graph attributes.
+        /// </summary>
+        private void BuildEdge(Edge edge, float metric, float distance, bool swap = false)
+        {
+            _edges!.Add(new AgvGraph.Edge(!swap ? edge.StartId.ToString() : edge.EndId.ToString(),
+                                          !swap ? edge.EndId.ToString() : edge.StartId.ToString())
+            {
+                Metric = metric
+            });
+            if (_considerVelocity)
+            {
+                _overallDistance += distance;
+                // No division by zero due to _considerVelocity.
+                _overallDuration += distance / edge.MaxVelocity;
+            }
         }
 
         /// <summary>
@@ -104,20 +112,25 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
 
                 foreach (var edge in _graph.Edges!)
                 {
-                    float metric = CalculateMetric(edge, _graph.Nodes!, _considerVelocity);
-
-                    _edges.Add(new AgvGraph.Edge(edge.StartId.ToString(), edge.EndId.ToString())
+                    float distance = CalculateDistance(edge, _graph.Nodes!);
+                    float metric;
+                    if (_considerVelocity)
                     {
-                        Metric = metric
-                    });
+                        // Calculate time based costs by distance divided by velocity
+                        // (no division by zero due to _considerVelocity).
+                        metric = distance / edge.MaxVelocity;
+                    }
+                    else
+                    {
+                        // Calculate costs based on distance.
+                        metric = distance;
+                    }
 
+                    BuildEdge(edge, metric, distance);
                     if (edge.Bidirectional)
                     {
                         // Build reversed edge by swapping From and To.
-                        _edges.Add(new AgvGraph.Edge(edge.EndId.ToString(), edge.StartId.ToString())
-                        {
-                            Metric = metric
-                        });
+                        BuildEdge(edge, metric, distance, true);
                     }
                 }
             }
@@ -151,36 +164,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
                         Y = node.Y,
                         Z = node.Z ?? 0f
                     });
-                    if (node.Attributes != null)
-                    {
-                        // Add stations beside end nodes as internal nodes.
-                        foreach (var attr in node.Attributes)
-                        {
-                            Node.WellKnownAttributes unused;
-                            if (Enum.TryParse(attr.Key, false, out unused))
-                            {
-                                _nodes.Add(new AgvGraph.Node(attr.Value)
-                                {
-                                    Enabled = true,
-
-                                    Type = AgvGraph.NodeType.Station,
-                                    X = node.X,
-                                    Y = node.Y,
-                                    Z = node.Z ?? 0f
-                                });
-
-                                // Add corresponding internal edges
-                                _edges!.Add(new AgvGraph.Edge(attr.Value, node.NodeId.ToString())
-                                {
-                                    Metric = 0f
-                                });
-                                _edges!.Add(new AgvGraph.Edge(node.NodeId.ToString(), attr.Value)
-                                {
-                                    Metric = 0f
-                                });
-                            }
-                        }
-                    }
                 }
             }
         }
@@ -214,6 +197,25 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
             {
                 ParseVelocity();
                 return _considerVelocity;
+            }
+        }
+
+        /// <summary>
+        /// Returns the average max. velocity considering all edges.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Edges are not valid (see <see cref="EdgesValid"/>) or velocity information missing.</exception>
+        [JetBrains.Annotations.PublicAPI]
+        public float AverageVelocity
+        {
+            get
+            {
+                ParseEdges();
+                if (!_considerVelocity)
+                {
+                    throw new InvalidOperationException("Velocity information missing.");
+                }
+                // No division by zero due to _considerVelocity.
+                return _overallDistance / _overallDuration;
             }
         }
 
@@ -267,8 +269,10 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
         }
 
         /// <summary>
-        /// Create AgvGraph
+        /// Create AgvGraph.
+        /// <para>Performs all required parsing and validation.</para>
         /// </summary>
+        /// <exception cref="InvalidOperationException">Failed due to parsing or validation issue.</exception>
         public AgvGraph Graph =>
             new(SerialNumber.ToGuid(),
                 Nodes.ToArray(),

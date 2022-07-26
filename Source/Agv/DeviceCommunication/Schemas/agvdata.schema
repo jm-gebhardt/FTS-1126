@@ -13,21 +13,9 @@
 				"AGV2034"
 			]
 		},
-		"IpV4Address": {
+		"RequestId": {
 			"type": "string",
-			"description": "The IP Address of the AGV",
-			"examples": [
-				"10.0.0.23",
-				"192.168.178.123"
-			]
-		},
-		"Length": {
-			"type": "number",
-			"description": "The length of the AGV in [m]"
-		},
-		"Width": {
-			"type": "number",
-			"description": "The width of the AGV in [m]"
+			"description": "The unique ID replied from the request."
 		},
 		"Model": {
 			"type": "string",
@@ -44,6 +32,22 @@
 				"Bauform1",
 				"BF1"
 			]
+		},
+		"IpV4Address": {
+			"type": "string",
+			"description": "The IP Address of the AGV",
+			"examples": [
+				"10.0.0.23",
+				"192.168.178.123"
+			]
+		},
+		"Length": {
+			"type": "number",
+			"description": "The length of the AGV in [m]"
+		},
+		"Width": {
+			"type": "number",
+			"description": "The width of the AGV in [m]"
 		},
 		"Payload": {
 			"type": "integer",

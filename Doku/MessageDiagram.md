@@ -29,11 +29,19 @@ sequenceDiagram
 
     AgvManagement->>DeviceCommunication: RequestAgvGraph
     activate DeviceCommunication
-    DeviceCommunication->>(AGV): IRequestGraph
+    DeviceCommunication->>(AGV): MqttRequestStationList
     deactivate DeviceCommunication
     activate (AGV)
-    (AGV)->>DeviceCommunication: IGraph
+    (AGV)->>DeviceCommunication: MqttStationList
     deactivate (AGV)
+    DeviceCommunication->>DeviceCommunication: StationList
+    activate DeviceCommunication
+    DeviceCommunication->>(AGV): MqttRequestGraph
+    deactivate DeviceCommunication
+    activate (AGV)
+    (AGV)->>DeviceCommunication: MqttGraph
+    deactivate (AGV)
+    DeviceCommunication->>DeviceCommunication: Graph
     activate DeviceCommunication
     DeviceCommunication->>AgvManagement: AgvGraphReceived
     deactivate DeviceCommunication

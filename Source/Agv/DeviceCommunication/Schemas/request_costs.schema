@@ -14,8 +14,8 @@
 			]
 		},
 		"RequestId": {
-			"type": "integer",
-			"description": "A unique request ID"
+			"type": "string",
+			"description": "A unique ID for that request."
 		},
 		"stations": {
 			"type": "object",
