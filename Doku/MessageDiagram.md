@@ -10,18 +10,18 @@ sequenceDiagram
 
     Note left of (AGV): TAR: AgvId == SerialNumber
 
-    (AGV)->>DeviceCommunication: IState
+    (AGV)->>DeviceCommunication: State
     activate DeviceCommunication
-    DeviceCommunication->>AgvManagement: IAgvStatusReceived
+    DeviceCommunication->>AgvManagement: AgvStatusReceived
     deactivate DeviceCommunication
     AgvManagement->>AgvManagement: ReleaseAgv
 
     AgvManagement->>DeviceCommunication: RequestAgvData
     activate DeviceCommunication
-    DeviceCommunication->>(AGV): IRequestData
+    DeviceCommunication->>(AGV): RequestData
     deactivate DeviceCommunication
     activate (AGV)
-    (AGV)->>DeviceCommunication: IAgvData
+    (AGV)->>DeviceCommunication: AgvData
     deactivate (AGV)
     activate DeviceCommunication
     DeviceCommunication->>AgvManagement: AgvDataReceived
@@ -34,69 +34,69 @@ sequenceDiagram
     activate (AGV)
     (AGV)->>DeviceCommunication: MqttStationList
     deactivate (AGV)
-    DeviceCommunication->>DeviceCommunication: StationList
+    DeviceCommunication->>DeviceCommunication: StationListReceived
     activate DeviceCommunication
     DeviceCommunication->>(AGV): MqttRequestGraph
     deactivate DeviceCommunication
     activate (AGV)
     (AGV)->>DeviceCommunication: MqttGraph
     deactivate (AGV)
-    DeviceCommunication->>DeviceCommunication: Graph
+    DeviceCommunication->>DeviceCommunication: GraphReceived
     activate DeviceCommunication
     DeviceCommunication->>AgvManagement: AgvGraphReceived
     deactivate DeviceCommunication
 
     Note over WCSCommunication,DeviceCommunication: Handle HostOrder
 
-    WCSCommunication->>TransportOrder: IHandleHostOrder
+    WCSCommunication->>TransportOrder: HandleHostOrder
 
-    TransportOrder->>AgvManagement: IAssignAgv
+    TransportOrder->>AgvManagement: AssignAgv
 
-    AgvManagement->>TransportOrder: IAgvAssignSucceeded
+    AgvManagement->>TransportOrder: AgvAssignmentSucceeded
 
-    TransportOrder->>DeviceCommunication: IExecuteTransportOrder
+    TransportOrder->>DeviceCommunication: ExecuteTransportOrder
 
-    DeviceCommunication->>TransportOrder: ITransportOrderStarted
+    DeviceCommunication->>TransportOrder: TransportOrderStarted
 
-    TransportOrder->>WCSCommunication: IHostOrderStarted
+    TransportOrder->>WCSCommunication: HostOrderStarted
 
-    DeviceCommunication->>TransportOrder: ITransportOrderPickCompleted
+    DeviceCommunication->>TransportOrder: TransportOrderPickCompleted
 
     alt success
-        DeviceCommunication->>TransportOrder: ITransportOrderCompleted
-        TransportOrder->>WCSCommunication: IHostOrderHandlingSucceeded
+        DeviceCommunication->>TransportOrder: TransportOrderCompleted
+        TransportOrder->>WCSCommunication: HostOrderHandlingSucceeded
     else failed
-        DeviceCommunication->>TransportOrder: ITransportOrderFailed
+        DeviceCommunication->>TransportOrder: TransportOrderFailed
         alt No User input
             TransportOrder->>TransportOrder: Wait for user input
         else User input "NOK"
-            TransportOrder->>WCSCommunication: IHostOrderHandlingFailed
+            TransportOrder->>WCSCommunication: HostOrderHandlingFailed
         end
     end
 
     Note over WCSCommunication,DeviceCommunication : Cancel HostOrder
 
-    WCSCommunication->>TransportOrder: ICancelHostOrder
-    TransportOrder->>DeviceCommunication: ICancelTransportOrder
+    WCSCommunication->>TransportOrder: CancelHostOrder
+    TransportOrder->>DeviceCommunication: CancelTransportOrder
 
     alt success
-        DeviceCommunication->>TransportOrder: ITransportOrderCancelSucceeded 
-        TransportOrder->>WCSCommunication: IHostOrderCancelSucceeded
+        DeviceCommunication->>TransportOrder: TransportOrderCancelSucceeded 
+        TransportOrder->>WCSCommunication: HostOrderCancelSucceeded
     else failed
-        DeviceCommunication->>TransportOrder: ITransportOrderCancelFailed
-        TransportOrder->>WCSCommunication: IHostOrderCancelFailed
+        DeviceCommunication->>TransportOrder: TransportOrderCancelFailed
+        TransportOrder->>WCSCommunication: HostOrderCancelFailed
     end
 
     Note over WCSCommunication,DeviceCommunication : Update HostOrder
 
-    WCSCommunication->>TransportOrder: IUpdateHostOrder
+    WCSCommunication->>TransportOrder: UpdateHostOrder
 
-    TransportOrder->>DeviceCommunication: IUpdateTransportOrder
+    TransportOrder->>DeviceCommunication: UpdateTransportOrder
     alt success
-        DeviceCommunication->>TransportOrder: ITransportOrderUpdateSucceeded
-        TransportOrder->>WCSCommunication: IHostOrderUpdateSucceeded
+        DeviceCommunication->>TransportOrder: TransportOrderUpdateSucceeded
+        TransportOrder->>WCSCommunication: HostOrderUpdateSucceeded
     else failed
-        DeviceCommunication->>TransportOrder: ITransportOrderUpdateFailed
-        TransportOrder->>WCSCommunication: IHostOrderUpdateFailed
+        DeviceCommunication->>TransportOrder: TransportOrderUpdateFailed
+        TransportOrder->>WCSCommunication: HostOrderUpdateFailed
     end
 :::
