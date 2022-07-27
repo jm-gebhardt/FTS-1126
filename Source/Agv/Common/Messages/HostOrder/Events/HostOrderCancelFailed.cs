@@ -1,4 +1,4 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Definitions;
+﻿
 using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor

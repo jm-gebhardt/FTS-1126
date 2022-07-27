@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using MassTransit;
-using Gebhardt.StoreWare.Agv.Common.Definitions;
 using Gebhardt.StoreWare.Agv.Common.Messages;
 using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Commands;
 using Gebhardt.StoreWare.Agv.Common.Services;

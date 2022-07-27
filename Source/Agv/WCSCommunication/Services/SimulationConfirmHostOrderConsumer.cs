@@ -8,7 +8,8 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
 	/// Simulate finishing of host orders
 	/// </summary>
 	public class SimulationConfirmHostOrderConsumer :
-        IConsumer<HostOrderHandlingSucceeded>
+        IConsumer<HostOrderHandlingSucceeded>,
+        IConsumer<HostOrderHandlingFailed>
     {
         private readonly ILogger<SimulationConfirmHostOrderConsumer> _logger;
 
@@ -34,6 +35,21 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
                 _logger.LogInformation("HostOrder handling succeeded for OrderId {OrderId} / {CorrelationId}", 
                     context.Message.OrderId, context.Message.CorrelationId
                     );
+            });
+        }
+        
+        /// <summary>
+        /// Simulation: Handle message <see cref="HostOrderHandlingFailed"/>.
+        /// <para>Logs received message and then discards it.</para>
+        /// </summary>
+        /// <param name="context">Context of the consumer wrapping details surrounding the inbound message.</param>
+        public async Task Consume(ConsumeContext<HostOrderHandlingFailed> context)
+        {
+            await Task.Run(() => // Await Task to satisfy async
+            {
+                _logger.LogInformation("HostOrder handling failed for OrderId {OrderId} / {CorrelationId}", 
+                    context.Message.OrderId, context.Message.CorrelationId
+                );
             });
         }
     }

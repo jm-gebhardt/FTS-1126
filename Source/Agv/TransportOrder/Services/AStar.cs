@@ -150,7 +150,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// </summary>
         /// <param name="current"></param>
         /// <param name="destination"></param>
-        /// <exception cref="KeyNotFoundException">Node not found in node collection.</exception>
         private void ExpandNode(ANode current, ANode destination)
         {
             foreach (var edge in _edges.Where(x => x.From == current.Node.Id))
@@ -189,13 +188,17 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// <param name="source">Node ID of the source.</param>
         /// <param name="destination">Node ID of the destination.</param>
         /// <returns>Returns the route as a comparable value or null when no path found.</returns>
-        /// <exception cref="KeyNotFoundException">Source or destination node not found.</exception>
         public IGraphAlgorithm.Route? CalculateRoute(string source, string destination)
         {
             _openList.Clear();
             _closedList.Clear();
             _nodes.Values.ToList().ForEach(x => x.Reset());
-
+            
+            if (!_nodes.ContainsKey(source) || !_nodes.ContainsKey(destination))
+            {
+                return null;
+            }
+            
             var start = _nodes[source];
             var end = _nodes[destination];
 

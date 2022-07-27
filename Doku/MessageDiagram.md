@@ -54,6 +54,8 @@ sequenceDiagram
 
     AgvManagement->>TransportOrder: AgvAssignmentSucceeded
 
+    AgvManagement->>TransportOrder: AgvAssignmentFailed
+
     TransportOrder->>DeviceCommunication: ExecuteTransportOrder
 
     DeviceCommunication->>TransportOrder: TransportOrderStarted

@@ -29,7 +29,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
 
         /// <summary>
         /// Returns the graph algorithm addressed by correlation ID from <paramref name="agv"/>.
-        /// When no such algorithm exists the factory tries to create such an algorithm.
+        /// When no such algorithm exists, the factory tries to create such an algorithm.
         /// </summary>
         /// <param name="agv"></param>
         /// <returns></returns>
@@ -77,45 +77,17 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// <param name="agvDataEnumeration"></param>
         /// <param name="order"></param>
         /// <returns>Returns the correlation ID chosen or null when no fitting AGV could be found.</returns>
-        /// <exception cref="ArgumentException">AGV enumeration is empty or missing or
-        /// order information is missing or
-        /// AGV graph within AGV data is missing.</exception>
+        /// <exception cref="ArgumentException">Thrown if <see cref="Order.Source"/> or <see cref="Order.Destination"/> are empty</exception>
         /// <exception cref="MissingMethodException">No fitting constructor for the graph algorithm found.</exception>
         /// <exception cref="System.Reflection.TargetInvocationException">The constructor of the algorithm has thrown an exception.</exception>
         [JetBrains.Annotations.PublicAPI]
         public KeyValuePair<Guid, IGraphAlgorithm.Route>? ChooseAgv(IEnumerable<IAgv> agvDataEnumeration, Order order)
         {
-            if (agvDataEnumeration == null)
-            {
-                throw new ArgumentException("AGV enumeration is missing.");
-            }
-            if (order == null)
-            {
-                throw new ArgumentException("Order information is missing.");
-            }
-            if (string.IsNullOrEmpty(order.Source))
-            {
-                throw new ArgumentException("Source is missing in order.");
-            }
-            if (string.IsNullOrEmpty(order.Destination))
-            {
-                throw new ArgumentException("Destination is missing in order.");
-            }
-
             var routeListing = new Dictionary<Guid, IGraphAlgorithm.Route>();
 
             foreach (var agv in agvDataEnumeration)
             {
-                var algorithm = AlgorithmFactory(agv);
-                IGraphAlgorithm.Route? route;
-                if (agv.AgvStatus != null && !string.IsNullOrEmpty(agv.AgvStatus.LastNodeId))
-                {
-	                route = algorithm.CalculateRoute(agv.AgvStatus.LastNodeId, order.Source, order.Destination);
-                }
-                else
-                {
-	                route = algorithm.CalculateRoute(order.Source, order.Destination);
-                }
+                var route = CalculateRoute(agv, order);
                 if (route != null)
                 {
                     routeListing.Add(agv.CorrelationId, route);
@@ -126,6 +98,33 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
                 return null;
             }
             return routeListing.MinBy(x => x.Value);
+        }
+
+        /// <summary>
+        /// Calculate Route for the given AGV and order
+        /// </summary>
+        /// <param name="agv"></param>
+        /// <param name="order"></param>
+        /// <exception cref="ArgumentException">Thrown if <see cref="Order.Source"/> or <see cref="Order.Destination"/> are empty</exception>
+        /// <returns>Route for the agv to process the order. Null if the route does not exist</returns>
+        public IGraphAlgorithm.Route? CalculateRoute(IAgv agv, Order order)
+        {
+            if (string.IsNullOrEmpty(order.Source))
+            {
+                throw new ArgumentException("Source is missing in order.");
+            }
+            if (string.IsNullOrEmpty(order.Destination))
+            {
+                throw new ArgumentException("Destination is missing in order.");
+            }
+            
+            var algorithm = AlgorithmFactory(agv);
+            if (agv.AgvStatus != null && !string.IsNullOrEmpty(agv.AgvStatus.LastNodeId))
+            {
+                return algorithm.CalculateRoute(agv.AgvStatus.LastNodeId, order.Source, order.Destination);
+            }
+            
+            return algorithm.CalculateRoute(order.Source, order.Destination);
         }
     }
 }

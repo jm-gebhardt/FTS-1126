@@ -1,5 +1,4 @@
 using System.Reflection;
-using System.Collections.Concurrent;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -10,7 +9,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.OpenApi.Models;
 using CommandLine;
 using Gebhardt.StoreWare.Agv.Common;
-using Gebhardt.StoreWare.Agv.Common.Messages;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.TransportOrder.CmdOptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence;
@@ -28,7 +26,6 @@ try
             hostBuilder = GebhardtStartup.CreateHostBuilder(args)
                 .ConfigureServices((context, services) =>
                 {
-                    services.AddSingleton<ConcurrentQueue<KeyValuePair<Guid, Order>>>();
                     services.AddTransient<IAgvRegistry, EfAgvRegistry>();
 
                     services.AddDbContextFactory<SagaPersistenceDbContext>(builder =>

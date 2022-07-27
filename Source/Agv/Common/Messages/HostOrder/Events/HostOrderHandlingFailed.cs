@@ -1,5 +1,4 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Definitions;
-using MassTransit;
+﻿using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
 namespace Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events

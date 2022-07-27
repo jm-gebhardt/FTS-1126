@@ -272,14 +272,16 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         }
 
         /// <summary>
-        /// Test path to non existent node.
+        /// Test path to or from non existent node.
         /// </summary>
         [TestMethod]
-        [ExpectedException(typeof(KeyNotFoundException))]
-        public void Test_AStarGrid_NonExistentNode_ExpectException()
+        [DataRow("01/01", "XX/XX")]
+        [DataRow("YY/YY", "01/01")]
+        [DataRow("YY/YY", "XX/XX")]
+        public void Test_AStarGrid_NonExistentSourceOrDestination_NoPath(string source, string destination)
         {
             var aStar = new AStar(_grid!);
-            aStar.CalculateRoute("01/01", "49/24");
+            Assert.IsNull(aStar.CalculateRoute(source, destination));
         }
 
         /// <summary>

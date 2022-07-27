@@ -22,6 +22,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// State when Order has been received
         /// </summary>
         public State OrderReceived { get; private set; } = default!;
+        
+        /// <summary>
+        /// State when the OrderFailed has been received
+        /// </summary>
+        public State OrderFailed { get; private set; } = default!;
 
         /// <summary>
         /// State when HandleHostOrder has been received and AssignAgv has been published
@@ -32,11 +37,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// State when the AgvAssignmentSucceeded has been received and ExecuteTransportOrder has been published
         /// </summary>
         public State TransportOrderSend { get; private set; } = default!;
-
-        /// <summary>
-        /// State when the TransportOrderFailed has been received
-        /// </summary>
-        public State TransportOrderFailed { get; private set; } = default!;
 
         /// <summary>
         /// HandleHostOrder was received. This is the Initial Event of the OrderStateMachine
@@ -64,7 +64,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         public Event<TransportOrderCompleted> TransportOrderCompletedEvent { get; private set; } = default!;
 
         /// <summary>
-        /// TransportOrderFailed was received. This is a final event
+        /// OrderFailed was received. This is a final event
         /// </summary>
         public Event<TransportOrderFailed> TransportOrderFailedEvent { get; private set; } = default!;
 
@@ -144,10 +144,17 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         private EventActivityBinder<OrderSaga, AgvAssignmentFailed> SetAgvAssignFailedHandler() =>
             When(AgvAssignFailedEvent)
                 .Then(c =>
-                    _logger.LogInformation("Order {OrderId}/{CorrelationId}, AGV assignment failed",
-                        c.Saga.Order.OrderId, c.Saga.CorrelationId)
+                    _logger.LogInformation("Order {OrderId}/{CorrelationId}, AGV assignment failed {Error}",
+                        c.Saga.Order.OrderId, c.Saga.CorrelationId, c.Message.Error)
                 )
-                .TransitionTo(OrderReceived);
+                .IfElse(c => c.Message.Error == AgvAssignmentErrorCode.NoIdleAgv,
+                    c => c.TransitionTo(OrderReceived),
+                    HostOrderInvalid
+                );
+
+        private EventActivityBinder<OrderSaga, AgvAssignmentFailed> HostOrderInvalid(EventActivityBinder<OrderSaga, AgvAssignmentFailed> context) =>
+            context.Publish( c => new HostOrderHandlingFailed(c.Saga.CorrelationId, c.Saga.Order.OrderId, HostOrderErrorCode.Any))
+                .TransitionTo(OrderFailed);
 
         /// <summary>
         /// Handler for AgvAssignmentSucceeded
@@ -181,14 +188,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         }
 
         /// <summary>
-        /// Handler for TransportOrderFailed
+        /// Handler for OrderFailed
         /// </summary>
-        /// <returns>Event Binding for TransportOrderFailed</returns>
+        /// <returns>Event Binding for OrderFailed</returns>
         private EventActivityBinder<OrderSaga, TransportOrderFailed> SetTransportOrderFailedHandler() =>
             When(TransportOrderFailedEvent)
                 .Then(c =>
                     _logger.LogInformation("Order {OrderId}/{CorrelationId} has failed", c.Saga.Order.OrderId, c.Saga.CorrelationId)
                  )
-                .TransitionTo(TransportOrderFailed);
+                .TransitionTo(OrderFailed);
     }
 }

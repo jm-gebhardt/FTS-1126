@@ -62,8 +62,10 @@ namespace Gebhardt.StoreWare.Agv.Common
             SystemTextJsonMessageSerializer.Options.Converters.Add(new JsonStringEnumConverter());
             
             var massTransitConfig = config.GetRequiredSection(ConfigSectionName).Get<MassTransitConfiguration>();
+
             services.AddMassTransit(x =>
             {
+
                 x.UsingRabbitMq((context, cfg) =>
                 {
                     rabbitMqConfiguration?.Invoke(context, cfg);

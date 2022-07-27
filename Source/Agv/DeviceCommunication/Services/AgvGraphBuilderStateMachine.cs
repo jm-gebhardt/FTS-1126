@@ -74,7 +74,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
                                 // (for testing)
                                 c.Message.MqttStationList.RequestId == Guid.Parse(InternalTestingRequestId) || c.Saga.CorrelationId == Guid.Parse(InternalTestingRequestId),
                     // The response (station list) correlates to the request 
-                    t => t.Then(_ => _logger.LogDebug("Station list received does match the request."))
+                    t => t.Then(_ => _logger.LogDebug("Station list received does match the request"))
                             .TransitionTo(StationListReceived)
                             // Store the station list in the saga instance.
                             .Then(c => c.Saga.MqttStationList = c.Message.MqttStationList)
@@ -83,7 +83,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
                             // Request the graph.
                             .Then(c => c.PublishMqtt(new MqttMessages.MqttRequestGraph(c.Message.MqttStationList.SerialNumber, c.Saga.CurrentMqttRequestId), null)),
                     // The response does not correlate to the request
-                    e => e.Then(_ => _logger.LogWarning("Station list received does not match the request.")));
+                    e => e.Then(_ => _logger.LogWarning("Station list received does not match the request")));
 
         private EventActivityBinder<AgvGraphBuilderSaga, GraphReceived> GraphHandler() =>
             When(GraphEvent)
@@ -92,7 +92,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
                                 // (for testing)
                                 c.Message.MqttGraph.RequestId == Guid.Parse(InternalTestingRequestId) || c.Saga.CorrelationId == Guid.Parse(InternalTestingRequestId),
                     // The response (station list) correlates to the request 
-                    t => t.Then(_ => _logger.LogDebug("Graph received does match the request."))
+                    t => t.Then(_ => _logger.LogDebug("Graph received does match the request"))
                             // Store the graph in the saga instance.
                             .Then(c => c.Saga.MqttGraph = c.Message.MqttGraph)
                             // Build the internal graph and store in the sage instacne.
@@ -101,7 +101,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
                             .Then(c => c.Publish(new Common.Messages.AgvManagement.Events.AgvGraphReceived(c.Saga.CorrelationId, c.Message.MqttGraph.SerialNumber, c.Saga.AgvGraph!)))
                             .Finalize(),
                     // The response does not correlate to the request
-                    e => e.Then(_ => _logger.LogWarning("Graph received does not match the request.")))
+                    e => e.Then(_ => _logger.LogWarning("Graph received does not match the request")))
                             .Finalize();
 
 

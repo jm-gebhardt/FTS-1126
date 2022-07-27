@@ -31,7 +31,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
         /// <exception cref="InvalidOperationException">Message content is invalid and cannot be processed.</exception>
         public async Task Consume(ConsumeContext<MqttGraph> context)
         {
-            _logger.LogInformation("MqttGraph for {AgvId} received.", context.Message.SerialNumber);
+            _logger.LogInformation("MqttGraph for {AgvId} received", context.Message.SerialNumber);
             await context.Publish(new GraphReceived(
                 correlationId: context.Message.SerialNumber.ToGuid(),
                 mqttGraph: context.Message
