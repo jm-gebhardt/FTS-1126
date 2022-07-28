@@ -129,9 +129,8 @@ services:
       - ./Config/rabbitmq/rabbitmq.docker.conf:/etc/rabbitmq/rabbitmq.conf
       - ./Config/rabbitmq/plugins/rabbitmq_delayed_message_exchange-3.10.2.ez:/opt/rabbitmq/plugins/rabbitmq_delayed_message_exchange-3.10.2.ez
     command: >
-      sh -c "rabbitmq-plugins enable rabbitmq_mqtt rabbitmq_prometheus rabbitmq_delayed_message_exchange &&
+      sh -c "rabbitmq-plugins enable rabbitmq_mqtt rabbitmq_auth_mechanism_ssl rabbitmq_prometheus rabbitmq_delayed_message_exchange &&
              rabbitmq-server"
-#     rabbitmq-plugins enable rabbitmq_delayed_message_exchange &&
     restart: unless-stopped
     depends_on:
       fluent:
