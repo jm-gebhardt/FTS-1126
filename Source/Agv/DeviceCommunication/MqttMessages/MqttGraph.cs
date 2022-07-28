@@ -53,13 +53,21 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         /// <summary>
         /// Initializes a new instance of <see cref="MqttGraph"/>
         /// </summary>
+        /// <param name="serialNumber">Serial number of the AGV.</param>
+        /// <param name="modificationDate">Modification date of the graph. Timestamp in ISO8601 format.</param>
+        /// <param name="numberOfNodes">Total amount of nodes in the graph.</param>
+        /// <param name="numberOfEdges">Total amount of edges in the graph.</param>
+        /// <param name="nodes">List of nodes.</param>
+        /// <param name="edges">List of edges.</param>
+        /// <param name="requestId">The unique ID replied from the request.</param>
         public MqttGraph(
             string serialNumber,
             DateTimeOffset modificationDate,
             int numberOfNodes,
             int numberOfEdges,
             Node[] nodes,
-            Edge[] edges)
+            Edge[] edges,
+            Guid? requestId = null)
         {
             SerialNumber = serialNumber;
             ModificationDate = modificationDate;
@@ -67,6 +75,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
             NumberOfEdges = numberOfEdges;
             Nodes = nodes;
             Edges = edges;
+            RequestId = requestId;
         }
     }
 

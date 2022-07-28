@@ -61,28 +61,53 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services
         [TestMethod]
         public async Task When_AllStatesPassedByReceive_ValidGraphPublished()
         {
-            var correlationId = Guid.Parse(AgvGraphBuilderStateMachine.InternalTestingRequestId);
+            var correlationId = AgvTestIdentifier01.ToGuid();
 
             var fixture = new StateMachineTestFixture<AgvGraphBuilderStateMachine, AgvGraphBuilderSaga>();
 
+            // Publish RequestAgvGraph ...
             await fixture.TestHarness.Bus.Publish(new RequestAgvGraph(correlationId, AgvTestIdentifier01));
+            // ... expect it's gonna be consumed by the statemachine.
             Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<RequestAgvGraph>());
 
+            // Get the instance which correlates to the AGV.
             var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<MqttRequestStationList>());
-            Assert.AreEqual(fixture.SagaHarness.StateMachine.RequestAgvGraphReceived, saga.CurrentState);
 
+            // Ensure that state machine did send MqttRequestStationList ...
+            Assert.IsTrue(await fixture.TestHarness.Published.Any<MqttRequestStationList>());
+            // ... and the current state is RequestAgvGraphReceived.
+            Assert.AreEqual(fixture.SagaHarness.StateMachine.RequestAgvGraphReceived, saga.CurrentState);
+            Assert.IsNull(saga.MqttStationList);
+            Assert.IsNull(saga.MqttGraph);
+            Assert.IsNull(saga.AgvGraph);
+
+            var requestIdList = saga.CurrentMqttRequestId; // Has been choosen by the state machine as request ID for MQTT.
             var stationList = new MqttStationList(AgvTestIdentifier01, DateTimeOffset.UtcNow,
                 new Station[] {
-                    new(Function.Pick, "P01", new Position(0f, 0f, 0f), "")
-                });
+                    new(Function.Pick, "P01", new Position(1f, 2f, 3f), "42"),
+                    new(Function.Drop, "D01", new Position(4f, 5f, 6f), "7")
+                },
+                requestIdList);
+            // Publish StationListReceived ...
             await fixture.TestHarness.Bus.Publish(new StationListReceived(correlationId, stationList));
+            // ... expect it's gonna be consumed by the statemachine.
             Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<StationListReceived>());
 
-            Assert.IsNotNull(saga.MqttStationList);
-            Assert.IsNull(saga.AgvGraph);
+            // Ensure that state machine did send MqttRequestGraph ...
+            Assert.IsTrue(await fixture.TestHarness.Published.Any<MqttRequestGraph>());
+            // ... and the current state is StationListReceived.
             Assert.AreEqual(fixture.SagaHarness.StateMachine.StationListReceived, saga.CurrentState);
 
+            Assert.IsNotNull(saga.MqttStationList);
+            Assert.IsNull(saga.MqttGraph);
+            Assert.IsNull(saga.AgvGraph);
+            Assert.AreEqual(correlationId, saga.MqttStationList.SerialNumber.ToGuid());
+            Assert.AreEqual(2, saga.MqttStationList.Stations.Length);
+            Assert.IsTrue(saga.MqttStationList.Stations.Any(x => x.Identifier == "P01"));
+            var stationD02 = saga.MqttStationList.Stations.Single(x => x.Identifier == "D01");
+            Assert.AreEqual("7", stationD02.TypeId);
+
+            var requestIdGraph = saga.CurrentMqttRequestId; // Has been choosen by the state machine as request ID for MQTT.
             var graph = new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow, 2, 1,
                 new Node[] {
                     new() { NodeId = 1, X = 0f, Y = 0f, Z = 0f },
@@ -90,15 +115,24 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services
                 },
                 new Edge[] {
                     new() { EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = true, MaxVelocity = 1 }
-                });
+                },
+                requestIdGraph);
+            // Publish GraphReceived ...
             await fixture.TestHarness.Bus.Publish(new GraphReceived(correlationId, graph));
-            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<StationListReceived>());
+            // ... expect it's gonna be consumed by the statemachine.
+            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<GraphReceived>());
 
+            Assert.AreNotEqual(requestIdList, requestIdGraph);
+
+            // Check if the state machine published AgvGraphReceived finally.
             var publishedData = fixture.TestHarness.Published.Select<AgvGraphReceived>().First().Context.Message;
+
             Assert.AreEqual(correlationId, publishedData.CorrelationId);
             Assert.AreEqual(AgvTestIdentifier01.ToGuid(), publishedData.Graph.CorrelationId);
-            Assert.AreEqual(2 + 1, publishedData.Graph.Nodes.Length);
-            Assert.AreEqual(2 + 2, publishedData.Graph.Edges.Length);
+            // 2 stations + 2 nodes
+            Assert.AreEqual(2 + 2, publishedData.Graph.Nodes.Length);
+            // 4 edges (2 (bidirectional) per station + 2 edges (bidirectional) from graph
+            Assert.AreEqual(2 + 4, publishedData.Graph.Edges.Length);
         }
     }
 }

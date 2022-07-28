@@ -29,21 +29,24 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         public Guid? RequestId { get; set; }
 
         /// <summary>
-        /// Station list
+        /// Station list.
         /// </summary>
         public Station[] Stations { get; }
 
         /// <summary>
         /// Initializes a new instance of <see cref="MqttStationList"/>
         /// </summary>
-        /// <param name="serialNumber"></param>
-        /// <param name="modificationDate"></param>
-        /// <param name="stations"></param>
-        public MqttStationList(string serialNumber, DateTimeOffset modificationDate, Station[] stations)
+        /// <param name="serialNumber">Serial number of the AGV.</param>
+        /// <param name="modificationDate">The modification date of the station list. Timestamp in ISO8601 format.</param>
+        /// <param name="stations">Station list.</param>
+        /// <param name="requestId">The unique ID replied from the request.</param>
+        public MqttStationList(string serialNumber, DateTimeOffset modificationDate, Station[] stations,
+                               Guid? requestId = null)
         {
             SerialNumber = serialNumber;
             ModificationDate = modificationDate;
             Stations = stations;
+            RequestId = requestId;
         }
     }
 

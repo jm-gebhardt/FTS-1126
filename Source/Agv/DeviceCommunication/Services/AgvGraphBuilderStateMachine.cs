@@ -15,15 +15,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
     /// Request station list and graph and merge both to an internal graph passed to the service AgvManagement.
     /// </remarks>
     [JetBrains.Annotations.UsedImplicitly]
-	public sealed class AgvGraphBuilderStateMachine : MassTransitStateMachine<AgvGraphBuilderSaga>
-	{
-		private readonly ILogger<AgvGraphBuilderStateMachine> _logger;
-
-        /// <summary>
-        /// Special request ID to enable testing with real messages.
-        /// </summary>
-        [JetBrains.Annotations.UsedImplicitly]
-        public const string InternalTestingRequestId = "c2db5d8b-4802-4d9c-81e5-f7da9ca26893";
+    public sealed class AgvGraphBuilderStateMachine : MassTransitStateMachine<AgvGraphBuilderSaga>
+    {
+        private readonly ILogger<AgvGraphBuilderStateMachine> _logger;
 
 
         /// <summary>
@@ -70,10 +64,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
         private EventActivityBinder<AgvGraphBuilderSaga, StationListReceived> StationListHandler() =>
             When(StationListEvent)
                 .Then(c => _logger.LogInformation("Station list {AgvId}/{CorrelationId} received", c.Message.MqttStationList.SerialNumber, c.Saga.CorrelationId))
-                .IfElse(c => c.Message.MqttStationList.RequestId == c.Saga.CurrentMqttRequestId ||
-                                // (for testing)
-                                c.Message.MqttStationList.RequestId == Guid.Parse(InternalTestingRequestId) || c.Saga.CorrelationId == Guid.Parse(InternalTestingRequestId),
-                    // The response (station list) correlates to the request 
+                .IfElse(c => c.Message.MqttStationList.RequestId == c.Saga.CurrentMqttRequestId,
+                    // The response (station list) correlates to the request
                     t => t.Then(_ => _logger.LogDebug("Station list received does match the request"))
                             .TransitionTo(StationListReceived)
                             // Store the station list in the saga instance.
@@ -88,10 +80,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
         private EventActivityBinder<AgvGraphBuilderSaga, GraphReceived> GraphHandler() =>
             When(GraphEvent)
                 .Then(c => _logger.LogInformation("Graph {AgvId}/{CorrelationId} received", c.Message.MqttGraph.SerialNumber, c.Saga.CorrelationId))
-                .IfElse(c => c.Message.MqttGraph.RequestId == c.Saga.CurrentMqttRequestId ||
-                                // (for testing)
-                                c.Message.MqttGraph.RequestId == Guid.Parse(InternalTestingRequestId) || c.Saga.CorrelationId == Guid.Parse(InternalTestingRequestId),
-                    // The response (station list) correlates to the request 
+                .IfElse(c => c.Message.MqttGraph.RequestId == c.Saga.CurrentMqttRequestId,
+                    // The response (station list) correlates to the request
                     t => t.Then(_ => _logger.LogDebug("Graph received does match the request"))
                             // Store the graph in the saga instance.
                             .Then(c => c.Saga.MqttGraph = c.Message.MqttGraph)
@@ -109,13 +99,13 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
         /// Handle requesting AGV graph by master control.
         /// </summary>
         public AgvGraphBuilderStateMachine(ILogger<AgvGraphBuilderStateMachine> logger)
-		{
-			_logger = logger;
+        {
+            _logger = logger;
 
             // Initial creation
             Event(() => RequestAgvGraphEvent, e =>
-				e.SetSagaFactory(context => new AgvGraphBuilderSaga(context.Message.CorrelationId))
-			);
+                e.SetSagaFactory(context => new AgvGraphBuilderSaga(context.Message.CorrelationId))
+            );
             Event(() => StationListEvent);
             Event(() => GraphEvent);
 
@@ -126,6 +116,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
             During(StationListReceived, GraphHandler());
 
             SetCompletedWhenFinalized();
-		}
+        }
     }
 }
