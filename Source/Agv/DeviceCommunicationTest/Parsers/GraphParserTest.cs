@@ -150,7 +150,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
         /// Test for parsing AGV graph message.
         /// </summary>
         [TestMethod]
-        public void ParseGraphMessage_WithBidirectionEdge_ExpectOne2TwoConversion()
+        public void ParseGraphMessage_WithBidirectionalEdge_ExpectOne2TwoConversion()
         {
             var nodes = new Node[] {
                 new() { NodeId = 1, X = 0f, Y = 0f, Z = 0f },
@@ -171,7 +171,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
 
             Assert.AreEqual(2, parser.Nodes.Count);
 
-            // Edge has to be dublicated because it is bidirectional.
+            // Edge has to be duplicated because it is bidirectional.
             Assert.AreEqual(2, parser.Edges.Count);
         }
 

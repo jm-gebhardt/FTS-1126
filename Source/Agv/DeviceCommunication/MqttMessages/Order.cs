@@ -27,7 +27,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
 		public Coordinates? Coordinates { get; set; }
 
 		/// <summary>
-		/// The unique serialnumber of the agv
+		/// The unique serial number of the agv
 		/// </summary>
 		public string? SerialNumber { get; set; }
 

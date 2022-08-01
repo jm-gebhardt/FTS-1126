@@ -32,7 +32,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         // ReSharper disable once ReturnTypeCanBeNotNullable
         public AgvStatus? AgvStatus => new(
             CorrelationId,
-            Order?.OrderId,
+            OrderDetails?.OrderId,
             new [] {
                 nameof(SimulatedAgvStateMachine.BusyMovingToSource), 
                 nameof(SimulatedAgvStateMachine.BusyMovingToDestination)
@@ -57,7 +57,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         /// <summary>
         /// The current order being processed, null if currently no order is being processed
         /// </summary>
-        public Order? Order { get; set; }
+        public OrderDetails? OrderDetails { get; set; }
 
         /// <summary>
         /// Token used by the send status update schedule
@@ -131,8 +131,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         /// <summary>
         /// Time the order will be picked up
         /// </summary>
-        public DateTime? OrderPickDate => OrderFinishDate != null && Order != null 
-            ? OrderStartDate + TimeSpan.FromSeconds(Array.IndexOf(Nodes, Order!.Source) * NodeTravelTime) 
+        public DateTime? OrderPickDate => OrderFinishDate != null && OrderDetails != null 
+            ? OrderStartDate + TimeSpan.FromSeconds(Array.IndexOf(Nodes, OrderDetails!.Source) * NodeTravelTime) 
             : null;
 
         /// <summary>
@@ -183,7 +183,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         /// </summary>
         public void ResetOrder()
         {
-            Order = null;
+            OrderDetails = null;
             OrderStartDate = null;
         }
     }

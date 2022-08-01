@@ -60,10 +60,10 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
             string dst = _simDestinations[_random.Next(_simDestinations.Length)];
             const string leNo = "9999";
             var correlationId = orderId.ToGuid();
-            var order = new Order(correlationId, orderId, src, dst, leNo, HostOrderCreator.Simulation);
+            var orderDetails = new OrderDetails(correlationId, orderId, src, dst, leNo, HostOrderCreator.Simulation);
 
             // Send message
-            await _bus.Publish(new HandleHostOrder(correlationId, order), cancellationToken);
+            await _bus.Publish(new HandleHostOrder(correlationId, orderDetails), cancellationToken);
 
             _logger.LogInformation("Simulation HostOrder created: CorrelationId = {CorrelationId}, OrderId = {OrderId}, Source = {Src}, Dest = {Dst}, LeNo = {LeNo}", correlationId, orderId, src, dst, leNo);
         }

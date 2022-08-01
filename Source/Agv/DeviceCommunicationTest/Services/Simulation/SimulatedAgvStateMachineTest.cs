@@ -176,7 +176,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             const string agvId = "Agv#1";
             var correlationId = agvId.ToGuid();
             const string orderId = "Order#1";
-            var order = new Order(orderId.ToGuid(), orderId, "S1", "D1", "123", HostOrderCreator.Simulation);
+            var order = new OrderDetails(orderId.ToGuid(), orderId, "S1", "D1", "123", HostOrderCreator.Simulation);
             var graph = new GridGraphGenerator(new[] {order.Source}, new[] {order.Destination}, gridLength: 1).Generate(correlationId);
             string[] path = {
                 order.Source, 

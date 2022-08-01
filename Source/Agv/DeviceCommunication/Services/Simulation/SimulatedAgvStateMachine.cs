@@ -171,7 +171,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
             When(ExecuteTransportOrderEvent)
                 .TransitionTo(BusyMovingToSource)
                 .Then(ExecuteOrder)
-                .Publish(c => new TransportOrderStarted(c.Message.CorrelationId, c.Message.Order.OrderId))
+                .Publish(c => new TransportOrderStarted(c.Message.CorrelationId, c.Message.OrderDetails.OrderId))
                 .ThenAsync(PublishStatus)
                 .Schedule(PickOrderSchedule, 
                     c => new SchedulePickOrder(c.Saga.CorrelationId),
@@ -189,8 +189,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
             When(PickOrderSchedule.Received)
                 .TransitionTo(BusyMovingToDestination)
                 .Publish( c => new TransportOrderPickCompleted(
-                    c.Saga.Order!.CorrelationId,
-                    c.Saga.Order!.OrderId))
+                    c.Saga.OrderDetails!.CorrelationId,
+                    c.Saga.OrderDetails!.OrderId))
                 .ThenAsync(PublishStatus);
         
         private EventActivityBinder<SimulatedAgvSaga, ScheduleFinishOrder> SetFinishOrderHandler() =>
@@ -210,19 +210,19 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
 
         private void ExecuteOrder(BehaviorContext<SimulatedAgvSaga, ExecuteTransportOrder> context)
         {
-            context.Saga.Order = context.Message.Order;
+            context.Saga.OrderDetails = context.Message.OrderDetails;
             context.Saga.Nodes = context.Message.Nodes;
             context.Saga.OrderStartDate = DateTime.Now;
 
             _logger.LogInformation("Agv {AgvId}/{CorrelationId} started Order {OrderId}/{OrderCorrelationId}. Order will be picked up at {OrderPickDate} and dropped at {OrderFinishDate}",
                 context.Saga.AgvId, context.Saga.CorrelationId,
-                context.Message.Order.OrderId, context.Message.Order.CorrelationId, context.Saga.OrderPickDate, context.Saga.OrderFinishDate);
+                context.Message.OrderDetails.OrderId, context.Message.OrderDetails.CorrelationId, context.Saga.OrderPickDate, context.Saga.OrderFinishDate);
  
         }
 
         private async Task FinishOrder(BehaviorContext<SimulatedAgvSaga, ScheduleFinishOrder> context)
         {
-            var order = context.Saga.Order;
+            var order = context.Saga.OrderDetails;
 
             if (order == null)
             {

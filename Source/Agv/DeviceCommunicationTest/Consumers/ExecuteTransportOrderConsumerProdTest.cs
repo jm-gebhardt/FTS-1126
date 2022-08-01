@@ -42,8 +42,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
                 const string toStationId = "Drop5";
                 const string leNo = "na";
 
-                var order = new Order(correlationId, orderId, fromStationId, toStationId, leNo, HostOrderCreator.Simulation);
-                var message = new ExecuteTransportOrder(agvCorrelationId, order, agvId, Array.Empty<string>());
+                var orderDetails = new OrderDetails(correlationId, orderId, fromStationId, toStationId, leNo, HostOrderCreator.Simulation);
+                var message = new ExecuteTransportOrder(agvCorrelationId, orderDetails, agvId, Array.Empty<string>());
 
                 // Publish ExecuteTransportOrder
                 await fixture.TestHarness.Bus.Publish(message);
@@ -63,8 +63,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
                 // Check consumed message
                 Assert.AreEqual(agvCorrelationId, consumedMessage.Context.Message.CorrelationId);
                 Assert.AreEqual(agvId, consumedMessage.Context.Message.AgvId);
-                Assert.AreEqual(orderId, consumedMessage.Context.Message.Order.OrderId);
-                Assert.AreEqual(fromStationId, consumedMessage.Context.Message.Order.Source);
+                Assert.AreEqual(orderId, consumedMessage.Context.Message.OrderDetails.OrderId);
+                Assert.AreEqual(fromStationId, consumedMessage.Context.Message.OrderDetails.Source);
 
                 // Get published MqttOrder Mqtt message
                 IPublishedMessage<MqttOrder> publishedMessage = publishObserver.Messages.Select<MqttOrder>().First();

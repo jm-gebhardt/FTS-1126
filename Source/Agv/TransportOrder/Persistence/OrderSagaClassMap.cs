@@ -13,7 +13,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence
     public class OrderSagaClassMap : SagaClassMap<OrderSaga>
     {
         private const string OrderSagaTableName = "OrderSaga";
-        private const string OrderTableName = "OrderSaga_Order";
+        private const string OrderTableName = "OrderSaga_OrderDetails";
         private const int CurrentStateMaxLength = 64;
         
         /// <summary>
@@ -25,29 +25,32 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence
         {
             // set table names
             entity.ToTable(OrderSagaTableName);
-            model.Entity<Order>().ToTable(OrderTableName);
+            model.Entity<OrderDetails>().ToTable(OrderTableName);
 
             // Restrict CurrentState length
             entity.Property(x => x.CurrentState).HasMaxLength(CurrentStateMaxLength);
             
             // Specify Primary Keys
             entity.HasKey(x => x.CorrelationId);
-            model.Entity<Order>().HasKey(o => o.CorrelationId);
+            model.Entity<OrderDetails>().HasKey(o => o.CorrelationId);
             
             entity.Property(x => x.AssignedAgv);
             
             // Specify One-to-One relationship between OrderSaga and Order
-            entity.HasOne(x => x.Order)
+            entity.HasOne(x => x.OrderDetails)
                 .WithOne()
-                .HasForeignKey<Order>(x => x.CorrelationId)
+                .HasForeignKey<OrderDetails>(x => x.CorrelationId)
                 .OnDelete(DeleteBehavior.Cascade);
-            entity.Navigation(x => x.Order).AutoInclude();
+            entity.Navigation(x => x.OrderDetails).AutoInclude();
 
             // Add all Order properties
-            model.Entity<Order>().ConfigureAllProperties();
+            model.Entity<OrderDetails>().ConfigureAllProperties();
 
-            model.Entity<Order>().Property(x => x.Creator)
+            model.Entity<OrderDetails>().Property(x => x.Creator)
                 .HasConversion(new EnumToStringConverter<HostOrderCreator>());
+
+            model.Entity<OrderDetails>().Property(x => x.CreationDate)
+	            .HasColumnType("datetime2");
         }
     }
 }

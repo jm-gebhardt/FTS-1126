@@ -77,11 +77,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// <param name="agvDataEnumeration"></param>
         /// <param name="order"></param>
         /// <returns>Returns the correlation ID chosen or null when no fitting AGV could be found.</returns>
-        /// <exception cref="ArgumentException">Thrown if <see cref="Order.Source"/> or <see cref="Order.Destination"/> are empty</exception>
+        /// <exception cref="NullReferenceException">Thrown if <see cref="OrderDetails.Source"/> or <see cref="OrderDetails.Destination"/> are null</exception>
+        /// <exception cref="ArgumentException">Thrown if <see cref="OrderDetails.Source"/> or <see cref="OrderDetails.Destination"/> are empty</exception>
         /// <exception cref="MissingMethodException">No fitting constructor for the graph algorithm found.</exception>
         /// <exception cref="System.Reflection.TargetInvocationException">The constructor of the algorithm has thrown an exception.</exception>
         [JetBrains.Annotations.PublicAPI]
-        public KeyValuePair<Guid, IGraphAlgorithm.Route>? ChooseAgv(IEnumerable<IAgv> agvDataEnumeration, Order order)
+        public KeyValuePair<Guid, IGraphAlgorithm.Route>? ChooseAgv(IEnumerable<IAgv> agvDataEnumeration, OrderDetails order)
         {
             var routeListing = new Dictionary<Guid, IGraphAlgorithm.Route>();
 
@@ -105,9 +106,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// </summary>
         /// <param name="agv"></param>
         /// <param name="order"></param>
-        /// <exception cref="ArgumentException">Thrown if <see cref="Order.Source"/> or <see cref="Order.Destination"/> are empty</exception>
+        /// <exception cref="ArgumentException">Thrown if <see cref="OrderDetails.Source"/> or <see cref="OrderDetails.Destination"/> are empty</exception>
         /// <returns>Route for the agv to process the order. Null if the route does not exist</returns>
-        public IGraphAlgorithm.Route? CalculateRoute(IAgv agv, Order order)
+        public IGraphAlgorithm.Route? CalculateRoute(IAgv agv, OrderDetails order)
         {
             if (string.IsNullOrEmpty(order.Source))
             {

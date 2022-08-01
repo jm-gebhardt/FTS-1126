@@ -63,12 +63,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         }
 
         /// <summary>
-        /// Test for consuming OrderEvent message with the event type 'CancellFailed'
+        /// Test for consuming OrderEvent message with the event type 'CancelFailed'
         /// </summary>
         [TestMethod]
         public async Task ConsumeEventCancelFailed()
         {
-            var message = new MqttOrderEvent(SerialNumber, OrderId, OrderEventType.CancellFailed);
+            var message = new MqttOrderEvent(SerialNumber, OrderId, OrderEventType.CancelFailed);
             var published = await ConsumeMessage(message);
             Assert.IsTrue(await published.Any<TransportOrderCancelFailed>());
         }

@@ -101,10 +101,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         }
 
         /// <summary>
-        /// Verfy_IAgvRegistry_Interface_Methods
+        /// Verify_IAgvRegistry_Interface_Methods
         /// </summary>
         [TestMethod]
-        public void Verfy_IAgvRegistry_Interface_Methods()
+        public void Verify_IAgvRegistry_Interface_Methods()
         {
             string agvId1 = "AGV001";
             string agvId2 = "AGV002";

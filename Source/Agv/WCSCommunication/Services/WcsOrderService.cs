@@ -63,9 +63,9 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
 
                     _logger.LogInformation("New order in FromAgv: {OrderId} / {CorrelationId}", order.OrderId, correlationId);
 
-                    var hostOrder = new Order(correlationId, order.OrderId, order.Source, order.Destination, order.LeNo, HostOrderCreator.Wms);
+                    var hostOrderDetails = new OrderDetails(correlationId, order.OrderId, order.Source, order.Destination, order.LeNo, HostOrderCreator.Wms, order.Created);
 
-                    await _bus.Publish(new HandleHostOrder(correlationId, hostOrder), cancellationToken);
+                    await _bus.Publish(new HandleHostOrder(correlationId, hostOrderDetails), cancellationToken);
 
                     context.FromAgv.Add(FromAgv.CreateInstance(order, OrderStatus.Pending, RecordType.TransportOrder));
                     order.MessageStatus = MessageStatus.Finished; // Mark Message as Read

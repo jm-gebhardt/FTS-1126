@@ -25,9 +25,17 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Enums
         /// </summary>
         Cancelled,
         /// <summary>
-        /// Cancelation for transport order failed
+        /// Cancellation for transport order failed
         /// </summary>
-        CancellFailed,
+        CancelFailed,
+        /// <summary>
+        /// Transport order updated
+        /// </summary>
+        Updated,
+        /// <summary>
+        /// Transport order update failed
+        /// </summary>
+        UpdateFailed,
         /// <summary>
         /// Transport order Failed
         /// </summary>

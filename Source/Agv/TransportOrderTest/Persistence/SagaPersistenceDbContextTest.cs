@@ -51,7 +51,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Persistence
         
             string orderId = "Order123";
             var correlationId = orderId.ToGuid();
-            var order = new Order(correlationId, orderId, "SRC1", "DST1", "LeNo123", HostOrderCreator.Simulation);
+            var order = new OrderDetails(correlationId, orderId, "SRC1", "DST1", "LeNo123", HostOrderCreator.Simulation);
             var orderSaga = new OrderSaga(correlationId, order)
             {
                 CurrentState = "TestState"

@@ -5,6 +5,7 @@ using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Definitions;
 using Gebhardt.StoreWare.Agv.Common.Messages;
+using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Commands;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
 {
@@ -12,22 +13,25 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
     /// Consumer for <see cref="AssignAgv"/> messages
     /// </summary>
     [JetBrains.Annotations.PublicAPI]
-    public class AssignAgvConsumer : IConsumer<AssignAgv>
+    public class AssignAgvConsumer : IConsumer<AssignAgv>, IConsumer<AgvBecameIdle>
     {
         private readonly ILogger<AssignAgvConsumer> _logger;
         private readonly IAgvRegistry _agvRegistry;
         private readonly IRequestClient<ReserveAgv> _client;
+        private readonly IOrderRegistry _orderRegistry;
 
         /// <summary>
         /// Consumer for <see cref="AssignAgv"/> messages
         /// </summary>
         public AssignAgvConsumer(ILogger<AssignAgvConsumer> logger,
             IAgvRegistry agvRegistry,
+            IOrderRegistry orderRegistry,
             IRequestClient<ReserveAgv> client)
         {
             _logger = logger;
             _agvRegistry = agvRegistry;
             _client = client;
+            _orderRegistry = orderRegistry;
         }
 
         /// <summary>
@@ -43,20 +47,20 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
             KeyValuePair<IAgv, IGraphAlgorithm.Route>? assignAgvAndRoute = await AssignIdleAgv<AStar>(context.Message.Order, context.CancellationToken);
             if (assignAgvAndRoute == null)
             {
-                var error = CheckRouteExists<AStar>(context.Message.Order)? AgvAssignmentErrorCode.NoIdleAgv : AgvAssignmentErrorCode.NoRouteFound;
+                var error = CheckRouteExists<AStar>(context.Message.Order) ? AgvAssignmentErrorCode.NoIdleAgv : AgvAssignmentErrorCode.NoRouteFound;
                 await context.Publish(new AgvAssignmentFailed(context.Message.CorrelationId, error));
             }
             else
             {
                 var agv = assignAgvAndRoute.Value.Key;
                 var route = assignAgvAndRoute.Value.Value;
-                
-                await context.Publish( new AgvAssignmentSucceeded(
+
+                await context.Publish(new AgvAssignmentSucceeded(
                     context.Message.CorrelationId,
                     agv.AgvId,
                     agv.CorrelationId,
                     route.Nodes
-                ));       
+                ));
             }
         }
 
@@ -67,21 +71,21 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// <param name="cancellationToken"></param>
         /// <typeparam name="TGraphAlgorithm"></typeparam>
         /// <returns></returns>
-        private async Task<KeyValuePair<IAgv, IGraphAlgorithm.Route>?> AssignIdleAgv<TGraphAlgorithm>(Order order, CancellationToken cancellationToken) where TGraphAlgorithm : IGraphAlgorithm
+        private async Task<KeyValuePair<IAgv, IGraphAlgorithm.Route>?> AssignIdleAgv<TGraphAlgorithm>(OrderDetails order, CancellationToken cancellationToken) where TGraphAlgorithm : IGraphAlgorithm
         {
-            
+
             var agvChooser = new AgvChooser<TGraphAlgorithm>();
             IAgv? assignedAgv = null;
             IGraphAlgorithm.Route? route = null;
-            
+
             List<IAgv> idleAgvs = _agvRegistry.GetIdleAgvs()
                 .Where(agv => agv.AgvGraph != null)
                 .ToList();
-            
+
             while (idleAgvs.Count > 0)
             {
                 KeyValuePair<Guid, IGraphAlgorithm.Route>? chosenAgv = agvChooser.ChooseAgv(idleAgvs, order);
-                
+
                 if (chosenAgv == null)
                 {
                     _logger.LogInformation("Could not find any AGV to handle {OrderId}", order.OrderId);
@@ -99,14 +103,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
                 _logger.LogInformation("Could not reserve Agv {CorrelationId}, trying next", correlationId);
                 idleAgvs.RemoveAll(x => x.CorrelationId == correlationId);
             }
-            
-           
+
+
             if (assignedAgv == null || route == null)
             {
                 // No route found
                 return null;
             }
-            
+
             return new KeyValuePair<IAgv, IGraphAlgorithm.Route>(assignedAgv, route);
         }
 
@@ -131,13 +135,68 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// <param name="order"></param>
         /// <typeparam name="TGraphAlgorithm"></typeparam>
         /// <returns></returns>
-        private bool CheckRouteExists<TGraphAlgorithm>(Order order) where TGraphAlgorithm : IGraphAlgorithm
+        private bool CheckRouteExists<TGraphAlgorithm>(OrderDetails order) where TGraphAlgorithm : IGraphAlgorithm
         {
             var agvChooser = new AgvChooser<TGraphAlgorithm>();
             IEnumerable<IAgv> agvs = _agvRegistry.GetAllAgvs()
                 .Where(agv => agv.AgvGraph != null);
 
             return agvs.Any(agv => agvChooser.CalculateRoute(agv, order) != null);
+        }
+
+        /// <summary>
+        /// Respond to <see cref="AgvBecameIdle"/> message
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public async Task Consume(ConsumeContext<AgvBecameIdle> context)
+        {
+            var agvChooser = new AgvChooser<AStar>();
+            var agv = _agvRegistry.GetAgv(context.Message.CorrelationId);
+            if (agv == null)
+            {
+                _logger.LogError("Agv {CorrelationId} became idle, but no agv with this correlation ID can be found", context.Message.CorrelationId);
+                return;
+            }
+
+            //1. Get unassigned Orders
+            List<IOrder> unassignedOrders = _orderRegistry.GetUnassignedOrders().ToList();
+            if (unassignedOrders.Count == 0)
+            {
+                return;
+            }
+
+            //1. Get open Orders
+            List<IOrder> openOrders = _orderRegistry.GetUnassignedOrders().ToList();
+            IOrder? assignedOrder = null;
+            foreach (var order in openOrders)
+            {
+                _logger.LogInformation("Trying to assign order {OrderId}/{CorrelationId} in state {State}", order.OrderDetails.OrderId, order.CorrelationId, order.CurrentState);
+
+                //2. See if agv has a route for this order
+                if (agvChooser.CalculateRoute(agv, order.OrderDetails) != null)
+                {
+                    //3. Try to assign
+                    await context.Publish(new RequestOrderAgvAssign(order.CorrelationId));
+                    assignedOrder = order;
+                    break;
+                }
+                else
+                {
+                    _logger.LogInformation("Assign order {OrderId}/{CorrelationId} in state {State} failed because AGV can't find a route", order.OrderDetails.OrderId, order.CorrelationId, order.CurrentState);
+                }
+                //4. Try next order
+                unassignedOrders.RemoveAll(x => x.CorrelationId == order.CorrelationId);
+            }
+
+            if (assignedOrder != null)
+            {
+                _logger.LogInformation("Agv {AgvId}/{CorrelationId} became idle and assignment for order {OrderId}/{OrderCorrelationId} has started", agv.AgvId, context.Message.CorrelationId, assignedOrder.OrderDetails.OrderId, assignedOrder.CorrelationId);
+            }
+            else
+            {
+                _logger.LogInformation("Agv {AgvId}/{CorrelationId} became idle but open order(s) can not be assigned, because AGV does not have a route for order(s)", agv.AgvId, context.Message.CorrelationId);
+            }
         }
     }
 }

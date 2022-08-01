@@ -15,12 +15,12 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands
         /// <summary>
         /// Order Details
         /// </summary>
-        public Order Order { get; }
+        public OrderDetails Order { get; }
 
         /// <summary>
         /// Initializes a new instance of <see cref="AssignAgv"/>
         /// </summary>
-        public AssignAgv(Guid correlationId, Order order)
+        public AssignAgv(Guid correlationId, OrderDetails order)
         {
             CorrelationId = correlationId;
             Order = order;

@@ -32,19 +32,19 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
 		/// <param name="context">Context of the consumer wrapping details surrounding the inbound message.</param>
 		public async Task Consume(ConsumeContext<ExecuteTransportOrder> context)
 		{
-			await context.PublishMqtt(new MqttOrder(context.Message.Order.OrderId)
+			await context.PublishMqtt(new MqttOrder(context.Message.OrderDetails.OrderId)
 			{
 				SerialNumber = context.Message.AgvId,
 				OrderType = OrderType.Transport,
 				RecordType = OrderRecordType.Order,
 				Stations = new Stations()
 				{
-					FromStationIdentifier = context.Message.Order.Source,
-					ToStationIdentifier = context.Message.Order.Destination
+					FromStationIdentifier = context.Message.OrderDetails.Source,
+					ToStationIdentifier = context.Message.OrderDetails.Destination
 				}
 			}, context.CancellationToken);
 
-			_logger.LogInformation("Sent transport order: {OrderId} for AGV:{AgvId} from {Source} to {Destination}", context.Message.Order.OrderId, context.Message.AgvId, context.Message.Order.Source, context.Message.Order.Destination);
+			_logger.LogInformation("Sent transport order: {OrderId} for AGV:{AgvId} from {Source} to {Destination}", context.Message.OrderDetails.OrderId, context.Message.AgvId, context.Message.OrderDetails.Source, context.Message.OrderDetails.Destination);
 		}
 
 		/// <summary>

@@ -22,9 +22,21 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         public AgvStatus? AgvStatus { get; set; }
         /// <summary/>
         public AgvGraph? AgvGraph { get; init; }
+
         /// <summary/>
-        [JetBrains.Annotations.UsedImplicitly]
-        public AgvData? AgvData { get; init; }
+        public AgvData? AgvData { get;} = new(Guid.Empty,
+            "",
+            "",
+            "",
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0,
+            Array.Empty<AgvData.Sensor>());
     }
 
 
@@ -165,8 +177,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
     {
         private readonly AgvGraph? _graphWikipedia;
         private readonly AgvGraph? _graphWikipediaFast;
-        private readonly Order? _dummyOrder;
-
+        private readonly OrderDetails? _dummyOrder;
 
         /// <summary>
         /// Test initialization.
@@ -216,8 +227,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             }
 
             _graphWikipediaFast = new AgvGraph(Guid.Empty, nodes, edgesFast);
-            
-            _dummyOrder = new Order(
+
+            _dummyOrder = new OrderDetails(
                 correlationId: Guid.NewGuid(),
                 orderId: "dummy",
                 source: "dummy",
@@ -226,6 +237,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                 creator: HostOrderCreator.Simulation
             );
         }
+
 
         /// <summary>
         /// Call chooser with empty AGV listing returns null
@@ -294,7 +306,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                 new() { AgvGraph = _graphWikipedia }
             };
 
-            var order = new Order(
+            var order = new OrderDetails(
                 correlationId: Guid.NewGuid(),
                 orderId: "dummy",
                 source: "source",
@@ -306,7 +318,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             Assert.ThrowsException<ArgumentException>(() => chooser.ChooseAgv(agvData, order));
             // ReSharper restore All
 
-            order = new Order(
+            order = new OrderDetails(
                correlationId: Guid.NewGuid(),
                orderId: "dummy",
                source: "",
@@ -330,7 +342,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             {
                 new() { AgvGraph = _graphWikipedia }
             };
-            var order = new Order(
+            var order = new OrderDetails(
                 correlationId: Guid.NewGuid(),
                 orderId: "dummy",
                 source: "Saarbrücken",
@@ -354,7 +366,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             {
                 new() { AgvGraph = _graphWikipedia }
             };
-            var order = new Order(
+            var order = new OrderDetails(
                 correlationId: Guid.NewGuid(),
                 orderId: "dummy",
                 source: "Kaiserslautern",
@@ -382,7 +394,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                 new() { AgvId = "Std3", AgvGraph = _graphWikipedia }
             };
 
-            var order = new Order(
+            var order = new OrderDetails(
                 correlationId: Guid.NewGuid(),
                 orderId: "dummy",
                 source: "Kaiserslautern",

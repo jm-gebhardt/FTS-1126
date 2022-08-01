@@ -21,7 +21,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
 
 
         /// <summary>
-        /// Inital request for AGV graph has been received.
+        /// Initial request for AGV graph has been received.
         /// </summary>
         [JetBrains.Annotations.UsedImplicitly]
         public State RequestAgvGraphReceived { get; private set; } = default!;
@@ -85,9 +85,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
                     t => t.Then(_ => _logger.LogDebug("Graph received does match the request"))
                             // Store the graph in the saga instance.
                             .Then(c => c.Saga.MqttGraph = c.Message.MqttGraph)
-                            // Build the internal graph and store in the sage instacne.
+                            // Build the internal graph and store in the saga instance.
                             .Then(c => c.Saga.MergeGraph())
-                            // Respond to the inital request with the graph
+                            // Respond to the initial request with the graph
                             .Then(c => c.Publish(new Common.Messages.AgvManagement.Events.AgvGraphReceived(c.Saga.CorrelationId, c.Message.MqttGraph.SerialNumber, c.Saga.AgvGraph!)))
                             .Finalize(),
                     // The response does not correlate to the request

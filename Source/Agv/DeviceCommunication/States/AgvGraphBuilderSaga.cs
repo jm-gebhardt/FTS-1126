@@ -9,7 +9,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
     public class AgvGraphBuilderSaga : SagaStateMachineInstance, CorrelatedBy<Guid>
 	{
         /// <summary>
-        /// Correlation ID taken from the inital request "<see cref="Common.Messages.AgvManagement.Commands.RequestAgvGraph"/>".
+        /// Correlation ID taken from the initial request "<see cref="Common.Messages.AgvManagement.Commands.RequestAgvGraph"/>".
         /// <para>
         /// See <see href="https://masstransit-project.com//usage/correlation.html" />
         /// </para></summary>

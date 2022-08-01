@@ -1,4 +1,5 @@
 using Gebhardt.StoreWare.Agv.Common.Messages;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using JetBrains.Annotations;
 using MassTransit;
 
@@ -11,7 +12,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.States
     /// </summary>
     [PublicAPI]
     public class OrderSaga :
-        SagaStateMachineInstance, CorrelatedBy<Guid>
+        SagaStateMachineInstance, IOrder
     {
 
         /// <summary>
@@ -33,32 +34,32 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.States
         /// <summary>
         /// The order details of this saga
         /// </summary>
-        public Order Order { get; set; } = null!;
+        public OrderDetails OrderDetails { get; set; } = null!;
 
         /// <summary>
         /// Create new OrderSaga
         /// </summary>
-        /// <param name="order">The order related to this Saga</param>
+        /// <param name="orderDetails">The order related to this Saga</param>
         /// <param name="correlationId">If the correlationId is empty, a new Id will be generated</param>
-        public OrderSaga(Guid correlationId, Order order)
+        public OrderSaga(Guid correlationId, OrderDetails orderDetails)
         {
             if (correlationId == Guid.Empty)
             {
                 throw new InvalidOperationException($"{this.GetType()} requires correlation ID.");
             }
             CorrelationId = correlationId;
-            Order = order;
+            OrderDetails = orderDetails;
         }
 
         /// <summary>
         /// OrderSaga constructor used to restore an instance from persistence
         /// </summary>
         /// <param name="correlationId"></param>
-        /// <param name="order"></param>
+        /// <param name="orderDetails"></param>
         /// <param name="currentState"></param>
         /// <param name="assignedAgv"></param>
-        public OrderSaga(Guid correlationId, Order order, string currentState, Guid? assignedAgv): 
-            this(correlationId, order)
+        public OrderSaga(Guid correlationId, OrderDetails orderDetails, string currentState, Guid? assignedAgv): 
+            this(correlationId, orderDetails)
         {
             CurrentState = currentState;
             AssignedAgv = assignedAgv;

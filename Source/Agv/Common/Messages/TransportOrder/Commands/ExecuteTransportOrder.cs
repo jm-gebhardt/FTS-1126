@@ -15,7 +15,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Commands
         /// <summary>
         /// Order Details
         /// </summary>
-        public Order Order { get; }
+        public OrderDetails OrderDetails { get; }
 
         /// <summary>
         /// The assigned AGV ID
@@ -30,10 +30,10 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Commands
         /// <summary>
         /// Initializes a new instance of <see cref="ExecuteTransportOrder"/>
         /// </summary>
-        public ExecuteTransportOrder(Guid correlationId, Order order, string agvId, string[] nodes)
+        public ExecuteTransportOrder(Guid correlationId, OrderDetails orderDetails, string agvId, string[] nodes)
         {
             CorrelationId = correlationId;
-            Order = order;
+            OrderDetails = orderDetails;
             AgvId = agvId;
             Nodes = nodes;
         }

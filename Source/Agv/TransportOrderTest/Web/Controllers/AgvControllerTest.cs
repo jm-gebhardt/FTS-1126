@@ -58,8 +58,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
             }
 
             registry.SetupGet(x => x.Count).Returns(agvs.Count);
-            registry.SetupGet(x => x.CountIdle).Returns(agvs.Count);
-            registry.Setup(x => x.GetIdleAgvs()).Returns(agvs);
+            registry.SetupGet(x => x.CountIdle).Returns(agvs.Where(x=> x.CurrentState == nameof(AgvStateMachine.Idle)).Count);
+            registry.Setup(x => x.GetIdleAgvs()).Returns(agvs.Where(x => x.CurrentState == nameof(AgvStateMachine.Idle)));
             registry.Setup(x => x.GetAllAgvs()).Returns(agvs);
             registry.Setup(x => x.GetAgv(It.IsAny<Guid>())).Returns<Guid>(correlationId =>
             {

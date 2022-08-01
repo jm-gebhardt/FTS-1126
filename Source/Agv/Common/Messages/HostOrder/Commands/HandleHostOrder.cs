@@ -15,15 +15,15 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Commands
         /// <summary>
         /// Order Details
         /// </summary>
-        public Order Order { get; }
+        public OrderDetails OrderDetails { get; }
 
         /// <summary>
         /// Initializes a new instance of <see cref="HandleHostOrder"/>
         /// </summary>
-        public HandleHostOrder(Guid correlationId, Order order)
+        public HandleHostOrder(Guid correlationId, OrderDetails orderDetails)
         {
             CorrelationId = correlationId;
-            Order = order;
+            OrderDetails = orderDetails;
         }
     }
 }

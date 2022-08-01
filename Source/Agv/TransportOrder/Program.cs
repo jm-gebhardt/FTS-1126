@@ -27,6 +27,7 @@ try
                 .ConfigureServices((context, services) =>
                 {
                     services.AddTransient<IAgvRegistry, EfAgvRegistry>();
+                    services.AddTransient<IOrderRegistry, EfOrderRegistry>();
 
                     services.AddDbContextFactory<SagaPersistenceDbContext>(builder =>
                     {

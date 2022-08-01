@@ -31,32 +31,32 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
         {
             _logger.LogTrace("Received {EventType} for {OrderId}", context.Message.EventType, context.Message.OrderId);
 
-            var coralationId = context.Message.OrderId.ToGuid();
+            var correlationId = context.Message.OrderId.ToGuid();
 
             switch (context.Message.EventType)
             {
                 case OrderEventType.Started:
-                    await context.Publish(new TransportOrderStarted(coralationId, context.Message.OrderId));
+                    await context.Publish(new TransportOrderStarted(correlationId, context.Message.OrderId));
                     break;
 
                 case OrderEventType.Picked:
-                    await context.Publish(new TransportOrderPickCompleted(coralationId, context.Message.OrderId));
+                    await context.Publish(new TransportOrderPickCompleted(correlationId, context.Message.OrderId));
                     break;
 
                 case OrderEventType.Completed:
-                    await context.Publish(new TransportOrderCompleted(coralationId, context.Message.OrderId));
+                    await context.Publish(new TransportOrderCompleted(correlationId, context.Message.OrderId));
                     break;
 
                 case OrderEventType.Cancelled:
-                    await context.Publish(new TransportOrderCancelSucceeded(coralationId, context.Message.OrderId));
+                    await context.Publish(new TransportOrderCancelSucceeded(correlationId, context.Message.OrderId));
                     break;
 
-                case OrderEventType.CancellFailed:
-                    await context.Publish(new TransportOrderCancelFailed(coralationId, context.Message.OrderId, TransportOrderErrorCode.Any));
+                case OrderEventType.CancelFailed:
+                    await context.Publish(new TransportOrderCancelFailed(correlationId, context.Message.OrderId, TransportOrderErrorCode.Any));
                     break;
 
                 case OrderEventType.Failed:
-                    await context.Publish(new TransportOrderFailed(coralationId, context.Message.OrderId, TransportOrderErrorCode.Any));
+                    await context.Publish(new TransportOrderFailed(correlationId, context.Message.OrderId, TransportOrderErrorCode.Any));
                     break;
 
                 default:

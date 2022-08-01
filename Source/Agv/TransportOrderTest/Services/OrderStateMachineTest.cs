@@ -29,18 +29,18 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             var fixture = new StateMachineTestFixture<OrderStateMachine, OrderSaga>();
             const string orderId = "Order#1";
             var correlationId = orderId.ToGuid();
-            var order = new Order(correlationId, orderId, "SRC1", "DST1", "LeNo123", HostOrderCreator.Simulation);
+            var orderDetails = new OrderDetails(correlationId, orderId, "SRC1", "DST1", "LeNo123", HostOrderCreator.Simulation);
 
-            await fixture.TestHarness.Bus.Publish(new HandleHostOrder(correlationId, order));
+            await fixture.TestHarness.Bus.Publish(new HandleHostOrder(correlationId, orderDetails));
             var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
 
             Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<HandleHostOrder>());
             Assert.IsTrue(await fixture.TestHarness.Published.Any<RequestOrderAgvAssign>());
 
             Assert.IsNull(saga.AssignedAgv);
-            Assert.IsNotNull(saga.Order.OrderId);
-            Assert.IsNotNull(saga.Order.Source);
-            Assert.IsNotNull(saga.Order.Destination);
+            Assert.IsNotNull(saga.OrderDetails.OrderId);
+            Assert.IsNotNull(saga.OrderDetails.Source);
+            Assert.IsNotNull(saga.OrderDetails.Destination);
             Assert.IsTrue(await fixture.TestHarness.Published.Any<AssignAgv>());
 
             IList<Guid> sagas = await fixture.SagaHarness.Match(s => s.CorrelationId == correlationId && s.CurrentState == fixture.SagaHarness.StateMachine.AgvRequested.Name);
@@ -57,9 +57,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             var fixture = new StateMachineTestFixture<OrderStateMachine, OrderSaga>();
             const string orderId = "Order123123";
             var correlationId = orderId.ToGuid();
-            var order = new Order(correlationId, orderId, "SRC1", "DST1", "LeNo123", HostOrderCreator.Simulation);
+            var orderDetails = new OrderDetails(correlationId, orderId, "SRC1", "DST1", "LeNo123", HostOrderCreator.Simulation);
 
-            await fixture.TestHarness.Bus.Publish(new HandleHostOrder(correlationId, order));
+            await fixture.TestHarness.Bus.Publish(new HandleHostOrder(correlationId, orderDetails));
 
             Assert.IsTrue(await fixture.TestHarness.Published.Any<HandleHostOrder>());
             Assert.IsNull(await fixture.SagaHarness.NotExists(Guid.Empty, TimeSpan.FromMilliseconds(10)));
@@ -74,9 +74,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             var fixture = new StateMachineTestFixture<OrderStateMachine, OrderSaga>();
             const string orderId = "Order123123";
             var correlationId = Guid.NewGuid();
-            var order = new Order(correlationId, orderId, "SRC1", "DST1", "LeNo123", HostOrderCreator.Simulation);
+            var orderDetails = new OrderDetails(correlationId, orderId, "SRC1", "DST1", "LeNo123", HostOrderCreator.Simulation);
 
-            await fixture.TestHarness.Bus.Publish(new HandleHostOrder(correlationId, order));
+            await fixture.TestHarness.Bus.Publish(new HandleHostOrder(correlationId, orderDetails));
             Assert.AreEqual(correlationId, await fixture.SagaHarness.Exists(correlationId));
         }
 
@@ -84,14 +84,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         /// When AgvAssignSucceeded received ExecuteTransportOrder requested
         /// </summary>
         [TestMethod]
-        public async Task When_AgvAssignmentSucceeded_ExecuteTransportOrderRequested()
+        public async Task When_AgvAssignSucceeded_ExecuteTransportOrderRequested()
         {
             var fixture = new StateMachineTestFixture<OrderStateMachine, OrderSaga>();
             const string orderId = "Order123";
             var correlationId = orderId.ToGuid();
             var orderSaga = new OrderSaga(
                 correlationId,
-                new Order(correlationId, orderId, "s1", "d2", "leno1", HostOrderCreator.Simulation)
+                new OrderDetails(correlationId, orderId, "s1", "d2", "leno1", HostOrderCreator.Simulation)
             )
             { CurrentState = fixture.Machine.AgvRequested.Name };
 
@@ -114,7 +114,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             Assert.IsTrue(await fixture.TestHarness.Published.Any<ExecuteTransportOrder>());
             Assert.IsTrue(await fixture.TestHarness.Published.Any<HostOrderStarted>());
         }
-        
+
         /// <summary>
         /// When AgvAssignmentFailed with NoRouteFound received HostOrderHandlingFailed is published
         /// </summary>
@@ -126,9 +126,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             var correlationId = orderId.ToGuid();
             var orderSaga = new OrderSaga(
                     correlationId,
-                    new Order(correlationId, orderId, "s1", "d2", "leno1", HostOrderCreator.Simulation)
+                    new OrderDetails(correlationId, orderId, "s1", "d2", "leno1", HostOrderCreator.Simulation)
                 )
-                { CurrentState = fixture.Machine.AgvRequested.Name };
+            { CurrentState = fixture.Machine.AgvRequested.Name };
 
             fixture.Add(orderSaga);
 
@@ -140,15 +140,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             );
             Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvAssignmentFailed>());
             Assert.IsTrue(await fixture.TestHarness.Published.Any<HostOrderHandlingFailed>());
-            
+
             var message = fixture.TestHarness.Published.Select<HostOrderHandlingFailed>().First().Context.Message;
             Assert.AreEqual(correlationId, message.CorrelationId);
             Assert.AreEqual(HostOrderErrorCode.Any, message.Error);
-            
+
             Assert.IsNull(orderSaga.AssignedAgv);
             Assert.AreEqual(fixture.SagaHarness.StateMachine.OrderFailed.Name, orderSaga.CurrentState);
         }
-        
+
         /// <summary>
         /// When AgvAssignmentFailed with NoIdleAgv received HostOrderHandlingFailed is published
         /// </summary>
@@ -160,9 +160,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             var correlationId = orderId.ToGuid();
             var orderSaga = new OrderSaga(
                     correlationId,
-                    new Order(correlationId, orderId, "s1", "d2", "leno1", HostOrderCreator.Simulation)
+                    new OrderDetails(correlationId, orderId, "s1", "d2", "leno1", HostOrderCreator.Simulation)
                 )
-                { CurrentState = fixture.Machine.AgvRequested.Name };
+            { CurrentState = fixture.Machine.AgvRequested.Name };
 
             fixture.Add(orderSaga);
 
@@ -173,7 +173,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                 )
             );
             Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvAssignmentFailed>());
-            
+
             Assert.IsNull(orderSaga.AssignedAgv);
             Assert.AreEqual(fixture.SagaHarness.StateMachine.OrderReceived.Name, orderSaga.CurrentState);
         }
@@ -191,7 +191,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 
             var orderState = new OrderSaga(
                 correlationId,
-                new Order(correlationId, orderId, "s1", "d2", "leno1", HostOrderCreator.Simulation)
+                new OrderDetails(correlationId, orderId, "s1", "d2", "leno1", HostOrderCreator.Simulation)
             )
             { CurrentState = fixture.Machine.TransportOrderSend.Name };
 
@@ -210,7 +210,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         }
 
         /// <summary>
-        /// OrderFailed results in sage state change to OrderFailed
+        /// TransportOrderFailed results in sage state change to TransportOrderFailed
         /// </summary>
         [TestMethod]
         public async Task When_TransportOrderFailed_HostOrderHandlingFailedPublished()
@@ -222,7 +222,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 
             var orderState = new OrderSaga(
                 correlationId,
-                new Order(correlationId, orderId, "s1", "d2", "leno1", HostOrderCreator.Simulation)
+                new OrderDetails(correlationId, orderId, "s1", "d2", "leno1", HostOrderCreator.Simulation)
             )
             { CurrentState = fixture.Machine.TransportOrderSend.Name };
 

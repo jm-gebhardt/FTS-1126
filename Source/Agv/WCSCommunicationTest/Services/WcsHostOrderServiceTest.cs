@@ -72,10 +72,10 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services
                 Assert.AreEqual(1, context.FromAgv.Count());
                 var toAgvEntry = context.ToAgv.First();
 
-                Assert.AreEqual(toAgvEntry.OrderId, message.Context.Message.Order.OrderId);
-                Assert.AreEqual(source, message.Context.Message.Order.Source);
-                Assert.AreEqual(destination, message.Context.Message.Order.Destination);
-                Assert.AreEqual(toAgvEntry.LeNo, message.Context.Message.Order.LeNo);
+                Assert.AreEqual(toAgvEntry.OrderId, message.Context.Message.OrderDetails.OrderId);
+                Assert.AreEqual(source, message.Context.Message.OrderDetails.Source);
+                Assert.AreEqual(destination, message.Context.Message.OrderDetails.Destination);
+                Assert.AreEqual(toAgvEntry.LeNo, message.Context.Message.OrderDetails.LeNo);
                 Assert.AreEqual(MessageStatus.Finished, toAgvEntry.MessageStatus);
             }
         }
