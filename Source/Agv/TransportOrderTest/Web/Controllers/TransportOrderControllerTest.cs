@@ -8,6 +8,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.States;
 using Gebhardt.StoreWare.Agv.TransportOrder.Services;
 using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Commands;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
+using Microsoft.Extensions.DependencyInjection;
 using Moq;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
@@ -29,7 +30,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
         [TestMethod]
         public async Task GetOrdersTest()
         {
-            var fixture = new StateMachineTestFixture<OrderStateMachine, OrderSaga>();
+	        var mockRegistry = new Mock<IAgvRegistry>();
+	        mockRegistry.Setup(s => s.GetIdleAgvs()).Returns(new List<IAgv>());
+
+	        var fixture = new StateMachineTestFixture<OrderStateMachine, OrderSaga>(services: s => { s.AddTransient(_ => mockRegistry.Object); });
+            
             var controller = new TransportOrderController(GetOrderRegistry());
 
             var inputOrderDetails = new OrderDetails(_orders[0].ToGuid(), _orders[0], _sources[0], _destinations[0], _leNo[0], HostOrderCreator.Simulation);
