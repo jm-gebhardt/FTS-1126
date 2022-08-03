@@ -28,6 +28,13 @@ stages:
           packageType: 'sdk'
           version: '6.0.x'
           performMultiLevelLookup: true
+      - task: NuGetCommand@2
+        displayName: 'Restoring based on NuGet.config'
+        inputs:
+          command: 'restore'
+          restoreSolution: '$(SourceDirectory)/$(Build.Target)'
+          feedsToUse: 'config'
+          nugetConfigPath: '$(SourceDirectory)/NuGet.Config'
       - task: DotNetCoreCLI@2
         displayName: 'Build Target ($(Build.Target))'
         inputs:
@@ -52,6 +59,13 @@ stages:
           packageType: 'sdk'
           version: '6.0.x'
           performMultiLevelLookup: true
+      - task: NuGetCommand@2
+        displayName: 'Restoring based on NuGet.config'
+        inputs:
+          command: 'restore'
+          restoreSolution: '$(SourceDirectory)/$(Build.Target)'
+          feedsToUse: 'config'
+          nugetConfigPath: '$(SourceDirectory)/NuGet.Config'
       - task: DotNetCoreCLI@2
         displayName: 'Run All tests'
         inputs:
