@@ -1,6 +1,12 @@
 pool:
   vmImage: ubuntu-latest
 
+variables:
+- name: 'SourceDirectory'
+  value: 'Source/Agv'
+- name: 'Build.Target'
+  value: 'CompileAgv.sln'
+
 schedules:
   - cron: "0 4 * * *"
     displayName: Daily midnight build
@@ -17,17 +23,20 @@ steps:
       packageType: 'sdk'
       version: '6.0.x'
       performMultiLevelLookup: true
-  - task: DotNetCoreCLI@2
-    displayName: 'dotnet restore'
+  - task: NuGetAuthenticate@1
+  - task: NuGetCommand@2
+    displayName: 'Restoring based on NuGet.config'
     inputs:
-      command: restore
-      projects: '**/*.csproj'
+      command: 'restore'
+      restoreSolution: '$(SourceDirectory)/$(Build.Target)'
+      feedsToUse: 'config'
+      nugetConfigPath: '$(SourceDirectory)/NuGet.Config'
   - task: Bash@3
     displayName: 'Check for vulnerabilities in dependencies'
     inputs:
       targetType: 'inline'
       script: |
-        set -e
+        set -ex
         OUTPUT=$(dotnet list package --vulnerable --include-transitive)
         echo "${OUTPUT}"
         VULNERABLE_PROJECTS=($(echo "${OUTPUT}" | awk '/Project `[A-z]+` has the following vulnerable packages/{ print $2}'))
