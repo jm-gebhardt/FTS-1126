@@ -100,9 +100,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
         /// node IDs are not unique.</exception>
         private void ParseEdges()
         {
-            if (!NodesValid)
+            if (!EdgesValid)
             {
-                throw new InvalidOperationException($"Cannot handle {typeof(MqttGraph)} message, invalid number of nodes.");
+                throw new InvalidOperationException($"Cannot handle {typeof(MqttGraph)} message, invalid number of edges.");
             }
 
             ParseVelocity();
@@ -178,13 +178,13 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
         /// Returns true when the nodes listing is present and contains at least one node.
         /// </summary>
         [JetBrains.Annotations.PublicAPI]
-        public bool EdgesValid => _graph.NumberOfEdges > 0 && _graph.Edges != null && _graph.NumberOfEdges == _graph.Edges.Length;
+        public bool EdgesValid => _graph.Edges is { Length: > 0 };
 
         /// <summary>
         /// Returns true when the nodes listing is present and contains at least one node.
         /// </summary>
         [JetBrains.Annotations.PublicAPI]
-        public bool NodesValid => _graph.NumberOfNodes > 0 && _graph.Nodes != null && _graph.NumberOfNodes == _graph.Nodes.Length;
+        public bool NodesValid => _graph.Nodes is { Length: > 0 } ;
 
         /// <summary>
         /// Returns true when velocity of all edges is present.
@@ -276,7 +276,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
         public AgvGraph Graph =>
             new(SerialNumber.ToGuid(),
                 Nodes.ToArray(),
-                Edges.ToArray()
+                Edges.ToArray(),
+                _graph.RelatedMapId.ToGuid()
             );
     }
 }

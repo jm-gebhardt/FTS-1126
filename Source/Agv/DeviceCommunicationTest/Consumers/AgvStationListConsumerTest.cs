@@ -39,14 +39,14 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
             Assert.AreEqual(AgvTestIdentifier, consumed.SerialNumber);
 
             // Did the consumer forward a StationList message ...
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<StationListReceived>());
+            Assert.IsTrue(await fixture.TestHarness.Published.Any<MqttStationListReceived>());
             // ... with expected content?
-            var published = fixture.TestHarness.Published.Select<StationListReceived>().First().Context.Message;
+            var published = fixture.TestHarness.Published.Select<MqttStationListReceived>().First().Context.Message;
             Assert.AreEqual(AgvTestIdentifier.ToGuid(), published.CorrelationId);
-            Assert.AreEqual(AgvTestIdentifier, published.MqttStationList.SerialNumber);
-            Assert.AreEqual(2, published.MqttStationList.Stations.Length);
-            Assert.IsTrue(published.MqttStationList.Stations.Any(x => x.Identifier == "D1"));
-            Assert.IsTrue(published.MqttStationList.Stations.Any(x => x.Identifier == "C1"));
+            Assert.AreEqual(AgvTestIdentifier, published.StationList.SerialNumber);
+            Assert.AreEqual(2, published.StationList.Stations.Length);
+            Assert.IsTrue(published.StationList.Stations.Any(x => x.Identifier == "D1"));
+            Assert.IsTrue(published.StationList.Stations.Any(x => x.Identifier == "C1"));
         }
     }
 }

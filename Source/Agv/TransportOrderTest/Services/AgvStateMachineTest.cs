@@ -214,7 +214,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 				}, new[]
 				{
 					new AgvGraph.Edge("node01", "node02"){ Metric = 4f}
-				});
+				},
+                Guid.Empty);
 
 			const string agvId = "AGV_01";
 			var correlationId = agvId.ToGuid();
@@ -262,7 +263,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 				}, new[]
 				{
 					new AgvGraph.Edge("node01", "node02"){ Metric = 4f}
-				});
+				},
+                Guid.Empty);
 
 			const string agvId = "AGV_01";
 			var correlationId = agvId.ToGuid();
@@ -478,7 +480,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 				}, new[]
 				{
 					new AgvGraph.Edge("node01", "node02"){ Metric = 4f}
-				});
+				},
+                Guid.Empty);
 
 			// Act
 			await fixture.TestHarness.Bus.Publish(new AgvGraphReceived(

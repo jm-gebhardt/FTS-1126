@@ -21,12 +21,18 @@
                 "1991-03-11T11:40:03.12Z"
             ]
         },
-        "URL": {
+        "MapId": {
             "type": "string",
-            "description": "The URL where to get the map as an image",
+            "description": "The unique ID of the map",
             "examples": [
-                "http://agv1:8081/api/map/map.png"
+                "Area51_Floor1_Compartment47"
             ]
+        },
+        "Data": {
+            "type": "string",
+            "description": "The base 64 encoded data of the png image",
+            "contentEncoding": "base64",
+            "contentMediaType": "image/png"
         },
         "Resolution": {
             "type": "number",
@@ -36,12 +42,12 @@
             ]
         },
         "XOffset": {
-            "type": "integer",
-            "description": "The x offset of the map (from the left upper corner) where the mapped graph coordinate system starts"
+            "type": "number",
+            "description": "The x offset of the map in [m] (from the left upper corner) where the mapped graph coordinate system starts"
         },
         "YOffset": {
-            "type": "integer",
-            "description": "The y offset of the map (from the left upper corner) where the mapped graph coordinate system starts"
+            "type": "number",
+            "description": "The y offset of the map in [m] (from the left upper corner) where the mapped graph coordinate system starts"
         }
     },
     "required": [

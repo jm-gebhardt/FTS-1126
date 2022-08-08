@@ -21,7 +21,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
         {
             var parser = new StationListParser(
                 new MqttStationList("", DateTimeOffset.UtcNow, Array.Empty<Station>()),
-                new MqttGraph("", DateTimeOffset.UtcNow, 0, 0, Array.Empty<Node>(), Array.Empty<Edge>()));
+                new MqttGraph("", DateTimeOffset.UtcNow, Array.Empty<Node>(), Array.Empty<Edge>(), string.Empty));
 
             Assert.IsFalse(parser.SerialNumberValid);
             Assert.IsFalse(parser.StationListValid);
@@ -35,7 +35,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
         {
             var parser = new StationListParser(
                 new MqttStationList(AgvTestIdentifier01, DateTimeOffset.UtcNow, Array.Empty<Station>()),
-                new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow, 0, 0, Array.Empty<Node>(), Array.Empty<Edge>()));
+                new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow, Array.Empty<Node>(), Array.Empty<Edge>(), string.Empty));
 
             Assert.IsTrue(parser.SerialNumberValid);
             Assert.IsFalse(parser.StationListValid);
@@ -52,7 +52,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
             };
             var parser = new StationListParser(
                 new MqttStationList(AgvTestIdentifier02, DateTimeOffset.UtcNow, stations),
-                new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow, 0, 0, Array.Empty<Node>(), Array.Empty<Edge>()));
+                new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow, Array.Empty<Node>(), Array.Empty<Edge>(), string.Empty));
 
             Assert.IsFalse(parser.SerialNumberValid);
             Assert.IsTrue(parser.StationListValid);
@@ -69,7 +69,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
             };
             var parser = new StationListParser(
                 new MqttStationList(AgvTestIdentifier01, DateTimeOffset.UtcNow, stations),
-                new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow, 0, 0, Array.Empty<Node>(), Array.Empty<Edge>()));
+                new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow, Array.Empty<Node>(), Array.Empty<Edge>(), string.Empty));
 
             Assert.IsTrue(parser.SerialNumberValid);
             Assert.IsTrue(parser.StationListValid);
@@ -115,7 +115,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
             };
             var parser = new StationListParser(
                 new MqttStationList(AgvTestIdentifier01, DateTimeOffset.UtcNow, stations),
-                new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow, 2, 1, nodes, edges));
+                new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
 
             Assert.IsTrue(parser.SerialNumberValid);
             Assert.IsTrue(parser.StationListValid);

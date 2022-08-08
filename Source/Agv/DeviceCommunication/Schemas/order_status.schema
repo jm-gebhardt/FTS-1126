@@ -91,14 +91,14 @@
 		},
 		"CurrentPath": {
 			"type": "array",
-			"description": "The remaining path expressed as an array of nodes to travel over",
+			"description": "The remaining path to the next station (not the total path) expressed as an array of nodes to travel over",
 			"items": {
 				"type": "integer"
 			}
 		},
 		"EstimatedRemainingExecutionTime": {
 			"type": "number",
-			"description": "The remaining execution time of the order in seconds"
+			"description": "The remaining execution time of the whole order in seconds"
 		}
 	},
 	"required": [

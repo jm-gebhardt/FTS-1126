@@ -29,18 +29,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         public Guid? RequestId { get; set; }
 
         /// <summary>
-        /// The total amount of nodes in the graph. Must correlate with list count of nodes in
-        /// following parameter.
-        /// </summary>
-        public int NumberOfNodes { get; }
-
-        /// <summary>
-        /// The total amount of edges in the graph. Must correlate with list count of edges in
-        /// following parameter.
-        /// </summary>
-        public int NumberOfEdges { get; }
-
-        /// <summary>
         /// The list of nodes in the graph
         /// </summary>
         public Node[]? Nodes { get; }
@@ -51,31 +39,33 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         public Edge[]? Edges { get; }
 
         /// <summary>
+        /// The unique ID of the map that belongs to the graph
+        /// </summary>
+        public string RelatedMapId { get; }
+
+        /// <summary>
         /// Initializes a new instance of <see cref="MqttGraph"/>
         /// </summary>
         /// <param name="serialNumber">Serial number of the AGV.</param>
         /// <param name="modificationDate">Modification date of the graph. Timestamp in ISO8601 format.</param>
-        /// <param name="numberOfNodes">Total amount of nodes in the graph.</param>
-        /// <param name="numberOfEdges">Total amount of edges in the graph.</param>
         /// <param name="nodes">List of nodes.</param>
         /// <param name="edges">List of edges.</param>
+        /// <param name="relatedMapId">The unique ID ID of the map that belongs to the graph.</param>
         /// <param name="requestId">The unique ID replied from the request.</param>
         public MqttGraph(
             string serialNumber,
             DateTimeOffset modificationDate,
-            int numberOfNodes,
-            int numberOfEdges,
             Node[] nodes,
             Edge[] edges,
+            string relatedMapId,
             Guid? requestId = null)
         {
             SerialNumber = serialNumber;
             ModificationDate = modificationDate;
-            NumberOfNodes = numberOfNodes;
-            NumberOfEdges = numberOfEdges;
             Nodes = nodes;
             Edges = edges;
             RequestId = requestId;
+            RelatedMapId = relatedMapId;
         }
     }
 
@@ -137,6 +127,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         /// The maximum allowed velocity on that edge
         /// </summary>
         public float MaxVelocity { get; set; }
+
+        /// <summary>
+        /// The list of attributes attached to the edge
+        /// </summary>
+        public Attribute[]? Attributes { get; set; }
     }
 
     /// <summary>

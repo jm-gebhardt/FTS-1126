@@ -1,31 +1,32 @@
-﻿using MassTransit;
+﻿using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
+using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Events
 {
     /// <summary>
-    /// Transformation of <see cref="MqttMessages.MqttStationList"/> into MassTransit message.
+    /// Transformation of <see cref="StationList"/> into MassTransit message.
     /// </summary>
     [JetBrains.Annotations.PublicAPI]
-    public record StationListReceived : CorrelatedBy<Guid>
+    public record MqttStationListReceived : CorrelatedBy<Guid>
     {
         /// <inheritdoc/>
         public Guid CorrelationId { get; }
 
         /// <summary>
-        /// See <see cref="MqttMessages.MqttStationList"/>.
+        /// See <see cref="StationList"/>.
         /// </summary>
-        public MqttMessages.MqttStationList MqttStationList { get; }
+        public MqttStationList StationList { get; }
 
         /// <summary>
         /// Build station list message.
         /// </summary>
         /// <param name="correlationId"></param>
-        /// <param name="mqttStationList"></param>
-        public StationListReceived(Guid correlationId, MqttMessages.MqttStationList mqttStationList)
+        /// <param name="stationList"></param>
+        public MqttStationListReceived(Guid correlationId, MqttStationList stationList)
         {
             CorrelationId = correlationId;
-            MqttStationList = mqttStationList;
+            StationList = stationList;
         }
     }
 }

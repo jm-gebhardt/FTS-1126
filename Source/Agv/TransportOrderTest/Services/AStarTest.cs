@@ -52,7 +52,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                     new AgvGraph.Edge("7", "8") { Metric = 1f },
                     new AgvGraph.Edge("9", "8") { Metric = 1f },
                     new AgvGraph.Edge("7", "10") { Metric = 6f }
-                });
+                },
+                Guid.Empty);
 
             var map = new List<string>
             { // --> x [1..50]
@@ -112,7 +113,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                 }
                 ++y;
             }
-            _grid = new AgvGraph(Guid.Empty, nodes.ToArray(), edges.ToArray());
+            _grid = new AgvGraph(Guid.Empty, nodes.ToArray(), edges.ToArray(), Guid.Empty);
         }
 
 
@@ -164,15 +165,16 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                    new AgvGraph.Edge("Frankfurt", "Würzburg") { Metric = 116f },
                    new AgvGraph.Edge("Ludwigshafen", "Würzburg") { Metric = 183f },
                    new AgvGraph.Edge("Heilbronn", "Würzburg") { Metric = 102f }
-                });
+                },
+                Guid.Empty);
             var aStar = new AStar(graph);
 
             var route = aStar.CalculateRoute("Saarbrücken", "Würzburg");
             Assert.IsNotNull(route);
-            CollectionAssert.AreEqual(new[] {"Saarbrücken", "Kaiserslautern", "Frankfurt", "Würzburg" }, route.Nodes);
+            CollectionAssert.AreEqual(new[] { "Saarbrücken", "Kaiserslautern", "Frankfurt", "Würzburg" }, route.Nodes);
             Assert.AreEqual(289f, route.Costs, 0.00001f);
         }
-        
+
         /// <summary>
         /// Test_AStar_WikipediaExample_WithCurrentNode
         /// </summary>
@@ -201,12 +203,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                    new AgvGraph.Edge("Frankfurt", "Würzburg") { Metric = 116f },
                    new AgvGraph.Edge("Ludwigshafen", "Würzburg") { Metric = 183f },
                    new AgvGraph.Edge("Heilbronn", "Würzburg") { Metric = 102f }
-                });
+                }, Guid.Empty);
             var aStar = new AStar(graph);
 
-            var route = aStar.CalculateRoute("Karlsruhe","Saarbrücken", "Würzburg");
+            var route = aStar.CalculateRoute("Karlsruhe", "Saarbrücken", "Würzburg");
             Assert.IsNotNull(route);
-            CollectionAssert.AreEqual(new[] {"Karlsruhe", "Saarbrücken", "Kaiserslautern", "Frankfurt", "Würzburg" }, route.Nodes);
+            CollectionAssert.AreEqual(new[] { "Karlsruhe", "Saarbrücken", "Kaiserslautern", "Frankfurt", "Würzburg" }, route.Nodes);
             Assert.AreEqual(289f + 145f, route.Costs, 0.00001f);
         }
 

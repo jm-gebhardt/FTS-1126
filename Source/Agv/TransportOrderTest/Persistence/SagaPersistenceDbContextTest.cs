@@ -93,7 +93,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Persistence
                 new AgvStatus(Guid.NewGuid(), "123", true, true, 10,false, false),
                 new AgvGraph(Guid.NewGuid(), 
                     new AgvGraph.Node[] { new("id") }, 
-                    new AgvGraph.Edge[] { new("from", "to") })
+                    new AgvGraph.Edge[] { new("from", "to") },
+                    Guid.Empty)
             );
             using (var dbContext = dbContextFactory.CreateDbContext())
             {

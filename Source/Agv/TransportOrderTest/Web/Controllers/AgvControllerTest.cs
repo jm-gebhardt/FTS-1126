@@ -50,7 +50,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
                 string ip = _ips[i];
                 var correlationId = agvId.ToGuid();
 
-                var agvGraph = new AgvGraph(correlationId, _nodes, _edges);
+                var agvGraph = new AgvGraph(correlationId, _nodes, _edges, Guid.Empty);
                 var agvStatus = new AgvStatus(correlationId, order, true, true, 10, true, true);
                 var agvData = new AgvData(correlationId, "Karis", "BF1", ip, 1.8, 120.0, 0.6, 0.8, 0.7, 1, 2.5, 1000, Array.Empty<AgvData.Sensor>());
 

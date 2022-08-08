@@ -9,7 +9,7 @@ using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
 namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
 {
     /// <summary>
-    /// Tests for <see cref="MqttGraph"/> and <see cref="GraphReceived"/>.
+    /// Tests for <see cref="MqttGraph"/> and <see cref="MqttGraphReceived"/>.
     /// </summary>
     [TestClass]
     public class AgvGraphConsumerTest
@@ -32,7 +32,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
             {
                 new() { EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = false, MaxVelocity = 1 }
             };
-            var message = new MqttGraph(AgvTestIdentifier, DateTimeOffset.UtcNow, 2, 1, nodes, edges);
+            var message = new MqttGraph(AgvTestIdentifier, DateTimeOffset.UtcNow, nodes, edges, string.Empty);
 
             await fixture.TestHarness.Bus.PublishMqtt(message, null);
 
@@ -43,15 +43,13 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
             Assert.AreEqual(AgvTestIdentifier, consumed.SerialNumber);
 
             // Did the consumer forward a Graph message ...
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<GraphReceived>());
+            Assert.IsTrue(await fixture.TestHarness.Published.Any<MqttGraphReceived>());
             // ... with expected content?
-            var published = fixture.TestHarness.Published.Select<GraphReceived>().First().Context.Message;
+            var published = fixture.TestHarness.Published.Select<MqttGraphReceived>().First().Context.Message;
             Assert.AreEqual(AgvTestIdentifier.ToGuid(), published.CorrelationId);
-            Assert.AreEqual(AgvTestIdentifier, published.MqttGraph.SerialNumber);
-            Assert.AreEqual(2, published.MqttGraph.NumberOfNodes);
-            Assert.AreEqual(2, published.MqttGraph.Nodes!.Length);
-            Assert.AreEqual(1, published.MqttGraph.NumberOfEdges);
-            Assert.AreEqual(1, published.MqttGraph.Edges!.Length);
+            Assert.AreEqual(AgvTestIdentifier, published.Graph.SerialNumber);
+            Assert.AreEqual(2, published.Graph.Nodes?.Length);
+            Assert.AreEqual(1, published.Graph.Edges?.Length);
         }
     }
 }

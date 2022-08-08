@@ -11,6 +11,11 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
     {
         /// <inheritdoc/>
         public Guid CorrelationId { get; }
+        
+        /// <summary>
+        /// The Guid of the related map 
+        /// </summary>
+        public Guid RelatedMapId { get; }
 
         /// <summary>
         /// The list of nodes in the graph.
@@ -28,11 +33,13 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
         /// <param name="correlationId"></param>
         /// <param name="nodes"></param>
         /// <param name="edges"></param>
-        public AgvGraph(Guid correlationId, Node[] nodes, Edge[] edges)
+        /// <param name="relatedMapId"></param>
+        public AgvGraph(Guid correlationId, Node[] nodes, Edge[] edges, Guid relatedMapId)
         {
             CorrelationId = correlationId;
             Nodes = nodes;
             Edges = edges;
+            RelatedMapId = relatedMapId;
         }
 
         /// <summary>

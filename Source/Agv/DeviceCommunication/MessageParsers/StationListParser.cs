@@ -9,20 +9,20 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
     /// </summary>
     public class StationListParser
     {
-        private readonly MqttStationList _mqttStationList;
-        private readonly MqttGraph _mqttGraph;
+        private readonly MqttStationList _stationList;
+        private readonly MqttGraph _graph;
         private AgvGraph? _agvGraph;
 
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="mqttGraph"></param>
-        /// <param name="mqttStationList"></param>
-        public StationListParser(MqttStationList mqttStationList, MqttGraph mqttGraph)
+        /// <param name="graph"></param>
+        /// <param name="stationList"></param>
+        public StationListParser(MqttStationList stationList, MqttGraph graph)
         {
-            _mqttStationList = mqttStationList;
-            _mqttGraph = mqttGraph;
+            _stationList = stationList;
+            _graph = graph;
         }
 
 
@@ -49,7 +49,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
         {
             if (_agvGraph == null)
             {
-                var graphParser = new GraphParser(_mqttGraph);
+                var graphParser = new GraphParser(_graph);
                 _agvGraph = graphParser.Graph;
             }
         }
@@ -60,14 +60,14 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
         /// </summary>
         [JetBrains.Annotations.PublicAPI]
         public bool SerialNumberValid =>
-            !string.IsNullOrEmpty(_mqttStationList.SerialNumber) &&
-            _mqttStationList.SerialNumber == _mqttGraph.SerialNumber;
+            !string.IsNullOrEmpty(_stationList.SerialNumber) &&
+            _stationList.SerialNumber == _graph.SerialNumber;
 
         /// <summary>
         /// Returns true when the nodes listing is present and contains at least one node.
         /// </summary>
         [JetBrains.Annotations.PublicAPI]
-        public bool StationListValid => _mqttStationList.Stations.Length > 0;
+        public bool StationListValid => _stationList.Stations.Length > 0;
 
 
         /// <summary>
@@ -81,7 +81,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
             {
                 if (_agvGraph == null)
                 {
-                    var graphParser = new GraphParser(_mqttGraph);
+                    var graphParser = new GraphParser(_graph);
                     var agvGraph = graphParser.Graph;
                     if (!StationListValid)
                     {
@@ -91,7 +91,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
                     List<Common.Messages.AgvManagement.AgvGraph.Node> additionalNodes = new();
                     List<Common.Messages.AgvManagement.AgvGraph.Edge> additionalEdges = new();
 
-                    foreach (var station in _mqttStationList.Stations)
+                    foreach (var station in _stationList.Stations)
                     {
                         // Search node closest to this station.
                         Common.Messages.AgvManagement.AgvGraph.Node? nodeNearby = null;
@@ -130,7 +130,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
                     additionalNodes.AddRange(agvGraph.Nodes);
                     additionalEdges.AddRange(agvGraph.Edges);
 
-                    _agvGraph = new AgvGraph(agvGraph.CorrelationId, additionalNodes.ToArray(), additionalEdges.ToArray());
+                    _agvGraph = new AgvGraph(agvGraph.CorrelationId, additionalNodes.ToArray(), additionalEdges.ToArray(), agvGraph.RelatedMapId);
                 }
                 return _agvGraph;
             }

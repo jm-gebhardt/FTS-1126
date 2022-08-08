@@ -77,7 +77,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph
             return new AgvGraph(
                 correlationId,
                 _otherNodes.Concat(_gridNodes).ToArray(),
-                _edges.ToArray()
+                _edges.ToArray(),
+                Guid.Empty
             );
         }
 

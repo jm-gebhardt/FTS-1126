@@ -71,7 +71,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                 new[]
                 {
                    new AgvGraph.Edge(_sources[0], _destinations[0]) { Metric = 1f }
-                });
+                },
+                Guid.Empty);
         }
 
         /// <summary>
@@ -223,7 +224,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                 new AgvGraph.Edge(node04, node01){ Metric = 5f},
                 new AgvGraph.Edge(node04, node02){ Metric = 6f},
                 new AgvGraph.Edge(node04, node03){ Metric = 4f}
-            });
+            },
+                Guid.Empty);
 
             const string agvId = "AGV_01";
             var closestAgvCorrelationId = agvId.ToGuid();
@@ -293,7 +295,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         {
 
             Mock<IAgvRegistry> mockAgvRegistry = GetAgvRegistry();
-            Mock<IOrderRegistry> mockOrderRegistry = GetOrderRegistry(false,true);
+            Mock<IOrderRegistry> mockOrderRegistry = GetOrderRegistry(false, true);
 
             var fixture = new MassTransitTestFixture<AssignAgvConsumer>(s =>
                 {
@@ -373,7 +375,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             {
                 for (int i = 0; i < _orders.Length; i++)
                 {
-                    var order = new OrderDetails(_orders[i].ToGuid(), _orders[i], _sources[i], _destinations[i], _leNo[i], HostOrderCreator.Simulation, noCreationDates?DateTime.Now : _creationDates[i]);
+                    var order = new OrderDetails(_orders[i].ToGuid(), _orders[i], _sources[i], _destinations[i], _leNo[i], HostOrderCreator.Simulation, noCreationDates ? DateTime.Now : _creationDates[i]);
                     orders.Add(new OrderSaga(_orders[i].ToGuid(), order, _states[i], null));
                 }
             }
@@ -422,7 +424,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                     new AgvGraph.Edge(node04, node02){ Metric = 6f},
                     new AgvGraph.Edge(node04, node03){ Metric = 4f}
                     //no edges for node 5 and 6 on purpose so that there is no route to this stations
-                });
+                },
+                Guid.Empty);
 
             for (int i = 0; i < _agvIds.Length; i++)
             {

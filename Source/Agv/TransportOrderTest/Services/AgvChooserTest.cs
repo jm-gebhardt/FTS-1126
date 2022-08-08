@@ -3,6 +3,7 @@ using Gebhardt.StoreWare.Agv.Common.Definitions;
 using Gebhardt.StoreWare.Agv.Common.Messages;
 using Gebhardt.StoreWare.Agv.TransportOrder.Services;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Utilities;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 {
@@ -218,7 +219,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                    new AgvGraph.Edge("NoWhere", "Heilbronn") { Metric = 123f }
                 };
 
-            _graphWikipedia = new AgvGraph(Guid.Empty, nodes, edges);
+            _graphWikipedia = new AgvGraph(Guid.Empty, nodes, edges, "Area51".ToGuid());
 
             AgvGraph.Edge[] edgesFast = edges.Select(e => (AgvGraph.Edge)e.Clone()).ToArray();
             foreach (var edge in edgesFast)
@@ -226,7 +227,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                 edge.Metric /= 2;
             }
 
-            _graphWikipediaFast = new AgvGraph(Guid.Empty, nodes, edgesFast);
+            _graphWikipediaFast = new AgvGraph(Guid.Empty, nodes, edgesFast, "Area51".ToGuid());
 
             _dummyOrder = new OrderDetails(
                 correlationId: Guid.NewGuid(),

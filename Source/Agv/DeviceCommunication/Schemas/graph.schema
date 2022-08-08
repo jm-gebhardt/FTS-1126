@@ -25,13 +25,12 @@
       "type": "string",
       "description": "The unique ID replied from the request."
     },
-    "NumberOfNodes": {
-      "type": "integer",
-      "description": "The total amount of nodes in the graph. Must correlate with list count of nodes in following parameter."
-    },
-    "NumberOfEdges": {
-      "type": "integer",
-      "description": "The total amount of edges in the graph. Must correlate with list count of edges in following parameter."
+    "RelatedMapId": {
+      "type": "string",
+      "description": "The unique ID of the map that belongs to the graph",
+      "examples": [
+           "Area51_Floor1_Compartment47"
+      ]
     },
     "Nodes": {
       "type": "array",
@@ -121,6 +120,30 @@
             "MaxVelocity": {
               "type": "integer",
               "description": "The maximum allowed velocity on that edge"
+            },
+            "Attributes": {
+              "type": "array",
+              "description": "The list of attributes attached to the edge",
+              "items": [
+                {
+                  "type": "object",
+                  "description": "Node attribute",
+                  "properties": {
+                    "Key": {
+                      "type": "string",
+                      "description": "The key (name) of the attribute"
+                    },
+                    "Value": {
+                      "type": "string",
+                      "description": "The value of the attribute"
+                    }
+                  },
+                  "required": [
+                    "Key",
+                    "Value"
+                  ]
+                }
+              ]
             }
           },
           "required": [
@@ -137,8 +160,6 @@
   "required": [
     "SerialNumber",
     "ModificationDate",
-    "NumberOfNodes",
-    "NumberOfEdges",
     "Nodes",
     "Edges"
   ]
