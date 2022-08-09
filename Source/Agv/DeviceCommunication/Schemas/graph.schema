@@ -160,6 +160,7 @@
   "required": [
     "SerialNumber",
     "ModificationDate",
+    "RequestId",
     "Nodes",
     "Edges"
   ]
