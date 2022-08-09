@@ -38,10 +38,10 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages
         /// </summary>
         public HostOrderCreator Creator { get; }
 
-		/// <summary>
-		/// The date and time when the order was created
-		/// </summary>
-		public DateTime CreationDate { get; }
+        /// <summary>
+        /// The date and time when the order was created
+        /// </summary>
+        public DateTime CreationDate { get; }
 
 
         /// <summary>
@@ -57,29 +57,29 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages
         [JsonConstructor]
         public OrderDetails(Guid correlationId, string orderId, string source, string destination, string leNo, HostOrderCreator creator, DateTime creationDate)
         {
-			CorrelationId = correlationId;
-			OrderId = orderId;
-			Source = source;
-			Destination = destination;
-			LeNo = leNo;
-			Creator = creator;
-			CreationDate = creationDate;
-		}
+            CorrelationId = correlationId;
+            OrderId = orderId;
+            Source = source;
+            Destination = destination;
+            LeNo = leNo;
+            Creator = creator;
+            CreationDate = creationDate;
+        }
 
-		/// <summary>
-		/// Initializes a new instance of <see cref="OrderDetails"/> with creation date 'now'
-		/// </summary>
-		/// <param name="correlationId"></param>
-		/// <param name="orderId"></param>
-		/// <param name="source"></param>
-		/// <param name="destination"></param>
-		/// <param name="leNo"></param>
-		/// <param name="creator"></param>
-		public OrderDetails(Guid correlationId, string orderId, string source, string destination, string leNo, HostOrderCreator creator)
-			: this(correlationId, orderId, source, destination, leNo, creator, DateTime.Now)
-		{
-		}
-	}
+        /// <summary>
+        /// Initializes a new instance of <see cref="OrderDetails"/> with creation date 'now'
+        /// </summary>
+        /// <param name="correlationId"></param>
+        /// <param name="orderId"></param>
+        /// <param name="source"></param>
+        /// <param name="destination"></param>
+        /// <param name="leNo"></param>
+        /// <param name="creator"></param>
+        public OrderDetails(Guid correlationId, string orderId, string source, string destination, string leNo, HostOrderCreator creator)
+            : this(correlationId, orderId, source, destination, leNo, creator, DateTime.Now)
+        {
+        }
+    }
 
     /// <summary>
     /// Defines the creator of a host order 

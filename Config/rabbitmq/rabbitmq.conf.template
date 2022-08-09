@@ -1,16 +1,16 @@
 # Set ports
-listeners.tcp.default 	= 5672
-listeners.ssl.default	= 5671
+listeners.tcp.default    = 5672
+listeners.ssl.default    = 5671
 
 # Enable SSL
-ssl_options.cacertfile	= %OPENSSL_CERTS_SERVER_DIR%/ca_certificate.pem
-ssl_options.certfile	= %OPENSSL_CERTS_SERVER_DIR%/server_certificate.pem
-ssl_options.keyfile		= %OPENSSL_CERTS_SERVER_DIR%/private_key.pem
-ssl_options.verify		= verify_peer
+ssl_options.cacertfile  = %OPENSSL_CERTS_SERVER_DIR%/ca_certificate.pem
+ssl_options.certfile    = %OPENSSL_CERTS_SERVER_DIR%/server_certificate.pem
+ssl_options.keyfile     = %OPENSSL_CERTS_SERVER_DIR%/private_key.pem
+ssl_options.verify      = verify_peer
 ssl_options.fail_if_no_peer_cert = true
 
 # MQTT config
-mqtt.listeners.ssl.default	= 8883
+mqtt.listeners.ssl.default = 8883
 mqtt.ssl_cert_login = true
 
 # Use the TLS cert's CN instead of its DN as the username

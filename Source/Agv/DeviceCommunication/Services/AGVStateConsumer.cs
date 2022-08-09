@@ -40,19 +40,19 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
             }
             
             await context.Publish(new AgvStatusReceived(
-	            correlationId: serialNumber.ToGuid(),
+                correlationId: serialNumber.ToGuid(),
                 agvId: serialNumber,
                 agvStatus: new AgvStatus(
-	                serialNumber.ToGuid(),
-	                GetOrderId(message),
-	                GetBusy(message),
-	                GetAutomatic(message),
-	                GetBatteryCharge(message),
-	                GetCharging(message),
-	                GetDisturbed(message),
-	                GetLastNodeId(message)
+                    serialNumber.ToGuid(),
+                    GetOrderId(message),
+                    GetBusy(message),
+                    GetAutomatic(message),
+                    GetBatteryCharge(message),
+                    GetCharging(message),
+                    GetDisturbed(message),
+                    GetLastNodeId(message)
                     )
-	            ), context.CancellationToken);
+                ), context.CancellationToken);
         }
 
         private string GetSerialNumber(MqttState message)
@@ -140,14 +140,14 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
 
         private string? GetLastNodeId(MqttState message)
         {
-	        if (!string.IsNullOrEmpty(message.LastNodeId))
-	        {
-		        return message.LastNodeId;
+            if (!string.IsNullOrEmpty(message.LastNodeId))
+            {
+                return message.LastNodeId;
             }
-	        else
-	        {
-		        return null;
-	        }
+            else
+            {
+                return null;
+            }
         }
     }
 }

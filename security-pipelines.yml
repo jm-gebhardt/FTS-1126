@@ -42,7 +42,7 @@ steps:
         VULNERABLE_PROJECTS=($(echo "${OUTPUT}" | awk '/Project `[A-z]+` has the following vulnerable packages/{ print $2}'))
         for i in "${VULNERABLE_PROJECTS[@]}"
         do
-        	echo "##vso[task.logissue type=error]${i} has vulnerable dependencies" >&2
+            echo "##vso[task.logissue type=error]${i} has vulnerable dependencies" >&2
         done
         if [ -n "${VULNERABLE_PROJECTS}" ]; then
           exit 1;

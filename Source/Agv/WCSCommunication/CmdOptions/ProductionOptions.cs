@@ -10,11 +10,11 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.CmdOptions
     [Verb("production", isDefault: true)]
     public sealed class ProductionOptions
     {
-	    /// <summary>
-	    /// This is required for 'dotnet ef migrations' to work
-	    /// </summary>
-	    [UsedImplicitly]
-	    [Option("applicationName", HelpText = "Ignore property only used by dotnet tools")]
-	    public string? ApplicationName { get; init; }
+        /// <summary>
+        /// This is required for 'dotnet ef migrations' to work
+        /// </summary>
+        [UsedImplicitly]
+        [Option("applicationName", HelpText = "Ignore property only used by dotnet tools")]
+        public string? ApplicationName { get; init; }
     }
 }

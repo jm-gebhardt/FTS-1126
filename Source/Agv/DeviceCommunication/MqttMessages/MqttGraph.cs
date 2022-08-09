@@ -8,7 +8,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
     /// Graph representing the paths on which the AGV travels.
     /// <para>See "graph.schema".</para>
     /// </summary>
-	[JetBrains.Annotations.PublicAPI]
+    [JetBrains.Annotations.PublicAPI]
     [EntityName("amq.topic")]   // Specifies the RabbitMq exchange where the message is published
     [RoutingKey("agv.graph")]   // Specifies the topic where subscribers can receive the message
     public record MqttGraph
@@ -72,7 +72,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
     /// <summary>
     /// Node representation
     /// </summary>
-	[JetBrains.Annotations.PublicAPI]
+    [JetBrains.Annotations.PublicAPI]
     public record Node
     {
         /// <summary>
@@ -100,7 +100,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
     /// <summary>
     /// Edge representation
     /// </summary>
-	[JetBrains.Annotations.PublicAPI]
+    [JetBrains.Annotations.PublicAPI]
     public record Edge
     {
         /// <summary>
@@ -137,7 +137,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
     /// <summary>
     /// Node attribute
     /// </summary>
-	[JetBrains.Annotations.PublicAPI]
+    [JetBrains.Annotations.PublicAPI]
     public record Attribute
     {
         /// <summary>

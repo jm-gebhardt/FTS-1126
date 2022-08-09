@@ -1,35 +1,35 @@
 ﻿{
-	"$schema": "https://json-schema.org/draft/2020-12/schema",
-	"title": "requestSensorStates",
-	"description": "A request to send sensor states in the state message",
-	"subtopic": "/requestSensorStates",
-	"type": "object",
-	"properties": {
-		"SerialNumber": {
-			"description": "Serial number of the AGV.",
-			"type": "string",
-			"examples": [
-				"1234-5678",
-				"AGV2034"
-			]
-		},
-		"RequestId": {
-			"type": "string",
-			"description": "A unique ID for that request."
-		},
-		"Send": {
-			"type": "string",
-			"description": "true/false. Send sensor data in state telegram."
-		},
-		"Interval": {
-			"type": "integer",
-			"description": "Interval how long the states are going to be sent in seconds. -1 is infinite."
-		}
-	},
-	"required": [
-		"SerialNumber",
-		"RequestId",
-		"Send",
-		"Interval"
-	]
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "requestSensorStates",
+    "description": "A request to send sensor states in the state message",
+    "subtopic": "/requestSensorStates",
+    "type": "object",
+    "properties": {
+        "SerialNumber": {
+            "description": "Serial number of the AGV.",
+            "type": "string",
+            "examples": [
+                "1234-5678",
+                "AGV2034"
+            ]
+        },
+        "RequestId": {
+            "type": "string",
+            "description": "A unique ID for that request."
+        },
+        "Send": {
+            "type": "string",
+            "description": "true/false. Send sensor data in state telegram."
+        },
+        "Interval": {
+            "type": "integer",
+            "description": "Interval how long the states are going to be sent in seconds. -1 is infinite."
+        }
+    },
+    "required": [
+        "SerialNumber",
+        "RequestId",
+        "Send",
+        "Interval"
+    ]
 }

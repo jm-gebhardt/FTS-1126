@@ -52,53 +52,53 @@ exit /b 1
 if not [%~1] == [] goto usage
 
 if defined AGV_SUBJ_SERVER (
-	set OPENSSL_SUBJ_SERVER=%AGV_SUBJ_SERVER%
+    set OPENSSL_SUBJ_SERVER=%AGV_SUBJ_SERVER%
 )
 
 if defined AGV_SUBJ_CLIENT (
-	set OPENSSL_SUBJ_CLIENT=%AGV_SUBJ_CLIENT%
+    set OPENSSL_SUBJ_CLIENT=%AGV_SUBJ_CLIENT%
 )
 
 if defined AGV_CERT_DAYS (
-	set OPENSSL_CERT_DAYS=%AGV_CERT_DAYS%
+    set OPENSSL_CERT_DAYS=%AGV_CERT_DAYS%
 )
 
 if defined AGV_SUBJ_CA (
-	set OPENSSL_SUBJ_CA=%AGV_SUBJ_CA%
+    set OPENSSL_SUBJ_CA=%AGV_SUBJ_CA%
 )
 
 if defined AGV_CERTS_DIR (
-	set OPENSSL_CERTS_DIR=%AGV_CERTS_DIR%
+    set OPENSSL_CERTS_DIR=%AGV_CERTS_DIR%
 )
 
 if defined AGV_OPENSSL_PATH (
-	REM Use settings from environment.
-	set OPENSSL_PATH=%AGV_OPENSSL_PATH%\
+    REM Use settings from environment.
+    set OPENSSL_PATH=%AGV_OPENSSL_PATH%\
 ) else (
-	REM Try find OpenSSL by PATH environment.
-	openssl.exe version >nul 2>&1
-	if not errorlevel 1 (
-		set OPENSSL_PATH=
-	)
+    REM Try find OpenSSL by PATH environment.
+    openssl.exe version >nul 2>&1
+    if not errorlevel 1 (
+        set OPENSSL_PATH=
+    )
 )
 
 REM Try to find OpenSSL (maybe using default),
 "%OPENSSL_PATH%openssl.exe" version >nul 2>&1
 if errorlevel 1 (
-	echo OpenSSL not found. 1>&2
-	goto usage
+    echo OpenSSL not found. 1>&2
+    goto usage
 )
 
 
 
 REM Cleanup leftover from previous run ...
 if exist "%TEMP_FOLDER%" (
-	rd /s /q "%TEMP_FOLDER%"
-	echo Failed to cleanup folder %TEMP_FOLDER%. 1>&2
-	if errorlevel 1 (
-		echo Failed to cleanup folder %TEMP_FOLDER%. 1>&2
-		exit /b 1
-	)
+    rd /s /q "%TEMP_FOLDER%"
+    echo Failed to cleanup folder %TEMP_FOLDER%. 1>&2
+    if errorlevel 1 (
+        echo Failed to cleanup folder %TEMP_FOLDER%. 1>&2
+        exit /b 1
+    )
 )
 REM ... and prepare temporary folders for certificate creation.
 mkdir "%TEMP_FOLDER%" && ^
@@ -110,8 +110,8 @@ mkdir "%TEMP_FOLDER%\ca\private" && ^
 echo 01>"%TEMP_FOLDER%\ca\serial"&&^
 echo. 2>"%TEMP_FOLDER%\ca\index.txt" >nul
 if errorlevel 1 (
-	echo Failed to create folders in %TEMP_FOLDER%. 1>&2
-	exit /b 1
+    echo Failed to create folders in %TEMP_FOLDER%. 1>&2
+    exit /b 1
 )
 
 REM Prepare replacements for configuration.
@@ -126,8 +126,8 @@ goto:eof
 echo. 2>"%TEMP_FOLDER%\ca\openssl.cnf" >nul
 for /f "delims=" %%i in (.\Config\openssl.cnf.template) do call:eval_openssl_cnf "%%i"
 if not exist "%TEMP_FOLDER%\ca\openssl.cnf" (
-	echo Failed to build OpenSSL configuration. 1>&2
-	exit /b 1
+    echo Failed to build OpenSSL configuration. 1>&2
+    exit /b 1
 )
 
 REM Prepare replacement for configuration (convert to absolute path)
@@ -146,8 +146,8 @@ goto:eof
 echo # Generated from rabbitmq.conf.template by create_cert.bat > .\Config\rabbitmq\rabbitmq.docker.conf
 for /f "delims=" %%i in (.\Config\rabbitmq\rabbitmq.conf.template) do call:eval_rabbitmq_cnf "%%i"
 if not exist .\Config\rabbitmq\rabbitmq.conf (
-	echo Failed to build RabbitMQ configuration. 1>&2
-	exit /b 1
+    echo Failed to build RabbitMQ configuration. 1>&2
+    exit /b 1
 )
 
 REM Prepare replacement for configuration (unix path within RabbitMQ container)
@@ -163,8 +163,8 @@ goto:eof
 echo # Generated from rabbitmq.conf.template by create_cert.bat > .\Config\rabbitmq\rabbitmq.docker.conf
 for /f "delims=" %%i in (.\Config\rabbitmq\rabbitmq.conf.template) do call:eval_rabbitmq_dockercnf "%%i"
 if not exist .\Config\rabbitmq\rabbitmq.docker.conf (
-	echo Failed to build RabbitMQ configuration for docker. 1>&2
-	exit /b 1
+    echo Failed to build RabbitMQ configuration for docker. 1>&2
+    exit /b 1
 )
 
 
@@ -203,64 +203,64 @@ set /a ERRCNT+=%errorlevel%
 
 
 if %ERRCNT% EQU 0 (
-	echo.
-	echo.
-	echo Copy certificates to target folder ==========================================
+    echo.
+    echo.
+    echo Copy certificates to target folder ==========================================
 
-	if not exist "%OPENSSL_CERTS_DIR%" (
-		mkdir "%OPENSSL_CERTS_DIR%"
-		set /a ERRCNT+=%errorlevel%
-	)
-	if %ERRCNT% EQU 0 (
-		if not exist "%OPENSSL_CERTS_DIR%\server" (
-			mkdir "%OPENSSL_CERTS_DIR%\server"
-			set /a ERRCNT+=%errorlevel%
-		)
-	)
-	if %ERRCNT% EQU 0 (
-		if not exist "%OPENSSL_CERTS_DIR%\client" (
-			mkdir "%OPENSSL_CERTS_DIR%\client"
-			set /a ERRCNT+=%errorlevel%
-		)
-	)
+    if not exist "%OPENSSL_CERTS_DIR%" (
+        mkdir "%OPENSSL_CERTS_DIR%"
+        set /a ERRCNT+=%errorlevel%
+    )
+    if %ERRCNT% EQU 0 (
+        if not exist "%OPENSSL_CERTS_DIR%\server" (
+            mkdir "%OPENSSL_CERTS_DIR%\server"
+            set /a ERRCNT+=%errorlevel%
+        )
+    )
+    if %ERRCNT% EQU 0 (
+        if not exist "%OPENSSL_CERTS_DIR%\client" (
+            mkdir "%OPENSSL_CERTS_DIR%\client"
+            set /a ERRCNT+=%errorlevel%
+        )
+    )
 
-	if %ERRCNT% EQU 0 (
-		copy /y "%TEMP_FOLDER%\ca\ca_certificate.pem"         "%OPENSSL_CERTS_DIR%\server\ca_certificate.pem" >nul
-		set /a ERRCNT+=%errorlevel%
-		copy /y "%TEMP_FOLDER%\server\server_certificate.pem" "%OPENSSL_CERTS_DIR%\server\server_certificate.pem" >nul
-		set /a ERRCNT+=%errorlevel%
-		copy /y "%TEMP_FOLDER%\server\private_key.pem"        "%OPENSSL_CERTS_DIR%\server\private_key.pem" >nul
-		set /a ERRCNT+=%errorlevel%
-		copy /y "%TEMP_FOLDER%\ca\ca_certificate.pem"         "%OPENSSL_CERTS_DIR%\client\ca_certificate.pem" >nul
-		set /a ERRCNT+=%errorlevel%
-		copy /y "%TEMP_FOLDER%\client\client_certificate.pem" "%OPENSSL_CERTS_DIR%\client\client_certificate.pem" >nul
-		set /a ERRCNT+=%errorlevel%
-		copy /y "%TEMP_FOLDER%\client\private_key.pem"        "%OPENSSL_CERTS_DIR%\client\private_key.pem" >nul
-		set /a ERRCNT+=%errorlevel%
-	)
-	if %ERRCNT% NEQ 0 (
-		rd /s /q "%OPENSSL_CERTS_DIR%\server"
-		rd /s /q "%OPENSSL_CERTS_DIR%\client"
-	)
+    if %ERRCNT% EQU 0 (
+        copy /y "%TEMP_FOLDER%\ca\ca_certificate.pem"         "%OPENSSL_CERTS_DIR%\server\ca_certificate.pem" >nul
+        set /a ERRCNT+=%errorlevel%
+        copy /y "%TEMP_FOLDER%\server\server_certificate.pem" "%OPENSSL_CERTS_DIR%\server\server_certificate.pem" >nul
+        set /a ERRCNT+=%errorlevel%
+        copy /y "%TEMP_FOLDER%\server\private_key.pem"        "%OPENSSL_CERTS_DIR%\server\private_key.pem" >nul
+        set /a ERRCNT+=%errorlevel%
+        copy /y "%TEMP_FOLDER%\ca\ca_certificate.pem"         "%OPENSSL_CERTS_DIR%\client\ca_certificate.pem" >nul
+        set /a ERRCNT+=%errorlevel%
+        copy /y "%TEMP_FOLDER%\client\client_certificate.pem" "%OPENSSL_CERTS_DIR%\client\client_certificate.pem" >nul
+        set /a ERRCNT+=%errorlevel%
+        copy /y "%TEMP_FOLDER%\client\private_key.pem"        "%OPENSSL_CERTS_DIR%\client\private_key.pem" >nul
+        set /a ERRCNT+=%errorlevel%
+    )
+    if %ERRCNT% NEQ 0 (
+        rd /s /q "%OPENSSL_CERTS_DIR%\server"
+        rd /s /q "%OPENSSL_CERTS_DIR%\client"
+    )
 ) else (
-	echo Failed to install certificates. 1>&2
+    echo Failed to install certificates. 1>&2
 )
 
 
 if %ERRCNT% EQU 0 (
-	echo.
-	echo.
-	echo RabbitMQ configuration ======================================================
-	echo A configuration template has been generated at .\Config\rabbitmq\rabbitmq.conf
-	echo CN of the following DN is used for authorization:
-	"%OPENSSL_PATH%openssl.exe" x509 -in "%OPENSSL_CERTS_DIR%\client\client_certificate.pem" -nameopt RFC2253 -subject -noout
-	echo For more information see https://dev.azure.com/GebhardtGroup/StoreWare/_wiki/wikis/StoreWare.wiki/167/Transportsicherheit-(TLS-Transport-Layer-Security)
+    echo.
+    echo.
+    echo RabbitMQ configuration ======================================================
+    echo A configuration template has been generated at .\Config\rabbitmq\rabbitmq.conf
+    echo CN of the following DN is used for authorization:
+    "%OPENSSL_PATH%openssl.exe" x509 -in "%OPENSSL_CERTS_DIR%\client\client_certificate.pem" -nameopt RFC2253 -subject -noout
+    echo For more information see https://dev.azure.com/GebhardtGroup/StoreWare/_wiki/wikis/StoreWare.wiki/167/Transportsicherheit-(TLS-Transport-Layer-Security)
 )
 
 
 REM Clean up temp files (on success).
 if %ERRCNT% EQU 0 (
-	rd /s /q "%TEMP_FOLDER%"
+    rd /s /q "%TEMP_FOLDER%"
 )
 
 echo.

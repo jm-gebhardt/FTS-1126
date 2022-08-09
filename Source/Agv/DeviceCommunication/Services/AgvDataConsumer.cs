@@ -32,14 +32,14 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
         /// <exception cref="InvalidOperationException">Message content is invalid and cannot be processed.</exception>
         public async Task Consume(ConsumeContext<MqttAgvData> context)
         {
-	        var parser = new MessageParsers.AgvDataParser(context.Message);
+            var parser = new MessageParsers.AgvDataParser(context.Message);
 
             try
             {
                 await context.Publish(new AgvDataReceived(
-	                parser.SerialNumber.ToGuid(),
-	                parser.SerialNumber,
-	                parser.AgvData)
+                    parser.SerialNumber.ToGuid(),
+                    parser.SerialNumber,
+                    parser.AgvData)
                 , context.CancellationToken);
             }
             catch (InvalidOperationException ex)

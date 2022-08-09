@@ -4,9 +4,9 @@ using JetBrains.Annotations;
 namespace Gebhardt.StoreWare.Agv.WCSCommunication.CmdOptions
 {
     /// <summary>
-	/// CommandLine Options for Simulation Mode
+    /// CommandLine Options for Simulation Mode
     /// </summary>
-	[Verb("simulate", HelpText = "Run in simulation mode")]
+    [Verb("simulate", HelpText = "Run in simulation mode")]
     public class SimulateOptions
     {
         /// <summary>

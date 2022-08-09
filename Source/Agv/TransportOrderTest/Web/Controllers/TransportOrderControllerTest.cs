@@ -36,9 +36,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
         public async Task GetOrders_Returns_Ok()
         {
             var mockRegistry = new Mock<IAgvRegistry>();
-	        mockRegistry.Setup(s => s.GetIdleAgvs()).Returns(new List<IAgv>());
+            mockRegistry.Setup(s => s.GetIdleAgvs()).Returns(new List<IAgv>());
 
-	        var fixture = new StateMachineTestFixture<OrderStateMachine, OrderSaga>(services: s => { s.AddTransient(_ => mockRegistry.Object); });
+            var fixture = new StateMachineTestFixture<OrderStateMachine, OrderSaga>(services: s => { s.AddTransient(_ => mockRegistry.Object); });
             
             var controller = new TransportOrderController(GetOrderRegistry());
             controller.ControllerContext = new ControllerContext(

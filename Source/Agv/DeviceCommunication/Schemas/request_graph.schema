@@ -1,25 +1,25 @@
 ﻿{
-	"$schema": "https://json-schema.org/draft/2020-12/schema",
-	"title": "request_graph",
-	"description": "Requests the current graph from the AGV",
-	"subtopic": "/requestGraph",
-	"type": "object",
-	"properties": {
-		"SerialNumber": {
-			"description": "Serial number of the AGV.",
-			"type": "string",
-			"examples": [
-				"1234-5678",
-				"AGV2034"
-			]
-		},
-		"RequestId": {
-			"type": "string",
-			"description": "A unique ID for that request."
-		}
-	},
-	"required": [
-		"SerialNumber",
-		"RequestId"
-	]
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "request_graph",
+    "description": "Requests the current graph from the AGV",
+    "subtopic": "/requestGraph",
+    "type": "object",
+    "properties": {
+        "SerialNumber": {
+            "description": "Serial number of the AGV.",
+            "type": "string",
+            "examples": [
+                "1234-5678",
+                "AGV2034"
+            ]
+        },
+        "RequestId": {
+            "type": "string",
+            "description": "A unique ID for that request."
+        }
+    },
+    "required": [
+        "SerialNumber",
+        "RequestId"
+    ]
 }

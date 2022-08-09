@@ -653,7 +653,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         public float? Omega { get; set; }
         /// <summary>
         /// The x value of the velocity vector
-	    /// </summary>
+        /// </summary>
         public float? Vx { get; set; }
         /// <summary>
         /// The y value of the velocity vector
@@ -671,23 +671,23 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         /// <summary>
         /// 
         /// </summary>
-	    Failed,
+        Failed,
         /// <summary>
         /// 
         /// </summary>
-	    Finished,
+        Finished,
         /// <summary>
         /// 
         /// </summary>
-	    Initializing,
+        Initializing,
         /// <summary>
         /// 
         /// </summary>
-	    Running,
+        Running,
         /// <summary>
         /// 
         /// </summary>
-	    Waiting
+        Waiting
     };
 
     /// <summary>
@@ -700,7 +700,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         /// <summary>
         /// 
         /// </summary>
-	    Fatal,
+        Fatal,
         /// <summary>
         /// 
         /// </summary>
@@ -716,11 +716,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         /// <summary>
         /// 
         /// </summary>
-	    Debug,
+        Debug,
         /// <summary>
         /// 
         /// </summary>
-	    Info
+        Info
     };
 
     /// <summary>
@@ -760,7 +760,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         /// <summary>
         /// 
         /// </summary>
-	    AutoAck,
+        AutoAck,
         /// <summary>
         /// 
         /// </summary>

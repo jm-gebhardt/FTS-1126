@@ -1,8 +1,8 @@
 {
-	admin off
-	local_certs
-	ocsp_stapling off
-	auto_https off
+    admin off
+    local_certs
+    ocsp_stapling off
+    auto_https off
 }
 
 # manually expose metrics as we disabled the admin API
@@ -10,28 +10,28 @@ caddy.agv.localhost:80 {
     log {
         output discard
     }
-	metrics /metrics
+    metrics /metrics
 }
 
 (log_and_errors) {
     log {
-		output file /var/log/caddy/{args.0}.json
-	}
-	handle_errors {
-		header Content-Type text/plain
-		respond "{http.error.status_code} {http.error.status_text}"
-	}
+        output file /var/log/caddy/{args.0}.json
+    }
+    handle_errors {
+        header Content-Type text/plain
+        respond "{http.error.status_code} {http.error.status_text}"
+    }
 }
 
 agv.localhost:80 {
-	root * /etc/caddy/html/index
-	file_server
+    root * /etc/caddy/html/index
+    file_server
 }
 
 ui.agv.localhost:80 {
     import log_and_errors ui.agv.localhost
     handle_path /api/* {
-    	    reverse_proxy transportorder.agv
+            reverse_proxy transportorder.agv
     }
     handle {
         root * /etc/caddy/html/ui
@@ -42,10 +42,10 @@ ui.agv.localhost:80 {
 }
 
 (proxy) {
-	{args.0}:80 {
-		import log_and_errors {args.0}
-		reverse_proxy {args.1}
-	}
+    {args.0}:80 {
+        import log_and_errors {args.0}
+        reverse_proxy {args.1}
+    }
 }
 
 import proxy prometheus.agv.localhost prometheus.agv:9090

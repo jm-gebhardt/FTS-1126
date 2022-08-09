@@ -33,10 +33,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// </summary>
         public State AgvRequested { get; private set; } = default!;
 
-		/// <summary>
-		/// State when the AgvAssignmentSucceeded has been received and ExecuteTransportOrder has been published
-		/// </summary>
-		public State TransportOrderSend { get; private set; } = default!;
+        /// <summary>
+        /// State when the AgvAssignmentSucceeded has been received and ExecuteTransportOrder has been published
+        /// </summary>
+        public State TransportOrderSend { get; private set; } = default!;
 
         /// <summary>
         /// State when TransportOrder has been started
@@ -53,30 +53,30 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// </summary>
         public Event<HandleHostOrder> HandleHostOrderEvent { get; private set; } = default!;
 
-		/// <summary>
-		/// AgvAssignmentSucceeded was received
-		/// </summary>
-		public Event<RequestOrderAgvAssign> RequestOrderAgvAssignEvent { get; private set; } = default!;
+        /// <summary>
+        /// AgvAssignmentSucceeded was received
+        /// </summary>
+        public Event<RequestOrderAgvAssign> RequestOrderAgvAssignEvent { get; private set; } = default!;
 
-		/// <summary>
-		/// AgvAssignmentSucceeded was received
-		/// </summary>
-		public Event<AgvAssignmentSucceeded> AgvAssignSucceededEvent { get; private set; } = default!;
+        /// <summary>
+        /// AgvAssignmentSucceeded was received
+        /// </summary>
+        public Event<AgvAssignmentSucceeded> AgvAssignSucceededEvent { get; private set; } = default!;
 
-		/// <summary>
-		/// AgvAssignmentFailed was received
-		/// </summary>
-		public Event<AgvAssignmentFailed> AgvAssignFailedEvent { get; private set; } = default!;
+        /// <summary>
+        /// AgvAssignmentFailed was received
+        /// </summary>
+        public Event<AgvAssignmentFailed> AgvAssignFailedEvent { get; private set; } = default!;
 
-		/// <summary>
-		/// TransportOrderCompleted was received. This is a final event
-		/// </summary>
-		public Event<TransportOrderCompleted> TransportOrderCompletedEvent { get; private set; } = default!;
+        /// <summary>
+        /// TransportOrderCompleted was received. This is a final event
+        /// </summary>
+        public Event<TransportOrderCompleted> TransportOrderCompletedEvent { get; private set; } = default!;
 
-		/// <summary>
-		/// TransportOrderFailed was received. This is a final event
-		/// </summary>
-		public Event<TransportOrderFailed> TransportOrderFailedEvent { get; private set; } = default!;
+        /// <summary>
+        /// TransportOrderFailed was received. This is a final event
+        /// </summary>
+        public Event<TransportOrderFailed> TransportOrderFailedEvent { get; private set; } = default!;
 
         /// <summary>
         /// TransportOrderStarted has been received
@@ -112,56 +112,56 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
             During(TransportOrderPicked, SetTransportOrderCompletedHandler());
         }
 
-		/// <summary>
-		/// Set saga factory on HandleHostOrderEvent
-		/// </summary>
-		private void SetSagaFactory()
-		{
-			// Initial creation
-			Event(() => HandleHostOrderEvent, e =>
-				e.SetSagaFactory(context => new OrderSaga(context.Message.CorrelationId, context.Message.OrderDetails))
-			);
-		}
+        /// <summary>
+        /// Set saga factory on HandleHostOrderEvent
+        /// </summary>
+        private void SetSagaFactory()
+        {
+            // Initial creation
+            Event(() => HandleHostOrderEvent, e =>
+                e.SetSagaFactory(context => new OrderSaga(context.Message.CorrelationId, context.Message.OrderDetails))
+            );
+        }
 
-		/// <summary>
-		/// Handler for HandleHostOrder
-		/// </summary>
-		/// <returns>Event Binding for HandleHostOrder</returns>
-		private EventActivityBinder<OrderSaga, HandleHostOrder> SetHandleHostOrderHandler() =>
-			When(HandleHostOrderEvent)
-				.TransitionTo(OrderReceived)
-				.Then(c =>
-					_logger.LogInformation("Order {OrderId}/{CorrelationId} received", c.Message.OrderDetails.OrderId, c.Saga.CorrelationId))
-				.Publish(c =>
-					new RequestOrderAgvAssign(c.Saga.CorrelationId)
-				);
+        /// <summary>
+        /// Handler for HandleHostOrder
+        /// </summary>
+        /// <returns>Event Binding for HandleHostOrder</returns>
+        private EventActivityBinder<OrderSaga, HandleHostOrder> SetHandleHostOrderHandler() =>
+            When(HandleHostOrderEvent)
+                .TransitionTo(OrderReceived)
+                .Then(c =>
+                    _logger.LogInformation("Order {OrderId}/{CorrelationId} received", c.Message.OrderDetails.OrderId, c.Saga.CorrelationId))
+                .Publish(c =>
+                    new RequestOrderAgvAssign(c.Saga.CorrelationId)
+                );
 
-		/// <summary>
-		/// Handler for RequestOrderAgvAssignS
-		/// </summary>
-		/// <returns>Event Binding for RequestOrderAgvAssign</returns>
-		private EventActivityBinder<OrderSaga, RequestOrderAgvAssign> SetRequestAgvAssignHandler() =>
-			When(RequestOrderAgvAssignEvent)
-				.Publish(c =>
-					new AssignAgv(c.Saga.CorrelationId, c.Saga.OrderDetails)
-				)
-				.TransitionTo(AgvRequested);
+        /// <summary>
+        /// Handler for RequestOrderAgvAssignS
+        /// </summary>
+        /// <returns>Event Binding for RequestOrderAgvAssign</returns>
+        private EventActivityBinder<OrderSaga, RequestOrderAgvAssign> SetRequestAgvAssignHandler() =>
+            When(RequestOrderAgvAssignEvent)
+                .Publish(c =>
+                    new AssignAgv(c.Saga.CorrelationId, c.Saga.OrderDetails)
+                )
+                .TransitionTo(AgvRequested);
 
-		/// <summary>
-		/// Handler for AgvAssignmentSucceeded
-		/// </summary>
-		/// <returns>Event Binding for AgvAssignmentSucceeded</returns>
-		private EventActivityBinder<OrderSaga, AgvAssignmentSucceeded> SetAgvAssignSucceededHandler() =>
-			When(AgvAssignSucceededEvent)
-				.Then(c =>
-					_logger.LogInformation("Order {OrderId}/{CorrelationId} has been assigned to AGV {AgvId}",
-						c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId, c.Message.AgvId)
-				 )
-				.Then(UpdateSagaState)
-				.Publish(c =>
-					new ExecuteTransportOrder(c.Message.AgvCorrelationId, c.Saga.OrderDetails, c.Message.AgvId, c.Message.Nodes)
-				)
-				.TransitionTo(TransportOrderSend);
+        /// <summary>
+        /// Handler for AgvAssignmentSucceeded
+        /// </summary>
+        /// <returns>Event Binding for AgvAssignmentSucceeded</returns>
+        private EventActivityBinder<OrderSaga, AgvAssignmentSucceeded> SetAgvAssignSucceededHandler() =>
+            When(AgvAssignSucceededEvent)
+                .Then(c =>
+                    _logger.LogInformation("Order {OrderId}/{CorrelationId} has been assigned to AGV {AgvId}",
+                        c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId, c.Message.AgvId)
+                 )
+                .Then(UpdateSagaState)
+                .Publish(c =>
+                    new ExecuteTransportOrder(c.Message.AgvCorrelationId, c.Saga.OrderDetails, c.Message.AgvId, c.Message.Nodes)
+                )
+                .TransitionTo(TransportOrderSend);
 
         /// <summary>
         /// Handler for AgvAssignmentFailed
@@ -230,30 +230,30 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// </summary>
         /// <returns>Event Binding for TransportOrderStarted</returns>
         private EventActivityBinder<OrderSaga, TransportOrderStarted> SetTransportOrderStartedHandler() =>
-	        When(TransportOrderStartedEvent)
-		        .Then(c =>
-			        _logger.LogInformation("Order {OrderId}/{CorrelationId} has been started", c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId))
-		        .Then(SendHostOrderStartedMessage);
+            When(TransportOrderStartedEvent)
+                .Then(c =>
+                    _logger.LogInformation("Order {OrderId}/{CorrelationId} has been started", c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId))
+                .Then(SendHostOrderStartedMessage);
 
         private void SendHostOrderStartedMessage(BehaviorContext<OrderSaga, TransportOrderStarted> context)
         {
-	        if (context.Saga.AssignedAgv != null)
-	        {
-		        var agv = _agvRegistry.GetAgv(context.Saga.AssignedAgv.Value);
-		        if (agv != null)
-		        {
-			        context.Publish(new HostOrderStarted(context.Saga.CorrelationId, context.Saga.OrderDetails.OrderId, agv.AgvId));
-			        context.TransitionToState(TransportOrderStarted);
-		        }
-		        else
-		        {
+            if (context.Saga.AssignedAgv != null)
+            {
+                var agv = _agvRegistry.GetAgv(context.Saga.AssignedAgv.Value);
+                if (agv != null)
+                {
+                    context.Publish(new HostOrderStarted(context.Saga.CorrelationId, context.Saga.OrderDetails.OrderId, agv.AgvId));
+                    context.TransitionToState(TransportOrderStarted);
+                }
+                else
+                {
                     _logger.LogError("Missing AgvId for {CorrelationId}", context.Saga.CorrelationId);
-		        }
+                }
             }
-	        else
-	        {
-		        _logger.LogError("Corresponding AGV not found for Order {OrderId}/{CorrelationId}", context.Saga.OrderDetails.OrderId, context.Saga.CorrelationId);
-	        }
+            else
+            {
+                _logger.LogError("Corresponding AGV not found for Order {OrderId}/{CorrelationId}", context.Saga.OrderDetails.OrderId, context.Saga.CorrelationId);
+            }
         }
 
         /// <summary>
@@ -261,9 +261,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// </summary>
         /// <returns>Event Binding for TransportOrderPickCompleted</returns>
         private EventActivityBinder<OrderSaga, TransportOrderPickCompleted> SetTransportOrderPickCompletedHandler() =>
-	        When(TransportOrderPickCompletedEvent)
-		        .Then(c => 
-			        _logger.LogInformation("Pick of Order {OrderId}/{CorrelationId} has been completed", c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId))
-			.TransitionTo(TransportOrderPicked);
+            When(TransportOrderPickCompletedEvent)
+                .Then(c => 
+                    _logger.LogInformation("Pick of Order {OrderId}/{CorrelationId} has been completed", c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId))
+            .TransitionTo(TransportOrderPicked);
     }
 }

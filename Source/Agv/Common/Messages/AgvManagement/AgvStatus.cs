@@ -88,37 +88,37 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
         [UsedImplicitly]
         public const int GoodBatteryLevel = 80;
 
-		/// <summary>
-		/// nodeID of last reached node or, if AGV is currently on a node, current node.
-		/// Empty string if no lastNodeId is available.
-		/// </summary>
-		/// <remarks>
-		/// VDA5050.state.schema.lastNodeId
-		/// </remarks>
-		public string? LastNodeId { get; }
+        /// <summary>
+        /// nodeID of last reached node or, if AGV is currently on a node, current node.
+        /// Empty string if no lastNodeId is available.
+        /// </summary>
+        /// <remarks>
+        /// VDA5050.state.schema.lastNodeId
+        /// </remarks>
+        public string? LastNodeId { get; }
 
 
-		/// <summary>
-		/// Constructor of AgvStatus
-		/// </summary>
-		/// <param name="correlationId"></param>
-		/// <param name="orderId"></param>
-		/// <param name="busy"></param>
-		/// <param name="automatic"></param>
-		/// <param name="batteryCharge"></param>
-		/// <param name="charging"></param>
-		/// <param name="disturbed"></param>
-		/// <param name="lastNodeId"></param>
-		public AgvStatus(Guid correlationId, string? orderId, bool busy, bool automatic, int batteryCharge, bool charging, bool disturbed, string? lastNodeId = null)
-		{
-			CorrelationId = correlationId;
-			OrderId = orderId;
-			Busy = busy;
-			Automatic = automatic;
-			BatteryCharge = batteryCharge;
-			Charging = charging;
-			Disturbed = disturbed;
-			LastNodeId = lastNodeId;
-		}
-	}
+        /// <summary>
+        /// Constructor of AgvStatus
+        /// </summary>
+        /// <param name="correlationId"></param>
+        /// <param name="orderId"></param>
+        /// <param name="busy"></param>
+        /// <param name="automatic"></param>
+        /// <param name="batteryCharge"></param>
+        /// <param name="charging"></param>
+        /// <param name="disturbed"></param>
+        /// <param name="lastNodeId"></param>
+        public AgvStatus(Guid correlationId, string? orderId, bool busy, bool automatic, int batteryCharge, bool charging, bool disturbed, string? lastNodeId = null)
+        {
+            CorrelationId = correlationId;
+            OrderId = orderId;
+            Busy = busy;
+            Automatic = automatic;
+            BatteryCharge = batteryCharge;
+            Charging = charging;
+            Disturbed = disturbed;
+            LastNodeId = lastNodeId;
+        }
+    }
 }

@@ -1,18 +1,18 @@
 ﻿{
-	"$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
     "title": "order",
     "description": "New Order for the AGV",
     "subtopic": "/order",
     "type": "object",
     "properties": {
-	    "SerialNumber": {
-		    "description": "Serial number of the AGV.",
-		    "type": "string",
-		    "examples": [
-			    "1234-5678",
-			    "AGV2034"
-		    ]
-	    },
+        "SerialNumber": {
+            "description": "Serial number of the AGV.",
+            "type": "string",
+            "examples": [
+                "1234-5678",
+                "AGV2034"
+            ]
+        },
         "OrderId": {
             "type": "string",
             "description": "The unique ID of the order"

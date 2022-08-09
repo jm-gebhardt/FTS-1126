@@ -8,7 +8,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
     /// A list of all stations.
     /// <para>See "station_list.schema".</para>
     /// </summary>
-	[JetBrains.Annotations.PublicAPI]
+    [JetBrains.Annotations.PublicAPI]
     [EntityName("amq.topic")]       // Specifies the RabbitMq exchange where the message is published
     [RoutingKey("agv.stationList")] // Specifies the topic where subscribers can receive the message
     public record MqttStationList

@@ -1,104 +1,104 @@
 ﻿{
-	"$schema": "https://json-schema.org/draft/2020-12/schema",
-	"title": "responseRoutingCosts",
-	"description": "Response to a routing cost request",
-	"subtopic": "/responseRoutingCosts",
-	"type": "object",
-	"properties": {
-		"SerialNumber": {
-			"description": "Serial number of the AGV.",
-			"type": "string",
-			"examples": [
-				"1234-5678",
-				"AGV2034"
-			]
-		},
-		"RequestId": {
-			"type": "string",
-			"description": "The unique ID replied from the request."
-		},
-		"stations": {
-			"type": "object",
-			"properties": {
-				"FromStationIdentifier": {
-					"type": "string",
-					"description": "The unique identifier of the station where to pick from",
-					"examples": [
-						"Source1",
-						"Source31"
-					]
-				},
-				"ToStationIdentifier": {
-					"type": "string",
-					"description": "The unique identifier of the station where to drop",
-					"examples": [
-						"Destination2",
-						"Destination42"
-					]
-				}
-			},
-			"required": [
-				"FromStationIdentifier",
-				"ToStationIdentifier"
-			]
-		},
-		"coordinates": {
-			"type": "object",
-			"description": "The coordinates of the point where to go to",
-			"properties": {
-				"ToX": {
-					"type": "number"
-				},
-				"ToY": {
-					"type": "number"
-				},
-				"ToTheta": {
-					"type": "number"
-				}
-			},
-			"required": [
-				"ToX",
-				"ToY",
-				"ToTheta"
-			]
-		},
-		"Cost": {
-			"type": "number",
-			"description": "The costs of the route"
-		},
-		"Unit": {
-			"type": "string",
-			"description": "The unit in which the costs are expressed",
-			"examples": [
-				"s",
-				"ms"
-			]
-		},
-		"Route": {
-			"type": "array",
-			"description": "The path expressed as an array of nodes to travel over",
-			"items": {
-				"type": "integer"
-			}
-		}
-	},
-	"required": [
-		"RequestId",
-		"SerialNumber",
-		"Cost",
-		"Unit",
-		"Route"
-	],
-	"oneOf": [
-		{
-			"required": [
-				"stations"
-			]
-		},
-		{
-			"required": [
-				"coordinates"
-			]
-		}
-	]
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "responseRoutingCosts",
+    "description": "Response to a routing cost request",
+    "subtopic": "/responseRoutingCosts",
+    "type": "object",
+    "properties": {
+        "SerialNumber": {
+            "description": "Serial number of the AGV.",
+            "type": "string",
+            "examples": [
+                "1234-5678",
+                "AGV2034"
+            ]
+        },
+        "RequestId": {
+            "type": "string",
+            "description": "The unique ID replied from the request."
+        },
+        "stations": {
+            "type": "object",
+            "properties": {
+                "FromStationIdentifier": {
+                    "type": "string",
+                    "description": "The unique identifier of the station where to pick from",
+                    "examples": [
+                        "Source1",
+                        "Source31"
+                    ]
+                },
+                "ToStationIdentifier": {
+                    "type": "string",
+                    "description": "The unique identifier of the station where to drop",
+                    "examples": [
+                        "Destination2",
+                        "Destination42"
+                    ]
+                }
+            },
+            "required": [
+                "FromStationIdentifier",
+                "ToStationIdentifier"
+            ]
+        },
+        "coordinates": {
+            "type": "object",
+            "description": "The coordinates of the point where to go to",
+            "properties": {
+                "ToX": {
+                    "type": "number"
+                },
+                "ToY": {
+                    "type": "number"
+                },
+                "ToTheta": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "ToX",
+                "ToY",
+                "ToTheta"
+            ]
+        },
+        "Cost": {
+            "type": "number",
+            "description": "The costs of the route"
+        },
+        "Unit": {
+            "type": "string",
+            "description": "The unit in which the costs are expressed",
+            "examples": [
+                "s",
+                "ms"
+            ]
+        },
+        "Route": {
+            "type": "array",
+            "description": "The path expressed as an array of nodes to travel over",
+            "items": {
+                "type": "integer"
+            }
+        }
+    },
+    "required": [
+        "RequestId",
+        "SerialNumber",
+        "Cost",
+        "Unit",
+        "Route"
+    ],
+    "oneOf": [
+        {
+            "required": [
+                "stations"
+            ]
+        },
+        {
+            "required": [
+                "coordinates"
+            ]
+        }
+    ]
 }

@@ -50,7 +50,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence
                 .HasConversion(new EnumToStringConverter<HostOrderCreator>());
 
             model.Entity<OrderDetails>().Property(x => x.CreationDate)
-	            .HasColumnType("datetime2");
+                .HasColumnType("datetime2");
         }
     }
 }

@@ -58,9 +58,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.States
         public DateTime? AgvGraphReceivedLastTime { get; set; }
 
         /// <summary>
-		/// Default constructor required to connect.
-		/// </summary>
-		public AgvSaga(Guid correlationId, 
+        /// Default constructor required to connect.
+        /// </summary>
+        public AgvSaga(Guid correlationId, 
             string agvId, 
             string? currentState = null, 
             AgvStatus? agvStatus = null, 
@@ -68,19 +68,19 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.States
             AgvData? agvData = null,
             DateTime? agvDataReceivedLastTime = null,
             DateTime? agvGraphReceivedLastTime = null)
-		{
-			if (correlationId == Guid.Empty)
-			{
-				throw new InvalidOperationException($"{this.GetType()} requires correlation ID.");
-			}
-			CorrelationId = correlationId;
-			AgvStatus = agvStatus;
-			AgvGraph = agvGraph;
-			AgvId = agvId;
-			CurrentState = currentState ?? default!;
-			AgvData = agvData;
-			AgvDataReceivedLastTime = agvDataReceivedLastTime ?? DateTime.MinValue;
-			AgvGraphReceivedLastTime = agvGraphReceivedLastTime ?? DateTime.MinValue;
+        {
+            if (correlationId == Guid.Empty)
+            {
+                throw new InvalidOperationException($"{this.GetType()} requires correlation ID.");
+            }
+            CorrelationId = correlationId;
+            AgvStatus = agvStatus;
+            AgvGraph = agvGraph;
+            AgvId = agvId;
+            CurrentState = currentState ?? default!;
+            AgvData = agvData;
+            AgvDataReceivedLastTime = agvDataReceivedLastTime ?? DateTime.MinValue;
+            AgvGraphReceivedLastTime = agvGraphReceivedLastTime ?? DateTime.MinValue;
         }
 
         /// <summary>
@@ -89,11 +89,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.States
         /// <returns>Time span between now and last update</returns>
         public TimeSpan GetTimeSpanSinceLastUpdate_AgvData()
         {
-			if (AgvDataReceivedLastTime != null)
-			{
-				return (TimeSpan)(DateTime.Now - AgvDataReceivedLastTime);
-			}
-			return TimeSpan.Zero;
+            if (AgvDataReceivedLastTime != null)
+            {
+                return (TimeSpan)(DateTime.Now - AgvDataReceivedLastTime);
+            }
+            return TimeSpan.Zero;
         }
 
         /// <summary>
@@ -102,11 +102,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.States
         /// <returns>Time span between now and last update</returns>
         public TimeSpan GetTimeSpanSinceLastUpdate_AgvGraph()
         {
-	        if (AgvGraphReceivedLastTime != null)
-	        {
-		        return (TimeSpan)(DateTime.Now - AgvGraphReceivedLastTime);
-	        }
-	        return TimeSpan.Zero;
+            if (AgvGraphReceivedLastTime != null)
+            {
+                return (TimeSpan)(DateTime.Now - AgvGraphReceivedLastTime);
+            }
+            return TimeSpan.Zero;
         }
-	}
+    }
 }

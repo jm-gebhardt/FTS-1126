@@ -120,7 +120,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
     /// <summary>
     /// A sensor object skeleton
     /// </summary>
-	[PublicAPI]
+    [PublicAPI]
     public record Sensor
     {
         /// <summary>
