@@ -7,11 +7,14 @@
 
 # manually expose metrics as we disabled the admin API
 caddy.agv.localhost:80 {
+    log {
+        output discard
+    }
 	metrics /metrics
 }
 
 (log_and_errors) {
-	log {
+    log {
 		output file /var/log/caddy/{args.0}.json
 	}
 	handle_errors {
@@ -21,8 +24,21 @@ caddy.agv.localhost:80 {
 }
 
 agv.localhost:80 {
-	root * /etc/caddy/html
+	root * /etc/caddy/html/index
 	file_server
+}
+
+ui.agv.localhost:80 {
+    import log_and_errors ui.agv.localhost
+    handle_path /api/* {
+    	    reverse_proxy transportorder.agv
+    }
+    handle {
+        root * /etc/caddy/html/ui
+        try_files {path} /index.html
+        file_server
+    }
+    
 }
 
 (proxy) {

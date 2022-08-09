@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -66,7 +67,12 @@ try
             {
                 services.AddMvc();
 
-                services.AddControllers().AddApplicationPart(assembly);
+                services.AddControllers()
+                    .AddApplicationPart(assembly)
+                    .AddJsonOptions(options =>
+                    {
+                        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                    });
 
                 services.Configure<Microsoft.Extensions.Logging.EventLog.EventLogSettings>(settings =>
                 {

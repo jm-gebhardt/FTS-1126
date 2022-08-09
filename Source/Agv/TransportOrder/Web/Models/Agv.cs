@@ -5,7 +5,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Models
     /// Controller for host order data
     /// </summary>
     [JetBrains.Annotations.PublicAPI]
-    public class Agv
+    public record Agv
     {
         /// <summary>
         /// CorrelationId

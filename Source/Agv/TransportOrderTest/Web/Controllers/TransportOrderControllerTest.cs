@@ -9,6 +9,11 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Services;
 using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Commands;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Microsoft.Extensions.DependencyInjection;
+using Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers.Pagination;
+using Gebhardt.StoreWare.Agv.TransportOrder.Web.Models;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.AspNetCore.Routing;
 using Moq;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
@@ -28,14 +33,19 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
         /// Test retrieving order list from saga repository
         /// </summary>
         [TestMethod]
-        public async Task GetOrdersTest()
+        public async Task GetOrders_Returns_Ok()
         {
-	        var mockRegistry = new Mock<IAgvRegistry>();
+            var mockRegistry = new Mock<IAgvRegistry>();
 	        mockRegistry.Setup(s => s.GetIdleAgvs()).Returns(new List<IAgv>());
 
 	        var fixture = new StateMachineTestFixture<OrderStateMachine, OrderSaga>(services: s => { s.AddTransient(_ => mockRegistry.Object); });
             
             var controller = new TransportOrderController(GetOrderRegistry());
+            controller.ControllerContext = new ControllerContext(
+                new ActionContext(new DefaultHttpContext(), 
+                    new RouteData(), 
+                    new ControllerActionDescriptor())
+                );
 
             var inputOrderDetails = new OrderDetails(_orders[0].ToGuid(), _orders[0], _sources[0], _destinations[0], _leNo[0], HostOrderCreator.Simulation);
 
@@ -43,20 +53,24 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
 
             Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<HandleHostOrder>());
 
-            var result = controller.GetOrders() as OkObjectResult;
+            ActionResult<IEnumerable<Order>> actionResult = controller.GetOrders(new PaginationParameters());
+            var result = actionResult.Result  as OkObjectResult;
             Assert.IsNotNull(result);
-
-            var orders = result.Value as List<OrderDetails>;
+            Assert.AreEqual(200, result.StatusCode);
+            Assert.IsInstanceOfType(result.Value, typeof(IEnumerable<Order>));
+            
+            List<Order> orders = (result.Value as IEnumerable<Order>)!.ToList();
+            
             Assert.IsNotNull(orders);
             Assert.AreEqual(2, orders.Count);
 
-            var resultOrder = orders[0];
+            var resultOrder = orders.Last();
             Assert.AreEqual(resultOrder.CorrelationId, inputOrderDetails.CorrelationId);
-            Assert.AreEqual(resultOrder.OrderId, inputOrderDetails.OrderId);
-            Assert.AreEqual(resultOrder.Source, inputOrderDetails.Source);
-            Assert.AreEqual(resultOrder.Destination, inputOrderDetails.Destination);
-            Assert.AreEqual(resultOrder.LeNo, inputOrderDetails.LeNo);
-            Assert.AreEqual(resultOrder.Creator, inputOrderDetails.Creator);
+            Assert.AreEqual(resultOrder.OrderDetails.OrderId, inputOrderDetails.OrderId);
+            Assert.AreEqual(resultOrder.OrderDetails.Source, inputOrderDetails.Source);
+            Assert.AreEqual(resultOrder.OrderDetails.Destination, inputOrderDetails.Destination);
+            Assert.AreEqual(resultOrder.OrderDetails.LeNo, inputOrderDetails.LeNo);
+            Assert.AreEqual(resultOrder.OrderDetails.Creator, inputOrderDetails.Creator);
         }
 
         private IOrderRegistry GetOrderRegistry()
@@ -71,8 +85,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
                 orders.Add(new OrderSaga(_orders[i].ToGuid(), order));
             }
             
-            registry.Setup(x => x.GetAllOrders()).Returns(orders);
-            registry.Setup(x => x.GetUnassignedOrders()).Returns(orders.Where(x=> x.CurrentState == nameof(OrderStateMachine.OrderReceived)));
+            registry.Setup(x => x.GetAllOrders()).Returns(orders.AsQueryable());
+            registry.Setup(x => x.GetUnassignedOrders()).Returns(orders.Where(x=> x.CurrentState == nameof(OrderStateMachine.OrderReceived)).AsQueryable());
 
             return registry.Object;
         }

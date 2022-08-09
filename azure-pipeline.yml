@@ -46,7 +46,28 @@ stages:
           solutionOrProjectPath: '$(SourceDirectory)/$(Build.Target)'
           additionalArguments: '--no-build'
           failBuildLevelSelector: Suggestion
-  ################################################
+  - job: WebUiCodeAnalysis
+    pool:
+      vmImage: windows-latest
+    steps:
+      - task: Npm@1
+        displayName: Install
+        inputs:
+          workingDir: '$(SourceDirectory)/ui'
+          command: install
+      - task: Npm@1
+        displayName: Build
+        inputs:
+          workingDir: '$(SourceDirectory)/ui'
+          command: custom
+          customCommand: run build
+      - task: Npm@1
+        displayName: Lint
+        inputs:
+          workingDir: '$(SourceDirectory)/ui'
+          command: custom
+          customCommand: run lint
+    ################################################
   # Run Tests and Coverage
   ################################################  
   - job: UnitTests_and_Coverage

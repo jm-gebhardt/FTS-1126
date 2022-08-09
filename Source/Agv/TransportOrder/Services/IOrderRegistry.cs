@@ -21,12 +21,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
 		/// <summary>
 		/// Get list of all orders
 		/// </summary>
-		public IEnumerable<IOrder> GetAllOrders();
+		public IQueryable<IOrder> GetAllOrders();
 
 		/// <summary>
 		/// Get list of all open orders
 		/// </summary>
-		public IEnumerable<IOrder> GetUnassignedOrders();
+		public IQueryable<IOrder> GetUnassignedOrders();
 
         /// <summary>
         /// Get specific order

@@ -171,7 +171,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
             When(ExecuteTransportOrderEvent)
                 .TransitionTo(BusyMovingToSource)
                 .Then(ExecuteOrder)
-                .Publish(c => new TransportOrderStarted(c.Message.CorrelationId, c.Message.OrderDetails.OrderId))
+                .Publish(c => new TransportOrderStarted(c.Message.OrderDetails.CorrelationId, c.Message.OrderDetails.OrderId))
                 .ThenAsync(PublishStatus)
                 .Schedule(PickOrderSchedule, 
                     c => new SchedulePickOrder(c.Saga.CorrelationId),

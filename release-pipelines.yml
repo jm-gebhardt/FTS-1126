@@ -21,8 +21,8 @@ parameters:
 stages:  
   - stage: CreateRelease
     jobs:
-      - job: ArchiveConfigurations
-        displayName: Archive Configurations
+      - job: CreateReleaseArchive
+        displayName: Create Release Archive
         pool:
           vmImage: ubuntu-latest
         steps:
@@ -30,8 +30,8 @@ stages:
               x=`echo "$(Build.SourceVersion)" | head -c 8`; echo "##vso[task.setvariable variable=SubstringSourceVersion;isoutput=true]$x"
             name: BuildOutput
           - bash: |
-              x=`echo "Agv_$(releaseDate)_$(BuildOutput.SubstringSourceVersion)"`; echo "##vso[task.setvariable variable=imageTag;isoutput=true]$x"
-            name: VersionOutput
+              x=`echo "$(releaseDate)_$(BuildOutput.SubstringSourceVersion)"`; echo "##vso[task.setvariable variable=imageTag;isoutput=true]$x"
+            name: VersionOutput  
           - task: CopyFiles@2
             inputs:
               SourceFolder: '$(Build.SourcesDirectory)'
@@ -43,6 +43,7 @@ stages:
               CleanTargetFolder: true
               preserveTimestamp: true
           - task: Bash@3
+            displayName: Set container version in docker compose
             inputs:
               targetType: 'inline'
               script: |
@@ -52,17 +53,36 @@ stages:
                 sed -i 's/devicecommunication:latest/devicecommunication:$(VersionOutput.imageTag)/g' docker-compose.yml
               # no need for additional copy task
               workingDirectory: '$(Build.ArtifactStagingDirectory)'
+          - task: Npm@1
+            displayName: WebUI - Install npm
+            inputs:
+              workingDir: '$(SourceDirectory)/ui'
+              command: install
+          - task: Npm@1
+            displayName: WebUI - Build
+            inputs:
+              workingDir: '$(SourceDirectory)/ui'
+              command: custom
+              customCommand: run build
+          - task: Bash@3
+            displayName: WebUI - Copy WebUI to Artifacts
+            inputs:
+              targetType: 'inline'
+              script: |
+                OUTPUT_DIR=$(Build.ArtifactStagingDirectory)/Config/caddy/html/ui
+                mkdir -p ${OUTPUT_DIR}
+                cp -r $(SourceDirectory)/ui/dist/* ${OUTPUT_DIR}
           - task: PublishBuildArtifacts@1
             inputs:
-              PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-              ArtifactName: '$(VersionOutput.imageTag)'
+              pathToPublish: '$(Build.ArtifactStagingDirectory)'
+              ArtifactName: 'Agv_$(VersionOutput.imageTag)'
               publishLocation: 'Container'
 
       - job: BuildingContainersOnLinux
         displayName: Build Container on Linux
-        dependsOn: ArchiveConfigurations
+        dependsOn: CreateReleaseArchive
         variables:
-          ImageTag: $[ dependencies.ArchiveConfigurations.outputs['VersionOutput.imageTag'] ]
+          ImageTag: $[ dependencies.CreateReleaseArchive.outputs['VersionOutput.imageTag'] ]
         pool:
           vmImage: ubuntu-latest
         steps:

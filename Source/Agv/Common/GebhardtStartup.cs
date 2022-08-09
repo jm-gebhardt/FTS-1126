@@ -43,6 +43,7 @@ namespace Gebhardt.StoreWare.Agv.Common
                     {
                         settings.SourceName = serviceName;
                     });
+                    
                 })
                 .ConfigureWebHost(host =>
                 {
@@ -60,7 +61,7 @@ namespace Gebhardt.StoreWare.Agv.Common
                         conf.AddJsonConsole();
                     }
                     // Disable info log for WebServer
-                    conf.AddFilter("Microsoft.AspNetCore.Hosting.Diagnostics", LogLevel.Warning);
+                    conf.AddFilter("Microsoft.AspNetCore", LogLevel.Warning);
                 });
             return host;
         }

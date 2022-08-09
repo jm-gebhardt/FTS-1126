@@ -267,7 +267,8 @@ services:
     image: caddy:2.4.6
     volumes:
       - ./Config/caddy/Caddyfile:/etc/caddy/Caddyfile
-      - ./Config/caddy/index.html:/etc/caddy/html/index.html
+      - ./Config/caddy/html/index:/etc/caddy/html/index
+      - ./Config/caddy/html/ui:/etc/caddy/html/ui
     restart: unless-stopped
     ports:
       - "80:80"

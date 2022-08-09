@@ -16,7 +16,7 @@ tags:
 
 # -----------------------------------------------------------------------------
 paths:
-  /orders:
+  /order:
     get:
       tags:
         - TransportOrder
@@ -123,34 +123,61 @@ components:
     Order:
       required:
         - CorrelationId
-        - OrderId
-        - Source
-        - Destination
-        - LeNo
-        - Creator
+        - CurrentState
+        - AssignedAgv
+        - OrderDetails
       type: object
       properties:
         CorrelationId:
           type: string
           description: Unique identifier for internal transport order
-        OrderId:
+        CurrentState:
           type: string
-          description: Order identifier used by the host system
-        Source:
+          description: Current State
+        AssignedAgv:
           type: string
-          description: Name of source node
-        Destination:
-          type: string
-          description: Name of destinion noe
-        LeNo:
-          type: string
-          description: LE number assigned be the host system
-        Creator:
-          type: string
-          description: 'Creator (example: READY and PAUSED)'
+          description: Guid of the Assigned AGV
+        OrderDetails:
+          type: OrderDetails
+          description: Order Details
       additionalProperties: false
       description: Data structure for a transport order
-
+    
+    OrderDetails:
+      required:
+        - CorrelationId
+        - OrderId
+        - Source
+        - Destination
+        - LeNo
+        - Creator
+        - CreationDate
+      type: object
+        properties:
+          CorrelationId:
+            type: string
+            description: Unique identifier for internal transport order
+          OrderId:
+            type: string
+            description: Order identifier used by the host system
+          Source:
+            type: string
+            description: Name of source node
+          Destination:
+            type: string
+            description: Name of destination node
+          LeNo:
+            type: string
+            description: LE number assigned be the host system
+          Creator:
+            type: string
+            description: 'Creator (example: READY and PAUSED)'
+          CreationDate:
+            type: date-time
+            description: Creation date of the order
+        additionalProperties: false
+        description: Order Details
+      
     Agv:
       required:
         - CorrelationId

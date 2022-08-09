@@ -174,17 +174,18 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
                 inMemoryConfiguration: (_, cfg) => cfg.UseDelayedMessageScheduler()
                 );
             const string agvId = "Agv#1";
-            var correlationId = agvId.ToGuid();
+            var agvCorrelationId = agvId.ToGuid();
             const string orderId = "Order#1";
-            var order = new OrderDetails(orderId.ToGuid(), orderId, "S1", "D1", "123", HostOrderCreator.Simulation);
-            var graph = new GridGraphGenerator(new[] {order.Source}, new[] {order.Destination}, gridLength: 1).Generate(correlationId);
+            var orderCorrelationId = orderId.ToGuid();
+            var order = new OrderDetails(orderCorrelationId, orderId, "S1", "D1", "123", HostOrderCreator.Simulation);
+            var graph = new GridGraphGenerator(new[] {order.Source}, new[] {order.Destination}, gridLength: 1).Generate(agvCorrelationId);
             string[] path = {
                 order.Source, 
                 graph.Nodes.Single(n => n.Type == AgvGraph.NodeType.WayPoint).Id, 
                 order.Destination
             };
-            var data = new AgvData(correlationId, "model", "type", null, 10, 1, 1, 1, 1, 1, 1, 1, Array.Empty<AgvData.Sensor>());
-            var agvSaga = new SimulatedAgvSaga(correlationId, agvId, currentState: nameof(SimulatedAgvStateMachine.Idle), agvData: data)
+            var data = new AgvData(agvCorrelationId, "model", "type", null, 10, 1, 1, 1, 1, 1, 1, 1, Array.Empty<AgvData.Sensor>());
+            var agvSaga = new SimulatedAgvSaga(agvCorrelationId, agvId, currentState: nameof(SimulatedAgvStateMachine.Idle), agvData: data)
             {
                 NodeTravelTime = 0.1
             };
@@ -194,12 +195,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             Assert.IsNull(agvSaga.LastNodeId);
             
             // Start Order
-            await fixture.TestHarness.Bus.Publish(new ExecuteTransportOrder(correlationId, order, agvId, path));
+            await fixture.TestHarness.Bus.Publish(new ExecuteTransportOrder(agvCorrelationId, order, agvId, path));
             
             Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<ExecuteTransportOrder>());      
             Assert.IsTrue(await fixture.TestHarness.Published.Any<TransportOrderStarted>());
             var startedMessage = fixture.TestHarness.Published.Select<TransportOrderStarted>().First().Context.Message;
-            Assert.AreEqual(correlationId, startedMessage.CorrelationId);
+            Assert.AreEqual(orderCorrelationId, startedMessage.CorrelationId);
             
             Assert.IsTrue(agvSaga.AgvStatus!.Busy);
             Assert.IsNotNull(agvSaga.TimeToFinish);

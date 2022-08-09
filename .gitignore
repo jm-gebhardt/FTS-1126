@@ -97,3 +97,6 @@ bld/
 # IRS/Kn
 /Certs
 /Config/rabbitmq/rabbitmq.conf
+
+#WebUi
+/Config/caddy/html/ui/*

@@ -14,3 +14,14 @@ services:
       context: ./Source/Agv
       args:
         - PROJECT=TransportOrder
+  
+  ui-builder:
+    image: node:18-alpine3.16
+    working_dir: /work
+    volumes:
+      - ./Source/Agv/ui:/work
+      - ./Config/caddy/html/ui:/work/dist
+      - /work/node_modules
+    command: > 
+      sh -c "npm install && npm run build"
+    

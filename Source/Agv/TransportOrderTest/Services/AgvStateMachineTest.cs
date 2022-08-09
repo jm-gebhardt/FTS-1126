@@ -371,7 +371,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 			Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvStatusReceived>());
 
 			Assert.AreEqual(correlationId, await fixture.SagaHarness.Exists(correlationId));
-			Assert.IsFalse(await fixture.TestHarness.Published.Any<RequestAgvData>());
+			var token = new CancellationTokenSource();
+			token.CancelAfter(10);
+			Assert.IsFalse(await fixture.TestHarness.Published.Any<RequestAgvData>(token.Token));
 		}
 
 		/// <summary>

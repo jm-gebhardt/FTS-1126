@@ -379,8 +379,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                     orders.Add(new OrderSaga(_orders[i].ToGuid(), order, _states[i], null));
                 }
             }
-            registry.Setup(x => x.GetAllOrders()).Returns(orders);
-            registry.Setup(x => x.GetUnassignedOrders()).Returns(orders.Where(x => x.CurrentState == nameof(OrderStateMachine.OrderReceived)).OrderBy(x => x.OrderDetails.CreationDate));
+            registry.Setup(x => x.GetAllOrders()).Returns(orders.AsQueryable);
+            registry.Setup(x => x.GetUnassignedOrders()).Returns(orders.Where(x => x.CurrentState == nameof(OrderStateMachine.OrderReceived)).OrderBy(x => x.OrderDetails.CreationDate).AsQueryable);
 
             return registry;
         }
