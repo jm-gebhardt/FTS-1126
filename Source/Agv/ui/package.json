@@ -7,8 +7,8 @@
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
-    "lint": "eslint --ext .js,.ts,.vue --ignore-path .gitignore --fix src/",
-    "lint:check": "eslint --ext .js,.ts,.vue --ignore-path .gitignore src/",
+    "lint": "eslint --ext .js,.ts,.vue --ignore-path .gitignore --fix --max-warnings=0 src/",
+    "lint:check": "eslint --ext .js,.ts,.vue --ignore-path .gitignore --max-warnings=0 src/",
     "format": "prettier . --write",
     "format:check": "prettier . --check"
   },
