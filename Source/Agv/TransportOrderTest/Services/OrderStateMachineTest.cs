@@ -164,7 +164,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 
             var message = fixture.TestHarness.Published.Select<HostOrderHandlingFailed>().First().Context.Message;
             Assert.AreEqual(correlationId, message.CorrelationId);
-            Assert.AreEqual(HostOrderErrorCode.Any, message.Error);
+            Assert.AreEqual(HostOrderErrorCode.InvalidOrderData, message.Error);
 
             Assert.IsNull(orderSaga.AssignedAgv);
             Assert.AreEqual(fixture.SagaHarness.StateMachine.OrderFailed.Name, orderSaga.CurrentState);
@@ -369,6 +369,77 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
             Assert.AreEqual(fixture.Machine.TransportOrderSend.Name, saga.CurrentState);
             Assert.IsFalse(await fixture.TestHarness.Published.Any<HostOrderStarted>());
+        }
+
+
+        private OrderSaga CreateTestOrderSaga(string previousState)
+        {
+            string orderId = "Order123";
+            var orderSaga = new OrderSaga(
+                orderId.ToGuid(),
+                new OrderDetails(orderId.ToGuid(), orderId, "S1", "D1", "1234", HostOrderCreator.Simulation),
+                previousState,
+                null
+            );
+
+            return orderSaga;
+        }
+
+        private StateMachineTestFixture<OrderStateMachine, OrderSaga> GetTheMostPrimitiveStateMachineTestFixtureForTests()
+        {
+            var mockRegistry = new Mock<IAgvRegistry>();
+            mockRegistry.Setup(s => s.GetIdleAgvs()).Returns(new List<IAgv>());
+
+            var fixture = new StateMachineTestFixture<OrderStateMachine, OrderSaga>(services: s => { s.AddTransient(_ => mockRegistry.Object); });
+            return fixture;
+        }
+        
+        /// <summary>
+        /// Checks the outgoing FailedReason strings after consuming the given AgvAssignmentErrorCode
+        /// </summary>
+        [DataRow(AgvAssignmentErrorCode.NoIdleAgv,  $"{nameof(AgvAssignmentErrorCode)}.NoIdleAgv")]
+        [DataRow(AgvAssignmentErrorCode.NoRouteFound, $"{nameof(AgvAssignmentErrorCode)}.NoRouteFound")]
+        [TestMethod]
+        public async Task AgvAssignmentErrorCode_EnumElements_Corresponds_to_its_string(AgvAssignmentErrorCode sentErrorCode, string expectedErrorCodeInOrderSaga)
+        {
+            // Arrange
+            StateMachineTestFixture<OrderStateMachine, OrderSaga> fixture = GetTheMostPrimitiveStateMachineTestFixtureForTests();
+            var order = CreateTestOrderSaga(fixture.Machine.AgvRequested.Name);
+            fixture.Add(order);
+
+            // Act
+            await fixture.TestHarness.Bus.Publish(new AgvAssignmentFailed(order.CorrelationId, sentErrorCode));
+
+            // Assert
+            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvAssignmentFailed>());
+            Assert.AreEqual(order.CorrelationId, await fixture.SagaHarness.Exists(order.CorrelationId));
+            var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == order.CorrelationId).First().Saga;
+            Assert.AreEqual(expectedErrorCodeInOrderSaga, saga.FailedReason );
+        }
+        
+        /// <summary>
+        /// Checks the outgoing FailedReason strings after consuming the given TransportOrderErrorCode
+        /// </summary>
+        [TestMethod]
+        [DataRow("TransportOrderSend", TransportOrderErrorCode.AbortedByUser, "AbortedByUser")]
+        [DataRow("TransportOrderSend", TransportOrderErrorCode.Any, "Any")]
+        [DataRow("TransportOrderPicked", TransportOrderErrorCode.AbortedByUser, "AbortedByUser")]
+        [DataRow("TransportOrderPicked", TransportOrderErrorCode.Any, "Any")]
+        public async Task TransportOrderErrorCode_EnumElements_Corresponds_to_its_string(string previousState, TransportOrderErrorCode sentErrorCode, string expectedErrorCodeInOrderSaga)
+        {
+            // Arrange
+            StateMachineTestFixture<OrderStateMachine, OrderSaga> fixture = GetTheMostPrimitiveStateMachineTestFixtureForTests();
+            var order = CreateTestOrderSaga(previousState);
+            fixture.Add(order);
+
+            // Act
+            await fixture.TestHarness.Bus.Publish(new TransportOrderFailed(order.CorrelationId, order.OrderDetails.OrderId, sentErrorCode));
+
+            // Assert
+            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<TransportOrderFailed>());
+            Assert.AreEqual(order.CorrelationId, await fixture.SagaHarness.Exists(order.CorrelationId));
+            var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == order.CorrelationId).First().Saga;
+            Assert.AreEqual(expectedErrorCodeInOrderSaga, saga.FailedReason);
         }
     }
 }

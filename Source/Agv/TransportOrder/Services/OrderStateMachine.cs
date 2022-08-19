@@ -173,13 +173,16 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
                     _logger.LogInformation("Order {OrderId}/{CorrelationId}, AGV assignment failed {Error}",
                         c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId, c.Message.Error)
                 )
+                .Then(c => c.Saga.FailedReason =  $"{nameof(AgvAssignmentErrorCode)}.{c.Message.Error}")
                 .IfElse(c => c.Message.Error == AgvAssignmentErrorCode.NoIdleAgv,
-                    c => c.TransitionTo(OrderReceived),
+                    c => c
+                        .TransitionTo(OrderReceived),
                     HostOrderInvalid
                 );
 
         private EventActivityBinder<OrderSaga, AgvAssignmentFailed> HostOrderInvalid(EventActivityBinder<OrderSaga, AgvAssignmentFailed> context) =>
-            context.Publish( c => new HostOrderHandlingFailed(c.Saga.CorrelationId, c.Saga.OrderDetails.OrderId, HostOrderErrorCode.Any))
+            context.Publish( c => new HostOrderHandlingFailed(c.Saga.CorrelationId, c.Saga.OrderDetails.OrderId, HostOrderErrorCode.InvalidOrderData))
+                .Then(c => _logger.LogInformation("Order {OrderId}/{CorrelationId} contains invalid data.", c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId))
                 .TransitionTo(OrderFailed);
 
         /// <summary>
@@ -220,10 +223,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         private EventActivityBinder<OrderSaga, TransportOrderFailed> SetTransportOrderFailedHandler() =>
             When(TransportOrderFailedEvent)
                 .Then(c =>
-                    _logger.LogInformation("Order {OrderId}/{CorrelationId} has failed", c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId)
-                 )
+                    _logger.LogInformation("Order {OrderId}/{CorrelationId} has failed with code {ErrorCode}", c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId, c.Message.Error)
+                )
                 .Publish(c => new HostOrderHandlingFailed(c.Saga.CorrelationId, c.Saga.OrderDetails.OrderId, HostOrderErrorCode.Any))
-                .TransitionTo(OrderFailed);
+                .TransitionTo(OrderFailed)
+                .Then(c => c.Saga.FailedReason = c.Message.Error.ToString());
 
         /// <summary>
         /// Handler for inbound message TransportOrderStarted

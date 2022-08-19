@@ -11,12 +11,16 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events
         /// </summary>
         Any,
         /// <summary>
-        /// Error code for order can not be modified or cancelled because it was already started
+        /// Error code for order that can not be modified or cancelled because it was already started
         /// </summary>
         OrderAlreadyStarted,
         /// <summary>
-        /// Error code for order can not be modified or cancelled because it was already finished
+        /// Error code for order that can not be modified or cancelled because it was already finished
         /// </summary>
-        OrderAlreadyFinished
+        OrderAlreadyFinished,
+        /// <summary>
+        /// Error code for an order that cannot be processed because its incoming order data was invalid
+        /// </summary>
+        InvalidOrderData
     }
 }

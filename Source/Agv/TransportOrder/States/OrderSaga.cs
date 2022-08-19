@@ -37,6 +37,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.States
         public OrderDetails OrderDetails { get; set; } = null!;
 
         /// <summary>
+        /// The reason why an order failed
+        /// </summary>
+        public string? FailedReason { get; set; }
+
+        /// <summary>
         /// Create new OrderSaga
         /// </summary>
         /// <param name="orderDetails">The order related to this Saga</param>
