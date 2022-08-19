@@ -51,6 +51,39 @@ export const useOrderStore = defineStore({
           console.log(response.error)
         })
         .finally(() => (this.loading = false))
+    },
+    async updateOrderList(order: IOrder) {
+      if (!this.orders || this.orders.length < 1) return // No orders to update
+
+      for (let i = 0; i < this.orders.length; i++) {
+        const element = this.orders[i]
+        if (element.correlationId === order.correlationId) {
+          this.orders[i] = order
+          return
+        }
+      }
+
+      // If this is the first page check if a new order can be added to the list
+      if (this.currentPage === 1) {
+        const lastOrder = this.orders[0]
+
+        if (!lastOrder.orderDetails?.creationDate) return
+        if (!order.orderDetails?.creationDate) return
+
+        // Add order to list if it is newer than the latest order
+        if (
+          order.orderDetails?.creationDate >
+          lastOrder.orderDetails?.creationDate
+        ) {
+          this.orders.splice(0, 0, order) // Add new order
+          this.totalCount++
+
+          // Trim orders array to page size
+          if (this.orders.length > this.pageSize) {
+            this.orders.pop()
+          }
+        }
+      }
     }
   }
 })

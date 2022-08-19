@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.OpenApi.Models;
 using CommandLine;
 using Gebhardt.StoreWare.Agv.Common;
@@ -15,8 +16,10 @@ using Gebhardt.StoreWare.Agv.TransportOrder.CmdOptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence;
 using Gebhardt.StoreWare.Agv.TransportOrder.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.States;
+using Gebhardt.StoreWare.Agv.TransportOrder.Web.Hubs;
 
 var initialLogger = Gebhardt.StoreWare.Agv.Common.Logging.InitialLogger.Create<Program>();
+
 try
 {
     IHostBuilder? hostBuilder = null;
@@ -29,6 +32,11 @@ try
                 {
                     services.AddTransient<IAgvRegistry, EfAgvRegistry>();
                     services.AddTransient<IOrderRegistry, EfOrderRegistry>();
+                    services.AddScoped<IOrderHubContext>(provider =>
+                    {
+                        var hubContext = provider.GetRequiredService<IHubContext<OrderHub>>();
+                        return new OrderHubContext(hubContext);
+                    });
 
                     services.AddDbContextFactory<SagaPersistenceDbContext>(builder =>
                     {
@@ -47,6 +55,7 @@ try
                             x.AddSagaStateMachine<AgvStateMachine, AgvSaga>()
                                 .AddPersistence<AgvSaga, SagaPersistenceDbContext>();
                             x.AddConsumer<AssignAgvConsumer>();
+                            x.AddConsumer<TransportOrderChangedConsumer>();
                             x.AddRequestClient<ReserveAgv>();
                         });
                     }
@@ -85,12 +94,14 @@ try
                         Version = "v1",
                         Title = "Monitoring API"
                     });
+                    options.AddSignalRSwaggerGen();
 
                     // Set the comments path for the Swagger JSON and UI.
                     string xmlFile = $"{assembly.GetName().Name}.xml";
                     string xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
                     options.IncludeXmlComments(xmlPath);
                 });
+                services.AddSignalR();
             })
             .Configure(app =>
             {
@@ -98,12 +109,14 @@ try
                 app.UseStaticFiles(); // Allow html, images, etc. in wwwroot directory to be served. (use UseWebRoot to change folder)
                 app.UseRouting();
                 app.UseCors();
+                app.UseWebSockets();
                 app.UseAuthentication(); // verify user
                 app.UseAuthorization(); // use security tokens
 
                 app.UseEndpoints(endpoints =>
                 {
                     endpoints.MapControllers();
+                    endpoints.MapHub<OrderHub>(OrderHub.UrlPath);
                 });
 
                 app.UseSwagger();

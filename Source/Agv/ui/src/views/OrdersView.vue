@@ -1,11 +1,12 @@
 <template>
   <h1>Orders</h1>
-  <div class="toggle-switch">
-    Auto reload
+  <div class="buttons">
+    <button @click="fetch()">Reload</button>
+    Auto-refresh
     <ui-switch
-      :model-value="orderPolling.pollingEnabled()"
-      @selected="() => orderPolling.toggle()"
-      >Polling</ui-switch
+      :model-value="orderHub.isConnected()"
+      @selected="() => toggleAutoRefresh()"
+      >Auto-Refresh</ui-switch
     >
   </div>
   <order-list
@@ -26,7 +27,9 @@ import OrderList from '@/components/OrderList.vue'
 import { useOrderStore } from '@/services/OrderStore'
 import { storeToRefs } from 'pinia'
 import { onBeforeUnmount } from 'vue'
-import { Polling } from '@/utils/Polling'
+import { OrderHub } from '@/services/OrderHub'
+
+const orderHub = new OrderHub()
 
 const { orders, currentPage, totalCount, loading, error } = storeToRefs(
   useOrderStore()
@@ -37,7 +40,6 @@ const pageSizes = [10, 25, 100]
 
 let requestPageNumber = 1
 let requestPageSize = pageSizes[0]
-const orderPolling = new Polling(fetch, 3000)
 
 function fetch(): void {
   fetchOrders(requestPageNumber, requestPageSize)
@@ -59,15 +61,23 @@ function pageChanged(pageNumber: number): void {
   fetch()
 }
 
+function toggleAutoRefresh(): void {
+  if (orderHub.isConnected()) {
+    orderHub.disconnect()
+  } else {
+    orderHub.connect()
+  }
+}
+
 onBeforeUnmount(async () => {
-  orderPolling.stop()
+  orderHub.disconnect()
 })
 
 fetch()
 </script>
 
 <style lang="scss">
-.toggle-switch {
+.buttons {
   text-align: right;
 }
 </style>

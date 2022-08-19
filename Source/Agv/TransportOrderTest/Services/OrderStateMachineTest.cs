@@ -237,7 +237,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         }
 
         /// <summary>
-        /// TransportOrderFailed results in sage state change to TransportOrderFailed
+        /// TransportOrderFailed results in saga state change to TransportOrderFailed
         /// </summary>
         [DataRow("TransportOrderSend")]
         [DataRow("TransportOrderPicked")]
@@ -440,6 +440,37 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             Assert.AreEqual(order.CorrelationId, await fixture.SagaHarness.Exists(order.CorrelationId));
             var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == order.CorrelationId).First().Saga;
             Assert.AreEqual(expectedErrorCodeInOrderSaga, saga.FailedReason);
+        }
+
+        /// <summary>
+        /// Send a TransportOrderChanged message after OrderSaga state has changed
+        /// </summary>
+        [TestMethod]
+        public async Task When_OrderSaga_State_Changed_Publish_TransportOrderChanged_Message()
+        {
+            var mockRegistry = new Mock<IAgvRegistry>();
+            mockRegistry.Setup(s => s.GetIdleAgvs()).Returns(new List<IAgv>());
+
+            var fixture = new StateMachineTestFixture<OrderStateMachine, OrderSaga>(services: s => { s.AddTransient(_ => mockRegistry.Object); });
+
+            string orderId = Guid.NewGuid().ToString();
+            var correlationId = orderId.ToGuid();
+
+            var orderSaga = new OrderSaga(
+                correlationId,
+                new OrderDetails(correlationId, orderId, "s1", "d2", "leno1", HostOrderCreator.Simulation)
+            )
+            { CurrentState = fixture.Machine.TransportOrderPicked.Name };
+
+            fixture.Add(orderSaga);
+
+            // Trigger state change: TransportOrderPicked -> Final
+            await fixture.TestHarness.Bus.Publish(new TransportOrderCompleted(correlationId, orderId));
+            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<TransportOrderCompleted>());
+
+            var message = fixture.TestHarness.Published.Select<TransportOrderChanged>().First().Context.Message;
+            Assert.AreEqual(correlationId, message.CorrelationId);
+            Assert.AreEqual(orderSaga.CurrentState, message.Order.CurrentState);
         }
     }
 }
