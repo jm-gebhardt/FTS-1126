@@ -32,8 +32,8 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
         {
             await Task.Run(() => // Await Task to satisfy async
             {
-                _logger.LogInformation("HostOrder handling succeeded for OrderId {OrderId} / {CorrelationId}", 
-                    context.Message.OrderId, context.Message.CorrelationId
+                _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId}", 
+                    nameof(HostOrderHandlingSucceeded), context.Message.OrderId, context.Message.CorrelationId
                     );
             });
         }
@@ -47,8 +47,8 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
         {
             await Task.Run(() => // Await Task to satisfy async
             {
-                _logger.LogInformation("HostOrder handling failed for OrderId {OrderId} / {CorrelationId}", 
-                    context.Message.OrderId, context.Message.CorrelationId
+                _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId}", 
+                    nameof(HostOrderHandlingFailed), context.Message.OrderId, context.Message.CorrelationId
                 );
             });
         }

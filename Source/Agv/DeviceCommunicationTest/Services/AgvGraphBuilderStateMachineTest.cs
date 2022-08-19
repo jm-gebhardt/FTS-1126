@@ -89,9 +89,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services
                 },
                 requestIdList);
             // Publish StationListReceived ...
-            await fixture.TestHarness.Bus.Publish(new MqttStationListReceived(correlationId, stationList));
+            await fixture.TestHarness.Bus.Publish(new InternalStationListReceived(correlationId, stationList));
             // ... expect it's gonna be consumed by the statemachine.
-            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<MqttStationListReceived>());
+            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<InternalStationListReceived>());
 
             // Ensure that state machine did send MqttRequestGraph ...
             Assert.IsTrue(await fixture.TestHarness.Published.Any<MqttRequestGraph>());
@@ -119,9 +119,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services
                 string.Empty,
                 requestIdGraph);
             // Publish GraphReceived ...
-            await fixture.TestHarness.Bus.Publish(new MqttGraphReceived(correlationId, graph));
+            await fixture.TestHarness.Bus.Publish(new InternalGraphReceived(correlationId, graph));
             // ... expect it's gonna be consumed by the state machine.
-            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<MqttGraphReceived>());
+            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<InternalGraphReceived>());
 
             Assert.AreNotEqual(requestIdList, requestIdGraph);
 

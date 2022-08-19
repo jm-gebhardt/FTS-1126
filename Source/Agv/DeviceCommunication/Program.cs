@@ -56,6 +56,7 @@ try
                         {
                             //add consumers here
                             configurator.AddMqttConsumer<AgvStateConsumer>();
+                            configurator.AddMqttConsumer<AgvDataConsumer>();
                             configurator.AddMqttConsumer<AgvGraphConsumer>();
                             configurator.AddMqttConsumer<AgvStationListConsumer>();
                             configurator.AddMqttConsumer<OrderEventConsumer>();
@@ -67,13 +68,14 @@ try
                         rabbitMqConfiguration: (registrationContext, configurator) =>
                         {
                             //for outgoing MQTT messages the message topology needs to be configured
+                            configurator.ConfigureMessageTopology<MqttRequestData>();
                             configurator.ConfigureMessageTopology<MqttRequestGraph>();
                             configurator.ConfigureMessageTopology<MqttOrder>();
                             configurator.ConfigureMessageTopology<MqttRequestStationList>();
 
                             //for incoming MQTT messages the raw JSON serializer/deserializer needs to be added
                             var serializerFactory = new SystemTextJsonRawMessageSerializerFactory();
-                            configurator.AddSerializer(serializerFactory);
+                            configurator.AddSerializer(serializerFactory, false);
                         });
                 })
                 .Build();

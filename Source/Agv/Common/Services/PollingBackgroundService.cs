@@ -36,7 +36,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Services
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                _logger.LogDebug("Polling {Service}", Pollable);
+                _logger.LogTrace("Polling {Service}", Pollable);
                 try
                 {
                     await Pollable.Poll(cancellationToken);

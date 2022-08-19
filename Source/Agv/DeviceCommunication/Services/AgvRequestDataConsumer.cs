@@ -30,7 +30,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
         {
             await context.PublishMqtt(new MqttRequestData(context.Message.AgvId, context.Message.CorrelationId), context.CancellationToken);
 
-            _logger.LogInformation("Requesting AGV data from AGV {AgvId} / {CorrelationId}", context.Message.AgvId, context.CorrelationId);
+            _logger.LogInformation("{MessageType} from AGV {AgvId} / {CorrelationId} received", nameof(RequestAgvData), context.Message.AgvId, context.CorrelationId);
         }
     }
 }

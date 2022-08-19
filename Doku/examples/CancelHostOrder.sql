@@ -1,0 +1,2 @@
+insert into ToAgv (RecordType, MessageStatus, Orderid, OrderType, LeNo, Source, Destination, Status, Creator, Created, CcuVersion, TimeStamp)
+	values ('OrderCancelRequest', 'Pending', 'ORD_02', 'Transport', 'LE_01', 'SRC_01', 'DST_01', 'Initial', 'IRS/Kn', CURRENT_TIMESTAMP, 0, CURRENT_TIMESTAMP);

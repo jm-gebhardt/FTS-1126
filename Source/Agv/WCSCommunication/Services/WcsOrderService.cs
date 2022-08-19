@@ -61,7 +61,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
                 {
                     var correlationId = order.OrderId.ToGuid();
 
-                    _logger.LogInformation("New order in FromAgv: {OrderId} / {CorrelationId}", order.OrderId, correlationId);
+                    _logger.LogInformation("New order in ToAgv: {OrderId} / {CorrelationId}", order.OrderId, correlationId);
 
                     var hostOrderDetails = new OrderDetails(correlationId, order.OrderId, order.Source, order.Destination, order.LeNo, HostOrderCreator.Wms, order.Created);
 

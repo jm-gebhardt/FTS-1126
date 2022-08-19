@@ -1,0 +1,50 @@
+{
+  "messageId": "98420000-56b8-0050-50a6-08da80fe4aca",
+  "requestId": null,
+  "correlationId": "99bff92f-d56e-cfac-a7de-09ff584f4115",
+  "conversationId": "98420000-56b8-0050-5b81-08da80fe4aca",
+  "initiatorId": null,
+  "sourceAddress": "rabbitmq://localhost/AgvData",
+  "destinationAddress": "rabbitmq://localhost/Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events:AgvDataReceived",
+  "responseAddress": null,
+  "faultAddress": null,
+  "messageType": [
+    "urn:message:Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events:AgvDataReceived"
+  ],
+  "message": {
+    "correlationId": "99bff92f-d56e-cfac-a7de-09ff584f4115",
+    "agvId": "AGV-01",
+    "data": {
+      "correlationId": "99bff92f-d56e-cfac-a7de-09ff584f4115",
+      "model": "Karis-2",
+      "type": "P",
+      "ipV4Address": "000.000.000.000",
+      "maxVelocityStraight": 0.123,
+      "batteryCapacity": 60,
+      "length": 0.8,
+      "width": 0.6,
+      "acceleration": 0.34,
+      "maxVelocityTurn": 0.01,
+      "maxVelocityTurnOnSpot": 0.02,
+      "payload": 35,
+      "sensors": [
+        {
+          "sensorIdentifier": "Temp"
+        }
+      ]
+    }
+  },
+  "expirationTime": null,
+  "sentTime": "2022-08-18T09:44:49.116791Z",
+  "headers": {},
+  "host": {
+    "machineName": "202203-IRS-HV01",
+    "processName": "Gebhardt.StoreWare.Agv.DeviceCommunication",
+    "processId": 17048,
+    "assembly": "Gebhardt.StoreWare.Agv.DeviceCommunication",
+    "assemblyVersion": "0.0.1.0",
+    "frameworkVersion": "6.0.8",
+    "massTransitVersion": "8.0.3.0",
+    "operatingSystemVersion": "Microsoft Windows NT 10.0.19043.0"
+  }
+}

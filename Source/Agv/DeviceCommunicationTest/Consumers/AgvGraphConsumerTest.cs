@@ -9,7 +9,7 @@ using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
 namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
 {
     /// <summary>
-    /// Tests for <see cref="MqttGraph"/> and <see cref="MqttGraphReceived"/>.
+    /// Tests for <see cref="MqttGraph"/> and <see cref="InternalGraphReceived"/>.
     /// </summary>
     [TestClass]
     public class AgvGraphConsumerTest
@@ -43,9 +43,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
             Assert.AreEqual(AgvTestIdentifier, consumed.SerialNumber);
 
             // Did the consumer forward a Graph message ...
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<MqttGraphReceived>());
+            Assert.IsTrue(await fixture.TestHarness.Published.Any<InternalGraphReceived>());
             // ... with expected content?
-            var published = fixture.TestHarness.Published.Select<MqttGraphReceived>().First().Context.Message;
+            var published = fixture.TestHarness.Published.Select<InternalGraphReceived>().First().Context.Message;
             Assert.AreEqual(AgvTestIdentifier.ToGuid(), published.CorrelationId);
             Assert.AreEqual(AgvTestIdentifier, published.Graph.SerialNumber);
             Assert.AreEqual(2, published.Graph.Nodes?.Length);

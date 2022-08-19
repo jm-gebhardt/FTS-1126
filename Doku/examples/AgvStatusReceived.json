@@ -1,0 +1,41 @@
+{
+  "messageId": "58300000-56b8-0050-3a74-08da8058cb44",
+  "requestId": null,
+  "correlationId": "99bff92f-d56e-cfac-a7de-09ff584f4115",
+  "conversationId": "58300000-56b8-0050-95be-08da8058cb52",
+  "initiatorId": null,
+  "sourceAddress": "rabbitmq://localhost/AgvState",
+  "destinationAddress": "rabbitmq://localhost/Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events:AgvStatusReceived",
+  "responseAddress": null,
+  "faultAddress": null,
+  "messageType": [
+    "urn:message:Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events:AgvStatusReceived"
+  ],
+  "message": {
+    "correlationId": "99bff92f-d56e-cfac-a7de-09ff584f4115",
+    "agvId": "AGV-01",
+    "agvStatus": {
+      "correlationId": "99bff92f-d56e-cfac-a7de-09ff584f4115",
+      "orderId": "Order01",
+      "busy": false,
+      "automatic": false,
+      "batteryCharge": 31,
+      "charging": false,
+      "disturbed": true,
+      "lastNodeId": null
+    }
+  },
+  "expirationTime": null,
+  "sentTime": "2022-08-17T14:00:08.2070132Z",
+  "headers": {},
+  "host": {
+    "machineName": "202203-IRS-HV01",
+    "processName": "Gebhardt.StoreWare.Agv.DeviceCommunication",
+    "processId": 12376,
+    "assembly": "Gebhardt.StoreWare.Agv.DeviceCommunication",
+    "assemblyVersion": "0.0.1.0",
+    "frameworkVersion": "6.0.8",
+    "massTransitVersion": "8.0.3.0",
+    "operatingSystemVersion": "Microsoft Windows NT 10.0.19043.0"
+  }
+}

@@ -27,7 +27,7 @@
                 "Cancelled",
                 "CancellFailed",
                 "Updated",
-                "UpdateFailed"
+                "UpdateFailed",
                 "Failed"
             ]
         }

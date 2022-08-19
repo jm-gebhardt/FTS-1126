@@ -119,7 +119,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
             When(AgvStatusReceivedEvent)
                 .TransitionTo(Discovered)
                 .Then(c =>
-                    _logger.LogInformation("New AGV {AgvId}/{CorrelationId} discovered", c.Message.AgvId, c.Saga.CorrelationId))
+                    _logger.LogInformation("New AGV {AgvId} / {CorrelationId} discovered", c.Message.AgvId, c.Saga.CorrelationId))
                 .Publish(c => new RequestAgvData(c.Saga.CorrelationId, c.Saga.AgvId))
                 .Publish(c => new RequestAgvGraph(c.Saga.CorrelationId, c.Saga.AgvId))
                 // Lets have a auto-discover feature
@@ -131,18 +131,18 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
             When(ReserveAgvEvent)
                 .TransitionTo(Reserved)
                 .Then(c =>
-                    _logger.LogTrace("AGV {AgvId}/{CorrelationId} reserved", c.Saga.AgvId, c.Saga.CorrelationId))
+                    _logger.LogDebug("AGV {AgvId} / {CorrelationId} reserved", c.Saga.AgvId, c.Saga.CorrelationId))
                 .Respond(c => new AgvReservationSucceeded(c.Message.CorrelationId));
 
         private EventActivityBinder<AgvSaga, ReserveAgv> RejectReserveAgvRequestHandler() =>
             When(ReserveAgvEvent)
-                .Then(c => _logger.LogTrace("Could not reserve {AgvId}/{CorrelationId} in state {State}", c.Saga.AgvId, c.Saga.CorrelationId, c.Saga.CurrentState))
+                .Then(c => _logger.LogDebug("Could not reserve {AgvId} / {CorrelationId} in state {State}", c.Saga.AgvId, c.Saga.CorrelationId, c.Saga.CurrentState))
                 .Respond(c => new AgvReservationRejected(c.Message.CorrelationId));
 
         private EventActivityBinder<AgvSaga, AgvStatusReceived> AgvStatusReceivedHandler() =>
             When(AgvStatusReceivedEvent)
                 .Then(c =>
-                    _logger.LogTrace("AgvStatus {AgvId}/{CorrelationId} received", c.Message.AgvId, c.Saga.CorrelationId))
+                    _logger.LogDebug("{MessageType} {AgvId} / {CorrelationId}", nameof(AgvStatusReceived), c.Message.AgvId, c.Saga.CorrelationId))
                 .Then(c => c.Saga.AgvStatus = c.Message.AgvStatus)
                 .If(cond => cond.Saga.AgvData == null && cond.Saga.GetTimeSpanSinceLastUpdate_AgvData().TotalSeconds > AgvRequestTimeout,
                     x => x.Publish(m => new RequestAgvData(m.Saga.CorrelationId, m.Saga.AgvId)))
@@ -156,14 +156,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         private EventActivityBinder<AgvSaga, AgvGraphReceived> AgvGraphReceivedHandler() =>
             When(AgvGraphReceivedEvent)
                 .Then(c =>
-                    _logger.LogTrace("AgvGraph {AgvId}/{CorrelationId} received", c.Message.AgvId, c.Saga.CorrelationId))
+                    _logger.LogDebug("{MessageType} {AgvId} / {CorrelationId}", nameof(AgvGraphReceived), c.Message.AgvId, c.Saga.CorrelationId))
                 .Then(c => c.Saga.AgvGraph = c.Message.Graph)
                 .Then(c => c.Saga.AgvGraphReceivedLastTime = DateTime.Now);
 
         private EventActivityBinder<AgvSaga, AgvDataReceived> AgvDataReceivedHandler() =>
             When(AgvDataReceivedEvent)
                 .Then(c =>
-                    _logger.LogTrace("AgvData {AgvId}/{CorrelationId} received", c.Message.AgvId, c.Saga.CorrelationId))
+                    _logger.LogDebug("{MessageType} {AgvId} / {CorrelationId}", nameof(AgvDataReceived), c.Message.AgvId, c.Saga.CorrelationId))
                 .Then(c => c.Saga.AgvData = c.Message.Data)
                 .Then(c => c.Saga.AgvDataReceivedLastTime = DateTime.Now);
 
@@ -172,6 +172,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
                 .TransitionTo(Idle)
                 .Publish(c => new AgvBecameIdle(c.Saga.CorrelationId))
                 .Then(c =>
-                    _logger.LogTrace("Agv {AgvId}/{CorrelationId} released and transitioned to Idle", c.Saga.AgvId, c.Saga.CorrelationId));
+                    _logger.LogDebug("Agv {AgvId} / {CorrelationId} released and transitioned to Idle", c.Saga.AgvId, c.Saga.CorrelationId));
     }
 }

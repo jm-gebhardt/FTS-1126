@@ -1,0 +1,12 @@
+{
+  "orderId": "ORD_01",
+  "coordinates": null,
+  "serialNumber": "AGV-01",
+  "orderType": "Transport",
+  "recordType": "Order",
+  "route": null,
+  "stations": {
+    "fromStationIdentifier": "SRC_01",
+    "toStationIdentifier": "DST_01"
+  }
+}

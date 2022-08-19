@@ -132,7 +132,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
             When(HandleHostOrderEvent)
                 .TransitionTo(OrderReceived)
                 .Then(c =>
-                    _logger.LogInformation("Order {OrderId}/{CorrelationId} received", c.Message.OrderDetails.OrderId, c.Saga.CorrelationId))
+                    _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId} received", nameof(HandleHostOrder), c.Message.OrderDetails.OrderId, c.Saga.CorrelationId))
                 .Publish(c =>
                     new RequestOrderAgvAssign(c.Saga.CorrelationId)
                 );
@@ -155,8 +155,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         private EventActivityBinder<OrderSaga, AgvAssignmentSucceeded> SetAgvAssignSucceededHandler() =>
             When(AgvAssignSucceededEvent)
                 .Then(c =>
-                    _logger.LogInformation("Order {OrderId}/{CorrelationId} has been assigned to AGV {AgvId}",
-                        c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId, c.Message.AgvId)
+                    _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId} to AGV {AgvId}",
+                        nameof(AgvAssignmentSucceeded), c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId, c.Message.AgvId)
                  )
                 .Then(UpdateSagaState)
                 .Publish(c =>
@@ -171,8 +171,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         private EventActivityBinder<OrderSaga, AgvAssignmentFailed> SetAgvAssignFailedHandler() =>
             When(AgvAssignFailedEvent)
                 .Then(c =>
-                    _logger.LogInformation("Order {OrderId}/{CorrelationId}, AGV assignment failed {Error}",
-                        c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId, c.Message.Error)
+                    _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId}, {Error}",
+                        nameof(AgvAssignmentFailed), c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId, c.Message.Error)
                 )
                 .Then(c => c.Saga.FailedReason =  $"{nameof(AgvAssignmentErrorCode)}.{c.Message.Error}")
                 .IfElse(c => c.Message.Error == AgvAssignmentErrorCode.NoIdleAgv,
@@ -193,7 +193,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         private EventActivityBinder<OrderSaga, TransportOrderCompleted> SetTransportOrderCompletedHandler() =>
             When(TransportOrderCompletedEvent)
                 .Then(c =>
-                    _logger.LogInformation("Order {OrderId}/{CorrelationId} has been completed", c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId)
+                    _logger.LogInformation("Order {OrderId} / {CorrelationId} has been completed", c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId)
                  )
                 .ThenAsync(SendReleaseAgv)
                 .ThenAsync(SendHostOrderCompleted)
@@ -224,8 +224,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         private EventActivityBinder<OrderSaga, TransportOrderFailed> SetTransportOrderFailedHandler() =>
             When(TransportOrderFailedEvent)
                 .Then(c =>
-                    _logger.LogInformation("Order {OrderId}/{CorrelationId} has failed with code {ErrorCode}", c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId, c.Message.Error)
-                )
+                    _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId}", nameof(TransportOrderFailed),  c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId)
+                 )
                 .Publish(c => new HostOrderHandlingFailed(c.Saga.CorrelationId, c.Saga.OrderDetails.OrderId, HostOrderErrorCode.Any))
                 .TransitionTo(OrderFailed)
                 .Then(c => c.Saga.FailedReason = c.Message.Error.ToString());
@@ -237,7 +237,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         private EventActivityBinder<OrderSaga, TransportOrderStarted> SetTransportOrderStartedHandler() =>
             When(TransportOrderStartedEvent)
                 .Then(c =>
-                    _logger.LogInformation("Order {OrderId}/{CorrelationId} has been started", c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId))
+                    _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId}", nameof(TransportOrderStarted), c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId))
                 .Then(SendHostOrderStartedMessage);
 
         private void SendHostOrderStartedMessage(BehaviorContext<OrderSaga, TransportOrderStarted> context)
@@ -257,7 +257,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
             }
             else
             {
-                _logger.LogError("Corresponding AGV not found for Order {OrderId}/{CorrelationId}", context.Saga.OrderDetails.OrderId, context.Saga.CorrelationId);
+                _logger.LogError("Corresponding AGV not found for Order {OrderId} / {CorrelationId}", context.Saga.OrderDetails.OrderId, context.Saga.CorrelationId);
             }
         }
 
@@ -268,7 +268,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         private EventActivityBinder<OrderSaga, TransportOrderPickCompleted> SetTransportOrderPickCompletedHandler() =>
             When(TransportOrderPickCompletedEvent)
                 .Then(c =>
-                    _logger.LogInformation("Pick of Order {OrderId}/{CorrelationId} has been completed", c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId))
+                    _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId} has been completed", nameof(TransportOrderPickCompleted), c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId))
                 .TransitionTo(TransportOrderPicked);
 
         /// <summary>
@@ -277,7 +277,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// <returns></returns>
         private EventActivityBinder<OrderSaga> OnStateChange(EventActivityBinder<OrderSaga> eventActivityBinder) =>
             eventActivityBinder
-                .Then(c => _logger.LogInformation("State of Order {OrderId}/{CorrelationId} changed to {CurrentState}",
+                .Then(c => _logger.LogInformation("State of order {OrderId} / {CorrelationId} changed to {CurrentState}",
                     c.Saga.OrderDetails.OrderId, c.Saga.OrderDetails.CorrelationId, c.Saga.CurrentState)
                 )
                 .Publish(c =>

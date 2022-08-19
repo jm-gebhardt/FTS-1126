@@ -92,7 +92,7 @@ try
                     options.SwaggerDoc("v1", new OpenApiInfo
                     {
                         Version = "v1",
-                        Title = "Monitoring API"
+                        Title = "TransportOrder Monitoring API"
                     });
                     options.AddSignalRSwaggerGen();
 

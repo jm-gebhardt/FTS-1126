@@ -35,10 +35,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
 
             if (string.IsNullOrEmpty(serialNumber))
             {
-                _logger.LogError("Missing serialNumber in MqttState message: {Status}", context.Message);
+                _logger.LogError("Missing serialNumber in {MessageType} message: {Status}", nameof(MqttState), context.Message);
                 throw new InvalidOperationException($"Cannot handle {typeof(MqttState)} message, serialNumber must not be null or empty");
             }
-            
+            _logger.LogDebug("{MessageType} from {AgvId} received", nameof(MqttState), serialNumber);
+
             await context.Publish(new AgvStatusReceived(
                 correlationId: serialNumber.ToGuid(),
                 agvId: serialNumber,

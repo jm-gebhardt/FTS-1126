@@ -4,9 +4,9 @@
   "version": "1.3.2",
   "manufacturer": "TAR",
   "serialNumber": "AGV-01",
-  "orderId": "Order01",
+  "orderId": "ORD_01",
   "orderUpdateId": 0,
-  "lastNodeId": "",
+  "lastNodeId": "CRG_01",
   "lastNodeSequenceId": 0,
   "nodeStates": [],
   "edgeStates": [],
@@ -23,7 +23,7 @@
   "errors": [],
   "safetyState": {
     "eStop": "none",
-    "fieldViolation": true
+    "fieldViolation": false
   },
   "zoneSetId": "",
   "paused": true,

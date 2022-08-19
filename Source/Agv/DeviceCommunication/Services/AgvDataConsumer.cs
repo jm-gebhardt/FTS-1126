@@ -44,7 +44,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
             }
             catch (InvalidOperationException ex)
             {
-                _logger.LogError(ex, "Message IAgvData has invalid content: {AgvData} / {CorrelationId}", context.Message, context.CorrelationId);
+                _logger.LogError(ex, "Message {MessageType} has invalid content: {AgvData} / {CorrelationId}", nameof(MqttAgvData), context.Message, context.CorrelationId);
                 throw;
             }
         }

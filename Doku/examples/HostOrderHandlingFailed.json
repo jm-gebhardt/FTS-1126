@@ -1,0 +1,32 @@
+{
+  "messageId": "8c170000-56b8-0050-480e-08da802401a5",
+  "requestId": null,
+  "correlationId": "5a32f8f8-97c0-c758-eb9f-6341aceadd21",
+  "conversationId": "b0370000-56b8-0050-42f9-08da80226bd6",
+  "initiatorId": "5a32f8f8-97c0-c758-eb9f-6341aceadd21",
+  "sourceAddress": "rabbitmq://localhost/Order",
+  "destinationAddress": "rabbitmq://localhost/Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events:HostOrderHandlingFailed",
+  "responseAddress": null,
+  "faultAddress": null,
+  "messageType": [
+    "urn:message:Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events:HostOrderHandlingFailed"
+  ],
+  "message": {
+    "correlationId": "5a32f8f8-97c0-c758-eb9f-6341aceadd21",
+    "orderId": "ORD_01",
+    "error": "Any"
+  },
+  "expirationTime": null,
+  "sentTime": "2022-08-17T07:42:16.1133582Z",
+  "headers": {},
+  "host": {
+    "machineName": "202203-IRS-HV01",
+    "processName": "Gebhardt.StoreWare.Agv.TransportOrder",
+    "processId": 6028,
+    "assembly": "Gebhardt.StoreWare.Agv.TransportOrder",
+    "assemblyVersion": "0.0.1.0",
+    "frameworkVersion": "6.0.8",
+    "massTransitVersion": "8.0.3.0",
+    "operatingSystemVersion": "Microsoft Windows NT 10.0.19043.0"
+  }
+}

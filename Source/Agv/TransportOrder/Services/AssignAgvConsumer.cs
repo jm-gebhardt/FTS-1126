@@ -42,7 +42,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// <param name="context"></param>
         public async Task Consume(ConsumeContext<AssignAgv> context)
         {
-            _logger.LogInformation("Order {OrderId}/{CorrelationId} requests assignment to an AGV", context.Message.Order.OrderId, context.Message.CorrelationId);
+            _logger.LogInformation("Order {OrderId} / {CorrelationId} requests assignment to an AGV", context.Message.Order.OrderId, context.Message.CorrelationId);
 
             KeyValuePair<IAgv, IGraphAlgorithm.Route>? assignAgvAndRoute = await AssignIdleAgv<AStar>(context.Message.Order, context.CancellationToken);
             if (assignAgvAndRoute == null)
@@ -155,7 +155,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
             var agv = _agvRegistry.GetAgv(context.Message.CorrelationId);
             if (agv == null)
             {
-                _logger.LogError("Agv {CorrelationId} became idle, but no agv with this correlation ID can be found", context.Message.CorrelationId);
+                _logger.LogError("AGV {CorrelationId} became idle, but no AGV with this correlation ID can be found", context.Message.CorrelationId);
                 return;
             }
 
@@ -171,7 +171,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
             IOrder? assignedOrder = null;
             foreach (var order in openOrders)
             {
-                _logger.LogInformation("Trying to assign order {OrderId}/{CorrelationId} in state {State}", order.OrderDetails.OrderId, order.CorrelationId, order.CurrentState);
+                _logger.LogInformation("Trying to assign order {OrderId} / {CorrelationId} in state {State}", order.OrderDetails.OrderId, order.CorrelationId, order.CurrentState);
 
                 //2. See if agv has a route for this order
                 if (agvChooser.CalculateRoute(agv, order.OrderDetails) != null)
@@ -183,7 +183,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
                 }
                 else
                 {
-                    _logger.LogInformation("Assign order {OrderId}/{CorrelationId} in state {State} failed because AGV can't find a route", order.OrderDetails.OrderId, order.CorrelationId, order.CurrentState);
+                    _logger.LogInformation("Assign order {OrderId} / {CorrelationId} in state {State} failed because AGV can't find a route", order.OrderDetails.OrderId, order.CorrelationId, order.CurrentState);
                 }
                 //4. Try next order
                 unassignedOrders.RemoveAll(x => x.CorrelationId == order.CorrelationId);
@@ -191,11 +191,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
 
             if (assignedOrder != null)
             {
-                _logger.LogInformation("Agv {AgvId}/{CorrelationId} became idle and assignment for order {OrderId}/{OrderCorrelationId} has started", agv.AgvId, context.Message.CorrelationId, assignedOrder.OrderDetails.OrderId, assignedOrder.CorrelationId);
+                _logger.LogInformation("AGV {AgvId} / {CorrelationId} became idle and assignment for order {OrderId}/{OrderCorrelationId} has started", agv.AgvId, context.Message.CorrelationId, assignedOrder.OrderDetails.OrderId, assignedOrder.CorrelationId);
             }
             else
             {
-                _logger.LogInformation("Agv {AgvId}/{CorrelationId} became idle but open order(s) can not be assigned, because AGV does not have a route for order(s)", agv.AgvId, context.Message.CorrelationId);
+                _logger.LogInformation("AGV {AgvId} / {CorrelationId} became idle but open order(s) cannot be assigned, because AGV does not have a route for order(s)", agv.AgvId, context.Message.CorrelationId);
             }
         }
     }

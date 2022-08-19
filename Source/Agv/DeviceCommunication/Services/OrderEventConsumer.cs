@@ -29,11 +29,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
         /// </summary>
         public async Task Consume(ConsumeContext<MqttOrderEvent> context)
         {
-            _logger.LogTrace("Received {EventType} for {OrderId}", context.Message.EventType, context.Message.OrderId);
+            _logger.LogDebug("Received {MessageType}.{OrderEventType} for {OrderId}", nameof(MqttOrderEvent), context.Message.OrderEventType, context.Message.OrderId);
 
             var correlationId = context.Message.OrderId.ToGuid();
 
-            switch (context.Message.EventType)
+            switch (context.Message.OrderEventType)
             {
                 case OrderEventType.Started:
                     await context.Publish(new TransportOrderStarted(correlationId, context.Message.OrderId));
@@ -60,7 +60,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
                     break;
 
                 default:
-                    _logger.LogWarning("Undefined EventType {EventType} for {OrderId}", context.Message.EventType, context.Message.OrderId);
+                    _logger.LogWarning("Undefined OrderEventType {OrderEventType} for {OrderId}", context.Message.OrderEventType, context.Message.OrderId);
                     break;
             }
         }

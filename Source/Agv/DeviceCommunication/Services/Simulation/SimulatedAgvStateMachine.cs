@@ -214,7 +214,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
             context.Saga.Nodes = context.Message.Nodes;
             context.Saga.OrderStartDate = DateTime.Now;
 
-            _logger.LogInformation("Agv {AgvId}/{CorrelationId} started Order {OrderId}/{OrderCorrelationId}. Order will be picked up at {OrderPickDate} and dropped at {OrderFinishDate}",
+            _logger.LogInformation("Agv {AgvId}/{CorrelationId} started Order {OrderId} / {OrderCorrelationId}. Order will be picked up at {OrderPickDate} and dropped at {OrderFinishDate}",
                 context.Saga.AgvId, context.Saga.CorrelationId,
                 context.Message.OrderDetails.OrderId, context.Message.OrderDetails.CorrelationId, context.Saga.OrderPickDate, context.Saga.OrderFinishDate);
  
@@ -231,7 +231,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
             }
             else
             {
-                _logger.LogInformation("Agv {AgvId}/{CorrelationId} finished Order {OrderId}/{OrderCorrelationId}",
+                _logger.LogInformation("Agv {AgvId}/{CorrelationId} finished Order {OrderId} / {OrderCorrelationId}",
                     context.Saga.AgvId, context.Saga.CorrelationId, order.OrderId, order.CorrelationId);
                 await context.Publish(new TransportOrderCompleted(
                     order.CorrelationId,

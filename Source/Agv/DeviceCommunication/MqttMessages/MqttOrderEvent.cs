@@ -29,16 +29,16 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         /// <summary>
         /// The type of the order event. Started/Completed/Failed
         /// </summary>
-        public OrderEventType? EventType { get; set; }
+        public OrderEventType? OrderEventType { get; set; }
 
         /// <summary>
         /// Initializes a new instance of <see cref="MqttOrderEvent"/>
         /// </summary>
-        public MqttOrderEvent(string orderId, string serialNumber, OrderEventType? eventType)
+        public MqttOrderEvent(string orderId, string serialNumber, OrderEventType? orderEventType)
         {
             OrderId = orderId;
             SerialNumber = serialNumber;
-            EventType = eventType;
+            OrderEventType = orderEventType;
         }
     }
 }

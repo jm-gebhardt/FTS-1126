@@ -8,7 +8,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Events
     /// Transformation of <see cref="MqttGraph"/> into MassTransit message.
     /// </summary>
     [JetBrains.Annotations.PublicAPI]
-    public record MqttGraphReceived : CorrelatedBy<Guid>
+    public record InternalGraphReceived : CorrelatedBy<Guid>
     {
         /// <inheritdoc/>
         public Guid CorrelationId { get; }
@@ -23,7 +23,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Events
         /// </summary>
         /// <param name="correlationId"></param>
         /// <param name="graph"></param>
-        public MqttGraphReceived(Guid correlationId, MqttGraph graph)
+        public InternalGraphReceived(Guid correlationId, MqttGraph graph)
         {
             CorrelationId = correlationId;
             Graph = graph;

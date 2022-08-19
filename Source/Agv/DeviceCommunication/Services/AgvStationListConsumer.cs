@@ -26,13 +26,13 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
         }
 
         /// <summary>
-        /// Consume graph message from AGV and transform this into <see cref="MqttStationListReceived"/> message.
+        /// Consume graph message from AGV and transform this into <see cref="InternalStationListReceived"/> message.
         /// </summary>
         /// <exception cref="InvalidOperationException">Message content is invalid and cannot be processed.</exception>
         public async Task Consume(ConsumeContext<MqttStationList> context)
         {
-            _logger.LogInformation("Station list for {AgvId} received", context.Message.SerialNumber);
-            await context.Publish(new MqttStationListReceived(
+            _logger.LogInformation("{MessageType} from {AgvId} received", nameof(MqttStationList), context.Message.SerialNumber);
+            await context.Publish(new InternalStationListReceived(
                 correlationId: context.Message.SerialNumber.ToGuid(),
                 stationList: context.Message
             ), context.CancellationToken);

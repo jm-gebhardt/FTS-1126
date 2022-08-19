@@ -105,7 +105,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
 
             Assert.AreEqual(message.SerialNumber, consumedMsg.SerialNumber);
             Assert.AreEqual(message.OrderId, consumedMsg.OrderId);
-            Assert.AreEqual(message.EventType, consumedMsg.EventType);
+            Assert.AreEqual(message.OrderEventType, consumedMsg.OrderEventType);
 
             return fixture.TestHarness.Published;
         }
