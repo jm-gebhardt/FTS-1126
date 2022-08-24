@@ -175,7 +175,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
     }
 
     /// <summary>
-    /// 
+    /// Handling the ActionState
     /// </summary>
     [PublicAPI]
     public record ActionState
@@ -230,12 +230,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         public float? LocalizationScore { get; set; }
 
         /// <summary>
-        /// 
+        /// Short map description
         /// </summary>
         public string? MapDescription { get; set; }
 
         /// <summary>
-        /// 
+        /// Unique identifier of AGV map - not in GUID form
         /// </summary>
         public string? MapId { get; set; }
 
@@ -245,15 +245,15 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         public bool PositionInitialized { get; set; }
 
         /// <summary>
-        /// 
+        /// Theta component of AGV position
         /// </summary>
         public float Theta { get; set; }
         /// <summary>
-        /// 
+        /// X component of AGV position
         /// </summary>
         public float X { get; set; }
         /// <summary>
-        /// 
+        /// Y component of AGV position
         /// </summary>
         public float Y { get; set; }
     }
@@ -293,7 +293,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
     }
 
     /// <summary>
-    /// 
+    /// All information relating to the edges
     /// </summary>
     [PublicAPI]
     public record EdgeState
@@ -355,7 +355,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
     }
 
     /// <summary>
-    /// 
+    /// Handling the control points
     /// </summary>
     [PublicAPI]
     public record ControlPoint
@@ -377,7 +377,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
     }
 
     /// <summary>
-    /// 
+    /// Information related to processing errors
     /// </summary>
     [PublicAPI]
     public record Error
@@ -394,7 +394,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         public ErrorLevel ErrorLevel { get; set; }
 
         /// <summary>
-        /// 
+        /// List of above mentioned ErrorReferences
         /// </summary>
         public List<ErrorReference>? ErrorReferences { get; set; }
 
@@ -412,11 +412,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
     public record ErrorReference
     {
         /// <summary>
-        /// 
+        /// Property for reference key
         /// </summary>
         public string? ReferenceKey { get; set; }
         /// <summary>
-        /// 
+        /// Property for reference value
         /// </summary>
         public string? ReferenceValue { get; set; }
     }
@@ -438,7 +438,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         public InfoLevel InfoLevel { get; set; }
 
         /// <summary>
-        /// 
+        /// List of above mentioned InfoReferences
         /// </summary>
         public List<InfoReference>? InfoReferences { get; set; }
 
@@ -456,11 +456,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
     public record InfoReference
     {
         /// <summary>
-        /// 
+        /// Property for reference key
         /// </summary>
         public string? ReferenceKey { get; set; }
         /// <summary>
-        /// 
+        /// Property for reference value
         /// </summary>
         public string? ReferenceValue { get; set; }
     }
@@ -518,19 +518,19 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
     public record BoundingBoxReference
     {
         /// <summary>
-        /// 
+        /// Theta component of bounding box reference
         /// </summary>
         public float? Theta { get; set; }
         /// <summary>
-        /// 
+        /// X component of bounding box reference
         /// </summary>
         public float X { get; set; }
         /// <summary>
-        /// 
+        /// Y component of bounding box reference
         /// </summary>
         public float Y { get; set; }
         /// <summary>
-        /// 
+        /// Z component of bounding box reference
         /// </summary>
         public float Z { get; set; }
     }
@@ -560,7 +560,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
     }
 
     /// <summary>
-    /// 
+    /// All information related to Node states
     /// </summary>
     [PublicAPI]
     public record NodeState
@@ -668,25 +668,15 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
     [PublicAPI]
     public enum ActionStatus
     {
-        /// <summary>
-        /// 
-        /// </summary>
+        /// <summary/>
         Failed,
-        /// <summary>
-        /// 
-        /// </summary>
+        /// <summary/>
         Finished,
-        /// <summary>
-        /// 
-        /// </summary>
+        /// <summary/>
         Initializing,
-        /// <summary>
-        /// 
-        /// </summary>
+        /// <summary/>
         Running,
-        /// <summary>
-        /// 
-        /// </summary>
+        /// <summary/>
         Waiting
     };
 
@@ -697,13 +687,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
     [PublicAPI]
     public enum ErrorLevel
     {
-        /// <summary>
-        /// 
-        /// </summary>
+        /// <summary/>
         Fatal,
-        /// <summary>
-        /// 
-        /// </summary>
+        /// <summary/>
         Warning
     };
 
@@ -713,13 +699,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
     [PublicAPI]
     public enum InfoLevel
     {
-        /// <summary>
-        /// 
-        /// </summary>
+        /// <summary/>
         Debug,
-        /// <summary>
-        /// 
-        /// </summary>
+        /// <summary/>
         Info
     };
 
@@ -729,25 +711,15 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
     [PublicAPI]
     public enum OperatingMode
     {
-        /// <summary>
-        /// 
-        /// </summary>
+        /// <summary/>
         Automatic,
-        /// <summary>
-        /// 
-        /// </summary>
+        /// <summary/>
         Manual,
-        /// <summary>
-        /// 
-        /// </summary>
+        /// <summary/>
         Semiautomatic,
-        /// <summary>
-        /// 
-        /// </summary>
+        /// <summary/>
         Service,
-        /// <summary>
-        /// 
-        /// </summary>
+        /// <summary/>
         Teachin
     };
 
@@ -757,21 +729,13 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
     [PublicAPI]
     public enum EStop
     {
-        /// <summary>
-        /// 
-        /// </summary>
+        /// <summary/>
         AutoAck,
-        /// <summary>
-        /// 
-        /// </summary>
+        /// <summary/>
         Manual,
-        /// <summary>
-        /// 
-        /// </summary>
+        /// <summary/>
         None,
-        /// <summary>
-        /// 
-        /// </summary>
+        /// <summary/>
         Remote
     };
 }

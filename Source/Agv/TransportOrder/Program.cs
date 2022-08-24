@@ -33,7 +33,7 @@ try
                 {
                     services.AddTransient<IAgvRegistry, EfAgvRegistry>();
                     services.AddTransient<IOrderRegistry, EfOrderRegistry>();
-
+                    services.AddTransient<IMapRegistry, EfMapRegistry>();
                     services.AddScoped<IOrderHubContext>(provider =>
                     {
                         var hubContext = provider.GetRequiredService<IHubContext<OrderHub>>();

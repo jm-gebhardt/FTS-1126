@@ -21,11 +21,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         [TestMethod]
         public async Task When_AgvSaga_State_Changed_Trigger_Observer()
         {
+            var mapRegistryMock = new Mock<IMapRegistry>();
             var mockHub = new Mock<IAgvHubContext>();
             var mockContext = new Mock<BehaviorContext<AgvSaga>>();
             var mockLogger = new Mock<ILogger<AgvStateMachine>>();
             var agvStateObserver = new AgvStateObserver(mockHub.Object);
-            var agvStateMachine = new AgvStateMachine(mockLogger.Object, agvStateObserver);
+            var agvStateMachine = new AgvStateMachine(mockLogger.Object, mapRegistryMock.Object, agvStateObserver);
             var previousState = agvStateMachine.Idle;
             var currentState = agvStateMachine.Reserved;
 

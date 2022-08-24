@@ -46,6 +46,16 @@ sequenceDiagram
     activate DeviceCommunication
     DeviceCommunication->>AgvManagement: AgvGraphReceived
     deactivate DeviceCommunication
+    AgvManagement->>DeviceCommunication: RequestAgvMap
+    activate DeviceCommunication
+    DeviceCommunication->>(AGV): MqttRequestMap
+    deactivate DeviceCommunication
+    activate (AGV)
+    (AGV)->>DeviceCommunication: MqttResponseMap
+    deactivate (AGV)
+    activate DeviceCommunication
+    DeviceCommunication->>AgvManagement: AgvMapReceived
+    deactivate DeviceCommunication
 
     Note over WCSCommunication,DeviceCommunication: Handle HostOrder
 

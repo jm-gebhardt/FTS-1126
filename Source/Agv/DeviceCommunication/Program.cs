@@ -60,8 +60,12 @@ try
                             configurator.AddMqttConsumer<AgvGraphConsumer>();
                             configurator.AddMqttConsumer<AgvStationListConsumer>();
                             configurator.AddMqttConsumer<OrderEventConsumer>();
+                            configurator.AddMqttConsumer<MqttMapConsumer>();
                             configurator.AddSagaStateMachine<AgvGraphBuilderStateMachine, AgvGraphBuilderSaga>().InMemoryRepository();
                             configurator.AddConsumer<ExecuteTransportOrderConsumer>();
+                            configurator.AddConsumer<RequestAgvMapConsumer>();
+                            configurator.AddConsumer<AgvRequestDataConsumer>();
+                            configurator.AddMqttConsumer<AgvDataConsumer>();
                         },
 
                         // ReSharper disable once UnusedParameter.Local
@@ -72,6 +76,7 @@ try
                             configurator.ConfigureMessageTopology<MqttRequestGraph>();
                             configurator.ConfigureMessageTopology<MqttOrder>();
                             configurator.ConfigureMessageTopology<MqttRequestStationList>();
+                            configurator.ConfigureMessageTopology<MqttRequestMap>();
 
                             //for incoming MQTT messages the raw JSON serializer/deserializer needs to be added
                             var serializerFactory = new SystemTextJsonRawMessageSerializerFactory();

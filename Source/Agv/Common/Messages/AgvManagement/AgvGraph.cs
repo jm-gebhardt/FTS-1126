@@ -18,6 +18,11 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
         public Guid RelatedMapId { get; }
 
         /// <summary>
+        /// The name of the related map
+        /// </summary>
+        public string? RelatedMapName { get; }
+
+        /// <summary>
         /// The list of nodes in the graph.
         /// </summary>
         public Node[] Nodes { get; }

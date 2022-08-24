@@ -57,7 +57,7 @@
     "required": [
         "SerialNumber",
         "ModificationDate",
-        "RequestId"
+        "RequestId",
         "URL",
         "Resolution",
         "XOffset",

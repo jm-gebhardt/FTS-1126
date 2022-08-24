@@ -61,6 +61,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         public Event<AgvDataReceived> AgvDataReceivedEvent { get; private set; } = default!;
 
         /// <summary>
+        /// Agv map is incoming
+        /// </summary>
+        public Event<AgvMapReceived> AgvMapReceivedEvent { get; private set; } = default!;
+
+        /// <summary>
         /// If true, AGV are automatically moved from Discovered to Idle
         /// </summary>
         private const bool AutoAcceptDiscoveredAgv = true;
@@ -77,12 +82,18 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// <remarks>Interval indicated in seconds</remarks>
         private const int DailyRequestUpdateInterval = 24 * 3600;
 
+        private readonly IMapRegistry _mapRegistry;
+
         /// <summary>
         /// Constructor of AgvStateMachine
         /// </summary>
-        public AgvStateMachine(ILogger<AgvStateMachine> logger, IStateObserver<AgvSaga> agvStateObserver)
+        /// <param name="logger"></param>
+        /// <param name="mapRegistry"></param>
+        /// <param name="agvStateObserver"></param>
+        public AgvStateMachine(ILogger<AgvStateMachine> logger, IMapRegistry mapRegistry, IStateObserver<AgvSaga> agvStateObserver)
         {
             _logger = logger;
+            _mapRegistry = mapRegistry;
 
             SetSagaFactory();
             InstanceState(x => x.CurrentState);
@@ -95,6 +106,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
             DuringAny(AgvStatusReceivedHandler());
             DuringAny(AgvGraphReceivedHandler());
             DuringAny(AgvDataReceivedHandler());
+            DuringAny(AgvMapReceivedHandler());
 
             ConnectStateObserver(agvStateObserver);
         }
@@ -157,7 +169,21 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
                 .Then(c =>
                     _logger.LogDebug("{MessageType} {AgvId} / {CorrelationId}", nameof(AgvGraphReceived), c.Message.AgvId, c.Saga.CorrelationId))
                 .Then(c => c.Saga.AgvGraph = c.Message.Graph)
-                .Then(c => c.Saga.AgvGraphReceivedLastTime = DateTime.Now);
+                .Then(c => c.Saga.AgvGraphReceivedLastTime = DateTime.Now)
+                .Then(SearchMapNameInRegistry);
+
+
+        private void SearchMapNameInRegistry(BehaviorContext<AgvSaga, AgvGraphReceived> context)
+        {
+            if (_mapRegistry.Exists(context.Message.Graph.RelatedMapId))
+            {
+                _logger.LogInformation("Map {MapName}/{MapCorrelationId} is already given in MapRegistry", context.Message.Graph.RelatedMapName, context.Message.Graph.RelatedMapId);
+            }
+            else
+            {
+                context.Publish(new RequestAgvMap(context.Saga.CorrelationId, context.Saga.AgvId, context.Message.Graph.RelatedMapId, context.Message.Graph.RelatedMapName!));
+            }
+        }
 
         private EventActivityBinder<AgvSaga, AgvDataReceived> AgvDataReceivedHandler() =>
             When(AgvDataReceivedEvent)
@@ -171,6 +197,38 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
                 .TransitionTo(Idle)
                 .Publish(c => new AgvBecameIdle(c.Saga.CorrelationId))
                 .Then(c =>
-                    _logger.LogDebug("Agv {AgvId} / {CorrelationId} released and transitioned to Idle", c.Saga.AgvId, c.Saga.CorrelationId));
+                    _logger.LogTrace("Agv {AgvId}/{CorrelationId} released and transitioned to Idle", c.Saga.AgvId, c.Saga.CorrelationId));
+
+        private EventActivityBinder<AgvSaga, AgvMapReceived> AgvMapReceivedHandler() =>
+            When(AgvMapReceivedEvent)
+                .Then(c => _logger.LogInformation("Incoming Map {mapId}/{mapCorrelationId} for Agv {AgvId}/{CorrelationId}",
+                    c.Message.MapId, c.Message.MapCorrelationId, c.Saga.AgvId, c.Saga.CorrelationId))
+                .Then(InsertIntoMapTable);
+
+        private void InsertIntoMapTable(BehaviorContext<AgvSaga, AgvMapReceived> context)
+        {
+            if (!_mapRegistry.Exists(context.Message.MapCorrelationId))
+            {
+                if (_mapRegistry.Add(context.Message.MapCorrelationId, context.Message.ImageData, context.Message.MapId))
+                {
+                    _logger.LogInformation("Map {mapId}/{mapCorrelationId} inserted into Registry", context.Message.MapId, context.Message.CorrelationId);
+                }
+                else
+                {
+                    _logger.LogWarning("Failed to insert Map {mapId}/{mapCorrelationId} into Registry", context.Message.MapId, context.Message.CorrelationId);
+                }
+            }
+            else
+            {
+                if (_mapRegistry.Update(context.Message.MapCorrelationId, context.Message.ImageData))
+                {
+                    _logger.LogInformation("Map {mapId}/{mapCorrelationId} has been updated in Registry", context.Message.MapId, context.Message.CorrelationId);
+                }
+                else
+                {
+                    _logger.LogWarning("Failed to update Map {mapId}/{mapCorrelationId} in Registry", context.Message.MapId, context.Message.CorrelationId);
+                }
+            }
+        }
     }
 }

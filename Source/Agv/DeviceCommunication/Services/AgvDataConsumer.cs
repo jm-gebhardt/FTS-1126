@@ -33,6 +33,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
         public async Task Consume(ConsumeContext<MqttAgvData> context)
         {
             var parser = new MessageParsers.AgvDataParser(context.Message);
+            _logger.LogInformation("Incoming AgvData: {AgvData} / {CorrelationId}", context.Message.SerialNumber, context.Message.RequestId);
 
             try
             {
