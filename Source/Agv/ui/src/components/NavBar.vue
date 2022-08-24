@@ -11,9 +11,16 @@
             Home
           </ui-nav-item>
         </RouterLink>
-        <RouterLink to="/order">
+        <RouterLink to="/orders">
           <ui-nav-item href="javascript:void(0)">
-            <ui-icon>shopping_cart</ui-icon> Orders
+            <ui-icon>shopping_cart</ui-icon>
+            Orders
+          </ui-nav-item>
+        </RouterLink>
+        <RouterLink to="/agvs">
+          <ui-nav-item href="javascript:void(0)">
+            <ui-icon>agriculture</ui-icon>
+            AGVs
           </ui-nav-item>
         </RouterLink>
       </ui-nav>

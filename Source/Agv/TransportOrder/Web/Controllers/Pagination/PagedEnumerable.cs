@@ -38,7 +38,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers.Pagination
         /// </summary>
         [UsedImplicitly]
         public bool HasPrevious => CurrentPage > 1;
-        
+
         /// <summary>
         /// Is there a next page
         /// </summary>
@@ -50,32 +50,19 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers.Pagination
         /// <summary>
         /// PagedEnumerable Constructor
         /// </summary>
-        /// <param name="items"></param>
-        /// <param name="count"></param>
-        /// <param name="pageNumber"></param>
-        /// <param name="pageSize"></param>
-        private PagedEnumerable(IEnumerable<T> items, int count, int pageNumber, int pageSize)
+        /// <param name="source">Source list</param>
+        /// <param name="pageNumber">Current page number</param>
+        /// <param name="pageSize">Items per page</param>
+        public PagedEnumerable(List<T> source, int pageNumber, int pageSize)
         {
-            _items = items;
-            TotalCount = count;
+            TotalCount = source.Count;
             PageSize = pageSize;
             CurrentPage = pageNumber;
-            TotalPages = (int)Math.Ceiling(count / (double)pageSize);
-        }
+            TotalPages = (int)Math.Ceiling(TotalCount / (double)pageSize);
 
-        /// <summary>
-        /// Convert given queryable into pages List
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="pageNumber"></param>
-        /// <param name="pageSize"></param>
-        /// <returns></returns>
-        public static PagedEnumerable<T> ToPagedList(IQueryable<T> source, int pageNumber, int pageSize)
-        {
-            int count = source.Count();
-            IEnumerable<T> items = source.Skip((pageNumber - 1) * pageSize).Take(pageSize).AsEnumerable();
-
-            return new PagedEnumerable<T>(items, count, pageNumber, pageSize);
+            int start = (pageNumber - 1) * pageSize;
+            int end = start + pageSize;
+            _items = source.Take(new Range(start, end));
         }
 
         /// <summary>
@@ -86,7 +73,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers.Pagination
         {
             return new PaginationHeader(CurrentPage, TotalPages, PageSize, TotalCount, HasPrevious, HasNext);
         }
-        
+
         /// <summary>
         /// <inheritdoc />
         /// </summary>
@@ -104,5 +91,3 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers.Pagination
         }
     }
 }
-
-

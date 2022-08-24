@@ -1,5 +1,4 @@
 ﻿using System.Text.Json;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Microsoft.AspNetCore.Mvc;
 using Gebhardt.StoreWare.Agv.TransportOrder.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers.Pagination;
@@ -28,16 +27,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers
         /// </summary>
         /// <response code="200">Ok</response>
         [HttpGet]
-        [Route("/order")]
+        [Route("/orders")]
         public ActionResult<IEnumerable<Order>> GetOrders([FromQuery] PaginationParameters paginationParameters)
         {
-            PagedEnumerable<IOrder> orders = PagedEnumerable<IOrder>.ToPagedList(
-                _orderRegistry.GetAllOrders().OrderByDescending(x => x.OrderDetails.CreationDate), 
-                paginationParameters.PageNumber, 
-                paginationParameters.PageSize);
-            
-            Response.Headers.Add(PaginationHeader.HeaderName, JsonSerializer.Serialize(orders.PaginationHeader()));
-            return Ok(orders.Select(Order.FromIOrder));
+            List<Order> orders = _orderRegistry.GetAllOrders().OrderByDescending(x => x.OrderDetails.CreationDate).Select(Order.FromIOrder).ToList();
+            var orderList = new PagedEnumerable<Order>(orders, paginationParameters.PageNumber, paginationParameters.PageSize);
+
+            Response.Headers.Add(PaginationHeader.HeaderName, JsonSerializer.Serialize(orderList.PaginationHeader()));
+            return Ok(orderList);
         }
     }
 }

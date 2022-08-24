@@ -36,7 +36,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
             new("node10", "node00")
         };
 
-        private IAgvRegistry GetAgvRegistry()
+        private static IAgvRegistry GetAgvRegistry()
         {
             var registry = new Mock<IAgvRegistry>();
 
@@ -58,7 +58,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
             }
 
             registry.SetupGet(x => x.Count).Returns(agvs.Count);
-            registry.SetupGet(x => x.CountIdle).Returns(agvs.Where(x=> x.CurrentState == nameof(AgvStateMachine.Idle)).Count);
+            registry.SetupGet(x => x.CountIdle).Returns(agvs.Where(x => x.CurrentState == nameof(AgvStateMachine.Idle)).Count);
             registry.Setup(x => x.GetIdleAgvs()).Returns(agvs.Where(x => x.CurrentState == nameof(AgvStateMachine.Idle)));
             registry.Setup(x => x.GetAllAgvs()).Returns(agvs);
             registry.Setup(x => x.GetAgv(It.IsAny<Guid>())).Returns<Guid>(correlationId =>
@@ -80,11 +80,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
 
         /// <summary/>
         [TestMethod]
-        public async Task GetAgvs_Successfully()
+        public void GetAgvs_Successfully()
         {
             var controller = new AgvController(GetAgvRegistry());
 
-            var result = await controller.GetAgvs() as OkObjectResult;
+            var result = controller.GetAgvs().Result as OkObjectResult;
             Assert.IsNotNull(result);
 
             var agvs = result.Value as List<TransportOrder.Web.Models.Agv>;
@@ -111,7 +111,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
             var controller = new AgvController(GetAgvRegistry());
             var correlationId = _agvIds[index].ToGuid();
 
-            var result = controller.GetAgvGraph(correlationId) as OkObjectResult;
+            var result = controller.GetAgvGraph(correlationId).Result as OkObjectResult;
             Assert.IsNotNull(result);
 
             var agvGraph = result.Value as AgvGraph;
@@ -129,7 +129,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
             var controller = new AgvController(GetAgvRegistry());
             var correlationId = Guid.Empty;
 
-            var result = controller.GetAgvGraph(correlationId) as NotFoundResult;
+            var result = controller.GetAgvGraph(correlationId).Result as NotFoundResult;
             Assert.IsNotNull(result);
         }
 
@@ -142,7 +142,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
             var controller = new AgvController(GetAgvRegistry());
             var correlationId = _agvIds[index].ToGuid();
 
-            var result = controller.GetAgvStatus(correlationId) as OkObjectResult;
+            var result = controller.GetAgvStatus(correlationId).Result as OkObjectResult;
             Assert.IsNotNull(result);
 
             var agvStatus = result.Value as AgvStatus;
@@ -159,7 +159,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
             var controller = new AgvController(GetAgvRegistry());
             var correlationId = Guid.Empty;
 
-            var result = controller.GetAgvStatus(correlationId) as NotFoundResult;
+            var result = controller.GetAgvStatus(correlationId).Result as NotFoundResult;
             Assert.IsNotNull(result);
         }
 
@@ -172,7 +172,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
             var controller = new AgvController(GetAgvRegistry());
             var correlationId = _agvIds[index].ToGuid();
 
-            var result = controller.GetAgvData(correlationId) as OkObjectResult;
+            var result = controller.GetAgvData(correlationId).Result as OkObjectResult;
             Assert.IsNotNull(result);
 
             var agvData = result.Value as AgvData;
@@ -189,7 +189,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
             var controller = new AgvController(GetAgvRegistry());
             var correlationId = Guid.Empty;
 
-            var result = controller.GetAgvData(correlationId) as NotFoundResult;
+            var result = controller.GetAgvData(correlationId).Result as NotFoundResult;
             Assert.IsNotNull(result);
         }
     }

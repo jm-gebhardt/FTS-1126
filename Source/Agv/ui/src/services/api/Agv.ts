@@ -9,23 +9,29 @@
  * ---------------------------------------------------------------
  */
 
+import { IAgv, IAgvData, IAgvGraph, IAgvStatus } from './data-contracts'
 import { HttpClient, RequestParams } from './http-client'
 
 export class Agv<
   SecurityDataType = unknown
-> extends HttpClient<SecurityDataType> {
+  > extends HttpClient<SecurityDataType> {
   /**
-   * No description
-   *
-   * @tags Agv
-   * @name GetAgv
-   * @summary Retrieve active agvs
-   * @request GET:/agv
-   */
-  getAgv = (params: RequestParams = {}) =>
-    this.request<void, any>({
-      path: `/agv`,
+  * No description
+  *
+  * @tags Agv
+  * @name GetAgvList
+  * @summary Retrieve paged lsit of agvs
+  * @request GET:/agvs
+  */
+  getAgvList = (
+    query?: { PageNumber?: number; PageSize?: number },
+    params: RequestParams = {}
+  ) =>
+    this.request<IAgv[], any>({
+      path: `/agvs`,
       method: 'GET',
+      query: query,
+      format: 'json',
       ...params
     })
   /**
@@ -34,12 +40,13 @@ export class Agv<
    * @tags Agv
    * @name GraphDetail
    * @summary Retrieve graph for agv
-   * @request GET:/agv/{correlationId}/graph
+   * @request GET:/agvs/{correlationId}/graph
    */
   graphDetail = (correlationId: string, params: RequestParams = {}) =>
-    this.request<void, void>({
-      path: `/agv/${correlationId}/graph`,
+    this.request<IAgvGraph, void>({
+      path: `/agvs/${correlationId}/graph`,
       method: 'GET',
+      format: 'json',
       ...params
     })
   /**
@@ -48,12 +55,13 @@ export class Agv<
    * @tags Agv
    * @name StatusDetail
    * @summary Retrieve status for agv
-   * @request GET:/agv/{correlationId}/status
+   * @request GET:/agvs/{correlationId}/status
    */
   statusDetail = (correlationId: string, params: RequestParams = {}) =>
-    this.request<void, void>({
-      path: `/agv/${correlationId}/status`,
+    this.request<IAgvStatus, void>({
+      path: `/agvs/${correlationId}/status`,
       method: 'GET',
+      format: 'json',
       ...params
     })
   /**
@@ -62,12 +70,13 @@ export class Agv<
    * @tags Agv
    * @name DataDetail
    * @summary Retrieve data for agv
-   * @request GET:/agv/{correlationId}/data
+   * @request GET:/agvs/{correlationId}/data
    */
   dataDetail = (correlationId: string, params: RequestParams = {}) =>
-    this.request<void, void>({
-      path: `/agv/${correlationId}/data`,
+    this.request<IAgvData, void>({
+      path: `/agvs/${correlationId}/data`,
       method: 'GET',
+      format: 'json',
       ...params
     })
 }

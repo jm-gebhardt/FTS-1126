@@ -1,5 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Microsoft.AspNetCore.Mvc;
 using Gebhardt.StoreWare.Agv.TransportOrder.Services;
+using Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers.Pagination;
+using System.Text.Json;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers
 {
@@ -20,23 +23,24 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers
         }
 
         /// <summary>
-        /// Retrieve active agvs
+        /// Retrieve paged list of agvs
         /// </summary>
         /// <response code="200">Ok</response>
         [HttpGet]
-        [Route("/agv")]
-        public async Task<IActionResult> GetAgvs()
+        [Route("/agvs")]
+        public ActionResult<IEnumerable<Models.Agv>> GetAgvs([FromQuery] int pageNumber = 0, [FromQuery] int pageSize = 0)
         {
-            List<Models.Agv> agvs = new();
-            await Task.Run(() =>
-            {
-                foreach (var agv in _agvRegistry.GetAllAgvs())
-                {
-                    agvs.Add(new Models.Agv(agv.CorrelationId, agv.AgvId, agv.CurrentState));
-                }
-            });
+            List<Models.Agv> agvs = _agvRegistry.GetAllAgvs().OrderBy(a => a.AgvId).Select(Models.Agv.FromIAgv).ToList();
 
-            return Ok(agvs);
+            if (pageNumber == 0 || pageSize == 0)
+            {
+                return Ok(agvs);
+            }
+
+            var agvList = new PagedEnumerable<Models.Agv>(agvs, pageNumber, pageSize);
+
+            Response.Headers.Add(PaginationHeader.HeaderName, JsonSerializer.Serialize(agvList.PaginationHeader()));
+            return Ok(agvList);
         }
 
         /// <summary>
@@ -45,8 +49,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers
         /// <response code="200">Ok</response>
         /// <response code="404">Not found</response>
         [HttpGet]
-        [Route("/agv/{correlationId}/graph")]
-        public IActionResult GetAgvGraph(Guid correlationId)
+        [Route("/agvs/{correlationId:guid}/graph")]
+        public ActionResult<AgvGraph> GetAgvGraph(Guid correlationId)
         {
             var agv = _agvRegistry.GetAgv(correlationId);
             if (agv == null)
@@ -63,8 +67,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers
         /// <response code="200">Ok</response>
         /// <response code="404">Not found</response>
         [HttpGet]
-        [Route("/agv/{correlationId}/status")]
-        public IActionResult GetAgvStatus(Guid correlationId)
+        [Route("/agvs/{correlationId:guid}/status")]
+        public ActionResult<AgvStatus> GetAgvStatus(Guid correlationId)
         {
             var agv = _agvRegistry.GetAgv(correlationId);
             if (agv == null)
@@ -81,8 +85,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers
         /// <response code="200">Ok</response>
         /// <response code="404">Not found</response>
         [HttpGet]
-        [Route("/agv/{correlationId}/data")]
-        public IActionResult GetAgvData(Guid correlationId)
+        [Route("/agvs/{correlationId}/data")]
+        public ActionResult<AgvData> GetAgvData(Guid correlationId)
         {
             var agv = _agvRegistry.GetAgv(correlationId);
             if (agv == null)

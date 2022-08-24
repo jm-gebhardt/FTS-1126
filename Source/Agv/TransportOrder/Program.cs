@@ -17,6 +17,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Persistence;
 using Gebhardt.StoreWare.Agv.TransportOrder.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.States;
 using Gebhardt.StoreWare.Agv.TransportOrder.Web.Hubs;
+using MassTransit;
 
 var initialLogger = Gebhardt.StoreWare.Agv.Common.Logging.InitialLogger.Create<Program>();
 
@@ -32,11 +33,20 @@ try
                 {
                     services.AddTransient<IAgvRegistry, EfAgvRegistry>();
                     services.AddTransient<IOrderRegistry, EfOrderRegistry>();
+
                     services.AddScoped<IOrderHubContext>(provider =>
                     {
                         var hubContext = provider.GetRequiredService<IHubContext<OrderHub>>();
                         return new OrderHubContext(hubContext);
                     });
+                    services.AddScoped<IAgvHubContext>(provider =>
+                    {
+                        var hubContext = provider.GetRequiredService<IHubContext<AgvHub>>();
+                        return new AgvHubContext(hubContext);
+                    });
+
+                    services.AddSingleton<IStateObserver<OrderSaga>, OrderStateObserver>();
+                    services.AddSingleton<IStateObserver<AgvSaga>, AgvStateObserver>();
 
                     services.AddDbContextFactory<SagaPersistenceDbContext>(builder =>
                     {
@@ -117,6 +127,7 @@ try
                 {
                     endpoints.MapControllers();
                     endpoints.MapHub<OrderHub>(OrderHub.UrlPath);
+                    endpoints.MapHub<AgvHub>(AgvHub.UrlPath);
                 });
 
                 app.UseSwagger();

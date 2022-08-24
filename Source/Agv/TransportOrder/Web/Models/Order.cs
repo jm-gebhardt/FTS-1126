@@ -11,15 +11,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Models
     /// </summary>
     public record Order(string CurrentState, Guid? AssignedAgv, OrderDetails OrderDetails, Guid CorrelationId) : IOrder
     {
-        
         /// <summary>
-        /// Cast IOrder into Order
+        /// Cast <see cref="IOrder"/> into <see cref="Order"/>
         /// </summary>
         /// <param name="order"></param>
         /// <returns></returns>
         public static Order FromIOrder(IOrder order)
         {
-            
             return new Order(order.CurrentState, order.AssignedAgv, order.OrderDetails, order.CorrelationId);
         }
     }

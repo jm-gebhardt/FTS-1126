@@ -95,7 +95,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// <summary>
         /// OrderStateMachine
         /// </summary>
-        public OrderStateMachine(ILogger<OrderStateMachine> logger, IAgvRegistry agvRegistry)
+        public OrderStateMachine(ILogger<OrderStateMachine> logger, IAgvRegistry agvRegistry, IStateObserver<OrderSaga> orderStateObserver)
         {
             _logger = logger;
             _agvRegistry = agvRegistry;
@@ -110,7 +110,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
             During(TransportOrderSend, SetTransportOrderStartedHandler());
             During(TransportOrderStarted, SetTransportOrderPickCompletedHandler());
             During(TransportOrderPicked, SetTransportOrderCompletedHandler());
-            WhenEnterAny(OnStateChange);
+            ConnectStateObserver(orderStateObserver);
         }
 
         /// <summary>
@@ -182,7 +182,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
                 );
 
         private EventActivityBinder<OrderSaga, AgvAssignmentFailed> HostOrderInvalid(EventActivityBinder<OrderSaga, AgvAssignmentFailed> context) =>
-            context.Publish( c => new HostOrderHandlingFailed(c.Saga.CorrelationId, c.Saga.OrderDetails.OrderId, HostOrderErrorCode.InvalidOrderData))
+            context.Publish(c => new HostOrderHandlingFailed(c.Saga.CorrelationId, c.Saga.OrderDetails.OrderId, HostOrderErrorCode.InvalidOrderData))
                 .Then(c => _logger.LogInformation("Order {OrderId}/{CorrelationId} contains invalid data.", c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId))
                 .TransitionTo(OrderFailed);
 
@@ -270,18 +270,5 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
                 .Then(c =>
                     _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId} has been completed", nameof(TransportOrderPickCompleted), c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId))
                 .TransitionTo(TransportOrderPicked);
-
-        /// <summary>
-        /// Called when state of an order saga changes
-        /// </summary>
-        /// <returns></returns>
-        private EventActivityBinder<OrderSaga> OnStateChange(EventActivityBinder<OrderSaga> eventActivityBinder) =>
-            eventActivityBinder
-                .Then(c => _logger.LogInformation("State of order {OrderId} / {CorrelationId} changed to {CurrentState}",
-                    c.Saga.OrderDetails.OrderId, c.Saga.OrderDetails.CorrelationId, c.Saga.CurrentState)
-                )
-                .Publish(c =>
-                    new TransportOrderChanged(c.Saga.CorrelationId, c.Saga) // OrderSaga derives from IOrder
-                );
     }
 }

@@ -27,11 +27,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         }
 
         /// <inheritdoc/>
-
         public int Count => OrderSagas.Count();
 
         /// <inheritdoc/>
-
         public int CountUnassigned => GetUnassignedOrders().Count();
 
         /// <inheritdoc/>

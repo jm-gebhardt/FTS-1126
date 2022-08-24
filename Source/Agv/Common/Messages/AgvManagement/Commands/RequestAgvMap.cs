@@ -1,5 +1,6 @@
 ﻿using MassTransit;
 
+// ReSharper disable ConvertToPrimaryConstructor
 namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands
 {
     /// <summary>
@@ -40,6 +41,5 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands
             MapCorrelationId = mapCorrelationId;
             MapId = mapId;
         }
-
     }
 }

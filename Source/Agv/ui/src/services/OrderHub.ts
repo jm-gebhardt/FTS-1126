@@ -18,7 +18,7 @@ export class OrderHub {
     this.client = new HubConnectionBuilder().withUrl(hubUrl + '/order').build()
 
     // Hub endpoints with respective handlers
-    this.client.on('TransportOrderChanged', (message: string) => {
+    this.client.on('OrderStateChanged', (message: string) => {
       this.onTransportOrderChanged(message)
     })
   }

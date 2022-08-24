@@ -21,14 +21,14 @@ export class Order<
    * @tags TransportOrder
    * @name OrderList
    * @summary Retrieve active transport orders
-   * @request GET:/order
+   * @request GET:/orders
    */
   orderList = (
     query?: { PageNumber?: number; PageSize?: number },
     params: RequestParams = {}
   ) =>
     this.request<IOrder[], any>({
-      path: `/order`,
+      path: `/orders`,
       method: 'GET',
       query: query,
       format: 'json',

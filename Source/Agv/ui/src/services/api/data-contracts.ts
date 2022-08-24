@@ -9,9 +9,137 @@
  * ---------------------------------------------------------------
  */
 
+/**
+ * Controller for host order data
+ */
+export interface IAgv {
+  /**
+   * CorrelationId
+   * @format uuid
+   */
+  correlationId?: string
+
+  /** AGV Serial Number */
+  agvId?: string | null
+
+  /** Current State */
+  currentState?: string | null
+}
+
+export interface IAgvData {
+  /** @format uuid */
+  correlationId?: string
+  model?: string | null
+  type?: string | null
+  ipV4Address?: string | null
+
+  /** @format double */
+  maxVelocityStraight?: number
+
+  /** @format double */
+  batteryCapacity?: number
+
+  /** @format double */
+  length?: number | null
+
+  /** @format double */
+  width?: number | null
+
+  /** @format double */
+  acceleration?: number | null
+
+  /** @format double */
+  maxVelocityTurn?: number | null
+
+  /** @format double */
+  maxVelocityTurnOnSpot?: number | null
+
+  /** @format int64 */
+  payload?: number | null
+  sensors?: ISensor[] | null
+}
+
+export interface IAgvGraph {
+  /** @format uuid */
+  correlationId?: string
+
+  /** @format uuid */
+  relatedMapId?: string
+  nodes?: INode[] | null
+  edges?: IEdge[] | null
+}
+
+export interface IAgvStatus {
+  /** @format uuid */
+  correlationId?: string
+  orderId?: string | null
+  busy?: boolean
+  automatic?: boolean
+
+  /** @format int32 */
+  batteryCharge?: number
+  charging?: boolean
+  disturbed?: boolean
+  lastNodeId?: string | null
+}
+
+export interface IEdge {
+  from?: string | null
+  to?: string | null
+
+  /** @format float */
+  metric?: number
+}
+
 export enum IHostOrderCreator {
   Wms = 'Wms',
   Simulation = 'Simulation'
+}
+
+/**
+ * Map Model
+ */
+export interface IMap {
+  /**
+   * Map Correlation Id
+   * @format uuid
+   */
+  correlationId?: string
+
+  /** Map Id */
+  mapId?: string | null
+
+  /**
+   * The resolution of the maps image. Expressed as how many [m] per pixel are represented
+   * @format double
+   */
+  resolution?: number
+
+  /** List of Agvs using this map */
+  relatedAgvs?: string[] | null
+}
+
+export interface INode {
+  id?: string | null
+  enabled?: boolean
+  type?: INodeType
+
+  /** @format float */
+  x?: number
+
+  /** @format float */
+  y?: number
+
+  /** @format float */
+  z?: number
+}
+
+export enum INodeType {
+  Charge = 'Charge',
+  WayPoint = 'WayPoint',
+  Turn = 'Turn',
+  Station = 'Station',
+  Park = 'Park'
 }
 
 /**
@@ -42,4 +170,8 @@ export interface IOrderDetails {
 
   /** @format date-time */
   creationDate?: string
+}
+
+export interface ISensor {
+  sensorIdentifier?: string | null
 }

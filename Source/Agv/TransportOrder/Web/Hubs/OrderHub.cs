@@ -43,7 +43,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Hubs
     }
 
     /// <summary>
-    /// Interface to define calls to the OrderHub
+    /// Interface to define calls to the OrderHub from the client to the server
     /// </summary>
     [SignalRHub]
     public interface IOrderHub

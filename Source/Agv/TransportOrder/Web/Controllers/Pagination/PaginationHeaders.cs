@@ -1,5 +1,6 @@
 using JetBrains.Annotations;
 
+// ReSharper disable ConvertToPrimaryConstructor
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers.Pagination
 {
     /// <summary>
@@ -20,26 +21,26 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers.Pagination
         /// <summary>
         /// Total number of pages
         /// </summary>
-        public int TotalPages  { get; }
+        public int TotalPages { get; }
 
         /// <summary>
         /// Size of the page
         /// </summary>
-        public int PageSize  { get; }
+        public int PageSize { get; }
 
         /// <summary>
         /// Total number of items
         /// </summary>
-        public int TotalCount  { get; }
+        public int TotalCount { get; }
 
         /// <summary>
         /// Is there a previous page
         /// </summary>
-        public bool HasPrevious  { get; }
+        public bool HasPrevious { get; }
         /// <summary>
         /// Is there a next page
         /// </summary>
-        public bool HasNext  { get; }
+        public bool HasNext { get; }
 
         /// <summary>
         /// Pagination X Headers Constructor
@@ -55,5 +56,3 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers.Pagination
         }
     }
 }
-
-

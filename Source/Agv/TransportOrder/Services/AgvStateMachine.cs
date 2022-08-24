@@ -12,7 +12,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
     [JetBrains.Annotations.PublicAPI]
     public class AgvStateMachine : MassTransitStateMachine<AgvSaga>
     {
-
         private readonly ILogger<AgvStateMachine> _logger;
 
         /// <summary>
@@ -51,7 +50,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// </summary>
         public Event<ReleaseAgv> ReleaseAgvEvent { get; private set; } = default!;
 
-
         /// <summary>
         /// The graph of the Agv was received
         /// </summary>
@@ -82,8 +80,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// <summary>
         /// Constructor of AgvStateMachine
         /// </summary>
-        /// <param name="logger"></param>
-        public AgvStateMachine(ILogger<AgvStateMachine> logger)
+        public AgvStateMachine(ILogger<AgvStateMachine> logger, IStateObserver<AgvSaga> agvStateObserver)
         {
             _logger = logger;
 
@@ -98,6 +95,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
             DuringAny(AgvStatusReceivedHandler());
             DuringAny(AgvGraphReceivedHandler());
             DuringAny(AgvDataReceivedHandler());
+
+            ConnectStateObserver(agvStateObserver);
         }
 
         /// <summary>

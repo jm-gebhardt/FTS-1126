@@ -1,5 +1,6 @@
 type HomeViewType = typeof import('@/views/HomeView.vue')
 type OrderViewType = typeof import('@/views/OrdersView.vue')
+type AgvViewType = typeof import('@/views/AgvView.vue')
 
 export default [
   {
@@ -10,6 +11,11 @@ export default [
   {
     component: (): Promise<OrderViewType> => import('@/views/OrdersView.vue'),
     name: 'Orders',
-    path: '/order'
+    path: '/orders'
+  },
+  {
+    component: (): Promise<AgvViewType> => import('@/views/AgvView.vue'),
+    name: 'AGVs',
+    path: '/agvs'
   }
 ]

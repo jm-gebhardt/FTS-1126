@@ -33,6 +33,9 @@ ui.agv.localhost:80 {
     handle_path /api/* {
             reverse_proxy transportorder.agv
     }
+    handle /hub/* {
+            reverse_proxy transportorder.agv
+    }
     handle {
         root * /etc/caddy/html/ui
         try_files {path} /index.html

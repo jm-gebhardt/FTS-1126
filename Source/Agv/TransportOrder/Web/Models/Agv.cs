@@ -1,4 +1,6 @@
-﻿
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+
+// ReSharper disable ConvertToPrimaryConstructor
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Models
 {
     /// <summary>
@@ -30,6 +32,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Models
             CorrelationId = correlationId;
             AgvId = agvId;
             CurrentState = currentState;
+        }
+
+        /// <summary>
+        /// Creates an <see cref="Agv"/> instance from <see cref="IAgv"/>
+        /// </summary>
+        public static Agv FromIAgv(IAgv agv)
+        {
+            return new Agv(agv.CorrelationId, agv.AgvId, agv.CurrentState);
         }
     }
 }
