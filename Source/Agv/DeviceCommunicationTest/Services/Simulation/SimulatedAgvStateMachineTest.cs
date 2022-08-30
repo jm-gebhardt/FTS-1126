@@ -8,6 +8,7 @@ using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Map;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.States;
 using MassTransit;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -32,13 +33,14 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             const string agvId = "Agv#1";
             var correlationId = agvId.ToGuid();
             var graph = new GridGraphGenerator(new[] {"S1"}, new[] {"D1"}).Generate(correlationId);
-            var data = new AgvData(correlationId, "model", "type",null, 10, 1, 1, 1,1,1, 1, 1, Array.Empty<AgvData.Sensor>());
+            var data = new AgvData(correlationId, "model", "type",null, 10, 1, 1, 1, 1 ,1, 1, 1, Array.Empty<AgvData.Sensor>());
             var agv = new Agv(correlationId, agvId , "", null, graph, data);
-            await fixture.TestHarness.Bus.Publish(new SimulatedAgvStateMachine.CreateAgv(correlationId, agv));
+            var map = new MapGenerator(graph);
+            await fixture.TestHarness.Bus.Publish(new SimulatedAgvStateMachine.CreateAgv(correlationId, agv, map.Generate()));
             await fixture.SagaHarness.Consumed.Any<SimulatedAgvStateMachine.CreateAgv>();
-            
+
             var createdSaga = fixture.SagaHarness.Sagas.Select(c => c.CorrelationId == correlationId).First().Saga;
-            
+
             Assert.AreEqual(correlationId, createdSaga.CorrelationId);
             Assert.AreEqual(agvId, createdSaga.AgvId);
             Assert.IsNotNull(createdSaga.AgvStatus);
@@ -58,13 +60,19 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             );
             const string agvId = "Agv#1";
             var correlationId = agvId.ToGuid();
-            var agv = new Agv(correlationId, agvId , "", null, null, null);
-            await fixture.TestHarness.Bus.Publish(new SimulatedAgvStateMachine.CreateAgv(correlationId, agv));
-            
-            
+            var graph = new AgvGraph(correlationId,
+                new[]
+                {
+                    new AgvGraph.Node("S1") { Enabled = true, Type = AgvGraph.NodeType.Station, X =  0f, Y = 0f, Z = 0f }
+                },
+                Array.Empty<AgvGraph.Edge>(), Guid.Empty);
+            var agv = new Agv(correlationId, agvId , "", null, graph, null);
+            var map = new MapGenerator(agv.AgvGraph!);
+            await fixture.TestHarness.Bus.Publish(new SimulatedAgvStateMachine.CreateAgv(correlationId, agv, map.Generate()));
+
             var createdSaga = fixture.SagaHarness.Sagas.Select(c => c.CorrelationId == correlationId).First().Saga;
-            var agvStatus = createdSaga.AgvStatus; 
-            
+            var agvStatus = createdSaga.AgvStatus;
+
             Assert.IsNotNull(agvStatus);
             Assert.AreEqual(correlationId, agvStatus.CorrelationId);
             Assert.IsNull(agvStatus.OrderId);
@@ -98,7 +106,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             Assert.AreEqual(agvId, message.AgvId);
             Assert.AreEqual(graph, message.Graph);
         }
-        
+
         /// <summary>
         /// When_RequestAgvGraph_AgvGraph_Null_NoMessageIsPublished
         /// </summary>
@@ -118,7 +126,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             token.CancelAfter(10);
             Assert.IsFalse(await fixture.TestHarness.Published.Any<AgvGraphReceived>(token.Token));
         }
-        
+
         /// <summary>
         /// When_RequestAgvData_AgvDataIsNull_NoMessageIsPublished
         /// </summary>
@@ -149,7 +157,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             const string agvId = "Agv#1";
             var correlationId = agvId.ToGuid();
            
-            var data = new AgvData(correlationId, "model", "type",null, 10, 1, 1, 1,1,1, 1, 1, Array.Empty<AgvData.Sensor>());
+            var data = new AgvData(correlationId, "model", "type",null, 10, 1, 1, 1, 1, 1, 1, 1, Array.Empty<AgvData.Sensor>());
             var agvSaga = new SimulatedAgvSaga(correlationId, agvId , currentState: nameof(SimulatedAgvStateMachine.Idle), agvData: data);
             fixture.Add(agvSaga);
 
@@ -161,6 +169,53 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             Assert.AreEqual(correlationId, message.CorrelationId);
             Assert.AreEqual(agvId, message.AgvId);
             Assert.AreEqual(data, message.Data);
+        }
+
+        /// <summary>
+        /// When_RequestAgvMap_AgvMapReceived_isPublished
+        /// </summary>
+        [TestMethod]
+        public async Task When_RequestAgvMap_AgvMapReceived_isPublished()
+        {
+            var fixture = new StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>();
+            const string agvId = "Agv#1";
+            const string mapId = "Map#1";
+            var correlationId = agvId.ToGuid();
+
+            var graph = new GridGraphGenerator(new[] { "S1" }, new[] { "D1" }).Generate(correlationId);
+            var map = new MapGenerator(graph).Generate();
+            var agvSaga = new SimulatedAgvSaga(correlationId, agvId, currentState: nameof(SimulatedAgvStateMachine.Idle), agvGraph: graph, agvMap: map);
+            fixture.Add(agvSaga);
+
+            await fixture.TestHarness.Bus.Publish(new RequestAgvMap(correlationId, agvId, mapId.ToGuid(), mapId));
+            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<RequestAgvMap>());
+
+            Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvMapReceived>());
+            var message = fixture.TestHarness.Published.Select<AgvMapReceived>().First().Context.Message;
+            Assert.AreEqual(correlationId, message.CorrelationId);
+            Assert.AreEqual(agvId, message.AgvId);
+            Assert.AreEqual(Convert.ToBase64String(agvSaga.AgvMap!.Bytes), message.ImageData);
+        }
+
+        /// <summary>
+        /// When_RequestAgvGraph_AgvGraph_Null_NoMessageIsPublished
+        /// </summary>
+        [TestMethod]
+        public async Task When_RequestAgvMap_AgvMapIsNull_NoMessageIsPublished()
+        {
+            var fixture = new StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>();
+            const string agvId = "Agv#1";
+            const string mapId = "Map#1";
+            var correlationId = agvId.ToGuid();
+
+            var agvSaga = new SimulatedAgvSaga(correlationId, agvId, currentState: nameof(SimulatedAgvStateMachine.Idle));
+            fixture.Add(agvSaga);
+
+            await fixture.TestHarness.Bus.Publish(new RequestAgvMap(correlationId, agvId, mapId.ToGuid(), mapId));
+            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<RequestAgvMap>());
+            var token = new CancellationTokenSource();
+            token.CancelAfter(10);
+            Assert.IsFalse(await fixture.TestHarness.Published.Any<AgvMapReceived>(token.Token));
         }
 
         /// <summary>

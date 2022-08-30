@@ -34,7 +34,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
                 _logger.LogError("Missing serialNumber in MqttMap message: {Status}", context.Message);
                 throw new InvalidOperationException($"Cannot handle {typeof(MqttMap)} message, serialNumber must not be null or empty");
             }
-            
+            if (!DateTime.TryParse(context.Message.ModificationDate, null, System.Globalization.DateTimeStyles.RoundtripKind, out var modificationDate))
+            {
+                _logger.LogError("Invalid datetime format for modification date: {Status}", context.Message);
+                throw new FormatException($"Cannot handle {typeof(MqttMap)} message, modification date need to be in ISO8601 format");
+            }
+
             if (context.Message.MapId == null)
             {
                 _logger.LogWarning("Incoming Map cannot be forwarded: MapId is NULL. Message: {msg}", context.Message);
@@ -50,7 +55,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
                     context.Message.SerialNumber,
                     context.Message.MapId.ToGuid(),
                     context.Message.MapId,
-                    context.Message.Data
+                    modificationDate,
+                    context.Message.Data,
+                    context.Message.Resolution,
+                    context.Message.XOffset,
+                    context.Message.YOffset
                 ));
             }
         }

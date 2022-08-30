@@ -18,7 +18,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
         public Guid RelatedMapId { get; }
 
         /// <summary>
-        /// The name of the related map
+        /// The name of the related map (map ID)
         /// </summary>
         public string? RelatedMapName { get; }
 

@@ -65,7 +65,6 @@ try
                             configurator.AddConsumer<ExecuteTransportOrderConsumer>();
                             configurator.AddConsumer<RequestAgvMapConsumer>();
                             configurator.AddConsumer<AgvRequestDataConsumer>();
-                            configurator.AddMqttConsumer<AgvDataConsumer>();
                         },
 
                         // ReSharper disable once UnusedParameter.Local

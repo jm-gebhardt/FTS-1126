@@ -95,6 +95,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
         /// <remarks>
         /// VDA5050.state.schema.lastNodeId
         /// </remarks>
+        [UsedImplicitly]
         public string? LastNodeId { get; }
 
 

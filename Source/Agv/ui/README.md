@@ -8,6 +8,8 @@ The UI development requires npm v18 to be installed
 
 - Install npm as described by [Microsoft](https://docs.microsoft.com/en-us/windows/dev-environment/javascript/nodejs-on-windows)
   - Download and install [nvm](https://github.com/coreybutler/nvm-windows)
+    - When development is done using a non-admin user take care to use ```"C:\Program Files\nvm"``` and ```"C:\Program Files\nodejs"``` for installation path instead of the default ```C:\Users\some_admin_user\AppData\Roaming\...```.
+    - When ```npm``` is not found by the development user add these two pathes to the PATH environment variable.
   - Run: nvm install latest
   - Run as Admin: nvm use <version>
 

@@ -630,7 +630,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             mockRegistry.Setup(mo => mo.Add(mapId.ToGuid(), imageData, mapId)).Returns(true);
 
             // Act
-            await fixture.TestHarness.Bus.Publish(new AgvMapReceived(agvSaga.CorrelationId, agvSaga.AgvId, mapId.ToGuid(), mapId, imageData));
+            await fixture.TestHarness.Bus.Publish(new AgvMapReceived(agvSaga.CorrelationId, agvSaga.AgvId, mapId.ToGuid(), mapId, DateTime.Now, imageData, 0.01f, 3.12f, 2.89f));
 
             // Assert
             Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvMapReceived>());
@@ -673,7 +673,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             mockRegistry.Setup(mo => mo.Exists(mapId.ToGuid())).Returns(true);
 
             // Act
-            await fixture.TestHarness.Bus.Publish(new AgvMapReceived(agvSaga.CorrelationId, agvSaga.AgvId, mapId.ToGuid(), mapId, imageData));
+            await fixture.TestHarness.Bus.Publish(new AgvMapReceived(agvSaga.CorrelationId, agvSaga.AgvId, mapId.ToGuid(), mapId, DateTime.Now, imageData, 0.01f, 3.12f, 2.89f));
 
             // Assert
             Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvMapReceived>());

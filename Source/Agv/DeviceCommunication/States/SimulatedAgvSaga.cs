@@ -53,7 +53,17 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         /// <inheritdoc />
         /// </summary>
         public AgvData? AgvData { get; }
-    
+
+        /// <summary>
+        /// Returns the modification date of the map.
+        /// </summary>
+        public DateTime AgvMapModificationDate { get; }
+
+        /// <summary>
+        /// Returns the map according to <see cref="AgvGraph"/>.
+        /// </summary>
+        public Services.Simulation.Map.MapGenerator.MapPng? AgvMap { get; }
+
         /// <summary>
         /// The current order being processed, null if currently no order is being processed
         /// </summary>
@@ -68,17 +78,17 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         /// Token used for by pick order schedule
         /// </summary>
         public Guid? PickOrderTokenId { get; set; }
-    
+
         /// <summary>
         /// Token used for by finish order schedule
         /// </summary>
         public Guid? FinishOrderTokenId { get; set; }
-    
+
         /// <summary>
         /// List of node ids that define the route
         /// </summary>
         public string[] Nodes { get; set; }
-        
+
         /// <summary>
         /// Time it takes to travel from one node to another in seconds
         /// </summary>
@@ -97,7 +107,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         public double? OrderProgress => TimeToFinish != null && OrderDuration != null 
             ? 1 - TimeToFinish.Value.TotalSeconds / OrderDuration.Value.TotalSeconds 
             : null;
-        
+
 
         /// <summary>
         /// Time the order takes to complete
@@ -120,14 +130,14 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         /// This values is calculated based on the current time and OrderFinishDate
         /// </summary>
         public TimeSpan? TimeToFinish => OrderFinishDate != null ? OrderFinishDate - DateTime.Now : null;
-        
+
         /// <summary>
         /// Time until the order is finished.
         /// This values is calculated based on the current time and OrderFinishDate
         /// </summary>
         public TimeSpan? TimeToPick => OrderFinishDate != null ? OrderPickDate - DateTime.Now : null;
 
-        
+
         /// <summary>
         /// Time the order will be picked up
         /// </summary>
@@ -144,13 +154,15 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         /// <param name="currentState"></param>
         /// <param name="agvGraph"></param>
         /// <param name="agvData"></param>
+        /// <param name="agvMap"></param>
         public SimulatedAgvSaga(
-            Guid correlationId, 
-            string agvId, 
-            string[]? nodes = null, 
+            Guid correlationId,
+            string agvId,
+            string[]? nodes = null,
             string? currentState = null,
-            AgvGraph? agvGraph = null, 
-            AgvData? agvData = null)
+            AgvGraph? agvGraph = null,
+            AgvData? agvData = null,
+            Services.Simulation.Map.MapGenerator.MapPng? agvMap = null)
         {
             if (correlationId == Guid.Empty)
             {
@@ -162,13 +174,16 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
             CurrentState = currentState ?? "";
             AgvGraph = agvGraph;
             AgvData = agvData;
+            AgvMap = agvMap;
+            AgvMapModificationDate = DateTime.Now;
         }
 
         /// <summary>
         /// SimulatedAgvSa Constructor
         /// </summary>
         /// <param name="agv"></param>
-        public SimulatedAgvSaga(IAgv agv)
+        /// <param name="agvMap"></param>
+        public SimulatedAgvSaga(IAgv agv, Services.Simulation.Map.MapGenerator.MapPng agvMap)
         {
             CorrelationId = agv.CorrelationId;
             AgvId = agv.AgvId;
@@ -176,6 +191,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
             AgvData = agv.AgvData;
             CurrentState = agv.CurrentState;
             Nodes = Array.Empty<string>();
+            AgvMap = agvMap;
+            AgvMapModificationDate = DateTime.Now;
         }
 
         /// <summary>

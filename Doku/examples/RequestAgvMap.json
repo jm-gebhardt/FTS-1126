@@ -1,0 +1,33 @@
+{
+  "messageId": "341c0000-56b8-0050-776a-08da805d5bd9",
+  "requestId": null,
+  "correlationId": "99bff92f-d56e-cfac-a7de-09ff584f4115",
+  "conversationId": "2c2c0000-56b8-0050-273e-08da8059ab60",
+  "initiatorId": "99bff92f-d56e-cfac-a7de-09ff584f4115",
+  "sourceAddress": "rabbitmq://localhost/Agv",
+  "destinationAddress": "rabbitmq://localhost/Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands:RequestAgvMap",
+  "responseAddress": null,
+  "faultAddress": null,
+  "messageType": [
+    "urn:message:Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands:RequestAgvMap"
+  ],
+  "message": {
+    "correlationId": "99bff92f-d56e-cfac-a7de-09ff584f4115",
+    "agvId": "AGV-01",
+    "mapCorrelationId": "4791aab1-5b93-4f22-8546-3b58315dc6eb",
+    "mapId": "MAP-01"
+  },
+  "expirationTime": null,
+  "sentTime": "2022-08-17T14:32:48.763889Z",
+  "headers": {},
+  "host": {
+    "machineName": "202203-IRS-HV01",
+    "processName": "Gebhardt.StoreWare.Agv.TransportOrder",
+    "processId": 7220,
+    "assembly": "Gebhardt.StoreWare.Agv.TransportOrder",
+    "assemblyVersion": "0.0.1.0",
+    "frameworkVersion": "6.0.8",
+    "massTransitVersion": "8.0.3.0",
+    "operatingSystemVersion": "Microsoft Windows NT 10.0.19043.0"
+  }
+}

@@ -5,11 +5,11 @@ using Gebhardt.StoreWare.Agv.Common.Extensions;
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
 {
     /// <summary>
-    /// Requests the current map from the AGV
+    /// The current map from the AGV
     /// </summary>
     [JetBrains.Annotations.PublicAPI]
-    [EntityName("amq.topic")]           // Specifies the RabbitMq exchange where the message is published
-    [RoutingKey("agv.responseMap")]   // Specifies the topic where subscribers can receive the message
+    [EntityName("amq.topic")]   // Specifies the RabbitMq exchange where the message is published
+    [RoutingKey("agv.map")]     // Specifies the topic where subscribers can receive the message
     public record MqttMap
     {
         /// <summary>

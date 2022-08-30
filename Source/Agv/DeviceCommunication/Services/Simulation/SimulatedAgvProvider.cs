@@ -2,6 +2,7 @@ using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Map;
 using MassTransit;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
@@ -30,7 +31,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
         private const long Payload = 50;
         private static readonly AgvData.Sensor[] _sensors = Array.Empty<AgvData.Sensor>();
 
-        private record Agv(Guid CorrelationId,string AgvId, string CurrentState, AgvStatus? AgvStatus, AgvGraph? AgvGraph, AgvData? AgvData) : IAgv;
+        private record Agv(Guid CorrelationId, string AgvId, string CurrentState, AgvStatus? AgvStatus, AgvGraph? AgvGraph, AgvData? AgvData) : IAgv;
 
 
         /// <summary>
@@ -55,9 +56,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
             for (int agvIndex = 0; agvIndex < _simulateOptions.Agvs; agvIndex++)
             {
                 var agv = GenerateAgv(agvIndex);
+                var map = new MapGenerator(agv.AgvGraph!);
                 _bus.Publish(new SimulatedAgvStateMachine.CreateAgv(
                     agv.CorrelationId,
-                    agv
+                    agv,
+                    map.Generate()
                 ));
             }
         }

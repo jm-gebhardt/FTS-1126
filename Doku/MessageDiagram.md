@@ -51,7 +51,7 @@ sequenceDiagram
     DeviceCommunication->>(AGV): MqttRequestMap
     deactivate DeviceCommunication
     activate (AGV)
-    (AGV)->>DeviceCommunication: MqttResponseMap
+    (AGV)->>DeviceCommunication: MqttMap
     deactivate (AGV)
     activate DeviceCommunication
     DeviceCommunication->>AgvManagement: AgvMapReceived

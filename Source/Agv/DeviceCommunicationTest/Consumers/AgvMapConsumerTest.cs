@@ -1,5 +1,4 @@
-﻿using System.Globalization;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
@@ -33,7 +32,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         {
             Data = "bGlnaHQgdw==",
             MapId = MapId,
-            ModificationDate = DateTime.Now.ToString(CultureInfo.InvariantCulture),
+            ModificationDate = DateTime.Now.ToString("o", System.Globalization.CultureInfo.InvariantCulture),
             Resolution = 1,
             XOffset = 1,
             YOffset = 1
@@ -64,7 +63,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         /// Checks if AgvMapReceived is published after consuming valid MqttMap
         /// </summary>
         [TestMethod]
-        public async Task Consume_MqttResponseMap_and_Publish_AgvMapReceived()
+        public async Task Consume_MqttMap_and_Publish_AgvMapReceived()
         {
             // Arrange
             var fixture = new MqttConsumerTestFixture<MqttMapConsumer>();
@@ -86,7 +85,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         [DataRow(FaultyParameter.NullData)]
         [DataRow(FaultyParameter.NullMapId)]
         [TestMethod]
-        public async Task Consume_MqttResponseMap_with_SerialNumber_equaling_NullOrEmpty(FaultyParameter faultyParameter)
+        public async Task Consume_MqttMap_with_SerialNumber_equaling_NullOrEmpty(FaultyParameter faultyParameter)
         {
             switch (faultyParameter)
             {
