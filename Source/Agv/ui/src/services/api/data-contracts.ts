@@ -65,6 +65,7 @@ export interface IAgvGraph {
 
   /** @format uuid */
   relatedMapId?: string
+  relatedMapName?: string | null
   nodes?: INode[] | null
   edges?: IEdge[] | null
 }
@@ -97,26 +98,11 @@ export enum IHostOrderCreator {
 }
 
 /**
- * Map Model
+ * SignalR hub methods
  */
-export interface IMap {
-  /**
-   * Map Correlation Id
-   * @format uuid
-   */
-  correlationId?: string
-
-  /** Map Id */
-  mapId?: string | null
-
-  /**
-   * The resolution of the maps image. Expressed as how many [m] per pixel are represented
-   * @format double
-   */
-  resolution?: number
-
-  /** List of Agvs using this map */
-  relatedAgvs?: string[] | null
+export enum IHubMethods {
+  OrderStateChanged = 'OrderStateChanged',
+  AgvStateChanged = 'AgvStateChanged'
 }
 
 export interface INode {

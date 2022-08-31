@@ -61,7 +61,7 @@ npm install swagger-typescript-api
 ### Generate
 
 ```
-swagger-typescript-api -p swagger.json ./src/services/api --modular --type-prefix=I
+npx swagger-typescript-api -p ./src/services/api/swagger.json -o ./src/services/api --modular --type-prefix=I
 ```
 
 All data-type definitions are then generated with an IPrefix, to overcome name conflicts.

@@ -12,18 +12,18 @@
 import { IOrder } from './data-contracts'
 import { HttpClient, RequestParams } from './http-client'
 
-export class Order<
+export class Orders<
   SecurityDataType = unknown
 > extends HttpClient<SecurityDataType> {
   /**
    * No description
    *
    * @tags TransportOrder
-   * @name OrderList
+   * @name OrdersList
    * @summary Retrieve active transport orders
    * @request GET:/orders
    */
-  orderList = (
+  ordersList = (
     query?: { PageNumber?: number; PageSize?: number },
     params: RequestParams = {}
   ) =>

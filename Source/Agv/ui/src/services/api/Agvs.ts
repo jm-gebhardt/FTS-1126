@@ -12,19 +12,19 @@
 import { IAgv, IAgvData, IAgvGraph, IAgvStatus } from './data-contracts'
 import { HttpClient, RequestParams } from './http-client'
 
-export class Agv<
+export class Agvs<
   SecurityDataType = unknown
-  > extends HttpClient<SecurityDataType> {
+> extends HttpClient<SecurityDataType> {
   /**
-  * No description
-  *
-  * @tags Agv
-  * @name GetAgvList
-  * @summary Retrieve paged lsit of agvs
-  * @request GET:/agvs
-  */
-  getAgvList = (
-    query?: { PageNumber?: number; PageSize?: number },
+   * No description
+   *
+   * @tags Agv
+   * @name AgvsList
+   * @summary Retrieve paged list of agvs
+   * @request GET:/agvs
+   */
+  agvsList = (
+    query?: { pageNumber?: number; pageSize?: number },
     params: RequestParams = {}
   ) =>
     this.request<IAgv[], any>({

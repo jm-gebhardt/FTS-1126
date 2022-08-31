@@ -9,39 +9,25 @@
  * ---------------------------------------------------------------
  */
 
-import { IMap } from './data-contracts'
+import { IHubMethods } from './data-contracts'
 import { HttpClient, RequestParams } from './http-client'
 
-export class Map<
+export class Meta<
   SecurityDataType = unknown
 > extends HttpClient<SecurityDataType> {
   /**
    * No description
    *
-   * @tags Map
-   * @name GetMap
-   * @summary Get all available maps
-   * @request GET:/map
+   * @tags Utility
+   * @name HubMethodsList
+   * @summary Get available SignalR hub methods
+   * @request GET:/meta/hubMethods
    */
-  getMap = (params: RequestParams = {}) =>
-    this.request<IMap[], any>({
-      path: `/map`,
+  hubMethodsList = (params: RequestParams = {}) =>
+    this.request<IHubMethods[], any>({
+      path: `/meta/hubMethods`,
       method: 'GET',
       format: 'json',
-      ...params
-    })
-  /**
-   * No description
-   *
-   * @tags Map
-   * @name MapPngDetail
-   * @summary Get Map Image
-   * @request GET:/map/{correlationId}/map.png
-   */
-  mapPngDetail = (correlationId: string, params: RequestParams = {}) =>
-    this.request<void, any>({
-      path: `/map/${correlationId}/map.png`,
-      method: 'GET',
       ...params
     })
 }

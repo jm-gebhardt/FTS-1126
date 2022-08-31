@@ -1,11 +1,12 @@
 ﻿using MassTransit;
 using Gebhardt.StoreWare.Agv.TransportOrder.States;
 using Gebhardt.StoreWare.Agv.TransportOrder.Web.Hubs;
+using Gebhardt.StoreWare.Agv.TransportOrder.Web;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
 {
     /// <summary>
-    /// Observer for AgvSaga
+    /// Observer for <see cref="AgvSaga"/>
     /// </summary>
     public class AgvStateObserver : IStateObserver<AgvSaga>
     {
@@ -24,7 +25,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// </summary>
         public async Task StateChanged(BehaviorContext<AgvSaga> context, State currentState, State previousState)
         {
-            await _agvHubContext.SendAgvToAllClients("AgvStateChanged", context.Saga, context.CancellationToken);
+            await _agvHubContext.SendAgvToAllClients(nameof(Defines.HubMethods.AgvStateChanged), context.Saga, context.CancellationToken);
         }
     }
 }

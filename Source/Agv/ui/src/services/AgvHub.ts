@@ -19,7 +19,7 @@ export class AgvHub {
 
     // Hub endpoints with respective handlers
     this.client.on('AgvStateChanged', (message: string) => {
-      this.onTransportAgvChanged(message)
+      this.onAgvStateChanged(message)
     })
   }
 
@@ -27,7 +27,7 @@ export class AgvHub {
    * Updates agv in agv list view
    * @param message JSON ecnoded IOrder object
    */
-  private onTransportAgvChanged(message: string): void {
+  private onAgvStateChanged(message: string): void {
     const agv: IAgv = JSON.parse(message)
     this.store.updateAgvList(agv)
   }

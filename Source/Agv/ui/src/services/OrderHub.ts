@@ -19,7 +19,7 @@ export class OrderHub {
 
     // Hub endpoints with respective handlers
     this.client.on('OrderStateChanged', (message: string) => {
-      this.onTransportOrderChanged(message)
+      this.onOrderStateChanged(message)
     })
   }
 
@@ -27,7 +27,7 @@ export class OrderHub {
    * Updates order in order list view
    * @param message JSON ecnoded IOrder object
    */
-  private onTransportOrderChanged(message: string): void {
+  private onOrderStateChanged(message: string): void {
     const order: IOrder = JSON.parse(message)
     this.store.updateOrderList(order)
   }

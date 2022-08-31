@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { IOrder } from '@/services/api/data-contracts'
-import { Order as OrderApi } from '@/services/api/Order'
+import { Orders as OrderApi } from '@/services/api/Orders'
 
 interface OrderStoreState {
   orders: IOrder[]
@@ -33,7 +33,7 @@ export const useOrderStore = defineStore({
       this.loading = true
 
       orderApi
-        .orderList({ PageNumber: pageNumber, PageSize: pageSize })
+        .ordersList({ PageNumber: pageNumber, PageSize: pageSize })
         .then((response) => {
           this.error = null
           this.orders = response.data

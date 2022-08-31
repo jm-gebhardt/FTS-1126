@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { IAgv } from '@/services/api/data-contracts'
-import { Agv as AgvApi } from '@/services/api/Agv'
+import { Agvs as AgvApi } from '@/services/api/Agvs'
 
 interface AgvStoreState {
   agvs: IAgv[]
@@ -33,7 +33,7 @@ export const useAgvStore = defineStore({
       this.loading = true
 
       agvApi
-        .getAgvList({ PageNumber: pageNumber, PageSize: pageSize })
+        .agvsList({ pageNumber: pageNumber, pageSize: pageSize })
         .then((response) => {
           this.error = null
           this.agvs = response.data

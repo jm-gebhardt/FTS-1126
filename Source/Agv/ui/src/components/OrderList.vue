@@ -1,5 +1,8 @@
 <template>
   <ui-table :data="props.orders" :thead="thead" :tbody="tbody">
+    <template #OrderId="{ data }">
+      <div class="tableCell">{{ data.orderDetails?.orderId }}</div>
+    </template>
     <template #CurrentState="{ data }">
       <div class="tableCell-align-middle--icon">
         <ui-icon>{{ OrderStatusIcon(data.currentState) }}</ui-icon>
@@ -41,8 +44,7 @@ const tbody = [
   'correlationId',
   {
     field: 'orderId',
-    fn: (order: IOrder): string | null | undefined =>
-      order.orderDetails?.orderId
+    slot: 'OrderId'
   },
   {
     field: 'currentState',
@@ -88,9 +90,16 @@ function OrderStatusIcon(status: string | null | undefined): string {
 </script>
 
 <style lang="scss">
+.tableCell {
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .tableCell-align-middle {
   display: inline-block;
   vertical-align: middle;
+
   &--icon {
     @extend .tableCell-align-middle;
     padding-right: 10px;
