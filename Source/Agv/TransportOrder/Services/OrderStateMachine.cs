@@ -95,7 +95,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// <summary>
         /// OrderStateMachine
         /// </summary>
-        public OrderStateMachine(ILogger<OrderStateMachine> logger, IAgvRegistry agvRegistry, IStateObserver<OrderSaga> orderStateObserver)
+        public OrderStateMachine(ILogger<OrderStateMachine> logger, IAgvRegistry agvRegistry, IStateObserver<OrderSaga> orderStateObserver,  IEventObserver<OrderSaga> orderEventObserver)
         {
             _logger = logger;
             _agvRegistry = agvRegistry;
@@ -110,7 +110,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
             During(TransportOrderSend, SetTransportOrderStartedHandler());
             During(TransportOrderStarted, SetTransportOrderPickCompletedHandler());
             During(TransportOrderPicked, SetTransportOrderCompletedHandler());
+
             ConnectStateObserver(orderStateObserver);
+            ConnectEventObserver(orderEventObserver);
         }
 
         /// <summary>

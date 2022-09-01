@@ -34,6 +34,7 @@ try
                     services.AddTransient<IAgvRegistry, EfAgvRegistry>();
                     services.AddTransient<IOrderRegistry, EfOrderRegistry>();
                     services.AddTransient<IMapRegistry, EfMapRegistry>();
+                    services.AddTransient<IOrderAuditRegistry, EfOrderAuditRegistry>();
                     services.AddScoped<IOrderHubContext>(provider =>
                     {
                         var hubContext = provider.GetRequiredService<IHubContext<OrderHub>>();
@@ -44,9 +45,17 @@ try
                         var hubContext = provider.GetRequiredService<IHubContext<AgvHub>>();
                         return new AgvHubContext(hubContext);
                     });
+                    
+                    // HubContexts also need to be added
+                    // Otherwise scoped service cannot be consumed and validated
+                    // Meaning that new migrations may not be applied
+                    services.AddTransient<IOrderHubContext, OrderHubContext>(); 
+                    services.AddTransient<IAgvHubContext, AgvHubContext>();
 
                     services.AddSingleton<IStateObserver<OrderSaga>, OrderStateObserver>();
                     services.AddSingleton<IStateObserver<AgvSaga>, AgvStateObserver>();
+
+                    services.AddTransient<IEventObserver<OrderSaga>, OrderEventObserver>();
 
                     services.AddDbContextFactory<SagaPersistenceDbContext>(builder =>
                     {

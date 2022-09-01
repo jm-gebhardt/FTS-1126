@@ -28,24 +28,67 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         /// <summary>
         /// Create OrderStateMachine test fixture with mocked services
         /// </summary>
-        private StateMachineTestFixture<OrderStateMachine, OrderSaga> GetFixture(Mock<IAgvRegistry>? mockRegistry = null)
+        private class TestFixture
         {
-            if (mockRegistry == null)
+            private readonly StateMachineTestFixture<OrderStateMachine, OrderSaga> _stateMachineTestFixture;
+            private readonly Mock<IStateObserver<OrderSaga>> _mockStateObserver;
+            private readonly Mock<IEventObserver<OrderSaga>> _mockOrderEventObserver;
+
+            /// <summary>
+            /// TestFixture constructor
+            /// </summary>
+            /// <param name="agvSaga"></param>
+            public TestFixture(AgvSaga? agvSaga = null)
             {
-                mockRegistry = new Mock<IAgvRegistry>();
-                mockRegistry.Setup(s => s.GetIdleAgvs()).Returns(new List<IAgv>());
+                var mockAgvRegistry = new Mock<IAgvRegistry>();
+                mockAgvRegistry.Setup(s => s.GetIdleAgvs()).Returns(new List<IAgv>());
+                if (agvSaga != null)
+                {
+                    mockAgvRegistry.Setup(s => s.GetAgv(agvSaga.AgvId.ToGuid()))
+                        .Returns(agvSaga);
+                }
+
+                _mockStateObserver = new Mock<IStateObserver<OrderSaga>>();
+                _mockOrderEventObserver = new Mock<IEventObserver<OrderSaga>>();
+
+                _stateMachineTestFixture = new StateMachineTestFixture<OrderStateMachine, OrderSaga>(services: s =>
+                {
+                    s.AddTransient(_ => mockAgvRegistry.Object);
+                    s.AddSingleton(_ => _mockStateObserver.Object);
+                    s.AddSingleton(_ => _mockOrderEventObserver.Object);
+                });
             }
 
-            var mockObserver = new Mock<IStateObserver<OrderSaga>>();
-
-            return new StateMachineTestFixture<OrderStateMachine, OrderSaga>(services: s =>
+            /// <summary>
+            /// Get standardized TestFixture instance
+            /// </summary>
+            public StateMachineTestFixture<OrderStateMachine, OrderSaga> GetTestFixture()
             {
-                s.AddTransient(_ => mockRegistry.Object);
-                s.AddSingleton(_ => mockObserver.Object);
-            });
+                return _stateMachineTestFixture;
+            }
+
+            /// <summary>
+            /// Get the Mock of the IStateObserver<ObserverSaga/> which is packed as a service in TestFixture 
+            /// </summary>
+            public Mock<IStateObserver<OrderSaga>> GetStateObserverMock()
+            {
+                return _mockStateObserver;
+            }
+
+            /// <summary>
+            /// Get the Mock of the IEventObserver<ObserverSaga/> which is packed as a service in TestFixture 
+            /// </summary>
+            public Mock<IEventObserver<OrderSaga>> GetOrderEventObserverMock()
+            {
+                return _mockOrderEventObserver;
+            }
         }
 
-        private OrderSaga CreateTestOrderSaga(string previousState)
+        /// <summary>
+        /// Get example OrderSaga
+        /// </summary>
+        /// <param name="previousState">Boundary state prior to each transition</param>
+        private static OrderSaga CreateTestOrderSaga(string previousState)
         {
             string orderId = "Order123";
             var orderSaga = new OrderSaga(
@@ -65,7 +108,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         [TestMethod]
         public async Task When_HostOrderReceived_OrderReceived_RequestOrderAgvAssign_Published()
         {
-            StateMachineTestFixture<OrderStateMachine, OrderSaga> fixture = GetFixture();
+            var testFixtureObject = new TestFixture();
+            StateMachineTestFixture<OrderStateMachine, OrderSaga> fixture = testFixtureObject.GetTestFixture();
 
             const string orderId = "Order#1";
             var correlationId = orderId.ToGuid();
@@ -94,7 +138,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         [TestMethod]
         public async Task When_HandleHostOrder_EmptyCorrelationId_NoSagaCreated()
         {
-            StateMachineTestFixture<OrderStateMachine, OrderSaga> fixture = GetFixture();
+            var testFixtureObject = new TestFixture();
+            StateMachineTestFixture<OrderStateMachine, OrderSaga> fixture = testFixtureObject.GetTestFixture();
 
             const string orderId = "Order123123";
             var correlationId = orderId.ToGuid();
@@ -112,7 +157,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         [TestMethod]
         public async Task When_HandleHostOrderWithCorrelationId_KeepsProvidedCorrelationId()
         {
-            StateMachineTestFixture<OrderStateMachine, OrderSaga> fixture = GetFixture();
+            var testFixtureObject = new TestFixture();
+            StateMachineTestFixture<OrderStateMachine, OrderSaga> fixture = testFixtureObject.GetTestFixture();
+            Mock<IEventObserver<OrderSaga>> orderEventObserver = testFixtureObject.GetOrderEventObserverMock();
 
             const string orderId = "Order123123";
             var correlationId = Guid.NewGuid();
@@ -120,6 +167,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 
             await fixture.TestHarness.Bus.Publish(new HandleHostOrder(correlationId, orderDetails));
             Assert.AreEqual(correlationId, await fixture.SagaHarness.Exists(correlationId));
+
+            orderEventObserver.Verify(s => s.PreExecute(It.IsAny<BehaviorContext<OrderSaga, HandleHostOrder>>()), Times.Once);
+            orderEventObserver.Verify(s => s.PostExecute(It.IsAny<BehaviorContext<OrderSaga, HandleHostOrder>>()), Times.Once);
         }
 
         /// <summary>
@@ -128,7 +178,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         [TestMethod]
         public async Task When_AgvAssignSucceeded_ExecuteTransportOrderRequested()
         {
-            StateMachineTestFixture<OrderStateMachine, OrderSaga> fixture = GetFixture();
+            var testFixtureObject = new TestFixture();
+            StateMachineTestFixture<OrderStateMachine, OrderSaga> fixture = testFixtureObject.GetTestFixture();
+            Mock<IEventObserver<OrderSaga>> orderEventObserver = testFixtureObject.GetOrderEventObserverMock();
 
             const string orderId = "Order123";
             var correlationId = orderId.ToGuid();
@@ -155,6 +207,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             Assert.AreEqual(fixture.SagaHarness.StateMachine.TransportOrderSend.Name, orderSaga.CurrentState);
             Assert.AreEqual(assignedAgvCorrelationId, orderSaga.AssignedAgv);
             Assert.IsTrue(await fixture.TestHarness.Published.Any<ExecuteTransportOrder>());
+
+            orderEventObserver.Verify(s => s.PreExecute(It.IsAny<BehaviorContext<OrderSaga, AgvAssignmentSucceeded>>()), Times.Once);
+            orderEventObserver.Verify(s => s.PostExecute(It.IsAny<BehaviorContext<OrderSaga, AgvAssignmentSucceeded>>()), Times.Once);
         }
 
         /// <summary>
@@ -163,7 +218,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         [TestMethod]
         public async Task When_AgvAssignmentFailed_NoRouteFound_HostOrderHandlingFailedPublished()
         {
-            StateMachineTestFixture<OrderStateMachine, OrderSaga> fixture = GetFixture();
+            var testFixtureObject = new TestFixture();
+            StateMachineTestFixture<OrderStateMachine, OrderSaga> fixture = testFixtureObject.GetTestFixture();
             const string orderId = "Order123";
             var correlationId = orderId.ToGuid();
             var orderSaga = new OrderSaga(
@@ -173,6 +229,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             { CurrentState = fixture.Machine.AgvRequested.Name };
 
             fixture.Add(orderSaga);
+
+            Mock<IEventObserver<OrderSaga>> orderEventObserver = testFixtureObject.GetOrderEventObserverMock();
 
             await fixture.TestHarness.Bus.Publish(new AgvAssignmentFailed
                 (
@@ -189,6 +247,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 
             Assert.IsNull(orderSaga.AssignedAgv);
             Assert.AreEqual(fixture.SagaHarness.StateMachine.OrderFailed.Name, orderSaga.CurrentState);
+
+            orderEventObserver.Verify(s => s.PreExecute(It.IsAny<BehaviorContext<OrderSaga, AgvAssignmentFailed>>()), Times.Once);
+            orderEventObserver.Verify(s => s.PostExecute(It.IsAny<BehaviorContext<OrderSaga, AgvAssignmentFailed>>()), Times.Once);
         }
 
         /// <summary>
@@ -197,7 +258,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         [TestMethod]
         public async Task When_AgvAssignmentFailed_NoFreeAgv_OrderStateIsOrderReceived()
         {
-            StateMachineTestFixture<OrderStateMachine, OrderSaga> fixture = GetFixture();
+            var testFixtureObject = new TestFixture();
+            StateMachineTestFixture<OrderStateMachine, OrderSaga> fixture = testFixtureObject.GetTestFixture();
             const string orderId = "Order123";
             var correlationId = orderId.ToGuid();
             var orderSaga = new OrderSaga(
@@ -226,7 +288,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         [TestMethod]
         public async Task When_TransportOrderCompleted_HostOrderHandlingSucceededPublished()
         {
-            StateMachineTestFixture<OrderStateMachine, OrderSaga> fixture = GetFixture();
+            var testFixtureObject = new TestFixture();
+            StateMachineTestFixture<OrderStateMachine, OrderSaga> fixture = testFixtureObject.GetTestFixture();
 
             string orderId = Guid.NewGuid().ToString();
             var correlationId = orderId.ToGuid();
@@ -238,6 +301,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             { CurrentState = fixture.Machine.TransportOrderPicked.Name };
 
             fixture.Add(orderState);
+            Mock<IEventObserver<OrderSaga>> orderEventObserver = testFixtureObject.GetOrderEventObserverMock();
+
             await fixture.TestHarness.Bus.Publish(new TransportOrderCompleted(correlationId, orderId));
             Assert.AreEqual(correlationId, await fixture.SagaHarness.Exists(correlationId));
             Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<TransportOrderCompleted>());
@@ -249,6 +314,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             Assert.IsNotNull(message);
             Assert.AreEqual(correlationId, message.Context.Message.CorrelationId);
             Assert.AreEqual(orderId, message.Context.Message.OrderId);
+
+            orderEventObserver.Verify(s => s.PreExecute(It.IsAny<BehaviorContext<OrderSaga, TransportOrderCompleted>>()), Times.Once);
+            orderEventObserver.Verify(s => s.PostExecute(It.IsAny<BehaviorContext<OrderSaga, TransportOrderCompleted>>()), Times.Once);
         }
 
         /// <summary>
@@ -259,7 +327,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         [TestMethod]
         public async Task When_TransportOrderFailed_HostOrderHandlingFailedPublished(string previousState)
         {
-            StateMachineTestFixture<OrderStateMachine, OrderSaga> fixture = GetFixture();
+            var testFixtureObject = new TestFixture();
+            StateMachineTestFixture<OrderStateMachine, OrderSaga> fixture = testFixtureObject.GetTestFixture();
 
             string orderId = Guid.NewGuid().ToString();
             var correlationId = orderId.ToGuid();
@@ -271,12 +340,17 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             { CurrentState = previousState };
 
             fixture.Add(orderState);
+            Mock<IEventObserver<OrderSaga>> orderEventObserver = testFixtureObject.GetOrderEventObserverMock();
+
             await fixture.TestHarness.Bus.Publish(new TransportOrderFailed(correlationId, orderId, TransportOrderErrorCode.Any));
             Assert.AreEqual(correlationId, await fixture.SagaHarness.Exists(correlationId));
             Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<TransportOrderFailed>());
 
             var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
             Assert.AreEqual(fixture.SagaHarness.StateMachine.OrderFailed.Name, saga.CurrentState);
+
+            orderEventObserver.Verify(s => s.PreExecute(It.IsAny<BehaviorContext<OrderSaga, TransportOrderFailed>>()), Times.Once);
+            orderEventObserver.Verify(s => s.PostExecute(It.IsAny<BehaviorContext<OrderSaga, TransportOrderFailed>>()), Times.Once);
         }
 
         /// <summary>
@@ -288,11 +362,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         public async Task Handling_Consumption_of_TransportOrderStarted(string agvId, bool hostOrderStartedHasBeenSent, string expectedState)
         {
             // Arrange
-            var mockRegistry = new Mock<IAgvRegistry>();
-            mockRegistry.Setup(s => s.GetAgv(agvId.ToGuid()))
-                .Returns(new AgvSaga(agvId.ToGuid(), agvId, "Discovered"));
+            var agvSaga = new AgvSaga(agvId.ToGuid(), agvId, "Discovered");
 
-            StateMachineTestFixture<OrderStateMachine, OrderSaga> fixture = GetFixture(mockRegistry);
+            var testFixtureObject = new TestFixture(agvSaga);
+            StateMachineTestFixture<OrderStateMachine, OrderSaga> fixture = testFixtureObject.GetTestFixture();
 
             string orderId = "Order123";
             var correlationId = orderId.ToGuid();
@@ -307,6 +380,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 
             fixture.Add(orderSaga);
 
+            Mock<IEventObserver<OrderSaga>> orderEventObserver = testFixtureObject.GetOrderEventObserverMock();
+
             // Act
             await fixture.TestHarness.Bus.Publish(new TransportOrderStarted(correlationId, orderId));
 
@@ -315,6 +390,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
             Assert.AreEqual(expectedState, saga.CurrentState);
             Assert.AreEqual(hostOrderStartedHasBeenSent, await fixture.TestHarness.Published.Any<HostOrderStarted>());
+
+            orderEventObserver.Verify(s => s.PreExecute(It.IsAny<BehaviorContext<OrderSaga, TransportOrderStarted>>()), Times.Once);
+            orderEventObserver.Verify(s => s.PostExecute(It.IsAny<BehaviorContext<OrderSaga, TransportOrderStarted>>()), Times.Once);
         }
 
         /// <summary>
@@ -324,7 +402,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         public async Task Handling_Consumption_of_TransportOrderPickCompleted()
         {
             // Arrange
-            StateMachineTestFixture<OrderStateMachine, OrderSaga> fixture = GetFixture();
+            var testFixtureObject = new TestFixture();
+            StateMachineTestFixture<OrderStateMachine, OrderSaga> fixture = testFixtureObject.GetTestFixture();
             string orderId = "Order123";
             var correlationId = orderId.ToGuid();
 
@@ -337,6 +416,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 
             fixture.Add(orderSaga);
 
+            Mock<IEventObserver<OrderSaga>> orderEventObserver = testFixtureObject.GetOrderEventObserverMock();
+
             // Act
             await fixture.TestHarness.Bus.Publish(new TransportOrderPickCompleted(correlationId, orderId));
 
@@ -344,6 +425,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<TransportOrderPickCompleted>());
             var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
             Assert.AreEqual(fixture.Machine.TransportOrderPicked.Name, saga.CurrentState);
+
+            orderEventObserver.Verify(s => s.PreExecute(It.IsAny<BehaviorContext<OrderSaga, TransportOrderPickCompleted>>()), Times.Once);
+            orderEventObserver.Verify(s => s.PostExecute(It.IsAny<BehaviorContext<OrderSaga, TransportOrderPickCompleted>>()), Times.Once);
         }
 
         /// <summary>
@@ -353,7 +437,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         public async Task No_HostOrderStarted_Message_Is_Sent_After_Consuming_TransportOrderStarted()
         {
             // Arrange
-            StateMachineTestFixture<OrderStateMachine, OrderSaga> fixture = GetFixture();
+            var testFixtureObject = new TestFixture();
+            StateMachineTestFixture<OrderStateMachine, OrderSaga> fixture = testFixtureObject.GetTestFixture();
             string orderId = "Order123";
             var correlationId = orderId.ToGuid();
 
@@ -386,7 +471,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         public async Task AgvAssignmentErrorCode_EnumElements_Corresponds_to_its_string(AgvAssignmentErrorCode sentErrorCode, string expectedErrorCodeInOrderSaga)
         {
             // Arrange
-            StateMachineTestFixture<OrderStateMachine, OrderSaga> fixture = GetFixture();
+            var testFixtureObject = new TestFixture();
+            StateMachineTestFixture<OrderStateMachine, OrderSaga> fixture = testFixtureObject.GetTestFixture();
             var order = CreateTestOrderSaga(fixture.Machine.AgvRequested.Name);
             fixture.Add(order);
 
@@ -411,7 +497,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         public async Task TransportOrderErrorCode_EnumElements_Corresponds_to_its_string(string previousState, TransportOrderErrorCode sentErrorCode, string expectedErrorCodeInOrderSaga)
         {
             // Arrange
-            StateMachineTestFixture<OrderStateMachine, OrderSaga> fixture = GetFixture();
+            var testFixtureObject = new TestFixture();
+            StateMachineTestFixture<OrderStateMachine, OrderSaga> fixture = testFixtureObject.GetTestFixture();
             var order = CreateTestOrderSaga(previousState);
             fixture.Add(order);
 
@@ -431,15 +518,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         [TestMethod]
         public async Task When_OrderSaga_State_Changed_Trigger_Observer()
         {
-            var mockRegistry = new Mock<IAgvRegistry>();
-            mockRegistry.Setup(s => s.GetIdleAgvs()).Returns(new List<IAgv>());
-            var mockObserver = new Mock<IStateObserver<OrderSaga>>();
-
-            var fixture = new StateMachineTestFixture<OrderStateMachine, OrderSaga>(services: s =>
-            {
-                s.AddTransient(_ => mockRegistry.Object);
-                s.AddSingleton(_ => mockObserver.Object);
-            });
+            var testFixtureObject = new TestFixture();
+            StateMachineTestFixture<OrderStateMachine, OrderSaga> fixture = testFixtureObject.GetTestFixture();
+            Mock<IStateObserver<OrderSaga>> mockObserver = testFixtureObject.GetStateObserverMock();
 
             string orderId = Guid.NewGuid().ToString();
             var correlationId = orderId.ToGuid();

@@ -13,7 +13,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         private readonly ILogger<EfMapRegistry> _logger;
 
         /// <summary>
-        /// Constructor of the EF Agv Registry
+        /// Constructor of the EF MapRegistry
         /// </summary>
         /// <param name="dbContextFactory"></param>
         /// <param name="logger"></param>

@@ -39,11 +39,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
             var mockRegistry = new Mock<IAgvRegistry>();
             mockRegistry.Setup(s => s.GetIdleAgvs()).Returns(new List<IAgv>());
             var mockObserver = new Mock<IStateObserver<OrderSaga>>();
+            var orderEventObserver = new Mock<IEventObserver<OrderSaga>>();
 
             var fixture = new StateMachineTestFixture<OrderStateMachine, OrderSaga>(services: s =>
             {
                 s.AddTransient(_ => mockRegistry.Object);
                 s.AddSingleton(_ => mockObserver.Object);
+                s.AddSingleton(_ => orderEventObserver.Object);
             });
 
             var controller = new TransportOrderController(GetOrderRegistry());

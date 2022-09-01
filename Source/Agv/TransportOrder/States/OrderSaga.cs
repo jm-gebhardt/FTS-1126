@@ -63,6 +63,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.States
         /// <param name="orderDetails"></param>
         /// <param name="currentState"></param>
         /// <param name="assignedAgv"></param>
+        [System.Text.Json.Serialization.JsonConstructor]
         public OrderSaga(Guid correlationId, OrderDetails orderDetails, string currentState, Guid? assignedAgv): 
             this(correlationId, orderDetails)
         {

@@ -26,7 +26,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             var mockLogger = new Mock<ILogger<OrderStateMachine>>();
             var mockAgvRegistry = new Mock<IAgvRegistry>();
             var orderStateObserver = new OrderStateObserver(mockHub.Object);
-            var orderStateMachine = new OrderStateMachine(mockLogger.Object, mockAgvRegistry.Object, orderStateObserver);
+            var orderEventObserver = new Mock<IEventObserver<OrderSaga>>();
+            var orderStateMachine = new OrderStateMachine(mockLogger.Object, mockAgvRegistry.Object, orderStateObserver, orderEventObserver.Object);
             var previousState = orderStateMachine.OrderReceived;
             var currentState = orderStateMachine.AgvRequested;
 

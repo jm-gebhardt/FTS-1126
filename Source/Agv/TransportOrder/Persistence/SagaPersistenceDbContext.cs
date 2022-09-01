@@ -41,6 +41,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence
                 yield return new OrderSagaClassMap();
                 yield return new AgvSagaClassMap();
                 yield return new MapClassMap();
+                yield return new OrderChangedClassMap();
             }
         }
         
