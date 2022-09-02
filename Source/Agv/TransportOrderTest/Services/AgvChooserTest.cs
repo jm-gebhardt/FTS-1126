@@ -219,7 +219,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                    new AgvGraph.Edge("NoWhere", "Heilbronn") { Metric = 123f }
                 };
 
-            _graphWikipedia = new AgvGraph(Guid.Empty, nodes, edges, "Area51".ToGuid());
+            const string relatedMapName = "Area51";
+
+            _graphWikipedia = new AgvGraph(Guid.Empty, nodes, edges, relatedMapName.ToGuid(), relatedMapName);
 
             AgvGraph.Edge[] edgesFast = edges.Select(e => (AgvGraph.Edge)e.Clone()).ToArray();
             foreach (var edge in edgesFast)
@@ -227,7 +229,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                 edge.Metric /= 2;
             }
 
-            _graphWikipediaFast = new AgvGraph(Guid.Empty, nodes, edgesFast, "Area51".ToGuid());
+            _graphWikipediaFast = new AgvGraph(Guid.Empty, nodes, edgesFast, relatedMapName.ToGuid(), relatedMapName);
 
             _dummyOrder = new OrderDetails(
                 correlationId: Guid.NewGuid(),

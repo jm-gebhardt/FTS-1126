@@ -8,7 +8,7 @@ using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
-using Gebhardt.StoreWare.Agv.TransportOrder.Persistence;
+using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Models;
 using Gebhardt.StoreWare.Agv.TransportOrder.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.States;
 
@@ -27,7 +27,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         private StateMachineTestFixture<AgvStateMachine, AgvSaga> GetFixture(Action<IBusRegistrationConfigurator>? busRegistrationConfigurator = null)
         {
             var mockRegistry = new Mock<IMapRegistry>();
-            mockRegistry.Setup(s => s.GetAllMaps()).Returns(new List<Map>());
+            mockRegistry.Setup(s => s.GetAllMaps()).Returns(new EnumerableQuery<Map>(new List<Map>()));
 
             var mockObserver = new Mock<IStateObserver<AgvSaga>>();
 
@@ -65,6 +65,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         /// </summary>
         private AgvGraph CreateTestAgvGraph()
         {
+            const string mapName = "Map#1"; 
             var agvGraph = new AgvGraph(Guid.Empty,
                 new[]
                 {
@@ -74,7 +75,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                 {
                     new AgvGraph.Edge("node01", "node02"){ Metric = 4f}
                 },
-                Guid.Empty);
+                mapName.ToGuid(),
+                mapName);
 
             return agvGraph;
         }
@@ -572,7 +574,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         {
             // Arrange
             var mockRegistry = new Mock<IMapRegistry>();
-            mockRegistry.Setup(s => s.GetAllMaps()).Returns(new List<Map>());
+            mockRegistry.Setup(s => s.GetAllMaps()).Returns(new EnumerableQuery<Map>(new List<Map>()));
 
             var mockObserver = new Mock<IStateObserver<AgvSaga>>();
 
@@ -611,7 +613,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         {
             // Arrange
             var mockRegistry = new Mock<IMapRegistry>();
-            mockRegistry.Setup(s => s.GetAllMaps()).Returns(new List<Map>());
+            mockRegistry.Setup(s => s.GetAllMaps()).Returns(new EnumerableQuery<Map>(new List<Map>()));
 
             var mockObserver = new Mock<IStateObserver<AgvSaga>>();
 
@@ -626,19 +628,23 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 
             const string mapId = "basicMap";
             const string imageData = "bGlnaHQgd29yay4=";
+            const float resolution = 1;
+            const float xOffset = 1;
+            const float yOffset = 1;
+            var modificationDate = DateTime.Now;
 
-            mockRegistry.Setup(mo => mo.Add(mapId.ToGuid(), imageData, mapId)).Returns(true);
+            mockRegistry.Setup(mo => mo.Add(mapId.ToGuid(), mapId, imageData, resolution, xOffset, yOffset, modificationDate)).Returns(true);
 
             // Act
-            await fixture.TestHarness.Bus.Publish(new AgvMapReceived(agvSaga.CorrelationId, agvSaga.AgvId, mapId.ToGuid(), mapId, DateTime.Now, imageData, 0.01f, 3.12f, 2.89f));
+            await fixture.TestHarness.Bus.Publish(new AgvMapReceived(agvSaga.CorrelationId, agvSaga.AgvId, mapId.ToGuid(), mapId, modificationDate, imageData,  resolution, xOffset, yOffset));
 
             // Assert
             Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvMapReceived>());
             Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvMapReceived>());
             Assert.AreEqual(agvSaga.CorrelationId, await fixture.SagaHarness.Exists(agvSaga.CorrelationId));
 
-            mockRegistry.Verify(mo => mo.Add(mapId.ToGuid(), imageData, mapId), Times.Once);
-            mockRegistry.Verify(mo => mo.Update(mapId.ToGuid(), imageData), Times.Never);
+            mockRegistry.Verify(mo => mo.Add(mapId.ToGuid(), mapId, imageData, resolution, xOffset, yOffset, modificationDate), Times.Once);
+            mockRegistry.Verify(mo => mo.Update(mapId.ToGuid(), mapId, imageData, resolution, xOffset, yOffset, modificationDate), Times.Never);
         }
 
         /// <summary>
@@ -654,7 +660,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         {
             // Arrange
             var mockRegistry = new Mock<IMapRegistry>();
-            mockRegistry.Setup(s => s.GetAllMaps()).Returns(new List<Map>());
+            mockRegistry.Setup(s => s.GetAllMaps()).Returns(new EnumerableQuery<Map>(new List<Map>()));
 
             var mockObserver = new Mock<IStateObserver<AgvSaga>>();
 
@@ -669,19 +675,23 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 
             const string mapId = "basicMap";
             const string imageData = "bGlnaHQgd29yay4=";
+            const float resolution = 1;
+            const float xOffset = 1;
+            const float yOffset = 1;
+            var modificationDate = DateTime.Now;
 
             mockRegistry.Setup(mo => mo.Exists(mapId.ToGuid())).Returns(true);
 
             // Act
-            await fixture.TestHarness.Bus.Publish(new AgvMapReceived(agvSaga.CorrelationId, agvSaga.AgvId, mapId.ToGuid(), mapId, DateTime.Now, imageData, 0.01f, 3.12f, 2.89f));
+            await fixture.TestHarness.Bus.Publish(new AgvMapReceived(agvSaga.CorrelationId, agvSaga.AgvId, mapId.ToGuid(), mapId, modificationDate, imageData, resolution, xOffset, yOffset));
 
             // Assert
             Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvMapReceived>());
             Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvMapReceived>());
             Assert.AreEqual(agvSaga.CorrelationId, await fixture.SagaHarness.Exists(agvSaga.CorrelationId));
 
-            mockRegistry.Verify(mo => mo.Add(mapId.ToGuid(), imageData, mapId), Times.Never);
-            mockRegistry.Verify(mo => mo.Update(mapId.ToGuid(), imageData), Times.Once);
+            mockRegistry.Verify(mo => mo.Add(mapId.ToGuid(),  mapId, imageData, resolution, xOffset, yOffset, modificationDate), Times.Never);
+            mockRegistry.Verify(mo => mo.Update(mapId.ToGuid(),  mapId, imageData, resolution, xOffset, yOffset, modificationDate), Times.Once);
         }
 
         /// <summary>
@@ -691,7 +701,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         public async Task When_AgvSaga_State_Changed_Trigger_Observer()
         {
             var mockRegistry = new Mock<IMapRegistry>();
-            mockRegistry.Setup(s => s.GetAllMaps()).Returns(new List<Map>());
+            mockRegistry.Setup(s => s.GetAllMaps()).Returns(new EnumerableQuery<Map>(new List<Map>()));
 
             var mockObserver = new Mock<IStateObserver<AgvSaga>>();
 

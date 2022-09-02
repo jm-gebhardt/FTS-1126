@@ -10,16 +10,16 @@
     >
   </div>
   <agv-list
-    :agvs="agvs"
-    :model-value="currentPage"
-    :total="totalCount"
+    :agvs="Array.from(agvs.data.values())"
+    :model-value="agvs.currentPage"
+    :total="agvs.totalCount"
     :page-size="pageSizes"
     @update:page-size="pageSizeChanged"
     @update:model-value="pageChanged"
   ></agv-list>
 
-  <ui-spinner v-if="loading" active></ui-spinner>
-  <ui-banner v-if="error">Error loading data: {{ error }}</ui-banner>
+  <ui-spinner v-if="agvs.loading" active></ui-spinner>
+  <ui-banner v-if="agvs.error">Error loading data: {{ agvs.error }}</ui-banner>
 </template>
 <script lang="ts" setup>
 import AgvList from '@/components/AgvList.vue'
@@ -31,9 +31,7 @@ import { AgvHub } from '@/services/AgvHub'
 
 const agvHub = new AgvHub()
 
-const { agvs, currentPage, totalCount, loading, error } = storeToRefs(
-  useAgvStore()
-)
+const { agvs } = storeToRefs(useAgvStore())
 const { fetchAgvs } = useAgvStore()
 
 const pageSizes = [10, 25, 100]

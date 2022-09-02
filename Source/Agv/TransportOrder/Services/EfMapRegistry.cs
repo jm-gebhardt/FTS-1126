@@ -1,4 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.TransportOrder.Persistence;
+using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -9,7 +10,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
     /// </summary>
     public class EfMapRegistry : IMapRegistry
     {
-        private readonly SagaPersistenceDbContext _dbContext;
+        private readonly IDbContextFactory<SagaPersistenceDbContext> _dbContextFactory;
         private readonly ILogger<EfMapRegistry> _logger;
 
         /// <summary>
@@ -19,19 +20,19 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// <param name="logger"></param>
         public EfMapRegistry(IDbContextFactory<SagaPersistenceDbContext> dbContextFactory, ILogger<EfMapRegistry> logger)
         {
-            _dbContext = dbContextFactory.CreateDbContext();
+            _dbContextFactory = dbContextFactory;
             _logger = logger;
         }
 
         private IQueryable<Map> Maps =>
-            _dbContext
+            _dbContextFactory.CreateDbContext()
                 .Set<Map>()
                 .AsNoTracking(); // No need to track changes
 
         /// <inheritdoc/>
-        public IEnumerable<Map> GetAllMaps()
+        public IQueryable<Map> GetAllMaps()
         {
-            return Maps.AsEnumerable();
+            return Maps;
         }
 
         /// <inheritdoc/>
@@ -48,37 +49,54 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         }
 
         /// <inheritdoc/>
-        public bool Add(Guid correlationId, string base64PngImage, string mapId)
+        public bool Add(Guid correlationId, string mapId, string base64PngImage, double resolution, double xOffset, double yOffset, DateTime modificationDate)
         {
             try
             {
-                _dbContext.Add(new Map(correlationId, mapId, Convert.FromBase64String(base64PngImage), DateTime.Now));
+                var dbContext = _dbContextFactory.CreateDbContext(); 
+                dbContext
+                    .Add(new Map(
+                    correlationId,
+                    mapId,
+                    Convert.FromBase64String(base64PngImage),
+                    resolution,
+                    xOffset,
+                    yOffset,
+                    modificationDate
+                    ));
 
-                int stateEntries = _dbContext.SaveChanges();
+                int stateEntries = dbContext.SaveChanges();
                 return stateEntries != 0;
             }
             catch (Exception e)
             {
-                _logger.LogError(e.Message);
+                _logger.LogError("Could not add map: {Exception}", e.Message);
                 return false;
             }
         }
 
         /// <inheritdoc/>
-        public bool Update(Guid correlationId, string base64PngImage)
+        public bool Update(Guid correlationId,  string mapId, string base64PngImage, double resolution, double xOffset, double yOffset, DateTime modificationDate)
         {
             try
             {
-                var map = _dbContext.Set<Map>().First(q => q.CorrelationId == correlationId);
+                var dbContext = _dbContextFactory.CreateDbContext();
+                var map = dbContext
+                    .Set<Map>()
+                    .First(q => q.CorrelationId == correlationId);
+                map.MapId = mapId;
                 map.MapValue = Convert.FromBase64String(base64PngImage);
-                map.ModificationDateTime = DateTime.Now;
+                map.Resolution = resolution;
+                map.XOffset = xOffset;
+                map.YOffset = yOffset;
+                map.ModificationDate = modificationDate;
 
-                int stateEntries = _dbContext.SaveChanges();
+                int stateEntries = dbContext.SaveChanges();
                 return stateEntries != 0;
             }
             catch (Exception e)
             {
-                _logger.LogError(e.Message);
+                _logger.LogError(e, "Could not update map");
                 return false;
             }
         }

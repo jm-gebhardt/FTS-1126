@@ -1,4 +1,5 @@
-﻿using MassTransit;
+﻿using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Models;
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -9,7 +10,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence
     /// </summary>
     public class MapClassMap : SagaClassMap<Map>
     {
-        private const string MapTableName = "MapTable";
+        private const string MapTableName = "Map";
         private const int CurrentStateMaxLength = 32;
 
         /// <summary>

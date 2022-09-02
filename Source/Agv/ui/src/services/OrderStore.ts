@@ -1,16 +1,9 @@
 import { defineStore } from 'pinia'
 import { IOrder } from '@/services/api/data-contracts'
 import { Orders as OrderApi } from '@/services/api/Orders'
+import { IPaginatedRestApiStore } from '@/services/IRestApiStore'
 
-interface OrderStoreState {
-  orders: IOrder[]
-  currentPage: number
-  pageSize: number
-  totalCount: number
-  totalPages: number
-  error: string | null
-  loading: boolean
-}
+type OrderStoreState = IPaginatedRestApiStore<IOrder[]>
 
 const orderApi = new OrderApi({
   baseUrl: import.meta.env.VITE_API_URL
@@ -19,7 +12,7 @@ const orderApi = new OrderApi({
 export const useOrderStore = defineStore({
   id: 'orderStore',
   state: (): OrderStoreState => ({
-    orders: [],
+    data: [],
     loading: false,
     error: null,
     currentPage: 1,
@@ -29,14 +22,14 @@ export const useOrderStore = defineStore({
   }),
 
   actions: {
-    async fetchOrders(pageNumber: number, pageSize: number) {
+    async fetchOrders(pageNumber: number, pageSize: number): Promise<void> {
       this.loading = true
 
-      orderApi
+      return await orderApi
         .ordersList({ PageNumber: pageNumber, PageSize: pageSize })
         .then((response) => {
           this.error = null
-          this.orders = response.data
+          this.data = response.data
           const paginationHeader = response.headers.get('x-pagination')
           if (paginationHeader != null) {
             const pagination = JSON.parse(paginationHeader)
@@ -48,24 +41,24 @@ export const useOrderStore = defineStore({
         })
         .catch((response) => {
           this.error = response.error
-          console.log(response.error)
+          console.error(response.error)
         })
         .finally(() => (this.loading = false))
     },
     async updateOrderList(order: IOrder) {
-      if (!this.orders || this.orders.length < 1) return // No orders to update
+      if (!this.data || this.data.length < 1) return // No orders to update
 
-      for (let i = 0; i < this.orders.length; i++) {
-        const element = this.orders[i]
+      for (let i = 0; i < this.data.length; i++) {
+        const element = this.data[i]
         if (element.correlationId === order.correlationId) {
-          this.orders[i] = order
+          this.data[i] = order
           return
         }
       }
 
       // If this is the first page check if a new order can be added to the list
       if (this.currentPage === 1) {
-        const lastOrder = this.orders[0]
+        const lastOrder = this.data[0]
 
         if (!lastOrder.orderDetails?.creationDate) return
         if (!order.orderDetails?.creationDate) return
@@ -75,12 +68,12 @@ export const useOrderStore = defineStore({
           order.orderDetails?.creationDate >
           lastOrder.orderDetails?.creationDate
         ) {
-          this.orders.splice(0, 0, order) // Add new order
+          this.data.splice(0, 0, order) // Add new order
           this.totalCount++
 
           // Trim orders array to page size
-          if (this.orders.length > this.pageSize) {
-            this.orders.pop()
+          if (this.data.length > this.pageSize) {
+            this.data.pop()
           }
         }
       }

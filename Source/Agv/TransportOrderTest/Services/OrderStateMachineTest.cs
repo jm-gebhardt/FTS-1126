@@ -41,7 +41,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             public TestFixture(AgvSaga? agvSaga = null)
             {
                 var mockAgvRegistry = new Mock<IAgvRegistry>();
-                mockAgvRegistry.Setup(s => s.GetIdleAgvs()).Returns(new List<IAgv>());
+                mockAgvRegistry.Setup(s => s.GetIdleAgvs()).Returns(new EnumerableQuery<IAgv>(new List<IAgv>()));
                 if (agvSaga != null)
                 {
                     mockAgvRegistry.Setup(s => s.GetAgv(agvSaga.AgvId.ToGuid()))

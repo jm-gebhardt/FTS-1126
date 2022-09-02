@@ -1,86 +1,145 @@
+import {
+  IAgv,
+  IAgvData,
+  IAgvGraph,
+  IAgvStatus,
+  IMap
+} from '@/services/api/data-contracts'
+import { IPaginatedRestApiStore, IRestApiStore } from '@/services/IRestApiStore'
 import { defineStore } from 'pinia'
-import { IAgv } from '@/services/api/data-contracts'
 import { Agvs as AgvApi } from '@/services/api/Agvs'
-
-interface AgvStoreState {
-  agvs: IAgv[]
-  currentPage: number
-  pageSize: number
-  totalCount: number
-  totalPages: number
-  error: string | null
-  loading: boolean
-}
+import { Maps as MapApi } from '@/services/api/Maps'
 
 const agvApi = new AgvApi({
   baseUrl: import.meta.env.VITE_API_URL
 })
+const mapApi = new MapApi({
+  baseUrl: import.meta.env.VITE_API_URL
+})
+
+interface AgvStoreState {
+  agvs: IPaginatedRestApiStore<Map<string, IAgv>>
+  agvGraph: IRestApiStore<Map<string, IAgvGraph>>
+  agvData: IRestApiStore<Map<string, IAgvData>>
+  agvStatus: IRestApiStore<Map<string, IAgvStatus>>
+  maps: IRestApiStore<Map<string, IMap>>
+  mapsImage: IRestApiStore<Map<string, string>>
+}
 
 export const useAgvStore = defineStore({
   id: 'agvStore',
   state: (): AgvStoreState => ({
-    agvs: [],
-    loading: false,
-    error: null,
-    currentPage: 1,
-    pageSize: 1,
-    totalPages: 1,
-    totalCount: 0
+    agvs: {
+      data: new Map(),
+      loading: false,
+      error: null,
+      currentPage: 0,
+      pageSize: 0,
+      totalPages: 1,
+      totalCount: 0
+    },
+    agvGraph: {
+      data: new Map(),
+      loading: false,
+      error: null
+    },
+    agvData: {
+      data: new Map(),
+      loading: false,
+      error: null
+    },
+    agvStatus: {
+      data: new Map(),
+      loading: false,
+      error: null
+    },
+    maps: {
+      data: new Map(),
+      loading: false,
+      error: null
+    },
+    mapsImage: {
+      data: new Map(),
+      loading: false,
+      error: null
+    }
   }),
-
   actions: {
-    async fetchAgvs(pageNumber: number, pageSize: number) {
-      this.loading = true
+    fetchAgvs: async function (pageNumber = 0, pageSize = 0): Promise<void> {
+      this.agvs.loading = true
 
-      agvApi
+      return await agvApi
         .agvsList({ pageNumber: pageNumber, pageSize: pageSize })
         .then((response) => {
-          this.error = null
-          this.agvs = response.data
+          this.agvs.error = null
+          const data = new Map<string, IAgv>()
+          response.data.forEach((agv: IAgv) => {
+            if (agv.correlationId != null) {
+              data.set(agv.correlationId, agv)
+            }
+          })
+          this.agvs.data = data
           const paginationHeader = response.headers.get('x-pagination')
           if (paginationHeader != null) {
             const pagination = JSON.parse(paginationHeader)
-            this.pageSize = pagination.PageSize
-            this.currentPage = pagination.CurrentPage
-            this.totalPages = pagination.TotalPages
-            this.totalCount = pagination.TotalCount
+            this.agvs.pageSize = pagination.PageSize
+            this.agvs.currentPage = pagination.CurrentPage
+            this.agvs.totalPages = pagination.TotalPages
+            this.agvs.totalCount = pagination.TotalCount
           }
         })
         .catch((response) => {
-          this.error = response.error
-          console.log(response.error)
+          this.agvs.error = response.error
+          console.error(response.error)
         })
-        .finally(() => (this.loading = false))
+        .finally(() => (this.agvs.loading = false))
     },
-    async updateAgvList(agv: IAgv) {
-      if (!this.agvs || this.agvs.length < 1) return // No agvs to update
-
-      for (let i = 0; i < this.agvs.length; i++) {
-        const element = this.agvs[i]
-        if (element.correlationId === agv.correlationId) {
-          this.agvs[i] = agv
-          return
-        }
+    async updateAgv(agv: IAgv) {
+      if (this.agvs.data.has(agv.correlationId)) {
+        this.agvs.data.set(agv.correlationId, agv)
       }
+    },
+    fetchGraph: async function (correlationId: string): Promise<void> {
+      this.agvGraph.loading = true
 
-      // If this is the first page check if a new agv can be added to the list
-      if (this.currentPage === 1) {
-        const lastAgv = this.agvs[0]
-
-        if (!lastAgv.agvId) return
-        if (!agv.agvId) return
-
-        // Add agv to list if it is newer than the latest agv
-        if (agv.agvId > lastAgv.agvId) {
-          this.agvs.splice(0, 0, agv) // Add new agv
-          this.totalCount++
-
-          // Trim agvs array to page size
-          if (this.agvs.length > this.pageSize) {
-            this.agvs.pop()
+      return await agvApi
+        .graphDetail(correlationId)
+        .then((response) => {
+          this.agvGraph.error = null
+          if (response.data.correlationId != null) {
+            this.agvGraph.data.set(response.data.correlationId, response.data)
           }
-        }
-      }
+        })
+        .catch((response) => {
+          this.agvGraph.error = response.error
+          console.error(response.error)
+        })
+        .finally(() => (this.agvGraph.loading = false))
+    },
+    fetchMaps: async function (): Promise<void> {
+      this.maps.loading = true
+
+      return await mapApi
+        .mapsList()
+        .then((response) => {
+          this.maps.error = null
+
+          const data = new Map<string, IMap>()
+          response.data.forEach((map: IMap) => {
+            if (map.correlationId != null) {
+              data.set(map.correlationId, map)
+            }
+          })
+          this.maps.data = data
+        })
+        .catch((response) => {
+          this.maps.error = response.error
+          console.error(response.error)
+        })
+        .finally(() => (this.maps.loading = false))
+    },
+    MapUrl: function (correlationId: string): string {
+      return `${mapApi.baseUrl}/maps/${correlationId}/map.png`
     }
   }
 })

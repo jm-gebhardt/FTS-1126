@@ -21,12 +21,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// <summary>
         /// Get list of all AGVs
         /// </summary>
-        public IEnumerable<IAgv> GetAllAgvs();
+        public IQueryable<IAgv> GetAllAgvs();
 
         /// <summary>
         /// Get list of idle AGVs
         /// </summary>
-        public IEnumerable<IAgv> GetIdleAgvs();
+        public IQueryable<IAgv> GetIdleAgvs();
 
         /// <summary>
         /// Get specific AGV

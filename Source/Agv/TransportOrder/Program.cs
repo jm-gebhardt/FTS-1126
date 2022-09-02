@@ -18,6 +18,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.States;
 using Gebhardt.StoreWare.Agv.TransportOrder.Web.Hubs;
 using MassTransit;
+using Gebhardt.StoreWare.Agv.TransportOrder.Web.SchemaFilter;
 
 var initialLogger = Gebhardt.StoreWare.Agv.Common.Logging.InitialLogger.Create<Program>();
 
@@ -119,6 +120,11 @@ try
                     string xmlFile = $"{assembly.GetName().Name}.xml";
                     string xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
                     options.IncludeXmlComments(xmlPath);
+                    
+                    options.SchemaFilter<RequireNonNullablePropertiesSchemaFilter>();
+                    options.SupportNonNullableReferenceTypes(); // Sets Nullable flags appropriately.              
+                    options.UseAllOfToExtendReferenceSchemas(); // Allows $ref enums to be nullable
+                    options.UseAllOfForInheritance();  // Allows $ref objects to be nullable
                 });
                 services.AddSignalR();
             })

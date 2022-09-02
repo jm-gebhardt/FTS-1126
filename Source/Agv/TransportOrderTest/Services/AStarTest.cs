@@ -1,6 +1,7 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Definitions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Services;
 
 
@@ -21,6 +22,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         /// </summary>
         public AStarTest()
         {
+            const string mapName = "Map#1";
             _graph = new AgvGraph(Guid.Empty,
                 new[]
                 {
@@ -53,7 +55,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                     new AgvGraph.Edge("9", "8") { Metric = 1f },
                     new AgvGraph.Edge("7", "10") { Metric = 6f }
                 },
-                Guid.Empty);
+                mapName.ToGuid(),
+                mapName);
 
             var map = new List<string>
             { // --> x [1..50]
@@ -113,7 +116,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                 }
                 ++y;
             }
-            _grid = new AgvGraph(Guid.Empty, nodes.ToArray(), edges.ToArray(), Guid.Empty);
+            _grid = new AgvGraph(Guid.Empty, nodes.ToArray(), edges.ToArray(), mapName.ToGuid(), mapName);
         }
 
 
@@ -144,6 +147,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         [TestMethod]
         public void Test_AStar_WikipediaExample()
         {
+            const string mapName = "Map#1";
             var graph = new AgvGraph(Guid.Empty,
                 new[]
                 {
@@ -166,7 +170,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                    new AgvGraph.Edge("Ludwigshafen", "Würzburg") { Metric = 183f },
                    new AgvGraph.Edge("Heilbronn", "Würzburg") { Metric = 102f }
                 },
-                Guid.Empty);
+                mapName.ToGuid(),
+                mapName);
             var aStar = new AStar(graph);
 
             var route = aStar.CalculateRoute("Saarbrücken", "Würzburg");
@@ -181,6 +186,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         [TestMethod]
         public void Test_AStar_WikipediaExample_WithCurrentNode()
         {
+            const string mapName = "Map#1";
             var graph = new AgvGraph(Guid.Empty,
                 new[]
                 {
@@ -203,7 +209,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                    new AgvGraph.Edge("Frankfurt", "Würzburg") { Metric = 116f },
                    new AgvGraph.Edge("Ludwigshafen", "Würzburg") { Metric = 183f },
                    new AgvGraph.Edge("Heilbronn", "Würzburg") { Metric = 102f }
-                }, Guid.Empty);
+                }, 
+                mapName.ToGuid(),
+                mapName);
             var aStar = new AStar(graph);
 
             var route = aStar.CalculateRoute("Karlsruhe", "Saarbrücken", "Würzburg");

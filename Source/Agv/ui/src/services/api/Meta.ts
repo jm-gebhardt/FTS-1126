@@ -18,7 +18,7 @@ export class Meta<
   /**
    * No description
    *
-   * @tags Utility
+   * @tags Meta
    * @name HubMethodsList
    * @summary Get available SignalR hub methods
    * @request GET:/meta/hubMethods

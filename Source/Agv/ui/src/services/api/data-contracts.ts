@@ -17,27 +17,27 @@ export interface IAgv {
    * CorrelationId
    * @format uuid
    */
-  correlationId?: string
+  correlationId: string
 
   /** AGV Serial Number */
-  agvId?: string | null
+  agvId: string
 
   /** Current State */
-  currentState?: string | null
+  currentState: string
 }
 
 export interface IAgvData {
   /** @format uuid */
-  correlationId?: string
-  model?: string | null
-  type?: string | null
+  correlationId: string
+  model: string
+  type: string
   ipV4Address?: string | null
 
   /** @format double */
-  maxVelocityStraight?: number
+  maxVelocityStraight: number
 
   /** @format double */
-  batteryCapacity?: number
+  batteryCapacity: number
 
   /** @format double */
   length?: number | null
@@ -56,40 +56,40 @@ export interface IAgvData {
 
   /** @format int64 */
   payload?: number | null
-  sensors?: ISensor[] | null
+  sensors: ISensor[]
 }
 
 export interface IAgvGraph {
   /** @format uuid */
-  correlationId?: string
+  correlationId: string
 
   /** @format uuid */
-  relatedMapId?: string
-  relatedMapName?: string | null
-  nodes?: INode[] | null
-  edges?: IEdge[] | null
+  relatedMapId: string
+  relatedMapName: string
+  nodes: INode[]
+  edges: IEdge[]
 }
 
 export interface IAgvStatus {
   /** @format uuid */
-  correlationId?: string
+  correlationId: string
   orderId?: string | null
-  busy?: boolean
-  automatic?: boolean
+  busy: boolean
+  automatic: boolean
 
   /** @format int32 */
-  batteryCharge?: number
-  charging?: boolean
-  disturbed?: boolean
+  batteryCharge: number
+  charging: boolean
+  disturbed: boolean
   lastNodeId?: string | null
 }
 
 export interface IEdge {
-  from?: string | null
-  to?: string | null
+  from: string
+  to: string
 
   /** @format float */
-  metric?: number
+  metric: number
 }
 
 export enum IHostOrderCreator {
@@ -102,22 +102,58 @@ export enum IHostOrderCreator {
  */
 export enum IHubMethods {
   OrderStateChanged = 'OrderStateChanged',
-  AgvStateChanged = 'AgvStateChanged'
+  AgvStateChanged = 'AgvStateChanged',
+  AgvDiscovered = 'AgvDiscovered'
+}
+
+/**
+ * Map Model
+ */
+export interface IMap {
+  /**
+   * Map Correlation Id
+   * @format uuid
+   */
+  correlationId: string
+
+  /** Map Id */
+  mapId: string
+
+  /**
+   * The resolution of the maps image. Expressed as how many [m] per pixel are represented
+   * @format double
+   */
+  resolution: number
+
+  /** List of Agvs using this map */
+  relatedAgvs: string[]
+
+  /**
+   * The x offset of the map in [m] where the mapped graph coordinate system starts. . Origin is the left upper corner.
+   * @format double
+   */
+  xOffset: number
+
+  /**
+   * The y offset of the map in [m] where the mapped graph coordinate system starts. Origin is the left upper corner.
+   * @format double
+   */
+  yOffset: number
 }
 
 export interface INode {
-  id?: string | null
-  enabled?: boolean
-  type?: INodeType
+  id: string
+  enabled: boolean
+  type: INodeType
 
   /** @format float */
-  x?: number
+  x: number
 
   /** @format float */
-  y?: number
+  y: number
 
   /** @format float */
-  z?: number
+  z: number
 }
 
 export enum INodeType {
@@ -135,27 +171,27 @@ This is a simply copy of the Gebhardt.StoreWare.Agv.Common.Messages.AgvManagemen
 <see href="https://github.com/dotnet/runtime/issues/41749" />
 */
 export interface IOrder {
-  currentState?: string | null
+  currentState: string
 
   /** @format uuid */
   assignedAgv?: string | null
-  orderDetails?: IOrderDetails
+  orderDetails: IOrderDetails
 
   /** @format uuid */
-  correlationId?: string
+  correlationId: string
 }
 
 export interface IOrderDetails {
   /** @format uuid */
-  correlationId?: string
-  orderId?: string | null
-  source?: string | null
-  destination?: string | null
-  leNo?: string | null
-  creator?: IHostOrderCreator
+  correlationId: string
+  orderId: string
+  source: string
+  destination: string
+  leNo: string
+  creator: IHostOrderCreator
 
   /** @format date-time */
-  creationDate?: string
+  creationDate: string
 }
 
 export interface ISensor {

@@ -37,7 +37,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
         public async Task GetOrders_Returns_Ok()
         {
             var mockRegistry = new Mock<IAgvRegistry>();
-            mockRegistry.Setup(s => s.GetIdleAgvs()).Returns(new List<IAgv>());
+            mockRegistry.Setup(s => s.GetIdleAgvs()).Returns(new EnumerableQuery<IAgv>(new List<IAgv>()));
             var mockObserver = new Mock<IStateObserver<OrderSaga>>();
             var orderEventObserver = new Mock<IEventObserver<OrderSaga>>();
 

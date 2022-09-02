@@ -1,4 +1,5 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Microsoft.OpenApi.Extensions;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph
@@ -62,6 +63,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph
         private readonly int _gridLength;
         private readonly AgvGraph.NodeType[] _serviceNodeTypes;
 
+        private string RelatedMapName => $"SIM_{GridWidth}x{_gridLength}";
+
         /// <summary>
         /// Generate AgvGraph
         /// </summary>
@@ -78,7 +81,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph
                 correlationId,
                 _otherNodes.Concat(_gridNodes).ToArray(),
                 _edges.ToArray(),
-                Guid.Empty
+                RelatedMapName.ToGuid(),
+                RelatedMapName
             );
         }
 
@@ -193,13 +197,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph
         /// <exception cref="IndexOutOfRangeException"></exception>
         private void AddServiceNode(AgvGraph.NodeType nodeType, int index)
         {
-            // Select grid node left, right, left, right, ...
-            int connectedGridNodeIdx = index % 2 == 0 ? (GridWidth - 1) * index :  GridWidth * (int)Math.Ceiling(index / 2.0) - 1;
-            if (connectedGridNodeIdx >= _gridNodes.Count)
-            {
-                throw new IndexOutOfRangeException($"GridLength is to small to add service node {nodeType} with index {index}");
-            } 
-        
+            int connectedGridNodeIdx = FindConnectedGridNodeIndex(index);
             var gridNode = _gridNodes[connectedGridNodeIdx];
             string nodeId = $"{nodeType.GetDisplayName()}-{index}";
         
@@ -210,6 +208,24 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph
                 Y = gridNode.Y
             });   
             AddEdge(nodeId, gridNode.Id);
+        }
+
+        private int FindConnectedGridNodeIndex(int serviceNodeIndex)
+        {
+            if (serviceNodeIndex == 0)
+            {
+                return 0;
+            }
+            // Select grid node left, right, left, right, ...
+            int connectedGridNodeIdx = serviceNodeIndex % 2 == 0 ? 
+                GridWidth * (serviceNodeIndex - 1) :  
+                GridWidth * (int)Math.Ceiling(serviceNodeIndex / 2.0) - 1;
+            if (connectedGridNodeIdx >= _gridNodes.Count)
+            {
+                throw new IndexOutOfRangeException($"GridLength is to small to add service node with index {serviceNodeIndex}");
+            }
+
+            return connectedGridNodeIdx;
         }
 
         /// <summary>

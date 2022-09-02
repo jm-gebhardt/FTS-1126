@@ -54,7 +54,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Hubs
         /// Test disconnect from client
         /// </summary>
         [TestMethod]
-        public void DisconectClient_NoException()
+        public void DisconnectClient_NoException()
         {
             var mockContext = new Mock<HubCallerContext>();
             var dummyLogger = new DummyLogger();
@@ -69,10 +69,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Hubs
         }
 
         /// <summary>
-        /// Test discinnect from client with exception
+        /// Test disconnect from client with exception
         /// </summary>
         [TestMethod]
-        public void DisconectClient_WithException()
+        public void DisconnectClient_WithException()
         {
             var mockContext = new Mock<HubCallerContext>();
             var dummyLogger = new DummyLogger();
@@ -84,7 +84,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Hubs
 
             var exception = new Exception("Test");
             orderHUb.OnDisconnectedAsync(exception);
-            Assert.AreEqual($"Client disconnected. Connection ID: {connectionId}. Exception: {exception}", dummyLogger.LastMessage);
+            Assert.AreEqual($"Client disconnected. Connection ID: {connectionId}", dummyLogger.LastMessage);
         }
     }
 }

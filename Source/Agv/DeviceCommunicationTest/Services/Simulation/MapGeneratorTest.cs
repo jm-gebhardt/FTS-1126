@@ -1,4 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Map;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -27,6 +28,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
              * |         D1
              * |          |
              *  ------S2--    */
+            
+            const string mapName = "Map#1";
             var graph = new AgvGraph(Guid.Empty,
                 new[]
                 {
@@ -40,7 +43,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
                    new AgvGraph.Edge("S1", "D1") { Metric = 8.944f },   // Just take the distance
                    new AgvGraph.Edge("S2", "D2") { Metric = 10.77f }    // as metric.
                 },
-                Guid.Empty);
+                mapName.ToGuid(),
+                mapName);
             var map = new MapGenerator(graph).Generate();
             Assert.IsTrue(map.Bytes != null);
             Assert.IsTrue(map.Bytes.Length > 0);
@@ -67,6 +71,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
              *            |      D1  |
              *            |          |
              *             ----------    */
+            
+            const string mapName = "Map#1";
             var graph = new AgvGraph(Guid.Empty,
                 new[]
                 {
@@ -77,7 +83,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
                 {
                    new AgvGraph.Edge("S1", "D1") { Metric = 14f }
                 },
-                Guid.Empty);
+                mapName.ToGuid(),
+                mapName);
             var map = new MapGenerator(graph).Generate();
             Assert.IsTrue(map.Bytes != null);
             Assert.IsTrue(map.Bytes.Length > 0);
@@ -93,7 +100,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
         [ExpectedException(typeof(InvalidOperationException))]
         public void GenerateMap_EmptyGraph_Failure()
         {
-            var graph = new AgvGraph(Guid.Empty, Array.Empty<AgvGraph.Node>(), Array.Empty<AgvGraph.Edge>(),  Guid.Empty);
+            var graph = new AgvGraph(Guid.Empty, Array.Empty<AgvGraph.Node>(), Array.Empty<AgvGraph.Edge>(),  Guid.Empty, "");
             var map = new MapGenerator(graph);
             map.Generate();
         }

@@ -185,7 +185,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
 
         private EventActivityBinder<OrderSaga, AgvAssignmentFailed> HostOrderInvalid(EventActivityBinder<OrderSaga, AgvAssignmentFailed> context) =>
             context.Publish(c => new HostOrderHandlingFailed(c.Saga.CorrelationId, c.Saga.OrderDetails.OrderId, HostOrderErrorCode.InvalidOrderData))
-                .Then(c => _logger.LogInformation("Order {OrderId}/{CorrelationId} contains invalid data.", c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId))
+                .Then(c => _logger.LogInformation("Order {OrderId}/{CorrelationId} contains invalid data", c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId))
                 .TransitionTo(OrderFailed);
 
         /// <summary>

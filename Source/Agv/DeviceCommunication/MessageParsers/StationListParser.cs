@@ -130,7 +130,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
                     additionalNodes.AddRange(agvGraph.Nodes);
                     additionalEdges.AddRange(agvGraph.Edges);
 
-                    _agvGraph = new AgvGraph(agvGraph.CorrelationId, additionalNodes.ToArray(), additionalEdges.ToArray(), agvGraph.RelatedMapId);
+                    _agvGraph = new AgvGraph(agvGraph.CorrelationId, additionalNodes.ToArray(), additionalEdges.ToArray(), agvGraph.RelatedMapId, agvGraph.RelatedMapName);
                 }
                 return _agvGraph;
             }

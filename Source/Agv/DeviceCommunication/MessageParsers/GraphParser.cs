@@ -277,7 +277,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
             new(SerialNumber.ToGuid(),
                 Nodes.ToArray(),
                 Edges.ToArray(),
-                _graph.RelatedMapId.ToGuid()
+                _graph.RelatedMapId.ToGuid(),
+                _graph.RelatedMapId
             );
     }
 }

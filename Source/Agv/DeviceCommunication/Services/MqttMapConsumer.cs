@@ -42,11 +42,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
 
             if (context.Message.MapId == null)
             {
-                _logger.LogWarning("Incoming Map cannot be forwarded: MapId is NULL. Message: {msg}", context.Message);
+                _logger.LogError("Incoming Map cannot be forwarded: MapId is NULL. Message: {Message}", context.Message);
             }
             else if (context.Message.Data == null)
             {
-                _logger.LogWarning("Incoming Map cannot be forwarded: PNG string is NULL. Message: {msg}", context.Message);
+                _logger.LogError("Incoming Map cannot be forwarded: PNG string is NULL. Message: {Message}", context.Message);
             } 
             else
             {

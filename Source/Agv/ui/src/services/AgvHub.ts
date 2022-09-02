@@ -18,8 +18,15 @@ export class AgvHub {
     this.client = new HubConnectionBuilder().withUrl(hubUrl + '/agv').build()
 
     // Hub endpoints with respective handlers
-    this.client.on('AgvStateChanged', (message: string) => {
+    this.client.on('AgvStateChanged', async (message: string) => {
       this.onAgvStateChanged(message)
+    })
+    this.client.on('AgvDiscovered', async () => {
+      // When a new agv has been added, we fetch the full list as we do not know an what page it is
+      await this.store.fetchAgvs(
+        this.store.agvs.currentPage,
+        this.store.agvs.pageSize
+      )
     })
   }
 
@@ -27,13 +34,13 @@ export class AgvHub {
    * Updates agv in agv list view
    * @param message JSON ecnoded IOrder object
    */
-  private onAgvStateChanged(message: string): void {
+  private async onAgvStateChanged(message: string): Promise<void> {
     const agv: IAgv = JSON.parse(message)
-    this.store.updateAgvList(agv)
+    await this.store.updateAgv(agv)
   }
 
   /**
-   * Checks if signalr hub is conneced
+   * Checks if signalr hub is connected
    * @returns True if hub is connected, otherwise false
    */
   public isConnected(): boolean {

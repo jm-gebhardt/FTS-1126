@@ -87,7 +87,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Hubs
             }
             else // Disconnect caused by exception
             {
-                _logger.LogWarning("Client disconnected. Connection ID: {ConnectionId}. Exception: {Exception}", Context.ConnectionId, exception);
+                _logger.LogWarning(exception, "Client disconnected. Connection ID: {ConnectionId}", Context.ConnectionId);
             }
 
             return base.OnDisconnectedAsync(exception);

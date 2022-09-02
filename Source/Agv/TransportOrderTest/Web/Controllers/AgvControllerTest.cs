@@ -50,7 +50,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
                 string ip = _ips[i];
                 var correlationId = agvId.ToGuid();
 
-                var agvGraph = new AgvGraph(correlationId, _nodes, _edges, Guid.Empty);
+                const string mapName = "Map#1";
+                var agvGraph = new AgvGraph(correlationId, _nodes, _edges, mapName.ToGuid(), mapName);
                 var agvStatus = new AgvStatus(correlationId, order, true, true, 10, true, true);
                 var agvData = new AgvData(correlationId, "Karis", "BF1", ip, 1.8, 120.0, 0.6, 0.8, 0.7, 1, 2.5, 1000, Array.Empty<AgvData.Sensor>());
 
@@ -59,8 +60,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
 
             registry.SetupGet(x => x.Count).Returns(agvs.Count);
             registry.SetupGet(x => x.CountIdle).Returns(agvs.Where(x => x.CurrentState == nameof(AgvStateMachine.Idle)).Count);
-            registry.Setup(x => x.GetIdleAgvs()).Returns(agvs.Where(x => x.CurrentState == nameof(AgvStateMachine.Idle)));
-            registry.Setup(x => x.GetAllAgvs()).Returns(agvs);
+            registry.Setup(x => x.GetIdleAgvs()).Returns(new EnumerableQuery<IAgv>(agvs.Where(x => x.CurrentState == nameof(AgvStateMachine.Idle))));
+            registry.Setup(x => x.GetAllAgvs()).Returns(new EnumerableQuery<IAgv>(agvs));
             registry.Setup(x => x.GetAgv(It.IsAny<Guid>())).Returns<Guid>(correlationId =>
             {
                 foreach (var agv in agvs)

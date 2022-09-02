@@ -20,7 +20,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
         /// <summary>
         /// The name of the related map (map ID)
         /// </summary>
-        public string? RelatedMapName { get; }
+        public string RelatedMapName { get; }
 
         /// <summary>
         /// The list of nodes in the graph.
@@ -39,12 +39,14 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
         /// <param name="nodes"></param>
         /// <param name="edges"></param>
         /// <param name="relatedMapId"></param>
-        public AgvGraph(Guid correlationId, Node[] nodes, Edge[] edges, Guid relatedMapId)
+        /// <param name="relatedMapName"></param>
+        public AgvGraph(Guid correlationId, Node[] nodes, Edge[] edges, Guid relatedMapId, string relatedMapName)
         {
             CorrelationId = correlationId;
             Nodes = nodes;
             Edges = edges;
             RelatedMapId = relatedMapId;
+            RelatedMapName = relatedMapName;
         }
 
         /// <summary>

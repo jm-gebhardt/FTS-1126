@@ -31,7 +31,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Map
     ///
     /// The outer bounds of the inner area of the image are derived from the min (minXY) and max (maxXY) coordinates of the nodes (o).
     /// The outer area is extended for a fixed value in each direction (see <see cref="MapGenerator.WallDistance"/>).
-    /// The resolution therefore is r = totalwidth[m] / ImageWidth
+    /// The resolution therefore is r = totalWidth[m] / ImageWidth
     /// The offset is the distance [m] from the left an upper wall to the origin (0/0).
     /// </para></summary>
     public class MapGenerator
@@ -105,10 +105,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Map
         private const float WallDistance = 3f;
 
         /// <summary>
-        /// Fixed value for wall thicknes.
+        /// Fixed value for wall thickness.
         /// </summary>
         private const float WallThickness = 0.24f;
-
 
         /// <summary>
         /// Initial graph passed by constructor for which the image will be created.
@@ -189,16 +188,17 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Map
                 var bounds = new SKRect();
                 using (var paint = new SKPaint())
                 {
-                    paint.Color = SKColors.Red;
-                    paint.TextSize = 36;    // Just an inital value for getting a base to calculate the final font size value.
+                    paint.Color = SKColors.LightGray;
+                    paint.TextSize = 36;    // Just an initial value for getting a base to calculate the final font size value.
+                    paint.IsAntialias = true;
                     paint.TextAlign = SKTextAlign.Right;
                     paint.MeasureText(Signature, ref bounds);
                     if (bounds.Height > 0)
                     {
-                        float ratio = wallThicknessPx / bounds.Height;
+                        float ratio = wallThicknessPx * 1.5f / bounds.Height;
                         paint.TextSize = ratio * paint.TextSize;
                     }
-                    canvas.DrawText(Signature, ImageWidth - wallThicknessPx, imageHeightPx - (int)(0.5 * wallThicknessPx + 0.5), paint);
+                    canvas.DrawText(Signature, ImageWidth - 2 * wallThicknessPx, imageHeightPx - (int)(2.0 * wallThicknessPx + 0.5), paint);
                 }
 
                 using (var image = surface.Snapshot())

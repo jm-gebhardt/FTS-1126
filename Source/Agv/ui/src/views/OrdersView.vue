@@ -10,7 +10,7 @@
     >
   </div>
   <order-list
-    :orders="orders"
+    :orders="data"
     :model-value="currentPage"
     :total="totalCount"
     :page-size="pageSizes"
@@ -31,7 +31,7 @@ import { OrderHub } from '@/services/OrderHub'
 
 const orderHub = new OrderHub()
 
-const { orders, currentPage, totalCount, loading, error } = storeToRefs(
+const { data, currentPage, totalCount, loading, error } = storeToRefs(
   useOrderStore()
 )
 const { fetchOrders } = useOrderStore()

@@ -29,7 +29,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
         public async Task Consume(ConsumeContext<RequestAgvMap> context)
         {
             await context.Publish(new MqttRequestMap(context.Message.AgvId, context.Message.CorrelationId));
-            _logger.LogInformation("Requesting map {mapId}/{mapCorrelationId} for AGV {agvId}/{CorrelationId}", 
+            _logger.LogInformation("Requesting map {MapId}/{MapCorrelationId} for AGV {AgvId}/{CorrelationId}", 
                 context.Message.MapId, context.Message.MapCorrelationId, context.Message.AgvId, context.Message.CorrelationId);
         }
     }

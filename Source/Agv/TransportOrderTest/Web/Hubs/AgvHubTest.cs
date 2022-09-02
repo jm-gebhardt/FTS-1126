@@ -43,7 +43,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Hubs
             var agvHub = new AgvHub(dummyLogger);
             agvHub.Context = mockContext.Object;
 
-            string connectionId = "1337";
+            const string connectionId = "1337";
             mockContext.Setup(c => c.ConnectionId).Returns(connectionId);
 
             agvHub.OnConnectedAsync();
@@ -54,14 +54,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Hubs
         /// Test disconnect from client
         /// </summary>
         [TestMethod]
-        public void DisconectClient_NoException()
+        public void DisconnectClient_NoException()
         {
             var mockContext = new Mock<HubCallerContext>();
             var dummyLogger = new DummyLogger();
             var agvHub = new AgvHub(dummyLogger);
             agvHub.Context = mockContext.Object;
 
-            string connectionId = "1337";
+            const string connectionId = "1337";
             mockContext.Setup(c => c.ConnectionId).Returns(connectionId);
 
             agvHub.OnDisconnectedAsync(null);
@@ -69,22 +69,22 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Hubs
         }
 
         /// <summary>
-        /// Test discinnect from client with exception
+        /// Test disconnect from client with exception
         /// </summary>
         [TestMethod]
-        public void DisconectClient_WithException()
+        public void DisconnectClient_WithException()
         {
             var mockContext = new Mock<HubCallerContext>();
             var dummyLogger = new DummyLogger();
             var agvHub = new AgvHub(dummyLogger);
             agvHub.Context = mockContext.Object;
 
-            string connectionId = "1337";
+            const string connectionId = "1337";
             mockContext.Setup(c => c.ConnectionId).Returns(connectionId);
 
             var exception = new Exception("Test");
             agvHub.OnDisconnectedAsync(exception);
-            Assert.AreEqual($"Client disconnected. Connection ID: {connectionId}. Exception: {exception}", dummyLogger.LastMessage);
+            Assert.AreEqual($"Client disconnected. Connection ID: {connectionId}", dummyLogger.LastMessage);
         }
     }
 }

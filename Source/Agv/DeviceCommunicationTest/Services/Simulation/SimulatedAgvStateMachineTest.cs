@@ -59,13 +59,17 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
                 inMemoryConfiguration: (_, cfg) => cfg.UseDelayedMessageScheduler()
             );
             const string agvId = "Agv#1";
+            const string mapName = "Map#1";
             var correlationId = agvId.ToGuid();
             var graph = new AgvGraph(correlationId,
                 new[]
                 {
                     new AgvGraph.Node("S1") { Enabled = true, Type = AgvGraph.NodeType.Station, X =  0f, Y = 0f, Z = 0f }
                 },
-                Array.Empty<AgvGraph.Edge>(), Guid.Empty);
+                Array.Empty<AgvGraph.Edge>(), 
+                mapName.ToGuid(),
+                mapName
+            );
             var agv = new Agv(correlationId, agvId , "", null, graph, null);
             var map = new MapGenerator(agv.AgvGraph!);
             await fixture.TestHarness.Bus.Publish(new SimulatedAgvStateMachine.CreateAgv(correlationId, agv, map.Generate()));

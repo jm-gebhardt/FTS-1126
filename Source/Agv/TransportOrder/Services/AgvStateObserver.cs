@@ -1,4 +1,4 @@
-﻿using MassTransit;
+using MassTransit;
 using Gebhardt.StoreWare.Agv.TransportOrder.States;
 using Gebhardt.StoreWare.Agv.TransportOrder.Web.Hubs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Web;
@@ -25,7 +25,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// </summary>
         public async Task StateChanged(BehaviorContext<AgvSaga> context, State currentState, State previousState)
         {
-            await _agvHubContext.SendAgvToAllClients(nameof(Defines.HubMethods.AgvStateChanged), context.Saga, context.CancellationToken);
+            if (Equals(currentState, context.StateMachine.Initial))
+            {
+                await _agvHubContext.SendAgvToAllClients(nameof(Defines.HubMethods.AgvDiscovered), context.Saga, context.CancellationToken);
+            }
+            else
+            {
+                await _agvHubContext.SendAgvToAllClients(nameof(Defines.HubMethods.AgvStateChanged), context.Saga, context.CancellationToken);
+            }
         }
     }
 }

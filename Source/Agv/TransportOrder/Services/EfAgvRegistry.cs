@@ -37,20 +37,17 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         }
 
         /// <inheritdoc/>
-        public IEnumerable<IAgv> GetAllAgvs()
+        public IQueryable<IAgv> GetAllAgvs()
         {
             return AgvSagas
-                .Cast<IAgv>()
-                .AsEnumerable();
+                .Cast<IAgv>();
         }
 
         /// <inheritdoc/>
-        public IEnumerable<IAgv> GetIdleAgvs()
+        public IQueryable<IAgv> GetIdleAgvs()
         {
-            return AgvSagas.
-                Where(x => x.CurrentState == nameof(AgvStateMachine.Idle))
-                .Cast<IAgv>()
-                .AsEnumerable();
+            return AgvSagas.Where(x => x.CurrentState == nameof(AgvStateMachine.Idle))
+                .Cast<IAgv>();
         }
 
         /// <inheritdoc/>

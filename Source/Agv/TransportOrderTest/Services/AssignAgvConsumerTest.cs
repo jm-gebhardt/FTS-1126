@@ -62,6 +62,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         [ClassInitialize]
         public static void ClassInitialize(TestContext context)
         {
+            const string mapName = "Map#1";
             _graph = new AgvGraph(Guid.Empty,
                 new[]
                 {
@@ -72,7 +73,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                 {
                    new AgvGraph.Edge(_sources[0], _destinations[0]) { Metric = 1f }
                 },
-                Guid.Empty);
+                mapName.ToGuid(),
+                mapName);
         }
 
         /// <summary>
@@ -91,7 +93,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         {
             var mockAgvRegistry = new Mock<IAgvRegistry>();
             Mock<IOrderRegistry> mockOrderRegistry = GetOrderRegistry();
-            mockAgvRegistry.Setup(s => s.GetIdleAgvs()).Returns(new List<IAgv>());
+            mockAgvRegistry.Setup(s => s.GetIdleAgvs()).Returns(new EnumerableQuery<IAgv>(new List<IAgv>()));
             var fixture = new MassTransitTestFixture<AssignAgvConsumer>(
                 services: s =>
                 {
@@ -123,10 +125,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             var agvCorrelationId = agvId.ToGuid();
             var mockAgvRegistry = new Mock<IAgvRegistry>();
             Mock<IOrderRegistry> mockOrderRegistry = GetOrderRegistry();
-            mockAgvRegistry.Setup(s => s.GetIdleAgvs()).Returns(new List<IAgv>
+            mockAgvRegistry.Setup(s => s.GetIdleAgvs()).Returns(new EnumerableQuery<IAgv>(new List<IAgv>
             {
                 new AgvSaga(agvCorrelationId, agvId, nameof(AgvStateMachine.Idle), agvGraph: _graph)
-            });
+            }));
 
             var fixture = new MassTransitTestFixture<AssignAgvConsumer>(
                 services: s =>
@@ -165,10 +167,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             var agvCorrelationId = agvId.ToGuid();
             var mockAgvRegistry = new Mock<IAgvRegistry>();
             Mock<IOrderRegistry> mockOrderRegistry = GetOrderRegistry();
-            mockAgvRegistry.Setup(s => s.GetIdleAgvs()).Returns(new List<IAgv>
+            mockAgvRegistry.Setup(s => s.GetIdleAgvs()).Returns(new EnumerableQuery<IAgv>(new List<IAgv>
             {
                 new AgvSaga(agvCorrelationId, agvId, nameof(AgvStateMachine.Idle), agvGraph: _graph)
-            });
+            }));
 
             var fixture = new MassTransitTestFixture<AssignAgvConsumer>(
                 services: s =>
@@ -205,6 +207,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             const string node02 = "node02";
             const string node03 = "node03";
             const string node04 = "node04";
+            const string mapName = "Map#1";
             var agvGraph = new AgvGraph(Guid.Empty,
                 new[]
             {
@@ -225,7 +228,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                 new AgvGraph.Edge(node04, node02){ Metric = 6f},
                 new AgvGraph.Edge(node04, node03){ Metric = 4f}
             },
-                Guid.Empty);
+                mapName.ToGuid(),
+                mapName);
 
             const string agvId = "AGV_01";
             var closestAgvCorrelationId = agvId.ToGuid();
@@ -237,12 +241,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             var mockAgvRegistry = new Mock<IAgvRegistry>();
             Mock<IOrderRegistry> mockOrderRegistry = GetOrderRegistry();
             mockAgvRegistry.Setup(mReg => mReg.GetIdleAgvs()).Returns(
-                new List<IAgv>
-                {
-                    new AgvSaga(closestAgvCorrelationId, agvId, nameof(AgvStateMachine.Idle), agvGraph: agvGraph, agvStatus: agvStatus1),
-                    new AgvSaga(agvCorrelationId2, agvId2, nameof(AgvStateMachine.Idle), agvGraph: agvGraph, agvStatus: agvStatus2)
-                }
-            );
+                new EnumerableQuery<IAgv>(
+                    new List<IAgv>
+                    {
+                        new AgvSaga(closestAgvCorrelationId, agvId, nameof(AgvStateMachine.Idle), agvGraph: agvGraph, agvStatus: agvStatus1),
+                        new AgvSaga(agvCorrelationId2, agvId2, nameof(AgvStateMachine.Idle), agvGraph: agvGraph, agvStatus: agvStatus2)
+                    }
+            ));
 
             const string orderId = "order123";
             const string source = node02;
@@ -394,6 +399,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             var registry = new Mock<IAgvRegistry>();
 
             var agvs = new List<IAgv>();
+            const string mapName = "Map#1";
 
             // Arrange
             string node01 = _sources[0];
@@ -425,7 +431,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                     new AgvGraph.Edge(node04, node03){ Metric = 4f}
                     //no edges for node 5 and 6 on purpose so that there is no route to this stations
                 },
-                Guid.Empty);
+                mapName.ToGuid(),
+                mapName);
 
             for (int i = 0; i < _agvIds.Length; i++)
             {
@@ -443,8 +450,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 
             registry.SetupGet(x => x.Count).Returns(agvs.Count);
             registry.SetupGet(x => x.CountIdle).Returns(agvs.Where(x => x.CurrentState == nameof(AgvStateMachine.Idle)).Count);
-            registry.Setup(x => x.GetIdleAgvs()).Returns(agvs.Where(x => x.CurrentState == nameof(AgvStateMachine.Idle)));
-            registry.Setup(x => x.GetAllAgvs()).Returns(agvs);
+            registry.Setup(x => x.GetIdleAgvs()).Returns( new EnumerableQuery<IAgv>(agvs.Where(x => x.CurrentState == nameof(AgvStateMachine.Idle))));
+            registry.Setup(x => x.GetAllAgvs()).Returns(new EnumerableQuery<IAgv>(agvs));
             registry.Setup(x => x.GetAgv(It.IsAny<Guid>())).Returns<Guid>(correlationId =>
             {
                 foreach (var agv in agvs)

@@ -18,7 +18,12 @@
             /// <summary>
             /// Hub method for agv state changed event
             /// </summary>
-            AgvStateChanged
+            AgvStateChanged,
+            
+            /// <summary>
+            /// New AGV was discovered
+            /// </summary>
+            AgvDiscovered
         }
     }
 }

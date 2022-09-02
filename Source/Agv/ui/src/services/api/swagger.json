@@ -196,6 +196,109 @@
         }
       }
     },
+    "/maps": {
+      "get": {
+        "tags": [
+          "Map"
+        ],
+        "summary": "Get all available maps",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Map"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Map"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Map"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/maps/{correlationId}/map.png": {
+      "get": {
+        "tags": [
+          "Map"
+        ],
+        "summary": "Get Map Image",
+        "parameters": [
+          {
+            "name": "correlationId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/meta/hubMethods": {
+      "get": {
+        "tags": [
+          "Meta"
+        ],
+        "summary": "Get available SignalR hub methods",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HubMethods"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HubMethods"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HubMethods"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/orders": {
       "get": {
         "tags": [
@@ -256,50 +359,16 @@
           }
         }
       }
-    },
-    "/meta/hubMethods": {
-      "get": {
-        "tags": [
-          "Utility"
-        ],
-        "summary": "Get available SignalR hub methods",
-        "responses": {
-          "200": {
-            "description": "Ok",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/HubMethods"
-                  }
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/HubMethods"
-                  }
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/HubMethods"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
     }
   },
   "components": {
     "schemas": {
       "Agv": {
+        "required": [
+          "agvId",
+          "correlationId",
+          "currentState"
+        ],
         "type": "object",
         "properties": {
           "correlationId": {
@@ -309,19 +378,25 @@
           },
           "agvId": {
             "type": "string",
-            "description": "AGV Serial Number",
-            "nullable": true
+            "description": "AGV Serial Number"
           },
           "currentState": {
             "type": "string",
-            "description": "Current State",
-            "nullable": true
+            "description": "Current State"
           }
         },
         "additionalProperties": false,
         "description": "Controller for host order data"
       },
       "AgvData": {
+        "required": [
+          "batteryCapacity",
+          "correlationId",
+          "maxVelocityStraight",
+          "model",
+          "sensors",
+          "type"
+        ],
         "type": "object",
         "properties": {
           "correlationId": {
@@ -329,12 +404,10 @@
             "format": "uuid"
           },
           "model": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "type": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "ipV4Address": {
             "type": "string",
@@ -382,13 +455,19 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Sensor"
-            },
-            "nullable": true
+            }
           }
         },
         "additionalProperties": false
       },
       "AgvGraph": {
+        "required": [
+          "correlationId",
+          "edges",
+          "nodes",
+          "relatedMapId",
+          "relatedMapName"
+        ],
         "type": "object",
         "properties": {
           "correlationId": {
@@ -400,28 +479,32 @@
             "format": "uuid"
           },
           "relatedMapName": {
-            "type": "string",
-            "nullable": true,
-            "readOnly": true
+            "type": "string"
           },
           "nodes": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Node"
-            },
-            "nullable": true
+            }
           },
           "edges": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Edge"
-            },
-            "nullable": true
+            }
           }
         },
         "additionalProperties": false
       },
       "AgvStatus": {
+        "required": [
+          "automatic",
+          "batteryCharge",
+          "busy",
+          "charging",
+          "correlationId",
+          "disturbed"
+        ],
         "type": "object",
         "properties": {
           "correlationId": {
@@ -456,15 +539,18 @@
         "additionalProperties": false
       },
       "Edge": {
+        "required": [
+          "from",
+          "metric",
+          "to"
+        ],
         "type": "object",
         "properties": {
           "from": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "to": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "metric": {
             "type": "number",
@@ -483,23 +569,82 @@
       "HubMethods": {
         "enum": [
           "OrderStateChanged",
-          "AgvStateChanged"
+          "AgvStateChanged",
+          "AgvDiscovered"
         ],
         "type": "string",
         "description": "SignalR hub methods"
       },
+      "Map": {
+        "required": [
+          "correlationId",
+          "mapId",
+          "relatedAgvs",
+          "resolution",
+          "xOffset",
+          "yOffset"
+        ],
+        "type": "object",
+        "properties": {
+          "correlationId": {
+            "type": "string",
+            "description": "Map Correlation Id",
+            "format": "uuid"
+          },
+          "mapId": {
+            "type": "string",
+            "description": "Map Id"
+          },
+          "resolution": {
+            "type": "number",
+            "description": "The resolution of the maps image. Expressed as how many [m] per pixel are represented",
+            "format": "double"
+          },
+          "relatedAgvs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "List of Agvs using this map"
+          },
+          "xOffset": {
+            "type": "number",
+            "description": "The x offset of the map in [m] where the mapped graph coordinate system starts. . Origin is the left upper corner.",
+            "format": "double"
+          },
+          "yOffset": {
+            "type": "number",
+            "description": "The y offset of the map in [m] where the mapped graph coordinate system starts. Origin is the left upper corner.",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Map Model"
+      },
       "Node": {
+        "required": [
+          "enabled",
+          "id",
+          "type",
+          "x",
+          "y",
+          "z"
+        ],
         "type": "object",
         "properties": {
           "id": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "enabled": {
             "type": "boolean"
           },
           "type": {
-            "$ref": "#/components/schemas/NodeType"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/NodeType"
+              }
+            ]
           },
           "x": {
             "type": "number",
@@ -527,11 +672,15 @@
         "type": "string"
       },
       "Order": {
+        "required": [
+          "correlationId",
+          "currentState",
+          "orderDetails"
+        ],
         "type": "object",
         "properties": {
           "currentState": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "assignedAgv": {
             "type": "string",
@@ -539,7 +688,11 @@
             "nullable": true
           },
           "orderDetails": {
-            "$ref": "#/components/schemas/OrderDetails"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OrderDetails"
+              }
+            ]
           },
           "correlationId": {
             "type": "string",
@@ -550,6 +703,15 @@
         "description": "Order Model\r\n            \r\nThis is a simply copy of the Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.IOrder to overcome a json serialization problems\r\n<see href=\"https://github.com/dotnet/runtime/issues/41749\" />"
       },
       "OrderDetails": {
+        "required": [
+          "correlationId",
+          "creationDate",
+          "creator",
+          "destination",
+          "leNo",
+          "orderId",
+          "source"
+        ],
         "type": "object",
         "properties": {
           "correlationId": {
@@ -557,23 +719,23 @@
             "format": "uuid"
           },
           "orderId": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "source": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "destination": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "leNo": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "creator": {
-            "$ref": "#/components/schemas/HostOrderCreator"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HostOrderCreator"
+              }
+            ]
           },
           "creationDate": {
             "type": "string",
