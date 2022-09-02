@@ -36,22 +36,16 @@ try
                     services.AddTransient<IOrderRegistry, EfOrderRegistry>();
                     services.AddTransient<IMapRegistry, EfMapRegistry>();
                     services.AddTransient<IOrderAuditRegistry, EfOrderAuditRegistry>();
-                    services.AddScoped<IOrderHubContext>(provider =>
+                    services.AddTransient<IOrderHubContext>(provider =>
                     {
                         var hubContext = provider.GetRequiredService<IHubContext<OrderHub>>();
                         return new OrderHubContext(hubContext);
                     });
-                    services.AddScoped<IAgvHubContext>(provider =>
+                    services.AddTransient<IAgvHubContext>(provider =>
                     {
                         var hubContext = provider.GetRequiredService<IHubContext<AgvHub>>();
                         return new AgvHubContext(hubContext);
                     });
-                    
-                    // HubContexts also need to be added
-                    // Otherwise scoped service cannot be consumed and validated
-                    // Meaning that new migrations may not be applied
-                    services.AddTransient<IOrderHubContext, OrderHubContext>(); 
-                    services.AddTransient<IAgvHubContext, AgvHubContext>();
 
                     services.AddSingleton<IStateObserver<OrderSaga>, OrderStateObserver>();
                     services.AddSingleton<IStateObserver<AgvSaga>, AgvStateObserver>();
