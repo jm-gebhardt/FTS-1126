@@ -60,7 +60,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
                 _bus.Publish(new SimulatedAgvStateMachine.CreateAgv(
                     agv.CorrelationId,
                     agv,
-                    map.Generate()
+                    map.Generate(),
+                    _simulateOptions.NodeTravelTime
                 ));
             }
         }

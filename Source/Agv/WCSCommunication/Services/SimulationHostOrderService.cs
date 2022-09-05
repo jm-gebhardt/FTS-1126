@@ -39,7 +39,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
 
             _simSources = simulationOptions.Sources != null ? simulationOptions.Sources.ToArray() : Array.Empty<string>();
             _simDestinations = simulationOptions.Destinations != null ? simulationOptions.Destinations.ToArray() : Array.Empty<string>();
-            PollingInterval = simulationOptions.Interval * 1000;  // simulation options is specified in seconds
+            PollingInterval = simulationOptions.Interval;  // simulation options is specified in milliseconds
         }
 
         /// <summary>

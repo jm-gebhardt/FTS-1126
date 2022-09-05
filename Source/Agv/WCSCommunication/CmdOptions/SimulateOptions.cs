@@ -13,7 +13,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.CmdOptions
         /// Interval for creating simulated HostOrders
         /// </summary>
         [UsedImplicitly]
-        [Option('i', "interval", HelpText = "Interval for creating simulated HostOrder", Default = 1, Required = true)]
+        [Option('i', "interval", HelpText = "Interval for creating simulated HostOrder in [ms]", Default = 10000, Required = true)]
         public int Interval { get; init; }
 
         /// <summary>

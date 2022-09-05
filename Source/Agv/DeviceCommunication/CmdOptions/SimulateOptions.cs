@@ -28,9 +28,17 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions
 
         /// <summary>
         /// List of simulation destinations
-        /// </summary>
+        /// </summary>  
         [JetBrains.Annotations.UsedImplicitly]
         [Option('d', "destinations", HelpText = "List of simulation destinations", Required = true, Min = 1, Separator = ',')]
         public IEnumerable<string>? Destinations { get; init; }
+
+        /// <summary>
+        /// Node travel time of the agv in [ms]
+        /// </summary>
+        [JetBrains.Annotations.UsedImplicitly]
+        // ReSharper disable once StringLiteralTypo
+        [Option('n', "nodetraveltime", HelpText = "The travel time for the simulated AGV from one node to another in [ms]", Default=5000)]
+        public int NodeTravelTime { get; init; }
     }
 }

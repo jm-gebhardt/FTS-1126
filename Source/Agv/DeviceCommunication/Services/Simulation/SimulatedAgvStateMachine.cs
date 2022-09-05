@@ -3,6 +3,7 @@ using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Events;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.States;
 using MassTransit;
 using Microsoft.Extensions.Logging;
@@ -21,7 +22,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
         /// <param name="CorrelationId"></param>
         /// <param name="Agv"></param>
         /// <param name="Map"></param>
-        public record CreateAgv(Guid CorrelationId, IAgv Agv, Map.MapGenerator.MapPng Map) : CorrelatedBy<Guid>;
+        /// <param name="NodeTravelTime"></param>
+        public record CreateAgv(Guid CorrelationId, IAgv Agv, Map.MapGenerator.MapPng Map, int NodeTravelTime) : CorrelatedBy<Guid>;
 
         /// <summary>
         /// Internal message to schedule sending status update
@@ -103,15 +105,18 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
         public const int SendStatusTimeout = 30;
         
         private readonly ILogger<SimulatedAgvStateMachine> _logger;
+        private readonly SimulateOptions _simulateOptions;
 
         /// <summary>
         /// SimulatedAgvStateMachine Constructor
         /// </summary>
         /// <param name="logger"></param>
-        public SimulatedAgvStateMachine(ILogger<SimulatedAgvStateMachine> logger)
+        /// <param name="simulateOptions"></param>
+        public SimulatedAgvStateMachine(ILogger<SimulatedAgvStateMachine> logger, SimulateOptions simulateOptions)
         {
             _logger = logger;
-
+            _simulateOptions = simulateOptions;
+            _logger.LogInformation("Initialized SimulatedAgvStateMachine with node travel time {NodetravelTime}", _simulateOptions.NodeTravelTime);
             SetSagaFactory();
             SetScheduler();
             InstanceState(x => x.CurrentState);
@@ -160,7 +165,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
         private void SetSagaFactory()
         {
             Event(() => CreateAgvEvent, e =>
-                e.SetSagaFactory(context => new SimulatedAgvSaga(context.Message.Agv, context.Message.Map))
+                e.SetSagaFactory(context => new SimulatedAgvSaga(context.Message.Agv, context.Message.Map, context.Message.NodeTravelTime))
             );
         }
 

@@ -1,6 +1,7 @@
 using Gebhardt.StoreWare.Agv.Common.Messages;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Map;
 using MassTransit;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
@@ -62,7 +63,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         /// <summary>
         /// Returns the map according to <see cref="AgvGraph"/>.
         /// </summary>
-        public Services.Simulation.Map.MapGenerator.MapPng? AgvMap { get; }
+        public MapGenerator.MapPng? AgvMap { get; }
 
         /// <summary>
         /// The current order being processed, null if currently no order is being processed
@@ -90,9 +91,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         public string[] Nodes { get; set; }
 
         /// <summary>
-        /// Time it takes to travel from one node to another in seconds
+        /// Time it takes to travel from one node to another in milliseconds
         /// </summary>
-        public double NodeTravelTime = 5;
+        public int NodeTravelTime { get; set; }
 
         /// <summary>
         /// The last visited Node of the AGV
@@ -112,7 +113,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         /// <summary>
         /// Time the order takes to complete
         /// </summary>
-        public TimeSpan? OrderDuration => TimeSpan.FromSeconds(Nodes.Length * NodeTravelTime);
+        public TimeSpan? OrderDuration => TimeSpan.FromMilliseconds(Nodes.Length * NodeTravelTime);
 
         /// <summary>
         /// Time the order processing started
@@ -142,7 +143,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         /// Time the order will be picked up
         /// </summary>
         public DateTime? OrderPickDate => OrderFinishDate != null && OrderDetails != null 
-            ? OrderStartDate + TimeSpan.FromSeconds(Array.IndexOf(Nodes, OrderDetails!.Source) * NodeTravelTime) 
+            ? OrderStartDate + TimeSpan.FromMilliseconds(Array.IndexOf(Nodes, OrderDetails!.Source) * NodeTravelTime) 
             : null;
 
         /// <summary>
@@ -150,6 +151,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         /// </summary>
         /// <param name="correlationId"></param>
         /// <param name="agvId"></param>
+        /// <param name="nodeTravelTime"></param>
         /// <param name="nodes"></param>
         /// <param name="currentState"></param>
         /// <param name="agvGraph"></param>
@@ -158,11 +160,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         public SimulatedAgvSaga(
             Guid correlationId,
             string agvId,
+            int nodeTravelTime,
             string[]? nodes = null,
             string? currentState = null,
             AgvGraph? agvGraph = null,
             AgvData? agvData = null,
-            Services.Simulation.Map.MapGenerator.MapPng? agvMap = null)
+            MapGenerator.MapPng? agvMap = null)
         {
             if (correlationId == Guid.Empty)
             {
@@ -170,6 +173,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
             }
             CorrelationId = correlationId;
             AgvId = agvId;
+            NodeTravelTime = nodeTravelTime;
             Nodes = nodes ?? Array.Empty<string>();
             CurrentState = currentState ?? "";
             AgvGraph = agvGraph;
@@ -183,7 +187,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         /// </summary>
         /// <param name="agv"></param>
         /// <param name="agvMap"></param>
-        public SimulatedAgvSaga(IAgv agv, Services.Simulation.Map.MapGenerator.MapPng agvMap)
+        /// <param name="nodeTravelTime"></param>
+        public SimulatedAgvSaga(IAgv agv, MapGenerator.MapPng agvMap, int nodeTravelTime)
         {
             CorrelationId = agv.CorrelationId;
             AgvId = agv.AgvId;
@@ -193,6 +198,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
             Nodes = Array.Empty<string>();
             AgvMap = agvMap;
             AgvMapModificationDate = DateTime.Now;
+            NodeTravelTime = nodeTravelTime;
         }
 
         /// <summary>
