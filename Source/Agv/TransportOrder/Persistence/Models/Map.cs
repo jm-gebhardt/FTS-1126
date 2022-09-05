@@ -1,6 +1,7 @@
 ﻿using JetBrains.Annotations;
 using MassTransit;
 
+// ReSharper disable ConvertToPrimaryConstructor
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Models
 {
     /// <summary>

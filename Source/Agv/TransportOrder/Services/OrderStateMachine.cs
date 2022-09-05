@@ -176,7 +176,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
                     _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId}, {Error}",
                         nameof(AgvAssignmentFailed), c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId, c.Message.Error)
                 )
-                .Then(c => c.Saga.FailedReason =  $"{nameof(AgvAssignmentErrorCode)}.{c.Message.Error}")
+                .Then(c => c.Saga.FailedReason = $"{nameof(AgvAssignmentErrorCode)}.{c.Message.Error}")
                 .IfElse(c => c.Message.Error == AgvAssignmentErrorCode.NoIdleAgv,
                     c => c
                         .TransitionTo(OrderReceived),

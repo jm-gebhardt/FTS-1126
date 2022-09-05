@@ -178,7 +178,8 @@ export interface IOrder {
   orderDetails: IOrderDetails
 
   /** @format uuid */
-  correlationId: string
+  correlationId?: string
+  failedReason?: string | null
 }
 
 export interface IOrderDetails {

@@ -14,31 +14,19 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.States
     public class OrderSaga :
         SagaStateMachineInstance, IOrder
     {
-
-        /// <summary>
-        /// Current State
-        /// </summary>
+        /// <inheritdoc/>
         public string CurrentState { get; set; } = default!;
 
-        /// <summary>
-        /// CorrelationId
-        /// <see href="https://masstransit-project.com//usage/correlation.html" />
-        /// </summary>
+        /// <inheritdoc cref="CorrelatedBy&lt;T>" />
         public Guid CorrelationId { get; set; }
-        
-        /// <summary>
-        /// AgvId
-        /// </summary>
+
+        /// <inheritdoc/>
         public Guid? AssignedAgv { get; set; }
 
-        /// <summary>
-        /// The order details of this saga
-        /// </summary>
+        /// <inheritdoc/>
         public OrderDetails OrderDetails { get; set; } = null!;
 
-        /// <summary>
-        /// The reason why an order failed
-        /// </summary>
+        /// <inheritdoc/>
         public string? FailedReason { get; set; }
 
         /// <summary>

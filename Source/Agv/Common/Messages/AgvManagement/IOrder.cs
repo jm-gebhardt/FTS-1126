@@ -23,5 +23,10 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
         /// The order details
         /// </summary>
         public OrderDetails OrderDetails { get; }
+
+        /// <summary>
+        /// Reason why an order failed
+        /// </summary>
+        public string? FailedReason { get; set; }
     }
 }

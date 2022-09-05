@@ -1,5 +1,6 @@
 using MassTransit;
 
+// ReSharper disable ConvertToPrimaryConstructor
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Models
 {
     /// <summary>

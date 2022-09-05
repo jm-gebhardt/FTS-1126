@@ -694,10 +694,14 @@
               }
             ]
           },
-          "correlationId": {
+            "correlationId": {
+                "type": "string",
+                "format": "uuid"
+            },
+          "failedReason": {
             "type": "string",
-            "format": "uuid"
-          }
+            "nullable":  true 
+          } 
         },
         "additionalProperties": false,
         "description": "Order Model\r\n            \r\nThis is a simply copy of the Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.IOrder to overcome a json serialization problems\r\n<see href=\"https://github.com/dotnet/runtime/issues/41749\" />"

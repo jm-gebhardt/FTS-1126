@@ -38,7 +38,8 @@ const thead = [
   'Source',
   'Destination',
   'creationDate',
-  'Assigned Agv'
+  'Assigned Agv',
+  'Failed Reason'
 ]
 const tbody = [
   'correlationId',
@@ -60,11 +61,15 @@ const tbody = [
       order.orderDetails?.destination
   },
   {
-    field: 'destination',
+    field: 'creationDate',
     fn: (order: IOrder): string | null | undefined =>
       order.orderDetails?.creationDate
   },
-  'assignedAgv'
+  'assignedAgv',
+  {
+    field: 'Failed Reason',
+    fn: (order: IOrder): string | null | undefined => order.failedReason
+  }
 ]
 
 function OrderStatusIcon(status: string | null | undefined): string {
