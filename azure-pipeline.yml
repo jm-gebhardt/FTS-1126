@@ -10,14 +10,17 @@ variables:
   # Required denominations
   # - CopiedFolderPath
   # - IsSimulationRequested
-- group: BuildAgentSim              
+- group: BuildAgentSim
 
 stages:
+  ################################################
+  # Build
+  ################################################
 - stage: Build
   jobs:
   ################################################
-  # ReSharper
-  ################################################
+  # Code Analysis
+  ################################################  
   - job: CodeAnalysis
     pool:
       vmImage: windows-latest 
@@ -51,7 +54,7 @@ stages:
       vmImage: windows-latest
     steps:
       - task: Npm@1
-        displayName: Install
+        displayName: 'Install node modules'
         inputs:
           workingDir: '$(SourceDirectory)/ui'
           command: install
@@ -67,10 +70,10 @@ stages:
           workingDir: '$(SourceDirectory)/ui'
           command: custom
           customCommand: run lint:check
-    ################################################
-  # Run Tests and Coverage
+  ################################################
+  # Run Unit Tests
   ################################################  
-  - job: UnitTests_and_Coverage
+  - job: UnitTests
     pool:
       vmImage: windows-latest
     steps:
@@ -94,9 +97,56 @@ stages:
           projects: '$(SourceDirectory)/**/*[Tt]est*/*.csproj'
           publishTestResults: true
           arguments: '--configuration $(BuildConfiguration) --collect:"XPlat Code Coverage" --settings=coverlet.runsettings'
+      - task: CopyFiles@2
+        displayName: 'Copy coverage report'
+        inputs:
+          SourceFolder: '$(Agent.TempDirectory)'
+          contents: '**/coverage.cobertura.xml'
+          targetFolder: '$(Build.ArtifactStagingDirectory)'
+      - publish: '$(Build.ArtifactStagingDirectory)'
+        displayName: 'Publish coverage report'
+        artifact: coverageReports
+  - job: WebUiUnitTests
+    pool:
+      vmImage: windows-latest
+    steps:
+    - task: Npm@1
+      displayName: 'Install node modules'
+      inputs:
+          workingDir: '$(SourceDirectory)/ui'
+          command: install
+    - task: Npm@1
+      displayName: 'Run Web Unit Tests'
+      inputs:
+          workingDir: '$(SourceDirectory)/ui'
+          command: custom
+          customCommand: run coverage
+    - task: CopyFiles@2
+      displayName: 'Copy coverage report'
+      inputs:
+          sourceFolder: '$(SourceDirectory)/ui/coverage'
+          contents: 'cobertura-coverage.xml'
+          targetFolder: '$(Build.ArtifactStagingDirectory)'
+    - publish: '$(Build.ArtifactStagingDirectory)'
+      displayName: 'Publish coverage report'
+      artifact: coverageReportsWeb
+  ################################################
+  # Coverage Report
+  ################################################  
+  - job: CoverageReport
+    dependsOn:
+    - UnitTests
+    - WebUiUnitTests
+    pool:
+      vmImage: windows-latest
+    steps:
+      - download: current
+        artifact: coverageReports
+      - download: current
+        artifact: coverageReportsWeb
       - task: reportgenerator@4
         inputs:
-          reports: '$(Agent.TempDirectory)/**/coverage.cobertura.xml'
+          reports: '$(Pipeline.Workspace)/coverageReports/**/coverage.cobertura.xml;$(Pipeline.Workspace)/coverageReportsWeb/*.xml'
           targetdir: '$(Agent.TempDirectory)/CoverageResults'
           reporttypes: 'Cobertura'
       - task: PublishCodeCoverageResults@1
@@ -104,7 +154,6 @@ stages:
         inputs:
           codeCoverageTool: 'Cobertura'
           summaryFileLocation: '$(Agent.TempDirectory)/CoverageResults/Cobertura.xml'
-        
       - task: BuildQualityChecks@8
         displayName: 'Check build quality'
         inputs:

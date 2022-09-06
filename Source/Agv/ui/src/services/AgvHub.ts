@@ -21,6 +21,7 @@ export class AgvHub {
     this.client.on('AgvStateChanged', async (message: string) => {
       this.onAgvStateChanged(message)
     })
+
     this.client.on('AgvDiscovered', async () => {
       // When a new agv has been added, we fetch the full list as we do not know an what page it is
       await this.store.fetchAgvs(

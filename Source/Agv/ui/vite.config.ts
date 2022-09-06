@@ -1,6 +1,8 @@
 import { defineConfig, splitVendorChunkPlugin } from 'vite'
+import { test } from 'vitest'
 import vue from '@vitejs/plugin-vue'
 import path from 'path'
+import { json } from 'stream/consumers'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -25,6 +27,13 @@ export default defineConfig({
         secure: false,
         ws: true
       }
+    }
+  },
+  test: {
+    environment: 'jsdom',
+    coverage: {
+      provider: 'c8',
+      reporter: ['text', 'cobertura']
     }
   }
 })

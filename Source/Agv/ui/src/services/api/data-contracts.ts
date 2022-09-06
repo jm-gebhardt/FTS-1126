@@ -125,9 +125,6 @@ export interface IMap {
    */
   resolution: number
 
-  /** List of Agvs using this map */
-  relatedAgvs: string[]
-
   /**
    * The x offset of the map in [m] where the mapped graph coordinate system starts. . Origin is the left upper corner.
    * @format double
@@ -139,6 +136,9 @@ export interface IMap {
    * @format double
    */
   yOffset: number
+
+  /** List of Agvs using this map */
+  relatedAgvs: string[]
 }
 
 export interface INode {
@@ -178,7 +178,7 @@ export interface IOrder {
   orderDetails: IOrderDetails
 
   /** @format uuid */
-  correlationId?: string
+  correlationId: string
   failedReason?: string | null
 }
 

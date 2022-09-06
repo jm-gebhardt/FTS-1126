@@ -600,14 +600,6 @@
             "description": "The resolution of the maps image. Expressed as how many [m] per pixel are represented",
             "format": "double"
           },
-          "relatedAgvs": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "description": "List of Agvs using this map"
-          },
           "xOffset": {
             "type": "number",
             "description": "The x offset of the map in [m] where the mapped graph coordinate system starts. . Origin is the left upper corner.",
@@ -617,6 +609,14 @@
             "type": "number",
             "description": "The y offset of the map in [m] where the mapped graph coordinate system starts. Origin is the left upper corner.",
             "format": "double"
+          },
+          "relatedAgvs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "List of Agvs using this map"
           }
         },
         "additionalProperties": false,
@@ -694,14 +694,14 @@
               }
             ]
           },
-            "correlationId": {
-                "type": "string",
-                "format": "uuid"
-            },
+          "correlationId": {
+            "type": "string",
+            "format": "uuid"
+          },
           "failedReason": {
             "type": "string",
-            "nullable":  true 
-          } 
+            "nullable": true
+          }
         },
         "additionalProperties": false,
         "description": "Order Model\r\n            \r\nThis is a simply copy of the Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.IOrder to overcome a json serialization problems\r\n<see href=\"https://github.com/dotnet/runtime/issues/41749\" />"

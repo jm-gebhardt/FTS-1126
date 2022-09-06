@@ -21,6 +21,15 @@
   <ui-spinner v-if="loading" active></ui-spinner>
   <ui-banner v-if="error">Error loading data: {{ error }}</ui-banner>
 </template>
+
+<script lang="ts">
+import { defineComponent } from 'vue'
+
+export default defineComponent({
+  name: 'OrdersView'
+})
+</script>
+
 <script lang="ts" setup>
 import OrderList from '@/components/OrderList.vue'
 
@@ -30,11 +39,10 @@ import { onBeforeUnmount } from 'vue'
 import { OrderHub } from '@/services/OrderHub'
 
 const orderHub = new OrderHub()
+const orderStore = useOrderStore()
 
-const { data, currentPage, totalCount, loading, error } = storeToRefs(
-  useOrderStore()
-)
-const { fetchOrders } = useOrderStore()
+const { data, currentPage, totalCount, loading, error } =
+  storeToRefs(orderStore)
 
 const pageSizes = [10, 25, 100]
 
@@ -42,7 +50,7 @@ let requestPageNumber = 1
 let requestPageSize = pageSizes[0]
 
 function fetch(): void {
-  fetchOrders(requestPageNumber, requestPageSize)
+  orderStore.fetchOrders(requestPageNumber, requestPageSize)
 }
 
 interface IPageSizeChangedEvent {
