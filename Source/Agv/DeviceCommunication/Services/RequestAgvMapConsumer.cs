@@ -1,4 +1,5 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
+﻿using Gebhardt.StoreWare.Agv.Common.Extensions;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 using JetBrains.Annotations;
 using MassTransit;
@@ -28,7 +29,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
         /// </summary>
         public async Task Consume(ConsumeContext<RequestAgvMap> context)
         {
-            await context.Publish(new MqttRequestMap(context.Message.AgvId, context.Message.CorrelationId));
+            await context.PublishMqtt(new MqttRequestMap(context.Message.AgvId, context.Message.CorrelationId), context.CancellationToken);
             _logger.LogInformation("Requesting map {MapId}/{MapCorrelationId} for AGV {AgvId}/{CorrelationId}", 
                 context.Message.MapId, context.Message.MapCorrelationId, context.Message.AgvId, context.Message.CorrelationId);
         }
