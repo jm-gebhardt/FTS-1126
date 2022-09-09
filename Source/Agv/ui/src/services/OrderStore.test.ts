@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { useOrderStore } from '@/services/orderStore'
+import { useOrderStore } from '@/services/OrderStore'
 import { IHostOrderCreator, IOrder } from '@/services/api/data-contracts'
 import { createPinia, setActivePinia } from 'pinia'
 import { createApp } from 'vue'

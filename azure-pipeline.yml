@@ -51,7 +51,7 @@ stages:
           failBuildLevelSelector: Suggestion
   - job: WebUiCodeAnalysis
     pool:
-      vmImage: windows-latest
+      vmImage: ubuntu-latest
     steps:
       - task: Npm@1
         displayName: 'Install node modules'
