@@ -10,7 +10,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
     /// See "request_data.schema".</para></summary>
     [JetBrains.Annotations.PublicAPI]
     [EntityName("amq.topic")]           // Specifies the RabbitMq exchange where the message is published
-    [RoutingKey("agv.requestData")]   // Specifies the topic where subscribers can receive the message
+    [RoutingKey("agv.requestAgvData")]   // Specifies the topic where subscribers can receive the message
     public record MqttRequestData
     {
         /// <summary>
