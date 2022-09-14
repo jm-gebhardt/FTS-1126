@@ -8,32 +8,31 @@ global:
 
 scrape_configs:
   - job_name: 'prometheus'
+    metrics_path: /prometheus/metrics
     static_configs:
-      - targets: ['prometheus.agv.localhost']
+      - targets: ['prometheus.agv:9090']
   - job_name: 'cadvisor'
+    metrics_path: /cadvisor/metrics
     static_configs:
-      - targets: ['cadvisor.agv.localhost']
+      - targets: ['cadvisor.agv:8080']
   - job_name: 'rabbitmq'
     static_configs:
-      - targets: [ 'prom.rabbitmq.agv.localhost' ]
+      - targets: [ 'rabbitmq.agv:15692' ]
   - job_name: 'fluent'
     metrics_path: /api/v1/metrics/prometheus
     static_configs: 
-      - targets: [ 'fluent.agv.localhost' ]
+      - targets: [ 'fluent.agv:2020' ]
   - job_name: 'fluent.node'
     static_configs:
-      - targets: [ 'node.fluent.agv.localhost' ]
-  - job_name: 'Caddy'
-    static_configs:
-      - targets: [ 'caddy.agv.localhost' ]
+      - targets: [ 'fluent.agv:2021' ]
         
   ####################
   - job_name: 'WCSCommunication'
     static_configs:
-      - targets: [ 'wcscommunication.agv.localhost' ]
+      - targets: [ 'wcscommunication.agv' ]
   - job_name: 'Transpororder'
     static_configs:
-      - targets: [ 'transportorder.agv.localhost' ]        
+      - targets: [ 'transportorder.agv' ]        
   - job_name: 'DeviceCommunication'
     static_configs:
-      - targets: [ 'devicecommunication.agv.localhost' ]          
+      - targets: [ 'devicecommunication.agv' ]          

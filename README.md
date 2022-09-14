@@ -77,7 +77,7 @@ ASPNETCORE_URLS/swagger (typically http://127.0.0.1:5010/swagger)
 
 If you are running the service in docker, you need to expose the swagger URL to the outside via caddy.
 ```
-transportorder.agv.localhost/swagger/
+http://localhost/transportorder/swagger/
 ```
 
 ### WebUI
@@ -128,7 +128,7 @@ docker compose build
 docker compose up
 ```
 
-You can now access the Web Service under: http://agv.localhost
+You can now access the Web Service under: http://localhost
 
 #### Check console logs
 ```

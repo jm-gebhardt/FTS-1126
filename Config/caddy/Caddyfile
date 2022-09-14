@@ -5,61 +5,50 @@
     auto_https off
 }
 
-# manually expose metrics as we disabled the admin API
-caddy.agv.localhost:80 {
-    log {
-        output discard
-    }
-    metrics /metrics
-}
-
-(log_and_errors) {
-    log {
-        output file /var/log/caddy/{args.0}.json
-    }
-    handle_errors {
-        header Content-Type text/plain
-        respond "{http.error.status_code} {http.error.status_text}"
-    }
-}
-
-agv.localhost:80 {
-    root * /etc/caddy/html/index
-    file_server
-}
-
-ui.agv.localhost:80 {
-    import log_and_errors ui.agv.localhost
-    handle_path /api/* {
-            reverse_proxy transportorder.agv
-    }
-    handle /hub/* {
-            reverse_proxy transportorder.agv
-    }
-    handle {
-        root * /etc/caddy/html/ui
-        try_files {path} /index.html
-        file_server
-    }
-    
-}
-
-(proxy) {
-    {args.0}:80 {
-        import log_and_errors {args.0}
+(sub) {
+    redir /{args.0} /{args.0}/
+    handle_path /{args.0}/* {
         reverse_proxy {args.1}
     }
 }
 
-import proxy prometheus.agv.localhost prometheus.agv:9090
-import proxy cadvisor.agv.localhost cadvisor.agv:8080
-import proxy grafana.agv.localhost grafana.agv:3000
-import proxy loki.agv.localhost loki.agv:3100
-import proxy prom.rabbitmq.agv.localhost rabbitmq.agv:15692
-import proxy rabbitmq.agv.localhost rabbitmq.agv:15672
-import proxy fluent.agv.localhost fluent.agv:2020
-import proxy node.fluent.agv.localhost fluent.agv:2021
+(sub_with_path) {
+    redir /{args.0} /{args.0}/
+    handle /{args.0}/* {
+        reverse_proxy {args.1}
+    }
+}
 
-import proxy wcscommunication.agv.localhost wcscommunication.agv
-import proxy transportorder.agv.localhost transportorder.agv
-import proxy devicecommunication.agv.localhost devicecommunication.agv
+*:80 {
+    handle_errors {
+        header Content-Type text/plain
+        respond "{http.error.status_code} {http.error.status_text}"
+    }
+    
+   log {
+        output discard
+   }
+
+    import sub_with_path prometheus prometheus.agv:9090
+    import sub grafana grafana.agv:3000
+    import sub rabbitmq rabbitmq.agv:15672
+    
+    import sub_with_path cadvisor cadvisor.agv:8080
+    
+    import sub wcscommunication wcscommunication.agv
+    import sub transportorder transportorder.agv
+    import sub devicecommunication devicecommunication.agv
+    
+    ## AGV Control UI
+    redir /ui /ui/
+    handle_path /ui/* {
+        root * /etc/caddy/html/ui
+        try_files {path} /index.html
+        file_server
+    }
+     
+    handle / {
+        root * /etc/caddy/html/index
+        file_server
+    }
+}

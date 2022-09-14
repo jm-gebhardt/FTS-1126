@@ -19,6 +19,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.States;
 using Gebhardt.StoreWare.Agv.TransportOrder.Web.Hubs;
 using MassTransit;
 using Gebhardt.StoreWare.Agv.TransportOrder.Web.SchemaFilter;
+using Prometheus;
 
 var initialLogger = Gebhardt.StoreWare.Agv.Common.Logging.InitialLogger.Create<Program>();
 
@@ -124,6 +125,7 @@ try
             })
             .Configure(app =>
             {
+                app.UseMetricServer();
                 app.UseDefaultFiles(); // Serve Default.htm/html, Index.htm/html by default, without having to explicitly qualify the URL.
                 app.UseStaticFiles(); // Allow html, images, etc. in wwwroot directory to be served. (use UseWebRoot to change folder)
                 app.UseRouting();

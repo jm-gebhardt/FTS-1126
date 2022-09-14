@@ -10,7 +10,7 @@ datasources:
   type: prometheus
   access: proxy
   orgId: 1
-  url: http://prometheus.agv.localhost
+  url: http://prometheus.agv:9090/prometheus
   isDefault: true
   version: 1
   editable: true

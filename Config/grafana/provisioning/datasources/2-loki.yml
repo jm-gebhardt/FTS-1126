@@ -10,5 +10,5 @@ datasources:
   type: loki
   orgId: 1
   access: proxy
-  url: http://loki.agv.localhost
+  url: http://loki.agv:3100
   editable: false
