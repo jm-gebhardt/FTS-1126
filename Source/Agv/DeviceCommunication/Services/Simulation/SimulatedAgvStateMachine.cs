@@ -21,9 +21,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
         /// </summary>
         /// <param name="CorrelationId"></param>
         /// <param name="Agv"></param>
-        /// <param name="Map"></param>
         /// <param name="NodeTravelTime"></param>
-        public record CreateAgv(Guid CorrelationId, IAgv Agv, Map.MapGenerator.MapPng Map, int NodeTravelTime) : CorrelatedBy<Guid>;
+        public record CreateAgv(Guid CorrelationId, SimulatedAgv Agv, int NodeTravelTime) : CorrelatedBy<Guid>;
 
         /// <summary>
         /// Internal message to schedule sending status update
@@ -42,6 +41,13 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
         /// </summary>
         /// <param name="CorrelationId"></param>
         public record ScheduleFinishOrder(Guid CorrelationId) : CorrelatedBy<Guid>;
+
+        /// <summary>
+        /// Internal message to schedule signaling of position
+        /// </summary>
+        /// <param name="CorrelationId"></param>
+        public record ScheduleSignalPosition(Guid CorrelationId) : CorrelatedBy<Guid>;
+
 
         /// <summary>
         /// AGV is Idle
@@ -84,28 +90,41 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
         /// </summary>
         public Event<RequestAgvMap> RequestAgvMapEvent { get; private set; } = default!;
 
+
         /// <summary>
         /// Status Schedule triggered
         /// </summary>
         public Schedule<SimulatedAgvSaga, ScheduleStatusUpdate> StatusUpdateSchedule { get; private set; } = default!;
-        
+
         /// <summary>
         /// Finish Order Schedule triggered
         /// </summary>
         public Schedule<SimulatedAgvSaga, SchedulePickOrder> PickOrderSchedule { get; private set; } = default!;
-        
+
         /// <summary>
         /// Finish Order Schedule triggered
         /// </summary>
         public Schedule<SimulatedAgvSaga, ScheduleFinishOrder> FinishOrderSchedule { get; private set; } = default!;
 
         /// <summary>
+        /// Trigger for scheduled signalling of position.
+        /// </summary>
+        public Schedule<SimulatedAgvSaga, ScheduleSignalPosition> SignalPositionSchedule { get; private set; } = default!;
+
+
+        /// <summary>
         /// Timeout between sending status messages
         /// </summary>
         public const int SendStatusTimeout = 30;
-        
+
+        /// <summary>
+        /// Interval for signalling position durting order execution.
+        /// </summary>
+        public int SignalPositionIntervalMs { get; set; } = 500;
+
         private readonly ILogger<SimulatedAgvStateMachine> _logger;
         private readonly SimulateOptions _simulateOptions;
+
 
         /// <summary>
         /// SimulatedAgvStateMachine Constructor
@@ -130,6 +149,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
             DuringAny(SetRequestAgvGraphHandler());
             DuringAny(SetRequestAgvDataHandler());
             DuringAny(SetRequestAgvMapHandler());
+            DuringAny(SetSignalPositionHandler());
 
             SetCompletedWhenFinalized(); // Delete when finalized
         }
@@ -143,7 +163,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
                     configuration.Delay = TimeSpan.FromSeconds(SendStatusTimeout);
                     configuration.Received = r => r.CorrelateById(context => context.Message.CorrelationId);
                 });
-            
+
             Schedule(() => PickOrderSchedule,
                 s => s.PickOrderTokenId,
                 configuration =>
@@ -157,6 +177,13 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
                 {
                     configuration.Received = r => r.CorrelateById(context => context.Message.CorrelationId);
                 });
+
+            Schedule(() => SignalPositionSchedule,
+                s => s.SignalPositionTokenId,
+                configuration =>
+                {
+                    configuration.Received = r => r.CorrelateById(context => context.Message.CorrelationId);
+                });
         }
 
         /// <summary>
@@ -165,7 +192,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
         private void SetSagaFactory()
         {
             Event(() => CreateAgvEvent, e =>
-                e.SetSagaFactory(context => new SimulatedAgvSaga(context.Message.Agv, context.Message.Map, context.Message.NodeTravelTime))
+                e.SetSagaFactory(context => new SimulatedAgvSaga(context.Message.Agv, context.Message.NodeTravelTime))
             );
         }
 
@@ -177,7 +204,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
                 .Schedule(StatusUpdateSchedule, c => new ScheduleStatusUpdate(c.Saga.CorrelationId));
 
         /// <summary>
-        /// Handler for IHandleHostOrder
+        /// Handler for ExecuteTransportOrder
         /// </summary>
         /// <returns>Event Binding for IHandleHostOrder</returns>
         private EventActivityBinder<SimulatedAgvSaga, ExecuteTransportOrder> SetExecuteTransportOrderHandler() =>
@@ -187,12 +214,15 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
                 .Then(ExecuteOrder)
                 .Publish(c => new TransportOrderStarted(c.Message.OrderDetails.CorrelationId, c.Message.OrderDetails.OrderId))
                 .ThenAsync(PublishStatus)
-                .Schedule(PickOrderSchedule, 
+                .Schedule(PickOrderSchedule,
                     c => new SchedulePickOrder(c.Saga.CorrelationId),
-                    c =>  c.Saga.TimeToPick!.Value)
-                .Schedule(FinishOrderSchedule, 
+                    c => c.Saga.TimeToPick!.Value)
+                .Schedule(FinishOrderSchedule,
                     c => new ScheduleFinishOrder(c.Saga.CorrelationId),
-                    c =>  c.Saga.TimeToFinish!.Value);
+                    c => c.Saga.TimeToFinish!.Value)
+                .Schedule(SignalPositionSchedule,
+                    c => new ScheduleSignalPosition(c.Saga.CorrelationId),
+                    _ => TimeSpan.FromMilliseconds(SignalPositionIntervalMs));
 
         private EventActivityBinder<SimulatedAgvSaga, ScheduleStatusUpdate> SetSendAgvStatusHandler() =>
             When(StatusUpdateSchedule.Received)
@@ -208,13 +238,23 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
                     c.Saga.OrderDetails!.CorrelationId,
                     c.Saga.OrderDetails!.OrderId))
                 .ThenAsync(PublishStatus);
-        
+
         private EventActivityBinder<SimulatedAgvSaga, ScheduleFinishOrder> SetFinishOrderHandler() =>
             When(FinishOrderSchedule.Received)
                 .Then(c => _logger.LogDebug("{MessageType} {CorrelationId} received", nameof(ScheduleFinishOrder), c.Saga.CorrelationId))
                 .ThenAsync(FinishOrder)
                 .TransitionTo(Idle)
                 .ThenAsync(PublishStatus);
+
+        private EventActivityBinder<SimulatedAgvSaga, ScheduleSignalPosition> SetSignalPositionHandler() =>
+            When(SignalPositionSchedule.Received)
+                .Then(c => _logger.LogDebug("{MessageType} {CorrelationId} received", nameof(ScheduleSignalPosition), c.Saga.CorrelationId))
+                .If(c => c.Saga.CurrentState != "Idle",
+                    t => t.ThenAsync(PublishPosition)
+                          .Schedule(SignalPositionSchedule,
+                                    c => new ScheduleSignalPosition(c.Saga.CorrelationId),
+                                    _ => TimeSpan.FromMilliseconds(SignalPositionIntervalMs))
+                    );
 
         private async Task PublishStatus(BehaviorContext<SimulatedAgvSaga> context)
         {
@@ -223,6 +263,19 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
                 context.Saga.AgvId,
                 context.Saga.AgvStatus!
             ), context.CancellationToken);
+        }
+
+        private async Task PublishPosition(BehaviorContext<SimulatedAgvSaga> context)
+        {
+            Tuple<float, float, float>? position = context.Saga.Position;
+            if (position != null)
+            {
+                await context.Publish(new AgvPositionReceived(
+                    context.Saga.CorrelationId,
+                    context.Saga.AgvId,
+                    true, position.Item1, position.Item2, 0f
+                ), context.CancellationToken);
+            }
         }
 
         private void ExecuteOrder(BehaviorContext<SimulatedAgvSaga, ExecuteTransportOrder> context)
@@ -234,7 +287,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
             _logger.LogInformation("Agv {AgvId}/{CorrelationId} started Order {OrderId} / {OrderCorrelationId}. Order will be picked up at {OrderPickDate} and dropped at {OrderFinishDate}",
                 context.Saga.AgvId, context.Saga.CorrelationId,
                 context.Message.OrderDetails.OrderId, context.Message.OrderDetails.CorrelationId, context.Saga.OrderPickDate, context.Saga.OrderFinishDate);
- 
         }
 
         private async Task FinishOrder(BehaviorContext<SimulatedAgvSaga, ScheduleFinishOrder> context)
@@ -254,8 +306,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
                     order.CorrelationId,
                     order.OrderId
                 ), context.CancellationToken);
+                await PublishPosition(context);
             }
-        
+
             context.Saga.ResetOrder();
         } 
 
@@ -289,13 +342,15 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
                         x.Publish(c => new AgvMapReceived(
                             c.Saga.CorrelationId,
                             c.Saga.AgvId,
-                            c.Message.MapCorrelationId,
-                            c.Message.MapId,
-                            c.Saga.AgvMapModificationDate,
-                            Convert.ToBase64String(c.Saga.AgvMap!.Bytes),
-                            c.Saga.AgvMap!.Resolution,
-                            c.Saga.AgvMap.XOffset,
-                            c.Saga.AgvMap.YOffset
+                            new AgvMap(
+                                c.Message.MapCorrelationId,
+                                c.Message.MapId,
+                                c.Saga.AgvMap!.ModificationDate,
+                                c.Saga.AgvMap!.ImageData,
+                                c.Saga.AgvMap!.Resolution,
+                                c.Saga.AgvMap.XOffset,
+                                c.Saga.AgvMap.YOffset
+                            )
                         )));
     }
 }

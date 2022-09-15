@@ -31,8 +31,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
         private const long Payload = 50;
         private static readonly AgvData.Sensor[] _sensors = Array.Empty<AgvData.Sensor>();
 
-        private record Agv(Guid CorrelationId, string AgvId, string CurrentState, AgvStatus? AgvStatus, AgvGraph? AgvGraph, AgvData? AgvData) : IAgv;
-
 
         /// <summary>
         /// SimulatedAgvProvider Constructor
@@ -56,17 +54,15 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
             for (int agvIndex = 0; agvIndex < _simulateOptions.Agvs; agvIndex++)
             {
                 var agv = GenerateAgv(agvIndex);
-                var map = new MapGenerator(agv.AgvGraph!);
                 _bus.Publish(new SimulatedAgvStateMachine.CreateAgv(
                     agv.CorrelationId,
                     agv,
-                    map.Generate(),
                     _simulateOptions.NodeTravelTime
                 ));
             }
         }
 
-        private Agv GenerateAgv(int agvIndex)
+        private SimulatedAgv GenerateAgv(int agvIndex)
         {
             string agvId = $"{AgvPrefix}-{agvIndex}";
             var correlationId = agvId.ToGuid();
@@ -75,13 +71,14 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
                 _destinations,
                 serviceNodes: new[] {AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park, AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park}
             ).Generate(correlationId);
-            return new Agv(
+            var mapGenerator = new MapGenerator(grid);
+            return new SimulatedAgv(
                 correlationId,
                 agvId,
                 "Initial",
-                null,
                 grid,
-                GenerateData(correlationId)
+                GenerateData(correlationId),
+                mapGenerator.Generate()
             );
         }
 

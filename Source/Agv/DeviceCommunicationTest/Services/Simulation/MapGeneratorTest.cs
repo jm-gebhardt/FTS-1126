@@ -46,12 +46,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
                 mapName.ToGuid(),
                 mapName);
             var map = new MapGenerator(graph).Generate();
-            Assert.IsTrue(map.Bytes != null);
-            Assert.IsTrue(map.Bytes.Length > 0);
+            Assert.IsTrue(map.ImageData != null);
+            Assert.IsTrue(map.ImageData.Length > 0);
             Assert.IsTrue(map.Resolution > 0f);
             Assert.IsTrue(map.XOffset > 0f);
             Assert.IsTrue(map.YOffset > 0f);
-            var image = map.GetPng();
+            var image = MapGenerator.GetPng(map);
             Assert.IsTrue(image != null);
             Assert.IsTrue(image.Width > 0);
             Assert.IsTrue(image.Height > 0);
@@ -86,8 +86,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
                 mapName.ToGuid(),
                 mapName);
             var map = new MapGenerator(graph).Generate();
-            Assert.IsTrue(map.Bytes != null);
-            Assert.IsTrue(map.Bytes.Length > 0);
+            Assert.IsTrue(map.ImageData != null);
+            Assert.IsTrue(map.ImageData.Length > 0);
             Assert.IsTrue(map.Resolution > 0f);
             Assert.IsTrue(map.XOffset < 0f);
             Assert.IsTrue(map.YOffset < 0f);

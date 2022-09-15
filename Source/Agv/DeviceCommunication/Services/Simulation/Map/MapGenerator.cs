@@ -37,59 +37,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Map
     public class MapGenerator
     {
         /// <summary>
-        /// Map representation.
-        /// </summary>
-        public class MapPng
-        {
-            /// <summary>
-            /// Byte array representing PNG image according to the outer nodes.
-            /// </summary>
-            public byte[] Bytes { get; }
-
-            /// <summary>
-            /// Resolution in [m]/[px].
-            /// </summary>
-            public float Resolution { get; }
-
-            /// <summary>
-            /// Offset in x-direction of the map in [m] (from the left upper corner) to the origin (0/0).
-            /// When x = 0 is outside the map this value is negative.
-            /// </summary>
-            public float XOffset { get; }
-
-            /// <summary>
-            /// Offset in y-direction of the map in [m] (from the left upper corner) to the origin (0/0).
-            /// When y = 0 is outside the map this value is negative.
-            /// </summary>
-            public float YOffset { get; }
-
-            /// <summary>
-            /// Constructor.
-            /// </summary>
-            /// <param name="bytes"></param>
-            /// <param name="resolution"></param>
-            /// <param name="xOffset"></param>
-            /// <param name="yOffset"></param>
-            public MapPng(byte[] bytes, float resolution, float xOffset, float yOffset)
-            {
-                Bytes = bytes;
-                Resolution = resolution;
-                XOffset = xOffset;
-                YOffset = yOffset;
-            }
-
-            /// <summary>
-            /// Try to decode the byte array into PNG image.
-            /// </summary>
-            /// <returns>Returns null on error.</returns>
-            [JetBrains.Annotations.PublicAPI]
-            public SKImage GetPng()
-            {
-                return SKImage.FromEncodedData(Bytes);
-            }
-        }
-
-        /// <summary>
         /// Image signature
         /// </summary>
         private const string Signature = "Simulated map powered by Gebhardt";
@@ -129,7 +76,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Map
         /// </summary>
         /// <returns>Map in PNG format plus additional attributes concerning scaling.</returns>
         /// <exception cref="InvalidOperationException">Graph nodes is empty.</exception>
-        public MapPng Generate()
+        public AgvMap Generate()
         {
             if (_graph.Nodes.Length == 0)
             {
@@ -210,7 +157,19 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Map
                 }
             }
 
-            return new MapPng(map, resolution, xOffset, yOffset);
+            return new AgvMap(
+                _graph.RelatedMapId,
+                _graph.RelatedMapName,
+                DateTime.Now,
+                Convert.ToBase64String(map),
+                resolution, xOffset, yOffset);
         }
+
+        /// <summary>
+        /// Try to generate a PNG image from the map data.
+        /// </summary>
+        /// <param name="agvMap"></param>
+        /// <returns></returns>
+        public static SKImage GetPng(AgvMap agvMap) => SKImage.FromEncodedData(Convert.FromBase64String(agvMap.ImageData));
     }
 }

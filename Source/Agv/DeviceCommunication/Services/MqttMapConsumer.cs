@@ -53,13 +53,15 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
                 await context.Publish(new AgvMapReceived(
                     context.Message.SerialNumber.ToGuid(),
                     context.Message.SerialNumber,
-                    context.Message.MapId.ToGuid(),
-                    context.Message.MapId,
-                    modificationDate,
-                    context.Message.Data,
-                    context.Message.Resolution,
-                    context.Message.XOffset,
-                    context.Message.YOffset
+                    new Common.Messages.AgvManagement.AgvMap(
+                        context.Message.MapId.ToGuid(),
+                        context.Message.MapId,
+                        modificationDate,
+                        context.Message.Data,
+                        context.Message.Resolution,
+                        context.Message.XOffset,
+                        context.Message.YOffset
+                    )
                 ));
             }
         }

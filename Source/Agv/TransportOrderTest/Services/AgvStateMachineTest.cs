@@ -636,7 +636,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             mockRegistry.Setup(mo => mo.Add(mapId.ToGuid(), mapId, imageData, resolution, xOffset, yOffset, modificationDate)).Returns(true);
 
             // Act
-            await fixture.TestHarness.Bus.Publish(new AgvMapReceived(agvSaga.CorrelationId, agvSaga.AgvId, mapId.ToGuid(), mapId, modificationDate, imageData,  resolution, xOffset, yOffset));
+            await fixture.TestHarness.Bus.Publish(new AgvMapReceived(
+                agvSaga.CorrelationId, 
+                agvSaga.AgvId, 
+                new AgvMap(mapId.ToGuid(), mapId, modificationDate, imageData,  resolution, xOffset, yOffset)));
 
             // Assert
             Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvMapReceived>());
@@ -683,7 +686,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             mockRegistry.Setup(mo => mo.Exists(mapId.ToGuid())).Returns(true);
 
             // Act
-            await fixture.TestHarness.Bus.Publish(new AgvMapReceived(agvSaga.CorrelationId, agvSaga.AgvId, mapId.ToGuid(), mapId, modificationDate, imageData, resolution, xOffset, yOffset));
+            await fixture.TestHarness.Bus.Publish(new AgvMapReceived(
+                agvSaga.CorrelationId,
+                agvSaga.AgvId,
+                new AgvMap(mapId.ToGuid(), mapId, modificationDate, imageData, resolution, xOffset, yOffset)));
 
             // Assert
             Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvMapReceived>());

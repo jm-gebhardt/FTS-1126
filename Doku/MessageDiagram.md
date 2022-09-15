@@ -12,6 +12,7 @@ sequenceDiagram
 
     (AGV)->>DeviceCommunication: State
     activate DeviceCommunication
+    DeviceCommunication->>AgvManagement: AgvPositionReceived
     DeviceCommunication->>AgvManagement: AgvStatusReceived
     deactivate DeviceCommunication
     AgvManagement->>AgvManagement: ReleaseAgv

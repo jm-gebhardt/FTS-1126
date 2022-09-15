@@ -168,6 +168,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             await fixture.TestHarness.Bus.Publish(new HandleHostOrder(correlationId, orderDetails));
             Assert.AreEqual(correlationId, await fixture.SagaHarness.Exists(correlationId));
 
+            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<HandleHostOrder>());
+
             orderEventObserver.Verify(s => s.PreExecute(It.IsAny<BehaviorContext<OrderSaga, HandleHostOrder>>()), Times.Once);
             orderEventObserver.Verify(s => s.PostExecute(It.IsAny<BehaviorContext<OrderSaga, HandleHostOrder>>()), Times.Once);
         }

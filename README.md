@@ -81,7 +81,7 @@ http://localhost/transportorder/swagger/
 ```
 
 ### WebUI
-See the WebUI [README.md](Source/Agv/ui/README.md) more more
+See the WebUI [README.md](Source/Agv/ui/README.md) for more information
 
 
 ## Provide certificates
@@ -96,7 +96,7 @@ For a detailed description see [Transportsicherheit](https://dev.azure.com/Gebha
 ## Run Simulation
 Ensure that `RABBITMQ__HOST` is set
 ```
-dotnet run --project WCSCommunication simulate --interval=10 --sources='S1,S2', --destinations='D1,D2,D3'
+dotnet run --project WCSCommunication simulate --interval=10000 --sources='S1,S2', --destinations='D1,D2,D3'
 dotnet run --project TransportOrder 
 dotnet run --project DeviceCommunication simulate --sources='S1,S2', --destinations='D1,D2,D3' --agvs=3
 ```

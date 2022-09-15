@@ -1,7 +1,6 @@
 using Gebhardt.StoreWare.Agv.Common.Messages;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Map;
 using MassTransit;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
@@ -17,25 +16,19 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         /// </summary>
         public Guid CorrelationId { get; set; }
 
-        /// <summary>
-        /// <inheritdoc />
-        /// </summary>
+        /// <inheritdoc cref="IAgv" />
         public string AgvId { get; }
 
-        /// <summary>
-        /// <inheritdoc />
-        /// </summary>
+        /// <inheritdoc cref="IAgv" />
         public string CurrentState { get; set; }
 
-        /// <summary>
-        /// <inheritdoc />
-        /// </summary>
+        /// <inheritdoc cref="IAgv" />
         // ReSharper disable once ReturnTypeCanBeNotNullable
         public AgvStatus? AgvStatus => new(
             CorrelationId,
             OrderDetails?.OrderId,
-            new [] {
-                nameof(SimulatedAgvStateMachine.BusyMovingToSource), 
+            new[] {
+                nameof(SimulatedAgvStateMachine.BusyMovingToSource),
                 nameof(SimulatedAgvStateMachine.BusyMovingToDestination)
             }.Any(c => c == CurrentState),
             false,
@@ -45,25 +38,16 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
             LastNodeId
         );
 
-        /// <summary>
-        /// <inheritdoc />
-        /// </summary>
+        /// <inheritdoc cref="IAgv" />
         public AgvGraph? AgvGraph { get; }
 
-        /// <summary>
-        /// <inheritdoc />
-        /// </summary>
+        /// <inheritdoc cref="IAgv" />
         public AgvData? AgvData { get; }
-
-        /// <summary>
-        /// Returns the modification date of the map.
-        /// </summary>
-        public DateTime AgvMapModificationDate { get; }
 
         /// <summary>
         /// Returns the map according to <see cref="AgvGraph"/>.
         /// </summary>
-        public MapGenerator.MapPng? AgvMap { get; }
+        public AgvMap? AgvMap { get; }
 
         /// <summary>
         /// The current order being processed, null if currently no order is being processed
@@ -74,7 +58,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         /// Token used by the send status update schedule
         /// </summary>
         public Guid? SendStatusUpdateTokenId { get; set; }
-        
+
         /// <summary>
         /// Token used for by pick order schedule
         /// </summary>
@@ -84,6 +68,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         /// Token used for by finish order schedule
         /// </summary>
         public Guid? FinishOrderTokenId { get; set; }
+
+        /// <summary>
+        /// Token used for signal position scheduling
+        /// </summary>
+        public Guid? SignalPositionTokenId { get; set; }
 
         /// <summary>
         /// List of node ids that define the route
@@ -96,19 +85,81 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         public int NodeTravelTime { get; set; }
 
         /// <summary>
-        /// The last visited Node of the AGV
+        /// Returns the node last visited by the AGV
         /// </summary>
-        public string? LastNodeId => OrderProgress != null
-            ? Nodes[(int) (Nodes.Length * OrderProgress)] 
-            : Nodes.LastOrDefault();
+        public string? LastNodeId
+        {
+            get
+            {
+                double? orderProgress = OrderProgress; // Access time dependent value just once
+                if (orderProgress.HasValue)
+                {
+                    int lastNodeIndex = (int)(Nodes.Length * orderProgress.Value);
+                    if (lastNodeIndex < Nodes.Length)
+                    {
+                        return Nodes[lastNodeIndex];
+                    }
+                }
+                return Nodes.LastOrDefault();
+            }
+        }
 
         /// <summary>
-        /// Order Progress as percentage
+        /// Next node AGV will arrive at.
+        /// On destination arrival this is the same as <see cref="LastNodeId"/>.
+        /// </summary>
+        public string? NextNodeId
+        {
+            get
+            {
+                string? lastNodeId = LastNodeId; // Access time dependent value just once
+                if (lastNodeId != null && lastNodeId != Nodes.Last())
+                {
+                    return Nodes[Array.IndexOf(Nodes, lastNodeId) + 1];
+                }
+                return lastNodeId;
+            }
+        }
+
+        /// <summary>
+        /// Return the current position based on the time passed travelling.
+        /// </summary>
+        public Tuple<float, float, float>? Position
+        {
+            get
+            {
+                double? orderProgress = OrderProgress; // Access time dependent value just once
+                if (AgvGraph != null && orderProgress.HasValue)
+                {
+                    int lastNodeIndex = (int)(Nodes.Length * orderProgress.Value);
+                    if (lastNodeIndex >= Nodes.Length)
+                    {
+                        // This happens when accessing position when or after order has finished
+                       lastNodeIndex = Nodes.Length - 1;
+                    }
+                    var lastNode = AgvGraph!.Nodes.First(x => x.Id == Nodes[lastNodeIndex]);
+                    if (lastNodeIndex < Nodes.Length - 1)
+                    {
+                        double partialProgress = orderProgress.Value - lastNodeIndex * NodeTravelTime / OrderDuration!.Value.TotalMilliseconds;
+                        var nextNode = AgvGraph!.Nodes.First(x => x.Id == Nodes[lastNodeIndex + 1]);
+                        var vectorLast = new System.Numerics.Vector3(lastNode.X, lastNode.Y, lastNode.Z);
+                        var vectorEdge = new System.Numerics.Vector3(nextNode.X, nextNode.Y, nextNode.Z) - vectorLast;
+                        vectorEdge *= (float)partialProgress;
+                        vectorEdge = vectorLast + vectorEdge;
+                        return new Tuple<float, float, float>(vectorEdge.X, vectorEdge.Y, vectorEdge.Z);
+                    }
+                    return new Tuple<float, float, float>(lastNode.X, lastNode.Y, lastNode.Y);
+                }
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Order Progress as percentage [0..1]
         /// </summary>
         public double? OrderProgress => TimeToFinish != null && OrderDuration != null 
             ? 1 - TimeToFinish.Value.TotalSeconds / OrderDuration.Value.TotalSeconds 
             : null;
-
 
         /// <summary>
         /// Time the order takes to complete
@@ -165,7 +216,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
             string? currentState = null,
             AgvGraph? agvGraph = null,
             AgvData? agvData = null,
-            MapGenerator.MapPng? agvMap = null)
+            AgvMap? agvMap = null)
         {
             if (correlationId == Guid.Empty)
             {
@@ -179,16 +230,14 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
             AgvGraph = agvGraph;
             AgvData = agvData;
             AgvMap = agvMap;
-            AgvMapModificationDate = DateTime.Now;
         }
 
         /// <summary>
         /// SimulatedAgvSa Constructor
         /// </summary>
         /// <param name="agv"></param>
-        /// <param name="agvMap"></param>
         /// <param name="nodeTravelTime"></param>
-        public SimulatedAgvSaga(IAgv agv, MapGenerator.MapPng agvMap, int nodeTravelTime)
+        public SimulatedAgvSaga(SimulatedAgv agv, int nodeTravelTime)
         {
             CorrelationId = agv.CorrelationId;
             AgvId = agv.AgvId;
@@ -196,8 +245,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
             AgvData = agv.AgvData;
             CurrentState = agv.CurrentState;
             Nodes = Array.Empty<string>();
-            AgvMap = agvMap;
-            AgvMapModificationDate = DateTime.Now;
+            AgvMap = agv.AgvMap;
             NodeTravelTime = nodeTravelTime;
         }
 

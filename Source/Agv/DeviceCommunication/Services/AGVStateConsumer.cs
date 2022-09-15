@@ -54,6 +54,19 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
                     GetLastNodeId(message)
                     )
                 ), context.CancellationToken);
+
+            if (context.Message.AgvPosition != null)
+            {
+                await context.Publish(new AgvPositionReceived(
+                    correlationId: serialNumber.ToGuid(),
+                    agvId: serialNumber,
+                    positionInitialized: context.Message.AgvPosition.PositionInitialized,
+                    x: context.Message.AgvPosition.X,
+                    y: context.Message.AgvPosition.Y,
+                    theta: context.Message.AgvPosition.Theta,
+                    deviationRange: context.Message.AgvPosition.DeviationRange
+                    ), context.CancellationToken);
+            }
         }
 
         private string GetSerialNumber(MqttState message)

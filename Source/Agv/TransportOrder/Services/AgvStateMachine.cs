@@ -202,31 +202,31 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         private EventActivityBinder<AgvSaga, AgvMapReceived> AgvMapReceivedHandler() =>
             When(AgvMapReceivedEvent)
                 .Then(c => _logger.LogInformation("Incoming Map {MapId}/{MapCorrelationId} for Agv {AgvId}/{CorrelationId}",
-                    c.Message.MapId, c.Message.MapCorrelationId, c.Saga.AgvId, c.Saga.CorrelationId))
+                    c.Message.AgvMap.MapId, c.Message.AgvMap.CorrelationId, c.Saga.AgvId, c.Saga.CorrelationId))
                 .Then(SaveMap);
 
         private void SaveMap(BehaviorContext<AgvSaga, AgvMapReceived> context)
         {
-            if (!_mapRegistry.Exists(context.Message.MapCorrelationId))
+            if (!_mapRegistry.Exists(context.Message.AgvMap.CorrelationId))
             {
-                if (_mapRegistry.Add(context.Message.MapCorrelationId, context.Message.MapId, context.Message.ImageData, context.Message.Resolution, context.Message.XOffset, context.Message.YOffset, context.Message.ModificationDate))
+                if (_mapRegistry.Add(context.Message.AgvMap.CorrelationId, context.Message.AgvMap.MapId, context.Message.AgvMap.ImageData, context.Message.AgvMap.Resolution, context.Message.AgvMap.XOffset, context.Message.AgvMap.YOffset, context.Message.AgvMap.ModificationDate))
                 {
-                    _logger.LogInformation("Map {MapId}/{MapCorrelationId} inserted into Registry", context.Message.MapId, context.Message.CorrelationId);
+                    _logger.LogInformation("Map {MapId}/{MapCorrelationId} inserted into Registry", context.Message.AgvMap.MapId, context.Message.CorrelationId);
                 }
                 else
                 {
-                    _logger.LogWarning("Failed to insert Map {MapId}/{MapCorrelationId} into Registry", context.Message.MapId, context.Message.CorrelationId);
+                    _logger.LogWarning("Failed to insert Map {MapId}/{MapCorrelationId} into Registry", context.Message.AgvMap.MapId, context.Message.CorrelationId);
                 }
             }
             else
             {
-                if (_mapRegistry.Update(context.Message.MapCorrelationId, context.Message.MapId, context.Message.ImageData, context.Message.Resolution, context.Message.XOffset, context.Message.YOffset, context.Message.ModificationDate))
+                if (_mapRegistry.Update(context.Message.AgvMap.CorrelationId, context.Message.AgvMap.MapId, context.Message.AgvMap.ImageData, context.Message.AgvMap.Resolution, context.Message.AgvMap.XOffset, context.Message.AgvMap.YOffset, context.Message.AgvMap.ModificationDate))
                 {
-                    _logger.LogInformation("Map {MapId}/{MapCorrelationId} has been updated in Registry", context.Message.MapId, context.Message.CorrelationId);
+                    _logger.LogInformation("Map {MapId}/{MapCorrelationId} has been updated in Registry", context.Message.AgvMap.MapId, context.Message.CorrelationId);
                 }
                 else
                 {
-                    _logger.LogWarning("Failed to update Map {MapId}/{MapCorrelationId} in Registry", context.Message.MapId, context.Message.CorrelationId);
+                    _logger.LogWarning("Failed to update Map {MapId}/{MapCorrelationId} in Registry", context.Message.AgvMap.MapId, context.Message.CorrelationId);
                 }
             }
         }

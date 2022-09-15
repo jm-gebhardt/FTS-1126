@@ -53,6 +53,8 @@ try
 
                     services.AddTransient<IEventObserver<OrderSaga>, OrderEventObserver>();
 
+                    services.AddSingleton<IAgvPositionRegistry, AgvPositionRegistry>();
+
                     services.AddDbContextFactory<SagaPersistenceDbContext>(builder =>
                     {
                         builder.UseSqlServer(context.Configuration.GetConnectionString(SagaPersistenceDbContext.ConfigSectionName), m =>
@@ -72,6 +74,7 @@ try
                             x.AddConsumer<AssignAgvConsumer>();
                             x.AddConsumer<TransportOrderChangedConsumer>();
                             x.AddRequestClient<ReserveAgv>();
+                            x.AddConsumer<AgvPositionReceivedConsumer>();
                         });
                     }
                     catch (InvalidOperationException e)
