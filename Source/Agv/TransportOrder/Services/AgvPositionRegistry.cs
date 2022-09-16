@@ -10,7 +10,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
     {
         private readonly ConcurrentDictionary<Guid, AgvPositionReceived> _agvPositionRegistry = new();
 
-
         /// <inheritdoc />
         public void UpdatePosition(AgvPositionReceived agvPositionReceived)
         {
@@ -22,6 +21,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         {
             _agvPositionRegistry.TryGetValue(correlationId, out var agvPositionReceived);
             return agvPositionReceived;
+        }
+
+        /// <inheritdoc />
+        public List<AgvPositionReceived> GetAllPositions()
+        {
+            return _agvPositionRegistry.Values.ToList();
         }
     }
 }

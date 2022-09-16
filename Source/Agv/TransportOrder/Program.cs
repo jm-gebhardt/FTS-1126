@@ -10,6 +10,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.OpenApi.Models;
 using CommandLine;
+using Prometheus;
+using MassTransit;
 using Gebhardt.StoreWare.Agv.Common;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.TransportOrder.CmdOptions;
@@ -17,9 +19,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Persistence;
 using Gebhardt.StoreWare.Agv.TransportOrder.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.States;
 using Gebhardt.StoreWare.Agv.TransportOrder.Web.Hubs;
-using MassTransit;
 using Gebhardt.StoreWare.Agv.TransportOrder.Web.SchemaFilter;
-using Prometheus;
 
 var initialLogger = Gebhardt.StoreWare.Agv.Common.Logging.InitialLogger.Create<Program>();
 
@@ -33,6 +33,7 @@ try
             hostBuilder = GebhardtStartup.CreateHostBuilder(args)
                 .ConfigureServices((context, services) =>
                 {
+                    // Transients
                     services.AddTransient<IAgvRegistry, EfAgvRegistry>();
                     services.AddTransient<IOrderRegistry, EfOrderRegistry>();
                     services.AddTransient<IMapRegistry, EfMapRegistry>();
@@ -47,12 +48,11 @@ try
                         var hubContext = provider.GetRequiredService<IHubContext<AgvHub>>();
                         return new AgvHubContext(hubContext);
                     });
-
-                    services.AddSingleton<IStateObserver<OrderSaga>, OrderStateObserver>();
-                    services.AddSingleton<IStateObserver<AgvSaga>, AgvStateObserver>();
-
                     services.AddTransient<IEventObserver<OrderSaga>, OrderEventObserver>();
 
+                    // Singletons
+                    services.AddSingleton<IStateObserver<OrderSaga>, OrderStateObserver>();
+                    services.AddSingleton<IStateObserver<AgvSaga>, AgvStateObserver>();
                     services.AddSingleton<IAgvPositionRegistry, AgvPositionRegistry>();
 
                     services.AddDbContextFactory<SagaPersistenceDbContext>(builder =>
@@ -71,10 +71,12 @@ try
                                 .AddPersistence<OrderSaga, SagaPersistenceDbContext>();
                             x.AddSagaStateMachine<AgvStateMachine, AgvSaga>()
                                 .AddPersistence<AgvSaga, SagaPersistenceDbContext>();
+
                             x.AddConsumer<AssignAgvConsumer>();
                             x.AddConsumer<TransportOrderChangedConsumer>();
-                            x.AddRequestClient<ReserveAgv>();
                             x.AddConsumer<AgvPositionReceivedConsumer>();
+
+                            x.AddRequestClient<ReserveAgv>();
                         });
                     }
                     catch (InvalidOperationException e)

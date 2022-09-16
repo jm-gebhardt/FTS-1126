@@ -4,8 +4,9 @@ import { createPinia } from 'pinia'
 
 import '@/styles/index.scss'
 
-import BalmUI from 'balm-ui'
 import App from './App.vue'
+import BalmUI from 'balm-ui'
+import VueKonva from 'vue-konva'
 import routes from './routes'
 
 const router = createRouter({
@@ -19,4 +20,5 @@ const app = createApp(App)
 app.use(router)
 app.use(pinia)
 app.use(BalmUI)
+app.use(VueKonva)
 app.mount('#app')

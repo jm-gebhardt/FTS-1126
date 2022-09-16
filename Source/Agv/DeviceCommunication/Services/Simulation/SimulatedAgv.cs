@@ -32,6 +32,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
         /// </summary>
         public AgvMap? AgvMap { get; }
 
+
         /// <summary>
         /// Build simulated AGV
         /// </summary>

@@ -29,21 +29,31 @@
         </template>
       </ui-list>
     </div>
-    <cytoscape-map ref="mapComponent"></cytoscape-map>
+    <div id="map-container">
+      <konva-map ref="mapComponent"></konva-map>
+    </div>
   </div>
 </template>
 
 <script lang="ts" setup>
-import CytoscapeMap from '@/components/CytoscapeMap/CytoscapeMap.vue'
+import KonvaMap from '@/components/KonvaMap/KonvaMap.vue'
 import { storeToRefs } from 'pinia'
 import { useAgvStore } from '@/services/AgvStore'
-import { onMounted, ref } from 'vue'
-import { IAgv, IAgvGraph, IMap } from '@/services/api/data-contracts'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
+import {
+  IAgv,
+  IAgvGraph,
+  IAgvPosition,
+  IMap
+} from '@/services/api/data-contracts'
+import { AgvHub } from '@/services/AgvHub'
 import {
   BalmUiOption,
   createOptionFromMap,
   createOptionsFromList
 } from '@/utils/BalmUiOptions'
+
+const agvHub = new AgvHub(undefined, undefined, onAgvPositionChanged)
 
 const { agvs, agvGraph, maps } = storeToRefs(useAgvStore())
 const { fetchAgvs, fetchGraph, fetchMaps, MapUrl } = useAgvStore()
@@ -65,7 +75,20 @@ onMounted(() => {
       (map) => map.mapId
     )
   })
+
+  agvHub.connect()
 })
+
+onBeforeUnmount(async () => {
+  agvHub.disconnect()
+})
+
+/**
+ * Handler for hub event 'onAgvPositionChanged'
+ */
+async function onAgvPositionChanged(agvPosition: IAgvPosition): Promise<void> {
+  mapComponent.value.updateAgvPosition(agvPosition)
+}
 
 /**
  * Update the listed agvs
@@ -149,7 +172,7 @@ async function fetchSelectedAgvGraphs(): Promise<void> {
  * Update Graph elements on map
  */
 function updateGraphElements(): void {
-  mapComponent.value.removeAll()
+  mapComponent.value.clear()
 
   const graphs: IAgvGraph[] = []
   for (const agv of selectedAgvs.value) {
@@ -192,8 +215,10 @@ $map-menu-width: 150px;
   width: $map-menu-width;
 }
 
-.map {
-  width: calc(100vw - #{vars.$drawer-width} - #{$map-menu-width} - 60px);
+#map-container {
+  border: 2px solid #888888;
+  background-color: #dddddd;
+  width: calc(100vw - #{vars.$drawer-width} - #{$map-menu-width} - 100px);
   height: calc(100vh - 100px);
   display: block;
 }

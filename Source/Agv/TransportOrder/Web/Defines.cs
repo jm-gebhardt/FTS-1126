@@ -14,16 +14,21 @@
             /// Hub method for order state changed event
             /// </summary>
             OrderStateChanged,
+            
+            /// <summary>
+            /// New AGV was discovered
+            /// </summary>
+            AgvDiscovered,
 
             /// <summary>
             /// Hub method for agv state changed event
             /// </summary>
             AgvStateChanged,
-            
+
             /// <summary>
-            /// New AGV was discovered
+            /// Hub method for agv position changed event
             /// </summary>
-            AgvDiscovered
+            AgvPositionChanged
         }
     }
 }

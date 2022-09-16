@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.SignalR;
 using SignalRSwaggerGen.Attributes;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Hubs
 {
@@ -12,9 +13,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Hubs
     public interface IAgvHubContext
     {
         /// <summary>
-        /// Broadcasts an agv to all clients
+        /// Broadcasts the status of an agv to all clients
         /// </summary>
-        public Task SendAgvToAllClients(string method, IAgv agv, CancellationToken cancellationToken);
+        public Task SendAgvStateToAllClients(string method, IAgv agv, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Broadcasts the position of an agv to all clients
+        /// </summary>
+        public Task SendAgvPositionToAllClients(string method, AgvPositionReceived agvPosition, CancellationToken cancellationToken);
     }
 
     /// <summary>
@@ -34,9 +40,16 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Hubs
         }
 
         /// <inheritdoc/>
-        public async Task SendAgvToAllClients(string method, IAgv agv, CancellationToken cancellationToken)
+        public async Task SendAgvStateToAllClients(string method, IAgv agv, CancellationToken cancellationToken)
         {
             string message = JsonSerializer.Serialize(Models.Agv.FromIAgv(agv), _serializerOptions);
+            await _hubContext.Clients.All.SendAsync(method, message, cancellationToken);
+        }
+
+        /// <inheritdoc/>
+        public async Task SendAgvPositionToAllClients(string method, AgvPositionReceived agvPosition, CancellationToken cancellationToken)
+        {
+            string message = JsonSerializer.Serialize(agvPosition, _serializerOptions);
             await _hubContext.Clients.All.SendAsync(method, message, cancellationToken);
         }
     }

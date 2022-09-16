@@ -24,6 +24,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { IOrder } from '@/services/api/data-contracts'
 
 export default defineComponent({
   name: 'OrdersView'
@@ -38,19 +39,27 @@ import { storeToRefs } from 'pinia'
 import { onBeforeUnmount } from 'vue'
 import { OrderHub } from '@/services/OrderHub'
 
-const orderHub = new OrderHub()
-const orderStore = useOrderStore()
+const orderHub = new OrderHub(onOrderStateChanged)
 
-const { data, currentPage, totalCount, loading, error } =
-  storeToRefs(orderStore)
+const { fetchOrders, updateOrderList } = useOrderStore()
+const { data, currentPage, totalCount, loading, error } = storeToRefs(
+  useOrderStore()
+)
 
 const pageSizes = [10, 25, 100]
 
 let requestPageNumber = 1
 let requestPageSize = pageSizes[0]
 
+/**
+ * Updates order in order list view
+ */
+async function onOrderStateChanged(order: IOrder): Promise<void> {
+  updateOrderList(order)
+}
+
 function fetch(): void {
-  orderStore.fetchOrders(requestPageNumber, requestPageSize)
+  fetchOrders(requestPageNumber, requestPageSize)
 }
 
 interface IPageSizeChangedEvent {

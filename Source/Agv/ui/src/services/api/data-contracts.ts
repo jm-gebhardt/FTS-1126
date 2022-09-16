@@ -92,18 +92,38 @@ export interface IEdge {
   metric: number
 }
 
+export interface IAgvPosition {
+  /** @format uuid */
+  correlationId: string
+
+  agvId: string
+
+  /** @format int32 */
+  x: number
+
+  /** @format int32 */
+  y: number
+
+  /** @format float */
+  theta: number
+}
+
+
 export enum IHostOrderCreator {
   Wms = 'Wms',
   Simulation = 'Simulation'
 }
+
+
 
 /**
  * SignalR hub methods
  */
 export enum IHubMethods {
   OrderStateChanged = 'OrderStateChanged',
+  AgvDiscovered = 'AgvDiscovered',
   AgvStateChanged = 'AgvStateChanged',
-  AgvDiscovered = 'AgvDiscovered'
+  AgvPositionChanged = 'AgvPositionChanged'
 }
 
 /**
@@ -161,7 +181,8 @@ export enum INodeType {
   WayPoint = 'WayPoint',
   Turn = 'Turn',
   Station = 'Station',
-  Park = 'Park'
+  Park = 'Park',
+  Agv = 'Agv'
 }
 
 /**

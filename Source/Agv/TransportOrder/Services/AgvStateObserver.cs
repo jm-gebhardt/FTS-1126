@@ -27,11 +27,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         {
             if (Equals(currentState, context.StateMachine.Initial))
             {
-                await _agvHubContext.SendAgvToAllClients(nameof(Defines.HubMethods.AgvDiscovered), context.Saga, context.CancellationToken);
+                await _agvHubContext.SendAgvStateToAllClients(nameof(Defines.HubMethods.AgvDiscovered), context.Saga, context.CancellationToken);
             }
             else
             {
-                await _agvHubContext.SendAgvToAllClients(nameof(Defines.HubMethods.AgvStateChanged), context.Saga, context.CancellationToken);
+                await _agvHubContext.SendAgvStateToAllClients(nameof(Defines.HubMethods.AgvStateChanged), context.Saga, context.CancellationToken);
             }
         }
     }

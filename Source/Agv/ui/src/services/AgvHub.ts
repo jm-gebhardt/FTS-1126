@@ -3,41 +3,42 @@ import {
   HubConnectionBuilder,
   HubConnectionState
 } from '@microsoft/signalr'
-import { IAgv } from '@/services/api/data-contracts'
-import { useAgvStore } from './AgvStore'
+import { IAgv, IAgvPosition, IHubMethods } from '@/services/api/data-contracts'
 
 /**
  * Signalr hub for orders
  */
 export class AgvHub {
   client: HubConnection
-  store = useAgvStore()
+  _onAgvDiscovered?: () => Promise<void>
+  _onAgvStateChanged?: (agv: IAgv) => Promise<void>
+  _onAgvPositionChanged?: (agvPosition: IAgvPosition) => Promise<void>
 
-  constructor() {
+  constructor(
+    onAgvDiscovered?: () => Promise<void>,
+    onAgvStateChanged?: (agv: IAgv) => Promise<void>,
+    onAgvPositionChanged?: (agvPosition: IAgvPosition) => Promise<void>
+  ) {
+    this._onAgvDiscovered = onAgvDiscovered
+    this._onAgvStateChanged = onAgvStateChanged
+    this._onAgvPositionChanged = onAgvPositionChanged
+
     const hubUrl = import.meta.env.VITE_HUB_URL
     this.client = new HubConnectionBuilder().withUrl(hubUrl + '/agv').build()
 
     // Hub endpoints with respective handlers
-    this.client.on('AgvStateChanged', async (message: string) => {
-      this.onAgvStateChanged(message)
+    this.client.on(IHubMethods.AgvDiscovered, async () => {
+      if (this._onAgvDiscovered) this._onAgvDiscovered()
     })
 
-    this.client.on('AgvDiscovered', async () => {
-      // When a new agv has been added, we fetch the full list as we do not know an what page it is
-      await this.store.fetchAgvs(
-        this.store.agvs.currentPage,
-        this.store.agvs.pageSize
-      )
+    this.client.on(IHubMethods.AgvStateChanged, async (message: string) => {
+      if (this._onAgvStateChanged) this._onAgvStateChanged(JSON.parse(message))
     })
-  }
 
-  /**
-   * Updates agv in agv list view
-   * @param message JSON ecnoded IOrder object
-   */
-  private async onAgvStateChanged(message: string): Promise<void> {
-    const agv: IAgv = JSON.parse(message)
-    await this.store.updateAgv(agv)
+    this.client.on(IHubMethods.AgvPositionChanged, async (message: string) => {
+      if (this._onAgvPositionChanged)
+        this._onAgvPositionChanged(JSON.parse(message))
+    })
   }
 
   /**

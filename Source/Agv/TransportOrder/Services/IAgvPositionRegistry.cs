@@ -20,5 +20,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// <param name="correlationId">Correlation ID of the AGV</param>
         /// <returns>Returns the position of the requested AGV of null when no AGV with the given correlationId was found</returns>
         public AgvPositionReceived? GetPosition(Guid correlationId);
+
+        /// <summary>
+        /// Returns a list position for all AGVs
+        /// </summary>
+        /// <returns>Returns a list position for all AGVs</returns>
+        public List<AgvPositionReceived> GetAllPositions();
     }
 }

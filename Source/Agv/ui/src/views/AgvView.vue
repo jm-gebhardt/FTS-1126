@@ -28,16 +28,32 @@ import { useAgvStore } from '@/services/AgvStore'
 import { storeToRefs } from 'pinia'
 import { onBeforeUnmount } from 'vue'
 import { AgvHub } from '@/services/AgvHub'
+import { IAgv } from '@/services/api/data-contracts'
 
-const agvHub = new AgvHub()
+const agvHub = new AgvHub(onAgvDiscovered, onAgvStateChanged)
 
 const { agvs } = storeToRefs(useAgvStore())
-const { fetchAgvs } = useAgvStore()
+const { fetchAgvs, updateAgv } = useAgvStore()
 
 const pageSizes = [10, 25, 100]
 
 let requestPageNumber = 1
 let requestPageSize = pageSizes[0]
+
+/**
+ * Handler for hub event 'onAgvDiscovered'
+ */
+async function onAgvDiscovered(): Promise<void> {
+  // When a new agv has been added, we fetch the full list as we do not know an what page it is
+  await fetchAgvs(requestPageNumber, requestPageSize)
+}
+
+/**
+ * Handler for hub event 'onAgvStateChanged'
+ */
+async function onAgvStateChanged(agv: IAgv): Promise<void> {
+  await updateAgv(agv)
+}
 
 function fetch(): void {
   fetchAgvs(requestPageNumber, requestPageSize)

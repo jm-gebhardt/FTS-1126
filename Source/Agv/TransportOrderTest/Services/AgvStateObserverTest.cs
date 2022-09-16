@@ -35,7 +35,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 
             await agvStateObserver.StateChanged(mockContext.Object, currentState, previousState);
 
-            mockHub.Verify(s => s.SendAgvToAllClients(nameof(Defines.HubMethods.AgvStateChanged), It.IsAny<IAgv>(), It.IsAny<CancellationToken>()), Times.Once);
+            mockHub.Verify(s => s.SendAgvStateToAllClients(nameof(Defines.HubMethods.AgvStateChanged), It.IsAny<IAgv>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         /// <summary>
@@ -57,7 +57,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 
             await agvStateObserver.StateChanged(mockContext.Object, currentState, previousState);
 
-            mockHub.Verify(s => s.SendAgvToAllClients(nameof(Defines.HubMethods.AgvDiscovered), It.IsAny<IAgv>(), It.IsAny<CancellationToken>()), Times.Once);
+            mockHub.Verify(s => s.SendAgvStateToAllClients(nameof(Defines.HubMethods.AgvDiscovered), It.IsAny<IAgv>(), It.IsAny<CancellationToken>()), Times.Once);
         }
     }
 }

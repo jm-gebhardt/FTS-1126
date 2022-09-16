@@ -3,33 +3,26 @@ import {
   HubConnectionBuilder,
   HubConnectionState
 } from '@microsoft/signalr'
-import { IOrder } from '@/services/api/data-contracts'
-import { useOrderStore } from './OrderStore'
+import { IHubMethods, IOrder } from '@/services/api/data-contracts'
 
 /**
  * Signalr hub for orders
  */
 export class OrderHub {
   client: HubConnection
-  store = useOrderStore()
+  _onOrderStateChanged?: (order: IOrder) => Promise<void>
 
-  constructor() {
+  constructor(onOrderStateChanged: (order: IOrder) => Promise<void>) {
+    this._onOrderStateChanged = onOrderStateChanged
+
     const hubUrl = import.meta.env.VITE_HUB_URL
     this.client = new HubConnectionBuilder().withUrl(hubUrl + '/order').build()
 
     // Hub endpoints with respective handlers
-    this.client.on('OrderStateChanged', (message: string) => {
-      this.onOrderStateChanged(message)
+    this.client.on(IHubMethods.OrderStateChanged, (message: string) => {
+      if (this._onOrderStateChanged)
+        this._onOrderStateChanged(JSON.parse(message))
     })
-  }
-
-  /**
-   * Updates order in order list view
-   * @param message JSON ecnoded IOrder object
-   */
-  private onOrderStateChanged(message: string): void {
-    const order: IOrder = JSON.parse(message)
-    this.store.updateOrderList(order)
   }
 
   /**
