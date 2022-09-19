@@ -27,7 +27,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Db.Models
         /// </summary>
         Finished,
         /// <summary>
-        /// Order canceled
+        /// Order cancelled
         /// </summary>
         Cancelled
     }

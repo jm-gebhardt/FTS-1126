@@ -96,21 +96,7 @@ services:
       mssql:
         condition: service_healthy
     logging: *fluent-json-logging
-    
-  taragv:
-    image: registry.gitlab.com/tar4/karis_virtual
-    hostname: agv0
-    environment:
-      - MQTT_BROKER=rabbitmq
-      - MQTT_USER=${RABBITMQ_USER}
-      - MQTT_PASSWORD=${RABBITMQ_PASSWORD} 
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-      fluent:
-        condition: service_started
-    logging: *fluent-logging
-    
+
   ######################################## RabbitMQ ####################################################################
   
   rabbitmq:
@@ -280,3 +266,7 @@ services:
     logging: *fluent-logging
     healthcheck:
       test:  wget --spider -q --tries=1 -O- http://localhost/metrics || exit 1
+
+networks:
+  default:
+    name: agvdev

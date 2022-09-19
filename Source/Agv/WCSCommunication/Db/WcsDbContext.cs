@@ -6,7 +6,6 @@ using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.StoreWare.Agv.WCSCommunication.Db
 {
-
     /// <summary>
     /// The Wcs Database Context
     /// </summary>
@@ -64,7 +63,6 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Db
         public WcsDbContext(DbContextOptions<WcsDbContext> options) : base(options)
         {
         }
-        
 
         /// <summary>
         /// Configure the DbContext
@@ -82,7 +80,6 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Db
                 // Logs from Microsoft.EntityFrameworkCore.Infrastructure
                 c.Log((CoreEventId.ContextInitialized, LogLevel.Debug));
             });
-
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿{
+{
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "title": "requestAgvData",
     "description": "Requests the basic AGV data from the AGV",

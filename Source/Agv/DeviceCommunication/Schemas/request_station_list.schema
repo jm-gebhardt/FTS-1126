@@ -1,4 +1,4 @@
-﻿{
+{
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "title": "request_station_list",
     "description": "Requests the station list from the AGV",

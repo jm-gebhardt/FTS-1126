@@ -1,0 +1,19 @@
+﻿namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
+{
+    /// <summary>
+    /// Env Variable names
+    /// </summary>
+    public static class EnvVars
+    {
+        /// <summary>
+        /// Compose file path
+        /// </summary>
+        public const string ComposeFileEnvVar = "COMPOSE_FILE";
+        /// <summary>
+        /// MQTT Samples
+        /// </summary>
+        public const string MqttSamplePath = "MQTT_SAMPLES";
+    }
+}
+
+

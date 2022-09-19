@@ -1,0 +1,49 @@
+{
+  "headerId": 43,
+  "timestamp": "2022-07-06T13:14:15",
+  "version": "1.3.2",
+  "manufacturer": "TAR",
+  "serialNumber": "AGV-01",
+  "orderId": "ORD_01",
+  "orderUpdateId": 0,
+  "lastNodeId": "CRG_01",
+  "lastNodeSequenceId": 0,
+  "nodeStates": [],
+  "edgeStates": [],
+  "driving": true,
+  "actionStates": [],
+  "batteryState": {
+    "batteryCharge": 31.25,
+    "charging": false,
+    "batteryVoltage": 43.5,
+    "batteryHealth": 93.4,
+    "reach": 190.25
+  },
+  "operatingMode": "SEMIAUTOMATIC",
+  "errors": [],
+  "safetyState": {
+    "eStop": "none",
+    "fieldViolation": false
+  },
+  "zoneSetId": "",
+  "paused": true,
+  "newBaseRequest": true,
+  "distanceSinceLastNode": 306.5,
+  "agvPosition": {
+    "x": -26.5,
+    "y": 371.75,
+    "theta": 86.5,
+    "mapId": "base",
+    "positionInitialized": false,
+    "mapDescription": "Base Map",
+    "localizationScore": -62.5,
+    "deviationRange": 836.75
+  },
+  "velocity": {
+    "vx": 611.75,
+    "vy": 128.25,
+    "omega": -95.25
+  },
+  "loads": [],
+  "information": []
+}

@@ -107,6 +107,27 @@ dotnet run --project DeviceCommunication simulate --sources='S1,S2', --destinati
 dotnet test Source/Agv/CompileAgv.sln
 ```
 
+## Run Integration Tests
+Integration tests are located in `Source/Agv.IntegrationsTests`
+```
+cd Source/Agv.IntegrationsTests
+```
+Powershell:
+```
+$Env:COMPOSE_FILE = Join-Path $pwd "/../../docker-compose.yml"
+$Env:MQTT_SAMPLES = Join-Path $pwd "/MqttMessages"
+```
+Bash:
+```
+export COMPOSE_FILE=$(pwd)/../../docker-compose.yml
+export MQTT_SAMPLES=$(pwd)/MqttMessages"
+```
+
+Run Tests 
+```
+dotnet test
+```
+
 ## Docker
 
 The software is designed to run within docker optionally.
@@ -167,4 +188,3 @@ admin> sc.exe delete "Gebhardt.StoreWare.Agv.<service>"
 ```
 
 Note: If MMC/Taskmgr/ProcExp are running, service removal may not have immediate effect and the following message will be shown "Der angegebene Dienst wurde zum Löschen markiert."
-

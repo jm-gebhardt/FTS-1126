@@ -28,7 +28,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
         /// <param name="context">Context of the consumer wrapping details surrounding the inbound message.</param>
         public async Task Consume(ConsumeContext<RequestAgvData> context)
         {
-            await context.PublishMqtt(new MqttRequestData(context.Message.AgvId, context.Message.CorrelationId), context.CancellationToken);
+            await context.PublishMqtt(new MqttRequestData(context.Message.AgvId, Guid.NewGuid()), context.CancellationToken);
 
             _logger.LogInformation("{MessageType} from AGV {AgvId} / {CorrelationId} received", nameof(RequestAgvData), context.Message.AgvId, context.CorrelationId);
         }

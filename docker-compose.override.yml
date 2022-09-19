@@ -24,4 +24,3 @@ services:
       - /work/node_modules
     command: > 
       sh -c "npm install && npm run build"
-    
