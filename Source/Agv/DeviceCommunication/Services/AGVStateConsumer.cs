@@ -60,12 +60,14 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
                 await context.Publish(new AgvPositionReceived(
                     correlationId: serialNumber.ToGuid(),
                     agvId: serialNumber,
-                    positionInitialized: context.Message.AgvPosition.PositionInitialized,
-                    x: context.Message.AgvPosition.X,
-                    y: context.Message.AgvPosition.Y,
-                    theta: context.Message.AgvPosition.Theta,
-                    deviationRange: context.Message.AgvPosition.DeviationRange
-                    ), context.CancellationToken);
+                    agvPosition: new Common.Messages.AgvManagement.AgvPosition(
+                        positionInitialized: context.Message.AgvPosition.PositionInitialized,
+                        x: context.Message.AgvPosition.X,
+                        y: context.Message.AgvPosition.Y,
+                        z: 0f,
+                        theta: context.Message.AgvPosition.Theta,
+                        deviationRange: context.Message.AgvPosition.DeviationRange
+                    )), context.CancellationToken);
             }
         }
 

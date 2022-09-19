@@ -124,7 +124,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         /// <summary>
         /// Return the current position based on the time passed travelling.
         /// </summary>
-        public Tuple<float, float, float>? Position
+        public AgvPosition? Position
         {
             get
             {
@@ -140,15 +140,17 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
                     var lastNode = AgvGraph!.Nodes.First(x => x.Id == Nodes[lastNodeIndex]);
                     if (lastNodeIndex < Nodes.Length - 1)
                     {
-                        double partialProgress = orderProgress.Value - lastNodeIndex * NodeTravelTime / OrderDuration!.Value.TotalMilliseconds;
+                        double partialProgress = (orderProgress.Value - lastNodeIndex / (double)Nodes.Length) * Nodes.Length;
                         var nextNode = AgvGraph!.Nodes.First(x => x.Id == Nodes[lastNodeIndex + 1]);
                         var vectorLast = new System.Numerics.Vector3(lastNode.X, lastNode.Y, lastNode.Z);
-                        var vectorEdge = new System.Numerics.Vector3(nextNode.X, nextNode.Y, nextNode.Z) - vectorLast;
+                        var vectorNext = new System.Numerics.Vector3(nextNode.X, nextNode.Y, nextNode.Z);
+                        float theta = (float)(Math.Atan2(vectorNext.Y - vectorLast.Y, vectorNext.X - vectorLast.X) + Math.PI / 2);
+                        var vectorEdge = vectorNext - vectorLast;
                         vectorEdge *= (float)partialProgress;
                         vectorEdge = vectorLast + vectorEdge;
-                        return new Tuple<float, float, float>(vectorEdge.X, vectorEdge.Y, vectorEdge.Z);
+                        return new AgvPosition(true, vectorEdge.X, vectorEdge.Y, vectorEdge.Z, theta, 0f);
                     }
-                    return new Tuple<float, float, float>(lastNode.X, lastNode.Y, lastNode.Y);
+                    return new AgvPosition(true, lastNode.X, lastNode.Y, lastNode.Z, 0f, 0f);
                 }
                 return null;
             }

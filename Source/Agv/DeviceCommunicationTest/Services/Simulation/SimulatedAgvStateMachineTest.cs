@@ -409,8 +409,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             // Last position message received should be the position of the last node
             var positionMessage = fixture.TestHarness.Published.Select<AgvPositionReceived>().Last().Context.Message;
             var destinationNode = graph.Nodes.First(n => n.Id == "D1");
-            Assert.AreEqual(destinationNode.X, positionMessage.X, 0.00001f);
-            Assert.AreEqual(destinationNode.Y, positionMessage.Y, 0.00001f);
+            Assert.AreEqual(destinationNode.X, positionMessage.AgvPosition.X, 0.00001f);
+            Assert.AreEqual(destinationNode.Y, positionMessage.AgvPosition.Y, 0.00001f);
+            Assert.AreEqual(destinationNode.Z, positionMessage.AgvPosition.Z, 0.00001f);
         }
     }
 }

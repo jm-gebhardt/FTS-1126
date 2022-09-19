@@ -50,7 +50,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
 
 
         /// <summary>
-        /// AGV is Idle
+        /// AGV is idle
         /// </summary>
         public State Idle { get; private set; } = default!;
 
@@ -267,13 +267,13 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
 
         private async Task PublishPosition(BehaviorContext<SimulatedAgvSaga> context)
         {
-            Tuple<float, float, float>? position = context.Saga.Position;
+            var position = context.Saga.Position;
             if (position != null)
             {
                 await context.Publish(new AgvPositionReceived(
                     context.Saga.CorrelationId,
                     context.Saga.AgvId,
-                    true, position.Item1, position.Item2, 0f
+                    position
                 ), context.CancellationToken);
             }
         }
