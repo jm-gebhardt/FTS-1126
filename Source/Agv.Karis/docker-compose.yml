@@ -1,0 +1,49 @@
+version: '3.8'
+
+########################################################################################################################
+# Network 
+########################################################################################################################
+networks:
+  default:
+    name: agv_net
+    external: true
+
+########################################################################################################################
+# Services 
+########################################################################################################################
+services:
+  karis0:
+    image: registry.gitlab.com/tar4/karis_virtual
+    hostname: karis0
+    environment:
+      - MQTT_BROKER=rabbitmq
+      - MQTT_USER=${RABBITMQ_USER}
+      - MQTT_PASSWORD=${RABBITMQ_PASSWORD}
+      - MONGODB=mongo
+    
+  karis1:
+    image: registry.gitlab.com/tar4/karis_virtual
+    hostname: karis1
+    environment:
+      - MQTT_BROKER=rabbitmq
+      - MQTT_USER=${RABBITMQ_USER}
+      - MQTT_PASSWORD=${RABBITMQ_PASSWORD}
+      - MONGODB=mongo
+  
+  mongo:
+    hostname: mongo.karis.agv
+    ports:
+      - "127.0.0.1:27018:27017"
+    image: mongo:4.4
+    restart: unless-stopped
+
+  mongo-provisioning:  
+    hostname: mongo-provisioning.agv
+    image: mongo:4.4
+    depends_on:
+      - mongo
+    environment:
+     - DB_HOST=mongo
+    volumes:
+     - ./mongodb/dump:/dump:ro
+    command: mongorestore --host=mongo /dump
