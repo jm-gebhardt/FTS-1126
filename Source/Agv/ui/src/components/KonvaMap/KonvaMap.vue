@@ -5,25 +5,27 @@
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue'
 import { MapCanvas } from '@/components/KonvaMap/MapCanvas'
-import { IAgvGraph, IAgvPosition } from '@/services/api/data-contracts'
+import { IAgvGraph, IAgvPositionReceived } from '@/services/api/data-contracts'
 
 const map = ref()
 let graphMap: MapCanvas | undefined
 
 onMounted(() => {
   graphMap = new MapCanvas(map.value)
-  graphMap.showAll()
 })
 
 defineExpose({
-  addAgvs: (agvs: IAgvPosition[]) => {
+  addGraphs: (graphs: IAgvGraph[]) => {
+    graphMap?.addGraphs(graphs)
+  },
+  setVisibleAgvs: (agvCorrelationIds: string[]) => {
+    graphMap?.setVisibleAgvs(agvCorrelationIds)
+  },
+  addAgvs: (agvs: IAgvPositionReceived[]) => {
     graphMap?.addAgvs(agvs)
   },
-  addGraphs: (graphs: IAgvGraph[]) => {
-    console.log(graphs)
-  },
-  updateAgvPosition(agv: IAgvPosition) {
-    graphMap?.UpdateAgvPosition(agv)
+  updateAgvPosition(agv: IAgvPositionReceived) {
+    graphMap?.updateAgvPosition(agv)
   },
   setBackground: (
     background: HTMLImageElement,
@@ -33,9 +35,7 @@ defineExpose({
   ) => {
     graphMap?.setBackground(background, resolution, xOffset, yOffset)
   },
-  renderBackground: () => graphMap?.renderBackground(),
-  showAll: () => graphMap?.showAll(),
-  clear: () => graphMap?.clear()
+  clear: () => graphMap?.clearGraph()
 })
 </script>
 <style lang="scss">

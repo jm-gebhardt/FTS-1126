@@ -6,6 +6,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.States;
 using Gebhardt.StoreWare.Agv.TransportOrder.Services;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
 {
@@ -77,13 +78,43 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
             return registry.Object;
         }
 
+        private static IAgvPositionRegistry GetAgvPositionRegistry()
+        {
+            var registry = new Mock<IAgvPositionRegistry>();
+            var agvPositions = new List<AgvPositionReceived>();
+
+            for (int i = 0; i < _agvIds.Length; i++)
+            {
+                string agvId = _agvIds[i];
+                var correlationId = agvId.ToGuid();
+                var node = _nodes[i];
+
+                agvPositions.Add(new AgvPositionReceived(correlationId, agvId, new AgvPosition(true, node.X, node.Y, node.Z, 0.5f)));
+            }
+
+            registry.Setup(x => x.GetAllPositions()).Returns(agvPositions);
+            registry.Setup(x => x.GetPosition(It.IsAny<Guid>())).Returns<Guid>(correlationId =>
+            {
+                foreach (var agvPosition in agvPositions)
+                {
+                    if (agvPosition.CorrelationId == correlationId)
+                    {
+                        return agvPosition;
+                    }
+                }
+                return null;
+            });
+
+            return registry.Object;
+        }
+
         #endregion
 
         /// <summary/>
         [TestMethod]
         public void GetAgvs_Successfully()
         {
-            var controller = new AgvController(GetAgvRegistry());
+            var controller = new AgvController(GetAgvRegistry(), GetAgvPositionRegistry());
 
             var result = controller.GetAgvs().Result as OkObjectResult;
             Assert.IsNotNull(result);
@@ -109,7 +140,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
         [DataRow(1)]
         public void GetAgvGraph_Successfully(int index)
         {
-            var controller = new AgvController(GetAgvRegistry());
+            var controller = new AgvController(GetAgvRegistry(), GetAgvPositionRegistry());
             var correlationId = _agvIds[index].ToGuid();
 
             var result = controller.GetAgvGraph(correlationId).Result as OkObjectResult;
@@ -127,7 +158,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
         [TestMethod]
         public void GetAgvGraph_NotFound()
         {
-            var controller = new AgvController(GetAgvRegistry());
+            var controller = new AgvController(GetAgvRegistry(), GetAgvPositionRegistry());
             var correlationId = Guid.Empty;
 
             var result = controller.GetAgvGraph(correlationId).Result as NotFoundResult;
@@ -140,7 +171,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
         [DataRow(1)]
         public void GetAgvStatus_Successfully(int index)
         {
-            var controller = new AgvController(GetAgvRegistry());
+            var controller = new AgvController(GetAgvRegistry(), GetAgvPositionRegistry());
             var correlationId = _agvIds[index].ToGuid();
 
             var result = controller.GetAgvStatus(correlationId).Result as OkObjectResult;
@@ -157,7 +188,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
         [TestMethod]
         public void GetAgvStatus_NotFound()
         {
-            var controller = new AgvController(GetAgvRegistry());
+            var controller = new AgvController(GetAgvRegistry(), GetAgvPositionRegistry());
             var correlationId = Guid.Empty;
 
             var result = controller.GetAgvStatus(correlationId).Result as NotFoundResult;
@@ -170,7 +201,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
         [DataRow(1)]
         public void GetAgvData_Successfully(int index)
         {
-            var controller = new AgvController(GetAgvRegistry());
+            var controller = new AgvController(GetAgvRegistry(), GetAgvPositionRegistry());
             var correlationId = _agvIds[index].ToGuid();
 
             var result = controller.GetAgvData(correlationId).Result as OkObjectResult;
@@ -187,7 +218,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
         [TestMethod]
         public void GetAgvData_NotFound()
         {
-            var controller = new AgvController(GetAgvRegistry());
+            var controller = new AgvController(GetAgvRegistry(), GetAgvPositionRegistry());
             var correlationId = Guid.Empty;
 
             var result = controller.GetAgvData(correlationId).Result as NotFoundResult;

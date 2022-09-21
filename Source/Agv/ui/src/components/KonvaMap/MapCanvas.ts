@@ -1,71 +1,36 @@
 import Konva from 'konva'
-import { IAgvPosition } from '@/services/api/data-contracts'
-import { Vector2d } from 'konva/lib/types'
-
-class AgvData {
-  tag: Konva.Text
-  shape: Konva.RegularPolygon
-
-  private tagOffsetY = -32 // Experimentally determined
-
-  constructor(
-    agvLayer: Konva.Layer,
-    agvId: string,
-    x: number,
-    y: number,
-    rotation: number
-  ) {
-    this.tag = new Konva.Text({
-      text: agvId
-    })
-
-    this.shape = new Konva.RegularPolygon({
-      x: x,
-      y: y,
-      rotation: rotation,
-      sides: 3,
-      radius: 20,
-      stroke: 'black',
-      strokeWidth: 1,
-      fillLinearGradientStartPoint: { x: 0, y: 0 },
-      fillLinearGradientEndPoint: { x: 0, y: 1 },
-      fillLinearGradientColorStops: [0, 'red', 1, 'blue']
-    })
-
-    this.tag.position({
-      x: x - this.tag.width() / 2,
-      y: y + this.tagOffsetY
-    })
-
-    agvLayer.add(this.shape)
-    agvLayer.add(this.tag)
-  }
-
-  Update(position: Vector2d, rotation: number): void {
-    this.tag.position({
-      x: position.x - this.tag.width() / 2,
-      y: position.y + this.tagOffsetY
-    })
-    this.shape.position(position)
-    this.shape.rotation(rotation)
-  }
-}
+import {
+  IAgvGraph,
+  IAgvPositionReceived,
+  IEdge,
+  INode,
+  INodeType
+} from '@/services/api/data-contracts'
+import { MapNode, Charge, Edge, Park, Station, WayPoint } from './MapNodes'
+import { Agv } from './MapAgv'
 
 /**
  * Konva AGV Graph
  */
 export class MapCanvas {
-  mapLayer: Konva.Layer
+  imageLayer: Konva.Layer
+  edgeLayer: Konva.Layer
+  nodeLayer: Konva.Layer
   agvLayer: Konva.Layer
 
-  private _agvs: Map<string, AgvData> = new Map()
+  private stage: Konva.Stage
+
+  private _nodes: Map<string, MapNode> = new Map()
+  private _edges: Map<string, Edge> = new Map()
+  private _agvs: Map<string, Agv> = new Map()
+  private _visibleAgvs: string[] = []
+
   private _background: HTMLImageElement | null = null
   private _resolution = 1
-  private _width = 0
-  private _height = 0
-  private _xOffset = 0
-  private _yOffset = 0
+  private _offsetX = 0
+  private _offsetY = 0
 
+  private readonly ZoomFactor = 1.1 // change zoom by 10% for each scroll step
   private readonly MinZoomLevel = 0.5
   private readonly MaxZoomLevel = 10
 
@@ -74,29 +39,164 @@ export class MapCanvas {
    * @param container: container where the map is rendered in
    */
   constructor(container: HTMLElement) {
-    this._width = container.offsetWidth
-    this._height = container.offsetHeight
-
-    const stage = new Konva.Stage({
+    this.stage = new Konva.Stage({
       container: container.id,
-      width: this._width,
-      height: this._height
+      width: container.offsetWidth,
+      height: container.offsetHeight,
+      draggable: true
     })
 
-    this.mapLayer = new Konva.Layer()
+    this.imageLayer = new Konva.Layer()
+    this.edgeLayer = new Konva.Layer()
+    this.nodeLayer = new Konva.Layer()
     this.agvLayer = new Konva.Layer()
 
-    stage.add(this.mapLayer)
-    stage.add(this.agvLayer)
+    this.stage.add(this.imageLayer)
+    this.stage.add(this.edgeLayer)
+    this.stage.add(this.nodeLayer)
+    this.stage.add(this.agvLayer)
+
+    // Event handler for resizing stage on window resize
+    window.addEventListener('resize', () => {
+      if (container) {
+        this.stage.width(container.offsetWidth)
+        this.stage.height(container.offsetHeight)
+      }
+    })
+
+    // Event handler for zooming
+    this.stage.on('wheel', (e) => {
+      e.evt.preventDefault() // stop default scrolling
+
+      const oldScale = this.stage.scaleX()
+      const pointer = this.stage.getPointerPosition()
+      if (pointer) {
+        let direction = e.evt.deltaY // zoom direction
+
+        // when using a trackpad, e.evt.ctrlKey is true, in that case invert direction
+        if (e.evt.ctrlKey) {
+          direction = -direction
+        }
+
+        let newScale = oldScale
+        if (direction < 0) {
+          newScale = oldScale * this.ZoomFactor
+          if (newScale > this.MaxZoomLevel) newScale = this.MaxZoomLevel
+        } else {
+          newScale = oldScale / this.ZoomFactor
+          if (newScale < this.MinZoomLevel) newScale = this.MinZoomLevel
+        }
+
+        const mousePointTo = {
+          x: (pointer.x - this.stage.x()) / oldScale,
+          y: (pointer.y - this.stage.y()) / oldScale
+        }
+
+        this.stage.scale({ x: newScale, y: newScale })
+        this.stage.position({
+          x: pointer.x - mousePointTo.x * newScale,
+          y: pointer.y - mousePointTo.y * newScale
+        })
+      }
+    })
+  }
+
+  /**
+   * Add AGV Graphs
+   * All graphs will be merged into one to avoid duplicate nodes
+   * @param graphs: Graphs
+   */
+  addGraphs(graphs: IAgvGraph[]): void {
+    for (const graph of graphs) {
+      const nodes = graph.nodes
+      if (nodes != null) {
+        this._addNodes(nodes)
+      }
+      const edges = graph.edges
+      if (edges != null) {
+        this._addEdges(edges)
+      }
+    }
+  }
+
+  _addNodes(nodes: INode[]): void {
+    for (const node of nodes) {
+      if (!this._nodes.has(node.id)) {
+        let newNode: MapNode | null = null
+
+        switch (node.type) {
+          case INodeType.Charge:
+            newNode = new Charge(node.id, { x: node.x, y: node.y })
+            break
+
+          case INodeType.WayPoint:
+            newNode = new WayPoint(node.id, { x: node.x, y: node.y })
+            break
+
+          case INodeType.Turn:
+            newNode = new WayPoint(node.id, { x: node.x, y: node.y })
+            break
+
+          case INodeType.Station:
+            newNode = new Station(node.id, { x: node.x, y: node.y })
+            break
+
+          case INodeType.Park:
+            newNode = new Park(node.id, { x: node.x, y: node.y })
+            break
+        }
+
+        if (newNode) {
+          this._nodes.set(node.id, newNode)
+          this.nodeLayer.add(newNode.tag)
+          this.nodeLayer.add(newNode.icon)
+        }
+      }
+    }
+  }
+
+  _addEdges(edges: IEdge[]): void {
+    for (const edge of edges) {
+      const edgeId = `${edge.from}-${edge.to}`
+
+      if (!this._edges.has(edgeId)) {
+        const nodeFrom = this._nodes.get(edge.from)
+        const nodeTo = this._nodes.get(edge.to)
+
+        if (nodeFrom && nodeTo) {
+          const newEdge = new Edge(
+            edgeId,
+            nodeFrom.getPosition(),
+            nodeTo.getPosition()
+          )
+          this._edges.set(edgeId, newEdge)
+          this.edgeLayer.add(newEdge.line)
+        }
+      }
+    }
+  }
+
+  /**
+   * Sets which AGVs are visible
+   * @param agvIds: IDs of visible AGVs
+   */
+  setVisibleAgvs(agvCorrelationIds: string[]): void {
+    this._visibleAgvs = agvCorrelationIds
+
+    for (const agv of this._agvs.values()) {
+      const visible = this._visibleAgvs.includes(agv.getCorrelationId())
+      agv.icon.visible(visible)
+      agv.tag.visible(visible)
+    }
   }
 
   /**
    * Add AGV positions
    * @param agvs: Agv Positions
    */
-  addAgvs(agvs: IAgvPosition[]): void {
+  addAgvs(agvs: IAgvPositionReceived[]): void {
     for (const agv of agvs) {
-      this.UpdateAgvPosition(agv)
+      this.updateAgvPosition(agv)
     }
   }
 
@@ -104,21 +204,33 @@ export class MapCanvas {
    * Updates position of an AGV
    * @param agv: Agv Position
    */
-  UpdateAgvPosition(agv: IAgvPosition): void {
-    const scale = 40
-    const offset = 80
+  updateAgvPosition(agv: IAgvPositionReceived): void {
+    const rotation = (agv.agvPosition.theta * 180) / Math.PI // Convert radians to degree: [-PI, PI] -> [-180°, 180°]
 
-    const x = agv.x * scale + offset
-    const y = agv.y * scale + offset
-    const r = (agv.theta * 180) / Math.PI // Convert radians to degree: [-PI, PI] -> [-180°, 180°]
+    let agvNode = this._agvs.get(agv.agvId)
 
-    if (!this._agvs.has(agv.agvId)) {
-      const data = new AgvData(this.agvLayer, agv.agvId, x, y, r)
-      this._agvs.set(agv.agvId, data)
+    if (agvNode) {
+      agvNode.updateSmooth(
+        { x: agv.agvPosition.x, y: agv.agvPosition.y },
+        rotation
+      )
+    } else {
+      agvNode = new Agv(
+        agv.correlationId,
+        agv.agvId,
+        agv.agvPosition.x,
+        agv.agvPosition.y,
+        rotation
+      )
+
+      this._agvs.set(agv.agvId, agvNode)
+      this.agvLayer.add(agvNode.icon)
+      this.agvLayer.add(agvNode.tag)
     }
 
-    const element = this._agvs.get(agv.agvId)
-    element?.Update({ x, y }, r)
+    const visible = this._visibleAgvs.includes(agv.correlationId)
+    agvNode.icon.visible(visible)
+    agvNode.tag.visible(visible)
   }
 
   /**
@@ -130,46 +242,36 @@ export class MapCanvas {
   setBackground(
     background: HTMLImageElement,
     resolution: number,
-    xOffset: number,
-    yOffset: number
+    offsetX: number,
+    offsetY: number
   ): void {
     this._background = background
     this._resolution = resolution
-    this._xOffset = xOffset
-    this._yOffset = yOffset
-  }
+    this._offsetX = offsetX
+    this._offsetY = offsetY
 
-  /**
-   * Render background map
-   */
-  renderBackground(): void {
-    if (this._background == null) {
-      return
-    }
+    MapNode.setScaleAndOffset(
+      1 / this._resolution,
+      offsetX / this._resolution,
+      offsetY / this._resolution
+    )
 
-    const scale = 1
     const image = new Konva.Image({
       image: this._background,
-      x: this._xOffset,
-      y: this._yOffset,
-      scale: { x: scale, y: scale }
+      x: this._offsetX,
+      y: this._offsetY
     })
-
-    this.mapLayer.add(image)
+    this.imageLayer.destroyChildren()
+    this.imageLayer.add(image)
   }
 
   /**
-   * Show all nodes
+   * Remove all nodes and edges
    */
-  showAll(): void {
-    this.renderBackground()
-  }
-
-  /**
-   * Remove all agvs, nodes and edges
-   */
-  clear(): void {
-    this._agvs.clear()
-    this.agvLayer.destroyChildren()
+  clearGraph(): void {
+    this._nodes.clear()
+    this._edges.clear()
+    this.edgeLayer.destroyChildren()
+    this.nodeLayer.destroyChildren()
   }
 }

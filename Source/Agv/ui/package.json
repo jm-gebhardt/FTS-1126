@@ -33,7 +33,6 @@
     "@typescript-eslint/parser": "^5.32.0",
     "@vitejs/plugin-vue": "^3.0.0",
     "@vitest/coverage-c8": "^0.22.1",
-    "@vitest/coverage-istanbul": "^0.22.1",
     "@vue/test-utils": "^2.0.2",
     "eslint": "^8.21.0",
     "eslint-config-prettier": "^8.5.0",

@@ -110,7 +110,7 @@ function updateAgvs(): void {
     )
 
     selectedAgvs.value = selectedMapRelatedAgvs.value
-
+    mapComponent.value.setVisibleAgvs(selectedAgvs.value)
     fetchSelectedAgvGraphs().then(() => {
       updateGraphElements()
     })
@@ -121,6 +121,7 @@ function updateAgvs(): void {
  * Callback for AGV selection has changed
  */
 function selectedAgvsChanged(): void {
+  mapComponent.value.setVisibleAgvs(selectedAgvs.value)
   fetchSelectedAgvGraphs().then(() => {
     updateGraphElements()
   })
@@ -149,8 +150,6 @@ async function selectedMapChanged(): Promise<void> {
       mapObject.xOffset,
       mapObject.yOffset
     )
-    mapComponent.value.renderBackground()
-    mapComponent.value.showAll()
   }
   selectedMapRelatedAgvs.value = mapObject.relatedAgvs
   updateAgvs()

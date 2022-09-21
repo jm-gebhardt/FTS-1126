@@ -70,6 +70,32 @@ export interface IAgvGraph {
   edges: IEdge[]
 }
 
+export interface IAgvPosition {
+  positionInitialized: boolean
+
+  /** @format float */
+  x: number
+
+  /** @format float */
+  y: number
+
+  /** @format float */
+  z: number
+
+  /** @format float */
+  theta: number
+
+  /** @format float */
+  deviationRange?: number | null
+}
+
+export interface IAgvPositionReceived {
+  /** @format uuid */
+  correlationId: string
+  agvId: string
+  agvPosition: IAgvPosition
+}
+
 export interface IAgvStatus {
   /** @format uuid */
   correlationId: string
@@ -92,29 +118,10 @@ export interface IEdge {
   metric: number
 }
 
-export interface IAgvPosition {
-  /** @format uuid */
-  correlationId: string
-
-  agvId: string
-
-  /** @format int32 */
-  x: number
-
-  /** @format int32 */
-  y: number
-
-  /** @format float */
-  theta: number
-}
-
-
 export enum IHostOrderCreator {
   Wms = 'Wms',
   Simulation = 'Simulation'
 }
-
-
 
 /**
  * SignalR hub methods
@@ -181,8 +188,7 @@ export enum INodeType {
   WayPoint = 'WayPoint',
   Turn = 'Turn',
   Station = 'Station',
-  Park = 'Park',
-  Agv = 'Agv'
+  Park = 'Park'
 }
 
 /**

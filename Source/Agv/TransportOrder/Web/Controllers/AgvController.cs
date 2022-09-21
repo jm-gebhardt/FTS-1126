@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Gebhardt.StoreWare.Agv.TransportOrder.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers.Pagination;
 using System.Text.Json;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers
 {
@@ -13,13 +14,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers
     public class AgvController : Controller
     {
         private readonly IAgvRegistry _agvRegistry;
+        private readonly IAgvPositionRegistry _agvPositionRegistry;
 
         /// <summary>
         /// Init controller
         /// </summary>
-        public AgvController(IAgvRegistry agvRegistry)
+        public AgvController(IAgvRegistry agvRegistry, IAgvPositionRegistry agvPositionRegistry)
         {
             _agvRegistry = agvRegistry;
+            _agvPositionRegistry = agvPositionRegistry;
         }
 
         /// <summary>
@@ -95,6 +98,17 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers
             }
 
             return Ok(agv.AgvData);
+        }
+
+        /// <summary>
+        /// Retrieve list of agv positions
+        /// </summary>
+        /// <response code="200">Ok</response>
+        [HttpGet]
+        [Route("/agvsPositions")]
+        public ActionResult<IEnumerable<AgvPositionReceived>> GetAgvPositionss()
+        {
+            return Ok(_agvPositionRegistry.GetAllPositions());
         }
     }
 }

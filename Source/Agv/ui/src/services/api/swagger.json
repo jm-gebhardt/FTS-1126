@@ -196,6 +196,45 @@
         }
       }
     },
+    "/agvsPositions": {
+      "get": {
+        "tags": [
+          "Agv"
+        ],
+        "summary": "Retrieve list of agv positions",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AgvPositionReceived"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AgvPositionReceived"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AgvPositionReceived"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/maps": {
       "get": {
         "tags": [
@@ -496,6 +535,68 @@
         },
         "additionalProperties": false
       },
+      "AgvPosition": {
+        "required": [
+          "positionInitialized",
+          "theta",
+          "x",
+          "y",
+          "z"
+        ],
+        "type": "object",
+        "properties": {
+          "positionInitialized": {
+            "type": "boolean"
+          },
+          "x": {
+            "type": "number",
+            "format": "float"
+          },
+          "y": {
+            "type": "number",
+            "format": "float"
+          },
+          "z": {
+            "type": "number",
+            "format": "float"
+          },
+          "theta": {
+            "type": "number",
+            "format": "float"
+          },
+          "deviationRange": {
+            "type": "number",
+            "format": "float",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "AgvPositionReceived": {
+        "required": [
+          "agvId",
+          "agvPosition",
+          "correlationId"
+        ],
+        "type": "object",
+        "properties": {
+          "correlationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "agvId": {
+            "type": "string"
+          },
+          "agvPosition": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AgvPosition"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
       "AgvStatus": {
         "required": [
           "automatic",
@@ -569,8 +670,9 @@
       "HubMethods": {
         "enum": [
           "OrderStateChanged",
+          "AgvDiscovered",
           "AgvStateChanged",
-          "AgvDiscovered"
+          "AgvPositionChanged"
         ],
         "type": "string",
         "description": "SignalR hub methods"

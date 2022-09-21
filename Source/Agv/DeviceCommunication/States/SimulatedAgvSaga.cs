@@ -135,7 +135,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
                     if (lastNodeIndex >= Nodes.Length)
                     {
                         // This happens when accessing position when or after order has finished
-                       lastNodeIndex = Nodes.Length - 1;
+                        lastNodeIndex = Nodes.Length - 1;
                     }
                     var lastNode = AgvGraph!.Nodes.First(x => x.Id == Nodes[lastNodeIndex]);
                     if (lastNodeIndex < Nodes.Length - 1)
@@ -159,8 +159,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         /// <summary>
         /// Order Progress as percentage [0..1]
         /// </summary>
-        public double? OrderProgress => TimeToFinish != null && OrderDuration != null 
-            ? 1 - TimeToFinish.Value.TotalSeconds / OrderDuration.Value.TotalSeconds 
+        public double? OrderProgress => TimeToFinish != null && OrderDuration != null
+            ? 1 - TimeToFinish.Value.TotalSeconds / OrderDuration.Value.TotalSeconds
             : null;
 
         /// <summary>
@@ -177,7 +177,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         /// Time the order will be finished
         /// This value is calculated base on OrderStartDate and the number of nodes
         /// </summary>
-        public DateTime? OrderFinishDate => OrderStartDate != null ? OrderStartDate + OrderDuration: null;
+        public DateTime? OrderFinishDate => OrderStartDate != null ? OrderStartDate + OrderDuration : null;
 
         /// <summary>
         /// Time until the order is finished.
@@ -195,8 +195,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         /// <summary>
         /// Time the order will be picked up
         /// </summary>
-        public DateTime? OrderPickDate => OrderFinishDate != null && OrderDetails != null 
-            ? OrderStartDate + TimeSpan.FromMilliseconds(Array.IndexOf(Nodes, OrderDetails!.Source) * NodeTravelTime) 
+        public DateTime? OrderPickDate => OrderFinishDate != null && OrderDetails != null
+            ? OrderStartDate + TimeSpan.FromMilliseconds(Array.IndexOf(Nodes, OrderDetails!.Source) * NodeTravelTime)
             : null;
 
         /// <summary>

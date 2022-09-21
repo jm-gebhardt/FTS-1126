@@ -24,7 +24,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers
             _agvRegistry = agvRegistry;
             _mapRegistry = mapRegistry;
         }
-        
+
         /// <summary>
         /// Get all available maps
         /// </summary>
@@ -33,26 +33,27 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers
         [Route("/maps")]
         public ActionResult<IEnumerable<Map>> GetMaps()
         {
-
             ImmutableDictionary<Guid, Guid[]> agvMapRelation = _agvRegistry.GetAllAgvs()
                 .Where(a => a.AgvGraph != null)
-                .Select(a => new {a.AgvGraph!.RelatedMapId, a.CorrelationId})
+                .Select(a => new { a.AgvGraph!.RelatedMapId, a.CorrelationId })
                 .AsEnumerable()
                 .GroupBy(a => a.RelatedMapId)
                 .ToImmutableDictionary(
-                    x => x.Key, 
+                    x => x.Key,
                     x => x.Select(m => m.CorrelationId).ToArray()
                 );
-            
-            return Ok(_mapRegistry.GetAllMaps().Select(
-                m => new Map(
-                    m.CorrelationId,
-                    m.MapId,
-                    m.Resolution,
-                    m.XOffset,
-                    m.YOffset, 
-                    agvMapRelation.GetValueOrDefault(m.CorrelationId) ?? Array.Empty<Guid>()
-                )).AsEnumerable());
+
+            IEnumerable<Map> map = _mapRegistry.GetAllMaps().Select(
+               m => new Map(
+                   m.CorrelationId,
+                   m.MapId,
+                   m.Resolution,
+                   m.XOffset,
+                   m.YOffset,
+                   agvMapRelation.GetValueOrDefault(m.CorrelationId) ?? Array.Empty<Guid>()
+               )).AsEnumerable();
+
+            return Ok(map);
         }
 
         /// <summary>
