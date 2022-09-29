@@ -4,6 +4,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers.Pagination;
 using System.Text.Json;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
+using Gebhardt.StoreWare.Agv.TransportOrder.Web.Models;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers
 {
@@ -50,18 +51,24 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers
         /// Retrieve graph for agv
         /// </summary>
         /// <response code="200">Ok</response>
+        /// <response code="204">No content</response>
         /// <response code="404">Not found</response>
         [HttpGet]
         [Route("/agvs/{correlationId:guid}/graph")]
-        public ActionResult<AgvGraph> GetAgvGraph(Guid correlationId)
+        public ActionResult<Graph> GetAgvGraph(Guid correlationId)
         {
             var agv = _agvRegistry.GetAgv(correlationId);
-            if (agv == null)
+            if (agv == null || agv.AgvGraph == null)
             {
                 return NotFound();
             }
 
-            return Ok(agv.AgvGraph);
+            if ( agv.AgvGraph == null)
+            {
+                return NoContent();
+            }
+
+            return Ok(new Graph(agv.AgvGraph));
         }
 
         /// <summary>
@@ -106,7 +113,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers
         /// <response code="200">Ok</response>
         [HttpGet]
         [Route("/agvsPositions")]
-        public ActionResult<IEnumerable<AgvPositionReceived>> GetAgvPositionss()
+        public ActionResult<IEnumerable<AgvPositionReceived>> GetAgvPositions()
         {
             return Ok(_agvPositionRegistry.GetAllPositions());
         }

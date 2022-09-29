@@ -40,12 +40,7 @@ import KonvaMap from '@/components/KonvaMap/KonvaMap.vue'
 import { storeToRefs } from 'pinia'
 import { useAgvStore } from '@/services/AgvStore'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
-import {
-  IAgv,
-  IAgvGraph,
-  IAgvPosition,
-  IMap
-} from '@/services/api/data-contracts'
+import { IAgv, IGraph, IAgvPosition, IMap } from '@/services/api/data-contracts'
 import { AgvHub } from '@/services/AgvHub'
 import {
   BalmUiOption,
@@ -173,9 +168,9 @@ async function fetchSelectedAgvGraphs(): Promise<void> {
 function updateGraphElements(): void {
   mapComponent.value.clear()
 
-  const graphs: IAgvGraph[] = []
+  const graphs: IGraph[] = []
   for (const agv of selectedAgvs.value) {
-    const graph: IAgvGraph | undefined = agvGraph.value.data.get(agv)
+    const graph: IGraph | undefined = agvGraph.value.data.get(agv)
     if (graph != undefined) {
       graphs.push(graph)
     }

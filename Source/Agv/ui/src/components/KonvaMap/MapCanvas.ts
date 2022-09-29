@@ -1,16 +1,24 @@
 import Konva from 'konva'
 import {
-  IAgvGraph,
+  IGraph,
   IAgvPositionReceived,
   IEdge,
   INode,
   INodeType
 } from '@/services/api/data-contracts'
-import { MapNode, Charge, Edge, Park, Station, WayPoint } from './MapNodes'
+import {
+  MapNode,
+  Charge,
+  Edge,
+  Park,
+  Station,
+  WayPoint,
+  GraphDimensions
+} from './MapNodes'
 import { Agv } from './MapAgv'
 
 /**
- * Konva AGV Graph
+ * Konva cavas for AGV Graph
  */
 export class MapCanvas {
   imageLayer: Konva.Layer
@@ -26,16 +34,13 @@ export class MapCanvas {
   private _visibleAgvs: string[] = []
 
   private _background: HTMLImageElement | null = null
-  private _resolution = 1
-  private _offsetX = 0
-  private _offsetY = 0
 
   private readonly ZoomFactor = 1.1 // change zoom by 10% for each scroll step
   private readonly MinZoomLevel = 0.5
   private readonly MaxZoomLevel = 10
 
   /**
-   * GraphMap Constructor
+   * MapCanvas Constructor
    * @param container: container where the map is rendered in
    */
   constructor(container: HTMLElement) {
@@ -106,7 +111,7 @@ export class MapCanvas {
    * All graphs will be merged into one to avoid duplicate nodes
    * @param graphs: Graphs
    */
-  addGraphs(graphs: IAgvGraph[]): void {
+  addGraphs(graphs: IGraph[]): void {
     for (const graph of graphs) {
       const nodes = graph.nodes
       if (nodes != null) {
@@ -157,21 +162,15 @@ export class MapCanvas {
 
   _addEdges(edges: IEdge[]): void {
     for (const edge of edges) {
-      const edgeId = `${edge.from}-${edge.to}`
+      const edgeId = `${edge.from.id}-${edge.to.id}`
 
       if (!this._edges.has(edgeId)) {
-        const nodeFrom = this._nodes.get(edge.from)
-        const nodeTo = this._nodes.get(edge.to)
+        const posFrom = { x: edge.from.x, y: edge.from.y }
+        const posTo = { x: edge.to.x, y: edge.to.y }
 
-        if (nodeFrom && nodeTo) {
-          const newEdge = new Edge(
-            edgeId,
-            nodeFrom.getPosition(),
-            nodeTo.getPosition()
-          )
-          this._edges.set(edgeId, newEdge)
-          this.edgeLayer.add(newEdge.line)
-        }
+        const newEdge = new Edge(edgeId, posFrom, posTo)
+        this._edges.set(edgeId, newEdge)
+        this.edgeLayer.add(newEdge.line)
       }
     }
   }
@@ -246,20 +245,13 @@ export class MapCanvas {
     offsetY: number
   ): void {
     this._background = background
-    this._resolution = resolution
-    this._offsetX = offsetX
-    this._offsetY = offsetY
 
-    MapNode.setScaleAndOffset(
-      1 / this._resolution,
-      offsetX / this._resolution,
-      offsetY / this._resolution
-    )
+    GraphDimensions.scale = 1 / resolution // Inverse of resolution
+    GraphDimensions.offsetX = offsetX / resolution
+    GraphDimensions.offsetY = offsetY / resolution
 
     const image = new Konva.Image({
-      image: this._background,
-      x: this._offsetX,
-      y: this._offsetY
+      image: this._background
     })
     this.imageLayer.destroyChildren()
     this.imageLayer.add(image)

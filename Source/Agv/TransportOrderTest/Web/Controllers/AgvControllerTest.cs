@@ -7,6 +7,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Services;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
+using Gebhardt.StoreWare.Agv.TransportOrder.Web.Models;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
 {
@@ -146,12 +147,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
             var result = controller.GetAgvGraph(correlationId).Result as OkObjectResult;
             Assert.IsNotNull(result);
 
-            var agvGraph = result.Value as AgvGraph;
-            Assert.IsNotNull(agvGraph);
+            var graph = result.Value as Graph;
+            Assert.IsNotNull(graph);
 
-            Assert.AreEqual(correlationId, agvGraph.CorrelationId);
-            Assert.AreEqual(_nodes[index].Id, agvGraph.Nodes[index].Id);
-            Assert.AreEqual(_edges[index].From, agvGraph.Edges[index].From);
+            Assert.AreEqual(correlationId, graph.CorrelationId);
+            Assert.AreEqual(_nodes[index].Id, graph.Nodes[index].Id);
+            Assert.AreEqual(_edges[index].From, graph.Edges[index].From.Id);
+            Assert.AreEqual(_edges[index].To, graph.Edges[index].To.Id);
         }
 
         /// <summary/>

@@ -2,15 +2,29 @@ import Konva from 'konva'
 import { Vector2d } from 'konva/lib/types'
 
 /**
+ * AGV Graph dimensions definitions
+ */
+export class GraphDimensions {
+  static scale = 1
+  static offsetX = 0
+  static offsetY = 0
+}
+
+/**
  * Edge
  */
 export class Edge {
   line: Konva.Line
 
   constructor(id: string, position1: Vector2d, position2: Vector2d) {
+    const x1 = position1.x * GraphDimensions.scale + GraphDimensions.offsetX
+    const y1 = position1.y * GraphDimensions.scale + GraphDimensions.offsetY
+    const x2 = position2.x * GraphDimensions.scale + GraphDimensions.offsetX
+    const y2 = position2.y * GraphDimensions.scale + GraphDimensions.offsetY
+
     this.line = new Konva.Line({
       id: id,
-      points: [position1.x, position1.y, position2.x, position2.y],
+      points: [x1, y1, x2, y2],
       stroke: 'darkgray',
       strokeWidth: 3,
       tension: 0
@@ -25,25 +39,11 @@ export abstract class MapNode {
   icon: Konva.Shape
   tag: Konva.Text
 
-  protected static scale = 1
-  protected static offsetX = 1
-  protected static offsetY = 1
-
-  static setScaleAndOffset(
-    scale: number,
-    offsetX: number,
-    offsetY: number
-  ): void {
-    MapNode.scale = scale
-    MapNode.offsetX = offsetX
-    MapNode.offsetY = offsetY
-  }
-
   protected tagOffsetY = -32 // Experimentally determined
 
   constructor(id: string, position: Vector2d) {
-    const x = position.x * MapNode.scale + MapNode.offsetX
-    const y = position.y * MapNode.scale + MapNode.offsetY
+    const x = position.x * GraphDimensions.scale + GraphDimensions.offsetX
+    const y = position.y * GraphDimensions.scale + GraphDimensions.offsetY
 
     this.tag = new Konva.Text({
       text: id
@@ -70,8 +70,8 @@ export abstract class MapNode {
   }
 
   update(position: Vector2d, rotation: number): void {
-    const x = position.x * MapNode.scale + MapNode.offsetX
-    const y = position.y * MapNode.scale + MapNode.offsetY
+    const x = position.x * GraphDimensions.scale + GraphDimensions.offsetX
+    const y = position.y * GraphDimensions.scale + GraphDimensions.offsetY
 
     this.tag.position({
       x: x - this.tag.width() / 2,

@@ -59,17 +59,6 @@ export interface IAgvData {
   sensors: ISensor[]
 }
 
-export interface IAgvGraph {
-  /** @format uuid */
-  correlationId: string
-
-  /** @format uuid */
-  relatedMapId: string
-  relatedMapName: string
-  nodes: INode[]
-  edges: IEdge[]
-}
-
 export interface IAgvPosition {
   positionInitialized: boolean
 
@@ -110,12 +99,29 @@ export interface IAgvStatus {
   lastNodeId?: string | null
 }
 
+/**
+ * Model for drawing an edge in the UI
+ */
 export interface IEdge {
-  from: string
-  to: string
+  /** Node where the edge starts. */
+  from: INode
 
-  /** @format float */
-  metric: number
+  /** Node where the edge ends. */
+  to: INode
+}
+
+/**
+ * Model for drawing a graph in the UI
+ */
+export interface IGraph {
+  /** @format uuid */
+  correlationId: string
+
+  /** The list of nodes in the graph. */
+  nodes: INode[]
+
+  /** The list of edges in the graph. */
+  edges: IEdge[]
 }
 
 export enum IHostOrderCreator {

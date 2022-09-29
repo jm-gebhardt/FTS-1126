@@ -87,20 +87,23 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/AgvGraph"
+                  "$ref": "#/components/schemas/Graph"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AgvGraph"
+                  "$ref": "#/components/schemas/Graph"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AgvGraph"
+                  "$ref": "#/components/schemas/Graph"
                 }
               }
             }
+          },
+          "204": {
+            "description": "No content"
           },
           "404": {
             "description": "Not found"
@@ -499,42 +502,6 @@
         },
         "additionalProperties": false
       },
-      "AgvGraph": {
-        "required": [
-          "correlationId",
-          "edges",
-          "nodes",
-          "relatedMapId",
-          "relatedMapName"
-        ],
-        "type": "object",
-        "properties": {
-          "correlationId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "relatedMapId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "relatedMapName": {
-            "type": "string"
-          },
-          "nodes": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Node"
-            }
-          },
-          "edges": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Edge"
-            }
-          }
-        },
-        "additionalProperties": false
-      },
       "AgvPosition": {
         "required": [
           "positionInitialized",
@@ -642,23 +609,62 @@
       "Edge": {
         "required": [
           "from",
-          "metric",
           "to"
         ],
         "type": "object",
         "properties": {
           "from": {
-            "type": "string"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Node"
+              }
+            ],
+            "description": "Node where the edge starts."
           },
           "to": {
-            "type": "string"
-          },
-          "metric": {
-            "type": "number",
-            "format": "float"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Node"
+              }
+            ],
+            "description": "Node where the edge ends."
           }
         },
-        "additionalProperties": false
+        "additionalProperties": false,
+        "description": "Model for drawing an edge in the UI"
+      },
+      "Graph": {
+        "required": [
+          "correlationId",
+          "edges",
+          "nodes"
+        ],
+        "type": "object",
+        "properties": {
+          "correlationId": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true
+          },
+          "nodes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Node"
+            },
+            "description": "The list of nodes in the graph.",
+            "readOnly": true
+          },
+          "edges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Edge"
+            },
+            "description": "The list of edges in the graph.",
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Model for drawing a graph in the UI"
       },
       "HostOrderCreator": {
         "enum": [

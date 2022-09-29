@@ -1,7 +1,7 @@
 import {
   IAgv,
   IAgvData,
-  IAgvGraph,
+  IGraph,
   IAgvStatus,
   IMap
 } from '@/services/api/data-contracts'
@@ -19,7 +19,7 @@ const mapApi = new MapApi({
 
 interface AgvStoreState {
   agvs: IPaginatedRestApiStore<Map<string, IAgv>>
-  agvGraph: IRestApiStore<Map<string, IAgvGraph>>
+  agvGraph: IRestApiStore<Map<string, IGraph>>
   agvData: IRestApiStore<Map<string, IAgvData>>
   agvStatus: IRestApiStore<Map<string, IAgvStatus>>
   maps: IRestApiStore<Map<string, IMap>>

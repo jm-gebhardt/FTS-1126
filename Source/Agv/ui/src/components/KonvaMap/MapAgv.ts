@@ -1,6 +1,6 @@
 import Konva from 'konva'
 import { Vector2d } from 'konva/lib/types'
-import { MapNode } from './MapNodes'
+import { GraphDimensions, MapNode } from './MapNodes'
 
 /**
  * AGV node
@@ -60,8 +60,8 @@ export class Agv extends MapNode {
     const duration = (now - this.lastUpdate) / 1000
     this.lastUpdate = now
 
-    const x = position.x * MapNode.scale + MapNode.offsetX
-    const y = position.y * MapNode.scale + MapNode.offsetY
+    const x = position.x * GraphDimensions.scale + GraphDimensions.offsetX
+    const y = position.y * GraphDimensions.scale + GraphDimensions.offsetY
 
     // Fix for wrong rotation direction
     const rotationDiff = this.icon.rotation() - rotation
