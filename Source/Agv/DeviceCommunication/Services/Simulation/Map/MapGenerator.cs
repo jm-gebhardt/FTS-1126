@@ -170,6 +170,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Map
         /// </summary>
         /// <param name="agvMap"></param>
         /// <returns></returns>
+        [JetBrains.Annotations.PublicAPI]
         public static SKImage GetPng(AgvMap agvMap) => SKImage.FromEncodedData(Convert.FromBase64String(agvMap.ImageData));
     }
 }

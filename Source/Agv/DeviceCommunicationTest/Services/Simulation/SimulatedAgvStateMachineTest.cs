@@ -36,7 +36,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
                 Destinations = new[] { "D1" },
                 NodeTravelTime = 1000
             };
-
             var fixture = new StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(
                 services => services.AddSingleton(options)
             );
@@ -46,9 +45,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             var data = new AgvData(correlationId, "model", "type",null, 10, 1, 1, 1, 1 ,1, 1, 1, Array.Empty<AgvData.Sensor>());
             var map = new MapGenerator(graph);
             var agv = new SimulatedAgv(correlationId, agvId , "", graph, data, map.Generate());
-            await fixture.TestHarness.Bus.Publish(new SimulatedAgvStateMachine.CreateAgv(correlationId, agv, options.NodeTravelTime));
-            await fixture.SagaHarness.Consumed.Any<SimulatedAgvStateMachine.CreateAgv>();
 
+            // Publish CreateAgv ...
+            await fixture.TestHarness.Bus.Publish(new SimulatedAgvStateMachine.CreateAgv(correlationId, agv, options.NodeTravelTime));
+            // ... wait for being consumed ...
+            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<SimulatedAgvStateMachine.CreateAgv>());
+            // ... pick newly created saga.
             var createdSaga = fixture.SagaHarness.Sagas.Select(c => c.CorrelationId == correlationId).First().Saga;
 
             Assert.AreEqual(correlationId, createdSaga.CorrelationId);
@@ -77,8 +79,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
                 (_, cfg) => cfg.UseDelayedMessageScheduler()
             );
             const string agvId = "Agv#1";
-            const string mapName = "Map#1";
             var correlationId = agvId.ToGuid();
+            const string mapName = "Map#1";
             var graph = new AgvGraph(correlationId,
                 new[]
                 {
@@ -89,11 +91,15 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
                 mapName
             );
             var agv = new SimulatedAgv(correlationId, agvId , "", graph, null, null);
+
+            // Publish CreateAgv ...
             await fixture.TestHarness.Bus.Publish(new SimulatedAgvStateMachine.CreateAgv(correlationId, agv, options.NodeTravelTime));
-
+            // ... wait for being consumed ...
+            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<SimulatedAgvStateMachine.CreateAgv>());
+            // ... pick newly created saga.
             var createdSaga = fixture.SagaHarness.Sagas.Select(c => c.CorrelationId == correlationId).First().Saga;
-            var agvStatus = createdSaga.AgvStatus;
 
+            var agvStatus = createdSaga.AgvStatus;
             Assert.IsNotNull(agvStatus);
             Assert.AreEqual(correlationId, agvStatus.CorrelationId);
             Assert.IsNull(agvStatus.OrderId);
@@ -116,21 +122,24 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
                 Sources = new[] { "S1" },
                 Destinations = new[] { "D1" }
             };
-
             var fixture = new StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(
                 services => services.AddSingleton(options)
             );
             const string agvId = "Agv#1";
             var correlationId = agvId.ToGuid();
-
             var graph = new GridGraphGenerator(new[] { "S1" }, new[] { "D1" }).Generate(correlationId);
+
+            // Create saga in idle state with graph
             var agvSaga = new SimulatedAgvSaga(correlationId, agvId, 5000, currentState: nameof(SimulatedAgvStateMachine.Idle), agvGraph: graph);
             fixture.Add(agvSaga);
 
+            // Publish RequestAgvGraph ...
             await fixture.TestHarness.Bus.Publish(new RequestAgvGraph(correlationId, agvId));
+            // ... wait for being consumed ...
             Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<RequestAgvGraph>());
-
+            // ... expect AgvGraphReceived being published.
             Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvGraphReceived>());
+
             var message = fixture.TestHarness.Published.Select<AgvGraphReceived>().First().Context.Message;
             Assert.AreEqual(correlationId, message.CorrelationId);
             Assert.AreEqual(agvId, message.AgvId);
@@ -149,20 +158,23 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
                 Sources = new[] { "S1" },
                 Destinations = new[] { "D1" }
             };
-
             var fixture = new StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(
                 services => services.AddSingleton(options)
             );
             const string agvId = "Agv#1";
             var correlationId = agvId.ToGuid();
 
+            // Create saga in idle state without graph
             var agvSaga = new SimulatedAgvSaga(correlationId, agvId, 5000, currentState: nameof(SimulatedAgvStateMachine.Idle));
             fixture.Add(agvSaga);
 
+            // Publish RequestAgvGraph ...
             await fixture.TestHarness.Bus.Publish(new RequestAgvGraph(correlationId, agvId));
+            // ... wait for being consumed ...
             Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<RequestAgvGraph>());
+            // ... but don't expect AgvGraphReceived being published.
             var token = new CancellationTokenSource();
-            token.CancelAfter(10);
+            token.CancelAfter(100);
             Assert.IsFalse(await fixture.TestHarness.Published.Any<AgvGraphReceived>(token.Token));
         }
 
@@ -178,20 +190,23 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
                 Sources = new[] { "S1" },
                 Destinations = new[] { "D1" }
             };
-
             var fixture = new StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(
                 services => services.AddSingleton(options)
             );
             const string agvId = "Agv#1";
             var correlationId = agvId.ToGuid();
 
+            // Create saga in idle state without agv data
             var agvSaga = new SimulatedAgvSaga(correlationId, agvId, 5000, currentState: nameof(SimulatedAgvStateMachine.Idle));
             fixture.Add(agvSaga);
 
+            // Publish RequestAgvData ...
             await fixture.TestHarness.Bus.Publish(new RequestAgvData(correlationId, agvId));
+            // ... wait for being consumed ...
             Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<RequestAgvData>());
+            // ... but don't expect AgvDataReceived being published.
             var token = new CancellationTokenSource();
-            token.CancelAfter(10);
+            token.CancelAfter(100);
             Assert.IsFalse(await fixture.TestHarness.Published.Any<AgvDataReceived>(token.Token));
         }
 
@@ -207,21 +222,24 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
                 Sources = new[] { "S1" },
                 Destinations = new[] { "D1" }
             };
-
             var fixture = new StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(
                 services => services.AddSingleton(options)
             );
             const string agvId = "Agv#1";
             var correlationId = agvId.ToGuid();
-
             var data = new AgvData(correlationId, "model", "type", null, 10, 1, 1, 1, 1, 1, 1, 1, Array.Empty<AgvData.Sensor>());
+
+            // Create saga in idle state with agv data
             var agvSaga = new SimulatedAgvSaga(correlationId, agvId, 5000, currentState: nameof(SimulatedAgvStateMachine.Idle), agvData: data);
             fixture.Add(agvSaga);
 
+            // Publish RequestAgvData ...
             await fixture.TestHarness.Bus.Publish(new RequestAgvData(correlationId, agvId));
+            // ... wait for being consumed ...
             Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<RequestAgvData>());
-
+            // ... expect AgvDataReceived being published.
             Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvDataReceived>());
+
             var message = fixture.TestHarness.Published.Select<AgvDataReceived>().First().Context.Message;
             Assert.AreEqual(correlationId, message.CorrelationId);
             Assert.AreEqual(agvId, message.AgvId);
@@ -240,23 +258,26 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
                 Sources = new[] { "S1" },
                 Destinations = new[] { "D1" }
             };
-
             var fixture = new StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(
                 services => services.AddSingleton(options)
             );
             const string agvId = "Agv#1";
             const string mapId = "Map#1";
             var correlationId = agvId.ToGuid();
-
             var graph = new GridGraphGenerator(new[] { "S1" }, new[] { "D1" }).Generate(correlationId);
             var map = new MapGenerator(graph).Generate();
+
+            // Create saga in idle state with agv map
             var agvSaga = new SimulatedAgvSaga(correlationId, agvId, 5000, currentState: nameof(SimulatedAgvStateMachine.Idle), agvGraph: graph, agvMap: map);
             fixture.Add(agvSaga);
 
+            // Publish RequestAgvMap ...
             await fixture.TestHarness.Bus.Publish(new RequestAgvMap(correlationId, agvId, mapId.ToGuid(), mapId));
+            // ... wait for being consumed ...
             Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<RequestAgvMap>());
-
+            // ... expect AgvMapReceived being published.
             Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvMapReceived>());
+
             var message = fixture.TestHarness.Published.Select<AgvMapReceived>().First().Context.Message;
             Assert.AreEqual(correlationId, message.CorrelationId);
             Assert.AreEqual(agvId, message.AgvId);
@@ -275,7 +296,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
                 Sources = new[] { "S1" },
                 Destinations = new[] { "D1" }
             };
-
             var fixture = new StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(
                 services => services.AddSingleton(options)
             );
@@ -283,13 +303,17 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             const string mapId = "Map#1";
             var correlationId = agvId.ToGuid();
 
+            // Create saga in idle state without agv map
             var agvSaga = new SimulatedAgvSaga(correlationId, agvId, 5000, currentState: nameof(SimulatedAgvStateMachine.Idle));
             fixture.Add(agvSaga);
 
+            // Publish RequestAgvMap ...
             await fixture.TestHarness.Bus.Publish(new RequestAgvMap(correlationId, agvId, mapId.ToGuid(), mapId));
+            // ... wait for being consumed ...
             Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<RequestAgvMap>());
+            // ... but don't expect AgvMapReceived being published.
             var token = new CancellationTokenSource();
-            token.CancelAfter(10);
+            token.CancelAfter(100);
             Assert.IsFalse(await fixture.TestHarness.Published.Any<AgvMapReceived>(token.Token));
         }
 
@@ -305,7 +329,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
                 Sources = new[] { "S1" },
                 Destinations = new[] { "D1" }
             };
-
             // ReSharper disable once UseObjectOrCollectionInitializer
             var fixture = new StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(
                 services => services.AddSingleton(options),
@@ -333,8 +356,10 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
                 order.Destination
             };
             var data = new AgvData(agvCorrelationId, "model", "type", null, 10, 1, 1, 1, 1, 1, 1, 1, Array.Empty<AgvData.Sensor>());
-            // Travel duration per edge is about twice of the position message interval.
+            // Travel duration per edge will be set about twice of the position message interval.
             int nodeTravelTime = (int)(2f * fixture.Machine.SignalPositionIntervalMs);
+
+            // Create saga in idle state
             var agvSaga = new SimulatedAgvSaga(agvCorrelationId, agvId, nodeTravelTime, currentState: nameof(SimulatedAgvStateMachine.Idle), agvGraph: graph, agvData: data);
             fixture.Add(agvSaga);
 
@@ -342,10 +367,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             Assert.IsNull(agvSaga.LastNodeId);
             Assert.IsNull(agvSaga.NextNodeId);
 
-            // Start Order
+            // Start Order: Publish ExecuteTransportOrder ...
             await fixture.TestHarness.Bus.Publish(new ExecuteTransportOrder(agvCorrelationId, order, agvId, path));
-
+            // ... wait for being consumed ...
             Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<ExecuteTransportOrder>());
+            // ... wait for TransportOrderStarted is being sent (by state machine) ...
             Assert.IsTrue(await fixture.TestHarness.Published.Any<TransportOrderStarted>());
             var startedMessage = fixture.TestHarness.Published.Select<TransportOrderStarted>().First().Context.Message;
             Assert.AreEqual(orderCorrelationId, startedMessage.CorrelationId);

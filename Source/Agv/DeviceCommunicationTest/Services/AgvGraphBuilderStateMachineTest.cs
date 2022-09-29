@@ -135,5 +135,69 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services
             // 4 edges (2 (bidirectional) per station + 2 edges (bidirectional) from graph
             Assert.AreEqual(2 + 4, publishedData.Graph.Edges.Length);
         }
+
+        /// <summary>
+        /// When graph is invald (e.g. duplicate node names) no graph will be stored
+        /// </summary>
+        [TestMethod]
+        public async Task When_InvalidStationListReceive_InvalidGraphPublished()
+        {
+            var correlationId = AgvTestIdentifier01.ToGuid();
+
+            var fixture = new StateMachineTestFixture<AgvGraphBuilderStateMachine, AgvGraphBuilderSaga>();
+
+            // Publish RequestAgvGraph ...
+            await fixture.TestHarness.Bus.Publish(new RequestAgvGraph(correlationId, AgvTestIdentifier01));
+            // ... expect it's gonna be consumed by the statemachine.
+            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<RequestAgvGraph>());
+
+            // Get the instance which correlates to the AGV.
+            var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
+
+            // Ensure that state machine did send MqttRequestStationList ...
+            Assert.IsTrue(await fixture.TestHarness.Published.Any<MqttRequestStationList>());
+            // ... and the current state is RequestAgvGraphReceived.
+            Assert.AreEqual(fixture.SagaHarness.StateMachine.RequestAgvGraphReceived, saga.CurrentState);
+
+            var requestIdList = saga.CurrentMqttRequestId; // Has been choosen by the state machine as request ID for MQTT.
+            var stationList = new MqttStationList(AgvTestIdentifier01, DateTimeOffset.UtcNow,
+                new Station[] {
+                    new(Function.Pick, "P01", new Position(1f, 2f, 3f), "42"),
+                    new(Function.Drop, "D01", new Position(4f, 5f, 6f), "7"),
+                    new(Function.Drop, "D01", new Position(4f, 5f, 6f), "7")    // Duplicate
+                },
+                requestIdList);
+            // Publish StationListReceived ...
+            await fixture.TestHarness.Bus.Publish(new InternalStationListReceived(correlationId, stationList));
+            // ... expect it's gonna be consumed by the statemachine.
+            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<InternalStationListReceived>());
+
+            // Ensure that state machine did send MqttRequestGraph ...
+            Assert.IsTrue(await fixture.TestHarness.Published.Any<MqttRequestGraph>());
+            // ... and the current state is StationListReceived.
+            Assert.AreEqual(fixture.SagaHarness.StateMachine.StationListReceived, saga.CurrentState);
+
+            var requestIdGraph = saga.CurrentMqttRequestId; // Has been chosen by the state machine as request ID for MQTT.
+            var graph = new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow,
+                new Node[] {
+                    new() { NodeId = 1, X = 0f, Y = 0f, Z = 0f },
+                    new() { NodeId = 2, X = 9f, Y = 9f, Z = 0f }
+                },
+                new Edge[] {
+                    new() { EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = true, MaxVelocity = 1 }
+                },
+                string.Empty,
+                requestIdGraph);
+            // Publish GraphReceived ...
+            await fixture.TestHarness.Bus.Publish(new InternalGraphReceived(correlationId, graph));
+            // ... expect it's gonna be consumed by the state machine.
+            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<InternalGraphReceived>());
+
+            // Check if the state machine published AgvGraphReceived finally.
+            var publishedData = fixture.TestHarness.Published.Select<AgvGraphReceived>().First().Context.Message;
+
+            // Check for invalid usability due to duplicate nodes.
+            Assert.AreEqual(Common.Messages.AgvManagement.AgvGraph.GraphUsability.InvalidStations, publishedData.Graph.Usability);
+        }
     }
 }

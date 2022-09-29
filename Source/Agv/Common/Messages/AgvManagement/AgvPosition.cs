@@ -48,5 +48,10 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
             Theta = theta;
             DeviationRange = deviationRange;
         }
+
+        /// <summary>
+        /// Simple string representation (e.g. for logging)
+        /// </summary>
+        public override string ToString() => $"[X={X}/Y={Y}/Z={Z}]";
     }
 }

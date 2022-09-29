@@ -82,6 +82,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
                 .Where(agv => agv.AgvGraph != null)
                 .ToList();
 
+            if (idleAgvs.Any(agv => agv.AgvGraph!.Usability != AgvGraph.GraphUsability.Valid))
+            {
+                _logger.LogInformation("There are AGVs with invalid graphs.");
+                idleAgvs.RemoveAll(x => x.AgvGraph!.Usability != AgvGraph.GraphUsability.Valid);
+            }
+
             while (idleAgvs.Count > 0)
             {
                 KeyValuePair<Guid, IGraphAlgorithm.Route>? chosenAgv = agvChooser.ChooseAgv(idleAgvs, order);

@@ -1,4 +1,5 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+﻿using Gebhardt.StoreWare.Agv.Common.Extensions;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 
 
@@ -11,6 +12,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
     {
         private readonly MqttStationList _stationList;
         private readonly MqttGraph _graph;
+
+        private string? _serialNumber;
+
+        /// <summary>Indicator for graph usability (valid or not).</summary>
+        private AgvGraph.GraphUsability _usability = AgvGraph.GraphUsability.Valid;
         private AgvGraph? _agvGraph;
 
 
@@ -41,59 +47,42 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
         }
 
         /// <summary>
-        /// Parse graph.
-        /// </summary>
-        /// <exception cref="InvalidOperationException">Graph is not valid (see <see cref="GraphParser"/>).</exception>
-        [JetBrains.Annotations.PublicAPI]
-        private void ParseGraph()
+        /// Parse graph and station list and create <see cref="AgvGraph"/> (to be stored in <see cref="_agvGraph"/>.
+        /// <para>Performs all required parsing and validation.</para>
+        /// </summary><remarks>
+        /// This method is called by each public member.
+        /// For diagnostic purpose the graph is build even when the graph is invalid.
+        /// </remarks>
+        private void Parse()
         {
             if (_agvGraph == null)
             {
                 var graphParser = new GraphParser(_graph);
-                _agvGraph = graphParser.Graph;
-            }
-        }
+                var agvGraph = graphParser.Graph;
+                _usability = agvGraph.Usability;
+                _serialNumber = _stationList.SerialNumber;
 
-
-        /// <summary>
-        /// Returns true when the serial number is present otherwise false.
-        /// </summary>
-        [JetBrains.Annotations.PublicAPI]
-        public bool SerialNumberValid =>
-            !string.IsNullOrEmpty(_stationList.SerialNumber) &&
-            _stationList.SerialNumber == _graph.SerialNumber;
-
-        /// <summary>
-        /// Returns true when the nodes listing is present and contains at least one node.
-        /// </summary>
-        [JetBrains.Annotations.PublicAPI]
-        public bool StationListValid => _stationList.Stations.Length > 0;
-
-
-        /// <summary>
-        /// Create AgvGraph.
-        /// <para>Performs all required parsing and validation.</para>
-        /// </summary>
-        /// <exception cref="InvalidOperationException">Failed due to parsing or validation issue.</exception>
-        public AgvGraph Graph
-        {
-            get
-            {
-                if (_agvGraph == null)
+                if (_usability == AgvGraph.GraphUsability.Valid &&
+                    graphParser.SerialNumber != _serialNumber)
                 {
-                    var graphParser = new GraphParser(_graph);
-                    var agvGraph = graphParser.Graph;
-                    if (!StationListValid)
-                    {
-                        throw new InvalidOperationException("Station list is missing or empty.");
-                    }
+                    _usability = AgvGraph.GraphUsability.SerialNumberMismatch;
+                }
 
-                    List<Common.Messages.AgvManagement.AgvGraph.Node> additionalNodes = new();
-                    List<Common.Messages.AgvManagement.AgvGraph.Edge> additionalEdges = new();
+                if (_usability == AgvGraph.GraphUsability.Valid &&
+                    _stationList.Stations.Length == 0 )
+                {
+                    _usability = AgvGraph.GraphUsability.InvalidStations;
+                }
+
+                if (_usability == AgvGraph.GraphUsability.Valid)
+                {
+                    bool allAdded = true;
+                    HashSet<Common.Messages.AgvManagement.AgvGraph.Node> additionalNodes = new(new Common.Utilities.NodeIdComparer());
+                    HashSet<Common.Messages.AgvManagement.AgvGraph.Edge> additionalEdges = new(new Common.Utilities.EdgeIdComparer());
 
                     foreach (var station in _stationList.Stations)
                     {
-                        // Search node closest to this station.
+                        // Search node from graph closest to this station.
                         Common.Messages.AgvManagement.AgvGraph.Node? nodeNearby = null;
                         float nearbyDistance = 0f;
                         foreach (var node in agvGraph.Nodes)
@@ -108,7 +97,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
                         }
 
                         // Add node and bidirectional edges.
-                        additionalNodes.Add(new(station.Identifier)
+                        bool added = additionalNodes.Add(new(station.Identifier)
                         {
                             Enabled = true,
                             Type = AgvGraph.NodeType.Station,
@@ -116,23 +105,98 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
                             Y = station.Position.Y,
                             Z = 0f
                         });
-                        float metric = graphParser.ConsiderVelocity ? nearbyDistance / graphParser.AverageVelocity : nearbyDistance;
-                        additionalEdges.Add(new(station.Identifier, nodeNearby!.Id)
+                        if (added)
                         {
-                            Metric = metric
-                        });
-                        additionalEdges.Add(new(nodeNearby.Id, station.Identifier)
-                        {
-                            Metric = metric
-                        });
+                            float metric = graphParser.ConsiderVelocity ? nearbyDistance / graphParser.AverageVelocity : nearbyDistance;
+                            additionalEdges.Add(new(station.Identifier, nodeNearby!.Id)
+                            {
+                                Metric = metric
+                            });
+                            additionalEdges.Add(new(nodeNearby.Id, station.Identifier)
+                            {
+                                Metric = metric
+                            });
+                        }
+                        allAdded &= added;
+                    }
+                    if (!allAdded)
+                    {
+                        // Station names not unique
+                        _usability = AgvGraph.GraphUsability.InvalidStations;
                     }
 
-                    additionalNodes.AddRange(agvGraph.Nodes);
-                    additionalEdges.AddRange(agvGraph.Edges);
+                    if (allAdded)
+                    {
+                        allAdded &= additionalNodes.AddRange(agvGraph.Nodes);
+                        if (!allAdded)
+                        {
+                            // Ambiguous station name compared to node names
+                            _usability = AgvGraph.GraphUsability.AmbiguousStationNames;
+                        }
+                    }
 
-                    _agvGraph = new AgvGraph(agvGraph.CorrelationId, additionalNodes.ToArray(), additionalEdges.ToArray(), agvGraph.RelatedMapId, agvGraph.RelatedMapName);
+                    if (allAdded)
+                    {
+                        allAdded &= additionalEdges.AddRange(agvGraph.Edges);
+                        if (!allAdded)
+                        {
+                            // Edges not unique
+                            _usability = AgvGraph.GraphUsability.StationEdgeMismatch;
+                        }
+                    }
+
+                    _agvGraph = new AgvGraph(   agvGraph.CorrelationId,
+                                                additionalNodes.ToArray(),
+                                                additionalEdges.ToArray(),
+                                                agvGraph.RelatedMapId,
+                                                agvGraph.RelatedMapName,
+                                                _usability);
                 }
-                return _agvGraph;
+                else
+                {
+                    _agvGraph = agvGraph;
+                    _agvGraph.Usability = _usability;
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// Returns the serial number of the AGV.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Graph is invalid.</exception>
+        [JetBrains.Annotations.PublicAPI]
+        public string SerialNumber
+        {
+            get
+            {
+                if (_agvGraph == null)
+                {
+                    Parse();
+                }
+                if (_agvGraph!.Usability != AgvGraph.GraphUsability.Valid)
+                {
+                    throw new InvalidOperationException("Graph is invalid.");
+                }
+
+                return _serialNumber!;
+            }
+        }
+
+        /// <summary>
+        /// Returns <see cref="AgvGraph"/> merged from graph and station list.
+        /// <para>Performs all required parsing and validation once if required.</para>
+        /// </summary>
+        public AgvGraph Graph
+        {
+            get
+            {
+                if (_agvGraph == null)
+                {
+                    Parse();
+                }
+
+                return _agvGraph!;
             }
         }
     }

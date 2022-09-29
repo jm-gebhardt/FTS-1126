@@ -258,6 +258,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
 
         private async Task PublishStatus(BehaviorContext<SimulatedAgvSaga> context)
         {
+            _logger.LogTrace("Status event from AGV {AgvId} / {CorrelationId}",
+                context.Saga.AgvId, context.Saga.CorrelationId);
+
             await context.Publish( new AgvStatusReceived(
                 context.Saga.CorrelationId, 
                 context.Saga.AgvId,
@@ -270,6 +273,10 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
             var position = context.Saga.Position;
             if (position != null)
             {
+                _logger.LogTrace("Position event from AGV {AgvId} / {CorrelationId}: {Position}",
+                    context.Saga.AgvId, context.Saga.CorrelationId,
+                    position);
+
                 await context.Publish(new AgvPositionReceived(
                     context.Saga.CorrelationId,
                     context.Saga.AgvId,
@@ -284,7 +291,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
             context.Saga.Nodes = context.Message.Nodes;
             context.Saga.OrderStartDate = DateTime.Now;
 
-            _logger.LogInformation("Agv {AgvId}/{CorrelationId} started Order {OrderId} / {OrderCorrelationId}. Order will be picked up at {OrderPickDate} and dropped at {OrderFinishDate}",
+            _logger.LogInformation("AGV {AgvId} / {CorrelationId} started order {OrderId} / {OrderCorrelationId}. Order will be picked up at {OrderPickDate:HH:mm:ss.fff} and dropped at {OrderFinishDate:HH:mm:ss.fff}",
                 context.Saga.AgvId, context.Saga.CorrelationId,
                 context.Message.OrderDetails.OrderId, context.Message.OrderDetails.CorrelationId, context.Saga.OrderPickDate, context.Saga.OrderFinishDate);
         }
@@ -300,7 +307,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
             }
             else
             {
-                _logger.LogInformation("Agv {AgvId}/{CorrelationId} finished Order {OrderId} / {OrderCorrelationId}",
+                _logger.LogInformation("AGV {AgvId} / {CorrelationId} finished order {OrderId} / {OrderCorrelationId}",
                     context.Saga.AgvId, context.Saga.CorrelationId, order.OrderId, order.CorrelationId);
                 await context.Publish(new TransportOrderCompleted(
                     order.CorrelationId,

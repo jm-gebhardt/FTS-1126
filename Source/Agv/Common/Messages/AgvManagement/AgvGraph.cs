@@ -11,7 +11,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
     {
         /// <inheritdoc/>
         public Guid CorrelationId { get; }
-        
+
         /// <summary>
         /// The Guid of the related map 
         /// </summary>
@@ -33,6 +33,13 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
         public Edge[] Edges { get; }
 
         /// <summary>
+        /// Attribute that informs for the usability of the graph.
+        /// Only when returning <see cref="GraphUsability.Valid"/> the graph should be used for routing.
+        /// </summary>
+        public GraphUsability Usability { get; set; }
+
+
+        /// <summary>
         /// Agv Graph
         /// </summary>
         /// <param name="correlationId"></param>
@@ -40,14 +47,65 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
         /// <param name="edges"></param>
         /// <param name="relatedMapId"></param>
         /// <param name="relatedMapName"></param>
-        public AgvGraph(Guid correlationId, Node[] nodes, Edge[] edges, Guid relatedMapId, string relatedMapName)
+        /// <param name="usability">Default is <see cref="GraphUsability.Valid"/>.</param>
+        public AgvGraph(Guid correlationId, Node[] nodes, Edge[] edges, Guid relatedMapId, string relatedMapName, GraphUsability usability = GraphUsability.Valid)
         {
             CorrelationId = correlationId;
             Nodes = nodes;
             Edges = edges;
             RelatedMapId = relatedMapId;
             RelatedMapName = relatedMapName;
+            Usability = usability;
         }
+
+
+        /// <summary>
+        /// Values for graph usability.
+        /// </summary><remarks>
+        /// On multiple reasons the first on is noted in the subsequent order</remarks>
+        [JetBrains.Annotations.PublicAPI]
+        public enum GraphUsability
+        {
+            /// <summary>
+            /// Graph is valid and can be used for routing
+            /// </summary>
+            Valid,
+
+            /// <summary>
+            /// Serial number is null or empty
+            /// </summary>
+            SerialNumberMissing,
+
+            /// <summary>
+            /// Invalid number of nodes or nodes not unique
+            /// </summary>
+            InvalidNodes,
+
+            /// <summary>
+            /// Invalid number of edges or edges not unique
+            /// </summary>
+            InvalidEdges,
+
+            /// <summary>
+            /// Serial number of graph does not match to serial number of station list
+            /// </summary>
+            SerialNumberMismatch,
+
+            /// <summary>
+            /// Invalid number of stations or station name not unique
+            /// </summary>
+            InvalidStations,
+
+            /// <summary>
+            /// Station names ambiguous compared to node names
+            /// </summary>
+            AmbiguousStationNames,
+
+            /// <summary>
+            /// Auto-generated edges between stations and graph nodes conflicts to edges from graph
+            /// </summary>
+            StationEdgeMismatch
+        };
 
         /// <summary>
         /// Node types.
