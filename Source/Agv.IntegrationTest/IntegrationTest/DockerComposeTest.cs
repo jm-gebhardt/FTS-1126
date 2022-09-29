@@ -10,7 +10,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest
     public class DockerComposeTest
     {
         /// <summary>
-        /// Start and stop all serivices
+        /// Start and stop all services
         /// </summary>
         [TestMethod]
         public void ComposeTest()

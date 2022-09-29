@@ -41,7 +41,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         /// <summary>
         /// Get all Agvs
         /// </summary>
-        /// <returns>JArray of Agvs or null if request is unsuccessfull</returns>
+        /// <returns>JArray of Agvs or null if request is unsuccessful</returns>
         public async Task<JArray?> GetAgvs()
         {
             return await Request<JArray>("agvs");
@@ -50,7 +50,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         /// <summary>
         /// Get Agv Data
         /// </summary>
-        /// <returns>JObject of AgvData or null if request is unsuccessfull</returns>
+        /// <returns>JObject of AgvData or null if request is unsuccessful</returns>
         public async Task<JObject?> GetAgvData(string correlationId)
         {
             return await Request<JObject>($"agvs/{correlationId}/data");
@@ -59,7 +59,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         /// <summary>
         /// Get Agv Graph
         /// </summary>
-        /// <returns>JObject of AgvGraph or null if request is unsuccessfull</returns>
+        /// <returns>JObject of AgvGraph or null if request is unsuccessful</returns>
         public async Task<JObject?> GetAgvGraph(string correlationId)
         {
             return await Request<JObject>($"agvs/{correlationId}/graph");
@@ -68,7 +68,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         /// <summary>
         /// Get all Maps
         /// </summary>
-        /// <returns>JArray of maps or null if request is unsuccessfull</returns>
+        /// <returns>JArray of maps or null if request is unsuccessful</returns>
         public async Task<JArray?> GetMaps()
         {
             return await Request<JArray>("maps");
@@ -77,7 +77,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         /// <summary>
         /// Get all Maps
         /// </summary>
-        /// <returns>JArray of Orders or null if request is unsuccessfull</returns>
+        /// <returns>JArray of Orders or null if request is unsuccessful</returns>
         public async Task<JArray?> GetOrders()
         {
             return await Request<JArray>("orders");
@@ -87,8 +87,8 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         /// Wait for a specific AGV
         /// </summary>
         /// <param name="agvId"></param>
-        /// <returns>JObject of AGV or null if not found or unsuccessfull</returns>
-        public async Task<JObject?> WaitForAgv(string agvId)
+        /// <returns>JObject of AGV or null if not found or unsuccessful</returns>
+        public async Task<JToken?> WaitForAgv(string agvId)
         {
             return await Poll(async () =>
             {
@@ -105,7 +105,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         /// Wait for AgvData
         /// </summary>
         /// <param name="correlationId"></param>
-        /// <returns>JObject of AgvData or null if not found or unsuccessfull</returns>
+        /// <returns>JObject of AgvData or null if not found or unsuccessful</returns>
         public async Task<JObject?> WaitForAgvData(string correlationId)
         {
             return await Poll(async () =>
@@ -119,7 +119,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         /// Wait for Agv Graph
         /// </summary>
         /// <param name="correlationId"></param>
-        /// <returns>JObject of AgvGraph or null if not found or unsuccessfull</returns>
+        /// <returns>JObject of AgvGraph or null if not found or unsuccessful</returns>
         public async Task<JObject?> WaitForAgvGraph(string correlationId)
         {
             return await Poll(async () =>
@@ -133,8 +133,8 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         /// Wait for Agv Graph
         /// </summary>
         /// <param name="agvCorrelationId"></param>
-        /// <returns>JObject of Map or null if not found or unsuccessfull</returns>
-        public async Task<JObject?> WaitForMap(string agvCorrelationId)
+        /// <returns>JObject of Map or null if not found or unsuccessful</returns>
+        public async Task<JToken?> WaitForMap(string agvCorrelationId)
         {
             return await Poll(async () =>
             {
@@ -152,8 +152,8 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         /// </summary>
         /// <param name="orderId"></param>
         /// <param name="orderState"></param>
-        /// <returns>JObject of Order or null if not found or unsuccessfull</returns>
-        public async Task<JObject?> WaitForOrder(string orderId, string? orderState = null )
+        /// <returns>JObject of Order or null if not found or unsuccessful</returns>
+        public async Task<JToken?> WaitForOrder(string orderId, string? orderState = null )
         {
             return await Poll(async () =>
             {
@@ -174,13 +174,13 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
 
 
         /// <summary>
-        /// Poll until request is successfull
+        /// Poll until request is successful
         /// </summary>
         /// <param name="pollJob"></param>
         /// <param name="timeout"></param>
         /// <typeparam name="T"></typeparam>
-        /// <returns>return request result or null of unsuccessfull</returns>
-        private static async Task<T?> Poll<T>(Func<Task<T?>> pollJob, int timeout=10000)
+        /// <returns>return request result or null of unsuccessful</returns>
+        private static async Task<T?> Poll<T>(Func<Task<T?>> pollJob, int timeout=20000)
         {
             var killTime = DateTime.Now + TimeSpan.FromMilliseconds(timeout);
             while (killTime > DateTime.Now)

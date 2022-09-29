@@ -39,7 +39,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         /// <summary>
         /// Stop Containers
         /// </summary>
-        /// <returns>true if command execution was successfull</returns>
+        /// <returns>true if command execution was successful</returns>
         public bool Stop()
         {
             return RunCommand("stop", 60000);
@@ -48,7 +48,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         /// <summary>
         /// Removes everything
         /// </summary>
-        /// <returns>true if command execution was successfull</returns>
+        /// <returns>true if command execution was successful</returns>
         public bool Down()
         {
             return RunCommand("down -v");
@@ -71,7 +71,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         /// <summary>
         /// Are all started services in state "running" 
         /// </summary>
-        /// <returns>true if all conainters are running</returns>
+        /// <returns>true if all containers are running</returns>
         public bool AreRunning()
         {
             var success = RunCommand("ps -a --format=json", out var stdout);
@@ -142,6 +142,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
             {
                 process.Kill();
                 _logger.LogError("Command timeout");
+                process.WaitForExit();
                 return false;
             }
 

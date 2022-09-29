@@ -1,7 +1,9 @@
-﻿namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
+﻿using System.Diagnostics;
+
+namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
 {
     /// <summary>
-    /// Generates Environment file from tempalte
+    /// Generates Environment file from template
     /// </summary>
     public class EnvFile
     {
@@ -75,6 +77,7 @@
                 };
             }
             FilePath = Path.GetTempFileName();
+            Trace.WriteLine($"FilePath for .env file: {FilePath}");
             File.WriteAllLines(FilePath, from kvp in _dict select kvp.Key + "=" + kvp.Value);
             
             return FilePath;

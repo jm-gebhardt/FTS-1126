@@ -5,12 +5,11 @@ variables:
   value: 'CompileAgv.sln'
 - name: 'Build.Configuration'
   value: 'Release'
+- name: 'CertsFolderPath'
+  value: '/home/admin-lvs/Dokumente/AgvDevCopy'
+- name: NugetVersion
+  value: 6.0
 
-  # Please don't forget to set the variables the variable group inside your Az Devops Account
-  # Required denominations
-  # - CopiedFolderPath
-  # - IsSimulationRequested
-- group: BuildAgentSim
 
 stages:
   ################################################
@@ -25,6 +24,9 @@ stages:
     pool:
       vmImage: windows-latest 
     steps:
+      - task: NuGetToolInstaller@1
+        inputs:
+          versionSpec: $(NugetVersion)
       - task: UseDotNet@2
         displayName: 'Install .NET 6 SDK'
         inputs:
@@ -53,6 +55,9 @@ stages:
     pool:
       vmImage: ubuntu-latest
     steps:
+      - task: NuGetToolInstaller@1
+        inputs:
+          versionSpec: $(NugetVersion)
       - task: Npm@1
         displayName: 'Install node modules'
         inputs:
@@ -77,6 +82,9 @@ stages:
     pool:
       vmImage: windows-latest
     steps:
+      - task: NuGetToolInstaller@1
+        inputs:
+          versionSpec: $(NugetVersion)
       - task: UseDotNet@2
         displayName: 'Install .NET 6 SDK'
         inputs:
@@ -110,6 +118,9 @@ stages:
     pool:
       vmImage: windows-latest
     steps:
+    - task: NuGetToolInstaller@1
+      inputs:
+        versionSpec: $(NugetVersion)
     - task: Npm@1
       displayName: 'Install node modules'
       inputs:
@@ -144,6 +155,9 @@ stages:
         artifact: coverageReports
       - download: current
         artifact: coverageReportsWeb
+      - task: NuGetToolInstaller@1
+        inputs:
+          versionSpec: $(NugetVersion)
       - task: reportgenerator@4
         inputs:
           reports: '$(Pipeline.Workspace)/coverageReports/**/coverage.cobertura.xml;$(Pipeline.Workspace)/coverageReportsWeb/*.xml'
@@ -165,30 +179,65 @@ stages:
   # Sim on Build Agent 
   ################################################
 - stage: Sim_on_UbuntuServer
-  condition: eq( variables['IsSimulationRequested'] , 'true')
+  dependsOn: Build
+  condition: and( succeeded(), in(variables['Build.Reason'], 'PullRequest', 'Manual') )
   pool:
     name: AGVDev
   jobs:
-  - job: PrepareSimulation
-    displayName: Copy files & Start docker compose
+  - job: Simulation
+    displayName: Preparing and executing simulation
     steps:
-    - task: CmdLine@2
-      displayName: docker compose down
-      inputs:
-        script: docker compose down
-        workingDirectory: '$(CopiedFolderPath)'
+    
     - task: CopyFiles@2
-      displayName: Copy files
+      displayName: Copy Certs folder
       inputs:
         Contents: |
           **/*
           !.git/**/*
-        targetFolder: '$(CopiedFolderPath)'
+        sourceFolder: '$(CertsFolderPath)'
+        targetFolder: '$(Build.SourcesDirectory)'
         overWrite: true
+
     - task: CmdLine@2
-      displayName: docker compose up
+      displayName: docker compose build
       inputs:
         script: | 
-          docker compose up -d
+          docker compose build
           exit 0
-        workingDirectory: '$(CopiedFolderPath)'
+        workingDirectory: '$(Build.SourcesDirectory)'
+
+    - task: NuGetAuthenticate@1
+
+    - task: DotNetCoreCLI@2
+      displayName: Restore
+      inputs:
+        command: restore
+        projects: '$(Build.SourcesDirectory)/Source/Agv.IntegrationTest/IntegrationTest.sln'
+        feedsToUse: config
+        nugetConfigPath: '$(Build.SourcesDirectory)/Source/Agv.IntegrationTest/NuGet.Config'
+    
+    - task: Bash@3
+      inputs:
+        targetType: 'inline'
+        script: dotnet test Source/Agv.IntegrationTest/IntegrationTest.sln --logger trx
+      env:
+        COMPOSE_FILE: $(Build.SourcesDirectory)/docker-compose.yml
+        MQTT_SAMPLES: $(Build.SourcesDirectory)/Source/Agv.IntegrationTest/MqttMessages
+
+    - task: CmdLine@2
+      condition: succeededOrFailed()
+      displayName: docker compose down
+      inputs:
+        script: docker compose down
+        workingDirectory: '$(Build.SourcesDirectory)'
+
+    - task: PublishTestResults@2
+      condition: succeededOrFailed()
+      inputs:
+        testRunner: VSTest
+        testResultsFiles: '$(Build.SourcesDirectory)/Source/Agv.IntegrationTest/IntegrationTest/TestResults/*.trx'
+
+    - script: rm -r TestResults
+      condition: succeededOrFailed()
+      displayName: clean up TestResults
+      workingDirectory: '$(Build.SourcesDirectory)/Source/Agv.IntegrationTest/IntegrationTest'

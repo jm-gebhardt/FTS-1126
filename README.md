@@ -108,9 +108,9 @@ dotnet test Source/Agv/CompileAgv.sln
 ```
 
 ## Run Integration Tests
-Integration tests are located in `Source/Agv.IntegrationsTests`
+Integration tests are located in `Source/Agv.IntegrationsTest`
 ```
-cd Source/Agv.IntegrationsTests
+cd Source/Agv.IntegrationsTest
 ```
 Powershell:
 ```
@@ -120,7 +120,7 @@ $Env:MQTT_SAMPLES = Join-Path $pwd "/MqttMessages"
 Bash:
 ```
 export COMPOSE_FILE=$(pwd)/../../docker-compose.yml
-export MQTT_SAMPLES=$(pwd)/MqttMessages"
+export MQTT_SAMPLES=$(pwd)/MqttMessages
 ```
 
 Run Tests 
