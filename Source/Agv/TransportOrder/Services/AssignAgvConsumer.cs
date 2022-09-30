@@ -164,6 +164,16 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
                 _logger.LogError("AGV {CorrelationId} became idle, but no AGV with this correlation ID can be found", context.Message.CorrelationId);
                 return;
             }
+            if (agv.AgvGraph == null)
+            {
+                _logger.LogTrace("AGV {CorrelationId} has no graph (Graph is NULL)", context.Message.CorrelationId);
+                return;
+            }
+            if (agv.AgvGraph!.Usability != AgvGraph.GraphUsability.Valid)
+            {
+                _logger.LogDebug("AGV {CorrelationId} has invalid graph.", context.Message.CorrelationId);
+                return;
+            }
 
             //1. Get unassigned Orders
             List<IOrder> unassignedOrders = _orderRegistry.GetUnassignedOrders().ToList();
