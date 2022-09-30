@@ -238,6 +238,36 @@
         }
       }
     },
+    "/agvs/{correlationId}/setIdle": {
+      "patch": {
+        "tags": [
+          "Agv"
+        ],
+        "summary": "Set status of agv from Discovered to Idle",
+        "parameters": [
+          {
+            "name": "correlationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok: AGV status was successfully set to Idle"
+          },
+          "400": {
+            "description": "Bad Request: AGV is not in State  Gebhardt.StoreWare.Agv.TransportOrder.Services.AgvStateMachine.Discovered"
+          },
+          "404": {
+            "description": "Not Found: AGV with the given correlationId does not exist"
+          }
+        }
+      }
+    },
     "/maps": {
       "get": {
         "tags": [

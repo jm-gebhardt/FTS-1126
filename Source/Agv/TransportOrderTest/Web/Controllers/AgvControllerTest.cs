@@ -8,6 +8,8 @@ using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.TransportOrder.Web.Models;
+using MassTransit;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
 {
@@ -19,10 +21,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
     {
         #region Setup
 
-        private static readonly string[] _agvIds = { "AGV001", "AGV002" };
-        private static readonly string[] _orders = { "ORDER001", "ORDER002" };
-        private static readonly string[] _states = { "Idle", "Busy" };
-        private static readonly string[] _ips = { "127.0.0.1", "127.0.0.2" };
+        private static readonly string[] _agvIds = { "AGV001", "AGV002", "AGV003" };
+        private static readonly string[] _orders = { "ORDER001", "ORDER002", "" };
+        private static readonly string[] _states = { nameof(AgvStateMachine.Idle), nameof(AgvStateMachine.Busy), nameof(AgvStateMachine.Discovered) };
+        private static readonly string[] _ips = { "127.0.0.1", "127.0.0.2", "127.0.0.3" };
 
         private static readonly AgvGraph.Node[] _nodes = new AgvGraph.Node[] {
             new("node00") { X = 0f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
@@ -109,13 +111,19 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
             return registry.Object;
         }
 
+        private AgvController GetController()
+        {
+            var bus = new Mock<IBus>();
+            return new AgvController(GetAgvRegistry(), GetAgvPositionRegistry(), bus.Object);
+        }
+
         #endregion
 
         /// <summary/>
         [TestMethod]
         public void GetAgvs_Successfully()
         {
-            var controller = new AgvController(GetAgvRegistry(), GetAgvPositionRegistry());
+            var controller = GetController();
 
             var result = controller.GetAgvs().Result as OkObjectResult;
             Assert.IsNotNull(result);
@@ -141,7 +149,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
         [DataRow(1)]
         public void GetAgvGraph_Successfully(int index)
         {
-            var controller = new AgvController(GetAgvRegistry(), GetAgvPositionRegistry());
+            var controller = GetController();
             var correlationId = _agvIds[index].ToGuid();
 
             var result = controller.GetAgvGraph(correlationId).Result as OkObjectResult;
@@ -160,7 +168,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
         [TestMethod]
         public void GetAgvGraph_NotFound()
         {
-            var controller = new AgvController(GetAgvRegistry(), GetAgvPositionRegistry());
+            var controller = GetController();
             var correlationId = Guid.Empty;
 
             var result = controller.GetAgvGraph(correlationId).Result as NotFoundResult;
@@ -173,7 +181,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
         [DataRow(1)]
         public void GetAgvStatus_Successfully(int index)
         {
-            var controller = new AgvController(GetAgvRegistry(), GetAgvPositionRegistry());
+            var controller = GetController();
             var correlationId = _agvIds[index].ToGuid();
 
             var result = controller.GetAgvStatus(correlationId).Result as OkObjectResult;
@@ -190,7 +198,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
         [TestMethod]
         public void GetAgvStatus_NotFound()
         {
-            var controller = new AgvController(GetAgvRegistry(), GetAgvPositionRegistry());
+            var controller = GetController();
             var correlationId = Guid.Empty;
 
             var result = controller.GetAgvStatus(correlationId).Result as NotFoundResult;
@@ -203,7 +211,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
         [DataRow(1)]
         public void GetAgvData_Successfully(int index)
         {
-            var controller = new AgvController(GetAgvRegistry(), GetAgvPositionRegistry());
+            var controller = GetController();
             var correlationId = _agvIds[index].ToGuid();
 
             var result = controller.GetAgvData(correlationId).Result as OkObjectResult;
@@ -220,11 +228,47 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
         [TestMethod]
         public void GetAgvData_NotFound()
         {
-            var controller = new AgvController(GetAgvRegistry(), GetAgvPositionRegistry());
+            var controller = GetController();
             var correlationId = Guid.Empty;
 
             var result = controller.GetAgvData(correlationId).Result as NotFoundResult;
             Assert.IsNotNull(result);
+        }
+
+        /// <summary/>
+        [TestMethod]
+        public void SetIdle_NotFound()
+        {
+            var controller = GetController();
+            var correlationId = Guid.Empty;
+
+            var result = controller.SetIdle(correlationId).Result as NotFoundResult;
+            Assert.IsNotNull(result);
+        }
+
+        /// <summary/>
+        [TestMethod]
+        public void SetIdle_BadRequest()
+        {
+            var controller = GetController();
+            var correlationId = _agvIds[1].ToGuid(); // AGV not in state 'Discovered'
+
+            var result = controller.SetIdle(correlationId).Result as BadRequestObjectResult;
+            Assert.IsNotNull(result);
+        }
+
+        /// <summary/>
+        [TestMethod]
+        public void SetIdle_Ok()
+        {
+            var bus = new Mock<IBus>();
+            var controller = new AgvController(GetAgvRegistry(), GetAgvPositionRegistry(), bus.Object);
+            var correlationId = _agvIds[2].ToGuid();
+
+            var result = controller.SetIdle(correlationId).Result as OkResult;
+            Assert.IsNotNull(result);
+
+            bus.Verify(s => s.Publish(It.IsAny<ReleaseAgv>(), default), Times.Once);
         }
     }
 }

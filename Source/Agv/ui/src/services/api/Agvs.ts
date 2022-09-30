@@ -79,4 +79,18 @@ export class Agvs<
       format: 'json',
       ...params
     })
+  /**
+   * No description
+   *
+   * @tags Agv
+   * @name SetIdlePartialUpdate
+   * @summary Set status of agv from Discovered to Idle
+   * @request PATCH:/agvs/{correlationId}/setIdle
+   */
+  setIdlePartialUpdate = (correlationId: string, params: RequestParams = {}) =>
+    this.request<void, void>({
+      path: `/agvs/${correlationId}/setIdle`,
+      method: 'PATCH',
+      ...params
+    })
 }

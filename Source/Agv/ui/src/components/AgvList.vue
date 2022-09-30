@@ -6,7 +6,9 @@
       </div>
       <div class="tableCell-align-middle">{{ data.currentState }}</div>
     </template>
-
+    <template #actions="{ data }">
+      <button @click="clickSetIdle(data)">Set Idle</button>
+    </template>
     <ui-pagination fullwidth show-total v-bind="$attrs"></ui-pagination>
   </ui-table>
 </template>
@@ -20,15 +22,21 @@ export default {
 
 <script lang="ts" setup>
 import { IAgv } from '@/services/api/data-contracts'
-import { UiPagination } from 'balm-ui'
+import { UiPagination, useConfirm, useAlert } from 'balm-ui'
+import { Agvs as AgvApi } from '@/services/api/Agvs'
+import { HttpResponse } from '@microsoft/signalr'
 
 interface Props {
   agvs: IAgv[]
 }
 
+const agvApi = new AgvApi({
+  baseUrl: import.meta.env.VITE_API_URL
+})
+
 const props = defineProps<Props>()
 
-const thead = ['ID', 'Agv ID', 'Current State']
+const thead = ['ID', 'Agv ID', 'Current State', 'Actions']
 const tbody = [
   'correlationId',
   {
@@ -38,6 +46,9 @@ const tbody = [
   {
     field: 'currentState',
     slot: 'CurrentState'
+  },
+  {
+    slot: 'actions'
   }
 ]
 
@@ -52,6 +63,28 @@ function AgvStatusIcon(status: string | null | undefined): string {
     default:
       return '🤔'
   }
+}
+
+function clickSetIdle(agv: IAgv): void {
+  const $confirm = useConfirm()
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  $confirm(`Set state of AGV '${agv.agvId}' to Idle?`).then((result: any) => {
+    // According to the balm-ui documentation 'result' should be a boolean but in the node module code it's declared as a void
+    // During runtime it actually is a boolean, so we need to cast it
+    if (result as boolean) {
+      agvApi
+        .setIdlePartialUpdate(agv.correlationId)
+        .then((value) => {
+          console.log('setIdle: ' + value.statusText)
+        })
+        .catch((reason: HttpResponse) => {
+          console.log('setIdle: ' + reason.statusText)
+          const $alert = useAlert()
+          $alert(`AGV '${agv.agvId}' could not be set to Idle`)
+        })
+    }
+  })
 }
 </script>
 

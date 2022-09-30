@@ -14,7 +14,8 @@
     "lint:check": "eslint --ext .js,.ts,.vue --ignore-path .gitignore --max-warnings=0 src/",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
-    "generate-api": "swagger-typescript-api -p ./src/services/api/swagger.json -o ./src/services/api --modular --type-prefix=I"
+    "generate-api": "swagger-typescript-api -p ./src/services/api/swagger.json -o ./src/services/api --modular --type-prefix=I",
+    "pr": "npm run format && npm run lint && npm run build && npm run coverage"
   },
   "dependencies": {
     "@microsoft/signalr": "^6.0.7",

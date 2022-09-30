@@ -5,6 +5,8 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers.Pagination;
 using System.Text.Json;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.TransportOrder.Web.Models;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
+using MassTransit;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers
 {
@@ -16,14 +18,16 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers
     {
         private readonly IAgvRegistry _agvRegistry;
         private readonly IAgvPositionRegistry _agvPositionRegistry;
+        private readonly IBus _bus;
 
         /// <summary>
         /// Init controller
         /// </summary>
-        public AgvController(IAgvRegistry agvRegistry, IAgvPositionRegistry agvPositionRegistry)
+        public AgvController(IAgvRegistry agvRegistry, IAgvPositionRegistry agvPositionRegistry, IBus bus)
         {
             _agvRegistry = agvRegistry;
             _agvPositionRegistry = agvPositionRegistry;
+            _bus = bus;
         }
 
         /// <summary>
@@ -58,12 +62,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers
         public ActionResult<Graph> GetAgvGraph(Guid correlationId)
         {
             var agv = _agvRegistry.GetAgv(correlationId);
-            if (agv == null || agv.AgvGraph == null)
+            if (agv == null)
             {
                 return NotFound();
             }
 
-            if ( agv.AgvGraph == null)
+            if (agv.AgvGraph == null)
             {
                 return NoContent();
             }
@@ -116,6 +120,32 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers
         public ActionResult<IEnumerable<AgvPositionReceived>> GetAgvPositions()
         {
             return Ok(_agvPositionRegistry.GetAllPositions());
+        }
+
+        /// <summary>
+        /// Set status of agv from Discovered to Idle
+        /// </summary>
+        /// <response code="200">Ok: AGV status was successfully set to Idle</response>
+        /// <response code="400">Bad Request: AGV is not in State  <see cref="AgvStateMachine.Discovered"/></response>
+        /// <response code="404">Not Found: AGV with the given correlationId does not exist</response>
+        [HttpPatch]
+        [Route("/agvs/{correlationId}/setIdle")]
+        public async Task<ActionResult> SetIdle(Guid correlationId)
+        {
+            var agv = _agvRegistry.GetAgv(correlationId);
+
+            if (agv == null)
+            {
+                return NotFound();
+            }
+
+            if (agv.CurrentState != nameof(AgvStateMachine.Discovered))
+            {
+                return BadRequest("Agv cannot be set 'Idle' because it is not in state 'Discovered'");
+            }
+
+            await _bus.Publish(new ReleaseAgv(agv.CorrelationId));
+            return Ok();
         }
     }
 }
