@@ -40,6 +40,11 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events
         /// <summary>
         /// There is no AGV registered with a route from source to destination of the given order
         /// </summary>
-        NoRouteFound
+        NoRouteFound,
+        /// <summary>
+        /// There was no AGV discovered or online when assigning the given order
+        /// </summary>
+        /// <remarks>No entry found in AgvRegistry</remarks>
+        AgvRegistryEmpty
     }
 }

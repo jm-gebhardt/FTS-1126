@@ -48,6 +48,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
             if (assignAgvAndRoute == null)
             {
                 var error = CheckRouteExists<AStar>(context.Message.Order) ? AgvAssignmentErrorCode.NoIdleAgv : AgvAssignmentErrorCode.NoRouteFound;
+                
+                if (_agvRegistry.Count == 0 && error == AgvAssignmentErrorCode.NoRouteFound)
+                {
+                    error = AgvAssignmentErrorCode.AgvRegistryEmpty;
+                }
+
                 await context.Publish(new AgvAssignmentFailed(context.Message.CorrelationId, error));
             }
             else

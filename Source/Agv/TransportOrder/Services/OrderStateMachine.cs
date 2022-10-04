@@ -172,21 +172,33 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// <returns>Event Binding for AgvAssignmentFailed</returns>
         private EventActivityBinder<OrderSaga, AgvAssignmentFailed> SetAgvAssignFailedHandler() =>
             When(AgvAssignFailedEvent)
-                .Then(c =>
-                    _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId}, {Error}",
-                        nameof(AgvAssignmentFailed), c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId, c.Message.Error)
-                )
                 .Then(c => c.Saga.FailedReason = $"{nameof(AgvAssignmentErrorCode)}.{c.Message.Error}")
-                .IfElse(c => c.Message.Error == AgvAssignmentErrorCode.NoIdleAgv,
-                    c => c
-                        .TransitionTo(OrderReceived),
-                    HostOrderInvalid
-                );
+                .ThenAsync(HostOrderInvalidationExamination);
 
-        private EventActivityBinder<OrderSaga, AgvAssignmentFailed> HostOrderInvalid(EventActivityBinder<OrderSaga, AgvAssignmentFailed> context) =>
-            context.Publish(c => new HostOrderHandlingFailed(c.Saga.CorrelationId, c.Saga.OrderDetails.OrderId, HostOrderErrorCode.InvalidOrderData))
-                .Then(c => _logger.LogInformation("Order {OrderId}/{CorrelationId} contains invalid data", c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId))
-                .TransitionTo(OrderFailed);
+        private async Task HostOrderInvalidationExamination(BehaviorContext<OrderSaga, AgvAssignmentFailed> context)
+        {
+            switch (context.Message.Error)
+            {
+                case AgvAssignmentErrorCode.NoIdleAgv:
+                    await context.TransitionToState(OrderReceived);
+                    _logger.LogInformation("{MessageType}/{FailedReason}: Incoming Order {OrderId} / {CorrelationId} but no idle AGV found in AgvRegistry",
+                        nameof(AgvAssignmentFailed), AgvAssignmentErrorCode.NoIdleAgv, context.Saga.OrderDetails.OrderId, context.Saga.CorrelationId);
+                    break;
+
+                case AgvAssignmentErrorCode.NoRouteFound:
+                    await context.Publish(new HostOrderHandlingFailed(context.Saga.CorrelationId, context.Saga.OrderDetails.OrderId, HostOrderErrorCode.InvalidOrderData));
+                    await context.TransitionToState(OrderFailed);
+                    _logger.LogInformation("{MessageType}/{FailedReason}: Incoming Order {OrderId} / {CorrelationId} but unable to calculate route with found AGVs in AgvRegistry",
+                        nameof(AgvAssignmentFailed), AgvAssignmentErrorCode.NoRouteFound, context.Saga.OrderDetails.OrderId, context.Saga.CorrelationId);
+                    break;
+
+                case AgvAssignmentErrorCode.AgvRegistryEmpty:
+                    await context.TransitionToState(OrderReceived);
+                    _logger.LogInformation("{MessageType}/{FailedReason}: Incoming Order {OrderId} / {CorrelationId} but no discovered AGV found in AgvRegistry",
+                        nameof(AgvAssignmentFailed), AgvAssignmentErrorCode.AgvRegistryEmpty, context.Saga.OrderDetails.OrderId, context.Saga.CorrelationId);
+                    break;
+            }
+        }
 
         /// <summary>
         /// Handler for AgvAssignmentSucceeded

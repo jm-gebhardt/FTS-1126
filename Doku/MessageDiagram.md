@@ -15,8 +15,6 @@ sequenceDiagram
     DeviceCommunication->>AgvManagement: AgvPositionReceived
     DeviceCommunication->>AgvManagement: AgvStatusReceived
     deactivate DeviceCommunication
-    AgvManagement->>AgvManagement: ReleaseAgv
-    AgvManagement->>AgvManagement: AgvBecameIdle
 
     AgvManagement->>DeviceCommunication: RequestAgvData
     activate DeviceCommunication
@@ -57,6 +55,8 @@ sequenceDiagram
     activate DeviceCommunication
     DeviceCommunication->>AgvManagement: AgvMapReceived
     deactivate DeviceCommunication
+    AgvManagement->>AgvManagement: ReleaseAgv
+    AgvManagement->>AgvManagement: AgvBecameIdle
 
     Note over WCSCommunication,DeviceCommunication: Handle HostOrder
 

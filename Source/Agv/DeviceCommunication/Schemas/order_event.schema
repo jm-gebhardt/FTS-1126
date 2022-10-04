@@ -17,15 +17,15 @@
             "type": "string",
             "description": "The unique ID of the order"
         },
-        "OrderEvenType": {
+        "OrderEventType": {
             "type": "string",
-            "description": "The type of the order event. Started/Picked/Completed/Cancelled/CancellFailed/Failed",
+            "description": "The type of the order event. Started/Picked/Completed/Cancelled/CancelFailed/Failed",
             "enum": [
                 "Started",
                 "Picked",
                 "Completed",
                 "Cancelled",
-                "CancellFailed",
+                "CancelFailed",
                 "Updated",
                 "UpdateFailed",
                 "Failed"
@@ -35,6 +35,6 @@
     "required": [
         "SerialNumber",
         "OrderId",
-        "OrderEvenType"
+        "OrderEventType"
     ]
 }
