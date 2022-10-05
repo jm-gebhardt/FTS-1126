@@ -1,3 +1,4 @@
+using System.Net;
 using Newtonsoft.Json.Linq;
 using JetBrains.Annotations;
 
@@ -35,6 +36,14 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
             }
 
             return null;
+        }
+        
+        private async Task<bool> Patch(string subPath)
+        {
+            var httpClient = new HttpClient();
+            var url = $"{_apiUrl}/{subPath}";
+            var response = await httpClient.PatchAsync(url, null);
+            return response.StatusCode == HttpStatusCode.OK;
         }
 
 
@@ -81,6 +90,16 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         public async Task<JArray?> GetOrders()
         {
             return await Request<JArray>("orders");
+        }
+
+        /// <summary>
+        /// Set status of agv from Discovered to Idle
+        /// </summary>
+        /// <param name="correlationId"></param>
+        /// <returns></returns>
+        public async Task<bool> SetAgvIdle(string correlationId)
+        {
+            return await Patch($"agvs/{correlationId}/setIdle");
         }
 
         /// <summary>

@@ -8,6 +8,7 @@ using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
+using Gebhardt.StoreWare.Agv.TransportOrder.CmdOptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Models;
 using Gebhardt.StoreWare.Agv.TransportOrder.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.States;
@@ -37,6 +38,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                 {
                     s.AddSingleton(_ => mockObserver.Object);
                     s.AddTransient(_ => mockRegistry.Object);
+                    s.AddSingleton(_ => new ProductionOptions()
+                    {
+                        ApplicationName = null,
+                        AutoAccept = true
+                    });
                 });
         }
 
@@ -582,6 +588,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             {
                 s.AddTransient(_ => mockRegistry.Object);
                 s.AddSingleton(mockObserver.Object);
+                s.AddSingleton(_ => new ProductionOptions()
+                {
+                    ApplicationName = null,
+                    AutoAccept = true
+                });
             });
 
             var agvSaga = CreateTestAgvSaga(previousState);    // The previous state is variable due to DuringAny()
@@ -621,6 +632,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             {
                 s.AddTransient(_ => mockRegistry.Object);
                 s.AddSingleton(mockObserver.Object);
+                s.AddSingleton(_ => new ProductionOptions()
+                {
+                    ApplicationName = null,
+                    AutoAccept = true
+                });
             });
 
             var agvSaga = CreateTestAgvSaga(previousState);    // The previous state is variable due to DuringAny()
@@ -671,6 +687,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             {
                 s.AddTransient(_ => mockRegistry.Object);
                 s.AddSingleton(mockObserver.Object);
+                s.AddSingleton(_ => new ProductionOptions()
+                {
+                    ApplicationName = null,
+                    AutoAccept = true
+                });
             });
 
             var agvSaga = CreateTestAgvSaga(previousState);    // The previous state is variable due to DuringAny()
@@ -716,6 +737,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                 {
                     s.AddSingleton(_ => mockObserver.Object);
                     s.AddTransient(_ => mockRegistry.Object);
+                    s.AddSingleton(_ => new ProductionOptions()
+                    {
+                        ApplicationName = null,
+                        AutoAccept = true
+                    });
                 });
 
             const string agvId = "Order#1";

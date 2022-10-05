@@ -91,6 +91,8 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest
             Assert.IsNotNull(await restApi.WaitForAgvGraph(restAgv["correlationId"].ToString()));
             Assert.IsNotNull(await restApi.WaitForMap(restAgv["correlationId"].ToString()));
 
+            Assert.IsTrue(await restApi.SetAgvIdle(restAgv["correlationId"].ToString()));
+
             return agv;
         }
         

@@ -1,5 +1,6 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
+using Gebhardt.StoreWare.Agv.TransportOrder.CmdOptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.States;
 using MassTransit;
 using Microsoft.Extensions.Logging;
@@ -66,11 +67,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         public Event<AgvMapReceived> AgvMapReceivedEvent { get; private set; } = default!;
 
         /// <summary>
-        /// If true, AGV are automatically moved from Discovered to Idle
-        /// </summary>
-        private const bool AutoAcceptDiscoveredAgv = true;
-
-        /// <summary>
         /// Time that has to pass before resending a request telegram in case AgvGraph or AgvData are still null
         /// </summary>
         /// <remarks>Interval indicated in seconds</remarks>
@@ -84,16 +80,20 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
 
         private readonly IMapRegistry _mapRegistry;
 
+        private readonly ProductionOptions _productionOptions;
+
         /// <summary>
         /// Constructor of AgvStateMachine
         /// </summary>
         /// <param name="logger"></param>
         /// <param name="mapRegistry"></param>
         /// <param name="agvStateObserver"></param>
-        public AgvStateMachine(ILogger<AgvStateMachine> logger, IMapRegistry mapRegistry, IStateObserver<AgvSaga> agvStateObserver)
+        /// <param name="productionOptions"></param>
+        public AgvStateMachine(ILogger<AgvStateMachine> logger, IMapRegistry mapRegistry, IStateObserver<AgvSaga> agvStateObserver, ProductionOptions productionOptions)
         {
             _logger = logger;
             _mapRegistry = mapRegistry;
+            _productionOptions = productionOptions;
 
             SetSagaFactory();
             InstanceState(x => x.CurrentState);
@@ -134,7 +134,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
                 .Publish(c => new RequestAgvData(c.Saga.CorrelationId, c.Saga.AgvId))
                 .Publish(c => new RequestAgvGraph(c.Saga.CorrelationId, c.Saga.AgvId))
                 // Lets have a auto-discover feature
-                .If(_ => AutoAcceptDiscoveredAgv, x =>
+                .If(_ => _productionOptions.AutoAccept, x =>
                     x.Publish(c => new ReleaseAgv(c.Saga.CorrelationId))
                 );
 

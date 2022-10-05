@@ -28,7 +28,7 @@ try
     IHostBuilder? hostBuilder = null;
 
     Parser.Default.ParseArguments<ProductionOptions>(args)
-        .WithParsed(_ =>
+        .WithParsed(productionOptions =>
         {
             hostBuilder = GebhardtStartup.CreateHostBuilder(args)
                 .ConfigureServices((context, services) =>
@@ -54,6 +54,9 @@ try
                     services.AddSingleton<IStateObserver<OrderSaga>, OrderStateObserver>();
                     services.AddSingleton<IStateObserver<AgvSaga>, AgvStateObserver>();
                     services.AddSingleton<IAgvPositionRegistry, AgvPositionRegistry>();
+
+                    // Scopes
+                    services.AddScoped(_ => productionOptions);
 
                     services.AddDbContextFactory<SagaPersistenceDbContext>(builder =>
                     {

@@ -2,6 +2,7 @@
 using MassTransit;
 using Moq;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.TransportOrder.CmdOptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.States;
 using Gebhardt.StoreWare.Agv.TransportOrder.Web;
@@ -27,7 +28,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             var mockContext = new Mock<BehaviorContext<AgvSaga>>();
             var mockLogger = new Mock<ILogger<AgvStateMachine>>();
             var agvStateObserver = new AgvStateObserver(mockHub.Object);
-            var agvStateMachine = new AgvStateMachine(mockLogger.Object, mapRegistryMock.Object, agvStateObserver);
+            var agvStateMachine = new AgvStateMachine(mockLogger.Object, mapRegistryMock.Object, agvStateObserver, new ProductionOptions { ApplicationName = null, AutoAccept = true });
             var previousState = agvStateMachine.Idle;
             var currentState = agvStateMachine.Reserved;
 
@@ -49,7 +50,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             var mockContext = new Mock<BehaviorContext<AgvSaga>>();
             var mockLogger = new Mock<ILogger<AgvStateMachine>>();
             var agvStateObserver = new AgvStateObserver(mockHub.Object);
-            var agvStateMachine = new AgvStateMachine(mockLogger.Object, mapRegistryMock.Object, agvStateObserver);
+            var agvStateMachine = new AgvStateMachine(mockLogger.Object, mapRegistryMock.Object, agvStateObserver, new ProductionOptions { ApplicationName = null, AutoAccept = true });
             var previousState = agvStateMachine.Idle;
             var currentState = agvStateMachine.Initial;
 
