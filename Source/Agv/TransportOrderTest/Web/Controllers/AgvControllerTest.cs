@@ -128,8 +128,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
             var result = controller.GetAgvs().Result as OkObjectResult;
             Assert.IsNotNull(result);
 
-            var agvs = result.Value as List<TransportOrder.Web.Models.Agv>;
-            Assert.IsNotNull(agvs);
+            var agvsIterable = result.Value as IEnumerable<TransportOrder.Web.Models.Agv>;
+            Assert.IsNotNull(agvsIterable);
+            List<TransportOrder.Web.Models.Agv> agvs = agvsIterable.ToList();
             Assert.AreEqual(_agvIds.Length, agvs.Count);
 
             for (int index = 0; index < _agvIds.Length; index++)

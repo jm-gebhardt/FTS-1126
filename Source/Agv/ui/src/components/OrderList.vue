@@ -1,17 +1,36 @@
 <template>
-  <ui-table :data="props.orders" :thead="thead" :tbody="tbody">
-    <template #OrderId="{ data }">
-      <div class="tableCell">{{ data.orderDetails?.orderId }}</div>
+  <ui-list
+    :key="props.currentPage"
+    v-model="selectedItemComputed"
+    :type="2"
+    single-selection
+  >
+    <template v-for="(item, index) in props.orders" :key="index">
+      <ui-item>
+        <template #before="{ iconClass }">
+          <ui-icon :class="iconClass">
+            {{ OrderStatusIcon(item.currentState) }}
+          </ui-icon>
+        </template>
+        <ui-item-text-content>
+          <ui-item-text1>{{ item.orderDetails?.orderId }}</ui-item-text1>
+          <ui-item-text2>
+            {{ new Date(item.orderDetails?.creationDate).toLocaleString() }}
+          </ui-item-text2>
+        </ui-item-text-content>
+        <ui-item-last-content>
+          {{ item.orderDetails.source }} -
+          {{ item.orderDetails.destination }}
+        </ui-item-last-content>
+      </ui-item>
     </template>
-    <template #CurrentState="{ data }">
-      <div class="tableCell-align-middle--icon">
-        <ui-icon>{{ OrderStatusIcon(data.currentState) }}</ui-icon>
-      </div>
-      <div class="tableCell-align-middle">{{ data.currentState }}</div>
-    </template>
-
-    <ui-pagination fullwidth show-total v-bind="$attrs"></ui-pagination>
-  </ui-table>
+    <ui-pagination
+      v-model="currentPage"
+      fullwidth
+      show-total
+      v-bind="$attrs"
+    ></ui-pagination>
+  </ui-list>
 </template>
 
 <script lang="ts">
@@ -24,53 +43,37 @@ export default {
 <script lang="ts" setup>
 import { IOrder } from '@/services/api/data-contracts'
 import { UiPagination } from 'balm-ui'
+import { computed } from 'vue'
 
 interface Props {
   orders: IOrder[]
+  selectedItem: number | null
+  currentPage: number
 }
 
-const props = defineProps<Props>()
+let props = defineProps<Props>()
 
-const thead = [
-  'ID',
-  'Order ID',
-  'Current State',
-  'Source',
-  'Destination',
-  'creationDate',
-  'Assigned Agv',
-  'Failed Reason'
-]
-const tbody = [
-  'correlationId',
-  {
-    field: 'orderId',
-    slot: 'OrderId'
+const emit = defineEmits(['update:selectedItemChanged', 'update:pageChanged'])
+
+const selectedItemComputed = computed({
+  get() {
+    return props.selectedItem
   },
-  {
-    field: 'currentState',
-    slot: 'CurrentState'
-  },
-  {
-    field: 'source',
-    fn: (order: IOrder): string | null | undefined => order.orderDetails?.source
-  },
-  {
-    field: 'destination',
-    fn: (order: IOrder): string | null | undefined =>
-      order.orderDetails?.destination
-  },
-  {
-    field: 'creationDate',
-    fn: (order: IOrder): string | null | undefined =>
-      order.orderDetails?.creationDate
-  },
-  'assignedAgv',
-  {
-    field: 'Failed Reason',
-    fn: (order: IOrder): string | null | undefined => order.failedReason
+
+  set(value) {
+    return emit('update:selectedItemChanged', value)
   }
-]
+})
+
+const currentPage = computed({
+  get() {
+    return props.currentPage
+  },
+
+  set(value) {
+    return emit('update:pageChanged', value)
+  }
+})
 
 function OrderStatusIcon(status: string | null | undefined): string {
   switch (status) {
@@ -93,21 +96,3 @@ function OrderStatusIcon(status: string | null | undefined): string {
   }
 }
 </script>
-
-<style lang="scss">
-.tableCell {
-  max-width: 300px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.tableCell-align-middle {
-  display: inline-block;
-  vertical-align: middle;
-
-  &--icon {
-    @extend .tableCell-align-middle;
-    padding-right: 10px;
-  }
-}
-</style>

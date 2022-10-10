@@ -9,14 +9,7 @@
       >Auto-Refresh</ui-switch
     >
   </div>
-  <agv-list
-    :agvs="Array.from(agvs.data.values())"
-    :model-value="agvs.currentPage"
-    :total="agvs.totalCount"
-    :page-size="pageSizes"
-    @update:page-size="pageSizeChanged"
-    @update:model-value="pageChanged"
-  ></agv-list>
+  <agv-list :agvs="Array.from(agvs.data.values())"></agv-list>
 
   <ui-spinner v-if="agvs.loading" active></ui-spinner>
   <ui-banner v-if="agvs.error">Error loading data: {{ agvs.error }}</ui-banner>
@@ -35,17 +28,12 @@ const agvHub = new AgvHub(onAgvDiscovered, onAgvStateChanged)
 const { agvs } = storeToRefs(useAgvStore())
 const { fetchAgvs, updateAgv } = useAgvStore()
 
-const pageSizes = [10, 25, 100]
-
-let requestPageNumber = 1
-let requestPageSize = pageSizes[0]
-
 /**
  * Handler for hub event 'onAgvDiscovered'
  */
 async function onAgvDiscovered(): Promise<void> {
   // When a new agv has been added, we fetch the full list as we do not know an what page it is
-  await fetchAgvs(requestPageNumber, requestPageSize)
+  await fetchAgvs()
 }
 
 /**
@@ -56,23 +44,7 @@ async function onAgvStateChanged(agv: IAgv): Promise<void> {
 }
 
 function fetch(): void {
-  fetchAgvs(requestPageNumber, requestPageSize)
-}
-
-interface IPageSizeChangedEvent {
-  page: number
-  pageSize: number
-}
-
-function pageSizeChanged(event: IPageSizeChangedEvent): void {
-  requestPageNumber = event.page
-  requestPageSize = event.pageSize
-  fetch()
-}
-
-function pageChanged(pageNumber: number): void {
-  requestPageNumber = pageNumber
-  fetch()
+  fetchAgvs()
 }
 
 function toggleAutoRefresh(): void {

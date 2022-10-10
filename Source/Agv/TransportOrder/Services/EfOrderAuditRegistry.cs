@@ -60,12 +60,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
             }
             catch (MassTransit.NotAcceptedStateMachineException e)
             {
-                _logger.LogError("MassTransit.NotAcceptedStateMachineException occurred \n {msg} \n {stackTrace}", e.Message, e.StackTrace);
+                _logger.LogError("MassTransit.NotAcceptedStateMachineException occurred \n {Message} \n {StackTrace}", e.Message, e.StackTrace);
                 return false;
             }
             catch (Exception e)
             {
-                _logger.LogError("{msg} \n {stackTrace}", e.Message, e.StackTrace);
+                _logger.LogError("{Message} \n {StackTrace}", e.Message, e.StackTrace);
                 return false;
             }
         }

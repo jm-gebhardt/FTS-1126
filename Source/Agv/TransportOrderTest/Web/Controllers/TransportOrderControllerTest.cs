@@ -14,6 +14,7 @@ using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.States;
 using Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers;
+using Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers.DateRange;
 using Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers.Pagination;
 using Gebhardt.StoreWare.Agv.TransportOrder.Web.Models;
 
@@ -34,7 +35,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
         /// Test retrieving order list from saga repository
         /// </summary>
         [TestMethod]
-        public async Task GetOrders_Returns_Ok()
+        public async Task GetOrders_Returns_Ok_AllOrdersReturned()
         {
             var mockRegistry = new Mock<IAgvRegistry>();
             mockRegistry.Setup(s => s.GetIdleAgvs()).Returns(new EnumerableQuery<IAgv>(new List<IAgv>()));
@@ -61,7 +62,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
 
             Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<HandleHostOrder>());
 
-            ActionResult<IEnumerable<Order>> actionResult = controller.GetOrders(new PaginationParameters());
+            ActionResult<IEnumerable<Order>> actionResult = controller.GetOrders(new PaginationParameters(), new DateRangeParameters());
             var result = actionResult.Result as OkObjectResult;
             Assert.IsNotNull(result);
             Assert.AreEqual(200, result.StatusCode);
@@ -81,6 +82,51 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
             Assert.AreEqual(resultOrder.OrderDetails.Creator, inputOrderDetails.Creator);
         }
 
+        /// <summary>
+        /// RequestWithCorrelationId_OrderReturned
+        /// </summary>
+        [TestMethod]
+        public void RequestWithCorrelationId_NoPagination_NoDateRange_OrderReturned()
+        {
+            var orderRegistry = GetOrderRegistry();
+            var controller = new TransportOrderController(orderRegistry);
+            SetupControllerForTests(controller);
+            ActionResult<IEnumerable<Order>> result = controller.GetOrders(
+                new PaginationParameters(), 
+                new DateRangeParameters()
+                );
+            Assert.IsNotNull(result.Result);
+            var okResult = result.Result as OkObjectResult;
+            Assert.IsNotNull(okResult);
+            Order[] orders = (okResult.Value as IEnumerable<Order>)!.ToArray();
+            Assert.IsNotNull(orders);
+            Assert.AreEqual(2, orders.Length);
+        }
+        
+        /// <summary>
+        /// RequestWithCorrelationId_OrderReturned
+        /// </summary>
+        [TestMethod]
+        public void Request_RegistryEmpty_ReturnsEmptyList()
+        {
+            var orderRegistry = new Mock<IOrderRegistry>();
+            orderRegistry.Setup(x => x.GetAllOrders()).Returns(Array.Empty<IOrder>().AsQueryable());
+            orderRegistry.Setup(x => x.GetUnassignedOrders()).Returns(Array.Empty<IOrder>().AsQueryable());
+            
+            var controller = new TransportOrderController(orderRegistry.Object);
+            SetupControllerForTests(controller);
+            ActionResult<IEnumerable<Order>> result = controller.GetOrders(
+                new PaginationParameters(), 
+                new DateRangeParameters()
+            );
+            Assert.IsNotNull(result.Result);
+            var okResult = result.Result as OkObjectResult;
+            Assert.IsNotNull(okResult);
+            Order[] orders = (okResult.Value as IEnumerable<Order>)!.ToArray();
+            Assert.IsNotNull(orders);
+            Assert.AreEqual(0, orders.Length);
+        }
+
         private IOrderRegistry GetOrderRegistry()
         {
             var registry = new Mock<IOrderRegistry>();
@@ -97,6 +143,17 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
             registry.Setup(x => x.GetUnassignedOrders()).Returns(orders.Where(x => x.CurrentState == nameof(OrderStateMachine.OrderReceived)).AsQueryable());
 
             return registry.Object;
+        }
+        
+        private static void SetupControllerForTests(TransportOrderController controller)
+        {
+            var controllerContext = new ControllerContext
+                (new ActionContext(
+                    new DefaultHttpContext(),
+                    new RouteData(),
+                    new ControllerActionDescriptor()
+                    ));
+            controller.ControllerContext = controllerContext;
         }
     }
 }

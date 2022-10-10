@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { IHostOrderCreator, IOrder } from '@/services/api/data-contracts'
 import OrderList from '@/components/OrderList.vue'
-import { UiTable } from 'balm-ui'
+import { UiList } from 'balm-ui'
 
 describe('view', () => {
   describe('OrderList', () => {
@@ -74,11 +74,13 @@ describe('view', () => {
       orderList = mount(OrderList, {
         global: {
           components: {
-            'ui-table': UiTable
+            'ui-list': UiList
           }
         },
         props: {
-          orders: testOrders
+          orders: testOrders,
+          selectedItem: null,
+          currentPage: 1
         }
       })
     })
@@ -92,7 +94,7 @@ describe('view', () => {
       //expect(orderList.findAll('.mdc-data-table').length).toBe(4)
     })
 
-    it('Pageination - Total page count is correct', async () => {
+    it('Pagination - Total page count is correct', async () => {
       const result = orderList.findAll('.mdc-data-table__pagination-total')
       const text = result.at(0)?.text()
       expect(text).toBe('1‑0 of 0') // '‑' ist kein Minus?

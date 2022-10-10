@@ -23,14 +23,10 @@ export class Agvs<
    * @summary Retrieve paged list of agvs
    * @request GET:/agvs
    */
-  agvsList = (
-    query?: { pageNumber?: number; pageSize?: number },
-    params: RequestParams = {}
-  ) =>
+  agvsList = (params: RequestParams = {}) =>
     this.request<IAgv[], any>({
       path: `/agvs`,
       method: 'GET',
-      query: query,
       format: 'json',
       ...params
     })

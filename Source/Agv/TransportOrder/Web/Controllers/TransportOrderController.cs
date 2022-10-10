@@ -1,6 +1,8 @@
 ﻿using System.Text.Json;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Microsoft.AspNetCore.Mvc;
 using Gebhardt.StoreWare.Agv.TransportOrder.Services;
+using Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers.DateRange;
 using Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers.Pagination;
 using Gebhardt.StoreWare.Agv.TransportOrder.Web.Models;
 
@@ -24,17 +26,37 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers
 
         /// <summary>
         /// Retrieve active transport orders
+        /// If correlation Id is provided, all other parameters are ignored
         /// </summary>
         /// <response code="200">Ok</response>
         [HttpGet]
         [Route("/orders")]
-        public ActionResult<IEnumerable<Order>> GetOrders([FromQuery] PaginationParameters paginationParameters)
+        public ActionResult<IEnumerable<Order>> GetOrders(
+            [FromQuery] PaginationParameters paginationParameters,
+            [FromQuery] DateRangeParameters dateRangeParameters
+            )
         {
-            List<Order> orders = _orderRegistry.GetAllOrders().OrderByDescending(x => x.OrderDetails.CreationDate).Select(Order.FromIOrder).ToList();
-            var orderList = new PagedEnumerable<Order>(orders, paginationParameters.PageNumber, paginationParameters.PageSize);
+            IOrderedQueryable<IOrder> sortedOrders = _orderRegistry.GetAllOrders().OrderByDescending(x => x.OrderDetails.CreationDate);
+            
+            if(dateRangeParameters.IsEmpty() && sortedOrders.Any())
+            {
+                dateRangeParameters = new DateRangeParameters(sortedOrders.Last().OrderDetails.CreationDate, sortedOrders.First().OrderDetails.CreationDate);
+            }
+            
+            IQueryable<IOrder> ordersInRange = sortedOrders.Where(order =>
+                order.OrderDetails.CreationDate >= dateRangeParameters.Start && 
+                order.OrderDetails.CreationDate <= dateRangeParameters.End
+            );
+            
+            var pagedOrders = new PagedEnumerable<IOrder>(ordersInRange, paginationParameters.PageNumber, paginationParameters.PageSize);
+            
+            var pageHeaders = pagedOrders.PaginationHeader();
+            Response.Headers.Add(pageHeaders.HeaderName, JsonSerializer.Serialize(pageHeaders));
 
-            Response.Headers.Add(PaginationHeader.HeaderName, JsonSerializer.Serialize(orderList.PaginationHeader()));
-            return Ok(orderList);
+            var dateRangeHeaders = new DateRangeHeaders(dateRangeParameters.Start, dateRangeParameters.End);
+            Response.Headers.Add(dateRangeHeaders.HeaderName, JsonSerializer.Serialize(dateRangeHeaders));
+            
+            return Ok(pagedOrders.Select(Order.FromIOrder));
         }
     }
 }

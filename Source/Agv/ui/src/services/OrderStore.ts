@@ -1,9 +1,9 @@
 import { defineStore } from 'pinia'
 import { IOrder } from '@/services/api/data-contracts'
 import { Orders as OrderApi } from '@/services/api/Orders'
-import { IPaginatedRestApiStore } from '@/services/IRestApiStore'
+import { IDateRangeRestApiStore } from '@/services/IRestApiStore'
 
-type OrderStoreState = IPaginatedRestApiStore<IOrder[]>
+type OrderStoreState = IDateRangeRestApiStore<IOrder[]>
 
 const orderApi = new OrderApi({
   baseUrl: import.meta.env.VITE_API_URL
@@ -18,19 +18,32 @@ export const useOrderStore = defineStore({
     currentPage: 1,
     pageSize: 1,
     totalPages: 1,
-    totalCount: 0
+    totalCount: 0,
+    startDate: null,
+    endDate: null
   }),
 
   actions: {
-    async fetchOrders(pageNumber: number, pageSize: number): Promise<void> {
+    async fetchOrders(
+      pageNumber: number,
+      pageSize: number,
+      start?: Date,
+      end?: Date
+    ) {
       this.loading = true
 
-      return await orderApi
-        .ordersList({ PageNumber: pageNumber, PageSize: pageSize })
+      await orderApi
+        .ordersList({
+          PageNumber: pageNumber,
+          PageSize: pageSize,
+          Start: start != undefined ? new Date(start).toISOString() : undefined,
+          End: end != undefined ? new Date(end).toISOString() : undefined
+        })
         .then((response) => {
           this.error = null
           this.data = response.data
           const paginationHeader = response.headers.get('x-pagination')
+          const dateRangeHeader = response.headers.get('x-dateRange')
           if (paginationHeader != null) {
             const pagination = JSON.parse(paginationHeader)
             this.pageSize = pagination.PageSize
@@ -38,10 +51,15 @@ export const useOrderStore = defineStore({
             this.totalPages = pagination.TotalPages
             this.totalCount = pagination.TotalCount
           }
+          if (dateRangeHeader != null) {
+            const pagination = JSON.parse(dateRangeHeader)
+            this.startDate = pagination.Start
+            this.endDate = pagination.End
+          }
         })
         .catch((response) => {
-          this.error = response.error
-          console.error(response.error)
+          this.error = `${response.status}: ${response.statusText} | ${response.error}`
+          console.error(response.status, response.statusText, response.error)
         })
         .finally(() => (this.loading = false))
     },

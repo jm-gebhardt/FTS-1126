@@ -39,7 +39,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
             if (context.Saga.CurrentState == InitialState && 
                 await _orderAuditRegistry.Add(context.Saga, context.Event.Name, context.Saga.CurrentState, Hook.PreHook, context.CancellationToken))
             {
-                _logger.LogDebug("PreExecute<{T}>: State -> {CurrentState} {eventName} {OrderSagaCorrelationId}",
+                _logger.LogDebug("PreExecute<{T}>: State -> {CurrentState} {EventName} {OrderSagaCorrelationId}",
                      typeof(T), context.Saga.CurrentState, context.Event.Name, context.Saga.CorrelationId);
             }
             await Task.FromResult(true);
@@ -56,7 +56,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         {
             if (await _orderAuditRegistry.Add(context.Saga, context.Event.Name, context.Saga.CurrentState, Hook.PostHook, context.CancellationToken))
             {
-                _logger.LogDebug("PostExecute<{T}>: State -> {CurrentState} {eventName} {OrderSagaCorrelationId}",
+                _logger.LogDebug("PostExecute<{T}>: State -> {CurrentState} {EventName} {OrderSagaCorrelationId}",
                     typeof(T), context.Saga.CurrentState, context.Event.Name, context.Saga.CorrelationId);
             }
             await Task.FromResult(true);
@@ -73,9 +73,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         {
             if (await _orderAuditRegistry.Add(context.Saga, context.Event.Name, context.Saga.CurrentState, Hook.ExecuteFault, context.CancellationToken))
             {
-                _logger.LogDebug("ExecuteFault<{T}>: State -> {CurrentState} {eventName} {OrderSagaCorrelationId}",
+                _logger.LogDebug(exception,"ExecuteFault<{T}>: State -> {CurrentState} {EventName} {OrderSagaCorrelationId}",
                     typeof(T), context.Saga.CurrentState, context.Event.Name, context.Saga.CorrelationId);
-                _logger.LogError("{msg} \n {stackTrace}", exception.Message, exception.StackTrace);
             }
             await Task.FromResult(true);
         }

@@ -5,7 +5,7 @@ import {
   IAgvStatus,
   IMap
 } from '@/services/api/data-contracts'
-import { IPaginatedRestApiStore, IRestApiStore } from '@/services/IRestApiStore'
+import { IRestApiStore } from '@/services/IRestApiStore'
 import { defineStore } from 'pinia'
 import { Agvs as AgvApi } from '@/services/api/Agvs'
 import { Maps as MapApi } from '@/services/api/Maps'
@@ -18,7 +18,7 @@ const mapApi = new MapApi({
 })
 
 interface AgvStoreState {
-  agvs: IPaginatedRestApiStore<Map<string, IAgv>>
+  agvs: IRestApiStore<Map<string, IAgv>>
   agvGraph: IRestApiStore<Map<string, IGraph>>
   agvData: IRestApiStore<Map<string, IAgvData>>
   agvStatus: IRestApiStore<Map<string, IAgvStatus>>
@@ -32,11 +32,7 @@ export const useAgvStore = defineStore({
     agvs: {
       data: new Map(),
       loading: false,
-      error: null,
-      currentPage: 0,
-      pageSize: 0,
-      totalPages: 1,
-      totalCount: 0
+      error: null
     },
     agvGraph: {
       data: new Map(),
@@ -65,11 +61,11 @@ export const useAgvStore = defineStore({
     }
   }),
   actions: {
-    fetchAgvs: async function (pageNumber = 0, pageSize = 0): Promise<void> {
+    fetchAgvs: async function (): Promise<void> {
       this.agvs.loading = true
 
       return await agvApi
-        .agvsList({ pageNumber: pageNumber, pageSize: pageSize })
+        .agvsList()
         .then((response) => {
           this.agvs.error = null
           const data = new Map<string, IAgv>()
@@ -79,14 +75,6 @@ export const useAgvStore = defineStore({
             }
           })
           this.agvs.data = data
-          const paginationHeader = response.headers.get('x-pagination')
-          if (paginationHeader != null) {
-            const pagination = JSON.parse(paginationHeader)
-            this.agvs.pageSize = pagination.PageSize
-            this.agvs.currentPage = pagination.CurrentPage
-            this.agvs.totalPages = pagination.TotalPages
-            this.agvs.totalCount = pagination.TotalCount
-          }
         })
         .catch((response) => {
           this.agvs.error = response.error

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { useOrderStore } from '@/services/OrderStore'
 import { IHostOrderCreator, IOrder } from '@/services/api/data-contracts'
 import { createPinia, setActivePinia } from 'pinia'
-import { createApp } from 'vue'
+import { createApp, UnwrapRef } from 'vue'
 
 describe('view', () => {
   describe('dataView', () => {
@@ -13,7 +13,9 @@ describe('view', () => {
       totalCount: 4,
       totalPages: 2,
       error: null,
-      loading: false
+      loading: false,
+      startDate: null,
+      endDate: null
     }
     const app = createApp({}) // Init vue app
     let testdata: IOrder[] = []
@@ -226,7 +228,7 @@ describe('view', () => {
       expect(index).toBe(-1) // not found
 
       const newOrder = store.data.find(
-        (element) => element.correlationId == correlationId
+        (element: UnwrapRef<IOrder>) => element.correlationId == correlationId
       )
       expect(newOrder).toBeUndefined() // not found
     })

@@ -9,7 +9,6 @@
     <template #actions="{ data }">
       <button @click="clickSetIdle(data)">Set Idle</button>
     </template>
-    <ui-pagination fullwidth show-total v-bind="$attrs"></ui-pagination>
   </ui-table>
 </template>
 
@@ -22,7 +21,7 @@ export default {
 
 <script lang="ts" setup>
 import { IAgv } from '@/services/api/data-contracts'
-import { UiPagination, useConfirm, useAlert } from 'balm-ui'
+import { useConfirm, useAlert } from 'balm-ui'
 import { Agvs as AgvApi } from '@/services/api/Agvs'
 import { HttpResponse } from '@microsoft/signalr'
 

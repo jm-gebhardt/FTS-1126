@@ -15,10 +15,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers.Pagination
         [TestMethod]
         public void Input_Empty_Output_Empty()
         {
-            var list = new List<int>();
             const int pageNumber = 1;
             const int pageSize = 1;
-            var enumerable = new PagedEnumerable<int>(list, pageNumber, pageSize);
+            var enumerable = new PagedEnumerable<int>(new List<int>().AsQueryable(), pageNumber, pageSize);
             Assert.AreEqual(pageNumber, enumerable.CurrentPage);
             Assert.AreEqual(pageSize, enumerable.PageSize);
             Assert.AreEqual(0, enumerable.Count());
@@ -35,7 +34,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers.Pagination
             var list = new List<int>(new[] { 1 });
             const int pageNumber = 1;
             const int pageSize = 1;
-            var enumerable = new PagedEnumerable<int>(list, pageNumber, pageSize);
+            var enumerable = new PagedEnumerable<int>(list.AsQueryable(), pageNumber, pageSize);
             Assert.AreEqual(pageNumber, enumerable.CurrentPage);
             Assert.AreEqual(pageSize, enumerable.PageSize);
             Assert.AreEqual(1, enumerable.Count());
@@ -52,7 +51,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers.Pagination
             var list = new List<int>(new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 });
             const int pageNumber = 1;
             const int pageSize = 5;
-            var enumerable = new PagedEnumerable<int>(list, pageNumber, pageSize);
+            var enumerable = new PagedEnumerable<int>(list.AsQueryable(), pageNumber, pageSize);
             Assert.AreEqual(pageNumber, enumerable.CurrentPage);
             Assert.AreEqual(pageSize, enumerable.PageSize);
             Assert.AreEqual(5, enumerable.Count());
@@ -69,7 +68,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers.Pagination
             var list = new List<int>(new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 });
             const int pageNumber = 2;
             const int pageSize = 5;
-            var enumerable = new PagedEnumerable<int>(list, pageNumber, pageSize);
+            var enumerable = new PagedEnumerable<int>(list.AsQueryable(), pageNumber, pageSize);
             Assert.AreEqual(pageNumber, enumerable.CurrentPage);
             Assert.AreEqual(pageSize, enumerable.PageSize);
             Assert.AreEqual(4, enumerable.Count());
@@ -87,7 +86,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers.Pagination
             var list = new List<int>(new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 });
             const int pageNumber = 2;
             const int pageSize = 5;
-            var enumerable = new PagedEnumerable<int>(list, pageNumber, pageSize);
+            var enumerable = new PagedEnumerable<int>(list.AsQueryable(), pageNumber, pageSize);
             var header = enumerable.PaginationHeader();
             Assert.AreEqual(pageSize, header.PageSize);
             Assert.AreEqual(pageNumber, header.CurrentPage);

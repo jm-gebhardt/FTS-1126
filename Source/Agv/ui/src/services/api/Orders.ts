@@ -16,15 +16,21 @@ export class Orders<
   SecurityDataType = unknown
 > extends HttpClient<SecurityDataType> {
   /**
-   * No description
-   *
-   * @tags TransportOrder
-   * @name OrdersList
-   * @summary Retrieve active transport orders
-   * @request GET:/orders
-   */
+ * No description
+ * 
+ * @tags TransportOrder
+ * @name OrdersList
+ * @summary Retrieve active transport orders
+If correlation Id is provided, all other parameters are ignored
+ * @request GET:/orders
+ */
   ordersList = (
-    query?: { PageNumber?: number; PageSize?: number },
+    query?: {
+      PageNumber?: number
+      PageSize?: number
+      Start?: string
+      End?: string
+    },
     params: RequestParams = {}
   ) =>
     this.request<IOrder[], any>({

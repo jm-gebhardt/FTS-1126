@@ -1,8 +1,6 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Microsoft.AspNetCore.Mvc;
 using Gebhardt.StoreWare.Agv.TransportOrder.Services;
-using Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers.Pagination;
-using System.Text.Json;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.TransportOrder.Web.Models;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
@@ -36,19 +34,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers
         /// <response code="200">Ok</response>
         [HttpGet]
         [Route("/agvs")]
-        public ActionResult<IEnumerable<Models.Agv>> GetAgvs([FromQuery] int pageNumber = 0, [FromQuery] int pageSize = 0)
+        public ActionResult<IEnumerable<Models.Agv>> GetAgvs()
         {
-            List<Models.Agv> agvs = _agvRegistry.GetAllAgvs().OrderBy(a => a.AgvId).Select(Models.Agv.FromIAgv).ToList();
-
-            if (pageNumber == 0 || pageSize == 0)
-            {
-                return Ok(agvs);
-            }
-
-            var agvList = new PagedEnumerable<Models.Agv>(agvs, pageNumber, pageSize);
-
-            Response.Headers.Add(PaginationHeader.HeaderName, JsonSerializer.Serialize(agvList.PaginationHeader()));
-            return Ok(agvList);
+            IOrderedQueryable<IAgv> agvs = _agvRegistry.GetAllAgvs().OrderBy(a => a.AgvId);
+            return Ok(agvs.Select(Models.Agv.FromIAgv));
         }
 
         /// <summary>

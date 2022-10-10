@@ -11,26 +11,6 @@
           "Agv"
         ],
         "summary": "Retrieve paged list of agvs",
-        "parameters": [
-          {
-            "name": "pageNumber",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "default": 0
-            }
-          },
-          {
-            "name": "pageSize",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "default": 0
-            }
-          }
-        ],
         "responses": {
           "200": {
             "description": "Ok",
@@ -376,7 +356,7 @@
         "tags": [
           "TransportOrder"
         ],
-        "summary": "Retrieve active transport orders",
+        "summary": "Retrieve active transport orders\r\nIf correlation Id is provided, all other parameters are ignored",
         "parameters": [
           {
             "name": "PageNumber",
@@ -396,6 +376,24 @@
               "type": "integer",
               "format": "int32",
               "default": 25
+            }
+          },
+          {
+            "name": "Start",
+            "in": "query",
+            "description": "Start date of range",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "End",
+            "in": "query",
+            "description": "End date of range",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
             }
           }
         ],

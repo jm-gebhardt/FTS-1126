@@ -10,3 +10,9 @@ export interface IPaginatedRestApiStore<Type> extends IRestApiStore<Type> {
   totalPages: number
   currentPage: number
 }
+
+export interface IDateRangeRestApiStore<Type>
+  extends IPaginatedRestApiStore<Type> {
+  startDate: Date | null | undefined
+  endDate: Date | null | undefined
+}

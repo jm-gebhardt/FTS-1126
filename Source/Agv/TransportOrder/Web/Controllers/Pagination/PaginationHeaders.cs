@@ -7,12 +7,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers.Pagination
     /// Pagination X Headers
     /// </summary>
     [PublicAPI]
-    public record PaginationHeader
+    public record PaginationHeaders: IResultHeaders
     {
         /// <summary>
         /// Header name
         /// </summary>
-        public const string HeaderName = "X-Pagination";
+        public string HeaderName => "X-Pagination";
         /// <summary>
         /// Current Page
         /// </summary>
@@ -45,7 +45,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers.Pagination
         /// <summary>
         /// Pagination X Headers Constructor
         /// </summary>
-        public PaginationHeader(int currentPage, int totalPages, int pageSize, int totalCount, bool hasPrevious, bool hasNext)
+        public PaginationHeaders(int currentPage, int totalPages, int pageSize, int totalCount, bool hasPrevious, bool hasNext)
         {
             CurrentPage = currentPage;
             TotalPages = totalPages;

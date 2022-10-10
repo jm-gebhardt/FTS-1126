@@ -22,7 +22,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// Get list of all orders
         /// </summary>
         public IQueryable<IOrder> GetAllOrders();
-
+        
         /// <summary>
         /// Get list of all open orders
         /// </summary>

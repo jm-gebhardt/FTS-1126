@@ -53,25 +53,24 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers.Pagination
         /// <param name="source">Source list</param>
         /// <param name="pageNumber">Current page number</param>
         /// <param name="pageSize">Items per page</param>
-        public PagedEnumerable(List<T> source, int pageNumber, int pageSize)
+        public PagedEnumerable(IQueryable<T> source, int pageNumber, int pageSize)
         {
-            TotalCount = source.Count;
+            TotalCount = source.Count();
             PageSize = pageSize;
             CurrentPage = pageNumber;
             TotalPages = (int)Math.Ceiling(TotalCount / (double)pageSize);
 
             int start = (pageNumber - 1) * pageSize;
-            int end = start + pageSize;
-            _items = source.Take(new Range(start, end));
+            _items = source.Skip(start).Take(pageSize);
         }
-
+        
         /// <summary>
         /// Get Pagination headers
         /// </summary>
-        /// <returns>PaginationHeader</returns>
-        public PaginationHeader PaginationHeader()
+        /// <returns>PaginationHeaders</returns>
+        public PaginationHeaders PaginationHeader()
         {
-            return new PaginationHeader(CurrentPage, TotalPages, PageSize, TotalCount, HasPrevious, HasNext);
+            return new PaginationHeaders(CurrentPage, TotalPages, PageSize, TotalCount, HasPrevious, HasNext);
         }
 
         /// <summary>
