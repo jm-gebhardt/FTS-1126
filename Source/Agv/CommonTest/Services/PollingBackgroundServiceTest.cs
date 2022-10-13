@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
-namespace Gebhardt.StoreWare.Agv.CommonTest
+namespace Gebhardt.StoreWare.Agv.CommonTest.Services
 {
     /// <summary>
     /// Test implementation
@@ -41,7 +41,7 @@ namespace Gebhardt.StoreWare.Agv.CommonTest
         {
             var service = new PollingBackgroundService<PollableTest>(Mock.Of<ILogger<PollingBackgroundService<PollableTest>>>(), new PollableTest());
             var token = new CancellationTokenSource();
-            
+
             token.CancelAfter(1000);  // Set timeout to avoid dead-lock in while  
             await service.StartAsync(token.Token);
             // wait for service startup
@@ -49,7 +49,7 @@ namespace Gebhardt.StoreWare.Agv.CommonTest
             {
             }
             Assert.IsFalse(token.IsCancellationRequested); // Ensure that the request was not canceled using CancelAfter()
-            
+
             // Stop gracefully to test that token.IsCancellationRequested is recognized 
             await service.StopAsync(token.Token);
         }

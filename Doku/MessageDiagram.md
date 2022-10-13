@@ -14,6 +14,7 @@ sequenceDiagram
     activate DeviceCommunication
     DeviceCommunication->>AgvManagement: AgvPositionReceived
     DeviceCommunication->>AgvManagement: AgvStatusReceived
+    AgvManagement->>AgvManagement: AgvPositionChanged
     deactivate DeviceCommunication
 
     AgvManagement->>DeviceCommunication: RequestAgvData

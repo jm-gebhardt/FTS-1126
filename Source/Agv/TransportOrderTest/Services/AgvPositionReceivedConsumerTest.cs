@@ -5,8 +5,8 @@ using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
+using Gebhardt.StoreWare.Agv.Common.Services.Detectors;
 using Gebhardt.StoreWare.Agv.TransportOrder.Services;
-using Gebhardt.StoreWare.Agv.TransportOrder.Web;
 using Gebhardt.StoreWare.Agv.TransportOrder.Web.Hubs;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
@@ -30,6 +30,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             var fixture = new MassTransitTestFixture<AgvPositionReceivedConsumer>(services =>
             {
                 services.AddSingleton<IAgvPositionRegistry, AgvPositionRegistry>();
+                services.AddSingleton<IChangeDetector<AgvPositionReceived>, ChangeDetector<AgvPositionReceived>>();
                 services.AddTransient(_ => mockHub.Object);
             });
 
@@ -72,6 +73,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             var fixture = new MassTransitTestFixture<AgvPositionReceivedConsumer>(services =>
             {
                 services.AddSingleton<IAgvPositionRegistry, AgvPositionRegistry>();
+                services.AddSingleton<IChangeDetector<AgvPositionReceived>, ChangeDetector<AgvPositionReceived>>();
                 services.AddTransient(_ => mockHub.Object);
             });
 
@@ -116,13 +118,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         /// Test for handling a AgvPositionReceived event
         /// </summary>
         [TestMethod]
-        public async Task AgvPositionReceived_ConsumedAndMessageSentToClients()
+        public async Task AgvPositionReceived_Consumed()
         {
-            var mockHub = new Mock<IAgvHubContext>();
+            var agvPositionRegistryMock = new Mock<IAgvPositionRegistry>();
             var fixture = new MassTransitTestFixture<AgvPositionReceivedConsumer>(services =>
             {
-                services.AddSingleton<IAgvPositionRegistry, AgvPositionRegistry>();
-                services.AddTransient(_ => mockHub.Object);
+                services.AddSingleton(agvPositionRegistryMock.Object);
             });
 
             await fixture.TestHarness.Bus.Publish(
@@ -135,8 +136,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvPositionReceived>());
             Assert.IsTrue(await fixture.ConsumerHarness.Consumed.Any<AgvPositionReceived>());
 
-            string method = nameof(Defines.HubMethods.AgvPositionChanged);
-            mockHub.Verify(h => h.SendAgvPositionToAllClients(method, It.Is<AgvPositionReceived>(o => o.AgvId == AgvTestIdentifier01), It.IsAny<CancellationToken>()), Times.Once);
+            agvPositionRegistryMock.Verify(h => h.UpdatePosition(It.Is<AgvPositionReceived>(o => o.AgvId == AgvTestIdentifier01)), Times.Once);
         }
     }
 }

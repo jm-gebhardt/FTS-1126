@@ -18,7 +18,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events
         public string AgvId { get; }
 
         /// <summary>
-        /// Current AGV postion
+        /// Current AGV position
         /// </summary>
         public AgvPosition AgvPosition { get; }
 

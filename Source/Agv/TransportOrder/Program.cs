@@ -14,6 +14,8 @@ using Prometheus;
 using MassTransit;
 using Gebhardt.StoreWare.Agv.Common;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
+using Gebhardt.StoreWare.Agv.Common.Services.Detectors;
 using Gebhardt.StoreWare.Agv.TransportOrder.CmdOptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence;
 using Gebhardt.StoreWare.Agv.TransportOrder.Services;
@@ -54,6 +56,7 @@ try
                     services.AddSingleton<IStateObserver<OrderSaga>, OrderStateObserver>();
                     services.AddSingleton<IStateObserver<AgvSaga>, AgvStateObserver>();
                     services.AddSingleton<IAgvPositionRegistry, AgvPositionRegistry>();
+                    services.AddSingleton<IChangeDetector<AgvPositionReceived>, ChangeDetector<AgvPositionReceived>>();
 
                     // Scopes
                     services.AddScoped(_ => productionOptions);
@@ -78,6 +81,7 @@ try
                             x.AddConsumer<AssignAgvConsumer>();
                             x.AddConsumer<TransportOrderChangedConsumer>();
                             x.AddConsumer<AgvPositionReceivedConsumer>();
+                            x.AddConsumer<AgvPositionChangedConsumer>();
 
                             x.AddRequestClient<ReserveAgv>();
                         });
@@ -123,7 +127,7 @@ try
                     string xmlFile = $"{assembly.GetName().Name}.xml";
                     string xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
                     options.IncludeXmlComments(xmlPath);
-                    
+
                     options.SchemaFilter<RequireNonNullablePropertiesSchemaFilter>();
                     options.SupportNonNullableReferenceTypes(); // Sets Nullable flags appropriately.              
                     options.UseAllOfToExtendReferenceSchemas(); // Allows $ref enums to be nullable
