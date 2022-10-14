@@ -33,7 +33,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         /// </summary>
         public bool Up()
         {
-            return RunCommand("up -d", 120000);
+            return RunCommand("up -d", 240000);
         }
 
         /// <summary>
