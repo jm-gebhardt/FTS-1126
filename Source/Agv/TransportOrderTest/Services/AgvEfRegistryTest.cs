@@ -75,6 +75,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             Assert.AreEqual(agvSaga.AgvStatus, idleAgv.AgvStatus);
             Assert.AreEqual(agvSaga.AgvGraph, idleAgv.AgvGraph);
             Assert.AreEqual(agvSaga.AgvData, idleAgv.AgvData);
+            Assert.AreEqual(false, idleAgv.Alive);
         }
 
         /// <summary>

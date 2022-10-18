@@ -10,10 +10,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.States
     /// This stores the current AGV state
     /// </summary>
     [PublicAPI]
-    public class AgvSaga :
-        SagaStateMachineInstance, IAgv
+    public class AgvSaga : SagaStateMachineInstance, IAgv
     {
-        
         /// <summary>
         /// CorrelationId
         /// <see href="https://masstransit-project.com//usage/correlation.html" />
@@ -56,6 +54,22 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.States
         /// </summary>
         /// <remarks>Nullable declaration required to make data model mappable according to EF Core</remarks>
         public DateTime? AgvGraphReceivedLastTime { get; set; }
+
+        /// <inheritdoc />
+        public bool Alive { get; set; }
+
+        /// <summary>
+        /// Token used by the send status update schedule
+        /// </summary>
+        public Guid? AgvOfflineTokenId { get; set; }
+
+        /// <inheritdoc />
+        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+        public bool Assignable =>
+            AgvGraph is not null &&
+            AgvGraph.Usability == AgvGraph.GraphUsability.Valid &&
+            Alive;
+
 
         /// <summary>
         /// Default constructor required to connect.

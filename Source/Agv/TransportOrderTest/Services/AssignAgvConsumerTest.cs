@@ -160,8 +160,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         /// <summary>
         /// Receive AssignAgv message and assign order to Idle AGV
         /// </summary>
+        /// <param name="alive">Influence AGV alive state</param>
         [TestMethod]
-        public async Task When_IdleAgvIsAvailable_AgvAssignSucceededIsPublished()
+        [DataRow(true)]
+        [DataRow(false)]
+        public async Task When_IdleAgvIsAvailable_AgvAssignSucceededWhenAliveElseFailed(bool alive)
         {
             const string agvId = "AGV001";
             var agvCorrelationId = agvId.ToGuid();
@@ -169,7 +172,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             Mock<IOrderRegistry> mockOrderRegistry = GetOrderRegistry();
             mockAgvRegistry.Setup(s => s.GetIdleAgvs()).Returns(new EnumerableQuery<IAgv>(new List<IAgv>
             {
-                new AgvSaga(agvCorrelationId, agvId, nameof(AgvStateMachine.Idle), agvGraph: _graph)
+                new AgvSaga(agvCorrelationId, agvId, nameof(AgvStateMachine.Idle), agvGraph: _graph) { Alive = alive }
             }));
 
             var fixture = new MassTransitTestFixture<AssignAgvConsumer>(
@@ -192,15 +195,28 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 
             Assert.IsTrue(await fixture.ConsumerHarness.Consumed.Any<AssignAgv>());
 
-            var message = fixture.TestHarness.Published.Select<AgvAssignmentSucceeded>(s => s.Context.CorrelationId == correlationId).First().Context.Message;
-            Assert.AreEqual(agvId, message.AgvId);
+            if (alive)
+            {
+                // When there is an idle AGV with alive state we expect AgvAssignmentSucceeded
+                var message = fixture.TestHarness.Published.Select<AgvAssignmentSucceeded>(s => s.Context.CorrelationId == correlationId).First().Context.Message;
+                Assert.AreEqual(agvId, message.AgvId);
+            }
+            else
+            {
+                // When there is just one idle AGV (but offlint) we expect AgvAssignmentFailed
+                var message = fixture.TestHarness.Published.Select<AgvAssignmentFailed>(s => s.Context.CorrelationId == correlationId).FirstOrDefault()?.Context.Message;
+                Assert.IsNotNull(message);
+            }
         }
 
         /// <summary>
-        /// Checks IAssignAgv consumption and calculation with LastNodeId
+        /// Checks IAssignAgv consumption and calculation with LastNodeId vs. alive state
         /// </summary>
+        /// <param name="aliveAgv1">Influence alive state of AGV 1</param>
         [TestMethod]
-        public async Task ConsumeIAssignAgv_and_determine_Agv_with_LastNodeId()
+        [DataRow(true)]
+        [DataRow(false)]
+        public async Task ConsumeIAssignAgv_DetermineAgvRegardingLastNodeIdAndAliveState(bool aliveAgv1)
         {
             // Arrange
             const string node01 = "node01";
@@ -210,14 +226,18 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             const string mapName = "Map#1";
             var agvGraph = new AgvGraph(Guid.Empty,
                 new[]
-            {
+            { /*   Map#1:  (AGV_01) 1   2
+               *                       /
+               *                      / (ORD_2-3, but this edge doesn't exist)
+               *                     /
+               *                    3   4 (AGV_02)   */
                 new AgvGraph.Node(node01){ Enabled = true, Type = AgvGraph.NodeType.Station, X = 0f, Y = 0f, Z = 0f},
                 new AgvGraph.Node(node02){ Enabled = true, Type = AgvGraph.NodeType.Station, X = 4f, Y = 0f, Z = 0f},
                 new AgvGraph.Node(node03){ Enabled = true, Type = AgvGraph.NodeType.Station, X = 0f, Y = 3f, Z = 0f},
                 new AgvGraph.Node(node04){ Enabled = true, Type = AgvGraph.NodeType.Station, X = 4f, Y = 3f, Z = 0f}
             }, new[]
             {
-                new AgvGraph.Edge(node01, node02){ Metric = 4f},
+                new AgvGraph.Edge(node01, node02){ Metric = 4f},    // Used by AGV_01 to travel to source
                 new AgvGraph.Edge(node01, node03){ Metric = 3f},
                 new AgvGraph.Edge(node01, node04){ Metric = 5f},
                 new AgvGraph.Edge(node02, node01){ Metric = 4f},
@@ -225,17 +245,19 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                 new AgvGraph.Edge(node03, node01){ Metric = 3f},
                 new AgvGraph.Edge(node03, node04){ Metric = 4f},
                 new AgvGraph.Edge(node04, node01){ Metric = 5f},
-                new AgvGraph.Edge(node04, node02){ Metric = 6f},
+                new AgvGraph.Edge(node04, node02){ Metric = 6f},    // Used by AGV_02 to travel to source (more expensive)
                 new AgvGraph.Edge(node04, node03){ Metric = 4f}
             },
                 mapName.ToGuid(),
                 mapName);
-
             const string agvId = "AGV_01";
             var closestAgvCorrelationId = agvId.ToGuid();
+            // Current location is node01
             var agvStatus1 = new AgvStatus(closestAgvCorrelationId, null, false, true, 50, false, false, node01);
+
             const string agvId2 = "AGV_02";
             var agvCorrelationId2 = agvId2.ToGuid();
+            // Current location ist node04
             var agvStatus2 = new AgvStatus(closestAgvCorrelationId, null, false, true, 50, false, false, node04);
 
             var mockAgvRegistry = new Mock<IAgvRegistry>();
@@ -244,12 +266,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                 new EnumerableQuery<IAgv>(
                     new List<IAgv>
                     {
-                        new AgvSaga(closestAgvCorrelationId, agvId, nameof(AgvStateMachine.Idle), agvGraph: agvGraph, agvStatus: agvStatus1),
-                        new AgvSaga(agvCorrelationId2, agvId2, nameof(AgvStateMachine.Idle), agvGraph: agvGraph, agvStatus: agvStatus2)
+                        new AgvSaga(closestAgvCorrelationId, agvId, nameof(AgvStateMachine.Idle), agvGraph: agvGraph, agvStatus: agvStatus1) { Alive = aliveAgv1 },
+                        new AgvSaga(agvCorrelationId2, agvId2, nameof(AgvStateMachine.Idle), agvGraph: agvGraph, agvStatus: agvStatus2) { Alive = true }
                     }
             ));
 
-            const string orderId = "order123";
+            const string orderId = "ORD_2->3";
             const string source = node02;
             const string destination = node03;
             const string leNo = "LeNo123";
@@ -287,8 +309,16 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 
             Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvAssignmentSucceeded>());
             var response = fixture.TestHarness.Published.Select<AgvAssignmentSucceeded>().First().Context.Message;
-            Assert.AreEqual(closestAgvCorrelationId, response.AgvCorrelationId);
-            CollectionAssert.AreEqual(new[] { agvStatus1.LastNodeId, node02, node01, node03 }, response.Nodes);
+            if (aliveAgv1)
+            {
+                Assert.AreEqual(closestAgvCorrelationId, response.AgvCorrelationId);
+                CollectionAssert.AreEqual(new[] { agvStatus1.LastNodeId, node02, node01, node03 }, response.Nodes);
+            }
+            else
+            {
+                Assert.AreEqual(agvCorrelationId2, response.AgvCorrelationId);
+                CollectionAssert.AreEqual(new[] { agvStatus2.LastNodeId, node02, node01, node03 }, response.Nodes);
+            }
         }
 
         /// <summary>
@@ -347,7 +377,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         [TestMethod]
         public async Task AgvBecameIdle_Assign_Oldest_UnassignedOrder_ThatHasRoute()
         {
-
             Mock<IAgvRegistry> mockAgvRegistry = GetAgvRegistry();
             Mock<IOrderRegistry> mockOrderRegistry = GetOrderRegistry();
 
@@ -445,7 +474,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                 var agvStatus = new AgvStatus(correlationId, order, true, true, 10, true, true);
                 var agvData = new AgvData(correlationId, "Karis", "BF1", ip, 1.8, 120.0, 0.6, 0.8, 0.7, 1, 2.5, 1000, Array.Empty<AgvData.Sensor>());
 
-                agvs.Add(new AgvSaga(correlationId, agvId, state, agvStatus, agvGraph, agvData));
+                agvs.Add(new AgvSaga(correlationId, agvId, state, agvStatus, agvGraph, agvData) { Alive = true });
             }
 
             registry.SetupGet(x => x.Count).Returns(agvs.Count);

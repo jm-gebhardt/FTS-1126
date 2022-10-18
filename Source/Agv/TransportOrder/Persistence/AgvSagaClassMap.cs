@@ -23,6 +23,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence
             // set table names
             entity.ToTable(AgvSagaTableName);
             entity.ConfigureAllProperties();
+            entity.Ignore(nameof(AgvSaga.Assignable));
             entity.Property(x => x.AgvStatus).HasJsonConversion();
             entity.Property(x => x.AgvGraph).HasJsonConversion();
             entity.Property(x => x.AgvData).HasJsonConversion();

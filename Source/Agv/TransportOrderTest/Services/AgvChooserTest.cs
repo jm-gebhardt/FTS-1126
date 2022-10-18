@@ -1,46 +1,12 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Gebhardt.StoreWare.Agv.Common.Definitions;
 using Gebhardt.StoreWare.Agv.Common.Messages;
-using Gebhardt.StoreWare.Agv.TransportOrder.Services;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
+using Gebhardt.StoreWare.Agv.TransportOrder.Services;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 {
-    /// <summary>
-    /// Implementation of interface <see cref="IAgv"/> for testing.
-    /// </summary>
-    internal class Agv : IAgv
-    {
-        /// <summary/>
-        public Guid CorrelationId { get; } = Guid.NewGuid();
-        /// <summary/>
-        public string AgvId { get; init; } = "";
-        /// <summary/>
-        public string CurrentState { get; } = "";
-        /// <summary/>
-        [JetBrains.Annotations.UsedImplicitly]
-        public AgvStatus? AgvStatus { get; set; }
-        /// <summary/>
-        public AgvGraph? AgvGraph { get; init; }
-
-        /// <summary/>
-        public AgvData? AgvData { get;} = new(Guid.Empty,
-            "",
-            "",
-            "",
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0,
-            Array.Empty<AgvData.Sensor>());
-    }
-
-
     /// <summary>
     /// More or less senseless implementation of a graph algorithm
     /// to test dependency injection and generic algorithm templates.
@@ -249,7 +215,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         public void CallChooser_WithEmptyEnumeration_Returns_Null()
         {
             var chooser = new AgvChooser<RandomGraphAlgorithm>();
-            Assert.IsNull(chooser.ChooseAgv(Array.Empty<Agv>(), _dummyOrder!));
+            Assert.IsNull(chooser.ChooseAgv(Array.Empty<Messages.Agv>(), _dummyOrder!));
         }
 
         /// <summary>
@@ -260,7 +226,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         public void CallChooser_WithoutGraph_ExpectException()
         {
             var chooser = new AgvChooser<AStar>(); // Use AStar because it depends on graphs.
-            var agvData = new List<Agv>()
+            var agvData = new List<Messages.Agv>()
             {
                 new() { AgvGraph = null }
             };
@@ -275,7 +241,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         public void CallChooser_WithInvalidAlgorithm_ExpectException()
         {
             var chooser = new AgvChooser<InvalidAlgorithm>();
-            var agvData = new List<Agv>()
+            var agvData = new List<Messages.Agv>()
             {
                 new() { AgvGraph = _graphWikipedia }
             };
@@ -290,7 +256,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         public void CallChooser_WithFailingAlgorithm_ExpectException()
         {
             var chooser = new AgvChooser<FailingAlgorithm>();
-            var agvData = new List<Agv>()
+            var agvData = new List<Messages.Agv>()
             {
                 new() { AgvGraph = _graphWikipedia }
             };
@@ -304,7 +270,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         public void CallChooser_WithMissingSourceDestination_ExpectExceptions()
         {
             var chooser = new AgvChooser<AStar>();
-            var agvData = new List<Agv>()
+            var agvData = new List<Messages.Agv>()
             {
                 new() { AgvGraph = _graphWikipedia }
             };
@@ -341,7 +307,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         public void CallChooser_WithValidSingleGraph_Success()
         {
             var chooser = new AgvChooser<AStar>();
-            var agvData = new List<Agv>()
+            var agvData = new List<Messages.Agv>()
             {
                 new() { AgvGraph = _graphWikipedia }
             };
@@ -365,7 +331,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         public void CallChooser_NonReachableNode_NoPath()
         {
             var chooser = new AgvChooser<AStar>();
-            var agvData = new List<Agv>()
+            var agvData = new List<Messages.Agv>()
             {
                 new() { AgvGraph = _graphWikipedia }
             };
@@ -389,7 +355,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         {
             var chooser = new AgvChooser<AStar>();
 
-            var agvData = new List<Agv>
+            var agvData = new List<Messages.Agv>
             {
                 new() { AgvId = "Std1", AgvGraph = _graphWikipedia },
                 new() { AgvId = "Std2", AgvGraph = _graphWikipedia },

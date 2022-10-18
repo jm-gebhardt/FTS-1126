@@ -115,7 +115,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
         /// <summary>
         /// Timeout between sending status messages
         /// </summary>
-        public const int SendStatusTimeout = 30;
+        public const int SendStatusTimeout = 10;
 
         /// <summary>
         /// Interval for signalling position durting order execution.

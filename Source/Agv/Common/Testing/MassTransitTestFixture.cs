@@ -28,11 +28,15 @@ namespace Gebhardt.StoreWare.Agv.Common.Testing
         public readonly IConsumerTestHarness<TConsumer> ConsumerHarness;
 
         /// <summary>
-        /// Consumer Test Fixture to be used for Consumer Unit/Integration tests
+        /// Consumer test fixture to be used for consumer unit/integration tests
         /// </summary>
-        /// <param name="services">Service Collection instance with MassTransitTestHarness added</param>
-        /// <param name="busRegistrationConfigurator">MassTransit Registration with consumer already added</param>
-        public MassTransitTestFixture(Action<IServiceCollection>? services = null, Action<IBusRegistrationConfigurator>? busRegistrationConfigurator = null)
+        /// <param name="services">Service collection instance with MassTransitTestHarness added</param>
+        /// <param name="busRegistrationConfigurator">MassTransit registration with consumer already added</param>
+        /// <param name="inMemoryConfiguration">MassTransit bus configurator</param>
+        public MassTransitTestFixture(
+            Action<IServiceCollection>? services = null,
+            Action<IBusRegistrationConfigurator>? busRegistrationConfigurator = null,
+            Action<IBusRegistrationContext, IInMemoryBusFactoryConfigurator>? inMemoryConfiguration = null)
         {
             var collection = new ServiceCollection()
                 .AddMassTransitTestHarness(x =>
@@ -42,6 +46,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Testing
                     x.UsingInMemory((context, cfg) =>
                     {
                         cfg.ConfigureEndpoints(context);
+                        inMemoryConfiguration?.Invoke(context, cfg);
                     });
                 });
 
@@ -76,7 +81,11 @@ namespace Gebhardt.StoreWare.Agv.Common.Testing
         /// </summary>
         /// <param name="services">Service Collection instance with MassTransitTestHarness added</param>
         /// <param name="busRegistrationConfigurator">MassTransit Registration with consumer already added</param>
-        public MassTransitTestFixture(Action<IServiceCollection>? services = null, Action<IBusRegistrationConfigurator>? busRegistrationConfigurator = null)
+        /// <param name="inMemoryConfiguration">MassTransit bus configurator</param>
+        public MassTransitTestFixture(
+            Action<IServiceCollection>? services = null, 
+            Action<IBusRegistrationConfigurator>? busRegistrationConfigurator = null,
+            Action<IBusRegistrationContext, IInMemoryBusFactoryConfigurator>? inMemoryConfiguration = null)
         {
             var collection = new ServiceCollection()
                 .AddMassTransitTestHarness(x =>
@@ -85,6 +94,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Testing
                     x.UsingInMemory((context, cfg) =>
                     {
                         cfg.ConfigureEndpoints(context);
+                        inMemoryConfiguration?.Invoke(context, cfg);
                     });
                 });
 

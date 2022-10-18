@@ -21,11 +21,22 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
     [TestClass]
     public class AgvStateMachineTest
     {
+        /// <summary>
+        /// Modified settings of state machine for testing
+        /// </summary>
+        /// <param name="AgvOfflineTimeoutMsWhileIdle"></param>
+        /// <param name="AgvOfflineTimeoutMsWhileBusy"></param>
+        private record Settings(int AgvOfflineTimeoutMsWhileIdle, int AgvOfflineTimeoutMsWhileBusy) : AgvStateMachine.ISettings;
+
         #region Setup
         /// <summary>
-        /// Create OrderStateMachine test fixture with mocked services
+        /// Create AgvStateMachine test fixture with mocked services
         /// </summary>
-        private StateMachineTestFixture<AgvStateMachine, AgvSaga> GetFixture(Action<IBusRegistrationConfigurator>? busRegistrationConfigurator = null)
+        private StateMachineTestFixture<AgvStateMachine, AgvSaga> GetFixture(
+            Action<IBusRegistrationConfigurator>? busRegistrationConfigurator = null,
+            Action<IBusRegistrationContext, IInMemoryBusFactoryConfigurator>? inMemoryConfiguration = null,
+            AgvStateMachine.ISettings? settings = null,
+            TimeSpan? inactivityTimeout = null)
         {
             var mockRegistry = new Mock<IMapRegistry>();
             mockRegistry.Setup(s => s.GetAllMaps()).Returns(new EnumerableQuery<Map>(new List<Map>()));
@@ -43,7 +54,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                         ApplicationName = null,
                         AutoAccept = true
                     });
-                });
+                    if (settings != null)
+                    {
+                        s.AddSingleton(_ => settings);
+                    }
+                },
+                inMemoryConfiguration: inMemoryConfiguration,
+                inactivityTimeout: inactivityTimeout);
         }
 
         /// <summary>
@@ -52,7 +69,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         /// <param name="previousState"></param>
         private AgvSaga CreateTestAgvSaga(string previousState)
         {
-
             const string agvId = "AGV_01";
             var correlationId = agvId.ToGuid();
 
@@ -122,7 +138,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         {
             StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = GetFixture();
 
-            const string agvId = "Order#1";
+            const string agvId = "AGV#1";
             var correlationId = Guid.Empty;
             var agvStatus = new AgvStatus(correlationId, null, true, true, 10, true, true);
 
@@ -140,7 +156,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         {
             StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = GetFixture(x => { x.AddRequestClient<ReserveAgv>(); });
 
-            const string agvId = "Order#1";
+            const string agvId = "AGV#1";
             var correlationId = agvId.ToGuid();
 
             var agvStage = new AgvSaga(
@@ -172,7 +188,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         {
             StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = GetFixture(x => { x.AddRequestClient<ReserveAgv>(); });
 
-            const string agvId = "Order#1";
+            const string agvId = "AGV#1";
             var correlationId = agvId.ToGuid();
 
             var agvStage = new AgvSaga(
@@ -203,7 +219,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         public async Task ConsumeAgvStatusReceived_with_LastNodeId(string inputLastNode)
         {
             // Arrange
-            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = GetFixture();
+            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = GetFixture(
+                x => x.AddDelayedMessageScheduler(),
+                (_, cfg) => cfg.UseDelayedMessageScheduler());
 
             const string agvId = "AGV_01";
             var correlationId = agvId.ToGuid();
@@ -744,7 +762,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                     });
                 });
 
-            const string agvId = "Order#1";
+            const string agvId = "AGV#1";
             var correlationId = agvId.ToGuid();
             var stateBefore = fixture.Machine.Idle;
             var stateAfter = fixture.Machine.Reserved;
@@ -767,6 +785,137 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             Assert.AreEqual(stateAfter.Name, saga.CurrentState);
 
             mockObserver.Verify(s => s.StateChanged(It.IsAny<BehaviorContext<AgvSaga>>(), stateAfter, stateBefore), Times.Once);
+        }
+
+        /// <summary>
+        /// When AgvInitializedMessage is received AgvfflineWatchdog is started
+        /// </summary>
+        /// <returns></returns>
+        [TestMethod]
+        [DataRow(true)]
+        [DataRow(false)]
+        public async Task When_AgvInitializedMessage_AgvOfflineWatchdogIsScheduled(bool agvInitialAlive)
+        {
+            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = GetFixture(
+                x => x.AddDelayedMessageScheduler(),
+                (_, cfg) => cfg.UseDelayedMessageScheduler());
+
+            const string agvId = "AGV#1";
+            var correlationId = agvId.ToGuid();
+            var agv = new AgvSaga(
+                correlationId,
+                agvId,
+                fixture.Machine.Idle.Name,
+                new AgvStatus(correlationId, null, true, true, 10, true, true)
+            ) { Alive = agvInitialAlive };
+            fixture.Add(agv);
+
+            await fixture.TestHarness.Bus.Publish(new AgvStateMachine.AgvInitializeMessage(correlationId, agvId));
+            agv = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
+            // Double check for initial alive (event when saga taken from the state machine)
+            Assert.AreEqual(agvInitialAlive, agv.Alive);
+
+            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvStateMachine.AgvInitializeMessage>());
+            Assert.IsTrue(fixture.TestHarness.Sent.Select<AgvStateMachine.AgvOfflineMessage>().Any());
+        }
+
+        /// <summary>
+        /// When watchdog expires AGV goes offline
+        /// </summary>
+        [TestMethod]
+        public async Task When_AgvWatchdogExpires_AgvWentOffline()
+        {
+            const int agvOfflineTimeoutMsWhileIdle = 100;
+            const int agvOfflineTimeoutMsWhileBusy = 500;
+
+            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = GetFixture(
+                x => x.AddDelayedMessageScheduler(),
+                (_, cfg) => cfg.UseDelayedMessageScheduler(),
+                new Settings(agvOfflineTimeoutMsWhileIdle, agvOfflineTimeoutMsWhileBusy),
+                TimeSpan.FromMilliseconds(2 * Math.Max(agvOfflineTimeoutMsWhileIdle, agvOfflineTimeoutMsWhileBusy)));
+
+            const string agvId = "AGV#1";
+            var correlationId = agvId.ToGuid();
+            var agv = new AgvSaga(
+                correlationId,
+                agvId,
+                fixture.Machine.Idle.Name,
+                new AgvStatus(correlationId, null, true, true, 10, true, true)
+            )
+            { Alive = true };
+            fixture.Add(agv);
+
+            await fixture.TestHarness.Bus.Publish(new AgvStateMachine.AgvInitializeMessage(correlationId, agvId));
+
+            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvStateMachine.AgvInitializeMessage>());
+            Assert.IsTrue(fixture.TestHarness.Sent.Select<AgvStateMachine.AgvOfflineMessage>().Any());
+            agv = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
+            Assert.IsTrue(agv.Alive);
+
+            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvStateMachine.AgvOfflineMessage>());
+            var now = DateTime.UtcNow;
+            var msg = fixture.SagaHarness.Consumed.Select<AgvStateMachine.AgvOfflineMessage>().First().Context.Message;
+            // When triggerd initially by AgvInitializeMessage the timeout for busy state is taken into account
+            Assert.IsTrue((now - msg.Created).TotalMilliseconds > 0.9 * agvOfflineTimeoutMsWhileBusy);
+            Assert.IsTrue((now - msg.Created).TotalMilliseconds < 1.5 * agvOfflineTimeoutMsWhileBusy);
+
+            agv = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
+            Assert.IsFalse(agv.Alive);
+        }
+
+        /// <summary>
+        /// When watchdog expires AGV goes offline
+        /// </summary>
+        [TestMethod]
+        public async Task When_AlternateGameBetweenWatchdogAndStatus_AgvTogglesOfflineAndOnline()
+        {
+            const int agvOfflineTimeoutMsWhileIdle = 500;
+            const int agvOfflineTimeoutMsWhileBusy = 1000;
+
+            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = GetFixture(
+                x => x.AddDelayedMessageScheduler(),
+                (_, cfg) => cfg.UseDelayedMessageScheduler(),
+                new Settings(agvOfflineTimeoutMsWhileIdle, agvOfflineTimeoutMsWhileBusy),
+                TimeSpan.FromMilliseconds(2 * Math.Max(agvOfflineTimeoutMsWhileIdle, agvOfflineTimeoutMsWhileBusy)));
+
+            const string agvId = "AGV#1";
+            var correlationId = agvId.ToGuid();
+            var agv = new AgvSaga(
+                correlationId,
+                agvId,
+                fixture.Machine.Idle.Name,
+                new AgvStatus(correlationId, null, true, true, 10, true, true)
+            )
+            { Alive = true };
+            fixture.Add(agv);
+
+            var agvStatus1 = new AgvStatus(correlationId, "first", false, true, 60, false, false);
+            var agvStatus2 = new AgvStatus(correlationId, "second", false, true, 60, false, false);
+
+            await fixture.TestHarness.Bus.Publish(new AgvStatusReceived(correlationId, agvId, agvStatus1));
+
+            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvStatusReceived>());
+            Assert.IsTrue(fixture.TestHarness.Sent.Select<AgvStateMachine.AgvOfflineMessage>().Any());
+
+            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvStateMachine.AgvOfflineMessage>());
+            var now = DateTime.UtcNow;
+            var msg = fixture.SagaHarness.Consumed.Select<AgvStateMachine.AgvOfflineMessage>().First().Context.Message;
+            // When triggerd by AgvStatusReceived the timeout depends on the state (and this AGV is idle)
+            Assert.IsTrue((now - msg.Created).TotalMilliseconds > 0.9 * agvOfflineTimeoutMsWhileIdle);
+            Assert.IsTrue((now - msg.Created).TotalMilliseconds < 1.5 * agvOfflineTimeoutMsWhileIdle);
+
+            agv = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
+            Assert.IsFalse(agv.Alive);
+
+            // Make sure nobody did spoil the test
+            Assert.IsTrue(agvStatus1.OrderId != agvStatus2.OrderId);
+
+            await fixture.TestHarness.Bus.Publish(new AgvStatusReceived(correlationId, agvId, agvStatus2));
+            // We need to wait for the "second" message (don't check just for any because a first message is already there)
+            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvStatusReceived>(x => x.Context.Message.AgvStatus.OrderId == "second"));
+
+            agv = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
+            Assert.IsTrue(agv.Alive);
         }
     }
 }

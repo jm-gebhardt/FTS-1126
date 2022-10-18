@@ -19,6 +19,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
         public string CurrentState { get; }
 
         /// <inheritdoc />
+        public bool Alive { get; }
+
+        /// <inheritdoc />
+        public bool Assignable { get; }
+
+        /// <inheritdoc />
         public AgvStatus? AgvStatus { get; }
 
         /// <inheritdoc />

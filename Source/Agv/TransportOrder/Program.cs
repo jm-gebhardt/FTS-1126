@@ -82,8 +82,15 @@ try
                             x.AddConsumer<TransportOrderChangedConsumer>();
                             x.AddConsumer<AgvPositionReceivedConsumer>();
                             x.AddConsumer<AgvPositionChangedConsumer>();
+                            x.AddConsumer<AgvInitializer>();
 
                             x.AddRequestClient<ReserveAgv>();
+
+                            x.AddDelayedMessageScheduler();
+                        }, rabbitMqConfiguration: (_, cfg) =>
+                        {
+                            cfg.UseDelayedMessageScheduler();
+                            cfg.ConnectBusObserver(new Gebhardt.StoreWare.Agv.Common.Services.BusObserver());
                         });
                     }
                     catch (InvalidOperationException e)

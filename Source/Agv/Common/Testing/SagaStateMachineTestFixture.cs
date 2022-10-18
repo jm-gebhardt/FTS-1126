@@ -43,11 +43,12 @@ namespace Gebhardt.StoreWare.Agv.Common.Testing
         /// <param name="services">IServiceCollection action</param>
         /// <param name="busRegistrationConfigurator">IBusRegistrationConfigurator action</param>
         /// <param name="inMemoryConfiguration">IBusRegistrationContext, IInMemoryBusFactoryConfigurator action</param>
+        /// <param name="inactivityTimeout">Override default inactivity timeout (4s).</param>
         public StateMachineTestFixture(
             Action<IServiceCollection>? services = null, 
             Action<IBusRegistrationConfigurator>? busRegistrationConfigurator = null,
-            Action<IBusRegistrationContext, IInMemoryBusFactoryConfigurator>? inMemoryConfiguration = null
-            )
+            Action<IBusRegistrationContext, IInMemoryBusFactoryConfigurator>? inMemoryConfiguration = null,
+            TimeSpan? inactivityTimeout = null)
         {
             var collection = new ServiceCollection()
                 .AddMassTransitTestHarness(x =>
@@ -66,6 +67,10 @@ namespace Gebhardt.StoreWare.Agv.Common.Testing
 
             Provider = collection.BuildServiceProvider(true);
             TestHarness = Provider.GetTestHarness();
+            if (inactivityTimeout.HasValue)
+            {
+                TestHarness.TestInactivityTimeout = inactivityTimeout.Value;
+            }
             TestHarness.Start();
             SagaHarness = TestHarness.GetSagaStateMachineHarness<TStateMachine, TInstance>();
             Machine = SagaHarness.StateMachine;

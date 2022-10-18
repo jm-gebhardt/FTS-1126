@@ -23,6 +23,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         public string CurrentState { get; set; }
 
         /// <inheritdoc cref="IAgv" />
+        public bool Alive => true;
+
+        /// <inheritdoc cref="IAgv" />
+        public bool Assignable => true;
+
+        /// <inheritdoc cref="IAgv" />
         // ReSharper disable once ReturnTypeCanBeNotNullable
         public AgvStatus? AgvStatus => new(
             CorrelationId,

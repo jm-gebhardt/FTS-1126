@@ -76,23 +76,17 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// <param name="order"></param>
         /// <param name="cancellationToken"></param>
         /// <typeparam name="TGraphAlgorithm"></typeparam>
-        /// <returns></returns>
+        /// <returns>Returns AGV and available route when reservable AGV found otherwise returns null</returns>
         private async Task<KeyValuePair<IAgv, IGraphAlgorithm.Route>?> AssignIdleAgv<TGraphAlgorithm>(OrderDetails order, CancellationToken cancellationToken) where TGraphAlgorithm : IGraphAlgorithm
         {
-
             var agvChooser = new AgvChooser<TGraphAlgorithm>();
             IAgv? assignedAgv = null;
             IGraphAlgorithm.Route? route = null;
 
             List<IAgv> idleAgvs = _agvRegistry.GetIdleAgvs()
-                .Where(agv => agv.AgvGraph != null)
+                .AsEnumerable()
+                .Where(agv => agv.Assignable)
                 .ToList();
-
-            if (idleAgvs.Any(agv => agv.AgvGraph!.Usability != AgvGraph.GraphUsability.Valid))
-            {
-                _logger.LogInformation("There are AGVs with invalid graphs.");
-                idleAgvs.RemoveAll(x => x.AgvGraph!.Usability != AgvGraph.GraphUsability.Valid);
-            }
 
             while (idleAgvs.Count > 0)
             {
@@ -116,10 +110,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
                 idleAgvs.RemoveAll(x => x.CorrelationId == correlationId);
             }
 
-
             if (assignedAgv == null || route == null)
             {
-                // No route found
+                // No idle AGV present or no route found
                 return null;
             }
 
@@ -170,14 +163,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
                 _logger.LogError("AGV {CorrelationId} became idle, but no AGV with this correlation ID can be found", context.Message.CorrelationId);
                 return;
             }
-            if (agv.AgvGraph == null)
+            if (!agv.Assignable)
             {
-                _logger.LogTrace("AGV {CorrelationId} has no graph (Graph is NULL)", context.Message.CorrelationId);
-                return;
-            }
-            if (agv.AgvGraph!.Usability != AgvGraph.GraphUsability.Valid)
-            {
-                _logger.LogDebug("AGV {CorrelationId} has invalid graph.", context.Message.CorrelationId);
+                _logger.LogDebug("AGV {CorrelationId} can't be used for order assignment", context.Message.CorrelationId);
                 return;
             }
 
