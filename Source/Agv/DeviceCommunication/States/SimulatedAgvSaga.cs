@@ -128,7 +128,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         }
 
         /// <summary>
-        /// Return the current position based on the time passed travelling.
+        /// Return the current position based on the time passed traveling.
         /// </summary>
         public AgvPosition? Position
         {

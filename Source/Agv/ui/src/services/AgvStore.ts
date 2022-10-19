@@ -77,8 +77,13 @@ export const useAgvStore = defineStore({
           this.agvs.data = data
         })
         .catch((response) => {
-          this.agvs.error = response.error
-          console.error(response.error)
+          // HTTP code 204 = No Content
+          if (response.status == 204) {
+            this.agvData.data.clear()
+          } else {
+            this.agvs.error = response.error
+            console.error(response.error)
+          }
         })
         .finally(() => (this.agvs.loading = false))
     },
@@ -94,13 +99,19 @@ export const useAgvStore = defineStore({
         .graphDetail(correlationId)
         .then((response) => {
           this.agvGraph.error = null
-          if (response.data.correlationId != null) {
+          if (response.data?.correlationId != null) {
             this.agvGraph.data.set(response.data.correlationId, response.data)
           }
         })
         .catch((response) => {
-          this.agvGraph.error = response.error
-          console.error(response.error)
+          // HTTP code 204 = No Content
+          // Entry in AgvRegistry is given but AgvGraph column is NULL
+          if (response.status == 204) {
+            this.agvGraph.data.clear()
+          } else {
+            this.agvGraph.error = response.error
+            console.error(response.error)
+          }
         })
         .finally(() => (this.agvGraph.loading = false))
     },
@@ -128,6 +139,52 @@ export const useAgvStore = defineStore({
     },
     MapUrl: function (correlationId: string): string {
       return `${mapApi.baseUrl}/maps/${correlationId}/map.png`
+    },
+    fetchData: async function (correlationId: string): Promise<void> {
+      this.agvData.loading = true
+
+      return await agvApi
+        .dataDetail(correlationId)
+        .then((response) => {
+          this.agvData.error = null
+          if (response.data?.correlationId != null) {
+            this.agvData.data.set(response.data.correlationId, response.data)
+          }
+        })
+        .catch((response) => {
+          // HTTP code 204 = No Content
+          // Entry in AgvRegistry is given but AgvData column is NULL
+          if (response.status == 204) {
+            this.agvData.data.clear()
+          } else {
+            this.agvData.error = response.error
+            console.error(response.error)
+          }
+        })
+        .finally(() => (this.agvData.loading = false))
+    },
+    fetchStatus: async function (correlationId: string): Promise<void> {
+      this.agvStatus.loading = true
+
+      return await agvApi
+        .statusDetail(correlationId)
+        .then((response) => {
+          this.agvStatus.error = null
+          if (response.data?.correlationId != null) {
+            this.agvStatus.data.set(response.data.correlationId, response.data)
+          }
+        })
+        .catch((response) => {
+          if (response.status == 204) {
+            // HTTP code 204 = No Content
+            // Entry in AgvRegistry is given but AgvStatus column is NULL
+            this.agvStatus.data.clear()
+          } else {
+            this.agvStatus.error = response.error
+            console.error(response.error)
+          }
+        })
+        .finally(() => (this.agvStatus.loading = false))
     }
   }
 })

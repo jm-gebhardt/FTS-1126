@@ -1,15 +1,27 @@
 <template>
-  <ui-table :data="props.agvs" :thead="thead" :tbody="tbody">
-    <template #CurrentState="{ data }">
-      <div class="tableCell-align-middle--icon">
-        <ui-icon>{{ AgvStatusIcon(data.currentState) }}</ui-icon>
-      </div>
-      <div class="tableCell-align-middle">{{ data.currentState }}</div>
+  <ui-list
+    v-model="selectedItemComputed"
+    :data="props.agvs"
+    :type="2"
+    single-selection
+  >
+    <template v-for="(item, index) in props.agvs" :key="index">
+      <ui-item>
+        <template #before="{ iconClass }">
+          <ui-icon :class="iconClass">
+            {{ AgvStatusIcon(item.currentState) }}
+          </ui-icon>
+        </template>
+        <ui-item-text-content>
+          <ui-item-text1>{{ item.agvId }}</ui-item-text1>
+          <ui-item-text2>{{ item.currentState }}</ui-item-text2>
+        </ui-item-text-content>
+        <ui-item-last-content>
+          <ui-button outlined @click="clickSetIdle(item)">Set Idle</ui-button>
+        </ui-item-last-content>
+      </ui-item>
     </template>
-    <template #actions="{ data }">
-      <button @click="clickSetIdle(data)">Set Idle</button>
-    </template>
-  </ui-table>
+  </ui-list>
 </template>
 
 <script lang="ts">
@@ -21,35 +33,27 @@ export default {
 
 <script lang="ts" setup>
 import { IAgv } from '@/services/api/data-contracts'
-import { useConfirm, useAlert } from 'balm-ui'
-import { Agvs as AgvApi } from '@/services/api/Agvs'
-import { HttpResponse } from '@microsoft/signalr'
+import { computed } from 'vue'
 
 interface Props {
   agvs: IAgv[]
+  selectedItem: number | null
+  clickSetIdle: (agv: IAgv) => void
 }
 
-const agvApi = new AgvApi({
-  baseUrl: import.meta.env.VITE_API_URL
-})
+let props = defineProps<Props>()
 
-const props = defineProps<Props>()
+const emit = defineEmits(['update:selectedListItemChanged'])
 
-const thead = ['ID', 'Agv ID', 'Current State', 'Actions']
-const tbody = [
-  'correlationId',
-  {
-    field: 'agvId',
-    fn: (agv: IAgv): string | null | undefined => agv.agvId
+const selectedItemComputed = computed({
+  get() {
+    return props.selectedItem
   },
-  {
-    field: 'currentState',
-    slot: 'CurrentState'
-  },
-  {
-    slot: 'actions'
+
+  set(value) {
+    return emit('update:selectedListItemChanged', value)
   }
-]
+})
 
 function AgvStatusIcon(status: string | null | undefined): string {
   switch (status) {
@@ -62,28 +66,6 @@ function AgvStatusIcon(status: string | null | undefined): string {
     default:
       return '🤔'
   }
-}
-
-function clickSetIdle(agv: IAgv): void {
-  const $confirm = useConfirm()
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  $confirm(`Set state of AGV '${agv.agvId}' to Idle?`).then((result: any) => {
-    // According to the balm-ui documentation 'result' should be a boolean but in the node module code it's declared as a void
-    // During runtime it actually is a boolean, so we need to cast it
-    if (result as boolean) {
-      agvApi
-        .setIdlePartialUpdate(agv.correlationId)
-        .then((value) => {
-          console.log('setIdle: ' + value.statusText)
-        })
-        .catch((reason: HttpResponse) => {
-          console.log('setIdle: ' + reason.statusText)
-          const $alert = useAlert()
-          $alert(`AGV '${agv.agvId}' could not be set to Idle`)
-        })
-    }
-  })
 }
 </script>
 

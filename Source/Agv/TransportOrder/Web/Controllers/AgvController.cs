@@ -72,6 +72,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers
         /// Retrieve status for agv
         /// </summary>
         /// <response code="200">Ok</response>
+        /// <response code="204">No content</response>
         /// <response code="404">Not found</response>
         [HttpGet]
         [Route("/agvs/{correlationId:guid}/status")]
@@ -90,6 +91,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers
         /// Retrieve data for agv
         /// </summary>
         /// <response code="200">Ok</response>
+        /// <response code="204">No Content</response>
         /// <response code="404">Not found</response>
         [HttpGet]
         [Route("/agvs/{correlationId}/data")]
