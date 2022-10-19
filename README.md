@@ -59,10 +59,10 @@ This can be done with the envirnment variable `ASPNETCORE_URLS`.
 Typical values:
 ```
 WCSCommunication:
-(use default, ASPNETCORE_URLS not set)
+ASPNETCORE_URLS=http://127.0.0.1:5010
 
 TransportOrder:
-ASPNETCORE_URLS=http://127.0.0.1:5010
+(use default, ASPNETCORE_URLS not set)
 
 DeviceCommunication:
 ASPNETCORE_URLS=http://127.0.0.1:5020

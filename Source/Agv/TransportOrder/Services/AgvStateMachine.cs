@@ -49,11 +49,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// <summary>
         /// Timeout value [ms] to set AGV offline while it is in idle mode
         /// </summary>
-        private readonly int _agvOfflineTimeoutMsWhileIdle = 5000;
+        private readonly int _agvOfflineTimeoutMsWhileIdle = 15000;
         /// <summary>
         /// Timeout value [ms] to set AGV offline while it is in busy mode
         /// </summary>
-        private readonly int _agvOfflineTimeoutMsWhileBusy = 10000;
+        private readonly int _agvOfflineTimeoutMsWhileBusy = 20000;
 
 
         /// <summary>
@@ -253,11 +253,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
                     x => x.Publish(m => new RequestAgvData(m.Saga.CorrelationId, m.Saga.AgvId)))
                 .If(cond => cond.Saga.AgvGraph != null && cond.Saga.GetTimeSpanSinceLastUpdate_AgvGraph().TotalSeconds > DailyRequestUpdateInterval,
                     x => x.Publish(m => new RequestAgvGraph(m.Saga.CorrelationId, m.Saga.AgvId)))
-                .If(cond => cond.Saga.AgvOfflineTokenId == null,
-                    x => x.Schedule(AgvOfflineWatchdog,
-                                    c1 => new AgvOfflineMessage(c1.Saga.CorrelationId, DateTime.UtcNow),
-                                    c2 => TimeSpan.FromMilliseconds(c2.Saga.AgvStatus!.Busy ? _agvOfflineTimeoutMsWhileBusy : _agvOfflineTimeoutMsWhileIdle))
-                          .Then(c => _logger.LogDebug("{AgvId} watchdog started", c.Message.AgvId)));
+                .Schedule(AgvOfflineWatchdog,
+                          c1 => new AgvOfflineMessage(c1.Saga.CorrelationId, DateTime.UtcNow),
+                          c2 => TimeSpan.FromMilliseconds(c2.Saga.AgvStatus!.Busy ? _agvOfflineTimeoutMsWhileBusy : _agvOfflineTimeoutMsWhileIdle))
+                .Then(c => _logger.LogTrace("{AgvId} watchdog started", c.Message.AgvId));
+
 
         private EventActivityBinder<AgvSaga, AgvGraphReceived> AgvGraphReceivedHandler() =>
             When(AgvGraphReceivedEvent)
