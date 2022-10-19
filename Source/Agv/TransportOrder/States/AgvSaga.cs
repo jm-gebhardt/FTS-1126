@@ -4,7 +4,6 @@ using MassTransit;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.States
 {
-
     /// <summary>
     /// AGV Saga used by AgvStateMachine
     /// This stores the current AGV state
@@ -12,15 +11,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.States
     [PublicAPI]
     public class AgvSaga : SagaStateMachineInstance, IAgv
     {
-        /// <summary>
-        /// CorrelationId
-        /// <see href="https://masstransit-project.com//usage/correlation.html" />
-        /// </summary>
+        /// <inheritdoc cref="IAgv"/>
         public Guid CorrelationId { get; set; }
-        
-        /// <summary>
-        /// AGV Serial Number
-        /// </summary>
+
+        /// <inheritdoc />
         public string AgvId { get; set; }
 
         /// <summary>

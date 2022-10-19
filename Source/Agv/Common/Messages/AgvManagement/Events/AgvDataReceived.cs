@@ -1,4 +1,5 @@
-﻿using MassTransit;
+﻿using Gebhardt.StoreWare.Agv.Common.Contracts;
+using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
 namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events
@@ -7,14 +8,12 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events
     /// An event reporting the retrieval of AGV data.
     /// </summary>
     [JetBrains.Annotations.PublicAPI]
-    public record AgvDataReceived : CorrelatedBy<Guid>
+    public record AgvDataReceived : CorrelatedBy<Guid>, IAgvId
     {
         /// <inheritdoc/>
         public Guid CorrelationId { get; }
 
-        /// <summary>
-        /// Identifier of the AGV.
-        /// </summary>
+        /// <inheritdoc />
         public string AgvId { get; }
         /// <summary>
         /// Agv Graph

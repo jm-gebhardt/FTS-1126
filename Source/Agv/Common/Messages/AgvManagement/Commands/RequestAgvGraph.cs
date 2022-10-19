@@ -1,4 +1,5 @@
-﻿using MassTransit;
+﻿using Gebhardt.StoreWare.Agv.Common.Contracts;
+using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
 namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands
@@ -7,14 +8,12 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands
     /// Command to request the assignment of an AGV for a specific order.
     /// </summary>
     [JetBrains.Annotations.PublicAPI]
-    public record RequestAgvGraph : CorrelatedBy<Guid>
+    public record RequestAgvGraph : CorrelatedBy<Guid>, IAgvId
     {
         /// <inheritdoc/>
         public Guid CorrelationId { get; }
 
-        /// <summary>
-        /// AGV serial number.
-        /// </summary>
+        /// <inheritdoc />
         public string AgvId { get; }
 
         /// <summary>

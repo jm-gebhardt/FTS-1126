@@ -1,3 +1,4 @@
+using Gebhardt.StoreWare.Agv.Common.Contracts;
 using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
@@ -7,14 +8,12 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events
     /// An event that provides a assigned AGV for an order 
     /// </summary>
     [JetBrains.Annotations.PublicAPI]
-    public record AgvAssignmentSucceeded : CorrelatedBy<Guid>
+    public record AgvAssignmentSucceeded : CorrelatedBy<Guid>, IAgvId
     {
         /// <inheritdoc/>
         public Guid CorrelationId { get; }
 
-        /// <summary>
-        /// Identifier of the Assigned AGV
-        /// </summary>
+        /// <inheritdoc />
         public string AgvId { get; }
 
         /// <summary>

@@ -1,4 +1,5 @@
 ﻿using MassTransit;
+using Gebhardt.StoreWare.Agv.Common.Contracts;
 
 // ReSharper disable ConvertToPrimaryConstructor
 namespace Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Commands
@@ -7,7 +8,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Commands
     /// A command from the transport order module to the agv communication module to execute an order
     /// </summary>
     [JetBrains.Annotations.PublicAPI]
-    public record ExecuteTransportOrder : CorrelatedBy<Guid>
+    public record ExecuteTransportOrder : CorrelatedBy<Guid>, IAgvId
     {
         /// <inheritdoc/>
         public Guid CorrelationId { get; }
@@ -17,9 +18,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Commands
         /// </summary>
         public OrderDetails OrderDetails { get; }
 
-        /// <summary>
-        /// The assigned AGV ID
-        /// </summary>
+        /// <inheritdoc />
         public string AgvId { get; }
 
         /// <summary>

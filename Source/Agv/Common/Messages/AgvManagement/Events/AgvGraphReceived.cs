@@ -1,4 +1,5 @@
-﻿using MassTransit;
+﻿using Gebhardt.StoreWare.Agv.Common.Contracts;
+using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
 namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events
@@ -11,14 +12,12 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events
     /// routing algorithms by having information like metric.
     /// </remarks>
     [JetBrains.Annotations.PublicAPI]
-    public record AgvGraphReceived : CorrelatedBy<Guid>
+    public record AgvGraphReceived : CorrelatedBy<Guid>, IAgvId
     {
         /// <inheritdoc/>
         public Guid CorrelationId { get; }
 
-        /// <summary>
-        /// AGV serial number
-        /// </summary>
+        /// <inheritdoc />
         public string AgvId { get; }
 
         /// <summary>

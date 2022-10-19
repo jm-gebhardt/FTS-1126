@@ -1,3 +1,4 @@
+using Gebhardt.StoreWare.Agv.Common.Contracts;
 using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
@@ -7,14 +8,8 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
     /// IAgv is a read-only interface to provide current agv data
     /// </summary>
     [JetBrains.Annotations.PublicAPI]
-    public interface IAgv : CorrelatedBy<Guid>
+    public interface IAgv : CorrelatedBy<Guid>, IAgvId
     {
-        /// <summary>
-        /// Agv Serial Number
-        /// </summary>
-        [JetBrains.Annotations.PublicAPI]
-        public string AgvId { get; }
-
         /// <summary>
         /// The current state of the AGV
         /// </summary>
