@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using MassTransit;
 using Gebhardt.StoreWare.Agv.Common.Services.Detectors;
+using Gebhardt.StoreWare.Agv.TransportOrder.Web.Dtos;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
 {
@@ -10,30 +10,30 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
     /// </summary>
     public class AgvPositionRegistry : BaseAgvPositionRegistry
     {
-        private readonly ConcurrentDictionary<Guid, AgvPositionReceived> _agvPositionRegistry = new();
+        private readonly ConcurrentDictionary<Guid, AgvPositionStatus> _agvPositionRegistry = new();
 
         /// <inheritdoc/>
-        public AgvPositionRegistry(IBus bus, IChangeDetector<AgvPositionReceived> agvPositionReceivedChangeDetector) : base(bus, agvPositionReceivedChangeDetector)
+        public AgvPositionRegistry(IBus bus, IChangeDetector<AgvPositionStatus> agvPositionChangeDetector) : base(bus, agvPositionChangeDetector)
         {
 
         }
 
         /// <inheritdoc />
-        protected override void UpdateInternal(AgvPositionReceived agvPositionReceived)
+        protected override void UpdateInternal(AgvPositionStatus agvPositionStatus)
         {
-            var correlationId = agvPositionReceived.CorrelationId;
-            _agvPositionRegistry.AddOrUpdate(correlationId, agvPositionReceived, (_, _) => agvPositionReceived);
+            var correlationId = agvPositionStatus.CorrelationId;
+            _agvPositionRegistry.AddOrUpdate(correlationId, agvPositionStatus, (_, _) => agvPositionStatus);
         }
 
         /// <inheritdoc />
-        public override AgvPositionReceived? GetPosition(Guid correlationId)
+        public override AgvPositionStatus? GetPosition(Guid correlationId)
         {
             _agvPositionRegistry.TryGetValue(correlationId, out var agvPositionReceived);
             return agvPositionReceived;
         }
 
         /// <inheritdoc />
-        public override List<AgvPositionReceived> GetAllPositions()
+        public override List<AgvPositionStatus> GetAllPositions()
         {
             return _agvPositionRegistry.Values.ToList();
         }

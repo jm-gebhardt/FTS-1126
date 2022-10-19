@@ -1,6 +1,8 @@
 using System.Collections.Immutable;
+using AutoMapper;
+using Gebhardt.StoreWare.Agv.TransportOrder.Profiles;
 using Gebhardt.StoreWare.Agv.TransportOrder.Services;
-using Gebhardt.StoreWare.Agv.TransportOrder.Web.Models;
+using Gebhardt.StoreWare.Agv.TransportOrder.Web.Dtos;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers
@@ -13,16 +15,19 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers
     {
         private readonly IAgvRegistry _agvRegistry;
         private readonly IMapRegistry _mapRegistry;
+        private readonly IMapper _mapper;
 
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="agvRegistry"></param>
         /// <param name="mapRegistry"></param>
-        public MapController(IAgvRegistry agvRegistry, IMapRegistry mapRegistry)
+        /// <param name="mapper"></param>
+        public MapController(IAgvRegistry agvRegistry, IMapRegistry mapRegistry, IMapper mapper)
         {
             _agvRegistry = agvRegistry;
             _mapRegistry = mapRegistry;
+            _mapper = mapper;
         }
 
         /// <summary>
@@ -43,15 +48,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers
                     x => x.Select(m => m.CorrelationId).ToArray()
                 );
 
-            IEnumerable<Map> map = _mapRegistry.GetAllMaps().Select(
-               m => new Map(
-                   m.CorrelationId,
-                   m.MapId,
-                   m.Resolution,
-                   m.XOffset,
-                   m.YOffset,
-                   agvMapRelation.GetValueOrDefault(m.CorrelationId) ?? Array.Empty<Guid>()
-               )).AsEnumerable();
+            var map = _mapper.Map<List<Map>>(_mapRegistry.GetAllMaps().AsEnumerable(), opt => opt.Items[MappingProfile.AgvMapRelationsName] = agvMapRelation);
 
             return Ok(map);
         }

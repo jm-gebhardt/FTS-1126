@@ -1,5 +1,6 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Services.Detectors;
+using Gebhardt.StoreWare.Agv.TransportOrder.Web.Dtos;
 using MassTransit;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Services;
@@ -10,30 +11,30 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services;
 public abstract class BaseAgvPositionRegistry : IAgvPositionRegistry
 {
     private readonly IBus _bus;
-    private readonly IChangeDetector<AgvPositionReceived> _agvPositionReceivedChangeDetector;
+    private readonly IChangeDetector<AgvPositionStatus> _agvPositionChangeDetector;
 
     /// <summary>
     /// Constructor
     /// </summary>
     /// <param name="bus">The MassTransit bus</param>
     /// <param name="agvPositionReceivedChangeDetector">The change detector which tells us whether the AgvPositionReceived has changed in the storage</param>
-    protected BaseAgvPositionRegistry(IBus bus, IChangeDetector<AgvPositionReceived> agvPositionReceivedChangeDetector)
+    protected BaseAgvPositionRegistry(IBus bus, IChangeDetector<AgvPositionStatus> agvPositionReceivedChangeDetector)
     {
         _bus = bus;
-        _agvPositionReceivedChangeDetector = agvPositionReceivedChangeDetector;
+        _agvPositionChangeDetector = agvPositionReceivedChangeDetector;
     }
 
     /// <inheritdoc />
-    public void UpdatePosition(AgvPositionReceived agvPositionReceived)
+    public void UpdatePosition(AgvPositionStatus agvPositionStatus)
     {
-        var correlationId = agvPositionReceived.CorrelationId;
+        var correlationId = agvPositionStatus.CorrelationId;
         var previousAgvPosition = GetPosition(correlationId);
 
-        UpdateInternal(agvPositionReceived);
+        UpdateInternal(agvPositionStatus);
 
-        if (_agvPositionReceivedChangeDetector.HasChanged(previousAgvPosition, agvPositionReceived))
+        if (_agvPositionChangeDetector.HasChanged(previousAgvPosition, agvPositionStatus))
         {
-            var agvPositionChanged = new AgvPositionChanged(agvPositionReceived.AgvPosition, previousAgvPosition?.AgvPosition, agvPositionReceived.AgvId, correlationId);
+            var agvPositionChanged = new AgvPositionChanged(agvPositionStatus.AgvPosition, previousAgvPosition?.AgvPosition, agvPositionStatus.AgvId, correlationId);
             _bus.Publish(agvPositionChanged);
         }
     }
@@ -41,12 +42,12 @@ public abstract class BaseAgvPositionRegistry : IAgvPositionRegistry
     /// <summary>
     /// The implementation that updates the stored status
     /// </summary>
-    /// <param name="agvPositionReceived">The new agv position to</param>
-    protected abstract void UpdateInternal(AgvPositionReceived agvPositionReceived);
+    /// <param name="agvPositionStatus">The new agv position to</param>
+    protected abstract void UpdateInternal(AgvPositionStatus agvPositionStatus);
 
     /// <inheritdoc />
-    public abstract AgvPositionReceived? GetPosition(Guid correlationId);
+    public abstract AgvPositionStatus? GetPosition(Guid correlationId);
 
     /// <inheritdoc />
-    public abstract List<AgvPositionReceived> GetAllPositions();
+    public abstract List<AgvPositionStatus> GetAllPositions();
 }

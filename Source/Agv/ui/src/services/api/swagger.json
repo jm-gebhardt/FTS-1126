@@ -193,7 +193,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/AgvPositionReceived"
+                    "$ref": "#/components/schemas/AgvPositionStatus"
                   }
                 }
               },
@@ -201,7 +201,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/AgvPositionReceived"
+                    "$ref": "#/components/schemas/AgvPositionStatus"
                   }
                 }
               },
@@ -209,7 +209,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/AgvPositionReceived"
+                    "$ref": "#/components/schemas/AgvPositionStatus"
                   }
                 }
               }
@@ -567,7 +567,7 @@
         },
         "additionalProperties": false
       },
-      "AgvPositionReceived": {
+      "AgvPositionStatus": {
         "required": [
           "agvId",
           "agvPosition",
@@ -577,20 +577,24 @@
         "properties": {
           "correlationId": {
             "type": "string",
+            "description": "The correlationId of the new AGV position",
             "format": "uuid"
           },
           "agvId": {
-            "type": "string"
+            "type": "string",
+            "description": "Identifier of the AGV"
           },
           "agvPosition": {
             "allOf": [
               {
                 "$ref": "#/components/schemas/AgvPosition"
               }
-            ]
+            ],
+            "description": "AGV position"
           }
         },
-        "additionalProperties": false
+        "additionalProperties": false,
+        "description": "Model for the status of the AGV position"
       },
       "AgvStatus": {
         "required": [
@@ -669,26 +673,24 @@
         ],
         "type": "object",
         "properties": {
-          "correlationId": {
-            "type": "string",
-            "format": "uuid",
-            "readOnly": true
+          "edges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Edge"
+            },
+            "description": "The list of edges in the graph."
           },
           "nodes": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Node"
             },
-            "description": "The list of nodes in the graph.",
-            "readOnly": true
+            "description": "The list of nodes in the graph"
           },
-          "edges": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Edge"
-            },
-            "description": "The list of edges in the graph.",
-            "readOnly": true
+          "correlationId": {
+            "type": "string",
+            "description": "CorrelationId",
+            "format": "uuid"
           }
         },
         "additionalProperties": false,

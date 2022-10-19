@@ -1,7 +1,7 @@
 import Konva from 'konva'
 import {
   IGraph,
-  IAgvPositionReceived,
+  IAgvPositionStatus,
   IEdge,
   INode,
   INodeType
@@ -193,7 +193,7 @@ export class MapCanvas {
    * Add AGV positions
    * @param agvs: Agv Positions
    */
-  addAgvs(agvs: IAgvPositionReceived[]): void {
+  addAgvs(agvs: IAgvPositionStatus[]): void {
     for (const agv of agvs) {
       this.updateAgvPosition(agv)
     }
@@ -203,7 +203,7 @@ export class MapCanvas {
    * Updates position of an AGV
    * @param agv: Agv Position
    */
-  updateAgvPosition(agv: IAgvPositionReceived): void {
+  updateAgvPosition(agv: IAgvPositionStatus): void {
     const rotation = (agv.agvPosition.theta * 180) / Math.PI // Convert radians to degree: [-PI, PI] -> [-180°, 180°]
 
     let agvNode = this._agvs.get(agv.agvId)

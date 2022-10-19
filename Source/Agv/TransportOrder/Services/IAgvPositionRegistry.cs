@@ -1,4 +1,4 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
+﻿using Gebhardt.StoreWare.Agv.TransportOrder.Web.Dtos;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
 {
@@ -11,20 +11,20 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// <summary>
         /// Update position of an AGV
         /// </summary>
-        /// <param name="agvPositionReceived">Position message from the AGV</param>
-        public void UpdatePosition(AgvPositionReceived agvPositionReceived);
+        /// <param name="agvPositionStatus">Position message from the AGV</param>
+        public void UpdatePosition(AgvPositionStatus agvPositionStatus);
 
         /// <summary>
         /// Get position of AGV
         /// </summary>
         /// <param name="correlationId">Correlation ID of the AGV</param>
         /// <returns>Returns the position of the requested AGV of null when no AGV with the given correlationId was found</returns>
-        public AgvPositionReceived? GetPosition(Guid correlationId);
+        public AgvPositionStatus? GetPosition(Guid correlationId);
 
         /// <summary>
         /// Returns a list position for all AGVs
         /// </summary>
         /// <returns>Returns a list position for all AGVs</returns>
-        public List<AgvPositionReceived> GetAllPositions();
+        public List<AgvPositionStatus> GetAllPositions();
     }
 }

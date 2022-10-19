@@ -18,10 +18,8 @@ export interface IAgv {
    * @format uuid
    */
   correlationId: string
-
   /** AGV Serial Number */
   agvId: string
-
   /** Current State */
   currentState: string
 }
@@ -32,28 +30,20 @@ export interface IAgvData {
   model: string
   type: string
   ipV4Address?: string | null
-
   /** @format double */
   maxVelocityStraight: number
-
   /** @format double */
   batteryCapacity: number
-
   /** @format double */
   length?: number | null
-
   /** @format double */
   width?: number | null
-
   /** @format double */
   acceleration?: number | null
-
   /** @format double */
   maxVelocityTurn?: number | null
-
   /** @format double */
   maxVelocityTurnOnSpot?: number | null
-
   /** @format int64 */
   payload?: number | null
   sensors: ISensor[]
@@ -61,27 +51,30 @@ export interface IAgvData {
 
 export interface IAgvPosition {
   positionInitialized: boolean
-
   /** @format float */
   x: number
-
   /** @format float */
   y: number
-
   /** @format float */
   z: number
-
   /** @format float */
   theta: number
-
   /** @format float */
   deviationRange?: number | null
 }
 
-export interface IAgvPositionReceived {
-  /** @format uuid */
+/**
+ * Model for the status of the AGV position
+ */
+export interface IAgvPositionStatus {
+  /**
+   * The correlationId of the new AGV position
+   * @format uuid
+   */
   correlationId: string
+  /** Identifier of the AGV */
   agvId: string
+  /** AGV position */
   agvPosition: IAgvPosition
 }
 
@@ -91,7 +84,6 @@ export interface IAgvStatus {
   orderId?: string | null
   busy: boolean
   automatic: boolean
-
   /** @format int32 */
   batteryCharge: number
   charging: boolean
@@ -105,7 +97,6 @@ export interface IAgvStatus {
 export interface IEdge {
   /** Node where the edge starts. */
   from: INode
-
   /** Node where the edge ends. */
   to: INode
 }
@@ -114,14 +105,15 @@ export interface IEdge {
  * Model for drawing a graph in the UI
  */
 export interface IGraph {
-  /** @format uuid */
-  correlationId: string
-
-  /** The list of nodes in the graph. */
-  nodes: INode[]
-
   /** The list of edges in the graph. */
   edges: IEdge[]
+  /** The list of nodes in the graph */
+  nodes: INode[]
+  /**
+   * CorrelationId
+   * @format uuid
+   */
+  correlationId: string
 }
 
 export enum IHostOrderCreator {
@@ -148,28 +140,23 @@ export interface IMap {
    * @format uuid
    */
   correlationId: string
-
   /** Map Id */
   mapId: string
-
   /**
    * The resolution of the maps image. Expressed as how many [m] per pixel are represented
    * @format double
    */
   resolution: number
-
   /**
    * The x offset of the map in [m] where the mapped graph coordinate system starts. . Origin is the left upper corner.
    * @format double
    */
   xOffset: number
-
   /**
    * The y offset of the map in [m] where the mapped graph coordinate system starts. Origin is the left upper corner.
    * @format double
    */
   yOffset: number
-
   /** List of Agvs using this map */
   relatedAgvs: string[]
 }
@@ -178,13 +165,10 @@ export interface INode {
   id: string
   enabled: boolean
   type: INodeType
-
   /** @format float */
   x: number
-
   /** @format float */
   y: number
-
   /** @format float */
   z: number
 }
@@ -205,11 +189,9 @@ This is a simply copy of the Gebhardt.StoreWare.Agv.Common.Messages.AgvManagemen
 */
 export interface IOrder {
   currentState: string
-
   /** @format uuid */
   assignedAgv?: string | null
   orderDetails: IOrderDetails
-
   /** @format uuid */
   correlationId: string
   failedReason?: string | null
@@ -223,7 +205,6 @@ export interface IOrderDetails {
   destination: string
   leNo: string
   creator: IHostOrderCreator
-
   /** @format date-time */
   creationDate: string
 }

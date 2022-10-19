@@ -1,4 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
+using Gebhardt.StoreWare.Agv.TransportOrder.Web.Dtos;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
@@ -17,17 +18,17 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services.AgvPositions
         {
             var fixture = new AgvPositionRegistryTestFixture();
             var agvPositionRegistry = fixture.AgvPositionRegistry;
-            var agvPositionReceived = fixture.AgvPositionReceived;
+            var agvPositionStatus = fixture.AgvPositionStatus;
 
-            List<AgvPositionReceived> positions = agvPositionRegistry.GetAllPositions();
+            List<AgvPositionStatus> positions = agvPositionRegistry.GetAllPositions();
 
             positions.ShouldNotBeNull();
             positions.Count.ShouldBe(0);
-            agvPositionRegistry.UpdatePosition(agvPositionReceived);
+            agvPositionRegistry.UpdatePosition(agvPositionStatus);
 
             positions = agvPositionRegistry.GetAllPositions();
             positions.Count.ShouldBe(1);
-            positions.First().ShouldBe(agvPositionReceived);
+            positions.First().ShouldBe(agvPositionStatus);
         }
 
         /// <summary/>
@@ -36,22 +37,22 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services.AgvPositions
         {
             var fixture = new AgvPositionRegistryTestFixture();
             var newAgvPosition = new Common.Messages.AgvManagement.AgvPosition(true, 2, 3, 4, 0);
-            var newAgvPositionReceived = new AgvPositionReceived(fixture.CorrelationId, fixture.AgvId, newAgvPosition);
-            var agvPositionReceived = fixture.AgvPositionReceived;
+            var newAgvPositionUpdated = new AgvPositionStatus(fixture.CorrelationId, fixture.AgvId, newAgvPosition);
+            var agvPositionStatus = fixture.AgvPositionStatus;
             var agvPositionRegistry = fixture.AgvPositionRegistry;
 
-            agvPositionRegistry.UpdatePosition(agvPositionReceived);
+            agvPositionRegistry.UpdatePosition(agvPositionStatus);
 
-            List<AgvPositionReceived> positions = agvPositionRegistry.GetAllPositions();
+            List<AgvPositionStatus> positions = agvPositionRegistry.GetAllPositions();
 
             positions.Count.ShouldBe(1);
-            positions.First().ShouldBe(agvPositionReceived);
+            positions.First().ShouldBe(agvPositionStatus);
 
-            agvPositionRegistry.UpdatePosition(newAgvPositionReceived);
+            agvPositionRegistry.UpdatePosition(newAgvPositionUpdated);
 
             positions = agvPositionRegistry.GetAllPositions();
             positions.Count.ShouldBe(1);
-            positions.First().ShouldBe(newAgvPositionReceived);
+            positions.First().ShouldBe(newAgvPositionUpdated);
         }
 
         /// <summary/>
@@ -59,15 +60,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services.AgvPositions
         public void UpdatePosition_PublishesAgvPositionChangedOnTheBus_WhenTheChangeDetectorReturnsTrue()
         {
             var fixture = new AgvPositionRegistryTestFixture();
-            fixture.ChangeDetectorMock.Setup(c => c.HasChanged(It.IsAny<AgvPositionReceived>(), It.IsAny<AgvPositionReceived>()))
+            fixture.ChangeDetectorMock.Setup(c => c.HasChanged(It.IsAny<AgvPositionStatus>(), It.IsAny<AgvPositionStatus>()))
                 .Returns(true);
 
-            var agvPositionReceived = fixture.AgvPositionReceived;
-            fixture.AgvPositionRegistry.UpdatePosition(agvPositionReceived);
+            var agvPositionStatus = fixture.AgvPositionStatus;
+            fixture.AgvPositionRegistry.UpdatePosition(agvPositionStatus);
 
             fixture.BusMock.Verify(b => b.Publish(It.Is<AgvPositionChanged>(o =>
-                    o.NewAgvPosition == agvPositionReceived.AgvPosition &&
-                    o.AgvId == agvPositionReceived.AgvId),
+                    o.NewAgvPosition == agvPositionStatus.AgvPosition &&
+                    o.AgvId == agvPositionStatus.AgvId),
                 It.IsAny<CancellationToken>()), Times.Once());
         }
 
@@ -76,12 +77,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services.AgvPositions
         public void UpdatePosition_DoesNotPublishAgvPositionChangedOnTheBus_WhenTheChangeDetectorReturnsFalse()
         {
             var fixture = new AgvPositionRegistryTestFixture();
-            fixture.ChangeDetectorMock.Setup(c => c.HasChanged(It.IsAny<AgvPositionReceived>(), It.IsAny<AgvPositionReceived>()))
+            fixture.ChangeDetectorMock.Setup(c => c.HasChanged(It.IsAny<AgvPositionStatus>(), It.IsAny<AgvPositionStatus>()))
                 .Returns(false);
 
-            fixture.AgvPositionRegistry.UpdatePosition(fixture.AgvPositionReceived);
+            fixture.AgvPositionRegistry.UpdatePosition(fixture.AgvPositionStatus);
 
-            fixture.BusMock.Verify(b => b.Publish(It.IsAny<AgvPositionChanged>(), default), Times.Never);
+            fixture.BusMock.Verify(b => b.Publish(It.IsAny<AgvPositionStatus>(), default), Times.Never);
         }
 
         /// <summary/>

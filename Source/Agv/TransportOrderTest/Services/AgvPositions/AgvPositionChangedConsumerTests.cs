@@ -7,9 +7,10 @@ using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.TransportOrder.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.Web;
+using Gebhardt.StoreWare.Agv.TransportOrder.Web.Dtos;
 using Gebhardt.StoreWare.Agv.TransportOrder.Web.Hubs;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
+namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services.AgvPositions
 {
     /// <summary>
     /// </summary>
@@ -27,6 +28,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             var fixture = new MassTransitTestFixture<AgvPositionChangedConsumer>(services =>
             {
                 services.AddTransient(_ => mockHub.Object);
+                services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
             });
 
             await fixture.TestHarness.Bus.Publish(
@@ -41,7 +43,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             Assert.IsTrue(await fixture.ConsumerHarness.Consumed.Any<AgvPositionChanged>());
 
             const string method = nameof(Defines.HubMethods.AgvPositionChanged);
-            mockHub.Verify(h => h.SendAgvPositionToAllClients(method, It.Is<AgvPositionReceived>(o => o.AgvId == AgvId), It.IsAny<CancellationToken>()), Times.Once);
+            mockHub.Verify(h => h.SendAgvPositionToAllClients(method, It.Is<AgvPositionStatus>(o => o.AgvId == AgvId), It.IsAny<CancellationToken>()), Times.Once);
         }
     }
 }

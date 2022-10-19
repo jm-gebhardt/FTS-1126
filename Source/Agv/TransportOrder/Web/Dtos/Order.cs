@@ -2,7 +2,7 @@ using Gebhardt.StoreWare.Agv.Common.Messages;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 
 // ReSharper disable ConvertToPrimaryConstructor
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Models
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Dtos
 {
     /// <summary>
     /// Order Model
@@ -43,16 +43,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Models
             OrderDetails = orderDetails;
             CorrelationId = correlationId;
             FailedReason = failedReason;
-        }
-
-        /// <summary>
-        /// Cast <see cref="IOrder"/> into <see cref="Order"/>
-        /// </summary>
-        /// <param name="order"></param>
-        /// <returns></returns>
-        public static Order FromIOrder(IOrder order)
-        {
-            return new Order(order.CurrentState, order.AssignedAgv, order.OrderDetails, order.CorrelationId, order.FailedReason);
         }
     }
 }

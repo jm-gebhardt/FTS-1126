@@ -1,10 +1,10 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Microsoft.AspNetCore.Mvc;
 using Gebhardt.StoreWare.Agv.TransportOrder.Services;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
-using Gebhardt.StoreWare.Agv.TransportOrder.Web.Models;
+using Gebhardt.StoreWare.Agv.TransportOrder.Web.Dtos;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using MassTransit;
+using AutoMapper;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers
 {
@@ -17,15 +17,17 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers
         private readonly IAgvRegistry _agvRegistry;
         private readonly IAgvPositionRegistry _agvPositionRegistry;
         private readonly IBus _bus;
+        private readonly IMapper _mapper;
 
         /// <summary>
         /// Init controller
         /// </summary>
-        public AgvController(IAgvRegistry agvRegistry, IAgvPositionRegistry agvPositionRegistry, IBus bus)
+        public AgvController(IAgvRegistry agvRegistry, IAgvPositionRegistry agvPositionRegistry, IBus bus, IMapper mapper)
         {
             _agvRegistry = agvRegistry;
             _agvPositionRegistry = agvPositionRegistry;
             _bus = bus;
+            _mapper = mapper;
         }
 
         /// <summary>
@@ -34,10 +36,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers
         /// <response code="200">Ok</response>
         [HttpGet]
         [Route("/agvs")]
-        public ActionResult<IEnumerable<Models.Agv>> GetAgvs()
+        public ActionResult<IEnumerable<Dtos.Agv>> GetAgvs()
         {
             IOrderedQueryable<IAgv> agvs = _agvRegistry.GetAllAgvs().OrderBy(a => a.AgvId);
-            return Ok(agvs.Select(Models.Agv.FromIAgv));
+            return Ok(agvs.Select(agv => _mapper.Map<Dtos.Agv>(agv)));
         }
 
         /// <summary>
@@ -61,7 +63,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers
                 return NoContent();
             }
 
-            return Ok(new Graph(agv.AgvGraph));
+            var graph = _mapper.Map<Graph>(agv.AgvGraph);
+
+            return Ok(graph);
         }
 
         /// <summary>
@@ -106,7 +110,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers
         /// <response code="200">Ok</response>
         [HttpGet]
         [Route("/agvsPositions")]
-        public ActionResult<IEnumerable<AgvPositionReceived>> GetAgvPositions()
+        public ActionResult<IEnumerable<AgvPositionStatus>> GetAgvPositions()
         {
             return Ok(_agvPositionRegistry.GetAllPositions());
         }

@@ -1,8 +1,10 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using AutoMapper;
+using Microsoft.Extensions.Logging;
 using MassTransit;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.TransportOrder.Web.Hubs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Web;
+using Gebhardt.StoreWare.Agv.TransportOrder.Web.Dtos;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
 {
@@ -14,15 +16,18 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
     {
         private readonly ILogger<AgvPositionReceivedConsumer> _logger;
         private readonly IAgvHubContext _agvHubContext;
+        private readonly IMapper _mapper;
 
         /// <summary>
         /// </summary>
         public AgvPositionChangedConsumer(
             ILogger<AgvPositionReceivedConsumer> logger,
-            IAgvHubContext agvHubContext)
+            IAgvHubContext agvHubContext,
+            IMapper mapper)
         {
             _logger = logger;
             _agvHubContext = agvHubContext;
+            _mapper = mapper;
         }
 
         /// <summary>
@@ -34,8 +39,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         {
             _logger.LogTrace("{MessageType} {AgvId} received", nameof(AgvPositionChanged), context.Message.AgvId);
 
-            var agvPositionChanged = context.Message;
-            await _agvHubContext.SendAgvPositionToAllClients(nameof(Defines.HubMethods.AgvPositionChanged), new AgvPositionReceived(agvPositionChanged.CorrelationId, agvPositionChanged.AgvId, agvPositionChanged.NewAgvPosition), context.CancellationToken);
+            var agvPositionStatus = _mapper.Map<AgvPositionStatus>(context.Message);
+
+            await _agvHubContext.SendAgvPositionToAllClients(nameof(Defines.HubMethods.AgvPositionChanged), agvPositionStatus, context.CancellationToken);
         }
     }
 }

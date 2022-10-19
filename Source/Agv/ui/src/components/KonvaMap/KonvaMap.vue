@@ -5,7 +5,7 @@
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue'
 import { MapCanvas } from '@/components/KonvaMap/MapCanvas'
-import { IGraph, IAgvPositionReceived } from '@/services/api/data-contracts'
+import { IGraph, IAgvPositionStatus } from '@/services/api/data-contracts'
 
 const map = ref()
 let graphMap: MapCanvas | undefined
@@ -21,10 +21,10 @@ defineExpose({
   setVisibleAgvs: (agvCorrelationIds: string[]) => {
     graphMap?.setVisibleAgvs(agvCorrelationIds)
   },
-  addAgvs: (agvs: IAgvPositionReceived[]) => {
+  addAgvs: (agvs: IAgvPositionStatus[]) => {
     graphMap?.addAgvs(agvs)
   },
-  updateAgvPosition(agv: IAgvPositionReceived) {
+  updateAgvPosition(agv: IAgvPositionStatus) {
     graphMap?.updateAgvPosition(agv)
   },
   setBackground: (

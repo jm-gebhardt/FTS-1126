@@ -1,6 +1,8 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using AutoMapper;
+using Microsoft.Extensions.Logging;
 using MassTransit;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
+using Gebhardt.StoreWare.Agv.TransportOrder.Web.Dtos;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
 {
@@ -12,16 +14,19 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
     {
         private readonly ILogger<AgvPositionReceivedConsumer> _logger;
         private readonly IAgvPositionRegistry _agvPositionRegistry;
+        private readonly IMapper _mapper;
 
         /// <summary>
         /// Constructor
         /// </summary>
         public AgvPositionReceivedConsumer(
             ILogger<AgvPositionReceivedConsumer> logger,
-            IAgvPositionRegistry agvPositionRegistry)
+            IAgvPositionRegistry agvPositionRegistry,
+            IMapper mapper)
         {
             _logger = logger;
             _agvPositionRegistry = agvPositionRegistry;
+            _mapper = mapper;
         }
 
         /// <summary>
@@ -33,7 +38,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         {
             _logger.LogDebug("{MessageType} {AgvId} / {CorrelationId} received", nameof(AgvPositionReceived), context.Message.AgvId, context.Message.CorrelationId);
 
-            _agvPositionRegistry.UpdatePosition(context.Message);
+            var agvPositionStatus = _mapper.Map<AgvPositionStatus>(context.Message);
+
+            _agvPositionRegistry.UpdatePosition(agvPositionStatus);
             return Task.CompletedTask;
         }
     }

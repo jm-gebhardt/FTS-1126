@@ -6,10 +6,11 @@ using Gebhardt.StoreWare.Agv.TransportOrder.States;
 using Gebhardt.StoreWare.Agv.TransportOrder.Services;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
-using Gebhardt.StoreWare.Agv.TransportOrder.Web.Models;
+using Gebhardt.StoreWare.Agv.TransportOrder.Web.Dtos;
 using MassTransit;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
+using AutoMapper;
+using Gebhardt.StoreWare.Agv.TransportOrder.Profiles;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
 {
@@ -39,6 +40,17 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
             new("node11", "node10"),
             new("node10", "node00")
         };
+
+        private Mapper GetMapper()
+        {
+            var mapperConfig = new MapperConfiguration(cfg =>
+            {
+                cfg.AddProfile(new MappingProfile());
+            });
+
+            var mapper = new Mapper(mapperConfig);
+            return mapper;
+        }
 
         private static IAgvRegistry GetAgvRegistry()
         {
@@ -84,7 +96,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
         private static IAgvPositionRegistry GetAgvPositionRegistry()
         {
             var registry = new Mock<IAgvPositionRegistry>();
-            var agvPositions = new List<AgvPositionReceived>();
+            var agvPositions = new List<AgvPositionStatus>();
 
             for (int i = 0; i < _agvIds.Length; i++)
             {
@@ -92,7 +104,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
                 var correlationId = agvId.ToGuid();
                 var node = _nodes[i];
 
-                agvPositions.Add(new AgvPositionReceived(correlationId, agvId, new AgvPosition(true, node.X, node.Y, node.Z, 0.5f)));
+                agvPositions.Add(new AgvPositionStatus(correlationId, agvId, new AgvPosition(true, node.X, node.Y, node.Z, 0.5f)));
             }
 
             registry.Setup(x => x.GetAllPositions()).Returns(agvPositions);
@@ -114,7 +126,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
         private AgvController GetController()
         {
             var bus = new Mock<IBus>();
-            return new AgvController(GetAgvRegistry(), GetAgvPositionRegistry(), bus.Object);
+            return new AgvController(GetAgvRegistry(), GetAgvPositionRegistry(), bus.Object, GetMapper());
         }
 
         #endregion
@@ -128,9 +140,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
             var result = controller.GetAgvs().Result as OkObjectResult;
             Assert.IsNotNull(result);
 
-            var agvsIterable = result.Value as IEnumerable<TransportOrder.Web.Models.Agv>;
+            var agvsIterable = result.Value as IEnumerable<TransportOrder.Web.Dtos.Agv>;
             Assert.IsNotNull(agvsIterable);
-            List<TransportOrder.Web.Models.Agv> agvs = agvsIterable.ToList();
+            List<TransportOrder.Web.Dtos.Agv> agvs = agvsIterable.ToList();
             Assert.AreEqual(_agvIds.Length, agvs.Count);
 
             for (int index = 0; index < _agvIds.Length; index++)
@@ -263,7 +275,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
         public void SetIdle_Ok()
         {
             var bus = new Mock<IBus>();
-            var controller = new AgvController(GetAgvRegistry(), GetAgvPositionRegistry(), bus.Object);
+
+            var controller = new AgvController(GetAgvRegistry(), GetAgvPositionRegistry(), bus.Object, GetMapper());
             var correlationId = _agvIds[2].ToGuid();
 
             var result = controller.SetIdle(correlationId).Result as OkResult;

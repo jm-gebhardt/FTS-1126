@@ -1,20 +1,7 @@
-using System.Reflection;
-using System.Text.Json.Serialization;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.SignalR;
-using Microsoft.OpenApi.Models;
+using AutoMapper;
 using CommandLine;
-using Prometheus;
-using MassTransit;
 using Gebhardt.StoreWare.Agv.Common;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Services.Detectors;
 using Gebhardt.StoreWare.Agv.TransportOrder.CmdOptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence;
@@ -22,6 +9,20 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.States;
 using Gebhardt.StoreWare.Agv.TransportOrder.Web.Hubs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Web.SchemaFilter;
+using MassTransit;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.OpenApi.Models;
+using Prometheus;
+using System.Reflection;
+using System.Text.Json.Serialization;
+using Gebhardt.StoreWare.Agv.TransportOrder.Web.Dtos;
 
 var initialLogger = Gebhardt.StoreWare.Agv.Common.Logging.InitialLogger.Create<Program>();
 
@@ -43,12 +44,16 @@ try
                     services.AddTransient<IOrderHubContext>(provider =>
                     {
                         var hubContext = provider.GetRequiredService<IHubContext<OrderHub>>();
-                        return new OrderHubContext(hubContext);
+                        var mapper = provider.GetRequiredService<IMapper>();
+
+                        return new OrderHubContext(hubContext, mapper);
                     });
                     services.AddTransient<IAgvHubContext>(provider =>
                     {
                         var hubContext = provider.GetRequiredService<IHubContext<AgvHub>>();
-                        return new AgvHubContext(hubContext);
+                        var mapper = provider.GetRequiredService<IMapper>();
+
+                        return new AgvHubContext(hubContext, mapper);
                     });
                     services.AddTransient<IEventObserver<OrderSaga>, OrderEventObserver>();
 
@@ -56,7 +61,7 @@ try
                     services.AddSingleton<IStateObserver<OrderSaga>, OrderStateObserver>();
                     services.AddSingleton<IStateObserver<AgvSaga>, AgvStateObserver>();
                     services.AddSingleton<IAgvPositionRegistry, AgvPositionRegistry>();
-                    services.AddSingleton<IChangeDetector<AgvPositionReceived>, ChangeDetector<AgvPositionReceived>>();
+                    services.AddSingleton<IChangeDetector<AgvPositionStatus>, ChangeDetector<AgvPositionStatus>>();
 
                     // Scopes
                     services.AddScoped(_ => productionOptions);
@@ -68,6 +73,9 @@ try
                             m.MigrationsHistoryTable(SagaPersistenceDbContext.MigrationTableName);
                         });
                     });
+
+                    // Automapper
+                    services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
                     try
                     {

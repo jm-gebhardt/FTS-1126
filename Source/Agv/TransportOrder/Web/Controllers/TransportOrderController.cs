@@ -1,10 +1,11 @@
 ﻿using System.Text.Json;
+using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Microsoft.AspNetCore.Mvc;
 using Gebhardt.StoreWare.Agv.TransportOrder.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers.DateRange;
 using Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers.Pagination;
-using Gebhardt.StoreWare.Agv.TransportOrder.Web.Models;
+using Gebhardt.StoreWare.Agv.TransportOrder.Web.Dtos;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers
 {
@@ -15,13 +16,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers
     public class TransportOrderController : Controller
     {
         private readonly IOrderRegistry _orderRegistry;
+        private readonly IMapper _mapper;
 
         /// <summary>
         /// Init controller
         /// </summary>
-        public TransportOrderController(IOrderRegistry orderRegistry)
+        public TransportOrderController(IOrderRegistry orderRegistry, IMapper mapper)
         {
             _orderRegistry = orderRegistry;
+            _mapper = mapper;
         }
 
         /// <summary>
@@ -56,7 +59,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers
             var dateRangeHeaders = new DateRangeHeaders(dateRangeParameters.Start, dateRangeParameters.End);
             Response.Headers.Add(dateRangeHeaders.HeaderName, JsonSerializer.Serialize(dateRangeHeaders));
             
-            return Ok(pagedOrders.Select(Order.FromIOrder));
+            return Ok(pagedOrders.Select(pageOrder => _mapper.Map<Order>(pageOrder)));
         }
     }
 }

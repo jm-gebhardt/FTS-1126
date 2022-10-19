@@ -16,7 +16,9 @@ using Gebhardt.StoreWare.Agv.TransportOrder.States;
 using Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers.DateRange;
 using Gebhardt.StoreWare.Agv.TransportOrder.Web.Controllers.Pagination;
-using Gebhardt.StoreWare.Agv.TransportOrder.Web.Models;
+using Gebhardt.StoreWare.Agv.TransportOrder.Web.Dtos;
+using AutoMapper;
+using Gebhardt.StoreWare.Agv.TransportOrder.Profiles;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
 {
@@ -30,6 +32,16 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
         private static readonly string[] _sources = { "S1", "S2" };
         private static readonly string[] _destinations = { "D1", "D2" };
         private static readonly string[] _leNo = { "111", "222" };
+
+        private Mapper GetMapper()
+        {
+            var mapperConfig = new MapperConfiguration(cfg =>
+            {
+                cfg.AddProfile(new MappingProfile());
+            });
+            var mapper = new Mapper(mapperConfig);
+            return mapper;
+        }
 
         /// <summary>
         /// Test retrieving order list from saga repository
@@ -49,7 +61,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
                 s.AddSingleton(_ => orderEventObserver.Object);
             });
 
-            var controller = new TransportOrderController(GetOrderRegistry());
+            var controller = new TransportOrderController(GetOrderRegistry(), GetMapper());
             controller.ControllerContext = new ControllerContext(
                 new ActionContext(new DefaultHttpContext(),
                     new RouteData(),
@@ -89,7 +101,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
         public void RequestWithCorrelationId_NoPagination_NoDateRange_OrderReturned()
         {
             var orderRegistry = GetOrderRegistry();
-            var controller = new TransportOrderController(orderRegistry);
+            var controller = new TransportOrderController(orderRegistry, GetMapper());
             SetupControllerForTests(controller);
             ActionResult<IEnumerable<Order>> result = controller.GetOrders(
                 new PaginationParameters(), 
@@ -113,7 +125,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
             orderRegistry.Setup(x => x.GetAllOrders()).Returns(Array.Empty<IOrder>().AsQueryable());
             orderRegistry.Setup(x => x.GetUnassignedOrders()).Returns(Array.Empty<IOrder>().AsQueryable());
             
-            var controller = new TransportOrderController(orderRegistry.Object);
+            var controller = new TransportOrderController(orderRegistry.Object, GetMapper());
             SetupControllerForTests(controller);
             ActionResult<IEnumerable<Order>> result = controller.GetOrders(
                 new PaginationParameters(), 
@@ -155,5 +167,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
                     ));
             controller.ControllerContext = controllerContext;
         }
+
     }
 }

@@ -9,7 +9,7 @@
  * ---------------------------------------------------------------
  */
 
-import { IAgvPositionReceived } from './data-contracts'
+import { IAgvPositionStatus } from './data-contracts'
 import { HttpClient, RequestParams } from './http-client'
 
 export class AgvsPositions<
@@ -24,7 +24,7 @@ export class AgvsPositions<
    * @request GET:/agvsPositions
    */
   agvsPositionsList = (params: RequestParams = {}) =>
-    this.request<IAgvPositionReceived[], any>({
+    this.request<IAgvPositionStatus[], any>({
       path: `/agvsPositions`,
       method: 'GET',
       format: 'json',

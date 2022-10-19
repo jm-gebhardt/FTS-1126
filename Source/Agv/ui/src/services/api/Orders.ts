@@ -26,9 +26,25 @@ If correlation Id is provided, all other parameters are ignored
  */
   ordersList = (
     query?: {
+      /**
+       * Page Number
+       * @format int32
+       */
       PageNumber?: number
+      /**
+       * Page Size
+       * @format int32
+       */
       PageSize?: number
+      /**
+       * Start date of range
+       * @format date-time
+       */
       Start?: string
+      /**
+       * End date of range
+       * @format date-time
+       */
       End?: string
     },
     params: RequestParams = {}

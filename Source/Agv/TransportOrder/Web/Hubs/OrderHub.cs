@@ -1,9 +1,10 @@
 ﻿using System.Text.Json;
+using AutoMapper;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.SignalR;
 using SignalRSwaggerGen.Attributes;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using Gebhardt.StoreWare.Agv.TransportOrder.Web.Models;
+using Gebhardt.StoreWare.Agv.TransportOrder.Web.Dtos;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Hubs
 {    
@@ -25,19 +26,21 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Hubs
     {
         private static readonly JsonSerializerOptions _serializerOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
         private readonly IHubContext<OrderHub> _hubContext;
+        private readonly IMapper _mapper;
 
         /// <summary>
         /// Initializes a new instance of <see cref="OrderHubContext"/>
         /// </summary>
-        public OrderHubContext(IHubContext<OrderHub> hubContext)
+        public OrderHubContext(IHubContext<OrderHub> hubContext, IMapper mapper)
         {
             _hubContext = hubContext;
+            _mapper = mapper;
         }
 
         /// <inheritdoc/>
         public async Task SendOrderToAllClients(string method, IOrder order, CancellationToken cancellationToken)
         {
-            string message = JsonSerializer.Serialize(Order.FromIOrder(order), _serializerOptions);
+            string message = JsonSerializer.Serialize(_mapper.Map<Order>(order), _serializerOptions);
             await _hubContext.Clients.All.SendAsync(method, message, cancellationToken);
         }
     }

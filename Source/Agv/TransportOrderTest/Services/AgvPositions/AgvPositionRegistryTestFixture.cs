@@ -1,6 +1,6 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
-using Gebhardt.StoreWare.Agv.Common.Services.Detectors;
+﻿using Gebhardt.StoreWare.Agv.Common.Services.Detectors;
 using Gebhardt.StoreWare.Agv.TransportOrder.Services;
+using Gebhardt.StoreWare.Agv.TransportOrder.Web.Dtos;
 using MassTransit;
 using Moq;
 
@@ -14,15 +14,15 @@ internal class AgvPositionRegistryTestFixture
     public readonly string AgvId = "myAgv";
 
     public readonly Mock<IBus> BusMock = new();
-    public AgvPositionReceived AgvPositionReceived { get; }
+    public AgvPositionStatus AgvPositionStatus { get; }
     public AgvPositionRegistry AgvPositionRegistry { get; }
-    public Mock<IChangeDetector<AgvPositionReceived>> ChangeDetectorMock { get; }
+    public Mock<IChangeDetector<AgvPositionStatus>> ChangeDetectorMock { get; }
 
     public AgvPositionRegistryTestFixture()
     {
-        ChangeDetectorMock = new Mock<IChangeDetector<AgvPositionReceived>>();
+        ChangeDetectorMock = new Mock<IChangeDetector<AgvPositionStatus>>();
         AgvPositionRegistry = new AgvPositionRegistry(BusMock.Object, ChangeDetectorMock.Object);
-        AgvPositionReceived = new AgvPositionReceived(CorrelationId, AgvId, _agvPosition);
+        AgvPositionStatus = new AgvPositionStatus(CorrelationId, AgvId, _agvPosition);
     }
 
 }

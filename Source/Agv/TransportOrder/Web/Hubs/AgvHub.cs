@@ -1,9 +1,10 @@
 ﻿using System.Text.Json;
+using AutoMapper;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.SignalR;
 using SignalRSwaggerGen.Attributes;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
+using Gebhardt.StoreWare.Agv.TransportOrder.Web.Dtos;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Hubs
 {
@@ -20,7 +21,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Hubs
         /// <summary>
         /// Broadcasts the position of an agv to all clients
         /// </summary>
-        public Task SendAgvPositionToAllClients(string method, AgvPositionReceived agvPosition, CancellationToken cancellationToken);
+        public Task SendAgvPositionToAllClients(string method, AgvPositionStatus agvPosition, CancellationToken cancellationToken);
     }
 
     /// <summary>
@@ -30,24 +31,26 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Web.Hubs
     {
         private static readonly JsonSerializerOptions _serializerOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
         private readonly IHubContext<AgvHub> _hubContext;
+        private readonly IMapper _mapper;
 
         /// <summary>
         /// Initializes a new instance of <see cref="AgvHubContext"/>
         /// </summary>
-        public AgvHubContext(IHubContext<AgvHub> hubContext)
+        public AgvHubContext(IHubContext<AgvHub> hubContext, IMapper mapper)
         {
             _hubContext = hubContext;
+            _mapper = mapper;
         }
 
         /// <inheritdoc/>
         public async Task SendAgvStateToAllClients(string method, IAgv agv, CancellationToken cancellationToken)
         {
-            string message = JsonSerializer.Serialize(Models.Agv.FromIAgv(agv), _serializerOptions);
+            string message = JsonSerializer.Serialize(_mapper.Map<Dtos.Agv>(agv), _serializerOptions);
             await _hubContext.Clients.All.SendAsync(method, message, cancellationToken);
         }
 
         /// <inheritdoc/>
-        public async Task SendAgvPositionToAllClients(string method, AgvPositionReceived agvPosition, CancellationToken cancellationToken)
+        public async Task SendAgvPositionToAllClients(string method, AgvPositionStatus agvPosition, CancellationToken cancellationToken)
         {
             string message = JsonSerializer.Serialize(agvPosition, _serializerOptions);
             await _hubContext.Clients.All.SendAsync(method, message, cancellationToken);
