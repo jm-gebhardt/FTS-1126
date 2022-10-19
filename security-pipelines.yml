@@ -39,7 +39,7 @@ steps:
         set -ex
         OUTPUT=$(dotnet list package --vulnerable --include-transitive)
         echo "${OUTPUT}"
-        VULNERABLE_PROJECTS=($(echo "${OUTPUT}" | awk '/Project `[A-z]+` has the following vulnerable packages/{ print $2}'))
+        VULNERABLE_PROJECTS=($(echo "${OUTPUT}" | awk '/Project `[A-z\.]+` has the following vulnerable packages/{ print $2}'))
         for i in "${VULNERABLE_PROJECTS[@]}"
         do
             echo "##vso[task.logissue type=error]${i} has vulnerable dependencies" >&2
