@@ -6,15 +6,12 @@ using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.CommonTest.Services.Detectors
 {
-    /// <summary>
-    /// </summary>
     [TestClass]
-    public class ChangeDetectorTests
+    public class ChangeDetectorTest
     {
         private static AgvPositionReceived GetAgvPosition(string agvId) => new(Guid.NewGuid(), agvId, new AgvPosition(true, 0, 0, 0, 0));
 
-        /// <summary>
-        /// </summary>
+
         [TestMethod]
         public void HasChanged_ReturnsTrue_WhenPreviousObjectIsNull()
         {
@@ -22,8 +19,6 @@ namespace Gebhardt.StoreWare.Agv.CommonTest.Services.Detectors
             changeDetector.HasChanged(null, GetAgvPosition("agv")).ShouldBeTrue();
         }
 
-        /// <summary>
-        /// </summary>
         [TestMethod]
         public void HasChanged_ReturnsTrue_WhenNewObjectIsNull()
         {
@@ -31,8 +26,6 @@ namespace Gebhardt.StoreWare.Agv.CommonTest.Services.Detectors
             changeDetector.HasChanged(GetAgvPosition("agv"), null).ShouldBeTrue();
         }
 
-        /// <summary>
-        /// </summary>
         [TestMethod]
         public void HasChanged_ReturnsFalse_WhenBothObjectsAreNull()
         {
@@ -40,8 +33,6 @@ namespace Gebhardt.StoreWare.Agv.CommonTest.Services.Detectors
             changeDetector.HasChanged(null, null).ShouldBeFalse();
         }
 
-        /// <summary>
-        /// </summary>
         [TestMethod]
         public void HasChanged_ReturnsTrue_WhenObjectAreNotEqual()
         {
@@ -49,8 +40,6 @@ namespace Gebhardt.StoreWare.Agv.CommonTest.Services.Detectors
             changeDetector.HasChanged(GetAgvPosition("agv1"), GetAgvPosition("agv2")).ShouldBeTrue();
         }
 
-        /// <summary>
-        /// </summary>
         [TestMethod]
         public void HasChanged_ReturnsFalse_WhenObjectAreEqual()
         {

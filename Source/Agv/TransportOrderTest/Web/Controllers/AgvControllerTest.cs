@@ -14,9 +14,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Profiles;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
 {
-    /// <summary>
-    /// Tests TransportOrderApiController
-    /// </summary>
+
     [TestClass]
     public class AgvControllerTest
     {
@@ -131,7 +129,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
 
         #endregion
 
-        /// <summary/>
         [TestMethod]
         public void GetAgvs_Successfully()
         {
@@ -156,7 +153,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
             }
         }
 
-        /// <summary/>
         [TestMethod]
         [DataRow(0)]
         [DataRow(1)]
@@ -177,7 +173,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
             Assert.AreEqual(_edges[index].To, graph.Edges[index].To.Id);
         }
 
-        /// <summary/>
         [TestMethod]
         public void GetAgvGraph_NotFound()
         {
@@ -188,7 +183,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
             Assert.IsNotNull(result);
         }
 
-        /// <summary/>
         [TestMethod]
         [DataRow(0)]
         [DataRow(1)]
@@ -207,7 +201,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
             Assert.AreEqual(_orders[index], agvStatus.OrderId);
         }
 
-        /// <summary/>
         [TestMethod]
         public void GetAgvStatus_NotFound()
         {
@@ -218,7 +211,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
             Assert.IsNotNull(result);
         }
 
-        /// <summary/>
         [TestMethod]
         [DataRow(0)]
         [DataRow(1)]
@@ -237,7 +229,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
             Assert.AreEqual(_ips[index], agvData.IpV4Address);
         }
 
-        /// <summary/>
         [TestMethod]
         public void GetAgvData_NotFound()
         {
@@ -248,7 +239,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
             Assert.IsNotNull(result);
         }
 
-        /// <summary/>
         [TestMethod]
         public void SetIdle_NotFound()
         {
@@ -259,7 +249,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
             Assert.IsNotNull(result);
         }
 
-        /// <summary/>
         [TestMethod]
         public void SetIdle_BadRequest()
         {
@@ -270,7 +259,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
             Assert.IsNotNull(result);
         }
 
-        /// <summary/>
         [TestMethod]
         public void SetIdle_Ok()
         {

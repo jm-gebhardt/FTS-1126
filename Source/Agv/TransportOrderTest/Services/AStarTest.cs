@@ -16,10 +16,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         private readonly AgvGraph? _graph;
         private readonly AgvGraph? _grid;
 
-
-        /// <summary>
-        /// Test initialization.
-        /// </summary>
         public AStarTest()
         {
             const string mapName = "Map#1";
@@ -180,9 +176,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             Assert.AreEqual(289f, route.Costs, 0.00001f);
         }
 
-        /// <summary>
-        /// Test_AStar_WikipediaExample_WithCurrentNode
-        /// </summary>
         [TestMethod]
         public void Test_AStar_WikipediaExample_WithCurrentNode()
         {

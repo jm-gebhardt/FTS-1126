@@ -15,9 +15,6 @@ using Gebhardt.StoreWare.Agv.TransportOrder.States;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 {
-    /// <summary>
-    /// AgvStateMachine Test
-    /// </summary>
     [TestClass]
     public class AgvStateMachineTest
     {
@@ -104,9 +101,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         }
         #endregion
 
-        /// <summary>
-        /// When_AgvStatusReceived_NewAgvSagaCreated
-        /// </summary>
+
         [TestMethod]
         public async Task When_AgvStatusReceived_NewAgvSagaCreated()
         {
@@ -130,9 +125,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             Assert.IsNull(saga.AgvData);
         }
 
-        /// <summary>
-        /// When_AgvStatusReceived_EmptyCorrelationId_NoSagaCreated
-        /// </summary>
         [TestMethod]
         public async Task When_AgvStatusReceived_EmptyCorrelationId_NoSagaCreated()
         {
@@ -177,9 +169,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             Assert.AreEqual(fixture.Machine.Reserved.Name, saga.CurrentState);
         }
 
-        /// <summary>
-        /// When AgvReservation Requested Agv Is Idle AcceptAgvReservation
-        /// </summary>
         [DataRow(nameof(AgvStateMachine.Discovered))]
         [DataRow(nameof(AgvStateMachine.Reserved))]
         [DataRow(nameof(AgvStateMachine.Busy))]
@@ -522,9 +511,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             Assert.IsTrue(await fixture.TestHarness.Published.Any<RequestAgvGraph>());
         }
 
-        /// <summary>
-        /// Checks if RequestAgvData and RequestAgvGraph are sent in the initial state
-        /// </summary>
         [TestMethod]
         public async Task Verify_DateTimes_On_Inbound_AgvRequestGraph_And_AgvRequestData()
         {
@@ -863,9 +849,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             Assert.IsFalse(agv.Alive);
         }
 
-        /// <summary>
-        /// When watchdog expires AGV goes offline
-        /// </summary>
         [TestMethod]
         public async Task When_AlternateGameBetweenWatchdogAndStatus_AgvTogglesOfflineAndOnline()
         {

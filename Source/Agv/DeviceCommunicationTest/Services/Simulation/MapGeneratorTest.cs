@@ -6,15 +6,9 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
 {
 
-    /// <summary>
-    /// Grid Generator Test
-    /// </summary>
     [TestClass]
     public class MapGeneratorTest
     {
-        /// <summary>
-        /// Generate map
-        /// </summary>
         [TestMethod]
         public void GenerateMap_CreateDataAndDecode_AllSuccessful()
         {
@@ -57,9 +51,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             Assert.IsTrue(image.Height > 0);
         }
 
-        /// <summary>
-        /// Generate map
-        /// </summary>
         [TestMethod]
         public void GenerateMap_OriginOutside_OffsetNegatice()
         {
@@ -93,9 +84,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             Assert.IsTrue(map.YOffset < 0f);
         }
 
-        /// <summary>
-        /// Generate map
-        /// </summary>
         [TestMethod]
         [ExpectedException(typeof(InvalidOperationException))]
         public void GenerateMap_EmptyGraph_Failure()

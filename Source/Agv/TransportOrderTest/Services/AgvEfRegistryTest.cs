@@ -9,9 +9,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 {
-    /// <summary>
-    /// AGV EF Registry Test
-    /// </summary>
     [TestClass]
     public class AgvEfRegistryTest
     {
@@ -43,9 +40,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             }
         }
 
-        /// <summary>
-        /// EmptyRegistry_NoAGVAvailable
-        /// </summary>
         [TestMethod]
         public void EmptyRegistry_NoAGVAvailable()
         {
@@ -55,9 +49,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             Assert.AreEqual(0, fixture.Registry.CountIdle);
         }
 
-        /// <summary>
-        /// OneIdleAdded_OneIdleAGVAvailable
-        /// </summary>
         [TestMethod]
         public void OneIdleAdded_OneIdleAGVAvailable()
         {
@@ -78,9 +69,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             Assert.AreEqual(false, idleAgv.Alive);
         }
 
-        /// <summary>
-        /// OneIdleAdded_OneIdleAGVAvailable
-        /// </summary>
         [TestMethod]
         public void TwoAdded_OneIdleAGVAvailable()
         {
@@ -101,9 +89,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             Assert.AreEqual(agvSaga.AgvData, idleAgv.AgvData);
         }
 
-        /// <summary>
-        /// Verify_IAgvRegistry_Interface_Methods
-        /// </summary>
         [TestMethod]
         public void Verify_IAgvRegistry_Interface_Methods()
         {

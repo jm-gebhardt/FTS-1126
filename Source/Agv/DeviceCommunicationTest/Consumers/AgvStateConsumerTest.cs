@@ -8,9 +8,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
 {
-    /// <summary>
-    /// AgvStateConsumerTest
-    /// </summary>
     [TestClass]
     public class AgvStateConsumerTest
     {
@@ -82,10 +79,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
             Assert.IsFalse(await fixture.TestHarness.Published.Any<AgvPositionReceived>());
         }
 
-        /// <summary>
-        /// Test for publishing IAgvStatusReceived message with LastNodeId.
-        /// </summary>
-        /// <returns></returns>
         [TestMethod]
         [DataRow(null, false, 4.56f, 7.89f, 3.14159f)]
         [DataRow(0.0123f, true, 4.56f, 7.89f, 3.14159f)]

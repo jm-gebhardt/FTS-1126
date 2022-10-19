@@ -62,7 +62,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
         }
 
         /// <summary>
-        /// Test recognition of missing staions
+        /// Test recognition of missing stations
         /// </summary>
         [TestMethod]
         public void Parse_WithMissingStation__GraphInvalid()

@@ -12,15 +12,11 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Web.Hubs;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services.AgvPositions
 {
-    /// <summary>
-    /// </summary>
     [TestClass]
-    public class AgvPositionChangedConsumerTests
+    public class AgvPositionChangedConsumerTest
     {
         private const string AgvId = "agv1";
 
-        /// <summary>
-        /// </summary>
         [TestMethod]
         public async Task Receiving_AgvPositionChanged_SendsAgvPositionToAllClients()
         {

@@ -5,16 +5,10 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
 {
 
-    /// <summary>
-    /// Grid Generator Test
-    /// </summary>
     [TestClass]
     public class GridGeneratorTest
     {
     
-        /// <summary>
-        /// Generate Grid
-        /// </summary>
         [TestMethod]
         [DataRow(0, 0, 0)]
         [DataRow(0, 0, 1)]
@@ -132,9 +126,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             Assert.AreEqual(new HashSet<string>(graph.Edges.Select(n => $"{n.From}.{n.To}")).Count, graph.Edges.Length);
         }
         
-        /// <summary>
-        /// Test if all edges have been added
-        /// </summary>
         [TestMethod]
         public void GenerateGrid_TwoServiceNode_AllEdgesAdded()
         {
@@ -179,9 +170,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             Assert.AreEqual(expectedEdges.Length * 2, graph.Edges.Length);
         }
         
-        /// <summary>
-        /// Test adding service nodes
-        /// </summary>
         [TestMethod]
         [ExpectedException(typeof(IndexOutOfRangeException))]
         public void GenerateGrid_WithThreeServiceNode_GridLengthOne_ExpectIndexOutOfRangeException()

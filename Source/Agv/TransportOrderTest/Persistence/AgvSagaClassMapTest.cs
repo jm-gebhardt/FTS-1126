@@ -5,9 +5,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Persistence
 {
-    /// <summary>
-    /// AgvSagaClassMapTest
-    /// </summary>
     [TestClass]
     public class AgvSagaClassMapTest
     {
@@ -27,9 +24,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Persistence
             }
         } 
 
-        /// <summary>
-        /// This is a simple that that calls the configuration method
-        /// </summary>
         [TestMethod]
         public void CallConfigurationMethod_NoAssertPerformed()
         {

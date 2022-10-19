@@ -17,15 +17,9 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
 {
-    /// <summary>
-    /// SimulatedAgvStateMachine Test
-    /// </summary>
     [TestClass]
     public class SimulatedAgvStateMachineTest
     {
-        /// <summary>
-        /// InitialCreation_SingleAgv_Successful
-        /// </summary>
         [TestMethod]
         public async Task InitialCreation_SingleAgv_Successful()
         {
@@ -60,9 +54,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             Assert.IsNotNull(createdSaga.AgvData);
         }
 
-        /// <summary>
-        /// InitialCreation_SingleAgv_Status_Correct
-        /// </summary>
         [TestMethod]
         public async Task InitialCreation_SingleAgv_Status_Correct()
         {
@@ -110,9 +101,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             Assert.IsNull(agvStatus.LastNodeId);
         }
 
-        /// <summary>
-        /// When_RequestAgvGraph_AgvGraphReceived_isPublished
-        /// </summary>
         [TestMethod]
         public async Task When_RequestAgvGraph_AgvGraphReceived_isPublished()
         {
@@ -146,9 +134,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             Assert.AreEqual(graph, message.Graph);
         }
 
-        /// <summary>
-        /// When_RequestAgvGraph_AgvGraph_Null_NoMessageIsPublished
-        /// </summary>
         [TestMethod]
         public async Task When_RequestAgvGraph_AgvGraphIsNull_NoMessageIsPublished()
         {
@@ -178,9 +163,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             Assert.IsFalse(await fixture.TestHarness.Published.Any<AgvGraphReceived>(token.Token));
         }
 
-        /// <summary>
-        /// When_RequestAgvData_AgvDataIsNull_NoMessageIsPublished
-        /// </summary>
         [TestMethod]
         public async Task When_RequestAgvData_AgvDataIsNull_NoMessageIsPublished()
         {
@@ -210,9 +192,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             Assert.IsFalse(await fixture.TestHarness.Published.Any<AgvDataReceived>(token.Token));
         }
 
-        /// <summary>
-        /// When_RequestAgvGraph_AgvGraphReceived_isPublished
-        /// </summary>
         [TestMethod]
         public async Task When_RequestAgvData_AgvDataReceived_isPublished()
         {
@@ -246,9 +225,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             Assert.AreEqual(data, message.Data);
         }
 
-        /// <summary>
-        /// When_RequestAgvMap_AgvMapReceived_isPublished
-        /// </summary>
         [TestMethod]
         public async Task When_RequestAgvMap_AgvMapReceived_isPublished()
         {
@@ -284,9 +260,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             Assert.AreEqual(agvSaga.AgvMap!.ImageData, message.AgvMap.ImageData);
         }
 
-        /// <summary>
-        /// When_RequestAgvGraph_AgvGraph_Null_NoMessageIsPublished
-        /// </summary>
         [TestMethod]
         public async Task When_RequestAgvMap_AgvMapIsNull_NoMessageIsPublished()
         {
@@ -317,9 +290,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             Assert.IsFalse(await fixture.TestHarness.Published.Any<AgvMapReceived>(token.Token));
         }
 
-        /// <summary>
-        /// When_ExecuteTransportOrder_TransportOrderStarted_IsPublished_TransportOrderCompleted_Is_Published
-        /// </summary>
         [TestMethod]
         public async Task When_ExecuteTransportOrder_TransportOrderStarted_IsPublished_TransportOrderCompleted_Is_Published()
         {

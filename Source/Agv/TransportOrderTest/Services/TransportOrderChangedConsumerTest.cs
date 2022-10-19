@@ -11,15 +11,10 @@ using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 {
-    /// <summary>
-    /// Test for finishing host orders
-    /// </summary>
+
     [TestClass]
     public class TransportOrderChangedConsumerTest
     {
-        /// <summary>
-        /// Test handling a TransportOrderChanged event
-        /// </summary>
         [TestMethod]
         public async Task TransportOrderChanged_ConsumedAndMessageSentToClients()
         {

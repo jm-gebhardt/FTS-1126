@@ -11,9 +11,6 @@ using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 {
-    /// <summary>
-    /// AgvStateObserver Test
-    /// </summary>
     [TestClass]
     public class AgvStateObserverTest
     {
@@ -39,9 +36,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             mockHub.Verify(s => s.SendAgvStateToAllClients(nameof(Defines.HubMethods.AgvStateChanged), It.IsAny<IAgv>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
-        /// <summary>
-        /// When_AgvSaga_Is_New_AddTrigger_Observer
-        /// </summary>
         [TestMethod]
         public async Task When_AgvSaga_StateIsInitial_AgvDiscovered_Published()
         {

@@ -3,6 +3,7 @@
         <AssemblyName>Gebhardt.StoreWare.Agv.CommonTest</AssemblyName>
         <Description></Description>
         <IsPackable>false</IsPackable>
+        <NoWarn>1591</NoWarn>
     </PropertyGroup>
     <Import Project="..\SharedProjectSettings.csproj" />
     <ItemGroup>

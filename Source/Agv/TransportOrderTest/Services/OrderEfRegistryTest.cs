@@ -10,9 +10,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 {
-    /// <summary>
-    /// Order EF Registry Test
-    /// </summary>
     [TestClass]
     public class OrderEfRegistryTest
     {
@@ -49,9 +46,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             }
         }
 
-        /// <summary>
-        /// EmptyRegistry_NoOrderAvailable
-        /// </summary>
         [TestMethod]
         public void EmptyRegistry_NoOrderAvailable()
         {
@@ -61,9 +55,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             Assert.AreEqual(0, fixture.Registry.CountUnassigned);
         }
 
-        /// <summary>
-        /// OneStateOrderReceivedAdded_OneUnassignedOrderAvailable
-        /// </summary>
         [TestMethod]
         public void OneStateOrderReceivedAdded_OneUnassignedOrderAvailable()
         {
@@ -84,9 +75,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             Assert.AreEqual(orderSaga.OrderDetails.LeNo, firstOrder.OrderDetails.LeNo);
         }
 
-        /// <summary>
-        /// OneStateOrderReceivedAdded_OneOther_OneUnassignedOrderAvailable
-        /// </summary>
         [TestMethod]
         public void OneStateOrderReceivedAdded_OneOther_OneUnassignedOrderAvailable()
         {
@@ -111,9 +99,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         }
 
 
-        /// <summary>
-        /// Verify_IAgvRegistry_Interface_Methods
-        /// </summary>
         [TestMethod]
         public void Verify_IAOrderRegistry_Interface_Methods()
         {

@@ -22,9 +22,6 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Profiles;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
 {
-    /// <summary>
-    /// Tests TransportOrderApiController
-    /// </summary>
     [TestClass]
     public class TransportOrderControllerTest
     {
@@ -94,9 +91,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
             Assert.AreEqual(resultOrder.OrderDetails.Creator, inputOrderDetails.Creator);
         }
 
-        /// <summary>
-        /// RequestWithCorrelationId_OrderReturned
-        /// </summary>
         [TestMethod]
         public void RequestWithCorrelationId_NoPagination_NoDateRange_OrderReturned()
         {
@@ -115,9 +109,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers
             Assert.AreEqual(2, orders.Length);
         }
         
-        /// <summary>
-        /// RequestWithCorrelationId_OrderReturned
-        /// </summary>
         [TestMethod]
         public void Request_RegistryEmpty_ReturnsEmptyList()
         {

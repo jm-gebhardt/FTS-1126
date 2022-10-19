@@ -54,11 +54,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             DateTime.ParseExact("2022-07-13 11:00:01", "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture) };
         private static AgvGraph? _graph;
 
-
-        /// <summary>
-        /// Test initialization.
-        /// </summary>
-        /// <param name="context"></param>
         [ClassInitialize]
         public static void ClassInitialize(TestContext context)
         {
@@ -85,9 +80,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         {
         }
 
-        /// <summary>
-        /// Receive AssignAgv message when no Idle AGV is available
-        /// </summary>
         [TestMethod]
         public async Task When_AgvRegistryIsEmpty_IAgvAssignFailed_isPublished()
         {

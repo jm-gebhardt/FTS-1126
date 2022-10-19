@@ -275,9 +275,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
             Assert.AreEqual(AgvGraph.GraphUsability.InvalidEdges, graph.Usability);
         }
 
-        /// <summary>
-        /// Test for parsing AGV graph message with invalid edges.
-        /// </summary>
         [TestMethod]
         public void Parse_WithDuplicateEdges_GraphInvalid()
         {

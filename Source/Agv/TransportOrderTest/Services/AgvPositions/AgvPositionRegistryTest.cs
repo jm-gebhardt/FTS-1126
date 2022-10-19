@@ -6,13 +6,9 @@ using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services.AgvPositions
 {
-    /// <summary>
-    /// Tests for AgvPositionRegistry
-    /// </summary>
     [TestClass]
-    public class AgvPositionRegistryTests
+    public class AgvPositionRegistryTest
     {
-        /// <summary/>
         [TestMethod]
         public void UpdatePosition_AddsObject_WhenRegistryIsEmpty()
         {
@@ -31,7 +27,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services.AgvPositions
             positions.First().ShouldBe(agvPositionStatus);
         }
 
-        /// <summary/>
         [TestMethod]
         public void UpdatePosition_StoresNewPosition_WhenRegistryContainsSingleAgv()
         {
@@ -55,7 +50,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services.AgvPositions
             positions.First().ShouldBe(newAgvPositionUpdated);
         }
 
-        /// <summary/>
         [TestMethod]
         public void UpdatePosition_PublishesAgvPositionChangedOnTheBus_WhenTheChangeDetectorReturnsTrue()
         {
@@ -72,7 +66,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services.AgvPositions
                 It.IsAny<CancellationToken>()), Times.Once());
         }
 
-        /// <summary/>
         [TestMethod]
         public void UpdatePosition_DoesNotPublishAgvPositionChangedOnTheBus_WhenTheChangeDetectorReturnsFalse()
         {
@@ -85,7 +78,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services.AgvPositions
             fixture.BusMock.Verify(b => b.Publish(It.IsAny<AgvPositionStatus>(), default), Times.Never);
         }
 
-        /// <summary/>
         [TestMethod]
         public void GetPosition_ReturnsNull_WhenRegistryIsEmpty()
         {

@@ -12,9 +12,6 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Consumers
     [TestClass]
     public class ConfirmHostOrderConsumerSimTest
     {
-        /// <summary>
-        /// Test for processing ExecuteTransportOrder message
-        /// </summary>
         [TestMethod]
         public async Task SimulationConfirmHostOrderConsumerTest()
         {

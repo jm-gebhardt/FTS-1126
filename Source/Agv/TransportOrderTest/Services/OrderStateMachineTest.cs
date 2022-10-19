@@ -1,4 +1,4 @@
-using Gebhardt.StoreWare.Agv.Common.Messages;
+ using Gebhardt.StoreWare.Agv.Common.Messages;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
@@ -18,9 +18,6 @@ using Moq;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 {
-    /// <summary>
-    /// Test class dedicated to the OrderStateMachine
-    /// </summary>
     [TestClass]
     public class OrderStateMachineTest
     {
@@ -154,9 +151,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             Assert.AreEqual(fixture.SagaHarness.StateMachine.AgvRequested.Name, saga.CurrentState);
         }
 
-        /// <summary>
-        /// When HandleHostOrder is received with empty CorrelationId no saga created
-        /// </summary>
         [TestMethod]
         public async Task When_HandleHostOrder_EmptyCorrelationId_NoSagaCreated()
         {
@@ -173,9 +167,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             Assert.IsNull(await fixture.SagaHarness.NotExists(Guid.Empty, TimeSpan.FromMilliseconds(10)));
         }
 
-        /// <summary>
-        /// When HandleHostOrder received with CorrelationId keeps provided CorrelationId
-        /// </summary>
         [TestMethod]
         public async Task When_HandleHostOrderWithCorrelationId_KeepsProvidedCorrelationId()
         {
@@ -196,9 +187,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             orderEventObserver.Verify(s => s.PostExecute(It.IsAny<BehaviorContext<OrderSaga, HandleHostOrder>>()), Times.Once);
         }
 
-        /// <summary>
-        /// When AgvAssignSucceeded received ExecuteTransportOrder requested
-        /// </summary>
         [TestMethod]
         public async Task When_AgvAssignSucceeded_ExecuteTransportOrderRequested()
         {
@@ -236,9 +224,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             orderEventObserver.Verify(s => s.PostExecute(It.IsAny<BehaviorContext<OrderSaga, AgvAssignmentSucceeded>>()), Times.Once);
         }
 
-        /// <summary>
-        /// When AgvAssignmentFailed with NoRouteFound received HostOrderHandlingFailed is published
-        /// </summary>
         [TestMethod]
         public async Task When_AgvAssignmentFailed_NoRouteFound_HostOrderHandlingFailedPublished()
         {
@@ -277,9 +262,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             orderEventObserver.Verify(s => s.PostExecute(It.IsAny<BehaviorContext<OrderSaga, AgvAssignmentFailed>>()), Times.Once);
         }
 
-        /// <summary>
-        /// When AgvAssignmentFailed with NoIdleAgv received HostOrderHandlingFailed is published
-        /// </summary>
         [TestMethod]
         public async Task When_AgvAssignmentFailed_NoFreeAgv_OrderStateIsOrderReceived()
         {
@@ -307,9 +289,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             Assert.AreEqual(fixture.SagaHarness.StateMachine.OrderReceived.Name, orderSaga.CurrentState);
         }
 
-        /// <summary>
-        /// TransportOrderCompleted results in HostOrderHandlingSucceededPublished
-        /// </summary>
         [TestMethod]
         public async Task When_TransportOrderCompleted_HostOrderHandlingSucceededPublished()
         {
@@ -348,9 +327,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             orderEventObserver.Verify(s => s.PostExecute(It.IsAny<BehaviorContext<OrderSaga, TransportOrderCompleted>>()), Times.Once);
         }
 
-        /// <summary>
-        /// TransportOrderFailed results in saga state change to TransportOrderFailed
-        /// </summary>
         [DataRow("TransportOrderSend")]
         [DataRow("TransportOrderPicked")]
         [TestMethod]
@@ -459,9 +435,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             orderEventObserver.Verify(s => s.PostExecute(It.IsAny<BehaviorContext<OrderSaga, TransportOrderPickCompleted>>()), Times.Once);
         }
 
-        /// <summary>
-        /// No HostOrderStarted message is sent after consuming TransportOrderStarted message
-        /// </summary>
         [TestMethod]
         public async Task No_HostOrderStarted_Message_Is_Sent_After_Consuming_TransportOrderStarted()
         {
@@ -542,9 +515,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             Assert.AreEqual(expectedErrorCodeInOrderSaga, saga.FailedReason);
         }
 
-        /// <summary>
-        /// When OrderSaga state has changed check if observer was triggered
-        /// </summary>
         [TestMethod]
         public async Task When_OrderSaga_State_Changed_Trigger_Observer()
         {

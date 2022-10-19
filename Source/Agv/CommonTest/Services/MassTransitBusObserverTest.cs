@@ -11,9 +11,6 @@ namespace Gebhardt.StoreWare.Agv.CommonTest.Services
     [TestClass]
     public class BusObserverTest
     {
-        /// <summary>
-        /// 
-        /// </summary>
         [TestMethod]
         public async Task When_BusStarted_MassTransitBusEventPostStartedIsSent()
         {

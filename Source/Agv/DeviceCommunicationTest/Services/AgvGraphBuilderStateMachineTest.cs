@@ -18,9 +18,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services
     {
         private const string AgvTestIdentifier01 = "#2410#";
 
-        /// <summary>
-        /// Test creation of saga instance.
-        /// </summary>
         [TestMethod]
         public async Task When_RequestAgvGraphReceived_NewAgvGraphBuilderSagaCreated()
         {
@@ -39,9 +36,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services
             Assert.IsNull(saga.AgvGraph);
         }
 
-        /// <summary>
-        /// When_AgvStatusReceived_EmptyCorrelationId_NoSagaCreated
-        /// </summary>
         [TestMethod]
         public async Task When_RequestAgvGraphReceived_EmptyCorrelationId_NoSagaCreated()
         {

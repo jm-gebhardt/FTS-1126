@@ -9,11 +9,8 @@ using Gebhardt.StoreWare.Agv.WCSCommunicationTest.Fixtures;
 
 namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Consumers
 {
-    /// <summary>
-    /// WcsOrderConsumer Tests
-    /// </summary>
     [TestClass]
-    public class WcsOrderConsumer
+    public class WcsOrderConsumerTest
     {
         /// <summary>
         /// Test for processing HostOrderHandlingSucceeded message
@@ -117,9 +114,6 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Consumers
             Assert.AreEqual(assignedAgv, entry.Vehicle);
         }
 
-        /// <summary>
-        /// Test for processing HostOrderStarted message
-        /// </summary>
         [TestMethod]
         [DataRow(RecordType.TransportOrder)]
         [DataRow(RecordType.TransportOrderUpdate)]

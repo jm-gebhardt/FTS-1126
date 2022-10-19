@@ -17,9 +17,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
     {
         private const string AgvTestIdentifier01 = "#2410#";
 
-        /// <summary>
-        /// 
-        /// </summary>
         [TestMethod]
         public async Task When_MassTransitBusEventPostStarted_AgvInitializeMessageSent()
         {

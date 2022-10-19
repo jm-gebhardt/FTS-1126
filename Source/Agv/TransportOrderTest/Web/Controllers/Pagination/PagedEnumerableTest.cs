@@ -3,15 +3,9 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers.Pagination
 {
-    /// <summary>
-    /// Paged Enumerable Test
-    /// </summary>
     [TestClass]
     public class PagedEnumerableTest
     {
-        /// <summary>
-        /// Test_Input_Empty_Output_Empty
-        /// </summary>
         [TestMethod]
         public void Input_Empty_Output_Empty()
         {
@@ -25,9 +19,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers.Pagination
             Assert.IsFalse(enumerable.HasPrevious);
         }
 
-        /// <summary>
-        /// Test_Input_Single_Output_Single
-        /// </summary>
         [TestMethod]
         public void Input_Single_Output_Single()
         {
@@ -42,9 +33,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers.Pagination
             Assert.IsFalse(enumerable.HasPrevious);
         }
 
-        /// <summary>
-        /// Test_ListInput_TwoPages_FirstPage
-        /// </summary>
         [TestMethod]
         public void ListInput_TwoPages_FirstPage()
         {
@@ -59,9 +47,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers.Pagination
             Assert.IsFalse(enumerable.HasPrevious);
             Assert.IsTrue(list.Take(pageSize).SequenceEqual(enumerable));
         }
-        /// <summary>
-        /// ListInput_TwoPages_SecondPage
-        /// </summary>
+
         [TestMethod]
         public void ListInput_TwoPages_SecondPage()
         {
@@ -77,9 +63,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Web.Controllers.Pagination
             Assert.IsTrue(list.Skip(pageSize).SequenceEqual(enumerable));
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
         [TestMethod]
         public void PaginationHeader_Valid()
         {
