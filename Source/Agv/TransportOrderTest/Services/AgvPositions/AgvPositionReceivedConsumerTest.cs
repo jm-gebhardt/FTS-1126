@@ -5,8 +5,9 @@ using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
+using Gebhardt.StoreWare.Agv.TransportOrder.Common.Models;
+using Gebhardt.StoreWare.Agv.TransportOrder.Common.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.Services;
-using Gebhardt.StoreWare.Agv.TransportOrder.Web.Dtos;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services.AgvPositions
 {
@@ -125,8 +126,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services.AgvPositions
             Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvPositionReceived>());
             Assert.IsTrue(await fixture.ConsumerHarness.Consumed.Any<AgvPositionReceived>());
 
-            agvPositionRegistryMock.Verify(h => h.UpdatePosition(It.Is<AgvPositionStatus>(o => o.AgvId == AgvTestIdentifier01 &&
-                                                                                                 o.CorrelationId == AgvTestIdentifier01.ToGuid())), Times.Once);
+            agvPositionRegistryMock.Verify(h => h.UpdatePosition(
+                It.Is<AgvPositionStatus>(o => o.AgvId == AgvTestIdentifier01 && o.CorrelationId == AgvTestIdentifier01.ToGuid())), Times.Once);
         }
     }
 }

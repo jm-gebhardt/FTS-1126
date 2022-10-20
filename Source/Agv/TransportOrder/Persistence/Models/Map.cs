@@ -1,5 +1,5 @@
 ﻿using JetBrains.Annotations;
-using MassTransit;
+using Gebhardt.StoreWare.Agv.TransportOrder.Common.Models;
 
 // ReSharper disable ConvertToPrimaryConstructor
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Models
@@ -7,42 +7,30 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Models
     /// <summary>
     /// class representing the Map table in Database
     /// </summary>
-    public record Map : ISaga
+    public record Map : IMap
     {
         /// <inheritdoc/>
         public Guid CorrelationId { get; set; }
 
-        /// <summary>
-        /// MapId
-        /// </summary>
+        /// <inheritdoc/>
         [UsedImplicitly]
         public string MapId { get; set; }
 
-        /// <summary>
-        /// Map in form bytes
-        /// </summary>
+        /// <inheritdoc/>
         [UsedImplicitly]
         public byte[]? MapValue { get; set; }
 
-        /// <summary>
-        /// Timestamp of last modification
-        /// </summary>
+        /// <inheritdoc/>
         [UsedImplicitly]
         public DateTime ModificationDate { get; set; }
-        
-        /// <summary>
-        /// The resolution of the maps image. Expressed as how many [m] per pixel are represented
-        /// </summary>
+
+        /// <inheritdoc/>
         public double Resolution { get; set; }
-        
-        /// <summary>
-        /// The x offset of the map in [m] where the mapped graph coordinate system starts. . Origin is the left upper corner.
-        /// </summary>
+
+        /// <inheritdoc/>
         public double XOffset { get; set; }
-        
-        /// <summary>
-        /// The y offset of the map in [m] where the mapped graph coordinate system starts. Origin is the left upper corner.
-        /// </summary>
+
+        /// <inheritdoc/>
         public double YOffset { get; set; }
 
         /// <summary>

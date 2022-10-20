@@ -13,9 +13,7 @@ ARG PROJECT
 WORKDIR /app
 
 # Copy project files
-COPY SharedProjectSettings.csproj ./
-COPY Common ./Common/
-COPY ${PROJECT} ./${PROJECT}/
+COPY . .
 
 # Restore
 RUN dotnet restore ${PROJECT}/${PROJECT}.csproj

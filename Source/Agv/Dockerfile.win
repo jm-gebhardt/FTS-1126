@@ -14,9 +14,7 @@ ENV PROJECT=$PROJECT
 WORKDIR c:\\app
 
 # Copy project files
-COPY SharedProjectSettings.csproj .\\
-COPY Common .\\Common\\
-COPY $PROJECT .\\$PROJECT\\
+COPY . .
 
 # Restore
 RUN dotnet restore %PROJECT%\\%PROJECT%.csproj

@@ -1,5 +1,5 @@
 ﻿using MassTransit;
-using Gebhardt.StoreWare.Agv.TransportOrder.Web.Hubs;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs;
 using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Events;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Services

@@ -1,4 +1,9 @@
- using Gebhardt.StoreWare.Agv.Common.Messages;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using MassTransit;
+using MassTransit.Testing;
+using Moq;
+using Gebhardt.StoreWare.Agv.Common.Messages;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
@@ -8,13 +13,9 @@ using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Events;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
+using Gebhardt.StoreWare.Agv.TransportOrder.Common.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.States;
-using MassTransit;
-using MassTransit.Testing;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 {
@@ -463,11 +464,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             Assert.AreEqual(fixture.Machine.TransportOrderSend.Name, saga.CurrentState);
             Assert.IsFalse(await fixture.TestHarness.Published.Any<HostOrderStarted>());
         }
-        
+
         /// <summary>
         /// Checks the outgoing FailedReason strings after consuming the given AgvAssignmentErrorCode
         /// </summary>
-        [DataRow(AgvAssignmentErrorCode.NoIdleAgv,  $"{nameof(AgvAssignmentErrorCode)}.NoIdleAgv")]
+        [DataRow(AgvAssignmentErrorCode.NoIdleAgv, $"{nameof(AgvAssignmentErrorCode)}.NoIdleAgv")]
         [DataRow(AgvAssignmentErrorCode.NoRouteFound, $"{nameof(AgvAssignmentErrorCode)}.NoRouteFound")]
         [TestMethod]
         public async Task AgvAssignmentErrorCode_EnumElements_Corresponds_to_its_string(AgvAssignmentErrorCode sentErrorCode, string expectedErrorCodeInOrderSaga)
@@ -486,9 +487,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvAssignmentFailed>());
             Assert.AreEqual(order.CorrelationId, await fixture.SagaHarness.Exists(order.CorrelationId));
             var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == order.CorrelationId).First().Saga;
-            Assert.AreEqual(expectedErrorCodeInOrderSaga, saga.FailedReason );
+            Assert.AreEqual(expectedErrorCodeInOrderSaga, saga.FailedReason);
         }
-        
+
         /// <summary>
         /// Checks the outgoing FailedReason strings after consuming the given TransportOrderErrorCode
         /// </summary>

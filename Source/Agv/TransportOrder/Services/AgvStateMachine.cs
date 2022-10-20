@@ -1,9 +1,10 @@
+using Microsoft.Extensions.Logging;
+using MassTransit;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
+using Gebhardt.StoreWare.Agv.TransportOrder.Common.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.CmdOptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.States;
-using MassTransit;
-using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
 {
@@ -33,7 +34,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
 
         private readonly ProductionOptions _productionOptions;
 
-
         /// <summary>
         /// Time that has to pass before resending a request telegram in case AgvGraph or AgvData are still null
         /// </summary>
@@ -55,7 +55,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// </summary>
         private readonly int _agvOfflineTimeoutMsWhileBusy = 20000;
 
-
         /// <summary>
         /// Internal message send once durting startup to initialze AGV and start AGV supervision.
         /// </summary>
@@ -69,7 +68,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// <param name="CorrelationId">Inherited</param>
         /// <param name="Created">Timestamp when the scheduled message has been created</param>
         public record AgvOfflineMessage(Guid CorrelationId, DateTime Created) : CorrelatedBy<Guid>;
-
 
         /// <summary>
         /// New AGV discovered by receiving AgvStatusReceived while missing information evaluating the current state of the AGV.
@@ -91,7 +89,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// Busy.
         /// </summary>
         public State Busy { get; private set; } = default!;
-
 
         /// <summary>
         /// Request for AGV initialization
@@ -128,12 +125,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// </summary>
         public Event<AgvMapReceived> AgvMapReceivedEvent { get; private set; } = default!;
 
-
         /// <summary>
         /// Watchdog to detect AGV offline
         /// </summary>
         public Schedule<AgvSaga, AgvOfflineMessage> AgvOfflineWatchdog { get; private set; } = default!;
-
 
         /// <summary>
         /// Constructor of AgvStateMachine
@@ -202,7 +197,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
                     configuration.Received = r => r.CorrelateById(context => context.Message.CorrelationId);
                 });
         }
-
 
         private EventActivityBinder<AgvSaga, AgvInitializeMessage> AgvInitializeMessageHandler() =>
             When(AgvInitializeMessageEvent)

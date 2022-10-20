@@ -1,8 +1,9 @@
-﻿using AutoMapper;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
+using AutoMapper;
 using MassTransit;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
-using Gebhardt.StoreWare.Agv.TransportOrder.Web.Dtos;
+using Gebhardt.StoreWare.Agv.TransportOrder.Common.Models;
+using Gebhardt.StoreWare.Agv.TransportOrder.Common.Services;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
 {

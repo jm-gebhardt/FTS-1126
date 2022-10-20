@@ -740,7 +740,7 @@
           },
           "xOffset": {
             "type": "number",
-            "description": "The x offset of the map in [m] where the mapped graph coordinate system starts. . Origin is the left upper corner.",
+            "description": "The x offset of the map in [m] where the mapped graph coordinate system starts. Origin is the left upper corner.",
             "format": "double"
           },
           "yOffset": {

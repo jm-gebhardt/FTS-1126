@@ -1,6 +1,9 @@
 using System.Globalization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using JetBrains.Annotations;
+using MassTransit;
+using Moq;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.Common.Messages;
@@ -8,11 +11,9 @@ using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Commands;
+using Gebhardt.StoreWare.Agv.TransportOrder.Common.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.States;
-using JetBrains.Annotations;
-using MassTransit;
-using Moq;
 using AssignAgvConsumer = Gebhardt.StoreWare.Agv.TransportOrder.Services.AssignAgvConsumer;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
@@ -291,7 +292,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             // Act
             await fixture.TestHarness.Bus.Publish(new AssignAgv(order.CorrelationId, order));
 
-
             // Assert
             Assert.IsTrue(await fixture.TestHarness.Published.Any<AssignAgv>());
 
@@ -335,7 +335,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             Assert.IsTrue(await fixture.TestHarness.Consumed.Any<AgvBecameIdle>());
             Assert.IsFalse(await fixture.TestHarness.Published.Any<RequestOrderAgvAssign>());
         }
-
 
         /// <summary>
         /// Agv became idle, check if oldest order is assigned
@@ -471,7 +470,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 
             registry.SetupGet(x => x.Count).Returns(agvs.Count);
             registry.SetupGet(x => x.CountIdle).Returns(agvs.Where(x => x.CurrentState == nameof(AgvStateMachine.Idle)).Count);
-            registry.Setup(x => x.GetIdleAgvs()).Returns( new EnumerableQuery<IAgv>(agvs.Where(x => x.CurrentState == nameof(AgvStateMachine.Idle))));
+            registry.Setup(x => x.GetIdleAgvs()).Returns(new EnumerableQuery<IAgv>(agvs.Where(x => x.CurrentState == nameof(AgvStateMachine.Idle))));
             registry.Setup(x => x.GetAllAgvs()).Returns(new EnumerableQuery<IAgv>(agvs));
             registry.Setup(x => x.GetAgv(It.IsAny<Guid>())).Returns<Guid>(correlationId =>
             {

@@ -1,53 +1,55 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
+﻿using MassTransit;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Services.Detectors;
-using Gebhardt.StoreWare.Agv.TransportOrder.Web.Dtos;
-using MassTransit;
+using Gebhardt.StoreWare.Agv.TransportOrder.Common.Services;
+using Gebhardt.StoreWare.Agv.TransportOrder.Common.Models;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Services;
-
-/// <summary>
-/// Handles <see cref="AgvPositionChanged"/> publishing
-/// </summary>
-public abstract class BaseAgvPositionRegistry : IAgvPositionRegistry
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
 {
-    private readonly IBus _bus;
-    private readonly IChangeDetector<AgvPositionStatus> _agvPositionChangeDetector;
-
     /// <summary>
-    /// Constructor
+    /// Handles <see cref="AgvPositionChanged"/> publishing
     /// </summary>
-    /// <param name="bus">The MassTransit bus</param>
-    /// <param name="agvPositionReceivedChangeDetector">The change detector which tells us whether the AgvPositionReceived has changed in the storage</param>
-    protected BaseAgvPositionRegistry(IBus bus, IChangeDetector<AgvPositionStatus> agvPositionReceivedChangeDetector)
+    public abstract class BaseAgvPositionRegistry : IAgvPositionRegistry
     {
-        _bus = bus;
-        _agvPositionChangeDetector = agvPositionReceivedChangeDetector;
-    }
+        private readonly IBus _bus;
+        private readonly IChangeDetector<AgvPositionStatus> _agvPositionChangeDetector;
 
-    /// <inheritdoc />
-    public void UpdatePosition(AgvPositionStatus agvPositionStatus)
-    {
-        var correlationId = agvPositionStatus.CorrelationId;
-        var previousAgvPosition = GetPosition(correlationId);
-
-        UpdateInternal(agvPositionStatus);
-
-        if (_agvPositionChangeDetector.HasChanged(previousAgvPosition, agvPositionStatus))
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="bus">The MassTransit bus</param>
+        /// <param name="agvPositionReceivedChangeDetector">The change detector which tells us whether the AgvPositionReceived has changed in the storage</param>
+        protected BaseAgvPositionRegistry(IBus bus, IChangeDetector<AgvPositionStatus> agvPositionReceivedChangeDetector)
         {
-            var agvPositionChanged = new AgvPositionChanged(agvPositionStatus.AgvPosition, previousAgvPosition?.AgvPosition, agvPositionStatus.AgvId, correlationId);
-            _bus.Publish(agvPositionChanged);
+            _bus = bus;
+            _agvPositionChangeDetector = agvPositionReceivedChangeDetector;
         }
+
+        /// <inheritdoc />
+        public void UpdatePosition(AgvPositionStatus agvPositionStatus)
+        {
+            var correlationId = agvPositionStatus.CorrelationId;
+            var previousAgvPosition = GetPosition(correlationId);
+
+            UpdateInternal(agvPositionStatus);
+
+            if (_agvPositionChangeDetector.HasChanged(previousAgvPosition, agvPositionStatus))
+            {
+                var agvPositionChanged = new AgvPositionChanged(agvPositionStatus.AgvPosition, previousAgvPosition?.AgvPosition, agvPositionStatus.AgvId, correlationId);
+                _bus.Publish(agvPositionChanged);
+            }
+        }
+
+        /// <summary>
+        /// The implementation that updates the stored status
+        /// </summary>
+        /// <param name="agvPositionStatus">The new agv position to</param>
+        protected abstract void UpdateInternal(AgvPositionStatus agvPositionStatus);
+
+        /// <inheritdoc />
+        public abstract AgvPositionStatus? GetPosition(Guid correlationId);
+
+        /// <inheritdoc />
+        public abstract List<AgvPositionStatus> GetAllPositions();
     }
-
-    /// <summary>
-    /// The implementation that updates the stored status
-    /// </summary>
-    /// <param name="agvPositionStatus">The new agv position to</param>
-    protected abstract void UpdateInternal(AgvPositionStatus agvPositionStatus);
-
-    /// <inheritdoc />
-    public abstract AgvPositionStatus? GetPosition(Guid correlationId);
-
-    /// <inheritdoc />
-    public abstract List<AgvPositionStatus> GetAllPositions();
 }

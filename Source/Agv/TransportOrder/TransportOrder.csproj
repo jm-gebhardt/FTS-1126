@@ -7,8 +7,6 @@
     </PropertyGroup>
     <Import Project="..\SharedProjectSettings.csproj" />
     <ItemGroup>
-        <PackageReference Include="AutoMapper" Version="12.0.0" />
-        <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.0" />
         <PackageReference Include="JetBrains.Annotations" Version="2022.1.0" />
         <PackageReference Include="MassTransit.EntityFrameworkCore" Version="8.0.3" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.8" />
@@ -26,10 +24,11 @@
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="CommandLineParser" Version="2.9.1" />
-        <PackageReference Include="SignalRSwaggerGen" Version="3.3.0" />
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\Common\Common.csproj" />
+        <ProjectReference Include="..\TransportOrder.Common\TransportOrder.Common.csproj" />
+        <ProjectReference Include="..\TransportOrder.WebApi\TransportOrder.WebApi.csproj" />
     </ItemGroup>
     <ItemGroup>
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">

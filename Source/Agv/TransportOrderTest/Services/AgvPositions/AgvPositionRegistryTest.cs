@@ -1,5 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
-using Gebhardt.StoreWare.Agv.TransportOrder.Web.Dtos;
+using Gebhardt.StoreWare.Agv.TransportOrder.Common.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;

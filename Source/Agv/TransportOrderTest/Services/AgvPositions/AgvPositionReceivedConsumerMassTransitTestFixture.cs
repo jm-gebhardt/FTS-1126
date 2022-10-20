@@ -1,10 +1,11 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Services.Detectors;
-using Gebhardt.StoreWare.Agv.Common.Testing;
-using Gebhardt.StoreWare.Agv.TransportOrder.Services;
-using Gebhardt.StoreWare.Agv.TransportOrder.Web.Dtos;
-using Gebhardt.StoreWare.Agv.TransportOrder.Web.Hubs;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Moq;
+using Gebhardt.StoreWare.Agv.Common.Services.Detectors;
+using Gebhardt.StoreWare.Agv.Common.Testing;
+using Gebhardt.StoreWare.Agv.TransportOrder.Common.Models;
+using Gebhardt.StoreWare.Agv.TransportOrder.Common.Services;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs;
+using Gebhardt.StoreWare.Agv.TransportOrder.Services;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services.AgvPositions
 {

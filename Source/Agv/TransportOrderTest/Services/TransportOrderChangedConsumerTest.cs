@@ -1,13 +1,13 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Events;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Services;
-using Gebhardt.StoreWare.Agv.TransportOrder.Web.Hubs;
-using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Events;
-using Gebhardt.StoreWare.Agv.TransportOrder.Web.Dtos;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 {

@@ -1,12 +1,13 @@
+using Microsoft.Extensions.Logging;
+using MassTransit;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Events;
+using Gebhardt.StoreWare.Agv.TransportOrder.Common.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.States;
-using MassTransit;
-using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
 {
@@ -89,13 +90,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         public Event<TransportOrderPickCompleted> TransportOrderPickCompletedEvent { get; private set; } = default!;
 
         private readonly ILogger<OrderStateMachine> _logger;
-
         private readonly IAgvRegistry _agvRegistry;
 
         /// <summary>
         /// OrderStateMachine
         /// </summary>
-        public OrderStateMachine(ILogger<OrderStateMachine> logger, IAgvRegistry agvRegistry, IStateObserver<OrderSaga> orderStateObserver,  IEventObserver<OrderSaga> orderEventObserver)
+        public OrderStateMachine(ILogger<OrderStateMachine> logger, IAgvRegistry agvRegistry, IStateObserver<OrderSaga> orderStateObserver, IEventObserver<OrderSaga> orderEventObserver)
         {
             _logger = logger;
             _agvRegistry = agvRegistry;
@@ -238,7 +238,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         private EventActivityBinder<OrderSaga, TransportOrderFailed> SetTransportOrderFailedHandler() =>
             When(TransportOrderFailedEvent)
                 .Then(c =>
-                    _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId}", nameof(TransportOrderFailed),  c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId)
+                    _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId}", nameof(TransportOrderFailed), c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId)
                  )
                 .Publish(c => new HostOrderHandlingFailed(c.Saga.CorrelationId, c.Saga.OrderDetails.OrderId, HostOrderErrorCode.Any))
                 .TransitionTo(OrderFailed)

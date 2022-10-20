@@ -1,7 +1,7 @@
 using MassTransit;
 using Gebhardt.StoreWare.Agv.TransportOrder.States;
-using Gebhardt.StoreWare.Agv.TransportOrder.Web.Hubs;
-using Gebhardt.StoreWare.Agv.TransportOrder.Web;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
 {

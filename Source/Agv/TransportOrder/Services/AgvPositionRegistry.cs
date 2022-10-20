@@ -1,7 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using MassTransit;
 using Gebhardt.StoreWare.Agv.Common.Services.Detectors;
-using Gebhardt.StoreWare.Agv.TransportOrder.Web.Dtos;
+using Gebhardt.StoreWare.Agv.TransportOrder.Common.Models;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
 {

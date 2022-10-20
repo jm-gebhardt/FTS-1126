@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using MassTransit;
 using Gebhardt.StoreWare.Agv.Common.Messages;
+using Gebhardt.StoreWare.Agv.TransportOrder.Common.Services;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
 {
@@ -11,12 +12,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
     public class AgvInitializer : IConsumer<MassTransitBusEvent>
     {
         private readonly ILogger<AgvInitializer> _logger;
-
         private readonly IAgvRegistry _agvRegistry;
-
         private readonly IBus _bus;
-
-
 
         /// <summary>
         /// Constructor

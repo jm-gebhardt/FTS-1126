@@ -5,10 +5,10 @@ using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
+using Gebhardt.StoreWare.Agv.TransportOrder.Common.Models;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Services;
-using Gebhardt.StoreWare.Agv.TransportOrder.Web;
-using Gebhardt.StoreWare.Agv.TransportOrder.Web.Dtos;
-using Gebhardt.StoreWare.Agv.TransportOrder.Web.Hubs;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services.AgvPositions
 {

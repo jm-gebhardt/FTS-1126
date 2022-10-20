@@ -2,9 +2,9 @@
 using Microsoft.Extensions.Logging;
 using MassTransit;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
-using Gebhardt.StoreWare.Agv.TransportOrder.Web.Hubs;
-using Gebhardt.StoreWare.Agv.TransportOrder.Web;
-using Gebhardt.StoreWare.Agv.TransportOrder.Web.Dtos;
+using Gebhardt.StoreWare.Agv.TransportOrder.Common.Models;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
 {

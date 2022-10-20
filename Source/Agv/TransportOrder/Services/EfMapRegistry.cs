@@ -1,7 +1,9 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Persistence;
-using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Models;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Gebhardt.StoreWare.Agv.TransportOrder.Common.Services;
+using Gebhardt.StoreWare.Agv.TransportOrder.Persistence;
+using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Models;
+using Gebhardt.StoreWare.Agv.TransportOrder.Common.Models;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
 {
@@ -30,7 +32,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
                 .AsNoTracking(); // No need to track changes
 
         /// <inheritdoc/>
-        public IQueryable<Map> GetAllMaps()
+        public IQueryable<IMap> GetAllMaps()
         {
             return Maps;
         }

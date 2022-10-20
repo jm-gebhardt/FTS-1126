@@ -6,6 +6,7 @@ using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Definitions;
 using Gebhardt.StoreWare.Agv.Common.Messages;
 using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Commands;
+using Gebhardt.StoreWare.Agv.TransportOrder.Common.Services;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
 {
@@ -48,7 +49,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
             if (assignAgvAndRoute == null)
             {
                 var error = CheckRouteExists<AStar>(context.Message.Order) ? AgvAssignmentErrorCode.NoIdleAgv : AgvAssignmentErrorCode.NoRouteFound;
-                
+
                 if (_agvRegistry.Count == 0 && error == AgvAssignmentErrorCode.NoRouteFound)
                 {
                     error = AgvAssignmentErrorCode.AgvRegistryEmpty;

@@ -1,2 +1,5 @@
 **/bin
 **/obj
+NuGet.Config
+Dockerfile
+Dockerfile.win
