@@ -48,11 +48,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
             var fixture = new MassTransitTestFixture<RequestAgvMapConsumer>();
 
             // Act
-            await fixture.TestHarness.Bus.Publish(new RequestAgvMap(AgvId.ToGuid(), AgvId, MapId.ToGuid(), MapId));
+            await fixture.TestHarness!.Bus.Publish(new RequestAgvMap(AgvId.ToGuid(), AgvId, MapId.ToGuid(), MapId));
 
             // Assert
             Assert.IsTrue(await fixture.TestHarness.Published.Any<RequestAgvMap>());
-            Assert.IsTrue(await fixture.ConsumerHarness.Consumed.Any<RequestAgvMap>());
+            Assert.IsTrue(await fixture.ConsumerHarness!.Consumed.Any<RequestAgvMap>());
 
             Assert.IsTrue(await fixture.TestHarness.Published.Any<MqttRequestMap>());
             var message = fixture.TestHarness.Published.Select<MqttRequestMap>().First().Context.Message;

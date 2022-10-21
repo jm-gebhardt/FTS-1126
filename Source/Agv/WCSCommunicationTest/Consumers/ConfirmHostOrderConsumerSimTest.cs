@@ -20,12 +20,12 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Consumers
             string orderId = "TestOrder123";
             var correlationId = orderId.ToGuid();
 
-            await fixture.TestHarness.Bus.Publish(new HostOrderHandlingSucceeded(correlationId, orderId));
+            await fixture.TestHarness!.Bus.Publish(new HostOrderHandlingSucceeded(correlationId, orderId));
 
             Assert.IsTrue(await fixture.TestHarness.Published.Any<HostOrderHandlingSucceeded>());
             Assert.IsTrue(await fixture.TestHarness.Consumed.Any<HostOrderHandlingSucceeded>());
 
-            var message = fixture.ConsumerHarness.Consumed.Select<HostOrderHandlingSucceeded>().First().Context.Message;
+            var message = fixture.ConsumerHarness!.Consumed.Select<HostOrderHandlingSucceeded>().First().Context.Message;
 
             Assert.AreEqual(correlationId, message.CorrelationId);
             Assert.AreEqual(orderId, message.OrderId);

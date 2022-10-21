@@ -37,7 +37,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                 }
             );
 
-            await fixture.TestHarness.Bus.Publish(new MassTransitBusEvent(MassTransitBusEvent.EventType.PostStarted));
+            await fixture.TestHarness!.Bus.Publish(new MassTransitBusEvent(MassTransitBusEvent.EventType.PostStarted));
             Assert.IsTrue(await fixture.TestHarness.Published.Any<MassTransitBusEvent>());
             Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvStateMachine.AgvInitializeMessage>());
         }

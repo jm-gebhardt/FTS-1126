@@ -24,15 +24,17 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Fixtures
         /// <param name="services">Configure IServiceCollection</param>
         /// <param name="busRegistrationConfigurator">Configure IBusRegistrationConfigurator</param>
         public EfConsumerTestFixture(Action<IServiceCollection>? services = null, Action<IBusRegistrationConfigurator>? busRegistrationConfigurator = null) :
-            base(s =>
-            {
-                s.AddDbContextFactory<TDbContext>(options =>
-                    options.UseInMemoryDatabase(Guid.NewGuid().ToString())
-                );
-                services?.Invoke(s);
-            }, busRegistrationConfigurator)
+            base(busRegistrationConfigurator,
+                null,
+                s =>
+                {
+                    s.AddDbContextFactory<TDbContext>(options =>
+                        options.UseInMemoryDatabase(Guid.NewGuid().ToString())
+                    );
+                    services?.Invoke(s);
+                })
         {
-            DbContextFactory = Provider.GetService<IDbContextFactory<TDbContext>>()!;
+            DbContextFactory = Provider!.GetService<IDbContextFactory<TDbContext>>()!;
             EnsureDbCreated();
         }
 

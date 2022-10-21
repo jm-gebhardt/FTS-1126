@@ -1,13 +1,11 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
-using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.TransportOrder.Common.Models;
 using Gebhardt.StoreWare.Agv.TransportOrder.Common.Services;
-using Gebhardt.StoreWare.Agv.TransportOrder.Services;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services.AgvPositions
 {
@@ -28,7 +26,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services.AgvPositions
         {
             var fixture = new AgvPositionReceivedConsumerMassTransitTestFixture();
 
-            await fixture.TestHarness.Bus.Publish(
+            await fixture.TestHarness!.Bus.Publish(
                 new AgvPositionReceived(
                     AgvTestIdentifier01.ToGuid(),
                     AgvTestIdentifier01,
@@ -36,9 +34,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services.AgvPositions
                 ));
 
             Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvPositionReceived>());
-            Assert.IsTrue(await fixture.ConsumerHarness.Consumed.Any<AgvPositionReceived>());
+            Assert.IsTrue(await fixture.ConsumerHarness!.Consumed.Any<AgvPositionReceived>());
 
-            var registry = fixture.Provider.GetRequiredService<IAgvPositionRegistry>();
+            var registry = fixture.Provider!.GetRequiredService<IAgvPositionRegistry>();
             Assert.IsNotNull(registry);
 
             var position = registry.GetPosition(Guid.Empty);
@@ -65,7 +63,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services.AgvPositions
 
             var fixture = new AgvPositionReceivedConsumerMassTransitTestFixture();
 
-            await fixture.TestHarness.Bus.Publish(
+            await fixture.TestHarness!.Bus.Publish(
                 new AgvPositionReceived(
                     AgvTestIdentifier01.ToGuid(),
                     AgvTestIdentifier01,
@@ -79,9 +77,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services.AgvPositions
                 ));
 
             Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvPositionReceived>());
-            Assert.AreEqual(2, fixture.ConsumerHarness.Consumed.Select<AgvPositionReceived>().Count());
+            Assert.AreEqual(2, fixture.ConsumerHarness!.Consumed.Select<AgvPositionReceived>().Count());
 
-            var registry = fixture.Provider.GetRequiredService<IAgvPositionRegistry>();
+            var registry = fixture.Provider!.GetRequiredService<IAgvPositionRegistry>();
             Assert.IsNotNull(registry);
 
             var position = registry.GetPosition(AgvTestIdentifier01.ToGuid());
@@ -108,15 +106,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services.AgvPositions
         [TestMethod]
         public async Task AgvPositionReceived_Consumed()
         {
-            var agvPositionRegistryMock = new Mock<IAgvPositionRegistry>();
+            var fixture = new AgvPositionReceivedConsumerMassTransitTestFixture()
+                .UseAgvPositionRegistryMock()
+                .Build();
 
-            var fixture = new MassTransitTestFixture<AgvPositionReceivedConsumer>(services =>
-            {
-                services.AddSingleton(agvPositionRegistryMock.Object);
-                services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-            });
+            Mock<IAgvPositionRegistry> agvPositionRegistryMock = fixture.AgvPositionRegistryMock!;
 
-            await fixture.TestHarness.Bus.Publish(
+            await fixture.TestHarness!.Bus.Publish(
                 new AgvPositionReceived(
                     AgvTestIdentifier01.ToGuid(),
                     AgvTestIdentifier01,
@@ -124,7 +120,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services.AgvPositions
                 ));
 
             Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvPositionReceived>());
-            Assert.IsTrue(await fixture.ConsumerHarness.Consumed.Any<AgvPositionReceived>());
+            Assert.IsTrue(await fixture.ConsumerHarness!.Consumed.Any<AgvPositionReceived>());
 
             agvPositionRegistryMock.Verify(h => h.UpdatePosition(
                 It.Is<AgvPositionStatus>(o => o.AgvId == AgvTestIdentifier01 && o.CorrelationId == AgvTestIdentifier01.ToGuid())), Times.Once);

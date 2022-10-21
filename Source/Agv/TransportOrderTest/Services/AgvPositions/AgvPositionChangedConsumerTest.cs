@@ -27,7 +27,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services.AgvPositions
                 services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
             });
 
-            await fixture.TestHarness.Bus.Publish(
+            await fixture.TestHarness!.Bus.Publish(
                 new AgvPositionChanged(
                     new AgvPosition(false, 0, 0, 0, 0),
                     null,
@@ -36,7 +36,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services.AgvPositions
                 ));
 
             Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvPositionChanged>());
-            Assert.IsTrue(await fixture.ConsumerHarness.Consumed.Any<AgvPositionChanged>());
+            Assert.IsTrue(await fixture.ConsumerHarness!.Consumed.Any<AgvPositionChanged>());
 
             const string method = nameof(Defines.HubMethods.AgvPositionChanged);
             mockHub.Verify(h => h.SendAgvPositionToAllClients(method, It.Is<AgvPositionStatus>(o => o.AgvId == AgvId), It.IsAny<CancellationToken>()), Times.Once);

@@ -23,11 +23,11 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Consumers
             string orderId = "TestOrder123";
             var correlationId = orderId.ToGuid();
 
-            await fixture.TestHarness.Bus.Publish(new HostOrderHandlingSucceeded(correlationId, orderId));
+            await fixture.TestHarness!.Bus.Publish(new HostOrderHandlingSucceeded(correlationId, orderId));
 
             Assert.IsTrue(await fixture.TestHarness.Published.Any<HostOrderHandlingSucceeded>());
 
-            var message = fixture.ConsumerHarness.Consumed.Select<HostOrderHandlingSucceeded>().First().Context.Message;
+            var message = fixture.ConsumerHarness!.Consumed.Select<HostOrderHandlingSucceeded>().First().Context.Message;
             Assert.AreEqual(correlationId, message.CorrelationId);
             Assert.AreEqual(orderId, message.OrderId);
 
@@ -55,11 +55,11 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Consumers
             await context.SaveChangesAsync();
             var correlationId = latestOrder.OrderId.ToGuid();
 
-            await fixture.TestHarness.Bus.Publish(new HostOrderHandlingSucceeded(correlationId, latestOrder.OrderId));
+            await fixture.TestHarness!.Bus.Publish(new HostOrderHandlingSucceeded(correlationId, latestOrder.OrderId));
 
             Assert.IsTrue(await fixture.TestHarness.Published.Any<HostOrderHandlingSucceeded>());
 
-            var message = fixture.ConsumerHarness.Consumed.Select<HostOrderHandlingSucceeded>().First().Context.Message;
+            var message = fixture.ConsumerHarness!.Consumed.Select<HostOrderHandlingSucceeded>().First().Context.Message;
             Assert.AreEqual(correlationId, message.CorrelationId);
             Assert.AreEqual(latestOrder.OrderId, message.OrderId);
 
@@ -95,11 +95,11 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Consumers
             string assignedAgv = "AGV1";
             var correlationId = latestOrder.OrderId.ToGuid();
 
-            await fixture.TestHarness.Bus.Publish(new HostOrderStarted(correlationId, latestOrder.OrderId, assignedAgv));
+            await fixture.TestHarness!.Bus.Publish(new HostOrderStarted(correlationId, latestOrder.OrderId, assignedAgv));
 
             Assert.IsTrue(await fixture.TestHarness.Published.Any<HostOrderStarted>());
 
-            var message = fixture.ConsumerHarness.Consumed.Select<HostOrderStarted>().First().Context.Message;
+            var message = fixture.ConsumerHarness!.Consumed.Select<HostOrderStarted>().First().Context.Message;
             Assert.AreEqual(correlationId, message.CorrelationId);
             Assert.AreEqual(latestOrder.OrderId, message.OrderId);
 
@@ -132,11 +132,11 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Consumers
 
             var correlationId = latestOrder.OrderId.ToGuid();
 
-            await fixture.TestHarness.Bus.Publish(new HostOrderHandlingFailed(correlationId, latestOrder.OrderId, HostOrderErrorCode.OrderAlreadyStarted));
+            await fixture.TestHarness!.Bus.Publish(new HostOrderHandlingFailed(correlationId, latestOrder.OrderId, HostOrderErrorCode.OrderAlreadyStarted));
 
             Assert.IsTrue(await fixture.TestHarness.Published.Any<HostOrderHandlingFailed>());
 
-            var message = fixture.ConsumerHarness.Consumed.Select<HostOrderHandlingFailed>().First().Context.Message;
+            var message = fixture.ConsumerHarness!.Consumed.Select<HostOrderHandlingFailed>().First().Context.Message;
             Assert.AreEqual(correlationId, message.CorrelationId);
             Assert.AreEqual(latestOrder.OrderId, message.OrderId);
 
