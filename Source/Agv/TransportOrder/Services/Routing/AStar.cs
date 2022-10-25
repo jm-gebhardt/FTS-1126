@@ -1,14 +1,14 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Definitions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.TransportOrder.Common.Services.Routing;
 
-
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Services.Routing
 {
     /// <summary>
     /// A* algorithm.
     /// </summary>
     [JetBrains.Annotations.PublicAPI]
-    public class AStar : IGraphAlgorithm
+    public class AStar : BaseGraphAlgorithm
     {
         /// <summary>
         /// Node extended with properties required for A* calculation.
@@ -20,7 +20,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// <para>
         /// f(x) = g(x) + h(x)
         /// </para><para>
-        /// <see cref="ANode.F"/> = <see cref="ANode.G"/> + <see cref="ANode.H"/>
+        /// <see cref="F"/> = <see cref="G"/> + <see cref="H"/>
         /// </para></remarks>
         private class ANode
         {
@@ -75,37 +75,23 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
             public override string ToString() => $"{Node.Id} [{Predecessor}, F({F}) = G({G}) + H({H})]";
         }
 
-        /// <summary>List of edges coming from the AGV graph.</summary>
-        private AgvGraph.Edge[] _edges;
-
-        /// <summary>List of nodes build from the AGV graph.</summary>
-        private Dictionary<string, ANode> _nodes;
-
         /// <summary>List of nodes currently processing.</summary>
-        private Dictionary<string, ANode> _openList; // Should be a PriorityQueue<node, float> but we need to update the sorting attribute.
-        
-        /// <summary>List of nodes already checked.</summary>
-        private SortedSet<string> _closedList;
+        private Dictionary<string, ANode> _openList = new(); // Should be a PriorityQueue<node, float> but we need to update the sorting attribute.
 
+        /// <summary>List of nodes already checked.</summary>
+        private SortedSet<string> _closedList = new();
+
+        private readonly Dictionary<string, ANode> _nodes;
 
         /// <summary>
         /// A* implementation.
         /// </summary>
         /// <param name="agvGraph"></param>
-        public AStar(AgvGraph agvGraph)
+        /// <param name="routingPlausibilityChecker">The checker to use for the check in the base implementation</param>
+        public AStar(AgvGraph agvGraph, IRoutingPlausibilityChecker routingPlausibilityChecker) : base(agvGraph, routingPlausibilityChecker)
         {
-            _edges = agvGraph.Edges;
-
-            _nodes = new Dictionary<string, ANode>();
-            foreach(var node in agvGraph.Nodes)
-            {
-                _nodes.Add(node.Id, new ANode(node));
-            }
-
-            _openList = new Dictionary<string, ANode>();
-            _closedList = new SortedSet<string>();
+            _nodes = agvGraph.Nodes.ToDictionary(n => n.Id, n => new ANode(n));
         }
-
 
         /// <summary>
         /// Calculate distance between two nodes.
@@ -130,7 +116,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         private ANode? GetAndRemoveMin()
         {
             ANode? min = null;
-            foreach(KeyValuePair<string, ANode> kvp in _openList)
+            foreach (KeyValuePair<string, ANode> kvp in _openList)
             {
                 if (min == null || kvp.Value.F < min.F)
                 {
@@ -152,7 +138,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// <param name="destination"></param>
         private void ExpandNode(ANode current, ANode destination)
         {
-            foreach (var edge in _edges.Where(x => x.From == current.Node.Id))
+            foreach (var edge in Edges.Where(x => x.From == current.Node.Id))
             {
                 if (_closedList.Any(x => x == edge.To))
                 {
@@ -181,24 +167,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
                 }
             }
         }
-        
-        /// <summary>
-        /// Calculate best route from <paramref name="source"/> to <paramref name="destination"/>.
-        /// </summary>
-        /// <param name="source">Node ID of the source.</param>
-        /// <param name="destination">Node ID of the destination.</param>
-        /// <returns>Returns the route as a comparable value or null when no path found.</returns>
-        public IGraphAlgorithm.Route? CalculateRoute(string source, string destination)
+
+        /// <inheritdoc/>>
+        protected override IGraphAlgorithm.Route? CalculateRouteInternal(string source, string destination)
         {
             _openList.Clear();
             _closedList.Clear();
             _nodes.Values.ToList().ForEach(x => x.Reset());
-            
-            if (!_nodes.ContainsKey(source) || !_nodes.ContainsKey(destination))
-            {
-                return null;
-            }
-            
+
             var start = _nodes[source];
             var end = _nodes[destination];
 
@@ -224,9 +200,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
 
             if (end.Predecessor != "")
             {
-                var route = new List<string> {end.Node.Id};
+                var route = new List<string> { end.Node.Id };
                 current = end;
-                
+
                 // Write path found.
                 while (current.Node.Id != source)
                 {
@@ -242,33 +218,5 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
             return null;
         }
 
-        /// <summary>
-        /// Calculate best route from <paramref name="currentNode"/> to <paramref name="destination"/> via <paramref name="source"/>.
-        /// </summary>
-        /// <param name="currentNode">Node ID of the current position.</param>
-        /// <param name="source">Node ID of the source.</param>
-        /// <param name="destination">Node ID of the destination.</param>
-        /// <returns>Returns the route as a comparable value or null when no path found.</returns>
-        /// <exception cref="KeyNotFoundException">Source or destination node not found.</exception>
-        public IGraphAlgorithm.Route? CalculateRoute(string currentNode, string source, string destination)
-        {
-            // Get route to source
-            var routeToSource = CalculateRoute(currentNode, source);
-
-            if (routeToSource == null)
-            {
-                return null;
-            }
-            // Get route from source to destination
-            var route = CalculateRoute(source, destination);
-            
-            if (route == null)
-            {
-                return null;
-            }
-            
-            // Return combined routes
-            return routeToSource + route;
-        }
     }
 }

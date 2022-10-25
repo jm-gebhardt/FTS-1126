@@ -7,6 +7,8 @@ using Gebhardt.StoreWare.Agv.Common.Definitions;
 using Gebhardt.StoreWare.Agv.Common.Messages;
 using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Commands;
 using Gebhardt.StoreWare.Agv.TransportOrder.Common.Services;
+using Gebhardt.StoreWare.Agv.TransportOrder.Services.Routing;
+using Gebhardt.StoreWare.Agv.TransportOrder.Common.Services.Routing;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
 {
@@ -19,6 +21,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         private readonly ILogger<AssignAgvConsumer> _logger;
         private readonly IAgvRegistry _agvRegistry;
         private readonly IRequestClient<ReserveAgv> _client;
+        private readonly IRoutingPlausibilityChecker _routingPlausibilityChecker;
         private readonly IOrderRegistry _orderRegistry;
 
         /// <summary>
@@ -27,11 +30,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         public AssignAgvConsumer(ILogger<AssignAgvConsumer> logger,
             IAgvRegistry agvRegistry,
             IOrderRegistry orderRegistry,
-            IRequestClient<ReserveAgv> client)
+            IRequestClient<ReserveAgv> client,
+            IRoutingPlausibilityChecker routingPlausibilityChecker)
         {
             _logger = logger;
             _agvRegistry = agvRegistry;
             _client = client;
+            _routingPlausibilityChecker = routingPlausibilityChecker;
             _orderRegistry = orderRegistry;
         }
 
@@ -80,7 +85,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// <returns>Returns AGV and available route when reservable AGV found otherwise returns null</returns>
         private async Task<KeyValuePair<IAgv, IGraphAlgorithm.Route>?> AssignIdleAgv<TGraphAlgorithm>(OrderDetails order, CancellationToken cancellationToken) where TGraphAlgorithm : IGraphAlgorithm
         {
-            var agvChooser = new AgvChooser<TGraphAlgorithm>();
+            var agvChooser = new AgvChooser<TGraphAlgorithm>(_routingPlausibilityChecker);
             IAgv? assignedAgv = null;
             IGraphAlgorithm.Route? route = null;
 
@@ -143,7 +148,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// <returns></returns>
         private bool CheckRouteExists<TGraphAlgorithm>(OrderDetails order) where TGraphAlgorithm : IGraphAlgorithm
         {
-            var agvChooser = new AgvChooser<TGraphAlgorithm>();
+            var agvChooser = new AgvChooser<TGraphAlgorithm>(_routingPlausibilityChecker);
             IEnumerable<IAgv> agvs = _agvRegistry.GetAllAgvs()
                 .Where(agv => agv.AgvGraph != null);
 
@@ -157,7 +162,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// <returns></returns>
         public async Task Consume(ConsumeContext<AgvBecameIdle> context)
         {
-            var agvChooser = new AgvChooser<AStar>();
+            var agvChooser = new AgvChooser<AStar>(_routingPlausibilityChecker);
             var agv = _agvRegistry.GetAgv(context.Message.CorrelationId);
             if (agv == null)
             {

@@ -89,8 +89,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             var agvGraph = new AgvGraph(Guid.Empty,
                 new[]
                 {
-                    new AgvGraph.Node("node01"){ Enabled = true, Type = AgvGraph.NodeType.Station, X = 0f, Y = 0f, Z = 0f},
-                    new AgvGraph.Node("node02"){ Enabled = true, Type = AgvGraph.NodeType.Station, X = 4f, Y = 0f, Z = 0f}
+                    new AgvGraph.Node("node01"){ Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 0f, Z = 0f},
+                    new AgvGraph.Node("node02"){ Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 4f, Y = 0f, Z = 0f}
                 }, new[]
                 {
                     new AgvGraph.Edge("node01", "node02"){ Metric = 4f}

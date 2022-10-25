@@ -15,8 +15,10 @@ using Gebhardt.StoreWare.Agv.Common.Services.Detectors;
 using Gebhardt.StoreWare.Agv.TransportOrder.Common.Models;
 using Gebhardt.StoreWare.Agv.TransportOrder.Common.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.CmdOptions;
+using Gebhardt.StoreWare.Agv.TransportOrder.Common.Services.Routing;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence;
 using Gebhardt.StoreWare.Agv.TransportOrder.Services;
+using Gebhardt.StoreWare.Agv.TransportOrder.Services.Routing;
 using Gebhardt.StoreWare.Agv.TransportOrder.States;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi;
@@ -59,6 +61,7 @@ try
                     services.AddSingleton<IStateObserver<AgvSaga>, AgvStateObserver>();
                     services.AddSingleton<IAgvPositionRegistry, AgvPositionRegistry>();
                     services.AddSingleton<IChangeDetector<AgvPositionStatus>, ChangeDetector<AgvPositionStatus>>();
+                    services.AddSingleton<IRoutingPlausibilityChecker, RoutingPlausibilityChecker>();
 
                     // Scopes
                     services.AddScoped(_ => productionOptions);

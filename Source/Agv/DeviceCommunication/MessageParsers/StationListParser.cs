@@ -100,7 +100,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
                         bool added = additionalNodes.Add(new(station.Identifier)
                         {
                             Enabled = true,
-                            Type = AgvGraph.NodeType.Station,
+                            Type = AgvGraph.NodeType.PickDrop,
                             X = station.Position.X,
                             Y = station.Position.Y,
                             Z = 0f

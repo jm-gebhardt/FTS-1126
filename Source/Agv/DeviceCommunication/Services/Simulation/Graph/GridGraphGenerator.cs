@@ -149,7 +149,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph
                 var gridNode = _gridNodes[index];
                 _otherNodes.Add(new AgvGraph.Node(nodeId)
                 {
-                    Type = AgvGraph.NodeType.Station,
+                    Type = AgvGraph.NodeType.Pick,
                     X = gridNode.X,
                     Y = gridNode.Y - OriginYOffset / 2
                 });
@@ -168,7 +168,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph
                 var gridNode = _gridNodes[_gridNodes.Count - index - 1];
                 _otherNodes.Add(new AgvGraph.Node(nodeId)
                 {
-                    Type = AgvGraph.NodeType.Station,
+                    Type = AgvGraph.NodeType.Drop,
                     X = gridNode.X,
                     Y = gridNode.Y + OriginYOffset / 2
                 });

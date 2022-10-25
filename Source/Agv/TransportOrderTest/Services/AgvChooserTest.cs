@@ -4,6 +4,9 @@ using Gebhardt.StoreWare.Agv.Common.Messages;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Services;
+using Gebhardt.StoreWare.Agv.TransportOrder.Services.Routing;
+using Gebhardt.StoreWare.Agv.TransportOrder.Common.Services.Routing;
+using Moq;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 {
@@ -34,7 +37,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         {
             return new IGraphAlgorithm.Route(
                 costs: _random.NextSingle(),
-                nodes: new [] {source, destination}
+                nodes: new[] { source, destination }
             );
         }
 
@@ -50,7 +53,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             var route = CalculateRoute(source, destination);
             return new IGraphAlgorithm.Route(
                 costs: 2f * route.Costs,
-                nodes: new [] {currentNode}.Concat(route.Nodes).ToArray()
+                nodes: new[] { currentNode }.Concat(route.Nodes).ToArray()
             );
         }
     }
@@ -78,7 +81,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         /// <returns></returns>
         public IGraphAlgorithm.Route CalculateRoute(string source, string destination)
         {
-            return new IGraphAlgorithm.Route( 0f, new [] {source, destination} );
+            return new IGraphAlgorithm.Route(0f, new[] { source, destination });
         }
 
         /// <summary>
@@ -90,7 +93,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         /// <returns></returns>
         public IGraphAlgorithm.Route CalculateRoute(string currentNode, string source, string destination)
         {
-            return new IGraphAlgorithm.Route( 0f, new [] {currentNode, source, destination} );
+            return new IGraphAlgorithm.Route(0f, new[] { currentNode, source, destination });
         }
     }
 
@@ -103,7 +106,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         /// <summary>
         /// This algorithm has no fitting constructor.
         /// </summary>
-        public FailingAlgorithm(AgvGraph graph)
+        public FailingAlgorithm(AgvGraph graph, IRoutingPlausibilityChecker routingPlausibilityChecker)
         {
             if (graph != null)
             {
@@ -119,7 +122,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         /// <returns></returns>
         public IGraphAlgorithm.Route CalculateRoute(string source, string destination)
         {
-            return new IGraphAlgorithm.Route(0f, new []{source, destination});
+            return new IGraphAlgorithm.Route(0f, new[] { source, destination });
         }
 
         /// <summary>
@@ -131,7 +134,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         /// <returns></returns>
         public IGraphAlgorithm.Route CalculateRoute(string currentNode, string source, string destination)
         {
-            return new IGraphAlgorithm.Route(0f, new []{currentNode, source, destination});
+            return new IGraphAlgorithm.Route(0f, new[] { currentNode, source, destination });
         }
     }
 
@@ -145,6 +148,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         private readonly AgvGraph? _graphWikipedia;
         private readonly AgvGraph? _graphWikipediaFast;
         private readonly OrderDetails? _dummyOrder;
+        private readonly Mock<IRoutingPlausibilityChecker> _routingPlausibilityCheckerMock;
+        private IRoutingPlausibilityChecker RoutingPlausibilityChecker => _routingPlausibilityCheckerMock.Object;
 
         /// <summary>
         /// Test initialization.
@@ -153,15 +158,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         {
             var nodes = new[]
                 {
-                    new AgvGraph.Node("Saarbrücken") { Enabled = true, Type = AgvGraph.NodeType.Station, X = 0f, Y = 0f, Z = 0f },
-                    new AgvGraph.Node("Kaiserslautern") { Enabled = true, Type = AgvGraph.NodeType.Station, X = 42f, Y = 80f, Z = 0f },
-                    new AgvGraph.Node("Frankfurt") { Enabled = true, Type = AgvGraph.NodeType.Station, X = 104f, Y = 100f, Z = 0f },
-                    new AgvGraph.Node("Ludwigshafen") { Enabled = true, Type = AgvGraph.NodeType.Station, X = 96f, Y = 60f, Z = 0f },
-                    new AgvGraph.Node("Karlsruhe") { Enabled = true, Type = AgvGraph.NodeType.Station, X = 104f, Y = -10f, Z = 0f },
-                    new AgvGraph.Node("Heilbronn") { Enabled = true, Type = AgvGraph.NodeType.Station, X = 150f, Y = 20f, Z = 0f },
-                    new AgvGraph.Node("Würzburg") { Enabled = true, Type = AgvGraph.NodeType.Station, X = 200f, Y = 92f, Z = 0f },
+                    new AgvGraph.Node("Saarbrücken") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 0f, Z = 0f },
+                    new AgvGraph.Node("Kaiserslautern") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 42f, Y = 80f, Z = 0f },
+                    new AgvGraph.Node("Frankfurt") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 104f, Y = 100f, Z = 0f },
+                    new AgvGraph.Node("Ludwigshafen") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 96f, Y = 60f, Z = 0f },
+                    new AgvGraph.Node("Karlsruhe") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 104f, Y = -10f, Z = 0f },
+                    new AgvGraph.Node("Heilbronn") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 150f, Y = 20f, Z = 0f },
+                    new AgvGraph.Node("Würzburg") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 200f, Y = 92f, Z = 0f },
                     // We extend the graph with a non reachable node.
-                    new AgvGraph.Node("NoWhere") { Enabled = true, Type = AgvGraph.NodeType.Station, X = 210f, Y = -50f, Z = 0f }
+                    new AgvGraph.Node("NoWhere") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 210f, Y = -50f, Z = 0f }
                 };
             var edges = new[]
             {
@@ -205,6 +210,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                 leNo: "dummy",
                 creator: HostOrderCreator.Simulation
             );
+
+            _routingPlausibilityCheckerMock = new Mock<IRoutingPlausibilityChecker>();
+            _routingPlausibilityCheckerMock.Setup(c => c.IsPlausible(It.IsAny<AgvGraph.Node>(), It.IsAny<AgvGraph.Node>()))
+                .Returns(true);
         }
 
 
@@ -214,7 +223,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         [TestMethod]
         public void CallChooser_WithEmptyEnumeration_Returns_Null()
         {
-            var chooser = new AgvChooser<RandomGraphAlgorithm>();
+            var chooser = new AgvChooser<RandomGraphAlgorithm>(RoutingPlausibilityChecker);
             Assert.IsNull(chooser.ChooseAgv(Array.Empty<Messages.Agv>(), _dummyOrder!));
         }
 
@@ -225,7 +234,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         [ExpectedException(typeof(ArgumentException))]
         public void CallChooser_WithoutGraph_ExpectException()
         {
-            var chooser = new AgvChooser<AStar>(); // Use AStar because it depends on graphs.
+            var chooser = new AgvChooser<AStar>(RoutingPlausibilityChecker); // Use AStar because it depends on graphs.
             var agvData = new List<Messages.Agv>()
             {
                 new() { AgvGraph = null }
@@ -240,7 +249,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         [ExpectedException(typeof(MissingMethodException))]
         public void CallChooser_WithInvalidAlgorithm_ExpectException()
         {
-            var chooser = new AgvChooser<InvalidAlgorithm>();
+            var chooser = new AgvChooser<InvalidAlgorithm>(RoutingPlausibilityChecker);
             var agvData = new List<Messages.Agv>()
             {
                 new() { AgvGraph = _graphWikipedia }
@@ -255,7 +264,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         [ExpectedException(typeof(System.Reflection.TargetInvocationException))]
         public void CallChooser_WithFailingAlgorithm_ExpectException()
         {
-            var chooser = new AgvChooser<FailingAlgorithm>();
+            var chooser = new AgvChooser<FailingAlgorithm>(RoutingPlausibilityChecker);
             var agvData = new List<Messages.Agv>()
             {
                 new() { AgvGraph = _graphWikipedia }
@@ -269,7 +278,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         [TestMethod]
         public void CallChooser_WithMissingSourceDestination_ExpectExceptions()
         {
-            var chooser = new AgvChooser<AStar>();
+            var chooser = new AgvChooser<AStar>(RoutingPlausibilityChecker);
             var agvData = new List<Messages.Agv>()
             {
                 new() { AgvGraph = _graphWikipedia }
@@ -306,7 +315,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         [TestMethod]
         public void CallChooser_WithValidSingleGraph_Success()
         {
-            var chooser = new AgvChooser<AStar>();
+            var chooser = new AgvChooser<AStar>(RoutingPlausibilityChecker);
             var agvData = new List<Messages.Agv>()
             {
                 new() { AgvGraph = _graphWikipedia }
@@ -330,7 +339,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         [TestMethod]
         public void CallChooser_NonReachableNode_NoPath()
         {
-            var chooser = new AgvChooser<AStar>();
+            var chooser = new AgvChooser<AStar>(RoutingPlausibilityChecker);
             var agvData = new List<Messages.Agv>()
             {
                 new() { AgvGraph = _graphWikipedia }
@@ -353,7 +362,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         [TestMethod]
         public void CallChooser_DifferentGraphs_UseFastest()
         {
-            var chooser = new AgvChooser<AStar>();
+            var chooser = new AgvChooser<AStar>(RoutingPlausibilityChecker);
 
             var agvData = new List<Messages.Agv>
             {

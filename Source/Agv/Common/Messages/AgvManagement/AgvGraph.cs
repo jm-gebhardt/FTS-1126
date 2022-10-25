@@ -113,28 +113,31 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
         /// These types are coming from the specification.
         /// </para>
         /// </summary>
-        [Flags]
-        public enum NodeType : short
+        public enum NodeType
         {
-            /// <summary>Charging station</summary>
-            [JetBrains.Annotations.UsedImplicitly]
-            Charge = 0x0001,
-
             /// <summary>General waypoint</summary>
             [JetBrains.Annotations.UsedImplicitly]
-            WayPoint = 0x0002,
+            WayPoint,
 
-            /// <summary>Rotation point</summary>
+            /// <summary>Charging station</summary>
             [JetBrains.Annotations.UsedImplicitly]
-            Turn = 0x0004,
+            Charge,
 
-            /// <summary>Source or destination</summary>
+            /// <summary>Pick station</summary>
             [JetBrains.Annotations.UsedImplicitly]
-            Station = 0x0008,
+            Pick,
+
+            /// <summary>Drop station</summary>
+            [JetBrains.Annotations.UsedImplicitly]
+            Drop,
+
+            /// <summary>Pick/Drop station</summary>
+            [JetBrains.Annotations.UsedImplicitly]
+            PickDrop,
 
             /// <summary>Waiting point</summary>
             [JetBrains.Annotations.UsedImplicitly]
-            Park = 0x0010
+            Park
         }
 
         /// <summary>

@@ -27,10 +27,10 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             var graph = new AgvGraph(Guid.Empty,
                 new[]
                 {
-                    new AgvGraph.Node("S1") { Enabled = true, Type = AgvGraph.NodeType.Station, X =  0f, Y = -2f, Z = 0f },
-                    new AgvGraph.Node("D1") { Enabled = true, Type = AgvGraph.NodeType.Station, X =  4f, Y =  6f, Z = 0f },
-                    new AgvGraph.Node("S2") { Enabled = true, Type = AgvGraph.NodeType.Station, X =  7f, Y =  4f, Z = 0f },
-                    new AgvGraph.Node("D2") { Enabled = true, Type = AgvGraph.NodeType.Station, X = -3f, Y =  0f, Z = 0f }
+                    new AgvGraph.Node("S1") { Enabled = true, Type = AgvGraph.NodeType.Pick, X =  0f, Y = -2f, Z = 0f },
+                    new AgvGraph.Node("D1") { Enabled = true, Type = AgvGraph.NodeType.Drop, X =  4f, Y =  6f, Z = 0f },
+                    new AgvGraph.Node("S2") { Enabled = true, Type = AgvGraph.NodeType.Pick, X =  7f, Y =  4f, Z = 0f },
+                    new AgvGraph.Node("D2") { Enabled = true, Type = AgvGraph.NodeType.Drop, X = -3f, Y =  0f, Z = 0f }
                 },
                 new[]
                 {
@@ -67,8 +67,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             var graph = new AgvGraph(Guid.Empty,
                 new[]
                 {
-                    new AgvGraph.Node("S1") { Enabled = true, Type = AgvGraph.NodeType.Station, X = 1000f, Y = 1000f, Z = 0f },
-                    new AgvGraph.Node("D1") { Enabled = true, Type = AgvGraph.NodeType.Station, X = 1010f, Y = 1010f, Z = 0f }
+                    new AgvGraph.Node("S1") { Enabled = true, Type = AgvGraph.NodeType.Pick, X = 1000f, Y = 1000f, Z = 0f },
+                    new AgvGraph.Node("D1") { Enabled = true, Type = AgvGraph.NodeType.Drop, X = 1010f, Y = 1010f, Z = 0f }
                 },
                 new[]
                 {

@@ -51,10 +51,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Profiles
             var agvGraph = new AgvGraph(Guid.NewGuid(),
                 new[]
                 {
-                    new AgvGraph.Node("S1") { Enabled = true, Type = AgvGraph.NodeType.Station, X =  0f, Y = -2f, Z = 0f },
-                    new AgvGraph.Node("D1") { Enabled = true, Type = AgvGraph.NodeType.Station, X =  4f, Y =  6f, Z = 0f },
-                    new AgvGraph.Node("S2") { Enabled = true, Type = AgvGraph.NodeType.Station, X =  7f, Y =  4f, Z = 0f },
-                    new AgvGraph.Node("D2") { Enabled = true, Type = AgvGraph.NodeType.Station, X = -3f, Y =  0f, Z = 0f }
+                    new AgvGraph.Node("S1") { Enabled = true, Type = AgvGraph.NodeType.Pick, X =  0f, Y = -2f, Z = 0f },
+                    new AgvGraph.Node("D1") { Enabled = true, Type = AgvGraph.NodeType.Drop, X =  4f, Y =  6f, Z = 0f },
+                    new AgvGraph.Node("S2") { Enabled = true, Type = AgvGraph.NodeType.Pick, X =  7f, Y =  4f, Z = 0f },
+                    new AgvGraph.Node("D2") { Enabled = true, Type = AgvGraph.NodeType.Drop, X = -3f, Y =  0f, Z = 0f }
                 },
                 new[]
                 {

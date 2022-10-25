@@ -1,7 +1,7 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Definitions;
 using Gebhardt.StoreWare.Agv.Common.Messages;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-
+using Gebhardt.StoreWare.Agv.TransportOrder.Common.Services.Routing;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
 {
@@ -16,13 +16,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
     public class AgvChooser<TGraphAlgorithm> where TGraphAlgorithm : IGraphAlgorithm
     {
         private readonly Dictionary<Guid, TGraphAlgorithm> _algorithms;
-
+        private readonly IRoutingPlausibilityChecker _routingPlausibilityChecker;
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        public AgvChooser()
+        public AgvChooser(IRoutingPlausibilityChecker routingPlausibilityChecker)
         {
+            _routingPlausibilityChecker = routingPlausibilityChecker;
             _algorithms = new Dictionary<Guid, TGraphAlgorithm>();
         }
 
@@ -42,14 +43,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
             {
                 var constructor = typeof(TGraphAlgorithm).GetConstructor(
                     System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance,
-                    new[] { typeof(AgvGraph) });
+                    new[] { typeof(AgvGraph), typeof(IRoutingPlausibilityChecker) });
                 if (constructor != null)
                 {
                     if (agv == null || agv.AgvGraph == null)
                     {
                         throw new ArgumentException("AGV graph is missing.");
                     }
-                    _algorithms[agv.CorrelationId] = (TGraphAlgorithm)constructor.Invoke(new object[] { agv.AgvGraph });
+                    _algorithms[agv.CorrelationId] = (TGraphAlgorithm)constructor.Invoke(new object[] { agv.AgvGraph, _routingPlausibilityChecker });
                 }
                 else
                 {
@@ -64,7 +65,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
                     {
                         throw new MissingMethodException($"Constructor is missing talking {typeof(AgvGraph)} or default constructor missing.");
                     }
-                } 
+                }
             }
 
             return _algorithms[agv.CorrelationId];
@@ -118,13 +119,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
             {
                 throw new ArgumentException("Destination is missing in order.");
             }
-            
+
             var algorithm = AlgorithmFactory(agv);
             if (agv.AgvStatus != null && !string.IsNullOrEmpty(agv.AgvStatus.LastNodeId))
             {
                 return algorithm.CalculateRoute(agv.AgvStatus.LastNodeId, order.Source, order.Destination);
             }
-            
+
             return algorithm.CalculateRoute(order.Source, order.Destination);
         }
     }

@@ -2,8 +2,10 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
-using Gebhardt.StoreWare.Agv.TransportOrder.Services;
-
+using Gebhardt.StoreWare.Agv.TransportOrder.Common.Services.Routing;
+using Gebhardt.StoreWare.Agv.TransportOrder.Services.Routing;
+using Moq;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 {
@@ -15,6 +17,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
     {
         private readonly AgvGraph? _graph;
         private readonly AgvGraph? _grid;
+        private readonly Mock<IRoutingPlausibilityChecker> _routingPlausibilityCheckerMock;
+        private IRoutingPlausibilityChecker RoutingPlausibilityChecker => _routingPlausibilityCheckerMock.Object;
 
         public AStarTest()
         {
@@ -22,16 +26,16 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             _graph = new AgvGraph(Guid.Empty,
                 new[]
                 {
-                    new AgvGraph.Node("1") { Enabled = true, Type = AgvGraph.NodeType.Station, X = 0f, Y = 5f, Z = 0f },
-                    new AgvGraph.Node("2") { Enabled = true, Type = AgvGraph.NodeType.Station, X = 1f, Y = 5f, Z = 0f },
-                    new AgvGraph.Node("3") { Enabled = true, Type = AgvGraph.NodeType.Station, X = 1f, Y = 2f, Z = 0f },
-                    new AgvGraph.Node("4") { Enabled = true, Type = AgvGraph.NodeType.Station, X = 3f, Y = 3f, Z = 0f },
-                    new AgvGraph.Node("5") { Enabled = true, Type = AgvGraph.NodeType.Station, X = 3f, Y = 6f, Z = 0f },
-                    new AgvGraph.Node("6") { Enabled = true, Type = AgvGraph.NodeType.Station, X = 3f, Y = 2f, Z = 0f },
-                    new AgvGraph.Node("7") { Enabled = true, Type = AgvGraph.NodeType.Station, X = 6f, Y = 0f, Z = 0f },
-                    new AgvGraph.Node("8") { Enabled = true, Type = AgvGraph.NodeType.Station, X = 7f, Y = 1f, Z = 0f },
-                    new AgvGraph.Node("9") { Enabled = true, Type = AgvGraph.NodeType.Station, X = 8f, Y = 2f, Z = 0f },
-                    new AgvGraph.Node("10") { Enabled = true, Type = AgvGraph.NodeType.Station, X = 8f, Y = 5f, Z = 0f }
+                    new AgvGraph.Node("1") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 5f, Z = 0f },
+                    new AgvGraph.Node("2") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 1f, Y = 5f, Z = 0f },
+                    new AgvGraph.Node("3") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 1f, Y = 2f, Z = 0f },
+                    new AgvGraph.Node("4") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 3f, Y = 3f, Z = 0f },
+                    new AgvGraph.Node("5") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 3f, Y = 6f, Z = 0f },
+                    new AgvGraph.Node("6") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 3f, Y = 2f, Z = 0f },
+                    new AgvGraph.Node("7") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 6f, Y = 0f, Z = 0f },
+                    new AgvGraph.Node("8") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 7f, Y = 1f, Z = 0f },
+                    new AgvGraph.Node("9") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 8f, Y = 2f, Z = 0f },
+                    new AgvGraph.Node("10") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 8f, Y = 5f, Z = 0f }
                 },
                 new[]
                 {
@@ -113,6 +117,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                 ++y;
             }
             _grid = new AgvGraph(Guid.Empty, nodes.ToArray(), edges.ToArray(), mapName.ToGuid(), mapName);
+
+            _routingPlausibilityCheckerMock = new Mock<IRoutingPlausibilityChecker>();
+            _routingPlausibilityCheckerMock.Setup(c => c.IsPlausible(It.IsAny<AgvGraph.Node>(), It.IsAny<AgvGraph.Node>()))
+                .Returns(true);
         }
 
 
@@ -147,13 +155,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             var graph = new AgvGraph(Guid.Empty,
                 new[]
                 {
-                    new AgvGraph.Node("Saarbrücken") { Enabled = true, Type = AgvGraph.NodeType.Station, X = 0f, Y = 0f, Z = 0f },
-                    new AgvGraph.Node("Kaiserslautern") { Enabled = true, Type = AgvGraph.NodeType.Station, X = 42f, Y = 80f, Z = 0f },
-                    new AgvGraph.Node("Frankfurt") { Enabled = true, Type = AgvGraph.NodeType.Station, X = 104f, Y = 100f, Z = 0f },
-                    new AgvGraph.Node("Ludwigshafen") { Enabled = true, Type = AgvGraph.NodeType.Station, X = 96f, Y = 60f, Z = 0f },
-                    new AgvGraph.Node("Karlsruhe") { Enabled = true, Type = AgvGraph.NodeType.Station, X = 104f, Y = -10f, Z = 0f },
-                    new AgvGraph.Node("Heilbronn") { Enabled = true, Type = AgvGraph.NodeType.Station, X = 150f, Y = 20f, Z = 0f },
-                    new AgvGraph.Node("Würzburg") { Enabled = true, Type = AgvGraph.NodeType.Station, X = 200f, Y = 92f, Z = 0f }
+                    new AgvGraph.Node("Saarbrücken") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 0f, Z = 0f },
+                    new AgvGraph.Node("Kaiserslautern") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 42f, Y = 80f, Z = 0f },
+                    new AgvGraph.Node("Frankfurt") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 104f, Y = 100f, Z = 0f },
+                    new AgvGraph.Node("Ludwigshafen") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 96f, Y = 60f, Z = 0f },
+                    new AgvGraph.Node("Karlsruhe") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 104f, Y = -10f, Z = 0f },
+                    new AgvGraph.Node("Heilbronn") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 150f, Y = 20f, Z = 0f },
+                    new AgvGraph.Node("Würzburg") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 200f, Y = 92f, Z = 0f }
                 },
                 new[]
                 {
@@ -168,7 +176,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                 },
                 mapName.ToGuid(),
                 mapName);
-            var aStar = new AStar(graph);
+            var aStar = new AStar(graph, RoutingPlausibilityChecker);
 
             var route = aStar.CalculateRoute("Saarbrücken", "Würzburg");
             Assert.IsNotNull(route);
@@ -183,13 +191,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             var graph = new AgvGraph(Guid.Empty,
                 new[]
                 {
-                    new AgvGraph.Node("Saarbrücken") { Enabled = true, Type = AgvGraph.NodeType.Station, X = 0f, Y = 0f, Z = 0f },
-                    new AgvGraph.Node("Kaiserslautern") { Enabled = true, Type = AgvGraph.NodeType.Station, X = 42f, Y = 80f, Z = 0f },
-                    new AgvGraph.Node("Frankfurt") { Enabled = true, Type = AgvGraph.NodeType.Station, X = 104f, Y = 100f, Z = 0f },
-                    new AgvGraph.Node("Ludwigshafen") { Enabled = true, Type = AgvGraph.NodeType.Station, X = 96f, Y = 60f, Z = 0f },
-                    new AgvGraph.Node("Karlsruhe") { Enabled = true, Type = AgvGraph.NodeType.Station, X = 104f, Y = -10f, Z = 0f },
-                    new AgvGraph.Node("Heilbronn") { Enabled = true, Type = AgvGraph.NodeType.Station, X = 150f, Y = 20f, Z = 0f },
-                    new AgvGraph.Node("Würzburg") { Enabled = true, Type = AgvGraph.NodeType.Station, X = 200f, Y = 92f, Z = 0f }
+                    new AgvGraph.Node("Saarbrücken") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 0f, Z = 0f },
+                    new AgvGraph.Node("Kaiserslautern") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 42f, Y = 80f, Z = 0f },
+                    new AgvGraph.Node("Frankfurt") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 104f, Y = 100f, Z = 0f },
+                    new AgvGraph.Node("Ludwigshafen") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 96f, Y = 60f, Z = 0f },
+                    new AgvGraph.Node("Karlsruhe") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 104f, Y = -10f, Z = 0f },
+                    new AgvGraph.Node("Heilbronn") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 150f, Y = 20f, Z = 0f },
+                    new AgvGraph.Node("Würzburg") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 200f, Y = 92f, Z = 0f }
                 },
                 new[]
                 {
@@ -202,10 +210,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                    new AgvGraph.Edge("Frankfurt", "Würzburg") { Metric = 116f },
                    new AgvGraph.Edge("Ludwigshafen", "Würzburg") { Metric = 183f },
                    new AgvGraph.Edge("Heilbronn", "Würzburg") { Metric = 102f }
-                }, 
+                },
                 mapName.ToGuid(),
                 mapName);
-            var aStar = new AStar(graph);
+            var aStar = new AStar(graph, RoutingPlausibilityChecker);
 
             var route = aStar.CalculateRoute("Karlsruhe", "Saarbrücken", "Würzburg");
             Assert.IsNotNull(route);
@@ -219,7 +227,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         [TestMethod]
         public void Test_AStarBidirectional_UseGraphSeveralTimes()
         {
-            var aStar = new AStar(_graph!);
+            var aStar = new AStar(_graph!, RoutingPlausibilityChecker);
 
             var route = aStar.CalculateRoute("1", "10");
             Assert.IsNotNull(route);
@@ -242,7 +250,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         [TestMethod]
         public void Test_AStar_GridExample()
         {
-            var aStar = new AStar(_grid!);
+            var aStar = new AStar(_grid!, RoutingPlausibilityChecker);
             // ReSharper disable JoinDeclarationAndInitializer
             IGraphAlgorithm.Route? c1, c2, c3, c4, costs;
             // ReSharper restore JoinDeclarationAndInitializer
@@ -283,7 +291,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         [DataRow("YY/YY", "XX/XX")]
         public void Test_AStarGrid_NonExistentSourceOrDestination_NoPath(string source, string destination)
         {
-            var aStar = new AStar(_grid!);
+            var aStar = new AStar(_grid!, RoutingPlausibilityChecker);
             Assert.IsNull(aStar.CalculateRoute(source, destination));
         }
 
@@ -293,9 +301,41 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         [TestMethod]
         public void Test_AStarGrid_UnreachableNode_NoPath()
         {
-            var aStar = new AStar(_grid!);
+            var aStar = new AStar(_grid!, RoutingPlausibilityChecker);
             var route = aStar.CalculateRoute("01/01", "47/23");
             Assert.IsNull(route);
         }
+
+        [TestMethod]
+        public void CalculateRoute_ReturnsNull_WhenRouteNotPlausible()
+        {
+            const string mapName = "Map#1";
+            var graph = new AgvGraph(Guid.Empty,
+            new[]
+            {
+               new AgvGraph.Node("1") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 5f, Z = 0f },
+               new AgvGraph.Node("2") { Enabled = true, Type = AgvGraph.NodeType.Drop, X = 1f, Y = 5f, Z = 0f }
+            },
+            new[]
+            {
+                new AgvGraph.Edge("1", "2") { Metric = 1f },
+                new AgvGraph.Edge("2", "1") { Metric = 4f }
+            },
+            mapName.ToGuid(),
+            mapName);
+
+            var routingPlausibilityCheckerMock = new Mock<IRoutingPlausibilityChecker>();
+            routingPlausibilityCheckerMock.Setup(r => r.IsPlausible(It.IsAny<AgvGraph.Node>(), It.IsAny<AgvGraph.Node>())).Returns(true);
+
+            var aStar = new AStar(graph, routingPlausibilityCheckerMock.Object);
+            var route = aStar.CalculateRoute("1", "2");
+            route.ShouldNotBeNull();
+
+            routingPlausibilityCheckerMock.Setup(r => r.IsPlausible(It.IsAny<AgvGraph.Node>(), It.IsAny<AgvGraph.Node>())).Returns(false);
+            aStar = new AStar(graph, routingPlausibilityCheckerMock.Object);
+            route = aStar.CalculateRoute("1", "2");
+            route.ShouldBeNull();
+        }
+
     }
 }

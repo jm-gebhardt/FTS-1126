@@ -1,20 +1,14 @@
-using System.Globalization;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using JetBrains.Annotations;
 using MassTransit;
-using Moq;
-using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.Common.Messages;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Commands;
-using Gebhardt.StoreWare.Agv.TransportOrder.Common.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.States;
-using AssignAgvConsumer = Gebhardt.StoreWare.Agv.TransportOrder.Services.AssignAgvConsumer;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 {
@@ -42,62 +36,19 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
     [TestClass]
     public class AssignAgvConsumerTest
     {
-        private static readonly string[] _orders = { "ORDER001", "ORDER002", "ORDER003" };
-        private static readonly string[] _sources = { "SRC1", "SRC2", "SRC3" };
-        private static readonly string[] _destinations = { "DST1", "DST2", "DST3" };
-        private static readonly string[] _leNo = { "111", "222", "333" };
-        private static readonly string[] _agvIds = { "AGV001", "AGV002" };
-        private static readonly string[] _agvStates = { "Idle", "Busy" };
-        private static readonly string[] _ips = { "127.0.0.1", "127.0.0.2" };
-        private static readonly string[] _states = { nameof(OrderStateMachine.OrderReceived), nameof(OrderStateMachine.TransportOrderSend), nameof(OrderStateMachine.OrderReceived) };
-        private static readonly DateTime[] _creationDates = { DateTime.ParseExact("2022-07-13 13:00:01", "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture),
-            DateTime.ParseExact("2022-07-13 12:00:01", "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture),
-            DateTime.ParseExact("2022-07-13 11:00:01", "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture) };
-        private static AgvGraph? _graph;
-
-        [ClassInitialize]
-        public static void ClassInitialize(TestContext context)
-        {
-            const string mapName = "Map#1";
-            _graph = new AgvGraph(Guid.Empty,
-                new[]
-                {
-                    new AgvGraph.Node(_sources[0]) { Enabled = true, Type = AgvGraph.NodeType.Station, X = 0f, Y = 0f, Z = 0f },
-                    new AgvGraph.Node(_destinations[0]) { Enabled = true, Type = AgvGraph.NodeType.Station, X = 1f, Y = 1f, Z = 0f }
-                },
-                new[]
-                {
-                   new AgvGraph.Edge(_sources[0], _destinations[0]) { Metric = 1f }
-                },
-                mapName.ToGuid(),
-                mapName);
-        }
-
-        /// <summary>
-        /// Test cleanup.
-        /// </summary>
-        [ClassCleanup]
-        public static void ClassCleanup()
-        {
-        }
-
         [TestMethod]
         public async Task When_AgvRegistryIsEmpty_IAgvAssignFailed_isPublished()
         {
-            var mockAgvRegistry = new Mock<IAgvRegistry>();
-            Mock<IOrderRegistry> mockOrderRegistry = GetOrderRegistry();
-            mockAgvRegistry.Setup(s => s.GetIdleAgvs()).Returns(new EnumerableQuery<IAgv>(new List<IAgv>()));
-            var fixture = new MassTransitTestFixture<AssignAgvConsumer>(
-                services: s =>
-                {
-                    s.AddTransient(_ => mockAgvRegistry.Object);
-                    s.AddTransient(_ => mockOrderRegistry.Object);
-                }
-                );
+            var fixture = new AssignAgvConsumerMassTransitFixture()
+                .AgvRegistryMock(r => r.Setup(s => s.GetIdleAgvs()).Returns(new EnumerableQuery<IAgv>(new List<IAgv>())))
+                .Build();
+
+            string[] sources = AssignAgvConsumerMassTransitFixture.Sources;
+            string[] destinations = AssignAgvConsumerMassTransitFixture.Destinations;
 
             string orderId = "0001";
             var correlationId = orderId.ToGuid();
-            var order = new OrderDetails(correlationId, orderId, _sources[0], _destinations[0], "LeNo123", HostOrderCreator.Simulation);
+            var order = new OrderDetails(correlationId, orderId, sources[0], destinations[0], "LeNo123", HostOrderCreator.Simulation);
 
             await fixture.TestHarness!.Bus.Publish(new AssignAgv(correlationId, order));
 
@@ -116,29 +67,25 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         {
             const string agvId = "AGV001";
             var agvCorrelationId = agvId.ToGuid();
-            var mockAgvRegistry = new Mock<IAgvRegistry>();
-            Mock<IOrderRegistry> mockOrderRegistry = GetOrderRegistry();
-            mockAgvRegistry.Setup(s => s.GetIdleAgvs()).Returns(new EnumerableQuery<IAgv>(new List<IAgv>
-            {
-                new AgvSaga(agvCorrelationId, agvId, nameof(AgvStateMachine.Idle), agvGraph: _graph)
-            }));
 
-            var fixture = new MassTransitTestFixture<AssignAgvConsumer>(
-                services: s =>
-                {
-                    s.AddSingleton((_) => mockAgvRegistry.Object);
-                    s.AddSingleton((_) => mockOrderRegistry.Object);
-                },
-                busRegistrationConfigurator: x =>
+            var fixture = new AssignAgvConsumerMassTransitFixture()
+                .SetupBusRegistrationConfigurator(x =>
                 {
                     x.AddRequestClient<ReserveAgv>();
                     x.AddConsumer<AgvReservationRejectedConsumer>();
-                }
-            );
+                })
+                .AgvRegistryMock(r => r.Setup(s => s.GetIdleAgvs()).Returns(new EnumerableQuery<IAgv>(new List<IAgv>
+                {
+                            new AgvSaga(agvCorrelationId, agvId, nameof(AgvStateMachine.Idle), agvGraph: AssignAgvConsumerMassTransitFixture.Graph)
+                })))
+                .Build();
+
+            string[] sources = AssignAgvConsumerMassTransitFixture.Sources;
+            string[] destinations = AssignAgvConsumerMassTransitFixture.Destinations;
 
             const string orderId = "0001";
             var correlationId = orderId.ToGuid();
-            var order = new OrderDetails(correlationId, orderId, _sources[0], _destinations[0], "LeNo123", HostOrderCreator.Simulation);
+            var order = new OrderDetails(correlationId, orderId, sources[0], destinations[0], "LeNo123", HostOrderCreator.Simulation);
 
             await fixture.TestHarness!.Bus.Publish(new AssignAgv(correlationId, order));
 
@@ -161,28 +108,26 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         {
             const string agvId = "AGV001";
             var agvCorrelationId = agvId.ToGuid();
-            var mockAgvRegistry = new Mock<IAgvRegistry>();
-            Mock<IOrderRegistry> mockOrderRegistry = GetOrderRegistry();
-            mockAgvRegistry.Setup(s => s.GetIdleAgvs()).Returns(new EnumerableQuery<IAgv>(new List<IAgv>
-            {
-                new AgvSaga(agvCorrelationId, agvId, nameof(AgvStateMachine.Idle), agvGraph: _graph) { Alive = alive }
-            }));
 
-            var fixture = new MassTransitTestFixture<AssignAgvConsumer>(
-                services: s =>
+            var fixture = new AssignAgvConsumerMassTransitFixture()
+                .AgvRegistryMock(m => m.Setup(s => s.GetIdleAgvs()).Returns(new EnumerableQuery<IAgv>(new List<IAgv>
                 {
-                    s.AddSingleton((_) => mockAgvRegistry.Object);
-                    s.AddSingleton((_) => mockOrderRegistry.Object);
-                },
-                busRegistrationConfigurator: x =>
+                    new AgvSaga(agvCorrelationId, agvId, nameof(AgvStateMachine.Idle), agvGraph: AssignAgvConsumerMassTransitFixture.Graph) { Alive = alive }
+                })))
+                .SetupBusRegistrationConfigurator(x =>
                 {
                     x.AddRequestClient<ReserveAgv>();
                     x.AddConsumer<AgvReservationSucceededConsumer>();
-                }
-            );
+                })
+                .Build();
 
-            var correlationId = _orders[0].ToGuid();
-            var order = new OrderDetails(correlationId, _orders[0], _sources[0], _destinations[0], _leNo[0], HostOrderCreator.Simulation);
+            string[] orders = AssignAgvConsumerMassTransitFixture.Orders;
+            string[] sources = AssignAgvConsumerMassTransitFixture.Sources;
+            string[] destinations = AssignAgvConsumerMassTransitFixture.Destinations;
+            string[] leNo = AssignAgvConsumerMassTransitFixture.LeNo;
+
+            var correlationId = orders[0].ToGuid();
+            var order = new OrderDetails(correlationId, orders[0], sources[0], destinations[0], leNo[0], HostOrderCreator.Simulation);
 
             await fixture.TestHarness!.Bus.Publish(new AssignAgv(correlationId, order));
 
@@ -196,7 +141,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             }
             else
             {
-                // When there is just one idle AGV (but offlint) we expect AgvAssignmentFailed
+                // When there is just one idle AGV (but offline) we expect AgvAssignmentFailed
                 var message = fixture.TestHarness.Published.Select<AgvAssignmentFailed>(s => s.Context.CorrelationId == correlationId).FirstOrDefault()?.Context.Message;
                 Assert.IsNotNull(message);
             }
@@ -220,26 +165,26 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             var agvGraph = new AgvGraph(Guid.Empty,
                 new[]
             { /*   Map#1:  (AGV_01) 1   2
-               *                       /
-               *                      / (ORD_2-3, but this edge doesn't exist)
-               *                     /
-               *                    3   4 (AGV_02)   */
-                new AgvGraph.Node(node01){ Enabled = true, Type = AgvGraph.NodeType.Station, X = 0f, Y = 0f, Z = 0f},
-                new AgvGraph.Node(node02){ Enabled = true, Type = AgvGraph.NodeType.Station, X = 4f, Y = 0f, Z = 0f},
-                new AgvGraph.Node(node03){ Enabled = true, Type = AgvGraph.NodeType.Station, X = 0f, Y = 3f, Z = 0f},
-                new AgvGraph.Node(node04){ Enabled = true, Type = AgvGraph.NodeType.Station, X = 4f, Y = 3f, Z = 0f}
+                       *                       /
+                       *                      / (ORD_2-3, but this edge doesn't exist)
+                       *                     /
+                       *                    3   4 (AGV_02)   */
+                        new AgvGraph.Node(node01){ Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 0f, Z = 0f},
+                        new AgvGraph.Node(node02){ Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 4f, Y = 0f, Z = 0f},
+                        new AgvGraph.Node(node03){ Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 3f, Z = 0f},
+                        new AgvGraph.Node(node04){ Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 4f, Y = 3f, Z = 0f}
             }, new[]
             {
-                new AgvGraph.Edge(node01, node02){ Metric = 4f},    // Used by AGV_01 to travel to source
-                new AgvGraph.Edge(node01, node03){ Metric = 3f},
-                new AgvGraph.Edge(node01, node04){ Metric = 5f},
-                new AgvGraph.Edge(node02, node01){ Metric = 4f},
-                new AgvGraph.Edge(node02, node04){ Metric = 6f},
-                new AgvGraph.Edge(node03, node01){ Metric = 3f},
-                new AgvGraph.Edge(node03, node04){ Metric = 4f},
-                new AgvGraph.Edge(node04, node01){ Metric = 5f},
-                new AgvGraph.Edge(node04, node02){ Metric = 6f},    // Used by AGV_02 to travel to source (more expensive)
-                new AgvGraph.Edge(node04, node03){ Metric = 4f}
+                        new AgvGraph.Edge(node01, node02){ Metric = 4f},    // Used by AGV_01 to travel to source
+                        new AgvGraph.Edge(node01, node03){ Metric = 3f},
+                        new AgvGraph.Edge(node01, node04){ Metric = 5f},
+                        new AgvGraph.Edge(node02, node01){ Metric = 4f},
+                        new AgvGraph.Edge(node02, node04){ Metric = 6f},
+                        new AgvGraph.Edge(node03, node01){ Metric = 3f},
+                        new AgvGraph.Edge(node03, node04){ Metric = 4f},
+                        new AgvGraph.Edge(node04, node01){ Metric = 5f},
+                        new AgvGraph.Edge(node04, node02){ Metric = 6f},    // Used by AGV_02 to travel to source (more expensive)
+                        new AgvGraph.Edge(node04, node03){ Metric = 4f}
             },
                 mapName.ToGuid(),
                 mapName);
@@ -252,17 +197,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             var agvCorrelationId2 = agvId2.ToGuid();
             // Current location ist node04
             var agvStatus2 = new AgvStatus(closestAgvCorrelationId, null, false, true, 50, false, false, node04);
-
-            var mockAgvRegistry = new Mock<IAgvRegistry>();
-            Mock<IOrderRegistry> mockOrderRegistry = GetOrderRegistry();
-            mockAgvRegistry.Setup(mReg => mReg.GetIdleAgvs()).Returns(
-                new EnumerableQuery<IAgv>(
-                    new List<IAgv>
-                    {
-                        new AgvSaga(closestAgvCorrelationId, agvId, nameof(AgvStateMachine.Idle), agvGraph: agvGraph, agvStatus: agvStatus1) { Alive = aliveAgv1 },
-                        new AgvSaga(agvCorrelationId2, agvId2, nameof(AgvStateMachine.Idle), agvGraph: agvGraph, agvStatus: agvStatus2) { Alive = true }
-                    }
-            ));
 
             const string orderId = "ORD_2->3";
             const string source = node02;
@@ -277,18 +211,21 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                 HostOrderCreator.Simulation
             );
 
-            var fixture = new MassTransitTestFixture<AssignAgvConsumer>(
-                busRegistrationConfigurator: x =>
+            var fixture = new AssignAgvConsumerMassTransitFixture()
+                .SetupBusRegistrationConfigurator(x =>
                 {
                     x.AddRequestClient<ReserveAgv>();
                     x.AddConsumer<AgvReservationSucceededConsumer>();
-                },
-                null,
-                s =>
-                {
-                    s.AddTransient(_ => mockAgvRegistry.Object);
-                    s.AddTransient(_ => mockOrderRegistry.Object);
-                });
+                })
+                .AgvRegistryMock(m => m.Setup(mReg => mReg.GetIdleAgvs()).Returns(
+                    new EnumerableQuery<IAgv>(
+                        new List<IAgv>
+                        {
+                            new AgvSaga(closestAgvCorrelationId, agvId, nameof(AgvStateMachine.Idle), agvGraph: agvGraph, agvStatus: agvStatus1) { Alive = aliveAgv1 },
+                            new AgvSaga(agvCorrelationId2, agvId2, nameof(AgvStateMachine.Idle), agvGraph: agvGraph, agvStatus: agvStatus2) { Alive = true }
+                        }
+                    )))
+                .Build();
 
             // Act
             await fixture.TestHarness!.Bus.Publish(new AssignAgv(order.CorrelationId, order));
@@ -321,18 +258,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         [TestMethod]
         public async Task AgvBecameIdle_NoOrderToAssign()
         {
+            var fixture = new AssignAgvConsumerMassTransitFixture()
+                .SetOrderRegistry(AssignAgvConsumerMassTransitFixture.GetOrderRegistry(false, true))
+                .Build();
 
-            Mock<IAgvRegistry> mockAgvRegistry = GetAgvRegistry();
-            Mock<IOrderRegistry> mockOrderRegistry = GetOrderRegistry(false, true);
-
-            var fixture = new MassTransitTestFixture<AssignAgvConsumer>(s =>
-                {
-                    s.AddTransient(_ => mockAgvRegistry.Object);
-                    s.AddTransient(_ => mockOrderRegistry.Object);
-                }
-            );
-
-            await fixture.TestHarness!.Bus.Publish(new AgvBecameIdle(_agvIds[0].ToGuid()));
+            await fixture.TestHarness!.Bus.Publish(new AgvBecameIdle(AssignAgvConsumerMassTransitFixture.AgvIds[0].ToGuid()));
             Assert.IsTrue(await fixture.TestHarness.Consumed.Any<AgvBecameIdle>());
             Assert.IsFalse(await fixture.TestHarness.Published.Any<RequestOrderAgvAssign>());
         }
@@ -344,22 +274,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         [TestMethod]
         public async Task AgvBecameIdle_Assign_Oldest_UnassignedOrder()
         {
+            var fixture = new AssignAgvConsumerMassTransitFixture()
+                .SetOrderRegistry(AssignAgvConsumerMassTransitFixture.GetOrderRegistry(true))
+                .Build();
 
-            Mock<IAgvRegistry> mockAgvRegistry = GetAgvRegistry();
-            Mock<IOrderRegistry> mockOrderRegistry = GetOrderRegistry(true);
-
-            var fixture = new MassTransitTestFixture<AssignAgvConsumer>(s =>
-                {
-                    s.AddTransient(_ => mockAgvRegistry.Object);
-                    s.AddTransient(_ => mockOrderRegistry.Object);
-                }
-            );
-
-            await fixture.TestHarness!.Bus.Publish(new AgvBecameIdle(_agvIds[0].ToGuid()));
+            await fixture.TestHarness!.Bus.Publish(new AgvBecameIdle(AssignAgvConsumerMassTransitFixture.AgvIds[0].ToGuid()));
             Assert.IsTrue(await fixture.TestHarness.Consumed.Any<AgvBecameIdle>());
             Assert.IsTrue(await fixture.TestHarness.Published.Any<RequestOrderAgvAssign>());
             var message = fixture.TestHarness.Published.Select<RequestOrderAgvAssign>().First().Context.Message;
-            Assert.AreEqual(_orders[0].ToGuid(), message.CorrelationId);
+            Assert.AreEqual(AssignAgvConsumerMassTransitFixture.Orders[0].ToGuid(), message.CorrelationId);
         }
 
         /// <summary>
@@ -369,123 +292,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         [TestMethod]
         public async Task AgvBecameIdle_Assign_Oldest_UnassignedOrder_ThatHasRoute()
         {
-            Mock<IAgvRegistry> mockAgvRegistry = GetAgvRegistry();
-            Mock<IOrderRegistry> mockOrderRegistry = GetOrderRegistry();
+            var fixture = new AssignAgvConsumerMassTransitFixture();
 
-            var fixture = new MassTransitTestFixture<AssignAgvConsumer>(s =>
-                {
-                    s.AddTransient(_ => mockAgvRegistry.Object);
-                    s.AddTransient(_ => mockOrderRegistry.Object);
-                }
-            );
-
-            await fixture.TestHarness!.Bus.Publish(new AgvBecameIdle(_agvIds[0].ToGuid()));
+            await fixture.TestHarness!.Bus.Publish(new AgvBecameIdle(AssignAgvConsumerMassTransitFixture.AgvIds[0].ToGuid()));
             Assert.IsTrue(await fixture.TestHarness.Consumed.Any<AgvBecameIdle>());
             Assert.IsTrue(await fixture.TestHarness.Published.Any<RequestOrderAgvAssign>());
             var message = fixture.TestHarness.Published.Select<RequestOrderAgvAssign>().First().Context.Message;
-            Assert.AreEqual(_orders[0].ToGuid(), message.CorrelationId);
-        }
-
-        /// <summary>
-        /// Mock order registry
-        /// </summary>
-        /// <param name="noCreationDates"></param>
-        /// <param name="empty"></param>
-        /// <returns></returns>
-        private Mock<IOrderRegistry> GetOrderRegistry(bool noCreationDates = false, bool empty = false)
-        {
-            var registry = new Mock<IOrderRegistry>();
-
-            var orders = new List<IOrder>();
-            if (!empty)
-            {
-                for (int i = 0; i < _orders.Length; i++)
-                {
-                    var order = new OrderDetails(_orders[i].ToGuid(), _orders[i], _sources[i], _destinations[i], _leNo[i], HostOrderCreator.Simulation, noCreationDates ? DateTime.Now : _creationDates[i]);
-                    orders.Add(new OrderSaga(_orders[i].ToGuid(), order, _states[i], null));
-                }
-            }
-            registry.Setup(x => x.GetAllOrders()).Returns(orders.AsQueryable);
-            registry.Setup(x => x.GetUnassignedOrders()).Returns(orders.Where(x => x.CurrentState == nameof(OrderStateMachine.OrderReceived)).OrderBy(x => x.OrderDetails.CreationDate).AsQueryable);
-
-            return registry;
-        }
-
-        /// <summary>
-        /// Mock agv registry
-        /// </summary>
-        /// <returns></returns>
-        private Mock<IAgvRegistry> GetAgvRegistry()
-        {
-            var registry = new Mock<IAgvRegistry>();
-
-            var agvs = new List<IAgv>();
-            const string mapName = "Map#1";
-
-            // Arrange
-            string node01 = _sources[0];
-            string node02 = _sources[1];
-            string node03 = _destinations[0];
-            string node04 = _destinations[1];
-            string node05 = _sources[2];
-            string node06 = _destinations[2];
-            var agvGraph = new AgvGraph(Guid.Empty,
-                new[]
-                {
-                    new AgvGraph.Node(node01){ Enabled = true, Type = AgvGraph.NodeType.Station, X = 0f, Y = 0f, Z = 0f},
-                    new AgvGraph.Node(node02){ Enabled = true, Type = AgvGraph.NodeType.Station, X = 4f, Y = 0f, Z = 0f},
-                    new AgvGraph.Node(node03){ Enabled = true, Type = AgvGraph.NodeType.Station, X = 0f, Y = 3f, Z = 0f},
-                    new AgvGraph.Node(node04){ Enabled = true, Type = AgvGraph.NodeType.Station, X = 4f, Y = 3f, Z = 0f},
-                    new AgvGraph.Node(node05){ Enabled = true, Type = AgvGraph.NodeType.Station, X = 6f, Y = 9f, Z = 0f},
-                    new AgvGraph.Node(node06){ Enabled = true, Type = AgvGraph.NodeType.Station, X = 13f, Y = 5f, Z = 0f}
-                }, new[]
-                {
-                    new AgvGraph.Edge(node01, node02){ Metric = 4f},
-                    new AgvGraph.Edge(node01, node03){ Metric = 3f},
-                    new AgvGraph.Edge(node01, node04){ Metric = 5f},
-                    new AgvGraph.Edge(node02, node01){ Metric = 4f},
-                    new AgvGraph.Edge(node02, node04){ Metric = 6f},
-                    new AgvGraph.Edge(node03, node01){ Metric = 3f},
-                    new AgvGraph.Edge(node03, node04){ Metric = 4f},
-                    new AgvGraph.Edge(node04, node01){ Metric = 5f},
-                    new AgvGraph.Edge(node04, node02){ Metric = 6f},
-                    new AgvGraph.Edge(node04, node03){ Metric = 4f}
-                    //no edges for node 5 and 6 on purpose so that there is no route to this stations
-                },
-                mapName.ToGuid(),
-                mapName);
-
-            for (int i = 0; i < _agvIds.Length; i++)
-            {
-                string agvId = _agvIds[i];
-                string order = _orders[i];
-                string state = _agvStates[i];
-                string ip = _ips[i];
-                var correlationId = agvId.ToGuid();
-
-                var agvStatus = new AgvStatus(correlationId, order, true, true, 10, true, true);
-                var agvData = new AgvData(correlationId, "Karis", "BF1", ip, 1.8, 120.0, 0.6, 0.8, 0.7, 1, 2.5, 1000, Array.Empty<AgvData.Sensor>());
-
-                agvs.Add(new AgvSaga(correlationId, agvId, state, agvStatus, agvGraph, agvData) { Alive = true });
-            }
-
-            registry.SetupGet(x => x.Count).Returns(agvs.Count);
-            registry.SetupGet(x => x.CountIdle).Returns(agvs.Where(x => x.CurrentState == nameof(AgvStateMachine.Idle)).Count);
-            registry.Setup(x => x.GetIdleAgvs()).Returns(new EnumerableQuery<IAgv>(agvs.Where(x => x.CurrentState == nameof(AgvStateMachine.Idle))));
-            registry.Setup(x => x.GetAllAgvs()).Returns(new EnumerableQuery<IAgv>(agvs));
-            registry.Setup(x => x.GetAgv(It.IsAny<Guid>())).Returns<Guid>(correlationId =>
-            {
-                foreach (var agv in agvs)
-                {
-                    if (agv.CorrelationId == correlationId)
-                    {
-                        return agv;
-                    }
-                }
-                return null;
-            });
-
-            return registry;
+            Assert.AreEqual(AssignAgvConsumerMassTransitFixture.Orders[0].ToGuid(), message.CorrelationId);
         }
     }
 }

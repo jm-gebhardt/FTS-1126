@@ -75,7 +75,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             var graph = new AgvGraph(correlationId,
                 new[]
                 {
-                    new AgvGraph.Node("S1") { Enabled = true, Type = AgvGraph.NodeType.Station, X =  0f, Y = 0f, Z = 0f }
+                    new AgvGraph.Node("S1") { Enabled = true, Type = AgvGraph.NodeType.Pick, X =  0f, Y = 0f, Z = 0f }
                 },
                 Array.Empty<AgvGraph.Edge>(), 
                 mapName.ToGuid(),
