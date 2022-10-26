@@ -16,6 +16,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
     [JetBrains.Annotations.PublicAPI]
     public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga>
     {
+        #region Records
         /// <summary>
         /// Internal message to create and AGV instance
         /// </summary>
@@ -47,8 +48,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
         /// </summary>
         /// <param name="CorrelationId"></param>
         public record ScheduleSignalPosition(Guid CorrelationId) : CorrelatedBy<Guid>;
+        #endregion
 
-
+        #region States
         /// <summary>
         /// AGV is idle
         /// </summary>
@@ -63,8 +65,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
         /// AGV is busy and is moving to destination
         /// </summary>
         public State BusyMovingToDestination { get; private set; } = default!;
+        #endregion
 
-
+        #region Events
         /// <summary>
         /// ExecuteTransportOrder was received
         /// </summary>
@@ -89,8 +92,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
         /// RequestAgvMap was received
         /// </summary>
         public Event<RequestAgvMap> RequestAgvMapEvent { get; private set; } = default!;
+        #endregion
 
-
+        #region Schedules
         /// <summary>
         /// Status Schedule triggered
         /// </summary>
@@ -110,12 +114,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
         /// Trigger for scheduled signalling of position.
         /// </summary>
         public Schedule<SimulatedAgvSaga, ScheduleSignalPosition> SignalPositionSchedule { get; private set; } = default!;
-
-
-        /// <summary>
-        /// Timeout between sending status messages
-        /// </summary>
-        public const int SendStatusTimeout = 10;
+        #endregion
 
         /// <summary>
         /// Interval for signalling position durting order execution.
@@ -124,7 +123,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
 
         private readonly ILogger<SimulatedAgvStateMachine> _logger;
         private readonly SimulateOptions _simulateOptions;
-
+        private readonly int _sendStatusTimeout; // Pause between sending the agv status in [ms]
 
         /// <summary>
         /// SimulatedAgvStateMachine Constructor
@@ -135,7 +134,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
         {
             _logger = logger;
             _simulateOptions = simulateOptions;
+            _sendStatusTimeout = Math.Max(_simulateOptions.NodeTravelTime / 2, 10000); // Send twice per node or at least every 10s
             _logger.LogInformation("Initialized SimulatedAgvStateMachine with node travel time {NodetravelTime}", _simulateOptions.NodeTravelTime);
+
             SetSagaFactory();
             SetScheduler();
             InstanceState(x => x.CurrentState);
@@ -160,7 +161,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
                 s => s.SendStatusUpdateTokenId,
                 configuration =>
                 {
-                    configuration.Delay = TimeSpan.FromSeconds(SendStatusTimeout);
+                    configuration.Delay = TimeSpan.FromMilliseconds(_sendStatusTimeout);
                     configuration.Received = r => r.CorrelateById(context => context.Message.CorrelationId);
                 });
 
@@ -234,7 +235,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
             When(PickOrderSchedule.Received)
                 .Then(c => _logger.LogDebug("{MessageType} {CorrelationId} received", nameof(SchedulePickOrder), c.Saga.CorrelationId))
                 .TransitionTo(BusyMovingToDestination)
-                .Publish( c => new TransportOrderPickCompleted(
+                .Publish(c => new TransportOrderPickCompleted(
                     c.Saga.OrderDetails!.CorrelationId,
                     c.Saga.OrderDetails!.OrderId))
                 .ThenAsync(PublishStatus);
@@ -261,8 +262,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
             _logger.LogTrace("Status event from AGV {AgvId} / {CorrelationId}",
                 context.Saga.AgvId, context.Saga.CorrelationId);
 
-            await context.Publish( new AgvStatusReceived(
-                context.Saga.CorrelationId, 
+            await context.Publish(new AgvStatusReceived(
+                context.Saga.CorrelationId,
                 context.Saga.AgvId,
                 context.Saga.AgvStatus!
             ), context.CancellationToken);
@@ -303,7 +304,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
             if (order == null)
             {
                 _logger.LogError("Could not finish order, Order object is missing");
-            
+
             }
             else
             {
@@ -317,13 +318,13 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
             }
 
             context.Saga.ResetOrder();
-        } 
+        }
 
         private EventActivityBinder<SimulatedAgvSaga, RequestAgvGraph> SetRequestAgvGraphHandler() =>
             When(RequestAgvGraphEvent)
                 .Then(c => _logger.LogDebug("{MessageType} {AgvId} / {CorrelationId} received", nameof(RequestAgvGraph), c.Message.AgvId, c.Saga.CorrelationId))
                 .If(c => c.Saga.AgvGraph != null,
-                    x => 
+                    x =>
                         x.Publish(c => new AgvGraphReceived(
                             c.Saga.CorrelationId,
                             c.Saga.AgvId,
@@ -334,7 +335,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
             When(RequestAgvDataEvent)
                 .Then(c => _logger.LogDebug("{MessageType} {AgvId} / {CorrelationId} received", nameof(RequestAgvData), c.Message.AgvId, c.Saga.CorrelationId))
                 .If(c => c.Saga.AgvData != null,
-                    x => 
+                    x =>
                         x.Publish(c => new AgvDataReceived(
                             c.Saga.CorrelationId,
                             c.Saga.AgvId,
