@@ -9,7 +9,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.States;
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
 {
     /// <summary>
-    /// State Machine used to track agvs
+    /// State Machine used to track AGVs
     /// </summary>
     [JetBrains.Annotations.PublicAPI]
     public class AgvStateMachine : MassTransitStateMachine<AgvSaga>
@@ -17,7 +17,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// <summary>
         /// Provide possibility to override default settings beside command line options
         /// <para>
-        /// Usefull for testing
+        /// Useful for testing
         /// </para></summary>
         public interface ISettings
         {
@@ -297,7 +297,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         {
             if (!_mapRegistry.Exists(context.Message.AgvMap.CorrelationId))
             {
-                if (_mapRegistry.Add(context.Message.AgvMap.CorrelationId, context.Message.AgvMap.MapId, context.Message.AgvMap.ImageData, context.Message.AgvMap.Resolution, context.Message.AgvMap.XOffset, context.Message.AgvMap.YOffset, context.Message.AgvMap.ModificationDate))
+                if (_mapRegistry.AddOrUpdate(context.Message.AgvMap.CorrelationId, context.Message.AgvMap.MapId, context.Message.AgvMap.ImageData, context.Message.AgvMap.Resolution, context.Message.AgvMap.XOffset, context.Message.AgvMap.YOffset, context.Message.AgvMap.ModificationDate))
                 {
                     _logger.LogInformation("Map {MapId}/{MapCorrelationId} inserted into Registry", context.Message.AgvMap.MapId, context.Message.CorrelationId);
                 }
@@ -308,7 +308,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
             }
             else
             {
-                if (_mapRegistry.Update(context.Message.AgvMap.CorrelationId, context.Message.AgvMap.MapId, context.Message.AgvMap.ImageData, context.Message.AgvMap.Resolution, context.Message.AgvMap.XOffset, context.Message.AgvMap.YOffset, context.Message.AgvMap.ModificationDate))
+                if (_mapRegistry.AddOrUpdate(context.Message.AgvMap.CorrelationId, context.Message.AgvMap.MapId, context.Message.AgvMap.ImageData, context.Message.AgvMap.Resolution, context.Message.AgvMap.XOffset, context.Message.AgvMap.YOffset, context.Message.AgvMap.ModificationDate))
                 {
                     _logger.LogInformation("Map {MapId}/{MapCorrelationId} has been updated in Registry", context.Message.AgvMap.MapId, context.Message.CorrelationId);
                 }

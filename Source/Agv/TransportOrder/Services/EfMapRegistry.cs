@@ -14,6 +14,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
     {
         private readonly IDbContextFactory<SagaPersistenceDbContext> _dbContextFactory;
         private readonly ILogger<EfMapRegistry> _logger;
+        private static readonly object _mapDbLockObject = new();
 
         /// <summary>
         /// Constructor of the EF MapRegistry
@@ -46,12 +47,30 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// <inheritdoc/>
         public bool Exists(Guid correlationId)
         {
-            var request = Maps.FirstOrDefault(q => q.CorrelationId == correlationId);
-            return request != null;
+            var dbContext = _dbContextFactory.CreateDbContext();
+            var map = dbContext
+                .Set<Map>()
+                .FirstOrDefault(q => q.CorrelationId == correlationId);
+            return map != null;
         }
 
         /// <inheritdoc/>
-        public bool Add(Guid correlationId, string mapId, string base64PngImage, double resolution, double xOffset, double yOffset, DateTime modificationDate)
+        public bool AddOrUpdate(Guid correlationId, string mapId, string base64PngImage, double resolution, double xOffset, double yOffset, DateTime modificationDate)
+        {
+            lock (_mapDbLockObject)
+            {
+                if (Exists(correlationId))
+                {
+                    return Update(correlationId, mapId, base64PngImage, resolution, xOffset, yOffset, modificationDate);
+                }
+                else
+                {
+                    return Add(correlationId, mapId, base64PngImage, resolution, xOffset, yOffset, modificationDate);
+                }
+            }
+        }
+        
+        private bool Add(Guid correlationId, string mapId, string base64PngImage, double resolution, double xOffset, double yOffset, DateTime modificationDate)
         {
             try
             {
@@ -72,13 +91,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
             }
             catch (Exception e)
             {
-                _logger.LogError("Could not add map: {Exception}", e.Message);
+                _logger.LogError(e, "Could not add map.");
                 return false;
             }
         }
 
-        /// <inheritdoc/>
-        public bool Update(Guid correlationId,  string mapId, string base64PngImage, double resolution, double xOffset, double yOffset, DateTime modificationDate)
+        private bool Update(Guid correlationId,  string mapId, string base64PngImage, double resolution, double xOffset, double yOffset, DateTime modificationDate)
         {
             try
             {

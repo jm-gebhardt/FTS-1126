@@ -654,7 +654,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             const float yOffset = 1;
             var modificationDate = DateTime.Now;
 
-            mockRegistry.Setup(mo => mo.Add(mapId.ToGuid(), mapId, imageData, resolution, xOffset, yOffset, modificationDate)).Returns(true);
+            mockRegistry.Setup(mo => mo.AddOrUpdate(mapId.ToGuid(), mapId, imageData, resolution, xOffset, yOffset, modificationDate)).Returns(true);
 
             // Act
             await fixture.TestHarness.Bus.Publish(new AgvMapReceived(
@@ -667,8 +667,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvMapReceived>());
             Assert.AreEqual(agvSaga.CorrelationId, await fixture.SagaHarness.Exists(agvSaga.CorrelationId));
 
-            mockRegistry.Verify(mo => mo.Add(mapId.ToGuid(), mapId, imageData, resolution, xOffset, yOffset, modificationDate), Times.Once);
-            mockRegistry.Verify(mo => mo.Update(mapId.ToGuid(), mapId, imageData, resolution, xOffset, yOffset, modificationDate), Times.Never);
+            mockRegistry.Verify(mo => mo.AddOrUpdate(mapId.ToGuid(), mapId, imageData, resolution, xOffset, yOffset, modificationDate), Times.Once);
         }
 
         /// <summary>
@@ -722,8 +721,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvMapReceived>());
             Assert.AreEqual(agvSaga.CorrelationId, await fixture.SagaHarness.Exists(agvSaga.CorrelationId));
 
-            mockRegistry.Verify(mo => mo.Add(mapId.ToGuid(),  mapId, imageData, resolution, xOffset, yOffset, modificationDate), Times.Never);
-            mockRegistry.Verify(mo => mo.Update(mapId.ToGuid(),  mapId, imageData, resolution, xOffset, yOffset, modificationDate), Times.Once);
+            mockRegistry.Verify(mo => mo.AddOrUpdate(mapId.ToGuid(),  mapId, imageData, resolution, xOffset, yOffset, modificationDate), Times.Once);
         }
 
         /// <summary>

@@ -20,6 +20,8 @@ services:
       - MQTT_USER=${RABBITMQ_USER}
       - MQTT_PASSWORD=${RABBITMQ_PASSWORD}
       - MONGODB=mongo
+    ports:
+      - 127.0.0.1:8081:80
     
   karis1:
     image: registry.gitlab.com/tar4/karis_virtual
@@ -29,7 +31,10 @@ services:
       - MQTT_USER=${RABBITMQ_USER}
       - MQTT_PASSWORD=${RABBITMQ_PASSWORD}
       - MONGODB=mongo
-  
+    ports:
+      - 127.0.0.1:8082:80
+      - 127.0.0.1:30061:30061
+    
   mongo:
     hostname: mongo.karis.agv
     ports:

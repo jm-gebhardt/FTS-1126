@@ -1,7 +1,7 @@
 ﻿namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi
 {
     /// <summary>
-    /// Utility class for definitions used across beckend and frontend
+    /// Utility class for definitions used across backend and frontend
     /// </summary>
     public static class Defines
     {

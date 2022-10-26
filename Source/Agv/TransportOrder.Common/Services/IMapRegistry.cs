@@ -26,27 +26,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Common.Services
         public bool Exists(Guid correlationId);
 
         /// <summary>
-        /// Add a new map to the registry
+        /// Add or update a map to/in the registry
         /// </summary>
-        /// <param name="correlationId">GUID of the map added to the registry</param>
+        /// <param name="correlationId">GUID of the map</param>
         /// <param name="base64PngImage"></param>
         /// <param name="mapId"></param>
         /// <param name="resolution"></param>
         /// <param name="xOffset"></param>
         /// <param name="yOffset"></param>
         /// <param name="modificationDate"></param>
-        public bool Add(Guid correlationId, string mapId, string base64PngImage, double resolution, double xOffset, double yOffset, DateTime modificationDate);
-
-        /// <summary>
-        /// Update image of a given map in the registry
-        /// </summary>
-        /// <param name="correlationId">GUID of the map updated in the registry</param>
-        /// <param name="mapId"></param>
-        /// <param name="base64PngImage"></param>
-        /// <param name="resolution"></param>
-        /// <param name="xOffset"></param>
-        /// <param name="yOffset"></param>
-        /// <param name="modificationDate"></param>
-        public bool Update(Guid correlationId, string mapId, string base64PngImage, double resolution, double xOffset, double yOffset, DateTime modificationDate);
+        public bool AddOrUpdate(Guid correlationId, string mapId, string base64PngImage, double resolution, double xOffset, double yOffset, DateTime modificationDate);
     }
 }

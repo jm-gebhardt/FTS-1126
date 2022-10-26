@@ -34,7 +34,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos
         /// <param name="assignedAgv">CorrelationId of the assigned AGV or null if order is not assigned to an AGV yet</param>
         /// <param name="orderDetails">Details about this order</param>
         /// <param name="correlationId">CorrelationId of this order</param>
-        /// <param name="failedReason">Error string containing the reason why the order faield or null</param>
+        /// <param name="failedReason">Error string containing the reason why the order failed or null</param>
         [JetBrains.Annotations.PublicAPI]
         public Order(string currentState, Guid? assignedAgv, OrderDetails orderDetails, Guid correlationId, string? failedReason = null)
         {
