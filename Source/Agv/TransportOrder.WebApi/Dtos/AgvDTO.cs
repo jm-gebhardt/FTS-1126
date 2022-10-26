@@ -9,5 +9,5 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos
     /// <param name="AgvId">AGV Serial Number</param>
     /// <param name="CurrentState">Current State</param>
     [JetBrains.Annotations.PublicAPI]
-    public record Agv(Guid CorrelationId, string AgvId, string CurrentState);
+    public record AgvDto(Guid CorrelationId, string AgvId, string CurrentState);
 }

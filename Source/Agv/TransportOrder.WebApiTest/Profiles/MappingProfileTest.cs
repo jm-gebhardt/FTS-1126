@@ -42,7 +42,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Profiles
         }
 
         /// <summary>
-        /// Maps the <see cref="AgvGraph"/> to <see cref="Graph"/> and should map correctly
+        /// Maps the <see cref="AgvGraph"/> to <see cref="GraphDto"/> and should map correctly
         /// </summary>
         [TestMethod]
         public void Map_ShouldMapAllPropertiesCorrectly_WhereAgvGraphIsMappedToGraph()
@@ -65,7 +65,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Profiles
                 mapName);
 
             var mapper = GetMapper();
-            var graph = mapper.Map<Graph>(agvGraph);
+            var graph = mapper.Map<GraphDto>(agvGraph);
 
             graph.ShouldNotBeNull();
 
@@ -88,7 +88,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Profiles
         }
 
         /// <summary>
-        /// Maps the <see cref="AgvSaga"/> to <see cref="TransportOrder.WebApi.Dtos.Agv"/> and should map correctly
+        /// Maps the <see cref="AgvSaga"/> to <see cref="AgvDto"/> and should map correctly
         /// </summary>
         [TestMethod]
         public void Map_ShouldMapAllPropertiesCorrectly_WhereAgvSagaIsMappedToAgv()
@@ -106,7 +106,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Profiles
             );
 
             var mapper = GetMapper();
-            var agv = mapper.Map<TransportOrder.WebApi.Dtos.Agv>(agvSaga);
+            var agv = mapper.Map<AgvDto>(agvSaga);
 
             agv.ShouldNotBeNull();
             agv.CorrelationId.ShouldBe(agvSaga.CorrelationId);
@@ -115,7 +115,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Profiles
         }
 
         /// <summary>
-        /// Maps the <see cref="TransportOrder.Persistence.Models.Map"/> to <see cref="TransportOrder.WebApi.Dtos.Map"/> and should map correctly
+        /// Maps the <see cref="Persistence.Models.Map"/> to <see cref="MapDto"/> and should map correctly
         /// </summary>
         [TestMethod]
         public void Map_ShouldMapAllPropertiesCorrectly_WherePersistenceMapIsMappedToDtoMap()
@@ -124,7 +124,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Profiles
             const string base64String = "dGhlIHF1aWNrIGJyb3duIGZveCBqdW1wIG92ZXIgdGhlIGxhenkgZG9n";
             var correlationId = Guid.NewGuid();
 
-            var persistenceMap = new TransportOrder.Persistence.Models.Map(correlationId, "Area51_Floor1_Compartment47", Encoding.UTF8.GetBytes(base64String), 0.01, 1, 2, DateTime.Now);
+            var persistenceMap = new Persistence.Models.Map(correlationId, "Area51_Floor1_Compartment47", Encoding.UTF8.GetBytes(base64String), 0.01, 1, 2, DateTime.Now);
             ImmutableDictionary<Guid, Guid[]> agvMapRelation = new Dictionary<Guid, Guid[]>
             {
                 {
@@ -137,7 +137,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Profiles
                 }
             }.ToImmutableDictionary(x => x.Key, x => x.Value);
 
-            var dtoMap = mapper.Map<Map>(persistenceMap, opt => opt.Items[MappingProfile.AgvMapRelationsName] = agvMapRelation);
+            var dtoMap = mapper.Map<MapDto>(persistenceMap, opt => opt.Items[MappingProfile.AgvMapRelationsName] = agvMapRelation);
 
             dtoMap.ShouldNotBeNull();
             dtoMap.CorrelationId.ShouldBe(persistenceMap.CorrelationId);
@@ -150,7 +150,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Profiles
         }
 
         /// <summary>
-        /// Maps the <see cref="TransportOrder.States.OrderSaga"/> to <see cref="TransportOrder.WebApi.Dtos.Order"/> and should map correctly
+        /// Maps the <see cref="TransportOrder.States.OrderSaga"/> to <see cref="OrderDto"/> and should map correctly
         /// </summary>
         [TestMethod]
         public void Map_ShouldMapAllPropertiesCorrectly_WhereOrderSagaIsMappedToOrder()
@@ -164,7 +164,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Profiles
             );
 
             var mapper = GetMapper();
-            var order = mapper.Map<Order>(orderSaga);
+            var order = mapper.Map<OrderDto>(orderSaga);
 
             order.ShouldNotBeNull();
             order.CurrentState.ShouldBe(orderSaga.CurrentState);

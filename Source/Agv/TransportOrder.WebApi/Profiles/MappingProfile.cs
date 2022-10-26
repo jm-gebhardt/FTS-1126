@@ -22,16 +22,16 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles
         /// </summary>
         public MappingProfile()
         {
-            CreateMap<AgvGraph, Graph>()
-                .ForMember(nameof(Graph.Edges), opt => opt.MapFrom<GraphEdgeValueResolver>())
+            CreateMap<AgvGraph, GraphDto>()
+                .ForMember(nameof(GraphDto.Edges), opt => opt.MapFrom<GraphEdgeValueResolver>())
                 // Graph is a record type, therefore we must initialize all properties in the ctor
-                .ForCtorParam(nameof(Graph.Edges), opt => opt.MapFrom((src, ctx) => new GraphEdgeValueResolver().Resolve(src, null!, null!, ctx)));
+                .ForCtorParam(nameof(GraphDto.Edges), opt => opt.MapFrom((src, ctx) => new GraphEdgeValueResolver().Resolve(src, null!, null!, ctx)));
 
-            CreateMap<IMap, Map>()
-                .ForCtorParam(nameof(Map.RelatedAgvs), opt => opt.MapFrom((src, ctx) => new RelatedAgvValueResolver().Resolve(src, null!, null!, ctx)));
+            CreateMap<IMap, MapDto>()
+                .ForCtorParam(nameof(MapDto.RelatedAgvs), opt => opt.MapFrom((src, ctx) => new RelatedAgvValueResolver().Resolve(src, null!, null!, ctx)));
 
-            CreateMap<IAgv, Dtos.Agv>();
-            CreateMap<IOrder, Order>();
+            CreateMap<IAgv, AgvDto>();
+            CreateMap<IOrder, OrderDto>();
             CreateMap<AgvPositionChanged, AgvPositionStatus>()
                 .ForCtorParam(nameof(AgvPositionStatus.AgvPosition), opt => opt.MapFrom(src => src.NewAgvPosition));
             CreateMap<AgvPositionReceived, AgvPositionStatus>();

@@ -37,10 +37,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
         /// <response code="200">Ok</response>
         [HttpGet]
         [Route("/agvs")]
-        public ActionResult<IEnumerable<Dtos.Agv>> GetAgvs()
+        public ActionResult<IEnumerable<AgvDto>> GetAgvs()
         {
             IOrderedQueryable<IAgv> agvs = _agvRegistry.GetAllAgvs().OrderBy(a => a.AgvId);
-            return Ok(agvs.Select(agv => _mapper.Map<Dtos.Agv>(agv)));
+            return Ok(agvs.Select(agv => _mapper.Map<AgvDto>(agv)));
         }
 
         /// <summary>
@@ -51,7 +51,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
         /// <response code="404">Not found</response>
         [HttpGet]
         [Route("/agvs/{correlationId:guid}/graph")]
-        public ActionResult<Graph> GetAgvGraph(Guid correlationId)
+        public ActionResult<GraphDto> GetAgvGraph(Guid correlationId)
         {
             var agv = _agvRegistry.GetAgv(correlationId);
             if (agv == null)
@@ -64,7 +64,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
                 return NoContent();
             }
 
-            var graph = _mapper.Map<Graph>(agv.AgvGraph);
+            var graph = _mapper.Map<GraphDto>(agv.AgvGraph);
 
             return Ok(graph);
         }

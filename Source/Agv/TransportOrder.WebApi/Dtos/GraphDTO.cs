@@ -1,6 +1,6 @@
 using MassTransit;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using static Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Graph;
+using static Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.GraphDto;
 
 // ReSharper disable ConvertToPrimaryConstructor
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos
@@ -12,7 +12,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos
     /// <param name="Edges">The list of edges in the graph.</param>
     /// <param name="CorrelationId">CorrelationId</param>
     [JetBrains.Annotations.PublicAPI]
-    public record Graph(List<AgvGraph.Node> Nodes, List<Edge> Edges, Guid CorrelationId) : CorrelatedBy<Guid>
+    public record GraphDto(List<AgvGraph.Node> Nodes, List<Edge> Edges, Guid CorrelationId) : CorrelatedBy<Guid>
     {
         /// <summary>
         /// Model for drawing an edge in the UI

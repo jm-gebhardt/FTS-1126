@@ -10,7 +10,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos
     /// This is a simply copy of the <see cref="IOrder"/> to overcome a json serialization problems
     /// <see href="https://github.com/dotnet/runtime/issues/41749" />
     /// </summary>
-    public record Order : IOrder
+    public record OrderDto : IOrder
     {
         /// <inheritdoc/>
         public string CurrentState { get; }
@@ -28,7 +28,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos
         public string? FailedReason { get; set; }
 
         /// <summary>
-        /// Initializes a new instance of <see cref="Order"/>
+        /// Initializes a new instance of <see cref="OrderDto"/>
         /// </summary>
         /// <param name="currentState">Current state of the order</param>
         /// <param name="assignedAgv">CorrelationId of the assigned AGV or null if order is not assigned to an AGV yet</param>
@@ -36,7 +36,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos
         /// <param name="correlationId">CorrelationId of this order</param>
         /// <param name="failedReason">Error string containing the reason why the order failed or null</param>
         [JetBrains.Annotations.PublicAPI]
-        public Order(string currentState, Guid? assignedAgv, OrderDetails orderDetails, Guid correlationId, string? failedReason = null)
+        public OrderDto(string currentState, Guid? assignedAgv, OrderDetails orderDetails, Guid correlationId, string? failedReason = null)
         {
             CurrentState = currentState;
             AssignedAgv = assignedAgv;

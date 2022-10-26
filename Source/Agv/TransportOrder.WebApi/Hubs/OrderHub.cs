@@ -40,7 +40,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs
         /// <inheritdoc/>
         public async Task SendOrderToAllClients(string method, IOrder order, CancellationToken cancellationToken)
         {
-            string message = JsonSerializer.Serialize(_mapper.Map<Order>(order), _serializerOptions);
+            string message = JsonSerializer.Serialize(_mapper.Map<OrderDto>(order), _serializerOptions);
             await _hubContext.Clients.All.SendAsync(method, message, cancellationToken);
         }
     }

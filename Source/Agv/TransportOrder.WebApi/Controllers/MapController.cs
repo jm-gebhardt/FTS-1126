@@ -36,7 +36,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("/maps")]
-        public ActionResult<IEnumerable<Map>> GetMaps()
+        public ActionResult<IEnumerable<MapDto>> GetMaps()
         {
             ImmutableDictionary<Guid, Guid[]> agvMapRelation = _agvRegistry.GetAllAgvs()
                 .Where(a => a.AgvGraph != null)
@@ -48,7 +48,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
                     x => x.Select(m => m.CorrelationId).ToArray()
                 );
 
-            var map = _mapper.Map<List<Map>>(_mapRegistry.GetAllMaps().AsEnumerable(), opt => opt.Items[MappingProfile.AgvMapRelationsName] = agvMapRelation);
+            var map = _mapper.Map<List<MapDto>>(_mapRegistry.GetAllMaps().AsEnumerable(), opt => opt.Items[MappingProfile.AgvMapRelationsName] = agvMapRelation);
 
             return Ok(map);
         }

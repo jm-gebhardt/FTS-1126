@@ -107,7 +107,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
 
             var mapRegistryMock = new Mock<IMapRegistry>();
 
-            mapRegistryMock.Setup(x => x.GetAllMaps()).Returns(new EnumerableQuery<TransportOrder.Persistence.Models.Map>(new List<TransportOrder.Persistence.Models.Map>
+            mapRegistryMock.Setup(x => x.GetAllMaps()).Returns(new EnumerableQuery<Persistence.Models.Map>(new List<Persistence.Models.Map>
             {
                 new(_correlationIds[0], "Area51_Floor1_Compartment47", Encoding.UTF8.GetBytes(base64String), 0.01, 1, 2, DateTime.Now),
                 new(_correlationIds[1], "Area51_Floor1_Compartment48", Encoding.UTF8.GetBytes(base64String), 0.02, 2, 3, DateTime.Now),
@@ -127,7 +127,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
 
             var result = controller.GetMaps().Result as OkObjectResult;
 
-            List<Map>? dtoMaps = (result!.Value as IEnumerable<Map>)?.ToList();
+            List<MapDto>? dtoMaps = (result!.Value as IEnumerable<MapDto>)?.ToList();
 
             dtoMaps.ShouldNotBeEmpty();
             dtoMaps.ShouldAllBe(p => _correlationIds.Any(id => id == p.CorrelationId));

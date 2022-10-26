@@ -72,13 +72,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
 
             Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<HandleHostOrder>());
 
-            ActionResult<IEnumerable<Order>> actionResult = controller.GetOrders(new PaginationParameters(), new DateRangeParameters());
+            ActionResult<IEnumerable<OrderDto>> actionResult = controller.GetOrders(new PaginationParameters(), new DateRangeParameters());
             var result = actionResult.Result as OkObjectResult;
             Assert.IsNotNull(result);
             Assert.AreEqual(200, result.StatusCode);
-            Assert.IsInstanceOfType(result.Value, typeof(IEnumerable<Order>));
+            Assert.IsInstanceOfType(result.Value, typeof(IEnumerable<OrderDto>));
 
-            List<Order> orders = (result.Value as IEnumerable<Order>)!.ToList();
+            List<OrderDto> orders = (result.Value as IEnumerable<OrderDto>)!.ToList();
 
             Assert.IsNotNull(orders);
             Assert.AreEqual(2, orders.Count);
@@ -98,14 +98,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var orderRegistry = GetOrderRegistry();
             var controller = new TransportOrderController(orderRegistry, GetMapper());
             SetupControllerForTests(controller);
-            ActionResult<IEnumerable<Order>> result = controller.GetOrders(
+            ActionResult<IEnumerable<OrderDto>> result = controller.GetOrders(
                 new PaginationParameters(),
                 new DateRangeParameters()
                 );
             Assert.IsNotNull(result.Result);
             var okResult = result.Result as OkObjectResult;
             Assert.IsNotNull(okResult);
-            Order[] orders = (okResult.Value as IEnumerable<Order>)!.ToArray();
+            OrderDto[] orders = (okResult.Value as IEnumerable<OrderDto>)!.ToArray();
             Assert.IsNotNull(orders);
             Assert.AreEqual(2, orders.Length);
         }
@@ -118,14 +118,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             orderRegistry.Setup(x => x.GetUnassignedOrders()).Returns(Array.Empty<IOrder>().AsQueryable());
             var controller = new TransportOrderController(orderRegistry.Object, GetMapper());
             SetupControllerForTests(controller);
-            ActionResult<IEnumerable<Order>> result = controller.GetOrders(
+            ActionResult<IEnumerable<OrderDto>> result = controller.GetOrders(
                 new PaginationParameters(),
                 new DateRangeParameters()
             );
             Assert.IsNotNull(result.Result);
             var okResult = result.Result as OkObjectResult;
             Assert.IsNotNull(okResult);
-            Order[] orders = (okResult.Value as IEnumerable<Order>)!.ToArray();
+            OrderDto[] orders = (okResult.Value as IEnumerable<OrderDto>)!.ToArray();
             Assert.IsNotNull(orders);
             Assert.AreEqual(0, orders.Length);
         }

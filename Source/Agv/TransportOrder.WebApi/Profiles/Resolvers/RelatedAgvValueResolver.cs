@@ -8,7 +8,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles.Resolvers
     /// <summary>
     /// The custom value resolver, maps from Persistence model of Map and the destination Dto Map to the RelatedAgvs property
     /// </summary>
-    public class RelatedAgvValueResolver : IValueResolver<IMap, Map, object>
+    public class RelatedAgvValueResolver : IValueResolver<IMap, MapDto, object>
     {
         /// <summary>
         /// The resolve method for mapping the RelatedAgvs coming from the ResolutionContext.Items which has a value of Dictionary 
@@ -18,7 +18,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles.Resolvers
         /// <param name="destMember"></param>
         /// <param name="context"></param>
         /// <returns></returns>
-        public object Resolve(IMap source, Map destination, object destMember, ResolutionContext context)
+        public object Resolve(IMap source, MapDto destination, object destMember, ResolutionContext context)
         {
             object agvMapRelations = context.Items[MappingProfile.AgvMapRelationsName];
             if (agvMapRelations is ImmutableDictionary<Guid, Guid[]> relations)

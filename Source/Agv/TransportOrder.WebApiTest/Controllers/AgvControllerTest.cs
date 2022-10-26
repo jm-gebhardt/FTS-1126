@@ -139,9 +139,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var result = controller.GetAgvs().Result as OkObjectResult;
             Assert.IsNotNull(result);
 
-            var agvsIterable = result.Value as IEnumerable<WebApi.Dtos.Agv>;
+            var agvsIterable = result.Value as IEnumerable<AgvDto>;
             Assert.IsNotNull(agvsIterable);
-            List<TransportOrder.WebApi.Dtos.Agv> agvs = agvsIterable.ToList();
+            List<AgvDto> agvs = agvsIterable.ToList();
             Assert.AreEqual(_agvIds.Length, agvs.Count);
 
             for (int index = 0; index < _agvIds.Length; index++)
@@ -166,7 +166,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var result = controller.GetAgvGraph(correlationId).Result as OkObjectResult;
             Assert.IsNotNull(result);
 
-            var graph = result.Value as Graph;
+            var graph = result.Value as GraphDto;
             Assert.IsNotNull(graph);
 
             Assert.AreEqual(correlationId, graph.CorrelationId);

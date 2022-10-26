@@ -7,7 +7,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles.Resolvers
     /// <summary>
     /// The custom value resolver, maps from AgvGraph and and the destination Graph to the Edges property
     /// </summary>
-    public class GraphEdgeValueResolver : IValueResolver<AgvGraph, Graph, object>
+    public class GraphEdgeValueResolver : IValueResolver<AgvGraph, GraphDto, object>
     {
         /// <summary>
         /// The resolve method
@@ -17,9 +17,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles.Resolvers
         /// <param name="destMember"></param>
         /// <param name="context"></param>
         /// <returns></returns>
-        public object Resolve(AgvGraph source, Graph destination, object destMember, ResolutionContext context)
+        public object Resolve(AgvGraph source, GraphDto destination, object destMember, ResolutionContext context)
         {
-            var graphEdges = new List<Graph.Edge>();
+            var graphEdges = new List<GraphDto.Edge>();
 
             Dictionary<string, AgvGraph.Node> nodeDict = source.Nodes.ToDictionary(node => node.Id);
 

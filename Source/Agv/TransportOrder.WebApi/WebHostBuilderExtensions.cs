@@ -55,6 +55,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi
                     options.SupportNonNullableReferenceTypes(); // Sets Nullable flags appropriately.
                     options.UseAllOfToExtendReferenceSchemas(); // Allows $ref enums to be nullable
                     options.UseAllOfForInheritance(); // Allows $ref objects to be nullable
+                    options.CustomSchemaIds(CustomSchemaSelector.RemoveDtoSuffix);
                 });
                 services.AddSignalR();
             });

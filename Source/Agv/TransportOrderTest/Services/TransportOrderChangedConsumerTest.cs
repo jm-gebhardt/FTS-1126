@@ -29,7 +29,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             var agvCorrelationId = Guid.NewGuid();
 
             var orderDetails = new Common.Messages.OrderDetails(correlationId, orderId, "S01", "D01", "001", Common.Messages.HostOrderCreator.Simulation);
-            IOrder order = new Order("TransportOrderStarted", agvCorrelationId, orderDetails, correlationId);
+            IOrder order = new OrderDto("TransportOrderStarted", agvCorrelationId, orderDetails, correlationId);
 
             await fixture.TestHarness!.Bus.Publish(new TransportOrderChanged(correlationId, order));
             Assert.IsTrue(await fixture.TestHarness.Published.Any<TransportOrderChanged>());

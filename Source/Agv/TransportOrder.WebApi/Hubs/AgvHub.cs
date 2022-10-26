@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.SignalR;
 using SignalRSwaggerGen.Attributes;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.TransportOrder.Common.Models;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs
 {
@@ -45,7 +46,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs
         /// <inheritdoc/>
         public async Task SendAgvStateToAllClients(string method, IAgv agv, CancellationToken cancellationToken)
         {
-            string message = JsonSerializer.Serialize(_mapper.Map<Dtos.Agv>(agv), _serializerOptions);
+            string message = JsonSerializer.Serialize(_mapper.Map<AgvDto>(agv), _serializerOptions);
             await _hubContext.Clients.All.SendAsync(method, message, cancellationToken);
         }
 

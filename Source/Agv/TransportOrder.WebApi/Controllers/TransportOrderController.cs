@@ -34,7 +34,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
         /// <response code="200">Ok</response>
         [HttpGet]
         [Route("/orders")]
-        public ActionResult<IEnumerable<Order>> GetOrders(
+        public ActionResult<IEnumerable<OrderDto>> GetOrders(
             [FromQuery] PaginationParameters paginationParameters,
             [FromQuery] DateRangeParameters dateRangeParameters
             )
@@ -59,7 +59,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
             var dateRangeHeaders = new DateRangeHeaders(dateRangeParameters.Start, dateRangeParameters.End);
             Response.Headers.Add(dateRangeHeaders.HeaderName, JsonSerializer.Serialize(dateRangeHeaders));
             
-            return Ok(pagedOrders.Select(pageOrder => _mapper.Map<Order>(pageOrder)));
+            return Ok(pagedOrders.Select(pageOrder => _mapper.Map<OrderDto>(pageOrder)));
         }
     }
 }

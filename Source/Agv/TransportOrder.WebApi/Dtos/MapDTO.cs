@@ -13,5 +13,5 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos
     /// <param name="YOffset">The y offset of the map in [m] where the mapped graph coordinate system starts. Origin is the left upper corner.</param>
     /// <param name="RelatedAgvs">List of Agvs using this map</param>
     [JetBrains.Annotations.PublicAPI]
-    public record Map(Guid CorrelationId, string MapId, double Resolution, double XOffset, double YOffset, Guid[] RelatedAgvs) : CorrelatedBy<Guid>;
+    public record MapDto(Guid CorrelationId, string MapId, double Resolution, double XOffset, double YOffset, Guid[] RelatedAgvs) : CorrelatedBy<Guid>;
 }
