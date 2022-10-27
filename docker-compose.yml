@@ -114,6 +114,7 @@ services:
       - "127.0.0.1:5671:5671"
       - "127.0.0.1:5672:5672"
       - "1883:1883"
+      - "8883:8883"
     environment:
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
