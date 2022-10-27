@@ -248,6 +248,60 @@
         }
       }
     },
+    "/agvs/{correlationId}/emitRequestData": {
+      "patch": {
+        "tags": [
+          "Agv"
+        ],
+        "summary": "Emit RequestData Telegram",
+        "parameters": [
+          {
+            "name": "correlationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok: RequestData telegram was successfully emitted"
+          },
+          "404": {
+            "description": "Not Found: AGV with the given correlationId does not exist"
+          }
+        }
+      }
+    },
+    "/agvs/{correlationId}/emitRequestGraph": {
+      "patch": {
+        "tags": [
+          "Agv"
+        ],
+        "summary": "Emit RequestGraph Telegram",
+        "parameters": [
+          {
+            "name": "correlationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok: RequestGraph telegram was successfully emitted"
+          },
+          "404": {
+            "description": "Not Found: AGV with the given correlationId does not exist"
+          }
+        }
+      }
+    },
     "/maps": {
       "get": {
         "tags": [

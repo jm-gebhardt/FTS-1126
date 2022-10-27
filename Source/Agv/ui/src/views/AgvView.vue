@@ -1,6 +1,7 @@
 <template>
   <h1>Agvs</h1>
   <div class="buttons">
+    <ui-button @click="requestParameter">Refresh Parameter</ui-button>
     <button @click="fetch()">Reload</button>
     Auto-refresh
     <ui-switch
@@ -149,6 +150,14 @@ function pushCurrentRoute(): void {
   }
 
   router?.push({ name: 'AGVs', query: query })
+}
+
+async function requestParameter(): Promise<void> {
+  if (selectedCorrelationId.value != null) {
+    console.log('request refreshment ' + selectedCorrelationId.value)
+    await agvApi.emitRequestDataPartialUpdate(selectedCorrelationId.value)
+    await agvApi.emitRequestGraphPartialUpdate(selectedCorrelationId.value)
+  }
 }
 
 onBeforeUnmount(async () => {

@@ -274,5 +274,53 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
 
             bus.Verify(s => s.Publish(It.IsAny<ReleaseAgv>(), default), Times.Once);
         }
+
+        [TestMethod]
+        public void EmitRequestAgvData_NotFound()
+        {
+            var controller = GetController();
+            var correlationId = Guid.Empty;
+
+            var result = controller.EmitRequestData(correlationId).Result as NotFoundResult;
+            Assert.IsNotNull(result);
+        }
+
+        [TestMethod]
+        public void EmitRequestAgvData_Ok()
+        {
+            var bus = new Mock<IBus>();
+
+            var controller = new AgvController(GetAgvRegistry(), GetAgvPositionRegistry(), bus.Object, GetMapper());
+            var correlationId = _agvIds[2].ToGuid();
+
+            var result = controller.EmitRequestData(correlationId).Result as OkResult;
+            Assert.IsNotNull(result);
+
+            bus.Verify(s => s.Publish(It.IsAny<RequestAgvData>(), default), Times.Once);
+        }
+
+        [TestMethod]
+        public void EmitRequestAgvGraph_NotFound()
+        {
+            var controller = GetController();
+            var correlationId = Guid.Empty;
+
+            var result = controller.EmitRequestGraph(correlationId).Result as NotFoundResult;
+            Assert.IsNotNull(result);
+        }
+
+        [TestMethod]
+        public void EmitRequestAgvGraph_Ok()
+        {
+            var bus = new Mock<IBus>();
+
+            var controller = new AgvController(GetAgvRegistry(), GetAgvPositionRegistry(), bus.Object, GetMapper());
+            var correlationId = _agvIds[2].ToGuid();
+
+            var result = controller.EmitRequestGraph(correlationId).Result as OkResult;
+            Assert.IsNotNull(result);
+
+            bus.Verify(s => s.Publish(It.IsAny<RequestAgvGraph>(), default), Times.Once);
+        }
     }
 }

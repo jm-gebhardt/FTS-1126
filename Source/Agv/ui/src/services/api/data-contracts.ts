@@ -148,7 +148,7 @@ export interface IMap {
    */
   resolution: number
   /**
-   * The x offset of the map in [m] where the mapped graph coordinate system starts. . Origin is the left upper corner.
+   * The x offset of the map in [m] where the mapped graph coordinate system starts. Origin is the left upper corner.
    * @format double
    */
   xOffset: number

@@ -89,4 +89,38 @@ export class Agvs<
       method: 'PATCH',
       ...params
     })
+  /**
+   * No description
+   *
+   * @tags Agv
+   * @name EmitRequestDataPartialUpdate
+   * @summary Emit RequestData Telegram
+   * @request PATCH:/agvs/{correlationId}/emitRequestData
+   */
+  emitRequestDataPartialUpdate = (
+    correlationId: string,
+    params: RequestParams = {}
+  ) =>
+    this.request<void, void>({
+      path: `/agvs/${correlationId}/emitRequestData`,
+      method: 'PATCH',
+      ...params
+    })
+  /**
+   * No description
+   *
+   * @tags Agv
+   * @name EmitRequestGraphPartialUpdate
+   * @summary Emit RequestGraph Telegram
+   * @request PATCH:/agvs/{correlationId}/emitRequestGraph
+   */
+  emitRequestGraphPartialUpdate = (
+    correlationId: string,
+    params: RequestParams = {}
+  ) =>
+    this.request<void, void>({
+      path: `/agvs/${correlationId}/emitRequestGraph`,
+      method: 'PATCH',
+      ...params
+    })
 }

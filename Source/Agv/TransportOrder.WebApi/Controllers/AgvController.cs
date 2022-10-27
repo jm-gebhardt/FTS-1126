@@ -143,5 +143,45 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
             await _bus.Publish(new ReleaseAgv(agv.CorrelationId));
             return Ok();
         }
+
+        /// <summary>
+        /// Emit RequestData telegram when receiving PATCH request
+        /// </summary>
+        /// <response code="200">Ok: Telegram was successfully emitted</response>
+        /// <response code="404">Not Found: AGV with the given correlationId does not exist</response>
+        [HttpPatch]
+        [Route("/agvs/{correlationId}/emitRequestData")]
+        public async Task<ActionResult> EmitRequestData(Guid correlationId)
+        {
+            var agv = _agvRegistry.GetAgv(correlationId);
+
+            if (agv == null)
+            {
+                return NotFound();
+            }
+
+            await _bus.Publish(new RequestAgvData(agv.CorrelationId, agv.AgvId));
+            return Ok();
+        }
+
+        /// <summary>
+        /// Emit RequestGraph telegram when receiving PATCH request
+        /// </summary>
+        /// <response code="200">Ok: Telegram was successfully emitted</response>
+        /// <response code="404">Not Found: AGV with the given correlationId does not exist</response>
+        [HttpPatch]
+        [Route("/agvs/{correlationId}/emitRequestGraph")]
+        public async Task<ActionResult> EmitRequestGraph(Guid correlationId)
+        {
+            var agv = _agvRegistry.GetAgv(correlationId);
+
+            if (agv == null)
+            {
+                return NotFound();
+            }
+
+            await _bus.Publish(new RequestAgvGraph(agv.CorrelationId, agv.AgvId));
+            return Ok();
+        }
     }
 }
