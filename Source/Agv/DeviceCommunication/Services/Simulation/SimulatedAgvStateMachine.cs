@@ -119,11 +119,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
         /// <summary>
         /// Interval for signalling position durting order execution.
         /// </summary>
-        public int SignalPositionIntervalMs { get; set; } = 500;
+        public int SignalPositionIntervalMs { get; set; }
 
         private readonly ILogger<SimulatedAgvStateMachine> _logger;
         private readonly SimulateOptions _simulateOptions;
-        private readonly int _sendStatusTimeout; // Pause between sending the agv status in [ms]
+        private readonly int _sendStatusIntervalMs; // Pause between sending the agv status in [ms]
 
         /// <summary>
         /// SimulatedAgvStateMachine Constructor
@@ -134,7 +134,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
         {
             _logger = logger;
             _simulateOptions = simulateOptions;
-            _sendStatusTimeout = Math.Max(_simulateOptions.NodeTravelTime / 2, 10000); // Send twice per node or at least every 10s
+            _sendStatusIntervalMs = Math.Clamp(_simulateOptions.NodeTravelTime / 2, 100, 10000); // Send twice per node (min 0.1s, max 10s)
+            SignalPositionIntervalMs = Math.Clamp(_simulateOptions.NodeTravelTime / 10, 200, 2000); // Send 10x per node (min 0.2s, max 2s)
             _logger.LogInformation("Initialized SimulatedAgvStateMachine with node travel time {NodetravelTime}", _simulateOptions.NodeTravelTime);
 
             SetSagaFactory();
@@ -161,7 +162,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
                 s => s.SendStatusUpdateTokenId,
                 configuration =>
                 {
-                    configuration.Delay = TimeSpan.FromMilliseconds(_sendStatusTimeout);
+                    configuration.Delay = TimeSpan.FromMilliseconds(_sendStatusIntervalMs);
                     configuration.Received = r => r.CorrelateById(context => context.Message.CorrelationId);
                 });
 
@@ -252,10 +253,10 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
                 .Then(c => _logger.LogDebug("{MessageType} {CorrelationId} received", nameof(ScheduleSignalPosition), c.Saga.CorrelationId))
                 .If(c => c.Saga.CurrentState != "Idle",
                     t => t.ThenAsync(PublishPosition)
-                          .Schedule(SignalPositionSchedule,
-                                    c => new ScheduleSignalPosition(c.Saga.CorrelationId),
-                                    _ => TimeSpan.FromMilliseconds(SignalPositionIntervalMs))
-                    );
+                    .Schedule(SignalPositionSchedule,
+                        c => new ScheduleSignalPosition(c.Saga.CorrelationId),
+                        _ => TimeSpan.FromMilliseconds(SignalPositionIntervalMs))
+                );
 
         private async Task PublishStatus(BehaviorContext<SimulatedAgvSaga> context)
         {
@@ -304,7 +305,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
             if (order == null)
             {
                 _logger.LogError("Could not finish order, Order object is missing");
-
             }
             else
             {
