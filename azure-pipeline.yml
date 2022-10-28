@@ -118,6 +118,10 @@ stages:
     pool:
       vmImage: windows-latest
     steps:
+    - task: NodeTool@0
+      inputs:
+        versionSource: 'spec'
+        versionSpec: '16.18.0'
     - task: NuGetToolInstaller@1
       inputs:
         versionSpec: $(NugetVersion)

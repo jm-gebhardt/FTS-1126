@@ -4,7 +4,7 @@ The UI is written in TypeScript using [vuejs 3](https://vuejs.org/) and [BalmUI]
 
 ## Development
 
-The UI development requires npm v18 to be installed
+The UI development requires npm v16.18.0 to be installed
 
 - Install npm as described by [Microsoft](https://docs.microsoft.com/en-us/windows/dev-environment/javascript/nodejs-on-windows)
   - Download and install [nvm](https://github.com/coreybutler/nvm-windows)
