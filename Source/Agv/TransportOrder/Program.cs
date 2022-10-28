@@ -62,9 +62,7 @@ try
                     services.AddSingleton<IAgvPositionRegistry, AgvPositionRegistry>();
                     services.AddSingleton<IChangeDetector<AgvPositionStatus>, ChangeDetector<AgvPositionStatus>>();
                     services.AddSingleton<IRoutingPlausibilityChecker, RoutingPlausibilityChecker>();
-
-                    // Scopes
-                    services.AddScoped(_ => productionOptions);
+                    services.AddSingleton(_ => productionOptions);
 
                     services.AddDbContextFactory<SagaPersistenceDbContext>(builder =>
                     {

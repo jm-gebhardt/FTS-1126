@@ -5,7 +5,7 @@ using MassTransit;
 namespace Gebhardt.StoreWare.Agv.TransportOrder.States
 {
     /// <summary>
-    /// AGV Saga used by AgvStateMachine
+    /// AGV Saga used by <see cref="Services.AgvStateMachine"/>.
     /// This stores the current AGV state
     /// </summary>
     [PublicAPI]
@@ -38,16 +38,16 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.States
         public AgvData? AgvData { get; set; }
 
         /// <summary>
-        /// Timestamp when the Agv received its data the last time
+        /// UTC timestamp when AGV data was requested
         /// </summary>
         /// <remarks>Nullable declaration required to make data model mappable according to EF Core</remarks>
-        public DateTime? AgvDataReceivedLastTime { get; set; }
+        public DateTime? AgvDataRequestedLastTime { get; set; }
 
         /// <summary>
-        /// Timestamp when the Agv received its graph the last time
+        /// UTC timestamp when AGV graph was requested
         /// </summary>
         /// <remarks>Nullable declaration required to make data model mappable according to EF Core</remarks>
-        public DateTime? AgvGraphReceivedLastTime { get; set; }
+        public DateTime? AgvGraphRequestedLastTime { get; set; }
 
         /// <inheritdoc />
         public bool Alive { get; set; }
@@ -73,48 +73,44 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.States
             string? currentState = null, 
             AgvStatus? agvStatus = null, 
             AgvGraph? agvGraph = null, 
-            AgvData? agvData = null,
-            DateTime? agvDataReceivedLastTime = null,
-            DateTime? agvGraphReceivedLastTime = null)
+            AgvData? agvData = null)
         {
             if (correlationId == Guid.Empty)
             {
                 throw new InvalidOperationException($"{this.GetType()} requires correlation ID.");
             }
             CorrelationId = correlationId;
-            AgvStatus = agvStatus;
-            AgvGraph = agvGraph;
             AgvId = agvId;
             CurrentState = currentState ?? default!;
+            AgvStatus = agvStatus;
+            AgvGraph = agvGraph;
             AgvData = agvData;
-            AgvDataReceivedLastTime = agvDataReceivedLastTime ?? DateTime.MinValue;
-            AgvGraphReceivedLastTime = agvGraphReceivedLastTime ?? DateTime.MinValue;
         }
 
         /// <summary>
         /// Get interval since last update of AgvDate
         /// </summary>
         /// <returns>Time span between now and last update</returns>
-        public TimeSpan GetTimeSpanSinceLastUpdate_AgvData()
+        public TimeSpan GetTimeSpanSinceLastRequest_AgvData()
         {
-            if (AgvDataReceivedLastTime != null)
+            if (AgvDataRequestedLastTime != null)
             {
-                return (TimeSpan)(DateTime.Now - AgvDataReceivedLastTime);
+                return (TimeSpan)(DateTime.UtcNow - AgvDataRequestedLastTime);
             }
-            return TimeSpan.Zero;
+            return TimeSpan.MaxValue;
         }
 
         /// <summary>
         /// Get interval since last update of AgvGraph
         /// </summary>
         /// <returns>Time span between now and last update</returns>
-        public TimeSpan GetTimeSpanSinceLastUpdate_AgvGraph()
+        public TimeSpan GetTimeSpanSinceLastRequest_AgvGraph()
         {
-            if (AgvGraphReceivedLastTime != null)
+            if (AgvGraphRequestedLastTime != null)
             {
-                return (TimeSpan)(DateTime.Now - AgvGraphReceivedLastTime);
+                return (TimeSpan)(DateTime.UtcNow - AgvGraphRequestedLastTime);
             }
-            return TimeSpan.Zero;
+            return TimeSpan.MaxValue;
         }
     }
 }

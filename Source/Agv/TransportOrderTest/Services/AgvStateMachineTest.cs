@@ -1,6 +1,6 @@
-using System.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Shouldly;
 using MassTransit;
 using Moq;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
@@ -27,6 +27,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         private record Settings(int AgvOfflineTimeoutMsWhileIdle, int AgvOfflineTimeoutMsWhileBusy) : AgvStateMachine.ISettings;
 
         #region Setup
+
         /// <summary>
         /// Create AgvStateMachine test fixture with mocked services
         /// </summary>
@@ -85,7 +86,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         /// </summary>
         private AgvGraph CreateTestAgvGraph()
         {
-            const string mapName = "Map#1"; 
+            const string mapName = "Map#1";
             var agvGraph = new AgvGraph(Guid.Empty,
                 new[]
                 {
@@ -100,6 +101,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 
             return agvGraph;
         }
+
+        /// <summary>
+        /// Create a standardized AgvData for testing purposes
+        /// </summary>
+        private AgvData CreateTestAgvData()
+        {
+            return new AgvData(Guid.Empty, "Karis", "BF 2", null, 80, 1.2, 0.6, 0.8, 0.7, 0.9, 2.5, 1000, Array.Empty<AgvData.Sensor>());
+        }
+
         #endregion
 
 
@@ -201,7 +211,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         }
 
         /// <summary>
-        /// Checks if IAgvStatusReceived is consumed with LastNodeId
+        /// Checks if AgvStatusReceived is consumed with LastNodeId
         /// </summary>
         [TestMethod]
         [DataRow(null)]
@@ -236,10 +246,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
         }
 
         /// <summary>
-        /// Checks if RequestAgvGraph is sent because AGV has no graph
+        /// Checks if requests are initially sent because AGV has no graph/data
         /// </summary>
         [TestMethod]
-        public async Task Emit_AgvRequestGraph_when_NoGraphIsGiven()
+        public async Task When_GraphAndDataMissingInitially_BothAreRequested()
         {
             // Arrange
             StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = GetFixture();
@@ -251,9 +261,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                 correlationId,
                 agvId,
                 currentState: fixture.Machine.Discovered.Name,
-                agvStatus: new AgvStatus(correlationId, null, true, true, 10, true, true),
-                agvGraphReceivedLastTime: DateTime.Now - new TimeSpan(0, 0, 31)
+                agvStatus: new AgvStatus(correlationId, null, true, true, 10, true, true)
             );
+            // Request timeout already passed
+            var utcStart = DateTime.UtcNow;
+            // agvStage.AgvGraphRequestedLastTime and agvStage.AgvDataRequestedLastTime initially will result in max timespan
 
             fixture.Add(agvStage);
 
@@ -267,98 +279,24 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             // Assert
             Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvStatusReceived>());
             Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvStatusReceived>());
+
+            Assert.IsTrue(await fixture.TestHarness.Published.Any<RequestAgvData>());
             Assert.IsTrue(await fixture.TestHarness.Published.Any<RequestAgvGraph>());
 
             Assert.AreEqual(correlationId, await fixture.SagaHarness.Exists(correlationId));
             var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
-            Assert.AreEqual(DateTime.MinValue, saga.AgvDataReceivedLastTime);
+            // Publishing requests should update corresponding last requested timestamp
+            ((DateTime)saga.AgvDataRequestedLastTime!).ShouldBeGreaterThan(utcStart);
+            ((DateTime)saga.AgvDataRequestedLastTime!).ShouldBeLessThan(DateTime.UtcNow);
+            ((DateTime)saga.AgvGraphRequestedLastTime!).ShouldBeGreaterThan(utcStart);
+            ((DateTime)saga.AgvGraphRequestedLastTime!).ShouldBeLessThan(DateTime.UtcNow);
         }
 
         /// <summary>
-        /// Checks if RequestAgvGraph is not sent because AGV is already given a graph
+        /// Checks if requests are sent because AGV has no graph/data and timeout exceeded
         /// </summary>
         [TestMethod]
-        public async Task DoNotEmit_AgvRequestGraph_when_GraphIsGiven()
-        {
-            // Arrange
-            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = GetFixture();
-
-            var agvGraph = CreateTestAgvGraph();
-
-            const string agvId = "AGV_01";
-            var correlationId = agvId.ToGuid();
-
-            var agvStage = new AgvSaga(
-                correlationId,
-                agvId,
-                currentState: fixture.Machine.Discovered.Name,
-                agvStatus: new AgvStatus(correlationId, null, true, true, 10, true, true),
-                agvGraph: agvGraph,
-                agvGraphReceivedLastTime: DateTime.Now - new TimeSpan(0, 0, 29)
-            );
-
-            fixture.Add(agvStage);
-
-            // Act
-            await fixture.TestHarness.Bus.Publish(new AgvStatusReceived(
-                correlationId,
-                agvId,
-                new AgvStatus(correlationId, null, false, false, 50, true, false)
-            ));
-
-            // Assert
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvStatusReceived>());
-            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvStatusReceived>());
-
-            Assert.AreEqual(correlationId, await fixture.SagaHarness.Exists(correlationId));
-            Assert.IsFalse(await fixture.TestHarness.Published.Any<RequestAgvGraph>());
-        }
-
-        /// <summary>
-        /// Checks if RequestAgvGraph is sent because there was no update in the past 24 hours
-        /// </summary>
-        [TestMethod]
-        public async Task Emit_AgvRequestGraph_when_LastGraphUpdate_Is_Longer_Than_24Hours()
-        {
-            // Arrange
-            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = GetFixture();
-
-            var agvGraph = CreateTestAgvGraph();
-
-            const string agvId = "AGV_01";
-            var correlationId = agvId.ToGuid();
-
-            var agvStage = new AgvSaga(
-                correlationId,
-                agvId,
-                currentState: fixture.Machine.Discovered.Name,
-                agvStatus: new AgvStatus(correlationId, null, true, true, 10, true, true),
-                agvGraph: agvGraph,
-                agvGraphReceivedLastTime: DateTime.Now - new TimeSpan(24, 0, 1)
-            );
-
-            fixture.Add(agvStage);
-
-            // Act
-            await fixture.TestHarness.Bus.Publish(new AgvStatusReceived(
-                correlationId,
-                agvId,
-                new AgvStatus(correlationId, null, false, false, 50, true, false)
-            ));
-
-            // Assert
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvStatusReceived>());
-            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvStatusReceived>());
-
-            Assert.AreEqual(correlationId, await fixture.SagaHarness.Exists(correlationId));
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<RequestAgvGraph>());
-        }
-
-        /// <summary>
-        /// Checks if RequestAgvData sent because AGV has no data
-        /// </summary>
-        [TestMethod]
-        public async Task Emit_AgvRequestData_when_NoDataIsGiven()
+        public async Task When_GraphAndDataMissingAndTimeoutExceeded_BothAreRequested()
         {
             // Arrange
             StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = GetFixture();
@@ -370,9 +308,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                 correlationId,
                 agvId,
                 currentState: fixture.Machine.Discovered.Name,
-                agvStatus: new AgvStatus(correlationId, null, true, true, 10, true, true),
-                agvDataReceivedLastTime: DateTime.Now - new TimeSpan(0, 0, 31)
+                agvStatus: new AgvStatus(correlationId, null, true, true, 10, true, true)
             );
+            // Request timeout already exceeded
+            var utcStart = DateTime.UtcNow;
+            // agvStage.AgvDataRequestedLastTime is max
+            agvStage.AgvGraphRequestedLastTime = utcStart - new TimeSpan(0, 0, fixture.Machine.AgvRequestTimeoutS + 1);
 
             fixture.Add(agvStage);
 
@@ -387,34 +328,43 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvStatusReceived>());
             Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvStatusReceived>());
             Assert.IsTrue(await fixture.TestHarness.Published.Any<RequestAgvData>());
+            Assert.IsTrue(await fixture.TestHarness.Published.Any<RequestAgvGraph>());
 
             Assert.AreEqual(correlationId, await fixture.SagaHarness.Exists(correlationId));
             var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
-            Assert.AreEqual(DateTime.MinValue, saga.AgvGraphReceivedLastTime);
+            // Publishing requests should update corresponding last requested timestamp
+            Assert.IsTrue(saga.AgvDataRequestedLastTime > utcStart && saga.AgvDataRequestedLastTime < DateTime.UtcNow);
+            Assert.IsTrue(saga.AgvGraphRequestedLastTime > utcStart && saga.AgvGraphRequestedLastTime < DateTime.UtcNow);
         }
 
+        // ReSharper disable MethodSupportsCancellation
         /// <summary>
-        /// Checks if RequestAgvData is not sent because AGV is already given its data
+        /// Checks if only RequestAgvData is sent because AGV already has graph
         /// </summary>
         [TestMethod]
-        public async Task DoNotEmit_AgvRequestData_when_DataIsGiven()
+        public async Task When_GraphIsGivenAndDataMissing_OnlyAgvDataRequested()
         {
             // Arrange
-            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = GetFixture();
+            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = GetFixture(null, null, null, TimeSpan.FromSeconds(5));
+            var token = new CancellationTokenSource();
+
+            var agvGraph = CreateTestAgvGraph();
 
             const string agvId = "AGV_01";
             var correlationId = agvId.ToGuid();
-
-            var agvData = new AgvData(correlationId, "Karis", "BF1", null, 1.8, 120.0, 0.6, 0.8, 0.7, 0.9, 2.5, 1000, Array.Empty<AgvData.Sensor>());
 
             var agvStage = new AgvSaga(
                 correlationId,
                 agvId,
                 currentState: fixture.Machine.Discovered.Name,
                 agvStatus: new AgvStatus(correlationId, null, true, true, 10, true, true),
-                agvData: agvData,
-                agvDataReceivedLastTime: DateTime.Now - new TimeSpan(0, 0, 29)
-            );
+                agvGraph: agvGraph
+            )
+            {
+                // Repeat request exceeded but no daily request
+                AgvGraphRequestedLastTime = DateTime.UtcNow - new TimeSpan(0, 0, fixture.Machine.AgvRequestTimeoutS + 1),
+                AgvDataRequestedLastTime = DateTime.UtcNow - new TimeSpan(0, 0, fixture.Machine.AgvRequestTimeoutS + 1)
+            };
 
             fixture.Add(agvStage);
 
@@ -430,33 +380,86 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvStatusReceived>());
 
             Assert.AreEqual(correlationId, await fixture.SagaHarness.Exists(correlationId));
-            var token = new CancellationTokenSource();
             token.CancelAfter(10);
+            Assert.IsFalse(await fixture.TestHarness.Published.Any<RequestAgvGraph>(token.Token));
+            Assert.IsTrue(await fixture.TestHarness.Published.Any<RequestAgvData>());
+        }
+
+        // ReSharper disable MethodSupportsCancellation
+        /// <summary>
+        /// Checks if only RequestAgvGraph is sent because AGV already has data
+        /// </summary>
+        [TestMethod]
+        public async Task When_DataIsGivenAndGraphMissing_OnlyAgvGraphRequested()
+        {
+            // Arrange
+            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = GetFixture(null, null, null, TimeSpan.FromSeconds(5));
+            var token = new CancellationTokenSource();
+
+            var agvData = CreateTestAgvData();
+
+            const string agvId = "AGV_01";
+            var correlationId = agvId.ToGuid();
+
+            var agvStage = new AgvSaga(
+                correlationId,
+                agvId,
+                currentState: fixture.Machine.Discovered.Name,
+                agvStatus: new AgvStatus(correlationId, null, true, true, 10, true, true),
+                agvData: agvData
+            )
+            {
+                // Repeat request exceeded but no daily request
+                AgvGraphRequestedLastTime = DateTime.UtcNow - new TimeSpan(0, 0, fixture.Machine.AgvRequestTimeoutS + 1),
+                AgvDataRequestedLastTime = DateTime.UtcNow - new TimeSpan(0, 0, fixture.Machine.AgvRequestTimeoutS + 1)
+            };
+
+            fixture.Add(agvStage);
+
+            // Act
+            await fixture.TestHarness.Bus.Publish(new AgvStatusReceived(
+                correlationId,
+                agvId,
+                new AgvStatus(correlationId, null, false, false, 50, true, false)
+            ));
+
+            // Assert
+            Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvStatusReceived>());
+            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvStatusReceived>());
+
+            Assert.AreEqual(correlationId, await fixture.SagaHarness.Exists(correlationId));
+            token.CancelAfter(10);
+            Assert.IsTrue(await fixture.TestHarness.Published.Any<RequestAgvGraph>());
             Assert.IsFalse(await fixture.TestHarness.Published.Any<RequestAgvData>(token.Token));
         }
 
         /// <summary>
-        /// Checks if RequestAgvData is sent because there was no update in the past 24 hours
+        /// Checks if requests are repeated once a day
         /// </summary>
         [TestMethod]
-        public async Task Emit_AgvRequestData_when_LastDataUpdate_Is_Longer_Than_24Hours()
+        public async Task When_GraphAndDataReceivedOneDayAgo_RequestBothAgain()
         {
             // Arrange
             StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = GetFixture();
 
+            var agvGraph = CreateTestAgvGraph();
+            var agvData = CreateTestAgvData();
+
             const string agvId = "AGV_01";
             var correlationId = agvId.ToGuid();
-
-            var agvData = new AgvData(correlationId, "Karis", "BF1", null, 1.8, 120.0, 0.6, 0.8, 0.7, 0.9, 2.5, 1000, Array.Empty<AgvData.Sensor>());
 
             var agvStage = new AgvSaga(
                 correlationId,
                 agvId,
                 currentState: fixture.Machine.Discovered.Name,
                 agvStatus: new AgvStatus(correlationId, null, true, true, 10, true, true),
-                agvData: agvData,
-                agvDataReceivedLastTime: DateTime.Now - new TimeSpan(24, 0, 1)
-            );
+                agvGraph: agvGraph,
+                agvData: agvData
+            )
+            {
+                AgvGraphRequestedLastTime = DateTime.UtcNow - new TimeSpan(24, 0, 1),
+                AgvDataRequestedLastTime = DateTime.UtcNow - new TimeSpan(24, 0, 1)
+            };
 
             fixture.Add(agvStage);
 
@@ -472,14 +475,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvStatusReceived>());
 
             Assert.AreEqual(correlationId, await fixture.SagaHarness.Exists(correlationId));
+            Assert.IsTrue(await fixture.TestHarness.Published.Any<RequestAgvGraph>());
             Assert.IsTrue(await fixture.TestHarness.Published.Any<RequestAgvData>());
         }
 
         /// <summary>
-        /// Checks if RequestAgvData and RequestAgvGraph are sent in the initial state
+        /// Checks if requests are sent in the initial state
         /// </summary>
         [TestMethod]
-        public async Task Emit_AgvRequestData_and_AgvRequestGraph_in_Initial_State()
+        public async Task When_AgvInInitialState_RequestIsDoneUnconditionally()
         {
             // Arrange
             StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = GetFixture();
@@ -492,7 +496,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                 agvId,
                 currentState: fixture.Machine.Initial.Name,
                 agvStatus: new AgvStatus(correlationId, null, true, true, 10, true, true)
-            );
+            )
+            {
+                AgvGraphRequestedLastTime = DateTime.UtcNow,
+                AgvDataRequestedLastTime = DateTime.UtcNow
+            };
 
             fixture.Add(agvStage);
 
@@ -512,67 +520,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
             Assert.IsTrue(await fixture.TestHarness.Published.Any<RequestAgvGraph>());
         }
 
-        [TestMethod]
-        public async Task Verify_DateTimes_On_Inbound_AgvRequestGraph_And_AgvRequestData()
-        {
-            // Arrange
-            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = GetFixture();
-
-            const string agvId = "AGV_01";
-            var correlationId = agvId.ToGuid();
-
-            var agvStage = new AgvSaga(
-                correlationId,
-                agvId,
-                currentState: fixture.Machine.Discovered.Name,
-                agvStatus: new AgvStatus(correlationId, null, true, true, 10, true, true)
-            );
-
-            fixture.Add(agvStage);
-
-            var agvGraph = CreateTestAgvGraph();
-
-            // Act
-            await fixture.TestHarness.Bus.Publish(new AgvGraphReceived(
-                correlationId,
-                agvId,
-                agvGraph
-            ));
-            var graphReceived = DateTime.Now;
-
-
-            var agvData = new AgvData(correlationId, "Karis", "BF1", null, 1.8, 120.0, 0.6, 0.8, 0.7, 0.9, 2.5, 1000, Array.Empty<AgvData.Sensor>());
-
-            await fixture.TestHarness.Bus.Publish(new AgvDataReceived(
-                correlationId,
-                agvId,
-                agvData
-            ));
-            var dataReceived = DateTime.Now;
-
-            // Assert
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvGraphReceived>());
-            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvGraphReceived>());
-
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<RequestAgvMap>());
-
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvDataReceived>());
-            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvDataReceived>());
-
-            Assert.AreEqual(correlationId, await fixture.SagaHarness.Exists(correlationId));
-            var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
-
-            TimeSpan? graphTimeDifference = saga.AgvGraphReceivedLastTime - graphReceived;
-            Assert.IsNotNull(graphTimeDifference);
-            Trace.WriteLine(graphTimeDifference.Value);
-            Assert.IsTrue(graphTimeDifference.Value.TotalSeconds < 1);
-
-            TimeSpan? dataTimeDifference = saga.AgvDataReceivedLastTime - dataReceived;
-            Assert.IsNotNull(dataTimeDifference);
-            Trace.WriteLine(dataTimeDifference.Value);
-            Assert.IsTrue(dataTimeDifference.Value.TotalSeconds < 1);
-        }
-        
         /// <summary>
         /// Checks if RequestAgvMap is not sent as soon as the corresponding RelatedMapId is found in the registry
         /// </summary>
@@ -602,7 +549,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 
             var agvSaga = CreateTestAgvSaga(previousState);    // The previous state is variable due to DuringAny()
             fixture.Add(agvSaga);
-            
+
             var agvGraph = CreateTestAgvGraph();
 
             mockRegistry.Setup(mo => mo.Exists(agvGraph.RelatedMapId)).Returns(true);
@@ -658,9 +605,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 
             // Act
             await fixture.TestHarness.Bus.Publish(new AgvMapReceived(
-                agvSaga.CorrelationId, 
-                agvSaga.AgvId, 
-                new AgvMap(mapId.ToGuid(), mapId, modificationDate, imageData,  resolution, xOffset, yOffset)));
+                agvSaga.CorrelationId,
+                agvSaga.AgvId,
+                new AgvMap(mapId.ToGuid(), mapId, modificationDate, imageData, resolution, xOffset, yOffset)));
 
             // Assert
             Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvMapReceived>());
@@ -792,7 +739,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
                 agvId,
                 fixture.Machine.Idle.Name,
                 new AgvStatus(correlationId, null, true, true, 10, true, true)
-            ) { Alive = agvInitialAlive };
+            )
+            { Alive = agvInitialAlive };
             fixture.Add(agv);
 
             await fixture.TestHarness.Bus.Publish(new AgvStateMachine.AgvInitializeMessage(correlationId, agvId));

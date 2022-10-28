@@ -4,6 +4,7 @@
         <Description></Description>
         <OutputType>Exe</OutputType>
         <AssemblyVersion>0.0.1</AssemblyVersion>
+        <AnalysisLevel>none</AnalysisLevel>
     </PropertyGroup>
     <Import Project="..\SharedProjectSettings.csproj" />
     <ItemGroup>

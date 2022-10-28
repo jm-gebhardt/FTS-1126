@@ -38,7 +38,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         /// Time that has to pass before resending a request telegram in case AgvGraph or AgvData are still null
         /// </summary>
         /// <remarks>Interval indicated in seconds</remarks>
-        private const int AgvRequestTimeout = 30;
+        public int AgvRequestTimeoutS => 30;
 
         /// <summary>
         /// Time that has to pass before resending a request telegram in case AgvGraph or AgvData are already given
@@ -214,8 +214,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
                 .TransitionTo(Discovered)
                 .Then(c =>
                     _logger.LogInformation("New AGV {AgvId} / {CorrelationId} discovered", c.Message.AgvId, c.Saga.CorrelationId))
-                .Publish(c => new RequestAgvData(c.Saga.CorrelationId, c.Saga.AgvId))
-                .Publish(c => new RequestAgvGraph(c.Saga.CorrelationId, c.Saga.AgvId))
+                .If(cond => cond.Saga.AgvData == null,
+                    PublishRequestAgvData)
+                .If(cond => cond.Saga.AgvGraph == null,
+                    PublishRequestAgvGraph)
                 // Lets have a auto-discover feature
                 .If(_ => _productionOptions.AutoAccept, x =>
                     x.Publish(c => new ReleaseAgv(c.Saga.CorrelationId))
@@ -239,26 +241,42 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
                     _logger.LogDebug("{MessageType} {AgvId} / {CorrelationId}, AGV is alive", nameof(AgvStatusReceived), c.Message.AgvId, c.Saga.CorrelationId))
                 .Then(c => c.Saga.Alive = true)
                 .Then(c => c.Saga.AgvStatus = c.Message.AgvStatus)
-                .If(cond => cond.Saga.AgvData == null && cond.Saga.GetTimeSpanSinceLastUpdate_AgvData().TotalSeconds > AgvRequestTimeout,
-                    x => x.Publish(m => new RequestAgvData(m.Saga.CorrelationId, m.Saga.AgvId)))
-                .If(cond => cond.Saga.AgvGraph == null && cond.Saga.GetTimeSpanSinceLastUpdate_AgvGraph().TotalSeconds > AgvRequestTimeout,
-                    x => x.Publish(m => new RequestAgvGraph(m.Saga.CorrelationId, m.Saga.AgvId)))
-                .If(cond => cond.Saga.AgvData != null && cond.Saga.GetTimeSpanSinceLastUpdate_AgvData().TotalSeconds > DailyRequestUpdateInterval,
-                    x => x.Publish(m => new RequestAgvData(m.Saga.CorrelationId, m.Saga.AgvId)))
-                .If(cond => cond.Saga.AgvGraph != null && cond.Saga.GetTimeSpanSinceLastUpdate_AgvGraph().TotalSeconds > DailyRequestUpdateInterval,
-                    x => x.Publish(m => new RequestAgvGraph(m.Saga.CorrelationId, m.Saga.AgvId)))
+                // When AgvData missing repeat request all x seconds
+                .If(cond => cond.Saga.AgvData == null && cond.Saga.GetTimeSpanSinceLastRequest_AgvData().TotalSeconds > AgvRequestTimeoutS,
+                    PublishRequestAgvData)
+                // When AgvData present refresh once a day
+                .If(cond => cond.Saga.AgvData != null && cond.Saga.GetTimeSpanSinceLastRequest_AgvData().TotalSeconds > DailyRequestUpdateInterval,
+                    PublishRequestAgvData)
+                // When AgvGraph missing repeat request all x seconds
+                .If(cond => cond.Saga.AgvGraph == null && cond.Saga.GetTimeSpanSinceLastRequest_AgvGraph().TotalSeconds > AgvRequestTimeoutS,
+                    PublishRequestAgvGraph)
+                // When AgvGraph present refresh once a day
+                .If(cond => cond.Saga.AgvGraph != null && cond.Saga.GetTimeSpanSinceLastRequest_AgvGraph().TotalSeconds > DailyRequestUpdateInterval,
+                    PublishRequestAgvGraph)
                 .Schedule(AgvOfflineWatchdog,
                           c1 => new AgvOfflineMessage(c1.Saga.CorrelationId, DateTime.UtcNow),
                           c2 => TimeSpan.FromMilliseconds(c2.Saga.AgvStatus!.Busy ? _agvOfflineTimeoutMsWhileBusy : _agvOfflineTimeoutMsWhileIdle))
                 .Then(c => _logger.LogTrace("{AgvId} watchdog started", c.Message.AgvId));
 
+        /// <summary>
+        /// When publishing <see cref="RequestAgvData"/> automatically store <see cref="AgvSaga.AgvDataRequestedLastTime"/>.
+        /// </summary>
+        private EventActivityBinder<AgvSaga, AgvStatusReceived> PublishRequestAgvData(EventActivityBinder<AgvSaga, AgvStatusReceived> binder) =>
+            binder.Publish(m => new RequestAgvData(m.Saga.CorrelationId, m.Saga.AgvId))
+                  .Then(c => c.Saga.AgvDataRequestedLastTime = DateTime.UtcNow);
+
+        /// <summary>
+        /// When publishing <see cref="RequestAgvGraph"/> automatically store <see cref="AgvSaga.AgvGraphRequestedLastTime"/>.
+        /// </summary>
+        private EventActivityBinder<AgvSaga, AgvStatusReceived> PublishRequestAgvGraph(EventActivityBinder<AgvSaga, AgvStatusReceived> binder) =>
+            binder.Publish(m => new RequestAgvGraph(m.Saga.CorrelationId, m.Saga.AgvId))
+                  .Then(c => c.Saga.AgvGraphRequestedLastTime = DateTime.UtcNow);
 
         private EventActivityBinder<AgvSaga, AgvGraphReceived> AgvGraphReceivedHandler() =>
             When(AgvGraphReceivedEvent)
                 .Then(c =>
-                    _logger.LogDebug("{MessageType} {AgvId} / {CorrelationId}", nameof(AgvGraphReceived), c.Message.AgvId, c.Saga.CorrelationId))
+                    _logger.LogInformation("{MessageType} {AgvId} / {CorrelationId}", nameof(AgvGraphReceived), c.Message.AgvId, c.Saga.CorrelationId))
                 .Then(c => c.Saga.AgvGraph = c.Message.Graph)
-                .Then(c => c.Saga.AgvGraphReceivedLastTime = DateTime.Now)
                 .Then(SearchMapNameInRegistry);
 
         private void SearchMapNameInRegistry(BehaviorContext<AgvSaga, AgvGraphReceived> context)
@@ -276,16 +294,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Services
         private EventActivityBinder<AgvSaga, AgvDataReceived> AgvDataReceivedHandler() =>
             When(AgvDataReceivedEvent)
                 .Then(c =>
-                    _logger.LogDebug("{MessageType} {AgvId} / {CorrelationId}", nameof(AgvDataReceived), c.Message.AgvId, c.Saga.CorrelationId))
-                .Then(c => c.Saga.AgvData = c.Message.Data)
-                .Then(c => c.Saga.AgvDataReceivedLastTime = DateTime.Now);
+                    _logger.LogInformation("{MessageType} {AgvId} / {CorrelationId}", nameof(AgvDataReceived), c.Message.AgvId, c.Saga.CorrelationId))
+                .Then(c => c.Saga.AgvData = c.Message.Data);
 
         private EventActivityBinder<AgvSaga, ReleaseAgv> ReleaseAgvHandler() =>
             When(ReleaseAgvEvent)
                 .TransitionTo(Idle)
                 .Publish(c => new AgvBecameIdle(c.Saga.CorrelationId))
                 .Then(c =>
-                    _logger.LogTrace("Agv {AgvId}/{CorrelationId} released and transitioned to Idle", c.Saga.AgvId, c.Saga.CorrelationId));
+                    _logger.LogDebug("Agv {AgvId}/{CorrelationId} released and transitioned to Idle", c.Saga.AgvId, c.Saga.CorrelationId));
 
         private EventActivityBinder<AgvSaga, AgvMapReceived> AgvMapReceivedHandler() =>
             When(AgvMapReceivedEvent)
