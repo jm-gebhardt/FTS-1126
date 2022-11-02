@@ -6,7 +6,7 @@ import path from 'path'
 // https://vitejs.dev/config/
 export default ({ mode }) => {
   process.env = Object.assign(process.env, loadEnv(mode, process.cwd(), ''))
-
+  
   return defineConfig({
     plugins: [
       vue({
@@ -35,6 +35,7 @@ export default ({ mode }) => {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),
+        vue: 'vue/dist/vue.esm-bundler.js',
         'balm-ui-css': 'balm-ui/dist/balm-ui.css'
       }
     },

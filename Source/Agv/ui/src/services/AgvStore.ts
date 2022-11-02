@@ -69,7 +69,7 @@ export const useAgvStore = defineStore({
         .then((response) => {
           this.agvs.error = null
           const data = new Map<string, IAgv>()
-          response.data.forEach((agv: IAgv) => {
+          response.data?.forEach((agv: IAgv) => {
             if (agv.correlationId != null) {
               data.set(agv.correlationId, agv)
             }
@@ -124,7 +124,7 @@ export const useAgvStore = defineStore({
           this.maps.error = null
 
           const data = new Map<string, IMap>()
-          response.data.forEach((map: IMap) => {
+          response.data?.forEach((map: IMap) => {
             if (map.correlationId != null) {
               data.set(map.correlationId, map)
             }
