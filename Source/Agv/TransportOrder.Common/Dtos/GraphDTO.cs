@@ -1,9 +1,9 @@
-using MassTransit;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using static Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.GraphDto;
+using MassTransit;
+using static Gebhardt.StoreWare.Agv.TransportOrder.Common.Dtos.GraphDto;
 
 // ReSharper disable ConvertToPrimaryConstructor
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Common.Dtos
 {
     /// <summary>
     /// Model for drawing a graph in the UI

@@ -1,9 +1,7 @@
-using System.Collections.Immutable;
+using Gebhardt.StoreWare.Agv.TransportOrder.Common.Dtos;
+using Gebhardt.StoreWare.Agv.TransportOrder.Common.Features.Maps.Requests.Queries;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using AutoMapper;
-using Gebhardt.StoreWare.Agv.TransportOrder.Common.Services;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
 {
@@ -13,21 +11,16 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
     [ApiController]
     public class MapController : Controller
     {
-        private readonly IAgvRegistry _agvRegistry;
-        private readonly IMapRegistry _mapRegistry;
-        private readonly IMapper _mapper;
+
+        private readonly IMediator _mediator;
 
         /// <summary>
         /// Constructor
         /// </summary>
-        /// <param name="agvRegistry"></param>
-        /// <param name="mapRegistry"></param>
-        /// <param name="mapper"></param>
-        public MapController(IAgvRegistry agvRegistry, IMapRegistry mapRegistry, IMapper mapper)
+        /// <param name="mediator"></param>
+        public MapController(IMediator mediator)
         {
-            _agvRegistry = agvRegistry;
-            _mapRegistry = mapRegistry;
-            _mapper = mapper;
+            _mediator = mediator;
         }
 
         /// <summary>
@@ -36,21 +29,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("/maps")]
-        public ActionResult<IEnumerable<MapDto>> GetMaps()
+        public async Task<ActionResult<IEnumerable<MapDto>>> GetMaps()
         {
-            ImmutableDictionary<Guid, Guid[]> agvMapRelation = _agvRegistry.GetAllAgvs()
-                .Where(a => a.AgvGraph != null)
-                .Select(a => new { a.AgvGraph!.RelatedMapId, a.CorrelationId })
-                .AsEnumerable()
-                .GroupBy(a => a.RelatedMapId)
-                .ToImmutableDictionary(
-                    x => x.Key,
-                    x => x.Select(m => m.CorrelationId).ToArray()
-                );
+            List<MapDto> maps = await _mediator.Send(new GetMapListRequest());
 
-            var map = _mapper.Map<List<MapDto>>(_mapRegistry.GetAllMaps().AsEnumerable(), opt => opt.Items[MappingProfile.AgvMapRelationsName] = agvMapRelation);
-
-            return Ok(map);
+            return Ok(maps);
         }
 
         /// <summary>
@@ -61,13 +44,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
         [HttpGet]
         [Route("/maps/{correlationId:guid}/map.png")]
         [Produces("image/png")]
-        public ActionResult GetMap(Guid correlationId)
+        public async Task<ActionResult> GetMap(Guid correlationId)
         {
-            byte[]? image = _mapRegistry.GetMap(correlationId);
-            if (image == null)
-            {
-                return NotFound();
-            }
+            byte[] image = await _mediator.Send(new GetMapImageRequest(correlationId));
+
             return File(image, "image/png");
         }
     }

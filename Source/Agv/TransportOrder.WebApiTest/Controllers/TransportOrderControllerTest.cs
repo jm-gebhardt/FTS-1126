@@ -12,12 +12,12 @@ using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Commands;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
+using Gebhardt.StoreWare.Agv.TransportOrder.Common.Dtos;
+using Gebhardt.StoreWare.Agv.TransportOrder.Common.Profiles;
 using Gebhardt.StoreWare.Agv.TransportOrder.Common.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers.DateRange;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers.Pagination;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles;
 using Gebhardt.StoreWare.Agv.TransportOrder.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.States;
 

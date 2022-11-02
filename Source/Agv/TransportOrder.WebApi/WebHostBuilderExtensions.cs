@@ -1,11 +1,13 @@
-using System.Reflection;
-using System.Text.Json.Serialization;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Middleware;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.SchemaFilter;
+using MediatR;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Builder;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.SchemaFilter;
+using System.Reflection;
+using System.Text.Json.Serialization;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi
 {
@@ -24,8 +26,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi
 
             webHostBuilder.ConfigureServices(services =>
             {
+                services.AddScoped<ExceptionHandlerMiddleware>();
                 services.AddMvc();
-
+                services.AddMediatR(AppDomain.CurrentDomain.GetAssemblies());
                 services.AddControllers()
                     .AddApplicationPart(assembly)
                     .AddJsonOptions(options =>
@@ -64,7 +67,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi
         }
 
         /// <summary>
-        /// Add web funtionality to the application />
+        /// Add web functionality to the application />
         /// </summary>
         /// <param name="app"></param>
         // ReSharper disable UnusedMethodReturnValue.Global
@@ -73,6 +76,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi
             app.UseDefaultFiles(); // Serve Default.htm/html, Index.htm/html by default, without having to explicitly qualify the URL.
             app.UseStaticFiles(); // Allow html, images, etc. in wwwroot directory to be served. (use UseWebRoot to change folder)
             app.UseRouting();
+            app.UseMiddleware<ExceptionHandlerMiddleware>();
             app.UseCors();
             app.UseWebSockets();
             app.UseAuthentication(); // verify user

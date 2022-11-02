@@ -1,8 +1,8 @@
 ﻿using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos;
+using Gebhardt.StoreWare.Agv.TransportOrder.Common.Dtos;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles.Resolvers
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Common.Profiles.Resolvers
 {
     /// <summary>
     /// The custom value resolver, maps from AgvGraph and and the destination Graph to the Edges property

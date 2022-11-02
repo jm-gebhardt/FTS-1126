@@ -5,9 +5,9 @@ using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Events;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
+using Gebhardt.StoreWare.Agv.TransportOrder.Common.Dtos;
 using Gebhardt.StoreWare.Agv.TransportOrder.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrderTest.Services
 {

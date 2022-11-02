@@ -3,8 +3,8 @@ using AutoMapper;
 using MassTransit;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
+using Gebhardt.StoreWare.Agv.TransportOrder.Common.Dtos;
 using Gebhardt.StoreWare.Agv.TransportOrder.Common.Services;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos;
 using Gebhardt.StoreWare.Agv.TransportOrder.Common.Models;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers

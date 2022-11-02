@@ -1,11 +1,11 @@
-﻿using System.Text.Json;
-using AutoMapper;
-using Microsoft.Extensions.Logging;
-using Microsoft.AspNetCore.SignalR;
-using SignalRSwaggerGen.Attributes;
+﻿using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.TransportOrder.Common.Models;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
+using SignalRSwaggerGen.Attributes;
+using System.Text.Json;
+using Gebhardt.StoreWare.Agv.TransportOrder.Common.Dtos;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs
 {

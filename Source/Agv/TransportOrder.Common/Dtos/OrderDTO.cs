@@ -2,7 +2,7 @@ using Gebhardt.StoreWare.Agv.Common.Messages;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 
 // ReSharper disable ConvertToPrimaryConstructor
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Common.Dtos
 {
     /// <summary>
     /// Order Model

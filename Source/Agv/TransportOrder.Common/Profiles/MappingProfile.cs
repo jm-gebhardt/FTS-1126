@@ -1,11 +1,11 @@
 ﻿using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
+using Gebhardt.StoreWare.Agv.TransportOrder.Common.Dtos;
 using Gebhardt.StoreWare.Agv.TransportOrder.Common.Models;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles.Resolvers;
+using Gebhardt.StoreWare.Agv.TransportOrder.Common.Profiles.Resolvers;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Common.Profiles
 {
     /// <summary>
     /// The AutoMapper profile for the Web Dtos

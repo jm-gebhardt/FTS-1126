@@ -1,8 +1,8 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Shouldly;
+﻿using Gebhardt.StoreWare.Agv.TransportOrder.Common.Dtos;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest
 {

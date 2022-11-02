@@ -7,9 +7,9 @@ using Gebhardt.StoreWare.Agv.Common.Messages;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
+using Gebhardt.StoreWare.Agv.TransportOrder.Common.Dtos;
 using Gebhardt.StoreWare.Agv.TransportOrder.Common.Models;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles;
+using Gebhardt.StoreWare.Agv.TransportOrder.Common.Profiles;
 using Gebhardt.StoreWare.Agv.TransportOrder.States;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Profiles

@@ -1,7 +1,7 @@
 using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Common.Dtos
 {
     /// <summary>
     /// Map Model

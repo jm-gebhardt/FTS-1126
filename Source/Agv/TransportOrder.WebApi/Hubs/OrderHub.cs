@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.SignalR;
 using SignalRSwaggerGen.Attributes;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos;
+using Gebhardt.StoreWare.Agv.TransportOrder.Common.Dtos;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs
 {    
