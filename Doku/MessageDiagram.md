@@ -1,5 +1,6 @@
 ﻿::: mermaid
 sequenceDiagram
+    participant UI
     participant WCSCommunication
     participant TransportOrder
     participant AgvManagement
@@ -10,14 +11,24 @@ sequenceDiagram
 
     Note left of (AGV): TAR: AgvId == SerialNumber
 
+    AgvManagement->>+AgvManagement: AgvInitializeMessage
+    Note right of AgvManagement: Scheduled<br/>reset by each AgvStatusReceived
+    loop agvOfflineTimeoutMsWhile Busy/Idle
+        AgvManagement--)-AgvManagement: AgvOfflineMessage
+    end
+    
+    UI->>AgvManagement: ReleaseAgv
+
     (AGV)->>DeviceCommunication: State
     activate DeviceCommunication
-    DeviceCommunication->>AgvManagement: AgvPositionReceived
-    DeviceCommunication->>AgvManagement: AgvStatusReceived
-    AgvManagement->>AgvManagement: AgvPositionChanged
+    DeviceCommunication->>+AgvManagement: AgvStatusReceived
+    DeviceCommunication->>+AgvManagement: AgvPositionReceived
     deactivate DeviceCommunication
-
+    AgvManagement->>-AgvManagement: AgvPositionChanged
+    Note right of AgvManagement: When "AutoAccept"
+    AgvManagement->>AgvManagement: ReleaseAgv
     AgvManagement->>DeviceCommunication: RequestAgvData
+
     activate DeviceCommunication
     DeviceCommunication->>(AGV): RequestData
     deactivate DeviceCommunication
@@ -28,7 +39,7 @@ sequenceDiagram
     DeviceCommunication->>AgvManagement: AgvDataReceived
     deactivate DeviceCommunication
 
-    AgvManagement->>DeviceCommunication: RequestAgvGraph
+    AgvManagement->>-DeviceCommunication: RequestAgvGraph
     activate DeviceCommunication
     DeviceCommunication->>(AGV): RequestStationList
     deactivate DeviceCommunication
@@ -44,9 +55,10 @@ sequenceDiagram
     deactivate (AGV)
     DeviceCommunication->>DeviceCommunication: InternalGraphReceived
     activate DeviceCommunication
-    DeviceCommunication->>AgvManagement: AgvGraphReceived
+    DeviceCommunication->>+AgvManagement: AgvGraphReceived
     deactivate DeviceCommunication
-    AgvManagement->>DeviceCommunication: RequestAgvMap
+
+    AgvManagement->>-DeviceCommunication: RequestAgvMap
     activate DeviceCommunication
     DeviceCommunication->>(AGV): MqttRequestMap
     deactivate DeviceCommunication
@@ -56,8 +68,9 @@ sequenceDiagram
     activate DeviceCommunication
     DeviceCommunication->>AgvManagement: AgvMapReceived
     deactivate DeviceCommunication
-    AgvManagement->>AgvManagement: ReleaseAgv
-    AgvManagement->>AgvManagement: AgvBecameIdle
+    
+    TransportOrder->>+AgvManagement: ReleaseAgv
+    AgvManagement->>-AgvManagement: AgvBecameIdle
 
     Note over WCSCommunication,DeviceCommunication: Handle HostOrder
 
