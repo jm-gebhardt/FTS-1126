@@ -8,29 +8,7 @@ export default ({ mode }) => {
   process.env = Object.assign(process.env, loadEnv(mode, process.cwd(), ''))
   
   return defineConfig({
-    plugins: [
-      vue({
-        template: {
-          compilerOptions: {
-            isCustomElement: (tag) => {
-              const excludeTagPattern: boolean =
-                tag.startsWith('ui-item-text') ||
-                tag.startsWith('ui-icon') ||
-                tag.startsWith('ui-grid') ||
-                tag.startsWith('ui-list') ||
-                tag.startsWith('ui-switch') ||
-                tag.startsWith('ui-spinner') ||
-                tag.startsWith('ui-datepicker') ||
-                tag.startsWith('ui-alert') ||
-                tag.endsWith('last-content') ||
-                tag == 'router-link'
-              return excludeTagPattern // (return true)
-            }
-          }
-        }
-      }),
-      splitVendorChunkPlugin()
-    ],
+    plugins: [vue(),splitVendorChunkPlugin()],
     base: process.env.VITE_BASE_PATH,
     resolve: {
       alias: {
