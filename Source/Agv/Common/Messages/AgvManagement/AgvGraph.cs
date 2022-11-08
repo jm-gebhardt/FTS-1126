@@ -115,7 +115,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
         /// </summary>
         public enum NodeType
         {
-            /// <summary>General waypoint</summary>
+            /// <summary>General WayPoint</summary>
             [JetBrains.Annotations.UsedImplicitly]
             WayPoint,
 

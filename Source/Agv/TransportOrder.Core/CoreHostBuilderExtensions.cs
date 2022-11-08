@@ -61,7 +61,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                 services.AddSingleton<IStateObserver<AgvSaga>, AgvStateObserver>();
                 services.AddSingleton<IAgvPositionRegistry, AgvPositionRegistry>();
                 services.AddSingleton<IChangeDetector<AgvPositionStatus>, ChangeDetector<AgvPositionStatus>>();
-                services.AddSingleton<IRoutingPlausibilityChecker, RoutingPlausibilityChecker>();
+                services.AddSingleton<IRoutingPlausibilityChecker, NoCheckPlausibilityChecker>();
                 services.AddSingleton(_ => productionOptions);
 
                 services.AddDbContextFactory<SagaPersistenceDbContext>(builder =>

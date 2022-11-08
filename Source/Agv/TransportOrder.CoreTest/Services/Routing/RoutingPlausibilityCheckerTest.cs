@@ -8,7 +8,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Routing
     [TestClass]
     public class RoutingPlausibilityCheckerTest
     {
-        private RoutingPlausibilityChecker _routingPlausibilityChecker = null!;
+        private IRoutingPlausibilityChecker _routingPlausibilityChecker = null!;
 
         [TestInitialize]
         public void Setup()
