@@ -18,7 +18,7 @@
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\Common\Common.csproj" />
-        <ProjectReference Include="..\TransportOrder.Common\TransportOrder.Common.csproj" />
+        <ProjectReference Include="..\TransportOrder.Core\TransportOrder.Core.csproj" />
     </ItemGroup>
     <ItemGroup>
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">

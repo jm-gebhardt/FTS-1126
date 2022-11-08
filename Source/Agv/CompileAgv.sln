@@ -8,21 +8,21 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Common", "Common\Common.csp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeviceCommunication", "DeviceCommunication\DeviceCommunication.csproj", "{886BCCFA-0CF3-4965-AF68-888263472568}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TransportOrder", "TransportOrder\TransportOrder.csproj", "{46E31FAD-3FA1-483A-B963-ECD6D6776B02}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TransportOrder.Core", "TransportOrder.Core\TransportOrder.Core.csproj", "{46E31FAD-3FA1-483A-B963-ECD6D6776B02}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommonTest", "CommonTest\CommonTest.csproj", "{26DDCA1C-DDE0-4464-955A-A1D4CC5BB435}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeviceCommunicationTest", "DeviceCommunicationTest\DeviceCommunicationTest.csproj", "{A6871DA8-3580-45AE-ADD7-F255A3FD5E10}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TransportOrderTest", "TransportOrderTest\TransportOrderTest.csproj", "{A14A7F30-583F-4930-8A6F-206FB3A2B955}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TransportOrder.CoreTest", "TransportOrder.CoreTest\TransportOrder.CoreTest.csproj", "{A14A7F30-583F-4930-8A6F-206FB3A2B955}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WCSCommunicationTest", "WCSCommunicationTest\WCSCommunicationTest.csproj", "{44DDC52B-1DB4-4723-AC97-4391E8BFBAE3}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TransportOrder.WebApi", "TransportOrder.WebApi\TransportOrder.WebApi.csproj", "{83AD9F28-6CD0-4F4C-83A2-AED70796908F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TransportOrder.Common", "TransportOrder.Common\TransportOrder.Common.csproj", "{F9F91831-B5B3-4EF5-B077-BAC365F0906C}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TransportOrder.WebApiTest", "TransportOrder.WebApiTest\TransportOrder.WebApiTest.csproj", "{9FB7AC22-8D5F-40F9-ADE8-9A35353E13F2}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TransportOrder", "TransportOrder\TransportOrder.csproj", "{C6CA1E80-85CB-4E41-8D18-C58DB7ABDBD8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -66,14 +66,14 @@ Global
 		{83AD9F28-6CD0-4F4C-83A2-AED70796908F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{83AD9F28-6CD0-4F4C-83A2-AED70796908F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{83AD9F28-6CD0-4F4C-83A2-AED70796908F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F9F91831-B5B3-4EF5-B077-BAC365F0906C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F9F91831-B5B3-4EF5-B077-BAC365F0906C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F9F91831-B5B3-4EF5-B077-BAC365F0906C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F9F91831-B5B3-4EF5-B077-BAC365F0906C}.Release|Any CPU.Build.0 = Release|Any CPU
 		{9FB7AC22-8D5F-40F9-ADE8-9A35353E13F2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{9FB7AC22-8D5F-40F9-ADE8-9A35353E13F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9FB7AC22-8D5F-40F9-ADE8-9A35353E13F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9FB7AC22-8D5F-40F9-ADE8-9A35353E13F2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C6CA1E80-85CB-4E41-8D18-C58DB7ABDBD8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C6CA1E80-85CB-4E41-8D18-C58DB7ABDBD8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C6CA1E80-85CB-4E41-8D18-C58DB7ABDBD8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C6CA1E80-85CB-4E41-8D18-C58DB7ABDBD8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

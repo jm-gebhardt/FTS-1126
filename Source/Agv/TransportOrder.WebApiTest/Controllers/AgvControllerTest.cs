@@ -6,13 +6,13 @@ using Moq;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
-using Gebhardt.StoreWare.Agv.TransportOrder.Common.Dtos;
-using Gebhardt.StoreWare.Agv.TransportOrder.Common.Models;
-using Gebhardt.StoreWare.Agv.TransportOrder.Common.Profiles;
-using Gebhardt.StoreWare.Agv.TransportOrder.Common.Services;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Models;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Profiles;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers;
-using Gebhardt.StoreWare.Agv.TransportOrder.States;
-using Gebhardt.StoreWare.Agv.TransportOrder.Services;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.States;
+
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
 {

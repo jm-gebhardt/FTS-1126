@@ -23,7 +23,7 @@
         <PackageReference Include="Shouldly" Version="4.1.0" />
     </ItemGroup>
     <ItemGroup>
-        <ProjectReference Include="..\TransportOrder.Common\TransportOrder.Common.csproj" />
-        <ProjectReference Include="..\TransportOrder\TransportOrder.csproj" />
+        <ProjectReference Include="..\TransportOrder.Core\TransportOrder.Core.csproj" />
+        <ProjectReference Include="..\TransportOrder.WebApi\TransportOrder.WebApi.csproj" />
     </ItemGroup>
 </Project>

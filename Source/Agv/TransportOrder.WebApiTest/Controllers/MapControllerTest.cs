@@ -1,5 +1,5 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Common.Dtos;
-using Gebhardt.StoreWare.Agv.TransportOrder.Common.Features.Maps.Requests.Queries;
+﻿using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Requests.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
