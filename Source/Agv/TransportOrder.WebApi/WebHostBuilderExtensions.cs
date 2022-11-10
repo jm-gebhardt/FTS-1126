@@ -1,14 +1,17 @@
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Hubs;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Middleware;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.SchemaFilter;
-using MediatR;
+using System.Reflection;
+using System.Text.Json.Serialization;
+using System.Xml.XPath;
+using System.Xml.Linq;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
-using System.Reflection;
-using System.Text.Json.Serialization;
+using Swashbuckle.AspNetCore.SwaggerGen;
+using MediatR;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Hubs;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.SchemaFilter;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Middleware;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi
 {
@@ -23,7 +26,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi
         /// <param name="webHostBuilder"></param>
         public static IWebHostBuilder AddTransportOrderWebApi(this IWebHostBuilder webHostBuilder)
         {
-            var assembly = Assembly.GetExecutingAssembly();
+            var executingAssembly = Assembly.GetExecutingAssembly();
 
             webHostBuilder.ConfigureServices(services =>
             {
@@ -31,7 +34,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi
                 services.AddMvc();
                 services.AddMediatR(AppDomain.CurrentDomain.GetAssemblies());
                 services.AddControllers()
-                    .AddApplicationPart(assembly)
+                    .AddApplicationPart(executingAssembly)
                     .AddJsonOptions(options =>
                     {
                         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
@@ -39,7 +42,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi
 
                 services.Configure<Microsoft.Extensions.Logging.EventLog.EventLogSettings>(settings =>
                 {
-                    settings.SourceName = assembly.GetName().Name ?? "WebService";
+                    settings.SourceName = executingAssembly.GetName().Name ?? "WebService";
                 });
                 services.AddSwaggerGen(options =>
                 {
@@ -49,22 +52,44 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi
                         Title = "TransportOrder Monitoring API"
                     });
                     options.AddSignalRSwaggerGen();
-
-                    // Set the comments path for the Swagger JSON and UI.
-                    string xmlFile = $"{assembly.GetName().Name}.xml";
-                    string xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-                    options.IncludeXmlComments(xmlPath);
-
                     options.SchemaFilter<RequireNonNullablePropertiesSchemaFilter>();
                     options.SupportNonNullableReferenceTypes(); // Sets Nullable flags appropriately.
                     options.UseAllOfToExtendReferenceSchemas(); // Allows $ref enums to be nullable
                     options.UseAllOfForInheritance(); // Allows $ref objects to be nullable
                     options.CustomSchemaIds(CustomSchemaSelector.RemoveDtoSuffix);
+
+                    IncludeXmlComments(options);
                 });
                 services.AddSignalR();
             });
 
             return webHostBuilder;
+        }
+
+        private static void IncludeXmlComments(SwaggerGenOptions options)
+        {
+            var xmlDocs = new List<XDocument>();
+            var assemblies = new List<Assembly>();
+
+            // Load assemblies and their corresponding XML documentation files
+            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                string path = Path.Combine(AppContext.BaseDirectory, $"{assembly.GetName().Name}.xml");
+                if (File.Exists(path))
+                {
+                    xmlDocs.Add(XDocument.Load(path));
+                    assemblies.Add(assembly);
+                }
+            }
+
+            // Resolve <inheritdoc/> comments so they show up correctly in the API
+            IEnumerable<XDocument> resolvedXmlDocs = XmlDocResolver.ResolveInheritedDocs(xmlDocs, assemblies);
+
+            // Add resolved XML docs to Swagger
+            foreach (var doc in resolvedXmlDocs)
+            {
+                options.IncludeXmlComments(() => new XPathDocument(doc.CreateReader()), true);
+            }
         }
 
         /// <summary>
@@ -92,7 +117,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi
 
             app.UseSwagger();
             app.UseSwaggerUI();
-
             return app;
         }
     }
