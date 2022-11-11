@@ -93,8 +93,22 @@ export class Agvs<
    * No description
    *
    * @tags Agv
+   * @name LockAgvPartialUpdate
+   * @summary Lock AGV to prevent it from being assigned to transport orders
+   * @request PATCH:/agvs/{correlationId}/lockAgv
+   */
+  lockAgvPartialUpdate = (correlationId: string, params: RequestParams = {}) =>
+    this.request<void, void>({
+      path: `/agvs/${correlationId}/lockAgv`,
+      method: 'PATCH',
+      ...params
+    })
+  /**
+   * No description
+   *
+   * @tags Agv
    * @name EmitRequestDataPartialUpdate
-   * @summary Emit RequestData Telegram
+   * @summary Emit RequestData telegram when receiving PATCH request
    * @request PATCH:/agvs/{correlationId}/emitRequestData
    */
   emitRequestDataPartialUpdate = (
@@ -111,7 +125,7 @@ export class Agvs<
    *
    * @tags Agv
    * @name EmitRequestGraphPartialUpdate
-   * @summary Emit RequestGraph Telegram
+   * @summary Emit RequestGraph telegram when receiving PATCH request
    * @request PATCH:/agvs/{correlationId}/emitRequestGraph
    */
   emitRequestGraphPartialUpdate = (

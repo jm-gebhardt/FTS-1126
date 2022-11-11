@@ -273,7 +273,31 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var result = controller.SetIdle(correlationId).Result as OkResult;
             Assert.IsNotNull(result);
 
-            bus.Verify(s => s.Publish(It.IsAny<ReleaseAgv>(), default), Times.Once);
+            bus.Verify(s => s.Publish(It.IsAny<ForceReleaseAgv>(), default), Times.Once);
+        }
+
+        [TestMethod]
+        public void LockAgv_NotFound()
+        {
+            var controller = GetController();
+            var correlationId = Guid.Empty;
+
+            var result = controller.LockAgv(correlationId).Result as NotFoundResult;
+            Assert.IsNotNull(result);
+        }
+
+        [TestMethod]
+        public void LockAgv_Ok()
+        {
+            var bus = new Mock<IBus>();
+
+            var controller = new AgvController(GetAgvRegistry(), GetAgvPositionRegistry(), bus.Object, GetMapper());
+            var correlationId = _agvIds[2].ToGuid();
+
+            var result = controller.LockAgv(correlationId).Result as OkResult;
+            Assert.IsNotNull(result);
+
+            bus.Verify(s => s.Publish(It.IsAny<LockAgv>(), default), Times.Once);
         }
 
         [TestMethod]

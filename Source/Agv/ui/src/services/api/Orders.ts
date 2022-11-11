@@ -17,7 +17,7 @@ export class Orders<
 > extends HttpClient<SecurityDataType> {
   /**
  * No description
- * 
+ *
  * @tags TransportOrder
  * @name OrdersList
  * @summary Retrieve active transport orders

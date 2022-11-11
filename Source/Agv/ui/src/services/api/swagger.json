@@ -129,6 +129,9 @@
               }
             }
           },
+          "204": {
+            "description": "No content"
+          },
           "404": {
             "description": "Not found"
           }
@@ -172,6 +175,9 @@
                 }
               }
             }
+          },
+          "204": {
+            "description": "No Content"
           },
           "404": {
             "description": "Not found"
@@ -240,7 +246,34 @@
             "description": "Ok: AGV status was successfully set to Idle"
           },
           "400": {
-            "description": "Bad Request: AGV is not in State  Gebhardt.StoreWare.Agv.TransportOrder.Services.AgvStateMachine.Discovered"
+            "description": "Bad Request: AGV is not in State 'Discovered'"
+          },
+          "404": {
+            "description": "Not Found: AGV with the given correlationId does not exist"
+          }
+        }
+      }
+    },
+    "/agvs/{correlationId}/lockAgv": {
+      "patch": {
+        "tags": [
+          "Agv"
+        ],
+        "summary": "Lock AGV to prevent it from being assigned to transport orders",
+        "parameters": [
+          {
+            "name": "correlationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok: AGV status was successfully set to Idle"
           },
           "404": {
             "description": "Not Found: AGV with the given correlationId does not exist"
@@ -253,7 +286,7 @@
         "tags": [
           "Agv"
         ],
-        "summary": "Emit RequestData Telegram",
+        "summary": "Emit RequestData telegram when receiving PATCH request",
         "parameters": [
           {
             "name": "correlationId",
@@ -267,7 +300,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Ok: RequestData telegram was successfully emitted"
+            "description": "Ok: Telegram was successfully emitted"
           },
           "404": {
             "description": "Not Found: AGV with the given correlationId does not exist"
@@ -280,7 +313,7 @@
         "tags": [
           "Agv"
         ],
-        "summary": "Emit RequestGraph Telegram",
+        "summary": "Emit RequestGraph telegram when receiving PATCH request",
         "parameters": [
           {
             "name": "correlationId",
@@ -294,7 +327,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Ok: RequestGraph telegram was successfully emitted"
+            "description": "Ok: Telegram was successfully emitted"
           },
           "404": {
             "description": "Not Found: AGV with the given correlationId does not exist"
@@ -510,7 +543,7 @@
           }
         },
         "additionalProperties": false,
-        "description": "Controller for host order data"
+        "description": "AGV model"
       },
       "AgvData": {
         "required": [
@@ -525,53 +558,65 @@
         "properties": {
           "correlationId": {
             "type": "string",
+            "description": "Used to identify a message as correlated so that the CorrelationId can be returned",
             "format": "uuid"
           },
           "model": {
-            "type": "string"
+            "type": "string",
+            "description": "The model name of the AGV"
           },
           "type": {
-            "type": "string"
+            "type": "string",
+            "description": "The type of the AGV"
           },
           "ipV4Address": {
             "type": "string",
+            "description": "The IP Address of the AGV",
             "nullable": true
           },
           "maxVelocityStraight": {
             "type": "number",
+            "description": "The maximum velocity of the AGV in straight direction [m/s]",
             "format": "double"
           },
           "batteryCapacity": {
             "type": "number",
+            "description": "The capacity of the AGVs battery in [Ah]",
             "format": "double"
           },
           "length": {
             "type": "number",
+            "description": "The length of the AGV in [m]",
             "format": "double",
             "nullable": true
           },
           "width": {
             "type": "number",
+            "description": "The width of the AGV in [m]",
             "format": "double",
             "nullable": true
           },
           "acceleration": {
             "type": "number",
+            "description": "The maximum velocity of the AGV while turning on spot [m/s^2]",
             "format": "double",
             "nullable": true
           },
           "maxVelocityTurn": {
             "type": "number",
+            "description": "The maximum velocity of the AGV in while turning [m/s]",
             "format": "double",
             "nullable": true
           },
           "maxVelocityTurnOnSpot": {
             "type": "number",
+            "description": "The maximum velocity of the AGV while turning on spot [rad/s]",
             "format": "double",
             "nullable": true
           },
           "payload": {
             "type": "integer",
+            "description": "The max. payload of the AGV in [kg]",
             "format": "int64",
             "nullable": true
           },
@@ -579,10 +624,12 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Sensor"
-            }
+            },
+            "description": "The list of sensors in the agv"
           }
         },
-        "additionalProperties": false
+        "additionalProperties": false,
+        "description": "AGV Data"
       },
       "AgvPosition": {
         "required": [
@@ -595,31 +642,38 @@
         "type": "object",
         "properties": {
           "positionInitialized": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "Returns true, when the position is known and valid."
           },
           "x": {
             "type": "number",
+            "description": "Current X-position [m].",
             "format": "float"
           },
           "y": {
             "type": "number",
+            "description": "Current Y-position [m].",
             "format": "float"
           },
           "z": {
             "type": "number",
+            "description": "Current Z-position [m].",
             "format": "float"
           },
           "theta": {
             "type": "number",
+            "description": "Current angle (rotation) [rad].",
             "format": "float"
           },
           "deviationRange": {
             "type": "number",
+            "description": "Deviation from the responded position [m].",
             "format": "float",
             "nullable": true
           }
         },
-        "additionalProperties": false
+        "additionalProperties": false,
+        "description": "AGV position information"
       },
       "AgvPositionStatus": {
         "required": [
@@ -644,7 +698,7 @@
                 "$ref": "#/components/schemas/AgvPosition"
               }
             ],
-            "description": "AGV position"
+            "description": "AGV position information"
           }
         },
         "additionalProperties": false,
@@ -663,34 +717,43 @@
         "properties": {
           "correlationId": {
             "type": "string",
+            "description": "AGV correlation ID",
             "format": "uuid"
           },
           "orderId": {
             "type": "string",
+            "description": "Current or previous order ID.",
             "nullable": true
           },
           "busy": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "AGV is busy (not idle)."
           },
           "automatic": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "AGV is in automatic mode."
           },
           "batteryCharge": {
             "type": "integer",
+            "description": "Battery charge.",
             "format": "int32"
           },
           "charging": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "AGV is charging."
           },
           "disturbed": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "AGV is disturbed."
           },
           "lastNodeId": {
             "type": "string",
+            "description": "nodeID of last reached node or, if AGV is currently on a node, current node.\r\nEmpty string if no lastNodeId is available.",
             "nullable": true
           }
         },
-        "additionalProperties": false
+        "additionalProperties": false,
+        "description": "AGV Status"
       },
       "Edge": {
         "required": [
@@ -705,7 +768,7 @@
                 "$ref": "#/components/schemas/Node"
               }
             ],
-            "description": "Node where the edge starts."
+            "description": "Node representation."
           },
           "to": {
             "allOf": [
@@ -713,7 +776,7 @@
                 "$ref": "#/components/schemas/Node"
               }
             ],
-            "description": "Node where the edge ends."
+            "description": "Node representation."
           }
         },
         "additionalProperties": false,
@@ -755,7 +818,8 @@
           "Wms",
           "Simulation"
         ],
-        "type": "string"
+        "type": "string",
+        "description": "Defines the creator of a host order"
       },
       "HubMethods": {
         "enum": [
@@ -826,42 +890,51 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "string"
+            "type": "string",
+            "description": "The unique ID of the node."
           },
           "enabled": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "Node enabled/disabled."
           },
           "type": {
             "allOf": [
               {
                 "$ref": "#/components/schemas/NodeType"
               }
-            ]
+            ],
+            "description": "Node type of the node."
           },
           "x": {
             "type": "number",
+            "description": "The x coordinate of the node.",
             "format": "float"
           },
           "y": {
             "type": "number",
+            "description": "The y coordinate of the node",
             "format": "float"
           },
           "z": {
             "type": "number",
+            "description": "The z coordinate of the node.\r\n<br>\r\nSet to default 0 when not needed.\r\n",
             "format": "float"
           }
         },
-        "additionalProperties": false
+        "additionalProperties": false,
+        "description": "Node representation."
       },
       "NodeType": {
         "enum": [
-          "Charge",
           "WayPoint",
-          "Turn",
-          "Station",
+          "Charge",
+          "Pick",
+          "Drop",
+          "PickDrop",
           "Park"
         ],
-        "type": "string"
+        "type": "string",
+        "description": "Node types.\r\n<br>\r\nThese types are coming from the specification.\r\n"
       },
       "Order": {
         "required": [
@@ -872,10 +945,12 @@
         "type": "object",
         "properties": {
           "currentState": {
-            "type": "string"
+            "type": "string",
+            "description": "Current State"
           },
           "assignedAgv": {
             "type": "string",
+            "description": "AgvId",
             "format": "uuid",
             "nullable": true
           },
@@ -884,14 +959,17 @@
               {
                 "$ref": "#/components/schemas/OrderDetails"
               }
-            ]
+            ],
+            "description": "Order object used by all messages that require the order details"
           },
           "correlationId": {
             "type": "string",
+            "description": "Used to identify a message as correlated so that the CorrelationId can be returned",
             "format": "uuid"
           },
           "failedReason": {
             "type": "string",
+            "description": "Reason why an order failed",
             "nullable": true
           }
         },
@@ -912,44 +990,72 @@
         "properties": {
           "correlationId": {
             "type": "string",
+            "description": "Used to identify a message as correlated so that the CorrelationId can be returned",
             "format": "uuid"
           },
           "orderId": {
-            "type": "string"
+            "type": "string",
+            "description": "The unique ID of the order known by the host system"
           },
           "source": {
-            "type": "string"
+            "type": "string",
+            "description": "The source where to pick up the order"
           },
           "destination": {
-            "type": "string"
+            "type": "string",
+            "description": "The destination where to drop the order"
           },
           "leNo": {
-            "type": "string"
+            "type": "string",
+            "description": "The LeNo of the orders handled box or transportation good"
           },
           "creator": {
             "allOf": [
               {
                 "$ref": "#/components/schemas/HostOrderCreator"
               }
-            ]
+            ],
+            "description": "The creator of the host order"
           },
           "creationDate": {
             "type": "string",
+            "description": "The date and time when the order was created",
             "format": "date-time"
           }
         },
-        "additionalProperties": false
+        "additionalProperties": false,
+        "description": "Order object used by all messages that require the order details"
       },
       "Sensor": {
         "type": "object",
         "properties": {
           "sensorIdentifier": {
             "type": "string",
+            "description": "The identifier of the sensor",
             "nullable": true
           }
         },
-        "additionalProperties": false
+        "additionalProperties": false,
+        "description": "A sensor object skeleton"
       }
     }
-  }
+  },
+  "tags": [
+    {
+      "name": "Agv",
+      "description": "Controller for host order data"
+    },
+    {
+      "name": "Map",
+      "description": "Map Rest API Controller"
+    },
+    {
+      "name": "Meta",
+      "description": "Controller for meta data"
+    },
+    {
+      "name": "TransportOrder",
+      "description": "Controller for host order data"
+    }
+  ]
 }

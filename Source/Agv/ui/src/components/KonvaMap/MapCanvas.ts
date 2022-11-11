@@ -134,20 +134,24 @@ export class MapCanvas {
             newNode = new Charge(node.id, { x: node.x, y: node.y })
             break
 
-          case INodeType.WayPoint:
-            newNode = new WayPoint(node.id, { x: node.x, y: node.y })
+          case INodeType.Park:
+            newNode = new Park(node.id, { x: node.x, y: node.y })
             break
 
-          case INodeType.Turn:
-            newNode = new WayPoint(node.id, { x: node.x, y: node.y })
-            break
-
-          case INodeType.Station:
+          case INodeType.Drop:
             newNode = new Station(node.id, { x: node.x, y: node.y })
             break
 
-          case INodeType.Park:
-            newNode = new Park(node.id, { x: node.x, y: node.y })
+          case INodeType.Pick:
+            newNode = new Station(node.id, { x: node.x, y: node.y })
+            break
+
+          case INodeType.PickDrop:
+            newNode = new Station(node.id, { x: node.x, y: node.y })
+            break
+
+          case INodeType.WayPoint:
+            newNode = new WayPoint(node.id, { x: node.x, y: node.y })
             break
         }
 

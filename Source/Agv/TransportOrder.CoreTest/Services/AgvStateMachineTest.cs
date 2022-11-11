@@ -111,6 +111,87 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
 
         #endregion
 
+        #region State Transitions
+
+        private const string TestAgvId = "AGV#1";
+
+        private async Task TransitionStateWhenMessageReceived<TRequest>(TRequest message, string initialState, string resultingState) where TRequest : class, CorrelatedBy<Guid>
+        {
+            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = GetFixture();
+
+            var correlationId = message.CorrelationId;
+
+            var agvStage = new AgvSaga(
+                correlationId,
+                TestAgvId,
+                initialState,
+                new AgvStatus(correlationId, null, true, true, 10, true, true)
+            );
+
+            fixture.Add(agvStage);
+
+            await fixture.TestHarness.Bus.Publish(message);
+
+            Assert.IsTrue(await fixture.TestHarness.Published.Any<TRequest>());
+            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<TRequest>());
+
+            var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
+            Assert.AreEqual(resultingState, saga.CurrentState);
+        }
+
+        [DataRow(nameof(AgvStateMachine.Idle), nameof(AgvStateMachine.Idle))]
+        [DataRow(nameof(AgvStateMachine.Discovered), nameof(AgvStateMachine.Idle))]
+        [DataRow(nameof(AgvStateMachine.Reserved), nameof(AgvStateMachine.Idle))]
+        [DataRow(nameof(AgvStateMachine.Busy), nameof(AgvStateMachine.Idle))]
+        [DataRow(nameof(AgvStateMachine.PendingLock), nameof(AgvStateMachine.Locked))]
+        [DataRow(nameof(AgvStateMachine.Locked), nameof(AgvStateMachine.Locked))]
+        [TestMethod]
+        public async Task Transition_State_When_Message_Received_ReleaseAgv(string initialState, string resultingState)
+        {
+            var message = new ReleaseAgv(TestAgvId.ToGuid());
+            await TransitionStateWhenMessageReceived(message, initialState, resultingState);
+        }
+
+        [DataRow(nameof(AgvStateMachine.Idle), nameof(AgvStateMachine.Idle))]
+        [DataRow(nameof(AgvStateMachine.Discovered), nameof(AgvStateMachine.Idle))]
+        [DataRow(nameof(AgvStateMachine.Reserved), nameof(AgvStateMachine.Reserved))]
+        [DataRow(nameof(AgvStateMachine.Busy), nameof(AgvStateMachine.Busy))]
+        [DataRow(nameof(AgvStateMachine.PendingLock), nameof(AgvStateMachine.PendingLock))]
+        [DataRow(nameof(AgvStateMachine.Locked), nameof(AgvStateMachine.Idle))]
+        [TestMethod]
+        public async Task Transition_State_When_Message_Received_ForceReleaseAgv(string initialState, string resultingState)
+        {
+            var message = new ForceReleaseAgv(TestAgvId.ToGuid());
+            await TransitionStateWhenMessageReceived(message, initialState, resultingState);
+        }
+
+        [DataRow(nameof(AgvStateMachine.Idle), nameof(AgvStateMachine.Reserved))]
+        [DataRow(nameof(AgvStateMachine.Discovered), nameof(AgvStateMachine.Discovered))]
+        [DataRow(nameof(AgvStateMachine.Reserved), nameof(AgvStateMachine.Reserved))]
+        [DataRow(nameof(AgvStateMachine.Busy), nameof(AgvStateMachine.Busy))]
+        [DataRow(nameof(AgvStateMachine.PendingLock), nameof(AgvStateMachine.PendingLock))]
+        [DataRow(nameof(AgvStateMachine.Locked), nameof(AgvStateMachine.Locked))]
+        [TestMethod]
+        public async Task Transition_State_When_Message_Received_ReserveAgv(string initialState, string resultingState)
+        {
+            var message = new ReserveAgv(TestAgvId.ToGuid());
+            await TransitionStateWhenMessageReceived(message, initialState, resultingState);
+        }
+
+        [DataRow(nameof(AgvStateMachine.Idle), nameof(AgvStateMachine.Locked))]
+        [DataRow(nameof(AgvStateMachine.Discovered), nameof(AgvStateMachine.Locked))]
+        [DataRow(nameof(AgvStateMachine.Reserved), nameof(AgvStateMachine.PendingLock))]
+        [DataRow(nameof(AgvStateMachine.Busy), nameof(AgvStateMachine.PendingLock))]
+        [DataRow(nameof(AgvStateMachine.PendingLock), nameof(AgvStateMachine.PendingLock))]
+        [DataRow(nameof(AgvStateMachine.Locked), nameof(AgvStateMachine.Locked))]
+        [TestMethod]
+        public async Task Transition_State_When_Message_Received_LockAgv(string initialState, string resultingState)
+        {
+            var message = new LockAgv(TestAgvId.ToGuid());
+            await TransitionStateWhenMessageReceived(message, initialState, resultingState);
+        }
+
+        #endregion
 
         [TestMethod]
         public async Task When_AgvStatusReceived_NewAgvSagaCreated()
@@ -667,7 +748,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvMapReceived>());
             Assert.AreEqual(agvSaga.CorrelationId, await fixture.SagaHarness.Exists(agvSaga.CorrelationId));
 
-            mockRegistry.Verify(mo => mo.AddOrUpdate(mapId.ToGuid(),  mapId, imageData, resolution, xOffset, yOffset, modificationDate), Times.Once);
+            mockRegistry.Verify(mo => mo.AddOrUpdate(mapId.ToGuid(), mapId, imageData, resolution, xOffset, yOffset, modificationDate), Times.Once);
         }
 
         /// <summary>

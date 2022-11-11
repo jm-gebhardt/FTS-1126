@@ -6,9 +6,9 @@ import path from 'path'
 // https://vitejs.dev/config/
 export default ({ mode }) => {
   process.env = Object.assign(process.env, loadEnv(mode, process.cwd(), ''))
-  
+
   return defineConfig({
-    plugins: [vue(),splitVendorChunkPlugin()],
+    plugins: [vue(), splitVendorChunkPlugin()],
     base: process.env.VITE_BASE_PATH,
     resolve: {
       alias: {

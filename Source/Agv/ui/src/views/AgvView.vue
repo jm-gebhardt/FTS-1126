@@ -1,7 +1,6 @@
 <template>
   <h1>Agvs</h1>
   <div class="buttons">
-    <ui-button @click="requestParameter">Refresh Parameter</ui-button>
     <button @click="fetch()">Reload</button>
     Auto-refresh
     <ui-switch
@@ -15,11 +14,10 @@
       <agv-list
         :agvs="Array.from(agvs.data.values())"
         :selected-item="selectedItemIdx"
-        :click-set-idle="(agvs) => clickSetIdle(agvs)"
         @update:selected-list-item-changed="selectedItemChanged"
       ></agv-list>
     </ui-grid-cell>
-    <ui-grid-cell columns="6">
+    <ui-grid-cell class="agv-list-cell" columns="6">
       <agv-details
         v-if="selectedItemIdx != null && selectedCorrelationId != null"
         v-model="Array.from(agvs.data.values())[selectedItemIdx]"
@@ -40,9 +38,6 @@ import { storeToRefs } from 'pinia'
 import { onBeforeUnmount, onMounted, Ref, ref } from 'vue'
 import { AgvHub } from '@/services/AgvHub'
 import { IAgv } from '@/services/api/data-contracts'
-import { useConfirm, useAlert } from 'balm-ui'
-import { HttpResponse } from '@microsoft/signalr'
-import { Agvs as AgvApi } from '@/services/api/Agvs'
 import { useRoute, useRouter } from 'vue-router'
 
 const agvHub = new AgvHub(onAgvDiscovered, onAgvStateChanged)
@@ -50,10 +45,6 @@ const agvHub = new AgvHub(onAgvDiscovered, onAgvStateChanged)
 const { agvs, agvData, agvStatus } = storeToRefs(useAgvStore())
 const { fetchAgvs, updateAgv, fetchData, fetchMaps, fetchStatus } =
   useAgvStore()
-
-const agvApi = new AgvApi({
-  baseUrl: import.meta.env.VITE_API_URL
-})
 
 const route = useRoute()
 const router = useRouter()
@@ -123,25 +114,6 @@ function toggleAutoRefresh(): void {
   }
 }
 
-function clickSetIdle(agv: IAgv): void {
-  const $confirm = useConfirm()
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  $confirm(`Set state of AGV '${agv.agvId}' to Idle?`).then((result: any) => {
-    // According to the balm-ui documentation 'result' should be a boolean but in the node module code it's declared as a void
-    // During runtime it actually is a boolean, so we need to cast it
-    if (result as boolean) {
-      agvApi
-        .setIdlePartialUpdate(agv.correlationId)
-        .catch((reason: HttpResponse) => {
-          console.log('setIdle: ' + reason.statusText)
-          const $alert = useAlert()
-          $alert(`AGV '${agv.agvId}' could not be set to Idle`)
-        })
-    }
-  })
-}
-
 function pushCurrentRoute(): void {
   let query: { [key: string]: string | number | null } = {}
 
@@ -150,14 +122,6 @@ function pushCurrentRoute(): void {
   }
 
   router?.push({ name: 'AGVs', query: query })
-}
-
-async function requestParameter(): Promise<void> {
-  if (selectedCorrelationId.value != null) {
-    console.log('request refreshment ' + selectedCorrelationId.value)
-    await agvApi.emitRequestDataPartialUpdate(selectedCorrelationId.value)
-    await agvApi.emitRequestGraphPartialUpdate(selectedCorrelationId.value)
-  }
 }
 
 onBeforeUnmount(async () => {
@@ -171,11 +135,16 @@ onMounted(() => {
 
   pushCurrentRoute()
   fetch()
+  agvHub.connect()
 })
 </script>
 
 <style lang="scss">
 .buttons {
   text-align: right;
+}
+
+.agv-list-cell {
+  width: 400px;
 }
 </style>

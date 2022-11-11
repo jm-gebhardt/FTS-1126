@@ -16,9 +16,6 @@
           <ui-item-text1>{{ item.agvId }}</ui-item-text1>
           <ui-item-text2>{{ item.currentState }}</ui-item-text2>
         </ui-item-text-content>
-        <ui-item-last-content>
-          <ui-button outlined @click="clickSetIdle(item)">Set Idle</ui-button>
-        </ui-item-last-content>
       </ui-item>
     </template>
   </ui-list>
@@ -38,7 +35,6 @@ import { computed } from 'vue'
 interface Props {
   agvs: IAgv[]
   selectedItem: number | null
-  clickSetIdle: (agv: IAgv) => void
 }
 
 let props = defineProps<Props>()
@@ -63,8 +59,12 @@ function AgvStatusIcon(status: string | null | undefined): string {
       return 'pending'
     case 'Reserved':
       return 'save_alt'
+    case 'Locked':
+      return 'lock'
+    case 'PendingLock':
+      return 'hourglass_bottom'
     default:
-      return '🤔'
+      return 'help'
   }
 }
 </script>

@@ -90,6 +90,16 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         public State Busy { get; private set; } = default!;
 
         /// <summary>
+        /// PendingLock.
+        /// </summary>
+        public State PendingLock { get; private set; } = default!;
+
+        /// <summary>
+        /// Locked.
+        /// </summary>
+        public State Locked { get; private set; } = default!;
+
+        /// <summary>
         /// Request for AGV initialization
         /// </summary>
         public Event<AgvInitializeMessage> AgvInitializeMessageEvent { get; private set; } = default!;
@@ -108,6 +118,16 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         /// Send AGV back to idle
         /// </summary>
         public Event<ReleaseAgv> ReleaseAgvEvent { get; private set; } = default!;
+
+        /// <summary>
+        /// Send AGV back to idle
+        /// </summary>
+        public Event<ForceReleaseAgv> ForceReleaseAgvEvent { get; private set; } = default!;
+
+        /// <summary>
+        /// Lock AGV to prevent it from being assigned to transport orders
+        /// </summary>
+        public Event<LockAgv> LockAgvEvent { get; private set; } = default!;
 
         /// <summary>
         /// The graph of the Agv was received
@@ -161,8 +181,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
             Initially(InitialAgvStatusReceivedHandler());
 
             During(Discovered, Reserved, Busy, ReleaseAgvHandler());
+            During(PendingLock, ReleasePendingLockAgvHandler());
             During(Idle, AcceptReserveAgvRequestHandler());
             During(Discovered, Reserved, Busy, RejectReserveAgvRequestHandler());
+            During(PendingLock, Locked, RejectReserveAgvRequestHandler());
+            During(Discovered, Locked, ForceReleaseAgvHandler());
+            During(Idle, Discovered, LockAgvHandler());
+            During(Reserved, Busy, PendingLockAgvHandler());
 
             DuringAny(AgvInitializeMessageHandler());
             DuringAny(AgvStatusReceivedHandler());
@@ -222,6 +247,20 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
                     x.Publish(c => new ReleaseAgv(c.Saga.CorrelationId))
                 );
 
+        private EventActivityBinder<AgvSaga, ReleaseAgv> ReleaseAgvHandler() =>
+           When(ReleaseAgvEvent)
+               .TransitionTo(Idle)
+               .Publish(c => new AgvBecameIdle(c.Saga.CorrelationId))
+               .Then(c =>
+                  _logger.LogDebug("Agv {AgvId}/{CorrelationId} released and transitioned to Idle", c.Saga.AgvId, c.Saga.CorrelationId));
+
+        private EventActivityBinder<AgvSaga, ReleaseAgv> ReleasePendingLockAgvHandler() =>
+            When(ReleaseAgvEvent)
+                .TransitionTo(Locked)
+                .Publish(c => new AgvBecameIdle(c.Saga.CorrelationId))
+                .Then(c =>
+                    _logger.LogDebug("Agv {AgvId}/{CorrelationId} was locked", c.Saga.AgvId, c.Saga.CorrelationId));
+
         private EventActivityBinder<AgvSaga, ReserveAgv> AcceptReserveAgvRequestHandler() =>
             When(ReserveAgvEvent)
                 .TransitionTo(Reserved)
@@ -233,6 +272,25 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
             When(ReserveAgvEvent)
                 .Then(c => _logger.LogDebug("Could not reserve {AgvId} / {CorrelationId} in state {State}", c.Saga.AgvId, c.Saga.CorrelationId, c.Saga.CurrentState))
                 .Respond(c => new AgvReservationRejected(c.Message.CorrelationId));
+
+        private EventActivityBinder<AgvSaga, ForceReleaseAgv> ForceReleaseAgvHandler() =>
+            When(ForceReleaseAgvEvent)
+                .TransitionTo(Idle)
+                .Publish(c => new AgvBecameIdle(c.Saga.CorrelationId))
+                .Then(c =>
+                    _logger.LogDebug("Agv {AgvId}/{CorrelationId} released and transitioned to Idle", c.Saga.AgvId, c.Saga.CorrelationId));
+
+        private EventActivityBinder<AgvSaga, LockAgv> LockAgvHandler() =>
+            When(LockAgvEvent)
+                .TransitionTo(Locked)
+                .Then(c =>
+                    _logger.LogDebug("Agv {AgvId}/{CorrelationId} was locked", c.Saga.AgvId, c.Saga.CorrelationId));
+
+        private EventActivityBinder<AgvSaga, LockAgv> PendingLockAgvHandler() =>
+                When(LockAgvEvent)
+                .TransitionTo(PendingLock)
+                .Then(c =>
+                    _logger.LogDebug("Agv {AgvId}/{CorrelationId} is pending to be locked", c.Saga.AgvId, c.Saga.CorrelationId));
 
         private EventActivityBinder<AgvSaga, AgvStatusReceived> AgvStatusReceivedHandler() =>
             When(AgvStatusReceivedEvent)
@@ -295,13 +353,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
                 .Then(c =>
                     _logger.LogInformation("{MessageType} {AgvId} / {CorrelationId}", nameof(AgvDataReceived), c.Message.AgvId, c.Saga.CorrelationId))
                 .Then(c => c.Saga.AgvData = c.Message.Data);
-
-        private EventActivityBinder<AgvSaga, ReleaseAgv> ReleaseAgvHandler() =>
-            When(ReleaseAgvEvent)
-                .TransitionTo(Idle)
-                .Publish(c => new AgvBecameIdle(c.Saga.CorrelationId))
-                .Then(c =>
-                    _logger.LogDebug("Agv {AgvId}/{CorrelationId} released and transitioned to Idle", c.Saga.AgvId, c.Saga.CorrelationId));
 
         private EventActivityBinder<AgvSaga, AgvMapReceived> AgvMapReceivedHandler() =>
             When(AgvMapReceivedEvent)

@@ -10,7 +10,7 @@
  */
 
 /**
- * Controller for host order data
+ * AGV model
  */
 export interface IAgv {
   /**
@@ -24,42 +24,95 @@ export interface IAgv {
   currentState: string
 }
 
+/**
+ * AGV Data
+ */
 export interface IAgvData {
-  /** @format uuid */
+  /**
+   * Used to identify a message as correlated so that the CorrelationId can be returned
+   * @format uuid
+   */
   correlationId: string
+  /** The model name of the AGV */
   model: string
+  /** The type of the AGV */
   type: string
+  /** The IP Address of the AGV */
   ipV4Address?: string | null
-  /** @format double */
+  /**
+   * The maximum velocity of the AGV in straight direction [m/s]
+   * @format double
+   */
   maxVelocityStraight: number
-  /** @format double */
+  /**
+   * The capacity of the AGVs battery in [Ah]
+   * @format double
+   */
   batteryCapacity: number
-  /** @format double */
+  /**
+   * The length of the AGV in [m]
+   * @format double
+   */
   length?: number | null
-  /** @format double */
+  /**
+   * The width of the AGV in [m]
+   * @format double
+   */
   width?: number | null
-  /** @format double */
+  /**
+   * The maximum velocity of the AGV while turning on spot [m/s^2]
+   * @format double
+   */
   acceleration?: number | null
-  /** @format double */
+  /**
+   * The maximum velocity of the AGV in while turning [m/s]
+   * @format double
+   */
   maxVelocityTurn?: number | null
-  /** @format double */
+  /**
+   * The maximum velocity of the AGV while turning on spot [rad/s]
+   * @format double
+   */
   maxVelocityTurnOnSpot?: number | null
-  /** @format int64 */
+  /**
+   * The max. payload of the AGV in [kg]
+   * @format int64
+   */
   payload?: number | null
+  /** The list of sensors in the agv */
   sensors: ISensor[]
 }
 
+/**
+ * AGV position information
+ */
 export interface IAgvPosition {
+  /** Returns true, when the position is known and valid. */
   positionInitialized: boolean
-  /** @format float */
+  /**
+   * Current X-position [m].
+   * @format float
+   */
   x: number
-  /** @format float */
+  /**
+   * Current Y-position [m].
+   * @format float
+   */
   y: number
-  /** @format float */
+  /**
+   * Current Z-position [m].
+   * @format float
+   */
   z: number
-  /** @format float */
+  /**
+   * Current angle (rotation) [rad].
+   * @format float
+   */
   theta: number
-  /** @format float */
+  /**
+   * Deviation from the responded position [m].
+   * @format float
+   */
   deviationRange?: number | null
 }
 
@@ -74,20 +127,38 @@ export interface IAgvPositionStatus {
   correlationId: string
   /** Identifier of the AGV */
   agvId: string
-  /** AGV position */
+  /** AGV position information */
   agvPosition: IAgvPosition
 }
 
+/**
+ * AGV Status
+ */
 export interface IAgvStatus {
-  /** @format uuid */
+  /**
+   * AGV correlation ID
+   * @format uuid
+   */
   correlationId: string
+  /** Current or previous order ID. */
   orderId?: string | null
+  /** AGV is busy (not idle). */
   busy: boolean
+  /** AGV is in automatic mode. */
   automatic: boolean
-  /** @format int32 */
+  /**
+   * Battery charge.
+   * @format int32
+   */
   batteryCharge: number
+  /** AGV is charging. */
   charging: boolean
+  /** AGV is disturbed. */
   disturbed: boolean
+  /**
+   * nodeID of last reached node or, if AGV is currently on a node, current node.
+   * Empty string if no lastNodeId is available.
+   */
   lastNodeId?: string | null
 }
 
@@ -95,9 +166,9 @@ export interface IAgvStatus {
  * Model for drawing an edge in the UI
  */
 export interface IEdge {
-  /** Node where the edge starts. */
+  /** Node representation. */
   from: INode
-  /** Node where the edge ends. */
+  /** Node representation. */
   to: INode
 }
 
@@ -116,6 +187,9 @@ export interface IGraph {
   correlationId: string
 }
 
+/**
+ * Defines the creator of a host order
+ */
 export enum IHostOrderCreator {
   Wms = 'Wms',
   Simulation = 'Simulation'
@@ -148,7 +222,7 @@ export interface IMap {
    */
   resolution: number
   /**
-   * The x offset of the map in [m] where the mapped graph coordinate system starts. . Origin is the left upper corner.
+   * The x offset of the map in [m] where the mapped graph coordinate system starts. Origin is the left upper corner.
    * @format double
    */
   xOffset: number
@@ -161,23 +235,47 @@ export interface IMap {
   relatedAgvs: string[]
 }
 
+/**
+ * Node representation.
+ */
 export interface INode {
+  /** The unique ID of the node. */
   id: string
+  /** Node enabled/disabled. */
   enabled: boolean
+  /** Node type of the node. */
   type: INodeType
-  /** @format float */
+  /**
+   * The x coordinate of the node.
+   * @format float
+   */
   x: number
-  /** @format float */
+  /**
+   * The y coordinate of the node
+   * @format float
+   */
   y: number
-  /** @format float */
+  /**
+   * The z coordinate of the node.
+   * <br>
+   * Set to default 0 when not needed.
+   *
+   * @format float
+   */
   z: number
 }
 
+/**
+* Node types.
+<br>
+These types are coming from the specification.
+*/
 export enum INodeType {
-  Charge = 'Charge',
   WayPoint = 'WayPoint',
-  Turn = 'Turn',
-  Station = 'Station',
+  Charge = 'Charge',
+  Pick = 'Pick',
+  Drop = 'Drop',
+  PickDrop = 'PickDrop',
   Park = 'Park'
 }
 
@@ -188,27 +286,54 @@ This is a simply copy of the Gebhardt.StoreWare.Agv.Common.Messages.AgvManagemen
 <see href="https://github.com/dotnet/runtime/issues/41749" />
 */
 export interface IOrder {
+  /** Current State */
   currentState: string
-  /** @format uuid */
+  /**
+   * AgvId
+   * @format uuid
+   */
   assignedAgv?: string | null
+  /** Order object used by all messages that require the order details */
   orderDetails: IOrderDetails
-  /** @format uuid */
+  /**
+   * Used to identify a message as correlated so that the CorrelationId can be returned
+   * @format uuid
+   */
   correlationId: string
+  /** Reason why an order failed */
   failedReason?: string | null
 }
 
+/**
+ * Order object used by all messages that require the order details
+ */
 export interface IOrderDetails {
-  /** @format uuid */
+  /**
+   * Used to identify a message as correlated so that the CorrelationId can be returned
+   * @format uuid
+   */
   correlationId: string
+  /** The unique ID of the order known by the host system */
   orderId: string
+  /** The source where to pick up the order */
   source: string
+  /** The destination where to drop the order */
   destination: string
+  /** The LeNo of the orders handled box or transportation good */
   leNo: string
+  /** The creator of the host order */
   creator: IHostOrderCreator
-  /** @format date-time */
+  /**
+   * The date and time when the order was created
+   * @format date-time
+   */
   creationDate: string
 }
 
+/**
+ * A sensor object skeleton
+ */
 export interface ISensor {
+  /** The identifier of the sensor */
   sensorIdentifier?: string | null
 }

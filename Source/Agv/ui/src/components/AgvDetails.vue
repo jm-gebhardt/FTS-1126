@@ -7,6 +7,9 @@
   <ui-list-divider></ui-list-divider>
   <ui-list-group-subheader>Data information</ui-list-group-subheader>
   <details-list v-model="dataItems"></details-list>
+  <ui-list-divider></ui-list-divider>
+  <ui-list-group-subheader>Actions</ui-list-group-subheader>
+  <actions-list v-model="actionItems"></actions-list>
 </template>
 
 <script lang="ts">
@@ -19,10 +22,24 @@ export default {
 import { IAgv, IAgvData, IAgvStatus } from '@/services/api/data-contracts'
 import { computed, ComputedRef, onMounted } from 'vue'
 import DetailsList from '@/components/DetailsList.vue'
+import ActionsList from '@/components/ActionsList.vue'
 import { ListItem } from '@/components/ListItem'
 import { useAgvStore } from '@/services/AgvStore'
+import {
+  UiListGroupSubheader,
+  UiListDivider,
+  useAlert,
+  useConfirm
+} from 'balm-ui'
+import { ActionItem } from './ActionItem'
+import { HttpResponse } from '@microsoft/signalr'
+import { Agvs as AgvApi } from '@/services/api/Agvs'
 
 const { fetchAgvs } = useAgvStore()
+
+const agvApi = new AgvApi({
+  baseUrl: import.meta.env.VITE_API_URL
+})
 
 interface Props {
   modelValue: IAgv | null
@@ -70,6 +87,79 @@ let dataItems: ComputedRef<ListItem[]> = computed(() => {
     { label: 'Payload', value: props.agvData?.payload }
   ] as ListItem[]
 })
+
+let actionItems: ComputedRef<ActionItem<IAgv>[]> = computed(() => {
+  if (props.modelValue == null) {
+    return [] as ActionItem<IAgv>[]
+  }
+  return [
+    // Actions
+    {
+      label: 'Set Idle',
+      data: props.modelValue,
+      action: setAgvIdle
+    },
+    {
+      label: 'Lock',
+      data: props.modelValue,
+      action: lockAgv
+    },
+    {
+      label: 'Refresh Parameters',
+      data: props.modelValue,
+      action: refreshParameters
+    }
+  ] as ActionItem<IAgv>[]
+})
+
+function setAgvIdle(agv: IAgv | null): void {
+  if (agv === null) return
+
+  const $confirm = useConfirm()
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  $confirm(`Set state of AGV '${agv.agvId}' to Idle?`).then((result: any) => {
+    // According to the balm-ui documentation 'result' should be a boolean but in the node module code it's declared as a void
+    // During runtime it actually is a boolean, so we need to cast it
+    if (result as boolean) {
+      agvApi
+        .setIdlePartialUpdate(agv.correlationId)
+        .catch((reason: HttpResponse) => {
+          console.log('Set AGV idle: ' + reason.statusText)
+          const $alert = useAlert()
+          $alert(`AGV '${agv.agvId}' could not be set to Idle`)
+        })
+    }
+  })
+}
+
+function lockAgv(agv: IAgv | null): void {
+  if (agv === null) return
+
+  const $confirm = useConfirm()
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  $confirm(`Lock AGV '${agv.agvId}'?`).then((result: any) => {
+    // According to the balm-ui documentation 'result' should be a boolean but in the node module code it's declared as a void
+    // During runtime it actually is a boolean, so we need to cast it
+    if (result as boolean) {
+      agvApi
+        .lockAgvPartialUpdate(agv.correlationId)
+        .catch((reason: HttpResponse) => {
+          console.log('lock agv: ' + reason.statusText)
+          const $alert = useAlert()
+          $alert(`AGV '${agv.agvId}' could not be locked`)
+        })
+    }
+  })
+}
+
+function refreshParameters(agv: IAgv | null): void {
+  if (agv === null) return
+
+  agvApi.emitRequestDataPartialUpdate(agv.correlationId)
+  agvApi.emitRequestGraphPartialUpdate(agv.correlationId)
+}
 
 onMounted(() => {
   fetchAgvs()

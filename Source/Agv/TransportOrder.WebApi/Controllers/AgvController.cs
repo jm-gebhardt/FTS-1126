@@ -135,12 +135,32 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
                 return NotFound();
             }
 
-            if (agv.CurrentState != "Discovered")
+            if (agv.CurrentState != "Discovered" && agv.CurrentState != "Locked")
             {
-                return BadRequest("Agv cannot be set 'Idle' because it is not in state 'Discovered'");
+                return BadRequest("Agv cannot be released because it is still busy");
             }
 
-            await _bus.Publish(new ReleaseAgv(agv.CorrelationId));
+            await _bus.Publish(new ForceReleaseAgv(agv.CorrelationId));
+            return Ok();
+        }
+
+        /// <summary>
+        /// Lock AGV to prevent it from being assigned to transport orders
+        /// </summary>
+        /// <response code="200">Ok: AGV status was successfully set to Idle</response>
+        /// <response code="404">Not Found: AGV with the given correlationId does not exist</response>
+        [HttpPatch]
+        [Route("/agvs/{correlationId}/lockAgv")]
+        public async Task<ActionResult> LockAgv(Guid correlationId)
+        {
+            var agv = _agvRegistry.GetAgv(correlationId);
+
+            if (agv == null)
+            {
+                return NotFound();
+            }
+
+            await _bus.Publish(new LockAgv(agv.CorrelationId));
             return Ok();
         }
 

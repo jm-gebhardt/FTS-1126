@@ -1,9 +1,17 @@
 ﻿::: mermaid
 stateDiagram-v2
     [*] --> Discovered: AgvStatusReceived
-    Discovered --> Discovered: AgvStatusReceived
+
     Discovered --> Idle: ReleaseAgv
-    Idle --> Idle: AgvStatusReceived
+    Reserved --> Idle: ReleaseAgv
+    PendingLock --> Locked: ReleaseAgv
+    
+    Discovered --> Idle: ForceReleaseAgv
+    Locked --> Idle: ForceReleaseAgv
+    
     Idle --> Reserved: ReserveAgv
-    Reserved --> Reserved: AgvStatusReceived
+    
+    Idle --> Locked: LockAgv
+    Discovered --> Locked: LockAgv
+    Reserved --> PendingLock: LockAgv
 :::
