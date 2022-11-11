@@ -27,7 +27,7 @@ BEGIN
 	SET @LoopNVARCHAR = CAST(@Loop AS NVARCHAR(20));
 
 	SET @Sql = 'INSERT INTO ToAgv (RecordType, MessageStatus, Orderid, OrderType, LeNo, Source, Destination, Status, Creator, Created, CcuVersion, TimeStamp) 
-	VALUES (''TransportOrder'', ''Pending'', ''ORD_'+@LoopNVARCHAR+''', ''Transport'', ''LE_'+@LoopNVARCHAR+''', ''SRC_'+@SrcNo+''', ''DST_'+@DstNo+''', ''Initial'', ''IRS/Kn'', CURRENT_TIMESTAMP, 0, CURRENT_TIMESTAMP);';
+	VALUES (''TransportOrder'', ''Pending'', ''ORD_'+@LoopNVARCHAR+''', ''Transport'', ''LE_'+@LoopNVARCHAR+''', ''SRC_'+@SrcNo+''', ''DST_'+@DstNo+''', ''Initial'', ''IRS/Kn'', GETUTCDATE(), 0, CURRENT_TIMESTAMP);';
 
 	exec (@Sql)
     SET @Loop = @Loop + 1

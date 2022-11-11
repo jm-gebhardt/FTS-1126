@@ -291,7 +291,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
         {
             context.Saga.OrderDetails = context.Message.OrderDetails;
             context.Saga.Nodes = context.Message.Nodes;
-            context.Saga.OrderStartDate = DateTime.Now;
+            context.Saga.OrderStartDate = DateTime.UtcNow;
 
             _logger.LogInformation("AGV {AgvId} / {CorrelationId} started order {OrderId} / {OrderCorrelationId}. Order will be picked up at {OrderPickDate:HH:mm:ss.fff} and dropped at {OrderFinishDate:HH:mm:ss.fff}",
                 context.Saga.AgvId, context.Saga.CorrelationId,

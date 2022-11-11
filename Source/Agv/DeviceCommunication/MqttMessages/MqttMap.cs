@@ -23,7 +23,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         public string RequestId { get; set; }
 
         /// <summary>
-        /// The modification date of the map. Timestamp in ISO8601 format.
+        /// The UTC modification date of the map. Timestamp in ISO8601 format.
         /// </summary>
         public string? ModificationDate { get; set; }
 

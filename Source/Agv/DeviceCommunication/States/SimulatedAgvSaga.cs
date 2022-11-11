@@ -189,13 +189,13 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         /// Time until the order is finished.
         /// This values is calculated based on the current time and OrderFinishDate
         /// </summary>
-        public TimeSpan? TimeToFinish => OrderFinishDate != null ? OrderFinishDate - DateTime.Now : null;
+        public TimeSpan? TimeToFinish => OrderFinishDate != null ? OrderFinishDate - DateTime.UtcNow : null;
 
         /// <summary>
         /// Time until the order is finished.
         /// This values is calculated based on the current time and OrderFinishDate
         /// </summary>
-        public TimeSpan? TimeToPick => OrderFinishDate != null ? OrderPickDate - DateTime.Now : null;
+        public TimeSpan? TimeToPick => OrderFinishDate != null ? OrderPickDate - DateTime.UtcNow : null;
 
 
         /// <summary>

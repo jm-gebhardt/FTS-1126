@@ -7,10 +7,10 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Db.Models
     {
         /// <summary>
         ///  Factory method to creates new FromAgv entry based on the provided ToAgv instance
-        /// 
+        /// <para>
         /// The MessageStatus is automatically set to <see cref="MessageStatus.Pending"/>
         /// The CcuVersion is incremented by 1
-        /// </summary>
+        /// </para></summary>
         /// <param name="order">Order the new FromAgv instance is based on</param>
         /// <param name="status">Status of this new FromAgv instance</param>
         /// <param name="recordType">RecordType of this new FromAgv instance</param>

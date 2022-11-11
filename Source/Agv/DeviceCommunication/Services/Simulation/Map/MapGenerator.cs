@@ -160,7 +160,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Map
             return new AgvMap(
                 _graph.RelatedMapId,
                 _graph.RelatedMapName,
-                DateTime.Now,
+                DateTime.UtcNow,
                 Convert.ToBase64String(map),
                 resolution, xOffset, yOffset);
         }

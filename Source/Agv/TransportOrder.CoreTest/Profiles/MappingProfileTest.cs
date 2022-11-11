@@ -124,7 +124,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Profiles
             const string base64String = "dGhlIHF1aWNrIGJyb3duIGZveCBqdW1wIG92ZXIgdGhlIGxhenkgZG9n";
             var correlationId = Guid.NewGuid();
 
-            var persistenceMap = new Core.Persistence.Models.Map(correlationId, "Area51_Floor1_Compartment47", Encoding.UTF8.GetBytes(base64String), 0.01, 1, 2, DateTime.Now);
+            var persistenceMap = new Core.Persistence.Models.Map(correlationId, "Area51_Floor1_Compartment47", Encoding.UTF8.GetBytes(base64String), 0.01, 1, 2, DateTime.UtcNow);
             ImmutableDictionary<Guid, Guid[]> agvMapRelation = new Dictionary<Guid, Guid[]>
             {
                 {

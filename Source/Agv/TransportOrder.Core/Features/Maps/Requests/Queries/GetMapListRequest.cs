@@ -8,10 +8,5 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Requests.Quer
     /// </summary>
     public class GetMapListRequest : IRequest<List<MapDto>>
     {
-        /// <summary/>
-        public GetMapListRequest()
-        {
-            
-        }
     }
 }

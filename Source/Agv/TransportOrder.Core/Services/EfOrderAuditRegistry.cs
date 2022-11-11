@@ -53,7 +53,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
                 // CancellationToken is necessary in order to prevent thread concurrency errors
                 var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-                dbContext.Add(new OrderChangedEvent(Guid.NewGuid(), orderSaga, eventName, state, hook.ToString(), DateTime.Now));
+                dbContext.Add(new OrderChangedEvent(Guid.NewGuid(), orderSaga, eventName, state, hook.ToString(), DateTime.UtcNow));
 
                 int stateEntries = await dbContext.SaveChangesAsync(cancellationToken);
                 return stateEntries != 0;

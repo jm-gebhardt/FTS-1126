@@ -39,7 +39,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages
         public HostOrderCreator Creator { get; }
 
         /// <summary>
-        /// The date and time when the order was created
+        /// The UTC timestamp when the order was created
         /// </summary>
         public DateTime CreationDate { get; }
 
@@ -76,7 +76,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages
         /// <param name="leNo"></param>
         /// <param name="creator"></param>
         public OrderDetails(Guid correlationId, string orderId, string source, string destination, string leNo, HostOrderCreator creator)
-            : this(correlationId, orderId, source, destination, leNo, creator, DateTime.Now)
+            : this(correlationId, orderId, source, destination, leNo, creator, DateTime.UtcNow)
         {
         }
     }

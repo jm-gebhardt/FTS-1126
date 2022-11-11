@@ -116,73 +116,87 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Db.Models
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; init; }
+
         /// <summary>
         ///  Action described in this entry
         /// </summary>
         [Column(TypeName = "nvarchar(255)")]
         public RecordType RecordType { get; init; }
+
         /// <summary>
         /// Message Status
         /// </summary>
         [Column(TypeName = "nvarchar(255)")]
         public MessageStatus MessageStatus { get; set; }
+
         /// <summary>
         /// Order Id
         /// </summary>
         [Column(TypeName = "nvarchar(255)")]
         public string OrderId { get; init; } = null!;
+
         /// <summary>
         /// Order 
         /// </summary>
         [Column(TypeName = "nvarchar(255)")]
         public OrderType OrderType { get; init; }
+
         /// <summary>
         /// The LeNo of the orders handled box or transportation good
         /// </summary>
         [Column(TypeName = "nvarchar(255)")]
         public string LeNo { get; init; } = null!;
+
         /// <summary>
         /// The source where to pick up the order
         /// </summary>
         [Column(TypeName = "nvarchar(255)")]
         public string Source { get; init; } = null!;
+
         /// <summary>
         /// The destination where to drop the order
         /// </summary>
         [Column(TypeName = "nvarchar(255)")]
         public string Destination { get; init; } = null!;
+
         /// <summary>
         /// Assigned AGV
         /// </summary>
         [Column(TypeName = "nvarchar(255)")]
         public string? Vehicle { get; init; }
+
         /// <summary>
         /// Current order status
         /// </summary>
         [Column(TypeName = "nvarchar(255)")]
         public OrderStatus Status { get; init; }
+
         /// <summary>
         /// Order error
         /// </summary>
         [Column(TypeName = "nvarchar(255)")]
         public string? Error { get; init; }
+
         /// <summary>
         /// Creator of this entry
         /// </summary>
         [Column(TypeName = "nvarchar(255)")]
         public string? Creator { get; init; }
+
         /// <summary>
-        /// Date of first order creation
+        /// UTC timestamp of first order creation
         /// </summary>
         public DateTime Created { get; init; }
+
         /// <summary>
         /// Number of Updates
         /// </summary>
         public int CcuVersion { get; init; }
+
         /// <summary>
-        /// Time of last update
+        /// UTC timestamp of last update
         /// </summary>
-        public DateTime TimeStamp { get; init; } = DateTime.Now;
+        public DateTime TimeStamp { get; init; } = DateTime.UtcNow;
     }
 }
 

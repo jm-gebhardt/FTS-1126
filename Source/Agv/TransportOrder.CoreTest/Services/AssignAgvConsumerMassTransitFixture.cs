@@ -22,9 +22,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         private static readonly string[] _agvStates = { "Idle", "Busy" };
         private static readonly string[] _ips = { "127.0.0.1", "127.0.0.2" };
         private static readonly string[] _states = { nameof(OrderStateMachine.OrderReceived), nameof(OrderStateMachine.TransportOrderSend), nameof(OrderStateMachine.OrderReceived) };
-        private static readonly DateTime[] _creationDates = { DateTime.ParseExact("2022-07-13 13:00:01", "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture),
+        private static readonly DateTime[] _creationDates = {
+            DateTime.ParseExact("2022-07-13 13:00:01", "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture),
             DateTime.ParseExact("2022-07-13 12:00:01", "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture),
-            DateTime.ParseExact("2022-07-13 11:00:01", "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture) };
+            DateTime.ParseExact("2022-07-13 11:00:01", "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)
+        };
 
         private readonly Mock<IAgvRegistry> _mockAgvRegistry;
         private Mock<IOrderRegistry> _mockOrderRegistry = null!;
@@ -184,7 +186,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             {
                 for (int i = 0; i < Orders.Length; i++)
                 {
-                    var order = new OrderDetails(Orders[i].ToGuid(), Orders[i], Sources[i], Destinations[i], LeNo[i], HostOrderCreator.Simulation, noCreationDates ? DateTime.Now : _creationDates[i]);
+                    var order = new OrderDetails(Orders[i].ToGuid(), Orders[i], Sources[i], Destinations[i], LeNo[i], HostOrderCreator.Simulation, noCreationDates ? DateTime.UtcNow : _creationDates[i]);
                     orders.Add(new OrderSaga(Orders[i].ToGuid(), order, _states[i], null));
                 }
             }

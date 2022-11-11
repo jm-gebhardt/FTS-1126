@@ -679,7 +679,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             const float resolution = 1;
             const float xOffset = 1;
             const float yOffset = 1;
-            var modificationDate = DateTime.Now;
+            var modificationDate = DateTime.UtcNow;
 
             mockRegistry.Setup(mo => mo.AddOrUpdate(mapId.ToGuid(), mapId, imageData, resolution, xOffset, yOffset, modificationDate)).Returns(true);
 
@@ -733,7 +733,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             const float resolution = 1;
             const float xOffset = 1;
             const float yOffset = 1;
-            var modificationDate = DateTime.Now;
+            var modificationDate = DateTime.UtcNow;
 
             mockRegistry.Setup(mo => mo.Exists(mapId.ToGuid())).Returns(true);
 

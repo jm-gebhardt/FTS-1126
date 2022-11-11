@@ -32,7 +32,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         {
             Data = "bGlnaHQgdw==",
             MapId = MapId,
-            ModificationDate = DateTime.Now.ToString("o", System.Globalization.CultureInfo.InvariantCulture),
+            ModificationDate = DateTime.UtcNow.ToString("o", System.Globalization.CultureInfo.InvariantCulture),
             Resolution = 1,
             XOffset = 1,
             YOffset = 1
