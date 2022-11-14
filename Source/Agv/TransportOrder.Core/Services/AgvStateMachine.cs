@@ -55,7 +55,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         private readonly int _agvOfflineTimeoutMsWhileBusy = 20000;
 
         /// <summary>
-        /// Internal message send once durting startup to initialze AGV and start AGV supervision.
+        /// Internal message send once during startup to initialize AGV and start AGV supervision.
         /// </summary>
         /// <param name="CorrelationId"></param>
         /// <param name="AgvId"></param>
@@ -241,11 +241,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
                 .If(cond => cond.Saga.AgvData == null,
                     PublishRequestAgvData)
                 .If(cond => cond.Saga.AgvGraph == null,
-                    PublishRequestAgvGraph)
-                // Lets have a auto-discover feature
-                .If(_ => _productionOptions.AutoAccept, x =>
-                    x.Publish(c => new ReleaseAgv(c.Saga.CorrelationId))
-                );
+                    PublishRequestAgvGraph);
 
         private EventActivityBinder<AgvSaga, ReleaseAgv> ReleaseAgvHandler() =>
            When(ReleaseAgvEvent)
@@ -310,6 +306,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
                 // When AgvGraph present refresh once a day
                 .If(cond => cond.Saga.AgvGraph != null && cond.Saga.GetTimeSpanSinceLastRequest_AgvGraph().TotalSeconds > DailyRequestUpdateInterval,
                     PublishRequestAgvGraph)
+                .If(cond => 
+                        _productionOptions.AutoAccept && 
+                        cond.Saga.AgvData != null && 
+                        cond.Saga.AgvGraph != null && 
+                        _mapRegistry.Exists(cond.Saga.AgvGraph.RelatedMapId) && 
+                        cond.Saga.CurrentState == nameof(Discovered),
+                    m => m.Publish(c => new ReleaseAgv(c.Saga.CorrelationId)))
                 .Schedule(AgvOfflineWatchdog,
                           c1 => new AgvOfflineMessage(c1.Saga.CorrelationId, DateTime.UtcNow),
                           c2 => TimeSpan.FromMilliseconds(c2.Saga.AgvStatus!.Busy ? _agvOfflineTimeoutMsWhileBusy : _agvOfflineTimeoutMsWhileIdle))

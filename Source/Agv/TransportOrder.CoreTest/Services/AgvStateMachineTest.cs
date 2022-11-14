@@ -207,9 +207,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvStatusReceived>());
 
             var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<ReleaseAgv>());
-            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<ReleaseAgv>());
-            Assert.AreEqual(fixture.SagaHarness.StateMachine.Idle.Name, saga.CurrentState);
+            Assert.AreEqual(fixture.SagaHarness.StateMachine.Discovered.Name, saga.CurrentState);
             Assert.AreEqual(agvId, saga.AgvId);
             Assert.IsNotNull(saga.AgvStatus);
             Assert.IsNull(saga.AgvGraph);

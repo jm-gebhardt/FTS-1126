@@ -35,16 +35,21 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             /// TestFixture constructor
             /// </summary>
             /// <param name="agvSaga"></param>
-            public TestFixture(AgvSaga? agvSaga = null)
+            /// <param name="mockAgvRegistry"></param>
+            public TestFixture(AgvSaga? agvSaga = null, Mock<IAgvRegistry>? mockAgvRegistry = null)
             {
-                var mockAgvRegistry = new Mock<IAgvRegistry>();
-                mockAgvRegistry.Setup(s => s.GetIdleAgvs()).Returns(new EnumerableQuery<IAgv>(new List<IAgv>()));
-                mockAgvRegistry.Setup(s => s.Count).Returns(0);
-                if (agvSaga != null)
+                if (mockAgvRegistry == null)
                 {
-                    mockAgvRegistry.Setup(s => s.GetAgv(agvSaga.AgvId.ToGuid()))
-                        .Returns(agvSaga);
-                    mockAgvRegistry.Setup(s => s.Count).Returns(1);
+                    mockAgvRegistry = new Mock<IAgvRegistry>();
+                    mockAgvRegistry.Setup(s => s.GetIdleAgvs()).Returns(new EnumerableQuery<IAgv>(new List<IAgv>()));
+                    mockAgvRegistry.Setup(s => s.Count).Returns(0);
+
+                    if (agvSaga != null)
+                    {
+                        mockAgvRegistry.Setup(s => s.GetAgv(agvSaga.AgvId.ToGuid()))
+                            .Returns(agvSaga);
+                        mockAgvRegistry.Setup(s => s.Count).Returns(1);
+                    }
                 }
 
                 _mockStateObserver = new Mock<IStateObserver<OrderSaga>>();
@@ -149,6 +154,32 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             IList<Guid> sagas = await fixture.SagaHarness.Match(s => s.CorrelationId == correlationId && s.CurrentState == fixture.SagaHarness.StateMachine.AgvRequested.Name);
             Assert.AreEqual(1, sagas.Count);
             Assert.AreEqual(fixture.SagaHarness.StateMachine.AgvRequested.Name, saga.CurrentState);
+        }
+
+        [DataRow(nameof(OrderStateMachine.AgvRequested))]
+        [DataRow(nameof(OrderStateMachine.TransportOrderSend))]
+        [DataRow(nameof(OrderStateMachine.TransportOrderStarted))]
+        [TestMethod]
+        public async Task Handle_RequestOrderAgvAssign_when_not_OrderReceived(string previousState)
+        {
+            // Arrange
+            var orderSaga = CreateTestOrderSaga(previousState);
+
+            var agvSaga = CreateTestAgvSaga("Idle");
+            var agvList = new List<IAgv> { agvSaga };
+
+            var mockAgvRegistry = new Mock<IAgvRegistry>();
+            mockAgvRegistry.Setup(s => s.GetIdleAgvs()).Returns(new EnumerableQuery<IAgv>(agvList));
+
+            var testFixtureObject = new TestFixture(mockAgvRegistry: mockAgvRegistry);
+            StateMachineTestFixture<OrderStateMachine, OrderSaga> fixture = testFixtureObject.GetTestFixture();
+            fixture.Add(orderSaga);
+
+            // Act
+            await fixture.TestHarness.Bus.Publish(new RequestOrderAgvAssign(orderSaga.CorrelationId));
+
+            // Assert
+            Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvBecameIdle>());
         }
 
         [TestMethod]

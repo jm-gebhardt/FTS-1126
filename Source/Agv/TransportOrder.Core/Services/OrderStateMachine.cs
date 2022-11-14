@@ -1,3 +1,4 @@
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Commands;
@@ -103,6 +104,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
             InstanceState(x => x.CurrentState);
             Initially(SetHandleHostOrderHandler());
             During(OrderReceived, SetRequestAgvAssignHandler());
+            During(AgvRequested, TransportOrderSend, TransportOrderStarted, SetRequestAgvAssignHandler_When_Not_OrderReceived());
             During(AgvRequested, SetAgvAssignSucceededHandler());
             During(AgvRequested, SetAgvAssignFailedHandler());
             During(TransportOrderSend, TransportOrderPicked, SetTransportOrderFailedHandler());
@@ -139,7 +141,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
                 );
 
         /// <summary>
-        /// Handler for RequestOrderAgvAssignS
+        /// Handler for RequestOrderAgvAssign
         /// </summary>
         /// <returns>Event Binding for RequestOrderAgvAssign</returns>
         private EventActivityBinder<OrderSaga, RequestOrderAgvAssign> SetRequestAgvAssignHandler() =>
@@ -148,6 +150,24 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
                     new AssignAgv(c.Saga.CorrelationId, c.Saga.OrderDetails)
                 )
                 .TransitionTo(AgvRequested);
+
+        private EventActivityBinder<OrderSaga, RequestOrderAgvAssign> SetRequestAgvAssignHandler_When_Not_OrderReceived() =>
+            When(RequestOrderAgvAssignEvent)
+                .Then(c => _logger.LogWarning("RequestOrderAgvAssign received but Order {OrderId} has already the state {State}", 
+                    c.Saga.OrderDetails.OrderId, c.Saga.CurrentState))
+                .ThenAsync(ResendAgvBecameIdle);
+
+        private async Task ResendAgvBecameIdle(BehaviorContext<OrderSaga, RequestOrderAgvAssign> context)
+        {
+            IQueryable<IAgv> idleAgvs = _agvRegistry.GetIdleAgvs();
+            if (idleAgvs.Any())
+            {
+                var agv = idleAgvs.First();
+                await context.Publish(new AgvBecameIdle(agv.CorrelationId));
+                _logger.LogInformation("AgvRegistry: {countIdleAgvs} idle AGVS found. Resending -AgvBecameIdle- for AGV {AgvId} / {CorrelationId}", 
+                    idleAgvs.Count(), agv.AgvId, agv.CorrelationId);
+            }
+        }
 
         /// <summary>
         /// Handler for AgvAssignmentSucceeded
