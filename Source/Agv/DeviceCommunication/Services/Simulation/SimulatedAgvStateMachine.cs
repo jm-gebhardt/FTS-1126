@@ -136,7 +136,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
             _simulateOptions = simulateOptions;
             _sendStatusIntervalMs = Math.Clamp(_simulateOptions.NodeTravelTime / 2, 100, 10000); // Send twice per node (min 0.1s, max 10s)
             SignalPositionIntervalMs = Math.Clamp(_simulateOptions.NodeTravelTime / 10, 200, 2000); // Send 10x per node (min 0.2s, max 2s)
-            _logger.LogInformation("Initialized SimulatedAgvStateMachine with node travel time {NodetravelTime}", _simulateOptions.NodeTravelTime);
+            _logger.LogInformation("Initialized SimulatedAgvStateMachine with {GridRows} rows and node travel time of {NodetravelTime} ms",
+                _simulateOptions.GridRows, _simulateOptions.NodeTravelTime);
 
             SetSagaFactory();
             SetScheduler();

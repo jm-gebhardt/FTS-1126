@@ -22,7 +22,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             {
                 Agvs = 1,
                 Sources = new[] {"S1"},
-                Destinations = new []{"D1"}
+                Destinations = new []{"D1"},
+                GridRows = 3
             };
 
             var bus = new Mock<IBus>();
@@ -30,7 +31,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             bus.Setup(s => s.Publish(Capture.In(createAgvMessages), default));
             var provider = new SimulatedAgvProvider(options, bus.Object);
             provider.Create();
-            
+
             bus.Verify(s => s.Publish(It.IsAny<SimulatedAgvStateMachine.CreateAgv>(), default), Times.Once);
 
             var firstAgv = createAgvMessages.First();
@@ -50,7 +51,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             {
                 Agvs = 2,
                 Sources = new[] {"S1"},
-                Destinations = new []{"D1"}
+                Destinations = new []{"D1"},
+                GridRows = 3
             };
 
             var bus = new Mock<IBus>();

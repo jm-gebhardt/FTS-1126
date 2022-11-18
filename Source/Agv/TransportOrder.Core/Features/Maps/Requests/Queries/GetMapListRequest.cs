@@ -6,6 +6,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Requests.Quer
     /// <summary>
     /// Represents the GetMapList request which returns a list of Maps
     /// </summary>
+    [JetBrains.Annotations.UsedImplicitly]
     public class GetMapListRequest : IRequest<List<MapDto>>
     {
     }

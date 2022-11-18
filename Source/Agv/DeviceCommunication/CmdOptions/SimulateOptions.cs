@@ -17,8 +17,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions
         // ReSharper disable once StringLiteralTypo
         [Option('c', "agvs", HelpText = "Number of simulated AGVs", Default=1)]
         // ReSharper disable once IdentifierTypo
-        public int Agvs { get;  init; }
-        
+        public int Agvs { get; init; }
+
         /// <summary>
         /// List of simulation sources
         /// </summary>
@@ -32,6 +32,26 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions
         [JetBrains.Annotations.UsedImplicitly]
         [Option('d', "destinations", HelpText = "List of simulation destinations", Required = true, Min = 1, Separator = ',')]
         public IEnumerable<string>? Destinations { get; init; }
+
+        /// <summary>
+        /// Number of grid rows [3..[
+        /// </summary>
+        [JetBrains.Annotations.UsedImplicitly]
+        // ReSharper disable once StringLiteralTypo
+        [Option('r', "gridrows", HelpText = "Number of grid rows of simulated map [3..[", Default = 3)]
+        public int GridRows
+        {
+            get => _gridRows;
+            init
+            {
+                if (value < 3)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(value), "Number of grid rows need to be greater or equal to 3.");
+                }
+                _gridRows = value;
+            }
+        }
+        private readonly int _gridRows;
 
         /// <summary>
         /// Node travel time of the agv in [ms]

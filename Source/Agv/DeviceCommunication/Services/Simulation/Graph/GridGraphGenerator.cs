@@ -7,14 +7,14 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph
     /// <summary>
     /// Generated Grid Style Graph
     /// Source will be connected in the north, services to left and right, and destinations to the south.
-    /// The grid dimensions are defined by gridLength (Default: 3) and by the number of Sources and destinations.
-    /// Grid length must be large enough to connect the given service nodes.
+    /// The grid dimensions are defined by gridRows (Default: 3) and by the number of Sources and destinations.
+    /// Grid rows must be large enough to connect the given service nodes.
     /// 
     ///           S0   S1  S2
     ///            |   |   |
-    /// Service0 - * - * - * - Service1
+    /// Service0 - * - * - *
+    ///            * - * - * - Service1
     /// Service2 - * - * - *
-    ///            * - * - *
     ///            |   |   |
     ///           D0  D1  D2
     /// 
@@ -26,18 +26,18 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph
         /// </summary>
         /// <param name="sources"></param>
         /// <param name="destinations"></param>
-        /// <param name="gridLength"></param>
+        /// <param name="gridRows"></param>
         /// <param name="serviceNodes"></param>
         public GridGraphGenerator(
             string[] sources, 
             string[] destinations, 
-            int gridLength = 3,
+            int gridRows = 3,
             AgvGraph.NodeType[]? serviceNodes = null)
         {
-            _gridLength = gridLength;
-            _serviceNodeTypes = serviceNodes ?? Array.Empty<AgvGraph.NodeType>();
             Sources = sources;
             Destinations = destinations;
+            _gridRows = gridRows;
+            _serviceNodeTypes = serviceNodes ?? Array.Empty<AgvGraph.NodeType>();
         }
 
         /// <summary>
@@ -60,10 +60,10 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph
         private readonly List<AgvGraph.Node> _otherNodes = new();
         private readonly List<AgvGraph.Edge> _edges = new();
     
-        private readonly int _gridLength;
+        private readonly int _gridRows;
         private readonly AgvGraph.NodeType[] _serviceNodeTypes;
 
-        private string RelatedMapName => $"SIM_{GridWidth}x{_gridLength}";
+        private string RelatedMapName => $"SIM_{GridWidth}x{_gridRows}";
 
         /// <summary>
         /// Generate AgvGraph
@@ -99,11 +99,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph
         private void AddGrid()
         {
             // Generate grid nodes
-            for (int y = 0; y < _gridLength; y++)
+            for (int y = 0; y < _gridRows; y++)
             {
                 for (int x = 0; x < GridWidth; x++)
                 {
-                    _gridNodes.Add(new AgvGraph.Node($"N{y:0000}-{x:0000}")
+                    _gridNodes.Add(new AgvGraph.Node($"N{x:000}-{y:000}")
                     {
                         Type = AgvGraph.NodeType.WayPoint,
                         X = x * NodeOffset + OriginXOffset,
@@ -112,7 +112,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph
                 }
             }
             // Connect grid nodes
-            for (int y = 0; y < _gridLength; y++)
+            for (int y = 0; y < _gridRows; y++)
             {
                 for (int x = 0; x < GridWidth; x++)
                 {
@@ -127,7 +127,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph
                     }
 
                     // Connect vertical
-                    if (y != _gridLength - 1)
+                    if (y != _gridRows - 1)
                     {
                         AddEdge(
                             _gridNodes[y * GridWidth + x].Id,
@@ -183,7 +183,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph
         {
             for (int index = 0; index < _serviceNodeTypes.Length; index++)
             {
-                AddServiceNode(_serviceNodeTypes[index], index);    
+                AddServiceNode(_serviceNodeTypes[index], index);
             }
         }
     
@@ -197,35 +197,46 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph
         /// <exception cref="IndexOutOfRangeException"></exception>
         private void AddServiceNode(AgvGraph.NodeType nodeType, int index)
         {
-            int connectedGridNodeIdx = FindConnectedGridNodeIndex(index);
+            int connectedGridNodeIdx = FindConnectedGridNodeIndex(index, out int side);
             var gridNode = _gridNodes[connectedGridNodeIdx];
             string nodeId = $"{nodeType.GetDisplayName()}-{index}";
-        
+
             _otherNodes.Add(new AgvGraph.Node(nodeId)
             {
                 Type = nodeType,
-                X = gridNode.X + OriginXOffset /  2 * (index % 2 == 0 ? -1 : 1),
+                X = gridNode.X + OriginXOffset / 2 * side,
                 Y = gridNode.Y
-            });   
+            });
             AddEdge(nodeId, gridNode.Id);
         }
 
-        private int FindConnectedGridNodeIndex(int serviceNodeIndex)
+        private int FindConnectedGridNodeIndex(int serviceNodeIndex, out int side)
         {
-            if (serviceNodeIndex == 0)
+            if (_serviceNodeTypes.Length == 0)
             {
-                return 0;
+                throw new IndexOutOfRangeException("Number of service nodes need to be greater than 0.");
             }
-            // Select grid node left, right, left, right, ...
-            int connectedGridNodeIdx = serviceNodeIndex % 2 == 0 ? 
-                GridWidth * (serviceNodeIndex - 1) :  
-                GridWidth * (int)Math.Ceiling(serviceNodeIndex / 2.0) - 1;
-            if (connectedGridNodeIdx >= _gridNodes.Count)
+            if (_serviceNodeTypes.Length > 2 * _gridRows)
             {
-                throw new IndexOutOfRangeException($"GridLength is to small to add service node with index {serviceNodeIndex}");
+                throw new IndexOutOfRangeException("Grid is to small to add service nodes.");
             }
 
-            return connectedGridNodeIdx;
+            float step = 2.0f * _gridRows / _serviceNodeTypes.Length;
+            int nodeIdx = (int)(step * serviceNodeIndex + 0.5);
+
+            if (nodeIdx % 2 == 0)
+            {
+                // Place to the left
+                side = -1;
+                return nodeIdx / 2 * GridWidth;
+            }
+            else
+            {
+                // Place to the right
+                side = 1;
+                return nodeIdx / 2 * GridWidth + GridWidth - 1;
+            }
+
         }
 
         /// <summary>

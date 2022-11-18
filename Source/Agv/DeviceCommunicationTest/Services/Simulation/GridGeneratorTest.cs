@@ -24,13 +24,13 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
         public void GenerateGrid_TestGridOfDifferentSizes_AllSuccessful(
             int numberOfSourceNodes, 
             int numberOfDestinationNodes,
-            int gridLength)
+            int gridRows)
         {
             string[] sources = GenerateNodeIds("S", numberOfSourceNodes);
             string[] destinations = GenerateNodeIds("D", numberOfDestinationNodes);
             var correlationId = Guid.NewGuid();
             
-            var generator = new GridGraphGenerator(sources, destinations, gridLength);
+            var generator = new GridGraphGenerator(sources, destinations, gridRows);
             var graph = generator.Generate(correlationId);
             
             int gridWidth = Math.Max(sources.Length, destinations.Length);
@@ -38,14 +38,14 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             Assert.AreEqual(correlationId, graph.CorrelationId);
             Assert.AreEqual(sources.Length + 
                             destinations.Length + 
-                            gridWidth * gridLength, 
+                            gridWidth * gridRows, 
                 graph.Nodes.Length);
 
             int expectedNumberOfEdges = (
                 sources.Length +
                 destinations.Length +
-                (gridWidth - 1) * gridLength + // horizontal
-                gridWidth * (gridLength - 1) // vertical
+                (gridWidth - 1) * gridRows + // horizontal
+                gridWidth * (gridRows - 1) // vertical
                 ) * 2;
 
             if (numberOfSourceNodes == 0 && numberOfDestinationNodes == 0)
@@ -125,7 +125,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             var graph = generator.Generate(Guid.NewGuid());
             Assert.AreEqual(new HashSet<string>(graph.Edges.Select(n => $"{n.From}.{n.To}")).Count, graph.Edges.Length);
         }
-        
+
         [TestMethod]
         public void GenerateGrid_TwoServiceNode_AllEdgesAdded()
         {
@@ -138,25 +138,24 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             string[][] expectedEdges =
             {
                 // Grid
-                new [] {"N0000-0000", "N0000-0001"}, 
-                new [] {"N0000-0000", "N0001-0000"}, 
-                new [] {"N0000-0001", "N0001-0001"}, 
-                new [] {"N0001-0000", "N0001-0001"},
-                new [] {"N0001-0000", "N0002-0000"}, 
-                new [] {"N0001-0001", "N0002-0001"},
-                new [] {"N0002-0000", "N0002-0001"},
+                new [] {"N000-000", "N001-000"}, 
+                new [] {"N000-000", "N000-001"}, 
+                new [] {"N001-000", "N001-001"},
+                new [] {"N000-001", "N001-001"},
+                new [] {"N000-001", "N000-002"},
+                new [] {"N001-001", "N001-002"},
+                new [] {"N000-002", "N001-002"},
                 // Source
-                new [] {"S0", "N0000-0000"},
-                new [] {"S1", "N0000-0001"},
+                new [] {"S0", "N000-000"},
+                new [] {"S1", "N001-000"},
                 // Destination
-                new [] {"D0", "N0002-0000"},
-                new [] {"D1", "N0002-0001"},
+                new [] {"D0", "N000-002"},
+                new [] {"D1", "N001-002"},
                 // Service
-                new [] {"Charge-0", "N0000-0000"},
-                new [] {"Park-1", "N0000-0001"}
+                new [] {"Charge-0", "N000-000"},
+                new [] {"Park-1", "N001-001"}
             };
-            
-            
+
             string[] graphEdges = graph.Edges.Select(e => $"{e.From}-{e.To}").ToArray();
 
             // Check for edges including bidirectional
@@ -165,11 +164,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
                 string edgeName = $"{edge[0]}-{edge[1]}";
                 Assert.AreEqual(edgeName, graphEdges.FirstOrDefault(n => n == edgeName));
             }
-            
+
             // 2*Expect for bidirectional
             Assert.AreEqual(expectedEdges.Length * 2, graph.Edges.Length);
         }
-        
+
         [TestMethod]
         [ExpectedException(typeof(IndexOutOfRangeException))]
         public void GenerateGrid_WithThreeServiceNode_GridLengthOne_ExpectIndexOutOfRangeException()

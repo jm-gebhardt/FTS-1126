@@ -318,7 +318,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
              *   WP (5.0/5.0)
              *    |
              *   D1 (5.0/7,5)   */
-            var graph = new GridGraphGenerator(new[] {order.Source}, new[] {order.Destination}, gridLength: 1).Generate(agvCorrelationId);
+            var graph = new GridGraphGenerator(new[] {order.Source}, new[] {order.Destination}, gridRows: 1).Generate(agvCorrelationId);
             //   S1 -> WP -> D1
             string[] path = {
                 order.Source,

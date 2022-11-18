@@ -66,10 +66,18 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
         {
             string agvId = $"{AgvPrefix}-{agvIndex}";
             var correlationId = agvId.ToGuid();
+            // Next even number from rows as number of service nodes.
+            int serviceNodeCount = (_simulateOptions.GridRows / 2 + _simulateOptions.GridRows % 2) * 2;
+            var serviceNodes = new AgvGraph.NodeType[serviceNodeCount];
+            for (; serviceNodeCount > 0; --serviceNodeCount)
+            {
+                serviceNodes[serviceNodeCount - 1] = serviceNodeCount % 2 == 0 ? AgvGraph.NodeType.Park : AgvGraph.NodeType.Charge;
+            }
             var grid = new GridGraphGenerator(
                 _sources,
                 _destinations,
-                serviceNodes: new[] {AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park, AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park}
+                _simulateOptions.GridRows,
+                serviceNodes
             ).Generate(correlationId);
             var mapGenerator = new MapGenerator(grid);
             return new SimulatedAgv(
