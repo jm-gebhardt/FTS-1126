@@ -59,8 +59,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
                         modificationDate,
                         context.Message.Data,
                         context.Message.Resolution,
-                        context.Message.XOffset,
-                        context.Message.YOffset
+                        context.Message.XOffset * -1.0f,
+                        context.Message.YOffset * -1.0f
                     )
                 ));
             }
