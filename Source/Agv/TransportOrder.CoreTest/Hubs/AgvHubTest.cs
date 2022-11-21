@@ -15,8 +15,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Hubs
         private class DummyLogger : ILogger<AgvHub>
         {
             public string? LastMessage { get; private set; }
-            
-            public IDisposable BeginScope<TState>(TState state)
+
+            public IDisposable BeginScope<TState>(TState state) where TState : notnull
             {
                 throw new NotImplementedException();
             }

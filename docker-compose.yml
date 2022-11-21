@@ -57,7 +57,7 @@ services:
       - RABBITMQ__HOST=rabbitmq
       - RABBITMQ__USER=${RABBITMQ_USER}
       - RABBITMQ__PASSWORD=${RABBITMQ_PASSWORD}
-      - "CONNECTIONSTRINGS__WCS=Server=mssql;Database=master;User Id=sa;Password=${MSSQL_SA_PASSWORD}"
+      - "CONNECTIONSTRINGS__WCS=Server=mssql;Database=master;User Id=sa;Password=${MSSQL_SA_PASSWORD};Encrypt=False"
     command: dotnet /app/Gebhardt.StoreWare.Agv.WCSCommunication.dll ${WCSCOMMUNICATION_ARGS}
     restart: unless-stopped
     depends_on:
@@ -92,7 +92,7 @@ services:
       - RABBITMQ__HOST=rabbitmq
       - RABBITMQ__USER=${RABBITMQ_USER}
       - RABBITMQ__PASSWORD=${RABBITMQ_PASSWORD}
-      - "CONNECTIONSTRINGS__TO=Server=mssql;Database=master;User Id=sa;Password=${MSSQL_SA_PASSWORD}"
+      - "CONNECTIONSTRINGS__TO=Server=mssql;Database=master;User Id=sa;Password=${MSSQL_SA_PASSWORD};Encrypt=False"
     command: dotnet /app/Gebhardt.StoreWare.Agv.TransportOrder.dll ${TRANSPORTORDER_ARGS}
     restart: unless-stopped
     depends_on:

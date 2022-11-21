@@ -10,7 +10,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Logging
     /// </summary>
     public sealed class TextLoggerProvider : ILoggerProvider
     {
-        private readonly IDisposable _onChangeToken;
+        private readonly IDisposable? _onChangeToken;
         private TextLoggerConfiguration _currentConfig;
         private readonly ConcurrentDictionary<string, TextLogger> _loggers = new(StringComparer.OrdinalIgnoreCase);
         private readonly IOptionsMonitor<TextLoggerConfiguration> _optionsMonitorConfig;
@@ -27,7 +27,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Logging
             _currentConfig = config.CurrentValue;
             _onChangeToken = config.OnChange(updatedConfig => _currentConfig = updatedConfig);
 
-            string settingsFolderPath = iConfiguration.GetValue<string>(LoggingConstants.SettingKeyFolderPath);
+            string? settingsFolderPath = iConfiguration.GetValue<string>(LoggingConstants.SettingKeyFolderPath);
             if (settingsFolderPath != null)
             {
                 config.CurrentValue.LogFolderPath = settingsFolderPath;
@@ -68,7 +68,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Logging
         public void Dispose()
         {
             _loggers.Clear();
-            _onChangeToken.Dispose();
+            _onChangeToken?.Dispose();
         }
     }
 }

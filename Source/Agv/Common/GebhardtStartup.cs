@@ -1,5 +1,5 @@
 ﻿using System.Reflection;
-using Microsoft.Extensions.DependencyInjection;
+using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
@@ -26,7 +26,8 @@ namespace Gebhardt.StoreWare.Agv.Common
         [JetBrains.Annotations.PublicAPI]
         public static IHostBuilder CreateHostBuilder(string[] args)
         {
-            string? serviceName = Assembly.GetEntryAssembly()?.GetName().Name;
+            var entryAssembly = Assembly.GetEntryAssembly();
+            string? serviceName = entryAssembly?.GetName().Name;
             if (IsNullOrEmpty(serviceName))
             {
                 throw new InvalidOperationException("Service name information missing.");
@@ -39,11 +40,7 @@ namespace Gebhardt.StoreWare.Agv.Common
                 })
                 .ConfigureServices(services =>
                 {
-                    services.Configure<Microsoft.Extensions.Logging.EventLog.EventLogSettings>(settings =>
-                    {
-                        settings.SourceName = serviceName;
-                    });
-                    
+                    services.ConfigureEventLogSettings(entryAssembly);
                 })
                 .ConfigureWebHost(host =>
                 {

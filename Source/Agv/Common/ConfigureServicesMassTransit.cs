@@ -63,6 +63,11 @@ namespace Gebhardt.StoreWare.Agv.Common
             
             var massTransitConfig = config.GetRequiredSection(ConfigSectionName).Get<MassTransitConfiguration>();
 
+            if (massTransitConfig == null)
+            {
+                throw new NullReferenceException("MassTransit config was not found");
+            }
+
             services.AddMassTransit(x =>
             {
 

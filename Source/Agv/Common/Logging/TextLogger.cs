@@ -11,7 +11,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Logging
     {
         private readonly string _name;
         private readonly Func<TextLoggerConfiguration> _getCurrentConfig;
-        
+
         private readonly int _padRight;
         private readonly int _eventIdPaddingRight;
         private static string? _folderPath;
@@ -39,7 +39,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Logging
         /// <typeparam name="TState"></typeparam>
         /// <param name="state"></param>
         /// <returns></returns>
-        public IDisposable BeginScope<TState>(TState state) => default!;
+        public IDisposable BeginScope<TState>(TState state) where TState : notnull => default!;
 
         /// <summary>
         /// Checks if Log level exists in dictionary keys
@@ -63,12 +63,12 @@ namespace Gebhardt.StoreWare.Agv.Common.Logging
             {
                 return;
             }
-            
+
             var config = _getCurrentConfig();
             if (config.EventId == 0 || config.EventId == eventId.Id)
             {
                 var timeNow = DateTime.Now;
-                
+
                 var logMessage = new StringBuilder();
                 logMessage.Append($"{logLevel}|EventId:{eventId.Id}".PadRight(_eventIdPaddingRight));
                 logMessage.Append($"|{timeNow.ToString(LoggingConstants.LoggingDateFormat)}|");
@@ -84,7 +84,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Logging
         {
             string? folderPath = _folderPath;
             string filePath;
-            
+
             if (logLevel == LogLevel.Error)
             {
                 filePath = DateTime.Now.ToString("dd") + LoggingConstants.ErrorFileSuffix;

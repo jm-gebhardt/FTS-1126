@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Text.Json.Serialization;
 using System.Xml.XPath;
 using System.Xml.Linq;
+using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -40,10 +41,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi
                         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
                     });
 
-                services.Configure<Microsoft.Extensions.Logging.EventLog.EventLogSettings>(settings =>
-                {
-                    settings.SourceName = executingAssembly.GetName().Name ?? "WebService";
-                });
+                services.ConfigureEventLogSettings(executingAssembly);
+
                 services.AddSwaggerGen(options =>
                 {
                     options.SwaggerDoc("v1", new OpenApiInfo
