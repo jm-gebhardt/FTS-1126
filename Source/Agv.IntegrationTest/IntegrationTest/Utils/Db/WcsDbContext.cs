@@ -1,6 +1,5 @@
 using Gebhardt.StoreWare.Agv.WCSCommunication.Db.Models;
 using JetBrains.Annotations;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;

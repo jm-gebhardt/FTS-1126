@@ -10,7 +10,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         /// <summary>
         /// File path of generated environment file
         /// </summary>
-        public string? FilePath = null;
+        public string? FilePath;
 
         /// <summary>
         /// Default user
@@ -23,7 +23,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         public const string DefaultPassword = "agvs!Ar3Aw3som3";
 
         private readonly string _composeDirectoryPath;
-        private string _envTemplateFile => $"{_composeDirectoryPath}/.env.template";
+        private string EnvTemplateFile => $"{_composeDirectoryPath}/.env.template";
         private Dictionary<string, string> _dict = new();
 
         /// <summary>
@@ -35,16 +35,6 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         {
             _composeDirectoryPath = Path.GetDirectoryName(composeFilePath ?? Environment.GetEnvironmentVariable(EnvVars.ComposeFileEnvVar)) 
                                     ?? throw new InvalidOperationException($"Environment variable {EnvVars.ComposeFileEnvVar} must be set");
-        }
-
-        /// <summary>
-        /// Get env value
-        /// </summary>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        public string Get(string key)
-        {
-            return _dict[key];
         }
 
         /// <summary>
@@ -61,7 +51,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
             {
                 return FilePath;
             }
-            var envTemplate = File.ReadAllLines(_envTemplateFile);
+            var envTemplate = File.ReadAllLines(EnvTemplateFile);
             _dict = envTemplate
                 .Where(l => !string.IsNullOrEmpty(l) && !l.StartsWith("#"))
                 .Select(line => line.Split('='))

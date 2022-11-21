@@ -210,6 +210,14 @@ stages:
           exit 0
         workingDirectory: '$(Build.SourcesDirectory)'
 
+    - task: CmdLine@2
+      displayName: docker compose pull 
+      inputs:
+        script: | 
+          docker compose pull loki rabbitmq mssql grafana fluent prometheus cadvisor caddy
+          exit 0
+        workingDirectory: '$(Build.SourcesDirectory)'
+
     - task: NuGetAuthenticate@1
 
     - task: DotNetCoreCLI@2

@@ -1,6 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.IntegrationTest.Utils;
 using Newtonsoft.Json.Linq;
-using NUnit.Framework.Constraints;
 
 namespace Gebhardt.StoreWare.Agv.IntegrationTest
 {
@@ -53,19 +52,16 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest
         /// </summary>
         public readonly string AgvId;
         private readonly MqttClient _mqttClient;
-        private readonly RestApi _restApi;
-        private CancellationToken? _sendAgvStatusCancellationToken = null;
-        private const int PublishStatusIntervall = 1000;
+        private const int PublishStatusInterval = 1000;
 
         /// <summary>
-        /// Test Agv Contructor
+        /// Test Agv constructor
         /// </summary>
         /// <param name="agvId"></param>
         public TestAgv(string agvId)
         {
             AgvId = agvId;
             _mqttClient = new MqttClient();
-            _restApi = new RestApi();
         }
 
         /// <summary>
@@ -76,7 +72,6 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest
         {
             
             var message = _mqttClient.ReadSample("status.json");
-            _sendAgvStatusCancellationToken = cancellationToken;
             Console.WriteLine("Message");
             Console.WriteLine(message);
             while (cancellationToken is {IsCancellationRequested: false})
@@ -84,10 +79,8 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest
                 Console.WriteLine("Publishing Status");
                 ChangeAgvId(message);
                 await _mqttClient.Publish(MqttClient.Topic.Status, message.ToString(), cancellationToken);
-                await Task.Delay(PublishStatusIntervall, cancellationToken);
+                await Task.Delay(PublishStatusInterval, cancellationToken);
             }
-
-            _sendAgvStatusCancellationToken = null;
         }
 
         /// <summary>
