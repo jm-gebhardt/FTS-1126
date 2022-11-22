@@ -117,20 +117,21 @@ function setAgvIdle(agv: IAgv | null): void {
 
   const $confirm = useConfirm()
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  $confirm(`Set state of AGV '${agv.agvId}' to Idle?`).then((result: any) => {
-    // According to the balm-ui documentation 'result' should be a boolean but in the node module code it's declared as a void
-    // During runtime it actually is a boolean, so we need to cast it
-    if (result as boolean) {
-      agvApi
-        .setIdlePartialUpdate(agv.correlationId)
-        .catch((reason: HttpResponse) => {
-          console.log('Set AGV idle: ' + reason.statusText)
-          const $alert = useAlert()
-          $alert(`AGV '${agv.agvId}' could not be set to Idle`)
-        })
-    }
-  })
+  $confirm(`Set state of AGV '${agv.agvId}' to Idle?`)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .then((result: any) => {
+      // According to the balm-ui documentation 'result' should be a boolean but in the node module code it's declared as a void
+      // During runtime it actually is a boolean, so we need to cast it
+      if (result as boolean) {
+        agvApi
+          .setIdlePartialUpdate(agv.correlationId)
+          .catch((reason: HttpResponse) => {
+            console.log('Set AGV idle: ' + reason.statusText)
+            const $alert = useAlert()
+            $alert(`AGV '${agv.agvId}' could not be set to Idle`)
+          })
+      }
+    })
 }
 
 function lockAgv(agv: IAgv | null): void {
@@ -138,20 +139,21 @@ function lockAgv(agv: IAgv | null): void {
 
   const $confirm = useConfirm()
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  $confirm(`Lock AGV '${agv.agvId}'?`).then((result: any) => {
-    // According to the balm-ui documentation 'result' should be a boolean but in the node module code it's declared as a void
-    // During runtime it actually is a boolean, so we need to cast it
-    if (result as boolean) {
-      agvApi
-        .lockAgvPartialUpdate(agv.correlationId)
-        .catch((reason: HttpResponse) => {
-          console.log('lock agv: ' + reason.statusText)
-          const $alert = useAlert()
-          $alert(`AGV '${agv.agvId}' could not be locked`)
-        })
-    }
-  })
+  $confirm(`Lock AGV '${agv.agvId}'?`)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .then((result: any) => {
+      // According to the balm-ui documentation 'result' should be a boolean but in the node module code it's declared as a void
+      // During runtime it actually is a boolean, so we need to cast it
+      if (result as boolean) {
+        agvApi
+          .lockAgvPartialUpdate(agv.correlationId)
+          .catch((reason: HttpResponse) => {
+            console.log('lock agv: ' + reason.statusText)
+            const $alert = useAlert()
+            $alert(`AGV '${agv.agvId}' could not be locked`)
+          })
+      }
+    })
 }
 
 function refreshParameters(agv: IAgv | null): void {

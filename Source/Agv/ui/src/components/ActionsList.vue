@@ -21,10 +21,10 @@ export default {
 
 <script lang="ts" setup>
 import { ActionItem } from '@/components/ActionItem'
-import { IAgv } from '@/services/api/data-contracts'
 
 interface Props {
-  modelValue: ActionItem<IAgv>[]
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  modelValue: ActionItem<any>[]
 }
 
 const props = defineProps<Props>()

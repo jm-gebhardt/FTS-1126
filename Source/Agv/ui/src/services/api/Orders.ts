@@ -56,4 +56,21 @@ If correlation Id is provided, all other parameters are ignored
       format: 'json',
       ...params
     })
+  /**
+   * No description
+   *
+   * @tags TransportOrder
+   * @name ResetOrderPartialUpdate
+   * @summary Resets order and starts a new transport
+   * @request PATCH:/orders/{correlationId}/resetOrder
+   */
+  resetOrderPartialUpdate = (
+    correlationId: string,
+    params: RequestParams = {}
+  ) =>
+    this.request<void, void>({
+      path: `/orders/${correlationId}/resetOrder`,
+      method: 'PATCH',
+      ...params
+    })
 }

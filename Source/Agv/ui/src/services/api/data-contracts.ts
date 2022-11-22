@@ -324,7 +324,7 @@ export interface IOrderDetails {
   /** The creator of the host order */
   creator: IHostOrderCreator
   /**
-   * The date and time when the order was created
+   * The UTC timestamp when the order was created
    * @format date-time
    */
   creationDate: string

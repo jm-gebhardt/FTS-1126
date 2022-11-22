@@ -516,6 +516,33 @@
           }
         }
       }
+    },
+    "/orders/{correlationId}/resetOrder": {
+      "patch": {
+        "tags": [
+          "TransportOrder"
+        ],
+        "summary": "Resets order and starts a new transport",
+        "parameters": [
+          {
+            "name": "correlationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok: Order was reset"
+          },
+          "404": {
+            "description": "Not Found: Order with the given correlationId does not exist"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1019,7 +1046,7 @@
           },
           "creationDate": {
             "type": "string",
-            "description": "The date and time when the order was created",
+            "description": "The UTC timestamp when the order was created",
             "format": "date-time"
           }
         },

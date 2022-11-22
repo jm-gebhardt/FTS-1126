@@ -2,6 +2,7 @@
 using Gebhardt.StoreWare.Agv.Common.Messages;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Commands;
+using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Events;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
@@ -25,10 +26,28 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
     [TestClass]
     public class TransportOrderControllerTest
     {
+        #region Setup
         private static readonly string[] _orders = { "ORDER001", "ORDER002" };
+        private static readonly string[] _states = { nameof(OrderStateMachine.OrderReceived), nameof(OrderStateMachine.Final) };
         private static readonly string[] _sources = { "S1", "S2" };
         private static readonly string[] _destinations = { "D1", "D2" };
         private static readonly string[] _leNo = { "111", "222" };
+
+        private TransportOrderController GetController(IOrderRegistry? orderRegistry = null, IBus? bus = null)
+        {
+            orderRegistry ??= GetOrderRegistry();
+            bus ??= new Mock<IBus>().Object;
+
+            var controller = new TransportOrderController(orderRegistry, bus, GetMapper());
+            controller.ControllerContext = new ControllerContext(
+                new ActionContext(
+                    new DefaultHttpContext(),
+                    new RouteData(),
+                    new ControllerActionDescriptor())
+                );
+
+            return controller;
+        }
 
         private Mapper GetMapper()
         {
@@ -40,12 +59,33 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             return mapper;
         }
 
+        private IOrderRegistry GetOrderRegistry()
+        {
+            var registry = new Mock<IOrderRegistry>();
+            var orders = new List<IOrder>();
+
+            for (int i = 0; i < _orders.Length; i++)
+            {
+                var order = new OrderDetails(_orders[i].ToGuid(), _orders[i], _sources[i], _destinations[i], _leNo[i], HostOrderCreator.Simulation);
+                orders.Add(new OrderSaga(_orders[i].ToGuid(), order, _states[i], null));
+            }
+
+            registry.Setup(x => x.GetAllOrders()).Returns(orders.AsQueryable());
+            registry.Setup(x => x.GetUnassignedOrders()).Returns(orders.Where(x => x.CurrentState == nameof(OrderStateMachine.OrderReceived)).AsQueryable());
+            registry.Setup(x => x.GetOrder(It.IsAny<Guid>())).Returns<Guid>(correlationId => orders.SingleOrDefault(a => a.CorrelationId == correlationId));
+
+            return registry.Object;
+        }
+        #endregion
+
         /// <summary>
         /// Test retrieving order list from saga repository
         /// </summary>
         [TestMethod]
         public async Task GetOrders_Returns_Ok_AllOrdersReturned()
         {
+            var controller = GetController();
+
             var mockRegistry = new Mock<IAgvRegistry>();
             mockRegistry.Setup(s => s.GetIdleAgvs()).Returns(new EnumerableQuery<IAgv>(new List<IAgv>()));
             var mockObserver = new Mock<IStateObserver<OrderSaga>>();
@@ -58,17 +98,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
                 s.AddSingleton(_ => orderEventObserver.Object);
             });
 
-            var controller = new TransportOrderController(GetOrderRegistry(), GetMapper());
-            controller.ControllerContext = new ControllerContext(
-                new ActionContext(new DefaultHttpContext(),
-                    new RouteData(),
-                    new ControllerActionDescriptor())
-                );
-
             var inputOrderDetails = new OrderDetails(_orders[0].ToGuid(), _orders[0], _sources[0], _destinations[0], _leNo[0], HostOrderCreator.Simulation);
 
             await fixture.TestHarness.Bus.Publish(new HandleHostOrder(_orders[0].ToGuid(), inputOrderDetails));
-
             Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<HandleHostOrder>());
 
             ActionResult<IEnumerable<OrderDto>> actionResult = controller.GetOrders(new PaginationParameters(), new DateRangeParameters());
@@ -78,7 +110,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             Assert.IsInstanceOfType(result.Value, typeof(IEnumerable<OrderDto>));
 
             List<OrderDto> orders = (result.Value as IEnumerable<OrderDto>)!.ToList();
-
             Assert.IsNotNull(orders);
             Assert.AreEqual(2, orders.Count);
 
@@ -94,69 +125,79 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
         [TestMethod]
         public void RequestWithCorrelationId_NoPagination_NoDateRange_OrderReturned()
         {
-            var orderRegistry = GetOrderRegistry();
-            var controller = new TransportOrderController(orderRegistry, GetMapper());
-            SetupControllerForTests(controller);
+            var controller = GetController();
+
             ActionResult<IEnumerable<OrderDto>> result = controller.GetOrders(
                 new PaginationParameters(),
                 new DateRangeParameters()
                 );
             Assert.IsNotNull(result.Result);
+
             var okResult = result.Result as OkObjectResult;
             Assert.IsNotNull(okResult);
+
             OrderDto[] orders = (okResult.Value as IEnumerable<OrderDto>)!.ToArray();
             Assert.IsNotNull(orders);
             Assert.AreEqual(2, orders.Length);
         }
-        
+
         [TestMethod]
         public void Request_RegistryEmpty_ReturnsEmptyList()
         {
             var orderRegistry = new Mock<IOrderRegistry>();
             orderRegistry.Setup(x => x.GetAllOrders()).Returns(Array.Empty<IOrder>().AsQueryable());
             orderRegistry.Setup(x => x.GetUnassignedOrders()).Returns(Array.Empty<IOrder>().AsQueryable());
-            var controller = new TransportOrderController(orderRegistry.Object, GetMapper());
-            SetupControllerForTests(controller);
+
+            var controller = GetController(orderRegistry.Object);
+
             ActionResult<IEnumerable<OrderDto>> result = controller.GetOrders(
                 new PaginationParameters(),
                 new DateRangeParameters()
             );
             Assert.IsNotNull(result.Result);
+
             var okResult = result.Result as OkObjectResult;
             Assert.IsNotNull(okResult);
+
             OrderDto[] orders = (okResult.Value as IEnumerable<OrderDto>)!.ToArray();
             Assert.IsNotNull(orders);
             Assert.AreEqual(0, orders.Length);
         }
 
-        private IOrderRegistry GetOrderRegistry()
+        [TestMethod]
+        public void ResetOrder_NotFound()
         {
-            var registry = new Mock<IOrderRegistry>();
+            var controller = GetController();
+            var correlationId = Guid.Empty;
 
-            var orders = new List<IOrder>();
-
-            for (int i = 0; i < _orders.Length; i++)
-            {
-                var order = new OrderDetails(_orders[i].ToGuid(), _orders[i], _sources[i], _destinations[i], _leNo[i], HostOrderCreator.Simulation);
-                orders.Add(new OrderSaga(_orders[i].ToGuid(), order));
-            }
-
-            registry.Setup(x => x.GetAllOrders()).Returns(orders.AsQueryable());
-            registry.Setup(x => x.GetUnassignedOrders()).Returns(orders.Where(x => x.CurrentState == nameof(OrderStateMachine.OrderReceived)).AsQueryable());
-
-            return registry.Object;
+            var result = controller.ResetOrder(correlationId).Result as NotFoundResult;
+            Assert.IsNotNull(result);
         }
 
-        private static void SetupControllerForTests(TransportOrderController controller)
+        [TestMethod]
+        public void ResetOrder_BadRequest()
         {
-            var controllerContext = new ControllerContext
-                (new ActionContext(
-                    new DefaultHttpContext(),
-                    new RouteData(),
-                    new ControllerActionDescriptor()
-                    ));
-            controller.ControllerContext = controllerContext;
+            var controller = GetController();
+            var correlationId = _orders[0].ToGuid(); // Order not in state 'OrderFailed' or 'Final'
+
+            var result = controller.ResetOrder(correlationId).Result as BadRequestObjectResult;
+            Assert.IsNotNull(result);
         }
 
+        [TestMethod]
+        public void ResetOrder_Ok()
+        {
+            var bus = new Mock<IBus>();
+
+            var controller = GetController(bus: bus.Object);
+            var correlationId = _orders[1].ToGuid();
+
+            var result = controller.ResetOrder(correlationId).Result as OkResult;
+            Assert.IsNotNull(result);
+
+            bus.Verify(s => s.Publish(It.Is<TransportOrderReset>(
+                    m => m.CorrelationId == correlationId && m.Error == TransportOrderErrorCode.ResetByUser
+                ), default), Times.Once);
+        }
     }
 }

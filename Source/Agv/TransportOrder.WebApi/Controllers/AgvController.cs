@@ -135,7 +135,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
                 return NotFound();
             }
 
-            if (agv.CurrentState != "Discovered" && agv.CurrentState != "Locked")
+            if (agv.CurrentState != nameof(AgvStateMachine.Discovered) && agv.CurrentState != nameof(AgvStateMachine.Locked))
             {
                 return BadRequest("Agv cannot be released because it is still busy");
             }

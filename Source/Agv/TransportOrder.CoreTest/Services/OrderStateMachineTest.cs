@@ -389,6 +389,37 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             orderEventObserver.Verify(s => s.PostExecute(It.IsAny<BehaviorContext<OrderSaga, TransportOrderFailed>>()), Times.Once);
         }
 
+        [DataRow(nameof(OrderStateMachine.OrderReceived), nameof(OrderStateMachine.OrderReceived))]
+        [DataRow(nameof(OrderStateMachine.AgvRequested), nameof(OrderStateMachine.AgvRequested))]
+        [DataRow(nameof(OrderStateMachine.TransportOrderSend), nameof(OrderStateMachine.TransportOrderSend))]
+        [DataRow(nameof(OrderStateMachine.TransportOrderStarted), nameof(OrderStateMachine.TransportOrderStarted))]
+        [DataRow(nameof(OrderStateMachine.TransportOrderPicked), nameof(OrderStateMachine.TransportOrderPicked))]
+        [DataRow(nameof(OrderStateMachine.OrderFailed), nameof(OrderStateMachine.OrderReceived))]
+        [DataRow(nameof(OrderStateMachine.Final), nameof(OrderStateMachine.OrderReceived))]
+        [TestMethod]
+        public async Task Handle_TransportOrderReset_Message(string previousState, string resultState)
+        {
+            var testFixtureObject = new TestFixture();
+            StateMachineTestFixture<OrderStateMachine, OrderSaga> fixture = testFixtureObject.GetTestFixture();
+
+            const string orderId = "Order123";
+            var correlationId = orderId.ToGuid();
+
+            var orderState = new OrderSaga(
+                correlationId,
+                new OrderDetails(correlationId, orderId, "s1", "d2", "leno1", HostOrderCreator.Simulation)
+            )
+            { CurrentState = previousState };
+
+            fixture.Add(orderState);
+
+            await fixture.TestHarness.Bus.Publish(new TransportOrderReset(correlationId, TransportOrderErrorCode.Any));
+            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<TransportOrderReset>());
+
+            var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
+            Assert.AreEqual(resultState, saga.CurrentState);
+        }
+
         /// <summary>
         /// Examining HostOrderStarted message and state transition after consuming TransportOrderStarted message
         /// </summary>

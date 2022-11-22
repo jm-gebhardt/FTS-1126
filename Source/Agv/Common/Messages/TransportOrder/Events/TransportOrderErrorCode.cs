@@ -13,6 +13,10 @@
         /// <summary>
         /// Error code that reports an abortion of the order by an user input
         /// </summary>
-        AbortedByUser
+        AbortedByUser,
+        /// <summary>
+        /// Error code that reports a reset of the order by an user input
+        /// </summary>
+        ResetByUser
     }
 }

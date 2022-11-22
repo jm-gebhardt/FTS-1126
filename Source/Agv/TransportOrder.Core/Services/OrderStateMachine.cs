@@ -89,6 +89,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         /// </summary>
         public Event<TransportOrderPickCompleted> TransportOrderPickCompletedEvent { get; private set; } = default!;
 
+        /// <summary>
+        /// TransportOrderReset has been received
+        /// </summary>
+        public Event<TransportOrderReset> TransportOrderResetEvent { get; private set; } = default!;
+
         private readonly ILogger<OrderStateMachine> _logger;
         private readonly IAgvRegistry _agvRegistry;
 
@@ -103,6 +108,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
             SetSagaFactory();
             InstanceState(x => x.CurrentState);
             Initially(SetHandleHostOrderHandler());
+
             During(OrderReceived, SetRequestAgvAssignHandler());
             During(AgvRequested, TransportOrderSend, TransportOrderStarted, SetRequestAgvAssignHandler_When_Not_OrderReceived());
             During(AgvRequested, SetAgvAssignSucceededHandler());
@@ -111,6 +117,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
             During(TransportOrderSend, SetTransportOrderStartedHandler());
             During(TransportOrderStarted, SetTransportOrderPickCompletedHandler());
             During(TransportOrderPicked, SetTransportOrderCompletedHandler());
+            During(OrderFailed, Final, SetTransportOrderResetHandler());
 
             ConnectStateObserver(orderStateObserver);
             ConnectEventObserver(orderEventObserver);
@@ -231,6 +238,19 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
                 .ThenAsync(SendReleaseAgv)
                 .ThenAsync(SendHostOrderCompleted)
                 .Finalize();
+
+        /// <summary>
+        /// Handler for TransportOrderReset
+        /// </summary>
+        /// <returns>Event Binding for TransportOrderReset</returns>
+        private EventActivityBinder<OrderSaga, TransportOrderReset> SetTransportOrderResetHandler() =>
+            When(TransportOrderResetEvent)
+                .Then(c =>
+                    _logger.LogInformation("Order {OrderId} / {CorrelationId} was reset. Reason: {TransportOrderErrorCode}", c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId, c.Message.Error)
+                 )
+                .Then(c => c.Saga.FailedReason = $"{nameof(TransportOrderErrorCode)}.{c.Message.Error}")
+                .TransitionTo(OrderReceived)
+                .Publish(c => new RequestOrderAgvAssign(c.Saga.CorrelationId));
 
         private void UpdateSagaState(BehaviorContext<OrderSaga, AgvAssignmentSucceeded> context)
         {
