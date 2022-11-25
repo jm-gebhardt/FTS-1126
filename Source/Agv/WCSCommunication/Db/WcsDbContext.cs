@@ -34,7 +34,18 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Db
             where
                 b.RecordType == RecordType.TransportOrder
             select b;
-        
+
+        /// <summary>
+        /// Get all Orders supposed to be cancelled
+        /// </summary>
+        public IQueryable<ToAgv> CancelRequests =>
+            from b in ToAgv
+            where
+                b.RecordType == RecordType.OrderCancelRequest &&
+                b.MessageStatus == MessageStatus.Pending
+            orderby b.TimeStamp
+            select b;
+
         /// <summary>
         /// Returns latest entry from ToAgv with given orderId
         /// </summary>

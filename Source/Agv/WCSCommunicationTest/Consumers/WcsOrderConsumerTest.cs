@@ -151,5 +151,125 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Consumers
             Assert.AreEqual(OrderStatus.Finished, entry.Status);
             Assert.AreEqual(HostOrderErrorCode.OrderAlreadyStarted.ToString(), entry.Error);
         }
+
+        [TestMethod]
+        public async Task Consuming_HostOrderCancelSucceeded_Table_Entry_Examination()
+        {
+            // Arrange
+            var fixture = new EfConsumerTestFixture<WcsHostOrderConsumer, WcsDbContext>();
+
+            await using var context = await fixture.DbContextFactory.CreateDbContextAsync();
+            context.ToAgv.Add(ToFromAgvGenerator.GenerateToAgvEntry());
+            context.ToAgv.Add(ToFromAgvGenerator.GenerateToAgvEntry(recordType: RecordType.TransportOrderUpdate));
+            var latestOrder = ToFromAgvGenerator.GenerateToAgvEntry(recordType: RecordType.OrderCancelAcknowledge);
+            context.ToAgv.Add(latestOrder);
+
+            await context.SaveChangesAsync();
+
+            var correlationId = latestOrder.OrderId.ToGuid();
+
+            // Act
+            await fixture.TestHarness!.Bus.Publish(new HostOrderCancelSucceeded(correlationId, latestOrder.OrderId));
+
+            // Assert
+            Assert.IsTrue(await fixture.TestHarness.Published.Any<HostOrderCancelSucceeded>());
+
+            var message = fixture.ConsumerHarness!.Consumed.Select<HostOrderCancelSucceeded>().First().Context.Message;
+            Assert.AreEqual(correlationId, message.CorrelationId);
+            Assert.AreEqual(latestOrder.OrderId, message.OrderId);
+
+            // Table entry examination
+            Assert.AreEqual(1, context.FromAgv.Count());
+            var entry = context.FromAgv.First();
+            Assert.AreEqual(latestOrder.OrderId, entry.OrderId);
+            Assert.AreEqual(latestOrder.Source, entry.Source);
+            Assert.AreEqual(latestOrder.Destination, entry.Destination);
+            Assert.AreEqual(latestOrder.LeNo, entry.LeNo);
+            Assert.AreEqual(RecordType.OrderCancelAcknowledge, entry.RecordType);
+            Assert.AreEqual(OrderStatus.Cancelled, entry.Status);
+        }
+
+        [TestMethod]
+        public async Task Consuming_HostOrderCancelSucceeded_But_No_Order_Found()
+        {
+            // Arrange
+            var fixture = new EfConsumerTestFixture<WcsHostOrderConsumer, WcsDbContext>();
+
+            string orderId = "TestOrder123";
+            var correlationId = orderId.ToGuid();
+
+            // Act
+            await fixture.TestHarness!.Bus.Publish(new HostOrderCancelSucceeded(correlationId, orderId));
+
+            // Arrange
+            Assert.IsTrue(await fixture.TestHarness.Published.Any<HostOrderCancelSucceeded>());
+
+            var message = fixture.ConsumerHarness!.Consumed.Select<HostOrderCancelSucceeded>().First().Context.Message;
+            Assert.AreEqual(correlationId, message.CorrelationId);
+            Assert.AreEqual(orderId, message.OrderId);
+
+            await using var context = await fixture.DbContextFactory.CreateDbContextAsync();
+            Assert.AreEqual(0, context.FromAgv.Count());
+        }
+
+        [TestMethod]
+        public async Task Consuming_HostOrderCancelFailed_Table_Entry_Examination()
+        {
+            // Arrange
+            var fixture = new EfConsumerTestFixture<WcsHostOrderConsumer, WcsDbContext>();
+
+            await using var context = await fixture.DbContextFactory.CreateDbContextAsync();
+            context.ToAgv.Add(ToFromAgvGenerator.GenerateToAgvEntry());
+            context.ToAgv.Add(ToFromAgvGenerator.GenerateToAgvEntry(recordType: RecordType.TransportOrderUpdate));
+            var latestOrder = ToFromAgvGenerator.GenerateToAgvEntry(recordType: RecordType.OrderCancelAcknowledge);
+            context.ToAgv.Add(latestOrder);
+
+            await context.SaveChangesAsync();
+
+            var correlationId = latestOrder.OrderId.ToGuid();
+
+            // Act
+            await fixture.TestHarness!.Bus.Publish(new HostOrderCancelFailed(correlationId, latestOrder.OrderId, HostOrderErrorCode.OrderAlreadyCancelled));
+
+            // Assert
+            Assert.IsTrue(await fixture.TestHarness.Published.Any<HostOrderCancelFailed>());
+
+            var message = fixture.ConsumerHarness!.Consumed.Select<HostOrderCancelFailed>().First().Context.Message;
+            Assert.AreEqual(correlationId, message.CorrelationId);
+            Assert.AreEqual(latestOrder.OrderId, message.OrderId);
+
+            // Table entry examination
+            Assert.AreEqual(1, context.FromAgv.Count());
+            var entry = context.FromAgv.First();
+            Assert.AreEqual(latestOrder.OrderId, entry.OrderId);
+            Assert.AreEqual(latestOrder.Source, entry.Source);
+            Assert.AreEqual(latestOrder.Destination, entry.Destination);
+            Assert.AreEqual(latestOrder.LeNo, entry.LeNo);
+            Assert.AreEqual(RecordType.OrderCancelFailed, entry.RecordType);
+            Assert.AreEqual(OrderStatus.Cancelled, entry.Status);
+        }
+
+        [TestMethod]
+        public async Task Consuming_HostOrderCancelFailed_But_No_Order_Found()
+        {
+            // Arrange
+            var fixture = new EfConsumerTestFixture<WcsHostOrderConsumer, WcsDbContext>();
+
+            string orderId = "TestOrder123";
+            var correlationId = orderId.ToGuid();
+
+            // Act
+            await fixture.TestHarness!.Bus.Publish(new HostOrderCancelFailed(correlationId, orderId, HostOrderErrorCode.OrderAlreadyCancelled));
+
+            // Arrange
+            Assert.IsTrue(await fixture.TestHarness.Published.Any<HostOrderCancelFailed>());
+
+            var message = fixture.ConsumerHarness!.Consumed.Select<HostOrderCancelFailed>().First().Context.Message;
+            Assert.AreEqual(correlationId, message.CorrelationId);
+            Assert.AreEqual(orderId, message.OrderId);
+
+            await using var context = await fixture.DbContextFactory.CreateDbContextAsync();
+            Assert.AreEqual(0, context.FromAgv.Count());
+        }
     }
 }

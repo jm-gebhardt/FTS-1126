@@ -112,5 +112,59 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services
                 Assert.AreEqual(MessageStatus.Finished, toAgvEntry.MessageStatus);
             }
         }
+
+        [TestMethod]
+        public async Task HandleIncomingCancelRequests_with_Valid_Orders()
+        {
+            // Arrange
+            var fixture = new EfPollableServiceTestFixture<WcsOrderHandler, WcsDbContext>();
+
+            await using (var context = await fixture.DbContextFactory.CreateDbContextAsync())
+            {
+                context.ToAgv.Add(ToFromAgvGenerator.GenerateToAgvEntry(source: "src01", destination: "dst01", recordType: RecordType.OrderCancelRequest, messageStatus: MessageStatus.Pending));
+                await context.SaveChangesAsync();
+            }
+
+            // Act
+            await fixture.Pollable.HandleIncomingCancelRequests(It.IsAny<CancellationToken>());
+
+            // Assert
+            await using (var context = await fixture.DbContextFactory.CreateDbContextAsync())
+            {
+                Assert.AreEqual(1, context.FromAgv.Count());
+                var toAgvEntry = context.ToAgv.First();
+                var fromAgvEntry = context.FromAgv.First();
+
+                Assert.AreEqual(toAgvEntry.OrderId, fromAgvEntry.OrderId);
+                Assert.AreEqual("src01", fromAgvEntry.Source);
+                Assert.AreEqual("dst01", fromAgvEntry.Destination);
+                Assert.AreEqual(MessageStatus.Pending, fromAgvEntry.MessageStatus);
+                Assert.AreEqual(MessageStatus.Finished, toAgvEntry.MessageStatus);
+            }
+        }
+
+        [TestMethod]
+        [DataRow("", "", "")]
+        [DataRow("Order123", "", "")]
+        public async Task HandleIncomingCancelRequests_with_Invalid_Orders(string orderId, string source, string destination)
+        {
+            // Arrange
+            var fixture = new EfPollableServiceTestFixture<WcsOrderHandler, WcsDbContext>();
+            await using (var context = await fixture.DbContextFactory.CreateDbContextAsync())
+            {
+                context.ToAgv.Add(ToFromAgvGenerator.GenerateToAgvEntry(orderId, source, destination, recordType: RecordType.OrderCancelRequest, messageStatus: MessageStatus.Pending));
+                await context.SaveChangesAsync();
+            }
+
+            // Act
+            await fixture.Pollable.HandleIncomingCancelRequests(It.IsAny<CancellationToken>());
+
+            // Assert
+            await using (var context = await fixture.DbContextFactory.CreateDbContextAsync())
+            {
+                Assert.AreEqual(MessageStatus.Failed, context.ToAgv.First().MessageStatus);
+                Assert.AreEqual(0, context.FromAgv.Count());
+            }
+        }
     }
 }

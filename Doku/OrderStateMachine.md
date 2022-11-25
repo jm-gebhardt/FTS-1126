@@ -2,6 +2,7 @@
 stateDiagram-v2
     [*] --> OrderReceived: HandleHostOrder
     OrderReceived --> AgvRequested: RequestOrderAgvAssign
+    OrderReceived --> Cancelled: CancelHostOrder
 
     AgvRequested --> TransportOrderSend: AgvAssignmentSucceeded
     AgvRequested --> AgvAssignmentErrorCode: AgvAssignmentFailed

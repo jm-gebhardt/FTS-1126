@@ -15,6 +15,7 @@ using MassTransit.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
+using CancelHostOrder = Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Commands.CancelHostOrder;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
 {
@@ -649,6 +650,48 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == order.CorrelationId).First().Saga;
             Assert.AreEqual($"{nameof(AgvAssignmentErrorCode)}.{AgvAssignmentErrorCode.NoRouteFound}", saga.FailedReason);
             Assert.AreEqual(fixture.Machine.OrderFailed.Name, saga.CurrentState);
+        }
+
+        /// <summary>
+        /// Checks the message sending according to each state after incoming CancelTransportOrder
+        /// </summary>
+        [DataRow(nameof(OrderStateMachine.OrderReceived), null)]
+        [DataRow(nameof(OrderStateMachine.Cancelled), HostOrderErrorCode.OrderAlreadyCancelled)]
+        [DataRow(nameof(OrderStateMachine.Final), HostOrderErrorCode.OrderAlreadyFinished)]
+        [DataRow(nameof(OrderStateMachine.Initial), HostOrderErrorCode.InvalidOrderData)]
+        [DataRow(nameof(OrderStateMachine.OrderFailed), HostOrderErrorCode.OrderAlreadyFailed)]
+        [DataRow(nameof(OrderStateMachine.AgvRequested), HostOrderErrorCode.OrderAlreadyStarted)]
+        [DataRow(nameof(OrderStateMachine.TransportOrderSend), HostOrderErrorCode.OrderAlreadyStarted)]
+        [DataRow(nameof(OrderStateMachine.TransportOrderStarted), HostOrderErrorCode.OrderAlreadyStarted)]
+        [DataRow(nameof(OrderStateMachine.TransportOrderPicked), HostOrderErrorCode.OrderAlreadyStarted)]
+        [TestMethod]
+        public async Task StateExamination_after_OrderCancel(string previousState, HostOrderErrorCode? transportOrderErrorCode)
+        {
+            // Arrange
+            var testFixtureObject = new TestFixture();
+            StateMachineTestFixture<OrderStateMachine, OrderSaga> fixture = testFixtureObject.GetTestFixture();
+            var order = CreateTestOrderSaga(previousState);
+            fixture.Add(order);
+
+            // Act
+            await fixture.TestHarness.Bus.Publish(new CancelHostOrder(order.CorrelationId, order.OrderDetails.OrderId));
+
+            // Assert
+            Assert.IsTrue(await fixture.TestHarness.Published.Any<CancelHostOrder>());
+            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<CancelHostOrder>());
+
+            if (previousState == nameof(OrderStateMachine.OrderReceived))
+            {
+                Assert.IsTrue(await fixture.TestHarness.Published.Any<HostOrderCancelSucceeded>());
+                var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == order.CorrelationId).First().Saga;
+                Assert.AreEqual(nameof(OrderStateMachine.Cancelled), saga.CurrentState);
+            }
+            else
+            {
+                Assert.IsTrue(await fixture.TestHarness.Published.Any<HostOrderCancelFailed>());
+                var msg = fixture.TestHarness.Published.Select<HostOrderCancelFailed>().First().Context.Message;
+                Assert.AreEqual(transportOrderErrorCode, msg.Error);
+            }
         }
     }
 }

@@ -36,10 +36,10 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
         /// Poll database for new actions 
         /// </summary>
         /// <param name="cancellationToken"></param>
-        /// <returns></returns>
         public async Task Poll(CancellationToken cancellationToken = default)
         {
             await HandleNewTransportOrders(cancellationToken);
+            await HandleIncomingCancelRequests(cancellationToken);
         }
 
         /// <summary>
@@ -54,7 +54,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
             {
                 if (!order.IsValid)
                 {
-                    _logger.LogError("Found invalid order in ToAgv with id={OrderId}", order.Id);
+                    _logger.LogError("Found invalid order in ToAgv with OrderId = {OrderId}", order.Id);
                     order.MessageStatus = MessageStatus.Failed; // Mark Message as Failed
                 }
                 else
@@ -69,6 +69,37 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
 
                     context.FromAgv.Add(FromAgv.CreateInstance(order, OrderStatus.Pending, RecordType.TransportOrder));
                     order.MessageStatus = MessageStatus.Finished; // Mark Message as Read
+                }
+            }
+            await context.SaveChangesAsync(cancellationToken);
+        }
+
+        /// <summary>
+        /// Handle incoming orders to be cancelled with RecordType == RecordType.CancelRequest
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        [JetBrains.Annotations.PublicAPI]
+        public async Task HandleIncomingCancelRequests(CancellationToken cancellationToken = default)
+        {
+            await using var context = await _contextFactory.CreateDbContextAsync(cancellationToken);
+            
+            foreach (var order in context.CancelRequests)
+            {
+                if (!order.IsValid)
+                {
+                    _logger.LogError("Found invalid order in ToAgv with OrderId = {OrderId} / {CorrelationId}", 
+                        order.Id, order.OrderId.ToGuid());
+                    order.MessageStatus = MessageStatus.Failed; // Mark Message as Failed
+                }
+                else
+                {
+                    await _bus.Publish(new CancelHostOrder(order.OrderId.ToGuid(), order.OrderId), cancellationToken);
+
+                    _logger.LogInformation("Cancel request for order {OrderId} / {CorrelationId} has been sent", 
+                        order.OrderId, order.OrderId.ToGuid());
+
+                    context.FromAgv.Add(FromAgv.CreateInstance(order, OrderStatus.Cancelled, RecordType.OrderCancelRequest));
+                    order.MessageStatus = MessageStatus.Finished;
                 }
             }
             await context.SaveChangesAsync(cancellationToken);

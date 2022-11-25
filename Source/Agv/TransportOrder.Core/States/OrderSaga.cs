@@ -65,6 +65,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.States
             CorrelationId = correlationId;
             CurrentState = currentState;
             AssignedAgv = assignedAgv;
-        } 
+        }
+
+        /// <summary>
+        /// Create new OrderSaga
+        /// </summary>
+        /// <param name="correlationId"></param>
+        public OrderSaga(Guid correlationId)
+        {
+            CorrelationId = correlationId;
+        }
     }
 }

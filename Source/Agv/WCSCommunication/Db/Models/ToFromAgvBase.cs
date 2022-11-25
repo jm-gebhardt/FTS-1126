@@ -79,7 +79,11 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Db.Models
         /// <summary>
         /// Acknowledge order cancellation
         /// </summary>
-        OrderCancelAcknowledge
+        OrderCancelAcknowledge,
+        /// <summary>
+        /// Order cancellation has failed
+        /// </summary>
+        OrderCancelFailed
     }
 
     /// <summary>

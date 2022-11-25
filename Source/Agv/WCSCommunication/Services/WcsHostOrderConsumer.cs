@@ -13,7 +13,9 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
     public class WcsHostOrderConsumer:
         IConsumer<HostOrderHandlingSucceeded>,
         IConsumer<HostOrderStarted>,
-        IConsumer<HostOrderHandlingFailed>
+        IConsumer<HostOrderHandlingFailed>,
+        IConsumer<HostOrderCancelSucceeded>,
+        IConsumer<HostOrderCancelFailed>
     {
         private readonly IDbContextFactory<WcsDbContext> _contextFactory;
         private readonly ILogger<WcsHostOrderConsumer> _logger;
@@ -93,6 +95,48 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
             else
             {
                 _logger.LogError("Corresponding order with id {OrderId} / {CorrelationId} could not be found in ToAgv", 
+                    context.Message.OrderId, context.Message.CorrelationId);
+            }
+        }
+
+        /// <summary>
+        /// Respond to <see cref="HostOrderCancelSucceeded"/>
+        /// </summary>
+        /// <param name="context"></param>
+        public async Task Consume(ConsumeContext<HostOrderCancelSucceeded> context)
+        {
+            await using var dbContext = await _contextFactory.CreateDbContextAsync(context.CancellationToken);
+
+            if (dbContext.LatestOrderStatus(context.Message.OrderId) is { } order)
+            {
+                dbContext.FromAgv.Add(
+                    FromAgv.CreateInstance(order, OrderStatus.Cancelled, RecordType.OrderCancelAcknowledge));
+                await dbContext.SaveChangesAsync(context.CancellationToken);
+            }
+            else
+            {
+                _logger.LogError("Corresponding order with id {OrderId} / {CorrelationId} could not be found in ToAgv",
+                    context.Message.OrderId, context.Message.CorrelationId);
+            }
+        }
+
+        /// <summary>
+        /// Respond to <see cref="HostOrderCancelFailed"/>
+        /// </summary>
+        /// <param name="context"></param>
+        public async Task Consume(ConsumeContext<HostOrderCancelFailed> context)
+        {
+            await using var dbContext = await _contextFactory.CreateDbContextAsync(context.CancellationToken);
+
+            if (dbContext.LatestOrderStatus(context.Message.OrderId) is { } order)
+            {
+                dbContext.FromAgv.Add(
+                    FromAgv.CreateInstance(order, OrderStatus.Cancelled, RecordType.OrderCancelFailed, error: context.Message.Error.ToString()));
+                await dbContext.SaveChangesAsync(context.CancellationToken);
+            }
+            else
+            {
+                _logger.LogError("Corresponding order with id {OrderId} / {CorrelationId} could not be found in ToAgv",
                     context.Message.OrderId, context.Message.CorrelationId);
             }
         }

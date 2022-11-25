@@ -50,6 +50,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         public State TransportOrderPicked { get; private set; } = default!;
 
         /// <summary>
+        /// State when TransportOrder has been cancelled
+        /// </summary>
+        public State Cancelled { get; private set; } = default!;
+
+        /// <summary>
         /// HandleHostOrder was received. This is the Initial Event of the OrderStateMachine
         /// </summary>
         public Event<HandleHostOrder> HandleHostOrderEvent { get; private set; } = default!;
@@ -90,6 +95,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         public Event<TransportOrderPickCompleted> TransportOrderPickCompletedEvent { get; private set; } = default!;
 
         /// <summary>
+        /// CancelTransportOrder has been received
+        /// </summary>
+        public Event<CancelHostOrder> CancelHostOrderEvent { get; private set; } = default!;
+
+        /// <summary>
         /// TransportOrderReset has been received
         /// </summary>
         public Event<TransportOrderReset> TransportOrderResetEvent { get; private set; } = default!;
@@ -117,6 +127,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
             During(TransportOrderSend, SetTransportOrderStartedHandler());
             During(TransportOrderStarted, SetTransportOrderPickCompletedHandler());
             During(TransportOrderPicked, SetTransportOrderCompletedHandler());
+
+            DuringAny(SetCancelHostOrderHandler());
+            During(Final, SetCancelHostOrderHandler());
+            Initially(SetCancelHostOrderHandler());
+
             During(OrderFailed, Final, SetTransportOrderResetHandler());
 
             ConnectStateObserver(orderStateObserver);
@@ -131,6 +146,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
             // Initial creation
             Event(() => HandleHostOrderEvent, e =>
                 e.SetSagaFactory(context => new OrderSaga(context.Message.CorrelationId, context.Message.OrderDetails))
+            );
+
+            Event(() => CancelHostOrderEvent, e =>
+                e.SetSagaFactory(context => new OrderSaga(context.Message.CorrelationId))
             );
         }
 
@@ -323,5 +342,50 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
                 .Then(c =>
                     _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId} has been completed", nameof(TransportOrderPickCompleted), c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId))
                 .TransitionTo(TransportOrderPicked);
+
+        /// <summary>
+        /// Handler for inbound message CancelTransportOrder
+        /// </summary>
+        /// <returns>Event Binding for CancelTransportOrder</returns>
+        private EventActivityBinder<OrderSaga, CancelHostOrder> SetCancelHostOrderHandler() =>
+            When(CancelHostOrderEvent)
+                .ThenAsync(CancelHostOrderExamination);
+
+        private async Task CancelHostOrderExamination(BehaviorContext<OrderSaga, CancelHostOrder> context)
+        {
+            if (context.Saga.CurrentState == nameof(OrderReceived))
+            {
+                await context.Publish(new HostOrderCancelSucceeded(context.Saga.CorrelationId, context.Message.OrderId));
+                await context.TransitionToState(Cancelled);
+                _logger.LogInformation("Order {OrderId} / {CorrelationId} is successfully cancelled in OrderRegistry",
+                    context.Saga.OrderDetails.OrderId, context.Saga.CorrelationId);
+            }
+            else if (context.Saga.CurrentState == nameof(Final))
+            {
+                await context.Publish(new HostOrderCancelFailed(context.Saga.CorrelationId, context.Message.OrderId, HostOrderErrorCode.OrderAlreadyFinished));
+                _logger.LogWarning("Unable to cancel Order {OrderId} / {CorrelationId} because it already is finished", context.Message.OrderId, context.Saga.CorrelationId);
+            }
+            else if (context.Saga.CurrentState == nameof(Initial))
+            {
+                await context.Publish(new HostOrderCancelFailed(context.Saga.CorrelationId, context.Message.OrderId, HostOrderErrorCode.InvalidOrderData));
+                _logger.LogWarning("Unable to cancel Order {OrderId} / {CorrelationId} because state is Initial => No Order in OrderRegistry", 
+                    context.Message.OrderId, context.Saga.CorrelationId);
+            }
+            else if (context.Saga.CurrentState == nameof(OrderFailed))
+            {
+                await context.Publish(new HostOrderCancelFailed(context.Saga.CorrelationId, context.Message.OrderId, HostOrderErrorCode.OrderAlreadyFailed));
+                _logger.LogError("Unable to cancel Order {OrderId} / {CorrelationId} because it already has failed", context.Message.OrderId, context.Saga.CorrelationId);
+            }
+            else if (context.Saga.CurrentState == nameof(Cancelled))
+            {
+                await context.Publish(new HostOrderCancelFailed(context.Saga.CorrelationId, context.Message.OrderId, HostOrderErrorCode.OrderAlreadyCancelled));
+                _logger.LogError("Unable to cancel Order {OrderId} / {CorrelationId} because it already has been cancelled", context.Message.OrderId, context.Saga.CorrelationId);
+            }
+            else
+            {
+                await context.Publish(new HostOrderCancelFailed(context.Saga.CorrelationId, context.Message.OrderId, HostOrderErrorCode.OrderAlreadyStarted));
+                _logger.LogError("Unable to cancel Order {OrderId} / {CorrelationId} because it already has started", context.Message.OrderId, context.Saga.CorrelationId);
+            }
+        }
     }
 }

@@ -232,7 +232,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         /// <summary>
         /// First message which creates a new agv saga instance
         /// </summary>
-        /// <returns>Event Binding for HandleHostOrder</returns>
+        /// <returns>Event Binding for AgvStatusReceived</returns>
         private EventActivityBinder<AgvSaga, AgvStatusReceived> InitialAgvStatusReceivedHandler() =>
             When(AgvStatusReceivedEvent)
                 .TransitionTo(Discovered)
