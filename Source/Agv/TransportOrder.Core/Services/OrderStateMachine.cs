@@ -19,6 +19,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
     [JetBrains.Annotations.PublicAPI]
     public sealed class OrderStateMachine : MassTransitStateMachine<OrderSaga>
     {
+        #region States
         /// <summary>
         /// State when Order has been received
         /// </summary>
@@ -54,6 +55,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         /// </summary>
         public State Cancelled { get; private set; } = default!;
 
+        #endregion
+
+        #region Events
         /// <summary>
         /// HandleHostOrder was received. This is the Initial Event of the OrderStateMachine
         /// </summary>
@@ -103,6 +107,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         /// TransportOrderReset has been received
         /// </summary>
         public Event<TransportOrderReset> TransportOrderResetEvent { get; private set; } = default!;
+        #endregion
 
         private readonly ILogger<OrderStateMachine> _logger;
         private readonly IAgvRegistry _agvRegistry;
@@ -117,8 +122,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
 
             SetSagaFactory();
             InstanceState(x => x.CurrentState);
-            Initially(SetHandleHostOrderHandler());
 
+            Initially(SetHandleHostOrderHandler());
             During(OrderReceived, SetRequestAgvAssignHandler());
             During(AgvRequested, TransportOrderSend, TransportOrderStarted, SetRequestAgvAssignHandler_When_Not_OrderReceived());
             During(AgvRequested, SetAgvAssignSucceededHandler());
@@ -134,10 +139,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
 
             During(OrderFailed, Final, SetTransportOrderResetHandler());
 
+            DuringAny(SetCancelHostOrderHandler());
+            During(Final, SetCancelHostOrderHandler());
+            Initially(SetCancelHostOrderHandler());
+
             ConnectStateObserver(orderStateObserver);
             ConnectEventObserver(orderEventObserver);
         }
 
+        #region Init
         /// <summary>
         /// Set saga factory on HandleHostOrderEvent
         /// </summary>
@@ -145,31 +155,24 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         {
             // Initial creation
             Event(() => HandleHostOrderEvent, e =>
-                e.SetSagaFactory(context => new OrderSaga(context.Message.CorrelationId, context.Message.OrderDetails))
+                e.SetSagaFactory(c => new OrderSaga(c.Message.CorrelationId, c.Message.OrderDetails))
             );
 
             Event(() => CancelHostOrderEvent, e =>
                 e.SetSagaFactory(context => new OrderSaga(context.Message.CorrelationId))
             );
         }
+        #endregion
 
-        /// <summary>
-        /// Handler for HandleHostOrder
-        /// </summary>
-        /// <returns>Event Binding for HandleHostOrder</returns>
+        #region State transitions
+
         private EventActivityBinder<OrderSaga, HandleHostOrder> SetHandleHostOrderHandler() =>
             When(HandleHostOrderEvent)
                 .TransitionTo(OrderReceived)
                 .Then(c =>
                     _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId} received", nameof(HandleHostOrder), c.Message.OrderDetails.OrderId, c.Saga.CorrelationId))
-                .Publish(c =>
-                    new RequestOrderAgvAssign(c.Saga.CorrelationId)
-                );
+                .Publish(c => new RequestOrderAgvAssign(c.Saga.CorrelationId));
 
-        /// <summary>
-        /// Handler for RequestOrderAgvAssign
-        /// </summary>
-        /// <returns>Event Binding for RequestOrderAgvAssign</returns>
         private EventActivityBinder<OrderSaga, RequestOrderAgvAssign> SetRequestAgvAssignHandler() =>
             When(RequestOrderAgvAssignEvent)
                 .Publish(c =>
@@ -195,10 +198,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
             }
         }
 
-        /// <summary>
-        /// Handler for AgvAssignmentSucceeded
-        /// </summary>
-        /// <returns>Event Binding for AgvAssignmentSucceeded</returns>
         private EventActivityBinder<OrderSaga, AgvAssignmentSucceeded> SetAgvAssignSucceededHandler() =>
             When(AgvAssignSucceededEvent)
                 .Then(c =>
@@ -211,44 +210,75 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
                 )
                 .TransitionTo(TransportOrderSend);
 
-        /// <summary>
-        /// Handler for AgvAssignmentFailed
-        /// </summary>
-        /// <returns>Event Binding for AgvAssignmentFailed</returns>
         private EventActivityBinder<OrderSaga, AgvAssignmentFailed> SetAgvAssignFailedHandler() =>
             When(AgvAssignFailedEvent)
                 .Then(c => c.Saga.FailedReason = $"{nameof(AgvAssignmentErrorCode)}.{c.Message.Error}")
-                .ThenAsync(HostOrderInvalidationExamination);
+                .ThenAsync(async c =>
+                { 
+                    switch (c.Message.Error) // TransitionTo(OrderReceived or OrderFailed)
+                    {
+                        case AgvAssignmentErrorCode.NoIdleAgv:
+                            await c.TransitionToState(OrderReceived);
+                            _logger.LogInformation("{MessageType}/{FailedReason}: Incoming Order {OrderId} / {CorrelationId} but no idle AGV found in AgvRegistry",
+                                nameof(AgvAssignmentFailed), AgvAssignmentErrorCode.NoIdleAgv, c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId);
+                            break;
 
-        private async Task HostOrderInvalidationExamination(BehaviorContext<OrderSaga, AgvAssignmentFailed> context)
-        {
-            switch (context.Message.Error)
-            {
-                case AgvAssignmentErrorCode.NoIdleAgv:
-                    await context.TransitionToState(OrderReceived);
-                    _logger.LogInformation("{MessageType}/{FailedReason}: Incoming Order {OrderId} / {CorrelationId} but no idle AGV found in AgvRegistry",
-                        nameof(AgvAssignmentFailed), AgvAssignmentErrorCode.NoIdleAgv, context.Saga.OrderDetails.OrderId, context.Saga.CorrelationId);
-                    break;
+                        case AgvAssignmentErrorCode.NoRouteFound:
+                            await c.Publish(new HostOrderHandlingFailed(c.Saga.CorrelationId, c.Saga.OrderDetails.OrderId, HostOrderErrorCode.InvalidOrderData));
+                            await c.TransitionToState(OrderFailed);
+                            _logger.LogInformation("{MessageType}/{FailedReason}: Incoming Order {OrderId} / {CorrelationId} but unable to calculate route with found AGVs in AgvRegistry",
+                                nameof(AgvAssignmentFailed), AgvAssignmentErrorCode.NoRouteFound, c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId);
+                            break;
 
-                case AgvAssignmentErrorCode.NoRouteFound:
-                    await context.Publish(new HostOrderHandlingFailed(context.Saga.CorrelationId, context.Saga.OrderDetails.OrderId, HostOrderErrorCode.InvalidOrderData));
-                    await context.TransitionToState(OrderFailed);
-                    _logger.LogInformation("{MessageType}/{FailedReason}: Incoming Order {OrderId} / {CorrelationId} but unable to calculate route with found AGVs in AgvRegistry",
-                        nameof(AgvAssignmentFailed), AgvAssignmentErrorCode.NoRouteFound, context.Saga.OrderDetails.OrderId, context.Saga.CorrelationId);
-                    break;
+                        case AgvAssignmentErrorCode.AgvRegistryEmpty:
+                            await c.TransitionToState(OrderReceived);
+                            _logger.LogInformation("{MessageType}/{FailedReason}: Incoming Order {OrderId} / {CorrelationId} but no discovered AGV found in AgvRegistry",
+                                nameof(AgvAssignmentFailed), AgvAssignmentErrorCode.AgvRegistryEmpty, c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId);
+                            break;
+                    }
+                });
 
-                case AgvAssignmentErrorCode.AgvRegistryEmpty:
-                    await context.TransitionToState(OrderReceived);
-                    _logger.LogInformation("{MessageType}/{FailedReason}: Incoming Order {OrderId} / {CorrelationId} but no discovered AGV found in AgvRegistry",
-                        nameof(AgvAssignmentFailed), AgvAssignmentErrorCode.AgvRegistryEmpty, context.Saga.OrderDetails.OrderId, context.Saga.CorrelationId);
-                    break;
-            }
-        }
+        private EventActivityBinder<OrderSaga, TransportOrderFailed> SetTransportOrderFailedHandler() =>
+            When(TransportOrderFailedEvent)
+                .Then(c =>
+                    _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId}", nameof(TransportOrderFailed), c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId)
+                 )
+                .Publish(c => new HostOrderHandlingFailed(c.Saga.CorrelationId, c.Saga.OrderDetails.OrderId, HostOrderErrorCode.Any))
+                .TransitionTo(OrderFailed)
+                .Then(c => c.Saga.FailedReason = c.Message.Error.ToString());
 
-        /// <summary>
-        /// Handler for AgvAssignmentSucceeded
-        /// </summary>
-        /// <returns>Event Binding for AgvAssignmentSucceeded</returns>
+        private EventActivityBinder<OrderSaga, TransportOrderStarted> SetTransportOrderStartedHandler() =>
+            When(TransportOrderStartedEvent)
+                .Then(c =>
+                    _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId}", nameof(TransportOrderStarted), c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId))
+                .Then(c => // TransitionTo(TransportOrderStarted)
+                {
+                    if (c.Saga.AssignedAgv != null)
+                    {
+                        var agv = _agvRegistry.GetAgv(c.Saga.AssignedAgv.Value);
+                        if (agv != null)
+                        {
+                            c.Publish(new HostOrderStarted(c.Saga.CorrelationId, c.Saga.OrderDetails.OrderId, agv.AgvId));
+                            c.TransitionToState(TransportOrderStarted);
+                        }
+                        else
+                        {
+                            _logger.LogError("Missing AgvId for {CorrelationId}", c.Saga.CorrelationId);
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogError("Corresponding AGV not found for Order {OrderId} / {CorrelationId}", c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId);
+                    }
+                });
+
+        private EventActivityBinder<OrderSaga, TransportOrderPickCompleted> SetTransportOrderPickCompletedHandler() =>
+            When(TransportOrderPickCompletedEvent)
+                .Then(c =>
+                    _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId} has been completed", nameof(TransportOrderPickCompleted), c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId))
+                .TransitionTo(TransportOrderPicked);
+
+
         private EventActivityBinder<OrderSaga, TransportOrderCompleted> SetTransportOrderCompletedHandler() =>
             When(TransportOrderCompletedEvent)
                 .Then(c =>
@@ -256,12 +286,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
                  )
                 .ThenAsync(SendReleaseAgv)
                 .ThenAsync(SendHostOrderCompleted)
-                .Finalize();
+                .Finalize(); // TransitionTo(Final)
 
-        /// <summary>
-        /// Handler for TransportOrderReset
-        /// </summary>
-        /// <returns>Event Binding for TransportOrderReset</returns>
         private EventActivityBinder<OrderSaga, TransportOrderReset> SetTransportOrderResetHandler() =>
             When(TransportOrderResetEvent)
                 .Then(c =>
@@ -270,6 +296,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
                 .Then(c => c.Saga.FailedReason = $"{nameof(TransportOrderErrorCode)}.{c.Message.Error}")
                 .TransitionTo(OrderReceived)
                 .Publish(c => new RequestOrderAgvAssign(c.Saga.CorrelationId));
+        #endregion
+
+        #region Actions
 
         private void UpdateSagaState(BehaviorContext<OrderSaga, AgvAssignmentSucceeded> context)
         {
@@ -288,60 +317,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
                 await context.Publish(new ReleaseAgv(correlationId: context.Saga.AssignedAgv.Value));
             }
         }
-
-        /// <summary>
-        /// Handler for OrderFailed
-        /// </summary>
-        /// <returns>Event Binding for OrderFailed</returns>
-        private EventActivityBinder<OrderSaga, TransportOrderFailed> SetTransportOrderFailedHandler() =>
-            When(TransportOrderFailedEvent)
-                .Then(c =>
-                    _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId}", nameof(TransportOrderFailed), c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId)
-                 )
-                .Publish(c => new HostOrderHandlingFailed(c.Saga.CorrelationId, c.Saga.OrderDetails.OrderId, HostOrderErrorCode.Any))
-                .TransitionTo(OrderFailed)
-                .Then(c => c.Saga.FailedReason = c.Message.Error.ToString());
-
-        /// <summary>
-        /// Handler for inbound message TransportOrderStarted
-        /// </summary>
-        /// <returns>Event Binding for TransportOrderStarted</returns>
-        private EventActivityBinder<OrderSaga, TransportOrderStarted> SetTransportOrderStartedHandler() =>
-            When(TransportOrderStartedEvent)
-                .Then(c =>
-                    _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId}", nameof(TransportOrderStarted), c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId))
-                .Then(SendHostOrderStartedMessage);
-
-        private void SendHostOrderStartedMessage(BehaviorContext<OrderSaga, TransportOrderStarted> context)
-        {
-            if (context.Saga.AssignedAgv != null)
-            {
-                var agv = _agvRegistry.GetAgv(context.Saga.AssignedAgv.Value);
-                if (agv != null)
-                {
-                    context.Publish(new HostOrderStarted(context.Saga.CorrelationId, context.Saga.OrderDetails.OrderId, agv.AgvId));
-                    context.TransitionToState(TransportOrderStarted);
-                }
-                else
-                {
-                    _logger.LogError("Missing AgvId for {CorrelationId}", context.Saga.CorrelationId);
-                }
-            }
-            else
-            {
-                _logger.LogError("Corresponding AGV not found for Order {OrderId} / {CorrelationId}", context.Saga.OrderDetails.OrderId, context.Saga.CorrelationId);
-            }
-        }
-
-        /// <summary>
-        /// Handler for inbound message TransportOrderPickCompleted
-        /// </summary>
-        /// <returns>Event Binding for TransportOrderPickCompleted</returns>
-        private EventActivityBinder<OrderSaga, TransportOrderPickCompleted> SetTransportOrderPickCompletedHandler() =>
-            When(TransportOrderPickCompletedEvent)
-                .Then(c =>
-                    _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId} has been completed", nameof(TransportOrderPickCompleted), c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId))
-                .TransitionTo(TransportOrderPicked);
+        #endregion
 
         /// <summary>
         /// Handler for inbound message CancelTransportOrder
@@ -368,7 +344,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
             else if (context.Saga.CurrentState == nameof(Initial))
             {
                 await context.Publish(new HostOrderCancelFailed(context.Saga.CorrelationId, context.Message.OrderId, HostOrderErrorCode.InvalidOrderData));
-                _logger.LogWarning("Unable to cancel Order {OrderId} / {CorrelationId} because state is Initial => No Order in OrderRegistry", 
+                _logger.LogWarning("Unable to cancel Order {OrderId} / {CorrelationId} because state is Initial => No Order in OrderRegistry",
                     context.Message.OrderId, context.Saga.CorrelationId);
             }
             else if (context.Saga.CurrentState == nameof(OrderFailed))

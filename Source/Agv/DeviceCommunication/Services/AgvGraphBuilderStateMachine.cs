@@ -5,7 +5,6 @@ using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Events;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.States;
 
-
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
 {
     /// <summary>
@@ -19,7 +18,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
     {
         private readonly ILogger<AgvGraphBuilderStateMachine> _logger;
 
-
         /// <summary>
         /// Initial request for AGV graph has been received.
         /// </summary>
@@ -31,7 +29,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
         /// </summary>
         [JetBrains.Annotations.UsedImplicitly]
         public State StationListReceived { get; private set; } = default!;
-
 
         /// <summary>
         /// Event fired on <see cref="RequestAgvGraph"/> message.
@@ -51,6 +48,30 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
         [JetBrains.Annotations.UsedImplicitly]
         public Event<InternalGraphReceived> GraphEvent { get; private set; } = default!;
 
+        /// <summary>
+        /// Handle requesting AGV graph by master control.
+        /// </summary>
+        public AgvGraphBuilderStateMachine(ILogger<AgvGraphBuilderStateMachine> logger)
+        {
+            _logger = logger;
+
+            // Initial creation
+            Event(() => RequestAgvGraphEvent, e =>
+                e.SetSagaFactory(context => new AgvGraphBuilderSaga(context.Message.CorrelationId))
+            );
+            Event(() => StationListEvent);
+            Event(() => GraphEvent);
+
+            Initially(RequestAgvGraphHandler());
+            DuringAny(RequestAgvGraphHandler());
+
+            During(RequestAgvGraphReceived, StationListHandler());
+            During(StationListReceived, GraphHandler());
+
+            SetCompletedWhenFinalized();
+        }
+
+        #region State transitions
 
         private EventActivityBinder<AgvGraphBuilderSaga, RequestAgvGraph> RequestAgvGraphHandler() =>
             When(RequestAgvGraphEvent)
@@ -83,39 +104,16 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
                 .IfElse(c => c.Message.Graph.RequestId == c.Saga.CurrentMqttRequestId,
                     // The response (station list) correlates to the request
                     t => t.Then(_ => _logger.LogDebug("{MessageType} does match the request", nameof(InternalGraphReceived)))
-                            // Store the graph in the saga instance.
-                            .Then(c => c.Saga.MqttGraph = c.Message.Graph)
-                            // Build the internal graph and store in the saga instance.
-                            .Then(c => c.Saga.MergeGraph())
-                            // Respond to the initial request with the graph
-                            .Then(c => c.Publish(new Common.Messages.AgvManagement.Events.AgvGraphReceived(c.Saga.CorrelationId, c.Message.Graph.SerialNumber, c.Saga.AgvGraph!)))
-                            .Finalize(),
+                        // Store the graph in the saga instance.
+                        .Then(c => c.Saga.MqttGraph = c.Message.Graph)
+                        // Build the internal graph and store in the saga instance.
+                        .Then(c => c.Saga.MergeGraph())
+                        // Respond to the initial request with the graph
+                        .Then(c => c.Publish(new Common.Messages.AgvManagement.Events.AgvGraphReceived(c.Saga.CorrelationId, c.Message.Graph.SerialNumber, c.Saga.AgvGraph!)))
+                        .Finalize(),
                     // The response does not correlate to the request
                     e => e.Then(_ => _logger.LogWarning("{MessageType} does not match the request", nameof(InternalGraphReceived))))
-                            .Finalize();
-
-
-        /// <summary>
-        /// Handle requesting AGV graph by master control.
-        /// </summary>
-        public AgvGraphBuilderStateMachine(ILogger<AgvGraphBuilderStateMachine> logger)
-        {
-            _logger = logger;
-
-            // Initial creation
-            Event(() => RequestAgvGraphEvent, e =>
-                e.SetSagaFactory(context => new AgvGraphBuilderSaga(context.Message.CorrelationId))
-            );
-            Event(() => StationListEvent);
-            Event(() => GraphEvent);
-
-            Initially(RequestAgvGraphHandler());
-            DuringAny(RequestAgvGraphHandler());
-
-            During(RequestAgvGraphReceived, StationListHandler());
-            During(StationListReceived, GraphHandler());
-
-            SetCompletedWhenFinalized();
-        }
+                .Finalize();
+        #endregion
     }
 }
