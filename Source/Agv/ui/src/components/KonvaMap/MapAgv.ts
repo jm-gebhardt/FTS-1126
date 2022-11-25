@@ -30,11 +30,11 @@ export class Agv extends MapNode {
   initIcon(): Konva.Shape {
     return new Konva.RegularPolygon({
       sides: 3,
-      radius: 20,
+      radius: 10,
       stroke: 'black',
       strokeWidth: 1,
-      fillLinearGradientStartPoint: { x: 0, y: -11 },
-      fillLinearGradientEndPoint: { x: 0, y: -10 },
+      fillLinearGradientStartPoint: { x: 0, y: -6 },
+      fillLinearGradientEndPoint: { x: 0, y: -5 },
       fillLinearGradientColorStops: [0, 'black', 1, 'red']
     })
   }

@@ -32,6 +32,14 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
         public async Task Consume(ConsumeContext<MqttStationList> context)
         {
             _logger.LogInformation("{MessageType} from {AgvId} received", nameof(MqttStationList), context.Message.SerialNumber);
+            var reversedYStationList = context.Message;
+
+            //Special treatment because we are in a different coordinate system than Karis AGV
+            foreach (var t in reversedYStationList.Stations)
+            {
+                t.Position.Y *= -1;
+            }
+
             await context.Publish(new InternalStationListReceived(
                 correlationId: context.Message.SerialNumber.ToGuid(),
                 stationList: context.Message

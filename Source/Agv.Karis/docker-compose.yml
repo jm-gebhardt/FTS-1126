@@ -20,6 +20,9 @@ services:
       - MQTT_USER=${RABBITMQ_USER}
       - MQTT_PASSWORD=${RABBITMQ_PASSWORD}
       - MONGODB=mongo
+    depends_on:
+      mongo:
+        condition: service_started
     ports:
       - 127.0.0.1:8081:80
     
@@ -31,6 +34,9 @@ services:
       - MQTT_USER=${RABBITMQ_USER}
       - MQTT_PASSWORD=${RABBITMQ_PASSWORD}
       - MONGODB=mongo
+    depends_on:
+      mongo:
+        condition: service_started
     ports:
       - 127.0.0.1:8082:80
       - 127.0.0.1:30061:30061
@@ -40,6 +46,8 @@ services:
     ports:
       - "127.0.0.1:27018:27017"
     image: mongo:4.4
+    volumes:
+      - ./mongodb/dumpFromAgv:/dumpExt
     restart: unless-stopped
 
   mongo-provisioning:  

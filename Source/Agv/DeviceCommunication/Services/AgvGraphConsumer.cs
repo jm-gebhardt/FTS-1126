@@ -32,9 +32,19 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
         public async Task Consume(ConsumeContext<MqttGraph> context)
         {
             _logger.LogInformation("{MessageType} from AGV {AgvId} received", nameof(MqttGraph), context.Message.SerialNumber);
+            var reversedYGraph = context.Message;
+
+            //Special treatment because we are in a different coordinate system than Karis AGV
+            if (reversedYGraph.Nodes != null)
+            {
+                foreach (var t in reversedYGraph.Nodes)
+                {
+                    t.Y *= -1;
+                }
+            }
             await context.Publish(new InternalGraphReceived(
                 correlationId: context.Message.SerialNumber.ToGuid(),
-                graph: context.Message
+                graph: reversedYGraph
             ), context.CancellationToken);
         }
     }

@@ -111,7 +111,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         /// <summary>
         /// Y coordinate
         /// </summary>
-        public float Y { get; }
+        public float Y { get; set; }
 
         /// <summary>
         /// Build message.

@@ -120,9 +120,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
             Assert.AreEqual(AgvTestIdentifier02.ToGuid(), publishedPos.CorrelationId);
             Assert.AreEqual(AgvTestIdentifier02, publishedPos.AgvId);
             Assert.AreEqual(positionInitialized, publishedPos.AgvPosition.PositionInitialized);
-            Assert.AreEqual(theta, publishedPos.AgvPosition.Theta);
+            Assert.AreEqual(Mathematics.ConvertToRadians(90) - theta, publishedPos.AgvPosition.Theta);
             Assert.AreEqual(x, publishedPos.AgvPosition.X);
-            Assert.AreEqual(y, publishedPos.AgvPosition.Y);
+            Assert.AreEqual(y, publishedPos.AgvPosition.Y * -1);
         }
     }
 }

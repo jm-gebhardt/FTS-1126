@@ -63,9 +63,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
                     agvPosition: new Common.Messages.AgvManagement.AgvPosition(
                         positionInitialized: context.Message.AgvPosition.PositionInitialized,
                         x: context.Message.AgvPosition.X,
-                        y: context.Message.AgvPosition.Y,
+                        y: context.Message.AgvPosition.Y * -1, // Special treatment for Karis AGV. Y Axis is inverted
                         z: 0f,
-                        theta: context.Message.AgvPosition.Theta,
+                        theta: Mathematics.ConvertToRadians(90.0f) - context.Message.AgvPosition.Theta, // Special treatment for Karis AGV. 90° in our System (AGV facing right) is 0° in our world
                         deviationRange: context.Message.AgvPosition.DeviationRange
                     )), context.CancellationToken);
             }
