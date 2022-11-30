@@ -59,7 +59,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils.Db
         public WcsDbContext(): base(
             new DbContextOptionsBuilder()
             .UseSqlServer(
-                $"Server=127.0.0.1;Database=master;User Id=sa;Password={EnvFile.DefaultPassword}"
+                $"Server=127.0.0.1;Database=master;User Id=sa;Password={EnvFile.DefaultPassword};Encrypt=False"
                 )
             .Options
             )
