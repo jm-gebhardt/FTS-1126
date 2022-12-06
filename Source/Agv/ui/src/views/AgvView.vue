@@ -131,6 +131,8 @@ onBeforeUnmount(async () => {
 onMounted(() => {
   if (route?.query?.correlationId != undefined) {
     selectedCorrelationId.value = <string>route?.query?.correlationId
+    fetchData(selectedCorrelationId.value)
+    fetchStatus(selectedCorrelationId.value)
   }
 
   pushCurrentRoute()

@@ -22,6 +22,7 @@ export class Agv extends MapNode {
     super(agvId, { x, y })
     this.correlationId = correlationId
     this.icon.rotation(rotation)
+    this.updateOnClickAgv(correlationId)
   }
 
   /**
@@ -36,6 +37,14 @@ export class Agv extends MapNode {
       fillLinearGradientStartPoint: { x: 0, y: -6 },
       fillLinearGradientEndPoint: { x: 0, y: -5 },
       fillLinearGradientColorStops: [0, 'black', 1, 'red']
+    })
+  }
+
+  updateOnClickAgv(correlationId: string): void {
+    this.icon.on('click', function () {
+      window.location.replace(
+        import.meta.env.VITE_BASE_PATH + 'agvs?correlationId=' + correlationId
+      )
     })
   }
 
