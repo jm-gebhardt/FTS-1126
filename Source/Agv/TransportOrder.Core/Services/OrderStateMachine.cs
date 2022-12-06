@@ -258,6 +258,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
                         var agv = _agvRegistry.GetAgv(c.Saga.AssignedAgv.Value);
                         if (agv != null)
                         {
+                            c.Saga.FailedReason = null;
                             c.Publish(new HostOrderStarted(c.Saga.CorrelationId, c.Saga.OrderDetails.OrderId, agv.AgvId));
                             c.TransitionToState(TransportOrderStarted);
                         }
