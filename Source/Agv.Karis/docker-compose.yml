@@ -16,10 +16,12 @@ services:
     image: registry.gitlab.com/tar4/karis_virtual
     hostname: karis0
     environment:
-      - MQTT_BROKER=rabbitmq
+      - MQTT_BROKER=ssl://rabbitmq:8883
       - MQTT_USER=${RABBITMQ_USER}
       - MQTT_PASSWORD=${RABBITMQ_PASSWORD}
       - MONGODB=mongo
+    volumes:
+      - ../../Certs/client:/home/karis/client
     depends_on:
       mongo:
         condition: service_started
