@@ -52,11 +52,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
             KeyValuePair<IAgv, IGraphAlgorithm.Route>? assignAgvAndRoute = await AssignIdleAgv<AStar>(context.Message.Order, context.CancellationToken);
             if (assignAgvAndRoute == null)
             {
-                var error = CheckRouteExists<AStar>(context.Message.Order) ? AgvAssignmentErrorCode.NoIdleAgv : AgvAssignmentErrorCode.NoRouteFound;
+                var error = CheckRouteExists<AStar>(context.Message.Order) ? AgvAssignmentFailed.ErrorCode.NoIdleAgv : AgvAssignmentFailed.ErrorCode.NoRouteFound;
 
-                if (_agvRegistry.Count == 0 && error == AgvAssignmentErrorCode.NoRouteFound)
+                if (_agvRegistry.Count == 0 && error == AgvAssignmentFailed.ErrorCode.NoRouteFound)
                 {
-                    error = AgvAssignmentErrorCode.AgvRegistryEmpty;
+                    error = AgvAssignmentFailed.ErrorCode.AgvRegistryEmpty;
                 }
 
                 await context.Publish(new AgvAssignmentFailed(context.Message.CorrelationId, error));

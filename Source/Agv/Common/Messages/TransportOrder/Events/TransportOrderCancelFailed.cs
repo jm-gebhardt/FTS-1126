@@ -18,18 +18,12 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Events
         public string OrderId { get; }
 
         /// <summary>
-        /// The error code that holds information why the cancel of the order failed
-        /// </summary>
-        public TransportOrderErrorCode Error { get; }
-
-        /// <summary>
         /// Initializes a new instance of <see cref="TransportOrderCancelFailed"/>
         /// </summary>
-        public TransportOrderCancelFailed(Guid correlationId, string orderId, TransportOrderErrorCode error)
+        public TransportOrderCancelFailed(Guid correlationId, string orderId)
         {
             CorrelationId = correlationId;
             OrderId = orderId;
-            Error = error;
         }
     }
 }

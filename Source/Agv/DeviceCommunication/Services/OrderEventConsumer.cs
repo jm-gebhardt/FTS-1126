@@ -52,11 +52,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
                     break;
 
                 case OrderEventType.CancelFailed:
-                    await context.Publish(new TransportOrderCancelFailed(correlationId, context.Message.OrderId, TransportOrderErrorCode.Any));
+                    await context.Publish(new TransportOrderCancelFailed(correlationId, context.Message.OrderId));
                     break;
 
                 case OrderEventType.Failed:
-                    await context.Publish(new TransportOrderFailed(correlationId, context.Message.OrderId, TransportOrderErrorCode.Any));
+                    await context.Publish(new TransportOrderFailed(correlationId, context.Message.OrderId));
                     break;
 
                 default:

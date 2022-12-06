@@ -196,7 +196,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             Assert.IsNotNull(result);
 
             bus.Verify(s => s.Publish(It.Is<TransportOrderReset>(
-                    m => m.CorrelationId == correlationId && m.Error == TransportOrderErrorCode.ResetByUser
+                    m => m.CorrelationId == correlationId
                 ), default), Times.Once);
         }
     }

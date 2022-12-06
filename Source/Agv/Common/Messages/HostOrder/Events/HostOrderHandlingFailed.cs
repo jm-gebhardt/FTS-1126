@@ -9,6 +9,29 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events
     [JetBrains.Annotations.PublicAPI]
     public record HostOrderHandlingFailed : CorrelatedBy<Guid>
     {
+        /// <summary>
+        /// Error code that can occur during handling of host orders
+        /// </summary>
+        [JetBrains.Annotations.PublicAPI]
+        public enum ErrorCode
+        {
+            /// <summary>
+            /// Order already exists
+            /// </summary>
+            OrderAlreadyExists,
+
+            /// <summary>
+            /// Order data is invalid
+            /// </summary>
+            InvalidOrderData,
+
+            /// <summary>
+            /// Order failed by transport layer (e.g. AGV)
+            /// </summary>
+            FailedByTransportLayer
+        }
+
+
         /// <inheritdoc/>
         public Guid CorrelationId { get; }
 
@@ -20,12 +43,12 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events
         /// <summary>
         /// The error code that holds information why the handling of the order failed
         /// </summary>
-        public HostOrderErrorCode Error { get; }
+        public ErrorCode Error { get; }
 
         /// <summary>
         /// Initializes a new instance of <see cref="HostOrderHandlingFailed"/>
         /// </summary>
-        public HostOrderHandlingFailed(Guid correlationId, string orderId, HostOrderErrorCode error)
+        public HostOrderHandlingFailed(Guid correlationId, string orderId, ErrorCode error)
         {
             CorrelationId = correlationId;
             OrderId = orderId;

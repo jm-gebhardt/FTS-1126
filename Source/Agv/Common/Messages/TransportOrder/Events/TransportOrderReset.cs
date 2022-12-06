@@ -13,17 +13,11 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Events
         public Guid CorrelationId { get; }
 
         /// <summary>
-        /// The error code that holds information why the update of the order failed
-        /// </summary>
-        public TransportOrderErrorCode Error { get; }
-
-        /// <summary>
         /// Initializes a new instance of <see cref="TransportOrderReset"/>
         /// </summary>
-        public TransportOrderReset(Guid correlationId, TransportOrderErrorCode error)
+        public TransportOrderReset(Guid correlationId)
         {
             CorrelationId = correlationId;
-            Error = error;
         }
     }
 }

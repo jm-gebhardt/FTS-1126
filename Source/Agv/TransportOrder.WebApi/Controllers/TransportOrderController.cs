@@ -86,7 +86,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
                 return BadRequest("Order can not be reset because it is not completed yet");
             }
 
-            await _bus.Publish(new TransportOrderReset(order.CorrelationId, TransportOrderErrorCode.ResetByUser));
+            await _bus.Publish(new TransportOrderReset(order.CorrelationId));
 
             return Ok();
         }

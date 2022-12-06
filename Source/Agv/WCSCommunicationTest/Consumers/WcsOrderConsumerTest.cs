@@ -132,7 +132,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Consumers
 
             var correlationId = latestOrder.OrderId.ToGuid();
 
-            await fixture.TestHarness!.Bus.Publish(new HostOrderHandlingFailed(correlationId, latestOrder.OrderId, HostOrderErrorCode.OrderAlreadyStarted));
+            await fixture.TestHarness!.Bus.Publish(new HostOrderHandlingFailed(correlationId, latestOrder.OrderId, HostOrderHandlingFailed.ErrorCode.OrderAlreadyExists));
 
             Assert.IsTrue(await fixture.TestHarness.Published.Any<HostOrderHandlingFailed>());
 
@@ -149,7 +149,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Consumers
             Assert.AreEqual(latestOrder.LeNo, entry.LeNo);
             Assert.AreEqual(RecordType.TransportOrder, entry.RecordType);
             Assert.AreEqual(OrderStatus.Finished, entry.Status);
-            Assert.AreEqual(HostOrderErrorCode.OrderAlreadyStarted.ToString(), entry.Error);
+            Assert.AreEqual(HostOrderHandlingFailed.ErrorCode.OrderAlreadyExists.ToString(), entry.Error);
         }
 
         [TestMethod]
@@ -229,7 +229,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Consumers
             var correlationId = latestOrder.OrderId.ToGuid();
 
             // Act
-            await fixture.TestHarness!.Bus.Publish(new HostOrderCancelFailed(correlationId, latestOrder.OrderId, HostOrderErrorCode.OrderAlreadyCancelled));
+            await fixture.TestHarness!.Bus.Publish(new HostOrderCancelFailed(correlationId, latestOrder.OrderId, HostOrderCancelFailed.ErrorCode.OrderAlreadyCancelled));
 
             // Assert
             Assert.IsTrue(await fixture.TestHarness.Published.Any<HostOrderCancelFailed>());
@@ -259,7 +259,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Consumers
             var correlationId = orderId.ToGuid();
 
             // Act
-            await fixture.TestHarness!.Bus.Publish(new HostOrderCancelFailed(correlationId, orderId, HostOrderErrorCode.OrderAlreadyCancelled));
+            await fixture.TestHarness!.Bus.Publish(new HostOrderCancelFailed(correlationId, orderId, HostOrderCancelFailed.ErrorCode.OrderAlreadyCancelled));
 
             // Arrange
             Assert.IsTrue(await fixture.TestHarness.Published.Any<HostOrderCancelFailed>());

@@ -212,28 +212,28 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
 
         private EventActivityBinder<OrderSaga, AgvAssignmentFailed> SetAgvAssignFailedHandler() =>
             When(AgvAssignFailedEvent)
-                .Then(c => c.Saga.FailedReason = $"{nameof(AgvAssignmentErrorCode)}.{c.Message.Error}")
+                .Then(c => c.Saga.FailedReason = $"{nameof(AgvAssignmentFailed)}.{c.Message.Error}")
                 .ThenAsync(async c =>
                 {
                     switch (c.Message.Error) // TransitionTo(OrderReceived or OrderFailed)
                     {
-                        case AgvAssignmentErrorCode.NoIdleAgv:
+                        case AgvAssignmentFailed.ErrorCode.NoIdleAgv:
                             await c.TransitionToState(OrderReceived);
                             _logger.LogInformation("{MessageType}/{FailedReason}: Incoming Order {OrderId} / {CorrelationId} but no idle AGV found in AgvRegistry",
-                                nameof(AgvAssignmentFailed), AgvAssignmentErrorCode.NoIdleAgv, c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId);
+                                nameof(AgvAssignmentFailed), c.Message.Error, c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId);
                             break;
 
-                        case AgvAssignmentErrorCode.NoRouteFound:
-                            await c.Publish(new HostOrderHandlingFailed(c.Saga.CorrelationId, c.Saga.OrderDetails.OrderId, HostOrderErrorCode.InvalidOrderData));
+                        case AgvAssignmentFailed.ErrorCode.NoRouteFound:
+                            await c.Publish(new HostOrderHandlingFailed(c.Saga.CorrelationId, c.Saga.OrderDetails.OrderId, HostOrderHandlingFailed.ErrorCode.InvalidOrderData));
                             await c.TransitionToState(OrderFailed);
                             _logger.LogInformation("{MessageType}/{FailedReason}: Incoming Order {OrderId} / {CorrelationId} but unable to calculate route with found AGVs in AgvRegistry",
-                                nameof(AgvAssignmentFailed), AgvAssignmentErrorCode.NoRouteFound, c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId);
+                                nameof(AgvAssignmentFailed), c.Message.Error, c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId);
                             break;
 
-                        case AgvAssignmentErrorCode.AgvRegistryEmpty:
+                        case AgvAssignmentFailed.ErrorCode.AgvRegistryEmpty:
                             await c.TransitionToState(OrderReceived);
                             _logger.LogInformation("{MessageType}/{FailedReason}: Incoming Order {OrderId} / {CorrelationId} but no discovered AGV found in AgvRegistry",
-                                nameof(AgvAssignmentFailed), AgvAssignmentErrorCode.AgvRegistryEmpty, c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId);
+                                nameof(AgvAssignmentFailed), c.Message.Error, c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId);
                             break;
                     }
                 });
@@ -243,9 +243,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
                 .Then(c =>
                     _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId}", nameof(TransportOrderFailed), c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId)
                  )
-                .Publish(c => new HostOrderHandlingFailed(c.Saga.CorrelationId, c.Saga.OrderDetails.OrderId, HostOrderErrorCode.Any))
+                .Publish(c => new HostOrderHandlingFailed(c.Saga.CorrelationId, c.Saga.OrderDetails.OrderId, HostOrderHandlingFailed.ErrorCode.FailedByTransportLayer))
                 .TransitionTo(OrderFailed)
-                .Then(c => c.Saga.FailedReason = c.Message.Error.ToString());
+                .Then(c => c.Saga.FailedReason = nameof(TransportOrderFailed));
 
         private EventActivityBinder<OrderSaga, TransportOrderStarted> SetTransportOrderStartedHandler() =>
             When(TransportOrderStartedEvent)
@@ -300,9 +300,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         private EventActivityBinder<OrderSaga, TransportOrderReset> SetTransportOrderResetHandler() =>
             When(TransportOrderResetEvent)
                 .Then(c =>
-                    _logger.LogInformation("Order {OrderId} / {CorrelationId} was reset. Reason: {TransportOrderErrorCode}", c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId, c.Message.Error)
+                    _logger.LogInformation("Order {OrderId} / {CorrelationId} was reset", c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId)
                  )
-                .Then(c => c.Saga.FailedReason = $"{nameof(TransportOrderErrorCode)}.{c.Message.Error}")
+                .Then(c => c.Saga.FailedReason = $"{nameof(TransportOrderReset)}")
                 .TransitionTo(OrderReceived)
                 .Publish(c => new RequestOrderAgvAssign(c.Saga.CorrelationId));
 
@@ -319,28 +319,28 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
                     }
                     else if (context.Saga.CurrentState == nameof(Final))
                     {
-                        await context.Publish(new HostOrderCancelFailed(context.Saga.CorrelationId, context.Message.OrderId, HostOrderErrorCode.OrderAlreadyFinished));
+                        await context.Publish(new HostOrderCancelFailed(context.Saga.CorrelationId, context.Message.OrderId, HostOrderCancelFailed.ErrorCode.OrderAlreadyFinished));
                         _logger.LogWarning("Unable to cancel Order {OrderId} / {CorrelationId} because it already is finished", context.Message.OrderId, context.Saga.CorrelationId);
                     }
                     else if (context.Saga.CurrentState == nameof(Initial))
                     {
-                        await context.Publish(new HostOrderCancelFailed(context.Saga.CorrelationId, context.Message.OrderId, HostOrderErrorCode.InvalidOrderData));
+                        await context.Publish(new HostOrderCancelFailed(context.Saga.CorrelationId, context.Message.OrderId, HostOrderCancelFailed.ErrorCode.OrderDoesNotExist));
                         _logger.LogWarning("Unable to cancel Order {OrderId} / {CorrelationId} because state is Initial => No Order in OrderRegistry",
                             context.Message.OrderId, context.Saga.CorrelationId);
                     }
                     else if (context.Saga.CurrentState == nameof(OrderFailed))
                     {
-                        await context.Publish(new HostOrderCancelFailed(context.Saga.CorrelationId, context.Message.OrderId, HostOrderErrorCode.OrderAlreadyFailed));
+                        await context.Publish(new HostOrderCancelFailed(context.Saga.CorrelationId, context.Message.OrderId, HostOrderCancelFailed.ErrorCode.OrderAlreadyFailed));
                         _logger.LogError("Unable to cancel Order {OrderId} / {CorrelationId} because it already has failed", context.Message.OrderId, context.Saga.CorrelationId);
                     }
                     else if (context.Saga.CurrentState == nameof(Cancelled))
                     {
-                        await context.Publish(new HostOrderCancelFailed(context.Saga.CorrelationId, context.Message.OrderId, HostOrderErrorCode.OrderAlreadyCancelled));
+                        await context.Publish(new HostOrderCancelFailed(context.Saga.CorrelationId, context.Message.OrderId, HostOrderCancelFailed.ErrorCode.OrderAlreadyCancelled));
                         _logger.LogError("Unable to cancel Order {OrderId} / {CorrelationId} because it already has been cancelled", context.Message.OrderId, context.Saga.CorrelationId);
                     }
                     else
                     {
-                        await context.Publish(new HostOrderCancelFailed(context.Saga.CorrelationId, context.Message.OrderId, HostOrderErrorCode.OrderAlreadyStarted));
+                        await context.Publish(new HostOrderCancelFailed(context.Saga.CorrelationId, context.Message.OrderId, HostOrderCancelFailed.ErrorCode.OrderAlreadyStarted));
                         _logger.LogError("Unable to cancel Order {OrderId} / {CorrelationId} because it already has started", context.Message.OrderId, context.Saga.CorrelationId);
                     }
                 });
