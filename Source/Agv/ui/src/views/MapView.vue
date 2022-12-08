@@ -40,13 +40,31 @@ import KonvaMap from '@/components/KonvaMap/KonvaMap.vue'
 import { storeToRefs } from 'pinia'
 import { useAgvStore } from '@/services/AgvStore'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
-import { IAgv, IGraph, IAgvPosition, IMap } from '@/services/api/data-contracts'
+import {
+  IAgv,
+  IGraph,
+  IMap,
+  IAgvPositionStatus
+} from '@/services/api/data-contracts'
+import { AgvsPositions as AgvPosApi } from '@/services/api/AgvsPositions'
 import { AgvHub } from '@/services/AgvHub'
 import {
   BalmUiOption,
   createOptionFromMap,
   createOptionsFromList
 } from '@/utils/BalmUiOptions'
+import {
+  UiSelect,
+  UiList,
+  UiItem,
+  UiItemFirstContent,
+  UiCheckbox,
+  UiItemTextContent
+} from 'balm-ui'
+
+const agvPosApi = new AgvPosApi({
+  baseUrl: import.meta.env.VITE_API_URL
+})
 
 const agvHub = new AgvHub(undefined, undefined, onAgvPositionChanged)
 
@@ -81,8 +99,10 @@ onBeforeUnmount(async () => {
 /**
  * Handler for hub event 'onAgvPositionChanged'
  */
-async function onAgvPositionChanged(agvPosition: IAgvPosition): Promise<void> {
-  mapComponent.value.updateAgvPosition(agvPosition)
+async function onAgvPositionChanged(
+  agvPositionStatus: IAgvPositionStatus
+): Promise<void> {
+  mapComponent.value.updateAgvPosition(agvPositionStatus)
 }
 
 /**
@@ -110,8 +130,19 @@ function updateAgvs(): void {
       updateGraphElements()
     })
   })
-}
 
+  agvPosApi
+    .agvsPositionsList()
+    .then((response) => {
+      response.data.forEach((agvPositionStatus) => {
+        console.log('Set AGV pos: ' + agvPositionStatus.agvId)
+        onAgvPositionChanged(agvPositionStatus)
+      })
+    })
+    .catch((response) => {
+      console.error(response.error)
+    })
+}
 /**
  * Callback for AGV selection has changed
  */

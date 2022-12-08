@@ -250,6 +250,15 @@ export class MapCanvas {
   ): void {
     this._background = background
 
+    // Remember current dimensions for rescale
+    const oldScale = GraphDimensions.scale
+    const oldOffsetX = GraphDimensions.offsetX
+    const oldOffsetY = GraphDimensions.offsetY
+
+    if (resolution === 0) {
+      resolution = 1 // Avoid 'division by zero' error
+    }
+
     GraphDimensions.scale = 1 / resolution // Inverse of resolution
     GraphDimensions.offsetX = offsetX / resolution
     GraphDimensions.offsetY = offsetY / resolution
@@ -259,6 +268,18 @@ export class MapCanvas {
     })
     this.imageLayer.destroyChildren()
     this.imageLayer.add(image)
+
+    // Check if scale has changed
+    if (
+      GraphDimensions.scale != oldScale ||
+      GraphDimensions.offsetX != oldOffsetX ||
+      GraphDimensions.offsetY != oldOffsetY
+    ) {
+      // Rescale all map opjects to set new scale
+      this._nodes.forEach((n) => n.rescale(oldScale, oldOffsetX, oldOffsetY))
+      this._edges.forEach((e) => e.rescale(oldScale, oldOffsetX, oldOffsetY))
+      this._agvs.forEach((a) => a.rescale(oldScale, oldOffsetX, oldOffsetY))
+    }
   }
 
   /**

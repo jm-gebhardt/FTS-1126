@@ -325,12 +325,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
                 // When AgvGraph present refresh once a day
                 .If(cond => cond.Saga.AgvGraph != null && cond.Saga.GetTimeSpanSinceLastRequest_AgvGraph().TotalSeconds > DailyRequestUpdateInterval,
                     PublishRequestAgvGraph)
-                .If(cond => 
-                        _productionOptions.AutoAccept && 
-                        cond.Saga.AgvData != null && 
-                        cond.Saga.AgvGraph != null && 
-                        _mapRegistry.Exists(cond.Saga.AgvGraph.RelatedMapId) && 
-                        cond.Saga.CurrentState == nameof(Discovered),
+                .If(cond =>
+                    _productionOptions.AutoAccept &&
+                    cond.Saga.AgvData is not null &&
+                    cond.Saga.AgvGraph is not null &&
+                    _mapRegistry.Exists(cond.Saga.AgvGraph.RelatedMapId) &&
+                    cond.Saga.CurrentState == nameof(Discovered),
                     m => m.Publish(c => new ReleaseAgv(c.Saga.CorrelationId)))
                 .Schedule(AgvOfflineWatchdog,
                           c1 => new AgvOfflineMessage(c1.Saga.CorrelationId, DateTime.UtcNow),

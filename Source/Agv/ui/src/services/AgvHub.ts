@@ -3,7 +3,11 @@ import {
   HubConnectionBuilder,
   HubConnectionState
 } from '@microsoft/signalr'
-import { IAgv, IAgvPosition, IHubMethods } from '@/services/api/data-contracts'
+import {
+  IAgv,
+  IAgvPositionStatus,
+  IHubMethods
+} from '@/services/api/data-contracts'
 
 /**
  * Signalr hub for orders
@@ -12,12 +16,16 @@ export class AgvHub {
   client: HubConnection
   _onAgvDiscovered?: () => Promise<void>
   _onAgvStateChanged?: (agv: IAgv) => Promise<void>
-  _onAgvPositionChanged?: (agvPosition: IAgvPosition) => Promise<void>
+  _onAgvPositionChanged?: (
+    agvPositionStatus: IAgvPositionStatus
+  ) => Promise<void>
 
   constructor(
     onAgvDiscovered?: () => Promise<void>,
     onAgvStateChanged?: (agv: IAgv) => Promise<void>,
-    onAgvPositionChanged?: (agvPosition: IAgvPosition) => Promise<void>
+    onAgvPositionChanged?: (
+      agvPositionStatus: IAgvPositionStatus
+    ) => Promise<void>
   ) {
     this._onAgvDiscovered = onAgvDiscovered
     this._onAgvStateChanged = onAgvStateChanged

@@ -30,6 +30,28 @@ export class Edge {
       tension: 0
     })
   }
+
+  rescale(oldScale: number, oldOffsetX: number, oldOffsetY: number): void {
+    if (oldScale === 0) {
+      oldScale = 1 // Avoid 'division by zero' error
+    }
+
+    const points = this.line.points()
+
+    // Reset scale
+    points[0] = (points[0] - oldOffsetX) / oldScale
+    points[1] = (points[1] - oldOffsetY) / oldScale
+    points[2] = (points[2] - oldOffsetX) / oldScale
+    points[3] = (points[3] - oldOffsetY) / oldScale
+
+    // Set new scale
+    points[0] = points[0] * GraphDimensions.scale + GraphDimensions.offsetX
+    points[1] = points[1] * GraphDimensions.scale + GraphDimensions.offsetY
+    points[2] = points[2] * GraphDimensions.scale + GraphDimensions.offsetX
+    points[3] = points[3] * GraphDimensions.scale + GraphDimensions.offsetY
+
+    this.line.points(points)
+  }
 }
 
 /**
@@ -79,6 +101,29 @@ export abstract class MapNode {
     })
     this.icon.position({ x, y })
     this.icon.rotation(rotation)
+  }
+
+  rescale(oldScale: number, oldOffsetX: number, oldOffsetY: number): void {
+    if (oldScale === 0) {
+      oldScale = 1 // Avoid 'division by zero' error
+    }
+
+    const position = this.icon.position()
+
+    // Reset scale
+    position.x = (position.x - oldOffsetX) / oldScale
+    position.y = (position.y - oldOffsetY) / oldScale
+
+    // Set new scale
+    position.x = position.x * GraphDimensions.scale + GraphDimensions.offsetX
+    position.y = position.y * GraphDimensions.scale + GraphDimensions.offsetY
+
+    this.icon.position(position)
+
+    this.tag.position({
+      x: position.x - this.tag.width() / 2,
+      y: position.y + this.tagOffsetY
+    })
   }
 }
 
