@@ -22,7 +22,7 @@
         v-if="selectedItemIdx != null && selectedCorrelationId != null"
         v-model="Array.from(agvs.data.values())[selectedItemIdx]"
         :agv-data="agvData.data.get(selectedCorrelationId)"
-        :agv-status="agvStatus.data.get(selectedCorrelationId)"
+        :agv-state="agvStates.data.get(selectedCorrelationId)"
       ></agv-details>
     </ui-grid-cell>
   </ui-grid>
@@ -37,13 +37,14 @@ import { useAgvStore } from '@/services/AgvStore'
 import { storeToRefs } from 'pinia'
 import { onBeforeUnmount, onMounted, Ref, ref } from 'vue'
 import { AgvHub } from '@/services/AgvHub'
-import { IAgv } from '@/services/api/data-contracts'
+import { IAgvState } from '@/services/api/data-contracts'
 import { useRoute, useRouter } from 'vue-router'
+import { UiSwitch, UiGrid, UiGridCell, UiSpinner, UiBanner } from 'balm-ui'
 
 const agvHub = new AgvHub(onAgvDiscovered, onAgvStateChanged)
 
-const { agvs, agvData, agvStatus } = storeToRefs(useAgvStore())
-const { fetchAgvs, updateAgv, fetchData, fetchMaps, fetchStatus } =
+const { agvs, agvData, agvStates } = storeToRefs(useAgvStore())
+const { fetchAgvs, fetchState, updateAgvState, fetchData, fetchMaps } =
   useAgvStore()
 
 const route = useRoute()
@@ -67,7 +68,7 @@ async function selectedItemChanged(value: number | null): Promise<void> {
       : null
   if (selectedCorrelationId.value != undefined) {
     await fetchData(selectedCorrelationId.value)
-    await fetchStatus(selectedCorrelationId.value)
+    await fetchState(selectedCorrelationId.value)
   }
 
   if (selectedCorrelationId.value != null) {
@@ -88,8 +89,8 @@ async function onAgvDiscovered(): Promise<void> {
 /**
  * Handler for hub event 'onAgvStateChanged'
  */
-async function onAgvStateChanged(agv: IAgv): Promise<void> {
-  await updateAgv(agv)
+async function onAgvStateChanged(agvState: IAgvState): Promise<void> {
+  await updateAgvState(agvState)
 }
 
 function fetch(): void {
@@ -132,7 +133,7 @@ onMounted(() => {
   if (route?.query?.correlationId != undefined) {
     selectedCorrelationId.value = <string>route?.query?.correlationId
     fetchData(selectedCorrelationId.value)
-    fetchStatus(selectedCorrelationId.value)
+    fetchState(selectedCorrelationId.value)
   }
 
   pushCurrentRoute()

@@ -77,7 +77,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
         /// <response code="404">Not found</response>
         [HttpGet]
         [Route("/agvs/{correlationId:guid}/status")]
-        public ActionResult<AgvStatus> GetAgvStatus(Guid correlationId)
+        public ActionResult<AgvStateDto> GetAgvStatus(Guid correlationId)
         {
             var agv = _agvRegistry.GetAgv(correlationId);
             if (agv == null)
@@ -85,7 +85,26 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
                 return NotFound();
             }
 
-            return Ok(agv.AgvStatus);
+            if (agv.AgvStatus == null)
+            {
+                return NoContent();
+            }
+
+            // Combine AgvDto and AgvStatus intoto AgvStatusDto
+            var agvStateDto = new AgvStateDto(
+                agv.CorrelationId,
+                agv.AgvId,
+                agv.CurrentState,
+                agv.Alive,
+                agv.AgvStatus.OrderId,
+                agv.AgvStatus.Busy,
+                agv.AgvStatus.Automatic,
+                agv.AgvStatus.BatteryCharge,
+                agv.AgvStatus.Charging,
+                agv.AgvStatus.Disturbed,
+                agv.AgvStatus.LastNodeId);
+
+            return Ok(agvStateDto);
         }
 
         /// <summary>

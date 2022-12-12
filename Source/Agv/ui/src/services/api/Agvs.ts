@@ -9,7 +9,7 @@
  * ---------------------------------------------------------------
  */
 
-import { IAgv, IAgvData, IAgvStatus, IGraph } from './data-contracts'
+import { IAgv, IAgvData, IAgvState, IGraph } from './data-contracts'
 import { HttpClient, RequestParams } from './http-client'
 
 export class Agvs<
@@ -54,7 +54,7 @@ export class Agvs<
    * @request GET:/agvs/{correlationId}/status
    */
   statusDetail = (correlationId: string, params: RequestParams = {}) =>
-    this.request<IAgvStatus, void>({
+    this.request<IAgvState, void>({
       path: `/agvs/${correlationId}/status`,
       method: 'GET',
       format: 'json',

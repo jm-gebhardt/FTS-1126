@@ -114,17 +114,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/AgvStatus"
+                  "$ref": "#/components/schemas/AgvState"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AgvStatus"
+                  "$ref": "#/components/schemas/AgvState"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AgvStatus"
+                  "$ref": "#/components/schemas/AgvState"
                 }
               }
             }
@@ -731,56 +731,60 @@
         "additionalProperties": false,
         "description": "Model for the status of the AGV position"
       },
-      "AgvStatus": {
+      "AgvState": {
         "required": [
-          "automatic",
-          "batteryCharge",
-          "busy",
-          "charging",
-          "correlationId",
-          "disturbed"
+          "alive"
         ],
         "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Agv"
+          }
+        ],
         "properties": {
-          "correlationId": {
-            "type": "string",
-            "description": "AGV correlation ID",
-            "format": "uuid"
+          "alive": {
+            "type": "boolean",
+            "description": ""
           },
           "orderId": {
             "type": "string",
-            "description": "Current or previous order ID.",
+            "description": "",
             "nullable": true
           },
           "busy": {
             "type": "boolean",
-            "description": "AGV is busy (not idle)."
+            "description": "",
+            "nullable": true
           },
           "automatic": {
             "type": "boolean",
-            "description": "AGV is in automatic mode."
+            "description": "",
+            "nullable": true
           },
           "batteryCharge": {
             "type": "integer",
-            "description": "Battery charge.",
-            "format": "int32"
+            "description": "",
+            "format": "int32",
+            "nullable": true
           },
           "charging": {
             "type": "boolean",
-            "description": "AGV is charging."
+            "description": "",
+            "nullable": true
           },
           "disturbed": {
             "type": "boolean",
-            "description": "AGV is disturbed."
+            "description": "",
+            "nullable": true
           },
           "lastNodeId": {
             "type": "string",
-            "description": "nodeID of last reached node or, if AGV is currently on a node, current node.\r\nEmpty string if no lastNodeId is available.",
+            "description": "",
             "nullable": true
           }
         },
         "additionalProperties": false,
-        "description": "AGV Status"
+        "description": "AgvState model"
       },
       "Edge": {
         "required": [

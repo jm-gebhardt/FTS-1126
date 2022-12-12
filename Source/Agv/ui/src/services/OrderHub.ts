@@ -44,7 +44,7 @@ export class OrderHub {
       .then(() => {
         console.log('OrderHub Connected')
       })
-      .catch((e) => console.log('OrderHub Connection failed: ', e))
+      .catch((e) => console.error('OrderHub Connection failed: ', e))
   }
 
   /**
@@ -58,6 +58,6 @@ export class OrderHub {
       .then(() => {
         console.log('OrderHub Disconnected')
       })
-      .catch((e) => console.log('OrderHub Disconnect failed: ', e))
+      .catch((e) => console.error('OrderHub Disconnect failed: ', e))
   }
 }

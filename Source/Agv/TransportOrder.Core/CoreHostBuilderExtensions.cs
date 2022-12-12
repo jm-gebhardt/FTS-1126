@@ -50,9 +50,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                 services.AddTransient<IAgvHubContext>(provider =>
                 {
                     var hubContext = provider.GetRequiredService<IHubContext<AgvHub>>();
-                    var mapper = provider.GetRequiredService<IMapper>();
 
-                    return new AgvHubContext(hubContext, mapper);
+                    return new AgvHubContext(hubContext);
                 });
                 services.AddTransient<IEventObserver<OrderSaga>, OrderEventObserver>();
 

@@ -209,6 +209,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
                 .Then(c => _logger.LogDebug("{MessageType} {AgvId} / {CorrelationId} received", nameof(CreateAgv), c.Message.Agv.AgvId, c.Saga.CorrelationId))
                 .TransitionTo(Idle)
                 .ThenAsync(PublishStatus)
+                .ThenAsync(PublishPosition)
                 .Schedule(StatusUpdateSchedule, c => new ScheduleStatusUpdate(c.Saga.CorrelationId));
 
         private EventActivityBinder<SimulatedAgvSaga, ExecuteTransportOrder> SetExecuteTransportOrderHandler() =>
@@ -306,10 +307,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
             _logger.LogTrace("Status event from AGV {AgvId} / {CorrelationId}",
                 context.Saga.AgvId, context.Saga.CorrelationId);
 
+            context.Saga.UpdateStatus(); // Update status before each send
+
             await context.Publish(new AgvStatusReceived(
                 context.Saga.CorrelationId,
                 context.Saga.AgvId,
-                context.Saga.AgvStatus!
+                context.Saga.AgvStatus
             ), context.CancellationToken);
         }
 

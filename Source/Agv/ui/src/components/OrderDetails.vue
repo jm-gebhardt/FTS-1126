@@ -107,7 +107,7 @@ function resetOrder(order: IOrder | null): void {
         orderApi
           .resetOrderPartialUpdate(order.correlationId)
           .catch((reason: HttpResponse) => {
-            console.log('Reset order: ' + reason.statusText)
+            console.error('Reset order: ' + reason.statusText)
             const $alert = useAlert()
             $alert(`Order '${order.orderDetails.orderId}' could not be resend`)
           })

@@ -19,7 +19,7 @@ export default {
 </script>
 
 <script lang="ts" setup>
-import { IAgv, IAgvData, IAgvStatus } from '@/services/api/data-contracts'
+import { IAgv, IAgvData, IAgvState } from '@/services/api/data-contracts'
 import { computed, ComputedRef, onMounted } from 'vue'
 import DetailsList from '@/components/DetailsList.vue'
 import ActionsList from '@/components/ActionsList.vue'
@@ -44,7 +44,7 @@ const agvApi = new AgvApi({
 interface Props {
   modelValue: IAgv | null
   agvData: IAgvData | null | undefined
-  agvStatus: IAgvStatus | null | undefined
+  agvState: IAgvState | null | undefined
 }
 
 const props = defineProps<Props>()
@@ -66,13 +66,13 @@ let statusItems: ComputedRef<ListItem[]> = computed(() => {
   }
   return [
     // Status information
-    { label: 'OrderID', value: props.agvStatus?.orderId },
-    { label: 'Busy', value: props.agvStatus?.busy },
-    { label: 'Automatic', value: props.agvStatus?.automatic },
-    { label: 'Disturbed', value: props.agvStatus?.disturbed },
-    { label: 'LastNodeID', value: props.agvStatus?.lastNodeId },
-    { label: 'BatteryCharge', value: props.agvStatus?.batteryCharge },
-    { label: 'Charging', value: props.agvStatus?.charging }
+    { label: 'OrderID', value: props.agvState?.orderId },
+    { label: 'Busy', value: props.agvState?.busy },
+    { label: 'Automatic', value: props.agvState?.automatic },
+    { label: 'Disturbed', value: props.agvState?.disturbed },
+    { label: 'LastNodeID', value: props.agvState?.lastNodeId },
+    { label: 'BatteryCharge', value: props.agvState?.batteryCharge },
+    { label: 'Charging', value: props.agvState?.charging }
   ] as ListItem[]
 })
 
@@ -126,7 +126,7 @@ function setAgvIdle(agv: IAgv | null): void {
         agvApi
           .setIdlePartialUpdate(agv.correlationId)
           .catch((reason: HttpResponse) => {
-            console.log('Set AGV idle: ' + reason.statusText)
+            console.error('Set AGV idle: ' + reason.statusText)
             const $alert = useAlert()
             $alert(`AGV '${agv.agvId}' could not be set to Idle`)
           })
@@ -148,7 +148,7 @@ function lockAgv(agv: IAgv | null): void {
         agvApi
           .lockAgvPartialUpdate(agv.correlationId)
           .catch((reason: HttpResponse) => {
-            console.log('lock agv: ' + reason.statusText)
+            console.error('lock agv: ' + reason.statusText)
             const $alert = useAlert()
             $alert(`AGV '${agv.agvId}' could not be locked`)
           })

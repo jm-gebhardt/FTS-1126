@@ -2,7 +2,7 @@ import {
   IAgv,
   IAgvData,
   IGraph,
-  IAgvStatus,
+  IAgvState,
   IMap
 } from '@/services/api/data-contracts'
 import { IRestApiStore } from '@/services/IRestApiStore'
@@ -21,7 +21,7 @@ interface AgvStoreState {
   agvs: IRestApiStore<Map<string, IAgv>>
   agvGraph: IRestApiStore<Map<string, IGraph>>
   agvData: IRestApiStore<Map<string, IAgvData>>
-  agvStatus: IRestApiStore<Map<string, IAgvStatus>>
+  agvStates: IRestApiStore<Map<string, IAgvState>>
   maps: IRestApiStore<Map<string, IMap>>
   mapsImage: IRestApiStore<Map<string, string>>
 }
@@ -44,7 +44,7 @@ export const useAgvStore = defineStore({
       loading: false,
       error: null
     },
-    agvStatus: {
+    agvStates: {
       data: new Map(),
       loading: false,
       error: null
@@ -91,6 +91,35 @@ export const useAgvStore = defineStore({
       if (this.agvs.data.has(agv.correlationId)) {
         this.agvs.data.set(agv.correlationId, agv)
       }
+    },
+    fetchState: async function (correlationId: string): Promise<void> {
+      this.agvStates.loading = true
+
+      return await agvApi
+        .statusDetail(correlationId)
+        .then((response) => {
+          this.agvStates.error = null
+          if (response.data?.correlationId != null) {
+            this.agvStates.data.set(response.data.correlationId, response.data)
+          }
+        })
+        .catch((response) => {
+          if (response.status == 204) {
+            // HTTP code 204 = No Content
+            // Entry in AgvRegistry is given but AgvState column is NULL
+            this.agvStates.data.clear()
+          } else {
+            this.agvStates.error = response.error
+            console.error(response.error)
+          }
+        })
+        .finally(() => (this.agvStates.loading = false))
+    },
+    async updateAgvState(agvState: IAgvState) {
+      if (this.agvs.data.has(agvState.correlationId)) {
+        this.agvs.data.set(agvState.correlationId, agvState)
+      }
+      this.updateAgv(agvState) // IAgvState inherits from IAgv
     },
     fetchGraph: async function (correlationId: string): Promise<void> {
       this.agvGraph.loading = true
@@ -162,29 +191,6 @@ export const useAgvStore = defineStore({
           }
         })
         .finally(() => (this.agvData.loading = false))
-    },
-    fetchStatus: async function (correlationId: string): Promise<void> {
-      this.agvStatus.loading = true
-
-      return await agvApi
-        .statusDetail(correlationId)
-        .then((response) => {
-          this.agvStatus.error = null
-          if (response.data?.correlationId != null) {
-            this.agvStatus.data.set(response.data.correlationId, response.data)
-          }
-        })
-        .catch((response) => {
-          if (response.status == 204) {
-            // HTTP code 204 = No Content
-            // Entry in AgvRegistry is given but AgvStatus column is NULL
-            this.agvStatus.data.clear()
-          } else {
-            this.agvStatus.error = response.error
-            console.error(response.error)
-          }
-        })
-        .finally(() => (this.agvStatus.loading = false))
     }
   }
 })

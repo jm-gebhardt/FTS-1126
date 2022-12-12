@@ -11,6 +11,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
     [JetBrains.Annotations.PublicAPI]
     public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
     {
+        private AgvPosition? _position;
+
         /// <summary>
         /// Correlation ID
         /// </summary>
@@ -29,20 +31,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         public bool Assignable => true;
 
         /// <inheritdoc cref="IAgv" />
-        // ReSharper disable once ReturnTypeCanBeNotNullable
-        public AgvStatus? AgvStatus => new(
-            CorrelationId,
-            OrderDetails?.OrderId,
-            new[] {
-                nameof(SimulatedAgvStateMachine.BusyMovingToSource),
-                nameof(SimulatedAgvStateMachine.BusyMovingToDestination)
-            }.Any(c => c == CurrentState),
-            false,
-            80,
-            false,
-            false,
-            LastNodeId
-        );
+        public AgvStatus AgvStatus { get; private set; }
 
         /// <inheritdoc cref="IAgv" />
         public AgvGraph? AgvGraph { get; }
@@ -134,31 +123,64 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         {
             get
             {
-                double? orderProgress = OrderProgress; // Access time dependent value just once
-                if (AgvGraph != null && orderProgress.HasValue)
+                if (AgvGraph == null)
                 {
-                    int lastNodeIndex = (int)(Nodes.Length * orderProgress.Value);
-                    if (lastNodeIndex >= Nodes.Length)
-                    {
-                        // This happens when accessing position when or after order has finished
-                        lastNodeIndex = Nodes.Length - 1;
-                    }
-                    var lastNode = AgvGraph!.Nodes.First(x => x.Id == Nodes[lastNodeIndex]);
-                    if (lastNodeIndex < Nodes.Length - 1)
-                    {
-                        double partialProgress = (orderProgress.Value - lastNodeIndex / (double)Nodes.Length) * Nodes.Length;
-                        var nextNode = AgvGraph!.Nodes.First(x => x.Id == Nodes[lastNodeIndex + 1]);
-                        var vectorLast = new System.Numerics.Vector3(lastNode.X, lastNode.Y, lastNode.Z);
-                        var vectorNext = new System.Numerics.Vector3(nextNode.X, nextNode.Y, nextNode.Z);
-                        float theta = (float)(Math.Atan2(vectorNext.Y - vectorLast.Y, vectorNext.X - vectorLast.X) + Math.PI / 2);
-                        var vectorEdge = vectorNext - vectorLast;
-                        vectorEdge *= (float)partialProgress;
-                        vectorEdge = vectorLast + vectorEdge;
-                        return new AgvPosition(true, vectorEdge.X, vectorEdge.Y, vectorEdge.Z, theta, 0f);
-                    }
-                    return new AgvPosition(true, lastNode.X, lastNode.Y, lastNode.Z, 0f, 0f);
+                    _position = null;
+                    return _position;
                 }
-                return null;
+
+                double? orderProgress = OrderProgress; // Access time dependent value just once
+
+                if (!orderProgress.HasValue) // Use first node as initial position
+                {
+                    if (_position == null)
+                    {
+                        // Init position to random station node
+                        List<AgvGraph.Node> stations = AgvGraph.Nodes.Where(n =>
+                        {
+                            switch (n.Type)
+                            {
+                                case AgvGraph.NodeType.Pick: return true;
+                                case AgvGraph.NodeType.Drop: return true;
+                                case AgvGraph.NodeType.PickDrop: return true;
+                                default: return false;
+                            }
+                        }).ToList();
+
+                        var rnd = new Random();
+                        var node = stations[rnd.Next(0, stations.Count)];
+                        _position = new AgvPosition(true, node.X, node.Y, node.Z, 0f, 0f);
+                    }
+                    return _position;
+                }
+
+                int lastNodeIndex = (int)(Nodes.Length * orderProgress.Value);
+                if (lastNodeIndex >= Nodes.Length)
+                {
+                    // This happens when accessing position when or after order has finished
+                    lastNodeIndex = Nodes.Length - 1;
+                }
+
+                var lastNode = AgvGraph!.Nodes.First(x => x.Id == Nodes[lastNodeIndex]);
+                if (lastNodeIndex < Nodes.Length - 1)
+                {
+                    double partialProgress = (orderProgress.Value - lastNodeIndex / (double)Nodes.Length) * Nodes.Length;
+                    var nextNode = AgvGraph!.Nodes.First(x => x.Id == Nodes[lastNodeIndex + 1]);
+                    var vectorLast = new System.Numerics.Vector3(lastNode.X, lastNode.Y, lastNode.Z);
+                    var vectorNext = new System.Numerics.Vector3(nextNode.X, nextNode.Y, nextNode.Z);
+                    float theta = (float)(Math.Atan2(vectorNext.Y - vectorLast.Y, vectorNext.X - vectorLast.X) + Math.PI / 2);
+                    var vectorEdge = vectorNext - vectorLast;
+                    vectorEdge *= (float)partialProgress;
+                    vectorEdge = vectorLast + vectorEdge;
+
+                    _position = new AgvPosition(true, vectorEdge.X, vectorEdge.Y, vectorEdge.Z, theta, 0f);
+                }
+                else
+                {
+                    _position = new AgvPosition(true, lastNode.X, lastNode.Y, lastNode.Z, 0f, 0f);
+                }
+
+                return _position;
             }
         }
 
@@ -238,6 +260,17 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
             AgvGraph = agvGraph;
             AgvData = agvData;
             AgvMap = agvMap;
+
+            AgvStatus = new(
+                CorrelationId,
+                OrderDetails?.OrderId,
+                busy: false,
+                automatic: true,
+                batteryCharge: new Random().Next(1, 100), // Init with random charge [1..99]
+                charging: false,
+                disturbed: false,
+                LastNodeId
+            );
         }
 
         /// <summary>
@@ -255,6 +288,17 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
             Nodes = Array.Empty<string>();
             AgvMap = agv.AgvMap;
             NodeTravelTime = nodeTravelTime;
+
+            AgvStatus = new(
+                CorrelationId,
+                OrderDetails?.OrderId,
+                busy: false,
+                automatic: true,
+                batteryCharge: new Random().Next(1, 100), // Init to random charge [1..99]
+                charging: false,
+                disturbed: false,
+                LastNodeId
+            );
         }
 
         /// <summary>
@@ -264,6 +308,49 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         {
             OrderDetails = null;
             OrderStartDate = null;
+        }
+
+        /// <summary>
+        /// Updates AgvStatus
+        /// </summary>
+        public void UpdateStatus()
+        {
+            bool busy = new[] {
+                nameof(SimulatedAgvStateMachine.BusyMovingToSource),
+                nameof(SimulatedAgvStateMachine.BusyMovingToDestination)
+            }.Any(c => c == CurrentState);
+
+            int batteryCharge = AgvStatus.BatteryCharge;
+            bool charging = AgvStatus.Charging;
+
+            // Simulate charging
+            if (charging)
+            {
+                batteryCharge += 5;
+                if (batteryCharge > AgvStatus.GoodBatteryLevel)
+                {
+                    charging = false;
+                }
+            }
+            else
+            {
+                batteryCharge--;
+                if (batteryCharge < AgvStatus.BadBatteryLevel)
+                {
+                    charging = true;
+                }
+            }
+
+            AgvStatus = new(
+                AgvStatus.CorrelationId,
+                AgvStatus.OrderId,
+                busy,
+                AgvStatus.Automatic,
+                batteryCharge,
+                charging,
+                AgvStatus.Disturbed,
+                LastNodeId
+            );
         }
     }
 }

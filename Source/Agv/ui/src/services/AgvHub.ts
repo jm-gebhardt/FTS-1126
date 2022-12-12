@@ -4,8 +4,8 @@ import {
   HubConnectionState
 } from '@microsoft/signalr'
 import {
-  IAgv,
   IAgvPositionStatus,
+  IAgvState,
   IHubMethods
 } from '@/services/api/data-contracts'
 
@@ -15,14 +15,14 @@ import {
 export class AgvHub {
   client: HubConnection
   _onAgvDiscovered?: () => Promise<void>
-  _onAgvStateChanged?: (agv: IAgv) => Promise<void>
+  _onAgvStateChanged?: (agvState: IAgvState) => Promise<void>
   _onAgvPositionChanged?: (
     agvPositionStatus: IAgvPositionStatus
   ) => Promise<void>
 
   constructor(
     onAgvDiscovered?: () => Promise<void>,
-    onAgvStateChanged?: (agv: IAgv) => Promise<void>,
+    onAgvStateChanged?: (agvState: IAgvState) => Promise<void>,
     onAgvPositionChanged?: (
       agvPositionStatus: IAgvPositionStatus
     ) => Promise<void>
@@ -68,7 +68,7 @@ export class AgvHub {
       .then(() => {
         console.log('AgvHub Connected')
       })
-      .catch((e) => console.log('AgvHub Connection failed: ', e))
+      .catch((e) => console.error('AgvHub Connection failed: ', e))
   }
 
   /**
@@ -82,6 +82,6 @@ export class AgvHub {
       .then(() => {
         console.log('AgvHub Disconnected')
       })
-      .catch((e) => console.log('AgvHub Disconnect failed: ', e))
+      .catch((e) => console.error('AgvHub Disconnect failed: ', e))
   }
 }

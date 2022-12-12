@@ -11,6 +11,11 @@ export class Agv extends MapNode {
 
   private lastUpdate = performance.now()
   private correlationId: string
+  private agvId: string
+  private start: number
+  private previousTimeStamp: number
+  private runAnimation: boolean
+  private reverseAnimation: boolean
 
   constructor(
     correlationId: string,
@@ -21,7 +26,12 @@ export class Agv extends MapNode {
   ) {
     super(agvId, { x, y })
     this.correlationId = correlationId
+    this.agvId = agvId
     this.icon.rotation(rotation)
+    this.start = -1
+    this.previousTimeStamp = -1
+    this.runAnimation = false
+    this.reverseAnimation = false
     this.updateOnClickAgv(correlationId)
   }
 
@@ -34,9 +44,7 @@ export class Agv extends MapNode {
       radius: 10,
       stroke: 'black',
       strokeWidth: 1,
-      fillLinearGradientStartPoint: { x: 0, y: -6 },
-      fillLinearGradientEndPoint: { x: 0, y: -5 },
-      fillLinearGradientColorStops: [0, 'black', 1, 'red']
+      fill: 'grey'
     })
   }
 

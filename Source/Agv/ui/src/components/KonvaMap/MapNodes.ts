@@ -60,6 +60,7 @@ export class Edge {
 export abstract class MapNode {
   icon: Konva.Shape
   tag: Konva.Text
+  colorTween: Konva.Tween | undefined // Animation object for icon color
 
   protected tagOffsetY = -32 // Experimentally determined
 
@@ -124,6 +125,44 @@ export abstract class MapNode {
       x: position.x - this.tag.width() / 2,
       y: position.y + this.tagOffsetY
     })
+
+    this.icon.draw()
+    this.tag.draw()
+  }
+
+  /**
+   * Set color of icon
+   * @param primaryColor Primary color for icon
+   * @param secondaryColor Optional secondary color that is used for blinking animation
+   */
+  setColor(primaryColor: string, secondaryColor: string | undefined): void {
+    this.icon.fill(primaryColor) // Set primary color
+
+    this.colorTween?.pause() // Pause existin animation (if it was running)
+
+    if (secondaryColor) {
+      // Create animation when a secondary color is defined
+      this.colorTween = new Konva.Tween({
+        node: this.icon,
+        duration: 1,
+        easing: Konva.Easings.Linear,
+        onFinish: () => this.reverseColorAnim(), // Callbacks for reversing animation
+        onReset: () => this.playColorAnmin(), // Callbacks for restarting animation
+        fill: secondaryColor // Alternate between primary and secondary color
+      })
+
+      this.playColorAnmin()
+    }
+  }
+
+  playColorAnmin(): void {
+    // Schedule callback to avoid infinite recursion
+    window.requestAnimationFrame(() => this.colorTween?.play())
+  }
+
+  reverseColorAnim(): void {
+    // Schedule callback to avoid infinite recursion
+    window.requestAnimationFrame(() => this.colorTween?.reverse())
   }
 }
 

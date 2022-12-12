@@ -132,33 +132,17 @@ export interface IAgvPositionStatus {
 }
 
 /**
- * AGV Status
+ * AgvState model
  */
-export interface IAgvStatus {
-  /**
-   * AGV correlation ID
-   * @format uuid
-   */
-  correlationId: string
-  /** Current or previous order ID. */
+export type IAgvState = IAgv & {
+  alive: boolean
   orderId?: string | null
-  /** AGV is busy (not idle). */
-  busy: boolean
-  /** AGV is in automatic mode. */
-  automatic: boolean
-  /**
-   * Battery charge.
-   * @format int32
-   */
-  batteryCharge: number
-  /** AGV is charging. */
-  charging: boolean
-  /** AGV is disturbed. */
-  disturbed: boolean
-  /**
-   * nodeID of last reached node or, if AGV is currently on a node, current node.
-   * Empty string if no lastNodeId is available.
-   */
+  busy?: boolean | null
+  automatic?: boolean | null
+  /** @format int32 */
+  batteryCharge?: number | null
+  charging?: boolean | null
+  disturbed?: boolean | null
   lastNodeId?: string | null
 }
 

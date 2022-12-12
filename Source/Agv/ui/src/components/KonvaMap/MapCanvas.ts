@@ -4,7 +4,9 @@ import {
   IAgvPositionStatus,
   IEdge,
   INode,
-  INodeType
+  INodeType,
+  IAgvState,
+  IAgvPosition
 } from '@/services/api/data-contracts'
 import {
   MapNode,
@@ -210,7 +212,7 @@ export class MapCanvas {
   updateAgvPosition(agv: IAgvPositionStatus): void {
     const rotation = (agv.agvPosition.theta * 180) / Math.PI // Convert radians to degree: [-PI, PI] -> [-180°, 180°]
 
-    let agvNode = this._agvs.get(agv.agvId)
+    let agvNode = this._agvs.get(agv.correlationId)
 
     if (agvNode) {
       agvNode.updateSmooth(
@@ -218,22 +220,90 @@ export class MapCanvas {
         rotation
       )
     } else {
-      agvNode = new Agv(
-        agv.correlationId,
-        agv.agvId,
-        agv.agvPosition.x,
-        agv.agvPosition.y,
-        rotation
-      )
-
-      this._agvs.set(agv.agvId, agvNode)
-      this.agvLayer.add(agvNode.icon)
-      this.agvLayer.add(agvNode.tag)
+      agvNode = this.createAgv(agv.correlationId, agv.agvId, agv.agvPosition)
     }
 
     const visible = this._visibleAgvs.includes(agv.correlationId)
     agvNode.icon.visible(visible)
     agvNode.tag.visible(visible)
+  }
+
+  updateAgvState(agvState: IAgvState): void {
+    let agvNode = this._agvs.get(agvState.correlationId)
+    if (!agvNode) {
+      agvNode = this.createAgv(agvState.correlationId, agvState.agvId)
+    }
+
+    let primary = '#FFFFFF' // white
+    let secondary = undefined
+
+    // Hardware states (priority over software state)
+    if (agvState.alive === false) {
+      primary = '#808080' // grey
+      secondary = undefined
+    } else if (agvState.disturbed === true) {
+      primary = 'FF8000' // darker orange
+      secondary = undefined
+    } else if (agvState.automatic === false) {
+      primary = '#0000FF' // blue
+      secondary = undefined
+    } else if (agvState.charging === true) {
+      primary = '#FFFF00' /// yellow
+      secondary = undefined
+    }
+    // Software states
+    else if (agvState.currentState === 'Discovered') {
+      primary = '#808080' // grey
+      secondary = undefined
+    } else if (agvState.currentState === 'Idle') {
+      primary = '#008000' // green
+      secondary = undefined
+    } else if (agvState.currentState === 'Reserved') {
+      primary = '#008000' // green
+      secondary = '#00FF00' // lime
+    } else if (agvState.currentState === 'Busy') {
+      primary = '#008000' // green
+      secondary = '#00FF00' // lime
+    } else if (agvState.currentState === 'PendingLock') {
+      primary = '#FF0000' // red
+      secondary = '#FF8000' // darker orange
+    } else if (agvState.currentState === 'Locked') {
+      primary = '#FF0000' // red
+      secondary = undefined
+    }
+
+    agvNode.setColor(primary, secondary)
+  }
+
+  /**
+   * Creats a new AGV ui element and adds it to the canvas layer
+   * @param correlationId Unique identifier of AGV
+   * @param agvId Name of AGV that is shown in the UI
+   * @param agvPosition Optional. If not set AGV position/rotaion will be initialised to 0
+   * @returns created agv
+   */
+  createAgv(
+    correlationId: string,
+    agvId: string,
+    agvPosition?: IAgvPosition
+  ): Agv {
+    let x = 0
+    let y = 0
+    let rotation = 0
+
+    if (agvPosition) {
+      x = agvPosition.x
+      y = agvPosition.y
+      rotation = (agvPosition.theta * 180) / Math.PI // Convert radians to degree: [-PI, PI] -> [-180°, 180°]
+    }
+
+    const agv = new Agv(correlationId, agvId, x, y, rotation)
+
+    this._agvs.set(correlationId, agv)
+    this.agvLayer.add(agv.icon)
+    this.agvLayer.add(agv.tag)
+
+    return agv
   }
 
   /**

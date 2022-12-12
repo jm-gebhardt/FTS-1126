@@ -42,6 +42,7 @@ import { useAgvStore } from '@/services/AgvStore'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import {
   IAgv,
+  IAgvState,
   IGraph,
   IMap,
   IAgvPositionStatus
@@ -66,10 +67,11 @@ const agvPosApi = new AgvPosApi({
   baseUrl: import.meta.env.VITE_API_URL
 })
 
-const agvHub = new AgvHub(undefined, undefined, onAgvPositionChanged)
+const agvHub = new AgvHub(undefined, onAgvStateChanged, onAgvPositionChanged)
 
-const { agvs, agvGraph, maps } = storeToRefs(useAgvStore())
-const { fetchAgvs, fetchGraph, fetchMaps, MapUrl } = useAgvStore()
+const { agvs, agvStates, agvGraph, maps } = storeToRefs(useAgvStore())
+const { fetchAgvs, fetchState, updateAgvState, fetchGraph, fetchMaps, MapUrl } =
+  useAgvStore()
 
 /*-------------------------------------*/
 
@@ -89,12 +91,22 @@ onMounted(() => {
     )
   })
 
+  updateAgvs()
+
   agvHub.connect()
 })
 
 onBeforeUnmount(async () => {
   agvHub.disconnect()
 })
+
+/**
+ * Handler for hub event 'onAgvStateChanged'
+ */
+async function onAgvStateChanged(agvState: IAgvState): Promise<void> {
+  await updateAgvState(agvState) // Update store
+  mapComponent.value.updateAgvState(agvState)
+}
 
 /**
  * Handler for hub event 'onAgvPositionChanged'
@@ -110,6 +122,17 @@ async function onAgvPositionChanged(
  */
 function updateAgvs(): void {
   fetchAgvs().then(() => {
+    // Get status for AGVs
+    agvs.value.data.forEach((agv) => {
+      fetchState(agv.correlationId).then(() => {
+        const agvState = agvStates.value.data.get(agv.correlationId)
+        if (agvState) {
+          mapComponent.value.updateAgvState(agvState)
+        }
+      })
+    })
+
+    // Only show selected AGVs
     const relevantAgvs: IAgv[] = []
     for (const agvCorrelationId of selectedMapRelatedAgvs.value) {
       const agv: IAgv | undefined = agvs.value.data.get(agvCorrelationId)
@@ -130,13 +153,23 @@ function updateAgvs(): void {
       updateGraphElements()
     })
   })
+}
 
+function updateAgvPositions(): void {
   agvPosApi
     .agvsPositionsList()
     .then((response) => {
       response.data.forEach((agvPositionStatus) => {
-        console.log('Set AGV pos: ' + agvPositionStatus.agvId)
         onAgvPositionChanged(agvPositionStatus)
+
+        fetchState(agvPositionStatus.correlationId).then(() => {
+          const agvState = agvStates.value.data.get(
+            agvPositionStatus.correlationId
+          )
+          if (agvState) {
+            mapComponent.value.updateAgvState(agvState)
+          }
+        })
       })
     })
     .catch((response) => {
@@ -161,13 +194,20 @@ async function selectedMapChanged(): Promise<void> {
   if (selectedMap.value == null) {
     return
   }
+
   const mapObject: IMap | undefined = maps.value.data.get(selectedMap.value)
   if (mapObject == undefined) {
     return
   }
 
+  await setMap(selectedMap.value, mapObject)
+
+  updateAgvs()
+}
+
+async function setMap(mapUrl: string, mapObject: IMap): Promise<void> {
   const image = new Image()
-  image.src = MapUrl(selectedMap.value)
+  image.src = MapUrl(mapUrl)
   image.onload = (): void => {
     // set background when image is loaded
     mapComponent.value.setBackground(
@@ -178,7 +218,8 @@ async function selectedMapChanged(): Promise<void> {
     )
   }
   selectedMapRelatedAgvs.value = mapObject.relatedAgvs
-  updateAgvs()
+
+  updateAgvPositions()
 }
 
 /**

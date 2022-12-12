@@ -95,7 +95,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             Assert.AreEqual(correlationId, agvStatus.CorrelationId);
             Assert.IsNull(agvStatus.OrderId);
             Assert.IsFalse(agvStatus.Busy);
-            Assert.IsFalse(agvStatus.Automatic);
+            Assert.IsTrue(agvStatus.Automatic);
             Assert.IsFalse(agvStatus.Charging);
             Assert.IsFalse(agvStatus.Disturbed);
             Assert.IsNull(agvStatus.LastNodeId);
@@ -333,7 +333,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             var agvSaga = new SimulatedAgvSaga(agvCorrelationId, agvId, nodeTravelTime, currentState: nameof(SimulatedAgvStateMachine.Idle), agvGraph: graph, agvData: data);
             fixture.Add(agvSaga);
 
-            Assert.IsFalse(agvSaga.AgvStatus!.Busy);
+            Assert.IsFalse(agvSaga.AgvStatus.Busy);
             Assert.IsNull(agvSaga.LastNodeId);
             Assert.IsNull(agvSaga.NextNodeId);
 
@@ -346,7 +346,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             var startedMessage = fixture.TestHarness.Published.Select<TransportOrderStarted>().First().Context.Message;
             Assert.AreEqual(orderCorrelationId, startedMessage.CorrelationId);
 
-            Assert.IsTrue(agvSaga.AgvStatus!.Busy);
+            Assert.IsTrue(agvSaga.AgvStatus.Busy);
             Assert.IsNotNull(agvSaga.TimeToFinish);
             Assert.IsNotNull(agvSaga.OrderStartDate);
             Assert.IsNotNull(agvSaga.OrderFinishDate);
@@ -381,7 +381,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             Assert.IsTrue(await fixture.TestHarness.Sent.Any<SimulatedAgvStateMachine.ScheduleFinishOrder>());
             Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<SimulatedAgvStateMachine.ScheduleFinishOrder>());
 
-            Assert.IsFalse(agvSaga.AgvStatus!.Busy);
+            Assert.IsFalse(agvSaga.AgvStatus.Busy);
             Assert.IsNull(agvSaga.TimeToFinish);
             Assert.IsNull(agvSaga.OrderStartDate);
             Assert.IsNull(agvSaga.OrderFinishDate);

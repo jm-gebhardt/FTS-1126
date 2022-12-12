@@ -9,7 +9,7 @@
       <ui-item>
         <template #before="{ iconClass }">
           <ui-icon :class="iconClass">
-            {{ AgvStatusIcon(item.currentState) }}
+            {{ AgvStateIcon(item.currentState) }}
           </ui-icon>
         </template>
         <ui-item-text-content>
@@ -51,7 +51,7 @@ const selectedItemComputed = computed({
   }
 })
 
-function AgvStatusIcon(status: string | null | undefined): string {
+function AgvStateIcon(status: string | null | undefined): string {
   switch (status) {
     case 'Discovered':
       return 'fiber_new'

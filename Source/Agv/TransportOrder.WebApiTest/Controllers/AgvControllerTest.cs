@@ -68,7 +68,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
 
                 const string mapName = "Map#1";
                 var agvGraph = new AgvGraph(correlationId, _nodes, _edges, mapName.ToGuid(), mapName);
-                var agvStatus = new AgvStatus(correlationId, order, true, true, 10, true, true);
+                var agvStatus = agvId == "AGV003" ? null : new AgvStatus(correlationId, order, true, true, 10, true, true);
                 var agvData = new AgvData(correlationId, "Karis", "BF1", ip, 1.8, 120.0, 0.6, 0.8, 0.7, 1, 2.5, 1000, Array.Empty<AgvData.Sensor>());
 
                 agvs.Add(new AgvSaga(correlationId, agvId, state, agvStatus, agvGraph, agvData));
@@ -197,7 +197,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var result = controller.GetAgvStatus(correlationId).Result as OkObjectResult;
             Assert.IsNotNull(result);
 
-            var agvStatus = result.Value as AgvStatus;
+            var agvStatus = result.Value as AgvStateDto;
             Assert.IsNotNull(agvStatus);
 
             Assert.AreEqual(correlationId, agvStatus.CorrelationId);
@@ -211,6 +211,16 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var correlationId = Guid.Empty;
 
             var result = controller.GetAgvStatus(correlationId).Result as NotFoundResult;
+            Assert.IsNotNull(result);
+        }
+
+        [TestMethod]
+        public void GetAgvStatus_NoContent()
+        {
+            var controller = GetController();
+            var correlationId = _agvIds[2].ToGuid(); // AGV without AgvStatus
+
+            var result = controller.GetAgvStatus(correlationId).Result as NoContentResult;
             Assert.IsNotNull(result);
         }
 
