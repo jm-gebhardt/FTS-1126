@@ -35,9 +35,11 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Consumers
             Assert.AreEqual(0, context.FromAgv.Count());
         }
 
+
         /// <summary>
         /// Test for processing HostOrderHandlingSucceeded message
         /// </summary>
+        /// <param name="recordTyp"></param>
         [TestMethod]
         [DataRow(RecordType.TransportOrder)]
         [DataRow(RecordType.TransportOrderUpdate)]

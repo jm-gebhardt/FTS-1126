@@ -228,7 +228,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvStatusReceived>());
             Assert.IsNull(await fixture.SagaHarness.NotExists(Guid.Empty, TimeSpan.FromMilliseconds(10)));
         }
-
+        
         /// <summary>
         /// When AgvReserve Requested Agv Is Idle AcceptAgvReservation
         /// </summary>

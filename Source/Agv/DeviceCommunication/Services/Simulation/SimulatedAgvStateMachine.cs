@@ -1,8 +1,9 @@
+using Gebhardt.StoreWare.Agv.Common.Messages;
+using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands;
+using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
-using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Commands;
-using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Events;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.States;
 using MassTransit;
@@ -18,7 +19,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
     {
         #region Records
         /// <summary>
-        /// Internal message to create and AGV instance
+        /// Internal message to create an AGV instance
         /// </summary>
         /// <param name="CorrelationId"></param>
         /// <param name="Agv"></param>
@@ -69,9 +70,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
 
         #region Events
         /// <summary>
-        /// ExecuteTransportOrder was received
+        /// 
         /// </summary>
-        public Event<ExecuteTransportOrder> ExecuteTransportOrderEvent { get; private set; } = default!;
+        public Event<StartActionCommand> StartActionEvent { get; private set; } = default!;
 
         /// <summary>
         /// CreateAgv was received
@@ -144,8 +145,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
             InstanceState(x => x.CurrentState);
 
             Initially(SetInitialCreateAgvHandler());
-
-            During(Idle, SetExecuteTransportOrderHandler());
+            
+            During(Idle, SetStartActionHandler());
             During(BusyMovingToSource, SetPickOrderHandler());
             During(BusyMovingToDestination, SetFinishOrderHandler());
 
@@ -192,7 +193,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
         }
 
         /// <summary>
-        /// Set saga factory on HandleHostOrderEvent
+        /// Set saga factory on <see cref="CreateAgv"/>
         /// </summary>
         private void SetSagaFactory()
         {
@@ -212,12 +213,23 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
                 .ThenAsync(PublishPosition)
                 .Schedule(StatusUpdateSchedule, c => new ScheduleStatusUpdate(c.Saga.CorrelationId));
 
-        private EventActivityBinder<SimulatedAgvSaga, ExecuteTransportOrder> SetExecuteTransportOrderHandler() =>
-            When(ExecuteTransportOrderEvent)
-                .Then(c => _logger.LogDebug("{MessageType} {AgvId} / {CorrelationId} received", nameof(ExecuteTransportOrder), c.Message.AgvId, c.Saga.CorrelationId))
+        private EventActivityBinder<SimulatedAgvSaga, StartActionCommand> SetStartActionHandler() =>
+            When(StartActionEvent)
+                .Then(c => _logger.LogDebug("{MessageType} {AgvId} / {CorrelationId} received", nameof(StartActionCommand), c.Message.AgvId, c.Saga.CorrelationId))
+                .Then(Validate)
+                .Then(c =>
+                {
+                    c.Saga.CurrentAction = c.Message.Action;
+                    c.Saga.OrderDetails = c.Message.Action.OrderDetails;
+                    c.Saga.Nodes = c.Message.Action.Nodes;
+                    c.Saga.OrderStartDate = DateTime.UtcNow;
+
+                    _logger.LogInformation("AGV {AgvId} / {CorrelationId} started order {OrderId} / {OrderCorrelationId}. Order will be picked up at {OrderPickDate:HH:mm:ss.fff} and dropped at {OrderFinishDate:HH:mm:ss.fff}",
+                        c.Saga.AgvId, c.Saga.CorrelationId,
+                        c.Message.Action.OrderDetails.OrderId, c.Message.Action.OrderDetails.CorrelationId, c.Saga.OrderPickDate, c.Saga.OrderFinishDate);
+                })
                 .TransitionTo(BusyMovingToSource)
-                .Then(ExecuteOrder)
-                .Publish(c => new TransportOrderStarted(c.Message.OrderDetails.CorrelationId, c.Message.OrderDetails.OrderId))
+                .Publish(c => new ActionStatusChangedEvent(c.Saga.CurrentAction!.CorrelationId, ActionStatusChangedType.Started))
                 .ThenAsync(PublishStatus)
                 .Schedule(PickOrderSchedule,
                     c => new SchedulePickOrder(c.Saga.CorrelationId),
@@ -233,9 +245,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
             When(PickOrderSchedule.Received)
                 .Then(c => _logger.LogDebug("{MessageType} {CorrelationId} received", nameof(SchedulePickOrder), c.Saga.CorrelationId))
                 .TransitionTo(BusyMovingToDestination)
-                .Publish(c => new TransportOrderPickCompleted(
-                    c.Saga.OrderDetails!.CorrelationId,
-                    c.Saga.OrderDetails!.OrderId))
+                .Publish(c => new ActionStatusChangedEvent(c.Saga.CurrentAction!.CorrelationId, ActionStatusChangedType.Picked))
                 .ThenAsync(PublishStatus);
 
         private EventActivityBinder<SimulatedAgvSaga, ScheduleFinishOrder> SetFinishOrderHandler() =>
@@ -333,15 +343,27 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
             }
         }
 
-        private void ExecuteOrder(BehaviorContext<SimulatedAgvSaga, ExecuteTransportOrder> context)
+        private static void Validate(BehaviorContext<SimulatedAgvSaga, StartActionCommand> context)
         {
-            context.Saga.OrderDetails = context.Message.OrderDetails;
-            context.Saga.Nodes = context.Message.Nodes;
-            context.Saga.OrderStartDate = DateTime.UtcNow;
+            Validate(context.Message.Action.Nodes);
+            Validate(context.Message.Action.OrderDetails);
+            Validate(context.Message.Action.Nodes);
+        }
 
-            _logger.LogInformation("AGV {AgvId} / {CorrelationId} started order {OrderId} / {OrderCorrelationId}. Order will be picked up at {OrderPickDate:HH:mm:ss.fff} and dropped at {OrderFinishDate:HH:mm:ss.fff}",
-                context.Saga.AgvId, context.Saga.CorrelationId,
-                context.Message.OrderDetails.OrderId, context.Message.OrderDetails.CorrelationId, context.Saga.OrderPickDate, context.Saga.OrderFinishDate);
+        private static void Validate(string[]? nodes)
+        {
+            if (!(nodes?.Any() ?? false))
+            {
+                throw new ArgumentException("No nodes");
+            }
+        }
+
+        private static void Validate(OrderDetails? orderDetails)
+        {
+            if (orderDetails == null)
+            {
+                throw new ArgumentException("OrderDetails not set");
+            }
         }
 
         private async Task FinishOrder(BehaviorContext<SimulatedAgvSaga, ScheduleFinishOrder> context)
@@ -356,10 +378,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
             {
                 _logger.LogInformation("AGV {AgvId} / {CorrelationId} finished order {OrderId} / {OrderCorrelationId}",
                     context.Saga.AgvId, context.Saga.CorrelationId, order.OrderId, order.CorrelationId);
-                await context.Publish(new TransportOrderCompleted(
-                    order.CorrelationId,
-                    order.OrderId
-                ), context.CancellationToken);
+
+                await context.Publish(new ActionStatusChangedEvent(context.Saga.CurrentAction!.CorrelationId, ActionStatusChangedType.Completed));
+
                 await PublishPosition(context);
             }
 

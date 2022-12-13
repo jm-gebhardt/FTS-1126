@@ -71,12 +71,23 @@ namespace Gebhardt.StoreWare.Agv.Common.Testing
                 service.Invoke(collection);
             }
 
+            ConfigureServices(collection);
+
             Provider = collection.BuildServiceProvider(true);
             TestHarness = Provider.GetTestHarness();
             TestHarness.Start();
             ConsumerHarness = TestHarness.GetConsumerHarness<TConsumer>();
 
             return this;
+        }
+
+        /// <summary>
+        /// Is executed to configure the service collection
+        /// </summary>
+        /// <param name="collection"></param>
+        protected virtual void ConfigureServices(IServiceCollection collection)
+        {
+
         }
     }
 

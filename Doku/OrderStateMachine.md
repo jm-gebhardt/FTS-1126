@@ -1,27 +1,19 @@
 ﻿::: mermaid
 stateDiagram-v2
     [*] --> OrderReceived: HandleHostOrder
-    OrderReceived --> AgvRequested: RequestOrderAgvAssign
-    OrderReceived --> Cancelled: CancelHostOrder
-
-    AgvRequested --> TransportOrderSend: AgvAssignmentSucceeded
-    AgvRequested --> AgvAssignmentErrorCode: AgvAssignmentFailed
-
-    state AgvAssignmentErrorCode <<choice>>
-    AgvAssignmentErrorCode --> OrderReceived: (NoIdleAgv)
-    AgvAssignmentErrorCode --> OrderFailed: (AgvRegistryEmpty)
-    AgvAssignmentErrorCode --> OrderFailed: (NoRouteFound)
-
-    TransportOrderSend --> OrderFailed: TransportOrderFailed
-    TransportOrderSend --> TransportOrderStarted: TransportOrderStarted
-
-    TransportOrderStarted --> TransportOrderPicked: TransportOrderPickCompleted
-
-    TransportOrderPicked --> OrderFailed: TransportOrderFailed
-    TransportOrderPicked --> Final: TransportOrderCompleted
-
+    OrderReceived --> OrderQueued: OrderQueuedEvent
+    OrderReceived --> OrderReceived: TransportOrderReset
     OrderFailed --> OrderReceived: TransportOrderReset
     Final --> OrderReceived: TransportOrderReset
+
+    OrderQueued --> TransportOrderSend: AgvAssignmentSucceeded
+    TransportOrderSend --> TransportOrderStarted: TransportOrderStarted
+    TransportOrderSend --> OrderFailed: TransportOrderFailed
+    TransportOrderPicked --> OrderFailed: TransportOrderFailed
+    TransportOrderStarted --> TransportOrderPicked: TransportOrderPickCompleted
+    TransportOrderPicked --> Final: TransportOrderCompleted
+
+    OrderReceived --> Cancelled: CancelHostOrder
 
     Final --> [*]
 :::

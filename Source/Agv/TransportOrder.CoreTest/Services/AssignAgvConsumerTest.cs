@@ -2,7 +2,6 @@ using Gebhardt.StoreWare.Agv.Common.Messages;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
-using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Commands;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.States;
@@ -251,54 +250,5 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             }
         }
 
-        /// <summary>
-        /// Agv became idle but there is no order to assign
-        /// </summary>
-        /// <returns></returns>
-        [TestMethod]
-        public async Task AgvBecameIdle_NoOrderToAssign()
-        {
-            var fixture = new AssignAgvConsumerMassTransitFixture()
-                .SetOrderRegistry(AssignAgvConsumerMassTransitFixture.GetOrderRegistry(false, true))
-                .Build();
-
-            await fixture.TestHarness!.Bus.Publish(new AgvBecameIdle(AssignAgvConsumerMassTransitFixture.AgvIds[0].ToGuid()));
-            Assert.IsTrue(await fixture.TestHarness.Consumed.Any<AgvBecameIdle>());
-            Assert.IsFalse(await fixture.TestHarness.Published.Any<RequestOrderAgvAssign>());
-        }
-
-        /// <summary>
-        /// Agv became idle, check if oldest order is assigned
-        /// </summary>
-        /// <returns></returns>
-        [TestMethod]
-        public async Task AgvBecameIdle_Assign_Oldest_UnassignedOrder()
-        {
-            var fixture = new AssignAgvConsumerMassTransitFixture()
-                .SetOrderRegistry(AssignAgvConsumerMassTransitFixture.GetOrderRegistry(true))
-                .Build();
-
-            await fixture.TestHarness!.Bus.Publish(new AgvBecameIdle(AssignAgvConsumerMassTransitFixture.AgvIds[0].ToGuid()));
-            Assert.IsTrue(await fixture.TestHarness.Consumed.Any<AgvBecameIdle>());
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<RequestOrderAgvAssign>());
-            var message = fixture.TestHarness.Published.Select<RequestOrderAgvAssign>().First().Context.Message;
-            Assert.AreEqual(AssignAgvConsumerMassTransitFixture.Orders[0].ToGuid(), message.CorrelationId);
-        }
-
-        /// <summary>
-        /// Agv became idle, oldest order has no route so take next
-        /// </summary>
-        /// <returns></returns>
-        [TestMethod]
-        public async Task AgvBecameIdle_Assign_Oldest_UnassignedOrder_ThatHasRoute()
-        {
-            var fixture = new AssignAgvConsumerMassTransitFixture();
-
-            await fixture.TestHarness!.Bus.Publish(new AgvBecameIdle(AssignAgvConsumerMassTransitFixture.AgvIds[0].ToGuid()));
-            Assert.IsTrue(await fixture.TestHarness.Consumed.Any<AgvBecameIdle>());
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<RequestOrderAgvAssign>());
-            var message = fixture.TestHarness.Published.Select<RequestOrderAgvAssign>().First().Context.Message;
-            Assert.AreEqual(AssignAgvConsumerMassTransitFixture.Orders[0].ToGuid(), message.CorrelationId);
-        }
     }
 }

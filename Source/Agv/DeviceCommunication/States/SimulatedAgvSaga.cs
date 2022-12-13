@@ -2,6 +2,7 @@ using Gebhardt.StoreWare.Agv.Common.Messages;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
 using MassTransit;
+using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
 {
@@ -23,6 +24,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
 
         /// <inheritdoc cref="IAgv" />
         public string CurrentState { get; set; }
+        
+        /// <summary>
+        /// Current action
+        /// </summary>
+        public AgvAction? CurrentAction { get; set; }
 
         /// <inheritdoc cref="IAgv" />
         public bool Alive => true;
@@ -87,7 +93,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
             get
             {
                 double? orderProgress = OrderProgress; // Access time dependent value just once
-                if (orderProgress.HasValue)
+                if (orderProgress.HasValue && Nodes.Any())
                 {
                     int lastNodeIndex = (int)(Nodes.Length * orderProgress.Value);
                     if (lastNodeIndex < Nodes.Length)

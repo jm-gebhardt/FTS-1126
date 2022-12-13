@@ -1,4 +1,6 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Extensions;
+using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
+using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Commands;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Enums;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
@@ -12,39 +14,48 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
     /// Execute processing of a transport order messages.
     /// </summary>
     [UsedImplicitly]
-    public class ExecuteTransportOrderConsumer :
-        IConsumer<ExecuteTransportOrder>,
+    public class StartActionCommandConsumer :
+        IConsumer<StartActionCommand>,
         IConsumer<SendAgvChargeOrder>
     {
-        private readonly ILogger<ExecuteTransportOrderConsumer> _logger;
+        private readonly ILogger<StartActionCommandConsumer> _logger;
 
         /// <summary>
         /// Create dummy consumer with message handler delegate
         /// </summary>
-        public ExecuteTransportOrderConsumer(ILogger<ExecuteTransportOrderConsumer> logger)
+        public StartActionCommandConsumer(ILogger<StartActionCommandConsumer> logger)
         {
             _logger = logger;
         }
 
         /// <summary>
-        /// Handle message <see cref="ExecuteTransportOrder"/>. and send an order to the AGV of Type Transport, RecordType Order
+        /// Handle message <see cref="StartActionCommand"/>. and send an order to the AGV of Type Transport, RecordType Order
         /// </summary>
         /// <param name="context">Context of the consumer wrapping details surrounding the inbound message.</param>
-        public async Task Consume(ConsumeContext<ExecuteTransportOrder> context)
+        public async Task Consume(ConsumeContext<StartActionCommand> context)
         {
-            await context.PublishMqtt(new MqttOrder(context.Message.OrderDetails.OrderId)
+            var action = context.Message.Action;
+            var orderDetails = action.OrderDetails;
+            var actionType = action.ActionType;
+            if (actionType != ActionType.Transport)
+            {
+                throw new NotImplementedException($"Can't handle {actionType} yet");
+            }
+
+            // we are using the action correlation Id as "order Id"
+            await context.PublishMqtt(new MqttOrder(action.CorrelationId.ToString())
             {
                 SerialNumber = context.Message.AgvId,
                 OrderType = OrderType.Transport,
                 RecordType = OrderRecordType.Order,
-                Stations = new Stations()
+                Stations = new Stations
                 {
-                    FromStationIdentifier = context.Message.OrderDetails.Source,
-                    ToStationIdentifier = context.Message.OrderDetails.Destination
+                    FromStationIdentifier = orderDetails.Source,
+                    ToStationIdentifier = orderDetails.Destination
                 }
             }, context.CancellationToken);
 
-            _logger.LogInformation("Sent transport order: {OrderId} for AGV:{AgvId} from {Source} to {Destination}", context.Message.OrderDetails.OrderId, context.Message.AgvId, context.Message.OrderDetails.Source, context.Message.OrderDetails.Destination);
+            _logger.LogInformation("Sent transport order: {OrderId} for AGV:{AgvId} from {Source} to {Destination}", orderDetails.OrderId, context.Message.AgvId, orderDetails.Source, orderDetails.Destination);
         }
 
         /// <summary>

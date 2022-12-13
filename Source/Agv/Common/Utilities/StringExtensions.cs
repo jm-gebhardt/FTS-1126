@@ -1,6 +1,4 @@
-﻿using System.Text;
-
-namespace Gebhardt.StoreWare.Agv.Common.Utilities
+﻿namespace Gebhardt.StoreWare.Agv.Common.Utilities
 {
     /// <summary>
     /// Extension methods to strings.
@@ -16,6 +14,11 @@ namespace Gebhardt.StoreWare.Agv.Common.Utilities
         [JetBrains.Annotations.PublicAPI]
         public static Guid ToGuid(this string str)
         {
+            if (Guid.TryParse(str, out var guid))
+            {
+                return guid;
+            }
+
             byte[] stringBytes = Encoding.UTF8.GetBytes(str);
             byte[] hashedBytes;
             // Usually SHA-1 is faster than MD5 and other SHA-algorithms.

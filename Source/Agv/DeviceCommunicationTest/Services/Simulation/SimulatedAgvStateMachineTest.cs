@@ -1,9 +1,10 @@
 using Gebhardt.StoreWare.Agv.Common.Messages;
+using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
+using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands;
+using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
-using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Commands;
-using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Events;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
@@ -36,9 +37,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             const string agvId = "Agv#1";
             var correlationId = agvId.ToGuid();
             var graph = new GridGraphGenerator(new[] { "S1" }, new[] { "D1" }).Generate(correlationId);
-            var data = new AgvData(correlationId, "model", "type",null, 10, 1, 1, 1, 1 ,1, 1, 1, Array.Empty<AgvData.Sensor>());
+            var data = new AgvData(correlationId, "model", "type", null, 10, 1, 1, 1, 1, 1, 1, 1, Array.Empty<AgvData.Sensor>());
             var map = new MapGenerator(graph);
-            var agv = new SimulatedAgv(correlationId, agvId , "", graph, data, map.Generate());
+            var agv = new SimulatedAgv(correlationId, agvId, "", graph, data, map.Generate());
 
             // Publish CreateAgv ...
             await fixture.TestHarness.Bus.Publish(new SimulatedAgvStateMachine.CreateAgv(correlationId, agv, options.NodeTravelTime));
@@ -77,11 +78,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
                 {
                     new AgvGraph.Node("S1") { Enabled = true, Type = AgvGraph.NodeType.Pick, X =  0f, Y = 0f, Z = 0f }
                 },
-                Array.Empty<AgvGraph.Edge>(), 
+                Array.Empty<AgvGraph.Edge>(),
                 mapName.ToGuid(),
                 mapName
             );
-            var agv = new SimulatedAgv(correlationId, agvId , "", graph, null, null);
+            var agv = new SimulatedAgv(correlationId, agvId, "", graph, null, null);
 
             // Publish CreateAgv ...
             await fixture.TestHarness.Bus.Publish(new SimulatedAgvStateMachine.CreateAgv(correlationId, agv, options.NodeTravelTime));
@@ -309,7 +310,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             fixture.Machine.SignalPositionIntervalMs = 50;
 
             const string agvId = "Agv#1";
-            var agvCorrelationId = agvId.ToGuid();
+            var agv = agvId.ToGuid();
             const string orderId = "Order#1";
             var orderCorrelationId = orderId.ToGuid();
             var order = new OrderDetails(orderCorrelationId, orderId, "S1", "D1", "123", HostOrderCreator.Simulation);
@@ -318,19 +319,19 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
              *   WP (5.0/5.0)
              *    |
              *   D1 (5.0/7,5)   */
-            var graph = new GridGraphGenerator(new[] {order.Source}, new[] {order.Destination}, gridRows: 1).Generate(agvCorrelationId);
+            var graph = new GridGraphGenerator(new[] { order.Source }, new[] { order.Destination }, gridRows: 1).Generate(agv);
             //   S1 -> WP -> D1
             string[] path = {
                 order.Source,
                 graph.Nodes.Single(n => n.Type == AgvGraph.NodeType.WayPoint).Id,
                 order.Destination
             };
-            var data = new AgvData(agvCorrelationId, "model", "type", null, 10, 1, 1, 1, 1, 1, 1, 1, Array.Empty<AgvData.Sensor>());
+            var data = new AgvData(agv, "model", "type", null, 10, 1, 1, 1, 1, 1, 1, 1, Array.Empty<AgvData.Sensor>());
             // Travel duration per edge will be set about twice of the position message interval.
             int nodeTravelTime = (int)(2f * fixture.Machine.SignalPositionIntervalMs);
 
             // Create saga in idle state
-            var agvSaga = new SimulatedAgvSaga(agvCorrelationId, agvId, nodeTravelTime, currentState: nameof(SimulatedAgvStateMachine.Idle), agvGraph: graph, agvData: data);
+            var agvSaga = new SimulatedAgvSaga(agv, agvId, nodeTravelTime, currentState: nameof(SimulatedAgvStateMachine.Idle), agvGraph: graph, agvData: data);
             fixture.Add(agvSaga);
 
             Assert.IsFalse(agvSaga.AgvStatus.Busy);
@@ -338,13 +339,24 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             Assert.IsNull(agvSaga.NextNodeId);
 
             // Start Order: Publish ExecuteTransportOrder ...
-            await fixture.TestHarness.Bus.Publish(new ExecuteTransportOrder(agvCorrelationId, order, agvId, path));
+            await fixture.TestHarness.Bus.Publish(new StartActionCommand(agv,
+                agvId,
+                new AgvAction(order.CorrelationId,
+                    ActionType.Transport,
+                    order)
+                {
+                    Nodes = path
+                }
+            ));
+
             // ... wait for being consumed ...
-            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<ExecuteTransportOrder>());
-            // ... wait for TransportOrderStarted is being sent (by state machine) ...
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<TransportOrderStarted>());
-            var startedMessage = fixture.TestHarness.Published.Select<TransportOrderStarted>().First().Context.Message;
-            Assert.AreEqual(orderCorrelationId, startedMessage.CorrelationId);
+            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<StartActionCommand>());
+            // ... wait for action started is being sent (by state machine) ...
+            Assert.IsTrue(await fixture.TestHarness.Published.Any<ActionStatusChangedEvent>());
+            var actionStatus = fixture.TestHarness.Published.Select<ActionStatusChangedEvent>()
+                .First(c => c.Context.Message.ChangedType == ActionStatusChangedType.Started)
+                .Context.Message;
+            Assert.AreEqual(orderCorrelationId, actionStatus.CorrelationId);
 
             Assert.IsTrue(agvSaga.AgvStatus.Busy);
             Assert.IsNotNull(agvSaga.TimeToFinish);
@@ -366,9 +378,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             Assert.IsTrue(await fixture.TestHarness.Sent.Any<SimulatedAgvStateMachine.ScheduleSignalPosition>());
             Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<SimulatedAgvStateMachine.ScheduleSignalPosition>());
 
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<TransportOrderPickCompleted>());
-            var pickedMessage = fixture.TestHarness.Published.Select<TransportOrderPickCompleted>().First().Context.Message;
-            Assert.AreEqual(order.CorrelationId, pickedMessage.CorrelationId);
+            Assert.IsTrue(await fixture.TestHarness.Published.Any<ActionStatusChangedEvent>());
+            actionStatus = fixture.TestHarness.Published.Select<ActionStatusChangedEvent>()
+                .First(c => c.Context.Message.ChangedType == ActionStatusChangedType.Picked)
+                .Context.Message;
+            Assert.AreEqual(ActionStatusChangedType.Picked, actionStatus.ChangedType);
+            Assert.AreEqual(order.CorrelationId, actionStatus.CorrelationId);
 
             // wait until order is completed
             delay = (int)(agvSaga.TimeToFinish!.Value.TotalMilliseconds + 0.5);
@@ -388,9 +403,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             Assert.AreEqual(order.Destination, agvSaga.LastNodeId);
             Assert.AreEqual(order.Destination, agvSaga.NextNodeId);
 
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<TransportOrderCompleted>());
-            var completedMessage = fixture.TestHarness.Published.Select<TransportOrderCompleted>().First().Context.Message;
-            Assert.AreEqual(order.CorrelationId, completedMessage.CorrelationId);
+            Assert.IsTrue(await fixture.TestHarness.Published.Any<ActionStatusChangedEvent>());
+            actionStatus = fixture.TestHarness.Published.Select<ActionStatusChangedEvent>()
+                .First(c => c.Context.Message.ChangedType == ActionStatusChangedType.Completed)
+                .Context.Message;
+            Assert.AreEqual(order.CorrelationId, actionStatus.CorrelationId);
 
             // There should be at least 2 positions sent (one or two per edge and we have two edges)
             int count = fixture.SagaHarness.Consumed.Select<SimulatedAgvStateMachine.ScheduleSignalPosition>().Count();

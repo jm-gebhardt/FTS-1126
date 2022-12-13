@@ -1,13 +1,11 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Testing;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services;
+﻿using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services;
 using JetBrains.Annotations;
-using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
 {
-    internal interface IAssignAgvConsumerTestFixtureBuilder : ITestFixtureBuilder<AssignAgvConsumerMassTransitFixture>
+    internal interface IAssignAgvConsumerTestFixtureBuilder : IMassTransitTestFixtureBuilder<AssignAgvConsumerMassTransitFixture, IAssignAgvConsumerTestFixtureBuilder>
     {
         [UsedImplicitly]
         IAssignAgvConsumerTestFixtureBuilder SetOrderRegistry(Mock<IOrderRegistry> orderRegistry);
@@ -16,6 +14,5 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         [UsedImplicitly]
         IAssignAgvConsumerTestFixtureBuilder OrderMock(Action<Mock<IOrderRegistry>> orderRegistry);
         IAssignAgvConsumerTestFixtureBuilder AgvRegistryMock(Action<Mock<IAgvRegistry>> agvRegistry);
-        IAssignAgvConsumerTestFixtureBuilder SetupBusRegistrationConfigurator(Action<IBusRegistrationConfigurator> busRegistrationConfigurator);
     }
 }

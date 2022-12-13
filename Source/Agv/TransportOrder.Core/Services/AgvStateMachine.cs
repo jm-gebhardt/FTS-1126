@@ -92,6 +92,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         /// </summary>
         public State Busy { get; private set; } = default!;
 
+
         /// <summary>
         /// PendingLock.
         /// </summary>
@@ -229,7 +230,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
                     configuration.Received = r => r.CorrelateById(context => context.Message.CorrelationId);
                 });
         }
+        #endregion
 
+        #region State transitions
         /// <summary>
         /// First message which creates a new agv saga instance
         /// </summary>
@@ -242,10 +245,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
                 .If(cond => cond.Saga.AgvData == null,
                     PublishRequestAgvData)
                 .If(cond => cond.Saga.AgvGraph == null,
-                    PublishRequestAgvGraph);
-        #endregion
-
-        #region State transitions
+                    PublishRequestAgvGraph)
+                // Lets have a auto-discover feature
+                .If(_ => _productionOptions.AutoAccept, x =>
+                    x.Publish(c => new ReleaseAgv(c.Saga.CorrelationId))
+                );
 
         private EventActivityBinder<AgvSaga, ReleaseAgv> ReleaseAgvHandler() =>
            When(ReleaseAgvEvent)

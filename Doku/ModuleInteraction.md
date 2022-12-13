@@ -9,6 +9,8 @@ flowchart TD
     AssignAgvConsumer[[AssignAgvConsumer]]
     DeviceCommunication[/DeviceCommunication/]
     AgvStateMachine
+    ActionManager
+    ActionStateMachine
 
     class WcsCommunication,DeviceCommunication Process
     class UI UI
@@ -20,15 +22,24 @@ flowchart TD
     OrderStateMachine -- HostOrderStarted --> WcsCommunication
     OrderStateMachine -- HostOrderCompleted --> WcsCommunication
     OrderStateMachine -- HostOrderHandlingFailed --> WcsCommunication
-    OrderStateMachine -- AssignAgv --> AssignAgvConsumer
-    OrderStateMachine -- ReleaseAgv --> AgvStateMachine
-    OrderStateMachine -- ExecuteTransportOrder --> DeviceCommunication
+    OrderStateMachine -- OrderQueuingCommand --> ActionManager
+    ActionManager -- OrderQueuedEvent --> OrderStateMachine
+
+    ActionManager -- AssignActionRequest --> ActionStateMachine
+    ActionStateMachine -- ActionAssignmentSucceededEvent --> ActionManager
+
+    DeviceCommunication -- ActionStatusChangedEvent --> ActionStateMachine
+    ActionStateMachine -- TransportOrderStarted/PickCompleted/Completed --> OrderStateMachine
+    ActionManager -- AssignAgv --> AssignAgvConsumer
     AssignAgvConsumer -- ReserveAgv --> AgvStateMachine
-    AssignAgvConsumer -- AgvAssignmentSucceeded/Failed --> OrderStateMachine
-    AgvStateMachine -- AgvBecameIdle --> AssignAgvConsumer
+    AssignAgvConsumer -- AgvAssignmentSucceeded/Failed --> ActionManager
+
+
+    ActionStateMachine -- ReleaseAgv --> AgvStateMachine
+    ActionManager -- StartActionCommand --> DeviceCommunication
+
+    AgvStateMachine -- AgvBecameIdle --> ActionManager
     AgvStateMachine -- AgvReservationSucceeded/Failed --> AssignAgvConsumer
     AgvStateMachine -- RequestAgvData/Graph/Map --> DeviceCommunication
     AgvStateMachine -. ReleaseAgv .-> AgvStateMachine
-    DeviceCommunication -- TransportOrderStarted/Completed/Failed --> OrderStateMachine
-    DeviceCommunication -- TransportOrderPickCompleted --> OrderStateMachine
 :::

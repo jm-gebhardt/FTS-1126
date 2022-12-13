@@ -1,11 +1,13 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MassTransit.Testing;
 using Gebhardt.StoreWare.Agv.Common.Extensions;
+using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Enums;
 using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Events;
 using Gebhardt.StoreWare.Agv.Common.Testing;
+using MassTransit;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
 {
@@ -26,7 +28,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         {
             var message = new MqttOrderEvent(SerialNumber, OrderId, OrderEventType.Started);
             var published = await ConsumeMessage(message);
-            Assert.IsTrue(await published.Any<TransportOrderStarted>());
+            await AssertPublishedEvent(published, ActionStatusChangedType.Started);
         }
 
         /// <summary>
@@ -37,7 +39,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         {
             var message = new MqttOrderEvent(SerialNumber, OrderId, OrderEventType.Picked);
             var published = await ConsumeMessage(message);
-            Assert.IsTrue(await published.Any<TransportOrderPickCompleted>());
+
+            await AssertPublishedEvent(published, ActionStatusChangedType.Picked);
         }
 
         /// <summary>
@@ -48,7 +51,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         {
             var message = new MqttOrderEvent(SerialNumber, OrderId, OrderEventType.Completed);
             var published = await ConsumeMessage(message);
-            Assert.IsTrue(await published.Any<TransportOrderCompleted>());
+
+            await AssertPublishedEvent(published, ActionStatusChangedType.Completed);
         }
 
         /// <summary>
@@ -59,7 +63,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         {
             var message = new MqttOrderEvent(SerialNumber, OrderId, OrderEventType.Cancelled);
             var published = await ConsumeMessage(message);
-            Assert.IsTrue(await published.Any<TransportOrderCancelSucceeded>());
+
+            await AssertPublishedEvent(published, ActionStatusChangedType.Cancelled);
         }
 
         /// <summary>
@@ -70,7 +75,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         {
             var message = new MqttOrderEvent(SerialNumber, OrderId, OrderEventType.CancelFailed);
             var published = await ConsumeMessage(message);
-            Assert.IsTrue(await published.Any<TransportOrderCancelFailed>());
+
+            await AssertPublishedEvent(published, ActionStatusChangedType.CancelFailed);
         }
 
         /// <summary>
@@ -81,7 +87,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         {
             var message = new MqttOrderEvent(SerialNumber, OrderId, OrderEventType.Failed);
             var published = await ConsumeMessage(message);
-            Assert.IsTrue(await published.Any<TransportOrderFailed>());
+            
+            await AssertPublishedEvent(published, ActionStatusChangedType.Failed);
         }
 
         /// <summary>
@@ -108,6 +115,15 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
             Assert.AreEqual(message.OrderEventType, consumedMsg.OrderEventType);
 
             return fixture.TestHarness.Published;
+        }
+
+        private async Task AssertPublishedEvent(IPublishedMessageList published, ActionStatusChangedType changedType)
+        {
+            Assert.IsTrue(await published.Any<ActionStatusChangedEvent>());
+
+            IPublishedMessage<ActionStatusChangedEvent>? publishedEvent = await published.SelectAsync<ActionStatusChangedEvent>().First();
+            var actionStatusEvent = publishedEvent.MessageObject as ActionStatusChangedEvent;
+            Assert.AreEqual(actionStatusEvent!.ChangedType, changedType);
         }
     }
 }

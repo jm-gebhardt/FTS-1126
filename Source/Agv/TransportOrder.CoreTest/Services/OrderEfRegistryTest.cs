@@ -82,7 +82,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             var order = new OrderDetails(_orders[0].ToGuid(), _orders[0], _sources[0], _destinations[0], _leNo[0], HostOrderCreator.Simulation);
             var order2 = new OrderDetails(_orders[1].ToGuid(), _orders[1], _sources[1], _destinations[1], _leNo[1], HostOrderCreator.Simulation);
             var orderSaga = new OrderSaga(_orders[0].ToGuid(), order, nameof(OrderStateMachine.OrderReceived), Guid.NewGuid());
-            var orderSaga2 = new OrderSaga(_orders[1].ToGuid(), order2, nameof(OrderStateMachine.AgvRequested), Guid.NewGuid());
+            var orderSaga2 = new OrderSaga(_orders[1].ToGuid(), order2, nameof(OrderStateMachine.OrderQueued), Guid.NewGuid());
 
             fixture.Add(orderSaga);
             fixture.Add(orderSaga2);
@@ -106,7 +106,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             var order = new OrderDetails(_orders[0].ToGuid(), _orders[0], _sources[0], _destinations[0], _leNo[0], HostOrderCreator.Simulation);
             var order2 = new OrderDetails(_orders[1].ToGuid(), _orders[1], _sources[1], _destinations[1], _leNo[1], HostOrderCreator.Simulation);
             var orderSaga = new OrderSaga(_orders[0].ToGuid(), order, nameof(OrderStateMachine.OrderReceived), Guid.NewGuid());
-            var orderSaga2 = new OrderSaga(_orders[1].ToGuid(), order2, nameof(OrderStateMachine.AgvRequested), Guid.NewGuid());
+            var orderSaga2 = new OrderSaga(_orders[1].ToGuid(), order2, nameof(OrderStateMachine.OrderQueued), Guid.NewGuid());
 
             fixture.Add(orderSaga);
             fixture.Add(orderSaga2);

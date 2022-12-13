@@ -7,6 +7,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Core.Hubs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Models;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Routing;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.States;
 using MassTransit;
@@ -63,6 +64,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                 services.AddSingleton<IRoutingPlausibilityChecker, NoCheckPlausibilityChecker>();
                 services.AddSingleton(_ => productionOptions);
 
+                services.AddSingleton<ActionManager>();
+                services.AddTransient<IActionRegistry, EfActionRegistry>();
+                services.AddHostedService<ActionManagerBackgroundService>();
+
                 services.AddDbContextFactory<SagaPersistenceDbContext>(builder =>
                 {
                     builder.UseSqlServer(context.Configuration.GetConnectionString(SagaPersistenceDbContext.ConfigSectionName), m =>
@@ -82,14 +87,20 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                             .AddPersistence<OrderSaga, SagaPersistenceDbContext>();
                         x.AddSagaStateMachine<AgvStateMachine, AgvSaga>()
                             .AddPersistence<AgvSaga, SagaPersistenceDbContext>();
+                        x.AddSagaStateMachine<ActionStateMachine, ActionSaga>()
+                            .AddPersistence<ActionSaga, SagaPersistenceDbContext>();
 
+                        x.AddTransient<AssignAgvConsumer>();
                         x.AddConsumer<AssignAgvConsumer>();
+                        x.AddConsumer<ActionManager>();
                         x.AddConsumer<TransportOrderChangedConsumer>();
                         x.AddConsumer<AgvPositionReceivedConsumer>();
                         x.AddConsumer<AgvPositionChangedConsumer>();
                         x.AddConsumer<AgvInitializer>();
 
+                        // TOOD: remove - unused?
                         x.AddRequestClient<ReserveAgv>();
+                        x.AddRequestClient<AssignAgv>();
 
                         x.AddDelayedMessageScheduler();
                     }, rabbitMqConfiguration: (_, cfg) =>

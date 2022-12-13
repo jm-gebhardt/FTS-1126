@@ -30,6 +30,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.States
         public string? FailedReason { get; set; }
 
         /// <summary>
+        /// The Id of the assigned Agv
+        /// </summary>
+        public string? AssignedAgvId { get; set; }
+
+        /// <summary>
         /// Create new OrderSaga
         /// </summary>
         /// <param name="orderDetails">The order related to this Saga</param>

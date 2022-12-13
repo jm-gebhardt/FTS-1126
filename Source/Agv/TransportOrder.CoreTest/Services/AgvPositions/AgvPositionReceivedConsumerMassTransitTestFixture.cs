@@ -15,7 +15,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.AgvPositions
 
         public AgvPositionReceivedConsumerMassTransitTestFixture()
         {
-            Build(ConfigureServiceCollection);
+            base.Build();
         }
 
         public ITestFixtureBuilder<AgvPositionReceivedConsumerMassTransitTestFixture> UseAgvPositionRegistryMock()
@@ -26,11 +26,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.AgvPositions
 
         public AgvPositionReceivedConsumerMassTransitTestFixture Build()
         {
-            Build(ConfigureServiceCollection);
+            base.Build();
             return this;
         }
 
-        private void ConfigureServiceCollection(IServiceCollection services)
+        protected override void ConfigureServices(IServiceCollection services)
         {
             if (_useAgvPositionRegistryMock)
             {

@@ -1,7 +1,7 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
+using Microsoft.Extensions.Logging;
 using JetBrains.Annotations;
 using MassTransit;
-using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Events;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Enums;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
@@ -29,40 +29,41 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
         /// </summary>
         public async Task Consume(ConsumeContext<MqttOrderEvent> context)
         {
-            _logger.LogDebug("Received {MessageType}.{OrderEventType} for {OrderId}", nameof(MqttOrderEvent), context.Message.OrderEventType, context.Message.OrderId);
+            var message = context.Message;
+            _logger.LogInformation("Received {MessageType}.{OrderEventType} for {OrderId}", nameof(MqttOrderEvent), message.OrderEventType, message.OrderId);
 
-            var correlationId = context.Message.OrderId.ToGuid();
-
-            switch (context.Message.OrderEventType)
+            var actionId = message.OrderId.ToGuid();
+            ActionStatusChangedType actionStatusChangedType;
+            switch (message.OrderEventType)
             {
                 case OrderEventType.Started:
-                    await context.Publish(new TransportOrderStarted(correlationId, context.Message.OrderId));
+                    actionStatusChangedType = ActionStatusChangedType.Started;
                     break;
 
                 case OrderEventType.Picked:
-                    await context.Publish(new TransportOrderPickCompleted(correlationId, context.Message.OrderId));
+                    actionStatusChangedType = ActionStatusChangedType.Picked;
                     break;
 
                 case OrderEventType.Completed:
-                    await context.Publish(new TransportOrderCompleted(correlationId, context.Message.OrderId));
+                    actionStatusChangedType = ActionStatusChangedType.Completed;
                     break;
 
                 case OrderEventType.Cancelled:
-                    await context.Publish(new TransportOrderCancelSucceeded(correlationId, context.Message.OrderId));
+                    actionStatusChangedType = ActionStatusChangedType.Cancelled;
                     break;
 
                 case OrderEventType.CancelFailed:
-                    await context.Publish(new TransportOrderCancelFailed(correlationId, context.Message.OrderId));
+                    actionStatusChangedType = ActionStatusChangedType.CancelFailed;
                     break;
 
                 case OrderEventType.Failed:
-                    await context.Publish(new TransportOrderFailed(correlationId, context.Message.OrderId));
+                    actionStatusChangedType = ActionStatusChangedType.Failed;
                     break;
-
                 default:
-                    _logger.LogWarning("Undefined OrderEventType {OrderEventType} for {OrderId}", context.Message.OrderEventType, context.Message.OrderId);
-                    break;
+                    throw new ArgumentOutOfRangeException($"Undefined OrderEventType {message.OrderEventType} for {message.OrderId}");
             }
+
+            await context.Publish(new ActionStatusChangedEvent(actionId, actionStatusChangedType));
         }
     }
 }

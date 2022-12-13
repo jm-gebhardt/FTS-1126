@@ -80,31 +80,32 @@ sequenceDiagram
     alt success
         AgvManagement->>TransportOrder: AgvAssignmentSucceeded
 
-        TransportOrder->>DeviceCommunication: ExecuteTransportOrder
+        TransportOrder->>DeviceCommunication: StartActionCommand
         activate DeviceCommunication
         DeviceCommunication->>(AGV): Order:Order
         deactivate DeviceCommunication
         activate (AGV)
+
         (AGV)->>DeviceCommunication: OrderEvent:Started
         activate DeviceCommunication
-        DeviceCommunication->>TransportOrder: TransportOrderStarted
-
+        DeviceCommunication->>TransportOrder: ActionStatusChangedEvent:Started
+        TransportOrder->>TransportOrder: TransportOrderStarted
         TransportOrder->>WCSCommunication: HostOrderStarted
+        
         (AGV)->>DeviceCommunication: OrderEvent:Picked
-        DeviceCommunication->>TransportOrder: TransportOrderPickCompleted
+        DeviceCommunication->>TransportOrder: ActionStatusChangedEvent:Picked
+        TransportOrder->>TransportOrder: TransportOrderPickCompleted
 
         alt success
             (AGV)->>DeviceCommunication: OrderEvent:Completed
-            DeviceCommunication->>TransportOrder: TransportOrderCompleted
+            DeviceCommunication->>TransportOrder: ActionStatusChangedEvent:Completed
+            TransportOrder->>TransportOrder: TransportOrderCompleted
             TransportOrder->>WCSCommunication: HostOrderHandlingSucceeded
         else failed
             (AGV)->>DeviceCommunication: OrderEvent:Failed
-            DeviceCommunication->>TransportOrder: TransportOrderFailed
-            alt No User input
-                TransportOrder->>TransportOrder: Wait for user input
-            else User input "NOK"
-                TransportOrder->>WCSCommunication: HostOrderHandlingFailed
-            end
+            DeviceCommunication->>TransportOrder: ActionStatusChangedEvent:Failed
+            TransportOrder->>TransportOrder: TransportOrderFailed
+            TransportOrder->>WCSCommunication: HostOrderHandlingFailed
         end
         deactivate (AGV)
         deactivate DeviceCommunication

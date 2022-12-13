@@ -1,4 +1,4 @@
-#pragma warning disable 1591, 0472
+﻿#pragma warning disable 1591, 0472
 using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
