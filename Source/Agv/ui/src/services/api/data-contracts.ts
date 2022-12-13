@@ -247,6 +247,14 @@ export interface INode {
    * @format float
    */
   z: number
+  /**
+   * The rotation coordinate of the node.
+   * <br>
+   * Set to null when not needed.
+   *
+   * @format float
+   */
+  theta: number
 }
 
 /**

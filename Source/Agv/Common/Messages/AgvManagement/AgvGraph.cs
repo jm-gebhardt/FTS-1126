@@ -182,6 +182,11 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
             public float Z { get; set; }
 
             /// <summary>
+            /// The theta coordinate of the node.
+            /// </summary>
+            public float Theta { get; set; }
+
+            /// <summary>
             /// Simple string representation.
             /// </summary>
             /// <returns></returns>

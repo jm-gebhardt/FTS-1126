@@ -103,7 +103,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
                             Type = AgvGraph.NodeType.PickDrop,
                             X = station.Position.X,
                             Y = station.Position.Y,
-                            Z = 0f
+                            Z = 0f,
+                            Theta = station.Position.Theta
                         });
                         if (added)
                         {

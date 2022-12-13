@@ -950,6 +950,12 @@
             "type": "number",
             "description": "The z coordinate of the node.\r\n<br>\r\nSet to default 0 when not needed.\r\n",
             "format": "float"
+          },
+          "theta": {
+            "type": "number",
+            "description": "The rotation coordinate of the node.\r\n<br>\r\nSet to null when not needed.\r\n",
+            "format": "float",
+            "nullable": false
           }
         },
         "additionalProperties": false,

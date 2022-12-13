@@ -60,13 +60,15 @@ export class Edge {
 export abstract class MapNode {
   icon: Konva.Shape
   tag: Konva.Text
+  theta: number
   colorTween: Konva.Tween | undefined // Animation object for icon color
 
   protected tagOffsetY = -32 // Experimentally determined
 
-  constructor(id: string, position: Vector2d) {
+  constructor(id: string, position: Vector2d, theta: number) {
     const x = position.x * GraphDimensions.scale + GraphDimensions.offsetX
     const y = position.y * GraphDimensions.scale + GraphDimensions.offsetY
+    this.theta = theta
 
     this.tag = new Konva.Text({
       text: id
@@ -185,7 +187,7 @@ export class WayPoint extends MapNode {
 export class Station extends MapNode {
   initIcon(): Konva.Shape {
     return new Konva.RegularPolygon({
-      rotation: 180 / 4, // fix oriantaion
+      rotation: this.theta - 180 / 4,
       sides: 4,
       radius: 20,
       fill: 'gray',
@@ -201,7 +203,7 @@ export class Station extends MapNode {
 export class Park extends MapNode {
   initIcon(): Konva.Shape {
     return new Konva.RegularPolygon({
-      rotation: 180 / 8, // fix oriantaion
+      rotation: this.theta - 180 / 8,
       sides: 8,
       radius: 20,
       fill: 'lightgreen',
@@ -217,7 +219,7 @@ export class Park extends MapNode {
 export class Charge extends MapNode {
   initIcon(): Konva.Shape {
     return new Konva.RegularPolygon({
-      rotation: 180 / 8, // fix oriantaion
+      rotation: this.theta - 180 / 8,
       sides: 8,
       radius: 20,
       fill: 'yellow',

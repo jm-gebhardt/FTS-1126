@@ -24,7 +24,7 @@ export class Agv extends MapNode {
     y: number,
     rotation: number
   ) {
-    super(agvId, { x, y })
+    super(agvId, { x, y }, rotation)
     this.correlationId = correlationId
     this.agvId = agvId
     this.icon.rotation(rotation)

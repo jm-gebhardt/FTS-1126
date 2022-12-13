@@ -130,30 +130,47 @@ export class MapCanvas {
     for (const node of nodes) {
       if (!this._nodes.has(node.id)) {
         let newNode: MapNode | null = null
+        const radRotation: number = (node.theta * 180) / Math.PI
 
         switch (node.type) {
           case INodeType.Charge:
-            newNode = new Charge(node.id, { x: node.x, y: node.y })
+            newNode = new Charge(node.id, { x: node.x, y: node.y }, radRotation)
             break
 
           case INodeType.Park:
-            newNode = new Park(node.id, { x: node.x, y: node.y })
+            newNode = new Park(node.id, { x: node.x, y: node.y }, radRotation)
             break
 
           case INodeType.Drop:
-            newNode = new Station(node.id, { x: node.x, y: node.y })
+            newNode = new Station(
+              node.id,
+              { x: node.x, y: node.y },
+              radRotation
+            )
             break
 
           case INodeType.Pick:
-            newNode = new Station(node.id, { x: node.x, y: node.y })
+            newNode = new Station(
+              node.id,
+              { x: node.x, y: node.y },
+              radRotation
+            )
             break
 
           case INodeType.PickDrop:
-            newNode = new Station(node.id, { x: node.x, y: node.y })
+            newNode = new Station(
+              node.id,
+              { x: node.x, y: node.y },
+              radRotation
+            )
             break
 
           case INodeType.WayPoint:
-            newNode = new WayPoint(node.id, { x: node.x, y: node.y })
+            newNode = new WayPoint(
+              node.id,
+              { x: node.x, y: node.y },
+              radRotation
+            )
             break
         }
 
