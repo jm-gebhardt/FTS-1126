@@ -53,7 +53,7 @@ stages:
           failBuildLevelSelector: Suggestion
   - job: WebUiCodeAnalysis
     pool:
-      vmImage: ubuntu-latest
+      vmImage: ubuntu-22.04
     steps:
       - task: NuGetToolInstaller@1
         inputs:
