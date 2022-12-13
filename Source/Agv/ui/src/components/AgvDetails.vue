@@ -1,15 +1,22 @@
 <template>
-  <ui-list-group-subheader>General information</ui-list-group-subheader>
-  <details-list v-model="generalItems"></details-list>
-  <ui-list-divider></ui-list-divider>
-  <ui-list-group-subheader>Status information</ui-list-group-subheader>
-  <details-list v-model="statusItems"></details-list>
-  <ui-list-divider></ui-list-divider>
-  <ui-list-group-subheader>Data information</ui-list-group-subheader>
-  <details-list v-model="dataItems"></details-list>
-  <ui-list-divider></ui-list-divider>
-  <ui-list-group-subheader>Actions</ui-list-group-subheader>
-  <actions-list v-model="actionItems"></actions-list>
+  <div id="div-outside">
+    <div class="div-inside">
+      <ui-list-group-subheader>General information</ui-list-group-subheader>
+      <details-list v-model="generalItems"></details-list>
+      <ui-list-divider></ui-list-divider>
+      <ui-list-group-subheader>Status information</ui-list-group-subheader>
+      <details-list v-model="statusItems"></details-list>
+      <ui-list-divider></ui-list-divider>
+      <ui-list-group-subheader>Data information</ui-list-group-subheader>
+      <details-list v-model="dataItems"></details-list>
+      <ui-list-divider></ui-list-divider>
+      <ui-list-group-subheader>Actions</ui-list-group-subheader>
+      <actions-list v-model="actionItems"></actions-list>
+    </div>
+    <div class="div-inside">
+      <img :src="agvImagePath" width="720" alt="png file not found" />
+    </div>
+  </div>
 </template>
 
 <script lang="ts">
@@ -112,6 +119,10 @@ let actionItems: ComputedRef<ActionItem<IAgv>[]> = computed(() => {
   ] as ActionItem<IAgv>[]
 })
 
+let agvImagePath: ComputedRef<string | undefined> = computed(() => {
+  return import.meta.env.VITE_BASE_PATH + props.agvData?.model + '.png'
+})
+
 function setAgvIdle(agv: IAgv | null): void {
   if (agv === null) return
 
@@ -167,3 +178,12 @@ onMounted(() => {
   fetchAgvs()
 })
 </script>
+
+<style lang="scss">
+#div-outside {
+  display: flex;
+}
+.div-inside {
+  width: 800px;
+}
+</style>

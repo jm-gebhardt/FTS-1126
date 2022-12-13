@@ -100,3 +100,4 @@ bld/
 
 #WebUi
 /Config/caddy/html/ui/*
+/Source/Agv/ui/public/Karis-BF3-VierfachLAM.png
