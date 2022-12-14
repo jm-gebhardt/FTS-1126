@@ -38,6 +38,7 @@ const orderApi = new OrderApi({
 
 interface Props {
   modelValue: IOrder | null
+  showNavBar: boolean | undefined
 }
 
 const props = defineProps<Props>()
@@ -57,7 +58,7 @@ let listItems: ComputedRef<ListItem[]> = computed(() => {
           ? agvs.value.data.get(props.modelValue.assignedAgv)?.agvId
           : '-',
       route: {
-        name: 'AGVs',
+        name: props.showNavBar ? 'AGVs' : 'SingleAgvPage',
         query: { correlationId: props.modelValue.assignedAgv }
       }
     },

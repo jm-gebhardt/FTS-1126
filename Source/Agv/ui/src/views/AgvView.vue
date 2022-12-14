@@ -1,35 +1,44 @@
 <template>
-  <h1>Agvs</h1>
-  <div class="buttons">
-    <button @click="fetch()">Reload</button>
-    Auto-refresh
-    <ui-switch
-      :model-value="agvHub.isConnected()"
-      @selected="() => toggleAutoRefresh()"
-      >Auto-Refresh
-    </ui-switch>
+  <div v-if="showNavBar" id="nav-main">
+    <nav-bar></nav-bar>
   </div>
-  <ui-grid>
-    <ui-grid-cell class="agv-list-cell" columns="6">
-      <agv-list
-        :agvs="Array.from(agvs.data.values())"
-        :selected-item="selectedItemIdx"
-        @update:selected-list-item-changed="selectedItemChanged"
-      ></agv-list>
-    </ui-grid-cell>
-    <ui-grid-cell class="agv-list-cell" columns="6">
-      <agv-details
-        v-if="selectedItemIdx != null && selectedCorrelationId != null"
-        v-model="Array.from(agvs.data.values())[selectedItemIdx]"
-        :agv-data="agvData.data.get(selectedCorrelationId)"
-        :agv-state="agvStates.data.get(selectedCorrelationId)"
-      ></agv-details>
-    </ui-grid-cell>
-  </ui-grid>
-  <ui-spinner v-if="agvs.loading" active></ui-spinner>
-  <ui-banner v-if="agvs.error">Error loading data: {{ agvs.error }}</ui-banner>
+  <div class="content-main">
+    <h1>Agvs</h1>
+    <div class="buttons">
+      <button @click="fetch()">Reload</button>
+      Auto-refresh
+      <ui-switch
+        :model-value="agvHub.isConnected()"
+        @selected="() => toggleAutoRefresh()"
+        >Auto-Refresh
+      </ui-switch>
+    </div>
+    <ui-grid>
+      <ui-grid-cell class="agv-list-cell" columns="6">
+        <agv-list
+          :agvs="Array.from(agvs.data.values())"
+          :selected-item="selectedItemIdx"
+          @update:selected-list-item-changed="selectedItemChanged"
+        ></agv-list>
+      </ui-grid-cell>
+      <ui-grid-cell class="agv-list-cell" columns="6">
+        <agv-details
+          v-if="selectedItemIdx != null && selectedCorrelationId != null"
+          v-model="Array.from(agvs.data.values())[selectedItemIdx]"
+          :agv-data="agvData.data.get(selectedCorrelationId)"
+          :agv-state="agvStates.data.get(selectedCorrelationId)"
+        ></agv-details>
+      </ui-grid-cell>
+    </ui-grid>
+    <ui-spinner v-if="agvs.loading" active></ui-spinner>
+    <ui-banner v-if="agvs.error"
+      >Error loading data: {{ agvs.error }}</ui-banner
+    >
+  </div>
 </template>
+
 <script lang="ts" setup>
+import NavBar from '@/components/NavBar.vue'
 import AgvList from '@/components/AgvList.vue'
 import AgvDetails from '@/components/AgvDetails.vue'
 
@@ -40,6 +49,12 @@ import { AgvHub } from '@/services/AgvHub'
 import { IAgvState } from '@/services/api/data-contracts'
 import { useRoute, useRouter } from 'vue-router'
 import { UiSwitch, UiGrid, UiGridCell, UiSpinner, UiBanner } from 'balm-ui'
+
+interface Props {
+  showNavBar: boolean | undefined
+}
+
+defineProps<Props>()
 
 const agvHub = new AgvHub(onAgvDiscovered, onAgvStateChanged)
 
@@ -122,7 +137,9 @@ function pushCurrentRoute(): void {
     query['correlationId'] = selectedCorrelationId.value
   }
 
-  router?.push({ name: 'AGVs', query: query })
+  if (router && route.name) {
+    router.push({ name: route.name, query: query })
+  }
 }
 
 onBeforeUnmount(async () => {

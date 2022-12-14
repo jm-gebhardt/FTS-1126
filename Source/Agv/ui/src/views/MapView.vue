@@ -1,41 +1,55 @@
 <template>
-  <h1>Maps</h1>
-  <div>
-    <div id="map-menu">
-      <ui-select
-        id="map-menu-maps"
-        v-model="selectedMap"
-        :options="mapOptions"
-        outlined
-        @update:model-value="selectedMapChanged"
-      >
-        Maps
-      </ui-select>
-      <ui-list>
-        <template v-for="item in agvOptions" :key="item.value">
-          <ui-item>
-            <ui-item-first-content>
-              <ui-checkbox
-                v-model="selectedAgvs"
-                :value="item.value"
-                :input-id="item.value"
-                @click.stop
-                @update:model-value="selectedAgvsChanged"
-              >
-              </ui-checkbox>
-            </ui-item-first-content>
-            <ui-item-text-content>{{ item.label }}</ui-item-text-content>
-          </ui-item>
-        </template>
-      </ui-list>
-    </div>
-    <div id="map-container">
-      <konva-map ref="mapComponent"></konva-map>
+  <div v-if="showNavBar" id="nav-main">
+    <nav-bar></nav-bar>
+  </div>
+  <div class="content-main">
+    <h1>Maps</h1>
+    <div>
+      <div id="map-menu">
+        <ui-select
+          id="map-menu-maps"
+          v-model="selectedMap"
+          :options="mapOptions"
+          outlined
+          @update:model-value="selectedMapChanged"
+        >
+          Maps
+        </ui-select>
+        <ui-list>
+          <template v-for="item in agvOptions" :key="item.value">
+            <ui-item>
+              <ui-item-first-content>
+                <ui-checkbox
+                  v-model="selectedAgvs"
+                  :value="item.value"
+                  :input-id="item.value"
+                  @click.stop
+                  @update:model-value="selectedAgvsChanged"
+                >
+                </ui-checkbox>
+              </ui-item-first-content>
+              <ui-item-text-content>{{ item.label }}</ui-item-text-content>
+            </ui-item>
+          </template>
+        </ui-list>
+      </div>
+      <div id="map-container">
+        <konva-map ref="mapComponent"></konva-map>
+      </div>
     </div>
   </div>
 </template>
 
+<script lang="ts">
+import { defineComponent } from 'vue'
+
+export default defineComponent({
+  name: 'MapView'
+})
+</script>
+
 <script lang="ts" setup>
+import NavBar from '@/components/NavBar.vue'
 import KonvaMap from '@/components/KonvaMap/KonvaMap.vue'
 import { storeToRefs } from 'pinia'
 import { useAgvStore } from '@/services/AgvStore'
@@ -62,6 +76,12 @@ import {
   UiCheckbox,
   UiItemTextContent
 } from 'balm-ui'
+
+interface Props {
+  showNavBar: boolean | undefined
+}
+
+defineProps<Props>()
 
 const agvPosApi = new AgvPosApi({
   baseUrl: import.meta.env.VITE_API_URL

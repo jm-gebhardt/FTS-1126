@@ -1,70 +1,69 @@
 <template>
-  <h1>Orders</h1>
-  <ui-grid>
-    <ui-grid-cell class="order-menu-cell" columns="6">
-      <ui-datepicker
-        :model-value="dateRange"
-        :config="{
-          enableTime: true,
-          time_24hr: true,
-          mode: 'range',
-          altInput: true,
-          altFormat: 'Y-m-d'
-        }"
-        @update:model-value="updateDateRange"
-      ></ui-datepicker>
-      <button @click="() => updateDateRange(getToday())">Today</button>
-    </ui-grid-cell>
-    <ui-grid-cell class="order-menu-cell" columns="6">
-      <div class="buttons">
-        <button @click="fetch()">Reload</button>
-        Auto-refresh
-        <ui-switch
-          :model-value="orderHub.isConnected()"
-          @selected="() => toggleAutoRefresh()"
-          >Auto-Refresh</ui-switch
+  <div v-if="showNavBar" id="nav-main">
+    <nav-bar></nav-bar>
+  </div>
+  <div class="content-main">
+    <h1>Orders</h1>
+    <ui-grid>
+      <ui-grid-cell class="order-menu-cell" columns="6">
+        <ui-datepicker
+          :model-value="dateRange"
+          :config="{
+            enableTime: true,
+            time_24hr: true,
+            mode: 'range',
+            altInput: true,
+            altFormat: 'Y-m-d'
+          }"
+          @update:model-value="updateDateRange"
+        ></ui-datepicker>
+        <button @click="() => updateDateRange(getToday())">Today</button>
+      </ui-grid-cell>
+      <ui-grid-cell class="order-menu-cell" columns="6">
+        <div class="buttons">
+          <button @click="fetch()">Reload</button>
+          Auto-refresh
+          <ui-switch
+            :model-value="orderHub.isConnected()"
+            @selected="() => toggleAutoRefresh()"
+            >Auto-Refresh</ui-switch
+          >
+        </div>
+      </ui-grid-cell>
+    </ui-grid>
+    <ui-grid class="demo-grid">
+      <ui-grid-cell class="order-list-cell" columns="6">
+        <order-list
+          :orders="data"
+          :current-page="currentPage"
+          :total="totalCount"
+          :page-size="pageSizes"
+          :selected-item="selectedItemIdx"
+          @update:page-size="pageSizeChanged"
+          @update:page-changed="pageChanged"
+          @update:selected-item-changed="selectedItemChanged"
+        ></order-list>
+      </ui-grid-cell>
+      <ui-grid-cell columns="6">
+        <order-details
+          v-if="selectedItemIdx != null"
+          v-model="data[selectedItemIdx]"
+          class="order-details-cell"
+          :show-nav-bar="showNavBar"
         >
-      </div>
-    </ui-grid-cell>
-  </ui-grid>
-  <ui-grid class="demo-grid">
-    <ui-grid-cell class="order-list-cell" columns="6">
-      <order-list
-        :orders="data"
-        :current-page="currentPage"
-        :total="totalCount"
-        :page-size="pageSizes"
-        :selected-item="selectedItemIdx"
-        @update:page-size="pageSizeChanged"
-        @update:page-changed="pageChanged"
-        @update:selected-item-changed="selectedItemChanged"
-      ></order-list>
-    </ui-grid-cell>
-    <ui-grid-cell columns="6">
-      <order-details
-        v-if="selectedItemIdx != null"
-        v-model="data[selectedItemIdx]"
-        class="order-details-cell"
-      >
-      </order-details>
-    </ui-grid-cell>
-  </ui-grid>
+        </order-details>
+      </ui-grid-cell>
+    </ui-grid>
 
-  <ui-spinner v-if="loading" active></ui-spinner>
-  <ui-alert v-if="error" state="error">
-    Error loading data: {{ error }}
-  </ui-alert>
+    <ui-spinner v-if="loading" active></ui-spinner>
+    <ui-alert v-if="error" state="error">
+      Error loading data: {{ error }}
+    </ui-alert>
+  </div>
 </template>
 
-<script lang="ts">
-import { defineComponent } from 'vue'
-
-export default defineComponent({
-  name: 'OrdersView'
-})
-</script>
-
 <script lang="ts" setup>
+import NavBar from '@/components/NavBar.vue'
 import OrderList from '@/components/OrderList.vue'
 import OrderDetails from '@/components/OrderDetails.vue'
 import { IOrder } from '@/services/api/data-contracts'
@@ -74,6 +73,12 @@ import { useOrderStore } from '@/services/OrderStore'
 import { storeToRefs } from 'pinia'
 import { computed, onBeforeUnmount, onMounted, Ref, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+
+interface Props {
+  showNavBar: boolean | undefined
+}
+
+defineProps<Props>()
 
 const orderHub = new OrderHub(onOrderStateChanged)
 let selectedItemIdx: Ref<number | null> = ref(null)
@@ -218,7 +223,10 @@ function pushCurrentRoute(): void {
   if (endDate.value != null) {
     query['endDate'] = new Date(endDate.value).toISOString()
   }
-  router?.push({ name: 'Orders', query: query })
+
+  if (router && route.name) {
+    router.push({ name: route.name, query: query })
+  }
 }
 
 onMounted(() => {
