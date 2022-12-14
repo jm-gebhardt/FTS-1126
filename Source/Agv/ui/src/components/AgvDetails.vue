@@ -7,6 +7,8 @@
       <ui-list-group-subheader>Status information</ui-list-group-subheader>
       <details-list v-model="statusItems"></details-list>
       <ui-list-divider></ui-list-divider>
+      <battery-charge-indicator :charge="props.agvState?.batteryCharge" />
+      <ui-list-divider></ui-list-divider>
       <ui-list-group-subheader>Data information</ui-list-group-subheader>
       <details-list v-model="dataItems"></details-list>
       <ui-list-divider></ui-list-divider>
@@ -30,6 +32,7 @@ import { IAgv, IAgvData, IAgvState } from '@/services/api/data-contracts'
 import { computed, ComputedRef, onMounted } from 'vue'
 import DetailsList from '@/components/DetailsList.vue'
 import ActionsList from '@/components/ActionsList.vue'
+import BatteryChargeIndicator from '@/components/BatteryChargeIndicator.vue'
 import { ListItem } from '@/components/ListItem'
 import { useAgvStore } from '@/services/AgvStore'
 import {
@@ -78,7 +81,6 @@ let statusItems: ComputedRef<ListItem[]> = computed(() => {
     { label: 'Automatic', value: props.agvState?.automatic },
     { label: 'Disturbed', value: props.agvState?.disturbed },
     { label: 'LastNodeID', value: props.agvState?.lastNodeId },
-    { label: 'BatteryCharge', value: props.agvState?.batteryCharge },
     { label: 'Charging', value: props.agvState?.charging }
   ] as ListItem[]
 })
