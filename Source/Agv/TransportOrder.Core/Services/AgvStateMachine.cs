@@ -315,7 +315,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
             When(AgvStatusReceivedEvent)
                 .Then(c =>
                     _logger.LogDebug("{MessageType} {AgvId} / {CorrelationId}, AGV is alive", nameof(AgvStatusReceived), c.Message.AgvId, c.Saga.CorrelationId))
-                .Then(c => c.Saga.Alive = true)
+                .If(cond => !cond.Saga.Alive, x => x
+                    .Then(c => c.Saga.Alive = true)
+                    .Publish(m => new AgvPropertyChanged(m.Saga, m.Saga.CorrelationId)))
                 .Then(c => c.Saga.AgvStatus = c.Message.AgvStatus)
                 // When AgvData missing repeat request all x seconds
                 .If(cond => cond.Saga.AgvData == null && cond.Saga.GetTimeSpanSinceLastRequest_AgvData().TotalSeconds > AgvRequestTimeoutS,
@@ -362,7 +364,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
 
         private EventActivityBinder<AgvSaga, AgvOfflineMessage> AgvOfflineMessageHandler() =>
             When(AgvOfflineWatchdog.Received)
-                .Then(c => c.Saga.Alive = false)
+                .If(cond => cond.Saga.Alive, x => x
+                    .Then(c => c.Saga.Alive = false)
+                    .Publish(m => new AgvPropertyChanged(m.Saga, m.Saga.CorrelationId)))
                 .Then(c => _logger.LogWarning("{MessageType} {CorrelationId} received after timeout of {Timeout} ms, AGV is offline",
                     nameof(AgvOfflineMessage), c.Saga.CorrelationId, (DateTime.UtcNow - c.Message.Created).TotalMilliseconds));
         #endregion

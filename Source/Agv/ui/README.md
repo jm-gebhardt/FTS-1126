@@ -4,14 +4,14 @@ The UI is written in TypeScript using [vuejs 3](https://vuejs.org/) and [BalmUI]
 
 ## Development
 
-The UI development requires npm v16.18.0 to be installed
+The UI development requires Node Version Manager `nvm` v16.18.0 to be installed
 
-- Install npm as described by [Microsoft](https://docs.microsoft.com/en-us/windows/dev-environment/javascript/nodejs-on-windows)
+- Install `npm` as described by [Microsoft](https://docs.microsoft.com/en-us/windows/dev-environment/javascript/nodejs-on-windows)
   - Download and install [nvm](https://github.com/coreybutler/nvm-windows)
     - When development is done using a non-admin user take care to use `"C:\Program Files\nvm"` and `"C:\Program Files\nodejs"` for installation path instead of the default `C:\Users\some_admin_user\AppData\Roaming\...`.
     - When `npm` is not found by the development user add these two pathes to the PATH environment variable.
-  - Run: nvm install latest
-  - Run as Admin: nvm use <version>
+  - Run: nvm install 16.18.0
+  - Run as Admin: nvm use 16.18.0
 
 ### Install all requirements:
 
@@ -49,7 +49,7 @@ npm run lint
 
 ## Generate Api
 
-Download the current swagger.json from the [swagger-ui](http://127.0.0.1:5000/swagger/v1/swagger.json)
+Download the current swagger.json from the [swagger-ui](http://127.0.0.1:5000/swagger/v1/swagger.json)  
 The api client in `src/services/api` is generated using [swagger-typescript-api](https://github.com/acacode/swagger-typescript-api)
 
 ### Install

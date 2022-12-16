@@ -26,5 +26,5 @@
         int? BatteryCharge,
         bool? Charging,
         bool? Disturbed,
-        string? LastNodeId) : AgvDto(CorrelationId, AgvId, CurrentState);
+        string? LastNodeId) : AgvDto(CorrelationId, AgvId, CurrentState, Alive);
 }

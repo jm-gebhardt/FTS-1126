@@ -839,8 +839,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             const int agvOfflineTimeoutMsWhileIdle = 100;
             const int agvOfflineTimeoutMsWhileBusy = 500;
 
+            var mockHub = new Mock<Core.Hubs.IAgvHubContext>();
             StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = GetFixture(
-                x => x.AddDelayedMessageScheduler(),
+                x =>
+                {
+                    x.AddDelayedMessageScheduler();
+                    x.AddConsumer<AgvPropertyChangedConsumer>();
+                    x.AddTransient(_ => mockHub.Object);
+                },
                 (_, cfg) => cfg.UseDelayedMessageScheduler(),
                 new Settings(agvOfflineTimeoutMsWhileIdle, agvOfflineTimeoutMsWhileBusy),
                 TimeSpan.FromMilliseconds(2 * Math.Max(agvOfflineTimeoutMsWhileIdle, agvOfflineTimeoutMsWhileBusy)));
@@ -872,6 +878,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
 
             agv = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
             Assert.IsFalse(agv.Alive);
+
+            Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvPropertyChanged>());
+            Assert.IsTrue(await fixture.TestHarness.Consumed.Any<AgvPropertyChanged>());
+            var propertyChangedMessage = fixture.TestHarness.Consumed.Select<AgvPropertyChanged>().First().Context.Message;
+            Assert.AreEqual(false, propertyChangedMessage.Agv.Alive);
         }
 
         [TestMethod]
@@ -880,8 +891,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             const int agvOfflineTimeoutMsWhileIdle = 500;
             const int agvOfflineTimeoutMsWhileBusy = 1000;
 
+            var mockHub = new Mock<Core.Hubs.IAgvHubContext>();
             StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = GetFixture(
-                x => x.AddDelayedMessageScheduler(),
+                x =>
+                {
+                    x.AddDelayedMessageScheduler();
+                    x.AddConsumer<AgvPropertyChangedConsumer>();
+                    x.AddTransient(_ => mockHub.Object);
+                },
                 (_, cfg) => cfg.UseDelayedMessageScheduler(),
                 new Settings(agvOfflineTimeoutMsWhileIdle, agvOfflineTimeoutMsWhileBusy),
                 TimeSpan.FromMilliseconds(2 * Math.Max(agvOfflineTimeoutMsWhileIdle, agvOfflineTimeoutMsWhileBusy)));
@@ -915,6 +932,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             agv = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
             Assert.IsFalse(agv.Alive);
 
+            // Make sure change has been published
+            Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvPropertyChanged>());
+            Assert.IsTrue(await fixture.TestHarness.Consumed.Any<AgvPropertyChanged>());
+            var propertyChangedMessage = fixture.TestHarness.Consumed.Select<AgvPropertyChanged>().First().Context.Message;
+            Assert.AreEqual(false, propertyChangedMessage.Agv.Alive);
+
             // Make sure nobody did spoil the test
             Assert.IsTrue(agvStatus1.OrderId != agvStatus2.OrderId);
 
@@ -924,6 +947,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
 
             agv = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
             Assert.IsTrue(agv.Alive);
+
+            // Make sure second change has been published
+            Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvPropertyChanged>());
+            // Ignore first message with alive equals true
+            Assert.IsTrue(await fixture.TestHarness.Consumed.Any<AgvPropertyChanged>(x => x.Context.Message.Agv.Alive == false));
         }
     }
 }

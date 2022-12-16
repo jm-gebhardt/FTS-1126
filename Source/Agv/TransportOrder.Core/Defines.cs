@@ -21,7 +21,7 @@
             AgvDiscovered,
 
             /// <summary>
-            /// Hub method for agv state changed event
+            /// Hub method for agv state and/or properties changed event
             /// </summary>
             AgvStateChanged,
 

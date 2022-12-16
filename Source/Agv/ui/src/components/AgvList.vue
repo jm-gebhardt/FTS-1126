@@ -16,6 +16,11 @@
           <ui-item-text1>{{ item.agvId }}</ui-item-text1>
           <ui-item-text2>{{ item.currentState }}</ui-item-text2>
         </ui-item-text-content>
+        <template #after="{ iconClass }">
+          <ui-icon :class="iconClass">
+            {{ AgvAliveIcon(item.alive) }}
+          </ui-icon>
+        </template>
       </ui-item>
     </template>
   </ui-list>
@@ -65,6 +70,14 @@ function AgvStateIcon(status: string | null | undefined): string {
       return 'hourglass_bottom'
     default:
       return 'help'
+  }
+}
+
+function AgvAliveIcon(alive: boolean | null | undefined): string {
+  if (alive == true) {
+    return ''
+  } else {
+    return 'signal_wifi_off'
   }
 }
 </script>

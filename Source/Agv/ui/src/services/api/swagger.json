@@ -551,7 +551,8 @@
         "required": [
           "agvId",
           "correlationId",
-          "currentState"
+          "currentState",
+          "alive"
         ],
         "type": "object",
         "properties": {
@@ -567,6 +568,10 @@
           "currentState": {
             "type": "string",
             "description": "Current State"
+          },
+          "alive": {
+            "type": "boolean",
+            "description": "Communication alive state"
           }
         },
         "additionalProperties": false,
@@ -916,7 +921,8 @@
           "type",
           "x",
           "y",
-          "z"
+          "z",
+          "theta"
         ],
         "type": "object",
         "properties": {
@@ -954,8 +960,7 @@
           "theta": {
             "type": "number",
             "description": "The rotation coordinate of the node.\r\n<br>\r\nSet to null when not needed.\r\n",
-            "format": "float",
-            "nullable": false
+            "format": "float"
           }
         },
         "additionalProperties": false,

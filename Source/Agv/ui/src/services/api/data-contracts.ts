@@ -9,6 +9,8 @@
  * ---------------------------------------------------------------
  */
 
+type UtilRequiredKeys<T, K extends keyof T> = Omit<T, K> & Required<Pick<T, K>>
+
 /**
  * AGV model
  */
@@ -22,6 +24,8 @@ export interface IAgv {
   agvId: string
   /** Current State */
   currentState: string
+  /** Communication alive state */
+  alive: boolean
 }
 
 /**
@@ -134,7 +138,7 @@ export interface IAgvPositionStatus {
 /**
  * AgvState model
  */
-export type IAgvState = IAgv & {
+export type IAgvState = UtilRequiredKeys<IAgv, 'alive'> & {
   alive: boolean
   orderId?: string | null
   busy?: boolean | null

@@ -96,6 +96,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                         x.AddConsumer<TransportOrderChangedConsumer>();
                         x.AddConsumer<AgvPositionReceivedConsumer>();
                         x.AddConsumer<AgvPositionChangedConsumer>();
+                        x.AddConsumer<AgvPropertyChangedConsumer>();
                         x.AddConsumer<AgvInitializer>();
 
                         // TOOD: remove - unused?
