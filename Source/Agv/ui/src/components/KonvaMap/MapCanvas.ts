@@ -18,9 +18,10 @@ import {
   GraphDimensions
 } from './MapNodes'
 import { Agv } from './MapAgv'
+import { Vector2d } from 'konva/lib/types'
 
 /**
- * Konva cavas for AGV Graph
+ * Konva canvas for AGV Graph
  */
 export class MapCanvas {
   imageLayer: Konva.Layer
@@ -36,9 +37,10 @@ export class MapCanvas {
   private _visibleAgvs: string[] = []
 
   private _background: HTMLImageElement | null = null
+  private _image: Konva.Image | null = null
 
   private readonly ZoomFactor = 1.1 // change zoom by 10% for each scroll step
-  private readonly MinZoomLevel = 0.5
+  private readonly MinZoomLevel = 0.1
   private readonly MaxZoomLevel = 10
 
   /**
@@ -68,6 +70,7 @@ export class MapCanvas {
       if (container) {
         this.stage.width(container.offsetWidth)
         this.stage.height(container.offsetHeight)
+        this.centerMap()
       }
     })
 
@@ -124,6 +127,8 @@ export class MapCanvas {
         this._addEdges(edges)
       }
     }
+
+    this.centerMap()
   }
 
   _addNodes(nodes: INode[]): void {
@@ -293,7 +298,7 @@ export class MapCanvas {
   }
 
   /**
-   * Creats a new AGV ui element and adds it to the canvas layer
+   * Creates a new AGV ui element and adds it to the canvas layer
    * @param correlationId Unique identifier of AGV
    * @param agvId Name of AGV that is shown in the UI
    * @param agvPosition Optional. If not set AGV position/rotaion will be initialised to 0
@@ -350,11 +355,11 @@ export class MapCanvas {
     GraphDimensions.offsetX = offsetX / resolution
     GraphDimensions.offsetY = offsetY / resolution
 
-    const image = new Konva.Image({
+    this._image = new Konva.Image({
       image: this._background
     })
     this.imageLayer.destroyChildren()
-    this.imageLayer.add(image)
+    this.imageLayer.add(this._image)
 
     // Check if scale has changed
     if (
@@ -367,6 +372,64 @@ export class MapCanvas {
       this._edges.forEach((e) => e.rescale(oldScale, oldOffsetX, oldOffsetY))
       this._agvs.forEach((a) => a.rescale(oldScale, oldOffsetX, oldOffsetY))
     }
+
+    this.centerMap()
+  }
+
+  centerMap(): void {
+    if (this._image == null || this._nodes.size == 0) {
+      return
+    }
+
+    const nodes = Array.from<MapNode>(this._nodes.values())
+
+    const minX = this.getMin(nodes, (m) => m.x)
+    const maxX = this.getMax(nodes, (m) => m.x)
+    const minY = this.getMin(nodes, (m) => m.y)
+    const maxY = this.getMax(nodes, (m) => m.y)
+
+    const graphHeigth = maxY - minY
+    const graphWidth = maxX - minX
+
+    // height of the visible area of Konva
+    const viewHeight = this.stage.getSize().height
+    const viewWidth = this.stage.getSize().width
+
+    // x percentage margin
+    const margin = 1.4
+    const scaleByY = viewHeight / (graphHeigth * margin)
+    const scaleByX = viewWidth / (graphWidth * margin)
+
+    // Take the minimum scale so that zoomed out far enough that the last two edges (vertically or horizontally) are resting against the frame
+    const scale = Math.min(scaleByX, scaleByY)
+    this.stage.scaleX(scale)
+    this.stage.scaleY(scale)
+
+    const offsetX = -viewWidth / scale / 2 + minX + graphWidth / 2
+    const offsetY = -viewHeight / scale / 2 + minY + graphHeigth / 2
+    this.stage.offsetX(offsetX)
+    this.stage.offsetY(offsetY)
+  }
+
+  private getMin(
+    nodes: MapNode[],
+    selector: (value: Vector2d) => number
+  ): number {
+    return Math.min(...this.map(nodes, selector))
+  }
+
+  private getMax(
+    nodes: MapNode[],
+    selector: (value: Vector2d) => number
+  ): number {
+    return Math.max(...this.map(nodes, selector))
+  }
+
+  private map(
+    nodes: MapNode[],
+    selector: (value: Vector2d) => number
+  ): number[] {
+    return nodes.map((m) => selector(m.getPosition()))
   }
 
   /**
