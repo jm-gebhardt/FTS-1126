@@ -4,18 +4,18 @@
 namespace Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Events
 {
     /// <summary>
-    /// An event that reports the failed execution of an order
+    /// An event that am order has been completed manually so it will be reported as finished
     /// </summary>
     [JetBrains.Annotations.PublicAPI]
-    public record TransportOrderReset : CorrelatedBy<Guid>
+    public record ManuallyCompleteTransportOrder : CorrelatedBy<Guid>
     {
         /// <inheritdoc/>
         public Guid CorrelationId { get; }
 
         /// <summary>
-        /// Initializes a new instance of <see cref="TransportOrderReset"/>
+        /// Initializes a new instance of <see cref="ManuallyCompleteTransportOrder"/>
         /// </summary>
-        public TransportOrderReset(Guid correlationId)
+        public ManuallyCompleteTransportOrder(Guid correlationId)
         {
             CorrelationId = correlationId;
         }

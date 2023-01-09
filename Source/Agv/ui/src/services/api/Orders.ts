@@ -17,7 +17,7 @@ export class Orders<
 > extends HttpClient<SecurityDataType> {
   /**
  * No description
- *
+ * 
  * @tags TransportOrder
  * @name OrdersList
  * @summary Retrieve active transport orders
@@ -70,6 +70,23 @@ If correlation Id is provided, all other parameters are ignored
   ) =>
     this.request<void, void>({
       path: `/orders/${correlationId}/resetOrder`,
+      method: 'PATCH',
+      ...params
+    })
+  /**
+   * No description
+   *
+   * @tags TransportOrder
+   * @name CompleteOrderPartialUpdate
+   * @summary Manually completes order
+   * @request PATCH:/orders/{correlationId}/completeOrder
+   */
+  completeOrderPartialUpdate = (
+    correlationId: string,
+    params: RequestParams = {}
+  ) =>
+    this.request<void, void>({
+      path: `/orders/${correlationId}/completeOrder`,
       method: 'PATCH',
       ...params
     })

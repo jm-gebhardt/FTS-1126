@@ -3,11 +3,12 @@ using Microsoft.AspNetCore.Mvc;
 using AutoMapper;
 using MassTransit;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Events;
+using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Commands;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers.DateRange;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers.Pagination;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
+using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Events;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
 {
@@ -69,6 +70,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
         /// Resets order and starts a new transport
         /// </summary>
         /// <response code="200">Ok: Order was reset</response>
+        /// <response code="400">BadRequest: Order is not completed yet</response>
         /// <response code="404">Not Found: Order with the given correlationId does not exist</response>
         [HttpPatch]
         [Route("/orders/{correlationId}/resetOrder")]
@@ -86,7 +88,28 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
                 return BadRequest("Order can not be reset because it is not completed yet");
             }
 
-            await _bus.Publish(new TransportOrderReset(order.CorrelationId));
+            await _bus.Publish(new ResetTransportOrder(order.CorrelationId));
+
+            return Ok();
+        }
+
+        /// <summary>
+        /// Completes order manually
+        /// </summary>
+        /// <response code="200">Ok: Order was completed</response>
+        /// <response code="404">Not Found: Order with the given correlationId does not exist</response>
+        [HttpPatch]
+        [Route("/orders/{correlationId}/completeOrder")]
+        public async Task<ActionResult> CompleteOrder(Guid correlationId)
+        {
+            var order = _orderRegistry.GetOrder(correlationId);
+
+            if (order == null)
+            {
+                return NotFound();
+            }
+
+            await _bus.Publish(new ManuallyCompleteTransportOrder(order.CorrelationId));
 
             return Ok();
         }

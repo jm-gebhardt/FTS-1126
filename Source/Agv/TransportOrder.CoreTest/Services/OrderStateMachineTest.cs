@@ -3,6 +3,7 @@ using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
+using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Events;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
@@ -239,7 +240,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         [DataRow(nameof(OrderStateMachine.OrderFailed), nameof(OrderStateMachine.OrderReceived))]
         [DataRow(nameof(OrderStateMachine.Final), nameof(OrderStateMachine.OrderReceived))]
         [TestMethod]
-        public async Task Handle_TransportOrderReset_Message(string previousState, string resultState)
+        public async Task Handle_ResetTransportOrder_Message(string previousState, string resultState)
         {
             var testFixtureObject = new TestFixture();
             StateMachineTestFixture<OrderStateMachine, OrderSaga> fixture = testFixtureObject.GetTestFixture();
@@ -255,13 +256,43 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
 
             fixture.Add(orderState);
 
-            await fixture.TestHarness.Bus.Publish(new TransportOrderReset(correlationId));
-            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<TransportOrderReset>());
+            await fixture.TestHarness.Bus.Publish(new ResetTransportOrder(correlationId));
+            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<ResetTransportOrder>());
 
             var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
             Assert.AreEqual(resultState, saga.CurrentState);
 
             var sentCommand = fixture.TestHarness.Published.Select<OrderQueuingCommand>().First().Context.Message;
+            sentCommand.CorrelationId.ShouldBe(correlationId);
+        }
+
+        [DataRow(nameof(OrderStateMachine.OrderReceived), nameof(OrderStateMachine.Final))]
+        [DataRow(nameof(OrderStateMachine.OrderFailed), nameof(OrderStateMachine.Final))]
+        [DataRow(nameof(OrderStateMachine.Final), nameof(OrderStateMachine.Final))]
+        [TestMethod]
+        public async Task Handle_ManuallyCompleteTransportOrder_Message_SendsHostOrderHandlingSucceeding(string previousState, string resultState)
+        {
+            var testFixtureObject = new TestFixture();
+            StateMachineTestFixture<OrderStateMachine, OrderSaga> fixture = testFixtureObject.GetTestFixture();
+
+            const string orderId = "Order123";
+            var correlationId = orderId.ToGuid();
+
+            var orderState = new OrderSaga(
+                    correlationId,
+                    new OrderDetails(correlationId, orderId, "s1", "d2", "leno1", HostOrderCreator.Simulation)
+                )
+                { CurrentState = previousState };
+
+            fixture.Add(orderState);
+
+            await fixture.TestHarness.Bus.Publish(new ManuallyCompleteTransportOrder(correlationId));
+            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<ManuallyCompleteTransportOrder>());
+
+            var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
+            Assert.AreEqual(resultState, saga.CurrentState);
+
+            var sentCommand = fixture.TestHarness.Published.Select<HostOrderHandlingSucceeded>().First().Context.Message;
             sentCommand.CorrelationId.ShouldBe(correlationId);
         }
 

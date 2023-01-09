@@ -3,6 +3,7 @@ using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
+using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Events;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.States;
 using MassTransit;
@@ -97,9 +98,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         public Event<CancelHostOrder> CancelHostOrderEvent { get; private set; } = default!;
 
         /// <summary>
-        /// TransportOrderReset has been received
+        /// ResetTransportOrder has been received
         /// </summary>
-        public Event<TransportOrderReset> TransportOrderResetEvent { get; private set; } = default!;
+        public Event<ResetTransportOrder> ResetTransportOrderEvent { get; private set; } = default!;
+
+        /// <summary>
+        /// ManuallyCompleteTransportOrder has been received
+        /// </summary>
+        public Event<ManuallyCompleteTransportOrder> ManuallyCompleteTransportOrderEvent { get; private set; } = default!;
         #endregion
 
         private readonly ILogger<OrderStateMachine> _logger;
@@ -129,7 +135,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
             During(Final, SetCancelHostOrderHandler());
             Initially(SetCancelHostOrderHandler());
 
-            During(OrderReceived, OrderFailed, Final, SetTransportOrderResetHandler());
+            During(OrderReceived, OrderFailed, Final, SetResetTransportOrderHandler());
+            
+            DuringAny(SetManuallyCompleteTransportOrderHandler());
+            During(Final, SetManuallyCompleteTransportOrderHandler());
 
             ConnectStateObserver(orderStateObserver);
             ConnectEventObserver(orderEventObserver);
@@ -216,12 +225,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
                 .ThenAsync(SendHostOrderCompleted)
                 .Finalize();
 
-        private EventActivityBinder<OrderSaga, TransportOrderReset> SetTransportOrderResetHandler() =>
-            When(TransportOrderResetEvent)
+        private EventActivityBinder<OrderSaga, ResetTransportOrder> SetResetTransportOrderHandler() =>
+            When(ResetTransportOrderEvent)
                 .Then(c =>
                     _logger.LogInformation("Order {OrderId} / {CorrelationId} was reset", c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId)
                  )
-                .Then(c => c.Saga.FailedReason = $"{nameof(TransportOrderReset)}")
+                .Then(c => c.Saga.FailedReason = $"{nameof(ResetTransportOrder)}")
                 .Then(c =>
                 {
                     // reset any assignment
@@ -230,6 +239,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
                 })
                 .TransitionTo(OrderReceived)
                 .Publish(OrderQueuingCommand);
+
+        private EventActivityBinder<OrderSaga, ManuallyCompleteTransportOrder> SetManuallyCompleteTransportOrderHandler() =>
+            When(ManuallyCompleteTransportOrderEvent)
+                .Then(c =>
+                    _logger.LogInformation("Order {OrderId} / {CorrelationId} was completed manually", c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId)
+                )
+                .ThenAsync(SendHostOrderManuallyCompleted)
+                .Finalize();
 
         /// <summary>
         /// Handler for inbound message CancelTransportOrder
@@ -253,6 +270,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         }
 
         private async Task SendHostOrderCompleted(BehaviorContext<OrderSaga, TransportOrderCompleted> context)
+        {
+            await context.Publish(new HostOrderHandlingSucceeded(context.Saga.CorrelationId, context.Saga.OrderDetails.OrderId));
+        }
+
+        private async Task SendHostOrderManuallyCompleted(BehaviorContext<OrderSaga, ManuallyCompleteTransportOrder> context)
         {
             await context.Publish(new HostOrderHandlingSucceeded(context.Saga.CorrelationId, context.Saga.OrderDetails.OrderId));
         }

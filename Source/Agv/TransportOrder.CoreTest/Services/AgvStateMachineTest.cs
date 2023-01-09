@@ -198,7 +198,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         {
             StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = GetFixture();
 
-            const string agvId = "Order#1";
+            const string agvId = "AGV#1";
             var correlationId = agvId.ToGuid();
             var agvStatus = new AgvStatus(correlationId, null, true, true, 10, true, true);
 

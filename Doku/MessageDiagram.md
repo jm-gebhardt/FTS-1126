@@ -18,6 +18,12 @@ sequenceDiagram
     end
     
     UI->>AgvManagement: ReleaseAgv
+    
+    UI->>TransportOrder: ResetOrder
+    UI->>TransportOrder: CompleteOrder
+    activate TransportOrder
+    TransportOrder->>+WCSCommunication:HostOrderHandlingSucceeded
+    deactivate TransportOrder
 
     (AGV)->>DeviceCommunication: State
     activate DeviceCommunication

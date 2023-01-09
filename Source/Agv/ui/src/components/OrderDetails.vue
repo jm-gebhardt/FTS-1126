@@ -90,6 +90,11 @@ let actionItems: ComputedRef<ActionItem<IOrder>[]> = computed(() => {
       label: 'Reset Order',
       data: props.modelValue,
       action: resetOrder
+    },
+    {
+      label: 'Complete Order',
+      data: props.modelValue,
+      action: completeOrder
     }
   ] as ActionItem<IOrder>[]
 })
@@ -111,6 +116,30 @@ function resetOrder(order: IOrder | null): void {
             console.error('Reset order: ' + reason.statusText)
             const $alert = useAlert()
             $alert(`Order '${order.orderDetails.orderId}' could not be resend`)
+          })
+      }
+    })
+}
+
+function completeOrder(order: IOrder | null): void {
+  if (order === null) return
+
+  const $confirm = useConfirm()
+
+  $confirm(`Complete order '${order.orderDetails.orderId}'?`)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .then((result: any) => {
+      // According to the balm-ui documentation 'result' should be a boolean but in the node module code it's declared as a void
+      // During runtime it actually is a boolean, so we need to cast it
+      if (result as boolean) {
+        orderApi
+          .completeOrderPartialUpdate(order.correlationId)
+          .catch((reason: HttpResponse) => {
+            console.error('Complete order: ' + reason.statusText)
+            const $alert = useAlert()
+            $alert(
+              `Order '${order.orderDetails.orderId}' could not be completed`
+            )
           })
       }
     })

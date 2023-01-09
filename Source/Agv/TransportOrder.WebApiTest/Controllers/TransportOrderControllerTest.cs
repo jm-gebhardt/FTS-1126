@@ -2,6 +2,7 @@
 using Gebhardt.StoreWare.Agv.Common.Messages;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Commands;
+using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Events;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
@@ -195,9 +196,35 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var result = controller.ResetOrder(correlationId).Result as OkResult;
             Assert.IsNotNull(result);
 
-            bus.Verify(s => s.Publish(It.Is<TransportOrderReset>(
+            bus.Verify(s => s.Publish(It.Is<ResetTransportOrder>(
                     m => m.CorrelationId == correlationId
                 ), default), Times.Once);
+        }
+
+        [TestMethod]
+        public void CompleteOrder_Ok()
+        {
+            var bus = new Mock<IBus>();
+
+            var controller = GetController(bus: bus.Object);
+            var correlationId = _orders[1].ToGuid();
+
+            var result = controller.CompleteOrder(correlationId).Result as OkResult;
+            Assert.IsNotNull(result);
+
+            bus.Verify(s => s.Publish(It.Is<ManuallyCompleteTransportOrder>(
+                    m => m.CorrelationId == correlationId
+                ), default), Times.Once);
+        }
+
+        [TestMethod]
+        public void CompleteOrder_NotFound()
+        {
+            var controller = GetController();
+            var correlationId = Guid.Empty;
+
+            var result = controller.CompleteOrder(correlationId).Result as NotFoundResult;
+            Assert.IsNotNull(result);
         }
     }
 }
