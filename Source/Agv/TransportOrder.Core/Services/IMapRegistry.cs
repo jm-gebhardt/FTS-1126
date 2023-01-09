@@ -35,6 +35,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         /// <param name="xOffset"></param>
         /// <param name="yOffset"></param>
         /// <param name="modificationDate"></param>
+        /// <returns>True if a change has been made</returns>
         public bool AddOrUpdate(Guid correlationId, string mapId, string base64PngImage, double resolution, double xOffset, double yOffset, DateTime modificationDate);
     }
 }

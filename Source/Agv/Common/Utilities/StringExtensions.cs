@@ -1,4 +1,6 @@
-﻿namespace Gebhardt.StoreWare.Agv.Common.Utilities
+﻿using System.Text;
+
+namespace Gebhardt.StoreWare.Agv.Common.Utilities
 {
     /// <summary>
     /// Extension methods to strings.
