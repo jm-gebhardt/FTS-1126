@@ -1,55 +1,110 @@
-﻿using System.Text;
-using AutoMapper;
+﻿using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Models;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Profiles;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.States;
+using MassTransit;
+using Microsoft.Extensions.DependencyInjection;
 using Moq;
+using System.Text;
+using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Features.Maps.Handlers.Queries
 {
-    public class MapRequestHandlerTestFixture
+    /// <summary>
+    /// Testing fixture to test map request
+    /// </summary>
+    /// <typeparam name="TRequestClient"></typeparam>
+    /// <typeparam name="TConsumer"></typeparam>
+    public class MapRequestTestFixture<TRequestClient, TConsumer> : MediatorTestFixture<TRequestClient, TConsumer> 
+        where TRequestClient : class
+        where TConsumer : class, IConsumer
     {
         public const string Base64String = "dGhlIHF1aWNrIGJyb3duIGZveCBqdW1wIG92ZXIgdGhlIGxhenkgZG9n";
 
-        private static readonly string[] _agvIds = { "AGV001", "AGV002", "AGV003" };
-        private static readonly string[] _orders = { "ORDER001", "ORDER002", "" };
-        private static readonly string[] _states = { nameof(AgvStateMachine.Idle), nameof(AgvStateMachine.Busy), nameof(AgvStateMachine.Discovered) };
-        private static readonly string[] _ips = { "127.0.0.1", "127.0.0.2", "127.0.0.3" };
+        private readonly string[] _agvIds = { "AGV001", "AGV002", "AGV003" };
+        private readonly string[] _orders = { "ORDER001", "ORDER002", "" };
+        private readonly string[] _states = { nameof(AgvStateMachine.Idle), nameof(AgvStateMachine.Busy), nameof(AgvStateMachine.Discovered) };
+        private readonly string[] _ips = { "127.0.0.1", "127.0.0.2", "127.0.0.3" };
 
-        private static readonly AgvGraph.Node[] _nodes = {
+        private readonly AgvGraph.Node[] _nodes = {
             new("node00") { X = 0f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
             new("node10") { X = 1f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
             new("node01") { X = 0f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
             new("node11") { X = 1f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint }
         };
 
-        private static readonly AgvGraph.Edge[] _edges = {
+        private readonly AgvGraph.Edge[] _edges = {
             new("node00", "node01"),
             new("node01", "node11"),
             new("node11", "node10"),
             new("node10", "node00")
         };
 
-        private static readonly Guid[] _correlationIds = {
+        private readonly Guid[] _correlationIds = {
             new("7FE9372B-4219-4D09-8885-966EE125A350"),
             new("041AD79E-1952-4AB7-BD3E-9EC972E27FBF"),
             new("465A85A6-6A02-4068-A7AA-E3B4B9821019")
         };
 
-        public Mock<IMapRegistry> MapRegistryMock { get; }
-        public Mock<IAgvRegistry> AgvRegistryMock { get; }
-        public IMapper Mapper { get; }
+        private readonly List<Action<IServiceCollection>> _serviceActions = new();
 
-        public MapRequestHandlerTestFixture()
+        protected override void ConfigureServices(IServiceCollection collection)
         {
-            MapRegistryMock = GetMapRegistry();
-            AgvRegistryMock = GetAgvRegistry();
-            Mapper = GetMapper();
+            foreach (Action<IServiceCollection> serviceAction in _serviceActions)
+            {
+                serviceAction.Invoke(collection);
+            }
         }
 
-        private static Mock<IMapRegistry> GetMapRegistry()
+        /// <summary>
+        /// Adds the service to the service collection
+        /// </summary>
+        /// <param name="serviceAction">The action of the service to add</param>
+        /// <returns></returns>
+        [UsedImplicitly]
+        public MapRequestTestFixture<TRequestClient, TConsumer> AddService(Action<IServiceCollection> serviceAction)
+        {
+            _serviceActions.Add(serviceAction);
+            return this;
+        }
+
+        /// <summary>
+        /// Uses the default services
+        /// </summary>
+        /// <returns></returns>
+        public MapRequestTestFixture<TRequestClient, TConsumer> UseDefaultServices()
+        {
+            _serviceActions.Add(sc => sc.AddTransient(_ => GetMapRegistry().Object));
+            _serviceActions.Add(sc => sc.AddTransient(_ => GetAgvRegistry().Object));
+            _serviceActions.Add(sc => sc.AddTransient(_ => GetMapper()));
+
+            return this;
+        }
+
+        /// <summary>
+        /// Uses the default services
+        /// </summary>
+        /// <returns></returns>
+        public MapRequestTestFixture<TRequestClient, TConsumer> AddMapRegistryMock(Action<Mock<IMapRegistry>> mapRegistryAction)
+        {
+            var mapRegistryMock = new Mock<IMapRegistry>();
+            mapRegistryAction.Invoke(mapRegistryMock);
+
+            _serviceActions.Add(sc => sc.AddTransient(_ => mapRegistryMock.Object));
+
+            return this;
+        }
+
+        public new MapRequestTestFixture<TRequestClient, TConsumer> Build()
+        {
+            base.Build();
+            return this;
+        }
+
+        private Mock<IMapRegistry> GetMapRegistry()
         {
             var mapRegistryMock = new Mock<IMapRegistry>();
 
@@ -63,7 +118,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Features.Maps.Handlers.
             return mapRegistryMock;
         }
 
-        private static Mock<IAgvRegistry> GetAgvRegistry()
+        private Mock<IAgvRegistry> GetAgvRegistry()
         {
             var registryMock = new Mock<IAgvRegistry>();
 
@@ -94,7 +149,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Features.Maps.Handlers.
             return registryMock;
         }
 
-        private static Mapper GetMapper()
+        private IMapper GetMapper()
         {
             var mapperConfig = new MapperConfiguration(cfg =>
             {
@@ -103,5 +158,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Features.Maps.Handlers.
             var mapper = new Mapper(mapperConfig);
             return mapper;
         }
+
     }
 }

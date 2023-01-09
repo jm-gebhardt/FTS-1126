@@ -1,11 +1,12 @@
 ﻿using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Common;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Handlers.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Requests.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers;
-using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
 using Shouldly;
+using System.Text;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
 {
@@ -15,32 +16,38 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
         [TestMethod]
         public async Task GetMaps_ShouldSendProperCommandToMediator_WhereRequestIsNotDefined()
         {
-            var maps = new List<MapDto>()
-            {
-                new(Guid.NewGuid(),"1",0,10,10,new []{ Guid.NewGuid() })
-            };
-            var mediatorMock = new Mock<IMediator>();
-            mediatorMock.Setup(m => m.Send(It.IsAny<GetMapListRequest>(), CancellationToken.None)).ReturnsAsync(maps);
+            MapControllerTestFixture<GetMapListRequest, GetMapListRequestHandler> fixture = new MapControllerTestFixture<GetMapListRequest, GetMapListRequestHandler>()
+                .UseDefaultServices()
+                .Build();
 
-            var mapController = new MapController(mediatorMock.Object);
+            var mapController = new MapController(fixture.GetRequestClient(), null!);
             ActionResult<IEnumerable<MapDto>> response = await mapController.GetMaps();
 
             var result = response.Result as OkObjectResult;
             var resultValue = result!.Value as IList<MapDto>;
 
             resultValue.ShouldNotBeEmpty();
+
+            var harness = fixture.TestHarness!;
+
+            Assert.IsTrue(await harness.Consumed.Any<GetMapListRequest>());
+            Assert.IsTrue(await harness.Consumed.Any<GetMapListResult>());
+
+            Assert.IsTrue(await harness.Published.Any<GetMapListRequest>());
+            Assert.IsTrue(await harness.Published.Any<GetMapListResult>());
         }
 
         [TestMethod]
         public async Task GetMap_ShouldSendProperCommandToMediator_WhereCorrelationIdIsValid()
         {
-            byte[] imageByteArray = Convert.FromBase64String("bGlnaHQgd29yay4=");
-            Guid correlationId = new("1647B1E4-79B3-4404-A274-572C41678A42");
+            byte[] imageByteArray = Encoding.UTF8.GetBytes(MapControllerTestFixture<GetMapImageRequest, GetMapImageRequestHandler>.Base64String);
+            Guid correlationId = new("7FE9372B-4219-4D09-8885-966EE125A350");
 
-            var mediatorMock = new Mock<IMediator>();
-            mediatorMock.Setup(m => m.Send(It.IsAny<GetMapImageRequest>(), CancellationToken.None)).ReturnsAsync(imageByteArray);
+            MapControllerTestFixture<GetMapImageRequest, GetMapImageRequestHandler> fixture = new MapControllerTestFixture<GetMapImageRequest, GetMapImageRequestHandler>()
+                .AddMapRegistryMock()
+                .Build();
 
-            var mapController = new MapController(mediatorMock.Object);
+            var mapController = new MapController(null!, fixture.GetRequestClient());
             var response = await mapController.GetMap(correlationId);
 
             var result = response as FileContentResult;
@@ -48,6 +55,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
 
             resultValue.ShouldNotBeEmpty();
             resultValue.ShouldBeEquivalentTo(imageByteArray);
+
+            var harness = fixture.TestHarness!;
+
+            Assert.IsTrue(await harness.Consumed.Any<GetMapImageRequest>());
+            Assert.IsTrue(await harness.Consumed.Any<GetMapImageResult>());
+
+            Assert.IsTrue(await harness.Published.Any<GetMapImageRequest>());
+            Assert.IsTrue(await harness.Published.Any<GetMapImageResult>());
         }
     }
 }

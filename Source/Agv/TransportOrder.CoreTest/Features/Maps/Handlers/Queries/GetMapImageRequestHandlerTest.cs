@@ -1,11 +1,12 @@
-﻿using System.Text;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Exceptions;
+﻿using Gebhardt.StoreWare.Agv.TransportOrder.Core.Exceptions;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Common;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Handlers.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Requests.Queries;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services;
+using MassTransit;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
+using System.Text;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Features.Maps.Handlers.Queries
 {
@@ -15,28 +16,40 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Features.Maps.Handlers.
         [TestMethod]
         public async Task GetMap_ShouldReturnByteArrayOfImage_WhenMapIsFound()
         {
-            var mapRegistryMock = new Mock<IMapRegistry>();
-            mapRegistryMock.Setup(x => x.GetMap(It.IsAny<Guid>())).Returns(Encoding.UTF8.GetBytes(MapRequestHandlerTestFixture.Base64String));
+            MapRequestTestFixture<GetMapImageRequest, GetMapImageRequestHandler> fixture = new MapRequestTestFixture<GetMapImageRequest, GetMapImageRequestHandler>()
+                .AddMapRegistryMock(m =>
+                {
+                    m.Setup(x => x.GetMap(It.IsAny<Guid>())).Returns(Encoding.UTF8.GetBytes(MapRequestTestFixture<GetMapImageRequest, GetMapImageRequestHandler>.Base64String));
+                })
+                .Build();
 
-            var mapRequest = new GetMapImageRequest(new("7FE9372B-4219-4D09-8885-966EE125A350"));
-            var mapCommandHandler = new GetMapImageRequestHandler(mapRegistryMock.Object);
-
-            byte[] byteArrayOfImage = await mapCommandHandler.Handle(mapRequest, CancellationToken.None);
+            Response<GetMapImageResult> response = await fixture.GetResponseAsync<GetMapImageResult>(new(new("7FE9372B-4219-4D09-8885-966EE125A350")));
+            byte[] byteArrayOfImage = response.Message.Image;
 
             byteArrayOfImage.ShouldNotBeEmpty();
+
+            var harness = fixture.TestHarness!;
+
+            Assert.IsTrue(await harness.Consumed.Any<GetMapImageRequest>());
+            Assert.IsTrue(await harness.Consumed.Any<GetMapImageResult>());
+
+            Assert.IsTrue(await harness.Published.Any<GetMapImageRequest>());
+            Assert.IsTrue(await harness.Published.Any<GetMapImageResult>());
         }
 
+
         [TestMethod]
-        [ExpectedException(typeof(MapNotFoundException))]
         public async Task GetMap_ShouldThrowMapNotFoundException_WhenMapIsNotFound()
         {
-            var mapRegistryMock = new Mock<IMapRegistry>();
-            mapRegistryMock.Setup(x => x.GetMap(It.IsAny<Guid>())).Returns(() => null);
+            MapRequestTestFixture<GetMapImageRequest, GetMapImageRequestHandler> fixture = new MapRequestTestFixture<GetMapImageRequest, GetMapImageRequestHandler>()
+                .AddMapRegistryMock(m =>
+                {
+                    m.Setup(x => x.GetMap(It.IsAny<Guid>())).Returns(() => null);
+                })
+                .Build();
 
-            var mapRequest = new GetMapImageRequest(new("7FE9372B-4219-4D09-8885-966EE125A351"));
-            var mapCommandHandler = new GetMapImageRequestHandler(mapRegistryMock.Object);
-
-            await mapCommandHandler.Handle(mapRequest, CancellationToken.None);
+            var requestException = await Should.ThrowAsync<RequestException>(fixture.GetResponseAsync<GetMapImageResult>(new(new("7FE9372B-4219-4D09-8885-966EE125A351"))));
+            requestException.InnerException.ShouldBeOfType<MapNotFoundException>();
         }
 
     }

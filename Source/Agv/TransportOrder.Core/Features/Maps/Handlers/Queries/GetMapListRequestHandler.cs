@@ -1,17 +1,20 @@
-﻿using System.Collections.Immutable;
-using AutoMapper;
+﻿using AutoMapper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Common;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Requests.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Profiles;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services;
-using MediatR;
+using MassTransit;
+using System.Collections.Immutable;
+using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Handlers.Queries
 {
     /// <summary>
     /// Defines a handler for the GetMapList request
     /// </summary>
-    public class GetMapListRequestHandler : IRequestHandler<GetMapListRequest, List<MapDto>>
+    [UsedImplicitly]
+    public class GetMapListRequestHandler : IConsumer<GetMapListRequest>
     {
         private readonly IAgvRegistry _agvRegistry;
         private readonly IMapRegistry _mapRegistry;
@@ -31,10 +34,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Handlers.Quer
         /// <summary>
         /// Handles a GetMapList request
         /// </summary>
-        /// <param name="request"></param>
-        /// <param name="cancellationToken"></param>
+        /// <param name="context"></param>
         /// <returns>Maps with an existing AgvGraph</returns>
-        public Task<List<MapDto>> Handle(GetMapListRequest request, CancellationToken cancellationToken)
+        public async Task Consume(ConsumeContext<GetMapListRequest> context)
         {
             ImmutableDictionary<Guid, Guid[]> agvMapRelation = _agvRegistry.GetAllAgvs()
                 .Where(a => a.AgvGraph != null)
@@ -42,11 +44,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Handlers.Quer
                 .AsEnumerable()
                 .GroupBy(a => a.RelatedMapId)
                 .ToImmutableDictionary(x => x.Key, x => x.Select(m => m.CorrelationId).ToArray()
-            );
+                );
 
             var maps = _mapper.Map<List<MapDto>>(_mapRegistry.GetAllMaps().AsEnumerable(), opt => opt.Items[MappingProfile.AgvMapRelationsName] = agvMapRelation);
 
-            return Task.FromResult(maps);
+            await context.RespondAsync(new GetMapListResult { Maps = maps });
         }
     }
 }

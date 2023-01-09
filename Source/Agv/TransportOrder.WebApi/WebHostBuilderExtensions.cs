@@ -1,18 +1,17 @@
-using System.Reflection;
-using System.Text.Json.Serialization;
-using System.Xml.XPath;
-using System.Xml.Linq;
 using Gebhardt.StoreWare.Agv.Common.Extensions;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Hubs;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.SchemaFilter;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Middleware;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
-using MediatR;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Hubs;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.SchemaFilter;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Middleware;
+using System.Reflection;
+using System.Text.Json.Serialization;
+using System.Xml.Linq;
+using System.Xml.XPath;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi
 {
@@ -33,7 +32,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi
             {
                 services.AddScoped<ExceptionHandlerMiddleware>();
                 services.AddMvc();
-                services.AddMediatR(AppDomain.CurrentDomain.GetAssemblies());
                 services.AddControllers()
                     .AddApplicationPart(executingAssembly)
                     .AddJsonOptions(options =>

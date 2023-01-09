@@ -1,14 +1,17 @@
 ﻿using Gebhardt.StoreWare.Agv.TransportOrder.Core.Exceptions;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Common;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Requests.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services;
-using MediatR;
+using JetBrains.Annotations;
+using MassTransit;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Handlers.Queries
 {
     /// <summary>
     /// Defines a handler for the GetMapImage request
     /// </summary>
-    public class GetMapImageRequestHandler : IRequestHandler<GetMapImageRequest, byte[]>
+    [UsedImplicitly]
+    public class GetMapImageRequestHandler : IConsumer<GetMapImageRequest>
     {
         private readonly IMapRegistry _mapRegistry;
 
@@ -24,19 +27,20 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Handlers.Quer
         /// <summary>
         /// Handles a GetMapImage request
         /// </summary>
-        /// <param name="request"></param>
-        /// <param name="cancellationToken"></param>
+        /// <param name="context"></param>
         /// <returns>A map from the MapRegistry</returns>
         /// <exception cref="MapNotFoundException">Map is null or empty</exception>
-        public Task<byte[]> Handle(GetMapImageRequest request, CancellationToken cancellationToken)
+        public async Task Consume(ConsumeContext<GetMapImageRequest> context)
         {
+            var request = context.Message;
+
             byte[]? image = _mapRegistry.GetMap(request.CorrelationId);
             if (image == null || image.Length == 0)
             {
                 throw new MapNotFoundException($"Map not found using the correlationId:{request.CorrelationId}");
             }
 
-            return Task.FromResult(image);
+            await context.RespondAsync(new GetMapImageResult { Image = image });
         }
     }
 }

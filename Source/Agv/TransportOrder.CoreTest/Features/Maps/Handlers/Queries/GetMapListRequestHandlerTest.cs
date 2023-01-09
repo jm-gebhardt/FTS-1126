@@ -1,6 +1,8 @@
 ﻿using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Common;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Handlers.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Requests.Queries;
+using MassTransit;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
@@ -12,13 +14,22 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Features.Maps.Handlers.
         [TestMethod]
         public async Task GetMaps_ShouldReturnListOfMaps_WhereMapRegistryIsContained()
         {
-            var mapTestFixture = new MapRequestHandlerTestFixture();
-            var request = new GetMapListRequest();
-            var handler = new GetMapListRequestHandler(mapTestFixture.AgvRegistryMock.Object, mapTestFixture.MapRegistryMock.Object, mapTestFixture.Mapper);
+            MapRequestTestFixture<GetMapListRequest, GetMapListRequestHandler> fixture = new MapRequestTestFixture<GetMapListRequest, GetMapListRequestHandler>()
+                .UseDefaultServices()
+                .Build();
 
-            List<MapDto> maps = await handler.Handle(request, CancellationToken.None);
+            Response<GetMapListResult> response = await fixture.GetResponseAsync<GetMapListResult>(new GetMapListRequest());
+            List<MapDto> maps = response.Message.Maps;
 
             maps.ShouldNotBeEmpty();
+
+            var harness = fixture.TestHarness!;
+
+            Assert.IsTrue(await harness.Consumed.Any<GetMapListRequest>());
+            Assert.IsTrue(await harness.Consumed.Any<GetMapListResult>());
+
+            Assert.IsTrue(await harness.Published.Any<GetMapListRequest>());
+            Assert.IsTrue(await harness.Published.Any<GetMapListResult>());
         }
     }
 }

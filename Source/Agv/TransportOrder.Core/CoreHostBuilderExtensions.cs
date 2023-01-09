@@ -3,6 +3,8 @@ using Gebhardt.StoreWare.Agv.Common;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Services.Detectors;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.CmdOptions;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Handlers.Queries;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Requests.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Hubs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Models;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence;
@@ -98,10 +100,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                         x.AddConsumer<AgvPositionChangedConsumer>();
                         x.AddConsumer<AgvPropertyChangedConsumer>();
                         x.AddConsumer<AgvInitializer>();
+                        x.AddConsumer<GetMapImageRequestHandler>();
+                        x.AddConsumer<GetMapListRequestHandler>();
 
-                        // TOOD: remove - unused?
                         x.AddRequestClient<ReserveAgv>();
                         x.AddRequestClient<AssignAgv>();
+                        x.AddRequestClient<GetMapImageRequest>();
+                        x.AddRequestClient<GetMapListRequest>();
 
                         x.AddDelayedMessageScheduler();
                     }, rabbitMqConfiguration: (_, cfg) =>

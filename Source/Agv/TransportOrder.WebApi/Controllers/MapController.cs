@@ -1,6 +1,7 @@
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Common;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Requests.Queries;
-using MediatR;
+using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
@@ -11,16 +12,18 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
     [ApiController]
     public class MapController : Controller
     {
-
-        private readonly IMediator _mediator;
+        private readonly IRequestClient<GetMapListRequest> _getMapListClient;
+        private readonly IRequestClient<GetMapImageRequest> _getMapImageClient;
 
         /// <summary>
         /// Constructor
         /// </summary>
-        /// <param name="mediator"></param>
-        public MapController(IMediator mediator)
+        /// <param name="getMapListClient"></param>
+        /// <param name="getMapImageClient"></param>
+        public MapController(IRequestClient<GetMapListRequest> getMapListClient, IRequestClient<GetMapImageRequest> getMapImageClient)
         {
-            _mediator = mediator;
+            _getMapListClient = getMapListClient;
+            _getMapImageClient = getMapImageClient;
         }
 
         /// <summary>
@@ -31,7 +34,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
         [Route("/maps")]
         public async Task<ActionResult<IEnumerable<MapDto>>> GetMaps()
         {
-            List<MapDto> maps = await _mediator.Send(new GetMapListRequest());
+            Response<GetMapListResult> response = await _getMapListClient.GetResponse<GetMapListResult>(new GetMapListRequest());
+            List<MapDto> maps = response.Message.Maps;
 
             return Ok(maps);
         }
@@ -46,7 +50,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
         [Produces("image/png")]
         public async Task<ActionResult> GetMap(Guid correlationId)
         {
-            byte[] image = await _mediator.Send(new GetMapImageRequest(correlationId));
+            Response<GetMapImageResult> response = await _getMapImageClient.GetResponse<GetMapImageResult>(new GetMapImageRequest(correlationId));
+            byte[] image = response.Message.Image;
 
             return File(image, "image/png");
         }
