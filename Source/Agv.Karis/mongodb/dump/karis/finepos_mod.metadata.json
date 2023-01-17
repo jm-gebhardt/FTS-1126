@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"},{"v":{"$numberInt":"2"},"unique":true,"key":{"id":{"$numberInt":"1"}},"name":"id_1"}],"uuid":"3704250200a14b94846c690fce5ec8be","collectionName":"finepos_mod","type":"collection"}

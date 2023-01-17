@@ -1,3 +1,4 @@
 * text eol=crlf encoding=UTF-8
 *.ez binary
 *.png binary
+*.bson binary

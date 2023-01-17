@@ -1,1 +1,0 @@
-{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"},{"v":{"$numberInt":"2"},"unique":true,"key":{"id":{"$numberInt":"1"}},"name":"id_1"}],"uuid":"b48261cf3d7b4fd080e3d8298e3fc0c8","collectionName":"street_node","type":"collection"}

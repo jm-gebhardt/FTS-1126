@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"},{"v":{"$numberInt":"2"},"unique":true,"key":{"ID":{"$numberInt":"1"}},"name":"ID_1"}],"uuid":"d9ef3f85e9dc4da0aaf8158557dd7c7d","collectionName":"path_node","type":"collection"}
