@@ -38,6 +38,7 @@ try
                         x.AddDelayedMessageScheduler();
                     }, rabbitMqConfiguration: (_, cfg) =>
                     {
+                        cfg.ConfigureMessageTopology<SimulatedAgvStateMachine>();
                         cfg.UseDelayedMessageScheduler();
                     });
                 })
