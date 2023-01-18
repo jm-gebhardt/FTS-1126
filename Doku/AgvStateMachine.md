@@ -14,4 +14,8 @@ stateDiagram-v2
     Idle --> Locked: LockAgv
     Discovered --> Locked: LockAgv
     Reserved --> PendingLock: LockAgv
+
+    Reserved --> Charging: AgvStartedCharging
+    Idle --> Charging: AgvStartedCharging
+    Charging --> Idle: AgvStoppedCharging
 :::

@@ -750,7 +750,83 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         }
 
         /// <summary>
-        /// When AgvSaga state has changed check if observer was triggered
+        /// Checks if <see cref="AgvStartedCharging"/> has been consumed with required state transition to <seealso cref="AgvStateMachine.Charging"/>
+        /// </summary>
+        [DataRow(nameof(AgvStateMachine.Reserved))]
+        [DataRow(nameof(AgvStateMachine.Idle))]
+        [TestMethod]
+        public async Task AgvStartedCharging_Consumed(string previousState)
+        {
+            // Arrange
+            var mockRegistry = new Mock<IMapRegistry>();
+            mockRegistry.Setup(s => s.GetAllMaps()).Returns(new EnumerableQuery<Map>(new List<Map>()));
+
+            var mockObserver = new Mock<IStateObserver<AgvSaga>>();
+
+            var fixture = new StateMachineTestFixture<AgvStateMachine, AgvSaga>(services: s =>
+            {
+                s.AddTransient(_ => mockRegistry.Object);
+                s.AddSingleton(mockObserver.Object);
+                s.AddSingleton(_ => new ProductionOptions()
+                {
+                    ApplicationName = null,
+                    AutoAccept = true
+                });
+            });
+
+            var agvSaga = CreateTestAgvSaga(previousState);
+            fixture.Add(agvSaga);
+
+            // Act
+            await fixture.TestHarness.Bus.Publish(new AgvStartedCharging(agvSaga.CorrelationId));
+
+            // Assert
+            bool consumed = await fixture.SagaHarness.Consumed.Any<AgvStartedCharging>();
+            consumed.ShouldBeTrue();
+
+            var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == agvSaga.CorrelationId).First().Saga;
+            saga.CurrentState.ShouldBe(nameof(AgvStateMachine.Charging));
+        }
+
+        /// <summary>
+        /// Checks if <see cref="AgvStoppedCharging"/> has been consumed with required state transition to <seealso cref="AgvStateMachine.Idle"/>
+        /// </summary>
+        [TestMethod]
+        public async Task AgvStoppedCharging_Consumed()
+        {
+            // Arrange
+            var mockRegistry = new Mock<IMapRegistry>();
+            mockRegistry.Setup(s => s.GetAllMaps()).Returns(new EnumerableQuery<Map>(new List<Map>()));
+
+            var mockObserver = new Mock<IStateObserver<AgvSaga>>();
+
+            var fixture = new StateMachineTestFixture<AgvStateMachine, AgvSaga>(services: s =>
+            {
+                s.AddTransient(_ => mockRegistry.Object);
+                s.AddSingleton(mockObserver.Object);
+                s.AddSingleton(_ => new ProductionOptions()
+                {
+                    ApplicationName = null,
+                    AutoAccept = true
+                });
+            });
+
+            var agvSaga = CreateTestAgvSaga(nameof(AgvStateMachine.Charging));
+            fixture.Add(agvSaga);
+
+            // Act
+            await fixture.TestHarness.Bus.Publish(new AgvStoppedCharging(agvSaga.CorrelationId));
+
+            // Assert
+            bool consumed = await fixture.SagaHarness.Consumed.Any<AgvStoppedCharging>();
+            consumed.ShouldBeTrue();
+
+            var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == agvSaga.CorrelationId).First().Saga;
+            saga.CurrentState.ShouldBe(nameof(AgvStateMachine.Idle));
+        }
+
+        /// <summary>
+        /// When AgvSaga state has changed, check if observer was triggered
         /// </summary>
         [TestMethod]
         public async Task When_AgvSaga_State_Changed_Trigger_Observer()
@@ -798,9 +874,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         }
 
         /// <summary>
-        /// When AgvInitializedMessage is received AgvfflineWatchdog is started
+        /// When AgvInitializedMessage is received, AgvOfflineWatchdog is started
         /// </summary>
-        /// <returns></returns>
         [TestMethod]
         [DataRow(true)]
         [DataRow(false)]
@@ -831,7 +906,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         }
 
         /// <summary>
-        /// When watchdog expires AGV goes offline
+        /// When watchdog expires, AGV goes offline
         /// </summary>
         [TestMethod]
         public async Task When_AgvWatchdogExpires_AgvWentOffline()
@@ -872,7 +947,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvStateMachine.AgvOfflineMessage>());
             var now = DateTime.UtcNow;
             var msg = fixture.SagaHarness.Consumed.Select<AgvStateMachine.AgvOfflineMessage>().First().Context.Message;
-            // When triggerd initially by AgvInitializeMessage the timeout for busy state is taken into account
+            // When triggered initially by AgvInitializeMessage, the timeout for busy state is taken into account
             Assert.IsTrue((now - msg.Created).TotalMilliseconds > 0.9 * agvOfflineTimeoutMsWhileBusy);
             Assert.IsTrue((now - msg.Created).TotalMilliseconds < 1.5 * agvOfflineTimeoutMsWhileBusy);
 
@@ -925,7 +1000,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvStateMachine.AgvOfflineMessage>());
             var now = DateTime.UtcNow;
             var msg = fixture.SagaHarness.Consumed.Select<AgvStateMachine.AgvOfflineMessage>().First().Context.Message;
-            // When triggerd by AgvStatusReceived the timeout depends on the state (and this AGV is idle)
+            // When triggered by AgvStatusReceived, the timeout depends on the state (and this AGV is idle)
             Assert.IsTrue((now - msg.Created).TotalMilliseconds > 0.9 * agvOfflineTimeoutMsWhileIdle);
             Assert.IsTrue((now - msg.Created).TotalMilliseconds < 1.5 * agvOfflineTimeoutMsWhileIdle);
 
