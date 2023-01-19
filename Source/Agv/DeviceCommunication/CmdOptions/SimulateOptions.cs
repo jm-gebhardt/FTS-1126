@@ -60,5 +60,21 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions
         // ReSharper disable once StringLiteralTypo
         [Option('n', "nodetraveltime", HelpText = "The travel time for the simulated AGV from one node to another in [ms]", Default=5000)]
         public int NodeTravelTime { get; init; }
+
+        /// <summary>
+        /// Node travel time of the agv in [ms]
+        /// </summary>
+        [JetBrains.Annotations.UsedImplicitly]
+        // ReSharper disable once StringLiteralTypo
+        [Option("batterydischargerate", HelpText = "Rate at which the battery charge decreases during simulation in [%/s]", Default = 0.1)]
+        public double BatteryDischargeRate { get; init; }
+
+        /// <summary>
+        /// Node travel time of the agv in [ms]
+        /// </summary>
+        [JetBrains.Annotations.UsedImplicitly]
+        // ReSharper disable once StringLiteralTypo
+        [Option("batterychargerate", HelpText = "Rate at which the battery charge increases during charge in [%/s]", Default = 1.0)]
+        public double BatteryChargeRate { get; init; }
     }
 }

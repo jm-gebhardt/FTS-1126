@@ -12,7 +12,19 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
     [JetBrains.Annotations.PublicAPI]
     public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
     {
+        private const int AliveChargeThreshold = 5;
+
         private AgvPosition? _position;
+
+        /// <summary>
+        /// Value for simulating change in battery charge
+        /// </summary>
+        public double SimulatedBatteryCharge { get; set; }
+
+        /// <summary>
+        /// Current node of this AGV
+        /// </summary>
+        public AgvGraph.Node? CurrentNode { get; set; }
 
         /// <summary>
         /// Correlation ID
@@ -24,14 +36,14 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
 
         /// <inheritdoc cref="IAgv" />
         public string CurrentState { get; set; }
-        
+
         /// <summary>
         /// Current action
         /// </summary>
         public AgvAction? CurrentAction { get; set; }
 
         /// <inheritdoc cref="IAgv" />
-        public bool Alive => true;
+        public bool Alive { get; set; } = true;
 
         /// <inheritdoc cref="IAgv" />
         public bool Assignable => true;
@@ -132,6 +144,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
                 if (AgvGraph == null)
                 {
                     _position = null;
+                    CurrentNode = null;
                     return _position;
                 }
 
@@ -186,6 +199,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
                     _position = new AgvPosition(true, lastNode.X, lastNode.Y, lastNode.Z, 0f, 0f);
                 }
 
+                CurrentNode = lastNode;
+
                 return _position;
             }
         }
@@ -224,7 +239,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         /// This values is calculated based on the current time and OrderFinishDate
         /// </summary>
         public TimeSpan? TimeToPick => OrderFinishDate != null ? OrderPickDate - DateTime.UtcNow : null;
-
 
         /// <summary>
         /// Time the order will be picked up
@@ -294,13 +308,14 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
             Nodes = Array.Empty<string>();
             AgvMap = agv.AgvMap;
             NodeTravelTime = nodeTravelTime;
+            SimulatedBatteryCharge = new Random().Next(50, 101); // Init to random charge [50..100]
 
             AgvStatus = new(
                 CorrelationId,
                 OrderDetails?.OrderId,
                 busy: false,
                 automatic: true,
-                batteryCharge: new Random().Next(1, 100), // Init to random charge [1..99]
+                (int)SimulatedBatteryCharge,
                 charging: false,
                 disturbed: false,
                 LastNodeId
@@ -319,40 +334,23 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         /// <summary>
         /// Updates AgvStatus
         /// </summary>
-        public void UpdateStatus()
+        public void UpdateStatus(double chargeDiff)
         {
             bool busy = new[] {
                 nameof(SimulatedAgvStateMachine.BusyMovingToSource),
                 nameof(SimulatedAgvStateMachine.BusyMovingToDestination)
             }.Any(c => c == CurrentState);
 
-            int batteryCharge = AgvStatus.BatteryCharge;
-            bool charging = AgvStatus.Charging;
-
-            // Simulate charging
-            if (charging)
-            {
-                batteryCharge += 5;
-                if (batteryCharge > AgvStatus.GoodBatteryLevel)
-                {
-                    charging = false;
-                }
-            }
-            else
-            {
-                batteryCharge--;
-                if (batteryCharge < AgvStatus.BadBatteryLevel)
-                {
-                    charging = true;
-                }
-            }
+            bool charging = chargeDiff > 0; // AGV is charging if charge difference is positive
+            SimulatedBatteryCharge = Math.Clamp(SimulatedBatteryCharge + chargeDiff, 0, 100);
+            Alive = SimulatedBatteryCharge > AliveChargeThreshold;
 
             AgvStatus = new(
                 AgvStatus.CorrelationId,
                 AgvStatus.OrderId,
                 busy,
                 AgvStatus.Automatic,
-                batteryCharge,
+                (int)SimulatedBatteryCharge,
                 charging,
                 AgvStatus.Disturbed,
                 LastNodeId

@@ -118,12 +118,14 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
         #endregion
 
         /// <summary>
-        /// Interval for signalling position durting order execution.
+        /// Interval for signalling position in [ms]
         /// </summary>
         public int SignalPositionIntervalMs { get; set; }
 
         private readonly ILogger<SimulatedAgvStateMachine> _logger;
         private readonly SimulateOptions _simulateOptions;
+        private readonly double _batteryDischargeRate; // Rate at which the battery charge decreases during simulation in [%/s]
+        private readonly double _batteryChargeRate; // Rate at which the battery charge increases during charge in [%/s]
         private readonly int _sendStatusIntervalMs; // Pause between sending the agv status in [ms]
 
         /// <summary>
@@ -135,8 +137,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
         {
             _logger = logger;
             _simulateOptions = simulateOptions;
+            _batteryDischargeRate = _simulateOptions.BatteryDischargeRate;
+            _batteryChargeRate = _simulateOptions.BatteryChargeRate;
             _sendStatusIntervalMs = Math.Clamp(_simulateOptions.NodeTravelTime / 2, 100, 10000); // Send twice per node (min 0.1s, max 10s)
             SignalPositionIntervalMs = Math.Clamp(_simulateOptions.NodeTravelTime / 10, 200, 2000); // Send 10x per node (min 0.2s, max 2s)
+
             _logger.LogInformation("Initialized SimulatedAgvStateMachine with {GridRows} rows and node travel time of {NodetravelTime} ms",
                 _simulateOptions.GridRows, _simulateOptions.NodeTravelTime);
 
@@ -145,7 +150,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
             InstanceState(x => x.CurrentState);
 
             Initially(SetInitialCreateAgvHandler());
-            
+
             During(Idle, SetStartActionHandler());
             During(BusyMovingToSource, SetPickOrderHandler());
             During(BusyMovingToDestination, SetFinishOrderHandler());
@@ -170,6 +175,13 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
                     configuration.Received = r => r.CorrelateById(context => context.Message.CorrelationId);
                 });
 
+            Schedule(() => SignalPositionSchedule,
+                s => s.SignalPositionTokenId,
+                configuration =>
+                {
+                    configuration.Received = r => r.CorrelateById(context => context.Message.CorrelationId);
+                });
+
             Schedule(() => PickOrderSchedule,
                 s => s.PickOrderTokenId,
                 configuration =>
@@ -179,13 +191,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
 
             Schedule(() => FinishOrderSchedule,
                 s => s.FinishOrderTokenId,
-                configuration =>
-                {
-                    configuration.Received = r => r.CorrelateById(context => context.Message.CorrelationId);
-                });
-
-            Schedule(() => SignalPositionSchedule,
-                s => s.SignalPositionTokenId,
                 configuration =>
                 {
                     configuration.Received = r => r.CorrelateById(context => context.Message.CorrelationId);
@@ -211,7 +216,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
                 .TransitionTo(Idle)
                 .ThenAsync(PublishStatus)
                 .ThenAsync(PublishPosition)
-                .Schedule(StatusUpdateSchedule, c => new ScheduleStatusUpdate(c.Saga.CorrelationId));
+                .Schedule(StatusUpdateSchedule, c => new ScheduleStatusUpdate(c.Saga.CorrelationId))
+                .Schedule(SignalPositionSchedule, c => new ScheduleSignalPosition(c.Saga.CorrelationId), _ => TimeSpan.FromMilliseconds(SignalPositionIntervalMs));
 
         private EventActivityBinder<SimulatedAgvSaga, StartActionCommand> SetStartActionHandler() =>
             When(StartActionEvent)
@@ -266,12 +272,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
         private EventActivityBinder<SimulatedAgvSaga, ScheduleSignalPosition> SetSignalPositionHandler() =>
             When(SignalPositionSchedule.Received)
                 .Then(c => _logger.LogDebug("{MessageType} {CorrelationId} received", nameof(ScheduleSignalPosition), c.Saga.CorrelationId))
-                .If(c => c.Saga.CurrentState != "Idle",
-                    t => t.ThenAsync(PublishPosition)
-                    .Schedule(SignalPositionSchedule,
-                        c => new ScheduleSignalPosition(c.Saga.CorrelationId),
-                        _ => TimeSpan.FromMilliseconds(SignalPositionIntervalMs)
-                    ));
+                .ThenAsync(PublishPosition)
+                    .Schedule(SignalPositionSchedule, c => new ScheduleSignalPosition(c.Saga.CorrelationId), _ => TimeSpan.FromMilliseconds(SignalPositionIntervalMs)
+                );
 
         private EventActivityBinder<SimulatedAgvSaga, RequestAgvGraph> SetRequestAgvGraphHandler() =>
             When(RequestAgvGraphEvent)
@@ -317,13 +320,39 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
             _logger.LogTrace("Status event from AGV {AgvId} / {CorrelationId}",
                 context.Saga.AgvId, context.Saga.CorrelationId);
 
-            context.Saga.UpdateStatus(); // Update status before each send
+            bool charging = false;
+            if (context.Saga.CurrentNode != null)
+            {
+                charging = context.Saga.CurrentNode.Type == AgvGraph.NodeType.Charge;
+            }
 
-            await context.Publish(new AgvStatusReceived(
-                context.Saga.CorrelationId,
-                context.Saga.AgvId,
-                context.Saga.AgvStatus
-            ), context.CancellationToken);
+            double chargeDiff;
+            if (charging)
+            {
+                chargeDiff = _batteryChargeRate * _sendStatusIntervalMs * 0.001;
+            }
+            else
+            {
+                chargeDiff = -_batteryDischargeRate * _sendStatusIntervalMs * 0.001;
+            }
+
+            context.Saga.UpdateStatus(chargeDiff); // Update status before each send
+
+            if (context.Saga.Alive) // Only send status if AGV is still alive
+            {
+                await context.Publish(new AgvStatusReceived(
+                    context.Saga.CorrelationId,
+                    context.Saga.AgvId,
+                    context.Saga.AgvStatus
+                ), context.CancellationToken);
+            }
+            else // Send offline message when AGV is not alive
+            {
+                await context.Publish(new AgvOfflineMessage(
+                    context.Saga.CorrelationId,
+                    DateTime.UtcNow
+                ), context.CancellationToken);
+            }
         }
 
         private async Task PublishPosition(BehaviorContext<SimulatedAgvSaga> context)

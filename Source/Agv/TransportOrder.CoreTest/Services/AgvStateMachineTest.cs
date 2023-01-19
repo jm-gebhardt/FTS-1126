@@ -902,7 +902,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             Assert.AreEqual(agvInitialAlive, agv.Alive);
 
             Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvStateMachine.AgvInitializeMessage>());
-            Assert.IsTrue(fixture.TestHarness.Sent.Select<AgvStateMachine.AgvOfflineMessage>().Any());
+            Assert.IsTrue(fixture.TestHarness.Sent.Select<AgvOfflineMessage>().Any());
         }
 
         /// <summary>
@@ -940,13 +940,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             await fixture.TestHarness.Bus.Publish(new AgvStateMachine.AgvInitializeMessage(correlationId, agvId));
 
             Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvStateMachine.AgvInitializeMessage>());
-            Assert.IsTrue(fixture.TestHarness.Sent.Select<AgvStateMachine.AgvOfflineMessage>().Any());
+            Assert.IsTrue(fixture.TestHarness.Sent.Select<AgvOfflineMessage>().Any());
             agv = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
             Assert.IsTrue(agv.Alive);
 
-            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvStateMachine.AgvOfflineMessage>());
+            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvOfflineMessage>());
             var now = DateTime.UtcNow;
-            var msg = fixture.SagaHarness.Consumed.Select<AgvStateMachine.AgvOfflineMessage>().First().Context.Message;
+            var msg = fixture.SagaHarness.Consumed.Select<AgvOfflineMessage>().First().Context.Message;
             // When triggered initially by AgvInitializeMessage, the timeout for busy state is taken into account
             Assert.IsTrue((now - msg.Created).TotalMilliseconds > 0.9 * agvOfflineTimeoutMsWhileBusy);
             Assert.IsTrue((now - msg.Created).TotalMilliseconds < 1.5 * agvOfflineTimeoutMsWhileBusy);
@@ -995,11 +995,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             await fixture.TestHarness.Bus.Publish(new AgvStatusReceived(correlationId, agvId, agvStatus1));
 
             Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvStatusReceived>());
-            Assert.IsTrue(fixture.TestHarness.Sent.Select<AgvStateMachine.AgvOfflineMessage>().Any());
+            Assert.IsTrue(fixture.TestHarness.Sent.Select<AgvOfflineMessage>().Any());
 
-            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvStateMachine.AgvOfflineMessage>());
+            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvOfflineMessage>());
             var now = DateTime.UtcNow;
-            var msg = fixture.SagaHarness.Consumed.Select<AgvStateMachine.AgvOfflineMessage>().First().Context.Message;
+            var msg = fixture.SagaHarness.Consumed.Select<AgvOfflineMessage>().First().Context.Message;
             // When triggered by AgvStatusReceived, the timeout depends on the state (and this AGV is idle)
             Assert.IsTrue((now - msg.Created).TotalMilliseconds > 0.9 * agvOfflineTimeoutMsWhileIdle);
             Assert.IsTrue((now - msg.Created).TotalMilliseconds < 1.5 * agvOfflineTimeoutMsWhileIdle);

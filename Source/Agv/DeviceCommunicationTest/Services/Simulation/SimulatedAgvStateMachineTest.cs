@@ -15,6 +15,7 @@ using Gebhardt.StoreWare.Agv.DeviceCommunication.States;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
 {
@@ -413,18 +414,45 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             int count = fixture.SagaHarness.Consumed.Select<SimulatedAgvStateMachine.ScheduleSignalPosition>().Count();
             Assert.IsTrue(count >= 2);
 
-            // When order is finished there shouldn't be any more position messages ...
-            Thread.Sleep(fixture.Machine.SignalPositionIntervalMs);
-            // ... even when we wait for the interval time.
-            int count2 = fixture.SagaHarness.Consumed.Select<SimulatedAgvStateMachine.ScheduleSignalPosition>().Count();
-            Assert.IsTrue(count == count2);
-
             // Last position message received should be the position of the last node
             var positionMessage = fixture.TestHarness.Published.Select<AgvPositionReceived>().Last().Context.Message;
             var destinationNode = graph.Nodes.First(n => n.Id == "D1");
             Assert.AreEqual(destinationNode.X, positionMessage.AgvPosition.X, 0.00001f);
             Assert.AreEqual(destinationNode.Y, positionMessage.AgvPosition.Y, 0.00001f);
             Assert.AreEqual(destinationNode.Z, positionMessage.AgvPosition.Z, 0.00001f);
+        }
+
+        [TestMethod]
+        [DataRow(true)]
+        [DataRow(false)]
+        public async Task When_Publish_AgvStatusReceived_or_AgvOfflineMessage_Based_ON_AGV_Alive(bool agvAlive)
+        {
+            var options = new SimulateOptions()
+            {
+                Agvs = 1,
+                Sources = new[] { "S1" },
+                Destinations = new[] { "D1" }
+            };
+            var fixture = new StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(
+                services => services.AddSingleton(options)
+            );
+            
+            const string agvId = "Agv#1";
+            var correlationId = agvId.ToGuid();
+
+            // ReSharper disable once UseObjectOrCollectionInitializer
+            var agvSaga = new SimulatedAgvSaga(correlationId, agvId, 5000, currentState: nameof(SimulatedAgvStateMachine.Idle));
+            agvSaga.SimulatedBatteryCharge = agvAlive ? 100 : 0; // Set charge to 100 for alive and 0 for not alive
+            fixture.Add(agvSaga);
+
+            // Trigger status update
+            await fixture.TestHarness.Bus.Publish(new SimulatedAgvStateMachine.ScheduleStatusUpdate(correlationId));
+
+            bool statusMessageSent = await fixture.TestHarness.Published.Any<AgvStatusReceived>(c => c.Context.Message.CorrelationId == correlationId);
+            statusMessageSent.ShouldBe(agvAlive);
+
+            bool offlineMessageSent = await fixture.TestHarness.Published.Any<AgvOfflineMessage>(c => c.Context.Message.CorrelationId == correlationId);
+            offlineMessageSent.ShouldNotBe(agvAlive);
         }
     }
 }

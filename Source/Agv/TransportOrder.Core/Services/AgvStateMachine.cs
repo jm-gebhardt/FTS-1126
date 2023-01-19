@@ -61,13 +61,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         /// <param name="CorrelationId"></param>
         /// <param name="AgvId"></param>
         public record AgvInitializeMessage(Guid CorrelationId, string AgvId) : CorrelatedBy<Guid>;
-
-        /// <summary>
-        /// Internal scheduled message to signal that AGV seems to be offline
-        /// </summary>
-        /// <param name="CorrelationId">Inherited</param>
-        /// <param name="Created">UTC timestamp when the scheduled message has been created</param>
-        public record AgvOfflineMessage(Guid CorrelationId, DateTime Created) : CorrelatedBy<Guid>;
         #endregion
 
         #region States
