@@ -43,6 +43,8 @@ export class MapCanvas {
   private readonly MinZoomLevel = 0.1
   private readonly MaxZoomLevel = 10
 
+  private menu = document.getElementById('menu')
+
   /**
    * MapCanvas Constructor
    * @param container: container where the map is rendered in
@@ -108,6 +110,12 @@ export class MapCanvas {
           y: pointer.y - mousePointTo.y * newScale
         })
       }
+    })
+
+    // closing of context menu when click on canvas
+    const a = this.menu
+    this.stage.on('click', function () {
+      if (a) a.style.display = 'none'
     })
   }
 

@@ -16,6 +16,7 @@ export class Agv extends MapNode {
   private previousTimeStamp: number
   private runAnimation: boolean
   private reverseAnimation: boolean
+  private contextMenuElement = document.getElementById('menu')
 
   constructor(
     correlationId: string,
@@ -32,7 +33,7 @@ export class Agv extends MapNode {
     this.previousTimeStamp = -1
     this.runAnimation = false
     this.reverseAnimation = false
-    this.updateOnClickAgv(correlationId)
+    this.updateOnClickAgv(agvId, correlationId)
   }
 
   /**
@@ -48,11 +49,30 @@ export class Agv extends MapNode {
     })
   }
 
-  updateOnClickAgv(correlationId: string): void {
-    this.icon.on('click', function () {
-      window.location.replace(
-        import.meta.env.VITE_BASE_PATH + 'agvs?correlationId=' + correlationId
-      )
+  updateOnClickAgv(agvId: string, correlationId: string): void {
+    this.icon.on('click', function (e) {
+      if (e.evt.button == 0) {
+        window.location.replace(
+          import.meta.env.VITE_BASE_PATH + 'agvs?correlationId=' + correlationId
+        )
+      }
+    })
+
+    // open context menu
+    const a = this.contextMenuElement
+    const agvNameElement = document.getElementById('agv-name')
+    this.icon.on('contextmenu', function (e) {
+      e.evt.preventDefault()
+      if (a) {
+        a.style.display = 'initial'
+        a.style.position = 'fixed'
+        a.style.top = e.evt.pageY + 'px'
+        a.style.left = e.evt.pageX + 'px'
+        a.dataset.correlationId = correlationId
+      }
+      if (agvNameElement) {
+        agvNameElement.innerHTML = agvId
+      }
     })
   }
 

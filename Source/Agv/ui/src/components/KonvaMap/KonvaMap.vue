@@ -1,15 +1,19 @@
 <template>
-  <div id="map" ref="map"></div>
+  <div id="map" ref="map" @contextmenu.prevent=""></div>
+  <div id="menu">
+    <agv-context></agv-context>
+  </div>
 </template>
 
 <script lang="ts" setup>
+import AgvContext from '../ContextMenu/AgvContext.vue'
 import { onMounted, ref } from 'vue'
-import { MapCanvas } from '@/components/KonvaMap/MapCanvas'
+import { MapCanvas } from './MapCanvas'
 import {
   IGraph,
   IAgvPositionStatus,
   IAgvState
-} from '@/services/api/data-contracts'
+} from '../../services/api/data-contracts'
 
 const map = ref()
 let graphMap: MapCanvas | undefined
@@ -50,5 +54,11 @@ defineExpose({
   width: 100%;
   height: 100%;
   display: block;
+}
+
+#menu {
+  display: none;
+  height: 0px;
+  width: 0px;
 }
 </style>

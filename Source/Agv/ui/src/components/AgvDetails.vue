@@ -35,15 +35,10 @@ import ActionsList from '@/components/ActionsList.vue'
 import BatteryChargeIndicator from '@/components/BatteryChargeIndicator.vue'
 import { ListItem } from '@/components/ListItem'
 import { useAgvStore } from '@/services/AgvStore'
-import {
-  UiListGroupSubheader,
-  UiListDivider,
-  useAlert,
-  useConfirm
-} from 'balm-ui'
+import { UiListGroupSubheader, UiListDivider, useConfirm } from 'balm-ui'
 import { ActionItem } from './ActionItem'
-import { HttpResponse } from '@microsoft/signalr'
 import { Agvs as AgvApi } from '@/services/api/Agvs'
+import { AgvService } from '../services/AgvService'
 
 const { fetchAgvs } = useAgvStore()
 
@@ -136,13 +131,7 @@ function setAgvIdle(agv: IAgv | null): void {
       // According to the balm-ui documentation 'result' should be a boolean but in the node module code it's declared as a void
       // During runtime it actually is a boolean, so we need to cast it
       if (result as boolean) {
-        agvApi
-          .setIdlePartialUpdate(agv.correlationId)
-          .catch((reason: HttpResponse) => {
-            console.error('Set AGV idle: ' + reason.statusText)
-            const $alert = useAlert()
-            $alert(`AGV '${agv.agvId}' could not be set to Idle`)
-          })
+        AgvService.setAgvIdle(agv.correlationId)
       }
     })
 }
@@ -158,13 +147,7 @@ function lockAgv(agv: IAgv | null): void {
       // According to the balm-ui documentation 'result' should be a boolean but in the node module code it's declared as a void
       // During runtime it actually is a boolean, so we need to cast it
       if (result as boolean) {
-        agvApi
-          .lockAgvPartialUpdate(agv.correlationId)
-          .catch((reason: HttpResponse) => {
-            console.error('lock agv: ' + reason.statusText)
-            const $alert = useAlert()
-            $alert(`AGV '${agv.agvId}' could not be locked`)
-          })
+        AgvService.lockAgv(agv.correlationId)
       }
     })
 }
