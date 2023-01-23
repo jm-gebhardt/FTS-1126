@@ -16,7 +16,7 @@
       <actions-list v-model="actionItems"></actions-list>
     </div>
     <div class="div-inside">
-      <img :src="agvImagePath" width="720" alt="png file not found" />
+      <img :src="agvImagePath" height="400" alt="png file not found" />
     </div>
   </div>
 </template>
