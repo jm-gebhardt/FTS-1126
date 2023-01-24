@@ -1,3 +1,4 @@
+using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
@@ -115,7 +116,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
 
         private const string TestAgvId = "AGV#1";
 
-        private async Task TransitionStateWhenMessageReceived<TRequest>(TRequest message, string initialState, string resultingState) where TRequest : class, CorrelatedBy<Guid>
+        private async Task TransitionStateWhenMessageReceived<TRequest>(TRequest message, string initialState, string resultingState, bool assertAreEqual = true) where TRequest : class, CorrelatedBy<Guid>
         {
             StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = GetFixture();
 
@@ -136,12 +137,18 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<TRequest>());
 
             var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
-            Assert.AreEqual(resultingState, saga.CurrentState);
+            if (assertAreEqual)
+            {
+                saga.CurrentState.ShouldBe(resultingState);
+            }
+            else
+            {
+                saga.CurrentState.ShouldNotBe(resultingState);
+            }
         }
 
         [DataRow(nameof(AgvStateMachine.Idle), nameof(AgvStateMachine.Idle))]
         [DataRow(nameof(AgvStateMachine.Discovered), nameof(AgvStateMachine.Idle))]
-        [DataRow(nameof(AgvStateMachine.Reserved), nameof(AgvStateMachine.Idle))]
         [DataRow(nameof(AgvStateMachine.Busy), nameof(AgvStateMachine.Idle))]
         [DataRow(nameof(AgvStateMachine.PendingLock), nameof(AgvStateMachine.Locked))]
         [DataRow(nameof(AgvStateMachine.Locked), nameof(AgvStateMachine.Locked))]
@@ -149,6 +156,23 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         public async Task Transition_State_When_Message_Received_ReleaseAgv(string initialState, string resultingState)
         {
             var message = new ReleaseAgv(TestAgvId.ToGuid());
+            await TransitionStateWhenMessageReceived(message, initialState, resultingState);
+        }
+
+
+        [DataRow(nameof(AgvStateMachine.Reserved), nameof(AgvStateMachine.Idle))]
+        [TestMethod]
+        public async Task Transition_State_Should_Fail_When_Message_Received_ReleaseAgv(string initialState, string resultingState)
+        {
+            var message = new ReleaseAgv(TestAgvId.ToGuid());
+            await TransitionStateWhenMessageReceived(message, initialState, resultingState, false);
+        }
+
+        [DataRow(nameof(AgvStateMachine.Reserved), nameof(AgvStateMachine.Busy))]
+        [TestMethod]
+        public async Task Transition_State_When_Message_Received_ActionStartedEvent(string initialState, string resultingState)
+        {
+            var message = new ActionStartedEvent(TestAgvId.ToGuid());
             await TransitionStateWhenMessageReceived(message, initialState, resultingState);
         }
 
@@ -228,7 +252,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvStatusReceived>());
             Assert.IsNull(await fixture.SagaHarness.NotExists(Guid.Empty, TimeSpan.FromMilliseconds(10)));
         }
-        
+
         /// <summary>
         /// When AgvReserve Requested Agv Is Idle AcceptAgvReservation
         /// </summary>

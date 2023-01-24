@@ -64,6 +64,8 @@ function AgvStateIcon(status: string | null | undefined): string {
       return 'pending'
     case 'Reserved':
       return 'save_alt'
+    case 'Busy':
+      return 'drive_eta'
     case 'Locked':
       return 'lock'
     case 'PendingLock':

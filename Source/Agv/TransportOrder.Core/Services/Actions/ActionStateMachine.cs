@@ -102,13 +102,19 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
                 {
                     var action = context.Saga.Action;
                     var orderCorrelationId = action.OrderCorrelationId;
+                    var agvCorrelationId = action.AgvCorrelationId;
                     string orderId = action.OrderDetails.OrderId;
                     switch (context.Message.ChangedType)
                     {
                         case ActionStatusChangedType.Started:
+                            // to be received in the OrderStateMachine
                             await context.Publish(new TransportOrderStarted(
                                 orderCorrelationId,
                                 orderId));
+
+                            // to be received in the AgvStateMachine
+                            await context.Publish(new ActionStartedEvent(
+                                agvCorrelationId));
                             break;
 
                         case ActionStatusChangedType.Picked:

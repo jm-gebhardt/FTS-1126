@@ -1,3 +1,4 @@
+using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.CmdOptions;
@@ -158,6 +159,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         /// Agv has stopped charging
         /// </summary>
         public Event<AgvStoppedCharging> AgvStoppedChargingEvent { get; private set; } = default!;
+
+        /// <summary>
+        /// <see cref="ActionStartedEvent"/> was received
+        /// </summary>
+        public Event<ActionStartedEvent> ActionStartedEvent { get; private set; } = default!;
         #endregion
 
         /// <summary>
@@ -196,7 +202,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
             InstanceState(x => x.CurrentState);
             Initially(InitialAgvStatusReceivedHandler());
 
-            During(Discovered, Reserved, Busy, ReleaseAgvHandler());
+            During(Discovered, Busy, ReleaseAgvHandler());
             During(PendingLock, ReleasePendingLockAgvHandler());
             During(Idle, AcceptReserveAgvRequestHandler());
             During(Discovered, Reserved, Busy, RejectReserveAgvRequestHandler());
@@ -206,6 +212,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
             During(Reserved, Busy, PendingLockAgvHandler());
             During(Reserved, Idle, AgvStartedChargingReceivedHandler());
             During(Charging, AgvStoppedChargingReceivedHandler());
+            During(Reserved, ActionStartedEventHandler());
 
             DuringAny(AgvInitializeMessageHandler());
             DuringAny(AgvStatusReceivedHandler());
@@ -216,6 +223,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
 
             ConnectStateObserver(agvStateObserver);
         }
+
 
         #region Init
         /// <summary>
@@ -295,6 +303,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
                 .TransitionTo(PendingLock)
                 .Then(c =>
                     _logger.LogDebug("Agv {AgvId}/{CorrelationId} is pending to be locked", c.Saga.AgvId, c.Saga.CorrelationId));
+
+        private EventActivityBinder<AgvSaga, ActionStartedEvent> ActionStartedEventHandler() =>
+            When(ActionStartedEvent)
+            .TransitionTo(Busy)
+            .Then(c =>
+            {
+                _logger.LogDebug("Agv {AgvId}/{CorrelationId} went to busy state, because action was started", c.Saga.AgvId, c.Saga.CorrelationId);
+            });
         #endregion
 
         #region Message Handlers

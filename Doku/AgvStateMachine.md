@@ -3,12 +3,17 @@ stateDiagram-v2
     [*] --> Discovered: AgvStatusReceived
 
     Discovered --> Idle: ReleaseAgv
-    Reserved --> Idle: ReleaseAgv
+    Busy --> Idle: ReleaseAgv
     PendingLock --> Locked: ReleaseAgv
+
+    Reserved --> Busy: ActionStartedEvent
+	Busy --> Busy: ActionStartedEvent
+	
+    Busy --> PendingLock: LockAgv
     
     Discovered --> Idle: ForceReleaseAgv
     Locked --> Idle: ForceReleaseAgv
-    
+
     Idle --> Reserved: ReserveAgv
     
     Idle --> Locked: LockAgv

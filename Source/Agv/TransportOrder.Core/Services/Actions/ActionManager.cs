@@ -207,6 +207,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
         {
             _agvActionsByAgvCorrelationId[agvCorrelationId].Add(action);
             action.Nodes = agvAssignmentSucceeded.Nodes;
+            action.AgvCorrelationId = agvCorrelationId;
 
             await SendWithConfirmation<AssignActionRequest, ActionAssignmentSucceededEvent>(new AssignActionRequest(action, agvCorrelationId, agvId), cancellationToken);
         }

@@ -17,6 +17,11 @@ public record AgvAction : CorrelatedBy<Guid>
     public Guid OrderCorrelationId { get; }
 
     /// <summary>
+    /// The CorrelationId of the assigned agv
+    /// </summary>
+    public Guid AgvCorrelationId { get; set; }
+
+    /// <summary>
     /// The type of the order, e.g. Pick/Drop/Transport
     /// </summary>
     public ActionType ActionType { get; set; }
