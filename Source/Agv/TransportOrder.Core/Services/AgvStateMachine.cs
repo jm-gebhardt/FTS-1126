@@ -99,7 +99,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         /// <summary>
         /// Charging.
         /// </summary>
-        public State Charging {get; private set; } = default!;
+        public State Charging { get; private set; } = default!;
 
         #endregion
 
@@ -259,17 +259,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
 
         private EventActivityBinder<AgvSaga, ReleaseAgv> ReleaseAgvHandler() =>
            When(ReleaseAgvEvent)
-               .TransitionTo(Idle)
-               .Publish(c => new AgvBecameIdle(c.Saga.CorrelationId))
-               .Then(c =>
-                  _logger.LogDebug("Agv {AgvId}/{CorrelationId} released and transitioned to Idle", c.Saga.AgvId, c.Saga.CorrelationId));
+                .TransitionTo(Idle)
+                .ThenAsync(c => PublishAgvBecameIdle(c.Saga, c));
 
         private EventActivityBinder<AgvSaga, ReleaseAgv> ReleasePendingLockAgvHandler() =>
             When(ReleaseAgvEvent)
                 .TransitionTo(Locked)
-                .Publish(c => new AgvBecameIdle(c.Saga.CorrelationId))
-                .Then(c =>
-                    _logger.LogDebug("Agv {AgvId}/{CorrelationId} was locked", c.Saga.AgvId, c.Saga.CorrelationId));
+                .ThenAsync(c => PublishAgvBecameIdle(c.Saga, c));
 
         private EventActivityBinder<AgvSaga, ReserveAgv> AcceptReserveAgvRequestHandler() =>
             When(ReserveAgvEvent)
@@ -286,9 +282,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         private EventActivityBinder<AgvSaga, ForceReleaseAgv> ForceReleaseAgvHandler() =>
             When(ForceReleaseAgvEvent)
                 .TransitionTo(Idle)
-                .Publish(c => new AgvBecameIdle(c.Saga.CorrelationId))
-                .Then(c =>
-                    _logger.LogDebug("Agv {AgvId}/{CorrelationId} released and transitioned to Idle", c.Saga.AgvId, c.Saga.CorrelationId));
+                .ThenAsync(c => PublishAgvBecameIdle(c.Saga, c));
 
         private EventActivityBinder<AgvSaga, LockAgv> LockAgvHandler() =>
             When(LockAgvEvent)
@@ -392,6 +386,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
             binder.Publish(m => new RequestAgvGraph(m.Saga.CorrelationId, m.Saga.AgvId))
                   .Then(c => c.Saga.AgvGraphRequestedLastTime = DateTime.UtcNow);
 
+        private async Task PublishAgvBecameIdle(AgvSaga agvSaga, IPublishEndpoint endpoint)
+        {
+            await endpoint.Publish(new AgvBecameIdle(agvSaga.CorrelationId));
+            _logger.LogDebug("Agv {AgvId}/{CorrelationId} was released and transitioned to Idle", agvSaga.AgvId, agvSaga.CorrelationId);
+        }
+
         private void SearchMapNameInRegistry(BehaviorContext<AgvSaga, AgvGraphReceived> context)
         {
             if (_mapRegistry.Exists(context.Message.Graph.RelatedMapId))
@@ -433,8 +433,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         private EventActivityBinder<AgvSaga, AgvStartedCharging> AgvStartedChargingReceivedHandler() =>
             When(AgvStartedChargingEvent)
                 .TransitionTo(Charging)
-                .Then(c => _logger.LogInformation("{AgvId} / {CorrelationId} has reached charging station (BatteryLevel: {batteryLevel}%) => Transitioned to {State}", 
-                    c.Saga.AgvId, c.Saga.CorrelationId, c.Saga.AgvStatus!.BatteryCharge,nameof(Charging)));
+                .Then(c => _logger.LogInformation("{AgvId} / {CorrelationId} has reached charging station (BatteryLevel: {batteryLevel}%) => Transitioned to {State}",
+                    c.Saga.AgvId, c.Saga.CorrelationId, c.Saga.AgvStatus!.BatteryCharge, nameof(Charging)));
 
         private EventActivityBinder<AgvSaga, AgvStoppedCharging> AgvStoppedChargingReceivedHandler() =>
             When(AgvStoppedChargingEvent)

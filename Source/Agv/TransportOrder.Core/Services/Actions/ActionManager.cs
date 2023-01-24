@@ -19,7 +19,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
     /// </summary>
     public class ActionManager :
         IConsumer<OrderQueuingCommand>,
-        IConsumer<AgvBecameIdle>
+        IConsumer<AgvReady>,
+        IConsumer<AgvRequestsCharging>,
+        IConsumer<AgvNeedsCharging>
     {
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<ActionManager> _logger;
@@ -27,6 +29,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
         private readonly IBus _bus;
         private readonly ConcurrentDictionary<Guid, List<AgvAction>> _agvActionsByAgvCorrelationId = new();
         private readonly IActionRegistry _actionRegistry;
+
         private readonly SemaphoreSlim _lockSemaphoreSlim = new(1, 1);
 
         /// <summary/>
@@ -35,8 +38,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
             ILogger<ActionManager> logger,
             IAgvRegistry agvRegistry,
             IBus bus,
-            IActionRegistry actionRegistry
-            )
+            IActionRegistry actionRegistry)
         {
             _scopeFactory = scopeFactory;
             _logger = logger;
@@ -49,7 +51,21 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
         public Task Consume(ConsumeContext<OrderQueuingCommand> context) => QueueActionsForOrderAsync(context.Message, context.CancellationToken);
 
         /// <inheritdoc/>
-        public Task Consume(ConsumeContext<AgvBecameIdle> context) => AgvBecameIdleAsync(context.Message.CorrelationId, context.CancellationToken);
+        public Task Consume(ConsumeContext<AgvReady> context) => AgvReadyAsync(context.Message.CorrelationId, context.CancellationToken);
+
+        /// <inheritdoc/>
+        public Task Consume(ConsumeContext<AgvRequestsCharging> context)
+        {
+            _logger.LogInformation("AGV {correlationId} requests charging", context.Message.CorrelationId);
+            return Task.CompletedTask;
+        }
+
+        /// <inheritdoc/>
+        public Task Consume(ConsumeContext<AgvNeedsCharging> context)
+        {
+            _logger.LogInformation("AGV {correlationId} needs charging", context.Message.CorrelationId);
+            return Task.CompletedTask;
+        }
 
         /// <summary>
         /// Creates action for the order and triggers the assignment of pending actions
@@ -80,9 +96,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
         /// </summary>
         /// <param name="correlationId">The correlationId of the Agv</param>
         /// <param name="cancellationToken"></param>
-        private Task AgvBecameIdleAsync(Guid correlationId, CancellationToken cancellationToken)
+        private Task AgvReadyAsync(Guid correlationId, CancellationToken cancellationToken)
         {
-            _logger.LogInformation(nameof(AgvBecameIdleAsync));
+            _logger.LogInformation("AGV {correlationId} is ready", correlationId);
 
             if (!_agvActionsByAgvCorrelationId.ContainsKey(correlationId))
             {

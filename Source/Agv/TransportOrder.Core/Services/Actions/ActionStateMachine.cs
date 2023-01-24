@@ -170,6 +170,5 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
             context.Saga.AssignedAgv = context.Message.Agv;
             context.Saga.AssignedAgvId = context.Message.AgvId;
         }
-
     }
 }

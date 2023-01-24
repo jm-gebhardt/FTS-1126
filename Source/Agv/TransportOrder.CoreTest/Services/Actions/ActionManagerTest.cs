@@ -14,7 +14,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Actions;
 public class ActionManagerTest
 {
     [TestMethod]
-    public async Task AgvBecameIdle_Triggers_AssignAgvCommandOfPendingAction()
+    public async Task AgvReady_Triggers_AssignAgvCommandOfPendingAction()
     {
         var correlationId = Guid.NewGuid();
 
@@ -29,10 +29,50 @@ public class ActionManagerTest
             .UseAssignAgvConsumer()
             .Build();
 
-        await fixture.TestHarness!.Bus.Publish(new AgvBecameIdle(Guid.NewGuid()));
-        (await fixture.TestHarness.Consumed.Any<AgvBecameIdle>()).ShouldBeTrue();
+        await fixture.TestHarness!.Bus.Publish(new AgvReady(Guid.NewGuid()));
+        (await fixture.TestHarness.Consumed.Any<AgvReady>()).ShouldBeTrue();
 
         (await fixture.TestHarness.Published.Any<AssignAgv>()).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task AgvRequestsCharging_Triggers_AssignAgvCommandOfPendingAction()
+    {
+        var correlationId = Guid.NewGuid();
+
+        var fixture = new ActionManagerTestFixture()
+            .PendingActionsRegistryMock(m =>
+            {
+                m.Setup(s => s.GetAllPendingActions()).Returns(new List<AgvAction>
+                {
+                    new(correlationId, ActionType.Transport, ActionManagerTestFixture.OrderDetails[0])
+                });
+            })
+            .UseAssignAgvConsumer()
+            .Build();
+
+        await fixture.TestHarness!.Bus.Publish(new AgvRequestsCharging(Guid.NewGuid()));
+        (await fixture.TestHarness.Consumed.Any<AgvRequestsCharging>()).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task AgvNeedsCharging_Consumed()
+    {
+        var correlationId = Guid.NewGuid();
+
+        var fixture = new ActionManagerTestFixture()
+            .PendingActionsRegistryMock(m =>
+            {
+                m.Setup(s => s.GetAllPendingActions()).Returns(new List<AgvAction>
+                {
+                    new(correlationId, ActionType.Transport, ActionManagerTestFixture.OrderDetails[0])
+                });
+            })
+            .UseAssignAgvConsumer()
+            .Build();
+
+        await fixture.TestHarness!.Bus.Publish(new AgvNeedsCharging(Guid.NewGuid()));
+        (await fixture.TestHarness.Consumed.Any<AgvNeedsCharging>()).ShouldBeTrue();
     }
 
     [TestMethod]

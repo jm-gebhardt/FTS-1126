@@ -67,6 +67,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                 services.AddSingleton(_ => productionOptions);
 
                 services.AddSingleton<ActionManager>();
+                services.AddSingleton<AgvChargingService>();
                 services.AddTransient<IActionRegistry, EfActionRegistry>();
                 services.AddHostedService<ActionManagerBackgroundService>();
 
@@ -95,6 +96,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                         x.AddTransient<AssignAgvConsumer>();
                         x.AddConsumer<AssignAgvConsumer>();
                         x.AddConsumer<ActionManager>();
+                        x.AddConsumer<AgvChargingService>();
                         x.AddConsumer<TransportOrderChangedConsumer>();
                         x.AddConsumer<AgvPositionReceivedConsumer>();
                         x.AddConsumer<AgvPositionChangedConsumer>();
