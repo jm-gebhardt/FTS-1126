@@ -6,6 +6,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
 {
@@ -37,8 +38,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             );
 
             await fixture.TestHarness!.Bus.Publish(new MassTransitBusEvent(MassTransitBusEvent.EventType.PostStarted));
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<MassTransitBusEvent>());
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvStateMachine.AgvInitializeMessage>());
+            (await fixture.TestHarness.Published.Any<MassTransitBusEvent>()).ShouldBeTrue();
+            (await fixture.TestHarness.Published.Any<AgvStateMachine.AgvInitializeMessage>()).ShouldBeTrue();
         }
     }
 }

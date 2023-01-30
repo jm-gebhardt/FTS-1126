@@ -1,5 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Gebhardt.StoreWare.Agv.Common.Extensions;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.CommonTest
 {
@@ -18,14 +19,14 @@ namespace Gebhardt.StoreWare.Agv.CommonTest
             var set = new HashSet<string>();
             var list = new List<string>();
 
-            Assert.IsTrue(set.Add("1"));
-            Assert.AreEqual(1, set.Count);
+            set.Add("1").ShouldBeTrue();
+            set.Count.ShouldBe(1);
             list.Add("2");
             list.Add("3");
-            Assert.IsTrue(set.AddRange(list));
-            Assert.AreEqual(3, set.Count);
-            Assert.IsFalse(set.AddRange(list));
-            Assert.AreEqual(3, set.Count);
+            set.AddRange(list).ShouldBeTrue();
+            set.Count.ShouldBe(3);
+            set.AddRange(list).ShouldBeFalse();
+            set.Count.ShouldBe(3);
         }
     }
 }

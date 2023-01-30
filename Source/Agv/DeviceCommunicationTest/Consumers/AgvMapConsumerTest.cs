@@ -5,6 +5,7 @@ using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
 {
@@ -51,12 +52,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
             await fixture.TestHarness!.Bus.Publish(new RequestAgvMap(AgvId.ToGuid(), AgvId, MapId.ToGuid(), MapId));
 
             // Assert
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<RequestAgvMap>());
-            Assert.IsTrue(await fixture.ConsumerHarness!.Consumed.Any<RequestAgvMap>());
+            (await fixture.TestHarness.Published.Any<RequestAgvMap>()).ShouldBeTrue();
+            (await fixture.ConsumerHarness!.Consumed.Any<RequestAgvMap>()).ShouldBeTrue();
 
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<MqttRequestMap>());
+            (await fixture.TestHarness.Published.Any<MqttRequestMap>()).ShouldBeTrue();
             var message = fixture.TestHarness.Published.Select<MqttRequestMap>().First().Context.Message;
-            Assert.AreEqual(AgvId, message.SerialNumber);
+            message.SerialNumber.ShouldBe(AgvId);
         }
 
         /// <summary>
@@ -72,9 +73,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
             await fixture.TestHarness.Bus.Publish(_mqttMap);
 
             // Assert
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<MqttMap>());
-            Assert.IsTrue(await fixture.ConsumerHarness.Consumed.Any<MqttMap>());
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvMapReceived>());
+            (await fixture.TestHarness.Published.Any<MqttMap>()).ShouldBeTrue();
+            (await fixture.ConsumerHarness.Consumed.Any<MqttMap>()).ShouldBeTrue();
+            (await fixture.TestHarness.Published.Any<AgvMapReceived>()).ShouldBeTrue();
         }
 
         /// <summary>
@@ -109,10 +110,10 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
             await fixture.TestHarness.Bus.Publish(_mqttMap);
 
             // Assert
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<MqttMap>());
-            Assert.IsTrue(await fixture.ConsumerHarness.Consumed.Any<MqttMap>());
+            (await fixture.TestHarness.Published.Any<MqttMap>()).ShouldBeTrue();
+            (await fixture.ConsumerHarness.Consumed.Any<MqttMap>()).ShouldBeTrue();
 
-            Assert.IsFalse(await fixture.TestHarness.Published.Any<AgvMapReceived>());
+            (await fixture.TestHarness.Published.Any<AgvMapReceived>()).ShouldBeFalse();
         }
     }
 }

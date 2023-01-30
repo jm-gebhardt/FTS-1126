@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Persistence
 {
@@ -68,7 +69,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Persistence
             {
                 var restoredOrderSaga = dbContext.OrderSagas.First();
                 // Test if restore objects contains all properties by comparing JSON converted
-                Assert.AreEqual(JsonConvert.SerializeObject(orderSaga), JsonConvert.SerializeObject(restoredOrderSaga));
+                JsonConvert.SerializeObject(restoredOrderSaga).ShouldBe(JsonConvert.SerializeObject(orderSaga));
             }
         }
     
@@ -110,7 +111,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Persistence
             {
                 var restoredAgvSaga = dbContext.AgvSagas.First();
                 // Test if restore objects contains all properties by comparing JSON converted
-                Assert.AreEqual(JsonConvert.SerializeObject(agvSaga), JsonConvert.SerializeObject(restoredAgvSaga));
+                JsonConvert.SerializeObject(restoredAgvSaga).ShouldBe(JsonConvert.SerializeObject(agvSaga));
             }
         }
     

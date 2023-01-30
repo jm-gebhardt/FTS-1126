@@ -6,6 +6,7 @@ using Gebhardt.StoreWare.Agv.WCSCommunicationTest.Fixtures;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MassTransit.Testing;
 using Moq;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services
 {
@@ -37,8 +38,8 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services
 
             await using (var context = await fixture.DbContextFactory.CreateDbContextAsync())
             {
-                Assert.AreEqual(MessageStatus.Failed, context.ToAgv.First().MessageStatus);
-                Assert.AreEqual(0, context.FromAgv.Count());
+                context.ToAgv.First().MessageStatus.ShouldBe(MessageStatus.Failed);
+                context.FromAgv.Count().ShouldBe(0);
             }
         }
 
@@ -65,18 +66,18 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services
 
             IPublishedMessage<HandleHostOrder>? message = fixture.TestHarness.Published.Select<HandleHostOrder>().First();
 
-            Assert.IsNotNull(message);
+            message.ShouldNotBeNull();
 
             await using (var context = await fixture.DbContextFactory.CreateDbContextAsync())
             {
-                Assert.AreEqual(1, context.FromAgv.Count());
+                context.FromAgv.Count().ShouldBe(1);
                 var toAgvEntry = context.ToAgv.First();
 
-                Assert.AreEqual(toAgvEntry.OrderId, message.Context.Message.OrderDetails.OrderId);
-                Assert.AreEqual(source, message.Context.Message.OrderDetails.Source);
-                Assert.AreEqual(destination, message.Context.Message.OrderDetails.Destination);
-                Assert.AreEqual(toAgvEntry.LeNo, message.Context.Message.OrderDetails.LeNo);
-                Assert.AreEqual(MessageStatus.Finished, toAgvEntry.MessageStatus);
+                message.Context.Message.OrderDetails.OrderId.ShouldBe(toAgvEntry.OrderId);
+                message.Context.Message.OrderDetails.Source.ShouldBe(source);
+                message.Context.Message.OrderDetails.Destination.ShouldBe(destination);
+                message.Context.Message.OrderDetails.LeNo.ShouldBe(toAgvEntry.LeNo);
+                toAgvEntry.MessageStatus.ShouldBe(MessageStatus.Finished);
             }
         }
 
@@ -101,15 +102,15 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services
 
             await using (var context = await fixture.DbContextFactory.CreateDbContextAsync())
             {
-                Assert.AreEqual(1, context.FromAgv.Count());
+                context.FromAgv.Count().ShouldBe(1);
                 var toAgvEntry = context.ToAgv.First();
                 var fromAgvEntry = context.FromAgv.First();
 
-                Assert.AreEqual(toAgvEntry.OrderId, fromAgvEntry.OrderId);
-                Assert.AreEqual(source, fromAgvEntry.Source);
-                Assert.AreEqual(destination, fromAgvEntry.Destination);
-                Assert.AreEqual(MessageStatus.Pending, fromAgvEntry.MessageStatus);
-                Assert.AreEqual(MessageStatus.Finished, toAgvEntry.MessageStatus);
+                fromAgvEntry.OrderId.ShouldBe(toAgvEntry.OrderId);
+                fromAgvEntry.Source.ShouldBe(source);
+                fromAgvEntry.Destination.ShouldBe(destination);
+                fromAgvEntry.MessageStatus.ShouldBe(MessageStatus.Pending);
+                toAgvEntry.MessageStatus.ShouldBe(MessageStatus.Finished);
             }
         }
 
@@ -131,15 +132,15 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services
             // Assert
             await using (var context = await fixture.DbContextFactory.CreateDbContextAsync())
             {
-                Assert.AreEqual(1, context.FromAgv.Count());
+                context.FromAgv.Count().ShouldBe(1);
                 var toAgvEntry = context.ToAgv.First();
                 var fromAgvEntry = context.FromAgv.First();
 
-                Assert.AreEqual(toAgvEntry.OrderId, fromAgvEntry.OrderId);
-                Assert.AreEqual("src01", fromAgvEntry.Source);
-                Assert.AreEqual("dst01", fromAgvEntry.Destination);
-                Assert.AreEqual(MessageStatus.Pending, fromAgvEntry.MessageStatus);
-                Assert.AreEqual(MessageStatus.Finished, toAgvEntry.MessageStatus);
+                fromAgvEntry.OrderId.ShouldBe(toAgvEntry.OrderId);
+                fromAgvEntry.Source.ShouldBe("src01");
+                fromAgvEntry.Destination.ShouldBe("dst01");
+                fromAgvEntry.MessageStatus.ShouldBe(MessageStatus.Pending);
+                toAgvEntry.MessageStatus.ShouldBe(MessageStatus.Finished);
             }
         }
 
@@ -162,8 +163,8 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services
             // Assert
             await using (var context = await fixture.DbContextFactory.CreateDbContextAsync())
             {
-                Assert.AreEqual(MessageStatus.Failed, context.ToAgv.First().MessageStatus);
-                Assert.AreEqual(0, context.FromAgv.Count());
+                context.ToAgv.First().MessageStatus.ShouldBe(MessageStatus.Failed);
+                context.FromAgv.Count().ShouldBe(0);
             }
         }
     }

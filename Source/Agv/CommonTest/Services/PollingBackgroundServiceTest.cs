@@ -2,6 +2,7 @@ using Gebhardt.StoreWare.Agv.Common.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.CommonTest.Services
 {
@@ -48,7 +49,7 @@ namespace Gebhardt.StoreWare.Agv.CommonTest.Services
             while (service.Pollable.Counter == 0 && !token.IsCancellationRequested)
             {
             }
-            Assert.IsFalse(token.IsCancellationRequested); // Ensure that the request was not canceled using CancelAfter()
+            token.IsCancellationRequested.ShouldBeFalse(); // Ensure that the request was not canceled using CancelAfter()
 
             // Stop gracefully to test that token.IsCancellationRequested is recognized 
             await service.StopAsync(token.Token);

@@ -3,6 +3,7 @@ using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
 using Gebhardt.StoreWare.Agv.WCSCommunication.Services;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Consumers
 {
@@ -22,13 +23,13 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Consumers
 
             await fixture.TestHarness!.Bus.Publish(new HostOrderHandlingSucceeded(correlationId, orderId));
 
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<HostOrderHandlingSucceeded>());
-            Assert.IsTrue(await fixture.TestHarness.Consumed.Any<HostOrderHandlingSucceeded>());
+            (await fixture.TestHarness.Published.Any<HostOrderHandlingSucceeded>()).ShouldBeTrue();
+            (await fixture.TestHarness.Consumed.Any<HostOrderHandlingSucceeded>()).ShouldBeTrue();
 
             var message = fixture.ConsumerHarness!.Consumed.Select<HostOrderHandlingSucceeded>().First().Context.Message;
 
-            Assert.AreEqual(correlationId, message.CorrelationId);
-            Assert.AreEqual(orderId, message.OrderId);
+            message.CorrelationId.ShouldBe(correlationId);
+            message.OrderId.ShouldBe(orderId);
         }
     }
 }

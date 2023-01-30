@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.CommonTest
 {
@@ -15,7 +16,7 @@ namespace Gebhardt.StoreWare.Agv.CommonTest
         public void TestFactory()
         {
             var initialLogger = Common.Logging.InitialLogger.Create<LoggingInitialTest>();
-            Assert.IsNotNull(initialLogger);
+            initialLogger.ShouldNotBeNull();
         }
     }
 }

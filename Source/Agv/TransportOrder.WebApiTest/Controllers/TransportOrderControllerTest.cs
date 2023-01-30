@@ -21,6 +21,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
 {
@@ -45,17 +46,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
                     new DefaultHttpContext(),
                     new RouteData(),
                     new ControllerActionDescriptor())
-                );
+            );
 
             return controller;
         }
 
         private Mapper GetMapper()
         {
-            var mapperConfig = new MapperConfiguration(cfg =>
-            {
-                cfg.AddProfile(new MappingProfile());
-            });
+            var mapperConfig = new MapperConfiguration(cfg => { cfg.AddProfile(new MappingProfile()); });
             var mapper = new Mapper(mapperConfig);
             return mapper;
         }
@@ -102,25 +100,26 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var inputOrderDetails = new OrderDetails(_orders[0].ToGuid(), _orders[0], _sources[0], _destinations[0], _leNo[0], HostOrderCreator.Simulation);
 
             await fixture.TestHarness.Bus.Publish(new HandleHostOrder(_orders[0].ToGuid(), inputOrderDetails));
-            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<HandleHostOrder>());
+            (await fixture.SagaHarness.Consumed.Any<HandleHostOrder>()).ShouldBeTrue();
 
             ActionResult<IEnumerable<OrderDto>> actionResult = controller.GetOrders(new PaginationParameters(), new DateRangeParameters());
             var result = actionResult.Result as OkObjectResult;
-            Assert.IsNotNull(result);
-            Assert.AreEqual(200, result.StatusCode);
-            Assert.IsInstanceOfType(result.Value, typeof(IEnumerable<OrderDto>));
-
+            result.ShouldNotBeNull();
+            result.StatusCode.ShouldBe(200);
+            
+            result.Value.ShouldBeAssignableTo(typeof(IEnumerable<OrderDto>));
+            
             List<OrderDto> orders = (result.Value as IEnumerable<OrderDto>)!.ToList();
-            Assert.IsNotNull(orders);
-            Assert.AreEqual(2, orders.Count);
+            orders.ShouldNotBeNull();
+            orders.Count.ShouldBe(2);
 
             var resultOrder = orders.Last();
-            Assert.AreEqual(resultOrder.CorrelationId, inputOrderDetails.CorrelationId);
-            Assert.AreEqual(resultOrder.OrderDetails.OrderId, inputOrderDetails.OrderId);
-            Assert.AreEqual(resultOrder.OrderDetails.Source, inputOrderDetails.Source);
-            Assert.AreEqual(resultOrder.OrderDetails.Destination, inputOrderDetails.Destination);
-            Assert.AreEqual(resultOrder.OrderDetails.LeNo, inputOrderDetails.LeNo);
-            Assert.AreEqual(resultOrder.OrderDetails.Creator, inputOrderDetails.Creator);
+            inputOrderDetails.CorrelationId.ShouldBe(resultOrder.CorrelationId);
+            inputOrderDetails.OrderId.ShouldBe(resultOrder.OrderDetails.OrderId);
+            inputOrderDetails.Source.ShouldBe(resultOrder.OrderDetails.Source);
+            inputOrderDetails.Destination.ShouldBe(resultOrder.OrderDetails.Destination);
+            inputOrderDetails.LeNo.ShouldBe(resultOrder.OrderDetails.LeNo);
+            inputOrderDetails.Creator.ShouldBe(resultOrder.OrderDetails.Creator);
         }
 
         [TestMethod]
@@ -131,15 +130,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             ActionResult<IEnumerable<OrderDto>> result = controller.GetOrders(
                 new PaginationParameters(),
                 new DateRangeParameters()
-                );
-            Assert.IsNotNull(result.Result);
+            );
+            result.Result.ShouldNotBeNull();
 
             var okResult = result.Result as OkObjectResult;
-            Assert.IsNotNull(okResult);
+            okResult.ShouldNotBeNull();
 
             OrderDto[] orders = (okResult.Value as IEnumerable<OrderDto>)!.ToArray();
-            Assert.IsNotNull(orders);
-            Assert.AreEqual(2, orders.Length);
+            orders.ShouldNotBeNull();
+            orders.Length.ShouldBe(2);
         }
 
         [TestMethod]
@@ -155,14 +154,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
                 new PaginationParameters(),
                 new DateRangeParameters()
             );
-            Assert.IsNotNull(result.Result);
+            result.Result.ShouldNotBeNull();
 
             var okResult = result.Result as OkObjectResult;
-            Assert.IsNotNull(okResult);
+            okResult.ShouldNotBeNull();
 
             OrderDto[] orders = (okResult.Value as IEnumerable<OrderDto>)!.ToArray();
-            Assert.IsNotNull(orders);
-            Assert.AreEqual(0, orders.Length);
+            orders.ShouldNotBeNull();
+            orders.Length.ShouldBe(0);
         }
 
         [TestMethod]
@@ -172,7 +171,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var correlationId = Guid.Empty;
 
             var result = controller.ResetOrder(correlationId).Result as NotFoundResult;
-            Assert.IsNotNull(result);
+            result.ShouldNotBeNull();
         }
 
         [TestMethod]
@@ -182,7 +181,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var correlationId = _orders[0].ToGuid(); // Order not in state 'OrderFailed' or 'Final'
 
             var result = controller.ResetOrder(correlationId).Result as BadRequestObjectResult;
-            Assert.IsNotNull(result);
+            result.ShouldNotBeNull();
         }
 
         [TestMethod]
@@ -194,11 +193,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var correlationId = _orders[1].ToGuid();
 
             var result = controller.ResetOrder(correlationId).Result as OkResult;
-            Assert.IsNotNull(result);
+            result.ShouldNotBeNull();
 
             bus.Verify(s => s.Publish(It.Is<ResetTransportOrder>(
-                    m => m.CorrelationId == correlationId
-                ), default), Times.Once);
+                m => m.CorrelationId == correlationId
+            ), default), Times.Once);
         }
 
         [TestMethod]
@@ -210,11 +209,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var correlationId = _orders[1].ToGuid();
 
             var result = controller.CompleteOrder(correlationId).Result as OkResult;
-            Assert.IsNotNull(result);
+            result.ShouldNotBeNull();
 
             bus.Verify(s => s.Publish(It.Is<ManuallyCompleteTransportOrder>(
-                    m => m.CorrelationId == correlationId
-                ), default), Times.Once);
+                m => m.CorrelationId == correlationId
+            ), default), Times.Once);
         }
 
         [TestMethod]
@@ -224,7 +223,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var correlationId = Guid.Empty;
 
             var result = controller.CompleteOrder(correlationId).Result as NotFoundResult;
-            Assert.IsNotNull(result);
+            result.ShouldNotBeNull();
         }
     }
 }

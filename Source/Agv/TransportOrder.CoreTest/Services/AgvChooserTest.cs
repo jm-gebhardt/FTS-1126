@@ -6,6 +6,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Routing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
 {
@@ -223,7 +224,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         public void CallChooser_WithEmptyEnumeration_Returns_Null()
         {
             var chooser = new AgvChooser<RandomGraphAlgorithm>(RoutingPlausibilityChecker);
-            Assert.IsNull(chooser.ChooseAgv(Array.Empty<Messages.Agv>(), _dummyOrder!));
+            chooser.ChooseAgv(Array.Empty<Messages.Agv>(), _dummyOrder!).ShouldBeNull();
         }
 
         /// <summary>
@@ -292,7 +293,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
                 creator: HostOrderCreator.Simulation
             );
             // ReSharper disable All
-            Assert.ThrowsException<ArgumentException>(() => chooser.ChooseAgv(agvData, order));
+            Should.Throw<ArgumentException>(() => chooser.ChooseAgv(agvData, order));
             // ReSharper restore All
 
             order = new OrderDetails(
@@ -304,7 +305,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
                creator: HostOrderCreator.Simulation
             );
             // ReSharper disable All
-            Assert.ThrowsException<ArgumentException>(() => chooser.ChooseAgv(agvData, order));
+            Should.Throw<ArgumentException>(() => chooser.ChooseAgv(agvData, order));
             // ReSharper restore All
         }
 
@@ -328,8 +329,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
                 creator: HostOrderCreator.Simulation
             );
             KeyValuePair<Guid, IGraphAlgorithm.Route>? chosenAgv = chooser.ChooseAgv(agvData, order);
-            Assert.IsNotNull(chosenAgv);
-            Assert.AreEqual(agvData[0].CorrelationId, chosenAgv.Value.Key);
+            chosenAgv.ShouldNotBeNull();
+            chosenAgv.Value.Key.ShouldBe(agvData[0].CorrelationId);
         }
 
         /// <summary>
@@ -352,7 +353,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
                 creator: HostOrderCreator.Simulation
             );
             KeyValuePair<Guid, IGraphAlgorithm.Route>? chosenAgv = chooser.ChooseAgv(agvData, order);
-            Assert.IsFalse(chosenAgv.HasValue);
+            chosenAgv.HasValue.ShouldBeFalse();
         }
 
         /// <summary>
@@ -380,9 +381,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
                 creator: HostOrderCreator.Simulation
             );
             KeyValuePair<Guid, IGraphAlgorithm.Route>? chosenAgv = chooser.ChooseAgv(agvData, order);
-            Assert.IsNotNull(chosenAgv);
+            chosenAgv.ShouldNotBeNull();
             var agv = agvData.Single(x => x.CorrelationId == chosenAgv.Value.Key);
-            Assert.AreEqual("Fast", agv.AgvId);
+            agv.AgvId.ShouldBe("Fast");
         }
     }
 }

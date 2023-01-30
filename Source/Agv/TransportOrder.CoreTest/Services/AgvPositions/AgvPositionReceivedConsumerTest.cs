@@ -6,6 +6,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.AgvPositions
 {
@@ -33,14 +34,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.AgvPositions
                     new AgvPosition(false, 0, 0, 0, 0)
                 ));
 
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvPositionReceived>());
-            Assert.IsTrue(await fixture.ConsumerHarness!.Consumed.Any<AgvPositionReceived>());
+            (await fixture.TestHarness.Published.Any<AgvPositionReceived>()).ShouldBeTrue();
+            (await fixture.ConsumerHarness!.Consumed.Any<AgvPositionReceived>()).ShouldBeTrue();
 
             var registry = fixture.Provider!.GetRequiredService<IAgvPositionRegistry>();
-            Assert.IsNotNull(registry);
+            registry.ShouldNotBeNull();
 
             var position = registry.GetPosition(Guid.Empty);
-            Assert.IsNull(position);
+            position.ShouldBeNull();
         }
 
         /// <summary>
@@ -76,28 +77,28 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.AgvPositions
                     new AgvPosition(init2, x2, y2, z2, theta2)
                 ));
 
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvPositionReceived>());
-            Assert.AreEqual(2, fixture.ConsumerHarness!.Consumed.Select<AgvPositionReceived>().Count());
+            (await fixture.TestHarness.Published.Any<AgvPositionReceived>()).ShouldBeTrue();
+            fixture.ConsumerHarness!.Consumed.Select<AgvPositionReceived>().Count().ShouldBe(2);
 
             var registry = fixture.Provider!.GetRequiredService<IAgvPositionRegistry>();
-            Assert.IsNotNull(registry);
+            registry.ShouldNotBeNull();
 
             var position = registry.GetPosition(AgvTestIdentifier01.ToGuid());
-            Assert.IsNotNull(position);
-            Assert.AreEqual(init1, position.AgvPosition.PositionInitialized);
-            Assert.AreEqual(x1, position.AgvPosition.X, 0.00001);
-            Assert.AreEqual(y1, position.AgvPosition.Y, 0.00001);
-            Assert.AreEqual(z1, position.AgvPosition.Z, 0.00001);
-            Assert.AreEqual(theta1, position.AgvPosition.Theta, 0.00001);
-            Assert.AreEqual(deviation1, position.AgvPosition.DeviationRange!.Value, 0.00001);
+            position.ShouldNotBeNull();
+            position.AgvPosition.PositionInitialized.ShouldBe(init1);
+            position.AgvPosition.X.ShouldBe(x1, 0.00001);
+            position.AgvPosition.Y.ShouldBe(y1, 0.00001);
+            position.AgvPosition.Z.ShouldBe(z1, 0.00001);
+            position.AgvPosition.Theta.ShouldBe(theta1, 0.00001);
+            position.AgvPosition.DeviationRange!.Value.ShouldBe(deviation1, 0.00001);
 
             position = registry.GetPosition(AgvTestIdentifier02.ToGuid());
-            Assert.IsNotNull(position);
-            Assert.AreEqual(x2, position.AgvPosition.X, 0.00001);
-            Assert.AreEqual(y2, position.AgvPosition.Y, 0.00001);
-            Assert.AreEqual(z2, position.AgvPosition.Z, 0.00001);
-            Assert.AreEqual(theta2, position.AgvPosition.Theta, 0.00001);
-            Assert.IsNull(position.AgvPosition.DeviationRange);
+            position.ShouldNotBeNull();
+            position.AgvPosition.X.ShouldBe(x2, 0.00001);
+            position.AgvPosition.Y.ShouldBe(y2, 0.00001);
+            position.AgvPosition.Z.ShouldBe(z2, 0.00001);
+            position.AgvPosition.Theta.ShouldBe(theta2, 0.00001);
+            position.AgvPosition.DeviationRange.ShouldBeNull();
         }
 
         /// <summary>
@@ -119,8 +120,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.AgvPositions
                     new AgvPosition(false, 0, 0, 0, 0)
                 ));
 
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvPositionReceived>());
-            Assert.IsTrue(await fixture.ConsumerHarness!.Consumed.Any<AgvPositionReceived>());
+            (await fixture.TestHarness.Published.Any<AgvPositionReceived>()).ShouldBeTrue();
+            (await fixture.ConsumerHarness!.Consumed.Any<AgvPositionReceived>()).ShouldBeTrue();
 
             agvPositionRegistryMock.Verify(h => h.UpdatePosition(
                 It.Is<AgvPositionStatus>(o => o.AgvId == AgvTestIdentifier01 && o.CorrelationId == AgvTestIdentifier01.ToGuid())), Times.Once);

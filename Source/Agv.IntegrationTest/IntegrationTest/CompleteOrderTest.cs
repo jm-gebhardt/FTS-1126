@@ -2,6 +2,7 @@ using Gebhardt.StoreWare.Agv.IntegrationTest.Utils;
 using Gebhardt.StoreWare.Agv.IntegrationTest.Utils.Db;
 using Gebhardt.StoreWare.Agv.WCSCommunication.Db.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Shouldly;
 
 
 namespace Gebhardt.StoreWare.Agv.IntegrationTest
@@ -21,11 +22,11 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest
         [TestInitialize]
         public void StartServices()
         {
-            Assert.IsNull(_dockerCompose);
+            _dockerCompose.ShouldBeNull();
             _dockerCompose= new DockerCompose();
-            Assert.IsTrue(_dockerCompose.AreRemoved());
-            Assert.IsTrue(_dockerCompose.Up());
-            Assert.IsTrue(_dockerCompose.AreRunning());
+            _dockerCompose.AreRemoved().ShouldBeTrue();
+            _dockerCompose.Up().ShouldBeTrue();
+            _dockerCompose.AreRunning().ShouldBeTrue();
         }
         
         /// <summary>
@@ -34,9 +35,9 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest
         [TestCleanup]
         public void StopServices()
         {
-            Assert.IsNotNull(_dockerCompose);
-            Assert.IsTrue(_dockerCompose.Down());
-            Assert.IsTrue(_dockerCompose.AreRemoved());
+            _dockerCompose.ShouldNotBeNull();
+            _dockerCompose.Down().ShouldBeTrue();
+            _dockerCompose.AreRemoved().ShouldBeTrue();
             _dockerCompose = null;
         }
 
@@ -85,13 +86,13 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest
             _ = agv.StartSendingStatus(token);
             
             var restAgv = await restApi.WaitForAgv(agv.AgvId);
-            Assert.IsNotNull(restAgv);
+            restAgv.ShouldNotBeNull();
             
-            Assert.IsNotNull(await restApi.WaitForAgvData(restAgv["correlationId"].ToString()));
-            Assert.IsNotNull(await restApi.WaitForAgvGraph(restAgv["correlationId"].ToString()));
-            Assert.IsNotNull(await restApi.WaitForMap(restAgv["correlationId"].ToString()));
+            (await restApi.WaitForAgvData(restAgv["correlationId"].ToString())).ShouldNotBeNull();
+            (await restApi.WaitForAgvGraph(restAgv["correlationId"].ToString())).ShouldNotBeNull();
+            (await restApi.WaitForMap(restAgv["correlationId"].ToString())).ShouldNotBeNull();
 
-            Assert.IsTrue(await restApi.SetAgvIdle(restAgv["correlationId"].ToString()));
+            (await restApi.SetAgvIdle(restAgv["correlationId"].ToString())).ShouldBeTrue();
 
             return agv;
         }
@@ -104,7 +105,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest
             const string destination = "DST_01";
             var context = new WcsDbContext();
 
-            Assert.IsTrue(await context.Database.CanConnectAsync());
+            (await context.Database.CanConnectAsync()).ShouldBeTrue();
 
             await context.AddNewOrder(orderId, leNo, source, destination);
             await context.SaveChangesAsync();
@@ -112,12 +113,12 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest
             var restApi = new RestApi();
             var order = await restApi.WaitForOrder(orderId);
 
-            Assert.IsNotNull(order);
+            order.ShouldNotBeNull();
             
             order = await restApi.WaitForOrder(orderId, "Final");
-            Assert.IsNotNull(order);
+            order.ShouldNotBeNull();
 
-            Assert.IsTrue(context.FromAgv.Any(o => o.OrderId == orderId && o.Status == OrderStatus.Finished));
+            context.FromAgv.Any(o => o.OrderId == orderId && o.Status == OrderStatus.Finished).ShouldBeTrue();
         }
     }
 }

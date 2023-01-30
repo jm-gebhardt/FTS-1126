@@ -6,6 +6,7 @@ using Gebhardt.StoreWare.Agv.WCSCommunication.Db;
 using Gebhardt.StoreWare.Agv.WCSCommunication.Db.Models;
 using Gebhardt.StoreWare.Agv.WCSCommunication.Services;
 using Gebhardt.StoreWare.Agv.WCSCommunicationTest.Fixtures;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Consumers
 {
@@ -25,14 +26,14 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Consumers
 
             await fixture.TestHarness!.Bus.Publish(new HostOrderHandlingSucceeded(correlationId, orderId));
 
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<HostOrderHandlingSucceeded>());
+            (await fixture.TestHarness.Published.Any<HostOrderHandlingSucceeded>()).ShouldBeTrue();
 
             var message = fixture.ConsumerHarness!.Consumed.Select<HostOrderHandlingSucceeded>().First().Context.Message;
-            Assert.AreEqual(correlationId, message.CorrelationId);
-            Assert.AreEqual(orderId, message.OrderId);
+            message.CorrelationId.ShouldBe(correlationId);
+            message.OrderId.ShouldBe(orderId);
 
             await using var context = await fixture.DbContextFactory.CreateDbContextAsync();
-            Assert.AreEqual(0, context.FromAgv.Count());
+            context.FromAgv.Count().ShouldBe(0);
         }
 
 
@@ -59,21 +60,21 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Consumers
 
             await fixture.TestHarness!.Bus.Publish(new HostOrderHandlingSucceeded(correlationId, latestOrder.OrderId));
 
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<HostOrderHandlingSucceeded>());
+            (await fixture.TestHarness.Published.Any<HostOrderHandlingSucceeded>()).ShouldBeTrue();
 
             var message = fixture.ConsumerHarness!.Consumed.Select<HostOrderHandlingSucceeded>().First().Context.Message;
-            Assert.AreEqual(correlationId, message.CorrelationId);
-            Assert.AreEqual(latestOrder.OrderId, message.OrderId);
+            message.CorrelationId.ShouldBe(correlationId);
+            message.OrderId.ShouldBe(latestOrder.OrderId);
 
             // Ensure database entry created
-            Assert.AreEqual(1, context.FromAgv.Count());
+            context.FromAgv.Count().ShouldBe(1);
             var entry = context.FromAgv.First();
-            Assert.AreEqual(latestOrder.OrderId, entry.OrderId);
-            Assert.AreEqual(latestOrder.Source, entry.Source);
-            Assert.AreEqual(latestOrder.Destination, entry.Destination);
-            Assert.AreEqual(latestOrder.LeNo, entry.LeNo);
-            Assert.AreEqual(RecordType.TransportOrder, entry.RecordType);
-            Assert.AreEqual(OrderStatus.Finished, entry.Status);
+            entry.OrderId.ShouldBe(latestOrder.OrderId);
+            entry.Source.ShouldBe(latestOrder.Source);
+            entry.Destination.ShouldBe(latestOrder.Destination);
+            entry.LeNo.ShouldBe(latestOrder.LeNo);
+            entry.RecordType.ShouldBe(RecordType.TransportOrder);
+            entry.Status.ShouldBe(OrderStatus.Finished);
         }
 
         /// <summary>
@@ -99,21 +100,21 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Consumers
 
             await fixture.TestHarness!.Bus.Publish(new HostOrderStarted(correlationId, latestOrder.OrderId, assignedAgv));
 
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<HostOrderStarted>());
+            (await fixture.TestHarness.Published.Any<HostOrderStarted>()).ShouldBeTrue();
 
             var message = fixture.ConsumerHarness!.Consumed.Select<HostOrderStarted>().First().Context.Message;
-            Assert.AreEqual(correlationId, message.CorrelationId);
-            Assert.AreEqual(latestOrder.OrderId, message.OrderId);
+            message.CorrelationId.ShouldBe(correlationId);
+            message.OrderId.ShouldBe(latestOrder.OrderId);
 
             // Ensure database entry created
-            Assert.AreEqual(1, context.FromAgv.Count());
+            context.FromAgv.Count().ShouldBe(1);
             var entry = context.FromAgv.First();
-            Assert.AreEqual(latestOrder.OrderId, entry.OrderId);
-            Assert.AreEqual(latestOrder.Source, entry.Source);
-            Assert.AreEqual(latestOrder.Destination, entry.Destination);
-            Assert.AreEqual(latestOrder.LeNo, entry.LeNo);
-            Assert.AreEqual(RecordType.TransportOrder, entry.RecordType);
-            Assert.AreEqual(assignedAgv, entry.Vehicle);
+            entry.OrderId.ShouldBe(latestOrder.OrderId);
+            entry.Source.ShouldBe(latestOrder.Source);
+            entry.Destination.ShouldBe(latestOrder.Destination);
+            entry.LeNo.ShouldBe(latestOrder.LeNo);
+            entry.RecordType.ShouldBe(RecordType.TransportOrder);
+            entry.Vehicle.ShouldBe(assignedAgv);
         }
 
         [TestMethod]
@@ -136,22 +137,22 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Consumers
 
             await fixture.TestHarness!.Bus.Publish(new HostOrderHandlingFailed(correlationId, latestOrder.OrderId, HostOrderHandlingFailed.ErrorCode.OrderAlreadyExists));
 
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<HostOrderHandlingFailed>());
+            (await fixture.TestHarness.Published.Any<HostOrderHandlingFailed>()).ShouldBeTrue();
 
             var message = fixture.ConsumerHarness!.Consumed.Select<HostOrderHandlingFailed>().First().Context.Message;
-            Assert.AreEqual(correlationId, message.CorrelationId);
-            Assert.AreEqual(latestOrder.OrderId, message.OrderId);
+            message.CorrelationId.ShouldBe(correlationId);
+            message.OrderId.ShouldBe(latestOrder.OrderId);
 
             // Ensure database entry created
-            Assert.AreEqual(1, context.FromAgv.Count());
+            context.FromAgv.Count().ShouldBe(1);
             var entry = context.FromAgv.First();
-            Assert.AreEqual(latestOrder.OrderId, entry.OrderId);
-            Assert.AreEqual(latestOrder.Source, entry.Source);
-            Assert.AreEqual(latestOrder.Destination, entry.Destination);
-            Assert.AreEqual(latestOrder.LeNo, entry.LeNo);
-            Assert.AreEqual(RecordType.TransportOrder, entry.RecordType);
-            Assert.AreEqual(OrderStatus.Finished, entry.Status);
-            Assert.AreEqual(HostOrderHandlingFailed.ErrorCode.OrderAlreadyExists.ToString(), entry.Error);
+            entry.OrderId.ShouldBe(latestOrder.OrderId);
+            entry.Source.ShouldBe(latestOrder.Source);
+            entry.Destination.ShouldBe(latestOrder.Destination);
+            entry.LeNo.ShouldBe(latestOrder.LeNo);
+            entry.RecordType.ShouldBe(RecordType.TransportOrder);
+            entry.Status.ShouldBe(OrderStatus.Finished);
+            entry.Error.ShouldBe(HostOrderHandlingFailed.ErrorCode.OrderAlreadyExists.ToString());
         }
 
         [TestMethod]
@@ -174,21 +175,21 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Consumers
             await fixture.TestHarness!.Bus.Publish(new HostOrderCancelSucceeded(correlationId, latestOrder.OrderId));
 
             // Assert
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<HostOrderCancelSucceeded>());
+            (await fixture.TestHarness.Published.Any<HostOrderCancelSucceeded>()).ShouldBeTrue();
 
             var message = fixture.ConsumerHarness!.Consumed.Select<HostOrderCancelSucceeded>().First().Context.Message;
-            Assert.AreEqual(correlationId, message.CorrelationId);
-            Assert.AreEqual(latestOrder.OrderId, message.OrderId);
+            message.CorrelationId.ShouldBe(correlationId);
+            message.OrderId.ShouldBe(latestOrder.OrderId);
 
             // Table entry examination
-            Assert.AreEqual(1, context.FromAgv.Count());
+            context.FromAgv.Count().ShouldBe(1);
             var entry = context.FromAgv.First();
-            Assert.AreEqual(latestOrder.OrderId, entry.OrderId);
-            Assert.AreEqual(latestOrder.Source, entry.Source);
-            Assert.AreEqual(latestOrder.Destination, entry.Destination);
-            Assert.AreEqual(latestOrder.LeNo, entry.LeNo);
-            Assert.AreEqual(RecordType.OrderCancelAcknowledge, entry.RecordType);
-            Assert.AreEqual(OrderStatus.Cancelled, entry.Status);
+            entry.OrderId.ShouldBe(latestOrder.OrderId);
+            entry.Source.ShouldBe(latestOrder.Source);
+            entry.Destination.ShouldBe(latestOrder.Destination);
+            entry.LeNo.ShouldBe(latestOrder.LeNo);
+            entry.RecordType.ShouldBe(RecordType.OrderCancelAcknowledge);
+            entry.Status.ShouldBe(OrderStatus.Cancelled);
         }
 
         [TestMethod]
@@ -204,14 +205,14 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Consumers
             await fixture.TestHarness!.Bus.Publish(new HostOrderCancelSucceeded(correlationId, orderId));
 
             // Arrange
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<HostOrderCancelSucceeded>());
+            (await fixture.TestHarness.Published.Any<HostOrderCancelSucceeded>()).ShouldBeTrue();
 
             var message = fixture.ConsumerHarness!.Consumed.Select<HostOrderCancelSucceeded>().First().Context.Message;
-            Assert.AreEqual(correlationId, message.CorrelationId);
-            Assert.AreEqual(orderId, message.OrderId);
+            message.CorrelationId.ShouldBe(correlationId);
+            message.OrderId.ShouldBe(orderId);
 
             await using var context = await fixture.DbContextFactory.CreateDbContextAsync();
-            Assert.AreEqual(0, context.FromAgv.Count());
+            context.FromAgv.Count().ShouldBe(0);
         }
 
         [TestMethod]
@@ -234,21 +235,21 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Consumers
             await fixture.TestHarness!.Bus.Publish(new HostOrderCancelFailed(correlationId, latestOrder.OrderId, HostOrderCancelFailed.ErrorCode.OrderAlreadyCancelled));
 
             // Assert
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<HostOrderCancelFailed>());
+            (await fixture.TestHarness.Published.Any<HostOrderCancelFailed>()).ShouldBeTrue();
 
             var message = fixture.ConsumerHarness!.Consumed.Select<HostOrderCancelFailed>().First().Context.Message;
-            Assert.AreEqual(correlationId, message.CorrelationId);
-            Assert.AreEqual(latestOrder.OrderId, message.OrderId);
+            message.CorrelationId.ShouldBe(correlationId);
+            message.OrderId.ShouldBe(latestOrder.OrderId);
 
             // Table entry examination
-            Assert.AreEqual(1, context.FromAgv.Count());
+            context.FromAgv.Count().ShouldBe(1);
             var entry = context.FromAgv.First();
-            Assert.AreEqual(latestOrder.OrderId, entry.OrderId);
-            Assert.AreEqual(latestOrder.Source, entry.Source);
-            Assert.AreEqual(latestOrder.Destination, entry.Destination);
-            Assert.AreEqual(latestOrder.LeNo, entry.LeNo);
-            Assert.AreEqual(RecordType.OrderCancelFailed, entry.RecordType);
-            Assert.AreEqual(OrderStatus.Cancelled, entry.Status);
+            entry.OrderId.ShouldBe(latestOrder.OrderId);
+            entry.Source.ShouldBe(latestOrder.Source);
+            entry.Destination.ShouldBe(latestOrder.Destination);
+            entry.LeNo.ShouldBe(latestOrder.LeNo);
+            entry.RecordType.ShouldBe(RecordType.OrderCancelFailed);
+            entry.Status.ShouldBe(OrderStatus.Cancelled);
         }
 
         [TestMethod]
@@ -264,14 +265,14 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Consumers
             await fixture.TestHarness!.Bus.Publish(new HostOrderCancelFailed(correlationId, orderId, HostOrderCancelFailed.ErrorCode.OrderAlreadyCancelled));
 
             // Arrange
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<HostOrderCancelFailed>());
+            (await fixture.TestHarness.Published.Any<HostOrderCancelFailed>()).ShouldBeTrue();
 
             var message = fixture.ConsumerHarness!.Consumed.Select<HostOrderCancelFailed>().First().Context.Message;
-            Assert.AreEqual(correlationId, message.CorrelationId);
-            Assert.AreEqual(orderId, message.OrderId);
+            message.CorrelationId.ShouldBe(correlationId);
+            message.OrderId.ShouldBe(orderId);
 
             await using var context = await fixture.DbContextFactory.CreateDbContextAsync();
-            Assert.AreEqual(0, context.FromAgv.Count());
+            context.FromAgv.Count().ShouldBe(0);
         }
     }
 }

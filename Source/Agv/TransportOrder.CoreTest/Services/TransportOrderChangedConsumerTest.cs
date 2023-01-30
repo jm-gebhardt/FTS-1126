@@ -8,6 +8,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
 {
@@ -32,11 +33,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             IOrder order = new OrderDto("TransportOrderStarted", agvCorrelationId, orderDetails, correlationId);
 
             await fixture.TestHarness!.Bus.Publish(new TransportOrderChanged(correlationId, order));
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<TransportOrderChanged>());
+            (await fixture.TestHarness.Published.Any<TransportOrderChanged>()).ShouldBeTrue();
 
             var consumedMessage = fixture.ConsumerHarness!.Consumed.Select<TransportOrderChanged>().First().Context.Message;
-            Assert.AreEqual(correlationId, consumedMessage.CorrelationId);
-            Assert.AreEqual(orderId, consumedMessage.Order.OrderDetails.OrderId);
+            consumedMessage.CorrelationId.ShouldBe(correlationId);
+            consumedMessage.Order.OrderDetails.OrderId.ShouldBe(orderId);
 
             string method = nameof(TransportOrderChanged);
             mockHub.Verify(h => h.SendOrderToAllClients(method, It.Is<IOrder>(o => o.CorrelationId == correlationId), It.IsAny<CancellationToken>()), Times.Once);

@@ -5,6 +5,7 @@ using Moq;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.WCSCommunication.CmdOptions;
 using Gebhardt.StoreWare.Agv.WCSCommunication.Services;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services
 {
@@ -30,7 +31,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services
                 });
             });
             await fixture.Pollable.Poll(It.IsAny<CancellationToken>());
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<HandleHostOrder>());
+            (await fixture.TestHarness.Published.Any<HandleHostOrder>()).ShouldBeTrue();
         }
     }
 }

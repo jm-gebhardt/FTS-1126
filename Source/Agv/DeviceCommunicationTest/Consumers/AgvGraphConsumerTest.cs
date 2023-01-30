@@ -5,6 +5,7 @@ using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Events;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
 {
@@ -37,19 +38,19 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
             await fixture.TestHarness.Bus.PublishMqtt(message, null);
 
             // Did the test publish MqttGraph ...
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<MqttGraph>());
+            (await fixture.TestHarness.Published.Any<MqttGraph>()).ShouldBeTrue();
             // ... and has the message been consumed?
             var consumed = fixture.ConsumerHarness.Consumed.Select<MqttGraph>().First().Context.Message;
-            Assert.AreEqual(AgvTestIdentifier, consumed.SerialNumber);
+            consumed.SerialNumber.ShouldBe(AgvTestIdentifier);
 
             // Did the consumer forward a Graph message ...
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<InternalGraphReceived>());
+            (await fixture.TestHarness.Published.Any<InternalGraphReceived>()).ShouldBeTrue();
             // ... with expected content?
             var published = fixture.TestHarness.Published.Select<InternalGraphReceived>().First().Context.Message;
-            Assert.AreEqual(AgvTestIdentifier.ToGuid(), published.CorrelationId);
-            Assert.AreEqual(AgvTestIdentifier, published.Graph.SerialNumber);
-            Assert.AreEqual(2, published.Graph.Nodes?.Length);
-            Assert.AreEqual(1, published.Graph.Edges?.Length);
+            published.CorrelationId.ShouldBe(AgvTestIdentifier.ToGuid());
+            published.Graph.SerialNumber.ShouldBe(AgvTestIdentifier);
+            published.Graph.Nodes?.Length.ShouldBe(2);
+            published.Graph.Edges?.Length.ShouldBe(1);
         }
     }
 }

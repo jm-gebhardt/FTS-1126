@@ -7,6 +7,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Core.States;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
 {
@@ -23,15 +24,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             public EfOrderRegistry Registry { get; }
 
             private IDbContextFactory<SagaPersistenceDbContext> ContextFactory { get; }
+
             private ServiceProvider Provider { get; }
 
             public EfOrderRegistryTestFixture()
             {
                 var collection = new ServiceCollection()
-                    .AddDbContextFactory<SagaPersistenceDbContext>(options =>
-                        {
-                            options.UseInMemoryDatabase(Guid.NewGuid().ToString());
-                        }
+                    .AddDbContextFactory<SagaPersistenceDbContext>(options => { options.UseInMemoryDatabase(Guid.NewGuid().ToString()); }
                     );
                 Provider = collection.BuildServiceProvider(true);
                 ContextFactory = Provider.GetService<IDbContextFactory<SagaPersistenceDbContext>>()!;
@@ -51,8 +50,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         {
             var fixture = new EfOrderRegistryTestFixture();
 
-            Assert.AreEqual(0, fixture.Registry.Count);
-            Assert.AreEqual(0, fixture.Registry.CountUnassigned);
+            fixture.Registry.Count.ShouldBe(0);
+            fixture.Registry.CountUnassigned.ShouldBe(0);
         }
 
         [TestMethod]
@@ -64,15 +63,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
 
             fixture.Add(orderSaga);
 
-            Assert.AreEqual(1, fixture.Registry.Count);
-            Assert.AreEqual(1, fixture.Registry.CountUnassigned);
+            fixture.Registry.Count.ShouldBe(1);
+            fixture.Registry.CountUnassigned.ShouldBe(1);
 
             var firstOrder = fixture.Registry.GetUnassignedOrders().First();
-            Assert.AreEqual(orderSaga.CorrelationId, firstOrder.CorrelationId);
-            Assert.AreEqual(orderSaga.CurrentState, firstOrder.CurrentState);
-            Assert.AreEqual(orderSaga.OrderDetails.Destination, firstOrder.OrderDetails.Destination);
-            Assert.AreEqual(orderSaga.OrderDetails.Source, firstOrder.OrderDetails.Source);
-            Assert.AreEqual(orderSaga.OrderDetails.LeNo, firstOrder.OrderDetails.LeNo);
+            firstOrder.CorrelationId.ShouldBe(orderSaga.CorrelationId);
+            firstOrder.CurrentState.ShouldBe(orderSaga.CurrentState);
+            firstOrder.OrderDetails.Destination.ShouldBe(orderSaga.OrderDetails.Destination);
+            firstOrder.OrderDetails.Source.ShouldBe(orderSaga.OrderDetails.Source);
+            firstOrder.OrderDetails.LeNo.ShouldBe(orderSaga.OrderDetails.LeNo);
         }
 
         [TestMethod]
@@ -87,17 +86,16 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             fixture.Add(orderSaga);
             fixture.Add(orderSaga2);
 
-            Assert.AreEqual(2, fixture.Registry.Count);
-            Assert.AreEqual(1, fixture.Registry.CountUnassigned);
+            fixture.Registry.Count.ShouldBe(2);
+            fixture.Registry.CountUnassigned.ShouldBe(1);
 
             var firstOrder = fixture.Registry.GetUnassignedOrders().First();
-            Assert.AreEqual(orderSaga.CorrelationId, firstOrder.CorrelationId);
-            Assert.AreEqual(orderSaga.CurrentState, firstOrder.CurrentState);
-            Assert.AreEqual(orderSaga.OrderDetails.Destination, firstOrder.OrderDetails.Destination);
-            Assert.AreEqual(orderSaga.OrderDetails.Source, firstOrder.OrderDetails.Source);
-            Assert.AreEqual(orderSaga.OrderDetails.LeNo, firstOrder.OrderDetails.LeNo);
+            firstOrder.CorrelationId.ShouldBe(orderSaga.CorrelationId);
+            firstOrder.CurrentState.ShouldBe(orderSaga.CurrentState);
+            firstOrder.OrderDetails.Destination.ShouldBe(orderSaga.OrderDetails.Destination);
+            firstOrder.OrderDetails.Source.ShouldBe(orderSaga.OrderDetails.Source);
+            firstOrder.OrderDetails.LeNo.ShouldBe(orderSaga.OrderDetails.LeNo);
         }
-
 
         [TestMethod]
         public void Verify_IAOrderRegistry_Interface_Methods()
@@ -113,24 +111,24 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
 
             var orderRegistry = fixture.Registry;
 
-            Assert.AreEqual(2, orderRegistry.Count);
-            Assert.AreEqual(1, orderRegistry.CountUnassigned);
+            orderRegistry.Count.ShouldBe(2);
+            orderRegistry.CountUnassigned.ShouldBe(1);
 
             IEnumerable<IOrder> allOrders = orderRegistry.GetAllOrders();
             IEnumerable<IOrder> unassignedOrders = orderRegistry.GetUnassignedOrders();
 
             // ReSharper disable PossibleMultipleEnumeration
-            Assert.AreEqual(2, allOrders.Count());
-            Assert.AreEqual(1, unassignedOrders.Count());
+            allOrders.Count().ShouldBe(2);
+            unassignedOrders.Count().ShouldBe(1);
 
             foreach (var actualOrder in orderRegistry.GetAllOrders())
             {
                 var foundOrder = orderRegistry.GetOrder(actualOrder.CorrelationId);
-                Assert.IsNotNull(foundOrder);
-                Assert.AreEqual(actualOrder.OrderDetails.OrderId, foundOrder.OrderDetails.OrderId);
+                foundOrder.ShouldNotBeNull();
+                foundOrder.OrderDetails.OrderId.ShouldBe(actualOrder.OrderDetails.OrderId);
             }
 
-            Assert.IsNull(orderRegistry.GetOrder(Guid.Empty));
+            orderRegistry.GetOrder(Guid.Empty).ShouldBeNull();
         }
     }
 }

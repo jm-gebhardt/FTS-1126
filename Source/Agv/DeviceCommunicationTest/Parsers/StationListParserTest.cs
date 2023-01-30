@@ -2,6 +2,7 @@
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
 {
@@ -25,7 +26,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
                 new MqttGraph("", DateTimeOffset.UtcNow, Array.Empty<Node>(), Array.Empty<Edge>(), string.Empty));
             var graph = parser.Graph;
 
-            Assert.AreEqual(Common.Messages.AgvManagement.AgvGraph.GraphUsability.SerialNumberMissing, graph.Usability);
+            graph.Usability.ShouldBe(Common.Messages.AgvManagement.AgvGraph.GraphUsability.SerialNumberMissing);
         }
 
         /// <summary>
@@ -39,8 +40,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
                 new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow, Array.Empty<Node>(), Array.Empty<Edge>(), string.Empty));
             var graph = parser.Graph;
 
-            Assert.AreEqual(Common.Messages.AgvManagement.AgvGraph.GraphUsability.InvalidNodes, graph.Usability);
-            Assert.ThrowsException<InvalidOperationException>(() => parser.SerialNumber);
+            graph.Usability.ShouldBe(Common.Messages.AgvManagement.AgvGraph.GraphUsability.InvalidNodes);
+            Should.Throw<InvalidOperationException>(() => parser.SerialNumber);
         }
 
         /// <summary>
@@ -58,7 +59,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
                 new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow, nodes, Array.Empty<Edge>(), string.Empty));
             var graph = parser.Graph;
 
-            Assert.AreEqual(Common.Messages.AgvManagement.AgvGraph.GraphUsability.InvalidEdges, graph.Usability);
+            graph.Usability.ShouldBe(Common.Messages.AgvManagement.AgvGraph.GraphUsability.InvalidEdges);
         }
 
         /// <summary>
@@ -80,7 +81,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
                 new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
             var graph = parser.Graph;
 
-            Assert.AreEqual(Common.Messages.AgvManagement.AgvGraph.GraphUsability.InvalidStations, graph.Usability);
+            graph.Usability.ShouldBe(Common.Messages.AgvManagement.AgvGraph.GraphUsability.InvalidStations);
         }
 
         /// <summary>
@@ -105,12 +106,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
                 new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
             var graph = parser.Graph;
 
-            Assert.AreEqual(Common.Messages.AgvManagement.AgvGraph.GraphUsability.Valid, graph.Usability);
-            Assert.AreEqual(AgvTestIdentifier01, parser.SerialNumber);
+            graph.Usability.ShouldBe(Common.Messages.AgvManagement.AgvGraph.GraphUsability.Valid);
+            parser.SerialNumber.ShouldBe(AgvTestIdentifier01);
             //              3 = 2 nodes + 1 station
-            Assert.AreEqual(3, graph.Nodes.Length);
+            graph.Nodes.Length.ShouldBe(3);
             //              4 = 2 * 2 bidirectional edges
-            Assert.AreEqual(4, graph.Edges.Length);
+            graph.Edges.Length.ShouldBe(4);
         }
 
         /// <summary>
@@ -137,11 +138,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
                 new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow, nodes, edges, mapId, Guid.NewGuid()));
             var graph = parser.Graph;
 
-            Assert.AreEqual(Common.Messages.AgvManagement.AgvGraph.GraphUsability.Valid, graph.Usability);
-            Assert.AreEqual(AgvTestIdentifier01, parser.SerialNumber);
-            Assert.AreEqual(mapId, graph.RelatedMapName);
-            Assert.AreEqual(mapId.ToGuid(), graph.RelatedMapId);
-            Assert.AreEqual(AgvTestIdentifier01.ToGuid(), graph.CorrelationId);
+            graph.Usability.ShouldBe(Common.Messages.AgvManagement.AgvGraph.GraphUsability.Valid);
+            parser.SerialNumber.ShouldBe(AgvTestIdentifier01);
+            graph.RelatedMapName.ShouldBe(mapId);
+            graph.RelatedMapId.ShouldBe(mapId.ToGuid());
+            graph.CorrelationId.ShouldBe(AgvTestIdentifier01.ToGuid());
         }
 
         /// <summary>
@@ -166,7 +167,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
                 new MqttGraph(AgvTestIdentifier02, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
             var graph = parser.Graph;
 
-            Assert.AreEqual(Common.Messages.AgvManagement.AgvGraph.GraphUsability.SerialNumberMismatch, graph.Usability);
+            graph.Usability.ShouldBe(Common.Messages.AgvManagement.AgvGraph.GraphUsability.SerialNumberMismatch);
         }
 
         /// <summary>
@@ -211,27 +212,27 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
                 new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
 
             var agvGraph = parser.Graph;
-            Assert.AreEqual(AgvTestIdentifier01, parser.SerialNumber);
+            parser.SerialNumber.ShouldBe(AgvTestIdentifier01);
 
-            Assert.AreEqual(5, agvGraph.Nodes.Length);
-            Assert.AreEqual(8, agvGraph.Edges.Length);
+            agvGraph.Nodes.Length.ShouldBe(5);
+            agvGraph.Edges.Length.ShouldBe(8);
 
             // Average velocity for the single edge is 1 (metric[t] = SQRT(9^2+9^2)/1 = 12.72792.
 
             // Distance S1->1 is 2 (metric[t] = SQRT(2^2+2^2)/1 = 2,82843
             float metric = (float)Math.Sqrt(8);
-            Assert.AreEqual(metric, agvGraph.Edges.First(x => x.From == "S1").Metric, 0.00001);
-            Assert.AreEqual(metric, agvGraph.Edges.First(x => x.To == "S1").Metric, 0.00001);
+            agvGraph.Edges.First(x => x.From == "S1").Metric.ShouldBe(metric, 0.00001);
+            agvGraph.Edges.First(x => x.To == "S1").Metric.ShouldBe(metric, 0.00001);
 
             // Distance S2->2 is 2 (metric[t] = SQRT(2^2+2^2)/1 = 2,82843
             metric = (float)Math.Sqrt(8);
-            Assert.AreEqual(metric, agvGraph.Edges.First(x => x.From == "S2").Metric, 0.00001);
-            Assert.AreEqual(metric, agvGraph.Edges.First(x => x.To == "S2").Metric, 0.00001);
+            agvGraph.Edges.First(x => x.From == "S2").Metric.ShouldBe(metric, 0.00001);
+            agvGraph.Edges.First(x => x.To == "S2").Metric.ShouldBe(metric, 0.00001);
 
             // Distance S3->1 is 2 (metric[t] = SQRT(6^2+2^2)/1 = 6,32456
             metric = (float)Math.Sqrt(40);
-            Assert.AreEqual(metric, agvGraph.Edges.First(x => x.From == "S3").Metric, 0.00001);
-            Assert.AreEqual(metric, agvGraph.Edges.First(x => x.To == "S3").Metric, 0.00001);
+            agvGraph.Edges.First(x => x.From == "S3").Metric.ShouldBe(metric, 0.00001);
+            agvGraph.Edges.First(x => x.To == "S3").Metric.ShouldBe(metric, 0.00001);
         }
     }
 }

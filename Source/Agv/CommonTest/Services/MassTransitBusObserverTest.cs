@@ -2,6 +2,7 @@
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.Common.Messages;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.CommonTest.Services
 {
@@ -20,8 +21,8 @@ namespace Gebhardt.StoreWare.Agv.CommonTest.Services
                 inMemoryConfiguration: (_, cfg) => { cfg.ConnectBusObserver(new BusObserver()); }
             );
 
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<MassTransitBusEvent>());
-            Assert.IsNotNull(fixture.TestHarness.Published.Select<MassTransitBusEvent>(s => s.Context.Message.Type == MassTransitBusEvent.EventType.PostStarted).First());
+            (await fixture.TestHarness.Published.Any<MassTransitBusEvent>()).ShouldBeTrue();
+            fixture.TestHarness.Published.Select<MassTransitBusEvent>(s => s.Context.Message.Type == MassTransitBusEvent.EventType.PostStarted).First().ShouldNotBeNull();
         }
     }
 }

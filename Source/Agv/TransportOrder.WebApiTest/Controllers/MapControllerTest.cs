@@ -30,11 +30,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
 
             var harness = fixture.TestHarness!;
 
-            Assert.IsTrue(await harness.Consumed.Any<GetMapListRequest>());
-            Assert.IsTrue(await harness.Consumed.Any<GetMapListResult>());
+            (await harness.Consumed.Any<GetMapListRequest>()).ShouldBeTrue();
+            (await harness.Consumed.Any<GetMapListResult>()).ShouldBeTrue();
 
-            Assert.IsTrue(await harness.Published.Any<GetMapListRequest>());
-            Assert.IsTrue(await harness.Published.Any<GetMapListResult>());
+            (await harness.Published.Any<GetMapListRequest>()).ShouldBeTrue();
+            (await harness.Published.Any<GetMapListResult>()).ShouldBeTrue();
         }
 
         [TestMethod]
@@ -58,11 +58,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
 
             var harness = fixture.TestHarness!;
 
-            Assert.IsTrue(await harness.Consumed.Any<GetMapImageRequest>());
-            Assert.IsTrue(await harness.Consumed.Any<GetMapImageResult>());
+            (await harness.Consumed.Any<GetMapImageRequest>()).ShouldBeTrue();
+            (await harness.Consumed.Any<GetMapImageResult>()).ShouldBeTrue();
 
-            Assert.IsTrue(await harness.Published.Any<GetMapImageRequest>());
-            Assert.IsTrue(await harness.Published.Any<GetMapImageResult>());
+            (await harness.Published.Any<GetMapImageRequest>()).ShouldBeTrue();
+            (await harness.Published.Any<GetMapImageResult>()).ShouldBeTrue();
         }
     }
 }

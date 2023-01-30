@@ -30,11 +30,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Features.Maps.Handlers.
 
             var harness = fixture.TestHarness!;
 
-            Assert.IsTrue(await harness.Consumed.Any<GetMapImageRequest>());
-            Assert.IsTrue(await harness.Consumed.Any<GetMapImageResult>());
+            (await harness.Consumed.Any<GetMapImageRequest>()).ShouldBeTrue();
+            (await harness.Consumed.Any<GetMapImageResult>()).ShouldBeTrue();
 
-            Assert.IsTrue(await harness.Published.Any<GetMapImageRequest>());
-            Assert.IsTrue(await harness.Published.Any<GetMapImageResult>());
+            (await harness.Published.Any<GetMapImageRequest>()).ShouldBeTrue();
+            (await harness.Published.Any<GetMapImageResult>()).ShouldBeTrue();
         }
 
 

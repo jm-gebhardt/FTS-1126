@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Hubs
 {
@@ -48,7 +49,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Hubs
             mockContext.Setup(c => c.ConnectionId).Returns(connectionId);
 
             orderHUb.OnConnectedAsync();
-            Assert.AreEqual($"Client connected. Connection ID: {connectionId}", dummyLogger.LastMessage);
+            dummyLogger.LastMessage.ShouldBe($"Client connected. Connection ID: {connectionId}");
         }
 
         /// <summary>
@@ -66,7 +67,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Hubs
             mockContext.Setup(c => c.ConnectionId).Returns(connectionId);
 
             orderHUb.OnDisconnectedAsync(null);
-            Assert.AreEqual($"Client disconnected. Connection ID: {connectionId}", dummyLogger.LastMessage);
+            dummyLogger.LastMessage.ShouldBe($"Client disconnected. Connection ID: {connectionId}");
         }
 
         /// <summary>
@@ -85,7 +86,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Hubs
 
             var exception = new Exception("Test");
             orderHUb.OnDisconnectedAsync(exception);
-            Assert.AreEqual($"Client disconnected. Connection ID: {connectionId}", dummyLogger.LastMessage);
+            dummyLogger.LastMessage.ShouldBe($"Client disconnected. Connection ID: {connectionId}");
         }
     }
 }

@@ -5,6 +5,7 @@ using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Events;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
 {
@@ -33,20 +34,20 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
             await fixture.TestHarness.Bus.PublishMqtt(message, null);
 
             // Did the test publish MqttStationList ...
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<MqttStationList>());
+            (await fixture.TestHarness.Published.Any<MqttStationList>()).ShouldBeTrue();
             // ... and has the message been consumed?
             var consumed = fixture.ConsumerHarness.Consumed.Select<MqttStationList>().First().Context.Message;
-            Assert.AreEqual(AgvTestIdentifier, consumed.SerialNumber);
+            consumed.SerialNumber.ShouldBe(AgvTestIdentifier);
 
             // Did the consumer forward a StationList message ...
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<InternalStationListReceived>());
+            (await fixture.TestHarness.Published.Any<InternalStationListReceived>()).ShouldBeTrue();
             // ... with expected content?
             var published = fixture.TestHarness.Published.Select<InternalStationListReceived>().First().Context.Message;
-            Assert.AreEqual(AgvTestIdentifier.ToGuid(), published.CorrelationId);
-            Assert.AreEqual(AgvTestIdentifier, published.StationList.SerialNumber);
-            Assert.AreEqual(2, published.StationList.Stations.Length);
-            Assert.IsTrue(published.StationList.Stations.Any(x => x.Identifier == "D1"));
-            Assert.IsTrue(published.StationList.Stations.Any(x => x.Identifier == "C1"));
+            published.CorrelationId.ShouldBe(AgvTestIdentifier.ToGuid());
+            published.StationList.SerialNumber.ShouldBe(AgvTestIdentifier);
+            published.StationList.Stations.Length.ShouldBe(2);
+            published.StationList.Stations.Any(x => x.Identifier == "D1").ShouldBeTrue();
+            published.StationList.Stations.Any(x => x.Identifier == "C1").ShouldBeTrue();
         }
     }
 }

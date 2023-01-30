@@ -1,5 +1,6 @@
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers.DateRange;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers.DateRange
 {
@@ -15,11 +16,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers.DateRange
         [TestMethod]
         public void DateRangeParametersEmpty()
         {
-            Assert.IsTrue(new DateRangeParameters().IsEmpty());
-            Assert.IsTrue(new DateRangeParameters(default, default).IsEmpty());
-            Assert.IsFalse(new DateRangeParameters(default, DateTime.Now).IsEmpty());
-            Assert.IsFalse(new DateRangeParameters(DateTime.Now, default).IsEmpty());
-            Assert.IsFalse(new DateRangeParameters(DateTime.Now, DateTime.Now).IsEmpty());
+            new DateRangeParameters().IsEmpty().ShouldBeTrue();
+            new DateRangeParameters(default, default).IsEmpty().ShouldBeTrue();
+            new DateRangeParameters(default, DateTime.Now).IsEmpty().ShouldBeFalse();
+            new DateRangeParameters(DateTime.Now, default).IsEmpty().ShouldBeFalse();
+            new DateRangeParameters(DateTime.Now, DateTime.Now).IsEmpty().ShouldBeFalse();
         }
     }
 }

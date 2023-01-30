@@ -12,29 +12,29 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Profiles;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.States;
-
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
 {
-
     [TestClass]
     public class AgvControllerTest
     {
         #region Setup
-
         private static readonly string[] _agvIds = { "AGV001", "AGV002", "AGV003" };
         private static readonly string[] _orders = { "ORDER001", "ORDER002", "" };
         private static readonly string[] _states = { nameof(AgvStateMachine.Idle), nameof(AgvStateMachine.Busy), nameof(AgvStateMachine.Discovered) };
         private static readonly string[] _ips = { "127.0.0.1", "127.0.0.2", "127.0.0.3" };
 
-        private static readonly AgvGraph.Node[] _nodes = new AgvGraph.Node[] {
+        private static readonly AgvGraph.Node[] _nodes = new AgvGraph.Node[]
+        {
             new("node00") { X = 0f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
             new("node10") { X = 1f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
             new("node01") { X = 0f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
             new("node11") { X = 1f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint }
         };
 
-        private static readonly AgvGraph.Edge[] _edges = new AgvGraph.Edge[] {
+        private static readonly AgvGraph.Edge[] _edges = new AgvGraph.Edge[]
+        {
             new("node00", "node01"),
             new("node01", "node11"),
             new("node11", "node10"),
@@ -43,10 +43,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
 
         private Mapper GetMapper()
         {
-            var mapperConfig = new MapperConfiguration(cfg =>
-            {
-                cfg.AddProfile(new MappingProfile());
-            });
+            var mapperConfig = new MapperConfiguration(cfg => { cfg.AddProfile(new MappingProfile()); });
 
             var mapper = new Mapper(mapperConfig);
             return mapper;
@@ -129,7 +126,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             return new AgvController(
                 GetAgvRegistry(), GetAgvPositionRegistry(), bus.Object, GetMapper());
         }
-
         #endregion
 
         [TestMethod]
@@ -138,21 +134,23 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var controller = GetController();
 
             var result = controller.GetAgvs().Result as OkObjectResult;
-            Assert.IsNotNull(result);
+            result.ShouldNotBeNull();
 
             var agvsIterable = result.Value as IEnumerable<AgvDto>;
-            Assert.IsNotNull(agvsIterable);
+            // ReSharper disable once PossibleMultipleEnumeration
+            agvsIterable.ShouldNotBeNull();
+            // ReSharper disable once PossibleMultipleEnumeration
             List<AgvDto> agvs = agvsIterable.ToList();
-            Assert.AreEqual(_agvIds.Length, agvs.Count);
+            agvs.Count.ShouldBe(_agvIds.Length);
 
             for (int index = 0; index < _agvIds.Length; index++)
             {
                 string agvId = _agvIds[index];
                 string state = _states[index];
 
-                Assert.AreEqual(agvId.ToGuid(), agvs[index].CorrelationId);
-                Assert.AreEqual(agvId, agvs[index].AgvId);
-                Assert.AreEqual(state, agvs[index].CurrentState);
+                agvs[index].CorrelationId.ShouldBe(agvId.ToGuid());
+                agvs[index].AgvId.ShouldBe(agvId);
+                agvs[index].CurrentState.ShouldBe(state);
             }
         }
 
@@ -165,15 +163,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var correlationId = _agvIds[index].ToGuid();
 
             var result = controller.GetAgvGraph(correlationId).Result as OkObjectResult;
-            Assert.IsNotNull(result);
+            result.ShouldNotBeNull();
 
             var graph = result.Value as GraphDto;
-            Assert.IsNotNull(graph);
+            graph.ShouldNotBeNull();
 
-            Assert.AreEqual(correlationId, graph.CorrelationId);
-            Assert.AreEqual(_nodes[index].Id, graph.Nodes[index].Id);
-            Assert.AreEqual(_edges[index].From, graph.Edges[index].From.Id);
-            Assert.AreEqual(_edges[index].To, graph.Edges[index].To.Id);
+            graph.CorrelationId.ShouldBe(correlationId);
+            graph.Nodes[index].Id.ShouldBe(_nodes[index].Id);
+            graph.Edges[index].From.Id.ShouldBe(_edges[index].From);
+            graph.Edges[index].To.Id.ShouldBe(_edges[index].To);
         }
 
         [TestMethod]
@@ -183,7 +181,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var correlationId = Guid.Empty;
 
             var result = controller.GetAgvGraph(correlationId).Result as NotFoundResult;
-            Assert.IsNotNull(result);
+            result.ShouldNotBeNull();
         }
 
         [TestMethod]
@@ -195,13 +193,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var correlationId = _agvIds[index].ToGuid();
 
             var result = controller.GetAgvStatus(correlationId).Result as OkObjectResult;
-            Assert.IsNotNull(result);
+            result.ShouldNotBeNull();
 
             var agvStatus = result.Value as AgvStateDto;
-            Assert.IsNotNull(agvStatus);
+            agvStatus.ShouldNotBeNull();
 
-            Assert.AreEqual(correlationId, agvStatus.CorrelationId);
-            Assert.AreEqual(_orders[index], agvStatus.OrderId);
+            agvStatus.CorrelationId.ShouldBe(correlationId);
+            agvStatus.OrderId.ShouldBe(_orders[index]);
         }
 
         [TestMethod]
@@ -211,7 +209,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var correlationId = Guid.Empty;
 
             var result = controller.GetAgvStatus(correlationId).Result as NotFoundResult;
-            Assert.IsNotNull(result);
+            result.ShouldNotBeNull();
         }
 
         [TestMethod]
@@ -221,7 +219,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var correlationId = _agvIds[2].ToGuid(); // AGV without AgvStatus
 
             var result = controller.GetAgvStatus(correlationId).Result as NoContentResult;
-            Assert.IsNotNull(result);
+            result.ShouldNotBeNull();
         }
 
         [TestMethod]
@@ -233,13 +231,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var correlationId = _agvIds[index].ToGuid();
 
             var result = controller.GetAgvData(correlationId).Result as OkObjectResult;
-            Assert.IsNotNull(result);
+            result.ShouldNotBeNull();
 
             var agvData = result.Value as AgvData;
-            Assert.IsNotNull(agvData);
+            agvData.ShouldNotBeNull();
 
-            Assert.AreEqual(correlationId, agvData.CorrelationId);
-            Assert.AreEqual(_ips[index], agvData.IpV4Address);
+            agvData.CorrelationId.ShouldBe(correlationId);
+            agvData.IpV4Address.ShouldBe(_ips[index]);
         }
 
         [TestMethod]
@@ -249,7 +247,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var correlationId = Guid.Empty;
 
             var result = controller.GetAgvData(correlationId).Result as NotFoundResult;
-            Assert.IsNotNull(result);
+            result.ShouldNotBeNull();
         }
 
         [TestMethod]
@@ -259,7 +257,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var correlationId = Guid.Empty;
 
             var result = controller.SetIdle(correlationId).Result as NotFoundResult;
-            Assert.IsNotNull(result);
+            result.ShouldNotBeNull();
         }
 
         [TestMethod]
@@ -269,7 +267,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var correlationId = _agvIds[1].ToGuid(); // AGV not in state 'Discovered'
 
             var result = controller.SetIdle(correlationId).Result as BadRequestObjectResult;
-            Assert.IsNotNull(result);
+            result.ShouldNotBeNull();
         }
 
         [TestMethod]
@@ -281,7 +279,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var correlationId = _agvIds[2].ToGuid();
 
             var result = controller.SetIdle(correlationId).Result as OkResult;
-            Assert.IsNotNull(result);
+            result.ShouldNotBeNull();
 
             bus.Verify(s => s.Publish(It.IsAny<ForceReleaseAgv>(), default), Times.Once);
         }
@@ -293,7 +291,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var correlationId = Guid.Empty;
 
             var result = controller.LockAgv(correlationId).Result as NotFoundResult;
-            Assert.IsNotNull(result);
+            result.ShouldNotBeNull();
         }
 
         [TestMethod]
@@ -305,7 +303,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var correlationId = _agvIds[2].ToGuid();
 
             var result = controller.LockAgv(correlationId).Result as OkResult;
-            Assert.IsNotNull(result);
+            result.ShouldNotBeNull();
 
             bus.Verify(s => s.Publish(It.IsAny<LockAgv>(), default), Times.Once);
         }
@@ -317,7 +315,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var correlationId = Guid.Empty;
 
             var result = controller.EmitRequestData(correlationId).Result as NotFoundResult;
-            Assert.IsNotNull(result);
+            result.ShouldNotBeNull();
         }
 
         [TestMethod]
@@ -329,7 +327,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var correlationId = _agvIds[2].ToGuid();
 
             var result = controller.EmitRequestData(correlationId).Result as OkResult;
-            Assert.IsNotNull(result);
+            result.ShouldNotBeNull();
 
             bus.Verify(s => s.Publish(It.IsAny<RequestAgvData>(), default), Times.Once);
         }
@@ -341,7 +339,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var correlationId = Guid.Empty;
 
             var result = controller.EmitRequestGraph(correlationId).Result as NotFoundResult;
-            Assert.IsNotNull(result);
+            result.ShouldNotBeNull();
         }
 
         [TestMethod]
@@ -353,7 +351,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var correlationId = _agvIds[2].ToGuid();
 
             var result = controller.EmitRequestGraph(correlationId).Result as OkResult;
-            Assert.IsNotNull(result);
+            result.ShouldNotBeNull();
 
             bus.Verify(s => s.Publish(It.IsAny<RequestAgvGraph>(), default), Times.Once);
         }

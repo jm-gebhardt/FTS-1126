@@ -2,6 +2,7 @@
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
 {
@@ -26,7 +27,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
                 correlationId: AgvTestIdentifier01.ToGuid(),
                 agvId: AgvTestIdentifier01
             ));
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<RequestAgvGraph>());
+            (await fixture.TestHarness.Published.Any<RequestAgvGraph>()).ShouldBeTrue();
         }
     }
 }

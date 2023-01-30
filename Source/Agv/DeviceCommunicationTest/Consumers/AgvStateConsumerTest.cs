@@ -5,6 +5,7 @@ using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
 {
@@ -23,7 +24,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
 
             await fixture.TestHarness.Bus.PublishMqtt(new MqttState("", ""), null);
 
-            Assert.IsFalse(await fixture.TestHarness.Published.Any<AgvStatusReceived>());
+            (await fixture.TestHarness.Published.Any<AgvStatusReceived>()).ShouldBeFalse();
         }
 
         /// <summary>
@@ -37,17 +38,17 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
             const string orderId = "Order123";
 
             await fixture.TestHarness.Bus.PublishMqtt(new MqttState(agvTestIdentifier, orderId), null);
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<MqttState>());
+            (await fixture.TestHarness.Published.Any<MqttState>()).ShouldBeTrue();
 
             var consumedState = fixture.ConsumerHarness.Consumed.Select<MqttState>().First().Context.Message;
-            Assert.AreEqual(agvTestIdentifier, consumedState.SerialNumber);
+            consumedState.SerialNumber.ShouldBe(agvTestIdentifier);
 
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvStatusReceived>());
+            (await fixture.TestHarness.Published.Any<AgvStatusReceived>()).ShouldBeTrue();
 
             var publishedStatus = fixture.TestHarness.Published.Select<AgvStatusReceived>().First().Context.Message;
-            Assert.AreEqual(agvTestIdentifier.ToGuid(), publishedStatus.CorrelationId);
-            Assert.AreEqual(agvTestIdentifier, publishedStatus.AgvId);
-            Assert.AreEqual(orderId, publishedStatus.AgvStatus.OrderId);
+            publishedStatus.CorrelationId.ShouldBe(agvTestIdentifier.ToGuid());
+            publishedStatus.AgvId.ShouldBe(agvTestIdentifier);
+            publishedStatus.AgvStatus.OrderId.ShouldBe(orderId);
         }
 
         /// <summary>
@@ -68,15 +69,15 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
                 AgvPosition = null
             }, null);
 
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<MqttState>());
+            (await fixture.TestHarness.Published.Any<MqttState>()).ShouldBeTrue();
 
             var consumedState = fixture.ConsumerHarness.Consumed.Select<MqttState>().First().Context.Message;
-            Assert.AreEqual(sentLastNodeId, consumedState.LastNodeId);
-
+            consumedState.LastNodeId.ShouldBe(sentLastNodeId);
+            
             var publishedStatus = fixture.TestHarness.Published.Select<AgvStatusReceived>().First().Context.Message;
-            Assert.AreEqual(receivedLastNodeId, publishedStatus.AgvStatus.LastNodeId);
+            publishedStatus.AgvStatus.LastNodeId.ShouldBe(receivedLastNodeId);
 
-            Assert.IsFalse(await fixture.TestHarness.Published.Any<AgvPositionReceived>());
+            (await fixture.TestHarness.Published.Any<AgvPositionReceived>()).ShouldBeFalse();
         }
 
         [TestMethod]
@@ -99,30 +100,30 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
                 }
             }, null);
 
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<MqttState>());
+            (await fixture.TestHarness.Published.Any<MqttState>()).ShouldBeTrue();
 
             var consumedState = fixture.ConsumerHarness.Consumed.Select<MqttState>().First().Context.Message;
-            Assert.IsNotNull(consumedState.AgvPosition);
+            consumedState.AgvPosition.ShouldNotBeNull();
             if (deviationRange == null)
             {
-                Assert.IsTrue(consumedState.AgvPosition.DeviationRange == null);
+                consumedState.AgvPosition.DeviationRange.ShouldBeNull();
             }
             else
             {
-                Assert.AreEqual(deviationRange.Value, consumedState.AgvPosition.DeviationRange!.Value, 0.00001);
+                consumedState.AgvPosition.DeviationRange!.Value.ShouldBe(deviationRange.Value, 0.00001);
             }
-            Assert.AreEqual(positionInitialized, consumedState.AgvPosition.PositionInitialized);
-            Assert.AreEqual(theta, consumedState.AgvPosition.Theta, 0.00001);
-            Assert.AreEqual(x, consumedState.AgvPosition.X, 0.00001);
-            Assert.AreEqual(y, consumedState.AgvPosition.Y, 0.00001);
+            consumedState.AgvPosition.PositionInitialized.ShouldBe(positionInitialized);
+            consumedState.AgvPosition.Theta.ShouldBe(theta, 0.00001);
+            consumedState.AgvPosition.X.ShouldBe(x, 0.00001);
+            consumedState.AgvPosition.Y.ShouldBe(y, 0.00001);
 
             var publishedPos = fixture.TestHarness.Published.Select<AgvPositionReceived>().First().Context.Message;
-            Assert.AreEqual(AgvTestIdentifier02.ToGuid(), publishedPos.CorrelationId);
-            Assert.AreEqual(AgvTestIdentifier02, publishedPos.AgvId);
-            Assert.AreEqual(positionInitialized, publishedPos.AgvPosition.PositionInitialized);
-            Assert.AreEqual(Mathematics.ConvertToRadians(90) - theta, publishedPos.AgvPosition.Theta);
-            Assert.AreEqual(x, publishedPos.AgvPosition.X);
-            Assert.AreEqual(y, publishedPos.AgvPosition.Y * -1);
+            publishedPos.CorrelationId.ShouldBe(AgvTestIdentifier02.ToGuid());
+            publishedPos.AgvId.ShouldBe(AgvTestIdentifier02);
+            publishedPos.AgvPosition.PositionInitialized.ShouldBe(positionInitialized);
+            publishedPos.AgvPosition.Theta.ShouldBe(Mathematics.ConvertToRadians(90) - theta);
+            publishedPos.AgvPosition.X.ShouldBe(x);
+            (publishedPos.AgvPosition.Y * -1).ShouldBe(y);
         }
     }
 }

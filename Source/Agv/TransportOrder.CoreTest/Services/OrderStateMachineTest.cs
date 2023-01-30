@@ -123,13 +123,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             await fixture.TestHarness.Bus.Publish(new HandleHostOrder(correlationId, orderDetails));
             var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
 
-            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<HandleHostOrder>());
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<OrderQueuingCommand>());
+            (await fixture.SagaHarness.Consumed.Any<HandleHostOrder>()).ShouldBeTrue();
+            (await fixture.TestHarness.Published.Any<OrderQueuingCommand>()).ShouldBeTrue();
 
-            Assert.IsNull(saga.AssignedAgv);
-            Assert.IsNotNull(saga.OrderDetails.OrderId);
-            Assert.IsNotNull(saga.OrderDetails.Source);
-            Assert.IsNotNull(saga.OrderDetails.Destination);
+            saga.AssignedAgv.ShouldBeNull();
+            saga.OrderDetails.OrderId.ShouldNotBeNull();
+            saga.OrderDetails.Source.ShouldNotBeNull();
+            saga.OrderDetails.Destination.ShouldNotBeNull();
         }
 
         [TestMethod]
@@ -144,8 +144,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
 
             await fixture.TestHarness.Bus.Publish(new HandleHostOrder(correlationId, orderDetails));
 
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<HandleHostOrder>());
-            Assert.IsNull(await fixture.SagaHarness.NotExists(Guid.Empty, TimeSpan.FromMilliseconds(10)));
+            (await fixture.TestHarness.Published.Any<HandleHostOrder>()).ShouldBeTrue();
+            (await fixture.SagaHarness.NotExists(Guid.Empty, TimeSpan.FromMilliseconds(10))).ShouldBeNull();
         }
 
         [TestMethod]
@@ -160,9 +160,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             var orderDetails = new OrderDetails(correlationId, orderId, "SRC1", "DST1", "LeNo123", HostOrderCreator.Simulation);
 
             await fixture.TestHarness.Bus.Publish(new HandleHostOrder(correlationId, orderDetails));
-            Assert.AreEqual(correlationId, await fixture.SagaHarness.Exists(correlationId));
+            (await fixture.SagaHarness.Exists(correlationId)).ShouldBe(correlationId);
 
-            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<HandleHostOrder>());
+            (await fixture.SagaHarness.Consumed.Any<HandleHostOrder>()).ShouldBeTrue();
 
             orderEventObserver.Verify(s => s.PreExecute(It.IsAny<BehaviorContext<OrderSaga, HandleHostOrder>>()), Times.Once);
             orderEventObserver.Verify(s => s.PostExecute(It.IsAny<BehaviorContext<OrderSaga, HandleHostOrder>>()), Times.Once);
@@ -190,16 +190,16 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             Mock<IEventObserver<OrderSaga>> orderEventObserver = testFixtureObject.GetOrderEventObserverMock();
 
             await fixture.TestHarness.Bus.Publish(new TransportOrderCompleted(correlationId, orderId));
-            Assert.AreEqual(correlationId, await fixture.SagaHarness.Exists(correlationId));
-            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<TransportOrderCompleted>());
+            (await fixture.SagaHarness.Exists(correlationId)).ShouldBe(correlationId);
+            (await fixture.SagaHarness.Consumed.Any<TransportOrderCompleted>()).ShouldBeTrue();
 
             var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
-            Assert.AreEqual(fixture.SagaHarness.StateMachine.Final.Name, saga.CurrentState);
+            saga.CurrentState.ShouldBe(fixture.SagaHarness.StateMachine.Final.Name);
 
             IPublishedMessage<HostOrderHandlingSucceeded>? message = fixture.TestHarness.Published.Select<HostOrderHandlingSucceeded>().First();
-            Assert.IsNotNull(message);
-            Assert.AreEqual(correlationId, message.Context.Message.CorrelationId);
-            Assert.AreEqual(orderId, message.Context.Message.OrderId);
+            message.ShouldNotBeNull();
+            message.Context.Message.CorrelationId.ShouldBe(correlationId);
+            message.Context.Message.OrderId.ShouldBe(orderId);
 
             orderEventObserver.Verify(s => s.PreExecute(It.IsAny<BehaviorContext<OrderSaga, TransportOrderCompleted>>()), Times.Once);
             orderEventObserver.Verify(s => s.PostExecute(It.IsAny<BehaviorContext<OrderSaga, TransportOrderCompleted>>()), Times.Once);
@@ -226,11 +226,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             Mock<IEventObserver<OrderSaga>> orderEventObserver = testFixtureObject.GetOrderEventObserverMock();
 
             await fixture.TestHarness.Bus.Publish(new TransportOrderFailed(correlationId, orderId));
-            Assert.AreEqual(correlationId, await fixture.SagaHarness.Exists(correlationId));
-            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<TransportOrderFailed>());
+            (await fixture.SagaHarness.Exists(correlationId)).ShouldBe(correlationId);
+            (await fixture.SagaHarness.Consumed.Any<TransportOrderFailed>()).ShouldBeTrue();
 
             var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
-            Assert.AreEqual(fixture.SagaHarness.StateMachine.OrderFailed.Name, saga.CurrentState);
+            saga.CurrentState.ShouldBe(fixture.SagaHarness.StateMachine.OrderFailed.Name);
 
             orderEventObserver.Verify(s => s.PreExecute(It.IsAny<BehaviorContext<OrderSaga, TransportOrderFailed>>()), Times.Once);
             orderEventObserver.Verify(s => s.PostExecute(It.IsAny<BehaviorContext<OrderSaga, TransportOrderFailed>>()), Times.Once);
@@ -257,10 +257,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             fixture.Add(orderState);
 
             await fixture.TestHarness.Bus.Publish(new ResetTransportOrder(correlationId));
-            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<ResetTransportOrder>());
+            (await fixture.SagaHarness.Consumed.Any<ResetTransportOrder>()).ShouldBeTrue();
 
             var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
-            Assert.AreEqual(resultState, saga.CurrentState);
+            saga.CurrentState.ShouldBe(resultState);
 
             var sentCommand = fixture.TestHarness.Published.Select<OrderQueuingCommand>().First().Context.Message;
             sentCommand.CorrelationId.ShouldBe(correlationId);
@@ -287,10 +287,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             fixture.Add(orderState);
 
             await fixture.TestHarness.Bus.Publish(new ManuallyCompleteTransportOrder(correlationId));
-            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<ManuallyCompleteTransportOrder>());
+            (await fixture.SagaHarness.Consumed.Any<ManuallyCompleteTransportOrder>()).ShouldBeTrue();
 
             var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
-            Assert.AreEqual(resultState, saga.CurrentState);
+            saga.CurrentState.ShouldBe(resultState);
 
             var sentCommand = fixture.TestHarness.Published.Select<HostOrderHandlingSucceeded>().First().Context.Message;
             sentCommand.CorrelationId.ShouldBe(correlationId);
@@ -323,9 +323,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             await fixture.TestHarness.Bus.Publish(new TransportOrderPickCompleted(correlationId, orderId));
 
             // Assert
-            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<TransportOrderPickCompleted>());
+            (await fixture.SagaHarness.Consumed.Any<TransportOrderPickCompleted>()).ShouldBeTrue();
             var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
-            Assert.AreEqual(fixture.Machine.TransportOrderPicked.Name, saga.CurrentState);
+            saga.CurrentState.ShouldBe(fixture.Machine.TransportOrderPicked.Name);
 
             orderEventObserver.Verify(s => s.PreExecute(It.IsAny<BehaviorContext<OrderSaga, TransportOrderPickCompleted>>()), Times.Once);
             orderEventObserver.Verify(s => s.PostExecute(It.IsAny<BehaviorContext<OrderSaga, TransportOrderPickCompleted>>()), Times.Once);
@@ -349,10 +349,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             await fixture.TestHarness.Bus.Publish(new TransportOrderFailed(order.CorrelationId, order.OrderDetails.OrderId));
 
             // Assert
-            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<TransportOrderFailed>());
-            Assert.AreEqual(order.CorrelationId, await fixture.SagaHarness.Exists(order.CorrelationId));
+            (await fixture.SagaHarness.Consumed.Any<TransportOrderFailed>()).ShouldBeTrue();
+            (await fixture.SagaHarness.Exists(order.CorrelationId)).ShouldBe(order.CorrelationId);
             var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == order.CorrelationId).First().Saga;
-            Assert.AreEqual(nameof(TransportOrderFailed), saga.FailedReason);
+            saga.FailedReason.ShouldBe(nameof(TransportOrderFailed));
         }
 
         [TestMethod]
@@ -375,7 +375,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
 
             // Trigger state change: TransportOrderPicked -> Final
             await fixture.TestHarness.Bus.Publish(new TransportOrderCompleted(correlationId, orderId));
-            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<TransportOrderCompleted>());
+            (await fixture.SagaHarness.Consumed.Any<TransportOrderCompleted>()).ShouldBeTrue();
 
             mockObserver.Verify(s => s.StateChanged(It.IsAny<BehaviorContext<OrderSaga>>(), It.IsAny<State>(), It.IsAny<State>()), Times.Once);
         }
@@ -405,20 +405,20 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             await fixture.TestHarness.Bus.Publish(new CancelHostOrder(order.CorrelationId, order.OrderDetails.OrderId));
 
             // Assert
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<CancelHostOrder>());
-            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<CancelHostOrder>());
+            (await fixture.TestHarness.Published.Any<CancelHostOrder>()).ShouldBeTrue();
+            (await fixture.SagaHarness.Consumed.Any<CancelHostOrder>()).ShouldBeTrue();
 
             if (previousState == nameof(OrderStateMachine.OrderReceived))
             {
-                Assert.IsTrue(await fixture.TestHarness.Published.Any<HostOrderCancelSucceeded>());
+                (await fixture.TestHarness.Published.Any<HostOrderCancelSucceeded>()).ShouldBeTrue();
                 var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == order.CorrelationId).First().Saga;
-                Assert.AreEqual(nameof(OrderStateMachine.Cancelled), saga.CurrentState);
+                saga.CurrentState.ShouldBe(nameof(OrderStateMachine.Cancelled));
             }
             else
             {
-                Assert.IsTrue(await fixture.TestHarness.Published.Any<HostOrderCancelFailed>());
+                (await fixture.TestHarness.Published.Any<HostOrderCancelFailed>()).ShouldBeTrue();
                 var msg = fixture.TestHarness.Published.Select<HostOrderCancelFailed>().First().Context.Message;
-                Assert.AreEqual(errorCode, msg.Error);
+                errorCode.ShouldBe(msg.Error);
             }
         }
     }

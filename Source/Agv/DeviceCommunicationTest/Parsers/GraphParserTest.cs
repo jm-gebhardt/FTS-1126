@@ -3,6 +3,7 @@ using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
 {
@@ -15,7 +16,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
         private const string AgvTestIdentifier01 = "#2410#";
         private const string AgvTestIdentifier02 = "#0815#";
 
-
         /// <summary>
         /// Test for parsing invalid AGV graph message with serial number missing.
         /// </summary>
@@ -25,7 +25,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
             var parser = new GraphParser(new MqttGraph("", DateTimeOffset.UtcNow, Array.Empty<Node>(), Array.Empty<Edge>(), string.Empty));
             var graph = parser.Graph;
 
-            Assert.AreEqual(AgvGraph.GraphUsability.SerialNumberMissing, graph.Usability);
+            graph.Usability.ShouldBe(AgvGraph.GraphUsability.SerialNumberMissing);
         }
 
         /// <summary>
@@ -35,10 +35,10 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
         public void Parse_WithEmptyNodes_GraphInvalid()
         {
             var parser = new GraphParser(new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow, Array.Empty<Node>(), Array.Empty<Edge>(), string.Empty));
-            Assert.ThrowsException<InvalidOperationException>(() => parser.SerialNumber);
+            Should.Throw<InvalidOperationException>(() => parser.SerialNumber);
 
             var graph = parser.Graph;
-            Assert.AreEqual(AgvGraph.GraphUsability.InvalidNodes, graph.Usability);
+            graph.Usability.ShouldBe(AgvGraph.GraphUsability.InvalidNodes);
         }
 
         /// <summary>
@@ -52,10 +52,10 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
                 new() { NodeId = 1, X = 0f, Y = 0f, Z = 0f }
             };
             var parser = new GraphParser(new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow, nodes, Array.Empty<Edge>(), string.Empty));
-            Assert.ThrowsException<InvalidOperationException>(() => parser.SerialNumber);
+            Should.Throw<InvalidOperationException>(() => parser.SerialNumber);
 
             var graph = parser.Graph;
-            Assert.AreEqual(AgvGraph.GraphUsability.InvalidEdges, graph.Usability);
+            graph.Usability.ShouldBe(AgvGraph.GraphUsability.InvalidEdges);
         }
 
         /// <summary>
@@ -76,10 +76,10 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
             var parser = new GraphParser(new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
             var graph = parser.Graph;
 
-            Assert.AreEqual(AgvTestIdentifier01, parser.SerialNumber);
-            Assert.AreEqual(AgvGraph.GraphUsability.Valid, graph.Usability);
-            Assert.AreEqual(2, graph.Nodes.Length);
-            Assert.AreEqual(1, graph.Edges.Length);
+            parser.SerialNumber.ShouldBe(AgvTestIdentifier01);
+            graph.Usability.ShouldBe(AgvGraph.GraphUsability.Valid);
+            graph.Nodes.Length.ShouldBe(2);
+            graph.Edges.Length.ShouldBe(1);
         }
 
         /// <summary>
@@ -102,11 +102,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
             var parser = new GraphParser(new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow, nodes, edges, mapId, Guid.NewGuid()));
             var graph = parser.Graph;
 
-            Assert.AreEqual(AgvTestIdentifier01, parser.SerialNumber);
-            Assert.AreEqual(AgvGraph.GraphUsability.Valid, graph.Usability);
-            Assert.AreEqual(mapId, graph.RelatedMapName);
-            Assert.AreEqual(mapId.ToGuid(), graph.RelatedMapId);
-            Assert.AreEqual(AgvTestIdentifier01.ToGuid(), graph.CorrelationId);
+            parser.SerialNumber.ShouldBe(AgvTestIdentifier01);
+            graph.Usability.ShouldBe(AgvGraph.GraphUsability.Valid);
+            graph.RelatedMapName.ShouldBe(mapId);
+            graph.RelatedMapId.ShouldBe(mapId.ToGuid());
+            graph.CorrelationId.ShouldBe(AgvTestIdentifier01.ToGuid());
         }
 
         /// <summary>
@@ -117,11 +117,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
         {
             var parser = new GraphParser(new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow, Array.Empty<Node>(), Array.Empty<Edge>(), string.Empty));
 
-            Assert.ThrowsException<InvalidOperationException>(() => parser.ConsiderVelocity);
-            Assert.ThrowsException<InvalidOperationException>(() => parser.AverageVelocity);
+            Should.Throw<InvalidOperationException>(() => parser.ConsiderVelocity);
+            Should.Throw<InvalidOperationException>(() => parser.AverageVelocity);
 
             var graph = parser.Graph;
-            Assert.AreEqual(AgvGraph.GraphUsability.InvalidNodes, graph.Usability);
+            graph.Usability.ShouldBe(AgvGraph.GraphUsability.InvalidNodes);
         }
 
         /// <summary>
@@ -141,11 +141,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
             };
             var parser = new GraphParser(new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
 
-            Assert.ThrowsException<InvalidOperationException>(() => parser.AverageVelocity);
+            Should.Throw<InvalidOperationException>(() => parser.AverageVelocity);
 
             var graph = parser.Graph;
-            Assert.AreEqual(AgvTestIdentifier01, parser.SerialNumber);
-            Assert.AreEqual(AgvGraph.GraphUsability.Valid, graph.Usability);
+            parser.SerialNumber.ShouldBe(AgvTestIdentifier01);
+            graph.Usability.ShouldBe(AgvGraph.GraphUsability.Valid);
         }
 
         /// <summary>
@@ -166,10 +166,10 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
             var parser = new GraphParser(new MqttGraph(AgvTestIdentifier02, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
 
             var graph = parser.Graph;
-            Assert.AreEqual(AgvTestIdentifier02, parser.SerialNumber);
-            Assert.AreEqual(AgvGraph.GraphUsability.Valid, graph.Usability);
-            Assert.AreEqual(2, graph.Nodes.Length);
-            Assert.AreEqual(1, graph.Edges.Length);
+            parser.SerialNumber.ShouldBe(AgvTestIdentifier02);
+            graph.Usability.ShouldBe(AgvGraph.GraphUsability.Valid);
+            graph.Nodes.Length.ShouldBe(2);
+            graph.Edges.Length.ShouldBe(1);
         }
 
         /// <summary>
@@ -188,14 +188,14 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
                 new() { EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = true, MaxVelocity = 1 }
             };
 
-            var parser = new GraphParser(new MqttGraph(AgvTestIdentifier02, DateTimeOffset.UtcNow,  nodes, edges, string.Empty));
+            var parser = new GraphParser(new MqttGraph(AgvTestIdentifier02, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
 
             var graph = parser.Graph;
-            Assert.AreEqual(AgvTestIdentifier02, parser.SerialNumber);
-            Assert.AreEqual(AgvGraph.GraphUsability.Valid, graph.Usability);
-            Assert.AreEqual(2, graph.Nodes.Length);
+            parser.SerialNumber.ShouldBe(AgvTestIdentifier02);
+            graph.Usability.ShouldBe(AgvGraph.GraphUsability.Valid);
+            graph.Nodes.Length.ShouldBe(2);
             // Edge has to be duplicated because it is bidirectional.
-            Assert.AreEqual(2, graph.Edges.Length);
+            graph.Edges.Length.ShouldBe(2);
         }
 
         /// <summary>
@@ -207,10 +207,10 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
             var nodes = new Node[]
             {
                 // Square with 4 edges.
-                new() { NodeId = 1, X =  0f, Y =  0f, Z = 0f },
-                new() { NodeId = 2, X = 10f, Y =  0f, Z = 0f },
+                new() { NodeId = 1, X = 0f, Y = 0f, Z = 0f },
+                new() { NodeId = 2, X = 10f, Y = 0f, Z = 0f },
                 new() { NodeId = 3, X = 10f, Y = 10f, Z = 0f },
-                new() { NodeId = 4, X =  0f, Y = 10f, Z = 0f }
+                new() { NodeId = 4, X = 0f, Y = 10f, Z = 0f }
             };
             var edges = new Edge[]
             {
@@ -223,12 +223,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
             var parser = new GraphParser(new MqttGraph(AgvTestIdentifier02, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
 
             var graph = parser.Graph;
-            Assert.AreEqual(AgvTestIdentifier02, parser.SerialNumber);
-            Assert.AreEqual(AgvGraph.GraphUsability.Valid, graph.Usability);
-            Assert.AreEqual(4, graph.Nodes.Length);
-            Assert.AreEqual(4, graph.Edges.Length);
+            parser.SerialNumber.ShouldBe(AgvTestIdentifier02);
+            graph.Usability.ShouldBe(AgvGraph.GraphUsability.Valid);
+            graph.Nodes.Length.ShouldBe(4);
+            graph.Edges.Length.ShouldBe(4);
             //              4x distance / 4x durations
-            Assert.AreEqual(4f * 10     / (10f/10 + 10f/20 + 10f/40 + 10f/10), parser.AverageVelocity, 0.00001);
+            parser.AverageVelocity.ShouldBe(4f * 10 / (10f / 10 + 10f / 20 + 10f / 40 + 10f / 10), 0.00001);
         }
 
         /// <summary>
@@ -239,9 +239,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
         {
             var nodes = new Node[]
             {
-                new() { NodeId = 1, X =  0f, Y =  0f, Z = 0f },
+                new() { NodeId = 1, X = 0f, Y = 0f, Z = 0f },
                 // Ambiguous node id
-                new() { NodeId = 1, X = 10f, Y =  0f, Z = 0f }
+                new() { NodeId = 1, X = 10f, Y = 0f, Z = 0f }
             };
             var edges = new Edge[]
             {
@@ -249,10 +249,10 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
             };
 
             var parser = new GraphParser(new MqttGraph(AgvTestIdentifier02, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
-            Assert.ThrowsException<InvalidOperationException>(() => parser.SerialNumber);
+            Should.Throw<InvalidOperationException>(() => parser.SerialNumber);
 
             var graph = parser.Graph;
-            Assert.AreEqual(AgvGraph.GraphUsability.InvalidNodes, graph.Usability);
+            graph.Usability.ShouldBe(AgvGraph.GraphUsability.InvalidNodes);
         }
 
         /// <summary>
@@ -263,16 +263,16 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
         {
             var nodes = new Node[]
             {
-                new() { NodeId = 1, X =  0f, Y =  0f, Z = 0f },
-                new() { NodeId = 2, X = 10f, Y =  0f, Z = 0f }
+                new() { NodeId = 1, X = 0f, Y = 0f, Z = 0f },
+                new() { NodeId = 2, X = 10f, Y = 0f, Z = 0f }
             };
             Edge[] edges = Array.Empty<Edge>();
 
             var parser = new GraphParser(new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
-            Assert.ThrowsException<InvalidOperationException>(() => parser.SerialNumber);
+            Should.Throw<InvalidOperationException>(() => parser.SerialNumber);
 
             var graph = parser.Graph;
-            Assert.AreEqual(AgvGraph.GraphUsability.InvalidEdges, graph.Usability);
+            graph.Usability.ShouldBe(AgvGraph.GraphUsability.InvalidEdges);
         }
 
         [TestMethod]
@@ -280,8 +280,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
         {
             var nodes = new Node[]
             {
-                new() { NodeId = 1, X =  0f, Y =  0f, Z = 0f },
-                new() { NodeId = 2, X = 10f, Y =  0f, Z = 0f }
+                new() { NodeId = 1, X = 0f, Y = 0f, Z = 0f },
+                new() { NodeId = 2, X = 10f, Y = 0f, Z = 0f }
             };
             var edges = new Edge[]
             {
@@ -291,10 +291,10 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
             };
 
             var parser = new GraphParser(new MqttGraph(AgvTestIdentifier02, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
-            Assert.ThrowsException<InvalidOperationException>(() => parser.SerialNumber);
+            Should.Throw<InvalidOperationException>(() => parser.SerialNumber);
 
             var graph = parser.Graph;
-            Assert.AreEqual(AgvGraph.GraphUsability.InvalidEdges, graph.Usability);
+            graph.Usability.ShouldBe(AgvGraph.GraphUsability.InvalidEdges);
         }
     }
 }

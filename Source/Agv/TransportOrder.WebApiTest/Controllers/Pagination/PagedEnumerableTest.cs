@@ -1,5 +1,6 @@
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers.Pagination;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers.Pagination
 {
@@ -12,11 +13,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers.Paginatio
             const int pageNumber = 1;
             const int pageSize = 1;
             var enumerable = new PagedEnumerable<int>(new List<int>().AsQueryable(), pageNumber, pageSize);
-            Assert.AreEqual(pageNumber, enumerable.CurrentPage);
-            Assert.AreEqual(pageSize, enumerable.PageSize);
-            Assert.AreEqual(0, enumerable.Count());
-            Assert.IsFalse(enumerable.HasNext);
-            Assert.IsFalse(enumerable.HasPrevious);
+            enumerable.CurrentPage.ShouldBe(pageNumber);
+            enumerable.PageSize.ShouldBe(pageSize);
+            enumerable.Count().ShouldBe(0);
+            enumerable.HasNext.ShouldBeFalse();
+            enumerable.HasPrevious.ShouldBeFalse();
         }
 
         [TestMethod]
@@ -26,11 +27,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers.Paginatio
             const int pageNumber = 1;
             const int pageSize = 1;
             var enumerable = new PagedEnumerable<int>(list.AsQueryable(), pageNumber, pageSize);
-            Assert.AreEqual(pageNumber, enumerable.CurrentPage);
-            Assert.AreEqual(pageSize, enumerable.PageSize);
-            Assert.AreEqual(1, enumerable.Count());
-            Assert.IsFalse(enumerable.HasNext);
-            Assert.IsFalse(enumerable.HasPrevious);
+            enumerable.CurrentPage.ShouldBe(pageNumber);
+            enumerable.PageSize.ShouldBe(pageSize);
+            enumerable.Count().ShouldBe(1);
+            enumerable.HasNext.ShouldBeFalse();
+            enumerable.HasPrevious.ShouldBeFalse();
         }
 
         [TestMethod]
@@ -40,12 +41,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers.Paginatio
             const int pageNumber = 1;
             const int pageSize = 5;
             var enumerable = new PagedEnumerable<int>(list.AsQueryable(), pageNumber, pageSize);
-            Assert.AreEqual(pageNumber, enumerable.CurrentPage);
-            Assert.AreEqual(pageSize, enumerable.PageSize);
-            Assert.AreEqual(5, enumerable.Count());
-            Assert.IsTrue(enumerable.HasNext);
-            Assert.IsFalse(enumerable.HasPrevious);
-            Assert.IsTrue(list.Take(pageSize).SequenceEqual(enumerable));
+            enumerable.CurrentPage.ShouldBe(pageNumber);
+            enumerable.PageSize.ShouldBe(pageSize);
+            enumerable.Count().ShouldBe(5);
+            enumerable.HasNext.ShouldBeTrue();
+            enumerable.HasPrevious.ShouldBeFalse();
+            list.Take(pageSize).SequenceEqual(enumerable).ShouldBeTrue();
         }
 
         [TestMethod]
@@ -55,12 +56,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers.Paginatio
             const int pageNumber = 2;
             const int pageSize = 5;
             var enumerable = new PagedEnumerable<int>(list.AsQueryable(), pageNumber, pageSize);
-            Assert.AreEqual(pageNumber, enumerable.CurrentPage);
-            Assert.AreEqual(pageSize, enumerable.PageSize);
-            Assert.AreEqual(4, enumerable.Count());
-            Assert.IsFalse(enumerable.HasNext);
-            Assert.IsTrue(enumerable.HasPrevious);
-            Assert.IsTrue(list.Skip(pageSize).SequenceEqual(enumerable));
+            enumerable.CurrentPage.ShouldBe(pageNumber);
+            enumerable.PageSize.ShouldBe(pageSize);
+            enumerable.Count().ShouldBe(4);
+            enumerable.HasNext.ShouldBeFalse();
+            enumerable.HasPrevious.ShouldBeTrue();
+            list.Skip(pageSize).SequenceEqual(enumerable).ShouldBeTrue();
         }
 
         [TestMethod]
@@ -71,8 +72,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers.Paginatio
             const int pageSize = 5;
             var enumerable = new PagedEnumerable<int>(list.AsQueryable(), pageNumber, pageSize);
             var header = enumerable.PaginationHeader();
-            Assert.AreEqual(pageSize, header.PageSize);
-            Assert.AreEqual(pageNumber, header.CurrentPage);
+            header.PageSize.ShouldBe(pageSize);
+            header.CurrentPage.ShouldBe(pageNumber);
         }
     }
 }

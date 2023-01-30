@@ -7,6 +7,7 @@ using MassTransit.Serialization;
 using MassTransit.Testing;
 using MassTransit.Testing.Implementations;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Publish
 {
@@ -36,11 +37,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Publish
 
                 IPublishedMessage<MqttState> publishedMessage = publishObserver.Messages.Select<MqttState>().First();
 
-                Assert.AreEqual(routingKeySpecified?.RoutingKeyValue, publishedMessage.Context.RoutingKey());
-                Assert.AreEqual(SystemTextJsonRawMessageSerializer.JsonContentType, publishedMessage.Context.ContentType);
-                Assert.AreEqual(serialNumber, publishedMessage.Context.Message.SerialNumber);
-                Assert.AreEqual(orderId, publishedMessage.Context.Message.OrderId);
-                Assert.AreEqual(OperatingMode.Automatic, publishedMessage.Context.Message.OperatingMode);
+                publishedMessage.Context.RoutingKey().ShouldBe(routingKeySpecified?.RoutingKeyValue);
+                publishedMessage.Context.ContentType.ShouldBe(SystemTextJsonRawMessageSerializer.JsonContentType);
+                publishedMessage.Context.Message.SerialNumber.ShouldBe(serialNumber);
+                publishedMessage.Context.Message.OrderId.ShouldBe(orderId);
+                publishedMessage.Context.Message.OperatingMode.ShouldBe(OperatingMode.Automatic);
             }
         }
     }

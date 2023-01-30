@@ -22,6 +22,7 @@
       </PackageReference>
       <PackageReference Include="NUnit" Version="3.13.3" />
       <PackageReference Include="RestSharp" Version="108.0.1" />
+      <PackageReference Include="Shouldly" Version="4.1.0" />
   </ItemGroup>
 
 </Project>

@@ -3,6 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
 {
@@ -35,10 +36,10 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             bus.Verify(s => s.Publish(It.IsAny<SimulatedAgvStateMachine.CreateAgv>(), default), Times.Once);
 
             var firstAgv = createAgvMessages.First();
-            Assert.AreNotEqual(Guid.Empty,firstAgv.Agv.CorrelationId);
-            Assert.IsNotNull("",firstAgv.Agv.AgvId);
-            Assert.IsNotNull(firstAgv.Agv.AgvGraph);
-            Assert.IsNotNull(firstAgv.Agv.AgvData);
+            firstAgv.Agv.CorrelationId.ShouldNotBe(Guid.Empty);
+            firstAgv.Agv.AgvId.ShouldNotBeNull();
+            firstAgv.Agv.AgvGraph.ShouldNotBeNull();
+            firstAgv.Agv.AgvData.ShouldNotBeNull();
         }
         
         /// <summary>
@@ -64,19 +65,19 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             bus.Verify(s => s.Publish(It.IsAny<SimulatedAgvStateMachine.CreateAgv>(), default), Times.Exactly(2));
 
             var firstAgv = createAgvMessages.First();
-            Assert.AreNotEqual(Guid.Empty,firstAgv.Agv.CorrelationId);
-            Assert.IsNotNull("",firstAgv.Agv.AgvId);
-            Assert.IsNotNull(firstAgv.Agv.AgvGraph);
-            Assert.IsNotNull(firstAgv.Agv.AgvData);
+            firstAgv.Agv.CorrelationId.ShouldNotBe(Guid.Empty);
+            firstAgv.Agv.AgvId.ShouldNotBeNullOrEmpty();
+            firstAgv.Agv.AgvGraph.ShouldNotBeNull();
+            firstAgv.Agv.AgvData.ShouldNotBeNull();
             
             var secondAgv = createAgvMessages[1];
-            Assert.AreNotEqual(Guid.Empty,secondAgv.Agv.CorrelationId);
-            Assert.IsNotNull("",secondAgv.Agv.AgvId);
-            Assert.IsNotNull(secondAgv.Agv.AgvGraph);
-            Assert.IsNotNull(secondAgv.Agv.AgvData);
+            secondAgv.Agv.CorrelationId.ShouldNotBe(Guid.Empty);
+            secondAgv.Agv.AgvId.ShouldNotBeEmpty();
+            secondAgv.Agv.AgvGraph.ShouldNotBeNull();
+            secondAgv.Agv.AgvData.ShouldNotBeNull();
             
-            Assert.AreNotEqual(firstAgv.Agv.AgvId, secondAgv.Agv.AgvId);
-            Assert.AreNotEqual(firstAgv.Agv.CorrelationId, secondAgv.Agv.CorrelationId);
+            secondAgv.Agv.AgvId.ShouldNotBe(firstAgv.Agv.AgvId);
+            secondAgv.Agv.CorrelationId.ShouldNotBe(firstAgv.Agv.CorrelationId);
         }
     }
 }

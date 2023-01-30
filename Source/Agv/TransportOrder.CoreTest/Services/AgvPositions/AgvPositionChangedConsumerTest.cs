@@ -9,6 +9,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.AgvPositions
 {
@@ -35,8 +36,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.AgvPositions
                     AgvId.ToGuid()
                 ));
 
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvPositionChanged>());
-            Assert.IsTrue(await fixture.ConsumerHarness!.Consumed.Any<AgvPositionChanged>());
+            (await fixture.TestHarness.Published.Any<AgvPositionChanged>()).ShouldBeTrue();
+            (await fixture.ConsumerHarness!.Consumed.Any<AgvPositionChanged>()).ShouldBeTrue();
 
             const string method = nameof(Defines.HubMethods.AgvPositionChanged);
             mockHub.Verify(h => h.SendAgvPositionToAllClients(method, It.Is<AgvPositionStatus>(o => o.AgvId == AgvId), It.IsAny<CancellationToken>()), Times.Once);

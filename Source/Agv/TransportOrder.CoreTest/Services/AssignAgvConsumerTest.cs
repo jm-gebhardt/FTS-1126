@@ -8,6 +8,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Core.States;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
 {
@@ -51,11 +52,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
 
             await fixture.TestHarness!.Bus.Publish(new AssignAgv(correlationId, order));
 
-            Assert.IsTrue(await fixture.ConsumerHarness!.Consumed.Any<AssignAgv>());
+            (await fixture.ConsumerHarness!.Consumed.Any<AssignAgv>()).ShouldBeTrue();
 
             Thread.Sleep(1); // Wait 1ms before checking if message was published
-            Assert.IsFalse(await fixture.TestHarness.Published.Any<AgvAssignmentSucceeded>());
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvAssignmentFailed>());
+            (await fixture.TestHarness.Published.Any<AgvAssignmentSucceeded>()).ShouldBeFalse();
+            (await fixture.TestHarness.Published.Any<AgvAssignmentFailed>()).ShouldBeTrue();
         }
 
         /// <summary>
@@ -75,7 +76,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
                 })
                 .AgvRegistryMock(r => r.Setup(s => s.GetIdleAgvs()).Returns(new EnumerableQuery<IAgv>(new List<IAgv>
                 {
-                            new AgvSaga(agvCorrelationId, agvId, nameof(AgvStateMachine.Idle), agvGraph: AssignAgvConsumerMassTransitFixture.Graph)
+                    new AgvSaga(agvCorrelationId, agvId, nameof(AgvStateMachine.Idle), agvGraph: AssignAgvConsumerMassTransitFixture.Graph)
                 })))
                 .Build();
 
@@ -88,12 +89,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
 
             await fixture.TestHarness!.Bus.Publish(new AssignAgv(correlationId, order));
 
-            Assert.IsTrue(await fixture.ConsumerHarness!.Consumed.Any<AssignAgv>());
+            (await fixture.ConsumerHarness!.Consumed.Any<AssignAgv>()).ShouldBeTrue();
 
             Thread.Sleep(1); // Wait 1ms before checking if message was published
-            Assert.IsFalse(await fixture.TestHarness.Published.Any<AgvAssignmentSucceeded>());
+            (await fixture.TestHarness.Published.Any<AgvAssignmentSucceeded>()).ShouldBeFalse();
 
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvAssignmentFailed>());
+            (await fixture.TestHarness.Published.Any<AgvAssignmentFailed>()).ShouldBeTrue();
         }
 
         /// <summary>
@@ -130,19 +131,19 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
 
             await fixture.TestHarness!.Bus.Publish(new AssignAgv(correlationId, order));
 
-            Assert.IsTrue(await fixture.ConsumerHarness!.Consumed.Any<AssignAgv>());
+            (await fixture.ConsumerHarness!.Consumed.Any<AssignAgv>()).ShouldBeTrue();
 
             if (alive)
             {
                 // When there is an idle AGV with alive state we expect AgvAssignmentSucceeded
                 var message = fixture.TestHarness.Published.Select<AgvAssignmentSucceeded>(s => s.Context.CorrelationId == correlationId).First().Context.Message;
-                Assert.AreEqual(agvId, message.AgvId);
+                message.AgvId.ShouldBe(agvId);
             }
             else
             {
                 // When there is just one idle AGV (but offline) we expect AgvAssignmentFailed
                 var message = fixture.TestHarness.Published.Select<AgvAssignmentFailed>(s => s.Context.CorrelationId == correlationId).FirstOrDefault()?.Context.Message;
-                Assert.IsNotNull(message);
+                message.ShouldNotBeNull();
             }
         }
 
@@ -163,28 +164,29 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             const string mapName = "Map#1";
             var agvGraph = new AgvGraph(Guid.Empty,
                 new[]
-            { /*   Map#1:  (AGV_01) 1   2
-                       *                       /
-                       *                      / (ORD_2-3, but this edge doesn't exist)
-                       *                     /
-                       *                    3   4 (AGV_02)   */
-                        new AgvGraph.Node(node01){ Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 0f, Z = 0f},
-                        new AgvGraph.Node(node02){ Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 4f, Y = 0f, Z = 0f},
-                        new AgvGraph.Node(node03){ Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 3f, Z = 0f},
-                        new AgvGraph.Node(node04){ Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 4f, Y = 3f, Z = 0f}
-            }, new[]
-            {
-                        new AgvGraph.Edge(node01, node02){ Metric = 4f},    // Used by AGV_01 to travel to source
-                        new AgvGraph.Edge(node01, node03){ Metric = 3f},
-                        new AgvGraph.Edge(node01, node04){ Metric = 5f},
-                        new AgvGraph.Edge(node02, node01){ Metric = 4f},
-                        new AgvGraph.Edge(node02, node04){ Metric = 6f},
-                        new AgvGraph.Edge(node03, node01){ Metric = 3f},
-                        new AgvGraph.Edge(node03, node04){ Metric = 4f},
-                        new AgvGraph.Edge(node04, node01){ Metric = 5f},
-                        new AgvGraph.Edge(node04, node02){ Metric = 6f},    // Used by AGV_02 to travel to source (more expensive)
-                        new AgvGraph.Edge(node04, node03){ Metric = 4f}
-            },
+                {
+                    /*   Map#1:  (AGV_01) 1   2
+                                          *                       /
+                                          *                      / (ORD_2-3, but this edge doesn't exist)
+                                          *                     /
+                                          *                    3   4 (AGV_02)   */
+                    new AgvGraph.Node(node01) { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 0f, Z = 0f },
+                    new AgvGraph.Node(node02) { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 4f, Y = 0f, Z = 0f },
+                    new AgvGraph.Node(node03) { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 3f, Z = 0f },
+                    new AgvGraph.Node(node04) { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 4f, Y = 3f, Z = 0f }
+                }, new[]
+                {
+                    new AgvGraph.Edge(node01, node02) { Metric = 4f }, // Used by AGV_01 to travel to source
+                    new AgvGraph.Edge(node01, node03) { Metric = 3f },
+                    new AgvGraph.Edge(node01, node04) { Metric = 5f },
+                    new AgvGraph.Edge(node02, node01) { Metric = 4f },
+                    new AgvGraph.Edge(node02, node04) { Metric = 6f },
+                    new AgvGraph.Edge(node03, node01) { Metric = 3f },
+                    new AgvGraph.Edge(node03, node04) { Metric = 4f },
+                    new AgvGraph.Edge(node04, node01) { Metric = 5f },
+                    new AgvGraph.Edge(node04, node02) { Metric = 6f }, // Used by AGV_02 to travel to source (more expensive)
+                    new AgvGraph.Edge(node04, node03) { Metric = 4f }
+                },
                 mapName.ToGuid(),
                 mapName);
             const string agvId = "AGV_01";
@@ -230,25 +232,24 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             await fixture.TestHarness!.Bus.Publish(new AssignAgv(order.CorrelationId, order));
 
             // Assert
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<AssignAgv>());
+            (await fixture.TestHarness.Published.Any<AssignAgv>()).ShouldBeTrue();
 
-            Assert.IsTrue(await fixture.ConsumerHarness!.Consumed.Any<AssignAgv>());
+            (await fixture.ConsumerHarness!.Consumed.Any<AssignAgv>()).ShouldBeTrue();
             var consumedIAssignAgvMessage = fixture.TestHarness.Consumed.Select<AssignAgv>().First().Context.Message;
-            Assert.AreEqual(order.CorrelationId, consumedIAssignAgvMessage.Order.CorrelationId);
+            consumedIAssignAgvMessage.Order.CorrelationId.ShouldBe(order.CorrelationId);
 
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvAssignmentSucceeded>());
+            (await fixture.TestHarness.Published.Any<AgvAssignmentSucceeded>()).ShouldBeTrue();
             var response = fixture.TestHarness.Published.Select<AgvAssignmentSucceeded>().First().Context.Message;
             if (aliveAgv1)
             {
-                Assert.AreEqual(closestAgvCorrelationId, response.AgvCorrelationId);
-                CollectionAssert.AreEqual(new[] { agvStatus1.LastNodeId, node02, node01, node03 }, response.Nodes);
+                response.AgvCorrelationId.ShouldBe(closestAgvCorrelationId);
+                response.Nodes.ShouldBe(new[] { agvStatus1.LastNodeId, node02, node01, node03 });
             }
             else
             {
-                Assert.AreEqual(agvCorrelationId2, response.AgvCorrelationId);
-                CollectionAssert.AreEqual(new[] { agvStatus2.LastNodeId, node02, node01, node03 }, response.Nodes);
+                response.AgvCorrelationId.ShouldBe(agvCorrelationId2);
+                response.Nodes.ShouldBe(new[] { agvStatus2.LastNodeId, node02, node01, node03 });
             }
         }
-
     }
 }

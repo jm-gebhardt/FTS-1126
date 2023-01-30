@@ -133,8 +133,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
 
             await fixture.TestHarness.Bus.Publish(message);
 
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<TRequest>());
-            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<TRequest>());
+            (await fixture.TestHarness.Published.Any<TRequest>()).ShouldBeTrue();
+            (await fixture.SagaHarness.Consumed.Any<TRequest>()).ShouldBeTrue();
 
             var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
             if (assertAreEqual)
@@ -228,14 +228,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
 
             await fixture.TestHarness.Bus.Publish(new AgvStatusReceived(correlationId, agvId, agvStatus));
 
-            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvStatusReceived>());
+            (await fixture.SagaHarness.Consumed.Any<AgvStatusReceived>()).ShouldBeTrue();
 
             var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
-            Assert.AreEqual(fixture.SagaHarness.StateMachine.Discovered.Name, saga.CurrentState);
-            Assert.AreEqual(agvId, saga.AgvId);
-            Assert.IsNotNull(saga.AgvStatus);
-            Assert.IsNull(saga.AgvGraph);
-            Assert.IsNull(saga.AgvData);
+            saga.CurrentState.ShouldBe(fixture.SagaHarness.StateMachine.Discovered.Name);
+            saga.AgvId.ShouldBe(agvId);
+            saga.AgvStatus.ShouldNotBeNull();
+            saga.AgvGraph.ShouldBeNull();
+            saga.AgvData.ShouldBeNull();
         }
 
         [TestMethod]
@@ -249,8 +249,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
 
             await fixture.TestHarness.Bus.Publish(new AgvStatusReceived(correlationId, agvId, agvStatus));
 
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvStatusReceived>());
-            Assert.IsNull(await fixture.SagaHarness.NotExists(Guid.Empty, TimeSpan.FromMilliseconds(10)));
+            (await fixture.TestHarness.Published.Any<AgvStatusReceived>()).ShouldBeTrue();
+            (await fixture.SagaHarness.NotExists(Guid.Empty, TimeSpan.FromMilliseconds(10))).ShouldBeNull();
         }
 
         /// <summary>
@@ -276,10 +276,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             IRequestClient<ReserveAgv>? client = fixture.TestHarness.GetRequestClient<ReserveAgv>();
             Response response = await client.GetResponse<AgvReservationSucceeded, AgvReservationRejected>(
                 new ReserveAgv(correlationId));
-            Assert.IsInstanceOfType(response.Message, typeof(AgvReservationSucceeded));
+            response.Message.ShouldBeAssignableTo(typeof(AgvReservationSucceeded));
 
             var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
-            Assert.AreEqual(fixture.Machine.Reserved.Name, saga.CurrentState);
+            saga.CurrentState.ShouldBe(fixture.Machine.Reserved.Name);
         }
 
         [DataRow(nameof(AgvStateMachine.Discovered))]
@@ -305,11 +305,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             IRequestClient<ReserveAgv>? client = fixture.TestHarness.GetRequestClient<ReserveAgv>();
             Response response = await client.GetResponse<AgvReservationSucceeded, AgvReservationRejected>(
                 new ReserveAgv(correlationId));
-
-            Assert.IsInstanceOfType(response.Message, typeof(AgvReservationRejected));
-
+            response.Message.ShouldBeAssignableTo(typeof(AgvReservationRejected));
+            
             var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
-            Assert.AreEqual(acceptedStates, saga.CurrentState);
+            saga.CurrentState.ShouldBe(acceptedStates);
         }
 
         /// <summary>
@@ -336,15 +335,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             ));
 
             // Assert
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvStatusReceived>());
-            Assert.IsTrue(await fixture.TestHarness.Consumed.Any<AgvStatusReceived>());
+            (await fixture.TestHarness.Published.Any<AgvStatusReceived>()).ShouldBeTrue();
+            (await fixture.TestHarness.Consumed.Any<AgvStatusReceived>()).ShouldBeTrue();
             var consumedMessage = fixture.TestHarness.Consumed.Select<AgvStatusReceived>().First().Context.Message;
-            Assert.AreEqual(inputLastNode, consumedMessage.AgvStatus.LastNodeId);
+            consumedMessage.AgvStatus.LastNodeId.ShouldBe(inputLastNode);
 
-            Assert.AreEqual(correlationId, await fixture.SagaHarness.Exists(correlationId));
+            (await fixture.SagaHarness.Exists(correlationId)).ShouldBe(correlationId);
             var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
-            Assert.IsNotNull(saga.AgvStatus);
-            Assert.AreEqual(inputLastNode, saga.AgvStatus.LastNodeId);
+            saga.AgvStatus.ShouldNotBeNull();
+            saga.AgvStatus.LastNodeId.ShouldBe(inputLastNode);
         }
 
         /// <summary>
@@ -379,13 +378,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             ));
 
             // Assert
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvStatusReceived>());
-            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvStatusReceived>());
+            (await fixture.TestHarness.Published.Any<AgvStatusReceived>()).ShouldBeTrue();
+            (await fixture.SagaHarness.Consumed.Any<AgvStatusReceived>()).ShouldBeTrue();
 
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<RequestAgvData>());
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<RequestAgvGraph>());
+            (await fixture.TestHarness.Published.Any<RequestAgvData>()).ShouldBeTrue();
+            (await fixture.TestHarness.Published.Any<RequestAgvGraph>()).ShouldBeTrue();
 
-            Assert.AreEqual(correlationId, await fixture.SagaHarness.Exists(correlationId));
+            (await fixture.SagaHarness.Exists(correlationId)).ShouldBe(correlationId);
             var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
             // Publishing requests should update corresponding last requested timestamp
             ((DateTime)saga.AgvDataRequestedLastTime!).ShouldBeGreaterThan(utcStart);
@@ -427,16 +426,16 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             ));
 
             // Assert
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvStatusReceived>());
-            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvStatusReceived>());
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<RequestAgvData>());
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<RequestAgvGraph>());
+            (await fixture.TestHarness.Published.Any<AgvStatusReceived>()).ShouldBeTrue();
+            (await fixture.SagaHarness.Consumed.Any<AgvStatusReceived>()).ShouldBeTrue();
+            (await fixture.TestHarness.Published.Any<RequestAgvData>()).ShouldBeTrue();
+            (await fixture.TestHarness.Published.Any<RequestAgvGraph>()).ShouldBeTrue();
 
-            Assert.AreEqual(correlationId, await fixture.SagaHarness.Exists(correlationId));
+            (await fixture.SagaHarness.Exists(correlationId)).ShouldBe(correlationId);
             var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
             // Publishing requests should update corresponding last requested timestamp
-            Assert.IsTrue(saga.AgvDataRequestedLastTime > utcStart && saga.AgvDataRequestedLastTime < DateTime.UtcNow);
-            Assert.IsTrue(saga.AgvGraphRequestedLastTime > utcStart && saga.AgvGraphRequestedLastTime < DateTime.UtcNow);
+            (saga.AgvDataRequestedLastTime > utcStart && saga.AgvDataRequestedLastTime < DateTime.UtcNow).ShouldBeTrue();
+            (saga.AgvGraphRequestedLastTime > utcStart && saga.AgvGraphRequestedLastTime < DateTime.UtcNow).ShouldBeTrue();
         }
 
         // ReSharper disable MethodSupportsCancellation
@@ -478,13 +477,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             ));
 
             // Assert
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvStatusReceived>());
-            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvStatusReceived>());
+            (await fixture.TestHarness.Published.Any<AgvStatusReceived>()).ShouldBeTrue();
+            (await fixture.SagaHarness.Consumed.Any<AgvStatusReceived>()).ShouldBeTrue();
 
-            Assert.AreEqual(correlationId, await fixture.SagaHarness.Exists(correlationId));
+            (await fixture.SagaHarness.Exists(correlationId)).ShouldBe(correlationId);
             token.CancelAfter(10);
-            Assert.IsFalse(await fixture.TestHarness.Published.Any<RequestAgvGraph>(token.Token));
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<RequestAgvData>());
+            (await fixture.TestHarness.Published.Any<RequestAgvGraph>(token.Token)).ShouldBeFalse();
+            (await fixture.TestHarness.Published.Any<RequestAgvData>()).ShouldBeTrue();
         }
 
         // ReSharper disable MethodSupportsCancellation
@@ -526,13 +525,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             ));
 
             // Assert
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvStatusReceived>());
-            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvStatusReceived>());
+            (await fixture.TestHarness.Published.Any<AgvStatusReceived>()).ShouldBeTrue();
+            (await fixture.SagaHarness.Consumed.Any<AgvStatusReceived>()).ShouldBeTrue();
 
-            Assert.AreEqual(correlationId, await fixture.SagaHarness.Exists(correlationId));
+            (await fixture.SagaHarness.Exists(correlationId)).ShouldBe(correlationId);
             token.CancelAfter(10);
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<RequestAgvGraph>());
-            Assert.IsFalse(await fixture.TestHarness.Published.Any<RequestAgvData>(token.Token));
+            (await fixture.TestHarness.Published.Any<RequestAgvGraph>()).ShouldBeTrue();
+            (await fixture.TestHarness.Published.Any<RequestAgvData>(token.Token)).ShouldBeFalse();
         }
 
         /// <summary>
@@ -573,12 +572,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             ));
 
             // Assert
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvStatusReceived>());
-            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvStatusReceived>());
+            (await fixture.TestHarness.Published.Any<AgvStatusReceived>()).ShouldBeTrue();
+            (await fixture.SagaHarness.Consumed.Any<AgvStatusReceived>()).ShouldBeTrue();
 
-            Assert.AreEqual(correlationId, await fixture.SagaHarness.Exists(correlationId));
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<RequestAgvGraph>());
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<RequestAgvData>());
+            (await fixture.SagaHarness.Exists(correlationId)).ShouldBe(correlationId);
+            (await fixture.TestHarness.Published.Any<RequestAgvGraph>()).ShouldBeTrue();
+            (await fixture.TestHarness.Published.Any<RequestAgvData>()).ShouldBeTrue();
         }
 
         /// <summary>
@@ -614,12 +613,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             ));
 
             // Assert
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvStatusReceived>());
-            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvStatusReceived>());
+            (await fixture.TestHarness.Published.Any<AgvStatusReceived>()).ShouldBeTrue();
+            (await fixture.SagaHarness.Consumed.Any<AgvStatusReceived>()).ShouldBeTrue();
 
-            Assert.AreEqual(correlationId, await fixture.SagaHarness.Exists(correlationId));
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<RequestAgvData>());
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<RequestAgvGraph>());
+            (await fixture.SagaHarness.Exists(correlationId)).ShouldBe(correlationId);
+            (await fixture.TestHarness.Published.Any<RequestAgvData>()).ShouldBeTrue();
+            (await fixture.TestHarness.Published.Any<RequestAgvGraph>()).ShouldBeTrue();
         }
 
         /// <summary>
@@ -660,9 +659,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             await fixture.TestHarness.Bus.Publish(new AgvGraphReceived(agvSaga.CorrelationId, agvSaga.AgvId, agvGraph));
 
             // Assert
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvGraphReceived>());
-            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvGraphReceived>());
-            Assert.IsFalse(await fixture.TestHarness.Published.Any<RequestAgvMap>());
+            (await fixture.TestHarness.Published.Any<AgvGraphReceived>()).ShouldBeTrue();
+            (await fixture.SagaHarness.Consumed.Any<AgvGraphReceived>()).ShouldBeTrue();
+            (await fixture.TestHarness.Published.Any<RequestAgvMap>()).ShouldBeFalse();
         }
 
         /// <summary>
@@ -712,9 +711,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
                 new AgvMap(mapId.ToGuid(), mapId, modificationDate, imageData, resolution, xOffset, yOffset)));
 
             // Assert
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvMapReceived>());
-            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvMapReceived>());
-            Assert.AreEqual(agvSaga.CorrelationId, await fixture.SagaHarness.Exists(agvSaga.CorrelationId));
+            (await fixture.TestHarness.Published.Any<AgvMapReceived>()).ShouldBeTrue();
+            (await fixture.SagaHarness.Consumed.Any<AgvMapReceived>()).ShouldBeTrue();
+            (await fixture.SagaHarness.Exists(agvSaga.CorrelationId)).ShouldBe(agvSaga.CorrelationId);
 
             mockRegistry.Verify(mo => mo.AddOrUpdate(mapId.ToGuid(), mapId, imageData, resolution, xOffset, yOffset, modificationDate), Times.Once);
         }
@@ -766,9 +765,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
                 new AgvMap(mapId.ToGuid(), mapId, modificationDate, imageData, resolution, xOffset, yOffset)));
 
             // Assert
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvMapReceived>());
-            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvMapReceived>());
-            Assert.AreEqual(agvSaga.CorrelationId, await fixture.SagaHarness.Exists(agvSaga.CorrelationId));
+            (await fixture.TestHarness.Published.Any<AgvMapReceived>()).ShouldBeTrue();
+            (await fixture.SagaHarness.Consumed.Any<AgvMapReceived>()).ShouldBeTrue();
+            (await fixture.SagaHarness.Exists(agvSaga.CorrelationId)).ShouldBe(agvSaga.CorrelationId);
 
             mockRegistry.Verify(mo => mo.AddOrUpdate(mapId.ToGuid(), mapId, imageData, resolution, xOffset, yOffset, modificationDate), Times.Once);
         }
@@ -889,10 +888,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             IRequestClient<ReserveAgv>? client = fixture.TestHarness.GetRequestClient<ReserveAgv>();
             Response response = await client.GetResponse<AgvReservationSucceeded, AgvReservationRejected>(
                 new ReserveAgv(correlationId));
-            Assert.IsInstanceOfType(response.Message, typeof(AgvReservationSucceeded));
+            response.Message.ShouldBeAssignableTo(typeof(AgvReservationSucceeded));
+
 
             var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
-            Assert.AreEqual(stateAfter.Name, saga.CurrentState);
+            saga.CurrentState.ShouldBe(stateAfter.Name);
 
             mockObserver.Verify(s => s.StateChanged(It.IsAny<BehaviorContext<AgvSaga>>(), stateAfter, stateBefore), Times.Once);
         }
@@ -923,10 +923,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             await fixture.TestHarness.Bus.Publish(new AgvStateMachine.AgvInitializeMessage(correlationId, agvId));
             agv = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
             // Double check for initial alive (event when saga taken from the state machine)
-            Assert.AreEqual(agvInitialAlive, agv.Alive);
+            agv.Alive.ShouldBe(agvInitialAlive);
 
-            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvStateMachine.AgvInitializeMessage>());
-            Assert.IsTrue(fixture.TestHarness.Sent.Select<AgvOfflineMessage>().Any());
+            (await fixture.SagaHarness.Consumed.Any<AgvStateMachine.AgvInitializeMessage>()).ShouldBeTrue();
+            fixture.TestHarness.Sent.Select<AgvOfflineMessage>().Any().ShouldBeTrue();
         }
 
         /// <summary>
@@ -963,25 +963,25 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
 
             await fixture.TestHarness.Bus.Publish(new AgvStateMachine.AgvInitializeMessage(correlationId, agvId));
 
-            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvStateMachine.AgvInitializeMessage>());
-            Assert.IsTrue(fixture.TestHarness.Sent.Select<AgvOfflineMessage>().Any());
+            (await fixture.SagaHarness.Consumed.Any<AgvStateMachine.AgvInitializeMessage>()).ShouldBeTrue();
+            fixture.TestHarness.Sent.Select<AgvOfflineMessage>().Any().ShouldBeTrue();
             agv = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
-            Assert.IsTrue(agv.Alive);
+            agv.Alive.ShouldBeTrue();
 
-            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvOfflineMessage>());
+            (await fixture.SagaHarness.Consumed.Any<AgvOfflineMessage>()).ShouldBeTrue();
             var now = DateTime.UtcNow;
             var msg = fixture.SagaHarness.Consumed.Select<AgvOfflineMessage>().First().Context.Message;
             // When triggered initially by AgvInitializeMessage, the timeout for busy state is taken into account
-            Assert.IsTrue((now - msg.Created).TotalMilliseconds > 0.9 * agvOfflineTimeoutMsWhileBusy);
-            Assert.IsTrue((now - msg.Created).TotalMilliseconds < 1.5 * agvOfflineTimeoutMsWhileBusy);
+            ((now - msg.Created).TotalMilliseconds > 0.9 * agvOfflineTimeoutMsWhileBusy).ShouldBeTrue();
+            ((now - msg.Created).TotalMilliseconds < 1.5 * agvOfflineTimeoutMsWhileBusy).ShouldBeTrue();
 
             agv = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
-            Assert.IsFalse(agv.Alive);
+            agv.Alive.ShouldBeFalse();
 
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvPropertyChanged>());
-            Assert.IsTrue(await fixture.TestHarness.Consumed.Any<AgvPropertyChanged>());
+            (await fixture.TestHarness.Published.Any<AgvPropertyChanged>()).ShouldBeTrue();
+            (await fixture.TestHarness.Consumed.Any<AgvPropertyChanged>()).ShouldBeTrue();
             var propertyChangedMessage = fixture.TestHarness.Consumed.Select<AgvPropertyChanged>().First().Context.Message;
-            Assert.AreEqual(false, propertyChangedMessage.Agv.Alive);
+            propertyChangedMessage.Agv.Alive.ShouldBeFalse();
         }
 
         [TestMethod]
@@ -1018,39 +1018,39 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
 
             await fixture.TestHarness.Bus.Publish(new AgvStatusReceived(correlationId, agvId, agvStatus1));
 
-            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvStatusReceived>());
-            Assert.IsTrue(fixture.TestHarness.Sent.Select<AgvOfflineMessage>().Any());
+            (await fixture.SagaHarness.Consumed.Any<AgvStatusReceived>()).ShouldBeTrue();
+            fixture.TestHarness.Sent.Select<AgvOfflineMessage>().Any().ShouldBeTrue();
 
-            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvOfflineMessage>());
+            (await fixture.SagaHarness.Consumed.Any<AgvOfflineMessage>()).ShouldBeTrue();
             var now = DateTime.UtcNow;
             var msg = fixture.SagaHarness.Consumed.Select<AgvOfflineMessage>().First().Context.Message;
             // When triggered by AgvStatusReceived, the timeout depends on the state (and this AGV is idle)
-            Assert.IsTrue((now - msg.Created).TotalMilliseconds > 0.9 * agvOfflineTimeoutMsWhileIdle);
-            Assert.IsTrue((now - msg.Created).TotalMilliseconds < 1.5 * agvOfflineTimeoutMsWhileIdle);
+            ((now - msg.Created).TotalMilliseconds > 0.9 * agvOfflineTimeoutMsWhileIdle).ShouldBeTrue();
+            ((now - msg.Created).TotalMilliseconds < 1.5 * agvOfflineTimeoutMsWhileIdle).ShouldBeTrue();
 
             agv = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
-            Assert.IsFalse(agv.Alive);
+            agv.Alive.ShouldBeFalse();
 
             // Make sure change has been published
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvPropertyChanged>());
-            Assert.IsTrue(await fixture.TestHarness.Consumed.Any<AgvPropertyChanged>());
+            (await fixture.TestHarness.Published.Any<AgvPropertyChanged>()).ShouldBeTrue();
+            (await fixture.TestHarness.Consumed.Any<AgvPropertyChanged>()).ShouldBeTrue();
             var propertyChangedMessage = fixture.TestHarness.Consumed.Select<AgvPropertyChanged>().First().Context.Message;
-            Assert.AreEqual(false, propertyChangedMessage.Agv.Alive);
+            propertyChangedMessage.Agv.Alive.ShouldBeFalse();
 
             // Make sure nobody did spoil the test
-            Assert.IsTrue(agvStatus1.OrderId != agvStatus2.OrderId);
+            agvStatus1.OrderId.ShouldNotBe(agvStatus2.OrderId);
 
             await fixture.TestHarness.Bus.Publish(new AgvStatusReceived(correlationId, agvId, agvStatus2));
             // We need to wait for the "second" message (don't check just for any because a first message is already there)
-            Assert.IsTrue(await fixture.SagaHarness.Consumed.Any<AgvStatusReceived>(x => x.Context.Message.AgvStatus.OrderId == "second"));
+            (await fixture.SagaHarness.Consumed.Any<AgvStatusReceived>(x => x.Context.Message.AgvStatus.OrderId == "second")).ShouldBeTrue();
 
             agv = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
-            Assert.IsTrue(agv.Alive);
+            agv.Alive.ShouldBeTrue();
 
             // Make sure second change has been published
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvPropertyChanged>());
+            (await fixture.TestHarness.Published.Any<AgvPropertyChanged>()).ShouldBeTrue();
             // Ignore first message with alive equals true
-            Assert.IsTrue(await fixture.TestHarness.Consumed.Any<AgvPropertyChanged>(x => x.Context.Message.Agv.Alive == false));
+            (await fixture.TestHarness.Consumed.Any<AgvPropertyChanged>(x => x.Context.Message.Agv.Alive == false)).ShouldBeTrue();
         }
     }
 }

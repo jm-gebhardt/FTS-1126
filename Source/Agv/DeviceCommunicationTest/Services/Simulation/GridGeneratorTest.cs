@@ -1,6 +1,7 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
 {
@@ -35,11 +36,10 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             
             int gridWidth = Math.Max(sources.Length, destinations.Length);
             
-            Assert.AreEqual(correlationId, graph.CorrelationId);
-            Assert.AreEqual(sources.Length + 
-                            destinations.Length + 
-                            gridWidth * gridRows, 
-                graph.Nodes.Length);
+            graph.CorrelationId.ShouldBe(correlationId);
+            graph.Nodes.Length.ShouldBe(sources.Length + 
+                                            destinations.Length + 
+                                            gridWidth * gridRows);
 
             int expectedNumberOfEdges = (
                 sources.Length +
@@ -53,15 +53,15 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
                 expectedNumberOfEdges = 0;
             }
             
-            Assert.AreEqual(expectedNumberOfEdges, graph.Edges.Length);
+            graph.Edges.Length.ShouldBe(expectedNumberOfEdges);
             
             foreach (string s in sources)
             {
-                Assert.IsTrue(graph.Nodes.Any(n => n.Id == s));
+                graph.Nodes.Any(n => n.Id == s).ShouldBeTrue();
             }
             foreach (string d in destinations)
             {
-                Assert.IsTrue(graph.Nodes.Any(n => n.Id == d));
+                graph.Nodes.Any(n => n.Id == d).ShouldBeTrue();
             }
         }
 
@@ -78,8 +78,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
                 );
             var graph = generator.Generate(Guid.NewGuid());
             
-            Assert.AreEqual(1, graph.Nodes.Count(n => n.Type is AgvGraph.NodeType.Charge));
-            Assert.AreEqual(1,graph.Nodes.Count(n => n.Type is AgvGraph.NodeType.Park));
+            graph.Nodes.Count(n => n.Type is AgvGraph.NodeType.Charge).ShouldBe(1);
+            graph.Nodes.Count(n => n.Type is AgvGraph.NodeType.Park).ShouldBe(1);
         }
         
         /// <summary>
@@ -94,8 +94,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             var generator = new GridGraphGenerator(sources, destinations, 2, serviceNodes);
             var graph = generator.Generate(Guid.NewGuid());
             
-            Assert.AreEqual(2, graph.Nodes.Count(n => n.Type is AgvGraph.NodeType.Charge));
-            Assert.AreEqual(2,graph.Nodes.Count(n => n.Type is AgvGraph.NodeType.Park));
+            graph.Nodes.Count(n => n.Type is AgvGraph.NodeType.Charge).ShouldBe(2);
+            graph.Nodes.Count(n => n.Type is AgvGraph.NodeType.Park).ShouldBe(2);
         }
         
         /// <summary>
@@ -109,7 +109,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             string[] destinations = GenerateNodeIds("D", 2);
             var generator = new GridGraphGenerator(sources, destinations, 2, serviceNodes);
             var graph = generator.Generate(Guid.NewGuid());
-            Assert.AreEqual(new HashSet<string>(graph.Nodes.Select(n => n.Id)).Count, graph.Nodes.Length);
+            graph.Nodes.Length.ShouldBe(new HashSet<string>(graph.Nodes.Select(n => n.Id)).Count);
         }
         
         /// <summary>
@@ -123,7 +123,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             string[] destinations = GenerateNodeIds("D", 2);
             var generator = new GridGraphGenerator(sources, destinations, 2, serviceNodes);
             var graph = generator.Generate(Guid.NewGuid());
-            Assert.AreEqual(new HashSet<string>(graph.Edges.Select(n => $"{n.From}.{n.To}")).Count, graph.Edges.Length);
+            graph.Edges.Length.ShouldBe(new HashSet<string>(graph.Edges.Select(n => $"{n.From}.{n.To}")).Count);
         }
 
         [TestMethod]
@@ -162,11 +162,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             foreach (string[] edge in expectedEdges.Concat(expectedEdges.Reverse()))
             {
                 string edgeName = $"{edge[0]}-{edge[1]}";
-                Assert.AreEqual(edgeName, graphEdges.FirstOrDefault(n => n == edgeName));
+                graphEdges.FirstOrDefault(n => n == edgeName).ShouldBe(edgeName);
             }
 
             // 2*Expect for bidirectional
-            Assert.AreEqual(expectedEdges.Length * 2, graph.Edges.Length);
+            graph.Edges.Length.ShouldBe(expectedEdges.Length * 2);
         }
 
         [TestMethod]

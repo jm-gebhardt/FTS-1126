@@ -6,6 +6,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Core.States;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
 {
@@ -45,8 +46,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         {
             var fixture = new EfAgvRegistryTestFixture();
 
-            Assert.AreEqual(0, fixture.Registry.Count);
-            Assert.AreEqual(0, fixture.Registry.CountIdle);
+            fixture.Registry.Count.ShouldBe(0);
+            fixture.Registry.CountIdle.ShouldBe(0);
         }
 
         [TestMethod]
@@ -56,17 +57,17 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             var agvSaga = new AgvSaga(Guid.NewGuid(), "agv0", nameof(AgvStateMachine.Idle));
             fixture.Add(agvSaga);
 
-            Assert.AreEqual(1, fixture.Registry.Count);
-            Assert.AreEqual(1, fixture.Registry.CountIdle);
+            fixture.Registry.Count.ShouldBe(1);
+            fixture.Registry.CountIdle.ShouldBe(1);
 
             var idleAgv = fixture.Registry.GetIdleAgvs().First();
-            Assert.AreEqual(agvSaga.CorrelationId, idleAgv.CorrelationId);
-            Assert.AreEqual(agvSaga.CurrentState, idleAgv.CurrentState);
-            Assert.AreEqual(agvSaga.AgvId, idleAgv.AgvId);
-            Assert.AreEqual(agvSaga.AgvStatus, idleAgv.AgvStatus);
-            Assert.AreEqual(agvSaga.AgvGraph, idleAgv.AgvGraph);
-            Assert.AreEqual(agvSaga.AgvData, idleAgv.AgvData);
-            Assert.AreEqual(false, idleAgv.Alive);
+            idleAgv.CorrelationId.ShouldBe(agvSaga.CorrelationId);
+            idleAgv.CurrentState.ShouldBe(agvSaga.CurrentState);
+            idleAgv.AgvId.ShouldBe(agvSaga.AgvId);
+            idleAgv.AgvStatus.ShouldBe(agvSaga.AgvStatus);
+            idleAgv.AgvGraph.ShouldBe(agvSaga.AgvGraph);
+            idleAgv.AgvData.ShouldBe(agvSaga.AgvData);
+            idleAgv.Alive.ShouldBeFalse();
         }
 
         [TestMethod]
@@ -77,16 +78,16 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             fixture.Add(agvSaga);
             fixture.Add(new AgvSaga(Guid.NewGuid(), "agv1", nameof(AgvStateMachine.Discovered)));
 
-            Assert.AreEqual(2, fixture.Registry.Count);
-            Assert.AreEqual(1, fixture.Registry.CountIdle);
+            fixture.Registry.Count.ShouldBe(2);
+            fixture.Registry.CountIdle.ShouldBe(1);
 
             var idleAgv = fixture.Registry.GetIdleAgvs().First();
-            Assert.AreEqual(agvSaga.CorrelationId, idleAgv.CorrelationId);
-            Assert.AreEqual(agvSaga.CurrentState, idleAgv.CurrentState);
-            Assert.AreEqual(agvSaga.AgvId, idleAgv.AgvId);
-            Assert.AreEqual(agvSaga.AgvStatus, idleAgv.AgvStatus);
-            Assert.AreEqual(agvSaga.AgvGraph, idleAgv.AgvGraph);
-            Assert.AreEqual(agvSaga.AgvData, idleAgv.AgvData);
+            idleAgv.CorrelationId.ShouldBe(agvSaga.CorrelationId);
+            idleAgv.CurrentState.ShouldBe(agvSaga.CurrentState);
+            idleAgv.AgvId.ShouldBe(agvSaga.AgvId);
+            idleAgv.AgvStatus.ShouldBe(agvSaga.AgvStatus);
+            idleAgv.AgvGraph.ShouldBe(agvSaga.AgvGraph);
+            idleAgv.AgvData.ShouldBe(agvSaga.AgvData);
         }
 
         [TestMethod]
@@ -103,24 +104,24 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
 
             var agvRegistry = fixture.Registry;
 
-            Assert.AreEqual(2, agvRegistry.Count);
-            Assert.AreEqual(1, agvRegistry.CountIdle);
+            fixture.Registry.Count.ShouldBe(2);
+            fixture.Registry.CountIdle.ShouldBe(1);
 
             IEnumerable<IAgv> allAgvs = agvRegistry.GetAllAgvs();
             IEnumerable<IAgv> idleAgvs = agvRegistry.GetIdleAgvs();
 
             // ReSharper disable PossibleMultipleEnumeration
-            Assert.AreEqual(2, allAgvs.Count());
-            Assert.AreEqual(1, idleAgvs.Count());
+            allAgvs.Count().ShouldBe(2);
+            idleAgvs.Count().ShouldBe(1);
 
             foreach (var actualAgv in agvRegistry.GetAllAgvs())
             {
                 var foundAgv = agvRegistry.GetAgv(actualAgv.CorrelationId);
-                Assert.IsNotNull(foundAgv);
-                Assert.AreEqual(actualAgv.AgvId, foundAgv.AgvId);
+                foundAgv.ShouldNotBeNull();
+                foundAgv.AgvId.ShouldBe(actualAgv.AgvId);
             }
 
-            Assert.IsNull(agvRegistry.GetAgv(Guid.Empty));
+            agvRegistry.GetAgv(Guid.Empty).ShouldBeNull();
         }
     }
 }

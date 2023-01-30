@@ -5,6 +5,7 @@ using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
 {
@@ -28,7 +29,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
 
             await fixture.TestHarness.Bus.PublishMqtt(message, null);
 
-            Assert.IsFalse(await fixture.TestHarness.Published.Any<AgvDataReceived>());
+            (await fixture.TestHarness.Published.Any<AgvDataReceived>()).ShouldBeFalse();
         }
 
         /// <summary>
@@ -48,28 +49,27 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
             var message = new MqttAgvData(AgvTestIdentifier, "Karis", "BF1", "127.0.0.1", 1.8, 120.0, 0.6, 0.8, 0.7, 0.9, 2.5, 1000, sensors);
 
             await fixture.TestHarness.Bus.PublishMqtt(message, null);
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<MqttAgvData>());
+            (await fixture.TestHarness.Published.Any<MqttAgvData>()).ShouldBeTrue();
 
             var consumedMessage = fixture.ConsumerHarness.Consumed.Select<MqttAgvData>().First().Context.Message;
-            Assert.AreEqual(AgvTestIdentifier, consumedMessage.SerialNumber);
-
-            Assert.IsTrue(await fixture.TestHarness.Published.Any<AgvDataReceived>());
+            consumedMessage.SerialNumber.ShouldBe(AgvTestIdentifier);
+            (await fixture.TestHarness.Published.Any<AgvDataReceived>()).ShouldBeTrue();
 
             var publishedData = fixture.TestHarness.Published.Select<AgvDataReceived>().First().Context.Message;
-            Assert.AreEqual(AgvTestIdentifier.ToGuid(), publishedData.CorrelationId);
-            Assert.AreEqual(AgvTestIdentifier, publishedData.AgvId);
-            Assert.AreEqual(4, publishedData.Data.Sensors.Length);
-            Assert.AreEqual("Karis", publishedData.Data.Model);
-            Assert.IsNotNull(publishedData.Data.Type);
-            Assert.IsNotNull(publishedData.Data.MaxVelocityTurnOnSpot);
-            Assert.IsNotNull(publishedData.Data.MaxVelocityStraight);
-            Assert.IsNotNull(publishedData.Data.MaxVelocityTurn);
-            Assert.IsNotNull(publishedData.Data.Width);
-            Assert.IsNotNull(publishedData.Data.Length);
-            Assert.IsNotNull(publishedData.Data.Payload);
-            Assert.IsNotNull(publishedData.Data.Acceleration);
-            Assert.IsNotNull(publishedData.Data.IpV4Address);
-            Assert.IsNotNull(publishedData.Data.BatteryCapacity);
+            publishedData.CorrelationId.ShouldBe(AgvTestIdentifier.ToGuid());
+            publishedData.AgvId.ShouldBe(AgvTestIdentifier);
+            publishedData.Data.Sensors.Length.ShouldBe(4);
+            publishedData.Data.Model.ShouldBe("Karis");
+            publishedData.Data.Type.ShouldNotBeNull();
+            publishedData.Data.MaxVelocityTurnOnSpot.ShouldNotBeNull();
+            publishedData.Data.MaxVelocityStraight.ShouldNotBe(0f);
+            publishedData.Data.MaxVelocityTurn.ShouldNotBeNull();
+            publishedData.Data.Width.ShouldNotBeNull();
+            publishedData.Data.Length.ShouldNotBeNull();
+            publishedData.Data.Payload.ShouldNotBeNull();
+            publishedData.Data.Acceleration.ShouldNotBeNull();
+            publishedData.Data.IpV4Address.ShouldNotBeNull();
+            publishedData.Data.BatteryCapacity.ShouldNotBe(0f);
         }
     }
 }

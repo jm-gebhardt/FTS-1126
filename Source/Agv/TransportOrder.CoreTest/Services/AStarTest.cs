@@ -17,6 +17,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         private readonly AgvGraph? _graph;
         private readonly AgvGraph? _grid;
         private readonly Mock<IRoutingPlausibilityChecker> _routingPlausibilityCheckerMock;
+
         private IRoutingPlausibilityChecker RoutingPlausibilityChecker => _routingPlausibilityCheckerMock.Object;
 
         public AStarTest()
@@ -58,33 +59,34 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
                 mapName);
 
             var map = new List<string>
-            { // --> x [1..50]
-              // 12345678901234567890123456789012345678901234567890
-                "           xxxxxx    xxx    xxx   xx  xx  x x x x ",  // 01 |
-                "        x                                         ",  // 02 |
-                "        x                                         ",  // 03 v
-                "    xxxxx                                         ",  // 04
-                "        x  ooooooooooooooooooooooo                ",  // 05 y [1..25}
-                "        x  o   o   o   o   o   o o                ",  // 06
-                "           o o o o o o o o o o o o                ",  // 07
-                "           o o o o o o o o o o o o                ",  // 08
-                "           o o o o o o o o o o o o                ",  // 09
-                "           o o o o o o o o o o o o                ",  // 10
-                "           o o o o o o o o o o o o                ",  // 11
-                "           o o o o o o o o o o o o                ",  // 12
-                "           o o o o o o o o o o o o                ",  // 13
-                "           o o o o o o o o o o o o                ",  // 14
-                "           o o o o o o o o o o o o                ",  // 15
-                "           o o o o o o o o o o o o                ",  // 16
-                "           o o   o   o   o   o   o                ",  // 17
-                "           o ooooooooooooooooooooo                ",  // 18
-                "                                                  ",  // 19
-                "                                                  ",  // 20
-                "                                                  ",  // 21
-                "                                            xxxxx ",  // 22
-                "                                            x   x ",  // 23
-                "                                            xxxxx ",  // 24
-                "                                                  "   // 25
+            {
+                // --> x [1..50]
+                // 12345678901234567890123456789012345678901234567890
+                "           xxxxxx    xxx    xxx   xx  xx  x x x x ", // 01 |
+                "        x                                         ", // 02 |
+                "        x                                         ", // 03 v
+                "    xxxxx                                         ", // 04
+                "        x  ooooooooooooooooooooooo                ", // 05 y [1..25}
+                "        x  o   o   o   o   o   o o                ", // 06
+                "           o o o o o o o o o o o o                ", // 07
+                "           o o o o o o o o o o o o                ", // 08
+                "           o o o o o o o o o o o o                ", // 09
+                "           o o o o o o o o o o o o                ", // 10
+                "           o o o o o o o o o o o o                ", // 11
+                "           o o o o o o o o o o o o                ", // 12
+                "           o o o o o o o o o o o o                ", // 13
+                "           o o o o o o o o o o o o                ", // 14
+                "           o o o o o o o o o o o o                ", // 15
+                "           o o o o o o o o o o o o                ", // 16
+                "           o o   o   o   o   o   o                ", // 17
+                "           o ooooooooooooooooooooo                ", // 18
+                "                                                  ", // 19
+                "                                                  ", // 20
+                "                                                  ", // 21
+                "                                            xxxxx ", // 22
+                "                                            x   x ", // 23
+                "                                            xxxxx ", // 24
+                "                                                  " // 25
             }; // 1030 nodes / 3548 edges
             var nodes = new List<AgvGraph.Node>();
             var edges = new List<AgvGraph.Edge>();
@@ -122,7 +124,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
                 .Returns(true);
         }
 
-
         /// <summary>
         /// Test sorting of <see cref="Common.Definitions.IGraphAlgorithm.Route"/>.
         /// </summary>
@@ -131,17 +132,17 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         {
             var routes = new List<IGraphAlgorithm.Route?>
             {
-                new(9f, Array.Empty<string>() ),
-                new(1f, Array.Empty<string>() ),
+                new(9f, Array.Empty<string>()),
+                new(1f, Array.Empty<string>()),
                 null,
-                new(5f, Array.Empty<string>() )
+                new(5f, Array.Empty<string>())
             };
 
             List<IGraphAlgorithm.Route?> sorted = routes.OrderByDescending(n => n != null).ThenBy(n => n).ToList();
-            Assert.AreEqual(routes[1]!.Costs, sorted[0]!.Costs, 0.00001f);
-            Assert.AreEqual(routes[3]!.Costs, sorted[1]!.Costs, 0.00001f);
-            Assert.AreEqual(routes[0]!.Costs, sorted[2]!.Costs, 0.00001f);
-            Assert.IsTrue(sorted[3] == null);
+            sorted[0]!.Costs.ShouldBe(routes[1]!.Costs, 0.00001f);
+            sorted[1]!.Costs.ShouldBe(routes[3]!.Costs, 0.00001f);
+            sorted[2]!.Costs.ShouldBe(routes[0]!.Costs, 0.00001f);
+            sorted[3].ShouldBeNull();
         }
 
         /// <summary>
@@ -164,23 +165,23 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
                 },
                 new[]
                 {
-                   new AgvGraph.Edge("Saarbrücken", "Kaiserslautern") { Metric = 70f },
-                   new AgvGraph.Edge("Saarbrücken", "Karlsruhe") { Metric = 145f },
-                   new AgvGraph.Edge("Kaiserslautern", "Frankfurt") { Metric = 103f },
-                   new AgvGraph.Edge("Kaiserslautern", "Ludwigshafen") { Metric = 53f },
-                   new AgvGraph.Edge("Karlsruhe", "Heilbronn") { Metric = 84f },
-                   new AgvGraph.Edge("Frankfurt", "Würzburg") { Metric = 116f },
-                   new AgvGraph.Edge("Ludwigshafen", "Würzburg") { Metric = 183f },
-                   new AgvGraph.Edge("Heilbronn", "Würzburg") { Metric = 102f }
+                    new AgvGraph.Edge("Saarbrücken", "Kaiserslautern") { Metric = 70f },
+                    new AgvGraph.Edge("Saarbrücken", "Karlsruhe") { Metric = 145f },
+                    new AgvGraph.Edge("Kaiserslautern", "Frankfurt") { Metric = 103f },
+                    new AgvGraph.Edge("Kaiserslautern", "Ludwigshafen") { Metric = 53f },
+                    new AgvGraph.Edge("Karlsruhe", "Heilbronn") { Metric = 84f },
+                    new AgvGraph.Edge("Frankfurt", "Würzburg") { Metric = 116f },
+                    new AgvGraph.Edge("Ludwigshafen", "Würzburg") { Metric = 183f },
+                    new AgvGraph.Edge("Heilbronn", "Würzburg") { Metric = 102f }
                 },
                 mapName.ToGuid(),
                 mapName);
             var aStar = new AStar(graph, RoutingPlausibilityChecker);
 
             var route = aStar.CalculateRoute("Saarbrücken", "Würzburg");
-            Assert.IsNotNull(route);
-            CollectionAssert.AreEqual(new[] { "Saarbrücken", "Kaiserslautern", "Frankfurt", "Würzburg" }, route.Nodes);
-            Assert.AreEqual(289f, route.Costs, 0.00001f);
+            route.ShouldNotBeNull();
+            route.Nodes.ShouldBe(new[] { "Saarbrücken", "Kaiserslautern", "Frankfurt", "Würzburg" });
+            route.Costs.ShouldBe(289f, 0.00001f);
         }
 
         [TestMethod]
@@ -200,24 +201,24 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
                 },
                 new[]
                 {
-                   new AgvGraph.Edge("Saarbrücken", "Kaiserslautern") { Metric = 70f },
-                   new AgvGraph.Edge("Saarbrücken", "Karlsruhe") { Metric = 145f },
-                   new AgvGraph.Edge("Karlsruhe", "Saarbrücken") { Metric = 145f },
-                   new AgvGraph.Edge("Kaiserslautern", "Frankfurt") { Metric = 103f },
-                   new AgvGraph.Edge("Kaiserslautern", "Ludwigshafen") { Metric = 53f },
-                   new AgvGraph.Edge("Karlsruhe", "Heilbronn") { Metric = 84f },
-                   new AgvGraph.Edge("Frankfurt", "Würzburg") { Metric = 116f },
-                   new AgvGraph.Edge("Ludwigshafen", "Würzburg") { Metric = 183f },
-                   new AgvGraph.Edge("Heilbronn", "Würzburg") { Metric = 102f }
+                    new AgvGraph.Edge("Saarbrücken", "Kaiserslautern") { Metric = 70f },
+                    new AgvGraph.Edge("Saarbrücken", "Karlsruhe") { Metric = 145f },
+                    new AgvGraph.Edge("Karlsruhe", "Saarbrücken") { Metric = 145f },
+                    new AgvGraph.Edge("Kaiserslautern", "Frankfurt") { Metric = 103f },
+                    new AgvGraph.Edge("Kaiserslautern", "Ludwigshafen") { Metric = 53f },
+                    new AgvGraph.Edge("Karlsruhe", "Heilbronn") { Metric = 84f },
+                    new AgvGraph.Edge("Frankfurt", "Würzburg") { Metric = 116f },
+                    new AgvGraph.Edge("Ludwigshafen", "Würzburg") { Metric = 183f },
+                    new AgvGraph.Edge("Heilbronn", "Würzburg") { Metric = 102f }
                 },
                 mapName.ToGuid(),
                 mapName);
             var aStar = new AStar(graph, RoutingPlausibilityChecker);
 
             var route = aStar.CalculateRoute("Karlsruhe", "Saarbrücken", "Würzburg");
-            Assert.IsNotNull(route);
-            CollectionAssert.AreEqual(new[] { "Karlsruhe", "Saarbrücken", "Kaiserslautern", "Frankfurt", "Würzburg" }, route.Nodes);
-            Assert.AreEqual(289f + 145f, route.Costs, 0.00001f);
+            route.ShouldNotBeNull();
+            route.Nodes.ShouldBe(new[] { "Karlsruhe", "Saarbrücken", "Kaiserslautern", "Frankfurt", "Würzburg" });
+            route.Costs.ShouldBe(289f + 145f, 0.00001f);
         }
 
         /// <summary>
@@ -229,18 +230,18 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             var aStar = new AStar(_graph!, RoutingPlausibilityChecker);
 
             var route = aStar.CalculateRoute("1", "10");
-            Assert.IsNotNull(route);
-            Assert.AreEqual(18f, route.Costs, 0.00001f);
+            route.ShouldNotBeNull();
+            route.Costs.ShouldBe(18f, 0.00001f);
 
             route = aStar.CalculateRoute("10", "1");
-            Assert.IsNull(route);
+            route.ShouldBeNull();
 
             route = aStar.CalculateRoute("9", "5");
-            Assert.IsNotNull(route);
-            Assert.AreEqual(8f, route.Costs, 0.00001f);
+            route.ShouldNotBeNull();
+            route.Costs.ShouldBe(8f, 0.00001f);
 
             route = aStar.CalculateRoute("4", "9");
-            Assert.IsNull(route);
+            route.ShouldBeNull();
         }
 
         /// <summary>
@@ -255,30 +256,30 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             // ReSharper restore JoinDeclarationAndInitializer
 
             c1 = aStar.CalculateRoute("01/01", "11/01");
-            Assert.AreEqual(10f, c1!.Costs, 0.00001f);
+            c1!.Costs.ShouldBe(10f, 0.00001f);
             c2 = aStar.CalculateRoute("11/01", "11/02");
-            Assert.AreEqual(1f, c2!.Costs, 0.00001f);
+            c2!.Costs.ShouldBe(1f, 0.00001f);
             c3 = aStar.CalculateRoute("11/02", "50/02");
-            Assert.AreEqual(39f, c3!.Costs, 0.00001f);
+            c3!.Costs.ShouldBe(39f, 0.00001f);
             c4 = aStar.CalculateRoute("50/02", "50/01");
-            Assert.AreEqual(1f, c4!.Costs, 0.00001f);
+            c4!.Costs.ShouldBe(1f, 0.00001f);
 
             costs = aStar.CalculateRoute("01/01", "50/01");
-            Assert.AreEqual(c1.Costs + c2.Costs + c3.Costs + c4.Costs, costs!.Costs, 0.00001f);
+            costs!.Costs.ShouldBe(c1.Costs + c2.Costs + c3.Costs + c4.Costs, 0.00001f);
 
             c1 = aStar.CalculateRoute("50/01", "13/17");
-            Assert.AreEqual(57f, c1!.Costs, 0.00001f);
+            c1!.Costs.ShouldBe(57f, 0.00001f);
             c2 = aStar.CalculateRoute("13/17", "33/17");
-            Assert.AreEqual(10f * 13f, c2!.Costs, 0.00001f);
+            c2!.Costs.ShouldBe(10f * 13f, 0.00001f);
             c3 = aStar.CalculateRoute("33/17", "33/06");
-            Assert.AreEqual(11f, c3!.Costs, 0.00001f);
+            c3!.Costs.ShouldBe(11f, 0.00001f);
 
             var stopWatch = new System.Diagnostics.Stopwatch();
             stopWatch.Start();
             costs = aStar.CalculateRoute("50/01", "33/06");
             stopWatch.Stop();
             System.Diagnostics.Trace.WriteLine("Grid example duration: " + stopWatch.ElapsedMilliseconds.ToString() + "ms.");
-            Assert.AreEqual(c1.Costs + c2.Costs + c3.Costs, costs!.Costs, 0.00001f);
+            costs!.Costs.ShouldBe(c1.Costs + c2.Costs + c3.Costs, 0.00001f);
         }
 
         /// <summary>
@@ -291,7 +292,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         public void Test_AStarGrid_NonExistentSourceOrDestination_NoPath(string source, string destination)
         {
             var aStar = new AStar(_grid!, RoutingPlausibilityChecker);
-            Assert.IsNull(aStar.CalculateRoute(source, destination));
+            aStar.CalculateRoute(source, destination).ShouldBeNull();
         }
 
         /// <summary>
@@ -302,7 +303,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         {
             var aStar = new AStar(_grid!, RoutingPlausibilityChecker);
             var route = aStar.CalculateRoute("01/01", "47/23");
-            Assert.IsNull(route);
+            route.ShouldBeNull();
         }
 
         [TestMethod]
@@ -310,18 +311,18 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         {
             const string mapName = "Map#1";
             var graph = new AgvGraph(Guid.Empty,
-            new[]
-            {
-               new AgvGraph.Node("1") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 5f, Z = 0f },
-               new AgvGraph.Node("2") { Enabled = true, Type = AgvGraph.NodeType.Drop, X = 1f, Y = 5f, Z = 0f }
-            },
-            new[]
-            {
-                new AgvGraph.Edge("1", "2") { Metric = 1f },
-                new AgvGraph.Edge("2", "1") { Metric = 4f }
-            },
-            mapName.ToGuid(),
-            mapName);
+                new[]
+                {
+                    new AgvGraph.Node("1") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 5f, Z = 0f },
+                    new AgvGraph.Node("2") { Enabled = true, Type = AgvGraph.NodeType.Drop, X = 1f, Y = 5f, Z = 0f }
+                },
+                new[]
+                {
+                    new AgvGraph.Edge("1", "2") { Metric = 1f },
+                    new AgvGraph.Edge("2", "1") { Metric = 4f }
+                },
+                mapName.ToGuid(),
+                mapName);
 
             var routingPlausibilityCheckerMock = new Mock<IRoutingPlausibilityChecker>();
             routingPlausibilityCheckerMock.Setup(r => r.IsPlausible(It.IsAny<AgvGraph.Node>(), It.IsAny<AgvGraph.Node>())).Returns(true);
@@ -335,6 +336,5 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             route = aStar.CalculateRoute("1", "2");
             route.ShouldBeNull();
         }
-
     }
 }

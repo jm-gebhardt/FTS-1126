@@ -7,6 +7,7 @@ using MassTransit.Saga;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Persistence
 {
@@ -37,7 +38,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Persistence
             
             var provider = collection.BuildServiceProvider(true);
             // In Memory repository adds an IndexedSagaDictionary
-            Assert.IsNotNull(provider.GetService<IndexedSagaDictionary<OrderSaga>>());
+            provider.GetService<IndexedSagaDictionary<OrderSaga>>().ShouldNotBeNull();
         }
         
         /// <summary>
@@ -66,8 +67,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Persistence
 
             using var scope = provider.CreateScope();
             var sagaRepository = scope.ServiceProvider.GetService<ISagaRepositoryContextFactory<OrderSaga>>();
-            Assert.IsNotNull(sagaRepository);
-            Assert.AreEqual(sagaRepository.GetType().GetGenericTypeDefinition(), typeof(EntityFrameworkSagaRepositoryContextFactory<>));
+            sagaRepository.ShouldNotBeNull();
+            typeof(EntityFrameworkSagaRepositoryContextFactory<>).ShouldBe(sagaRepository.GetType().GetGenericTypeDefinition());
         }
 
     }

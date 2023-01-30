@@ -14,6 +14,7 @@ using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Enums;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
 {
@@ -59,34 +60,34 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
                 IConsumerTestHarness<StartActionCommandConsumer> consumerHarness = fixture.TestHarness.GetConsumerHarness<StartActionCommandConsumer>();
 
                 // Check if consumed
-                Assert.IsTrue(await consumerHarness.Consumed.Any<StartActionCommand>());
+                (await consumerHarness.Consumed.Any<StartActionCommand>()).ShouldBeTrue();
 
                 // Get consumed message
                 IReceivedMessage<StartActionCommand> consumedMessage = consumerHarness.Consumed.Select<StartActionCommand>().First();
                 orderDetails = consumedMessage.Context.Message.Action.OrderDetails;
 
                 // Check consumed message
-                Assert.AreEqual(agv, consumedMessage.Context.Message.CorrelationId);
-                Assert.AreEqual(agvId, consumedMessage.Context.Message.AgvId);
-                Assert.AreEqual(orderId, orderDetails.OrderId);
-                Assert.AreEqual(fromStationId, orderDetails.Source);
+                consumedMessage.Context.Message.CorrelationId.ShouldBe(agv);
+                consumedMessage.Context.Message.AgvId.ShouldBe(agvId);
+                orderDetails.OrderId.ShouldBe(orderId);
+                orderDetails.Source.ShouldBe(fromStationId);
 
                 // Get published MqttOrder Mqtt message
                 IPublishedMessage<MqttOrder> publishedMessage = publishObserver.Messages.Select<MqttOrder>().First();
 
                 // Check routing key and content type
                 var routingKeySpecified = typeof(MqttOrder).GetCustomAttribute(typeof(RoutingKey)) as RoutingKey;
-                Assert.AreEqual(routingKeySpecified?.RoutingKeyValue, publishedMessage.Context.RoutingKey());
-                Assert.AreEqual(SystemTextJsonRawMessageSerializer.JsonContentType, publishedMessage.Context.ContentType);
+                publishedMessage.Context.RoutingKey().ShouldBe(routingKeySpecified?.RoutingKeyValue);
+                publishedMessage.Context.ContentType.ShouldBe(SystemTextJsonRawMessageSerializer.JsonContentType);
 
                 // Check content
                 var mqttMessage = publishedMessage.Context.Message;
 
-                Assert.AreEqual(agvId, mqttMessage.SerialNumber);
-                Assert.AreEqual(fromStationId, mqttMessage.Stations?.FromStationIdentifier);
-                Assert.AreEqual(toStationId, mqttMessage.Stations?.ToStationIdentifier);
-                Assert.AreEqual(OrderType.Transport, mqttMessage.OrderType);
-                Assert.AreEqual(OrderRecordType.Order, mqttMessage.RecordType);
+                mqttMessage.SerialNumber.ShouldBe(agvId);
+                mqttMessage.Stations?.FromStationIdentifier.ShouldBe(fromStationId);
+                mqttMessage.Stations?.ToStationIdentifier.ShouldBe(toStationId);
+                mqttMessage.OrderType.ShouldBe(OrderType.Transport);
+                mqttMessage.RecordType.ShouldBe(OrderRecordType.Order);
             }
         }
 
@@ -110,20 +111,20 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
                 await fixture.TestHarness.Bus.Publish(new SendAgvChargeOrder(Guid.NewGuid(), agvId, chargerId));
 
                 // Check if sent
-                Assert.IsTrue(await fixture.TestHarness.Published.Any<SendAgvChargeOrder>());
+                (await fixture.TestHarness.Published.Any<SendAgvChargeOrder>()).ShouldBeTrue();
 
                 // Get Consumer Harness
                 IConsumerTestHarness<StartActionCommandConsumer> consumerHarness = fixture.TestHarness.GetConsumerHarness<StartActionCommandConsumer>();
 
                 // Check if consumed
-                Assert.IsTrue(await consumerHarness.Consumed.Any<SendAgvChargeOrder>());
+                (await consumerHarness.Consumed.Any<SendAgvChargeOrder>()).ShouldBeTrue();
 
                 // Get consumed message
                 IReceivedMessage<SendAgvChargeOrder> consumedMessage = consumerHarness.Consumed.Select<SendAgvChargeOrder>().First();
 
                 // Check consumed message
-                Assert.AreEqual(agvId, consumedMessage.Context.Message.AgvId);
-                Assert.AreEqual(chargerId, consumedMessage.Context.Message.ToCharger);
+                consumedMessage.Context.Message.AgvId.ShouldBe(agvId);
+                consumedMessage.Context.Message.ToCharger.ShouldBe(chargerId);
                 Guid? correlationId = consumedMessage.Context.CorrelationId;
 
                 // Get published MqttOrder Mqtt message
@@ -131,13 +132,13 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
 
                 // Check routing key and content type
                 var routingKeySpecified = typeof(MqttOrder).GetCustomAttribute(typeof(RoutingKey)) as RoutingKey;
-                Assert.AreEqual(routingKeySpecified?.RoutingKeyValue, publishedMessage.Context.RoutingKey());
-                Assert.AreEqual(SystemTextJsonRawMessageSerializer.JsonContentType, publishedMessage.Context.ContentType);
+                publishedMessage.Context.RoutingKey().ShouldBe(routingKeySpecified?.RoutingKeyValue);
+                publishedMessage.Context.ContentType.ShouldBe(SystemTextJsonRawMessageSerializer.JsonContentType);
 
                 // Check content
-                Assert.AreEqual(agvId, publishedMessage.Context.Message.SerialNumber);
-                Assert.AreEqual(correlationId.ToString(), publishedMessage.Context.Message.OrderId);
-                Assert.AreEqual(chargerId, publishedMessage.Context.Message.Stations?.ToStationIdentifier);
+                publishedMessage.Context.Message.SerialNumber.ShouldBe(agvId);
+                publishedMessage.Context.Message.OrderId.ShouldBe(correlationId.ToString());
+                publishedMessage.Context.Message.Stations?.ToStationIdentifier.ShouldBe(chargerId);
             }
         }
     }

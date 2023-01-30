@@ -1,5 +1,6 @@
 using Gebhardt.StoreWare.Agv.IntegrationTest.Utils;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.IntegrationTest
 {
@@ -16,10 +17,10 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest
         public void ComposeTest()
         {
             var dc = new DockerCompose();
-            Assert.IsTrue(dc.Up());
-            Assert.IsTrue(dc.AreRunning());
-            Assert.IsTrue(dc.Down());
-            Assert.IsTrue(dc.AreRemoved());
+            dc.Up().ShouldBeTrue();
+            dc.AreRunning().ShouldBeTrue();
+            dc.Down().ShouldBeTrue();
+            dc.AreRemoved().ShouldBeTrue();
         }
     }
 }

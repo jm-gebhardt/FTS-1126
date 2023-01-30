@@ -8,6 +8,7 @@ using Gebhardt.StoreWare.Agv.DeviceCommunication.Enums;
 using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Events;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using MassTransit;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
 {
@@ -100,7 +101,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
             var message = new MqttOrderEvent(SerialNumber, OrderId, null);
             var published = await ConsumeMessage(message);
             Thread.Sleep(1); // Wait 1ms before checking if message was published
-            Assert.IsFalse(await published.Any<TransportOrderFailed>());
+            (await published.Any<TransportOrderFailed>()).ShouldBeFalse();
         }
 
         private async Task<IPublishedMessageList> ConsumeMessage(MqttOrderEvent message)
@@ -110,20 +111,20 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
 
             var consumedMsg = fixture.ConsumerHarness.Consumed.Select<MqttOrderEvent>().First().Context.Message;
 
-            Assert.AreEqual(message.SerialNumber, consumedMsg.SerialNumber);
-            Assert.AreEqual(message.OrderId, consumedMsg.OrderId);
-            Assert.AreEqual(message.OrderEventType, consumedMsg.OrderEventType);
+            consumedMsg.SerialNumber.ShouldBe(message.SerialNumber);
+            consumedMsg.OrderId.ShouldBe(message.OrderId);
+            consumedMsg.OrderEventType.ShouldBe(message.OrderEventType);
 
             return fixture.TestHarness.Published;
         }
 
         private async Task AssertPublishedEvent(IPublishedMessageList published, ActionStatusChangedType changedType)
         {
-            Assert.IsTrue(await published.Any<ActionStatusChangedEvent>());
+            (await published.Any<ActionStatusChangedEvent>()).ShouldBeTrue();
 
             IPublishedMessage<ActionStatusChangedEvent>? publishedEvent = await published.SelectAsync<ActionStatusChangedEvent>().First();
             var actionStatusEvent = publishedEvent.MessageObject as ActionStatusChangedEvent;
-            Assert.AreEqual(actionStatusEvent!.ChangedType, changedType);
+            changedType.ShouldBe(actionStatusEvent!.ChangedType);
         }
     }
 }
