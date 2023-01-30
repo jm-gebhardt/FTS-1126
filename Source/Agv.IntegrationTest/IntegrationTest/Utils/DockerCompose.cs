@@ -141,7 +141,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
             if (!process.HasExited)
             {
                 process.Kill();
-                _logger.LogError("Command timeout");
+                _logger.LogError("Command timeout {CommandArguments}", args);
                 process.WaitForExit();
                 return false;
             }

@@ -13,7 +13,7 @@ public class ActionManagerBackgroundService : BackgroundService
     private readonly ILogger _logger;
 
     /// <summary>
-    /// 
+    /// Creates an instance of <see cref="ActionManagerBackgroundService"/>
     /// </summary>
     /// <param name="actionManager"></param>
     /// <param name="logger"></param>
@@ -35,7 +35,7 @@ public class ActionManagerBackgroundService : BackgroundService
             }
             catch (Exception exc)
             {
-                _logger.LogError(exc, $"Failed to {nameof(ExecuteAsync)}");
+                _logger.LogError(exc, "Failed to {nameOf}", nameof(ExecuteAsync));
             }
 
             await Task.Delay(PeriodicAssignmentTaskPeriodInMs, stoppingToken);

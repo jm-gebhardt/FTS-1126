@@ -132,7 +132,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
         /// <summary>
         /// Checks if a idle Agv can handle any pending action
         /// </summary>
-        /// <returns></returns>
         private async Task Assign(CancellationToken cancellationToken)
         {
             List<AgvAction> pendingActions = _actionRegistry.GetAllPendingActions().ToList();
@@ -152,7 +151,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
             // we must manually create a scope because the ActionManager is a singleton and the IRequestClient is only scoped available
             using var scope = _scopeFactory.CreateScope();
             var client = scope.ServiceProvider.GetRequiredService<IRequestClient<AssignAgv>>();
-            _logger.LogInformation("Sending AssignAgv request and waiting for response");
+            _logger.LogInformation("Sending {nameOf} request and waiting for response", nameof(AssignAgv));
             Response<AgvAssignmentSucceeded, AgvAssignmentFailed> response = await client.GetResponse<AgvAssignmentSucceeded, AgvAssignmentFailed>(
                 new AssignAgv(correlationId, order),
                 cancellationToken, RequestTimeout.After(s: 10));
@@ -172,7 +171,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
             }
             else
             {
-                _logger.LogError($"Bad response: {response.Message}");
+                _logger.LogError("Bad response: {responseMessage}", response.Message);
             }
         }
 
@@ -219,7 +218,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
             using var scope = _scopeFactory.CreateScope();
             var client = scope.ServiceProvider.GetRequiredService<IRequestClient<TRequest>>();
             // we must wait for the confirmation, otherwise this leads to a racing condition where the next cycle of the DoUpdate method is called and the assignment is triggered twice
-            _logger.LogInformation($"Sending {typeof(TRequest).Name} and awaiting for confirmation response");
+            _logger.LogInformation("Sending {typeOf} and awaiting for confirmation response", typeof(TRequest).Name);
 
             return client.GetResponse<TResponse>(request, cancellationToken);
         }

@@ -51,7 +51,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
         public Event<ActionStatusChangedEvent> ExecuteActionStatusChangedEvent { get; private set; } = default!;
 
         /// <summary>
-        /// 
+        /// Create new instance of <see cref="ActionStateMachine"/>
         /// </summary>
         public ActionStateMachine(ILogger<ActionStateMachine> logger)
         {
@@ -86,7 +86,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
         private EventActivityBinder<ActionSaga, AssignActionRequest> ActionAssignedHandler() =>
             When(ActionAssignedEvent)
                 .Then(Validate)
-                .Then(UpdateSage)
+                .Then(UpdateSaga)
                 .Publish(c => new AgvAssignmentSucceeded(c.Saga.Action.OrderCorrelationId, c.Saga.AssignedAgvId!, c.Saga.AssignedAgv, c.Message.Action.Nodes))
                 .Publish(c => new StartActionCommand(c.Saga.AssignedAgv, c.Saga.AssignedAgvId!, c.Saga.Action))
                 .TransitionTo(ActionSend)
@@ -152,7 +152,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
                             }
                             else
                             {
-                                _logger.LogInformation($"Completed: {action.ActionType}");
+                                _logger.LogInformation("Completed: {actionType}", action.ActionType);
                             }
                             break;
 
@@ -170,7 +170,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
             }
         }
 
-        private void UpdateSage(BehaviorContext<ActionSaga, AssignActionRequest> context)
+        private void UpdateSaga(BehaviorContext<ActionSaga, AssignActionRequest> context)
         {
             context.Saga.Action = context.Message.Action;
             context.Saga.AssignedAgv = context.Message.Agv;

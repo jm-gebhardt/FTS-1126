@@ -60,7 +60,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
             }
             catch (MassTransit.NotAcceptedStateMachineException e)
             {
-                _logger.LogError("MassTransit.NotAcceptedStateMachineException occurred \n {Message} \n {StackTrace}", e.Message, e.StackTrace);
+                _logger.LogError("{nameOf} occurred \n {Message} \n {StackTrace}", 
+                    nameof(MassTransit.NotAcceptedStateMachineException), e.Message, e.StackTrace);
                 return false;
             }
             catch (Exception e)
