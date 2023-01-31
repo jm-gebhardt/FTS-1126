@@ -1,4 +1,3 @@
-import { HttpResponse } from '@microsoft/signalr'
 import { Agvs as AgvApi } from '@/services/api/Agvs'
 import { useAlert } from 'balm-ui'
 
@@ -8,18 +7,22 @@ export abstract class AgvService {
   })
 
   public static setAgvIdle(id: string): void {
-    AgvService.agvApi.setIdlePartialUpdate(id).catch((reason: HttpResponse) => {
-      console.error('Set AGV idle: ' + reason.statusText)
-      const $alert = useAlert()
-      $alert(`AGV '${id}' could not be set to Idle`)
+    AgvService.agvApi.setIdlePartialUpdate(id).catch((response) => {
+      console.error('Set AGV idle: ' + response.statusText)
+      response.text().then((body: unknown) => {
+        const $alert = useAlert()
+        $alert(`AGV '${id}' could not be set to Idle. ${body}`)
+      })
     })
   }
 
   public static lockAgv(id: string): void {
-    AgvService.agvApi.lockAgvPartialUpdate(id).catch((reason: HttpResponse) => {
-      console.error('lock agv: ' + reason.statusText)
-      const $alert = useAlert()
-      $alert(`AGV '${id}' could not be locked`)
+    AgvService.agvApi.lockAgvPartialUpdate(id).catch((response) => {
+      console.error('lock agv: ' + response.statusText)
+      response.text().then((body: unknown) => {
+        const $alert = useAlert()
+        $alert(`AGV '${id}' could not be locked. ${body}`)
+      })
     })
   }
 }
