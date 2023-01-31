@@ -346,13 +346,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
                     context.Saga.AgvStatus
                 ), context.CancellationToken);
             }
-            else // Send offline message when AGV is not alive
-            {
-                await context.Publish(new AgvOfflineMessage(
-                    context.Saga.CorrelationId,
-                    DateTime.UtcNow
-                ), context.CancellationToken);
-            }
         }
 
         private async Task PublishPosition(BehaviorContext<SimulatedAgvSaga> context)

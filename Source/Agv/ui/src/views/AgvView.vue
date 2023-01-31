@@ -24,9 +24,9 @@
       <ui-grid-cell class="agv-list-cell" columns="6">
         <agv-details
           v-if="selectedItemIdx != null && selectedCorrelationId != null"
-          v-model="Array.from(agvs.data.values())[selectedItemIdx]"
-          :agv-data="agvData.data.get(selectedCorrelationId)"
-          :agv-state="agvStates.data.get(selectedCorrelationId)"
+          v-model="selectedAgv"
+          :agv-data="selectedAgvData"
+          :agv-state="selectedAgvState"
         ></agv-details>
       </ui-grid-cell>
     </ui-grid>
@@ -46,7 +46,7 @@ import { useAgvStore } from '@/services/AgvStore'
 import { storeToRefs } from 'pinia'
 import { onBeforeUnmount, onMounted, Ref, ref } from 'vue'
 import { AgvHub } from '@/services/AgvHub'
-import { IAgvState } from '@/services/api/data-contracts'
+import { IAgv, IAgvData, IAgvState } from '@/services/api/data-contracts'
 import { useRoute, useRouter } from 'vue-router'
 import { UiSwitch, UiGrid, UiGridCell, UiSpinner, UiBanner } from 'balm-ui'
 
@@ -68,31 +68,66 @@ const router = useRouter()
 let selectedItemIdx: Ref<number | null> = ref(null)
 let selectedCorrelationId: Ref<string | null> = ref(null)
 
+let selectedAgv: Ref<IAgv | null> = ref(null)
+let selectedAgvData: Ref<IAgvData | null | undefined> = ref(null)
+let selectedAgvState: Ref<IAgvState | null | undefined> = ref(null)
+
 /**
  * Selected item changed
  * Update selected item and changes route
  * @param value
  */
-async function selectedItemChanged(value: number | null): Promise<void> {
+async function selectedItemChanged(index: number | null): Promise<void> {
   let query: { [key: string]: string | number | null } = {}
 
-  selectedItemIdx.value = value
-  selectedCorrelationId.value =
-    value != null
-      ? Array.from(agvs.value.data.values())[value].correlationId
-      : null
-  if (selectedCorrelationId.value != undefined) {
-    await fetchData(selectedCorrelationId.value)
-    await fetchState(selectedCorrelationId.value)
+  selectedItemIdx.value = index
+  let agv: IAgv | null = null
+
+  if (index !== null) {
+    agv = Array.from(agvs.value.data.values())[index]
+  }
+
+  const lastSelectedCorrelationId = selectedCorrelationId.value
+
+  if (agv) {
+    selectedCorrelationId.value = agv.correlationId
+    selectedAgv.value = agv
+
+    selectedAgvData.value = agvData.value.data.get(agv.correlationId)
+    selectedAgvState.value = agvStates.value.data.get(agv.correlationId)
+  } else {
+    selectedCorrelationId.value = null
+    selectedAgv.value = null
+    selectedAgvData.value = null
+    selectedAgvState.value = null
   }
 
   if (selectedCorrelationId.value != null) {
     query['correlationId'] = selectedCorrelationId.value
   }
 
-  pushCurrentRoute()
-}
+  if (selectedCorrelationId.value != lastSelectedCorrelationId) {
+    pushCurrentRoute()
+  }
 
+  if (selectedCorrelationId.value != null) {
+    await fetchData(selectedCorrelationId.value).then(() => {
+      if (selectedCorrelationId.value != null) {
+        selectedAgvData.value = agvData.value.data.get(
+          selectedCorrelationId.value
+        )
+      }
+    })
+
+    await fetchState(selectedCorrelationId.value).then(() => {
+      if (selectedCorrelationId.value != null) {
+        selectedAgvState.value = agvStates.value.data.get(
+          selectedCorrelationId.value
+        )
+      }
+    })
+  }
+}
 /**
  * Handler for hub event 'onAgvDiscovered'
  */
@@ -106,16 +141,21 @@ async function onAgvDiscovered(): Promise<void> {
  */
 async function onAgvStateChanged(agvState: IAgvState): Promise<void> {
   await updateAgvState(agvState)
+
+  // Refresh selected AGV status if the status belongs to the selected AGV
+  if (selectedCorrelationId.value === agvState.correlationId) {
+    selectedAgvState.value = agvState
+  }
 }
 
 function fetch(): void {
   fetchAgvs().then(() => {
     if (selectedCorrelationId.value != null) {
-      let selectedAgv = agvs.value.data.get(selectedCorrelationId.value)
-      if (selectedAgv != undefined) {
-        selectedItemIdx.value = Array.from(agvs.value.data.values()).indexOf(
-          selectedAgv
-        )
+      const index = Array.from(agvs.value.data.keys()).indexOf(
+        selectedCorrelationId.value
+      )
+      if (index !== -1) {
+        selectedItemChanged(index)
       }
     }
   })
@@ -149,11 +189,9 @@ onBeforeUnmount(async () => {
 onMounted(() => {
   if (route?.query?.correlationId != undefined) {
     selectedCorrelationId.value = <string>route?.query?.correlationId
-    fetchData(selectedCorrelationId.value)
-    fetchState(selectedCorrelationId.value)
+    pushCurrentRoute()
   }
 
-  pushCurrentRoute()
   fetch()
   agvHub.connect()
 })

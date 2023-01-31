@@ -1,4 +1,5 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.CmdOptions;
@@ -331,10 +332,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
             When(AgvStatusReceivedEvent)
                 .Then(c =>
                     _logger.LogDebug("{MessageType} {AgvId} / {CorrelationId}, AGV is alive", nameof(AgvStatusReceived), c.Message.AgvId, c.Saga.CorrelationId))
-                .If(cond => !cond.Saga.Alive, x => x
-                    .Then(c => c.Saga.Alive = true)
-                    .Publish(m => new AgvPropertyChanged(m.Saga, m.Saga.CorrelationId)))
-                .Then(c => c.Saga.AgvStatus = c.Message.AgvStatus)
+                .Then(c => UpdateAgvAgvStatus(c.Saga, c.Message.AgvStatus, true, c))
                 // When AgvData missing repeat request all x seconds
                 .If(cond => cond.Saga.AgvData == null && cond.Saga.GetTimeSpanSinceLastRequest_AgvData().TotalSeconds > AgvRequestTimeoutS,
                     PublishRequestAgvData)
@@ -380,9 +378,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
 
         private EventActivityBinder<AgvSaga, AgvOfflineMessage> AgvOfflineMessageHandler() =>
             When(AgvOfflineWatchdog.Received)
-                .If(cond => cond.Saga.Alive, x => x
-                    .Then(c => c.Saga.Alive = false)
-                    .Publish(m => new AgvPropertyChanged(m.Saga, m.Saga.CorrelationId)))
+                .Then(c => UpdateAgvAgvStatus(c.Saga, c.Saga.AgvStatus, false, c))
                 .Then(c => _logger.LogWarning("{MessageType} {AgvId} / {CorrelationId} received after timeout of {Timeout} ms, AGV is offline",
                     nameof(AgvOfflineMessage), c.Saga.AgvId, c.Saga.CorrelationId, (DateTime.UtcNow - c.Message.Created).TotalMilliseconds));
         #endregion
@@ -406,6 +402,20 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         {
             await endpoint.Publish(new AgvBecameIdle(agvSaga.CorrelationId));
             _logger.LogDebug("Agv {AgvId}/{CorrelationId} was released and transitioned to Idle", agvSaga.AgvId, agvSaga.CorrelationId);
+        }
+
+        private void UpdateAgvAgvStatus(AgvSaga agvSaga, AgvStatus? newStatus, bool newAlive, IPublishEndpoint endpoint)
+        {
+            bool aliveChanged = agvSaga.Alive != newAlive; // AGV alive has changed
+            bool stateChanged = !Equals(agvSaga.AgvStatus, newStatus); // Equals() checks value equality for record types
+
+            agvSaga.Alive = newAlive;
+            agvSaga.AgvStatus = newStatus;
+
+            if (aliveChanged || stateChanged) // Publish AgvPropertyChanged only something has actually changed
+            {
+                endpoint.Publish(new AgvPropertyChanged(agvSaga, agvSaga.CorrelationId));
+            }
         }
 
         private void SearchMapNameInRegistry(BehaviorContext<AgvSaga, AgvGraphReceived> context)

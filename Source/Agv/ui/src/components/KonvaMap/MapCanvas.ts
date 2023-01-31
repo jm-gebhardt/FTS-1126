@@ -245,10 +245,7 @@ export class MapCanvas {
     let agvNode = this._agvs.get(agv.correlationId)
 
     if (agvNode) {
-      agvNode.updateSmooth(
-        { x: agv.agvPosition.x, y: agv.agvPosition.y },
-        rotation
-      )
+      agvNode.update({ x: agv.agvPosition.x, y: agv.agvPosition.y }, rotation)
     } else {
       agvNode = this.createAgv(agv.correlationId, agv.agvId, agv.agvPosition)
     }

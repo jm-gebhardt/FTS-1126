@@ -1008,7 +1008,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
                 correlationId,
                 agvId,
                 fixture.Machine.Idle.Name,
-                new AgvStatus(correlationId, null, true, true, 10, true, true)
+                new AgvStatus(correlationId, "first", false, true, 60, false, false)
             )
             { Alive = true };
             fixture.Add(agv);

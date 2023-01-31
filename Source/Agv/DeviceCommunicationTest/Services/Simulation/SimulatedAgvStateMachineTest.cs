@@ -427,7 +427,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
         [TestMethod]
         [DataRow(true)]
         [DataRow(false)]
-        public async Task When_Publish_AgvStatusReceived_or_AgvOfflineMessage_Based_ON_AGV_Alive(bool agvAlive)
+        public async Task When_AGV_Alive_Publish_AgvStatusReceived(bool agvAlive)
         {
             var options = new SimulateOptions()
             {
@@ -452,9 +452,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
 
             bool statusMessageSent = await fixture.TestHarness.Published.Any<AgvStatusReceived>(c => c.Context.Message.CorrelationId == correlationId);
             statusMessageSent.ShouldBe(agvAlive);
-
-            bool offlineMessageSent = await fixture.TestHarness.Published.Any<AgvOfflineMessage>(c => c.Context.Message.CorrelationId == correlationId);
-            offlineMessageSent.ShouldNotBe(agvAlive);
         }
     }
 }
