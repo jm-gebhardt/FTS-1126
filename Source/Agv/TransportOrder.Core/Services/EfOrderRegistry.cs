@@ -33,6 +33,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         public int CountUnassigned => GetUnassignedOrders().Count();
 
         /// <inheritdoc/>
+        public int CountQueued => GetQueuedOrders().Count();
+
+        /// <inheritdoc/>
         public IQueryable<IOrder> GetAllOrders()
         {
             return OrderSagas
@@ -43,6 +46,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         public IQueryable<IOrder> GetUnassignedOrders()
         {
             return OrderSagas.Where(x => x.CurrentState == nameof(OrderStateMachine.OrderReceived))
+                .OrderBy(x => x.OrderDetails.CreationDate)
+                .Cast<IOrder>();
+        }
+
+        /// <inheritdoc/>
+        public IQueryable<IOrder> GetQueuedOrders()
+        {
+            return OrderSagas.Where(x => x.CurrentState == nameof(OrderStateMachine.OrderQueued))
                 .OrderBy(x => x.OrderDetails.CreationDate)
                 .Cast<IOrder>();
         }

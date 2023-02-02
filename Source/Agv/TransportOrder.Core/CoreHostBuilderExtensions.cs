@@ -43,6 +43,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                 services.AddTransient<IOrderRegistry, EfOrderRegistry>();
                 services.AddTransient<IMapRegistry, EfMapRegistry>();
                 services.AddTransient<IOrderAuditRegistry, EfOrderAuditRegistry>();
+                services.AddTransient<IActionRegistry, EfActionRegistry>();
                 services.AddTransient<IOrderHubContext>(provider =>
                 {
                     var hubContext = provider.GetRequiredService<IHubContext<OrderHub>>();
@@ -67,8 +68,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                 services.AddSingleton(_ => productionOptions);
 
                 services.AddSingleton<ActionManager>();
-                services.AddSingleton<AgvChargingService>();
-                services.AddTransient<IActionRegistry, EfActionRegistry>();
+                
                 services.AddHostedService<ActionManagerBackgroundService>();
 
                 services.AddDbContextFactory<SagaPersistenceDbContext>(builder =>
@@ -92,8 +92,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                             .AddPersistence<AgvSaga, SagaPersistenceDbContext>();
                         x.AddSagaStateMachine<ActionStateMachine, ActionSaga>()
                             .AddPersistence<ActionSaga, SagaPersistenceDbContext>();
-
-                        x.AddTransient<AssignAgvConsumer>();
+                        
                         x.AddConsumer<AssignAgvConsumer>();
                         x.AddConsumer<ActionManager>();
                         x.AddConsumer<AgvChargingService>();
@@ -104,12 +103,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                         x.AddConsumer<AgvInitializer>();
                         x.AddConsumer<GetMapImageRequestHandler>();
                         x.AddConsumer<GetMapListRequestHandler>();
-
+                        
                         x.AddRequestClient<ReserveAgv>();
                         x.AddRequestClient<AssignAgv>();
                         x.AddRequestClient<GetMapImageRequest>();
                         x.AddRequestClient<GetMapListRequest>();
-
+                        
                         x.AddDelayedMessageScheduler();
                     }, rabbitMqConfiguration: (_, cfg) =>
                     {

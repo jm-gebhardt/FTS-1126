@@ -19,6 +19,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         public int CountUnassigned { get; }
 
         /// <summary>
+        /// Get count of queued orders in the registry
+        /// </summary>
+        public int CountQueued { get; }
+
+        /// <summary>
         /// Get list of all orders
         /// </summary>
         public IQueryable<IOrder> GetAllOrders();
@@ -27,6 +32,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         /// Get list of all open orders
         /// </summary>
         public IQueryable<IOrder> GetUnassignedOrders();
+
+        /// <summary>
+        /// Get list of all queued orders
+        /// </summary>
+        public IQueryable<IOrder> GetQueuedOrders();
 
         /// <summary>
         /// Get specific order

@@ -20,7 +20,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
     public class AgvChargingServiceTest
     {
         #region Setup
-        private MassTransitTestFixture<AgvChargingService> GetTestFixture(int batteryCharge)
+        private MassTransitTestFixture<AgvChargingService> GetTestFixture(int batteryCharge, int countQueuedOrders = 0)
         {
             var logger = new Mock<ILogger<AgvChargingService>>();
             Mock<IAgvRegistry> agvRegistry = AgvRegistryMock.GetAgvRegistry();
@@ -31,10 +31,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             var agv2 = agvRegistry.Object.GetAgv("AGV002".ToGuid()) as AgvSaga;
             agv2!.AgvStatus = null; // Test case for AGV without status
 
+            var orderRegistryMock = new Mock<IOrderRegistry>();
+            orderRegistryMock.SetupGet(s => s.CountQueued).Returns(countQueuedOrders);
+
             var fixture = new MassTransitTestFixture<AgvChargingService>(services =>
             {
                 services.AddTransient(_ => logger.Object);
                 services.AddTransient(_ => agvRegistry.Object);
+                services.AddTransient(_ => orderRegistryMock.Object);
             });
 
             return fixture;
@@ -134,13 +138,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         }
 
         [TestMethod]
-        public async Task Check_AGV_charged_enough_publish_AgvReady()
+        [DataRow(true, AgvChargingService.BatteryLevelGood, 1)]
+        [DataRow(true, AgvChargingService.BatteryLevelFull, 0)]
+        public async Task Check_AGV_charged_enough_publish_AgvReady(bool charging, int batteryCharge, int countQueuedOrders)
         {
             string agvId = "AGV001";
             var correlationId = agvId.ToGuid();
-            int batteryCharge = AgvChargingService.BatteryLevelGood;
-            bool charging = true; // charging
-            MassTransitTestFixture<AgvChargingService> fixture = GetTestFixture(batteryCharge);
+            MassTransitTestFixture<AgvChargingService> fixture = GetTestFixture(batteryCharge, countQueuedOrders);
 
             var agvStatus = new AgvStatus(correlationId, "", true, true, batteryCharge, charging, false);
             await fixture.TestHarness!.Bus.Publish(new AgvStatusReceived(correlationId, agvId, agvStatus));
@@ -148,7 +152,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             bool consumed = await fixture.ConsumerHarness!.Consumed.Any<AgvStatusReceived>(s => s.Context.Message.CorrelationId == correlationId);
             consumed.ShouldBeTrue();
 
-            bool published = await fixture.TestHarness.Published.Any<AgvReady>(s => s.Context.Message.CorrelationId == correlationId);
+            bool published = await fixture.TestHarness.Published.Any<AgvStoppedCharging>(s => s.Context.Message.CorrelationId == correlationId);
             published.ShouldBeTrue();
         }
 

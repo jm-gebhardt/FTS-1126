@@ -67,10 +67,10 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
         /// </summary>
         public State BusyMovingToDestination { get; private set; } = default!;
         #endregion
-
+        
         #region Events
         /// <summary>
-        /// 
+        /// StartActionCommand was received
         /// </summary>
         public Event<StartActionCommand> StartActionEvent { get; private set; } = default!;
 
@@ -154,7 +154,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
             During(Idle, SetStartActionHandler());
             During(BusyMovingToSource, SetPickOrderHandler());
             During(BusyMovingToDestination, SetFinishOrderHandler());
-
+            
             DuringAny(SetSendAgvStatusHandler());
             DuringAny(SetRequestAgvGraphHandler());
             DuringAny(SetRequestAgvDataHandler());

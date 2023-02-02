@@ -465,8 +465,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         private EventActivityBinder<AgvSaga, AgvStoppedCharging> AgvStoppedChargingReceivedHandler() =>
             When(AgvStoppedChargingEvent)
                 .TransitionTo(Idle)
-                .Then(c => _logger.LogInformation("{AgvId} / {CorrelationId} reloaded its battery level to {batteryLevel}% => Transitioned to {State}",
-                    c.Saga.AgvId, c.Saga.CorrelationId, c.Saga.AgvStatus!.BatteryCharge, nameof(Idle)));
+                .Then(c => _logger.LogInformation("{AgvId} / {CorrelationId} reloaded its battery level to {batteryLevel}%",
+                    c.Saga.AgvId, c.Saga.CorrelationId, c.Saga.AgvStatus!.BatteryCharge))
+                .ThenAsync(c => PublishAgvBecameIdle(c.Saga, c));
         #endregion
     }
 }

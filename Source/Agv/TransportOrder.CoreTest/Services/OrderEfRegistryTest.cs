@@ -130,5 +130,28 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
 
             orderRegistry.GetOrder(Guid.Empty).ShouldBeNull();
         }
+
+        [TestMethod]
+        public void OneQueuedOrder_inserted_into_OrderRegistry()
+        {
+            // Arrange
+            var fixture = new EfOrderRegistryTestFixture();
+            var order = new OrderDetails(_orders[0].ToGuid(), _orders[0], _sources[0], _destinations[0], _leNo[0], HostOrderCreator.Simulation);
+            var orderSaga = new OrderSaga(_orders[0].ToGuid(), order, nameof(OrderStateMachine.OrderQueued), Guid.NewGuid());
+
+            // Act
+            fixture.Add(orderSaga);
+
+            // Assert
+            fixture.Registry.Count.ShouldBe(1);
+            fixture.Registry.CountQueued.ShouldBe(1);
+
+            var firstOrder = fixture.Registry.GetQueuedOrders().First();
+            firstOrder.CorrelationId.ShouldBe(orderSaga.CorrelationId);
+            firstOrder.CurrentState.ShouldBe(orderSaga.CurrentState);
+            firstOrder.OrderDetails.Destination.ShouldBe(orderSaga.OrderDetails.Destination);
+            firstOrder.OrderDetails.Source.ShouldBe(orderSaga.OrderDetails.Source);
+            firstOrder.OrderDetails.LeNo.ShouldBe(orderSaga.OrderDetails.LeNo);
+        }
     }
 }

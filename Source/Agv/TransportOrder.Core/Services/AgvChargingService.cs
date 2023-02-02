@@ -8,6 +8,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
     /// <summary>
     /// Class for checking the battery level of an AGV
     /// </summary>
+    [JetBrains.Annotations.PublicAPI]
     public class AgvChargingService :
         IConsumer<AgvBecameIdle>,
         IConsumer<AgvStatusReceived>
@@ -21,18 +22,24 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         /// <summary>Good battery level</summary>
         public const int BatteryLevelGood = 80;
 
+        /// <summary>Full battery level</summary>
+        public const int BatteryLevelFull = 100;
+
         private readonly ILogger<AgvChargingService> _logger;
         private readonly IAgvRegistry _agvRegistry;
+        private readonly IOrderRegistry _orderRegistry;
 
         /// <summary>
         /// Create a new instance of <see cref="AgvChargingService"/>
         /// </summary>
         /// <param name="logger"></param>
         /// <param name="agvRegistry"></param>
-        public AgvChargingService(ILogger<AgvChargingService> logger, IAgvRegistry agvRegistry)
+        /// <param name="orderRegistry"></param>
+        public AgvChargingService(ILogger<AgvChargingService> logger, IAgvRegistry agvRegistry, IOrderRegistry orderRegistry)
         {
             _logger = logger;
             _agvRegistry = agvRegistry;
+            _orderRegistry=orderRegistry;
         }
 
         /// <summary>
@@ -97,11 +104,19 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         /// <param name="endpoint">MassTransit endpoint for publishing a message</param>
         private async Task CheckAgvChargingCompleted(AgvStatus agvStatus, IPublishEndpoint endpoint)
         {
+            int cntQueuedOrder = _orderRegistry.CountQueued;
+
             // ReSharper disable once MergeIntoPattern
-            if (agvStatus.Charging && agvStatus.BatteryCharge >= BatteryLevelGood)
+            if (agvStatus.Charging && agvStatus.BatteryCharge >= BatteryLevelGood && cntQueuedOrder > 0)
             {
                 _logger.LogInformation("Agv with correlationId {CorrelationId} reached good battery level ({BatteryCharge}%)", agvStatus.CorrelationId, agvStatus.BatteryCharge);
-                await endpoint.Publish(new AgvReady(agvStatus.CorrelationId));
+                await endpoint.Publish(new AgvStoppedCharging(agvStatus.CorrelationId));
+            }
+            // ReSharper disable once MergeIntoPattern
+            else if (agvStatus.Charging && agvStatus.BatteryCharge >= BatteryLevelFull)
+            {
+                _logger.LogInformation("Agv with correlationId {CorrelationId} reached full battery level ({BatteryCharge}%)", agvStatus.CorrelationId, agvStatus.BatteryCharge);
+                await endpoint.Publish(new AgvStoppedCharging(agvStatus.CorrelationId));
             }
         }
     }
