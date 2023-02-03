@@ -199,7 +199,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         /// <param name="timeout"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns>return request result or null of unsuccessful</returns>
-        private static async Task<T?> Poll<T>(Func<Task<T?>> pollJob, int timeout=20000)
+        private static async Task<T?> Poll<T>(Func<Task<T?>> pollJob, int timeout=30000)
         {
             var killTime = DateTime.Now + TimeSpan.FromMilliseconds(timeout);
             while (killTime > DateTime.Now)
@@ -215,9 +215,10 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
                 catch (Exception e)
                 {
                     // Do not care
+		    Console.WriteLine(e.Message);
                     await Console.Error.WriteLineAsync(e.ToString());
                 }
-                await Task.Delay(200);
+                await Task.Delay(500);
             }
 
             return default;

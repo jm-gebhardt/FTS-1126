@@ -37,7 +37,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.States
         /// <summary>
         /// The assigned Agv
         /// </summary>
-        public Guid AssignedAgv { get; set; }
+        public Guid? AssignedAgv { get; set; }
 
         /// <summary>
         /// The Id of the assigned Agv

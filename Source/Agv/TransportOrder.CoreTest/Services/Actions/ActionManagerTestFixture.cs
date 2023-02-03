@@ -1,6 +1,6 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages;
+﻿//ReSharper disable all
+using Gebhardt.StoreWare.Agv.Common.Messages;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
-using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Requests;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
@@ -20,8 +20,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Actions;
 public class ActionManagerTestFixture : MassTransitTestFixture<ActionManager>, IActionManagerTestFixtureBuilder
 {
     private readonly List<Action<IBusRegistrationConfigurator>> _busRegistrationConfigurators = new();
+    /*
     private readonly Mock<IAgvRegistry> _mockAgvRegistry;
     private Mock<IActionRegistry>? _pendingActionsRegistry;
+    */
 
     private static string[] Orders => AgvRegistryMock.Orders;
 
@@ -47,11 +49,14 @@ public class ActionManagerTestFixture : MassTransitTestFixture<ActionManager>, I
         return orderDetails.ToArray();
     }
 
+    /*
     [UsedImplicitly]
     public List<IAgv> Agvs => _mockAgvRegistry.Object.GetAllAgvs().ToList();
+    */
 
     public ActionManager ActionManager { get; private set; } = default!;
 
+    /*
     /// <summary>
     /// You must call Build() after constructing an instance!
     /// </summary>
@@ -80,24 +85,31 @@ public class ActionManagerTestFixture : MassTransitTestFixture<ActionManager>, I
             mockAgvRegistry.Setup(s => s.Count).Returns(1);
         }
     }
+    */
 
+    /*
     private static Mock<IActionRegistry> GetActionRegistry()
     {
         var registry = new Mock<IActionRegistry>();
 
         return registry;
     }
+    */
 
+    /*
     private void SetActionRegistry(Mock<IActionRegistry> actionRegistry)
     {
         _pendingActionsRegistry = actionRegistry;
     }
+    */
 
+    /*
     public ActionManagerTestFixture PendingActionsRegistryMock(Action<Mock<IActionRegistry>> actionRegistry)
     {
         actionRegistry(_pendingActionsRegistry!);
         return this;
     }
+    */
 
     public IActionManagerTestFixtureBuilder UseAssignAgvConsumer()
     {
@@ -109,6 +121,7 @@ public class ActionManagerTestFixture : MassTransitTestFixture<ActionManager>, I
         return this;
     }
 
+    /*
     public IActionManagerTestFixtureBuilder SetActionCreationSucceededEventResponse(ActionCreationSucceededEvent actionCreationSucceededEvent)
     {
         SetupBusRegistrationConfigurator(x =>
@@ -119,6 +132,7 @@ public class ActionManagerTestFixture : MassTransitTestFixture<ActionManager>, I
 
         return this;
     }
+    */
 
     public IActionManagerTestFixtureBuilder SetAgvAssignmentResponse(AgvAssignmentSucceeded agvAssignmentSucceeded)
     {
@@ -150,11 +164,13 @@ public class ActionManagerTestFixture : MassTransitTestFixture<ActionManager>, I
         return this;
     }
 
+    /*
     protected override void ConfigureServices(IServiceCollection collection)
     {
         collection.AddTransient(_ => _mockAgvRegistry.Object);
         collection.AddTransient(_ => _pendingActionsRegistry!.Object);
     }
+    */
 
     public IActionManagerTestFixtureBuilder SetupBusRegistrationConfigurator(Action<IBusRegistrationConfigurator> busRegistrationConfigurator)
     {

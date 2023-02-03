@@ -3,6 +3,7 @@ using Gebhardt.StoreWare.Agv.Common;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.CmdOptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Db;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -43,8 +44,11 @@ try
         using (var scope = host.Services.CreateScope())
         {
             // Apply migrations if SagaPersistenceDbContext is available
-            var db = scope.ServiceProvider.GetService<SagaPersistenceDbContext>();
-            db?.Database.Migrate();
+            var db1 = scope.ServiceProvider.GetRequiredService<SagaPersistenceDbContext>();
+            db1.Database.Migrate();
+
+            var db2 = scope.ServiceProvider.GetRequiredService<TransportOrderDbContext>();
+            db2.Database.Migrate();
         }
 
         host.Run();

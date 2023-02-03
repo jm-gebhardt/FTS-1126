@@ -33,6 +33,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
 
         private readonly IMapRegistry _mapRegistry;
 
+        #region Settings
         private readonly ProductionOptions _productionOptions;
 
         /// <summary>
@@ -55,6 +56,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         /// Timeout value [ms] to set AGV offline while it is in busy mode
         /// </summary>
         private readonly int _agvOfflineTimeoutMsWhileBusy = 20000;
+        #endregion
 
         #region Message handlers
         /// <summary>
@@ -86,7 +88,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         /// Busy.
         /// </summary>
         public State Busy { get; private set; } = default!;
-
 
         /// <summary>
         /// PendingLock.
@@ -213,7 +214,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
             During(Reserved, Busy, PendingLockAgvHandler());
             During(Reserved, Idle, AgvStartedChargingReceivedHandler());
             During(Charging, AgvStoppedChargingReceivedHandler());
-            During(Reserved, ActionStartedEventHandler());
+            During(Reserved, Busy, ActionStartedEventHandler());
 
             DuringAny(AgvInitializeMessageHandler());
             DuringAny(AgvStatusReceivedHandler());
@@ -310,7 +311,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
             .TransitionTo(Busy)
             .Then(c =>
             {
-                _logger.LogDebug("Agv {AgvId}/{CorrelationId} went to busy state, because action was started", c.Saga.AgvId, c.Saga.CorrelationId);
+                _logger.LogDebug("Agv {AgvId}/{CorrelationId} went to busy state, because action has been started", c.Saga.AgvId, c.Saga.CorrelationId);
             });
         #endregion
 
@@ -330,8 +331,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         /// </summary>
         private EventActivityBinder<AgvSaga, AgvStatusReceived> AgvStatusReceivedHandler() =>
             When(AgvStatusReceivedEvent)
-                .Then(c =>
-                    _logger.LogDebug("{MessageType} {AgvId} / {CorrelationId}, AGV is alive", nameof(AgvStatusReceived), c.Message.AgvId, c.Saga.CorrelationId))
+                .IfElse(cond => !cond.Saga.Alive,
+                    t => t.Then(c => _logger.LogDebug("{MessageType} {AgvId} / {CorrelationId}, AGV is alive", nameof(AgvStatusReceived), c.Message.AgvId, c.Saga.CorrelationId)),
+                    e => e.Then(c => _logger.LogTrace("{MessageType} {AgvId} / {CorrelationId}, AGV is alive", nameof(AgvStatusReceived), c.Message.AgvId, c.Saga.CorrelationId)))
                 .Then(c => UpdateAgvAgvStatus(c.Saga, c.Message.AgvStatus, true, c))
                 // When AgvData missing repeat request all x seconds
                 .If(cond => cond.Saga.AgvData == null && cond.Saga.GetTimeSpanSinceLastRequest_AgvData().TotalSeconds > AgvRequestTimeoutS,

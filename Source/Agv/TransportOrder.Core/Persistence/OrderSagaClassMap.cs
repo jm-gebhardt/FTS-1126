@@ -10,12 +10,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence
     /// <summary>
     /// <see cref="OrderSaga"/> Entity Framework Mapping
     /// </summary>
+    [JetBrains.Annotations.PublicAPI]
     public class OrderSagaClassMap : SagaClassMap<OrderSaga>
     {
         private const string OrderSagaTableName = "OrderSaga";
         private const string OrderTableName = "OrderSaga_OrderDetails";
+        private const string OrderActionName = "OrderSaga_OrderActions";
         private const int CurrentStateMaxLength = 64;
-        
+
         /// <summary>
         /// <see cref="OrderSaga" /> entity configurations 
         /// </summary>
@@ -29,14 +31,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence
 
             // Restrict CurrentState length
             entity.Property(x => x.CurrentState).HasMaxLength(CurrentStateMaxLength);
-            
+
             // Specify Primary Keys
             entity.HasKey(x => x.CorrelationId);
             model.Entity<OrderDetails>().HasKey(o => o.CorrelationId);
-            
+
             entity.Property(x => x.AssignedAgv);
-            
-            // Specify One-to-One relationship between OrderSaga and Order
+
+            // Specify One-to-One relationship between OrderSaga and OrderDetail
             entity.HasOne(x => x.OrderDetails)
                 .WithOne()
                 .HasForeignKey<OrderDetails>(x => x.CorrelationId)

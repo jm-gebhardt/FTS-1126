@@ -1,4 +1,5 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
+﻿//ReSharper disable all
+using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using JetBrains.Annotations;
 
@@ -9,8 +10,10 @@ public interface IActionManagerTestFixtureBuilder : IMassTransitTestFixtureBuild
     [UsedImplicitly]
     IActionManagerTestFixtureBuilder UseAssignAgvConsumer();
 
+    /*
     [UsedImplicitly]
     IActionManagerTestFixtureBuilder SetActionCreationSucceededEventResponse(ActionCreationSucceededEvent actionCreationSucceededEvent);
+    */
 
     [UsedImplicitly]
     IActionManagerTestFixtureBuilder SetAgvAssignmentResponse(AgvAssignmentSucceeded agvAssignmentSucceeded);

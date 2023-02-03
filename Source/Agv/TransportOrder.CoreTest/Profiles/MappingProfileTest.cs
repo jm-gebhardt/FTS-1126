@@ -159,8 +159,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Profiles
             var orderSaga = new OrderSaga(
                 orderId.ToGuid(),
                 new OrderDetails(orderId.ToGuid(), orderId, "S1", "D1", "1234", HostOrderCreator.Simulation),
-                "TransportOrderSend",
-                null
+                                 nameof(Core.Services.OrderStateMachine.TransportOrderSent),
+                                 null
             );
 
             var mapper = GetMapper();

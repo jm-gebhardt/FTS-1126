@@ -1,10 +1,10 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Events;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Messages;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.States;
 using MassTransit;
 using Microsoft.Extensions.Logging;
@@ -33,7 +33,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         /// <summary>
         /// State when the pick action has been assigned to an Agv
         /// </summary>
-        public State TransportOrderSend { get; private set; } = default!;
+        public State TransportOrderSent { get; private set; } = default!;
 
         /// <summary>
         /// State when pick action has been started by an Agv
@@ -68,9 +68,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         public Event<OrderQueuedEvent> OrderQueuedEvent { get; private set; } = default!;
 
         /// <summary>
-        /// AgvAssignmentSucceeded was received
+        /// OrderAssignmentSucceeded was received
         /// </summary>
-        public Event<AgvAssignmentSucceeded> AgvAssignSucceededEvent { get; private set; } = default!;
+        public Event<OrderAssignmentSucceeded> OrderAssignmentSucceededEvent { get; private set; } = default!;
 
         /// <summary>
         /// TransportOrderCompleted was received. This is a final event
@@ -124,12 +124,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
 
             Initially(SetHandleHostOrderHandler());
             During(OrderReceived, SetOrderQueuedEventHandler());
-            During(OrderQueued, SetAgvAssignSucceededHandler());
-            During(TransportOrderSend, SetTransportOrderStartedHandler());
+            During(OrderQueued, SetOrderAssignmentSucceededHandler());
+            During(TransportOrderSent, SetTransportOrderStartedHandler());
             During(TransportOrderStarted, SetTransportOrderPickCompletedHandler());
-            During(TransportOrderPicked, SetTransportOrderCompletedHandler());
+            During(TransportOrderPicked, TransportOrderStarted, SetTransportOrderCompletedHandler());
 
-            During(TransportOrderSend, TransportOrderPicked, SetTransportOrderFailedHandler());
+            During(TransportOrderSent, TransportOrderPicked, SetTransportOrderFailedHandler());
 
             DuringAny(SetCancelHostOrderHandler());
             During(Final, SetCancelHostOrderHandler());
@@ -186,14 +186,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
                 .TransitionTo(OrderReceived)
                 .Publish(OrderQueuingCommand);
 
-        private EventActivityBinder<OrderSaga, AgvAssignmentSucceeded> SetAgvAssignSucceededHandler() =>
-            When(AgvAssignSucceededEvent)
+        private EventActivityBinder<OrderSaga, OrderAssignmentSucceeded> SetOrderAssignmentSucceededHandler() =>
+            When(OrderAssignmentSucceededEvent)
                 .Then(c =>
                     _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId} to AGV {AssignedAgvId}",
-                        nameof(AgvAssignmentSucceeded), c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId, c.Message.AgvId)
+                        nameof(OrderAssignmentSucceeded), c.Saga.OrderDetails.OrderId, c.Saga.CorrelationId, c.Message.AgvId)
                 )
                 .Then(UpdateSagaState)
-                .TransitionTo(TransportOrderSend);
+                .TransitionTo(TransportOrderSent);
 
         private EventActivityBinder<OrderSaga, TransportOrderFailed> SetTransportOrderFailedHandler() =>
             When(TransportOrderFailedEvent)
@@ -258,7 +258,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         #endregion
 
         #region Actions
-        private void UpdateSagaState(BehaviorContext<OrderSaga, AgvAssignmentSucceeded> context)
+        private void UpdateSagaState(BehaviorContext<OrderSaga, OrderAssignmentSucceeded> context)
         {
             context.Saga.AssignedAgv = context.Message.AgvCorrelationId;
             context.Saga.AssignedAgvId = context.Message.AgvId;

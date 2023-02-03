@@ -46,10 +46,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         /// <param name="context"></param>
         public async Task Consume(ConsumeContext<AssignAgv> context)
         {
-            _logger.LogInformation("Order {OrderId} / {CorrelationId} requests assignment to an AGV", context.Message.Order.OrderId, context.Message.Order.CorrelationId);
-            
-            KeyValuePair<IAgv, IGraphAlgorithm.Route>? assignAgvAndRoute = await AssignIdleAgv<AStar>(context.Message.Order, context.CancellationToken);
-            if (assignAgvAndRoute == null)
+            _logger.LogInformation("Request {MessageType} received for order {OrderId} / {CorrelationId}",
+                nameof(AssignAgv), context.Message.Order.OrderId, context.Message.Order.CorrelationId);
+
+            KeyValuePair<IAgv, IGraphAlgorithm.Route>? assignedAgvAndRoute = await AssignIdleAgv<AStar>(context.Message.Order, context.CancellationToken);
+            if (assignedAgvAndRoute == null)
             {
                 var error = CheckRouteExists<AStar>(context.Message.Order) ? AgvAssignmentFailed.ErrorCode.NoIdleAgv : AgvAssignmentFailed.ErrorCode.NoRouteFound;
 
@@ -58,13 +59,17 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
                     error = AgvAssignmentFailed.ErrorCode.AgvRegistryEmpty;
                 }
 
+                _logger.LogDebug("{MessageType} for order {OrderId} / {CorrelationId}",
+                    nameof(AssignAgv), context.Message.Order.OrderId, context.Message.Order.CorrelationId);
                 await context.RespondAsync(new AgvAssignmentFailed(context.Message.CorrelationId, error));
             }
             else
             {
-                var agv = assignAgvAndRoute.Value.Key;
-                var route = assignAgvAndRoute.Value.Value;
+                var agv = assignedAgvAndRoute.Value.Key;
+                var route = assignedAgvAndRoute.Value.Value;
 
+                _logger.LogDebug("{MessageType} for order {OrderId} / {CorrelationId} using AGV {AgvId}",
+                    nameof(AssignAgv), context.Message.Order.OrderId, context.Message.Order.CorrelationId, agv.AgvId);
                 await context.RespondAsync(new AgvAssignmentSucceeded(
                     context.Message.CorrelationId,
                     agv.AgvId,
@@ -76,7 +81,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
 
         /// <summary>
         /// Try to assign the order to an AGV, the assigned AGV will be reserved
-        /// </summary>
+        /// </summary><remarks>
+        /// Takes the complete order into account because the AGV needs to be able to travel
+        /// the complete route independent of the number of actions this order consists of.
+        /// </remarks>
         /// <param name="order"></param>
         /// <param name="cancellationToken"></param>
         /// <typeparam name="TGraphAlgorithm"></typeparam>
@@ -98,7 +106,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
 
                 if (chosenAgv == null)
                 {
-                    _logger.LogInformation("Could not find any AGV to handle {OrderId}", order.OrderId);
+                    _logger.LogInformation("Could not find any AGV to handle {OrderId} / {CorrelationId}",
+                        order.OrderId, order.CorrelationId);
                     break;
                 }
 

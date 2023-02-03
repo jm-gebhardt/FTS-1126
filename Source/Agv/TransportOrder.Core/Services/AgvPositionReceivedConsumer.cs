@@ -36,7 +36,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         /// <returns></returns>
         public Task Consume(ConsumeContext<AgvPositionReceived> context)
         {
-            _logger.LogDebug("{MessageType} {AgvId} / {CorrelationId} received", nameof(AgvPositionReceived), context.Message.AgvId, context.Message.CorrelationId);
+            _logger.LogTrace("{MessageType} {AgvId} / {CorrelationId} received", nameof(AgvPositionReceived), context.Message.AgvId, context.Message.CorrelationId);
 
             var agvPositionStatus = _mapper.Map<AgvPositionStatus>(context.Message);
 

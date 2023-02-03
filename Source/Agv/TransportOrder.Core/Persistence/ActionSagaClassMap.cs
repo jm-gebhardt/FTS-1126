@@ -8,6 +8,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence
     /// <summary>
     /// <see cref="ActionSagaClassMap"/> Entity Framework Mapping
     /// </summary>
+    [JetBrains.Annotations.PublicAPI]
     public class ActionSagaClassMap : SagaClassMap<ActionSaga>
     {
         private const string MapTableName = "Action";

@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
+using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.Common.Services.Detectors;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.CmdOptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Handlers.Queries;
@@ -12,6 +13,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Routing;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.States;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Db;
 using MassTransit;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
@@ -43,7 +45,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                 services.AddTransient<IOrderRegistry, EfOrderRegistry>();
                 services.AddTransient<IMapRegistry, EfMapRegistry>();
                 services.AddTransient<IOrderAuditRegistry, EfOrderAuditRegistry>();
-                services.AddTransient<IActionRegistry, EfActionRegistry>();
                 services.AddTransient<IOrderHubContext>(provider =>
                 {
                     var hubContext = provider.GetRequiredService<IHubContext<OrderHub>>();
@@ -67,10 +68,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                 services.AddSingleton<IRoutingPlausibilityChecker, NoCheckPlausibilityChecker>();
                 services.AddSingleton(_ => productionOptions);
 
+                services.AddSingleton<MassTransitBusEventConsumer>();
                 services.AddSingleton<ActionManager>();
                 
                 services.AddHostedService<ActionManagerBackgroundService>();
 
+                services.AddDbContextFactory<TransportOrderDbContext>(builder =>
+                {
+                    builder.UseSqlServer(context.Configuration.GetConnectionString(TransportOrderDbContext.ConfigSectionName));
+                });
                 services.AddDbContextFactory<SagaPersistenceDbContext>(builder =>
                 {
                     builder.UseSqlServer(context.Configuration.GetConnectionString(SagaPersistenceDbContext.ConfigSectionName), m =>
@@ -90,10 +96,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                             .AddPersistence<OrderSaga, SagaPersistenceDbContext>();
                         x.AddSagaStateMachine<AgvStateMachine, AgvSaga>()
                             .AddPersistence<AgvSaga, SagaPersistenceDbContext>();
-                        x.AddSagaStateMachine<ActionStateMachine, ActionSaga>()
-                            .AddPersistence<ActionSaga, SagaPersistenceDbContext>();
-                        
+
                         x.AddConsumer<AssignAgvConsumer>();
+                        x.AddConsumer<MassTransitBusEventConsumer>();
                         x.AddConsumer<ActionManager>();
                         x.AddConsumer<AgvChargingService>();
                         x.AddConsumer<TransportOrderChangedConsumer>();
@@ -113,7 +118,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                     }, rabbitMqConfiguration: (_, cfg) =>
                     {
                         cfg.UseDelayedMessageScheduler();
-                        cfg.ConnectBusObserver(new Gebhardt.StoreWare.Agv.Common.Services.BusObserver());
+                        cfg.ConnectBusObserver(new BusObserver());
                     });
                 }
                 catch (InvalidOperationException e)

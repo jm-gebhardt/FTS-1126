@@ -112,7 +112,8 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest
                 }
 
                 response["OrderId"] = request["orderId"];
-                
+
+                // Pick
                 response["OrderEventType"] = OrderEventType.Started.ToString();
                 await _mqttClient.Publish(MqttClient.Topic.OrderEvent, response.ToString());
                 await Task.Delay(1000);

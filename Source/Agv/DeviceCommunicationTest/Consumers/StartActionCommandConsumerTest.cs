@@ -1,6 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Extensions;
-using Gebhardt.StoreWare.Agv.Common.Messages;
 using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Commands;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
@@ -25,7 +24,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
     public class StartActionCommandConsumerTest
     {
         /// <summary>
-        /// Test consuming a ExecuteOrder message and publish an MqttOrder Mqtt message with proper bus configuration
+        /// Test consuming an ExecuteOrder message and publish an MqttOrder Mqtt message with proper bus configuration
         /// </summary>
         /// <returns></returns>
         [TestMethod]
@@ -37,21 +36,15 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
             var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
             using (fixture.TestHarness.Bus.ConnectPublishObserver(publishObserver))
             {
-                const string orderId = "1234";
-                var correlationId = orderId.ToGuid();
+                var actionCorrelationId = Guid.NewGuid();
                 const string agvId = "agv0";
-                var agv = agvId.ToGuid();
+                const string orderId = "1234";
+                var orderCorrelationId = orderId.ToGuid();
                 const string fromStationId = "Pick1";
                 const string toStationId = "Drop5";
-                const string leNo = "na";
 
-                var orderDetails = new OrderDetails(correlationId, orderId, fromStationId, toStationId, leNo, HostOrderCreator.Simulation);
-                var message = new StartActionCommand(agv,
-                    agvId,
-                    new AgvAction(orderDetails.CorrelationId,
-                        ActionType.Transport,
-                        orderDetails)
-                );
+                var action = new AgvAction(actionCorrelationId, agvId, ActionType.Pick, orderId, orderCorrelationId, fromStationId, toStationId);
+                var message = new StartActionCommand(Guid.NewGuid(), action);
 
                 // Publish ExecuteTransportOrder
                 await fixture.TestHarness.Bus.Publish(message);
@@ -64,13 +57,15 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
 
                 // Get consumed message
                 IReceivedMessage<StartActionCommand> consumedMessage = consumerHarness.Consumed.Select<StartActionCommand>().First();
-                orderDetails = consumedMessage.Context.Message.Action.OrderDetails;
+                action = consumedMessage.Context.Message.Action;
 
                 // Check consumed message
-                consumedMessage.Context.Message.CorrelationId.ShouldBe(agv);
-                consumedMessage.Context.Message.AgvId.ShouldBe(agvId);
-                orderDetails.OrderId.ShouldBe(orderId);
-                orderDetails.Source.ShouldBe(fromStationId);
+                action.CorrelationId.ShouldBe(actionCorrelationId);
+                action.AgvId.ShouldBe(agvId);
+                action.OrderId.ShouldBe(orderId);
+                action.OrderCorrelationId.ShouldBe(orderCorrelationId);
+                action.Source.ShouldBe(fromStationId);
+                action.Destination.ShouldBe(toStationId);
 
                 // Get published MqttOrder Mqtt message
                 IPublishedMessage<MqttOrder> publishedMessage = publishObserver.Messages.Select<MqttOrder>().First();
@@ -84,9 +79,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
                 var mqttMessage = publishedMessage.Context.Message;
 
                 mqttMessage.SerialNumber.ShouldBe(agvId);
-                mqttMessage.Stations?.FromStationIdentifier.ShouldBe(fromStationId);
-                mqttMessage.Stations?.ToStationIdentifier.ShouldBe(toStationId);
-                mqttMessage.OrderType.ShouldBe(OrderType.Transport);
+                // For pick action Karis expects destination as source ...
+                mqttMessage.Stations?.FromStationIdentifier.ShouldBe(toStationId);
+                // ... and empty destination.
+                mqttMessage.Stations?.ToStationIdentifier.ShouldBe(string.Empty);
+                mqttMessage.OrderType.ShouldBe(OrderType.Pick);
                 mqttMessage.RecordType.ShouldBe(OrderRecordType.Order);
             }
         }

@@ -116,31 +116,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Migrations
                     b.ToTable("Map", (string)null);
                 });
 
-            modelBuilder.Entity("Gebhardt.StoreWare.Agv.TransportOrder.Core.States.ActionSaga", b =>
-                {
-                    b.Property<Guid>("CorrelationId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Action")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("AssignedAgv")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("AssignedAgvId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CurrentState")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("nvarchar(64)");
-
-                    b.HasKey("CorrelationId");
-
-                    b.ToTable("Action", (string)null);
-                });
-
             modelBuilder.Entity("Gebhardt.StoreWare.Agv.TransportOrder.Core.States.AgvSaga", b =>
                 {
                     b.Property<Guid>("CorrelationId")
@@ -186,11 +161,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Migrations
                     b.Property<Guid>("CorrelationId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("AssignedAgvId")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<Guid?>("AssignedAgv")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AssignedAgvId")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CurrentState")
                         .IsRequired()

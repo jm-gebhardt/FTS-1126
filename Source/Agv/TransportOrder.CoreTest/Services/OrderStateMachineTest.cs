@@ -205,8 +205,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             orderEventObserver.Verify(s => s.PostExecute(It.IsAny<BehaviorContext<OrderSaga, TransportOrderCompleted>>()), Times.Once);
         }
 
-        [DataRow("TransportOrderSend")]
-        [DataRow("TransportOrderPicked")]
+        [DataRow(nameof(OrderStateMachine.TransportOrderSent))]
+        [DataRow(nameof(OrderStateMachine.TransportOrderPicked))]
         [TestMethod]
         public async Task When_TransportOrderFailed_HostOrderHandlingFailedPublished(string previousState)
         {
@@ -335,7 +335,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         /// Checks the outgoing FailedReason strings after consuming TransportOrderFailed
         /// </summary>
         [TestMethod]
-        [DataRow(nameof(OrderStateMachine.TransportOrderSend))]
+        [DataRow(nameof(OrderStateMachine.TransportOrderSent))]
         [DataRow(nameof(OrderStateMachine.TransportOrderPicked))]
         public async Task TransportOrderFailed_EnumElements_Corresponds_to_its_string(string prevStateWhichHandlesTransportOrderFailed)
         {
@@ -389,7 +389,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         [DataRow(nameof(OrderStateMachine.Initial), HostOrderCancelFailed.ErrorCode.OrderDoesNotExist)]
         [DataRow(nameof(OrderStateMachine.OrderFailed), HostOrderCancelFailed.ErrorCode.OrderAlreadyFailed)]
         [DataRow(nameof(OrderStateMachine.OrderQueued), HostOrderCancelFailed.ErrorCode.OrderAlreadyStarted)]
-        [DataRow(nameof(OrderStateMachine.TransportOrderSend), HostOrderCancelFailed.ErrorCode.OrderAlreadyStarted)]
+        [DataRow(nameof(OrderStateMachine.TransportOrderSent), HostOrderCancelFailed.ErrorCode.OrderAlreadyStarted)]
         [DataRow(nameof(OrderStateMachine.TransportOrderStarted), HostOrderCancelFailed.ErrorCode.OrderAlreadyStarted)]
         [DataRow(nameof(OrderStateMachine.TransportOrderPicked), HostOrderCancelFailed.ErrorCode.OrderAlreadyStarted)]
         [TestMethod]

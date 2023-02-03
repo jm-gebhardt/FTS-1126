@@ -10,7 +10,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions
     public sealed class SimulateOptions
     {
         /// <summary>
-        /// Response delay interval (seconds) in which the ExecuteTransportOrder is completed by sending TransportOrderCompleted
         /// Number of AGVs
         /// </summary>
         [JetBrains.Annotations.UsedImplicitly]
@@ -62,7 +61,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions
         public int NodeTravelTime { get; init; }
 
         /// <summary>
-        /// Node travel time of the agv in [ms]
+        /// Battery discharge rate [%/s]
         /// </summary>
         [JetBrains.Annotations.UsedImplicitly]
         // ReSharper disable once StringLiteralTypo
@@ -70,7 +69,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions
         public double BatteryDischargeRate { get; init; }
 
         /// <summary>
-        /// Node travel time of the agv in [ms]
+        /// Battery charge rate [%/s]
         /// </summary>
         [JetBrains.Annotations.UsedImplicitly]
         // ReSharper disable once StringLiteralTypo

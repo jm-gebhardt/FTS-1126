@@ -1,4 +1,3 @@
-using Gebhardt.StoreWare.Agv.Common.Messages;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
@@ -33,16 +32,10 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
         public record ScheduleStatusUpdate(Guid CorrelationId) : CorrelatedBy<Guid>;
 
         /// <summary>
-        /// Internal message to schedule pick up of the order
+        /// Internal message to schedule finishing the action
         /// </summary>
         /// <param name="CorrelationId"></param>
-        public record SchedulePickOrder(Guid CorrelationId) : CorrelatedBy<Guid>;
-
-        /// <summary>
-        /// Internal message to schedule finishing the order
-        /// </summary>
-        /// <param name="CorrelationId"></param>
-        public record ScheduleFinishOrder(Guid CorrelationId) : CorrelatedBy<Guid>;
+        public record ScheduleFinishAction(Guid CorrelationId) : CorrelatedBy<Guid>;
 
         /// <summary>
         /// Internal message to schedule signaling of position
@@ -58,21 +51,17 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
         public State Idle { get; private set; } = default!;
 
         /// <summary>
-        /// AGV is busy and is moving to source
+        /// AGV is busy and is moving
         /// </summary>
-        public State BusyMovingToSource { get; private set; } = default!;
+        public State BusyMoving { get; private set; } = default!;
 
-        /// <summary>
-        /// AGV is busy and is moving to destination
-        /// </summary>
-        public State BusyMovingToDestination { get; private set; } = default!;
         #endregion
-        
+
         #region Events
         /// <summary>
-        /// StartActionCommand was received
+        /// Action has been started
         /// </summary>
-        public Event<StartActionCommand> StartActionEvent { get; private set; } = default!;
+        public Event<StartActionCommand> StartActionCommandEvent { get; private set; } = default!;
 
         /// <summary>
         /// CreateAgv was received
@@ -97,19 +86,14 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
 
         #region Schedules
         /// <summary>
-        /// Status Schedule triggered
+        /// Status schedule triggered
         /// </summary>
         public Schedule<SimulatedAgvSaga, ScheduleStatusUpdate> StatusUpdateSchedule { get; private set; } = default!;
 
         /// <summary>
-        /// Finish Order Schedule triggered
+        /// Finish action schedule triggered
         /// </summary>
-        public Schedule<SimulatedAgvSaga, SchedulePickOrder> PickOrderSchedule { get; private set; } = default!;
-
-        /// <summary>
-        /// Finish Order Schedule triggered
-        /// </summary>
-        public Schedule<SimulatedAgvSaga, ScheduleFinishOrder> FinishOrderSchedule { get; private set; } = default!;
+        public Schedule<SimulatedAgvSaga, ScheduleFinishAction> FinishActionSchedule { get; private set; } = default!;
 
         /// <summary>
         /// Trigger for scheduled signalling of position.
@@ -152,9 +136,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
             Initially(SetInitialCreateAgvHandler());
 
             During(Idle, SetStartActionHandler());
-            During(BusyMovingToSource, SetPickOrderHandler());
-            During(BusyMovingToDestination, SetFinishOrderHandler());
-            
+            During(BusyMoving, SetFinishActionHandler());
+
             DuringAny(SetSendAgvStatusHandler());
             DuringAny(SetRequestAgvGraphHandler());
             DuringAny(SetRequestAgvDataHandler());
@@ -182,15 +165,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
                     configuration.Received = r => r.CorrelateById(context => context.Message.CorrelationId);
                 });
 
-            Schedule(() => PickOrderSchedule,
-                s => s.PickOrderTokenId,
-                configuration =>
-                {
-                    configuration.Received = r => r.CorrelateById(context => context.Message.CorrelationId);
-                });
-
-            Schedule(() => FinishOrderSchedule,
-                s => s.FinishOrderTokenId,
+            Schedule(() => FinishActionSchedule,
+                s => s.FinishActionTokenId,
                 configuration =>
                 {
                     configuration.Received = r => r.CorrelateById(context => context.Message.CorrelationId);
@@ -220,58 +196,47 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
                 .Schedule(SignalPositionSchedule, c => new ScheduleSignalPosition(c.Saga.CorrelationId), _ => TimeSpan.FromMilliseconds(SignalPositionIntervalMs));
 
         private EventActivityBinder<SimulatedAgvSaga, StartActionCommand> SetStartActionHandler() =>
-            When(StartActionEvent)
-                .Then(c => _logger.LogDebug("{MessageType} {AgvId} / {CorrelationId} received", nameof(StartActionCommand), c.Message.AgvId, c.Saga.CorrelationId))
+            When(StartActionCommandEvent)
+                .Then(c => _logger.LogDebug("{MessageType} {AgvId} / {CorrelationId} received", nameof(StartActionCommand), c.Message.Action.AgvId, c.Saga.CorrelationId))
                 .Then(Validate)
                 .Then(c =>
                 {
-                    c.Saga.CurrentAction = c.Message.Action;
-                    c.Saga.OrderDetails = c.Message.Action.OrderDetails;
-                    c.Saga.Nodes = c.Message.Action.Nodes;
-                    c.Saga.OrderStartDate = DateTime.UtcNow;
+                    c.Saga.Action = c.Message.Action;
+                    c.Saga.ActionStartDate = DateTime.UtcNow;
 
-                    _logger.LogInformation("AGV {AgvId} / {CorrelationId} started order {OrderId} / {OrderCorrelationId}. Order will be picked up at {OrderPickDate:HH:mm:ss.fff} and dropped at {OrderFinishDate:HH:mm:ss.fff}",
+                    _logger.LogInformation("AGV {AgvId} / {CorrelationId} started action {ActionType} for {OrderId} / {OrderCorrelationId}. Action will be finished at {ActionFinishDate:HH:mm:ss.fff}",
                         c.Saga.AgvId, c.Saga.CorrelationId,
-                        c.Message.Action.OrderDetails.OrderId, c.Message.Action.OrderDetails.CorrelationId, c.Saga.OrderPickDate, c.Saga.OrderFinishDate);
+                        c.Message.Action.ActionType, c.Message.Action.OrderId, c.Message.Action.OrderCorrelationId, c.Saga.ActionFinishDate);
                 })
-                .TransitionTo(BusyMovingToSource)
-                .Publish(c => new ActionStatusChangedEvent(c.Saga.CurrentAction!.CorrelationId, ActionStatusChangedType.Started))
+                .TransitionTo(BusyMoving)
+                .Publish(c => new ActionStatusChangedEvent(c.Saga.Action!.CorrelationId, ActionStatusChangedType.Started))
                 .ThenAsync(PublishStatus)
-                .Schedule(PickOrderSchedule,
-                    c => new SchedulePickOrder(c.Saga.CorrelationId),
-                    c => c.Saga.TimeToPick!.Value)
-                .Schedule(FinishOrderSchedule,
-                    c => new ScheduleFinishOrder(c.Saga.CorrelationId),
+                .Schedule(FinishActionSchedule,
+                    c => new ScheduleFinishAction(c.Saga.CorrelationId),
                     c => c.Saga.TimeToFinish!.Value)
                 .Schedule(SignalPositionSchedule,
                     c => new ScheduleSignalPosition(c.Saga.CorrelationId),
                     _ => TimeSpan.FromMilliseconds(SignalPositionIntervalMs));
 
-        private EventActivityBinder<SimulatedAgvSaga, SchedulePickOrder> SetPickOrderHandler() =>
-            When(PickOrderSchedule.Received)
-                .Then(c => _logger.LogDebug("{MessageType} {CorrelationId} received", nameof(SchedulePickOrder), c.Saga.CorrelationId))
-                .TransitionTo(BusyMovingToDestination)
-                .Publish(c => new ActionStatusChangedEvent(c.Saga.CurrentAction!.CorrelationId, ActionStatusChangedType.Picked))
-                .ThenAsync(PublishStatus);
-
-        private EventActivityBinder<SimulatedAgvSaga, ScheduleFinishOrder> SetFinishOrderHandler() =>
-            When(FinishOrderSchedule.Received)
-                .Then(c => _logger.LogDebug("{MessageType} {CorrelationId} received", nameof(ScheduleFinishOrder), c.Saga.CorrelationId))
-                .ThenAsync(FinishOrder)
+        private EventActivityBinder<SimulatedAgvSaga, ScheduleFinishAction> SetFinishActionHandler() =>
+            When(FinishActionSchedule.Received)
+                .Then(c => _logger.LogDebug("{MessageType} {CorrelationId} received", nameof(ScheduleFinishAction), c.Saga.CorrelationId))
+                .Then(FinishAction)
                 .TransitionTo(Idle)
-                .ThenAsync(PublishStatus);
+                .ThenAsync(PublishStatus)
+                .ThenAsync(PublishPosition);
         #endregion
 
         #region Message handlers
         private EventActivityBinder<SimulatedAgvSaga, ScheduleStatusUpdate> SetSendAgvStatusHandler() =>
             When(StatusUpdateSchedule.Received)
-                .Then(c => _logger.LogDebug("{MessageType} {CorrelationId} received", nameof(ScheduleStatusUpdate), c.Saga.CorrelationId))
+                .Then(c => _logger.LogTrace("{MessageType} {CorrelationId} received", nameof(ScheduleStatusUpdate), c.Saga.CorrelationId))
                 .ThenAsync(PublishStatus)
                 .Schedule(StatusUpdateSchedule, c => new ScheduleStatusUpdate(c.Saga.CorrelationId));
 
         private EventActivityBinder<SimulatedAgvSaga, ScheduleSignalPosition> SetSignalPositionHandler() =>
             When(SignalPositionSchedule.Received)
-                .Then(c => _logger.LogDebug("{MessageType} {CorrelationId} received", nameof(ScheduleSignalPosition), c.Saga.CorrelationId))
+                .Then(c => _logger.LogTrace("{MessageType} {CorrelationId} received", nameof(ScheduleSignalPosition), c.Saga.CorrelationId))
                 .ThenAsync(PublishPosition)
                     .Schedule(SignalPositionSchedule, c => new ScheduleSignalPosition(c.Saga.CorrelationId), _ => TimeSpan.FromMilliseconds(SignalPositionIntervalMs)
                 );
@@ -367,46 +332,33 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
 
         private static void Validate(BehaviorContext<SimulatedAgvSaga, StartActionCommand> context)
         {
-            Validate(context.Message.Action.Nodes);
-            Validate(context.Message.Action.OrderDetails);
-            Validate(context.Message.Action.Nodes);
-        }
-
-        private static void Validate(string[]? nodes)
-        {
-            if (!(nodes?.Any() ?? false))
+            if (context.Message.Action == null)
             {
-                throw new ArgumentException("No nodes");
+                throw new ArgumentException("Action data missing.");
+            }
+            if (!context.Message.Action.Nodes.Any())
+            {
+                throw new ArgumentException("Nodes missing.");
             }
         }
 
-        private static void Validate(OrderDetails? orderDetails)
+        private void FinishAction(BehaviorContext<SimulatedAgvSaga, ScheduleFinishAction> context)
         {
-            if (orderDetails == null)
-            {
-                throw new ArgumentException("OrderDetails not set");
-            }
-        }
+            var action = context.Saga.Action;
 
-        private async Task FinishOrder(BehaviorContext<SimulatedAgvSaga, ScheduleFinishOrder> context)
-        {
-            var order = context.Saga.OrderDetails;
-
-            if (order == null)
+            if (action == null)
             {
-                _logger.LogError("Could not finish order, Order object is missing");
+                _logger.LogError("Could not finish action, AgvAction object missing");
             }
             else
             {
-                _logger.LogInformation("AGV {AgvId} / {CorrelationId} finished order {OrderId} / {OrderCorrelationId}",
-                    context.Saga.AgvId, context.Saga.CorrelationId, order.OrderId, order.CorrelationId);
+                _logger.LogInformation("AGV {AgvId} / {CorrelationId} finished action {ActionType} for {OrderId} / {OrderCorrelationId}",
+                    context.Saga.AgvId, context.Saga.CorrelationId, action.ActionType, action.OrderId, action.OrderCorrelationId);
 
-                await context.Publish(new ActionStatusChangedEvent(context.Saga.CurrentAction!.CorrelationId, ActionStatusChangedType.Completed));
-
-                await PublishPosition(context);
+                context.Publish(new ActionStatusChangedEvent(action.CorrelationId, ActionStatusChangedType.Completed));
             }
 
-            context.Saga.ResetOrder();
+            context.Saga.ResetAction();
         }
         #endregion
     }

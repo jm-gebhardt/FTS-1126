@@ -1,4 +1,3 @@
-using Gebhardt.StoreWare.Agv.Common.Messages;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
 using MassTransit;
@@ -15,6 +14,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         private const int AliveChargeThreshold = 5;
 
         private AgvPosition? _position;
+
 
         /// <summary>
         /// Value for simulating change in battery charge
@@ -37,11 +37,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         /// <inheritdoc cref="IAgv" />
         public string CurrentState { get; set; }
 
-        /// <summary>
-        /// Current action
-        /// </summary>
-        public AgvAction? CurrentAction { get; set; }
-
         /// <inheritdoc cref="IAgv" />
         public bool Alive { get; set; } = true;
 
@@ -63,9 +58,10 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         public AgvMap? AgvMap { get; }
 
         /// <summary>
-        /// The current order being processed, null if currently no order is being processed
+        /// Current action (this is not reset after finish)
         /// </summary>
-        public OrderDetails? OrderDetails { get; set; }
+        public AgvAction? Action { get; set; }
+
 
         /// <summary>
         /// Token used by the send status update schedule
@@ -73,24 +69,14 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         public Guid? SendStatusUpdateTokenId { get; set; }
 
         /// <summary>
-        /// Token used for by pick order schedule
+        /// Token used for by finish action schedule
         /// </summary>
-        public Guid? PickOrderTokenId { get; set; }
-
-        /// <summary>
-        /// Token used for by finish order schedule
-        /// </summary>
-        public Guid? FinishOrderTokenId { get; set; }
+        public Guid? FinishActionTokenId { get; set; }
 
         /// <summary>
         /// Token used for signal position scheduling
         /// </summary>
         public Guid? SignalPositionTokenId { get; set; }
-
-        /// <summary>
-        /// List of node ids that define the route
-        /// </summary>
-        public string[] Nodes { get; set; }
 
         /// <summary>
         /// Time it takes to travel from one node to another in milliseconds
@@ -104,16 +90,16 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         {
             get
             {
-                double? orderProgress = OrderProgress; // Access time dependent value just once
-                if (orderProgress.HasValue && Nodes.Any())
+                double? orderProgress = ActionProgress; // Access time dependent value just once
+                if (orderProgress.HasValue && Action!.Nodes.Any())
                 {
-                    int lastNodeIndex = (int)(Nodes.Length * orderProgress.Value);
-                    if (lastNodeIndex < Nodes.Length)
+                    int lastNodeIndex = (int)(Action!.Nodes.Length * orderProgress.Value);
+                    if (lastNodeIndex < Action!.Nodes.Length)
                     {
-                        return Nodes[lastNodeIndex];
+                        return Action!.Nodes[lastNodeIndex];
                     }
                 }
-                return Nodes.LastOrDefault();
+                return Action?.Nodes.LastOrDefault();
             }
         }
 
@@ -126,9 +112,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
             get
             {
                 string? lastNodeId = LastNodeId; // Access time dependent value just once
-                if (lastNodeId != null && lastNodeId != Nodes.Last())
+                if (Action != null && lastNodeId != null && lastNodeId != Action!.Nodes.Last())
                 {
-                    return Nodes[Array.IndexOf(Nodes, lastNodeId) + 1];
+                    return Action!.Nodes[Array.IndexOf(Action!.Nodes, lastNodeId) + 1];
                 }
                 return lastNodeId;
             }
@@ -148,7 +134,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
                     return _position;
                 }
 
-                double? orderProgress = OrderProgress; // Access time dependent value just once
+                double? orderProgress = ActionProgress; // Access time dependent value just once
 
                 if (!orderProgress.HasValue) // Use first node as initial position
                 {
@@ -173,18 +159,18 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
                     return _position;
                 }
 
-                int lastNodeIndex = (int)(Nodes.Length * orderProgress.Value);
-                if (lastNodeIndex >= Nodes.Length)
+                int lastNodeIndex = (int)(Action!.Nodes.Length * orderProgress.Value);
+                if (lastNodeIndex >= Action!.Nodes.Length)
                 {
                     // This happens when accessing position when or after order has finished
-                    lastNodeIndex = Nodes.Length - 1;
+                    lastNodeIndex = Action!.Nodes.Length - 1;
                 }
 
-                var lastNode = AgvGraph!.Nodes.First(x => x.Id == Nodes[lastNodeIndex]);
-                if (lastNodeIndex < Nodes.Length - 1)
+                var lastNode = AgvGraph!.Nodes.First(x => x.Id == Action!.Nodes[lastNodeIndex]);
+                if (lastNodeIndex < Action!.Nodes.Length - 1)
                 {
-                    double partialProgress = (orderProgress.Value - lastNodeIndex / (double)Nodes.Length) * Nodes.Length;
-                    var nextNode = AgvGraph!.Nodes.First(x => x.Id == Nodes[lastNodeIndex + 1]);
+                    double partialProgress = (orderProgress.Value - lastNodeIndex / (double)Action!.Nodes.Length) * Action!.Nodes.Length;
+                    var nextNode = AgvGraph!.Nodes.First(x => x.Id == Action!.Nodes[lastNodeIndex + 1]);
                     var vectorLast = new System.Numerics.Vector3(lastNode.X, lastNode.Y, lastNode.Z);
                     var vectorNext = new System.Numerics.Vector3(nextNode.X, nextNode.Y, nextNode.Z);
                     float theta = (float)(Math.Atan2(vectorNext.Y - vectorLast.Y, vectorNext.X - vectorLast.X) + Math.PI / 2);
@@ -206,49 +192,37 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         }
 
         /// <summary>
-        /// Order Progress as percentage [0..1]
+        /// Time the action processing started (set to null when finished)
         /// </summary>
-        public double? OrderProgress => TimeToFinish != null && OrderDuration != null
-            ? 1 - TimeToFinish.Value.TotalSeconds / OrderDuration.Value.TotalSeconds
-            : null;
+        public DateTime? ActionStartDate { get; set; }
 
         /// <summary>
-        /// Time the order takes to complete
+        /// Time the action takes to complete
         /// </summary>
-        public TimeSpan? OrderDuration => TimeSpan.FromMilliseconds(Nodes.Length * NodeTravelTime);
-
-        /// <summary>
-        /// Time the order processing started
-        /// </summary>
-        public DateTime? OrderStartDate { get; set; }
+        public TimeSpan? ActionDuration => TimeSpan.FromMilliseconds(Action!.Nodes.Length * NodeTravelTime);
 
         /// <summary>
         /// Time the order will be finished
         /// This value is calculated base on OrderStartDate and the number of nodes
         /// </summary>
-        public DateTime? OrderFinishDate => OrderStartDate != null ? OrderStartDate + OrderDuration : null;
+        public DateTime? ActionFinishDate => ActionStartDate != null ? ActionStartDate + ActionDuration : null;
 
         /// <summary>
-        /// Time until the order is finished.
+        /// Remaining time until the order is finished.
         /// This values is calculated based on the current time and OrderFinishDate
         /// </summary>
-        public TimeSpan? TimeToFinish => OrderFinishDate != null ? OrderFinishDate - DateTime.UtcNow : null;
+        public TimeSpan? TimeToFinish => ActionFinishDate != null ? ActionFinishDate - DateTime.UtcNow : null;
 
         /// <summary>
-        /// Time until the order is finished.
-        /// This values is calculated based on the current time and OrderFinishDate
+        /// Action progress as percentage [0..1]
         /// </summary>
-        public TimeSpan? TimeToPick => OrderFinishDate != null ? OrderPickDate - DateTime.UtcNow : null;
-
-        /// <summary>
-        /// Time the order will be picked up
-        /// </summary>
-        public DateTime? OrderPickDate => OrderFinishDate != null && OrderDetails != null
-            ? OrderStartDate + TimeSpan.FromMilliseconds(Array.IndexOf(Nodes, OrderDetails!.Source) * NodeTravelTime)
+        public double? ActionProgress => TimeToFinish != null && ActionDuration != null
+            ? 1 - TimeToFinish.Value.TotalSeconds / ActionDuration.Value.TotalSeconds
             : null;
 
+
         /// <summary>
-        /// SimulatedAgvSaga Constructor
+        /// SimulatedAgvSaga constructor used for testing
         /// </summary>
         /// <param name="correlationId"></param>
         /// <param name="agvId"></param>
@@ -275,7 +249,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
             CorrelationId = correlationId;
             AgvId = agvId;
             NodeTravelTime = nodeTravelTime;
-            Nodes = nodes ?? Array.Empty<string>();
             CurrentState = currentState ?? "";
             AgvGraph = agvGraph;
             AgvData = agvData;
@@ -283,7 +256,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
 
             AgvStatus = new(
                 CorrelationId,
-                OrderDetails?.OrderId,
+                Action?.OrderId,
                 busy: false,
                 automatic: true,
                 batteryCharge: new Random().Next(1, 100), // Init with random charge [1..99]
@@ -294,7 +267,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         }
 
         /// <summary>
-        /// SimulatedAgvSa Constructor
+        /// SimulatedAgvSaga constructor used by state machine
         /// </summary>
         /// <param name="agv"></param>
         /// <param name="nodeTravelTime"></param>
@@ -305,14 +278,13 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
             AgvGraph = agv.AgvGraph;
             AgvData = agv.AgvData;
             CurrentState = agv.CurrentState;
-            Nodes = Array.Empty<string>();
             AgvMap = agv.AgvMap;
             NodeTravelTime = nodeTravelTime;
             SimulatedBatteryCharge = new Random().Next(50, 101); // Init to random charge [50..100]
 
             AgvStatus = new(
                 CorrelationId,
-                OrderDetails?.OrderId,
+                null,
                 busy: false,
                 automatic: true,
                 (int)SimulatedBatteryCharge,
@@ -323,12 +295,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         }
 
         /// <summary>
-        /// Reset Order
+        /// Reset action
         /// </summary>
-        public void ResetOrder()
+        public void ResetAction()
         {
-            OrderDetails = null;
-            OrderStartDate = null;
+            ActionStartDate = null;
+            // Do not reset Action to provide informations such as last node
         }
 
         /// <summary>
@@ -337,8 +309,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         public void UpdateStatus(double chargeDiff)
         {
             bool busy = new[] {
-                nameof(SimulatedAgvStateMachine.BusyMovingToSource),
-                nameof(SimulatedAgvStateMachine.BusyMovingToDestination)
+                nameof(SimulatedAgvStateMachine.BusyMoving)
             }.Any(c => c == CurrentState);
 
             bool charging = chargeDiff > 0; // AGV is charging if charge difference is positive

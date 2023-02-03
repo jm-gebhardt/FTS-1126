@@ -66,14 +66,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.States
 
 
         /// <summary>
-        /// Default constructor required to connect.
+        /// Constructor
         /// </summary>
         public AgvSaga(Guid correlationId, 
-            string agvId, 
-            string? currentState = null, 
-            AgvStatus? agvStatus = null, 
-            AgvGraph? agvGraph = null, 
-            AgvData? agvData = null)
+                       string agvId, 
+                       string? currentState = null, 
+                       AgvStatus? agvStatus = null, 
+                       AgvGraph? agvGraph = null, 
+                       AgvData? agvData = null)
         {
             if (correlationId == Guid.Empty)
             {

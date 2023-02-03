@@ -35,27 +35,41 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
         public async Task Consume(ConsumeContext<StartActionCommand> context)
         {
             var action = context.Message.Action;
-            var orderDetails = action.OrderDetails;
             var actionType = action.ActionType;
-            if (actionType != ActionType.Transport)
+            OrderType orderType;
+            string sourceToSend = string.Empty;
+            string destinationToSend = string.Empty;
+
+            if (actionType == ActionType.Pick)
+            {
+                orderType = OrderType.Pick;
+                sourceToSend = action.Destination;
+            }
+            else if (actionType == ActionType.Drop)
+            {
+                orderType = OrderType.Drop;
+                destinationToSend = action.Destination;
+            }
+            else
             {
                 throw new NotImplementedException($"Can't handle {actionType} yet");
             }
 
-            // we are using the action correlation Id as "order Id"
+            // We are using the action correlation Id as "order Id"
             await context.PublishMqtt(new MqttOrder(action.CorrelationId.ToString())
             {
-                SerialNumber = context.Message.AgvId,
-                OrderType = OrderType.Transport,
+                SerialNumber = action.AgvId,
+                OrderType = orderType,
                 RecordType = OrderRecordType.Order,
                 Stations = new Stations
                 {
-                    FromStationIdentifier = orderDetails.Source,
-                    ToStationIdentifier = orderDetails.Destination
+                    FromStationIdentifier = sourceToSend,
+                    ToStationIdentifier = destinationToSend
                 }
             }, context.CancellationToken);
 
-            _logger.LogInformation("Sent transport order: {OrderId} for AGV:{AgvId} from {Source} to {Destination}", orderDetails.OrderId, context.Message.AgvId, orderDetails.Source, orderDetails.Destination);
+            _logger.LogInformation("Sent transport order: {OrderId} for AGV:{AgvId} from {Source} to {Destination}",
+                action.OrderId, action.AgvId, action.Source, action.Destination);
         }
 
         /// <summary>

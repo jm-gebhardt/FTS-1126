@@ -169,8 +169,21 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         }
 
         [DataRow(nameof(AgvStateMachine.Reserved), nameof(AgvStateMachine.Busy))]
+        [DataRow(nameof(AgvStateMachine.Busy), nameof(AgvStateMachine.Busy))]
         [TestMethod]
         public async Task Transition_State_When_Message_Received_ActionStartedEvent(string initialState, string resultingState)
+        {
+            var message = new ActionStartedEvent(TestAgvId.ToGuid());
+            await TransitionStateWhenMessageReceived(message, initialState, resultingState);
+        }
+
+        [DataRow(nameof(AgvStateMachine.Discovered), nameof(AgvStateMachine.Discovered))]
+        [DataRow(nameof(AgvStateMachine.Idle), nameof(AgvStateMachine.Idle))]
+        [DataRow(nameof(AgvStateMachine.Charging), nameof(AgvStateMachine.Charging))]
+        [DataRow(nameof(AgvStateMachine.PendingLock), nameof(AgvStateMachine.PendingLock))]
+        [DataRow(nameof(AgvStateMachine.LockAgvEvent), nameof(AgvStateMachine.LockAgvEvent))]
+        [TestMethod]
+        public async Task No_Transition_State_When_Message_Received_ActionStartedEvent(string initialState, string resultingState)
         {
             var message = new ActionStartedEvent(TestAgvId.ToGuid());
             await TransitionStateWhenMessageReceived(message, initialState, resultingState);

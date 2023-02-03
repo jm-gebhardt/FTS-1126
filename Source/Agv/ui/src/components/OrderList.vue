@@ -81,9 +81,11 @@ function OrderStatusIcon(status: string | null | undefined): string {
       return 'fiber_new'
     case 'OrderFailed':
       return 'clear'
+    case 'OrderQueued':
+      return 'queue'
     case 'AgvRequested':
       return 'hail'
-    case 'TransportOrderSend':
+    case 'TransportOrderSent':
       return 'agriculture'
     case 'TransportOrderStarted':
       return 'agriculture'

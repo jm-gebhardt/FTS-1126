@@ -1,0 +1,42 @@
+{
+  "messageId": "a8270000-56b8-0050-5d88-08daf9dcdf09",
+  "requestId": null,
+  "correlationId": "14f7f5cd-efe9-5550-fce2-a60b86db78dc",
+  "conversationId": "a8270000-56b8-0050-3a67-08daf9dcdf0c",
+  "initiatorId": null,
+  "sourceAddress": "rabbitmq://localhost/202203IRSHV01_GebhardtStoreWareAgvTransportOrder_bus_iyuoyynszyyfbaz4bdpxuzdjnk?temporary=true",
+  "destinationAddress": "rabbitmq://localhost/Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands:StartActionCommand",
+  "responseAddress": null,
+  "faultAddress": null,
+  "messageType": [
+    "urn:message:Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands:StartActionCommand"
+  ],
+  "message": {
+    "correlationId": "14f7f5cd-efe9-5550-fce2-a60b86db78dc",
+    "action": {
+      "correlationId": "068b55a6-b2c8-4e7a-f8eb-08daf9dcdb31",
+      "agvId": "SimAgv-0",
+      "actionType": "Pick",
+      "orderId": "Order#01",
+      "orderCorrelationId": "5c8e6a45-04a1-b4f3-65b7-4c3298cb7d7f",
+      "source": null,
+      "destination": "S1",
+      "nodes": [
+        "S1"
+      ]
+    }
+  },
+  "expirationTime": null,
+  "sentTime": "2023-01-19T05:20:25.6400776Z",
+  "headers": {},
+  "host": {
+    "machineName": "202203-IRS-HV01",
+    "processName": "Gebhardt.StoreWare.Agv.TransportOrder",
+    "processId": 10152,
+    "assembly": "Gebhardt.StoreWare.Agv.TransportOrder",
+    "assemblyVersion": "1.0.0.0",
+    "frameworkVersion": "6.0.13",
+    "massTransitVersion": "8.0.3.0",
+    "operatingSystemVersion": "Microsoft Windows NT 10.0.19045.0"
+  }
+}

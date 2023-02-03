@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Gebhardt.StoreWare.Agv.Common.Services;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions;
 
@@ -8,19 +9,26 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions;
 /// </summary>
 public class ActionManagerBackgroundService : BackgroundService
 {
-    private const int PeriodicAssignmentTaskPeriodInMs = 1000;
-    private readonly ActionManager _actionManager;
+    private const int PeriodicAssignmentTaskPeriodInMs = 10000;
+
     private readonly ILogger _logger;
+    private readonly MassTransitBusEventConsumer _busEventConsumer;
+    private readonly ActionManager _actionManager;
+
 
     /// <summary>
-    /// Creates an instance of <see cref="ActionManagerBackgroundService"/>
+    /// Background service for cyclical tasks in action mananger.
     /// </summary>
-    /// <param name="actionManager"></param>
     /// <param name="logger"></param>
-    public ActionManagerBackgroundService(ActionManager actionManager, ILogger<ActionManagerBackgroundService> logger)
+    /// <param name="busEventConsumer"></param>
+    /// <param name="actionManager"></param>
+    public ActionManagerBackgroundService(ILogger<ActionManagerBackgroundService> logger,
+                                          MassTransitBusEventConsumer busEventConsumer,
+                                          ActionManager actionManager)
     {
-        _actionManager = actionManager;
         _logger = logger;
+        _busEventConsumer = busEventConsumer;
+        _actionManager = actionManager;
     }
 
     /// <inheritdoc/>
@@ -28,14 +36,21 @@ public class ActionManagerBackgroundService : BackgroundService
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            try
+            if (_busEventConsumer.BusStarted)
             {
-                var cancellationToken = new CancellationTokenSource(60 * 1000).Token;
-                await _actionManager.RequestAssignmentAsync(cancellationToken);
+                try
+                {
+                    var cancellationToken = new CancellationTokenSource(60 * 1000).Token;
+                    await _actionManager.RequestAssignmentAsync(cancellationToken);
+                }
+                catch (Exception exc)
+                {
+                    _logger.LogError(exc, $"Failed to {nameof(ExecuteAsync)}");
+                }
             }
-            catch (Exception exc)
+            else
             {
-                _logger.LogError(exc, "Failed to {nameOf}", nameof(ExecuteAsync));
+                _logger.LogTrace("{Service} is waiting for bus initialization being finished", nameof(ActionManagerBackgroundService));
             }
 
             await Task.Delay(PeriodicAssignmentTaskPeriodInMs, stoppingToken);

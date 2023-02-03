@@ -19,7 +19,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         public static string[] Destinations => Services.AgvRegistryMock.Destinations;
 
         public static readonly string[] LeNo = { "111", "222", "333" };
-        private static readonly string[] _states = { nameof(OrderStateMachine.OrderReceived), nameof(OrderStateMachine.TransportOrderSend), nameof(OrderStateMachine.OrderReceived) };
+        private static readonly string[] _states = { nameof(OrderStateMachine.OrderReceived), nameof(OrderStateMachine.TransportOrderSent), nameof(OrderStateMachine.OrderReceived) };
         private static readonly DateTime[] _creationDates = {
             DateTime.ParseExact("2022-07-13 13:00:01", "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture),
             DateTime.ParseExact("2022-07-13 12:00:01", "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture),
