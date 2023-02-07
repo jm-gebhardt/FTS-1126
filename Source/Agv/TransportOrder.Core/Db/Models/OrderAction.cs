@@ -80,7 +80,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Db.Models
         public Guid? AssignedAgv { get; set; }
 
         /// <summary>
-        /// AGV ID of the assigned AGV (for diagnostiv purpose)
+        /// AGV ID of the assigned AGV (for diagnostic purpose)
         /// </summary>
         public string? AssignedAgvId { get; set; }
 
@@ -99,7 +99,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Db.Models
         /// </summary>
         public string[]? Nodes { get; set; }
 
-
+        /// <summary>
+        /// Creation DateTime
+        /// </summary>
+        public DateTime? OrderCreationDateTime { get; set; }
+        
         /// <summary>
         /// Constructor
         /// <para>
@@ -110,8 +114,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Db.Models
         /// <param name="type">Action type</param>
         /// <param name="source">Source node or null for last node ID</param>
         /// <param name="destination">Destination node</param>
+        /// <param name="orderCreationDateTime"></param>
         /// <returns>AGV action instance</returns>
-        public OrderAction(OrderDetails order, int sequenceNumber, ActionType type, string? source = null, string? destination = null)
+        public OrderAction(OrderDetails order, int sequenceNumber, ActionType type, string? source = null, string? destination = null, DateTime? orderCreationDateTime = null)
         {
             OrderCorrelationId = order.CorrelationId;
             SequenceNumber = sequenceNumber;
@@ -120,6 +125,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Db.Models
             State = OrderActionState.Created;
             Source = source;
             Destination = destination;
+            OrderCreationDateTime = orderCreationDateTime;
         }
 
         /// <summary>

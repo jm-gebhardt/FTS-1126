@@ -1,4 +1,4 @@
-﻿#pragma warning disable 1591, 0472
+#pragma warning disable 1591, 0472
 // ReSharper disable all
 using System;
 using Microsoft.EntityFrameworkCore.Migrations;
@@ -27,7 +27,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Migrations.TransportOrderDb
                     AssignedAgvId = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Source = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Destination = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Nodes = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Nodes = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    OrderCreationDateTime = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -49,5 +50,4 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Migrations.TransportOrderDb
         }
     }
 }
-#pragma warning restore 1591, 0472
 #pragma warning restore 1591, 0472

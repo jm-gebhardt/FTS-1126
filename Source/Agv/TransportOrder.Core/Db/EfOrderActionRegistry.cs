@@ -51,9 +51,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Db
 
 
         /// <inheritdoc cref="IOrderActionRegistry"/>
-        public void Insert(OrderDetails order, ActionType type, string? source = null, string? destination = null)
+        public void Insert(OrderDetails order, ActionType type, DateTime creationDateTime, string? source = null, string? destination = null)
         {
-            _context.Add(new OrderAction(order, ++_sequenceNumber, type, source, destination));
+            _context.Add(new OrderAction(order, ++_sequenceNumber, type, source, destination, creationDateTime));
         }
 
         /// <inheritdoc cref="IOrderActionRegistry"/>
@@ -64,11 +64,18 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Db
         }
 
         /// <inheritdoc cref="IOrderActionRegistry"/>
-        public List<OrderAction> GetPendingActions()
+        public List<OrderAction> GetPendingActions(bool sortBySequenceAsc = false)
         {
-            return _context.Set<OrderAction>()
-                .Where(a => a.State == OrderActionState.Created || a.State == OrderActionState.Assigned)
-                .ToList();
+            IQueryable<OrderAction> queryablePendingActions = _context.Set<OrderAction>().Where(a => a.State == OrderActionState.Created || a.State == OrderActionState.Assigned);
+
+            if (sortBySequenceAsc)
+            {
+                return queryablePendingActions
+                    .OrderBy(o => o.OrderCreationDateTime).ThenBy(o => o.SequenceNumber)
+                    .ToList();
+            }
+
+            return queryablePendingActions.ToList();
         }
 
         /// <inheritdoc cref="IOrderActionRegistry"/>

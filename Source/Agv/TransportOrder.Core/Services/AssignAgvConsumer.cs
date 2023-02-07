@@ -20,14 +20,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         private readonly IAgvRegistry _agvRegistry;
         private readonly IRequestClient<ReserveAgv> _client;
         private readonly IRoutingPlausibilityChecker _routingPlausibilityChecker;
-        private readonly IOrderRegistry _orderRegistry;
 
         /// <summary>
         /// Consumer for <see cref="AssignAgv"/> messages
         /// </summary>
         public AssignAgvConsumer(ILogger<AssignAgvConsumer> logger,
             IAgvRegistry agvRegistry,
-            IOrderRegistry orderRegistry,
             IRequestClient<ReserveAgv> client,
             IRoutingPlausibilityChecker routingPlausibilityChecker)
         {
@@ -35,7 +33,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
             _agvRegistry = agvRegistry;
             _client = client;
             _routingPlausibilityChecker = routingPlausibilityChecker;
-            _orderRegistry = orderRegistry;
         }
 
         /// <summary>
@@ -46,7 +43,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         /// <param name="context"></param>
         public async Task Consume(ConsumeContext<AssignAgv> context)
         {
-            _logger.LogInformation("Request {MessageType} received for order {OrderId} / {CorrelationId}",
+            _logger.LogDebug("Request {MessageType} received for order {OrderId} / {CorrelationId}",
                 nameof(AssignAgv), context.Message.Order.OrderId, context.Message.Order.CorrelationId);
 
             KeyValuePair<IAgv, IGraphAlgorithm.Route>? assignedAgvAndRoute = await AssignIdleAgv<AStar>(context.Message.Order, context.CancellationToken);
@@ -68,7 +65,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
                 var agv = assignedAgvAndRoute.Value.Key;
                 var route = assignedAgvAndRoute.Value.Value;
 
-                _logger.LogDebug("{MessageType} for order {OrderId} / {CorrelationId} using AGV {AgvId}",
+                _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId} using AGV {AgvId}",
                     nameof(AssignAgv), context.Message.Order.OrderId, context.Message.Order.CorrelationId, agv.AgvId);
                 await context.RespondAsync(new AgvAssignmentSucceeded(
                     context.Message.CorrelationId,

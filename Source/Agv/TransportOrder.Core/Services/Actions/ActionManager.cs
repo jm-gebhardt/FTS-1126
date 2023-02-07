@@ -80,8 +80,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
 
             // Create ActionSagas
             using var orderActionRepo = new EfOrderActionRegistry(_transportOrderContextFactory);
-            orderActionRepo.Insert(request.OrderDetails, ActionType.Pick, null, request.OrderDetails.Source);
-            orderActionRepo.Insert(request.OrderDetails, ActionType.Drop, request.OrderDetails.Source, request.OrderDetails.Destination);
+            orderActionRepo.Insert(request.OrderDetails, ActionType.Pick, request.OrderDetails.CreationDate, null, request.OrderDetails.Source);
+            orderActionRepo.Insert(request.OrderDetails, ActionType.Drop, request.OrderDetails.CreationDate, request.OrderDetails.Source, request.OrderDetails.Destination);
             orderActionRepo.SaveChanges();
 
             // confirm queuing to OrderStateMachine
@@ -223,13 +223,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
         private async Task Assign(CancellationToken cancellationToken)
         {
             using var orderActionRepo = new EfOrderActionRegistry(_transportOrderContextFactory);
-            List<OrderAction> actions = orderActionRepo.GetPendingActions();
+            List<OrderAction> actions = orderActionRepo.GetPendingActions(true);
 
             var orders = actions.GroupBy(a => a.OrderCorrelationId)
                                 .Select(g => new
                                 {
                                     OrderCorrelationId = g.Key,
-                                    OrderActions = g.Select(x => x).OrderBy(o => o.SequenceNumber).ToArray()
+                                    OrderActions = g.Select(x => x).ToArray()
                                 }).ToList();
             foreach (var order in orders)
             {
@@ -251,7 +251,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
                     using var scope = _scopeFactory.CreateScope();
                     var client = scope.ServiceProvider.GetRequiredService<IRequestClient<AssignAgv>>();
 
-                    _logger.LogInformation("Sending {MessageType} for order {OrderId} / {CorrelationId} request and waiting for response",
+                    _logger.LogDebug("Sending {MessageType} for order {OrderId} / {CorrelationId} request and waiting for response",
                         nameof(AssignAgv), orderDetails.OrderId, order.OrderCorrelationId);
                     Response<AgvAssignmentSucceeded, AgvAssignmentFailed> response = await client.GetResponse<AgvAssignmentSucceeded, AgvAssignmentFailed>(
                         new AssignAgv(Guid.NewGuid(), orderDetails),
@@ -297,7 +297,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
         /// <param name="orderActionRepo">Order action repository</param>
         /// <param name="orderCorrelationId">Order correlation ID</param>
         /// <param name="actions">Complete list of actions belonging to that order (make sure list is not empty)</param>
-        /// <param name="agvAssignmentSucceeded">Success message containing AGV informations</param>
+        /// <param name="agvAssignmentSucceeded">Success message containing AGV information</param>
         /// <param name="cancellationToken"></param>
         private async Task HandleAssignmentSucceeded(IOrderActionRegistry orderActionRepo, Guid orderCorrelationId, OrderAction[] actions, AgvAssignmentSucceeded agvAssignmentSucceeded, CancellationToken cancellationToken)
         {
@@ -361,7 +361,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
         /// Assign pending orders to AGV
         /// </summary><remarks>
         /// This is called when a new order is queued, when an AGV became idle or cyclically.
-        /// Triggerd by order is not priorized to let the assign algorithm decide which order should be assigned next.
+        /// Triggered by order is not prioritized to let the assign algorithm decide which order should be assigned next.
         /// </remarks>
         public async Task RequestAssignmentAsync(CancellationToken cancellationToken)
         {

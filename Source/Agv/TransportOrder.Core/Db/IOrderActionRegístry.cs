@@ -17,9 +17,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Db
         /// </remarks>
         /// <param name="order">Order details</param>
         /// <param name="type">Action type</param>
+        /// <param name="creationDateTime"></param>
         /// <param name="source">Source node</param>
         /// <param name="destination">Destination node</param>
-        public void Insert(OrderDetails order, ActionType type, string? source = null, string? destination = null);
+        public void Insert(OrderDetails order, ActionType type, DateTime creationDateTime, string? source = null, string? destination = null);
 
         /// <summary>
         /// Get order action by key.
@@ -31,8 +32,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Db
         /// <summary>
         /// Return list of all actions not started yet
         /// </summary>
+        /// <param name="sortBySequenceAsc">If true, then pending actions get sorted according to underlying order's creation timestamp and then by its sequence number</param>
         /// <returns>Returns the list of pending actions, empty list when there are no pending actions</returns>
-        public List<OrderAction> GetPendingActions();
+        public List<OrderAction> GetPendingActions(bool sortBySequenceAsc);
 
         /// <summary>
         /// Return list of all action belonging to the given order

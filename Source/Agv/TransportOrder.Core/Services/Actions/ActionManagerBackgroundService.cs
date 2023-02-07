@@ -17,7 +17,7 @@ public class ActionManagerBackgroundService : BackgroundService
 
 
     /// <summary>
-    /// Background service for cyclical tasks in action mananger.
+    /// Background service for cyclical tasks in action manager.
     /// </summary>
     /// <param name="logger"></param>
     /// <param name="busEventConsumer"></param>
