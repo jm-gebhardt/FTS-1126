@@ -1,4 +1,4 @@
-namespace Gebhardt.StoreWare.Agv.WCSCommunication.Db.Models
+namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils.Db.Models
 {
     /// <summary>
     /// WCS writes actions for us to consume into this table

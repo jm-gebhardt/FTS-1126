@@ -14,7 +14,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         /// Default URL
         /// </summary>
         public const string DefaultApiUrl = "http://localhost/transportorder";
-        
+
         private string _apiUrl;
 
         /// <summary>
@@ -25,7 +25,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
             _apiUrl = url;
         }
 
-        private async Task<T?> Request<T>(string subPath) where T: JToken
+        private async Task<T?> Request<T>(string subPath) where T : JToken
         {
             var httpClient = new HttpClient();
             var url = $"{_apiUrl}/{subPath}";
@@ -37,7 +37,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
 
             return null;
         }
-        
+
         private async Task<bool> Patch(string subPath)
         {
             var httpClient = new HttpClient();
@@ -55,7 +55,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         {
             return await Request<JArray>("agvs");
         }
-        
+
         /// <summary>
         /// Get Agv Data
         /// </summary>
@@ -64,7 +64,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         {
             return await Request<JObject>($"agvs/{correlationId}/data");
         }
-        
+
         /// <summary>
         /// Get Agv Graph
         /// </summary>
@@ -73,7 +73,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         {
             return await Request<JObject>($"agvs/{correlationId}/graph");
         }
-        
+
         /// <summary>
         /// Get all Maps
         /// </summary>
@@ -82,7 +82,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         {
             return await Request<JArray>("maps");
         }
-        
+
         /// <summary>
         /// Get all Maps
         /// </summary>
@@ -112,10 +112,11 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
             return await Poll(async () =>
             {
                 var agvs = await GetAgvs();
-                if (agvs is {Count: > 0} && agvs.Any(a => a["agvId"].ToString() == agvId))
+                if (agvs is { Count: > 0 } && agvs.Any(a => a["agvId"].ToString() == agvId))
                 {
                     return agvs.First(token => token["agvId"].ToString() == agvId);
                 }
+
                 return null;
             });
         }
@@ -133,7 +134,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
                 return data ?? null;
             });
         }
-        
+
         /// <summary>
         /// Wait for Agv Graph
         /// </summary>
@@ -147,7 +148,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
                 return data ?? null;
             });
         }
-        
+
         /// <summary>
         /// Wait for Agv Graph
         /// </summary>
@@ -158,10 +159,12 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
             return await Poll(async () =>
             {
                 var maps = await GetMaps();
-                if (maps is {Count: > 0} && maps.Any(a => a["relatedAgvs"].Any( c => c.ToString() == agvCorrelationId)))
+                if (maps is { Count: > 0 } &&
+                    maps.Any(a => a["relatedAgvs"].Any(c => c.ToString() == agvCorrelationId)))
                 {
                     return maps.First(token => token["relatedAgvs"].Any(c => c.ToString() == agvCorrelationId));
                 }
+
                 return null;
             });
         }
@@ -171,13 +174,14 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         /// </summary>
         /// <param name="orderId"></param>
         /// <param name="orderState"></param>
+        /// <param name="longJob">Indicates that waiting can take a long time. Currently max. 10 min for long job. Default 30s for not long job [false] </param>
         /// <returns>JObject of Order or null if not found or unsuccessful</returns>
-        public async Task<JToken?> WaitForOrder(string orderId, string? orderState = null )
+        public async Task<JToken?> WaitForOrder(string orderId, string? orderState = null, bool longJob = false)
         {
             return await Poll(async () =>
             {
                 var orders = await GetOrders();
-                if (orders is {Count: > 0} && 
+                if (orders is { Count: > 0 } &&
                     orders.Any(a => a["orderDetails"]["orderId"].ToString() == orderId)
                    )
                 {
@@ -187,8 +191,9 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
                         return order;
                     }
                 }
+
                 return null;
-            });
+            }, longJob ? 600000 : 30000);
         }
 
 
@@ -215,7 +220,6 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
                 catch (Exception e)
                 {
                     // Do not care
-		    Console.WriteLine(e.Message);
                     await Console.Error.WriteLineAsync(e.ToString());
                 }
                 await Task.Delay(500);

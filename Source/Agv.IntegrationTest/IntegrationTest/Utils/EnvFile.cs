@@ -33,8 +33,9 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         /// <exception cref="InvalidOperationException"></exception>
         public EnvFile(string? composeFilePath = null)
         {
-            _composeDirectoryPath = Path.GetDirectoryName(composeFilePath ?? Environment.GetEnvironmentVariable(EnvVars.ComposeFileEnvVar)) 
-                                    ?? throw new InvalidOperationException($"Environment variable {EnvVars.ComposeFileEnvVar} must be set");
+            _composeDirectoryPath =
+                Path.GetDirectoryName(composeFilePath)
+                ?? throw new InvalidOperationException($"Environment variable {EnvVars.ComposeFileEnvVar} must be set");
         }
 
         /// <summary>
@@ -51,12 +52,13 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
             {
                 return FilePath;
             }
+
             var envTemplate = File.ReadAllLines(EnvTemplateFile);
             _dict = envTemplate
                 .Where(l => !string.IsNullOrEmpty(l) && !l.StartsWith("#"))
                 .Select(line => line.Split('='))
                 .ToDictionary(split => split[0], split => split[1]);
-            
+
             foreach (var key in _dict.Keys)
             {
                 _dict[key] = key.Split("_").Last() switch
@@ -66,12 +68,12 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
                     _ => _dict[key]
                 };
             }
+
             FilePath = Path.GetTempFileName();
             Trace.WriteLine($"FilePath for .env file: {FilePath}");
             File.WriteAllLines(FilePath, from kvp in _dict select kvp.Key + "=" + kvp.Value);
-            
+
             return FilePath;
         }
-        
     }
 }

@@ -10,30 +10,69 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
     public class DockerCompose
     {
         private readonly EnvFile _envFile;
-        
+
         private readonly ILogger _logger;
 
-        private readonly string _composeFile =
-            Environment.GetEnvironmentVariable(EnvVars.ComposeFileEnvVar) 
-            ?? throw new InvalidOperationException($"Environment variable {EnvVars.ComposeFileEnvVar} must be set.");
-        
+        private readonly string _composeFile;
+
+        private readonly string _dockerRegistry;
+
+        private readonly string _dockerRegistryRepository;
+
+        private readonly string _dockerRegistryUser;
+
+        private readonly string _dockerRegistryPassword;
+
         /// <summary>
         /// Constructor
+        /// <param name="composeFileLocation">The location of the compose file</param>
+        /// <param name="dockerRegistry">The name of the docker registry where to pull specific containers from</param>
+        /// <param name="dockerRegistryRepository">The name of the docker repository where to pull specific containers from</param>
+        /// <param name="dockerRegistryUser">The user for the docker registry</param>
+        /// <param name="dockerRegistryPassword">The password for the docker registry</param>
         /// </summary>
-        public DockerCompose()
+        public DockerCompose(string composeFileLocation, string dockerRegistry = "",
+            string dockerRegistryRepository = "", string dockerRegistryUser = "", string dockerRegistryPassword = "")
         {
             var loggerFactory = LoggerFactory.Create(builder => { builder.AddConsole(); });
+            _composeFile = Environment.GetEnvironmentVariable(composeFileLocation)
+                           ?? throw new InvalidOperationException(
+                               $"Environment variable {composeFileLocation} must be set.");
+            _dockerRegistry = dockerRegistry;
+            _dockerRegistryRepository = dockerRegistryRepository;
+            _dockerRegistryUser = dockerRegistryUser;
+            _dockerRegistryPassword = dockerRegistryPassword;
+
             _logger = loggerFactory.CreateLogger<DockerCompose>();
             _envFile = new EnvFile(_composeFile);
             _envFile.Create();
         }
 
         /// <summary>
+        /// Login to registry
+        /// </summary>
+        /// <returns></returns>
+        public bool Login()
+        {
+            return RunDockerCommand($"login {_dockerRegistry} -u {_dockerRegistryUser} -p {_dockerRegistryPassword}");
+        }
+
+        /// <summary>
+        /// Pull containers
+        /// Timeout 300s
+        /// </summary>
+        /// <returns></returns>
+        public bool Pull()
+        {
+            return RunDockerCommand($"pull {_dockerRegistryRepository}", 300000);
+        }
+
+        /// <summary>
         /// Create Containers
         /// </summary>
-        public bool Up()
+        public bool Up(string specificContainers = "")
         {
-            return RunCommand("up -d", 240000);
+            return RunDockerComposeCommand($"up {specificContainers} -d", 240000);
         }
 
         /// <summary>
@@ -42,7 +81,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         /// <returns>true if command execution was successful</returns>
         public bool Stop()
         {
-            return RunCommand("stop", 60000);
+            return RunDockerComposeCommand("stop");
         }
 
         /// <summary>
@@ -51,7 +90,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         /// <returns>true if command execution was successful</returns>
         public bool Down()
         {
-            return RunCommand("down -v");
+            return RunDockerComposeCommand("down -v");
         }
 
         /// <summary>
@@ -61,10 +100,13 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         public bool AreRemoved()
         {
             var success = RunCommand("ps -a --format=json", out var stdout);
+            Trace.WriteLine($"Running docker container: {stdout}");    
+
             if (!success)
             {
                 return false;
             }
+
             return stdout == "[]";
         }
 
@@ -79,14 +121,15 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
             {
                 return false;
             }
-            
+
             foreach (JObject item in JArray.Parse(stdout))
             {
-                if(item["State"].ToString() != "running")
+                if (item["State"].ToString() != "running")
                 {
                     return false;
                 }
             }
+
             return true;
         }
 
@@ -95,24 +138,44 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         /// </summary>
         /// <param name="args"></param>
         /// <param name="timeout"></param>
-        public bool RunCommand(string args, int timeout=60000)
+        public bool RunDockerComposeCommand(string args, int timeout = 60000)
         {
-            return RunCommand(args, out _, timeout);
+            return RunCommand(args, out _, true, timeout);
+        }
+        
+        /// <summary>
+        /// Run a docker compose command, output will be printed to stdout/stderr
+        /// </summary>
+        /// <param name="args"></param>
+        /// <param name="timeout"></param>
+        public bool RunDockerCommand(string args, int timeout = 60000)
+        {
+            return RunCommand(args, out _, false, timeout);
         }
 
         /// <summary>
         /// Run a docker command and write output to stdout variable
         /// </summary>
         /// <param name="args"></param>
+        /// <param name="dockerComposeCommand"></param>
         /// <param name="timeout"></param>
         /// <param name="stdout"></param>
         /// <returns>Returns true if exit code is zero</returns>
-        public bool RunCommand(string args, out string stdout, int timeout=60000)
+        public bool RunCommand(string args, out string stdout, bool dockerComposeCommand = true, int timeout = 60000)
         {
-            var cmdArgs = $"compose -f \"{_composeFile}\" --env-file \"{_envFile.FilePath}\" " + args;
-            _logger.LogInformation("Executing docker {CommandArguments}", args);
+            var cmd = String.Empty;
+            if (dockerComposeCommand)
+            {
+                cmd = $"compose -f \"{_composeFile}\" --env-file \"{_envFile.FilePath}\" ";
+            }
+            else
+            {
+                cmd = " ";
+            }
             
-            var processInfo = new ProcessStartInfo("docker", cmdArgs)
+            _logger.LogInformation("Executing docker {Command }{CommandArguments}", cmd, args);
+
+            var processInfo = new ProcessStartInfo("docker", cmd + args)
             {
                 CreateNoWindow = true,
                 UseShellExecute = false,
@@ -121,17 +184,14 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
             };
 
             using var process = new Process();
-            using var stdOutWriter = new StringWriter();
+            var stdOutWriter = new StringWriter();
             process.StartInfo = processInfo;
             process.OutputDataReceived += (sender, e) =>
             {
-               Console.WriteLine(e.Data);
-               stdOutWriter.Write(e.Data);
+                Console.WriteLine(e.Data);
+                stdOutWriter.Write(e.Data);
             };
-            process.ErrorDataReceived += (sender, e) =>
-            {
-                Console.Error.WriteLine(e.Data);
-            };
+            process.ErrorDataReceived += (sender, e) => { Console.Error.WriteLine(e.Data); };
 
             process.Start();
             process.BeginOutputReadLine();

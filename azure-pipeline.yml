@@ -201,7 +201,7 @@ stages:
         sourceFolder: '$(CertsFolderPath)'
         targetFolder: '$(Build.SourcesDirectory)'
         overWrite: true
-
+    
     - task: CmdLine@2
       displayName: docker compose build
       inputs:
@@ -231,10 +231,19 @@ stages:
     - task: Bash@3
       inputs:
         targetType: 'inline'
-        script: dotnet test Source/Agv.IntegrationTest/IntegrationTest.sln --logger trx
+        script: dotnet test --logger trx
+        workingDirectory: '$(Build.SourcesDirectory)/Source/Agv.IntegrationTest'
       env:
-        COMPOSE_FILE: $(Build.SourcesDirectory)/docker-compose.yml
+        COMPOSE_FILE_IntegrationTest: $(Build.SourcesDirectory)/docker-compose.yml
+        COMPOSE_FILE_VirtualAGV: $(Build.SourcesDirectory)/Source/Agv.Karis/docker-compose.yml
         MQTT_SAMPLES: $(Build.SourcesDirectory)/Source/Agv.IntegrationTest/MqttMessages
+
+    - task: CmdLine@2
+      condition: succeededOrFailed()
+      displayName: docker compose down Karis AGV
+      inputs:
+        script: docker compose down
+        workingDirectory: '$(Build.SourcesDirectory)/Source/Agv.Karis'
 
     - task: CmdLine@2
       condition: succeededOrFailed()

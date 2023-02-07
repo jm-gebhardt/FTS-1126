@@ -1,7 +1,8 @@
 ﻿using Gebhardt.StoreWare.Agv.IntegrationTest.Utils;
+using JetBrains.Annotations;
 using Newtonsoft.Json.Linq;
 
-namespace Gebhardt.StoreWare.Agv.IntegrationTest
+namespace Gebhardt.StoreWare.Agv.IntegrationTest.Agv
 {
     /// <summary>
     /// Test AGV Implementation
@@ -17,40 +18,53 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest
             /// Transport order started
             /// </summary>
             Started,
+
             /// <summary>
             /// Pick for transport order completed
             /// </summary>
             Picked,
+
             /// <summary>
             /// Transport order completed
             /// </summary>
             Completed,
+
             /// <summary>
             /// Transport order cancelled
             /// </summary>
+            [UsedImplicitly] 
             Cancelled,
+
             /// <summary>
             /// Cancellation for transport order failed
             /// </summary>
+            [UsedImplicitly] 
             CancelFailed,
+
             /// <summary>
             /// Transport order updated
             /// </summary>
+            [UsedImplicitly] 
             Updated,
+
             /// <summary>
             /// Transport order update failed
             /// </summary>
+            [UsedImplicitly] 
             UpdateFailed,
+
             /// <summary>
             /// Transport order Failed
             /// </summary>
+            [UsedImplicitly] 
             Failed
         }
-        
+
         /// <summary>
         /// Agv Id
         /// </summary>
         public readonly string AgvId;
+
         private readonly MqttClient _mqttClient;
         private const int PublishStatusInterval = 1000;
 
@@ -70,11 +84,10 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest
         /// <param name="cancellationToken"></param>
         public async Task StartSendingStatus(CancellationToken cancellationToken)
         {
-            
             var message = _mqttClient.ReadSample("status.json");
             Console.WriteLine("Message");
             Console.WriteLine(message);
-            while (cancellationToken is {IsCancellationRequested: false})
+            while (cancellationToken is { IsCancellationRequested: false })
             {
                 Console.WriteLine("Publishing Status");
                 ChangeAgvId(message);
@@ -89,10 +102,14 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest
         public async Task SubscribeDataTopics()
         {
             await _mqttClient.Start();
-            _mqttClient.SubscribeAndRespond(MqttClient.Topic.RequestData, MqttClient.Topic.AgvData, "AgvData.json", IsCurrentAgv, ChangeAgvId);
-            _mqttClient.SubscribeAndRespond(MqttClient.Topic.RequestGraph, MqttClient.Topic.Graph, "Graph.json", IsCurrentAgv, ChangeAgvId);
-            _mqttClient.SubscribeAndRespond(MqttClient.Topic.RequestStationList, MqttClient.Topic.StationList, "StationList.json", IsCurrentAgv, ChangeAgvId);
-            _mqttClient.SubscribeAndRespond(MqttClient.Topic.RequestMap, MqttClient.Topic.Map, "Map.json", IsCurrentAgv, ChangeAgvId);
+            _mqttClient.SubscribeAndRespond(MqttClient.Topic.RequestData, MqttClient.Topic.AgvData, "AgvData.json",
+                IsCurrentAgv, ChangeAgvId);
+            _mqttClient.SubscribeAndRespond(MqttClient.Topic.RequestGraph, MqttClient.Topic.Graph, "Graph.json",
+                IsCurrentAgv, ChangeAgvId);
+            _mqttClient.SubscribeAndRespond(MqttClient.Topic.RequestStationList, MqttClient.Topic.StationList,
+                "StationList.json", IsCurrentAgv, ChangeAgvId);
+            _mqttClient.SubscribeAndRespond(MqttClient.Topic.RequestMap, MqttClient.Topic.Map, "Map.json", IsCurrentAgv,
+                ChangeAgvId);
         }
 
         /// <summary>
@@ -101,9 +118,9 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest
         public async Task SubscribeToCompleteOrdersSuccessfully()
         {
             await _mqttClient.Start();
-            var response =  _mqttClient.ReadSample("OrderEvent.json");
+            var response = _mqttClient.ReadSample("OrderEvent.json");
             ChangeAgvId(response);
-            
+
             _mqttClient.Subscribe(MqttClient.Topic.RequestOrder, async (request) =>
             {
                 if (!IsCurrentAgv(request))
@@ -117,15 +134,14 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest
                 response["OrderEventType"] = OrderEventType.Started.ToString();
                 await _mqttClient.Publish(MqttClient.Topic.OrderEvent, response.ToString());
                 await Task.Delay(1000);
-                
+
                 response["OrderEventType"] = OrderEventType.Picked.ToString();
                 await _mqttClient.Publish(MqttClient.Topic.OrderEvent, response.ToString());
                 await Task.Delay(1000);
-                
+
                 response["OrderEventType"] = OrderEventType.Completed.ToString();
                 await _mqttClient.Publish(MqttClient.Topic.OrderEvent, response.ToString());
             });
-            
         }
 
         private bool IsCurrentAgv(JToken jsonMessage)

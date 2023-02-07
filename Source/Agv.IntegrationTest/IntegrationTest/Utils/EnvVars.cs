@@ -8,7 +8,13 @@
         /// <summary>
         /// Compose file path
         /// </summary>
-        public const string ComposeFileEnvVar = "COMPOSE_FILE";
+        public const string ComposeFileEnvVar = "COMPOSE_FILE_IntegrationTest";
+        
+        /// <summary>
+        /// Compose file path
+        /// </summary>
+        public const string ComposeFileEnvVarVirtualAgv = "COMPOSE_FILE_VirtualAGV";
+        
         /// <summary>
         /// MQTT Samples
         /// </summary>

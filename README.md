@@ -20,7 +20,6 @@ Each Service is build as a separate project.
 
 
 ## Build
-
 ```
 dotnet build Source/Agv/CompileAgv.sln
 ```
@@ -30,8 +29,6 @@ Configurations may be passed in as environment variables or any other configurat
 
 * In Bash: `export RABBITMQ__HOST=localhost`
 * In Windows Command Line: `set RABBITMQ__HOST=localhost`
-
-
 
 ### All Services
 ```
@@ -48,7 +45,6 @@ CONNECTIONSTRINGS__WCS="Server=127.0.0.1,1433;Database=master;User Id=MyDbUser;P
 CONNECTIONSTRINGS__TO="Server=127.0.0.1,1433;Database=master;User Id=MyDbUser;Password=MyStrongPassword;"
 ```
 Database persistence can be disabled using: `--enableInMemoryPersistence`
-
 
 ### Webserver
 Each module is hosting a metric server via a Kestrel web host.
@@ -107,19 +103,30 @@ dotnet run --project DeviceCommunication simulate --sources=S1,S2 --destinations
 dotnet test Source/Agv/CompileAgv.sln
 ```
 
+
 ## Run Integration Tests
+Integration tests are using docker to run. For running the integrations tests make sure to update the container images.
+```
+cd <projectFolder>
+docker compose build
+```
+
 Integration tests are located in `Source/Agv.IntegrationsTest`
 ```
 cd Source/Agv.IntegrationsTest
 ```
+
+The following environment is required:  
 Powershell:
 ```
-$Env:COMPOSE_FILE = Join-Path $pwd "/../../docker-compose.yml"
+$Env:COMPOSE_FILE_IntegrationTest = Join-Path $pwd "/../../docker-compose.yml"
+$Env:COMPOSE_FILE_VirtualAGV = Join-Path $pwd "/../Agv.Karis/docker-compose.yml"
 $Env:MQTT_SAMPLES = Join-Path $pwd "/MqttMessages"
 ```
 Bash:
 ```
-export COMPOSE_FILE=$(pwd)/../../docker-compose.yml
+export COMPOSE_FILE_IntegrationTest=$(pwd)/../../docker-compose.yml
+export COMPOSE_FILE_VirtualAGV=$(pwd)/../Agv.Karis/docker-compose.yml
 export MQTT_SAMPLES=$(pwd)/MqttMessages
 ```
 
@@ -127,6 +134,13 @@ Run Tests
 ```
 dotnet test
 ```
+
+It may fail to download the duplicated NuGet packages from the Gebhardt gallary.
+For this case temporarily delete  
+`Source/Agv.IntegrationsTest/NuGet.Config`  
+in your local source repository for downloading the NuGet packages from it's origin.  
+Make sure the keep `NuGet.Config` in the published Git repository!
+
 
 ## Docker
 

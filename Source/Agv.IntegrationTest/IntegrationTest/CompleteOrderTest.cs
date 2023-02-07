@@ -1,6 +1,7 @@
+using Gebhardt.StoreWare.Agv.IntegrationTest.Agv;
 using Gebhardt.StoreWare.Agv.IntegrationTest.Utils;
 using Gebhardt.StoreWare.Agv.IntegrationTest.Utils.Db;
-using Gebhardt.StoreWare.Agv.WCSCommunication.Db.Models;
+using Gebhardt.StoreWare.Agv.IntegrationTest.Utils.Db.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
@@ -23,7 +24,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest
         public void StartServices()
         {
             _dockerCompose.ShouldBeNull();
-            _dockerCompose= new DockerCompose();
+            _dockerCompose= new DockerCompose(EnvVars.ComposeFileEnvVar);
             _dockerCompose.AreRemoved().ShouldBeTrue();
             _dockerCompose.Up().ShouldBeTrue();
             _dockerCompose.AreRunning().ShouldBeTrue();
@@ -112,9 +113,8 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest
 
             var restApi = new RestApi();
             var order = await restApi.WaitForOrder(orderId);
-
             order.ShouldNotBeNull();
-            
+
             order = await restApi.WaitForOrder(orderId, "Final");
             order.ShouldNotBeNull();
 
