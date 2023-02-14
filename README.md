@@ -122,13 +122,16 @@ Powershell:
 $Env:COMPOSE_FILE_IntegrationTest = Join-Path $pwd "/../../docker-compose.yml"
 $Env:COMPOSE_FILE_VirtualAGV = Join-Path $pwd "/../Agv.Karis/docker-compose.yml"
 $Env:MQTT_SAMPLES = Join-Path $pwd "/MqttMessages"
+$Env:DockerRegistryPassword = "ThisIsTheHighSecurityPasswordWhatYouCanGetFromYourPO"
 ```
 Bash:
 ```
 export COMPOSE_FILE_IntegrationTest=$(pwd)/../../docker-compose.yml
 export COMPOSE_FILE_VirtualAGV=$(pwd)/../Agv.Karis/docker-compose.yml
 export MQTT_SAMPLES=$(pwd)/MqttMessages
+export DockerRegistryPassword=ThisIsTheHighSecurityPasswordWhatYouCanGetFromYourPO 
 ```
+TAR provides the Karis AGV's image through their own Registry. The password of this Docker Registry can be obtained by the Product Owner.
 
 Run Tests 
 ```

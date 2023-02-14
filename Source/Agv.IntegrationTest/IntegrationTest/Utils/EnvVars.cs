@@ -19,6 +19,11 @@
         /// MQTT Samples
         /// </summary>
         public const string MqttSamplePath = "MQTT_SAMPLES";
+
+        /// <summary>
+        /// TAR's Docker Registry Password
+        /// </summary>
+        public const string DockerRegistryPassword = "DockerRegistryPassword";
     }
 }
 

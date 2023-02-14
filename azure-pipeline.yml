@@ -10,6 +10,18 @@ variables:
 - name: NugetVersion
   value: 6.0
 
+- group: KarisKeyGroup 
+
+parameters:
+- name: 'name'
+  type: object
+  default:
+    - ComposeTest
+    - CombinedComposeTest
+    - SingleAgvAdd_OrderProcessedSuccessful
+    - TwoAgvAdd_FourOrderProcessedSuccessful
+    - SingleVirtualAgvAdd_OrderProcessedSuccessful
+
 
 stages:
   ################################################
@@ -180,36 +192,18 @@ stages:
           coverageThreshold: 70
           coverageFailOption: fixed
   ################################################
-  # Sim on Build Agent 
+  # Integration Test 
   ################################################
-- stage: Sim_on_UbuntuServer
+- stage: IntegrationTest
   dependsOn: Build
   condition: and( succeeded(), in(variables['Build.Reason'], 'PullRequest', 'Manual') )
   pool:
     name: AGVDev
   jobs:
-  - job: Simulation
-    displayName: Preparing and executing simulation
+  - job: SimulationPreparation
+    displayName: Preparing simulation
     steps:
     
-    - task: CopyFiles@2
-      displayName: Copy Certs folder
-      inputs:
-        Contents: |
-          **/*
-          !.git/**/*
-        sourceFolder: '$(CertsFolderPath)'
-        targetFolder: '$(Build.SourcesDirectory)'
-        overWrite: true
-    
-    - task: CmdLine@2
-      displayName: docker compose build
-      inputs:
-        script: | 
-          docker compose build
-          exit 0
-        workingDirectory: '$(Build.SourcesDirectory)'
-
     - task: CmdLine@2
       displayName: docker compose pull 
       inputs:
@@ -218,47 +212,70 @@ stages:
           exit 0
         workingDirectory: '$(Build.SourcesDirectory)'
 
-    - task: NuGetAuthenticate@1
+  - ${{ each testMethod in parameters.name }}:
+    - job: ${{ testMethod }}
+      displayName: ${{ testMethod }}
+      dependsOn: SimulationPreparation
+      condition: succeeded()
+      steps:
 
-    - task: DotNetCoreCLI@2
-      displayName: Restore
-      inputs:
-        command: restore
-        projects: '$(Build.SourcesDirectory)/Source/Agv.IntegrationTest/IntegrationTest.sln'
-        feedsToUse: config
-        nugetConfigPath: '$(Build.SourcesDirectory)/Source/Agv.IntegrationTest/NuGet.Config'
+      - task: CopyFiles@2
+        displayName: Copy Certs folder
+        inputs:
+          Contents: |
+            **/*
+            !.git/**/*
+          sourceFolder: '$(CertsFolderPath)'
+          targetFolder: '$(Build.SourcesDirectory)'
+          overWrite: true
+
+      - task: NuGetAuthenticate@1
+
+      - task: DotNetCoreCLI@2
+        displayName: Restore
+        inputs:
+          command: restore
+          projects: '$(Build.SourcesDirectory)/Source/Agv.IntegrationTest/IntegrationTest.sln'
+          feedsToUse: config
+          nugetConfigPath: '$(Build.SourcesDirectory)/Source/Agv.IntegrationTest/NuGet.Config'
     
-    - task: Bash@3
-      inputs:
-        targetType: 'inline'
-        script: dotnet test --logger trx
-        workingDirectory: '$(Build.SourcesDirectory)/Source/Agv.IntegrationTest'
-      env:
-        COMPOSE_FILE_IntegrationTest: $(Build.SourcesDirectory)/docker-compose.yml
-        COMPOSE_FILE_VirtualAGV: $(Build.SourcesDirectory)/Source/Agv.Karis/docker-compose.yml
-        MQTT_SAMPLES: $(Build.SourcesDirectory)/Source/Agv.IntegrationTest/MqttMessages
+      - task: CmdLine@2
+        displayName: docker compose build
+        inputs:
+          script: | 
+            docker compose build
+            exit 0
+          workingDirectory: '$(Build.SourcesDirectory)'
 
-    - task: CmdLine@2
-      condition: succeededOrFailed()
-      displayName: docker compose down Karis AGV
-      inputs:
-        script: docker compose down
-        workingDirectory: '$(Build.SourcesDirectory)/Source/Agv.Karis'
+      # This is where each unit test is being run
+      - task: Bash@3
+        displayName: dotnet test ${{ testMethod }}
+        inputs:
+          targetType: 'inline'
+          script: dotnet test --filter Name~${{ testMethod }} --logger trx
+          workingDirectory: '$(Build.SourcesDirectory)/Source/Agv.IntegrationTest'
+        env:
+          COMPOSE_FILE_IntegrationTest: $(Build.SourcesDirectory)/docker-compose.yml
+          COMPOSE_FILE_VirtualAGV: $(Build.SourcesDirectory)/Source/Agv.Karis/docker-compose.yml
+          MQTT_SAMPLES: $(Build.SourcesDirectory)/Source/Agv.IntegrationTest/MqttMessages
+          DockerRegistryPassword: $(karisPassword)    
+      
+      - task: CmdLine@2
+        condition: succeededOrFailed()
+        displayName: docker compose down Karis AGV
+        inputs:
+          script: docker compose down
+          workingDirectory: '$(Build.SourcesDirectory)/Source/Agv.Karis'
 
-    - task: CmdLine@2
-      condition: succeededOrFailed()
-      displayName: docker compose down
-      inputs:
-        script: docker compose down
-        workingDirectory: '$(Build.SourcesDirectory)'
+      - task: CmdLine@2
+        condition: succeededOrFailed()
+        displayName: docker compose down
+        inputs:
+          script: docker compose down
+          workingDirectory: '$(Build.SourcesDirectory)'
 
-    - task: PublishTestResults@2
-      condition: succeededOrFailed()
-      inputs:
-        testRunner: VSTest
-        testResultsFiles: '$(Build.SourcesDirectory)/Source/Agv.IntegrationTest/IntegrationTest/TestResults/*.trx'
-
-    - script: rm -r TestResults
-      condition: succeededOrFailed()
-      displayName: clean up TestResults
-      workingDirectory: '$(Build.SourcesDirectory)/Source/Agv.IntegrationTest/IntegrationTest'
+      - task: PublishTestResults@2
+        condition: succeededOrFailed()
+        inputs:
+          testRunner: VSTest
+          testResultsFiles: '$(Build.SourcesDirectory)/Source/Agv.IntegrationTest/IntegrationTest/TestResults/*.trx'

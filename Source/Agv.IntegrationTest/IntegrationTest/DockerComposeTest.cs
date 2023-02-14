@@ -15,7 +15,9 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest
 
         private const string DockerRegistryUser = "gebhardt";
 
-        private const string DockerRegistryPassword = "Crqsh3XfL-xcBTq6A8rw";
+        private readonly string _dockerRegistryPassword =
+            Environment.GetEnvironmentVariable(EnvVars.DockerRegistryPassword)
+            ?? throw new InvalidOperationException($"Environment variable {EnvVars.DockerRegistryPassword} must be set.");
 
         /// <summary>
         /// Start and stop all services without VirtualAgv
@@ -38,7 +40,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest
         {
             var dc = new DockerCompose(EnvVars.ComposeFileEnvVar);
             var dcVirtual = new DockerCompose(EnvVars.ComposeFileEnvVarVirtualAgv, DockerRegistry,
-                DockerRegistryRepository, DockerRegistryUser, DockerRegistryPassword);
+                DockerRegistryRepository, DockerRegistryUser, _dockerRegistryPassword);
             dc.Up().ShouldBeTrue();
             dc.AreRunning().ShouldBeTrue();
             dcVirtual.Login();

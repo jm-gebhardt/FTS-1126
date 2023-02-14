@@ -21,7 +21,9 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest
 
         private const string DockerRegistryUser = "gebhardt";
 
-        private const string DockerRegistryPassword = "Crqsh3XfL-xcBTq6A8rw";
+        private readonly string _dockerRegistryPassword =
+            Environment.GetEnvironmentVariable(EnvVars.DockerRegistryPassword)
+            ?? throw new InvalidOperationException($"Environment variable {EnvVars.DockerRegistryPassword} must be set.");
 
         /// <summary>
         /// Start all docker services before each test
@@ -34,7 +36,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest
 
             _dockerCompose = new DockerCompose(EnvVars.ComposeFileEnvVar);
             _dockerComposeVirtualAgv = new DockerCompose(EnvVars.ComposeFileEnvVarVirtualAgv, DockerRegistry,
-                DockerRegistryRepository, DockerRegistryUser, DockerRegistryPassword);
+                DockerRegistryRepository, DockerRegistryUser, _dockerRegistryPassword);
             _dockerCompose.AreRemoved().ShouldBeTrue();
             _dockerComposeVirtualAgv.AreRemoved().ShouldBeTrue();
 
