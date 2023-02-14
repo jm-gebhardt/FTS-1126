@@ -60,7 +60,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         /// Get Agv Data
         /// </summary>
         /// <returns>JObject of AgvData or null if request is unsuccessful</returns>
-        public async Task<JObject?> GetAgvData(string correlationId)
+        public async Task<JObject?> GetAgvData(string? correlationId)
         {
             return await Request<JObject>($"agvs/{correlationId}/data");
         }
@@ -69,7 +69,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         /// Get Agv Graph
         /// </summary>
         /// <returns>JObject of AgvGraph or null if request is unsuccessful</returns>
-        public async Task<JObject?> GetAgvGraph(string correlationId)
+        public async Task<JObject?> GetAgvGraph(string? correlationId)
         {
             return await Request<JObject>($"agvs/{correlationId}/graph");
         }
@@ -97,7 +97,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         /// </summary>
         /// <param name="correlationId"></param>
         /// <returns></returns>
-        public async Task<bool> SetAgvIdle(string correlationId)
+        public async Task<bool> SetAgvIdle(string? correlationId)
         {
             return await Patch($"agvs/{correlationId}/setIdle");
         }
@@ -112,9 +112,9 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
             return await Poll(async () =>
             {
                 var agvs = await GetAgvs();
-                if (agvs is { Count: > 0 } && agvs.Any(a => a["agvId"].ToString() == agvId))
+                if (agvs is { Count: > 0 } && agvs.Any(a => a["agvId"]?.ToString() == agvId))
                 {
-                    return agvs.First(token => token["agvId"].ToString() == agvId);
+                    return agvs.First(token => token["agvId"]?.ToString() == agvId);
                 }
 
                 return null;
@@ -126,7 +126,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         /// </summary>
         /// <param name="correlationId"></param>
         /// <returns>JObject of AgvData or null if not found or unsuccessful</returns>
-        public async Task<JObject?> WaitForAgvData(string correlationId)
+        public async Task<JObject?> WaitForAgvData(string? correlationId)
         {
             return await Poll(async () =>
             {
@@ -140,7 +140,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         /// </summary>
         /// <param name="correlationId"></param>
         /// <returns>JObject of AgvGraph or null if not found or unsuccessful</returns>
-        public async Task<JObject?> WaitForAgvGraph(string correlationId)
+        public async Task<JObject?> WaitForAgvGraph(string? correlationId)
         {
             return await Poll(async () =>
             {
@@ -154,15 +154,14 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         /// </summary>
         /// <param name="agvCorrelationId"></param>
         /// <returns>JObject of Map or null if not found or unsuccessful</returns>
-        public async Task<JToken?> WaitForMap(string agvCorrelationId)
+        public async Task<JToken?> WaitForMap(string? agvCorrelationId)
         {
             return await Poll(async () =>
             {
                 var maps = await GetMaps();
-                if (maps is { Count: > 0 } &&
-                    maps.Any(a => a["relatedAgvs"].Any(c => c.ToString() == agvCorrelationId)))
+                if (maps is { Count: > 0 } && maps.Any(a => (a["relatedAgvs"] ?? throw new InvalidOperationException()).Any( c => c.ToString() == agvCorrelationId)))
                 {
-                    return maps.First(token => token["relatedAgvs"].Any(c => c.ToString() == agvCorrelationId));
+                    return maps.First(token => (token["relatedAgvs"] ?? throw new InvalidOperationException()).Any(c => c.ToString() == agvCorrelationId));
                 }
 
                 return null;
@@ -182,11 +181,11 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
             {
                 var orders = await GetOrders();
                 if (orders is { Count: > 0 } &&
-                    orders.Any(a => a["orderDetails"]["orderId"].ToString() == orderId)
+                    orders.Any(a => a["orderDetails"]?["orderId"]?.ToString() == orderId)
                    )
                 {
-                    var order = orders.First(token => token["orderDetails"]["orderId"].ToString() == orderId);
-                    if (orderState == null || order["currentState"].ToString() == orderState)
+                    var order = orders.First(token => token["orderDetails"]?["orderId"]?.ToString() == orderId);
+                    if (orderState == null || order["currentState"]?.ToString() == orderState)
                     {
                         return order;
                     }

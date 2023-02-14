@@ -1,1125 +1,1126 @@
 {
-    "openapi": "3.0.1",
-    "info": {
-        "title": "TransportOrder Monitoring API",
-        "version": "v1"
-    },
-    "paths": {
-        "/agvs": {
-            "get": {
-                "tags": [
-                    "Agv"
-                ],
-                "summary": "Retrieve paged list of agvs",
-                "responses": {
-                    "200": {
-                        "description": "Ok",
-                        "content": {
-                            "text/plain": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/Agv"
-                                    }
-                                }
-                            },
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/Agv"
-                                    }
-                                }
-                            },
-                            "text/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/Agv"
-                                    }
-                                }
-                            }
-                        }
-                    }
+  "openapi": "3.0.1",
+  "info": {
+    "title": "TransportOrder Monitoring API",
+    "version": "v1"
+  },
+  "paths": {
+    "/agvs": {
+      "get": {
+        "tags": [
+          "Agv"
+        ],
+        "summary": "Retrieve paged list of agvs",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Agv"
+                  }
                 }
-            }
-        },
-        "/agvs/{correlationId}/graph": {
-            "get": {
-                "tags": [
-                    "Agv"
-                ],
-                "summary": "Retrieve graph for agv",
-                "parameters": [
-                    {
-                        "name": "correlationId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Ok",
-                        "content": {
-                            "text/plain": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Graph"
-                                }
-                            },
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Graph"
-                                }
-                            },
-                            "text/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Graph"
-                                }
-                            }
-                        }
-                    },
-                    "204": {
-                        "description": "No content"
-                    },
-                    "404": {
-                        "description": "Not found"
-                    }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Agv"
+                  }
                 }
-            }
-        },
-        "/agvs/{correlationId}/status": {
-            "get": {
-                "tags": [
-                    "Agv"
-                ],
-                "summary": "Retrieve status for agv",
-                "parameters": [
-                    {
-                        "name": "correlationId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Ok",
-                        "content": {
-                            "text/plain": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/AgvState"
-                                }
-                            },
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/AgvState"
-                                }
-                            },
-                            "text/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/AgvState"
-                                }
-                            }
-                        }
-                    },
-                    "204": {
-                        "description": "No content"
-                    },
-                    "404": {
-                        "description": "Not found"
-                    }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Agv"
+                  }
                 }
+              }
             }
-        },
-        "/agvs/{correlationId}/data": {
-            "get": {
-                "tags": [
-                    "Agv"
-                ],
-                "summary": "Retrieve data for agv",
-                "parameters": [
-                    {
-                        "name": "correlationId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Ok",
-                        "content": {
-                            "text/plain": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/AgvData"
-                                }
-                            },
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/AgvData"
-                                }
-                            },
-                            "text/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/AgvData"
-                                }
-                            }
-                        }
-                    },
-                    "204": {
-                        "description": "No Content"
-                    },
-                    "404": {
-                        "description": "Not found"
-                    }
-                }
-            }
-        },
-        "/agvsPositions": {
-            "get": {
-                "tags": [
-                    "Agv"
-                ],
-                "summary": "Retrieve list of agv positions",
-                "responses": {
-                    "200": {
-                        "description": "Ok",
-                        "content": {
-                            "text/plain": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/AgvPositionStatus"
-                                    }
-                                }
-                            },
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/AgvPositionStatus"
-                                    }
-                                }
-                            },
-                            "text/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/AgvPositionStatus"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/agvs/{correlationId}/setIdle": {
-            "patch": {
-                "tags": [
-                    "Agv"
-                ],
-                "summary": "Set status of agv from Discovered to Idle",
-                "parameters": [
-                    {
-                        "name": "correlationId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Ok: AGV status was successfully set to Idle"
-                    },
-                    "400": {
-                        "description": "Bad Request: AGV is not in State 'Discovered'"
-                    },
-                    "404": {
-                        "description": "Not Found: AGV with the given correlationId does not exist"
-                    }
-                }
-            }
-        },
-        "/agvs/{correlationId}/lockAgv": {
-            "patch": {
-                "tags": [
-                    "Agv"
-                ],
-                "summary": "Lock AGV to prevent it from being assigned to transport orders",
-                "parameters": [
-                    {
-                        "name": "correlationId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Ok: AGV status was successfully set to Idle"
-                    },
-                    "404": {
-                        "description": "Not Found: AGV with the given correlationId does not exist"
-                    }
-                }
-            }
-        },
-        "/agvs/{correlationId}/emitRequestData": {
-            "patch": {
-                "tags": [
-                    "Agv"
-                ],
-                "summary": "Emit RequestData telegram when receiving PATCH request",
-                "parameters": [
-                    {
-                        "name": "correlationId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Ok: Telegram was successfully emitted"
-                    },
-                    "404": {
-                        "description": "Not Found: AGV with the given correlationId does not exist"
-                    }
-                }
-            }
-        },
-        "/agvs/{correlationId}/emitRequestGraph": {
-            "patch": {
-                "tags": [
-                    "Agv"
-                ],
-                "summary": "Emit RequestGraph telegram when receiving PATCH request",
-                "parameters": [
-                    {
-                        "name": "correlationId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Ok: Telegram was successfully emitted"
-                    },
-                    "404": {
-                        "description": "Not Found: AGV with the given correlationId does not exist"
-                    }
-                }
-            }
-        },
-        "/maps": {
-            "get": {
-                "tags": [
-                    "Map"
-                ],
-                "summary": "Get all available maps",
-                "responses": {
-                    "200": {
-                        "description": "Success",
-                        "content": {
-                            "text/plain": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/Map"
-                                    }
-                                }
-                            },
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/Map"
-                                    }
-                                }
-                            },
-                            "text/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/Map"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/maps/{correlationId}/map.png": {
-            "get": {
-                "tags": [
-                    "Map"
-                ],
-                "summary": "Get Map Image",
-                "parameters": [
-                    {
-                        "name": "correlationId",
-                        "in": "path",
-                        "description": "",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Success"
-                    }
-                }
-            }
-        },
-        "/meta/hubMethods": {
-            "get": {
-                "tags": [
-                    "Meta"
-                ],
-                "summary": "Get available SignalR hub methods",
-                "responses": {
-                    "200": {
-                        "description": "Ok",
-                        "content": {
-                            "text/plain": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/HubMethods"
-                                    }
-                                }
-                            },
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/HubMethods"
-                                    }
-                                }
-                            },
-                            "text/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/HubMethods"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/orders": {
-            "get": {
-                "tags": [
-                    "TransportOrder"
-                ],
-                "summary": "Retrieve active transport orders\r\nIf correlation Id is provided, all other parameters are ignored",
-                "parameters": [
-                    {
-                        "name": "PageNumber",
-                        "in": "query",
-                        "description": "Page Number",
-                        "schema": {
-                            "type": "integer",
-                            "format": "int32",
-                            "default": 1
-                        }
-                    },
-                    {
-                        "name": "PageSize",
-                        "in": "query",
-                        "description": "Page Size",
-                        "schema": {
-                            "type": "integer",
-                            "format": "int32",
-                            "default": 25
-                        }
-                    },
-                    {
-                        "name": "Start",
-                        "in": "query",
-                        "description": "Start date of range",
-                        "schema": {
-                            "type": "string",
-                            "format": "date-time"
-                        }
-                    },
-                    {
-                        "name": "End",
-                        "in": "query",
-                        "description": "End date of range",
-                        "schema": {
-                            "type": "string",
-                            "format": "date-time"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Ok",
-                        "content": {
-                            "text/plain": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/Order"
-                                    }
-                                }
-                            },
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/Order"
-                                    }
-                                }
-                            },
-                            "text/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/Order"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/orders/{correlationId}/resetOrder": {
-            "patch": {
-                "tags": [
-                    "TransportOrder"
-                ],
-                "summary": "Resets order and starts a new transport",
-                "parameters": [
-                    {
-                        "name": "correlationId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Ok: Order was reset"
-                    },
-                    "404": {
-                        "description": "Not Found: Order with the given correlationId does not exist"
-                    }
-                }
-            }
-        },
-        "/orders/{correlationId}/completeOrder": {
-            "patch": {
-                "tags": [
-                    "TransportOrder"
-                ],
-                "summary": "Manually completes order",
-                "parameters": [
-                    {
-                        "name": "correlationId",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Ok: Order was completed"
-                    },
-                    "404": {
-                        "description": "Not Found: Order with the given correlationId does not exist"
-                    }
-                }
-            }
+          }
         }
+      }
     },
-    "components": {
-        "schemas": {
-            "Agv": {
-                "required": [
-                    "agvId",
-                    "correlationId",
-                    "currentState"
-                ],
-                "type": "object",
-                "properties": {
-                    "correlationId": {
-                        "type": "string",
-                        "description": "CorrelationId",
-                        "format": "uuid"
-                    },
-                    "agvId": {
-                        "type": "string",
-                        "description": "AGV Serial Number"
-                    },
-                    "currentState": {
-                        "type": "string",
-                        "description": "Current State"
-                    }
-                },
-                "additionalProperties": false,
-                "description": "AGV model"
-            },
-            "AgvData": {
-                "required": [
-                    "batteryCapacity",
-                    "correlationId",
-                    "maxVelocityStraight",
-                    "model",
-                    "sensors",
-                    "type"
-                ],
-                "type": "object",
-                "properties": {
-                    "correlationId": {
-                        "type": "string",
-                        "description": "Used to identify a message as correlated so that the CorrelationId can be returned",
-                        "format": "uuid"
-                    },
-                    "model": {
-                        "type": "string",
-                        "description": "The model name of the AGV"
-                    },
-                    "type": {
-                        "type": "string",
-                        "description": "The type of the AGV"
-                    },
-                    "ipV4Address": {
-                        "type": "string",
-                        "description": "The IP Address of the AGV",
-                        "nullable": true
-                    },
-                    "maxVelocityStraight": {
-                        "type": "number",
-                        "description": "The maximum velocity of the AGV in straight direction [m/s]",
-                        "format": "double"
-                    },
-                    "batteryCapacity": {
-                        "type": "number",
-                        "description": "The capacity of the AGVs battery in [Ah]",
-                        "format": "double"
-                    },
-                    "length": {
-                        "type": "number",
-                        "description": "The length of the AGV in [m]",
-                        "format": "double",
-                        "nullable": true
-                    },
-                    "width": {
-                        "type": "number",
-                        "description": "The width of the AGV in [m]",
-                        "format": "double",
-                        "nullable": true
-                    },
-                    "acceleration": {
-                        "type": "number",
-                        "description": "The maximum velocity of the AGV while turning on spot [m/s^2]",
-                        "format": "double",
-                        "nullable": true
-                    },
-                    "maxVelocityTurn": {
-                        "type": "number",
-                        "description": "The maximum velocity of the AGV in while turning [m/s]",
-                        "format": "double",
-                        "nullable": true
-                    },
-                    "maxVelocityTurnOnSpot": {
-                        "type": "number",
-                        "description": "The maximum velocity of the AGV while turning on spot [rad/s]",
-                        "format": "double",
-                        "nullable": true
-                    },
-                    "payload": {
-                        "type": "integer",
-                        "description": "The max. payload of the AGV in [kg]",
-                        "format": "int64",
-                        "nullable": true
-                    },
-                    "sensors": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/Sensor"
-                        },
-                        "description": "The list of sensors in the agv"
-                    }
-                },
-                "additionalProperties": false,
-                "description": "AGV Data"
-            },
-            "AgvPosition": {
-                "required": [
-                    "positionInitialized",
-                    "theta",
-                    "x",
-                    "y",
-                    "z"
-                ],
-                "type": "object",
-                "properties": {
-                    "positionInitialized": {
-                        "type": "boolean",
-                        "description": "Returns true, when the position is known and valid."
-                    },
-                    "x": {
-                        "type": "number",
-                        "description": "Current X-position [m].",
-                        "format": "float"
-                    },
-                    "y": {
-                        "type": "number",
-                        "description": "Current Y-position [m].",
-                        "format": "float"
-                    },
-                    "z": {
-                        "type": "number",
-                        "description": "Current Z-position [m].",
-                        "format": "float"
-                    },
-                    "theta": {
-                        "type": "number",
-                        "description": "Current angle (rotation) [rad].",
-                        "format": "float"
-                    },
-                    "deviationRange": {
-                        "type": "number",
-                        "description": "Deviation from the responded position [m].",
-                        "format": "float",
-                        "nullable": true
-                    }
-                },
-                "additionalProperties": false,
-                "description": "AGV position information"
-            },
-            "AgvPositionStatus": {
-                "required": [
-                    "agvId",
-                    "agvPosition",
-                    "correlationId"
-                ],
-                "type": "object",
-                "properties": {
-                    "correlationId": {
-                        "type": "string",
-                        "description": "The correlationId of the new AGV position",
-                        "format": "uuid"
-                    },
-                    "agvId": {
-                        "type": "string",
-                        "description": "Identifier of the AGV"
-                    },
-                    "agvPosition": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/AgvPosition"
-                            }
-                        ],
-                        "description": "AGV position information"
-                    }
-                },
-                "additionalProperties": false,
-                "description": "Model for the status of the AGV position"
-            },
-            "AgvState": {
-                "required": [
-                    "alive"
-                ],
-                "type": "object",
-                "allOf": [
-                    {
-                        "$ref": "#/components/schemas/Agv"
-                    }
-                ],
-                "properties": {
-                    "alive": {
-                        "type": "boolean",
-                        "description": ""
-                    },
-                    "orderId": {
-                        "type": "string",
-                        "description": "",
-                        "nullable": true
-                    },
-                    "busy": {
-                        "type": "boolean",
-                        "description": "",
-                        "nullable": true
-                    },
-                    "automatic": {
-                        "type": "boolean",
-                        "description": "",
-                        "nullable": true
-                    },
-                    "batteryCharge": {
-                        "type": "integer",
-                        "description": "",
-                        "format": "int32",
-                        "nullable": true
-                    },
-                    "charging": {
-                        "type": "boolean",
-                        "description": "",
-                        "nullable": true
-                    },
-                    "disturbed": {
-                        "type": "boolean",
-                        "description": "",
-                        "nullable": true
-                    },
-                    "lastNodeId": {
-                        "type": "string",
-                        "description": "",
-                        "nullable": true
-                    }
-                },
-                "additionalProperties": false,
-                "description": "AgvState model"
-            },
-            "Edge": {
-                "required": [
-                    "from",
-                    "to"
-                ],
-                "type": "object",
-                "properties": {
-                    "from": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/Node"
-                            }
-                        ],
-                        "description": "Node representation."
-                    },
-                    "to": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/Node"
-                            }
-                        ],
-                        "description": "Node representation."
-                    }
-                },
-                "additionalProperties": false,
-                "description": "Model for drawing an edge in the UI"
-            },
-            "Graph": {
-                "required": [
-                    "correlationId",
-                    "edges",
-                    "nodes"
-                ],
-                "type": "object",
-                "properties": {
-                    "edges": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/Edge"
-                        },
-                        "description": "The list of edges in the graph."
-                    },
-                    "nodes": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/Node"
-                        },
-                        "description": "The list of nodes in the graph"
-                    },
-                    "correlationId": {
-                        "type": "string",
-                        "description": "CorrelationId",
-                        "format": "uuid"
-                    }
-                },
-                "additionalProperties": false,
-                "description": "Model for drawing a graph in the UI"
-            },
-            "HostOrderCreator": {
-                "enum": [
-                    "Wms",
-                    "Simulation"
-                ],
-                "type": "string",
-                "description": "Defines the creator of a host order"
-            },
-            "HubMethods": {
-                "enum": [
-                    "OrderStateChanged",
-                    "AgvDiscovered",
-                    "AgvStateChanged",
-                    "AgvPositionChanged"
-                ],
-                "type": "string",
-                "description": "SignalR hub methods"
-            },
-            "Map": {
-                "required": [
-                    "correlationId",
-                    "mapId",
-                    "relatedAgvs",
-                    "resolution",
-                    "xOffset",
-                    "yOffset"
-                ],
-                "type": "object",
-                "properties": {
-                    "correlationId": {
-                        "type": "string",
-                        "description": "Map Correlation Id",
-                        "format": "uuid"
-                    },
-                    "mapId": {
-                        "type": "string",
-                        "description": "Map Id"
-                    },
-                    "resolution": {
-                        "type": "number",
-                        "description": "The resolution of the maps image. Expressed as how many [m] per pixel are represented",
-                        "format": "double"
-                    },
-                    "xOffset": {
-                        "type": "number",
-                        "description": "The x offset of the map in [m] where the mapped graph coordinate system starts. Origin is the left upper corner.",
-                        "format": "double"
-                    },
-                    "yOffset": {
-                        "type": "number",
-                        "description": "The y offset of the map in [m] where the mapped graph coordinate system starts. Origin is the left upper corner.",
-                        "format": "double"
-                    },
-                    "relatedAgvs": {
-                        "type": "array",
-                        "items": {
-                            "type": "string",
-                            "format": "uuid"
-                        },
-                        "description": "List of Agvs using this map"
-                    }
-                },
-                "additionalProperties": false,
-                "description": "Map Model"
-            },
-            "Node": {
-                "required": [
-                    "enabled",
-                    "id",
-                    "type",
-                    "x",
-                    "y",
-                    "z"
-                ],
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "string",
-                        "description": "The unique ID of the node."
-                    },
-                    "enabled": {
-                        "type": "boolean",
-                        "description": "Node enabled/disabled."
-                    },
-                    "type": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/NodeType"
-                            }
-                        ],
-                        "description": "Node type of the node."
-                    },
-                    "x": {
-                        "type": "number",
-                        "description": "The x coordinate of the node.",
-                        "format": "float"
-                    },
-                    "y": {
-                        "type": "number",
-                        "description": "The y coordinate of the node",
-                        "format": "float"
-                    },
-                    "z": {
-                        "type": "number",
-                        "description": "The z coordinate of the node.\r\n<br>\r\nSet to default 0 when not needed.\r\n",
-                        "format": "float"
-                    },
-                    "theta": {
-                        "type": "number",
-                        "description": "The rotation coordinate of the node.\r\n<br>\r\nSet to null when not needed.\r\n",
-                        "format": "float",
-                        "nullable": false
-                    }
-                },
-                "additionalProperties": false,
-                "description": "Node representation."
-            },
-            "NodeType": {
-                "enum": [
-                    "WayPoint",
-                    "Charge",
-                    "Pick",
-                    "Drop",
-                    "PickDrop",
-                    "Park"
-                ],
-                "type": "string",
-                "description": "Node types.\r\n<br>\r\nThese types are coming from the specification.\r\n"
-            },
-            "Order": {
-                "required": [
-                    "correlationId",
-                    "currentState",
-                    "orderDetails"
-                ],
-                "type": "object",
-                "properties": {
-                    "currentState": {
-                        "type": "string",
-                        "description": "Current State"
-                    },
-                    "assignedAgv": {
-                        "type": "string",
-                        "description": "AgvId",
-                        "format": "uuid",
-                        "nullable": true
-                    },
-                    "orderDetails": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/OrderDetails"
-                            }
-                        ],
-                        "description": "Order object used by all messages that require the order details"
-                    },
-                    "correlationId": {
-                        "type": "string",
-                        "description": "Used to identify a message as correlated so that the CorrelationId can be returned",
-                        "format": "uuid"
-                    },
-                    "failedReason": {
-                        "type": "string",
-                        "description": "Reason why an order failed",
-                        "nullable": true
-                    }
-                },
-                "additionalProperties": false,
-                "description": "Order Model\r\n            \r\nThis is a simply copy of the Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.IOrder to overcome a json serialization problems\r\n<see href=\"https://github.com/dotnet/runtime/issues/41749\" />"
-            },
-            "OrderDetails": {
-                "required": [
-                    "correlationId",
-                    "creationDate",
-                    "creator",
-                    "destination",
-                    "leNo",
-                    "orderId",
-                    "source"
-                ],
-                "type": "object",
-                "properties": {
-                    "correlationId": {
-                        "type": "string",
-                        "description": "Used to identify a message as correlated so that the CorrelationId can be returned",
-                        "format": "uuid"
-                    },
-                    "orderId": {
-                        "type": "string",
-                        "description": "The unique ID of the order known by the host system"
-                    },
-                    "source": {
-                        "type": "string",
-                        "description": "The source where to pick up the order"
-                    },
-                    "destination": {
-                        "type": "string",
-                        "description": "The destination where to drop the order"
-                    },
-                    "leNo": {
-                        "type": "string",
-                        "description": "The LeNo of the orders handled box or transportation good"
-                    },
-                    "creator": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/HostOrderCreator"
-                            }
-                        ],
-                        "description": "The creator of the host order"
-                    },
-                    "creationDate": {
-                        "type": "string",
-                        "description": "The UTC timestamp when the order was created",
-                        "format": "date-time"
-                    }
-                },
-                "additionalProperties": false,
-                "description": "Order object used by all messages that require the order details"
-            },
-            "Sensor": {
-                "type": "object",
-                "properties": {
-                    "sensorIdentifier": {
-                        "type": "string",
-                        "description": "The identifier of the sensor",
-                        "nullable": true
-                    }
-                },
-                "additionalProperties": false,
-                "description": "A sensor object skeleton"
+    "/agvs/{correlationId}/graph": {
+      "get": {
+        "tags": [
+          "Agv"
+        ],
+        "summary": "Retrieve graph for agv",
+        "parameters": [
+          {
+            "name": "correlationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
             }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Graph"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Graph"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Graph"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No content"
+          },
+          "404": {
+            "description": "Not found"
+          }
         }
+      }
     },
-    "tags": [
-        {
-            "name": "Agv",
-            "description": "Controller for host order data"
-        },
-        {
-            "name": "Map",
-            "description": "Map Rest API Controller"
-        },
-        {
-            "name": "Meta",
-            "description": "Controller for meta data"
-        },
-        {
-            "name": "TransportOrder",
-            "description": "Controller for host order data"
+    "/agvs/{correlationId}/status": {
+      "get": {
+        "tags": [
+          "Agv"
+        ],
+        "summary": "Retrieve status for agv",
+        "parameters": [
+          {
+            "name": "correlationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgvState"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgvState"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgvState"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No content"
+          },
+          "404": {
+            "description": "Not found"
+          }
         }
-    ]
+      }
+    },
+    "/agvs/{correlationId}/data": {
+      "get": {
+        "tags": [
+          "Agv"
+        ],
+        "summary": "Retrieve data for agv",
+        "parameters": [
+          {
+            "name": "correlationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgvData"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgvData"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgvData"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/agvsPositions": {
+      "get": {
+        "tags": [
+          "Agv"
+        ],
+        "summary": "Retrieve list of agv positions",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AgvPositionStatus"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AgvPositionStatus"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AgvPositionStatus"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agvs/{correlationId}/setIdle": {
+      "patch": {
+        "tags": [
+          "Agv"
+        ],
+        "summary": "Set status of agv from Discovered to Idle",
+        "parameters": [
+          {
+            "name": "correlationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok: AGV status was successfully set to Idle"
+          },
+          "400": {
+            "description": "Bad Request: AGV is not in State 'Discovered'"
+          },
+          "404": {
+            "description": "Not Found: AGV with the given correlationId does not exist"
+          }
+        }
+      }
+    },
+    "/agvs/{correlationId}/lockAgv": {
+      "patch": {
+        "tags": [
+          "Agv"
+        ],
+        "summary": "Lock AGV to prevent it from being assigned to transport orders",
+        "parameters": [
+          {
+            "name": "correlationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok: AGV status was successfully set to Idle"
+          },
+          "404": {
+            "description": "Not Found: AGV with the given correlationId does not exist"
+          }
+        }
+      }
+    },
+    "/agvs/{correlationId}/emitRequestData": {
+      "patch": {
+        "tags": [
+          "Agv"
+        ],
+        "summary": "Emit RequestData telegram when receiving PATCH request",
+        "parameters": [
+          {
+            "name": "correlationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok: Telegram was successfully emitted"
+          },
+          "404": {
+            "description": "Not Found: AGV with the given correlationId does not exist"
+          }
+        }
+      }
+    },
+    "/agvs/{correlationId}/emitRequestGraph": {
+      "patch": {
+        "tags": [
+          "Agv"
+        ],
+        "summary": "Emit RequestGraph telegram when receiving PATCH request",
+        "parameters": [
+          {
+            "name": "correlationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok: Telegram was successfully emitted"
+          },
+          "404": {
+            "description": "Not Found: AGV with the given correlationId does not exist"
+          }
+        }
+      }
+    },
+    "/maps": {
+      "get": {
+        "tags": [
+          "Map"
+        ],
+        "summary": "Get all available maps",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Map"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Map"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Map"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/maps/{correlationId}/map.png": {
+      "get": {
+        "tags": [
+          "Map"
+        ],
+        "summary": "Get Map Image",
+        "parameters": [
+          {
+            "name": "correlationId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/meta/hubMethods": {
+      "get": {
+        "tags": [
+          "Meta"
+        ],
+        "summary": "Get available SignalR hub methods",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HubMethods"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HubMethods"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HubMethods"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/orders": {
+      "get": {
+        "tags": [
+          "TransportOrder"
+        ],
+        "summary": "Retrieve active transport orders\r\nIf correlation Id is provided, all other parameters are ignored",
+        "parameters": [
+          {
+            "name": "PageNumber",
+            "in": "query",
+            "description": "Page Number",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "PageSize",
+            "in": "query",
+            "description": "Page Size",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 25
+            }
+          },
+          {
+            "name": "Start",
+            "in": "query",
+            "description": "Start date of range",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "End",
+            "in": "query",
+            "description": "End date of range",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Order"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Order"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Order"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/orders/{correlationId}/resetOrder": {
+      "patch": {
+        "tags": [
+          "TransportOrder"
+        ],
+        "summary": "Resets order and starts a new transport",
+        "parameters": [
+          {
+            "name": "correlationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok: Order was reset"
+          },
+          "400": {
+            "description": "BadRequest: Order is not completed yet"
+          },
+          "404": {
+            "description": "Not Found: Order with the given correlationId does not exist"
+          }
+        }
+      }
+    },
+    "/orders/{correlationId}/completeOrder": {
+      "patch": {
+        "tags": [
+          "TransportOrder"
+        ],
+        "summary": "Completes order manually",
+        "parameters": [
+          {
+            "name": "correlationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok: Order was completed"
+          },
+          "404": {
+            "description": "Not Found: Order with the given correlationId does not exist"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Agv": {
+        "required": [
+          "agvId",
+          "alive",
+          "correlationId",
+          "currentState"
+        ],
+        "type": "object",
+        "properties": {
+          "correlationId": {
+            "type": "string",
+            "description": "CorrelationId",
+            "format": "uuid"
+          },
+          "agvId": {
+            "type": "string",
+            "description": "AGV Serial Number"
+          },
+          "currentState": {
+            "type": "string",
+            "description": "Current State"
+          },
+          "alive": {
+            "type": "boolean",
+            "description": "Communication alive state"
+          }
+        },
+        "additionalProperties": false,
+        "description": "AGV model"
+      },
+      "AgvData": {
+        "required": [
+          "batteryCapacity",
+          "correlationId",
+          "maxVelocityStraight",
+          "model",
+          "sensors",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "correlationId": {
+            "type": "string",
+            "description": "Used to identify a message as correlated so that the CorrelationId can be returned",
+            "format": "uuid"
+          },
+          "model": {
+            "type": "string",
+            "description": "The model name of the AGV"
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of the AGV"
+          },
+          "ipV4Address": {
+            "type": "string",
+            "description": "The IP Address of the AGV",
+            "nullable": true
+          },
+          "maxVelocityStraight": {
+            "type": "number",
+            "description": "The maximum velocity of the AGV in straight direction [m/s]",
+            "format": "double"
+          },
+          "batteryCapacity": {
+            "type": "number",
+            "description": "The capacity of the AGVs battery in [Ah]",
+            "format": "double"
+          },
+          "length": {
+            "type": "number",
+            "description": "The length of the AGV in [m]",
+            "format": "double",
+            "nullable": true
+          },
+          "width": {
+            "type": "number",
+            "description": "The width of the AGV in [m]",
+            "format": "double",
+            "nullable": true
+          },
+          "acceleration": {
+            "type": "number",
+            "description": "The maximum velocity of the AGV while turning on spot [m/s^2]",
+            "format": "double",
+            "nullable": true
+          },
+          "maxVelocityTurn": {
+            "type": "number",
+            "description": "The maximum velocity of the AGV in while turning [m/s]",
+            "format": "double",
+            "nullable": true
+          },
+          "maxVelocityTurnOnSpot": {
+            "type": "number",
+            "description": "The maximum velocity of the AGV while turning on spot [rad/s]",
+            "format": "double",
+            "nullable": true
+          },
+          "payload": {
+            "type": "integer",
+            "description": "The max. payload of the AGV in [kg]",
+            "format": "int64",
+            "nullable": true
+          },
+          "sensors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Sensor"
+            },
+            "description": "The list of sensors in the agv"
+          }
+        },
+        "additionalProperties": false,
+        "description": "AGV Data"
+      },
+      "AgvPosition": {
+        "required": [
+          "positionInitialized",
+          "theta",
+          "x",
+          "y",
+          "z"
+        ],
+        "type": "object",
+        "properties": {
+          "positionInitialized": {
+            "type": "boolean",
+            "description": "Returns true, when the position is known and valid."
+          },
+          "x": {
+            "type": "number",
+            "description": "Current X-position [m].",
+            "format": "float"
+          },
+          "y": {
+            "type": "number",
+            "description": "Current Y-position [m].",
+            "format": "float"
+          },
+          "z": {
+            "type": "number",
+            "description": "Current Z-position [m].",
+            "format": "float"
+          },
+          "theta": {
+            "type": "number",
+            "description": "Current angle (rotation) [rad].",
+            "format": "float"
+          },
+          "deviationRange": {
+            "type": "number",
+            "description": "Deviation from the responded position [m].",
+            "format": "float",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "AGV position information"
+      },
+      "AgvPositionStatus": {
+        "required": [
+          "agvId",
+          "agvPosition",
+          "correlationId"
+        ],
+        "type": "object",
+        "properties": {
+          "correlationId": {
+            "type": "string",
+            "description": "The correlationId of the new AGV position",
+            "format": "uuid"
+          },
+          "agvId": {
+            "type": "string",
+            "description": "Identifier of the AGV"
+          },
+          "agvPosition": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AgvPosition"
+              }
+            ],
+            "description": "AGV position information"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Model for the status of the AGV position"
+      },
+      "AgvState": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Agv"
+          }
+        ],
+        "properties": {
+          "orderId": {
+            "type": "string",
+            "description": "",
+            "nullable": true
+          },
+          "busy": {
+            "type": "boolean",
+            "description": "",
+            "nullable": true
+          },
+          "automatic": {
+            "type": "boolean",
+            "description": "",
+            "nullable": true
+          },
+          "batteryCharge": {
+            "type": "integer",
+            "description": "",
+            "format": "int32",
+            "nullable": true
+          },
+          "charging": {
+            "type": "boolean",
+            "description": "",
+            "nullable": true
+          },
+          "disturbed": {
+            "type": "boolean",
+            "description": "",
+            "nullable": true
+          },
+          "lastNodeId": {
+            "type": "string",
+            "description": "",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "AgvState model"
+      },
+      "Edge": {
+        "required": [
+          "from",
+          "to"
+        ],
+        "type": "object",
+        "properties": {
+          "from": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Node"
+              }
+            ],
+            "description": "Node representation."
+          },
+          "to": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Node"
+              }
+            ],
+            "description": "Node representation."
+          }
+        },
+        "additionalProperties": false,
+        "description": "Model for drawing an edge in the UI"
+      },
+      "Graph": {
+        "required": [
+          "correlationId",
+          "edges",
+          "nodes"
+        ],
+        "type": "object",
+        "properties": {
+          "edges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Edge"
+            },
+            "description": "The list of edges in the graph."
+          },
+          "nodes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Node"
+            },
+            "description": "The list of nodes in the graph"
+          },
+          "correlationId": {
+            "type": "string",
+            "description": "CorrelationId",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Model for drawing a graph in the UI"
+      },
+      "HostOrderCreator": {
+        "enum": [
+          "Wms",
+          "Simulation"
+        ],
+        "type": "string",
+        "description": "Defines the creator of a host order"
+      },
+      "HubMethods": {
+        "enum": [
+          "OrderStateChanged",
+          "AgvDiscovered",
+          "AgvStateChanged",
+          "AgvPositionChanged"
+        ],
+        "type": "string",
+        "description": "SignalR hub methods"
+      },
+      "Map": {
+        "required": [
+          "correlationId",
+          "mapId",
+          "relatedAgvs",
+          "resolution",
+          "xOffset",
+          "yOffset"
+        ],
+        "type": "object",
+        "properties": {
+          "correlationId": {
+            "type": "string",
+            "description": "Map Correlation Id",
+            "format": "uuid"
+          },
+          "mapId": {
+            "type": "string",
+            "description": "Map Id"
+          },
+          "resolution": {
+            "type": "number",
+            "description": "The resolution of the maps image. Expressed as how many [m] per pixel are represented",
+            "format": "double"
+          },
+          "xOffset": {
+            "type": "number",
+            "description": "The x offset of the map in [m] where the mapped graph coordinate system starts. Origin is the left upper corner.",
+            "format": "double"
+          },
+          "yOffset": {
+            "type": "number",
+            "description": "The y offset of the map in [m] where the mapped graph coordinate system starts. Origin is the left upper corner.",
+            "format": "double"
+          },
+          "relatedAgvs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "List of Agvs using this map"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Map Model"
+      },
+      "Node": {
+        "required": [
+          "enabled",
+          "id",
+          "theta",
+          "type",
+          "x",
+          "y",
+          "z"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The unique ID of the node."
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "Node enabled/disabled."
+          },
+          "type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/NodeType"
+              }
+            ],
+            "description": "Node type of the node."
+          },
+          "x": {
+            "type": "number",
+            "description": "The x coordinate of the node.",
+            "format": "float"
+          },
+          "y": {
+            "type": "number",
+            "description": "The y coordinate of the node",
+            "format": "float"
+          },
+          "z": {
+            "type": "number",
+            "description": "The z coordinate of the node.\r\n<br>\r\nSet to default 0 when not needed.\r\n",
+            "format": "float"
+          },
+          "theta": {
+            "type": "number",
+            "description": "The theta coordinate of the node.",
+            "format": "float"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Node representation."
+      },
+      "NodeType": {
+        "enum": [
+          "WayPoint",
+          "Charge",
+          "Pick",
+          "Drop",
+          "PickDrop",
+          "Park"
+        ],
+        "type": "string",
+        "description": "Node types.\r\n<br>\r\nThese types are coming from the specification.\r\n"
+      },
+      "Order": {
+        "required": [
+          "correlationId",
+          "currentState",
+          "orderDetails"
+        ],
+        "type": "object",
+        "properties": {
+          "currentState": {
+            "type": "string",
+            "description": "Current State"
+          },
+          "assignedAgv": {
+            "type": "string",
+            "description": "AgvId",
+            "format": "uuid",
+            "nullable": true
+          },
+          "orderDetails": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OrderDetails"
+              }
+            ],
+            "description": "Order object used by all messages that require the order details"
+          },
+          "correlationId": {
+            "type": "string",
+            "description": "Used to identify a message as correlated so that the CorrelationId can be returned",
+            "format": "uuid"
+          },
+          "failedReason": {
+            "type": "string",
+            "description": "Reason why an order failed",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Order Model\r\n            \r\nThis is a simply copy of the Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.IOrder to overcome a json serialization problems\r\n<see href=\"https://github.com/dotnet/runtime/issues/41749\" />"
+      },
+      "OrderDetails": {
+        "required": [
+          "correlationId",
+          "creationDate",
+          "creator",
+          "destination",
+          "leNo",
+          "orderId",
+          "source"
+        ],
+        "type": "object",
+        "properties": {
+          "correlationId": {
+            "type": "string",
+            "description": "Used to identify a message as correlated so that the CorrelationId can be returned",
+            "format": "uuid"
+          },
+          "orderId": {
+            "type": "string",
+            "description": "The unique ID of the order known by the host system"
+          },
+          "source": {
+            "type": "string",
+            "description": "The source where to pick up the order"
+          },
+          "destination": {
+            "type": "string",
+            "description": "The destination where to drop the order"
+          },
+          "leNo": {
+            "type": "string",
+            "description": "The LeNo of the orders handled box or transportation good"
+          },
+          "creator": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HostOrderCreator"
+              }
+            ],
+            "description": "The creator of the host order"
+          },
+          "creationDate": {
+            "type": "string",
+            "description": "The UTC timestamp when the order was created",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Order object used by all messages that require the order details"
+      },
+      "Sensor": {
+        "type": "object",
+        "properties": {
+          "sensorIdentifier": {
+            "type": "string",
+            "description": "The identifier of the sensor",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "A sensor object skeleton"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Agv",
+      "description": "Controller for host order data"
+    },
+    {
+      "name": "Map",
+      "description": "Map Rest API Controller"
+    },
+    {
+      "name": "Meta",
+      "description": "Controller for meta data"
+    },
+    {
+      "name": "TransportOrder",
+      "description": "Controller for host order data"
+    }
+  ]
 }

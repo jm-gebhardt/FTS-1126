@@ -15,7 +15,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
 
         private AgvPosition? _position;
 
-
         /// <summary>
         /// Value for simulating change in battery charge
         /// </summary>
@@ -61,7 +60,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         /// Current action (this is not reset after finish)
         /// </summary>
         public AgvAction? Action { get; set; }
-
 
         /// <summary>
         /// Token used by the send status update schedule
@@ -216,10 +214,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         /// <summary>
         /// Action progress as percentage [0..1]
         /// </summary>
-        public double? ActionProgress => TimeToFinish != null && ActionDuration != null
-            ? 1 - TimeToFinish.Value.TotalSeconds / ActionDuration.Value.TotalSeconds
-            : null;
-
+        public double? ActionProgress => TimeToFinish != null && ActionDuration != null ? 1 - TimeToFinish.Value.TotalSeconds / ActionDuration.Value.TotalSeconds : null;
 
         /// <summary>
         /// SimulatedAgvSaga constructor used for testing
@@ -308,7 +303,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         /// </summary>
         public void UpdateStatus(double chargeDiff)
         {
-            bool busy = new[] {
+            bool busy = new[]
+            {
                 nameof(SimulatedAgvStateMachine.BusyMoving)
             }.Any(c => c == CurrentState);
 

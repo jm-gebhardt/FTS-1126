@@ -141,7 +141,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
                 if (requestFilter(request))
                 {
                     var response = ReadSample(fileName);
-                    response["RequestId"] = request["requestId"].ToString();
+                    response["RequestId"] = request["requestId"]?.ToString();
                     callback?.Invoke(response);
                     await Publish(respondTopic, response.ToString());
                 }

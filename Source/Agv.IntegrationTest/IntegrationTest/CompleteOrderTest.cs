@@ -8,7 +8,6 @@ using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.IntegrationTest
 {
-
     /// <summary>
     /// CompleteOrderTest
     /// </summary>
@@ -16,7 +15,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest
     public class CompleteOrderTest
     {
         private DockerCompose? _dockerCompose;
-        
+
         /// <summary>
         /// Start all docker services before each test
         /// </summary>
@@ -24,12 +23,12 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest
         public void StartServices()
         {
             _dockerCompose.ShouldBeNull();
-            _dockerCompose= new DockerCompose(EnvVars.ComposeFileEnvVar);
+            _dockerCompose = new DockerCompose(EnvVars.ComposeFileEnvVar);
             _dockerCompose.AreRemoved().ShouldBeTrue();
             _dockerCompose.Up().ShouldBeTrue();
             _dockerCompose.AreRunning().ShouldBeTrue();
         }
-        
+
         /// <summary>
         /// Remove all docker services after test
         /// </summary>
@@ -52,11 +51,11 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest
             var agv = await AddAgv("Agv#1", cancellationTokenSource.Token);
             var _ = agv.SubscribeToCompleteOrdersSuccessfully();
             await AddAndCompleteOrder("Order#1");
-            
+
             cancellationTokenSource.Cancel();
             cancellationTokenSource.Dispose();
         }
-        
+
         /// <summary>
         /// Add two agvs and process four orders
         /// </summary>
@@ -72,7 +71,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest
             await AddAndCompleteOrder("Order#2");
             await AddAndCompleteOrder("Order#3");
             await AddAndCompleteOrder("Order#4");
-            
+
             cancellationTokenSource.Cancel();
             cancellationTokenSource.Dispose();
         }
@@ -83,24 +82,23 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest
 
             var agv = new TestAgv(agvId);
             await agv.SubscribeDataTopics();
-            
+
             _ = agv.StartSendingStatus(token);
-            
+
             var restAgv = await restApi.WaitForAgv(agv.AgvId);
             restAgv.ShouldNotBeNull();
-            
-            (await restApi.WaitForAgvData(restAgv["correlationId"].ToString())).ShouldNotBeNull();
-            (await restApi.WaitForAgvGraph(restAgv["correlationId"].ToString())).ShouldNotBeNull();
-            (await restApi.WaitForMap(restAgv["correlationId"].ToString())).ShouldNotBeNull();
 
-            (await restApi.SetAgvIdle(restAgv["correlationId"].ToString())).ShouldBeTrue();
+            (await restApi.WaitForAgvData(restAgv["correlationId"]?.ToString())).ShouldNotBeNull();
+            (await restApi.WaitForAgvGraph(restAgv["correlationId"]?.ToString())).ShouldNotBeNull();
+            (await restApi.WaitForMap(restAgv["correlationId"]?.ToString())).ShouldNotBeNull();
+
+            (await restApi.SetAgvIdle(restAgv["correlationId"]?.ToString())).ShouldBeTrue();
 
             return agv;
         }
-        
+
         private async Task AddAndCompleteOrder(string orderId)
         {
-            
             const string leNo = "123";
             const string source = "SRC_01";
             const string destination = "DST_01";

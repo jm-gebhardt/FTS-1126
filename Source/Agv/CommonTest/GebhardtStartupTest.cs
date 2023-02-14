@@ -1,5 +1,6 @@
 using Gebhardt.StoreWare.Agv.Common;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.CommonTest
 {
@@ -17,6 +18,7 @@ namespace Gebhardt.StoreWare.Agv.CommonTest
         public void CreateHostBuilder_Build()
         {
             using var host = GebhardtStartup.CreateHostBuilder(Array.Empty<string>()).Build();
+            host.ShouldNotBeNull();
         }
     }
 }

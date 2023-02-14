@@ -9,8 +9,6 @@
  * ---------------------------------------------------------------
  */
 
-type UtilRequiredKeys<T, K extends keyof T> = Omit<T, K> & Required<Pick<T, K>>
-
 /**
  * AGV model
  */
@@ -138,8 +136,7 @@ export interface IAgvPositionStatus {
 /**
  * AgvState model
  */
-export type IAgvState = UtilRequiredKeys<IAgv, 'alive'> & {
-  alive: boolean
+export type IAgvState = IAgv & {
   orderId?: string | null
   busy?: boolean | null
   automatic?: boolean | null
@@ -252,10 +249,7 @@ export interface INode {
    */
   z: number
   /**
-   * The rotation coordinate of the node.
-   * <br>
-   * Set to null when not needed.
-   *
+   * The theta coordinate of the node.
    * @format float
    */
   theta: number

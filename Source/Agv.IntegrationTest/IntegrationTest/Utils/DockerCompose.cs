@@ -124,7 +124,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
 
             foreach (JObject item in JArray.Parse(stdout))
             {
-                if (item["State"].ToString() != "running")
+                if (item["State"]?.ToString() != "running")
                 {
                     return false;
                 }

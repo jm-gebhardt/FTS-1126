@@ -10,6 +10,7 @@ using Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Map;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Messages;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.States;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
@@ -405,33 +406,85 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
         }
 
         [TestMethod]
-        [DataRow(true)]
-        [DataRow(false)]
-        public async Task When_AGV_Alive_Publish_AgvStatusReceived(bool agvAlive)
+        public async Task When_AGV_Alive_Publish_AgvStatusReceived()
         {
             var options = new SimulateOptions()
             {
                 Agvs = 1,
                 Sources = new[] { "S1" },
-                Destinations = new[] { "D1" }
+                Destinations = new[] { "D1" },
+                NodeTravelTime = 500
             };
             var fixture = new StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(
-                services => services.AddSingleton(options)
+                services => services.AddSingleton(options),
+                x => x.AddDelayedMessageScheduler(),
+                (_, cfg) => cfg.UseDelayedMessageScheduler()
             );
 
             const string agvId = "Agv#1";
             var correlationId = agvId.ToGuid();
 
             // ReSharper disable once UseObjectOrCollectionInitializer
-            var agvSaga = new SimulatedAgvSaga(correlationId, agvId, 5000, currentState: nameof(SimulatedAgvStateMachine.Idle));
-            agvSaga.SimulatedBatteryCharge = agvAlive ? 100 : 0; // Set charge to 100 for alive and 0 for not alive
+            var agvSaga = new SimulatedAgvSaga(correlationId, agvId, 500, currentState: nameof(SimulatedAgvStateMachine.Idle));
+            agvSaga.SimulatedBatteryCharge = 100; // Set charge to 100 for alive and 0 for not alive
             fixture.Add(agvSaga);
 
-            // Trigger status update
-            await fixture.TestHarness.Bus.Publish(new SimulatedAgvStateMachine.ScheduleStatusUpdate(correlationId));
+            // Trigger status update scheduler
+            await fixture.TestHarness.Bus.Publish(new RequestStatusSendSchedulerStart(correlationId, agvId));
+            (await fixture.SagaHarness.Consumed.Any<RequestStatusSendSchedulerStart>(c => c.Context.Message.CorrelationId == correlationId)).ShouldBeTrue();
 
-            bool statusMessageSent = await fixture.TestHarness.Published.Any<AgvStatusReceived>(c => c.Context.Message.CorrelationId == correlationId);
-            statusMessageSent.ShouldBe(agvAlive);
+            //Check if Scheduler sends status update
+            (await fixture.TestHarness.Sent.Any<SimulatedAgvStateMachine.ScheduleStatusUpdate>(c => c.Context.Message.CorrelationId == correlationId)).ShouldBeTrue();
+
+            //Check if status update gets consumed
+            (await fixture.SagaHarness.Consumed.Any<SimulatedAgvStateMachine.ScheduleStatusUpdate>(c => c.Context.Message.CorrelationId == correlationId)).ShouldBeTrue();
+
+            var token = new CancellationTokenSource();
+            token.CancelAfter(400);
+
+            //Check if AgvStatusIsReceived was sent. Only true if agv is alive.
+            (await fixture.TestHarness.Published.Any<AgvStatusReceived>(c => c.Context.Message.CorrelationId == correlationId, token.Token)).ShouldBeTrue();
+        }
+
+        [TestMethod]
+        public async Task When_AGV_Dead_NoPublish_AgvStatusReceived()
+        {
+            var options = new SimulateOptions()
+            {
+                Agvs = 1,
+                Sources = new[] { "S1" },
+                Destinations = new[] { "D1" },
+                NodeTravelTime = 500
+            };
+            var fixture = new StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(
+                services => services.AddSingleton(options),
+                x => x.AddDelayedMessageScheduler(),
+                (_, cfg) => cfg.UseDelayedMessageScheduler()
+            );
+
+            const string agvId = "Agv#1";
+            var correlationId = agvId.ToGuid();
+
+            // ReSharper disable once UseObjectOrCollectionInitializer
+            var agvSaga = new SimulatedAgvSaga(correlationId, agvId, 500, currentState: nameof(SimulatedAgvStateMachine.Idle));
+            agvSaga.SimulatedBatteryCharge = 0; // Set charge to 100 for alive and 0 for not alive
+            fixture.Add(agvSaga);
+
+            // Trigger status update scheduler
+            await fixture.TestHarness.Bus.Publish(new RequestStatusSendSchedulerStart(correlationId, agvId));
+            (await fixture.SagaHarness.Consumed.Any<RequestStatusSendSchedulerStart>(c => c.Context.Message.CorrelationId == correlationId)).ShouldBeTrue();
+
+            //Check if Scheduler sends status update
+            (await fixture.TestHarness.Sent.Any<SimulatedAgvStateMachine.ScheduleStatusUpdate>(c => c.Context.Message.CorrelationId == correlationId)).ShouldBeTrue();
+
+            //Check if status update gets consumed
+            (await fixture.SagaHarness.Consumed.Any<SimulatedAgvStateMachine.ScheduleStatusUpdate>(c => c.Context.Message.CorrelationId == correlationId)).ShouldBeTrue();
+
+            var token = new CancellationTokenSource();
+            token.CancelAfter(400);
+
+            //Check if AgvStatusIsReceived was sent. Only true if agv is alive.
+            (await fixture.TestHarness.Published.Any<AgvStatusReceived>(c => c.Context.Message.CorrelationId == correlationId, token.Token)).ShouldBeFalse();
         }
     }
 }

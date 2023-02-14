@@ -75,11 +75,11 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest
             var restAgv = await restApi.WaitForAgv("karis0");
             restAgv.ShouldNotBeNull();
             
-            (await restApi.WaitForAgvData(restAgv["correlationId"].ToString())).ShouldNotBeNull();
-            (await restApi.WaitForAgvGraph(restAgv["correlationId"].ToString())).ShouldNotBeNull();
-            (await restApi.WaitForMap(restAgv["correlationId"].ToString())).ShouldNotBeNull();
+            (await restApi.WaitForAgvData(restAgv["correlationId"]?.ToString())).ShouldNotBeNull();
+            (await restApi.WaitForAgvGraph(restAgv["correlationId"]?.ToString())).ShouldNotBeNull();
+            (await restApi.WaitForMap(restAgv["correlationId"]?.ToString())).ShouldNotBeNull();
 
-            (await restApi.SetAgvIdle(restAgv["correlationId"].ToString())).ShouldBeTrue();
+            (await restApi.SetAgvIdle(restAgv["correlationId"]?.ToString())).ShouldBeTrue();
 
             var cancellationTokenSource = new CancellationTokenSource();
             await AddAndCompleteOrder("Order#1");

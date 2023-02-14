@@ -17,7 +17,7 @@ export class Orders<
 > extends HttpClient<SecurityDataType> {
   /**
  * No description
- * 
+ *
  * @tags TransportOrder
  * @name OrdersList
  * @summary Retrieve active transport orders
@@ -78,7 +78,7 @@ If correlation Id is provided, all other parameters are ignored
    *
    * @tags TransportOrder
    * @name CompleteOrderPartialUpdate
-   * @summary Manually completes order
+   * @summary Completes order manually
    * @request PATCH:/orders/{correlationId}/completeOrder
    */
   completeOrderPartialUpdate = (

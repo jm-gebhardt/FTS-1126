@@ -146,7 +146,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Agv
 
         private bool IsCurrentAgv(JToken jsonMessage)
         {
-            return jsonMessage["serialNumber"].ToString() == AgvId;
+            return jsonMessage["serialNumber"]?.ToString() == AgvId;
         }
 
         private void ChangeAgvId(JToken response)
