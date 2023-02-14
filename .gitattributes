@@ -1,4 +1,8 @@
+# Set default behavior to automatically normalize line endings
 * text eol=crlf encoding=UTF-8
+
+# Files declared as binary at the end
+# Remaining untouched
 *.ez binary
 *.png binary
 *.bson binary
