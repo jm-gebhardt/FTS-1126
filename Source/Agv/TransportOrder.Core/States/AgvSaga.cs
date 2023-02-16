@@ -1,4 +1,6 @@
+using Gebhardt.StoreWare.Agv.Common.Configurations;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Models;
 using JetBrains.Annotations;
 using MassTransit;
 
@@ -9,7 +11,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.States
     /// This stores the current AGV state
     /// </summary>
     [PublicAPI]
-    public class AgvSaga : SagaStateMachineInstance, IAgv
+    public class AgvSaga : SagaStateMachineInstance, IAgv, ISagaSetting<AgvSettings>
     {
         /// <inheritdoc cref="IAgv"/>
         public Guid CorrelationId { get; set; }
@@ -57,6 +59,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.States
         /// </summary>
         public Guid? AgvOfflineTokenId { get; set; }
 
+        /// <summary>
+        /// The Agv settings
+        /// </summary>
+        public AgvSettings? Settings { get; set; }
+
         /// <inheritdoc />
         [System.ComponentModel.DataAnnotations.Schema.NotMapped]
         public bool Assignable =>
@@ -64,16 +71,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.States
             AgvGraph.Usability == AgvGraph.GraphUsability.Valid &&
             Alive;
 
-
         /// <summary>
-        /// Constructor
+        /// Default constructor required to connect.
         /// </summary>
         public AgvSaga(Guid correlationId, 
-                       string agvId, 
-                       string? currentState = null, 
-                       AgvStatus? agvStatus = null, 
-                       AgvGraph? agvGraph = null, 
-                       AgvData? agvData = null)
+            string agvId, 
+            string? currentState = null, 
+            AgvStatus? agvStatus = null, 
+            AgvGraph? agvGraph = null, 
+            AgvData? agvData = null)
         {
             if (correlationId == Guid.Empty)
             {

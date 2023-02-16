@@ -1,14 +1,18 @@
 ﻿using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common;
+using Gebhardt.StoreWare.Agv.Common.Configurations;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.Common.Services.Detectors;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.CmdOptions;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations.Agvs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Handlers.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Requests.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Hubs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Models;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Models;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Routing;
@@ -21,6 +25,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Gebhardt.StoreWare.Agv.Common.Configurations.Extensions;
+using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
 {
@@ -38,6 +44,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
         /// <returns><see cref="IHostBuilder"/></returns>
         public static IHostBuilder AddTransportOrderCore(this IHostBuilder hostBuilder, ILogger initialLogger, ProductionOptions productionOptions)
         {
+            ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
+
             hostBuilder.ConfigureServices((context, services) =>
             {
                 // Transients
@@ -59,6 +67,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                     return new AgvHubContext(hubContext);
                 });
                 services.AddTransient<IEventObserver<OrderSaga>, OrderEventObserver>();
+                services.AddTransient<IAgvSettingsProvider, AgvSettingsProvider>();
+                services.AddTransient<ISagaSettingsProvider<AgvSettings, AgvSaga>, SagaSettingsProvider<AgvSettings, AgvSaga, SagaPersistenceDbContext>>();
+                services.AddConfigurationTypeManager();
+                services.AddSettingsProviders(ConfigurationTypeManager.Instance);
 
                 // Singletons
                 services.AddSingleton<IStateObserver<OrderSaga>, OrderStateObserver>();
@@ -70,7 +82,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
 
                 services.AddSingleton<MassTransitBusEventConsumer>();
                 services.AddSingleton<ActionManager>();
-                
+
                 services.AddHostedService<ActionManagerBackgroundService>();
 
                 services.AddDbContextFactory<TransportOrderDbContext>(builder =>
@@ -84,6 +96,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                         m.MigrationsHistoryTable(SagaPersistenceDbContext.MigrationTableName);
                     });
                 });
+
+                // Scoped
+                services.AddScoped<DatabaseConfigurationSeeder>();
 
                 // Automapper
                 services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
@@ -108,12 +123,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                         x.AddConsumer<AgvInitializer>();
                         x.AddConsumer<GetMapImageRequestHandler>();
                         x.AddConsumer<GetMapListRequestHandler>();
-                        
+
                         x.AddRequestClient<ReserveAgv>();
                         x.AddRequestClient<AssignAgv>();
                         x.AddRequestClient<GetMapImageRequest>();
                         x.AddRequestClient<GetMapListRequest>();
-                        
+
                         x.AddDelayedMessageScheduler();
                     }, rabbitMqConfiguration: (_, cfg) =>
                     {

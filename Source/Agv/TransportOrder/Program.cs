@@ -1,7 +1,9 @@
 ﻿using CommandLine;
 using Gebhardt.StoreWare.Agv.Common;
+using Gebhardt.StoreWare.Agv.Common.Configurations;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.CmdOptions;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Db;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi;
@@ -28,10 +30,18 @@ try
     // By using the generic overload of WithParsed above hostBuilder will be null for invalid command line arguments.
     if (hostBuilder != null)
     {
+        DatabaseConfigurationSource? databaseConfigurationSource = null;
+
         hostBuilder.ConfigureWebHost(host =>
         {
             host.UseKestrel()
                 .AddTransportOrderWebApi()
+                .ConfigureAppConfiguration((_, config) =>
+                {
+                    ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
+                    config.AddDefaultConfiguration(ConfigurationTypeManager.Instance);
+                    databaseConfigurationSource = config.AddDatabaseConfiguration(ConfigurationTypeManager.Instance, initialLogger, 0, true);
+                })
                 .Configure(app =>
                 {
                     app.UseMetricServer();
@@ -45,11 +55,17 @@ try
         {
             // Apply migrations if SagaPersistenceDbContext is available
             var db1 = scope.ServiceProvider.GetRequiredService<SagaPersistenceDbContext>();
-            db1.Database.Migrate();
+            await db1.Database.MigrateAsync();
 
             var db2 = scope.ServiceProvider.GetRequiredService<TransportOrderDbContext>();
-            db2.Database.Migrate();
+            await db2.Database.MigrateAsync();
+
+            var dbConfigurationSeeder = scope.ServiceProvider.GetService<DatabaseConfigurationSeeder>()!;
+            await dbConfigurationSeeder.SeedDefaultConfigurationAsync();
         }
+        
+        // we need to set the DbContext manually and after instantiation, because the AppConfiguration is built before the services (dbContext) are built
+        databaseConfigurationSource!.UpdateDbContext(host.Services.GetRequiredService<SagaPersistenceDbContext>());
 
         host.Run();
         return 0;

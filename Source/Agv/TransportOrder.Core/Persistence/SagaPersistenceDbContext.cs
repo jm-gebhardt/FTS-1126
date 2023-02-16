@@ -1,3 +1,6 @@
+using Gebhardt.StoreWare.Agv.Common.Configurations;
+using Gebhardt.StoreWare.Agv.Common.Configurations.Extensions;
+using Gebhardt.StoreWare.Agv.Common.Configurations.Models;
 using MassTransit.EntityFrameworkCoreIntegration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -10,7 +13,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence
     /// </summary>
     public class SagaPersistenceDbContext : SagaDbContext
     {
-        
         /// <summary>
         /// Configuration section where the ConnectionString is located
         /// </summary>
@@ -21,12 +23,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence
         /// </summary>
         public const string MigrationTableName = $"__{nameof(SagaPersistenceDbContext)}Migration";
         
-        
         /// <summary>
         /// Persistence DBContext used for sagas 
         /// </summary>
         /// <param name="options"></param>
-        public SagaPersistenceDbContext(DbContextOptions options) : base(options)
+        public SagaPersistenceDbContext(DbContextOptions<SagaPersistenceDbContext> options) : base(options)
         {
         }
 
@@ -44,6 +45,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence
                 yield return new OrderChangedClassMap();
             }
         }
+
+        /// <summary>
+        /// A DbSet of <see cref="ConfigurationSetting"/> used for querying and saving instances.
+        /// </summary>
+        public DbSet<ConfigurationSetting> ConfigurationSettings { get; set; } = null!;
         
         /// <summary>
         /// Configure the DbContext
@@ -61,6 +67,47 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence
                 // Logs from Microsoft.EntityFrameworkCore.Infrastructure
                 c.Log((CoreEventId.ContextInitialized, LogLevel.Debug));
             });
+        }
+
+        /// <inheritdoc/>
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.BuildConfigurationSetting();
+        }
+
+        /// <inheritdoc/>
+        public override int SaveChanges()
+        {
+            bool hasChanges = HasChanges();
+            int result = base.SaveChanges();
+            NotifyEntityChangeWatchers(hasChanges);
+            
+            return result;
+        }
+
+        /// <inheritdoc/>
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            bool hasChanges = HasChanges();
+            int result = await base.SaveChangesAsync(cancellationToken);
+            NotifyEntityChangeWatchers(hasChanges);
+
+            return result;
+        }
+
+        private bool HasChanges()
+        {
+            return ChangeTracker.Entries().Any(i => i.Entity is ConfigurationSetting && (i.State == EntityState.Modified || i.State == EntityState.Added));
+        }
+
+        private static void NotifyEntityChangeWatchers(bool hasChanges)
+        {
+            if(hasChanges)
+            {
+                EntityChangeObserver.Instance.OnChanged(EventArgs.Empty);
+            }
         }
     }
 }

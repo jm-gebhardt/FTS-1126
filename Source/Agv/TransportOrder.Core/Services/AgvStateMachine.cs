@@ -1,11 +1,13 @@
-using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.CmdOptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.States;
 using MassTransit;
 using Microsoft.Extensions.Logging;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations.Agvs;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Models;
+using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
 {
@@ -15,25 +17,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
     [JetBrains.Annotations.PublicAPI]
     public class AgvStateMachine : MassTransitStateMachine<AgvSaga>
     {
-        /// <summary>
-        /// Provide possibility to override default settings beside command line options
-        /// <para>
-        /// Useful for testing
-        /// </para></summary>
-        public interface ISettings
-        {
-            /// <summary>Overwrite <see cref="AgvStateMachine._agvOfflineTimeoutMsWhileIdle"/> (keep default when 0).</summary>
-            public int AgvOfflineTimeoutMsWhileIdle { get; }
-
-            /// <summary>Overwrite <see cref="AgvStateMachine._agvOfflineTimeoutMsWhileBusy"/> (keep default when 0).</summary>
-            public int AgvOfflineTimeoutMsWhileBusy { get; }
-        }
-
         private readonly ILogger<AgvStateMachine> _logger;
 
         private readonly IMapRegistry _mapRegistry;
 
-        #region Settings
         private readonly ProductionOptions _productionOptions;
 
         /// <summary>
@@ -48,15 +35,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         /// <remarks>Interval indicated in seconds</remarks>
         private const int DailyRequestUpdateInterval = 24 * 3600;
 
-        /// <summary>
-        /// Timeout value [ms] to set AGV offline while it is in idle mode
-        /// </summary>
-        private readonly int _agvOfflineTimeoutMsWhileIdle = 15000;
-        /// <summary>
-        /// Timeout value [ms] to set AGV offline while it is in busy mode
-        /// </summary>
-        private readonly int _agvOfflineTimeoutMsWhileBusy = 20000;
-        #endregion
+        private readonly IAgvSettingsProvider _agvSettingsProvider;
 
         #region Message handlers
         /// <summary>
@@ -180,24 +159,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         /// <param name="mapRegistry"></param>
         /// <param name="agvStateObserver"></param>
         /// <param name="productionOptions"></param>
-        /// <param name="settings"></param>
-        public AgvStateMachine(ILogger<AgvStateMachine> logger, IMapRegistry mapRegistry, IStateObserver<AgvSaga> agvStateObserver, ProductionOptions productionOptions, ISettings? settings = null)
+        /// <param name="agvSettingsProvider"></param>
+        public AgvStateMachine(ILogger<AgvStateMachine> logger, IMapRegistry mapRegistry, IStateObserver<AgvSaga> agvStateObserver, ProductionOptions productionOptions, IAgvSettingsProvider agvSettingsProvider)
         {
             _logger = logger;
             _mapRegistry = mapRegistry;
             _productionOptions = productionOptions;
-
-            if (settings != null)
-            {
-                if (settings.AgvOfflineTimeoutMsWhileBusy > 0)
-                {
-                    _agvOfflineTimeoutMsWhileBusy = settings.AgvOfflineTimeoutMsWhileBusy;
-                }
-                if (settings.AgvOfflineTimeoutMsWhileIdle > 0)
-                {
-                    _agvOfflineTimeoutMsWhileIdle = settings.AgvOfflineTimeoutMsWhileIdle;
-                }
-            }
+            _agvSettingsProvider = agvSettingsProvider;
 
             SetSagaFactory();
             SetScheduler();
@@ -226,6 +194,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
             ConnectStateObserver(agvStateObserver);
         }
 
+        private AgvSettings GetSettings(AgvSaga saga)
+        {
+            var settings = _agvSettingsProvider.GetSettingsForAgv(saga.CorrelationId);
+
+            return settings;
+        }
 
         #region Init
         /// <summary>
@@ -323,7 +297,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
             When(AgvInitializeMessageEvent)
                 .Schedule(AgvOfflineWatchdog,
                           c => new AgvOfflineMessage(c.Saga.CorrelationId, DateTime.UtcNow),
-                          _ => TimeSpan.FromMilliseconds(_agvOfflineTimeoutMsWhileBusy))
+                          c => TimeSpan.FromMilliseconds(GetSettings(c.Saga).AgvOfflineTimeoutMsWhileBusy))
                 .Then(c => _logger.LogTrace("{AgvId} watchdog started", c.Message.AgvId));
 
         /// <summary>
@@ -356,7 +330,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
                     m => m.Publish(c => new ReleaseAgv(c.Saga.CorrelationId)))
                 .Schedule(AgvOfflineWatchdog,
                           c1 => new AgvOfflineMessage(c1.Saga.CorrelationId, DateTime.UtcNow),
-                          c2 => TimeSpan.FromMilliseconds(c2.Saga.AgvStatus!.Busy ? _agvOfflineTimeoutMsWhileBusy : _agvOfflineTimeoutMsWhileIdle))
+                          c2 =>
+                          {
+                              var agvSettings = GetSettings(c2.Saga);
+                              return TimeSpan.FromMilliseconds(c2.Saga.AgvStatus!.Busy ? agvSettings.AgvOfflineTimeoutMsWhileBusy : agvSettings.AgvOfflineTimeoutMsWhileIdle);
+                          })
                 .Then(c => _logger.LogTrace("{AgvId} watchdog started", c.Message.AgvId));
 
         private EventActivityBinder<AgvSaga, AgvGraphReceived> AgvGraphReceivedHandler() =>

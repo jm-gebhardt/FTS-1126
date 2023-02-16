@@ -17,6 +17,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Persistence
     [TestClass]
     public class SagaPersistenceDbContextTest
     {
+        private const string DatabaseName = "saga";
         private class DbSetSagaPersistenceDbContext : SagaPersistenceDbContext
         {
             // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
@@ -24,14 +25,16 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Persistence
             // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
             public DbSet<AgvSaga> AgvSagas { get; set; }  = null!;
 
-            public DbSetSagaPersistenceDbContext(): this(new DbContextOptions<DbSetSagaPersistenceDbContext>())
+            public DbSetSagaPersistenceDbContext(DbContextOptions<DbSetSagaPersistenceDbContext> options) : base(GetOptions())
             {
             
             }
-        
-            public DbSetSagaPersistenceDbContext(DbContextOptions<DbSetSagaPersistenceDbContext> options) : base(options)
+
+            private static DbContextOptions<SagaPersistenceDbContext> GetOptions()
             {
-            
+                var dbContextOptionsBuilder = new DbContextOptionsBuilder<SagaPersistenceDbContext>();
+                dbContextOptionsBuilder.UseInMemoryDatabase(DatabaseName);
+                return dbContextOptionsBuilder.Options;
             }
         }
  
@@ -44,7 +47,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Persistence
             var collection = new ServiceCollection()
                 .AddDbContextFactory<DbSetSagaPersistenceDbContext>(options =>
                     {
-                        options.UseInMemoryDatabase(Guid.NewGuid().ToString());
+                        options.UseInMemoryDatabase(DatabaseName);
                     }
                 );
             var provider = collection.BuildServiceProvider(true);
@@ -82,7 +85,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Persistence
             var collection = new ServiceCollection()
                 .AddDbContextFactory<DbSetSagaPersistenceDbContext>(options =>
                     {
-                        options.UseInMemoryDatabase(Guid.NewGuid().ToString());
+                        options.UseInMemoryDatabase(DatabaseName);
                     }
                 );
             var provider = collection.BuildServiceProvider(true);
