@@ -46,12 +46,12 @@ stages:
           version: '6.0.x'
           performMultiLevelLookup: true
       - task: NuGetCommand@2
-        displayName: 'Restoring based on NuGet.config'
+        displayName: 'Restoring based on NuGetBackupFeed.config'
         inputs:
           command: 'restore'
           restoreSolution: '$(SourceDirectory)/$(Build.Target)'
           feedsToUse: 'config'
-          nugetConfigPath: '$(SourceDirectory)/NuGet.Config'
+          nugetConfigPath: '$(SourceDirectory)/NuGetBackupFeed.Config'
       - task: DotNetCoreCLI@2
         displayName: 'Build Target ($(Build.Target))'
         inputs:
@@ -104,12 +104,12 @@ stages:
           version: '6.0.x'
           performMultiLevelLookup: true
       - task: NuGetCommand@2
-        displayName: 'Restoring based on NuGet.config'
+        displayName: 'Restoring based on NuGetBackupFeed.config'
         inputs:
           command: 'restore'
           restoreSolution: '$(SourceDirectory)/$(Build.Target)'
           feedsToUse: 'config'
-          nugetConfigPath: '$(SourceDirectory)/NuGet.Config'
+          nugetConfigPath: '$(SourceDirectory)/NuGetBackupFeed.Config'
       - task: DotNetCoreCLI@2
         displayName: 'Run All tests'
         inputs:
@@ -237,7 +237,7 @@ stages:
           command: restore
           projects: '$(Build.SourcesDirectory)/Source/Agv.IntegrationTest/IntegrationTest.sln'
           feedsToUse: config
-          nugetConfigPath: '$(Build.SourcesDirectory)/Source/Agv.IntegrationTest/NuGet.Config'
+          nugetConfigPath: '$(Build.SourcesDirectory)/Source/Agv.IntegrationTest/NuGetBackupFeed.Config'
     
       - task: CmdLine@2
         displayName: docker compose build
