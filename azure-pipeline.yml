@@ -197,6 +197,7 @@ stages:
 - stage: IntegrationTest
   dependsOn: Build
   condition: and( succeeded(), in(variables['Build.Reason'], 'PullRequest', 'Manual') )
+  lockBehavior: sequential
   pool:
     name: AGVDev
   jobs:
