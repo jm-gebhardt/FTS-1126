@@ -7,39 +7,51 @@ flowchart TD
     WcsCommunication[/WcsCommunication/]
     UI[/UI/]
     AssignAgvConsumer[[AssignAgvConsumer]]
+    AgvPositionReceivedConsumer[[AgvPositionReceivedConsumer]]
     DeviceCommunication[/DeviceCommunication/]
     AgvStateMachine
-    ActionManager
-    ActionStateMachine
+    ActionManager[[ActionManager]]
 
     class WcsCommunication,DeviceCommunication Process
     class UI UI
-    class AssignAgvConsumer,AgvStateMachine AgvManagement
+    class AssignAgvConsumer,AgvStateMachine,AgvPositionReceivedConsumer AgvManagement
+
+
+    UI -- ForceReleaseAgv --> AgvStateMachine
+    UI -- LockAgv --> AgvStateMachine
+    UI -- RequestAgvData/Graph --> DeviceCommunication
+    UI -- ResetTransportOrder --> OrderStateMachine
+    UI -- ManuallyCompleteTransportOrder --> OrderStateMachine
 
     WcsCommunication -- HandleHostOrder --> OrderStateMachine
     WcsCommunication -- CancelHostOrder --> OrderStateMachine
-    UI -- ReleaseAgv --> AgvStateMachine
+
     OrderStateMachine -- HostOrderStarted --> WcsCommunication
-    OrderStateMachine -- HostOrderCompleted --> WcsCommunication
-    OrderStateMachine -- HostOrderHandlingFailed --> WcsCommunication
+    OrderStateMachine -- HostOrderHandlingSucceeded/Failed --> WcsCommunication
+    OrderStateMachine -- HostOrderCancelSucceeded/Failed --> WcsCommunication
     OrderStateMachine -- OrderQueuingCommand --> ActionManager
+
+    AgvStateMachine -. ReleaseAgv .-> AgvStateMachine
+    AgvStateMachine -- AgvBecameIdle --> AgvChargingService
+    AgvStateMachine == AgvReservationSucceeded/Rejected ==> AssignAgvConsumer
+    AgvStateMachine -- AgvPropertyChanged --> AgvPropertyChangedConsumer
+    AgvStateMachine -- RequestAgvData/Graph/Map --> DeviceCommunication
+
+    AgvChargingService -- AgvReady --> ActionManager
+
+    ActionManager -- HostOrderHandlingFailed --> WcsCommunication
     ActionManager -- OrderQueuedEvent --> OrderStateMachine
-
-    ActionManager -- AssignActionRequest --> ActionStateMachine
-    ActionStateMachine -- ActionAssignmentSucceededEvent --> ActionManager
-
-    DeviceCommunication -- ActionStatusChangedEvent --> ActionStateMachine
-    ActionStateMachine -- TransportOrderStarted/PickCompleted/Completed --> OrderStateMachine
-    ActionManager -- AssignAgv --> AssignAgvConsumer
-    AssignAgvConsumer -- ReserveAgv --> AgvStateMachine
-    AssignAgvConsumer -- AgvAssignmentSucceeded/Failed --> ActionManager
-
-
-    ActionStateMachine -- ReleaseAgv --> AgvStateMachine
+    ActionManager -- TransportOrderStarted/PickCompleted/Failed/Completed --> OrderStateMachine
+    ActionManager -- OrderAssignmentSucceeded --> OrderStateMachine
+    ActionManager -- ReleaseAgv --> AgvStateMachine
+    ActionManager -- ActionStartedEvent --> AgvStateMachine
+    ActionManager == AssignAgv ==> AssignAgvConsumer
     ActionManager -- StartActionCommand --> DeviceCommunication
 
-    AgvStateMachine -- AgvBecameIdle --> ActionManager
-    AgvStateMachine -- AgvReservationSucceeded/Failed --> AssignAgvConsumer
-    AgvStateMachine -- RequestAgvData/Graph/Map --> DeviceCommunication
-    AgvStateMachine -. ReleaseAgv .-> AgvStateMachine
+    AssignAgvConsumer == ReserveAgv ==> AgvStateMachine
+    AssignAgvConsumer == AgvAssignmentSucceeded/Failed ==> ActionManager
+
+    DeviceCommunication -- AgvData/Graph/Status/MapReceived --> AgvStateMachine
+    DeviceCommunication -- AgvPositionReceived --> AgvPositionReceivedConsumer
+    DeviceCommunication -- ActionStatusChangedEvent --> ActionManager
 :::

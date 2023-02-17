@@ -2,18 +2,24 @@
 stateDiagram-v2
     [*] --> OrderReceived: HandleHostOrder
     OrderReceived --> OrderQueued: OrderQueuedEvent
-    OrderReceived --> OrderReceived: TransportOrderReset
-    OrderFailed --> OrderReceived: TransportOrderReset
-    Final --> OrderReceived: TransportOrderReset
-
-    OrderQueued --> TransportOrderSend: AgvAssignmentSucceeded
-    TransportOrderSend --> TransportOrderStarted: TransportOrderStarted
-    TransportOrderSend --> OrderFailed: TransportOrderFailed
-    TransportOrderPicked --> OrderFailed: TransportOrderFailed
-    TransportOrderStarted --> TransportOrderPicked: TransportOrderPickCompleted
-    TransportOrderPicked --> Final: TransportOrderCompleted
-
+    OrderReceived --> OrderReceived: ResetTransportOrder
     OrderReceived --> Cancelled: CancelHostOrder
 
+    OrderQueued --> TransportOrderSend: OrderAssignmentSucceeded
+
+    TransportOrderSend --> TransportOrderStarted: TransportOrderStarted
+    TransportOrderSend --> OrderFailed: TransportOrderFailed
+
+    TransportOrderPicked --> OrderFailed: TransportOrderFailed
+    TransportOrderPicked --> Final: TransportOrderCompleted
+
+    TransportOrderStarted --> Final: TransportOrderCompleted
+    TransportOrderStarted --> TransportOrderPicked: TransportOrderPickCompleted
+
+    OrderFailed --> OrderReceived: ResetTransportOrder
+
+    Final --> OrderReceived: ResetTransportOrder
     Final --> [*]
+
+    note right of Final: Finalize by ManuallyCompleteTransportOrder during any state
 :::

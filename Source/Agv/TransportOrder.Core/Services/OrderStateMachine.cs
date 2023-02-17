@@ -299,28 +299,28 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
             else if (context.Saga.CurrentState == nameof(Final))
             {
                 await context.Publish(new HostOrderCancelFailed(context.Saga.CorrelationId, context.Message.OrderId, HostOrderCancelFailed.ErrorCode.OrderAlreadyFinished));
-                _logger.LogWarning("Unable to cancel Order {OrderId} / {CorrelationId} because it already is finished", context.Message.OrderId, context.Saga.CorrelationId);
+                _logger.LogWarning("Unable to cancel order {OrderId} / {CorrelationId} because it already is finished", context.Message.OrderId, context.Saga.CorrelationId);
             }
             else if (context.Saga.CurrentState == nameof(Initial))
             {
                 await context.Publish(new HostOrderCancelFailed(context.Saga.CorrelationId, context.Message.OrderId, HostOrderCancelFailed.ErrorCode.OrderDoesNotExist));
-                _logger.LogWarning("Unable to cancel Order {OrderId} / {CorrelationId} because state is Initial => No Order in OrderRegistry",
+                _logger.LogWarning("Unable to cancel order {OrderId} / {CorrelationId} because order is in inital state => No Order in OrderRegistry",
                     context.Message.OrderId, context.Saga.CorrelationId);
             }
             else if (context.Saga.CurrentState == nameof(OrderFailed))
             {
                 await context.Publish(new HostOrderCancelFailed(context.Saga.CorrelationId, context.Message.OrderId, HostOrderCancelFailed.ErrorCode.OrderAlreadyFailed));
-                _logger.LogError("Unable to cancel Order {OrderId} / {CorrelationId} because it already has failed", context.Message.OrderId, context.Saga.CorrelationId);
+                _logger.LogError("Unable to cancel order {OrderId} / {CorrelationId} because it already has been failed", context.Message.OrderId, context.Saga.CorrelationId);
             }
             else if (context.Saga.CurrentState == nameof(Cancelled))
             {
                 await context.Publish(new HostOrderCancelFailed(context.Saga.CorrelationId, context.Message.OrderId, HostOrderCancelFailed.ErrorCode.OrderAlreadyCancelled));
-                _logger.LogError("Unable to cancel Order {OrderId} / {CorrelationId} because it already has been cancelled", context.Message.OrderId, context.Saga.CorrelationId);
+                _logger.LogError("Unable to cancel order {OrderId} / {CorrelationId} because it already has been cancelled", context.Message.OrderId, context.Saga.CorrelationId);
             }
             else
             {
                 await context.Publish(new HostOrderCancelFailed(context.Saga.CorrelationId, context.Message.OrderId, HostOrderCancelFailed.ErrorCode.OrderAlreadyStarted));
-                _logger.LogError("Unable to cancel Order {OrderId} / {CorrelationId} because it already has started", context.Message.OrderId, context.Saga.CorrelationId);
+                _logger.LogError("Unable to cancel order {OrderId} / {CorrelationId} because it already has been started", context.Message.OrderId, context.Saga.CorrelationId);
             }
         }
         #endregion

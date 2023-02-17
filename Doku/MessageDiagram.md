@@ -17,10 +17,10 @@ sequenceDiagram
         AgvManagement--)-AgvManagement: AgvOfflineMessage
     end
     
-    UI->>AgvManagement: ReleaseAgv
+    UI->>AgvManagement: ForceReleaseAgv
     
-    UI->>TransportOrder: ResetOrder
-    UI->>TransportOrder: CompleteOrder
+    UI->>TransportOrder: ResetTransportOrder
+    UI->>TransportOrder: ManuallyCompleteTransportOrder
     activate TransportOrder
     TransportOrder->>+WCSCommunication:HostOrderHandlingSucceeded
     deactivate TransportOrder
@@ -81,7 +81,7 @@ sequenceDiagram
     Note over WCSCommunication,DeviceCommunication: Handle HostOrder
 
     WCSCommunication->>TransportOrder: HandleHostOrder
-    TransportOrder->>TransportOrder: RequestOrderAgvAssign
+    TransportOrder->>TransportOrder: OrderQueuingCommand
     TransportOrder->>AgvManagement: AssignAgv
     alt success
         AgvManagement->>TransportOrder: AgvAssignmentSucceeded

@@ -1,10 +1,8 @@
 ::: mermaid
 stateDiagram-v2
-    [*] --> Idle: CreateAgvEvent
+    [*] --> Idle: CreateAgv
 
-    Idle --> BusyMovingToSource: ExecuteTransportOrder
+    Idle --> BusyMoving: StartActionCommand
 
-    BusyMovingToSource --> BusyMovingToDestination: SchedulePickOrde
-
-    BusyMovingToDestination --> Idle: ScheduleFinishOrder
+    BusyMoving --> Idle: ScheduleFinishAction
 :::
