@@ -28,7 +28,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             var settingsProviderMock = new Mock<IAgvSettingsProvider>();
             var agvStateObserver = new AgvStateObserver(mockHub.Object);
             var agvStateMachine = new AgvStateMachine(mockLogger.Object, mapRegistryMock.Object, agvStateObserver, new ProductionOptions { ApplicationName = null, AutoAccept = true }, settingsProviderMock.Object);
-            var previousState = agvStateMachine.Idle;
+            var previousState = agvStateMachine.Ready;
             var currentState = agvStateMachine.Reserved;
 
             mockContext.Setup(m => m.StateMachine.Initial).Returns(agvStateMachine.Initial);

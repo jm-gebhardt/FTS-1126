@@ -128,6 +128,7 @@ async function selectedItemChanged(index: number | null): Promise<void> {
     })
   }
 }
+
 /**
  * Handler for hub event 'onAgvDiscovered'
  */

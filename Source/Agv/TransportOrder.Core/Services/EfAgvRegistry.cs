@@ -18,7 +18,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         /// <summary>
         /// Get count of idle AGVs in the registry
         /// </summary>
-        public int CountIdle => GetIdleAgvs().Count();
+        public int CountIdle => GetReadyAgvs().Count();
 
         private readonly IDbContextFactory<SagaPersistenceDbContext> _dbContextFactory;
 
@@ -44,9 +44,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         }
 
         /// <inheritdoc/>
-        public IQueryable<IAgv> GetIdleAgvs()
+        public IQueryable<IAgv> GetReadyAgvs()
         {
-            return AgvSagas.Where(x => x.CurrentState == nameof(AgvStateMachine.Idle))
+            return AgvSagas.Where(x => x.CurrentState == nameof(AgvStateMachine.Ready))
                 .Cast<IAgv>();
         }
 

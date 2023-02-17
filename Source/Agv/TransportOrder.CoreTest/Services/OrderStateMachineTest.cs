@@ -42,7 +42,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
                 if (mockAgvRegistry == null)
                 {
                     mockAgvRegistry = new Mock<IAgvRegistry>();
-                    mockAgvRegistry.Setup(s => s.GetIdleAgvs()).Returns(new EnumerableQuery<IAgv>(new List<IAgv>()));
+                    mockAgvRegistry.Setup(s => s.GetReadyAgvs()).Returns(new EnumerableQuery<IAgv>(new List<IAgv>()));
                     mockAgvRegistry.Setup(s => s.Count).Returns(0);
 
                     if (agvSaga != null)

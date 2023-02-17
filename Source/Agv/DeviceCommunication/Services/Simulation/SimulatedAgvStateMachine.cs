@@ -120,6 +120,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
         private readonly SimulateOptions _simulateOptions;
         private readonly double _batteryDischargeRate; // Rate at which the battery charge decreases during simulation in [%/s]
         private readonly double _batteryChargeRate; // Rate at which the battery charge increases during charge in [%/s]
+        private readonly int _initialBatteryCharge;
 
         /// <summary>
         /// SimulatedAgvStateMachine Constructor
@@ -132,6 +133,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
             _simulateOptions = simulateOptions;
             _batteryDischargeRate = _simulateOptions.BatteryDischargeRate;
             _batteryChargeRate = _simulateOptions.BatteryChargeRate;
+            _initialBatteryCharge = _simulateOptions.InitialBatteryCharge;
             StatusUpdateIntervalMs = Math.Clamp(_simulateOptions.NodeTravelTime / 2, 100, 10000); // Send twice per node (min 0.1s, max 10s)
             SignalPositionIntervalMs = Math.Clamp(_simulateOptions.NodeTravelTime / 10, 200, 2000); // Send 10x per node (min 0.2s, max 2s)
 
@@ -187,7 +189,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
         private void SetSagaFactory()
         {
             Event(() => CreateAgvEvent, e =>
-                e.SetSagaFactory(context => new SimulatedAgvSaga(context.Message.Agv, context.Message.NodeTravelTime))
+                e.SetSagaFactory(context => new SimulatedAgvSaga(context.Message.Agv, context.Message.NodeTravelTime, _initialBatteryCharge))
             );
         }
         #endregion
@@ -296,23 +298,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
             _logger.LogTrace("Status event from AGV {AgvId} / {CorrelationId}",
                 context.Saga.AgvId, context.Saga.CorrelationId);
 
-            bool charging = false;
-            if (context.Saga.CurrentNode != null)
-            {
-                charging = context.Saga.CurrentNode.Type == AgvGraph.NodeType.Charge;
-            }
+            bool prevCharging = context.Saga.AgvStatus.Charging;
 
-            double chargeDiff;
-            if (charging)
-            {
-                chargeDiff = _batteryChargeRate * StatusUpdateIntervalMs * 0.001;
-            }
-            else
-            {
-                chargeDiff = -_batteryDischargeRate * StatusUpdateIntervalMs * 0.001;
-            }
+            const double secondsPerMillisecond = 0.001;
+            context.Saga.UpdateStatus(StatusUpdateIntervalMs * secondsPerMillisecond, _batteryChargeRate, _batteryDischargeRate); // Update status before each send
 
-            context.Saga.UpdateStatus(chargeDiff); // Update status before each send
+            bool startedCharging = !prevCharging && context.Saga.AgvStatus.Charging; // Check if AGV has switched charging to true
 
             if (context.Saga.Alive) // Only send status if AGV is still alive
             {
@@ -321,6 +312,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
                     context.Saga.AgvId,
                     context.Saga.AgvStatus
                 ), context.CancellationToken);
+
+                if (startedCharging)
+                {
+                    await context.Publish(new AgvStartedCharging(context.Saga.CorrelationId));
+                }
             }
         }
 

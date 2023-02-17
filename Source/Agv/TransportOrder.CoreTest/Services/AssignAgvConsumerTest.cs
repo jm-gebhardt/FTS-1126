@@ -40,7 +40,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         public async Task When_AgvRegistryIsEmpty_IAgvAssignFailed_isPublished()
         {
             var fixture = new AssignAgvConsumerMassTransitFixture()
-                .AgvRegistryMock(r => r.Setup(s => s.GetIdleAgvs()).Returns(new EnumerableQuery<IAgv>(new List<IAgv>())))
+                .AgvRegistryMock(r => r.Setup(s => s.GetReadyAgvs()).Returns(new EnumerableQuery<IAgv>(new List<IAgv>())))
                 .Build();
 
             string[] sources = AssignAgvConsumerMassTransitFixture.Sources;
@@ -60,10 +60,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         }
 
         /// <summary>
-        /// Receive AssignAgv message when no Idle AGV is available
+        /// Receive AssignAgv message when no Ready AGV is available
         /// </summary>
         [TestMethod]
-        public async Task When_NoIdleAgvIsIdle_AgvAssignFailedIsPublished()
+        public async Task When_NoReadyAgvIsAvailable_AgvAssignFailedIsPublished()
         {
             const string agvId = "AGV001";
             var agvCorrelationId = agvId.ToGuid();
@@ -74,9 +74,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
                     x.AddRequestClient<ReserveAgv>();
                     x.AddConsumer<AgvReservationRejectedConsumer>();
                 })
-                .AgvRegistryMock(r => r.Setup(s => s.GetIdleAgvs()).Returns(new EnumerableQuery<IAgv>(new List<IAgv>
+                .AgvRegistryMock(r => r.Setup(s => s.GetReadyAgvs()).Returns(new EnumerableQuery<IAgv>(new List<IAgv>
                 {
-                    new AgvSaga(agvCorrelationId, agvId, nameof(AgvStateMachine.Idle), agvGraph: AssignAgvConsumerMassTransitFixture.Graph)
+                    new AgvSaga(agvCorrelationId, agvId, nameof(AgvStateMachine.Ready), agvGraph: AssignAgvConsumerMassTransitFixture.Graph)
                 })))
                 .Build();
 
@@ -98,21 +98,21 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         }
 
         /// <summary>
-        /// Receive AssignAgv message and assign order to Idle AGV
+        /// Receive AssignAgv message and assign order to Ready AGV
         /// </summary>
         /// <param name="alive">Influence AGV alive state</param>
         [TestMethod]
         [DataRow(true)]
         [DataRow(false)]
-        public async Task When_IdleAgvIsAvailable_AgvAssignSucceededWhenAliveElseFailed(bool alive)
+        public async Task When_ReadyAgvIsAvailable_AgvAssignSucceededWhenAliveElseFailed(bool alive)
         {
             const string agvId = "AGV001";
             var agvCorrelationId = agvId.ToGuid();
 
             var fixture = new AssignAgvConsumerMassTransitFixture()
-                .AgvRegistryMock(m => m.Setup(s => s.GetIdleAgvs()).Returns(new EnumerableQuery<IAgv>(new List<IAgv>
+                .AgvRegistryMock(m => m.Setup(s => s.GetReadyAgvs()).Returns(new EnumerableQuery<IAgv>(new List<IAgv>
                 {
-                    new AgvSaga(agvCorrelationId, agvId, nameof(AgvStateMachine.Idle), agvGraph: AssignAgvConsumerMassTransitFixture.Graph) { Alive = alive }
+                    new AgvSaga(agvCorrelationId, agvId, nameof(AgvStateMachine.Ready), agvGraph: AssignAgvConsumerMassTransitFixture.Graph) { Alive = alive }
                 })))
                 .SetupBusRegistrationConfigurator(x =>
                 {
@@ -166,10 +166,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
                 new[]
                 {
                     /*   Map#1:  (AGV_01) 1   2
-                                          *                       /
-                                          *                      / (ORD_2-3, but this edge doesn't exist)
-                                          *                     /
-                                          *                    3   4 (AGV_02)   */
+                     *                       /
+                     *                      / (ORD_2-3, but this edge doesn't exist)
+                     *                     /
+                     *                    3   4 (AGV_02) */
                     new AgvGraph.Node(node01) { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 0f, Z = 0f },
                     new AgvGraph.Node(node02) { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 4f, Y = 0f, Z = 0f },
                     new AgvGraph.Node(node03) { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 3f, Z = 0f },
@@ -218,12 +218,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
                     x.AddRequestClient<ReserveAgv>();
                     x.AddConsumer<AgvReservationSucceededConsumer>();
                 })
-                .AgvRegistryMock(m => m.Setup(mReg => mReg.GetIdleAgvs()).Returns(
+                .AgvRegistryMock(m => m.Setup(mReg => mReg.GetReadyAgvs()).Returns(
                     new EnumerableQuery<IAgv>(
                         new List<IAgv>
                         {
-                            new AgvSaga(closestAgvCorrelationId, agvId, nameof(AgvStateMachine.Idle), agvGraph: agvGraph, agvStatus: agvStatus1) { Alive = aliveAgv1 },
-                            new AgvSaga(agvCorrelationId2, agvId2, nameof(AgvStateMachine.Idle), agvGraph: agvGraph, agvStatus: agvStatus2) { Alive = true }
+                            new AgvSaga(closestAgvCorrelationId, agvId, nameof(AgvStateMachine.Ready), agvGraph: agvGraph, agvStatus: agvStatus1) { Alive = aliveAgv1 },
+                            new AgvSaga(agvCorrelationId2, agvId2, nameof(AgvStateMachine.Ready), agvGraph: agvGraph, agvStatus: agvStatus2) { Alive = true }
                         }
                     )))
                 .Build();

@@ -86,7 +86,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var controller = GetController();
 
             var mockRegistry = new Mock<IAgvRegistry>();
-            mockRegistry.Setup(s => s.GetIdleAgvs()).Returns(new EnumerableQuery<IAgv>(new List<IAgv>()));
+            mockRegistry.Setup(s => s.GetReadyAgvs()).Returns(new EnumerableQuery<IAgv>(new List<IAgv>()));
             var mockObserver = new Mock<IStateObserver<OrderSaga>>();
             var orderEventObserver = new Mock<IEventObserver<OrderSaga>>();
 

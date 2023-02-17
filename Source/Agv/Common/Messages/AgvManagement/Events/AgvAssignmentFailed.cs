@@ -18,7 +18,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events
             /// <summary>
             /// There are no free AGVs to which this order could be assigned
             /// </summary>
-            NoIdleAgv,
+            NoReadyAgv,
 
             /// <summary>
             /// There is no AGV registered with a route from source to destination of the given order

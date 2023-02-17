@@ -2,6 +2,10 @@
 using MassTransit;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
+using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands;
+using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
+using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Routing;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
 {
@@ -39,7 +43,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         {
             _logger = logger;
             _agvRegistry = agvRegistry;
-            _orderRegistry=orderRegistry;
+            _orderRegistry = orderRegistry;
         }
 
         /// <summary>
@@ -49,18 +53,25 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         public async Task Consume(ConsumeContext<AgvBecameIdle> context)
         {
             var agv = _agvRegistry.GetAgv(context.Message.CorrelationId);
-
             if (agv == null)
             {
                 _logger.LogWarning("Agv with correlationId {CorrelationId} doesn't exist", context.Message.CorrelationId);
+                return;
             }
-            else if (agv.AgvStatus == null)
+
+            if (agv.AgvStatus == null)
             {
-                _logger.LogWarning("Agv with correlationId {CorrelationId} has no Status", context.Message.CorrelationId);
+                _logger.LogWarning("Agv with correlationId {CorrelationId} has no Status", agv.CorrelationId);
+                return;
+            }
+
+            if (CheckAgvNeedsCharging(agv.AgvStatus))
+            {
+                await CreateChargingAction(agv, context);
             }
             else
             {
-                await CheckAgvBatteryLevel(agv.AgvStatus, context);
+                await context.Publish(new AgvReady(agv.CorrelationId));
             }
         }
 
@@ -70,54 +81,114 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         /// <param name="context"></param>
         public async Task Consume(ConsumeContext<AgvStatusReceived> context)
         {
-            await CheckAgvChargingCompleted(context.Message.AgvStatus, context);
+            var agvStatus = context.Message.AgvStatus;
+
+            if (agvStatus.Charging)
+            {
+                if (agvStatus.BatteryCharge >= BatteryLevelFull)
+                {
+                    _logger.LogInformation("Agv with correlationId {CorrelationId} reached full battery level ({BatteryCharge}%)", agvStatus.CorrelationId, agvStatus.BatteryCharge);
+                    await context.Publish(new AgvStoppedCharging(agvStatus.CorrelationId));
+                }
+                else if (agvStatus.BatteryCharge >= BatteryLevelGood && _orderRegistry.CountQueued > 0)
+                {
+                    _logger.LogInformation("Agv with correlationId {CorrelationId} reached good battery level ({BatteryCharge}%)", agvStatus.CorrelationId, agvStatus.BatteryCharge);
+                    await context.Publish(new AgvStoppedCharging(agvStatus.CorrelationId));
+                }
+            }
+            else // Check battery charge of active AGV
+            {
+                if (CheckAgvNeedsCharging(agvStatus))
+                {
+                    await context.Publish(new AgvNeedsCharging(agvStatus.CorrelationId)); // This is a placeholder, there are currently no consumers for this message
+                }
+            }
         }
 
-        /// <summary>
-        /// Check the battery level of an AGV
-        /// </summary>
-        /// <param name="agvStatus">Status of the AGV</param>
-        /// <param name="endpoint">MassTransit endpoint for publishing a message</param>
-        private async Task CheckAgvBatteryLevel(AgvStatus agvStatus, IPublishEndpoint endpoint)
+        private bool CheckAgvNeedsCharging(AgvStatus agvStatus)
         {
             if (agvStatus.BatteryCharge <= BatteryLevelCritical)
             {
                 _logger.LogInformation("Agv with correlationId {CorrelationId} has critical battery level ({BatteryCharge}%)", agvStatus.CorrelationId, agvStatus.BatteryCharge);
-                await endpoint.Publish(new AgvNeedsCharging(agvStatus.CorrelationId));
+                return true;
             }
-            else if (agvStatus.BatteryCharge <= BatteryLevelLow)
+
+            if (agvStatus.BatteryCharge <= BatteryLevelLow)
             {
                 _logger.LogInformation("Agv with correlationId {CorrelationId} has low battery level ({BatteryCharge}%)", agvStatus.CorrelationId, agvStatus.BatteryCharge);
-                await endpoint.Publish(new AgvRequestsCharging(agvStatus.CorrelationId));
+
+                if (_orderRegistry.CountQueued == 0) // No ordes -> send AGV to charging station
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
             }
-            else
-            {
-                _logger.LogInformation("Agv with correlationId {CorrelationId} has good battery level ({BatteryCharge}%)", agvStatus.CorrelationId, agvStatus.BatteryCharge);
-                await endpoint.Publish(new AgvReady(agvStatus.CorrelationId));
-            }
+
+            // agvStatus.BatteryCharge > BatteryLevelLow
+            _logger.LogInformation("Agv with correlationId {CorrelationId} has good battery level ({BatteryCharge}%)", agvStatus.CorrelationId, agvStatus.BatteryCharge);
+            return false;
         }
 
-        /// <summary>
-        /// Checks if the battery level of an AGV is high enough to stop charging
-        /// </summary>
-        /// <param name="agvStatus">Status of the AGV</param>
-        /// <param name="endpoint">MassTransit endpoint for publishing a message</param>
-        private async Task CheckAgvChargingCompleted(AgvStatus agvStatus, IPublishEndpoint endpoint)
+        private async Task CreateChargingAction(IAgv agv, ConsumeContext context)
         {
-            int cntQueuedOrder = _orderRegistry.CountQueued;
+            _logger.LogInformation("Start action {ActionType} for AGV {AgvId} / {CorrelationId}",
+                ActionType.Charge, agv.AgvId, agv.CorrelationId);
 
-            // ReSharper disable once MergeIntoPattern
-            if (agvStatus.Charging && agvStatus.BatteryCharge >= BatteryLevelGood && cntQueuedOrder > 0)
+            if (agv.AgvGraph == null)
             {
-                _logger.LogInformation("Agv with correlationId {CorrelationId} reached good battery level ({BatteryCharge}%)", agvStatus.CorrelationId, agvStatus.BatteryCharge);
-                await endpoint.Publish(new AgvStoppedCharging(agvStatus.CorrelationId));
+                _logger.LogWarning("Agv with correlationId {CorrelationId} has no graph", agv.CorrelationId);
+                return;
             }
-            // ReSharper disable once MergeIntoPattern
-            else if (agvStatus.Charging && agvStatus.BatteryCharge >= BatteryLevelFull)
+
+            var chargingNode = ChooseChargingStation(agv.AgvGraph);
+            if (chargingNode == null)
             {
-                _logger.LogInformation("Agv with correlationId {CorrelationId} reached full battery level ({BatteryCharge}%)", agvStatus.CorrelationId, agvStatus.BatteryCharge);
-                await endpoint.Publish(new AgvStoppedCharging(agvStatus.CorrelationId));
+                _logger.LogWarning("Agv with correlationId {CorrelationId} has no charging stations in its graph", agv.CorrelationId);
+                return;
             }
+
+            string source = agv.AgvStatus!.LastNodeId ?? "";
+            string destination = chargingNode.Id;
+
+            var graphAlgorithm = new AStar(agv.AgvGraph, new NoCheckPlausibilityChecker());
+
+            var route = graphAlgorithm.CalculateRoute(source, destination);
+            if (route == null)
+            {
+                _logger.LogWarning("Charging station {NodeId} is not reachable by AGV with correlationId {CorrelationId}", source, agv.CorrelationId);
+                return;
+            }
+            // ReSharper disable once UseObjectOrCollectionInitializer
+            var agvAction = new AgvAction(
+                Guid.NewGuid(),
+                agv.AgvId,
+                ActionType.Charge,
+                string.Empty,
+                Guid.Empty,
+                source,
+                destination);
+
+            agvAction.AgvCorrelationId = agv.CorrelationId;
+            agvAction.Nodes = route.Nodes;
+
+            await context.Publish(new StartActionCommand(agv.CorrelationId, agvAction));
+            await context.Publish(new ActionStartedEvent(agv.CorrelationId));
+        }
+
+        private AgvGraph.Node? ChooseChargingStation(AgvGraph agvGraph)
+        {
+            List<AgvGraph.Node> chargingNodes = agvGraph.Nodes.Where(n => n.Type == AgvGraph.NodeType.Charge).ToList();
+
+            if (chargingNodes.Count == 0)
+            {
+                return null;
+            }
+
+            var random = new Random(); // Get random charging node
+            return chargingNodes[random.Next(chargingNodes.Count)];
         }
     }
 }

@@ -14,7 +14,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions
         /// </summary>
         [JetBrains.Annotations.UsedImplicitly]
         // ReSharper disable once StringLiteralTypo
-        [Option('c', "agvs", HelpText = "Number of simulated AGVs", Default=1)]
+        [Option('c', "agvs", HelpText = "Number of simulated AGVs", Default = 1)]
         // ReSharper disable once IdentifierTypo
         public int Agvs { get; init; }
 
@@ -57,7 +57,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions
         /// </summary>
         [JetBrains.Annotations.UsedImplicitly]
         // ReSharper disable once StringLiteralTypo
-        [Option('n', "nodetraveltime", HelpText = "The travel time for the simulated AGV from one node to another in [ms]", Default=5000)]
+        [Option('n', "nodetraveltime", HelpText = "The travel time for the simulated AGV from one node to another in [ms]", Default = 5000)]
         public int NodeTravelTime { get; init; }
 
         /// <summary>
@@ -75,5 +75,13 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions
         // ReSharper disable once StringLiteralTypo
         [Option("batterychargerate", HelpText = "Rate at which the battery charge increases during charge in [%/s]", Default = 1.0)]
         public double BatteryChargeRate { get; init; }
+
+        /// <summary>
+        /// Initial battery charge of AGV in [%]
+        /// </summary>
+        [JetBrains.Annotations.UsedImplicitly]
+        // ReSharper disable once StringLiteralTypo
+        [Option("initialbatterycharge", HelpText = "Initial battery charge of AGV in [%]", Default = 75)]
+        public int InitialBatteryCharge { get; init; }
     }
 }

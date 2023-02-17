@@ -6,13 +6,14 @@ using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Map;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.States;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
+using static Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.AgvGraph;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.States
 {
     [TestClass]
     public class SimulatedAgvSagaTest
     {
-       private SimulatedAgvSaga CreateSimulatedAgvSaga()
+        private SimulatedAgvSaga CreateSimulatedAgvSaga()
         {
             const string agvId = "Agv#1";
             var correlationId = agvId.ToGuid();
@@ -20,20 +21,23 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.States
             var data = new AgvData(correlationId, "model", "type", null, 10, 1, 1, 1, 1, 1, 1, 1, Array.Empty<AgvData.Sensor>());
             var map = new MapGenerator(graph);
             var agv = new SimulatedAgv(correlationId, agvId, "", graph, data, map.Generate());
-            return new SimulatedAgvSaga(agv, 10);
+            return new SimulatedAgvSaga(agv, 10, 75);
         }
 
         [TestMethod]
         public void Charging()
         {
             double chargeInit = 50;
-            double chargeDiff = 10;
+            double chargeDiff = 0.1;
+            double timeDiff = 60;
 
             var saga = CreateSimulatedAgvSaga();
             saga.SimulatedBatteryCharge = chargeInit;
-            saga.UpdateStatus(chargeDiff);
+            saga.CurrentNode = new("node01") { Type = NodeType.Charge };
 
-            saga.SimulatedBatteryCharge.ShouldBe(chargeInit + chargeDiff);
+            saga.UpdateStatus(timeDiff, chargeDiff, chargeDiff);
+
+            saga.SimulatedBatteryCharge.ShouldBe(chargeInit + chargeDiff * timeDiff);
             saga.AgvStatus.Charging.ShouldBeTrue();
         }
 
@@ -41,13 +45,16 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.States
         public void Discharging()
         {
             double chargeInit = 50;
-            double chargeDiff = -10;
+            double chargeDiff = 0.1;
+            double timeDiff = 60;
 
             var saga = CreateSimulatedAgvSaga();
             saga.SimulatedBatteryCharge = chargeInit;
-            saga.UpdateStatus(chargeDiff);
+            saga.CurrentNode = new("node01") { Type = NodeType.Pick };
 
-            saga.SimulatedBatteryCharge.ShouldBe(chargeInit + chargeDiff);
+            saga.UpdateStatus(timeDiff, chargeDiff, chargeDiff);
+
+            saga.SimulatedBatteryCharge.ShouldBe(chargeInit - chargeDiff * timeDiff);
             saga.AgvStatus.Charging.ShouldBeFalse();
         }
 
@@ -55,14 +62,16 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.States
         public void Not_alive_when_below_charg_threshold()
         {
             double chargeInit = 10;
-            double chargeDiff = -8;
+            double chargeDiff = 0.1;
+            double timeDiff = 60;
 
             var saga = CreateSimulatedAgvSaga();
             saga.SimulatedBatteryCharge = chargeInit;
 
             saga.Alive.ShouldBeTrue();
 
-            saga.UpdateStatus(chargeDiff);
+            saga.CurrentNode = new("node01") { Type = NodeType.Pick };
+            saga.UpdateStatus(timeDiff, chargeDiff, chargeDiff);
 
             saga.Alive.ShouldBeFalse();
         }

@@ -24,9 +24,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         public IQueryable<IAgv> GetAllAgvs();
 
         /// <summary>
-        /// Get list of idle AGVs
+        /// Get list of AGVs that are ready to be assigned to an order
         /// </summary>
-        public IQueryable<IAgv> GetIdleAgvs();
+        public IQueryable<IAgv> GetReadyAgvs();
 
         /// <summary>
         /// Get specific AGV

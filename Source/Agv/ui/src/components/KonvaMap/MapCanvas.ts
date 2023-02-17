@@ -283,6 +283,9 @@ export class MapCanvas {
       primary = '#808080' // grey
       secondary = undefined
     } else if (agvState.currentState === 'Idle') {
+      primary = '#FFFFFF' // white
+      secondary = undefined
+    } else if (agvState.currentState === 'Ready') {
       primary = '#008000' // green
       secondary = undefined
     } else if (agvState.currentState === 'Reserved') {

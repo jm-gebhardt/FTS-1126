@@ -20,11 +20,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
     /// <summary>
     /// Manages handling of actions and reports to <see cref="OrderStateMachine"/>
     /// </summary>
-    public class ActionManager : IConsumer<OrderQueuingCommand>,
-                                 IConsumer<ActionStatusChangedEvent>,
-                                 IConsumer<AgvReady>,
-                                 IConsumer<AgvRequestsCharging>,
-                                 IConsumer<AgvNeedsCharging>
+    public class ActionManager :
+        IConsumer<OrderQueuingCommand>,
+        IConsumer<ActionStatusChangedEvent>,
+        IConsumer<AgvBecameReady>
     {
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<ActionManager> _logger;
@@ -35,12 +34,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
         private readonly IDbContextFactory<TransportOrderDbContext> _transportOrderContextFactory;
         private readonly SemaphoreSlim _lockSemaphoreSlim = new(1, 1);
 
-
         /// <summary/>
-        public ActionManager(IServiceScopeFactory scopeFactory,
-                             ILogger<ActionManager> logger,
-                             IBus bus,
-                             IDbContextFactory<TransportOrderDbContext> transportOrderContextFactory)
+        public ActionManager(
+            IServiceScopeFactory scopeFactory,
+            ILogger<ActionManager> logger,
+            IBus bus,
+            IDbContextFactory<TransportOrderDbContext> transportOrderContextFactory)
         {
             _scopeFactory = scopeFactory;
             _logger = logger;
@@ -52,21 +51,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
         public Task Consume(ConsumeContext<OrderQueuingCommand> context) => QueueActionsForOrderAsync(context.Message, context.CancellationToken);
 
         /// <inheritdoc/>
-        public Task Consume(ConsumeContext<AgvReady> context) => AgvReadyAsync(context.Message.CorrelationId, context.CancellationToken);
-
-        /// <inheritdoc/>
-        public Task Consume(ConsumeContext<AgvRequestsCharging> context)
-        {
-            _logger.LogInformation("AGV {correlationId} requests charging", context.Message.CorrelationId);
-            return Task.CompletedTask;
-        }
-
-        /// <inheritdoc/>
-        public Task Consume(ConsumeContext<AgvNeedsCharging> context)
-        {
-            _logger.LogInformation("AGV {correlationId} needs charging", context.Message.CorrelationId);
-            return Task.CompletedTask;
-        }
+        public Task Consume(ConsumeContext<AgvBecameReady> context) => AgvBecameReadyAsync(context.Message.CorrelationId, context.CancellationToken);
 
         /// <summary>
         /// Creates action for the order and triggers the assignment of pending actions.
@@ -96,11 +81,32 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
         /// </summary>
         /// <param name="correlationId">The correlationId of the Agv</param>
         /// <param name="cancellationToken"></param>
-        private Task AgvReadyAsync(Guid correlationId, CancellationToken cancellationToken)
+        private Task AgvBecameReadyAsync(Guid correlationId, CancellationToken cancellationToken)
         {
             _logger.LogInformation("{MessageType} for AGV {AgvCorrelationId}", nameof(AgvReady), correlationId);
 
             return RequestAssignmentAsync(cancellationToken);
+        }
+
+        /// <summary>
+        /// Assign pending orders to AGV
+        /// </summary>
+        /// <remarks>
+        /// This is called when a new order is queued, when an AGV became idle or cyclically.
+        /// Triggered by order is not prioritized to let the assign algorithm decide which order should be assigned next.
+        /// </remarks>
+        public async Task RequestAssignmentAsync(CancellationToken cancellationToken)
+        {
+            await _lockSemaphoreSlim.WaitAsync(cancellationToken);
+
+            try
+            {
+                await Assign(cancellationToken);
+            }
+            finally
+            {
+                _lockSemaphoreSlim.Release();
+            }
         }
 
         /// <summary>
@@ -170,8 +176,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
         /// <param name="orderCorrelationId"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        private async Task CheckNextAction(ConsumeContext<ActionStatusChangedEvent> context, IOrderActionRegistry orderActionRepo, Guid assignedAgv, string orderId, Guid orderCorrelationId,
-                                           CancellationToken cancellationToken)
+        private async Task CheckNextAction(
+            ConsumeContext<ActionStatusChangedEvent> context,
+            IOrderActionRegistry orderActionRepo,
+            Guid assignedAgv,
+            string orderId,
+            Guid orderCorrelationId,
+            CancellationToken cancellationToken)
         {
             var action = orderActionRepo.GetSubsequentAction(orderCorrelationId);
             if (action != null)
@@ -190,8 +201,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
         /// <summary>
         /// Send <see cref="StartActionCommand"/> and set action to start <see cref="OrderActionState.Started"/>.
         /// </summary>
-        private async Task StartAction(IOrderActionRegistry orderActionRepo, OrderAction action, string orderId, Guid orderCorrelationId,
-                                       CancellationToken cancellationToken)
+        private async Task StartAction(
+            IOrderActionRegistry orderActionRepo,
+            OrderAction action,
+            string orderId,
+            Guid orderCorrelationId,
+            CancellationToken cancellationToken)
         {
             _logger.LogInformation("Start action {ActionType} for AGV {AgvId} for order {OrderId} / {CorrelationId}",
                 action.Type, action.AssignedAgvId, action.OrderDetails.OrderId, action.OrderCorrelationId);
@@ -231,6 +246,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
                                     OrderCorrelationId = g.Key,
                                     OrderActions = g.Select(x => x).ToArray()
                                 }).ToList();
+
             foreach (var order in orders)
             {
                 if (order.OrderActions.Length == 0)
@@ -262,8 +278,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
                         // Assign all actions
                         await HandleAssignmentSucceeded(orderActionRepo, order.OrderCorrelationId, order.OrderActions, agvAssignmentSucceeded, cancellationToken);
 
-                        await StartAction(orderActionRepo, order.OrderActions[0], orderDetails.OrderId, orderDetails.CorrelationId,
-                                          cancellationToken);
+                        await StartAction(orderActionRepo, order.OrderActions[0], orderDetails.OrderId, orderDetails.CorrelationId, cancellationToken);
                     }
                     else if (response.Message is AgvAssignmentFailed assignmentFailed)
                     {
@@ -282,8 +297,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
                         // There is no started action
                         _logger.LogDebug("Respawning actions for order {OrderId} / {CorrelationId}", orderDetails.OrderId, order.OrderCorrelationId);
 
-                        await StartAction(orderActionRepo, order.OrderActions[0], orderDetails.OrderId, orderDetails.CorrelationId,
-                                          cancellationToken);
+                        await StartAction(orderActionRepo, order.OrderActions[0], orderDetails.OrderId, orderDetails.CorrelationId, cancellationToken);
                     }
                 }
             }
@@ -299,7 +313,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
         /// <param name="actions">Complete list of actions belonging to that order (make sure list is not empty)</param>
         /// <param name="agvAssignmentSucceeded">Success message containing AGV information</param>
         /// <param name="cancellationToken"></param>
-        private async Task HandleAssignmentSucceeded(IOrderActionRegistry orderActionRepo, Guid orderCorrelationId, OrderAction[] actions, AgvAssignmentSucceeded agvAssignmentSucceeded, CancellationToken cancellationToken)
+        private async Task HandleAssignmentSucceeded(
+            IOrderActionRegistry orderActionRepo,
+            Guid orderCorrelationId,
+            OrderAction[] actions,
+            AgvAssignmentSucceeded agvAssignmentSucceeded,
+            CancellationToken cancellationToken)
         {
             _logger.LogDebug("{MessageType} for order {OrderId} / {CorrelationId}", nameof(AgvAssignmentSucceeded), actions[0].OrderDetails.OrderId, orderCorrelationId);
 
@@ -336,7 +355,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
 
             switch (error)
             {
-                case AgvAssignmentFailed.ErrorCode.NoIdleAgv:
+                case AgvAssignmentFailed.ErrorCode.NoReadyAgv:
                     _logger.LogInformation("{MessageType}/{FailedReason}: For action of order: {OrderId} no idle AGV found in AgvRegistry",
                         nameof(AgvAssignmentFailed), failedReason, order.OrderId);
                     break;
@@ -354,26 +373,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
 
                 default:
                     throw new ArgumentOutOfRangeException($"{nameof(AgvAssignmentFailed)}Error: {error} unknown");
-            }
-        }
-
-        /// <summary>
-        /// Assign pending orders to AGV
-        /// </summary><remarks>
-        /// This is called when a new order is queued, when an AGV became idle or cyclically.
-        /// Triggered by order is not prioritized to let the assign algorithm decide which order should be assigned next.
-        /// </remarks>
-        public async Task RequestAssignmentAsync(CancellationToken cancellationToken)
-        {
-            await _lockSemaphoreSlim.WaitAsync(cancellationToken);
-
-            try
-            {
-                await Assign(cancellationToken);
-            }
-            finally
-            {
-                _lockSemaphoreSlim.Release();
             }
         }
     }

@@ -46,7 +46,6 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
             return response.StatusCode == HttpStatusCode.OK;
         }
 
-
         /// <summary>
         /// Get all Agvs
         /// </summary>
@@ -159,7 +158,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
             return await Poll(async () =>
             {
                 var maps = await GetMaps();
-                if (maps is { Count: > 0 } && maps.Any(a => (a["relatedAgvs"] ?? throw new InvalidOperationException()).Any( c => c.ToString() == agvCorrelationId)))
+                if (maps is { Count: > 0 } && maps.Any(a => (a["relatedAgvs"] ?? throw new InvalidOperationException()).Any(c => c.ToString() == agvCorrelationId)))
                 {
                     return maps.First(token => (token["relatedAgvs"] ?? throw new InvalidOperationException()).Any(c => c.ToString() == agvCorrelationId));
                 }
@@ -195,7 +194,6 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
             }, longJob ? 600000 : 30000);
         }
 
-
         /// <summary>
         /// Poll until request is successful
         /// </summary>
@@ -203,7 +201,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         /// <param name="timeout"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns>return request result or null of unsuccessful</returns>
-        private static async Task<T?> Poll<T>(Func<Task<T?>> pollJob, int timeout=30000)
+        private static async Task<T?> Poll<T>(Func<Task<T?>> pollJob, int timeout = 30000)
         {
             var killTime = DateTime.Now + TimeSpan.FromMilliseconds(timeout);
             while (killTime > DateTime.Now)
@@ -223,6 +221,8 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
                 }
                 await Task.Delay(500);
             }
+
+            await Console.Error.WriteLineAsync("Polling time out");
 
             return default;
         }

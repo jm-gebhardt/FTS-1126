@@ -13,7 +13,7 @@
   "driving": true,
   "actionStates": [],
   "batteryState": {
-    "batteryCharge": 31.25,
+    "batteryCharge": 81.25,
     "charging": false,
     "batteryVoltage": 43.5,
     "batteryHealth": 93.4,

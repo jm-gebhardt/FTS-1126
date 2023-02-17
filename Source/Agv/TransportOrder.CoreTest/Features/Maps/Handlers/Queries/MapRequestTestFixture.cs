@@ -26,7 +26,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Features.Maps.Handlers.
 
         private readonly string[] _agvIds = { "AGV001", "AGV002", "AGV003" };
         private readonly string[] _orders = { "ORDER001", "ORDER002", "" };
-        private readonly string[] _states = { nameof(AgvStateMachine.Idle), nameof(AgvStateMachine.Busy), nameof(AgvStateMachine.Discovered) };
+        private readonly string[] _states = { nameof(AgvStateMachine.Ready), nameof(AgvStateMachine.Busy), nameof(AgvStateMachine.Discovered) };
         private readonly string[] _ips = { "127.0.0.1", "127.0.0.2", "127.0.0.3" };
 
         private readonly AgvGraph.Node[] _nodes = {
@@ -141,8 +141,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Features.Maps.Handlers.
             }
 
             registryMock.SetupGet(x => x.Count).Returns(agvs.Count);
-            registryMock.SetupGet(x => x.CountIdle).Returns(agvs.Where(x => x.CurrentState == nameof(AgvStateMachine.Idle)).Count);
-            registryMock.Setup(x => x.GetIdleAgvs()).Returns(new EnumerableQuery<IAgv>(agvs.Where(x => x.CurrentState == nameof(AgvStateMachine.Idle))));
+            registryMock.SetupGet(x => x.CountIdle).Returns(agvs.Where(x => x.CurrentState == nameof(AgvStateMachine.Ready)).Count);
+            registryMock.Setup(x => x.GetReadyAgvs()).Returns(new EnumerableQuery<IAgv>(agvs.Where(x => x.CurrentState == nameof(AgvStateMachine.Ready))));
             registryMock.Setup(x => x.GetAllAgvs()).Returns(new EnumerableQuery<IAgv>(agvs));
             registryMock.Setup(x => x.GetAgv(It.IsAny<Guid>())).Returns<Guid>(correlationId => agvs.SingleOrDefault(a => a.CorrelationId == correlationId));
 

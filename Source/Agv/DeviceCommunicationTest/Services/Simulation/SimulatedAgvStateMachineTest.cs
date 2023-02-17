@@ -22,6 +22,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
     [TestClass]
     public class SimulatedAgvStateMachineTest
     {
+        private const int InitialBatteryCharge = 75;
+        
         [TestMethod]
         public async Task InitialCreation_SingleAgv_Successful()
         {
@@ -120,7 +122,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             var graph = new GridGraphGenerator(new[] { "S1" }, new[] { "D1" }).Generate(correlationId);
 
             // Create saga in idle state with graph
-            var agvSaga = new SimulatedAgvSaga(correlationId, agvId, 5000, currentState: nameof(SimulatedAgvStateMachine.Idle), agvGraph: graph);
+            var agvSaga = new SimulatedAgvSaga(correlationId, agvId, 5000, InitialBatteryCharge, currentState: nameof(SimulatedAgvStateMachine.Idle), agvGraph: graph);
             fixture.Add(agvSaga);
 
             // Publish RequestAgvGraph ...
@@ -152,7 +154,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             var correlationId = agvId.ToGuid();
 
             // Create saga in idle state without graph
-            var agvSaga = new SimulatedAgvSaga(correlationId, agvId, 5000, currentState: nameof(SimulatedAgvStateMachine.Idle));
+            var agvSaga = new SimulatedAgvSaga(correlationId, agvId, 5000, InitialBatteryCharge, currentState: nameof(SimulatedAgvStateMachine.Idle));
             fixture.Add(agvSaga);
 
             // Publish RequestAgvGraph ...
@@ -181,7 +183,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             var correlationId = agvId.ToGuid();
 
             // Create saga in idle state without agv data
-            var agvSaga = new SimulatedAgvSaga(correlationId, agvId, 5000, currentState: nameof(SimulatedAgvStateMachine.Idle));
+            var agvSaga = new SimulatedAgvSaga(correlationId, agvId, 5000, InitialBatteryCharge, currentState: nameof(SimulatedAgvStateMachine.Idle));
             fixture.Add(agvSaga);
 
             // Publish RequestAgvData ...
@@ -211,7 +213,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             var data = new AgvData(correlationId, "model", "type", null, 10, 1, 1, 1, 1, 1, 1, 1, Array.Empty<AgvData.Sensor>());
 
             // Create saga in idle state with agv data
-            var agvSaga = new SimulatedAgvSaga(correlationId, agvId, 5000, currentState: nameof(SimulatedAgvStateMachine.Idle), agvData: data);
+            var agvSaga = new SimulatedAgvSaga(correlationId, agvId, 5000, InitialBatteryCharge, currentState: nameof(SimulatedAgvStateMachine.Idle), agvData: data);
             fixture.Add(agvSaga);
 
             // Publish RequestAgvData ...
@@ -246,7 +248,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             var map = new MapGenerator(graph).Generate();
 
             // Create saga in idle state with agv map
-            var agvSaga = new SimulatedAgvSaga(correlationId, agvId, 5000, currentState: nameof(SimulatedAgvStateMachine.Idle), agvGraph: graph, agvMap: map);
+            var agvSaga = new SimulatedAgvSaga(correlationId, agvId, 5000, InitialBatteryCharge, currentState: nameof(SimulatedAgvStateMachine.Idle), agvGraph: graph, agvMap: map);
             fixture.Add(agvSaga);
 
             // Publish RequestAgvMap ...
@@ -279,7 +281,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             var correlationId = agvId.ToGuid();
 
             // Create saga in idle state without agv map
-            var agvSaga = new SimulatedAgvSaga(correlationId, agvId, 5000, currentState: nameof(SimulatedAgvStateMachine.Idle));
+            var agvSaga = new SimulatedAgvSaga(correlationId, agvId, 5000, InitialBatteryCharge, currentState: nameof(SimulatedAgvStateMachine.Idle));
             fixture.Add(agvSaga);
 
             // Publish RequestAgvMap ...
@@ -335,7 +337,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             int nodeTravelTime = (int)(2f * fixture.Machine.SignalPositionIntervalMs);
 
             // Create saga in idle state
-            var agvSaga = new SimulatedAgvSaga(agv, agvId, nodeTravelTime, currentState: nameof(SimulatedAgvStateMachine.Idle), agvGraph: graph, agvData: data);
+            var agvSaga = new SimulatedAgvSaga(agv, agvId, nodeTravelTime, InitialBatteryCharge, currentState: nameof(SimulatedAgvStateMachine.Idle), agvGraph: graph, agvData: data);
             fixture.Add(agvSaga);
 
             agvSaga.AgvStatus.Busy.ShouldBeFalse();
@@ -425,7 +427,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             var correlationId = agvId.ToGuid();
 
             // ReSharper disable once UseObjectOrCollectionInitializer
-            var agvSaga = new SimulatedAgvSaga(correlationId, agvId, 500, currentState: nameof(SimulatedAgvStateMachine.Idle));
+            var agvSaga = new SimulatedAgvSaga(correlationId, agvId, 500, InitialBatteryCharge, currentState: nameof(SimulatedAgvStateMachine.Idle));
             agvSaga.SimulatedBatteryCharge = 100; // Set charge to 100 for alive and 0 for not alive
             fixture.Add(agvSaga);
 
@@ -466,7 +468,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             var correlationId = agvId.ToGuid();
 
             // ReSharper disable once UseObjectOrCollectionInitializer
-            var agvSaga = new SimulatedAgvSaga(correlationId, agvId, 500, currentState: nameof(SimulatedAgvStateMachine.Idle));
+            var agvSaga = new SimulatedAgvSaga(correlationId, agvId, 500, InitialBatteryCharge, currentState: nameof(SimulatedAgvStateMachine.Idle));
             agvSaga.SimulatedBatteryCharge = 0; // Set charge to 100 for alive and 0 for not alive
             fixture.Add(agvSaga);
 

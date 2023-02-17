@@ -51,43 +51,43 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         }
 
         [TestMethod]
-        public void OneIdleAdded_OneIdleAGVAvailable()
+        public void OneReadyAdded_OneReadyAGVAvailable()
         {
             var fixture = new EfAgvRegistryTestFixture();
-            var agvSaga = new AgvSaga(Guid.NewGuid(), "agv0", nameof(AgvStateMachine.Idle));
+            var agvSaga = new AgvSaga(Guid.NewGuid(), "agv0", nameof(AgvStateMachine.Ready));
             fixture.Add(agvSaga);
 
             fixture.Registry.Count.ShouldBe(1);
             fixture.Registry.CountIdle.ShouldBe(1);
 
-            var idleAgv = fixture.Registry.GetIdleAgvs().First();
-            idleAgv.CorrelationId.ShouldBe(agvSaga.CorrelationId);
-            idleAgv.CurrentState.ShouldBe(agvSaga.CurrentState);
-            idleAgv.AgvId.ShouldBe(agvSaga.AgvId);
-            idleAgv.AgvStatus.ShouldBe(agvSaga.AgvStatus);
-            idleAgv.AgvGraph.ShouldBe(agvSaga.AgvGraph);
-            idleAgv.AgvData.ShouldBe(agvSaga.AgvData);
-            idleAgv.Alive.ShouldBeFalse();
+            var readyAgv = fixture.Registry.GetReadyAgvs().First();
+            readyAgv.CorrelationId.ShouldBe(agvSaga.CorrelationId);
+            readyAgv.CurrentState.ShouldBe(agvSaga.CurrentState);
+            readyAgv.AgvId.ShouldBe(agvSaga.AgvId);
+            readyAgv.AgvStatus.ShouldBe(agvSaga.AgvStatus);
+            readyAgv.AgvGraph.ShouldBe(agvSaga.AgvGraph);
+            readyAgv.AgvData.ShouldBe(agvSaga.AgvData);
+            readyAgv.Alive.ShouldBeFalse();
         }
 
         [TestMethod]
-        public void TwoAdded_OneIdleAGVAvailable()
+        public void TwoAdded_OneReadyAGVAvailable()
         {
             var fixture = new EfAgvRegistryTestFixture();
-            var agvSaga = new AgvSaga(Guid.NewGuid(), "agv0", nameof(AgvStateMachine.Idle));
+            var agvSaga = new AgvSaga(Guid.NewGuid(), "agv0", nameof(AgvStateMachine.Ready));
             fixture.Add(agvSaga);
             fixture.Add(new AgvSaga(Guid.NewGuid(), "agv1", nameof(AgvStateMachine.Discovered)));
 
             fixture.Registry.Count.ShouldBe(2);
             fixture.Registry.CountIdle.ShouldBe(1);
 
-            var idleAgv = fixture.Registry.GetIdleAgvs().First();
-            idleAgv.CorrelationId.ShouldBe(agvSaga.CorrelationId);
-            idleAgv.CurrentState.ShouldBe(agvSaga.CurrentState);
-            idleAgv.AgvId.ShouldBe(agvSaga.AgvId);
-            idleAgv.AgvStatus.ShouldBe(agvSaga.AgvStatus);
-            idleAgv.AgvGraph.ShouldBe(agvSaga.AgvGraph);
-            idleAgv.AgvData.ShouldBe(agvSaga.AgvData);
+            var readyAgv = fixture.Registry.GetReadyAgvs().First();
+            readyAgv.CorrelationId.ShouldBe(agvSaga.CorrelationId);
+            readyAgv.CurrentState.ShouldBe(agvSaga.CurrentState);
+            readyAgv.AgvId.ShouldBe(agvSaga.AgvId);
+            readyAgv.AgvStatus.ShouldBe(agvSaga.AgvStatus);
+            readyAgv.AgvGraph.ShouldBe(agvSaga.AgvGraph);
+            readyAgv.AgvData.ShouldBe(agvSaga.AgvData);
         }
 
         [TestMethod]
@@ -99,7 +99,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             var correlationId2 = agvId2.ToGuid();
 
             var fixture = new EfAgvRegistryTestFixture();
-            fixture.Add(new AgvSaga(correlationId1, agvId1, nameof(AgvStateMachine.Idle)));
+            fixture.Add(new AgvSaga(correlationId1, agvId1, nameof(AgvStateMachine.Ready)));
             fixture.Add(new AgvSaga(correlationId2, agvId2, nameof(AgvStateMachine.Discovered)));
 
             var agvRegistry = fixture.Registry;
@@ -108,11 +108,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             fixture.Registry.CountIdle.ShouldBe(1);
 
             IEnumerable<IAgv> allAgvs = agvRegistry.GetAllAgvs();
-            IEnumerable<IAgv> idleAgvs = agvRegistry.GetIdleAgvs();
+            IEnumerable<IAgv> readyAgvs = agvRegistry.GetReadyAgvs();
 
             // ReSharper disable PossibleMultipleEnumeration
             allAgvs.Count().ShouldBe(2);
-            idleAgvs.Count().ShouldBe(1);
+            readyAgvs.Count().ShouldBe(1);
 
             foreach (var actualAgv in agvRegistry.GetAllAgvs())
             {

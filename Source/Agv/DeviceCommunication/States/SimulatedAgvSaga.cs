@@ -84,22 +84,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         /// <summary>
         /// Returns the node last visited by the AGV
         /// </summary>
-        public string? LastNodeId
-        {
-            get
-            {
-                double? orderProgress = ActionProgress; // Access time dependent value just once
-                if (orderProgress.HasValue && Action!.Nodes.Any())
-                {
-                    int lastNodeIndex = (int)(Action!.Nodes.Length * orderProgress.Value);
-                    if (lastNodeIndex < Action!.Nodes.Length)
-                    {
-                        return Action!.Nodes[lastNodeIndex];
-                    }
-                }
-                return Action?.Nodes.LastOrDefault();
-            }
-        }
+        public string? LastNodeId => CurrentNode?.Id;
 
         /// <summary>
         /// Next node AGV will arrive at.
@@ -153,6 +138,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
                         var rnd = new Random();
                         var node = stations[rnd.Next(0, stations.Count)];
                         _position = new AgvPosition(true, node.X, node.Y, node.Z, 0f, 0f);
+                        CurrentNode = node;
                     }
                     return _position;
                 }
@@ -214,7 +200,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         /// <summary>
         /// Action progress as percentage [0..1]
         /// </summary>
-        public double? ActionProgress => TimeToFinish != null && ActionDuration != null ? 1 - TimeToFinish.Value.TotalSeconds / ActionDuration.Value.TotalSeconds : null;
+        public double? ActionProgress => TimeToFinish != null && ActionDuration != null
+            ? 1 - TimeToFinish.Value.TotalSeconds / ActionDuration.Value.TotalSeconds
+            : null;
 
         /// <summary>
         /// SimulatedAgvSaga constructor used for testing
@@ -222,6 +210,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         /// <param name="correlationId"></param>
         /// <param name="agvId"></param>
         /// <param name="nodeTravelTime"></param>
+        /// <param name="initialBatteryCharge"></param>
         /// <param name="nodes"></param>
         /// <param name="currentState"></param>
         /// <param name="agvGraph"></param>
@@ -231,6 +220,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
             Guid correlationId,
             string agvId,
             int nodeTravelTime,
+            int initialBatteryCharge,
             string[]? nodes = null,
             string? currentState = null,
             AgvGraph? agvGraph = null,
@@ -254,7 +244,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
                 Action?.OrderId,
                 busy: false,
                 automatic: true,
-                batteryCharge: new Random().Next(1, 100), // Init with random charge [1..99]
+                initialBatteryCharge,
                 charging: false,
                 disturbed: false,
                 LastNodeId
@@ -266,7 +256,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         /// </summary>
         /// <param name="agv"></param>
         /// <param name="nodeTravelTime"></param>
-        public SimulatedAgvSaga(SimulatedAgv agv, int nodeTravelTime)
+        /// <param name="initialBatteryCharge"></param>
+        public SimulatedAgvSaga(SimulatedAgv agv, int nodeTravelTime, int initialBatteryCharge)
         {
             CorrelationId = agv.CorrelationId;
             AgvId = agv.AgvId;
@@ -275,7 +266,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
             CurrentState = agv.CurrentState;
             AgvMap = agv.AgvMap;
             NodeTravelTime = nodeTravelTime;
-            SimulatedBatteryCharge = new Random().Next(50, 101); // Init to random charge [50..100]
+            SimulatedBatteryCharge = initialBatteryCharge;
 
             AgvStatus = new(
                 CorrelationId,
@@ -301,14 +292,28 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         /// <summary>
         /// Updates AgvStatus
         /// </summary>
-        public void UpdateStatus(double chargeDiff)
+        public void UpdateStatus(double timeDiffMs, double batteryChargeRate, double batteryDischargeRate)
         {
-            bool busy = new[]
+            bool charging = false;
+            if (CurrentNode != null) // AGV is charging if it is at a charging station
             {
+                charging = CurrentNode.Type == AgvGraph.NodeType.Charge;
+            }
+
+            double chargeDiff;
+            if (charging)
+            {
+                chargeDiff = timeDiffMs * batteryChargeRate;
+            }
+            else
+            {
+                chargeDiff = timeDiffMs * -batteryDischargeRate;
+            }
+
+            bool busy = new[] {
                 nameof(SimulatedAgvStateMachine.BusyMoving)
             }.Any(c => c == CurrentState);
 
-            bool charging = chargeDiff > 0; // AGV is charging if charge difference is positive
             SimulatedBatteryCharge = Math.Clamp(SimulatedBatteryCharge + chargeDiff, 0, 100);
             Alive = SimulatedBatteryCharge > AliveChargeThreshold;
 

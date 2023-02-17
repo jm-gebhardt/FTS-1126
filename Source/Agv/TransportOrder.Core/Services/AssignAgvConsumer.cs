@@ -46,10 +46,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
             _logger.LogDebug("Request {MessageType} received for order {OrderId} / {CorrelationId}",
                 nameof(AssignAgv), context.Message.Order.OrderId, context.Message.Order.CorrelationId);
 
-            KeyValuePair<IAgv, IGraphAlgorithm.Route>? assignedAgvAndRoute = await AssignIdleAgv<AStar>(context.Message.Order, context.CancellationToken);
+            KeyValuePair<IAgv, IGraphAlgorithm.Route>? assignedAgvAndRoute = await AssignReadyAgv<AStar>(context.Message.Order, context.CancellationToken);
             if (assignedAgvAndRoute == null)
             {
-                var error = CheckRouteExists<AStar>(context.Message.Order) ? AgvAssignmentFailed.ErrorCode.NoIdleAgv : AgvAssignmentFailed.ErrorCode.NoRouteFound;
+                var error = CheckRouteExists<AStar>(context.Message.Order) ? AgvAssignmentFailed.ErrorCode.NoReadyAgv : AgvAssignmentFailed.ErrorCode.NoRouteFound;
 
                 if (_agvRegistry.Count == 0 && error == AgvAssignmentFailed.ErrorCode.NoRouteFound)
                 {
@@ -86,20 +86,20 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         /// <param name="cancellationToken"></param>
         /// <typeparam name="TGraphAlgorithm"></typeparam>
         /// <returns>Returns AGV and available route when reservable AGV found otherwise returns null</returns>
-        private async Task<KeyValuePair<IAgv, IGraphAlgorithm.Route>?> AssignIdleAgv<TGraphAlgorithm>(OrderDetails order, CancellationToken cancellationToken) where TGraphAlgorithm : IGraphAlgorithm
+        private async Task<KeyValuePair<IAgv, IGraphAlgorithm.Route>?> AssignReadyAgv<TGraphAlgorithm>(OrderDetails order, CancellationToken cancellationToken) where TGraphAlgorithm : IGraphAlgorithm
         {
             var agvChooser = new AgvChooser<TGraphAlgorithm>(_routingPlausibilityChecker);
             IAgv? assignedAgv = null;
             IGraphAlgorithm.Route? route = null;
 
-            List<IAgv> idleAgvs = _agvRegistry.GetIdleAgvs()
+            List<IAgv> readyAgvs = _agvRegistry.GetReadyAgvs()
                 .AsEnumerable()
                 .Where(agv => agv.Assignable)
                 .ToList();
 
-            while (idleAgvs.Count > 0)
+            while (readyAgvs.Count > 0)
             {
-                KeyValuePair<Guid, IGraphAlgorithm.Route>? chosenAgv = agvChooser.ChooseAgv(idleAgvs, order);
+                KeyValuePair<Guid, IGraphAlgorithm.Route>? chosenAgv = agvChooser.ChooseAgv(readyAgvs, order);
 
                 if (chosenAgv == null)
                 {
@@ -112,12 +112,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
 
                 if (await ReserveAgv(correlationId, cancellationToken))
                 {
-                    assignedAgv = idleAgvs.Single(x => x.CorrelationId == correlationId);
+                    assignedAgv = readyAgvs.Single(x => x.CorrelationId == correlationId);
                     route = chosenAgv.Value.Value;
                     break;
                 }
                 _logger.LogInformation("Could not reserve Agv {CorrelationId}, trying next", correlationId);
-                idleAgvs.RemoveAll(x => x.CorrelationId == correlationId);
+                readyAgvs.RemoveAll(x => x.CorrelationId == correlationId);
             }
 
             if (assignedAgv == null || route == null)
