@@ -19,12 +19,18 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
     {
         #region Records
         /// <summary>
-        /// Internal message to create an AGV instance
+        /// Internal message (request) to create an AGV instance
         /// </summary>
         /// <param name="CorrelationId"></param>
         /// <param name="Agv"></param>
         /// <param name="NodeTravelTime"></param>
         public record CreateAgv(Guid CorrelationId, SimulatedAgv Agv, int NodeTravelTime) : CorrelatedBy<Guid>;
+        
+        /// <summary>
+        /// Response to the CreateAgv request 
+        /// </summary>
+        /// <param name="CorrelationId"></param>
+        public record CreateAgvResponse(Guid CorrelationId);
 
         /// <summary>
         /// Internal message to schedule sending status update
@@ -202,7 +208,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
                 .ThenAsync(PublishStatus)
                 .ThenAsync(PublishPosition)
                 .Schedule(StatusUpdateSchedule, c => new ScheduleStatusUpdate(c.Saga.CorrelationId), _ => TimeSpan.FromMilliseconds(StatusUpdateIntervalMs))
-                .Schedule(SignalPositionSchedule, c => new ScheduleSignalPosition(c.Saga.CorrelationId), _ => TimeSpan.FromMilliseconds(SignalPositionIntervalMs));
+                .Schedule(SignalPositionSchedule, c => new ScheduleSignalPosition(c.Saga.CorrelationId), _ => TimeSpan.FromMilliseconds(SignalPositionIntervalMs))
+                .Then(c => c.RespondAsync(new CreateAgvResponse(c.Saga.CorrelationId)));
 
         private EventActivityBinder<SimulatedAgvSaga, StartActionCommand> SetStartActionHandler() =>
             When(StartActionCommandEvent)

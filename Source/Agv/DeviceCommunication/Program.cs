@@ -30,21 +30,20 @@ try
                 {
                     services.AddScoped(_ => simulationOptions);
                     services.AddTransient<SimulatedAgvProvider>();
-                    ConfigureServicesMassTransit.ConfigureServices(services, context.Configuration, 
+                    ConfigureServicesMassTransit.ConfigureServices(services, context.Configuration,
                         x =>
                         {
+                            x.AddDelayedMessageScheduler();
                             x.AddSagaStateMachine<SimulatedAgvStateMachine, SimulatedAgvSaga>()
                                 .InMemoryRepository();
-                        x.AddDelayedMessageScheduler();
-                    }, rabbitMqConfiguration: (_, cfg) =>
-                    {
-                        cfg.ConfigureMessageTopology<SimulatedAgvStateMachine>();
-                        cfg.UseDelayedMessageScheduler();
-                    });
+                            x.AddRequestClient<SimulatedAgvProvider>();
+                            x.AddConsumer<SimulatedAgvProvider>();
+                        }, rabbitMqConfiguration: (_, cfg) =>
+                        {
+                            cfg.UseDelayedMessageScheduler();
+                        });
                 })
                 .Build();
-            // Create AGVs
-            host.Services.GetRequiredService<SimulatedAgvProvider>().Create();
         })
         .WithParsed<ProductionOptions>(productionOptions =>
         {

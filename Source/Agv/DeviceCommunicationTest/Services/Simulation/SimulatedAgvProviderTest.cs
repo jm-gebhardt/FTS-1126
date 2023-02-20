@@ -1,8 +1,12 @@
+using Gebhardt.StoreWare.Agv.Common.Messages;
+using Gebhardt.StoreWare.Agv.Common.Testing;
+using Gebhardt.StoreWare.Agv.Common.Utilities;
 using MassTransit;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.States;
+using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
@@ -13,73 +17,81 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
     [TestClass]
     public class SimulatedAgvProviderTest
     {
-        /// <summary>
-        /// Test SingleAgv Single Source And Destination CreateAgv Published Successful
-        /// </summary>
         [TestMethod]
-        public void SingleAgv_SingleSourceAndDestination_CreateAgvPublished_Successful()
+        public async Task BusReadyPublished_SimulatedAgvProvider_Create_Triggered_CreateAgv_Published()
         {
             var options = new SimulateOptions()
             {
                 Agvs = 1,
-                Sources = new[] {"S1"},
-                Destinations = new []{"D1"},
+                Sources = new[] { "S1" },
+                Destinations = new[] { "D1" },
                 GridRows = 3
             };
 
-            var bus = new Mock<IBus>();
-            var createAgvMessages = new List<SimulatedAgvStateMachine.CreateAgv>();
-            bus.Setup(s => s.Publish(Capture.In(createAgvMessages), default));
-            var provider = new SimulatedAgvProvider(options, bus.Object);
-            provider.Create();
+            var fixture = new StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(
+                services: s =>
+                {
+                    s.AddSingleton(options);
+                    s.AddTransient<SimulatedAgvProvider>();
+                },
+                busRegistrationConfigurator:
+                x =>
+                {
+                    x.AddConsumer<SimulatedAgvProvider>();
+                    x.AddRequestClient<SimulatedAgvProvider>();
+                });
 
-            bus.Verify(s => s.Publish(It.IsAny<SimulatedAgvStateMachine.CreateAgv>(), default), Times.Once);
-
-            var firstAgv = createAgvMessages.First();
-            firstAgv.Agv.CorrelationId.ShouldNotBe(Guid.Empty);
-            firstAgv.Agv.AgvId.ShouldNotBeNull();
-            firstAgv.Agv.AgvGraph.ShouldNotBeNull();
-            firstAgv.Agv.AgvData.ShouldNotBeNull();
+            await fixture.TestHarness.Bus.Publish(new MassTransitBusEvent(MassTransitBusEvent.EventType.PostStarted));
+            bool result = await fixture.TestHarness.Published.Any<SimulatedAgvStateMachine.CreateAgv>();
+            result.ShouldBeTrue();
         }
-        
-        /// <summary>
-        /// Test TwoAgv Single Source And Destination CreateAgv Published with unique AgvId Successful
-        /// </summary>
+
         [TestMethod]
-        public void TwoAgvs_SingleSourceAndDestination_CreateAgvPublished_AgvIdUnique_Successful()
+        public async Task TwoAgvs_SingleSourceAndDestination_CreateAgvPublished_AgvIdUnique_Successful()
         {
+            const int numberOfAgvs = 2;
             var options = new SimulateOptions()
             {
-                Agvs = 2,
-                Sources = new[] {"S1"},
-                Destinations = new []{"D1"},
+                Agvs = numberOfAgvs,
+                Sources = new[] { "S1" },
+                Destinations = new[] { "D1" },
                 GridRows = 3
             };
 
-            var bus = new Mock<IBus>();
-            var createAgvMessages = new List<SimulatedAgvStateMachine.CreateAgv>();
-            bus.Setup(s => s.Publish(Capture.In(createAgvMessages), default));
-            var provider = new SimulatedAgvProvider(options, bus.Object);
-            provider.Create();
-            
-            bus.Verify(s => s.Publish(It.IsAny<SimulatedAgvStateMachine.CreateAgv>(), default), Times.Exactly(2));
+            var fixture = new StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(
+                services: s =>
+                {
+                    s.AddSingleton(options);
+                    s.AddScoped<SimulatedAgvProvider>();
+                },
+                inMemoryConfiguration: (_, cfg) => { cfg.UseDelayedMessageScheduler(); },
+                busRegistrationConfigurator:
+                x =>
+                {
+                    x.AddDelayedMessageScheduler();
+                    x.AddConsumer<SimulatedAgvProvider>();
+                    x.AddRequestClient<SimulatedAgvProvider>();
+                });
 
-            var firstAgv = createAgvMessages.First();
-            firstAgv.Agv.CorrelationId.ShouldNotBe(Guid.Empty);
-            firstAgv.Agv.AgvId.ShouldNotBeNullOrEmpty();
-            firstAgv.Agv.AgvGraph.ShouldNotBeNull();
-            firstAgv.Agv.AgvData.ShouldNotBeNull();
+            await fixture.TestHarness.Bus.Publish(new MassTransitBusEvent(MassTransitBusEvent.EventType.PostStarted));
+
+            (await fixture.TestHarness.Published.Any<SimulatedAgvStateMachine.CreateAgv>()).ShouldBeTrue();
             
-            var secondAgv = createAgvMessages[1];
-            secondAgv.Agv.CorrelationId.ShouldNotBe(Guid.Empty);
-            secondAgv.Agv.AgvId.ShouldNotBeEmpty();
-            secondAgv.Agv.AgvGraph.ShouldNotBeNull();
-            secondAgv.Agv.AgvData.ShouldNotBeNull();
+            (await fixture.SagaHarness.Consumed.Any<SimulatedAgvStateMachine.CreateAgv>()).ShouldBeTrue();
             
-            secondAgv.Agv.AgvId.ShouldNotBe(firstAgv.Agv.AgvId);
-            secondAgv.Agv.CorrelationId.ShouldNotBe(firstAgv.Agv.CorrelationId);
+            for (int i = 0; i < numberOfAgvs; i++)
+            {
+                int i1 = i;
+                var createdSaga = fixture.SagaHarness.Sagas.Select(c => c.CorrelationId == $"SimAgv-{i1}".ToGuid()).First().Saga;
+
+                createdSaga.CorrelationId.ShouldBe($"SimAgv-{i}".ToGuid());
+                createdSaga.AgvId.ShouldBe($"SimAgv-{i}");
+                createdSaga.AgvStatus.ShouldNotBeNull();
+                createdSaga.AgvGraph.ShouldNotBeNull();
+                createdSaga.AgvData.ShouldNotBeNull();
+
+                (await fixture.TestHarness.Consumed.Any<SimulatedAgvStateMachine.CreateAgvResponse>(c => c.Context.CorrelationId == $"SimAgv-{i}".ToGuid())).ShouldBeTrue();
+            }
         }
     }
 }
-
-
