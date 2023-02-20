@@ -23,7 +23,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
     public class SimulatedAgvStateMachineTest
     {
         private const int InitialBatteryCharge = 75;
-        
+
         [TestMethod]
         public async Task InitialCreation_SingleAgv_Successful()
         {
@@ -370,24 +370,24 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             (await fixture.TestHarness.Sent.Any<SimulatedAgvStateMachine.ScheduleSignalPosition>()).ShouldBeTrue();
             (await fixture.SagaHarness.Consumed.Any<SimulatedAgvStateMachine.ScheduleSignalPosition>()).ShouldBeTrue();
 
-            // wait until order is completed
-            double? delay = agvSaga.TimeToFinish?.TotalMilliseconds;
-            // ReSharper disable once MergeIntoPattern
-            if (delay.HasValue && delay > 0)
-            {
-                Thread.Sleep((int)(delay + 0.5));
-            }
-
             // Order completed
             (await fixture.TestHarness.Sent.Any<SimulatedAgvStateMachine.ScheduleFinishAction>()).ShouldBeTrue();
             (await fixture.SagaHarness.Consumed.Any<SimulatedAgvStateMachine.ScheduleFinishAction>()).ShouldBeTrue();
 
-            agvSaga.AgvStatus.Busy.ShouldBeFalse();
-            agvSaga.TimeToFinish.ShouldBeNull();
-            agvSaga.ActionStartDate.ShouldBeNull();
-            agvSaga.ActionFinishDate.ShouldBeNull();
-            agvSaga.LastNodeId.ShouldBe(destination);
-            agvSaga.NextNodeId.ShouldBe(destination);
+            //wait until saga is updated
+            var startedTime = DateTime.Now;
+            var timeout = TimeSpan.FromMilliseconds(2500);
+            bool matches;
+            do
+            {
+                matches = !agvSaga.AgvStatus.Busy;
+                matches = matches && agvSaga.TimeToFinish == null;
+                matches = matches && agvSaga.ActionStartDate == null;
+                matches = matches && agvSaga.ActionFinishDate == null;
+                matches = matches && agvSaga.LastNodeId == destination;
+                matches = matches && agvSaga.NextNodeId == destination;
+            } while (!matches && DateTime.Now < startedTime + timeout);
+            matches.ShouldBeTrue();
 
             (await fixture.TestHarness.Published.Any<ActionStatusChangedEvent>()).ShouldBeTrue();
             actionStatus = fixture.TestHarness.Published.Select<ActionStatusChangedEvent>()
