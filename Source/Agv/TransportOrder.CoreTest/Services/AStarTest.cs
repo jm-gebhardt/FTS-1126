@@ -336,5 +336,68 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             route = aStar.CalculateRoute("1", "2");
             route.ShouldBeNull();
         }
+
+        [TestMethod]
+        public void FindsShortestPossibleRoute_WhenAllPossibleRoutesBlocked_ReturnsNull()
+        {
+            var agvGraphTextFixtureMock = new Mock<AgvGraphTestFixture>();
+            agvGraphTextFixtureMock.Setup(method => method.GetAllPossibleRoutesOrdered())
+            .Returns(new[]
+            {
+                new[] {"Saarbrücken", "Kaiserslautern", "Frankfurt", "Würzburg"},
+                new[] {"Saarbrücken", "Kaiserslautern", "Ludwigshafen", "Würzburg"},
+                new[] {"Saarbrücken", "Karlsruhe", "Heilbronn", "Würzburg"}
+            });
+            var agvGraphTextFixture = agvGraphTextFixtureMock.Object;
+
+            AssertFindsShortestPath("Saarbrücken", "Würzburg", agvGraphTextFixture);
+            AssertWhenEdgeBlock_FindsAlternativePath("Saarbrücken", "Würzburg", agvGraphTextFixture);
+        }
+
+        [TestMethod]
+        public void OnlyOnePossibleRoute_FindsRoute_WhenBlockedEdgeDoesNotFindRoute()
+        {
+            var agvGraphTextFixtureMock = new Mock<AgvGraphTestFixture>();
+            agvGraphTextFixtureMock.Setup(method => method.GetAllPossibleRoutesOrdered())
+            .Returns(new[]
+            {
+                new[] { "Saarbrücken", "LoneRoute", "LoneDestination" }
+            });
+            var agvGraphTextFixture = agvGraphTextFixtureMock.Object;
+
+            AssertFindsShortestPath("Saarbrücken", "LoneDestination", agvGraphTextFixture);
+            AssertWhenEdgeBlock_FindsAlternativePath("Saarbrücken", "LoneDestination", agvGraphTextFixture);
+        }
+
+        private void AssertFindsShortestPath(string source, string destination, AgvGraphTestFixture agvGraphTextFixture)
+        {
+            var aStar = new AStar(agvGraphTextFixture.Graph, RoutingPlausibilityChecker);
+            var route = aStar.CalculateRoute(source, destination);
+
+            route.ShouldNotBeNull();
+            route.Nodes.ShouldBe(agvGraphTextFixture.GetAllPossibleRoutesOrdered().First());
+        }
+
+        private void AssertWhenEdgeBlock_FindsAlternativePath(string source, string destination, AgvGraphTestFixture agvGraphTextFixture)
+        {
+            string[][] possibleRoutesOrdered = agvGraphTextFixture.GetAllPossibleRoutesOrdered();
+            for (int routeNum = 0; routeNum < possibleRoutesOrdered.Length; routeNum++)
+            {
+                // remove node of possible route one by one until there is none anymore
+                agvGraphTextFixture.BlockEdgeInRoute(possibleRoutesOrdered[routeNum]);
+                var aStar = new AStar(agvGraphTextFixture.Graph, RoutingPlausibilityChecker);
+                var route = aStar.CalculateRoute(source, destination);
+
+                if (routeNum != possibleRoutesOrdered.Length - 1)
+                {
+                    route.ShouldNotBeNull();
+                    route.Nodes.ShouldBe(possibleRoutesOrdered[routeNum + 1]);
+                }
+                else
+                {
+                    route.ShouldBeNull();
+                }
+            }
+        }
     }
 }

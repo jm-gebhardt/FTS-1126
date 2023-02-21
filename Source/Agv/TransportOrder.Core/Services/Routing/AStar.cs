@@ -137,7 +137,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Routing
         /// <param name="destination"></param>
         private void ExpandNode(ANode current, ANode destination)
         {
-            foreach (var edge in Edges.Where(x => x.From == current.Node.Id))
+            foreach (var edge in Edges.Where(x => x.From == current.Node.Id && !x.IsBlocked))
             {
                 if (_closedList.Any(x => x == edge.To))
                 {

@@ -223,6 +223,11 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
             public float Metric { get; set; }
 
             /// <summary>
+            /// If True, this Edge cannot be used
+            /// </summary>
+            public bool IsBlocked { get; set; }
+
+            /// <summary>
             /// Edge Constructor
             /// </summary>
             /// <param name="from"></param>
