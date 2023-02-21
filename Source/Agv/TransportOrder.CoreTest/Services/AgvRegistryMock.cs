@@ -9,6 +9,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services;
 public static class AgvRegistryMock
 {
     public static readonly string[] Orders = { "ORDER001", "ORDER002", "ORDER003" };
+    public static readonly string[] LoadUnits = { "LE001", "LE002", "LE003" };
     public static readonly string[] Sources = { "SRC1", "SRC2", "SRC3" };
     public static readonly string[] Destinations = { "DST1", "DST2", "DST3" };
     private static readonly string[] _agvIds = { "AGV001", "AGV002", "AGV003" };
@@ -59,6 +60,14 @@ public static class AgvRegistryMock
         };
 
         const string mapName = "Map#1";
+        /*          CRG1          *
+         *           |            *
+         *   SRC2---SRC1---DST1   *
+         *       \   |    /       *
+         *        \  |   /        *
+         *         \ |  /         *
+         *          \| /          *
+         *   SRC3   DST2   DST3   */
         var agvGraph = new AgvGraph(Guid.Empty, nodes, edges, mapName.ToGuid(), mapName);
         
         for (int i = 0; i < _agvIds.Length; i++)

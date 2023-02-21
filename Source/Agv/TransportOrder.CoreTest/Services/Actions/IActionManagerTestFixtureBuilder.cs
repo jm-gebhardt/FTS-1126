@@ -10,11 +10,6 @@ public interface IActionManagerTestFixtureBuilder : IMassTransitTestFixtureBuild
     [UsedImplicitly]
     IActionManagerTestFixtureBuilder UseAssignAgvConsumer();
 
-    /*
-    [UsedImplicitly]
-    IActionManagerTestFixtureBuilder SetActionCreationSucceededEventResponse(ActionCreationSucceededEvent actionCreationSucceededEvent);
-    */
-
     [UsedImplicitly]
     IActionManagerTestFixtureBuilder SetAgvAssignmentResponse(AgvAssignmentSucceeded agvAssignmentSucceeded);
 

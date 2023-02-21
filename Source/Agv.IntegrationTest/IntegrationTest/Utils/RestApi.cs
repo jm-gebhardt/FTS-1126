@@ -117,7 +117,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
                 }
 
                 return null;
-            });
+            }, 60000);
         }
 
         /// <summary>

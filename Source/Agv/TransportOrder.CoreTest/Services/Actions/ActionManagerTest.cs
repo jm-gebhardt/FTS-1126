@@ -1,241 +1,239 @@
-﻿//ReSharper disable all
-using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Db.Models;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Messages;
+using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Events;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Actions;
-
-[TestClass]
-public class ActionManagerTest
+namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Actions
 {
-    /*
-    [TestMethod]
-    public async Task AgvReady_Triggers_AssignAgvCommandOfPendingAction()
+    [TestClass]
+    public class ActionManagerTest
     {
-        var correlationId = Guid.NewGuid();
-
-        var fixture = new ActionManagerTestFixture()
-            .PendingActionsRegistryMock(m =>
-            {
-                m.Setup(s => s.GetAllPendingActions()).Returns(new List<AgvAction>
-                {
-                    new(correlationId, ActionType.Transport, ActionManagerTestFixture.OrderDetails[0])
-                });
-            })
-            .UseAssignAgvConsumer()
-            .Build();
-
-        await fixture.TestHarness!.Bus.Publish(new AgvReady(Guid.NewGuid()));
-        (await fixture.TestHarness.Consumed.Any<AgvReady>()).ShouldBeTrue();
-
-        (await fixture.TestHarness.Published.Any<AssignAgv>()).ShouldBeTrue();
-    }
-    */
-
-    /*
-    [TestMethod]
-    public async Task AgvRequestsCharging_Triggers_AssignAgvCommandOfPendingAction()
-    {
-        var correlationId = Guid.NewGuid();
-
-        var fixture = new ActionManagerTestFixture()
-            .PendingActionsRegistryMock(m =>
-            {
-                m.Setup(s => s.GetAllPendingActions()).Returns(new List<AgvAction>
-                {
-                    new(correlationId, ActionType.Transport, ActionManagerTestFixture.OrderDetails[0])
-                });
-            })
-            .UseAssignAgvConsumer()
-            .Build();
-
-        await fixture.TestHarness!.Bus.Publish(new AgvRequestsCharging(Guid.NewGuid()));
-        (await fixture.TestHarness.Consumed.Any<AgvRequestsCharging>()).ShouldBeTrue();
-    }
-    */
-
-    /*
-    [TestMethod]
-    public async Task AgvNeedsCharging_Consumed()
-    {
-        var correlationId = Guid.NewGuid();
-
-        var fixture = new ActionManagerTestFixture()
-            .PendingActionsRegistryMock(m =>
-            {
-                m.Setup(s => s.GetAllPendingActions()).Returns(new List<AgvAction>
-                {
-                    new(correlationId, ActionType.Transport, ActionManagerTestFixture.OrderDetails[0])
-                });
-            })
-            .UseAssignAgvConsumer()
-            .Build();
-
-        await fixture.TestHarness!.Bus.Publish(new AgvNeedsCharging(Guid.NewGuid()));
-        (await fixture.TestHarness.Consumed.Any<AgvNeedsCharging>()).ShouldBeTrue();
-    }
-    */
-
-    /*
-    [TestMethod]
-    public async Task AgvRequestsCharging_Triggers_AssignAgvCommandOfPendingAction()
-    {
-        var correlationId = Guid.NewGuid();
-
-        var fixture = new ActionManagerTestFixture()
-            .PendingActionsRegistryMock(m =>
-            {
-                m.Setup(s => s.GetAllPendingActions()).Returns(new List<AgvAction>
-                {
-                    new(correlationId, ActionType.Transport, ActionManagerTestFixture.OrderDetails[0])
-                });
-            })
-            .UseAssignAgvConsumer()
-            .Build();
-
-        await fixture.TestHarness!.Bus.Publish(new AgvRequestsCharging(Guid.NewGuid()));
-        (await fixture.TestHarness.Consumed.Any<AgvRequestsCharging>()).ShouldBeTrue();
-    }
-
-    [TestMethod]
-    public async Task AgvNeedsCharging_Consumed()
-    {
-        var correlationId = Guid.NewGuid();
-
-        var fixture = new ActionManagerTestFixture()
-            .PendingActionsRegistryMock(m =>
-            {
-                m.Setup(s => s.GetAllPendingActions()).Returns(new List<AgvAction>
-                {
-                    new(correlationId, ActionType.Transport, ActionManagerTestFixture.OrderDetails[0])
-                });
-            })
-            .UseAssignAgvConsumer()
-            .Build();
-
-        await fixture.TestHarness!.Bus.Publish(new AgvNeedsCharging(Guid.NewGuid()));
-        (await fixture.TestHarness.Consumed.Any<AgvNeedsCharging>()).ShouldBeTrue();
-    }
-
-    [TestMethod]
-    public async Task RequestAssignmentAsync_Triggers_AssignAgvCommandOfAllPendingAction()
-    {
-        var fixture = new ActionManagerTestFixture()
-            .PendingActionsRegistryMock(m =>
-            {
-                m.Setup(s => s.GetAllPendingActions()).Returns(new List<AgvAction>
-                {
-                    new(Guid.NewGuid(), ActionType.Transport, ActionManagerTestFixture.OrderDetails[0]),
-                    new(Guid.NewGuid(), ActionType.Transport, ActionManagerTestFixture.OrderDetails[1]),
-                    new(Guid.NewGuid(), ActionType.Transport, ActionManagerTestFixture.OrderDetails[2])
-                });
-            })
-            .UseAssignAgvConsumer()
-            .Build();
-
-        await fixture.ActionManager.RequestAssignmentAsync(CancellationToken.None);
-
-        (await fixture.TestHarness!.Published.Any<AssignAgv>(a => a.Context.Message.Order == ActionManagerTestFixture.OrderDetails[0])).ShouldBeTrue();
-        (await fixture.TestHarness!.Published.Any<AssignAgv>(a => a.Context.Message.Order == ActionManagerTestFixture.OrderDetails[1])).ShouldBeTrue();
-        (await fixture.TestHarness!.Published.Any<AssignAgv>(a => a.Context.Message.Order == ActionManagerTestFixture.OrderDetails[2])).ShouldBeTrue();
-    }
-    */
-
-    /*
-    [TestMethod]
-    public async Task OrderQueuingCommand_Triggers_CreateActionRequest()
-    {
-        var correlationId = Guid.NewGuid();
-        var orderDetails = ActionManagerTestFixture.OrderDetails[0];
-        var request = new OrderQueuingCommand(correlationId, orderDetails);
-
-        var fixture = new ActionManagerTestFixture()
-            .SetActionCreationSucceededEventResponse(new ActionCreationSucceededEvent(correlationId))
-            .Build();
-
-        await fixture.TestHarness!.Bus.Publish(request);
-        (await fixture.TestHarness.Consumed.Any<OrderQueuingCommand>()).ShouldBeTrue();
-
-        (await fixture.TestHarness!.Published.Any<CreateActionRequest>()).ShouldBeTrue();
-        var sentRequest = fixture.TestHarness.Published.Select<CreateActionRequest>().First().Context.Message;
-        sentRequest.Action.OrderDetails.ShouldBe(orderDetails);
-        sentRequest.Action.ActionType.ShouldBe(ActionType.Transport);
-
-        var sentOrderQueuedEvent = fixture.TestHarness.Published.Select<OrderQueuedEvent>().First().Context.Message;
-        sentOrderQueuedEvent.CorrelationId.ShouldBe(correlationId);
-    }
-    */
-
-    /*
-    [TestMethod]
-    public async Task ActionAssignedEvent_IsPublished_When_AgvAssignmentSucceeded()
-    {
-        var correlationId = Guid.NewGuid();
-        var testFixture = new ActionManagerTestFixture();
-
-        var agv = testFixture.Agvs.First();
-        string agvId = agv.AgvId;
-        var assignedAgvCorrelationId = agv.CorrelationId;
-        var agvAction = new AgvAction(correlationId, ActionType.Transport, ActionManagerTestFixture.OrderDetails[0]);
-
-        testFixture.PendingActionsRegistryMock(m =>
+        /// <summary />
+        public ActionManagerTest()
         {
-            m.Setup(s => s.GetAllPendingActions()).Returns(new List<AgvAction>
-                {
-                    agvAction
-                });
-        })
-            .SetAgvAssignmentResponse(new AgvAssignmentSucceeded
-            (
-                correlationId,
-                agvId,
-                assignedAgvCorrelationId,
-                Array.Empty<string>()
-            ))
-        .Build();
+            var fixture = new ActionManagerTestFixture().Build();
+            // Initialize EntityFramework
+            fixture.CreateOrderActionRegistry().SaveChanges();
+        }
 
-        // create ActionStateMachine
-        await testFixture.TestHarness!.Bus.Publish(new CreateActionRequest(agvAction), CancellationToken.None);
-        (await testFixture.TestHarness.Consumed.Any<CreateActionRequest>()).ShouldBeTrue();
-
-        // assign agv to action
-        await testFixture.ActionManager.RequestAssignmentAsync(CancellationToken.None);
-        (await testFixture.TestHarness!.Published.Any<AssignActionRequest>()).ShouldBeTrue();
-    }
-    */
-
-    /*
-    [TestMethod]
-    public async Task When_AgvAssignmentFailed_NoRouteFound_HostOrderHandlingFailedPublished()
-    {
-        var correlationId = Guid.NewGuid();
-        var testFixture = new ActionManagerTestFixture();
-        var orderDetails = ActionManagerTestFixture.OrderDetails[0];
-        var orderCorrelationId = orderDetails.CorrelationId;
-        testFixture.PendingActionsRegistryMock(m =>
+        [TestMethod]
+        public async Task OrderQueuingCommand_Triggers_ActionsCreated()
         {
-            m.Setup(s => s.GetAllPendingActions()).Returns(new List<AgvAction>
-                {
-                    new(correlationId, ActionType.Transport, orderDetails)
-                });
-        })
-            .SetAgvAssignmentResponse(new AgvAssignmentFailed
-            (
-                correlationId,
-                AgvAssignmentFailed.ErrorCode.NoRouteFound
-            ))
-            .Build();
+            // Order being queued
+            var orderDetails = ActionManagerTestFixture.OrderDetails[0];
 
-        await testFixture.ActionManager.RequestAssignmentAsync(CancellationToken.None);
-        (await testFixture.TestHarness!.Published.Any<HostOrderHandlingFailed>()).ShouldBeTrue();
-        var message = testFixture.TestHarness.Published.Select<HostOrderHandlingFailed>().First().Context.Message;
-        message.CorrelationId.ShouldBe(orderCorrelationId);
-        message.Error.ShouldBe(HostOrderHandlingFailed.ErrorCode.InvalidOrderData);
+            var fixture = new ActionManagerTestFixture()
+                .SetAgvAssignmentResponse(new AgvAssignmentFailed(Guid.NewGuid(), AgvAssignmentFailed.ErrorCode.NoRouteFound))
+                .Build();
+
+            await fixture.TestHarness!.Bus.Publish(new OrderQueuingCommand(Guid.NewGuid(), orderDetails));
+            (await fixture.TestHarness.Consumed.Any<OrderQueuingCommand>()).ShouldBeTrue();
+
+            (await fixture.TestHarness.Published.Any<OrderQueuedEvent>()).ShouldBeTrue();
+
+            // Called due to reason "NoRouteFound"
+            (await fixture.TestHarness.Published.Any<HostOrderHandlingFailed>()).ShouldBeTrue();
+
+            // Actions still there in status "Created"
+            using var orderActionRepo = fixture.CreateOrderActionRegistry();
+            orderActionRepo.GetActionsOfOrder(orderDetails.CorrelationId).Count.ShouldBe(2);
+            List<OrderAction> actions = orderActionRepo.GetActionsOfOrder(orderDetails.CorrelationId);
+            foreach (var action in actions)
+            {
+                action.State.ShouldBe(OrderActionState.Created);
+            }
+            actions[0].Type.ShouldBe(ActionType.Pick);
+            actions[0].Source.ShouldBeNull();
+            actions[0].Destination.ShouldBe(orderDetails.Source);
+            actions[1].Type.ShouldBe(ActionType.Drop);
+            actions[1].Source.ShouldBe(orderDetails.Source);
+            actions[1].Destination.ShouldBe(orderDetails.Destination);
+        }
+
+        [TestMethod]
+        public async Task AgvBecameReady_Triggers_AssignAgvForPendingAction()
+        {
+            var orderDetails = ActionManagerTestFixture.OrderDetails[0];
+
+            var fixture = new ActionManagerTestFixture();
+            var agv = fixture.Agvs.First();
+            string agvId = agv.AgvId;
+            var assignedAgvCorrelationId = agv.CorrelationId;
+            string[] nodes = new string[]
+            {
+                orderDetails.Source,
+                orderDetails.Destination
+            };
+
+            fixture
+                .SetAgvAssignmentResponse(new AgvAssignmentSucceeded(Guid.NewGuid(), agvId, assignedAgvCorrelationId, nodes))
+                .Build();
+
+            using var inserter = fixture.CreateOrderActionRegistry();
+            inserter.Insert(orderDetails, ActionType.Pick, DateTime.UtcNow, null, orderDetails.Source);
+            inserter.Insert(orderDetails, ActionType.Drop, DateTime.UtcNow, orderDetails.Source, orderDetails.Destination);
+            inserter.SaveChanges();
+
+            await fixture.TestHarness!.Bus.Publish(new AgvBecameReady(Guid.NewGuid()));
+            (await fixture.TestHarness.Consumed.Any<AgvBecameReady>()).ShouldBeTrue();
+
+            (await fixture.TestHarness.Published.Any<OrderAssignmentSucceeded>()).ShouldBeTrue();
+            // Check content of published message
+            var orderMsg = fixture.TestHarness.Published.Select<OrderAssignmentSucceeded>().First().Context.Message;
+            orderMsg.CorrelationId.ShouldBe(orderDetails.CorrelationId);
+            orderMsg.AgvId.ShouldBe(agvId);
+            orderMsg.AgvCorrelationId.ShouldBe(assignedAgvCorrelationId);
+
+            (await fixture.TestHarness.Published.Any<StartActionCommand>()).ShouldBeTrue();
+            // Check content of published message
+            var startMsg = fixture.TestHarness.Published.Select<StartActionCommand>().First().Context.Message;
+            startMsg.CorrelationId.ShouldBe(assignedAgvCorrelationId);
+            startMsg.Action.AgvId.ShouldBe(agvId);
+
+            (await fixture.TestHarness.Published.Any<ActionStartedEvent>()).ShouldBeTrue();
+            // Check content of published message
+            var actionMsg = fixture.TestHarness.Published.Select<ActionStartedEvent>().First().Context.Message;
+            actionMsg.CorrelationId.ShouldBe(assignedAgvCorrelationId);
+
+            using var getter = fixture.CreateOrderActionRegistry();
+            List<OrderAction> actions = getter.GetActionsOfOrder(orderDetails.CorrelationId);
+            actions[0].State.ShouldBe(OrderActionState.Started);
+            actions[0].Type.ShouldBe(ActionType.Pick);
+            actions[0].Source.ShouldBeNull();
+            actions[0].Destination.ShouldBe(orderDetails.Source);
+            actions[1].State.ShouldBe(OrderActionState.Assigned);
+            actions[1].Type.ShouldBe(ActionType.Drop);
+            actions[1].Source.ShouldBe(orderDetails.Source);
+            actions[1].Destination.ShouldBe(orderDetails.Destination);
+        }
+
+        [TestMethod]
+        public async Task ActionStatusChangedEvent_Triggers_ActionProgress()
+        {
+            var orderDetails = ActionManagerTestFixture.OrderDetails[0];
+
+            var fixture = new ActionManagerTestFixture()
+                .Build();
+
+            using var inserter = fixture.CreateOrderActionRegistry();
+            inserter.Insert(orderDetails, ActionType.Pick, DateTime.UtcNow, null, orderDetails.Source);
+            inserter.SaveChanges();
+            var actionId = inserter.GetActionsOfOrder(orderDetails.CorrelationId)[0].Id;
+
+            await fixture.TestHarness!.Bus.Publish(new ActionStatusChangedEvent(actionId, ActionStatusChangedType.Started));
+            (await fixture.TestHarness.Published.Any<TransportOrderStarted>()).ShouldBeTrue();
+
+            await fixture.TestHarness!.Bus.Publish(new ActionStatusChangedEvent(actionId, ActionStatusChangedType.Picked));
+            (await fixture.TestHarness.Published.Any<TransportOrderPickCompleted>()).ShouldBeTrue();
+
+            await fixture.TestHarness!.Bus.Publish(new ActionStatusChangedEvent(actionId, ActionStatusChangedType.Cancelled));
+            (await fixture.TestHarness.Published.Any<TransportOrderCancelSucceeded>()).ShouldBeTrue();
+
+            await fixture.TestHarness!.Bus.Publish(new ActionStatusChangedEvent(actionId, ActionStatusChangedType.Failed));
+            (await fixture.TestHarness.Published.Any<TransportOrderFailed>()).ShouldBeTrue();
+        }
+
+        [TestMethod]
+        public async Task ActionCompleted_DeleteAllActions_WhenNoSubsequentActions()
+        {
+            var order1 = ActionManagerTestFixture.OrderDetails[0];
+            var order2 = ActionManagerTestFixture.OrderDetails[1];
+
+            var fixture = new ActionManagerTestFixture();
+            var agv = fixture.Agvs.First();
+            string agvId = agv.AgvId;
+            var assignedAgvCorrelationId = agv.CorrelationId;
+            string[] nodes = new string[]
+            {
+                order1.Source,
+                order1.Destination,
+                order2.Source,
+                order2.Destination
+            };
+            fixture
+                .SetAgvAssignmentResponse(new AgvAssignmentSucceeded(Guid.NewGuid(), agvId, assignedAgvCorrelationId, nodes))
+                .Build();
+
+            using var inserter = fixture.CreateOrderActionRegistry();
+            // Insert action of first order
+            inserter.Insert(order1, ActionType.Move, DateTime.UtcNow, null, order1.Destination);
+            inserter.SaveChanges();
+            // Ensure different creation timestamp
+            Thread.Sleep(10);
+            // Insert action of second order
+            inserter.Insert(order2, ActionType.Charge, DateTime.UtcNow, null, order2.Destination);
+            inserter.SaveChanges();
+
+            // Assign action of first order
+            await fixture.TestHarness!.Bus.Publish(new AgvBecameReady(Guid.NewGuid()));
+//(await fixture.TestHarness.Published.Any<AgvBecameReady>()).ShouldBeTrue();
+            (await fixture.TestHarness.Consumed.Any<AgvBecameReady>()).ShouldBeTrue();
+
+            // Complete action of first order
+            var actionId1 = inserter.GetActionsOfOrder(order1.CorrelationId)[0].Id;
+            await fixture.TestHarness!.Bus.Publish(new ActionStatusChangedEvent(actionId1, ActionStatusChangedType.Completed));
+            (await fixture.TestHarness.Consumed.Any<ActionStatusChangedEvent>()).ShouldBeTrue();
+
+            // Expect ReleaseAgv due to action completed ...
+            (await fixture.TestHarness.Published.Any<ReleaseAgv>()).ShouldBeTrue();
+            // ... and therefore order is completed, too.
+            (await fixture.TestHarness.Published.Any<TransportOrderCompleted>()).ShouldBeTrue();
+        }
+
+        [TestMethod]
+        public async Task ActionCompleted_Triggers_NextAction()
+        {
+            var order1 = ActionManagerTestFixture.OrderDetails[0];
+
+            var fixture = new ActionManagerTestFixture();
+            var agv = fixture.Agvs.First();
+            string agvId = agv.AgvId;
+            var assignedAgvCorrelationId = agv.CorrelationId;
+            string[] nodes = new string[]
+            {
+                order1.Source,
+                order1.Destination
+            };
+            fixture
+                .SetAgvAssignmentResponse(new AgvAssignmentSucceeded(Guid.NewGuid(), agvId, assignedAgvCorrelationId, nodes))
+                .Build();
+
+            using var inserter = fixture.CreateOrderActionRegistry();
+            // Insert action of first order
+            inserter.Insert(order1, ActionType.Move, DateTime.UtcNow, null, order1.Destination);
+            inserter.Insert(order1, ActionType.Move, DateTime.UtcNow, null, order1.Destination);
+            inserter.SaveChanges();
+
+            // Assign action of first order ...
+            await fixture.TestHarness!.Bus.Publish(new AgvBecameReady(Guid.NewGuid()));
+            (await fixture.TestHarness.Consumed.Any<AgvBecameReady>()).ShouldBeTrue();
+            // ... what will start this action
+            (await fixture.TestHarness.Published.Any<StartActionCommand>()).ShouldBeTrue();
+
+            // Complete first action of first order ...
+            var actionId1 = inserter.GetActionsOfOrder(order1.CorrelationId)[0].Id;
+            await fixture.TestHarness!.Bus.Publish(new ActionStatusChangedEvent(actionId1, ActionStatusChangedType.Completed));
+            (await fixture.TestHarness.Consumed.Any<ActionStatusChangedEvent>()).ShouldBeTrue();
+            // ... and start subsequent action
+            fixture.TestHarness.Published.Select<StartActionCommand>().Count().ShouldBe(2);
+
+            // Expect first action being completed
+            using var getter = fixture.CreateOrderActionRegistry();
+            var action = getter.GetActionById(actionId1);
+            action!.State.ShouldBe(OrderActionState.Completed);
+            action.OrderCorrelationId.ShouldBe(order1.CorrelationId);
+
+            // Expect subsequent action being started
+            action = getter.GetActionsOfOrder(order1.CorrelationId)[1];
+            action.State.ShouldBe(OrderActionState.Started);
+            action.OrderCorrelationId.ShouldBe(order1.CorrelationId);
+        }
     }
-    */
 }

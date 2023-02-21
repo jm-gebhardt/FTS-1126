@@ -10,9 +10,12 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Routing;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.States;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Db;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Db.Models;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
 using Moq;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Actions;
@@ -20,62 +23,61 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Actions;
 public class ActionManagerTestFixture : MassTransitTestFixture<ActionManager>, IActionManagerTestFixtureBuilder
 {
     private readonly List<Action<IBusRegistrationConfigurator>> _busRegistrationConfigurators = new();
-    /*
+
     private readonly Mock<IAgvRegistry> _mockAgvRegistry;
-    private Mock<IActionRegistry>? _pendingActionsRegistry;
-    */
-
-    private static string[] Orders => AgvRegistryMock.Orders;
-
-    private static string[] Sources => AgvRegistryMock.Sources;
-
-    private static string[] Destinations => AgvRegistryMock.Destinations;
-
-    private static readonly string[] _leNo = { "111", "222", "333" };
+    private IDbContextFactory<TransportOrderDbContext>? _transportOrderContextFactory;
 
     private static OrderDetails[]? _orderDetails;
-
-    public static OrderDetails[] OrderDetails => _orderDetails ??= GetOrderDetails();
 
     private static OrderDetails[] GetOrderDetails()
     {
         var orderDetails = new List<OrderDetails>();
-        for (int i = 0; i < Orders.Length; i++)
+        for (int i = 0; i < AgvRegistryMock.Orders.Length; i++)
         {
-            var details = new OrderDetails(Orders[i].ToGuid(), Orders[i], Sources[i], Destinations[i], _leNo[i], HostOrderCreator.Simulation, DateTime.UtcNow);
+            var details = new OrderDetails(AgvRegistryMock.Orders[i].ToGuid(),
+                                           AgvRegistryMock.Orders[i],
+                                           AgvRegistryMock.Sources[i],
+                                           AgvRegistryMock.Destinations[i],
+                                           AgvRegistryMock.LoadUnits[i],
+                                           HostOrderCreator.Simulation,
+                                           DateTime.UtcNow);
             orderDetails.Add(details);
         }
 
         return orderDetails.ToArray();
     }
 
-    /*
-    [UsedImplicitly]
-    public List<IAgv> Agvs => _mockAgvRegistry.Object.GetAllAgvs().ToList();
-    */
+    public static OrderDetails[] OrderDetails => _orderDetails ??= GetOrderDetails();
 
+    public List<IAgv> Agvs => _mockAgvRegistry.Object.GetAllAgvs().ToList();
+
+    public IOrderActionRegistry CreateOrderActionRegistry() => new EfOrderActionRegistry(_transportOrderContextFactory!);
+ 
     public ActionManager ActionManager { get; private set; } = default!;
 
-    /*
+
     /// <summary>
-    /// You must call Build() after constructing an instance!
+    /// Test fixture using mocked AGV registry and in-memory-database for actions.
     /// </summary>
+    /// <remarks>
+    /// You must call <see cref="Build"/>> after constructing an instance!
+    /// </remarks>
     /// <param name="agvSaga"></param>
     public ActionManagerTestFixture(AgvSaga? agvSaga = null)
     {
         _mockAgvRegistry = AgvRegistryMock.GetAgvRegistry();
 
-        SetActionRegistry(GetActionRegistry());
         SetupBusRegistrationConfigurator(x =>
         {
-            x.AddSingleton(new Mock<IOrderRegistry>().Object);
-            x.AddSingleton(new Mock<IRoutingPlausibilityChecker>().Object);
+            x.AddDbContextFactory<TransportOrderDbContext>(options =>
+            {
+                options.UseInMemoryDatabase(Guid.NewGuid().ToString());
+            });
             x.AddRequestClient<AssignAgv>();
-            x.AddSagaStateMachine<ActionStateMachine, ActionSaga>();
         });
 
         var mockAgvRegistry = new Mock<IAgvRegistry>();
-        mockAgvRegistry.Setup(s => s.GetIdleAgvs()).Returns(new EnumerableQuery<IAgv>(new List<IAgv>()));
+        mockAgvRegistry.Setup(s => s.GetReadyAgvs()).Returns(new EnumerableQuery<IAgv>(new List<IAgv>()));
         mockAgvRegistry.Setup(s => s.Count).Returns(0);
 
         if (agvSaga != null)
@@ -85,31 +87,21 @@ public class ActionManagerTestFixture : MassTransitTestFixture<ActionManager>, I
             mockAgvRegistry.Setup(s => s.Count).Returns(1);
         }
     }
-    */
 
-    /*
-    private static Mock<IActionRegistry> GetActionRegistry()
+    public ActionManagerTestFixture Build()
     {
-        var registry = new Mock<IActionRegistry>();
+        Build(a => _busRegistrationConfigurators.ForEach(b => b(a)), null);
 
-        return registry;
-    }
-    */
+        _transportOrderContextFactory = TestHarness!.Scope.ServiceProvider.GetRequiredService<IDbContextFactory<TransportOrderDbContext>>();
+        ActionManager = TestHarness!.Scope.ServiceProvider.GetRequiredService<ActionManager>();
 
-    /*
-    private void SetActionRegistry(Mock<IActionRegistry> actionRegistry)
-    {
-        _pendingActionsRegistry = actionRegistry;
-    }
-    */
-
-    /*
-    public ActionManagerTestFixture PendingActionsRegistryMock(Action<Mock<IActionRegistry>> actionRegistry)
-    {
-        actionRegistry(_pendingActionsRegistry!);
         return this;
     }
-    */
+
+    protected override void ConfigureServices(IServiceCollection collection)
+    {
+        collection.AddTransient(_ => _mockAgvRegistry.Object);
+    }
 
     public IActionManagerTestFixtureBuilder UseAssignAgvConsumer()
     {
@@ -120,19 +112,6 @@ public class ActionManagerTestFixture : MassTransitTestFixture<ActionManager>, I
 
         return this;
     }
-
-    /*
-    public IActionManagerTestFixtureBuilder SetActionCreationSucceededEventResponse(ActionCreationSucceededEvent actionCreationSucceededEvent)
-    {
-        SetupBusRegistrationConfigurator(x =>
-        {
-            x.AddSingleton(_ => new ConstantRequestHandler<CreateActionRequest, ActionCreationSucceededEvent>(actionCreationSucceededEvent));
-            x.AddConsumer<ConstantRequestHandler<CreateActionRequest, ActionCreationSucceededEvent>>();
-        });
-
-        return this;
-    }
-    */
 
     public IActionManagerTestFixtureBuilder SetAgvAssignmentResponse(AgvAssignmentSucceeded agvAssignmentSucceeded)
     {
@@ -155,22 +134,6 @@ public class ActionManagerTestFixture : MassTransitTestFixture<ActionManager>, I
 
         return this;
     }
-
-    public ActionManagerTestFixture Build()
-    {
-        Build(a => _busRegistrationConfigurators.ForEach(b => b(a)), null);
-
-        ActionManager = TestHarness!.Scope.ServiceProvider.GetRequiredService<ActionManager>();
-        return this;
-    }
-
-    /*
-    protected override void ConfigureServices(IServiceCollection collection)
-    {
-        collection.AddTransient(_ => _mockAgvRegistry.Object);
-        collection.AddTransient(_ => _pendingActionsRegistry!.Object);
-    }
-    */
 
     public IActionManagerTestFixtureBuilder SetupBusRegistrationConfigurator(Action<IBusRegistrationConfigurator> busRegistrationConfigurator)
     {

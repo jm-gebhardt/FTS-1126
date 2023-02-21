@@ -25,7 +25,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Db
         /// <summary>
         /// Get order action by key.
         /// </summary>
-        /// <param name="id"></param>
+        /// <param name="id">Unique ID per action</param>
         /// <returns>Returns order action identified by key or null when not found</returns>
         public OrderAction? GetActionById(Guid id);
 
