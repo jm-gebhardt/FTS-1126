@@ -21,7 +21,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Configurations.Models
         public string? Value { get; set; }
 
         /// <summary>
-        /// The type of the setting used for the configuration
+        /// The type name of the setting used for the configuration
         /// </summary>
         public string ConfigurationType { get; set; } = null!;
 

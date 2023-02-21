@@ -34,12 +34,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations
         {
             try
             {
-                foreach (var configurationType in _configurationTypeManager.ConfigurationTypes)
+                foreach (var configurationType in _configurationTypeManager.ConfigurationTypes.Where(t => t.AutoSeedToDatabase))
                 {
                     List<ConfigurationSetting> settings = _dbContext.ConfigurationSettings.Where(c => c.ConfigurationType == configurationType.Name).ToList();
                     if (!settings.Any())
                     {
-                        foreach (var configurationTypeProperty in configurationType.Properties)
+                        foreach (var configurationTypeProperty in configurationType.Properties.Where(p => p.AutoSeedToDatabase))
                         {
                             string key = configurationTypeProperty.Key;
                             var setting = settings.FirstOrDefault(s => s.Key == key);

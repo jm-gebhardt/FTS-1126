@@ -13,6 +13,7 @@ using MassTransit.Serialization;
 using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
+using Gebhardt.StoreWare.Agv.Common.Configurations.Extensions;
 
 var initialLogger = Gebhardt.StoreWare.Agv.Common.Logging.InitialLogger.Create<Program>();
 try
@@ -30,7 +31,7 @@ try
                 {
                     services.AddScoped(_ => simulationOptions);
                     services.AddTransient<SimulatedAgvProvider>();
-                    ConfigureServicesMassTransit.ConfigureServices(services, context.Configuration,
+                    services.ConfigureServicesMassTransit(context.Configuration,
                         x =>
                         {
                             x.AddDelayedMessageScheduler();
@@ -51,7 +52,7 @@ try
                 .ConfigureServices((context, services) =>
                 {
                     services.AddScoped(_ => productionOptions);
-                    ConfigureServicesMassTransit.ConfigureServices(services, context.Configuration,
+                    services.ConfigureServicesMassTransit(context.Configuration,
                         busRegistrationConfiguration: configurator =>
                         {
                             //add consumers here

@@ -9,6 +9,7 @@ using Gebhardt.StoreWare.Agv.WCSCommunication.Db;
 using Gebhardt.StoreWare.Agv.WCSCommunication.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Gebhardt.StoreWare.Agv.Common.Configurations.Extensions;
 
 var initialLogger = Gebhardt.StoreWare.Agv.Common.Logging.InitialLogger.Create<Program>();
 try
@@ -25,7 +26,7 @@ try
                     services.AddSingleton(_ => simulationOptions);
                     services.AddHostedService<PollingBackgroundService<SimulationHostOrderService>>();
                     services.AddSingleton<SimulationHostOrderService>();
-                    ConfigureServicesMassTransit.ConfigureServices(services, context.Configuration, x =>
+                    services.ConfigureServicesMassTransit(context.Configuration, x =>
                     {
                         x.AddConsumer<SimulationConfirmHostOrderConsumer>();
                     });
@@ -43,7 +44,7 @@ try
                 });
                 services.AddHostedService<PollingBackgroundService<WcsOrderHandler>>();
                 services.AddSingleton<WcsOrderHandler>();
-                ConfigureServicesMassTransit.ConfigureServices(services, context.Configuration, x =>
+                services.ConfigureServicesMassTransit(context.Configuration, x =>
                 {
                     x.AddConsumer<WcsHostOrderConsumer>();
                 });

@@ -60,7 +60,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations
                 List<ConfigurationSetting> configurationSettings = dbContext.ConfigurationSettings.ToList();
                 foreach (var setting in configurationSettings)
                 {
-                    var configuration = _source.ConfigurationTypeManager.ConfigurationTypes.SingleOrDefault(c => c.Name == setting.ConfigurationType);
+                    var configuration = _source.ConfigurationTypeManager.GetConfigurationTypeByTypeName(setting.ConfigurationType);
                     if (configuration == null)
                     {
                         _logger.LogError("Configuration setting unknown: {ConfigurationType}", setting.ConfigurationType);

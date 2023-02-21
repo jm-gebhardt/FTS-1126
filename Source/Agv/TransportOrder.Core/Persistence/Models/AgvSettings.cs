@@ -1,11 +1,11 @@
-using Gebhardt.StoreWare.Agv.Common.Configurations;
+using Gebhardt.StoreWare.Agv.Common.Configurations.Models;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Models
 {
     /// <summary>
     /// The settings for Agv
     /// </summary>
-    public class AgvSettings : ISettings<AgvSettings>
+    public record AgvSettings : SettingsBase<AgvSettings>
     {
         /// <summary>
         /// Timeout value [ms] to set AGV offline while it is in idle mode

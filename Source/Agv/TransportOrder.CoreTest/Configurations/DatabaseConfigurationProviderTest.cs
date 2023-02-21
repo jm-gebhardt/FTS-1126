@@ -21,12 +21,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Configurations
             IList<ConfigurationSetting> configurationSettings = await testFixture.GetConfigurationSettingsAsync();
             configurationSettings.ShouldNotBeEmpty();
 
-            foreach (var configurationType in ConfigurationProviderTestFixture.ConfigurationTypes)
+            foreach (var configurationType in ConfigurationProviderTestFixture.ConfigurationTypes.Where(t => t.AutoSeedToDatabase))
             {
                 List<ConfigurationSetting> settings = configurationSettings.Where(cf => cf.ConfigurationType == configurationType.Name).ToList();
                 settings.ShouldNotBeEmpty();
 
-                foreach (var configurationTypeProperty in configurationType.Properties)
+                foreach (var configurationTypeProperty in configurationType.Properties.Where(p => p.AutoSeedToDatabase))
                 {
                     string key = configurationTypeProperty.Key;
                     var setting = settings.FirstOrDefault(s => s.Key == key);

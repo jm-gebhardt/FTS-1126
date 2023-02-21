@@ -1,6 +1,6 @@
 ﻿using System.Text;
+using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace Gebhardt.StoreWare.Agv.Common.Logging
 {
@@ -9,28 +9,23 @@ namespace Gebhardt.StoreWare.Agv.Common.Logging
     /// </summary>
     public sealed class TextLogger : ILogger
     {
+        private readonly TextLoggerConfiguration _currentConfig;
         private readonly string _name;
-        private readonly Func<TextLoggerConfiguration> _getCurrentConfig;
-
-        private readonly int _padRight;
-        private readonly int _eventIdPaddingRight;
-        private static string? _folderPath;
-
+        private string FolderPath => _currentConfig.LogFolderPath;
+        private int PadRight => _currentConfig.PadRight;
+        private int EventIdPaddingRight => _currentConfig.EventIdPaddingRight;
+        private int EventId => _currentConfig.EventId;
+        private IDictionary<LogLevel, int> LogLevels => _currentConfig.LogLevels;
 
         /// <summary>
         /// Constructor of TextLogger class
         /// </summary>
         /// <param name="name"></param>
-        /// <param name="getCurrentConfig"></param>
-        /// <param name="iOptionsMonitorConfig"></param>
-        public TextLogger(string name, Func<TextLoggerConfiguration> getCurrentConfig, IOptionsMonitor<TextLoggerConfiguration> iOptionsMonitorConfig)
+        /// <param name="textLoggerSettingsProvider"></param>
+        public TextLogger(string name, ISettingsProvider<TextLoggerConfiguration> textLoggerSettingsProvider)
         {
-            _padRight = iOptionsMonitorConfig.CurrentValue.PadRight;
-            _eventIdPaddingRight = iOptionsMonitorConfig.CurrentValue.EventIdPaddingRight;
-            _folderPath = iOptionsMonitorConfig.CurrentValue.LogFolderPath;
-
             _name = name;
-            _getCurrentConfig = getCurrentConfig;
+            _currentConfig = textLoggerSettingsProvider.GetSettings();
         }
 
         /// <summary>
@@ -46,7 +41,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Logging
         /// </summary>
         /// <param name="logLevel"></param>
         /// <returns></returns>
-        public bool IsEnabled(LogLevel logLevel) => _getCurrentConfig().LogLevels.ContainsKey(logLevel);
+        public bool IsEnabled(LogLevel logLevel) => LogLevels.ContainsKey(logLevel);
 
         /// <summary>
         /// Implements the log creation
@@ -64,25 +59,22 @@ namespace Gebhardt.StoreWare.Agv.Common.Logging
                 return;
             }
 
-            var config = _getCurrentConfig();
-            if (config.EventId == 0 || config.EventId == eventId.Id)
+            if (EventId == 0 || EventId == eventId.Id)
             {
                 var timeNow = DateTime.Now;
 
                 var logMessage = new StringBuilder();
-                logMessage.Append($"{logLevel}|EventId:{eventId.Id}".PadRight(_eventIdPaddingRight));
+                logMessage.Append($"{logLevel}|EventId:{eventId.Id}".PadRight(EventIdPaddingRight));
                 logMessage.Append($"|{timeNow.ToString(LoggingConstants.LoggingDateFormat)}|");
-                logMessage.Append($"{_name.PadRight(_padRight)}|");
+                logMessage.Append($"{_name.PadRight(PadRight)}|");
                 logMessage.Append(formatter(state, exception));
 
                 Write(logLevel, logMessage.ToString());
             }
         }
 
-
-        private static void Write(LogLevel logLevel, string msg)
+        private void Write(LogLevel logLevel, string msg)
         {
-            string? folderPath = _folderPath;
             string filePath;
 
             if (logLevel == LogLevel.Error)
@@ -94,16 +86,15 @@ namespace Gebhardt.StoreWare.Agv.Common.Logging
                 filePath = DateTime.Now.ToString("dd") + LoggingConstants.NonErrorFileSuffix;
             }
 
-
-            if (!File.Exists(folderPath + filePath))
+            if (!File.Exists(FolderPath + filePath))
             {
-                using var fs = new FileStream(folderPath + filePath, FileMode.CreateNew);
+                using var fs = new FileStream(FolderPath + filePath, FileMode.CreateNew);
                 using var w = new BinaryWriter(fs);
                 w.Write(msg + Environment.NewLine);
             }
             else
             {
-                using var streamWriter = File.AppendText(folderPath + filePath);
+                using var streamWriter = File.AppendText(FolderPath + filePath);
                 streamWriter.WriteLine(msg);
             }
         }

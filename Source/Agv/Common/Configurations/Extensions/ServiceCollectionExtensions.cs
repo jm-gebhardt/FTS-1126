@@ -1,0 +1,52 @@
+﻿using System.Text.Json.Serialization;
+using MassTransit;
+using MassTransit.Serialization;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace Gebhardt.StoreWare.Agv.Common.Configurations.Extensions;
+
+/// <summary>
+/// MassTransit configurations
+/// </summary>
+public static class ServiceCollectionExtensions
+{
+    /// <summary>
+    /// ConfigureServices
+    /// </summary>
+    /// <param name="services">Service collection</param>
+    /// <param name="config">Configuration</param>
+    /// <param name="busRegistrationConfiguration">xxx</param>
+    /// <param name="rabbitMqConfiguration"></param>
+    [JetBrains.Annotations.PublicAPI]
+    public static void ConfigureServicesMassTransit(this IServiceCollection services,
+        IConfiguration config,
+        Action<IBusRegistrationConfigurator>? busRegistrationConfiguration = null,
+        Action<IBusRegistrationContext, IRabbitMqBusFactoryConfigurator>? rabbitMqConfiguration = null
+    )
+    {
+        // Enable serialization/deserialization of enum values as string.
+        SystemTextJsonMessageSerializer.Options.Converters.Add(new JsonStringEnumConverter());
+
+        string sectionName = ConfigurationTypeManager.Instance.GetSectionName<MassTransitConfiguration>();
+        var massTransitConfig = config.GetRequiredSection(sectionName).Get<MassTransitConfiguration>();
+
+        if (massTransitConfig == null)
+        {
+            throw new NullReferenceException("MassTransit config was not found");
+        }
+
+        services.AddMassTransit(x =>
+        {
+
+            x.UsingRabbitMq((context, cfg) =>
+            {
+                rabbitMqConfiguration?.Invoke(context, cfg);
+                cfg.ConfigureEndpoints(context);
+                cfg.Host(massTransitConfig.Url);
+                cfg.UsePrometheusMetrics();
+            });
+            busRegistrationConfiguration?.Invoke(x);
+        });
+    }
+}

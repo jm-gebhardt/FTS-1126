@@ -1,4 +1,6 @@
-﻿using JetBrains.Annotations;
+﻿using Gebhardt.StoreWare.Agv.Common.Configurations.Attributes;
+using Gebhardt.StoreWare.Agv.Common.Configurations.Models;
+using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.StoreWare.Agv.Common.Logging
@@ -6,7 +8,8 @@ namespace Gebhardt.StoreWare.Agv.Common.Logging
     /// <summary>
     /// Basic configuration for TextLogger
     /// </summary>
-    public class TextLoggerConfiguration
+    [AutoSeedToDatabase(false)]
+    public record TextLoggerConfiguration : SettingsBase<TextLoggerConfiguration>
     {
         /// <summary>
         /// Basic integer ID for every log message
@@ -34,16 +37,16 @@ namespace Gebhardt.StoreWare.Agv.Common.Logging
         /// <summary>
         /// Padding parameter for the log message's string
         /// </summary>
-        public int PadRight = 60;
+        public int PadRight { get; set; } = 60;
 
         /// <summary>
         /// Padding parameter for the log message's eventId
         /// </summary>
-        public int EventIdPaddingRight = 27;
+        public int EventIdPaddingRight { get; set; } = 27;
 
         /// <summary>
         /// Default path of the text log folder
         /// </summary>
-        public string LogFolderPath = @".\LOG\";
+        public string LogFolderPath { get; set; } = @".\LOG\";
     }
 }

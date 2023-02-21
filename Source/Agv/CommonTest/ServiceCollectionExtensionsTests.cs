@@ -1,4 +1,5 @@
-using Gebhardt.StoreWare.Agv.Common;
+using Gebhardt.StoreWare.Agv.Common.Configurations;
+using Gebhardt.StoreWare.Agv.Common.Configurations.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -6,10 +7,10 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Gebhardt.StoreWare.Agv.CommonTest
 {
     /// <summary>
-    /// Tests for ConfigureServicesMassTransit
+    /// Tests for ServiceCollectionExtensions
     /// </summary>
     [TestClass]
-    public class ConfigureServicesMassTransitTest
+    public class ServiceCollectionExtensionsTests
     {
         /// <summary>
         /// Test no RabbitMQ config provided
@@ -22,7 +23,7 @@ namespace Gebhardt.StoreWare.Agv.CommonTest
                 new Dictionary<string, string?>()
                 ).Build();
             ServiceCollection services = new();
-            ConfigureServicesMassTransit.ConfigureServices(services, configuration);
+            services.ConfigureServicesMassTransit(configuration);
         }
 
         /// <summary>
@@ -31,12 +32,13 @@ namespace Gebhardt.StoreWare.Agv.CommonTest
         [TestMethod]
         public void ConfigureServices_ValidConfigProvided()
         {
+            string sectionName = ConfigurationTypeManager.Instance.GetSectionName<MassTransitConfiguration>();
             var configuration = new ConfigurationBuilder().AddInMemoryCollection(
-                new Dictionary<string, string?> { { $"{ConfigureServicesMassTransit.ConfigSectionName}:Url", "127.0.0.1" } }
+                new Dictionary<string, string?> { { $"{sectionName}:Url", "127.0.0.1" } }
                 ).Build();
             ServiceCollection services = new();
 
-            ConfigureServicesMassTransit.ConfigureServices(services, configuration);
+            services.ConfigureServicesMassTransit(configuration);
         }
     }
 }

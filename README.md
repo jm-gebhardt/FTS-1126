@@ -205,3 +205,45 @@ admin> sc.exe delete "Gebhardt.StoreWare.Agv.<service>"
 ```
 
 Note: If MMC/Taskmgr/ProcExp are running, service removal may not have immediate effect and the following message will be shown "Der angegebene Dienst wurde zum Löschen markiert."
+
+# Settings
+The Settings construct builds on Microsoft's IConfiguration.
+Using the settings:
+```
+var settings = settingsProvider.GetSettings();
+```
+There are several layers that serve as a source for the settings.
+If a layer has no settings stored, it is the turn of the layer below:
+
+- DatabaseSettingsProvider
+- DefaultSettingsProvider (hardcoded default values)
+
+In general, the default values of all settings classes are provided by the DefaultSettingsProvider. In the following case it's the "myValue":
+```
+public record TestConfiguration : SettingsBase<TestConfiguration>
+    {
+        public string TestProperty { get; set; } = "myValue";
+    }
+```
+
+If you want to override this value by the database (of the layer above), create an entry in the "ConfigurationSetting" table with
+Key= TestConfiguration:TestProperty
+Value = "differentValue"
+this will be the value provided by the SettingsProvider, because the database layer overrides the default layer.
+In general, the default value is created in the database.
+The settingsProvider is automatically registered and you can have it injected via DI:
+```ISettingsProvider<TestConfiguration>```
+
+## Introduction of a new setting
+1. Introduce the new settings class, which derives from SettingsBase
+2. Get ISettingsProvider<T> injected into the constructor by DI (it's automatically registered)
+3. Use GetSettings() method to get the current settings: ```private string Settings => settingsProvider.GetSettings();```
+
+## Options
+### Default seeding
+By default, all settings are written to the configuration database table with the default values.
+If this is not desired, it can be disabled for the whole class or on property level by using the attribute, e.g.:
+```[AutoSeedToDatabase(false)]```
+### SectionName
+By default, the name of the setting class is used as key, e.g. as key in the database, you can overwrite this in the settings class:
+```public override string SectionName => "Test";```

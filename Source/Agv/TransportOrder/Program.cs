@@ -13,6 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Prometheus;
+using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
 
 var initialLogger = Gebhardt.StoreWare.Agv.Common.Logging.InitialLogger.Create<Program>();
 
@@ -39,7 +40,10 @@ try
                 .ConfigureAppConfiguration((_, config) =>
                 {
                     ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
-                    config.AddDefaultConfiguration(ConfigurationTypeManager.Instance);
+
+                    // DefaultConfigurationProvider should be at index 0 of the provider layer, so that environment variable can overwrite the hardcoded values of a ISettings
+                    config.Sources.Insert(0, new DefaultConfigurationSource(ConfigurationTypeManager.Instance));
+
                     databaseConfigurationSource = config.AddDatabaseConfiguration(ConfigurationTypeManager.Instance, initialLogger, 0, true);
                 })
                 .Configure(app =>
@@ -63,7 +67,7 @@ try
             var dbConfigurationSeeder = scope.ServiceProvider.GetService<DatabaseConfigurationSeeder>()!;
             await dbConfigurationSeeder.SeedDefaultConfigurationAsync();
         }
-        
+
         // we need to set the DbContext manually and after instantiation, because the AppConfiguration is built before the services (dbContext) are built
         databaseConfigurationSource!.UpdateDbContext(host.Services.GetRequiredService<SagaPersistenceDbContext>());
 

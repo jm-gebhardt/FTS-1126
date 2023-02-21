@@ -11,7 +11,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders
     public class SettingsProvider<TSettings> : ISettingsProvider<TSettings> where TSettings : class, ISettings<TSettings>
     {
         private readonly IConfiguration _configuration;
-        private readonly string _sectionName = typeof(TSettings).Name;
+        private readonly string _sectionName = ConfigurationTypeManager.Instance.GetSectionName<TSettings>();
 
         /// <summary>
         /// Ctor
@@ -22,16 +22,25 @@ namespace Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders
             _configuration = configuration;
         }
 
-        private TSettings? GetSettingsWithoutThrowing()
+        private TSettings? TryGetSettings()
         {
-            var settings = _configuration.GetSection(_sectionName).Get<TSettings>();
+            TSettings? settings = null;
+            try
+            {
+                settings = _configuration.GetSection(_sectionName).Get<TSettings>();
+            }
+            catch
+            {
+                // ignored
+            }
+
             return settings;
         }
 
         /// <inheritdoc/>
         public TSettings GetSettings()
         {
-            var settings = GetSettingsWithoutThrowing();
+            var settings = TryGetSettings();
 
             if (settings == null)
             {
@@ -43,7 +52,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders
         /// <inheritdoc />
         public bool DoTheSettingsExist()
         {
-            var settings = GetSettingsWithoutThrowing();
+            var settings = TryGetSettings();
             return settings != null;
         }
     }

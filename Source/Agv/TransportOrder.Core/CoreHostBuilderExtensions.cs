@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common;
 using Gebhardt.StoreWare.Agv.Common.Configurations;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Services;
@@ -105,7 +104,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
 
                 try
                 {
-                    ConfigureServicesMassTransit.ConfigureServices(services, context.Configuration, x =>
+                    services.ConfigureServicesMassTransit(context.Configuration, x =>
                     {
                         x.AddSagaStateMachine<OrderStateMachine, OrderSaga>()
                             .AddPersistence<OrderSaga, SagaPersistenceDbContext>();

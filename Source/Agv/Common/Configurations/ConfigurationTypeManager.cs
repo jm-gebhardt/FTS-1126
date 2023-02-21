@@ -1,4 +1,5 @@
 using System.Reflection;
+using Gebhardt.StoreWare.Agv.Common.Configurations.Attributes;
 using Gebhardt.StoreWare.Agv.Common.Configurations.Models;
 
 namespace Gebhardt.StoreWare.Agv.Common.Configurations
@@ -9,11 +10,26 @@ namespace Gebhardt.StoreWare.Agv.Common.Configurations
     public sealed class ConfigurationTypeManager : IConfigurationTypeManager
     {
         private static readonly Lazy<ConfigurationTypeManager> _lazy = new(() => new ConfigurationTypeManager());
-        private IEnumerable<ConfigurationType>? _configurationTypes;
+        private IList<ConfigurationType>? _configurationTypes;
 
-        private ConfigurationTypeManager()
+        private static IEnumerable<ConfigurationType> GetConfigurationTypes(params Assembly[] assemblies)
         {
+            foreach (var assembly in assemblies)
+            {
+                IEnumerable<ConfigurationType> configurationTypes = assembly.GetTypes()
+                    .Where(t => t.IsAssignableTo(typeof(ISettings)) && t is { IsInterface: false, IsGenericParameter: false, IsGenericType: false })
+                    .Select(t => new ConfigurationType(t, ShouldAutoSeedToDatabase(t)));
 
+                foreach (var configurationType in configurationTypes)
+                {
+                    yield return configurationType;
+                }
+            }
+        }
+
+        private static bool ShouldAutoSeedToDatabase(Type type)
+        {
+            return (type.GetCustomAttribute(typeof(AutoSeedToDatabase)) as AutoSeedToDatabase)?.AutoSeedToDatabaseValue ?? true;
         }
 
         /// <summary>
@@ -24,27 +40,39 @@ namespace Gebhardt.StoreWare.Agv.Common.Configurations
         /// <summary>
         /// Initializes the <see cref="ConfigurationTypes"/> property
         /// </summary>
-        public void InitializeConfigurationTypes()
+        public IList<ConfigurationType> InitializeConfigurationTypes()
         {
-            _configurationTypes ??= GetConfigurationTypes(AppDomain.CurrentDomain.GetAssemblies());
+            List<ConfigurationType> configurationTypes = GetConfigurationTypes(AppDomain.CurrentDomain.GetAssemblies()).ToList();
+            _configurationTypes = configurationTypes;
+            return configurationTypes;
         }
 
         /// <inheritdoc />
-        public IEnumerable<ConfigurationType> ConfigurationTypes => _configurationTypes ?? throw new Exception($"{nameof(ConfigurationTypeManager)} has not been initialized");
+        public IList<ConfigurationType> ConfigurationTypes => _configurationTypes ??= InitializeConfigurationTypes();
 
-        private static IEnumerable<ConfigurationType> GetConfigurationTypes(params Assembly[] assemblies)
+        /// <inheritdoc/>
+        public TSettings GetDefaultInstance<TSettings>() where TSettings : class, ISettings<TSettings>
         {
-            foreach (var assembly in assemblies)
-            {
-                IEnumerable<ConfigurationType> configurationTypes = assembly.GetTypes()
-                    .Where(t => t.IsAssignableTo(typeof(ISettings)) && !t.IsInterface)
-                    .Select(t => new ConfigurationType(t));
+            var configurationType = ConfigurationTypes.SingleOrDefault(c => c.Type == typeof(TSettings));
 
-                foreach (var configurationType in configurationTypes)
-                {
-                    yield return configurationType;
-                }
+            if (configurationType == null)
+            {
+                throw new ArgumentException($"{typeof(TSettings).Name} not found!");
             }
+
+            return (TSettings)configurationType.DefaultInstance;
+        }
+
+        /// <inheritdoc/>
+        public ConfigurationType? GetConfigurationTypeByTypeName(string configurationTypeName)
+        {
+            return ConfigurationTypes.SingleOrDefault(c => c.Name == configurationTypeName);
+        }
+
+        /// <inheritdoc/>
+        public string GetSectionName<TSettings>() where TSettings : class, ISettings<TSettings>
+        {
+            return GetDefaultInstance<TSettings>().SectionName;
         }
     }
 }

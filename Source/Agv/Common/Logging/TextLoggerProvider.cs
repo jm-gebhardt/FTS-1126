@@ -1,7 +1,6 @@
 ﻿using System.Collections.Concurrent;
-using Microsoft.Extensions.Configuration;
+using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace Gebhardt.StoreWare.Agv.Common.Logging
 {
@@ -10,46 +9,16 @@ namespace Gebhardt.StoreWare.Agv.Common.Logging
     /// </summary>
     public sealed class TextLoggerProvider : ILoggerProvider
     {
-        private readonly IDisposable? _onChangeToken;
-        private TextLoggerConfiguration _currentConfig;
         private readonly ConcurrentDictionary<string, TextLogger> _loggers = new(StringComparer.OrdinalIgnoreCase);
-        private readonly IOptionsMonitor<TextLoggerConfiguration> _optionsMonitorConfig;
-        
+        private readonly ISettingsProvider<TextLoggerConfiguration> _textLoggerSettingsProvider;
 
         /// <summary>
         /// Setting up a logging provider instance of TextLogger
         /// </summary>
-        /// <param name="config"></param>
-        /// <param name="iConfiguration"></param>
-        public TextLoggerProvider(IOptionsMonitor<TextLoggerConfiguration> config, IConfiguration iConfiguration)
+        /// <param name="textLoggerSettingsProvider"></param>
+        public TextLoggerProvider(ISettingsProvider<TextLoggerConfiguration> textLoggerSettingsProvider)
         {
-            _optionsMonitorConfig = config;
-            _currentConfig = config.CurrentValue;
-            _onChangeToken = config.OnChange(updatedConfig => _currentConfig = updatedConfig);
-
-            string? settingsFolderPath = iConfiguration.GetValue<string>(LoggingConstants.SettingKeyFolderPath);
-            if (settingsFolderPath != null)
-            {
-                config.CurrentValue.LogFolderPath = settingsFolderPath;
-            }
-
-            if (!Directory.Exists(config.CurrentValue.LogFolderPath))
-            {
-                Directory.CreateDirectory(config.CurrentValue.LogFolderPath);
-            }
-
-
-            int settingsPaddingRight = iConfiguration.GetValue<int>(LoggingConstants.SettingKeyPaddingRight);
-            if (settingsPaddingRight > 0)
-            {
-                config.CurrentValue.PadRight = settingsPaddingRight;
-            }
-
-            int eventIdPaddingRight = iConfiguration.GetValue<int>(LoggingConstants.SettingKeyEventIdPaddingRight);
-            if (eventIdPaddingRight > 0)
-            {
-                config.CurrentValue.EventIdPaddingRight = eventIdPaddingRight;
-            }
+            _textLoggerSettingsProvider = textLoggerSettingsProvider;
         }
 
         /// <summary>
@@ -57,10 +26,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Logging
         /// </summary>
         /// <param name="categoryName"></param>
         /// <returns></returns>
-        public ILogger CreateLogger(string categoryName) => _loggers.GetOrAdd(categoryName, name => new TextLogger(name, GetCurrentConfig, _optionsMonitorConfig));
-
-
-        private TextLoggerConfiguration GetCurrentConfig() => _currentConfig;
+        public ILogger CreateLogger(string categoryName) => _loggers.GetOrAdd(categoryName, name => new TextLogger(name, _textLoggerSettingsProvider));
 
         /// <summary>
         /// Freeing up resources after using Log
@@ -68,7 +34,6 @@ namespace Gebhardt.StoreWare.Agv.Common.Logging
         public void Dispose()
         {
             _loggers.Clear();
-            _onChangeToken?.Dispose();
         }
     }
 }
