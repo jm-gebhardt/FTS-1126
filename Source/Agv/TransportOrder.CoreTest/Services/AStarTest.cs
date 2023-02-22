@@ -342,12 +342,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         {
             var agvGraphTextFixtureMock = new Mock<AgvGraphTestFixture>();
             agvGraphTextFixtureMock.Setup(method => method.GetAllPossibleRoutesOrdered())
-            .Returns(new[]
-            {
-                new[] {"Saarbrücken", "Kaiserslautern", "Frankfurt", "Würzburg"},
-                new[] {"Saarbrücken", "Kaiserslautern", "Ludwigshafen", "Würzburg"},
-                new[] {"Saarbrücken", "Karlsruhe", "Heilbronn", "Würzburg"}
-            });
+                .Returns(new[]
+                {
+                    new[] { "Saarbrücken", "Kaiserslautern", "Frankfurt", "Würzburg" },
+                    new[] { "Saarbrücken", "Kaiserslautern", "Ludwigshafen", "Würzburg" },
+                    new[] { "Saarbrücken", "Karlsruhe", "Heilbronn", "Würzburg" }
+                });
             var agvGraphTextFixture = agvGraphTextFixtureMock.Object;
 
             AssertFindsShortestPath("Saarbrücken", "Würzburg", agvGraphTextFixture);
@@ -359,10 +359,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         {
             var agvGraphTextFixtureMock = new Mock<AgvGraphTestFixture>();
             agvGraphTextFixtureMock.Setup(method => method.GetAllPossibleRoutesOrdered())
-            .Returns(new[]
-            {
-                new[] { "Saarbrücken", "LoneRoute", "LoneDestination" }
-            });
+                .Returns(new[]
+                {
+                    new[] { "Saarbrücken", "LoneRoute", "LoneDestination" }
+                });
             var agvGraphTextFixture = agvGraphTextFixtureMock.Object;
 
             AssertFindsShortestPath("Saarbrücken", "LoneDestination", agvGraphTextFixture);
@@ -398,6 +398,50 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
                     route.ShouldBeNull();
                 }
             }
+        }
+
+        [TestMethod]
+        [DataRow(true)]
+        [DataRow(false)]
+        public void TestStaticCalculateRoute_FindsRoute_And_NoRoute(bool blockEdgesThatLeadToNoRoute)
+        {
+            var graph = new AgvGraph(Guid.Empty,
+                new[]
+                {
+                    new AgvGraph.Node("1") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 5f, Z = 0f },
+                    new AgvGraph.Node("2") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 1f, Y = 5f, Z = 0f },
+                    new AgvGraph.Node("3") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 1f, Y = 2f, Z = 0f },
+                    new AgvGraph.Node("4") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 3f, Y = 3f, Z = 0f },
+                    new AgvGraph.Node("5") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 3f, Y = 6f, Z = 0f },
+                    new AgvGraph.Node("6") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 3f, Y = 2f, Z = 0f },
+                    new AgvGraph.Node("7") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 6f, Y = 0f, Z = 0f },
+                    new AgvGraph.Node("8") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 7f, Y = 1f, Z = 0f },
+                    new AgvGraph.Node("9") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 8f, Y = 2f, Z = 0f },
+                    new AgvGraph.Node("10") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 8f, Y = 5f, Z = 0f }
+                },
+                new[]
+                {
+                    new AgvGraph.Edge("1", "2", blockEdgesThatLeadToNoRoute) { Metric = 1f },
+                    new AgvGraph.Edge("1", "4", blockEdgesThatLeadToNoRoute) { Metric = 4f },
+                    new AgvGraph.Edge("4", "1") { Metric = 4f },
+                    new AgvGraph.Edge("2", "5", blockEdgesThatLeadToNoRoute) { Metric = 3f },
+                    new AgvGraph.Edge("3", "5", blockEdgesThatLeadToNoRoute) { Metric = 5f },
+                    new AgvGraph.Edge("3", "4", blockEdgesThatLeadToNoRoute) { Metric = 3f },
+                    new AgvGraph.Edge("4", "3") { Metric = 3f },
+                    new AgvGraph.Edge("3", "6", blockEdgesThatLeadToNoRoute) { Metric = 2f },
+                    new AgvGraph.Edge("6", "3") { Metric = 2f },
+                    new AgvGraph.Edge("5", "8", blockEdgesThatLeadToNoRoute) { Metric = 7f },
+                    new AgvGraph.Edge("8", "5") { Metric = 7f },
+                    new AgvGraph.Edge("8", "7", blockEdgesThatLeadToNoRoute) { Metric = 1f },
+                    new AgvGraph.Edge("7", "8") { Metric = 1f },
+                    new AgvGraph.Edge("9", "8", blockEdgesThatLeadToNoRoute) { Metric = 1f },
+                    new AgvGraph.Edge("7", "10") { Metric = 6f }
+                },
+                "Test".ToGuid(),
+                "Test");
+            var route = AStar.CalculateRouteStatic(graph, "1", "8");
+            bool routeNull = route == null;
+            routeNull.ShouldBe(blockEdgesThatLeadToNoRoute);
         }
     }
 }

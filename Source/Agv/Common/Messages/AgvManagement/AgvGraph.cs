@@ -232,10 +232,12 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
             /// </summary>
             /// <param name="from"></param>
             /// <param name="to"></param>
-            public Edge(string from, string to)
+            /// <param name="isBlocked"></param>
+            public Edge(string from, string to, bool isBlocked = false)
             {
                 From = from;
                 To = to;
+                IsBlocked = isBlocked;
             }
 
             /// <summary>

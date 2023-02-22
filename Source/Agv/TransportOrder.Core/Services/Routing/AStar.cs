@@ -87,7 +87,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Routing
         /// </summary>
         /// <param name="agvGraph"></param>
         /// <param name="routingPlausibilityChecker">The checker to use for the check in the base implementation</param>
-        public AStar(AgvGraph agvGraph, IRoutingPlausibilityChecker routingPlausibilityChecker) : base(agvGraph, routingPlausibilityChecker)
+        public AStar(AgvGraph agvGraph, IRoutingPlausibilityChecker? routingPlausibilityChecker = null) : base(agvGraph, routingPlausibilityChecker)
         {
             _nodes = agvGraph.Nodes.ToDictionary(n => n.Id, n => new ANode(n));
         }
@@ -217,5 +217,17 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Routing
             return null;
         }
 
+        /// <summary>
+        /// Returns a simple route from source to destination on the given graph 
+        /// </summary>
+        /// <param name="agvGraph">The graph on witch the route shall be calculated on</param>
+        /// <param name="source">The source/start of the route</param>
+        /// <param name="destination">The destination/end of the route</param>
+        /// <returns>The shortest <see cref="IGraphAlgorithm.Route"/> route between source and destination or null if no route could be found</returns>
+        public static IGraphAlgorithm.Route? CalculateRouteStatic(AgvGraph agvGraph, string source, string destination)
+        {
+            var aStar = new AStar(agvGraph);
+            return aStar.CalculateRouteInternal(source, destination);
+        }
     }
 }

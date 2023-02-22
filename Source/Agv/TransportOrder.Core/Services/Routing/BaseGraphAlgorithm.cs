@@ -8,7 +8,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Routing;
 /// </summary>
 public abstract class BaseGraphAlgorithm : IGraphAlgorithm
 {
-    private readonly IRoutingPlausibilityChecker _routingPlausibilityChecker;
+    private readonly IRoutingPlausibilityChecker? _routingPlausibilityChecker;
 
     /// <summary>List of edges coming from the AGV graph.</summary>
     protected AgvGraph.Edge[] Edges { get; }
@@ -21,7 +21,7 @@ public abstract class BaseGraphAlgorithm : IGraphAlgorithm
     /// </summary>
     /// <param name="agvGraph">The agvGraph to work with</param>
     /// <param name="routingPlausibilityChecker">The checker to use for the check in the base implementation</param>
-    protected BaseGraphAlgorithm(AgvGraph agvGraph, IRoutingPlausibilityChecker routingPlausibilityChecker)
+    protected BaseGraphAlgorithm(AgvGraph agvGraph, IRoutingPlausibilityChecker? routingPlausibilityChecker = null)
     {
         _routingPlausibilityChecker = routingPlausibilityChecker;
         Edges = agvGraph.Edges;
@@ -66,7 +66,7 @@ public abstract class BaseGraphAlgorithm : IGraphAlgorithm
     /// <returns>True if it is plausible</returns>
     private bool IsPlausible(AgvGraph.Node start, AgvGraph.Node end)
     {
-        return _routingPlausibilityChecker.IsPlausible(start, end);
+        return _routingPlausibilityChecker == null || _routingPlausibilityChecker.IsPlausible(start, end);
     }
 
     /// <summary>
