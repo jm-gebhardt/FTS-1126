@@ -108,7 +108,7 @@ services:
   
   rabbitmq:
     hostname: rabbitmq.agv
-    image: rabbitmq:3.10.2-management
+    image: rabbitmq:3.11.9-management
     ports:
       - "127.0.0.1:15672:15672"
       - "127.0.0.1:5671:5671"
@@ -121,7 +121,7 @@ services:
     volumes:
       - ./Certs/server:/etc/rabbitmq/certs
       - ./Config/rabbitmq/rabbitmq.docker.conf:/etc/rabbitmq/rabbitmq.conf
-      - ./Config/rabbitmq/plugins/rabbitmq_delayed_message_exchange-3.10.2.ez:/opt/rabbitmq/plugins/rabbitmq_delayed_message_exchange-3.10.2.ez
+      - ./Config/rabbitmq/plugins/rabbitmq_delayed_message_exchange-3.11.1.ez:/opt/rabbitmq/plugins/rabbitmq_delayed_message_exchange-3.11.1.ez
     command: >
       sh -c "rabbitmq-plugins enable rabbitmq_mqtt rabbitmq_auth_mechanism_ssl rabbitmq_prometheus rabbitmq_delayed_message_exchange &&
              rabbitmq-server"
@@ -141,7 +141,7 @@ services:
       - MSSQL_PID=Express
       - SA_PASSWORD=${MSSQL_SA_PASSWORD}
     ports:
-      - "127.0.0.1:1433:1433"
+      - "1433:1433"
     restart: unless-stopped
     depends_on:
       fluent:
