@@ -70,6 +70,8 @@ function AgvStateIcon(status: string | null | undefined): string {
       return 'lock'
     case 'PendingLock':
       return 'hourglass_bottom'
+    case 'Ready':
+      return 'unfold_less'
     default:
       return 'help'
   }
