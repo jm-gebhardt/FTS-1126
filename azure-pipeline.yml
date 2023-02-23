@@ -204,12 +204,24 @@ stages:
   - job: SimulationPreparation
     displayName: Preparing simulation
     steps:
+
+    - task: CmdLine@2
+      displayName: docker prune
+      inputs:
+        script: |
+          docker volume prune -f
+          docker image prune -f                                             # Only removing dangling images
+          docker image rm storeware.azurecr.io/agv/transportorder           # Service modules are rebuilt in docker compose build step
+          docker image rm storeware.azurecr.io/agv/wcscommunication
+          docker image rm storeware.azurecr.io/agv/devicecommunication
     
     - task: CmdLine@2
-      displayName: docker compose pull 
+      displayName: docker compose pull & and TAR authentication
       inputs:
         script: | 
           docker compose pull loki rabbitmq mssql grafana fluent prometheus cadvisor caddy
+          docker login registry.gitlab.com -u gebhardt -p $(karisPassword)
+          docker pull registry.gitlab.com/tar4/karis_virtual                # Instead of pulling the image in dotnet test
           exit 0
         workingDirectory: '$(Build.SourcesDirectory)'
 
