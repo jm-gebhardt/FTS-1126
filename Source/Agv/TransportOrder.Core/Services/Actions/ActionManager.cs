@@ -332,7 +332,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
             switch (error)
             {
                 case AgvAssignmentFailed.ErrorCode.NoReadyAgv:
-                    _logger.LogInformation("{MessageType}/{FailedReason}: For action of order: {OrderId} no idle AGV found in AgvRegistry",
+                    _logger.LogInformation("{MessageType}/{FailedReason}: For action of order: {OrderId} no ready AGV found in AgvRegistry",
                         nameof(AgvAssignmentFailed), failedReason, order.OrderId);
                     break;
 

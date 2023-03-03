@@ -507,7 +507,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             (await fixture.TestHarness.Published.Any<RequestAgvGraph>(token.Token)).ShouldBeFalse();
             (await fixture.TestHarness.Published.Any<RequestAgvData>()).ShouldBeTrue();
         }
-
+        
         // ReSharper disable MethodSupportsCancellation
         /// <summary>
         /// Checks if only RequestAgvGraph is sent because AGV already has data
@@ -524,7 +524,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             const string agvId = "AGV_01";
             var correlationId = agvId.ToGuid();
 
-            var agvStage = new AgvSaga(
+            var agvSaga = new AgvSaga(
                 correlationId,
                 agvId,
                 currentState: fixture.Machine.Discovered.Name,
@@ -537,7 +537,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
                 AgvDataRequestedLastTime = DateTime.UtcNow - new TimeSpan(0, 0, fixture.Machine.AgvRequestTimeoutS + 1)
             };
 
-            fixture.Add(agvStage);
+            fixture.Add(agvSaga);
 
             // Act
             await fixture.TestHarness.Bus.Publish(new AgvStatusReceived(
@@ -556,6 +556,40 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             (await fixture.TestHarness.Published.Any<RequestAgvData>(token.Token)).ShouldBeFalse();
         }
 
+        [TestMethod]
+        public async Task Resend_AgvReady_When_Agv_is_Idle_and_just_came_Online()
+        {
+            // Arrange
+            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = GetFixture();
+
+            const string agvId = "AGV_01";
+            var correlationId = agvId.ToGuid();
+
+            var agvSaga = new AgvSaga(
+                    correlationId,
+                    agvId,
+                    fixture.Machine.Idle.Name,
+                    new AgvStatus(correlationId, null, true, true, 10, true, true)
+                )
+                { Alive = false };
+
+            fixture.Add(agvSaga);
+
+            // Act
+            await fixture.TestHarness.Bus.Publish(new AgvStatusReceived(
+                correlationId,
+                agvId,
+                new AgvStatus(correlationId, null, false, false, 50, false, false)
+            ));
+
+            // Assert
+            (await fixture.TestHarness.Published.Any<AgvStatusReceived>()).ShouldBeTrue();
+            (await fixture.SagaHarness.Consumed.Any<AgvStatusReceived>()).ShouldBeTrue();
+
+            (await fixture.SagaHarness.Exists(correlationId)).ShouldBe(correlationId);
+            (await fixture.TestHarness.Published.Any<AgvReady>()).ShouldBeTrue();
+        }
+        
         /// <summary>
         /// Checks if requests are repeated once a day
         /// </summary>

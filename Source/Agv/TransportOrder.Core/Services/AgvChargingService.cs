@@ -117,18 +117,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
             {
                 _logger.LogInformation("Agv with correlationId {CorrelationId} has low battery level ({BatteryCharge}%)", agvStatus.CorrelationId, agvStatus.BatteryCharge);
 
-                if (_orderRegistry.CountQueued == 0) // No ordes -> send AGV to charging station
+                if (_orderRegistry.CountQueued == 0) // No orders -> send AGV to charging station
                 {
                     return true;
                 }
-                else
-                {
-                    return false;
-                }
+                return false;
             }
 
             // agvStatus.BatteryCharge > BatteryLevelLow
-            _logger.LogInformation("Agv with correlationId {CorrelationId} has good battery level ({BatteryCharge}%)", agvStatus.CorrelationId, agvStatus.BatteryCharge);
+            _logger.LogDebug("Agv with correlationId {CorrelationId} has good battery level ({BatteryCharge}%)", agvStatus.CorrelationId, agvStatus.BatteryCharge);
             return false;
         }
 

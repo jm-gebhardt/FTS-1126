@@ -422,7 +422,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         private async Task PublishAgvBecameReady(AgvSaga agvSaga, IPublishEndpoint endpoint)
         {
             await endpoint.Publish(new AgvBecameReady(agvSaga.CorrelationId));
-            _logger.LogDebug("Agv {AgvId}/{CorrelationId} transitioned ti Ready", agvSaga.AgvId, agvSaga.CorrelationId);
+            _logger.LogDebug("Agv {AgvId}/{CorrelationId} transitioned to Ready", agvSaga.AgvId, agvSaga.CorrelationId);
         }
 
         private void UpdateAgvAgvStatus(AgvSaga agvSaga, AgvStatus? newStatus, bool newAlive, IPublishEndpoint endpoint)
@@ -436,6 +436,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
             if (aliveChanged || stateChanged) // Publish AgvPropertyChanged only something has actually changed
             {
                 endpoint.Publish(new AgvPropertyChanged(agvSaga, agvSaga.CorrelationId));
+            }
+
+            if (aliveChanged && newAlive && agvSaga.CurrentState == nameof(Idle)) // Transition to Ready must happen before triggering order assignment
+            {
+                endpoint.Publish(new AgvReady(agvSaga.CorrelationId));
             }
         }
 
