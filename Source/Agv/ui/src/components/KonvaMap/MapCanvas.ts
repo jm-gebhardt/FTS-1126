@@ -268,13 +268,13 @@ export class MapCanvas {
     if (agvState.alive === false) {
       primary = '#808080' // grey
       secondary = undefined
-    } else if (agvState.disturbed === true) {
+    } else if (agvState.agvStatus.disturbed === true) {
       primary = 'FF8000' // darker orange
       secondary = undefined
-    } else if (agvState.automatic === false) {
+    } else if (agvState.agvStatus.automatic === false) {
       primary = '#0000FF' // blue
       secondary = undefined
-    } else if (agvState.charging === true) {
+    } else if (agvState.agvStatus.charging === true) {
       primary = '#FFFF00' /// yellow
       secondary = undefined
     }

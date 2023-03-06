@@ -11,7 +11,7 @@ using Moq;
 using System.Text;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Features.Maps.Handlers.Queries
+namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Features.Maps.Handlers.Queries.Maps
 {
     /// <summary>
     /// Testing fixture to test map request

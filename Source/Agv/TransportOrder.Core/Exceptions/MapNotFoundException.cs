@@ -8,12 +8,11 @@
         /// <inheritdoc cref="MapNotFoundException"/>
         public MapNotFoundException()
         {
-                
         }
 
         /// <inheritdoc cref="MapNotFoundException"/>
-        /// <param name="message">Exception message</param>
-        public MapNotFoundException(string message) : base(message)
+        public MapNotFoundException(string paramIdentifierName, object paramIdentifierValue)
+            : base($"Map not found using the {paramIdentifierName}:{paramIdentifierValue}")
         {
 
         }

@@ -8,7 +8,7 @@ using Moq;
 using Shouldly;
 using System.Text;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Features.Maps.Handlers.Queries
+namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Features.Maps.Handlers.Queries.Maps
 {
     [TestClass]
     public class GetMapImageRequestHandlerTest

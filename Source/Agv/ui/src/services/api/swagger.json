@@ -620,7 +620,7 @@
         "properties": {
           "correlationId": {
             "type": "string",
-            "description": "Used to identify a message as correlated so that the CorrelationId can be returned",
+            "description": "The CorrelationId of the agv",
             "format": "uuid"
           },
           "model": {
@@ -636,33 +636,21 @@
             "description": "The IP Address of the AGV",
             "nullable": true
           },
-          "maxVelocityStraight": {
-            "type": "number",
-            "description": "The maximum velocity of the AGV in straight direction [m/s]",
-            "format": "double"
-          },
           "batteryCapacity": {
             "type": "number",
             "description": "The capacity of the AGVs battery in [Ah]",
             "format": "double"
-          },
-          "length": {
-            "type": "number",
-            "description": "The length of the AGV in [m]",
-            "format": "double",
-            "nullable": true
-          },
-          "width": {
-            "type": "number",
-            "description": "The width of the AGV in [m]",
-            "format": "double",
-            "nullable": true
           },
           "acceleration": {
             "type": "number",
             "description": "The maximum velocity of the AGV while turning on spot [m/s^2]",
             "format": "double",
             "nullable": true
+          },
+          "maxVelocityStraight": {
+            "type": "number",
+            "description": "The maximum velocity of the AGV in straight direction [m/s]",
+            "format": "double"
           },
           "maxVelocityTurn": {
             "type": "number",
@@ -673,6 +661,18 @@
           "maxVelocityTurnOnSpot": {
             "type": "number",
             "description": "The maximum velocity of the AGV while turning on spot [rad/s]",
+            "format": "double",
+            "nullable": true
+          },
+          "width": {
+            "type": "number",
+            "description": "The width of the AGV in [m]",
+            "format": "double",
+            "nullable": true
+          },
+          "length": {
+            "type": "number",
+            "description": "The length of the AGV in [m]",
             "format": "double",
             "nullable": true
           },
@@ -691,7 +691,7 @@
           }
         },
         "additionalProperties": false,
-        "description": "AGV Data"
+        "description": "Agv Data model"
       },
       "AgvPosition": {
         "required": [
@@ -767,12 +767,30 @@
         "description": "Model for the status of the AGV position"
       },
       "AgvState": {
+        "required": [
+          "agvStatus"
+        ],
         "type": "object",
         "allOf": [
           {
             "$ref": "#/components/schemas/Agv"
           }
         ],
+        "properties": {
+          "agvStatus": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AgvStatus"
+              }
+            ],
+            "description": "AGV Status"
+          }
+        },
+        "additionalProperties": false,
+        "description": "AgvState model"
+      },
+      "AgvStatus": {
+        "type": "object",
         "properties": {
           "orderId": {
             "type": "string",
@@ -812,7 +830,7 @@
           }
         },
         "additionalProperties": false,
-        "description": "AgvState model"
+        "description": "AgvStatus model"
       },
       "Edge": {
         "required": [

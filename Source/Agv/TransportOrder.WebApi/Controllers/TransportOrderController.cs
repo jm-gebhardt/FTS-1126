@@ -1,14 +1,12 @@
-﻿using System.Text.Json;
-using Microsoft.AspNetCore.Mvc;
-using AutoMapper;
+﻿using Microsoft.AspNetCore.Mvc;
 using MassTransit;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Commands;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers.DateRange;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers.Pagination;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
-using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Events;
+using System.Text.Json;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Orders.Common;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Orders.Requests.Commands;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Orders.Requests.Queries;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Orders.Requests.Queries.Filtering.DateRange;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Orders.Requests.Queries.Filtering.Pagination;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
 {
@@ -18,18 +16,18 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
     [ApiController]
     public class TransportOrderController : Controller
     {
-        private readonly IOrderRegistry _orderRegistry;
-        private readonly IBus _bus;
-        private readonly IMapper _mapper;
+        private readonly IRequestClient<ResetOrderCommand> _resetOrderClient;
+        private readonly IRequestClient<CompleteOrderCommand> _completeOrderClient;
+        private readonly IRequestClient<GetOrdersRequest> _getOrdersClient;
 
         /// <summary>
         /// Init controller
         /// </summary>
-        public TransportOrderController(IOrderRegistry orderRegistry, IBus bus, IMapper mapper)
+        public TransportOrderController(IRequestClient<ResetOrderCommand> resetOrderClient, IRequestClient<CompleteOrderCommand> completeOrderClient, IRequestClient<GetOrdersRequest> getOrdersClient)
         {
-            _orderRegistry = orderRegistry;
-            _bus = bus;
-            _mapper = mapper;
+            _resetOrderClient = resetOrderClient;
+            _completeOrderClient = completeOrderClient;
+            _getOrdersClient = getOrdersClient;
         }
 
         /// <summary>
@@ -39,31 +37,16 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
         /// <response code="200">Ok</response>
         [HttpGet]
         [Route("/orders")]
-        public ActionResult<IEnumerable<OrderDto>> GetOrders(
+        public async Task<ActionResult<IEnumerable<OrderDto>>> GetOrders(
             [FromQuery] PaginationParameters paginationParameters,
             [FromQuery] DateRangeParameters dateRangeParameters)
         {
-            IOrderedQueryable<IOrder> sortedOrders = _orderRegistry.GetAllOrders().OrderByDescending(x => x.OrderDetails.CreationDate);
-            
-            if(dateRangeParameters.IsEmpty() && sortedOrders.Any())
-            {
-                dateRangeParameters = new DateRangeParameters(sortedOrders.Last().OrderDetails.CreationDate, sortedOrders.First().OrderDetails.CreationDate);
-            }
-            
-            IQueryable<IOrder> ordersInRange = sortedOrders.Where(order =>
-                order.OrderDetails.CreationDate >= dateRangeParameters.Start && 
-                order.OrderDetails.CreationDate <= dateRangeParameters.End
-            );
-            
-            var pagedOrders = new PagedEnumerable<IOrder>(ordersInRange, paginationParameters.PageNumber, paginationParameters.PageSize);
-            
-            var pageHeaders = pagedOrders.PaginationHeader();
-            Response.Headers.Add(pageHeaders.HeaderName, JsonSerializer.Serialize(pageHeaders));
+            Response<GetOrdersResult> response = await _getOrdersClient.GetResponse<GetOrdersResult>(new GetOrdersRequest(paginationParameters, dateRangeParameters));
 
-            var dateRangeHeaders = new DateRangeHeaders(dateRangeParameters.Start, dateRangeParameters.End);
-            Response.Headers.Add(dateRangeHeaders.HeaderName, JsonSerializer.Serialize(dateRangeHeaders));
-            
-            return Ok(pagedOrders.Select(pageOrder => _mapper.Map<OrderDto>(pageOrder)));
+            Response.Headers.Add(response.Message.PaginationHeaders.HeaderName, JsonSerializer.Serialize(response.Message.PaginationHeaders));
+            Response.Headers.Add(response.Message.DateRangeHeaders.HeaderName, JsonSerializer.Serialize(response.Message.DateRangeHeaders));
+
+            return Ok(response.Message.Orders);
         }
 
         /// <summary>
@@ -76,20 +59,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
         [Route("/orders/{correlationId}/resetOrder")]
         public async Task<ActionResult> ResetOrder(Guid correlationId)
         {
-            var order = _orderRegistry.GetOrder(correlationId);
-
-            if (order == null)
-            {
-                return NotFound();
-            }
-
-            if (order.CurrentState != nameof(OrderStateMachine.OrderFailed) && order.CurrentState != nameof(OrderStateMachine.Final))
-            {
-                return BadRequest("Order can not be reset because it is not completed yet");
-            }
-
-            await _bus.Publish(new ResetTransportOrder(order.CorrelationId));
-
+            await _resetOrderClient.GetResponse<ResetOrderResult>(new ResetOrderCommand(correlationId));
             return Ok();
         }
 
@@ -102,15 +72,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
         [Route("/orders/{correlationId}/completeOrder")]
         public async Task<ActionResult> CompleteOrder(Guid correlationId)
         {
-            var order = _orderRegistry.GetOrder(correlationId);
-
-            if (order == null)
-            {
-                return NotFound();
-            }
-
-            await _bus.Publish(new ManuallyCompleteTransportOrder(order.CorrelationId));
-
+            await _completeOrderClient.GetResponse<CompleteOrderResult>(new CompleteOrderCommand(correlationId));
             return Ok();
         }
     }

@@ -1,7 +1,7 @@
 using System.Collections;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers.Pagination
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Orders.Requests.Queries.Filtering.Pagination
 {
     /// <summary>
     /// Paged Enumerable
@@ -63,7 +63,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers.Pagination
             int start = (pageNumber - 1) * pageSize;
             _items = source.Skip(start).Take(pageSize);
         }
-        
+
         /// <summary>
         /// Get Pagination headers
         /// </summary>

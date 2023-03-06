@@ -1,12 +1,12 @@
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers.DateRange
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Orders.Requests.Queries.Filtering.DateRange
 {
     /// <summary>
     /// Date range parameter
     /// </summary>
     [PublicAPI]
-    public class DateRangeParameters
+    public record DateRangeParameters
     {
         /// <summary>
         /// Start date of range
@@ -34,7 +34,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers.DateRange
         /// </summary>
         public DateRangeParameters()
         {
-            
+
         }
 
         /// <summary>

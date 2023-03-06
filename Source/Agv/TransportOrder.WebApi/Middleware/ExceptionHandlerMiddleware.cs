@@ -35,8 +35,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Middleware
 
             switch (exception)
             {
+                case NotFoundException:
                 case MapNotFoundException:
                     statusCode = HttpStatusCode.NotFound;
+                    break;
+                case NoContentException:
+                    statusCode = HttpStatusCode.NoContent;
+                    break;
+                case NotInCorrectStateException:
+                    statusCode = HttpStatusCode.BadRequest;
                     break;
                 default:
                     statusCode = HttpStatusCode.InternalServerError;

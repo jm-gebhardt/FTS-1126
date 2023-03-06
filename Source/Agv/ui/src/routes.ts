@@ -7,7 +7,8 @@ export default [
   {
     component: (): Promise<HomeViewType> => import('@/views/HomeView.vue'),
     name: 'Home',
-    path: '/'
+    path: '/',
+    props: { showNavBar: true }
   },
   {
     component: (): Promise<OrderViewType> => import('@/views/OrdersView.vue'),

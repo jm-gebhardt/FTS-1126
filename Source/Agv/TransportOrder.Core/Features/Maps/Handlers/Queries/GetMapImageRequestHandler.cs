@@ -37,10 +37,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Handlers.Quer
             byte[]? image = _mapRegistry.GetMap(request.CorrelationId);
             if (image == null || image.Length == 0)
             {
-                throw new MapNotFoundException($"Map not found using the correlationId:{request.CorrelationId}");
+                throw new MapNotFoundException(nameof(request.CorrelationId), request.CorrelationId);
             }
 
-            await context.RespondAsync(new GetMapImageResult { Image = image });
+            await context.RespondAsync(new GetMapImageResult(image));
         }
     }
 }

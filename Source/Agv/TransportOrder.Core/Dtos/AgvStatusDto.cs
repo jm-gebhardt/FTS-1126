@@ -1,12 +1,8 @@
 ﻿namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos
 {
     /// <summary>
-    /// AgvState model
+    /// AgvStatus model
     /// </summary>
-    /// <param name="CorrelationId">CorrelationId</param>
-    /// <param name="AgvId">AGV Serial Number</param>
-    /// <param name="CurrentState">Current State</param>
-    /// <param name="Alive"></param>
     /// <param name="OrderId"></param>
     /// <param name="Busy"></param>
     /// <param name="Automatic"></param>
@@ -15,16 +11,12 @@
     /// <param name="Disturbed"></param>
     /// <param name="LastNodeId"></param>
     [JetBrains.Annotations.PublicAPI]
-    public record AgvStateDto(
-        Guid CorrelationId,
-        string AgvId,
-        string CurrentState,
-        bool Alive,
+    public record AgvStatusDto(
         string? OrderId,
         bool? Busy,
         bool? Automatic,
         int? BatteryCharge,
         bool? Charging,
         bool? Disturbed,
-        string? LastNodeId) : AgvDto(CorrelationId, AgvId, CurrentState, Alive);
+        string? LastNodeId);
 }

@@ -1,29 +1,29 @@
 using System.ComponentModel;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers.Pagination
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Orders.Requests.Queries.Filtering.Pagination
 {
-   
+
     /// <summary>
     /// Query Parameters for paging 
     /// </summary>
     [PublicAPI]
-    public class PaginationParameters
+    public record PaginationParameters
     {
         /// <summary>
         /// Default Page Size
         /// </summary>
         [UsedImplicitly]
         public const int DefaultPageSize = 25;
-        
+
         /// <summary>
         /// Default Page Number
         /// </summary>
         [UsedImplicitly]
         public const int DefaultPageNumber = 1;
-        
+
         private const int MaxPageSize = 100;
-        
+
         /// <summary>
         /// Page Number
         /// </summary>

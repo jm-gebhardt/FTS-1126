@@ -237,5 +237,54 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Profiles
             agvPositionStatus.AgvId.ShouldBe(agvPositionReceived.AgvId);
             agvPositionStatus.CorrelationId.ShouldBe(agvPositionReceived.CorrelationId);
         }
+
+        [TestMethod]
+        public void Map_ShouldMapAllPropertiesCorrectly_WhereAgvPositionStatusDtoIsMappedToAgvPositionStatus()
+        {
+            string agvId = "agv1";
+
+            var agvPositionStatus = new AgvPositionStatus(
+                Guid.NewGuid(), 
+                agvId, 
+                new AgvPosition(false, 0, 0, 0, 0)
+                );
+
+            var mapper = GetMapper();
+            var agvPositionStatusDto = mapper.Map<AgvPositionStatusDto>(agvPositionStatus);
+
+            agvPositionStatusDto.ShouldNotBeNull();
+            agvPositionStatusDto.AgvPosition.ShouldSatisfyAllConditions(
+                s => s.PositionInitialized.ShouldBe(agvPositionStatus.AgvPosition.PositionInitialized),
+                s => s.X.ShouldBe(agvPositionStatus.AgvPosition.X),
+                s => s.Y.ShouldBe(agvPositionStatus.AgvPosition.Y),
+                s => s.Z.ShouldBe(agvPositionStatus.AgvPosition.Z),
+                s => s.Theta.ShouldBe(agvPositionStatus.AgvPosition.Theta),
+                s => s.DeviationRange.ShouldBe(agvPositionStatus.AgvPosition.DeviationRange));
+
+            agvPositionStatusDto.AgvId.ShouldBe(agvPositionStatus.AgvId);
+            agvPositionStatusDto.CorrelationId.ShouldBe(agvPositionStatus.CorrelationId);
+        }
+
+        [TestMethod]
+        public void Map_ShouldMapAllPropertiesCorrectly_WhereAgvDataDtoIsMappedToAgvData()
+        {
+            var agvData = new AgvData(Guid.NewGuid(), "Karis", "BF1", "127.0.0.1", 1.8, 120.0, 0.6, 0.8, 0.7, 1, 2.5, 1000, Array.Empty<AgvData.Sensor>());
+            var mapper = GetMapper();
+            var agvDataDto = mapper.Map<AgvDataDto>(agvData);
+
+            agvDataDto.ShouldNotBeNull();
+            agvDataDto.Acceleration.ShouldBe(agvData.Acceleration);
+            agvDataDto.CorrelationId.ShouldBe(agvData.CorrelationId);
+            agvDataDto.BatteryCapacity.ShouldBe(agvData.BatteryCapacity);
+            agvDataDto.IpV4Address.ShouldBe(agvData.IpV4Address);
+            agvDataDto.Length.ShouldBe(agvData.Length);
+            agvDataDto.MaxVelocityStraight.ShouldBe(agvData.MaxVelocityStraight);
+            agvDataDto.MaxVelocityTurn.ShouldBe(agvData.MaxVelocityTurn);
+            agvDataDto.MaxVelocityTurnOnSpot.ShouldBe(agvData.MaxVelocityTurnOnSpot);
+            agvDataDto.Model.ShouldBe(agvData.Model);
+            agvDataDto.Payload.ShouldBe(agvData.Payload);
+            agvDataDto.Width.ShouldBe(agvData.Width);
+            agvDataDto.Sensors.ShouldBe(agvData.Sensors);
+        }
     }
 }

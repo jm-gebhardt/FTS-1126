@@ -1,13 +1,13 @@
 using JetBrains.Annotations;
 
 // ReSharper disable ConvertToPrimaryConstructor
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers.Pagination
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Orders.Requests.Queries.Filtering.Pagination
 {
     /// <summary>
     /// Pagination X Headers
     /// </summary>
     [PublicAPI]
-    public record PaginationHeaders: IResultHeaders
+    public record PaginationHeaders : IResultHeaders
     {
         /// <summary>
         /// Header name

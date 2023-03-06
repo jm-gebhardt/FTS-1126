@@ -4,7 +4,5 @@
     /// Represents the GetMapList request which returns a list of Maps
     /// </summary>
     [JetBrains.Annotations.UsedImplicitly]
-    public class GetMapListRequest
-    {
-    }
+    public record GetMapListRequest;
 }

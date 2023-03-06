@@ -27,11 +27,11 @@ export interface IAgv {
 }
 
 /**
- * AGV Data
+ * Agv Data model
  */
 export interface IAgvData {
   /**
-   * Used to identify a message as correlated so that the CorrelationId can be returned
+   * The CorrelationId of the agv
    * @format uuid
    */
   correlationId: string
@@ -42,30 +42,20 @@ export interface IAgvData {
   /** The IP Address of the AGV */
   ipV4Address?: string | null
   /**
-   * The maximum velocity of the AGV in straight direction [m/s]
-   * @format double
-   */
-  maxVelocityStraight: number
-  /**
    * The capacity of the AGVs battery in [Ah]
    * @format double
    */
   batteryCapacity: number
   /**
-   * The length of the AGV in [m]
-   * @format double
-   */
-  length?: number | null
-  /**
-   * The width of the AGV in [m]
-   * @format double
-   */
-  width?: number | null
-  /**
    * The maximum velocity of the AGV while turning on spot [m/s^2]
    * @format double
    */
   acceleration?: number | null
+  /**
+   * The maximum velocity of the AGV in straight direction [m/s]
+   * @format double
+   */
+  maxVelocityStraight: number
   /**
    * The maximum velocity of the AGV in while turning [m/s]
    * @format double
@@ -76,6 +66,16 @@ export interface IAgvData {
    * @format double
    */
   maxVelocityTurnOnSpot?: number | null
+  /**
+   * The width of the AGV in [m]
+   * @format double
+   */
+  width?: number | null
+  /**
+   * The length of the AGV in [m]
+   * @format double
+   */
+  length?: number | null
   /**
    * The max. payload of the AGV in [kg]
    * @format int64
@@ -137,6 +137,14 @@ export interface IAgvPositionStatus {
  * AgvState model
  */
 export type IAgvState = IAgv & {
+  /** AGV Status */
+  agvStatus: IAgvStatus
+}
+
+/**
+ * AgvStatus model
+ */
+export interface IAgvStatus {
   orderId?: string | null
   busy?: boolean | null
   automatic?: boolean | null

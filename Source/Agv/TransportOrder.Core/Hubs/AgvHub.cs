@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Models;
@@ -31,31 +32,22 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Hubs
     {
         private static readonly JsonSerializerOptions _serializerOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
         private readonly IHubContext<AgvHub> _hubContext;
+        private readonly IMapper _mapper;
 
         /// <summary>
         /// Initializes a new instance of <see cref="AgvHubContext"/>
         /// </summary>
-        public AgvHubContext(IHubContext<AgvHub> hubContext)
+        public AgvHubContext(IHubContext<AgvHub> hubContext, IMapper mapper)
         {
             _hubContext = hubContext;
+            _mapper = mapper;
         }
 
         /// <inheritdoc/>
         public async Task SendAgvStateToAllClients(string method, IAgv agv, CancellationToken cancellationToken)
         {
             // Combine Agv and AgvStatus into AgvStatusDto
-            var agvStateDto = new AgvStateDto(
-                agv.CorrelationId,
-                agv.AgvId,
-                agv.CurrentState,
-                agv.Alive,
-                agv.AgvStatus?.OrderId,
-                agv.AgvStatus?.Busy,
-                agv.AgvStatus?.Automatic,
-                agv.AgvStatus?.BatteryCharge,
-                agv.AgvStatus?.Charging,
-                agv.AgvStatus?.Disturbed,
-                agv.AgvStatus?.LastNodeId);
+            var agvStateDto = _mapper.Map<AgvStateDto>(agv);
 
             string message = JsonSerializer.Serialize(agvStateDto, _serializerOptions);
             await _hubContext.Clients.All.SendAsync(method, message, cancellationToken);

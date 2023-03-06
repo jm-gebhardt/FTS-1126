@@ -1,139 +1,31 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.AspNetCore.Mvc;
-using AutoMapper;
-using MassTransit;
-using Moq;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Models;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Profiles;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.States;
 using Shouldly;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Exceptions;
+using Gebhardt.StoreWare.Agv.CommonTest.Helpers;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Queries;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Commands;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Requests.Queries;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Requests.Commands;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
 {
     [TestClass]
     public class AgvControllerTest
     {
-        #region Setup
-        private static readonly string[] _agvIds = { "AGV001", "AGV002", "AGV003" };
-        private static readonly string[] _orders = { "ORDER001", "ORDER002", "" };
-        private static readonly string[] _states = { nameof(AgvStateMachine.Idle), nameof(AgvStateMachine.Busy), nameof(AgvStateMachine.Discovered) };
-        private static readonly string[] _ips = { "127.0.0.1", "127.0.0.2", "127.0.0.3" };
-
-        private static readonly AgvGraph.Node[] _nodes = new AgvGraph.Node[]
-        {
-            new("node00") { X = 0f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
-            new("node10") { X = 1f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
-            new("node01") { X = 0f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
-            new("node11") { X = 1f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint }
-        };
-
-        private static readonly AgvGraph.Edge[] _edges = new AgvGraph.Edge[]
-        {
-            new("node00", "node01"),
-            new("node01", "node11"),
-            new("node11", "node10"),
-            new("node10", "node00")
-        };
-
-        private Mapper GetMapper()
-        {
-            var mapperConfig = new MapperConfiguration(cfg => { cfg.AddProfile(new MappingProfile()); });
-
-            var mapper = new Mapper(mapperConfig);
-            return mapper;
-        }
-
-        private static IAgvRegistry GetAgvRegistry()
-        {
-            var registry = new Mock<IAgvRegistry>();
-
-            var agvs = new List<IAgv>();
-
-            for (int i = 0; i < _agvIds.Length; i++)
-            {
-                string agvId = _agvIds[i];
-                string order = _orders[i];
-                string state = _states[i];
-                string ip = _ips[i];
-                var correlationId = agvId.ToGuid();
-
-                const string mapName = "Map#1";
-                var agvGraph = new AgvGraph(correlationId, _nodes, _edges, mapName.ToGuid(), mapName);
-                var agvStatus = agvId == "AGV003" ? null : new AgvStatus(correlationId, order, true, true, 10, true, true);
-                var agvData = new AgvData(correlationId, "Karis", "BF1", ip, 1.8, 120.0, 0.6, 0.8, 0.7, 1, 2.5, 1000, Array.Empty<AgvData.Sensor>());
-
-                agvs.Add(new AgvSaga(correlationId, agvId, state, agvStatus, agvGraph, agvData));
-            }
-
-            registry.SetupGet(x => x.Count).Returns(agvs.Count);
-            registry.SetupGet(x => x.CountIdle).Returns(agvs.Where(x => x.CurrentState == nameof(AgvStateMachine.Idle)).Count);
-            registry.Setup(x => x.GetReadyAgvs()).Returns(new EnumerableQuery<IAgv>(agvs.Where(x => x.CurrentState == nameof(AgvStateMachine.Idle))));
-            registry.Setup(x => x.GetAllAgvs()).Returns(new EnumerableQuery<IAgv>(agvs));
-            registry.Setup(x => x.GetAgv(It.IsAny<Guid>())).Returns<Guid>(correlationId =>
-            {
-                foreach (var agv in agvs)
-                {
-                    if (agv.CorrelationId == correlationId)
-                    {
-                        return agv;
-                    }
-                }
-                return null;
-            });
-
-            return registry.Object;
-        }
-
-        private static IAgvPositionRegistry GetAgvPositionRegistry()
-        {
-            var registry = new Mock<IAgvPositionRegistry>();
-            var agvPositions = new List<AgvPositionStatus>();
-
-            for (int i = 0; i < _agvIds.Length; i++)
-            {
-                string agvId = _agvIds[i];
-                var correlationId = agvId.ToGuid();
-                var node = _nodes[i];
-
-                agvPositions.Add(new AgvPositionStatus(correlationId, agvId, new AgvPosition(true, node.X, node.Y, node.Z, 0.5f)));
-            }
-
-            registry.Setup(x => x.GetAllPositions()).Returns(agvPositions);
-            registry.Setup(x => x.GetPosition(It.IsAny<Guid>())).Returns<Guid>(correlationId =>
-            {
-                foreach (var agvPosition in agvPositions)
-                {
-                    if (agvPosition.CorrelationId == correlationId)
-                    {
-                        return agvPosition;
-                    }
-                }
-                return null;
-            });
-
-            return registry.Object;
-        }
-
-        private AgvController GetController()
-        {
-            var bus = new Mock<IBus>();
-            return new AgvController(
-                GetAgvRegistry(), GetAgvPositionRegistry(), bus.Object, GetMapper());
-        }
-        #endregion
-
         [TestMethod]
-        public void GetAgvs_Successfully()
+        public async Task GetAgvs_Successfully()
         {
-            var controller = GetController();
+            AgvControllerTestFixture<GetAgvsRequest, GetAgvsRequestHandler> fixture = new AgvControllerTestFixture<GetAgvsRequest, GetAgvsRequestHandler>()
+                .UseDefaultServices()
+                .Build();
 
-            var result = controller.GetAgvs().Result as OkObjectResult;
+            var controller = fixture.Controller;
+            ActionResult<IEnumerable<AgvDto>> response = await controller.GetAgvs();
+
+            var result = response.Result as OkObjectResult;
             result.ShouldNotBeNull();
 
             var agvsIterable = result.Value as IEnumerable<AgvDto>;
@@ -141,12 +33,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             agvsIterable.ShouldNotBeNull();
             // ReSharper disable once PossibleMultipleEnumeration
             List<AgvDto> agvs = agvsIterable.ToList();
-            agvs.Count.ShouldBe(_agvIds.Length);
+            agvs.Count.ShouldBe(fixture.AgvIds.Length);
 
-            for (int index = 0; index < _agvIds.Length; index++)
+            for (int index = 0; index < fixture.AgvIds.Length; index++)
             {
-                string agvId = _agvIds[index];
-                string state = _states[index];
+                string agvId = fixture.AgvIds[index];
+                string state = fixture.States[index];
 
                 agvs[index].CorrelationId.ShouldBe(agvId.ToGuid());
                 agvs[index].AgvId.ShouldBe(agvId);
@@ -157,203 +49,246 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
         [TestMethod]
         [DataRow(0)]
         [DataRow(1)]
-        public void GetAgvGraph_Successfully(int index)
+        public async Task GetAgvGraph_Successfully(int index)
         {
-            var controller = GetController();
-            var correlationId = _agvIds[index].ToGuid();
+            AgvControllerTestFixture<GetAgvGraphRequest, GetAgvGraphRequestHandler> fixture = new AgvControllerTestFixture<GetAgvGraphRequest, GetAgvGraphRequestHandler>()
+               .UseDefaultServices()
+               .Build();
+            var controller = fixture.Controller;
+            var correlationId = fixture.AgvIds[index].ToGuid();
 
-            var result = controller.GetAgvGraph(correlationId).Result as OkObjectResult;
+            ActionResult<GraphDto> response = await controller.GetAgvGraph(correlationId);
+            var result = response.Result as OkObjectResult;
             result.ShouldNotBeNull();
 
             var graph = result.Value as GraphDto;
             graph.ShouldNotBeNull();
 
             graph.CorrelationId.ShouldBe(correlationId);
-            graph.Nodes[index].Id.ShouldBe(_nodes[index].Id);
-            graph.Edges[index].From.Id.ShouldBe(_edges[index].From);
-            graph.Edges[index].To.Id.ShouldBe(_edges[index].To);
+            graph.Nodes[index].Id.ShouldBe(fixture.Nodes[index].Id);
+            graph.Edges[index].From.Id.ShouldBe(fixture.Edges[index].From);
+            graph.Edges[index].To.Id.ShouldBe(fixture.Edges[index].To);
         }
 
         [TestMethod]
-        public void GetAgvGraph_NotFound()
+        public async Task GetAgvGraph_NotFoundAsync()
         {
-            var controller = GetController();
+            AgvControllerTestFixture<GetAgvGraphRequest, GetAgvGraphRequestHandler> fixture = new AgvControllerTestFixture<GetAgvGraphRequest, GetAgvGraphRequestHandler>()
+               .UseDefaultServices()
+               .Build();
+            var controller = fixture.Controller;
             var correlationId = Guid.Empty;
 
-            var result = controller.GetAgvGraph(correlationId).Result as NotFoundResult;
-            result.ShouldNotBeNull();
+            await MediatorShould.ThrowRequestExceptionAsync<NotFoundException>(async () => await controller.GetAgvGraph(correlationId));
         }
 
         [TestMethod]
         [DataRow(0)]
         [DataRow(1)]
-        public void GetAgvStatus_Successfully(int index)
+        public async Task GetAgvStatus_Successfully(int index)
         {
-            var controller = GetController();
-            var correlationId = _agvIds[index].ToGuid();
-
-            var result = controller.GetAgvStatus(correlationId).Result as OkObjectResult;
+            AgvControllerTestFixture<GetAgvStatusRequest, GetAgvStatusRequestHandler> fixture = new AgvControllerTestFixture<GetAgvStatusRequest, GetAgvStatusRequestHandler>()
+                .UseDefaultServices()
+                .Build();
+            var controller = fixture.Controller;
+            var correlationId = fixture.AgvIds[index].ToGuid();
+            ActionResult<AgvStateDto> response = await controller.GetAgvStatus(correlationId);
+            var result = response.Result as OkObjectResult;
             result.ShouldNotBeNull();
 
             var agvStatus = result.Value as AgvStateDto;
             agvStatus.ShouldNotBeNull();
 
             agvStatus.CorrelationId.ShouldBe(correlationId);
-            agvStatus.OrderId.ShouldBe(_orders[index]);
+            agvStatus.AgvStatus.OrderId.ShouldBe(fixture.Orders[index]);
         }
 
         [TestMethod]
-        public void GetAgvStatus_NotFound()
+        public async Task GetAgvStatus_NotFound()
         {
-            var controller = GetController();
+            AgvControllerTestFixture<GetAgvStatusRequest, GetAgvStatusRequestHandler> fixture = new AgvControllerTestFixture<GetAgvStatusRequest, GetAgvStatusRequestHandler>()
+                .UseDefaultServices()
+                .Build();
+            var controller = fixture.Controller;
             var correlationId = Guid.Empty;
 
-            var result = controller.GetAgvStatus(correlationId).Result as NotFoundResult;
-            result.ShouldNotBeNull();
+            await MediatorShould.ThrowRequestExceptionAsync<NotFoundException>(async () => await controller.GetAgvStatus(correlationId));
         }
 
         [TestMethod]
-        public void GetAgvStatus_NoContent()
+        public async Task GetAgvStatus_NoContent()
         {
-            var controller = GetController();
-            var correlationId = _agvIds[2].ToGuid(); // AGV without AgvStatus
+            AgvControllerTestFixture<GetAgvStatusRequest, GetAgvStatusRequestHandler> fixture = new AgvControllerTestFixture<GetAgvStatusRequest, GetAgvStatusRequestHandler>()
+                .UseDefaultServices()
+                .Build();
+            var controller = fixture.Controller;
+            var correlationId = fixture.AgvIds[2].ToGuid(); // AGV without AgvStatus
 
-            var result = controller.GetAgvStatus(correlationId).Result as NoContentResult;
-            result.ShouldNotBeNull();
+            await MediatorShould.ThrowRequestExceptionAsync<NoContentException>(async () => await controller.GetAgvStatus(correlationId));
         }
 
         [TestMethod]
         [DataRow(0)]
         [DataRow(1)]
-        public void GetAgvData_Successfully(int index)
+        public async Task GetAgvData_Successfully(int index)
         {
-            var controller = GetController();
-            var correlationId = _agvIds[index].ToGuid();
-
-            var result = controller.GetAgvData(correlationId).Result as OkObjectResult;
+            AgvControllerTestFixture<GetAgvDataRequest, GetAgvDataRequestHandler> fixture = new AgvControllerTestFixture<GetAgvDataRequest, GetAgvDataRequestHandler>()
+                .UseDefaultServices()
+                .Build();
+            var controller = fixture.Controller;
+            var correlationId = fixture.AgvIds[index].ToGuid();
+            ActionResult<AgvDataDto> response = await controller.GetAgvData(correlationId);
+            var result = response.Result as OkObjectResult;
             result.ShouldNotBeNull();
 
-            var agvData = result.Value as AgvData;
+            var agvData = result.Value as AgvDataDto;
             agvData.ShouldNotBeNull();
 
             agvData.CorrelationId.ShouldBe(correlationId);
-            agvData.IpV4Address.ShouldBe(_ips[index]);
+            agvData.IpV4Address.ShouldBe(fixture.Ips[index]);
         }
 
         [TestMethod]
-        public void GetAgvData_NotFound()
+        public async Task GetAgvData_NotFound()
         {
-            var controller = GetController();
+            AgvControllerTestFixture<GetAgvDataRequest, GetAgvDataRequestHandler> fixture = new AgvControllerTestFixture<GetAgvDataRequest, GetAgvDataRequestHandler>()
+                .UseDefaultServices()
+                .Build();
+            var controller = fixture.Controller;
             var correlationId = Guid.Empty;
 
-            var result = controller.GetAgvData(correlationId).Result as NotFoundResult;
-            result.ShouldNotBeNull();
+            await MediatorShould.ThrowRequestExceptionAsync<NotFoundException>(async () => await controller.GetAgvData(correlationId));
         }
 
         [TestMethod]
-        public void SetIdle_NotFound()
+        public async Task SetIdle_NotFound()
         {
-            var controller = GetController();
+            AgvControllerTestFixture<SetIdleCommand, SetIdleCommandHandler> fixture = new AgvControllerTestFixture<SetIdleCommand, SetIdleCommandHandler>()
+                .UseDefaultServices()
+                .Build();
+            var controller = fixture.Controller;
             var correlationId = Guid.Empty;
 
-            var result = controller.SetIdle(correlationId).Result as NotFoundResult;
-            result.ShouldNotBeNull();
+            Should.Throw<AggregateException>(() => controller.SetIdle(correlationId).Result)
+                .GetBaseException().GetBaseException().ShouldBeOfType<NotFoundException>();
+
+            await MediatorShould.ThrowRequestExceptionAsync<NotFoundException>(async () => await controller.SetIdle(correlationId));
         }
 
         [TestMethod]
-        public void SetIdle_BadRequest()
+        public async Task SetIdle_BadRequest()
         {
-            var controller = GetController();
-            var correlationId = _agvIds[1].ToGuid(); // AGV not in state 'Discovered'
+            AgvControllerTestFixture<SetIdleCommand, SetIdleCommandHandler> fixture = new AgvControllerTestFixture<SetIdleCommand, SetIdleCommandHandler>()
+                .UseDefaultServices()
+                .Build();
+            var controller = fixture.Controller;
+            var correlationId = fixture.AgvIds[1].ToGuid(); // AGV not in state 'Discovered'
 
-            var result = controller.SetIdle(correlationId).Result as BadRequestObjectResult;
-            result.ShouldNotBeNull();
+            await MediatorShould.ThrowRequestExceptionAsync<NotInCorrectStateException>(async () => await controller.SetIdle(correlationId));
         }
 
         [TestMethod]
-        public void SetIdle_Ok()
+        public async Task SetIdle_Ok()
         {
-            var bus = new Mock<IBus>();
+            AgvControllerTestFixture<SetIdleCommand, SetIdleCommandHandler> fixture = new AgvControllerTestFixture<SetIdleCommand, SetIdleCommandHandler>()
+                .UseDefaultServices()
+                .Build();
+            var controller = fixture.Controller;
+            var correlationId = fixture.AgvIds[2].ToGuid();
 
-            var controller = new AgvController(GetAgvRegistry(), GetAgvPositionRegistry(), bus.Object, GetMapper());
-            var correlationId = _agvIds[2].ToGuid();
-
-            var result = controller.SetIdle(correlationId).Result as OkResult;
+            var result = await controller.SetIdle(correlationId) as OkResult;
             result.ShouldNotBeNull();
 
-            bus.Verify(s => s.Publish(It.IsAny<ForceReleaseAgv>(), default), Times.Once);
+            var harness = fixture.TestHarness!;
+            (await harness.Consumed.Any<SetIdleCommand>()).ShouldBeTrue();
+            (await harness.Published.Any<SetIdleCommand>()).ShouldBeTrue();
         }
 
         [TestMethod]
-        public void LockAgv_NotFound()
+        public async Task LockAgv_NotFound()
         {
-            var controller = GetController();
+            AgvControllerTestFixture<LockAgvCommand, LockAgvCommandHandler> fixture = new AgvControllerTestFixture<LockAgvCommand, LockAgvCommandHandler>()
+                .UseDefaultServices()
+                .Build();
+            var controller = fixture.Controller;
             var correlationId = Guid.Empty;
 
-            var result = controller.LockAgv(correlationId).Result as NotFoundResult;
-            result.ShouldNotBeNull();
+            await MediatorShould.ThrowRequestExceptionAsync<NotFoundException>(async () => await controller.LockAgv(correlationId));
         }
 
         [TestMethod]
-        public void LockAgv_Ok()
+        public async Task LockAgv_Ok()
         {
-            var bus = new Mock<IBus>();
+            AgvControllerTestFixture<LockAgvCommand, LockAgvCommandHandler> fixture = new AgvControllerTestFixture<LockAgvCommand, LockAgvCommandHandler>()
+                .UseDefaultServices()
+                .Build();
+            var controller = fixture.Controller;
+            var correlationId = fixture.AgvIds[2].ToGuid();
 
-            var controller = new AgvController(GetAgvRegistry(), GetAgvPositionRegistry(), bus.Object, GetMapper());
-            var correlationId = _agvIds[2].ToGuid();
-
-            var result = controller.LockAgv(correlationId).Result as OkResult;
+            var result = await controller.LockAgv(correlationId) as OkResult;
             result.ShouldNotBeNull();
 
-            bus.Verify(s => s.Publish(It.IsAny<LockAgv>(), default), Times.Once);
+            var harness = fixture.TestHarness!;
+            (await harness.Consumed.Any<LockAgvCommand>()).ShouldBeTrue();
+            (await harness.Published.Any<LockAgvCommand>()).ShouldBeTrue();
         }
 
         [TestMethod]
-        public void EmitRequestAgvData_NotFound()
+        public async Task EmitRequestAgvData_NotFound()
         {
-            var controller = GetController();
+            AgvControllerTestFixture<RequestAgvDataCommand, RequestAgvDataCommandHandler> fixture = new AgvControllerTestFixture<RequestAgvDataCommand, RequestAgvDataCommandHandler>()
+                .UseDefaultServices()
+                .Build();
+            var controller = fixture.Controller;
             var correlationId = Guid.Empty;
 
-            var result = controller.EmitRequestData(correlationId).Result as NotFoundResult;
-            result.ShouldNotBeNull();
+            await MediatorShould.ThrowRequestExceptionAsync<NotFoundException>(async () => await controller.EmitRequestData(correlationId));
         }
 
         [TestMethod]
-        public void EmitRequestAgvData_Ok()
+        public async Task EmitRequestAgvData_Ok()
         {
-            var bus = new Mock<IBus>();
+            AgvControllerTestFixture<RequestAgvDataCommand, RequestAgvDataCommandHandler> fixture = new AgvControllerTestFixture<RequestAgvDataCommand, RequestAgvDataCommandHandler>()
+                .UseDefaultServices()
+                .Build();
+            var controller = fixture.Controller;
+            var correlationId = fixture.AgvIds[2].ToGuid();
 
-            var controller = new AgvController(GetAgvRegistry(), GetAgvPositionRegistry(), bus.Object, GetMapper());
-            var correlationId = _agvIds[2].ToGuid();
-
-            var result = controller.EmitRequestData(correlationId).Result as OkResult;
+            var result = await controller.EmitRequestData(correlationId) as OkResult;
             result.ShouldNotBeNull();
 
-            bus.Verify(s => s.Publish(It.IsAny<RequestAgvData>(), default), Times.Once);
+            var harness = fixture.TestHarness!;
+            (await harness.Consumed.Any<RequestAgvDataCommand>()).ShouldBeTrue();
+            (await harness.Published.Any<RequestAgvDataCommand>()).ShouldBeTrue();
         }
 
         [TestMethod]
-        public void EmitRequestAgvGraph_NotFound()
+        public async Task EmitRequestAgvGraph_NotFound()
         {
-            var controller = GetController();
+            AgvControllerTestFixture<RequestAgvGraphCommand, RequestAgvGraphCommandHandler> fixture = new AgvControllerTestFixture<RequestAgvGraphCommand, RequestAgvGraphCommandHandler>()
+                .UseDefaultServices()
+                .Build();
+            var controller = fixture.Controller;
             var correlationId = Guid.Empty;
 
-            var result = controller.EmitRequestGraph(correlationId).Result as NotFoundResult;
-            result.ShouldNotBeNull();
+            await MediatorShould.ThrowRequestExceptionAsync<NotFoundException>(async () => await controller.EmitRequestGraph(correlationId));
         }
 
         [TestMethod]
-        public void EmitRequestAgvGraph_Ok()
+        public async Task EmitRequestAgvGraph_Ok()
         {
-            var bus = new Mock<IBus>();
+            AgvControllerTestFixture<RequestAgvGraphCommand, RequestAgvGraphCommandHandler> fixture = new AgvControllerTestFixture<RequestAgvGraphCommand, RequestAgvGraphCommandHandler>()
+                .UseDefaultServices()
+                .Build();
+            var controller = fixture.Controller;
+            var correlationId = fixture.AgvIds[2].ToGuid();
 
-            var controller = new AgvController(GetAgvRegistry(), GetAgvPositionRegistry(), bus.Object, GetMapper());
-            var correlationId = _agvIds[2].ToGuid();
-
-            var result = controller.EmitRequestGraph(correlationId).Result as OkResult;
+            var result = await controller.EmitRequestGraph(correlationId) as OkResult;
             result.ShouldNotBeNull();
 
-            bus.Verify(s => s.Publish(It.IsAny<RequestAgvGraph>(), default), Times.Once);
+            var harness = fixture.TestHarness!;
+            (await harness.Consumed.Any<RequestAgvGraphCommand>()).ShouldBeTrue();
+            (await harness.Published.Any<RequestAgvGraphCommand>()).ShouldBeTrue();
         }
     }
 }

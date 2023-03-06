@@ -5,7 +5,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Requests.Quer
     /// <summary>
     /// Represents the GetMap request which returns an image of the map as byte[]
     /// </summary>
-    public class GetMapImageRequest : CorrelatedBy<Guid>
+    public record GetMapImageRequest : CorrelatedBy<Guid>
     {
         /// <summary>
         /// <inheritdoc/>

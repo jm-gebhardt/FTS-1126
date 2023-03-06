@@ -7,7 +7,9 @@
       <ui-list-group-subheader>Status information</ui-list-group-subheader>
       <details-list v-model="statusItems"></details-list>
       <ui-list-divider></ui-list-divider>
-      <battery-charge-indicator :charge="props.agvState?.batteryCharge" />
+      <battery-charge-indicator
+        :charge="props.agvState?.agvStatus.batteryCharge"
+      />
       <ui-list-divider></ui-list-divider>
       <ui-list-group-subheader>Data information</ui-list-group-subheader>
       <details-list v-model="dataItems"></details-list>
@@ -71,12 +73,12 @@ let statusItems: ComputedRef<ListItem[]> = computed(() => {
   }
   return [
     // Status information
-    { label: 'OrderID', value: props.agvState?.orderId },
-    { label: 'Busy', value: props.agvState?.busy },
-    { label: 'Automatic', value: props.agvState?.automatic },
-    { label: 'Disturbed', value: props.agvState?.disturbed },
-    { label: 'LastNodeID', value: props.agvState?.lastNodeId },
-    { label: 'Charging', value: props.agvState?.charging }
+    { label: 'OrderID', value: props.agvState?.agvStatus.orderId },
+    { label: 'Busy', value: props.agvState?.agvStatus.busy },
+    { label: 'Automatic', value: props.agvState?.agvStatus.automatic },
+    { label: 'Disturbed', value: props.agvState?.agvStatus.disturbed },
+    { label: 'LastNodeID', value: props.agvState?.agvStatus.lastNodeId },
+    { label: 'Charging', value: props.agvState?.agvStatus.charging }
   ] as ListItem[]
 })
 

@@ -1,11 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using AutoMapper;
 using MassTransit;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Models;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Common;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Requests.Queries;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Requests.Commands;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
 {
@@ -15,20 +14,38 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
     [ApiController]
     public class AgvController : Controller
     {
-        private readonly IAgvRegistry _agvRegistry;
-        private readonly IAgvPositionRegistry _agvPositionRegistry;
-        private readonly IBus _bus;
-        private readonly IMapper _mapper;
+        private readonly IRequestClient<GetAgvsRequest> _getAgvsClient;
+        private readonly IRequestClient<GetAgvGraphRequest> _getAgvGraphClient;
+        private readonly IRequestClient<GetAgvStatusRequest> _getAgvStatusClient;
+        private readonly IRequestClient<GetAgvDataRequest> _getAgvDataClient;
+        private readonly IRequestClient<GetAgvPositionsRequest> _getAgvPositionsClient;
+        private readonly IRequestClient<SetIdleCommand> _setIdleClient;
+        private readonly IRequestClient<LockAgvCommand> _lockAgvClient;
+        private readonly IRequestClient<RequestAgvDataCommand> _emitRequestDataClient;
+        private readonly IRequestClient<RequestAgvGraphCommand> _emitRequestGraphClient;
 
         /// <summary>
         /// Init controller
         /// </summary>
-        public AgvController(IAgvRegistry agvRegistry, IAgvPositionRegistry agvPositionRegistry, IBus bus, IMapper mapper)
+        public AgvController(IRequestClient<GetAgvsRequest> getAgvsClient,
+                             IRequestClient<GetAgvGraphRequest> getAgvGraphClient,
+                             IRequestClient<GetAgvStatusRequest> getAgvStatusClient,
+                             IRequestClient<GetAgvDataRequest> getAgvDataClient,
+                             IRequestClient<GetAgvPositionsRequest> getAgvPositionsClient,
+                             IRequestClient<SetIdleCommand> setIdleClient,
+                             IRequestClient<LockAgvCommand> lockAgvClient,
+                             IRequestClient<RequestAgvDataCommand> emitRequestDataClient,
+                             IRequestClient<RequestAgvGraphCommand> emitRequestGraphClient)
         {
-            _agvRegistry = agvRegistry;
-            _agvPositionRegistry = agvPositionRegistry;
-            _bus = bus;
-            _mapper = mapper;
+            _getAgvsClient = getAgvsClient;
+            _getAgvGraphClient = getAgvGraphClient;
+            _getAgvStatusClient = getAgvStatusClient;
+            _getAgvDataClient = getAgvDataClient;
+            _getAgvPositionsClient = getAgvPositionsClient;
+            _setIdleClient = setIdleClient;
+            _lockAgvClient = lockAgvClient;
+            _emitRequestDataClient = emitRequestDataClient;
+            _emitRequestGraphClient = emitRequestGraphClient;
         }
 
         /// <summary>
@@ -37,10 +54,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
         /// <response code="200">Ok</response>
         [HttpGet]
         [Route("/agvs")]
-        public ActionResult<IEnumerable<AgvDto>> GetAgvs()
+        public async Task<ActionResult<IEnumerable<AgvDto>>> GetAgvs()
         {
-            IOrderedQueryable<IAgv> agvs = _agvRegistry.GetAllAgvs().OrderBy(a => a.AgvId);
-            return Ok(agvs.Select(agv => _mapper.Map<AgvDto>(agv)));
+            Response<GetAgvsResult> response = await _getAgvsClient.GetResponse<GetAgvsResult>(new GetAgvsRequest(Guid.NewGuid()));
+            return Ok(response.Message.Agvs);
         }
 
         /// <summary>
@@ -51,22 +68,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
         /// <response code="404">Not found</response>
         [HttpGet]
         [Route("/agvs/{correlationId:guid}/graph")]
-        public ActionResult<GraphDto> GetAgvGraph(Guid correlationId)
+        public async Task<ActionResult<GraphDto>> GetAgvGraph(Guid correlationId)
         {
-            var agv = _agvRegistry.GetAgv(correlationId);
-            if (agv == null)
-            {
-                return NotFound();
-            }
-
-            if (agv.AgvGraph == null)
-            {
-                return NoContent();
-            }
-
-            var graph = _mapper.Map<GraphDto>(agv.AgvGraph);
-
-            return Ok(graph);
+            Response<GetAgvGraphResult> response = await _getAgvGraphClient.GetResponse<GetAgvGraphResult>(new GetAgvGraphRequest(correlationId));
+            return Ok(response.Message.AgvGraph);
         }
 
         /// <summary>
@@ -77,34 +82,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
         /// <response code="404">Not found</response>
         [HttpGet]
         [Route("/agvs/{correlationId:guid}/status")]
-        public ActionResult<AgvStateDto> GetAgvStatus(Guid correlationId)
+        public async Task<ActionResult<AgvStateDto>> GetAgvStatus(Guid correlationId)
         {
-            var agv = _agvRegistry.GetAgv(correlationId);
-            if (agv == null)
-            {
-                return NotFound();
-            }
-
-            if (agv.AgvStatus == null)
-            {
-                return NoContent();
-            }
-
-            // Combine AgvDto and AgvStatus intoto AgvStatusDto
-            var agvStateDto = new AgvStateDto(
-                agv.CorrelationId,
-                agv.AgvId,
-                agv.CurrentState,
-                agv.Alive,
-                agv.AgvStatus.OrderId,
-                agv.AgvStatus.Busy,
-                agv.AgvStatus.Automatic,
-                agv.AgvStatus.BatteryCharge,
-                agv.AgvStatus.Charging,
-                agv.AgvStatus.Disturbed,
-                agv.AgvStatus.LastNodeId);
-
-            return Ok(agvStateDto);
+            Response<GetAgvStateResult> response = await _getAgvStatusClient.GetResponse<GetAgvStateResult>(new GetAgvStatusRequest(correlationId));
+            return Ok(response.Message.AgvState);
         }
 
         /// <summary>
@@ -115,15 +96,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
         /// <response code="404">Not found</response>
         [HttpGet]
         [Route("/agvs/{correlationId}/data")]
-        public ActionResult<AgvData> GetAgvData(Guid correlationId)
+        public async Task<ActionResult<AgvDataDto>> GetAgvData(Guid correlationId)
         {
-            var agv = _agvRegistry.GetAgv(correlationId);
-            if (agv == null)
-            {
-                return NotFound();
-            }
-
-            return Ok(agv.AgvData);
+            Response<GetAgvDataResult> response = await _getAgvDataClient.GetResponse<GetAgvDataResult>(new GetAgvDataRequest(correlationId));
+            return Ok(response.Message.AgvData);
         }
 
         /// <summary>
@@ -132,9 +108,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
         /// <response code="200">Ok</response>
         [HttpGet]
         [Route("/agvsPositions")]
-        public ActionResult<IEnumerable<AgvPositionStatus>> GetAgvPositions()
+        public async Task<ActionResult<IEnumerable<AgvPositionStatus>>> GetAgvPositions()
         {
-            return Ok(_agvPositionRegistry.GetAllPositions());
+            Response<GetAgvPositionsResult> response = await _getAgvPositionsClient.GetResponse<GetAgvPositionsResult>(new GetAgvPositionsRequest());
+            return Ok(response.Message.AgvPositions);
         }
 
         /// <summary>
@@ -147,19 +124,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
         [Route("/agvs/{correlationId}/setIdle")]
         public async Task<ActionResult> SetIdle(Guid correlationId)
         {
-            var agv = _agvRegistry.GetAgv(correlationId);
-
-            if (agv == null)
-            {
-                return NotFound();
-            }
-
-            if (agv.CurrentState != nameof(AgvStateMachine.Discovered) && agv.CurrentState != nameof(AgvStateMachine.Locked))
-            {
-                return BadRequest("Agv cannot be released because it is still busy");
-            }
-
-            await _bus.Publish(new ForceReleaseAgv(agv.CorrelationId));
+            await _setIdleClient.GetResponse<SetIdleResult>(new SetIdleCommand(correlationId));
             return Ok();
         }
 
@@ -172,14 +137,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
         [Route("/agvs/{correlationId}/lockAgv")]
         public async Task<ActionResult> LockAgv(Guid correlationId)
         {
-            var agv = _agvRegistry.GetAgv(correlationId);
-
-            if (agv == null)
-            {
-                return NotFound();
-            }
-
-            await _bus.Publish(new LockAgv(agv.CorrelationId));
+            await _lockAgvClient.GetResponse<LockAgvResult>(new LockAgvCommand(correlationId));
             return Ok();
         }
 
@@ -192,14 +150,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
         [Route("/agvs/{correlationId}/emitRequestData")]
         public async Task<ActionResult> EmitRequestData(Guid correlationId)
         {
-            var agv = _agvRegistry.GetAgv(correlationId);
-
-            if (agv == null)
-            {
-                return NotFound();
-            }
-
-            await _bus.Publish(new RequestAgvData(agv.CorrelationId, agv.AgvId));
+            await _emitRequestDataClient.GetResponse<RequestAgvDataResult>(new RequestAgvDataCommand(correlationId));
             return Ok();
         }
 
@@ -212,14 +163,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
         [Route("/agvs/{correlationId}/emitRequestGraph")]
         public async Task<ActionResult> EmitRequestGraph(Guid correlationId)
         {
-            var agv = _agvRegistry.GetAgv(correlationId);
-
-            if (agv == null)
-            {
-                return NotFound();
-            }
-
-            await _bus.Publish(new RequestAgvGraph(agv.CorrelationId, agv.AgvId));
+            await _emitRequestGraphClient.GetResponse<RequestAgvGraphResult>(new RequestAgvGraphCommand(correlationId));
             return Ok();
         }
     }

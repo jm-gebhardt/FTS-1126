@@ -2,7 +2,6 @@
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Common;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Handlers.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Requests.Queries;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
@@ -19,8 +18,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             MapControllerTestFixture<GetMapListRequest, GetMapListRequestHandler> fixture = new MapControllerTestFixture<GetMapListRequest, GetMapListRequestHandler>()
                 .UseDefaultServices()
                 .Build();
-
-            var mapController = new MapController(fixture.GetRequestClient(), null!);
+            var mapController = fixture.Controller;
             ActionResult<IEnumerable<MapDto>> response = await mapController.GetMaps();
 
             var result = response.Result as OkObjectResult;
@@ -47,7 +45,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
                 .AddMapRegistryMock()
                 .Build();
 
-            var mapController = new MapController(null!, fixture.GetRequestClient());
+            var mapController = fixture.Controller;
             var response = await mapController.GetMap(correlationId);
 
             var result = response as FileContentResult;

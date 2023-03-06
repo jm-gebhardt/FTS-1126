@@ -35,6 +35,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Profiles
             CreateMap<AgvPositionChanged, AgvPositionStatus>()
                 .ForCtorParam(nameof(AgvPositionStatus.AgvPosition), opt => opt.MapFrom(src => src.NewAgvPosition));
             CreateMap<AgvPositionReceived, AgvPositionStatus>();
+            CreateMap<AgvData, AgvDataDto>();
+            CreateMap<AgvPositionStatus, AgvPositionStatusDto>();
+            CreateMap<AgvStatus, AgvStatusDto>();
+            CreateMap<IAgv, AgvStateDto>();
         }
     }
 }

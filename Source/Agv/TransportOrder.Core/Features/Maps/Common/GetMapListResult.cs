@@ -5,7 +5,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Common
     /// <summary>
     /// Defines a result for the GetMapList request
     /// </summary>
-    public class GetMapListResult
+    public record GetMapListResult
     {
         /// <summary>
         /// <inheritdoc cref="GetMapImageResult"/>

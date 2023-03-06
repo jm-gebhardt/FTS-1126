@@ -1,13 +1,13 @@
 using JetBrains.Annotations;
 
 // ReSharper disable ConvertToPrimaryConstructor
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers.DateRange
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Orders.Requests.Queries.Filtering.DateRange
 {
     /// <summary>
     /// Pagination X Headers
     /// </summary>
     [PublicAPI]
-    public record DateRangeHeaders: IResultHeaders
+    public record DateRangeHeaders : IResultHeaders
     {
         /// <summary>
         /// Header name
@@ -22,7 +22,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers.DateRange
         /// Total number of pages
         /// </summary>
         public DateTime End { get; }
-        
+
         /// <summary>
         /// Pagination X Headers Constructor
         /// </summary>

@@ -1,13 +1,10 @@
 ﻿using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Configurations;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.Common.Services.Detectors;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.CmdOptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations.Agvs;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Handlers.Queries;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Requests.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Hubs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Models;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence;
@@ -26,6 +23,12 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Gebhardt.StoreWare.Agv.Common.Configurations.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Queries;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Commands;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Handlers.Queries;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Orders.Handlers.Commands;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Orders.Handlers.Queries;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Requests.Queries;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
 {
@@ -62,8 +65,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                 services.AddTransient<IAgvHubContext>(provider =>
                 {
                     var hubContext = provider.GetRequiredService<IHubContext<AgvHub>>();
+                    var mapper = provider.GetRequiredService<IMapper>();
 
-                    return new AgvHubContext(hubContext);
+                    return new AgvHubContext(hubContext, mapper);
                 });
                 services.AddTransient<IEventObserver<OrderSaga>, OrderEventObserver>();
                 services.AddTransient<IAgvSettingsProvider, AgvSettingsProvider>();
@@ -120,13 +124,48 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                         x.AddConsumer<AgvPositionChangedConsumer>();
                         x.AddConsumer<AgvPropertyChangedConsumer>();
                         x.AddConsumer<AgvInitializer>();
+
+                        // maps
                         x.AddConsumer<GetMapImageRequestHandler>();
                         x.AddConsumer<GetMapListRequestHandler>();
 
-                        x.AddRequestClient<ReserveAgv>();
-                        x.AddRequestClient<AssignAgv>();
+                        // agv
+                        x.AddConsumer<RequestAgvDataCommandHandler>();
+                        x.AddConsumer<RequestAgvGraphCommandHandler>();
+                        x.AddConsumer<GetAgvDataRequestHandler>();
+                        x.AddConsumer<GetAgvGraphRequestHandler>();
+                        x.AddConsumer<GetAgvPositionsRequestHandler>();
+                        x.AddConsumer<GetAgvsRequestHandler>();
+                        x.AddConsumer<GetAgvStatusRequestHandler>();
+                        x.AddConsumer<LockAgvCommandHandler>();
+                        x.AddConsumer<SetIdleCommandHandler>();
+
+                        // orders
+                        x.AddConsumer<CompleteOrderCommandHandler>();
+                        x.AddConsumer<GetOrdersRequestHandler>();
+                        x.AddConsumer<ResetOrderCommandHandler>();
+
+                        // request clients
+                        // ########################################
+                        // maps
                         x.AddRequestClient<GetMapImageRequest>();
                         x.AddRequestClient<GetMapListRequest>();
+
+                        // agv
+                        x.AddRequestClient<RequestAgvDataCommandHandler>();
+                        x.AddRequestClient<RequestAgvGraphCommandHandler>();
+                        x.AddRequestClient<GetAgvDataRequestHandler>();
+                        x.AddRequestClient<GetAgvGraphRequestHandler>();
+                        x.AddRequestClient<GetAgvPositionsRequestHandler>();
+                        x.AddRequestClient<GetAgvsRequestHandler>();
+                        x.AddRequestClient<GetAgvStatusRequestHandler>();
+                        x.AddRequestClient<LockAgvCommandHandler>();
+                        x.AddRequestClient<SetIdleCommandHandler>();
+
+                        // orders
+                        x.AddConsumer<CompleteOrderCommandHandler>();
+                        x.AddConsumer<GetOrdersRequestHandler>();
+                        x.AddConsumer<ResetOrderCommandHandler>();
 
                         x.AddDelayedMessageScheduler();
                     }, rabbitMqConfiguration: (_, cfg) =>
