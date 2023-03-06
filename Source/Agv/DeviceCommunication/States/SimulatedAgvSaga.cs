@@ -183,7 +183,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         /// <summary>
         /// Time the action takes to complete
         /// </summary>
-        public TimeSpan? ActionDuration => TimeSpan.FromMilliseconds(Action!.Nodes.Length * NodeTravelTime);
+        public TimeSpan? ActionDuration => TimeSpan.FromMilliseconds((Action!.Nodes.Length - 1) * NodeTravelTime);
 
         /// <summary>
         /// Time the order will be finished
@@ -201,7 +201,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         /// Action progress as percentage [0..1]
         /// </summary>
         public double? ActionProgress => TimeToFinish != null && ActionDuration != null
-            ? 1 - TimeToFinish.Value.TotalSeconds / ActionDuration.Value.TotalSeconds
+            ? Math.Clamp(1 - TimeToFinish.Value.TotalSeconds / ActionDuration.Value.TotalSeconds, 0, 1)
             : null;
 
         /// <summary>
@@ -286,7 +286,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         public void ResetAction()
         {
             ActionStartDate = null;
-            // Do not reset Action to provide informations such as last node
+            // Do not reset Action to provide information such as last node
         }
 
         /// <summary>

@@ -229,7 +229,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
                 .ThenAsync(PublishStatus)
                 .Schedule(FinishActionSchedule,
                     c => new ScheduleFinishAction(c.Saga.CorrelationId),
-                    c => c.Saga.TimeToFinish!.Value)
+                    c => c.Saga.ActionDuration!.Value)
                 .Schedule(SignalPositionSchedule,
                     c => new ScheduleSignalPosition(c.Saga.CorrelationId),
                     _ => TimeSpan.FromMilliseconds(SignalPositionIntervalMs));

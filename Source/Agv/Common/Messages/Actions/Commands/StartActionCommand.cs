@@ -16,7 +16,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands
         public AgvAction Action { get; }
 
         /// <summary>
-        /// Costructor
+        /// Constructor
         /// </summary>
         /// <param name="correlationId">CorrelationId</param>
         /// <param name="action">Action to be executed</param>
