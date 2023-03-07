@@ -211,6 +211,7 @@ stages:
         script: |
           docker volume prune -f
           docker image prune -f                                             # Only removing dangling images
+          docker builder prune -f                                           # Removing dangling build cache
           docker image rm storeware.azurecr.io/agv/transportorder           # Service modules are rebuilt in docker compose build step
           docker image rm storeware.azurecr.io/agv/wcscommunication
           docker image rm storeware.azurecr.io/agv/devicecommunication
