@@ -38,7 +38,6 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
         /// </summary>
         public GraphUsability Usability { get; set; }
 
-
         /// <summary>
         /// Agv Graph
         /// </summary>
@@ -57,7 +56,6 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
             RelatedMapName = relatedMapName;
             Usability = usability;
         }
-
 
         /// <summary>
         /// Values for graph usability.
@@ -141,11 +139,35 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
         }
 
         /// <summary>
+        /// Node state
+        /// </summary>
+        [JetBrains.Annotations.UsedImplicitly]
+        public enum NodeState
+        {
+            /// <summary>Free</summary>
+            Free,
+
+            /// <summary>Reserved</summary>
+            Reserved,
+
+            /// <summary>Occupied</summary>
+            Occupied,
+
+            /// <summary>Locked by user</summary>
+            Locked
+        }
+
+        /// <summary>
         /// Node representation.
         /// </summary>
         [JetBrains.Annotations.PublicAPI]
         public class Node
         {
+            /// <summary>
+            /// Table name constant for entity framework
+            /// </summary>
+            public const string TableName = "Node";
+
             /// <summary>
             /// The unique ID of the node.
             /// </summary><remarks>
@@ -158,6 +180,11 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
             /// Node enabled/disabled.
             /// </summary>
             public bool Enabled { get; set; } = true;
+
+            /// <summary>
+            /// Node state.
+            /// </summary>
+            public NodeState State { get; set; }
 
             /// <summary>
             /// Node type of the node.
@@ -209,9 +236,15 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
         public class Edge : ICloneable
         {
             /// <summary>
+            /// Table name constant for entity framework
+            /// </summary>
+            public const string TableName = "Edge";
+
+            /// <summary>
             /// The ID of the node where the edge starts.
             /// </summary>
             public string From { get; set; }
+
             /// <summary>
             /// The ID of the node where the edge ends.
             /// </summary>

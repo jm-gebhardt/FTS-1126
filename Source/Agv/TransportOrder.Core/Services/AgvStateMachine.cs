@@ -20,6 +20,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         private readonly ILogger<AgvStateMachine> _logger;
 
         private readonly IMapRegistry _mapRegistry;
+        private readonly IGraphRegistry _graphRegistry;
 
         private readonly ProductionOptions _productionOptions;
 
@@ -110,7 +111,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         /// Send AGV back to idle
         /// </summary>
         public Event<ReleaseAgv> ReleaseAgvEvent { get; private set; } = default!;
-        
+
         /// <summary>
         /// AGV is ready to be assigned to orders
         /// </summary>
@@ -167,18 +168,21 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         /// </summary>
         /// <param name="logger"></param>
         /// <param name="mapRegistry"></param>
+        /// <param name="graphRegistry"></param>
         /// <param name="agvStateObserver"></param>
         /// <param name="productionOptions"></param>
         /// <param name="agvSettingsProvider"></param>
         public AgvStateMachine(
             ILogger<AgvStateMachine> logger,
             IMapRegistry mapRegistry,
+            IGraphRegistry graphRegistry,
             IStateObserver<AgvSaga> agvStateObserver,
             ProductionOptions productionOptions,
             IAgvSettingsProvider agvSettingsProvider)
         {
             _logger = logger;
             _mapRegistry = mapRegistry;
+            _graphRegistry = graphRegistry;
             _productionOptions = productionOptions;
             _agvSettingsProvider = agvSettingsProvider;
 
@@ -377,7 +381,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
                 .Then(c =>
                     _logger.LogInformation("{MessageType} {AgvId} / {CorrelationId}", nameof(AgvGraphReceived), c.Message.AgvId, c.Saga.CorrelationId))
                 .Then(c => c.Saga.AgvGraph = c.Message.Graph)
-                .Then(SearchMapNameInRegistry);
+                .Then(SaveGraph);
 
         private EventActivityBinder<AgvSaga, AgvDataReceived> AgvDataReceivedHandler() =>
             When(AgvDataReceivedEvent)
@@ -389,7 +393,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
             When(AgvMapReceivedEvent)
                 .Then(c => _logger.LogInformation("Incoming Map {MapId}/{MapCorrelationId} for Agv {AgvId}/{CorrelationId}",
                     c.Message.AgvMap.MapId, c.Message.AgvMap.CorrelationId, c.Saga.AgvId, c.Saga.CorrelationId))
-                .Then(SaveMap);
+                .Then(c => SaveMap(c.Message.AgvMap));
 
         private EventActivityBinder<AgvSaga, AgvOfflineMessage> AgvOfflineMessageHandler() =>
             When(AgvOfflineWatchdog.Received)
@@ -444,40 +448,47 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
             }
         }
 
-        private void SearchMapNameInRegistry(BehaviorContext<AgvSaga, AgvGraphReceived> context)
+        private void SaveGraph(BehaviorContext<AgvSaga, AgvGraphReceived> context)
         {
-            if (_mapRegistry.Exists(context.Message.Graph.RelatedMapId))
+            var agvGraph = context.Message.Graph;
+
+            if (!_mapRegistry.Exists(agvGraph.RelatedMapId))
             {
-                _logger.LogInformation("Map {MapName}/{MapCorrelationId} is already given in MapRegistry", context.Message.Graph.RelatedMapName, context.Message.Graph.RelatedMapId);
+                context.Publish(new RequestAgvMap(context.Saga.CorrelationId, context.Saga.AgvId, agvGraph.RelatedMapId, agvGraph.RelatedMapName));
+            }
+
+            if (_graphRegistry.AddOrUpdateGraph(agvGraph))
+            {
+                _logger.LogInformation("Graph {GraphCorrelationId} added or updated in registry", agvGraph.CorrelationId);
             }
             else
             {
-                context.Publish(new RequestAgvMap(context.Saga.CorrelationId, context.Saga.AgvId, context.Message.Graph.RelatedMapId, context.Message.Graph.RelatedMapName));
+                _logger.LogWarning("Failed to insert Graph {GraphCorrelationId} added or updated in registry", agvGraph.CorrelationId);
             }
         }
 
-        private void SaveMap(BehaviorContext<AgvSaga, AgvMapReceived> context)
+        private void SaveMap(AgvMap agvMap)
         {
-            if (!_mapRegistry.Exists(context.Message.AgvMap.CorrelationId))
+            if (!_mapRegistry.Exists(agvMap.CorrelationId))
             {
-                if (_mapRegistry.AddOrUpdate(context.Message.AgvMap.CorrelationId, context.Message.AgvMap.MapId, context.Message.AgvMap.ImageData, context.Message.AgvMap.Resolution, context.Message.AgvMap.XOffset, context.Message.AgvMap.YOffset, context.Message.AgvMap.ModificationDate))
+                if (_mapRegistry.AddOrUpdate(agvMap.CorrelationId, agvMap.MapId, agvMap.ImageData, agvMap.Resolution, agvMap.XOffset, agvMap.YOffset, agvMap.ModificationDate))
                 {
-                    _logger.LogInformation("Map {MapId}/{MapCorrelationId} inserted into Registry", context.Message.AgvMap.MapId, context.Message.CorrelationId);
+                    _logger.LogInformation("Map {MapId}/{MapCorrelationId} inserted into Registry", agvMap.MapId, agvMap.CorrelationId);
                 }
                 else
                 {
-                    _logger.LogWarning("Failed to insert Map {MapId}/{MapCorrelationId} into Registry", context.Message.AgvMap.MapId, context.Message.CorrelationId);
+                    _logger.LogWarning("Failed to insert Map {MapId}/{MapCorrelationId} into Registry", agvMap.MapId, agvMap.CorrelationId);
                 }
             }
             else
             {
-                if (_mapRegistry.AddOrUpdate(context.Message.AgvMap.CorrelationId, context.Message.AgvMap.MapId, context.Message.AgvMap.ImageData, context.Message.AgvMap.Resolution, context.Message.AgvMap.XOffset, context.Message.AgvMap.YOffset, context.Message.AgvMap.ModificationDate))
+                if (_mapRegistry.AddOrUpdate(agvMap.CorrelationId, agvMap.MapId, agvMap.ImageData, agvMap.Resolution, agvMap.XOffset, agvMap.YOffset, agvMap.ModificationDate))
                 {
-                    _logger.LogInformation("Map {MapId}/{MapCorrelationId} has been updated in Registry", context.Message.AgvMap.MapId, context.Message.CorrelationId);
+                    _logger.LogInformation("Map {MapId}/{MapCorrelationId} has been updated in Registry", agvMap.MapId, agvMap.CorrelationId);
                 }
                 else
                 {
-                    _logger.LogWarning("Failed to update Map {MapId}/{MapCorrelationId} in Registry", context.Message.AgvMap.MapId, context.Message.CorrelationId);
+                    _logger.LogWarning("Failed to update Map {MapId}/{MapCorrelationId} in Registry", agvMap.MapId, agvMap.CorrelationId);
                 }
             }
         }

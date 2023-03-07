@@ -15,6 +15,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Configurations
         {
             int agvOfflineTimeoutMsWhileBusy = 1000;
             int agvOfflineTimeoutMsWhileIdle = 2000;
+            float occupiedDistanceThreshold = 1.0f;
 
             var testFixture = new ConfigurationProviderTestFixture()
                             .AddSettingsProvider<AgvSettings>()
@@ -25,7 +26,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Configurations
 
             SagaSettingsProvider<AgvSettings, AgvSaga, ConfigurationProviderTestFixture.DbSetSagaPersistenceDbContext> sagaSettingsProvider = testFixture.GetSagaSettingsProvider<AgvSettings, AgvSaga>();
 
-            testFixture.AddAgvSagaSettings(agvOfflineTimeoutMsWhileBusy, agvOfflineTimeoutMsWhileIdle);
+            testFixture.AddAgvSagaSettings(agvOfflineTimeoutMsWhileBusy, agvOfflineTimeoutMsWhileIdle, occupiedDistanceThreshold);
             await testFixture.CreateAgvSagaAsync();
             var restoredAgvSaga = await testFixture.GetAgvSagaAsync();
 
@@ -34,6 +35,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Configurations
             agvSettings.ShouldNotBeNull();
             agvSettings.AgvOfflineTimeoutMsWhileBusy.ShouldBe(agvOfflineTimeoutMsWhileBusy);
             agvSettings.AgvOfflineTimeoutMsWhileIdle.ShouldBe(agvOfflineTimeoutMsWhileIdle);
+            agvSettings.OccupiedDistanceThreshold.ShouldBe(occupiedDistanceThreshold);
         }
 
         [TestMethod]
@@ -59,7 +61,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Configurations
             defaultAgvSettings.ShouldNotBeNull();
             agvSagaSettings.AgvOfflineTimeoutMsWhileBusy.ShouldBe(defaultAgvSettings.AgvOfflineTimeoutMsWhileBusy);
             agvSagaSettings.AgvOfflineTimeoutMsWhileIdle.ShouldBe(defaultAgvSettings.AgvOfflineTimeoutMsWhileIdle);
+            agvSagaSettings.OccupiedDistanceThreshold.ShouldBe(defaultAgvSettings.OccupiedDistanceThreshold);
         }
-
     }
 }

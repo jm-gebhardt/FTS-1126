@@ -147,12 +147,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Configurations
         where TSettings : class, ISettings<TSettings>
         where TSaga : class, SagaStateMachineInstance
         {
-            _hostBuilder.ConfigureServices(sp => sp.AddTransient<SagaSettingsProvider<TSettings, TSaga, DbSetSagaPersistenceDbContext>>(p =>
+            _hostBuilder.ConfigureServices(sp => sp.AddTransient(p =>
             {
-                var dbContext = p.GetService<DbSetSagaPersistenceDbContext>()!;
+                IDbContextFactory<DbSetSagaPersistenceDbContext> dbContextFactory = DbSetSagaPersistenceDbContextFactory;
                 var settingsProvider = p.GetRequiredService<ISettingsProvider<TSettings>>();
 
-                return new SagaSettingsProvider<TSettings, TSaga, DbSetSagaPersistenceDbContext>(dbContext, settingsProvider);
+                return new SagaSettingsProvider<TSettings, TSaga, DbSetSagaPersistenceDbContext>(dbContextFactory, settingsProvider);
             }));
             return this;
         }
@@ -193,12 +193,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Configurations
         /// </summary>
         /// <param name="agvOfflineTimeoutMsWhileBusy"></param>
         /// <param name="agvOfflineTimeoutMsWhileIdle"></param>
-        public void AddAgvSagaSettings(int agvOfflineTimeoutMsWhileBusy, int agvOfflineTimeoutMsWhileIdle)
+        /// <param name="occupiedDistanceThreshold"></param>
+        public void AddAgvSagaSettings(int agvOfflineTimeoutMsWhileBusy, int agvOfflineTimeoutMsWhileIdle, float occupiedDistanceThreshold)
         {
             _agvSaga.Settings = new()
             {
                 AgvOfflineTimeoutMsWhileBusy = agvOfflineTimeoutMsWhileBusy,
-                AgvOfflineTimeoutMsWhileIdle = agvOfflineTimeoutMsWhileIdle
+                AgvOfflineTimeoutMsWhileIdle = agvOfflineTimeoutMsWhileIdle,
+                OccupiedDistanceThreshold = occupiedDistanceThreshold
             };
         }
 

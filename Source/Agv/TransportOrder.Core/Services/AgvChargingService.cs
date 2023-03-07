@@ -32,6 +32,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         private readonly ILogger<AgvChargingService> _logger;
         private readonly IAgvRegistry _agvRegistry;
         private readonly IOrderRegistry _orderRegistry;
+        private readonly IGraphRegistry _graphRegistry;
 
         /// <summary>
         /// Create a new instance of <see cref="AgvChargingService"/>
@@ -39,11 +40,17 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         /// <param name="logger"></param>
         /// <param name="agvRegistry"></param>
         /// <param name="orderRegistry"></param>
-        public AgvChargingService(ILogger<AgvChargingService> logger, IAgvRegistry agvRegistry, IOrderRegistry orderRegistry)
+        /// <param name="graphRegistry"></param>
+        public AgvChargingService(
+            ILogger<AgvChargingService> logger,
+            IAgvRegistry agvRegistry,
+            IOrderRegistry orderRegistry,
+            IGraphRegistry graphRegistry)
         {
             _logger = logger;
             _agvRegistry = agvRegistry;
             _orderRegistry = orderRegistry;
+            _graphRegistry = graphRegistry;
         }
 
         /// <summary>
@@ -85,6 +92,18 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
 
             if (agvStatus.Charging)
             {
+                var agv = _agvRegistry.GetAgv(context.Message.CorrelationId);
+                if (agv == null)
+                {
+                    _logger.LogWarning("Agv with correlationId {CorrelationId} doesn't exist", context.Message.CorrelationId);
+                    return;
+                }
+
+                if (agv.CurrentState != nameof(AgvStateMachine.Charging))
+                {
+                    return; // AgvStoppedCharging message was already send
+                }
+
                 if (agvStatus.BatteryCharge >= BatteryLevelFull)
                 {
                     _logger.LogInformation("Agv with correlationId {CorrelationId} reached full battery level ({BatteryCharge}%)", agvStatus.CorrelationId, agvStatus.BatteryCharge);
@@ -181,11 +200,19 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
 
             if (chargingNodes.Count == 0)
             {
-                return null;
+                return null; // AGV has no charging nodes in its graph
             }
 
-            var random = new Random(); // Get random charging node
-            return chargingNodes[random.Next(chargingNodes.Count)];
+            foreach (var node in chargingNodes)
+            {
+                // Try reserving node
+                if (_graphRegistry.ReserveNode(node.Id))
+                {
+                    return node; // Return reserved charging node
+                }
+            }
+
+            return null; // Charging node could not be reserved
         }
     }
 }

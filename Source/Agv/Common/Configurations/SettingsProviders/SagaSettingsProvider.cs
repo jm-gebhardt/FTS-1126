@@ -14,18 +14,18 @@ namespace Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders
     where TSaga : class, SagaStateMachineInstance
     where TDbContext : DbContext
     {
-        private readonly TDbContext _dbContext;
+        private readonly IDbContextFactory<TDbContext> _dbContextFactory;
         private readonly ISettingsProvider<TSettings> _settingsProvider;
         private readonly SemaphoreSlim _semaphore = new(1, 1);
 
         /// <summary>
         /// Ctor
         /// </summary>
-        /// <param name="dbContext"></param>
+        /// <param name="dbContextFactory"></param>
         /// <param name="settingsProvider"></param>
-        public SagaSettingsProvider(TDbContext dbContext, ISettingsProvider<TSettings> settingsProvider)
+        public SagaSettingsProvider(IDbContextFactory<TDbContext> dbContextFactory, ISettingsProvider<TSettings> settingsProvider)
         {
-            _dbContext = dbContext;
+            _dbContextFactory = dbContextFactory;
             _settingsProvider = settingsProvider;
         }
 
@@ -37,7 +37,8 @@ namespace Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders
             _semaphore.Wait();
             try
             {
-                var saga = _dbContext.Set<TSaga>().FirstOrDefault(s => s.CorrelationId == correlationId);
+                var dbContext = _dbContextFactory.CreateDbContext();
+                var saga = dbContext.Set<TSaga>().FirstOrDefault(s => s.CorrelationId == correlationId);
                 if (saga is ISagaSetting<TSettings> { Settings: { } settings })
                 {
                     return settings;

@@ -22,35 +22,45 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
     {
         #region Setup
 
-        /// <summary>
-        /// Create AgvStateMachine test fixture with mocked services
-        /// </summary>
-        private StateMachineTestFixture<AgvStateMachine, AgvSaga> GetFixture(
-            Action<IBusRegistrationConfigurator>? busRegistrationConfigurator = null,
-            Action<IBusRegistrationContext, IInMemoryBusFactoryConfigurator>? inMemoryConfiguration = null,
-            AgvSettings? settings = null,
-            TimeSpan? inactivityTimeout = null)
+        private class AgvStateMachineTestFixture
         {
-            var mockRegistry = new Mock<IMapRegistry>();
-            mockRegistry.Setup(s => s.GetAllMaps()).Returns(new EnumerableQuery<Map>(new List<Map>()));
+            public Mock<IMapRegistry> MockMapRegistry { get; }
+            private Mock<IGraphRegistry> MockGraphRegistry { get; }
+            public Mock<IStateObserver<AgvSaga>> MockObserver { get; }
+            public StateMachineTestFixture<AgvStateMachine, AgvSaga> Fixture { get; }
 
-            var mockObserver = new Mock<IStateObserver<AgvSaga>>();
+            /// <summary>
+            /// Create AgvStateMachine test fixture with mocked services
+            /// </summary>
+            public AgvStateMachineTestFixture(
+                Action<IBusRegistrationConfigurator>? busRegistrationConfigurator = null,
+                Action<IBusRegistrationContext, IInMemoryBusFactoryConfigurator>? inMemoryConfiguration = null,
+                AgvSettings? settings = null,
+                TimeSpan? inactivityTimeout = null)
+            {
+                MockMapRegistry = new Mock<IMapRegistry>();
+                MockGraphRegistry = new Mock<IGraphRegistry>();
+                MockObserver = new Mock<IStateObserver<AgvSaga>>();
 
-            return new StateMachineTestFixture<AgvStateMachine, AgvSaga>(
-                busRegistrationConfigurator: busRegistrationConfigurator,
-                services: s =>
-                {
-                    s.AddSingleton(_ => mockObserver.Object);
-                    s.AddTransient(_ => mockRegistry.Object);
-                    s.AddSingleton(_ => new ProductionOptions()
+                MockMapRegistry.Setup(s => s.GetAllMaps()).Returns(new EnumerableQuery<Map>(new List<Map>()));
+
+                Fixture = new StateMachineTestFixture<AgvStateMachine, AgvSaga>(
+                    busRegistrationConfigurator: busRegistrationConfigurator,
+                    services: s =>
                     {
-                        ApplicationName = null,
-                        AutoAccept = true
-                    });
-                    s.AddAgvSettings(settings);
-                },
-                inMemoryConfiguration: inMemoryConfiguration,
-                inactivityTimeout: inactivityTimeout);
+                        s.AddSingleton(_ => MockObserver.Object);
+                        s.AddTransient(_ => MockMapRegistry.Object);
+                        s.AddTransient(_ => MockGraphRegistry.Object);
+                        s.AddSingleton(_ => new ProductionOptions()
+                        {
+                            ApplicationName = null,
+                            AutoAccept = true
+                        });
+                        s.AddAgvSettings(settings);
+                    },
+                    inMemoryConfiguration: inMemoryConfiguration,
+                    inactivityTimeout: inactivityTimeout);
+            }
         }
 
         /// <summary>
@@ -94,6 +104,21 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         }
 
         /// <summary>
+        /// Create a standardized AgvMap for testing purposes
+        /// </summary>
+        private AgvMap CreateTestAgvMap()
+        {
+            const string mapId = "basicMap";
+            const string imageData = "bGlnaHQgd29yay4=";
+            const float resolution = 1;
+            const float xOffset = 1;
+            const float yOffset = 1;
+            var modificationDate = DateTime.UtcNow;
+
+            return new AgvMap(mapId.ToGuid(), mapId, modificationDate, imageData, resolution, xOffset, yOffset);
+        }
+
+        /// <summary>
         /// Create a standardized AgvData for testing purposes
         /// </summary>
         private AgvData CreateTestAgvData()
@@ -114,7 +139,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             bool assertAreEqual = true)
             where TRequest : class, CorrelatedBy<Guid>
         {
-            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = GetFixture();
+            var agvStateMachine = new AgvStateMachineTestFixture();
+            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = agvStateMachine.Fixture;
 
             var correlationId = message.CorrelationId;
 
@@ -242,7 +268,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         [TestMethod]
         public async Task When_AgvStatusReceived_NewAgvSagaCreated()
         {
-            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = GetFixture();
+            var agvStateMachine = new AgvStateMachineTestFixture();
+            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = agvStateMachine.Fixture;
 
             const string agvId = "AGV#1";
             var correlationId = agvId.ToGuid();
@@ -263,7 +290,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         [TestMethod]
         public async Task When_AgvStatusReceived_EmptyCorrelationId_NoSagaCreated()
         {
-            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = GetFixture();
+            var agvStateMachine = new AgvStateMachineTestFixture();
+            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = agvStateMachine.Fixture;
 
             const string agvId = "AGV#1";
             var correlationId = Guid.Empty;
@@ -281,7 +309,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         [TestMethod]
         public async Task When_AgvReservationRequested_AgvIsIdle_AcceptAgvReservation()
         {
-            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = GetFixture(x => { x.AddRequestClient<ReserveAgv>(); });
+            var agvStateMachine = new AgvStateMachineTestFixture(x => { x.AddRequestClient<ReserveAgv>(); });
+            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = agvStateMachine.Fixture;
 
             const string agvId = "AGV#1";
             var correlationId = agvId.ToGuid();
@@ -310,7 +339,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         [TestMethod]
         public async Task When_AgvReservationRequested_AgvIsBusyDiscoveredReserved_RejectAgvReservation(string acceptedStates)
         {
-            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = GetFixture(x => { x.AddRequestClient<ReserveAgv>(); });
+            var agvStateMachine = new AgvStateMachineTestFixture(x => { x.AddRequestClient<ReserveAgv>(); });
+            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = agvStateMachine.Fixture;
 
             const string agvId = "AGV#1";
             var correlationId = agvId.ToGuid();
@@ -342,9 +372,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         public async Task ConsumeAgvStatusReceived_with_LastNodeId(string inputLastNode)
         {
             // Arrange
-            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = GetFixture(
+            var agvStateMachine = new AgvStateMachineTestFixture(
                 x => x.AddDelayedMessageScheduler(),
                 (_, cfg) => cfg.UseDelayedMessageScheduler());
+            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = agvStateMachine.Fixture;
 
             const string agvId = "AGV_01";
             var correlationId = agvId.ToGuid();
@@ -375,7 +406,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         public async Task When_GraphAndDataMissingInitially_BothAreRequested()
         {
             // Arrange
-            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = GetFixture();
+            var agvStateMachine = new AgvStateMachineTestFixture();
+            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = agvStateMachine.Fixture;
 
             const string agvId = "AGV_01";
             var correlationId = agvId.ToGuid();
@@ -422,7 +454,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         public async Task When_GraphAndDataMissingAndTimeoutExceeded_BothAreRequested()
         {
             // Arrange
-            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = GetFixture();
+            var agvStateMachine = new AgvStateMachineTestFixture();
+            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = agvStateMachine.Fixture;
 
             const string agvId = "AGV_01";
             var correlationId = agvId.ToGuid();
@@ -468,7 +501,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         public async Task When_GraphIsGivenAndDataMissing_OnlyAgvDataRequested()
         {
             // Arrange
-            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = GetFixture(null, null, null, TimeSpan.FromSeconds(5));
+            var agvStateMachine = new AgvStateMachineTestFixture(null, null, null, TimeSpan.FromSeconds(5));
+            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = agvStateMachine.Fixture;
             var token = new CancellationTokenSource();
 
             var agvGraph = CreateTestAgvGraph();
@@ -516,7 +550,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         public async Task When_DataIsGivenAndGraphMissing_OnlyAgvGraphRequested()
         {
             // Arrange
-            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = GetFixture(null, null, null, TimeSpan.FromSeconds(5));
+            var agvStateMachine = new AgvStateMachineTestFixture(null, null, null, TimeSpan.FromSeconds(5));
+            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = agvStateMachine.Fixture;
             var token = new CancellationTokenSource();
 
             var agvData = CreateTestAgvData();
@@ -560,7 +595,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         public async Task Resend_AgvReady_When_Agv_is_Idle_and_just_came_Online()
         {
             // Arrange
-            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = GetFixture();
+            var agvStateMachine = new AgvStateMachineTestFixture();
+            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = agvStateMachine.Fixture;
 
             const string agvId = "AGV_01";
             var correlationId = agvId.ToGuid();
@@ -597,7 +633,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         public async Task When_GraphAndDataReceivedOneDayAgo_RequestBothAgain()
         {
             // Arrange
-            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = GetFixture();
+            var agvStateMachine = new AgvStateMachineTestFixture();
+            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = agvStateMachine.Fixture;
 
             var agvGraph = CreateTestAgvGraph();
             var agvData = CreateTestAgvData();
@@ -643,7 +680,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         public async Task When_AgvInInitialState_RequestIsDoneUnconditionally()
         {
             // Arrange
-            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = GetFixture();
+            var agvStateMachine = new AgvStateMachineTestFixture();
+            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = agvStateMachine.Fixture;
 
             const string agvId = "AGV_01";
             var correlationId = agvId.ToGuid();
@@ -689,29 +727,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         public async Task RequestAgvMap_NotSent_when_RelatedMapName_found_in_Registry(string previousState)
         {
             // Arrange
-            var mockRegistry = new Mock<IMapRegistry>();
-            mockRegistry.Setup(s => s.GetAllMaps()).Returns(new EnumerableQuery<Map>(new List<Map>()));
-
-            var mockObserver = new Mock<IStateObserver<AgvSaga>>();
-
-            var fixture = new StateMachineTestFixture<AgvStateMachine, AgvSaga>(services: s =>
-            {
-                s.AddTransient(_ => mockRegistry.Object);
-                s.AddAgvSettings();
-                s.AddSingleton(mockObserver.Object);
-                s.AddSingleton(_ => new ProductionOptions()
-                {
-                    ApplicationName = null,
-                    AutoAccept = true
-                });
-            });
+            var agvStateMachine = new AgvStateMachineTestFixture();
+            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = agvStateMachine.Fixture;
 
             var agvSaga = CreateTestAgvSaga(previousState);    // The previous state is variable due to DuringAny()
             fixture.Add(agvSaga);
 
             var agvGraph = CreateTestAgvGraph();
 
-            mockRegistry.Setup(mo => mo.Exists(agvGraph.RelatedMapId)).Returns(true);
+            agvStateMachine.MockMapRegistry.Setup(mo => mo.Exists(agvGraph.RelatedMapId)).Returns(true);
 
             // Act
             await fixture.TestHarness.Bus.Publish(new AgvGraphReceived(agvSaga.CorrelationId, agvSaga.AgvId, agvGraph));
@@ -735,47 +759,24 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         public async Task AgvMapReceived_is_Consumed_and_Processed_with_EmptyRegistry(string previousState)
         {
             // Arrange
-            var mockRegistry = new Mock<IMapRegistry>();
-            mockRegistry.Setup(s => s.GetAllMaps()).Returns(new EnumerableQuery<Map>(new List<Map>()));
-
-            var mockObserver = new Mock<IStateObserver<AgvSaga>>();
-
-            var fixture = new StateMachineTestFixture<AgvStateMachine, AgvSaga>(services: s =>
-            {
-                s.AddTransient(_ => mockRegistry.Object);
-                s.AddAgvSettings();
-                s.AddSingleton(mockObserver.Object);
-                s.AddSingleton(_ => new ProductionOptions()
-                {
-                    ApplicationName = null,
-                    AutoAccept = true
-                });
-            });
+            var agvStateMachine = new AgvStateMachineTestFixture();
+            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = agvStateMachine.Fixture;
 
             var agvSaga = CreateTestAgvSaga(previousState);    // The previous state is variable due to DuringAny()
             fixture.Add(agvSaga);
 
-            const string mapId = "basicMap";
-            const string imageData = "bGlnaHQgd29yay4=";
-            const float resolution = 1;
-            const float xOffset = 1;
-            const float yOffset = 1;
-            var modificationDate = DateTime.UtcNow;
-
-            mockRegistry.Setup(mo => mo.AddOrUpdate(mapId.ToGuid(), mapId, imageData, resolution, xOffset, yOffset, modificationDate)).Returns(true);
+            var agvMap = CreateTestAgvMap();
+            agvStateMachine.MockMapRegistry.Setup(mo => mo.AddOrUpdate(agvMap.CorrelationId, agvMap.MapId, agvMap.ImageData, agvMap.Resolution, agvMap.XOffset, agvMap.YOffset, agvMap.ModificationDate)).Returns(true);
 
             // Act
-            await fixture.TestHarness.Bus.Publish(new AgvMapReceived(
-                agvSaga.CorrelationId,
-                agvSaga.AgvId,
-                new AgvMap(mapId.ToGuid(), mapId, modificationDate, imageData, resolution, xOffset, yOffset)));
+            await fixture.TestHarness.Bus.Publish(new AgvMapReceived(agvSaga.CorrelationId, agvSaga.AgvId, agvMap));
 
             // Assert
             (await fixture.TestHarness.Published.Any<AgvMapReceived>()).ShouldBeTrue();
             (await fixture.SagaHarness.Consumed.Any<AgvMapReceived>()).ShouldBeTrue();
             (await fixture.SagaHarness.Exists(agvSaga.CorrelationId)).ShouldBe(agvSaga.CorrelationId);
 
-            mockRegistry.Verify(mo => mo.AddOrUpdate(mapId.ToGuid(), mapId, imageData, resolution, xOffset, yOffset, modificationDate), Times.Once);
+            agvStateMachine.MockMapRegistry.Verify(mo => mo.AddOrUpdate(agvMap.CorrelationId, agvMap.MapId, agvMap.ImageData, agvMap.Resolution, agvMap.XOffset, agvMap.YOffset, agvMap.ModificationDate), Times.Once);
         }
 
         /// <summary>
@@ -791,47 +792,24 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         public async Task AgvMapReceived_is_Consumed_and_Processed_with_Registry_containing_entries(string previousState)
         {
             // Arrange
-            var mockRegistry = new Mock<IMapRegistry>();
-            mockRegistry.Setup(s => s.GetAllMaps()).Returns(new EnumerableQuery<Map>(new List<Map>()));
-
-            var mockObserver = new Mock<IStateObserver<AgvSaga>>();
-
-            var fixture = new StateMachineTestFixture<AgvStateMachine, AgvSaga>(services: s =>
-            {
-                s.AddTransient(_ => mockRegistry.Object);
-                s.AddAgvSettings();
-                s.AddSingleton(mockObserver.Object);
-                s.AddSingleton(_ => new ProductionOptions()
-                {
-                    ApplicationName = null,
-                    AutoAccept = true
-                });
-            });
+            var agvStateMachine = new AgvStateMachineTestFixture();
+            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = agvStateMachine.Fixture;
 
             var agvSaga = CreateTestAgvSaga(previousState);    // The previous state is variable due to DuringAny()
             fixture.Add(agvSaga);
 
-            const string mapId = "basicMap";
-            const string imageData = "bGlnaHQgd29yay4=";
-            const float resolution = 1;
-            const float xOffset = 1;
-            const float yOffset = 1;
-            var modificationDate = DateTime.UtcNow;
-
-            mockRegistry.Setup(mo => mo.Exists(mapId.ToGuid())).Returns(true);
+            var agvMap = CreateTestAgvMap();
+            agvStateMachine.MockMapRegistry.Setup(mo => mo.Exists(agvMap.MapId.ToGuid())).Returns(true);
 
             // Act
-            await fixture.TestHarness.Bus.Publish(new AgvMapReceived(
-                agvSaga.CorrelationId,
-                agvSaga.AgvId,
-                new AgvMap(mapId.ToGuid(), mapId, modificationDate, imageData, resolution, xOffset, yOffset)));
+            await fixture.TestHarness.Bus.Publish(new AgvMapReceived(agvSaga.CorrelationId, agvSaga.AgvId, agvMap));
 
             // Assert
             (await fixture.TestHarness.Published.Any<AgvMapReceived>()).ShouldBeTrue();
             (await fixture.SagaHarness.Consumed.Any<AgvMapReceived>()).ShouldBeTrue();
             (await fixture.SagaHarness.Exists(agvSaga.CorrelationId)).ShouldBe(agvSaga.CorrelationId);
 
-            mockRegistry.Verify(mo => mo.AddOrUpdate(mapId.ToGuid(), mapId, imageData, resolution, xOffset, yOffset, modificationDate), Times.Once);
+            agvStateMachine.MockMapRegistry.Verify(mo => mo.AddOrUpdate(agvMap.CorrelationId, agvMap.MapId, agvMap.ImageData, agvMap.Resolution, agvMap.XOffset, agvMap.YOffset, agvMap.ModificationDate), Times.Once);
         }
 
         /// <summary>
@@ -844,22 +822,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         public async Task AgvStartedCharging_Consumed(string previousState)
         {
             // Arrange
-            var mockRegistry = new Mock<IMapRegistry>();
-            mockRegistry.Setup(s => s.GetAllMaps()).Returns(new EnumerableQuery<Map>(new List<Map>()));
-
-            var mockObserver = new Mock<IStateObserver<AgvSaga>>();
-
-            var fixture = new StateMachineTestFixture<AgvStateMachine, AgvSaga>(services: s =>
-            {
-                s.AddTransient(_ => mockRegistry.Object);
-                s.AddAgvSettings();
-                s.AddSingleton(mockObserver.Object);
-                s.AddSingleton(_ => new ProductionOptions()
-                {
-                    ApplicationName = null,
-                    AutoAccept = true
-                });
-            });
+            var agvStateMachine = new AgvStateMachineTestFixture();
+            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = agvStateMachine.Fixture;
 
             var agvSaga = CreateTestAgvSaga(previousState);
             fixture.Add(agvSaga);
@@ -882,22 +846,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         public async Task AgvStoppedCharging_Consumed()
         {
             // Arrange
-            var mockRegistry = new Mock<IMapRegistry>();
-            mockRegistry.Setup(s => s.GetAllMaps()).Returns(new EnumerableQuery<Map>(new List<Map>()));
-
-            var mockObserver = new Mock<IStateObserver<AgvSaga>>();
-
-            var fixture = new StateMachineTestFixture<AgvStateMachine, AgvSaga>(services: s =>
-            {
-                s.AddTransient(_ => mockRegistry.Object);
-                s.AddAgvSettings();
-                s.AddSingleton(mockObserver.Object);
-                s.AddSingleton(_ => new ProductionOptions()
-                {
-                    ApplicationName = null,
-                    AutoAccept = true
-                });
-            });
+            var agvStateMachine = new AgvStateMachineTestFixture();
+            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = agvStateMachine.Fixture;
 
             var agvSaga = CreateTestAgvSaga(nameof(AgvStateMachine.Charging));
             fixture.Add(agvSaga);
@@ -919,23 +869,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         [TestMethod]
         public async Task When_AgvSaga_State_Changed_Trigger_Observer()
         {
-            var mockRegistry = new Mock<IMapRegistry>();
-            mockRegistry.Setup(s => s.GetAllMaps()).Returns(new EnumerableQuery<Map>(new List<Map>()));
-
-            var mockObserver = new Mock<IStateObserver<AgvSaga>>();
-
-            var fixture = new StateMachineTestFixture<AgvStateMachine, AgvSaga>(
-                services: s =>
-                {
-                    s.AddSingleton(_ => mockObserver.Object);
-                    s.AddAgvSettings();
-                    s.AddTransient(_ => mockRegistry.Object);
-                    s.AddSingleton(_ => new ProductionOptions()
-                    {
-                        ApplicationName = null,
-                        AutoAccept = true
-                    });
-                });
+            var agvStateMachine = new AgvStateMachineTestFixture();
+            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = agvStateMachine.Fixture;
 
             const string agvId = "AGV#1";
             var correlationId = agvId.ToGuid();
@@ -959,7 +894,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
             saga.CurrentState.ShouldBe(stateAfter.Name);
 
-            mockObserver.Verify(s => s.StateChanged(It.IsAny<BehaviorContext<AgvSaga>>(), stateAfter, stateBefore), Times.Once);
+            agvStateMachine.MockObserver.Verify(s => s.StateChanged(It.IsAny<BehaviorContext<AgvSaga>>(), stateAfter, stateBefore), Times.Once);
         }
 
         /// <summary>
@@ -970,9 +905,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         [DataRow(false)]
         public async Task When_AgvInitializedMessage_AgvOfflineWatchdogIsScheduled(bool agvInitialAlive)
         {
-            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = GetFixture(
+            var agvStateMachine = new AgvStateMachineTestFixture(
                 x => x.AddDelayedMessageScheduler(),
                 (_, cfg) => cfg.UseDelayedMessageScheduler());
+
+            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = agvStateMachine.Fixture;
 
             const string agvId = "AGV#1";
             var correlationId = agvId.ToGuid();
@@ -1004,7 +941,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             const int agvOfflineTimeoutMsWhileBusy = 500;
 
             var mockHub = new Mock<Core.Hubs.IAgvHubContext>();
-            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = GetFixture(
+            var agvStateMachine = new AgvStateMachineTestFixture(
                 x =>
                 {
                     x.AddDelayedMessageScheduler();
@@ -1014,6 +951,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
                 (_, cfg) => cfg.UseDelayedMessageScheduler(),
                 new AgvSettings { AgvOfflineTimeoutMsWhileIdle = agvOfflineTimeoutMsWhileIdle, AgvOfflineTimeoutMsWhileBusy = agvOfflineTimeoutMsWhileBusy },
                 TimeSpan.FromMilliseconds(2 * Math.Max(agvOfflineTimeoutMsWhileIdle, agvOfflineTimeoutMsWhileBusy)));
+
+            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = agvStateMachine.Fixture;
 
             const string agvId = "AGV#1";
             var correlationId = agvId.ToGuid();
@@ -1056,7 +995,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             const int agvOfflineTimeoutMsWhileBusy = 1000;
 
             var mockHub = new Mock<Core.Hubs.IAgvHubContext>();
-            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = GetFixture(
+            var agvStateMachine = new AgvStateMachineTestFixture(
                 x =>
                 {
                     x.AddDelayedMessageScheduler();
@@ -1066,6 +1005,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
                 (_, cfg) => cfg.UseDelayedMessageScheduler(),
                 new AgvSettings { AgvOfflineTimeoutMsWhileIdle = agvOfflineTimeoutMsWhileIdle, AgvOfflineTimeoutMsWhileBusy = agvOfflineTimeoutMsWhileBusy },
                 TimeSpan.FromMilliseconds(2 * Math.Max(agvOfflineTimeoutMsWhileIdle, agvOfflineTimeoutMsWhileBusy)));
+
+            StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = agvStateMachine.Fixture;
 
             const string agvId = "AGV#1";
             var correlationId = agvId.ToGuid();

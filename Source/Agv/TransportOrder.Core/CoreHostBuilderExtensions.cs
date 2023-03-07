@@ -51,10 +51,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
             hostBuilder.ConfigureServices((context, services) =>
             {
                 // Transients
-                services.AddTransient<IAgvRegistry, EfAgvRegistry>();
-                services.AddTransient<IOrderRegistry, EfOrderRegistry>();
-                services.AddTransient<IMapRegistry, EfMapRegistry>();
-                services.AddTransient<IOrderAuditRegistry, EfOrderAuditRegistry>();
                 services.AddTransient<IOrderHubContext>(provider =>
                 {
                     var hubContext = provider.GetRequiredService<IHubContext<OrderHub>>();
@@ -70,21 +66,31 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                     return new AgvHubContext(hubContext, mapper);
                 });
                 services.AddTransient<IEventObserver<OrderSaga>, OrderEventObserver>();
-                services.AddTransient<IAgvSettingsProvider, AgvSettingsProvider>();
-                services.AddTransient<ISagaSettingsProvider<AgvSettings, AgvSaga>, SagaSettingsProvider<AgvSettings, AgvSaga, SagaPersistenceDbContext>>();
-                services.AddConfigurationTypeManager();
-                services.AddSettingsProviders(ConfigurationTypeManager.Instance);
+                
+                // Scoped
+                services.AddScoped<DatabaseConfigurationSeeder>();
 
                 // Singletons
                 services.AddSingleton<IStateObserver<OrderSaga>, OrderStateObserver>();
                 services.AddSingleton<IStateObserver<AgvSaga>, AgvStateObserver>();
-                services.AddSingleton<IAgvPositionRegistry, AgvPositionRegistry>();
                 services.AddSingleton<IChangeDetector<AgvPositionStatus>, ChangeDetector<AgvPositionStatus>>();
                 services.AddSingleton<IRoutingPlausibilityChecker, NoCheckPlausibilityChecker>();
                 services.AddSingleton(_ => productionOptions);
-
                 services.AddSingleton<MassTransitBusEventConsumer>();
                 services.AddSingleton<ActionManager>();
+                services.AddSingleton<ISagaSettingsProvider<AgvSettings, AgvSaga>, SagaSettingsProvider<AgvSettings, AgvSaga, SagaPersistenceDbContext>>();
+                services.AddSingleton<IAgvSettingsProvider, AgvSettingsProvider>();
+
+                // Registries
+                services.AddSingleton<IAgvRegistry, EfAgvRegistry>();
+                services.AddSingleton<IOrderRegistry, EfOrderRegistry>();
+                services.AddSingleton<IOrderAuditRegistry, EfOrderAuditRegistry>();
+                services.AddSingleton<IMapRegistry, EfMapRegistry>();
+                services.AddSingleton<IGraphRegistry, EfGraphRegistry>();
+                services.AddSingleton<IAgvPositionRegistry, AgvPositionRegistry>();
+
+                services.AddConfigurationTypeManager();
+                services.AddSettingsProviders(ConfigurationTypeManager.Instance);
 
                 services.AddHostedService<ActionManagerBackgroundService>();
 
@@ -99,9 +105,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                         m.MigrationsHistoryTable(SagaPersistenceDbContext.MigrationTableName);
                     });
                 });
-
-                // Scoped
-                services.AddScoped<DatabaseConfigurationSeeder>();
 
                 // Automapper
                 services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());

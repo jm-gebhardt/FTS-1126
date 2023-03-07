@@ -1,5 +1,5 @@
 ﻿using JetBrains.Annotations;
-using IMap = Gebhardt.StoreWare.Agv.TransportOrder.Core.Models.IMap;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Models;
 
 // ReSharper disable ConvertToPrimaryConstructor
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Models

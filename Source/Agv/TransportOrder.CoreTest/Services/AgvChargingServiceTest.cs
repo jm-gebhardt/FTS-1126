@@ -40,6 +40,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
                     agv1.AgvStatus.Disturbed,
                     agv1.AgvStatus.LastNodeId);
             }
+            agv1.CurrentState = nameof(AgvStateMachine.Charging);
 
             var agv2 = agvRegistry.Object.GetAgv("AGV002".ToGuid()) as AgvSaga;
             agv2!.AgvStatus = null; // Test case for AGV without status
@@ -50,11 +51,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             var orderRegistryMock = new Mock<IOrderRegistry>();
             orderRegistryMock.SetupGet(s => s.CountQueued).Returns(countQueuedOrders);
 
+            var graphRegistry = new Mock<IGraphRegistry>();
+            graphRegistry.Setup(s => s.ReserveNode(It.IsAny<string>())).Returns(true);
+
             var fixture = new MassTransitTestFixture<AgvChargingService>(services =>
             {
                 services.AddTransient(_ => logger);
                 services.AddTransient(_ => agvRegistry.Object);
                 services.AddTransient(_ => orderRegistryMock.Object);
+                services.AddSingleton(_ => graphRegistry.Object);
             });
 
             return fixture;
@@ -69,10 +74,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             await fixture.TestHarness!.Bus.Publish(consumed);
 
             bool consumeCheck = await fixture.ConsumerHarness!.Consumed.Any<TConsumed>(s => s.Context.Message.CorrelationId == consumed.CorrelationId);
-            consumeCheck.ShouldBeTrue();
+            consumeCheck.ShouldBeTrue($"Message of type '{typeof(TConsumed).Name}' was not consumed");
 
             bool publishCheck = await fixture.TestHarness.Published.Any<TResponse>(s => s.Context.Message.CorrelationId == consumed.CorrelationId);
-            publishCheck.ShouldBeTrue();
+            publishCheck.ShouldBeTrue($"Message of type '{typeof(TResponse).Name}' was not published");
         }
 
         private async Task TestConsumeNoAction<TConsumed>(TConsumed consumed, int batteryCharge, int countQueuedOrders = 0)

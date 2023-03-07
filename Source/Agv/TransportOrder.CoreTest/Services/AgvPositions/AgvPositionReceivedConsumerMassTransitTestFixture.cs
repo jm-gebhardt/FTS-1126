@@ -12,6 +12,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.AgvPositions
     {
         private bool _useAgvPositionRegistryMock;
         public Mock<IAgvPositionRegistry>? AgvPositionRegistryMock { get; private set; }
+        private Mock<IGraphRegistry>? GraphRegistryMock { get; set; }
 
         public AgvPositionReceivedConsumerMassTransitTestFixture()
         {
@@ -32,14 +33,19 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.AgvPositions
 
         protected override void ConfigureServices(IServiceCollection services)
         {
+            GraphRegistryMock = new Mock<IGraphRegistry>();
+
             if (_useAgvPositionRegistryMock)
             {
                 AgvPositionRegistryMock = new Mock<IAgvPositionRegistry>();
+
                 services.AddSingleton(AgvPositionRegistryMock.Object);
+                services.AddSingleton(GraphRegistryMock.Object);
             }
             else
             {
                 services.AddSingleton<IAgvPositionRegistry, AgvPositionRegistry>();
+                services.AddSingleton(GraphRegistryMock.Object);
             }
 
             services.AddSingleton<IChangeDetector<AgvPositionStatus>, ChangeDetector<AgvPositionStatus>>();

@@ -22,12 +22,20 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         public async Task When_AgvSaga_State_Changed_AgvStateChanged_Published()
         {
             var mapRegistryMock = new Mock<IMapRegistry>();
+            var graphRegistryMock = new Mock<IGraphRegistry>();
             var mockHub = new Mock<IAgvHubContext>();
             var mockContext = new Mock<BehaviorContext<AgvSaga>>();
             var mockLogger = new Mock<ILogger<AgvStateMachine>>();
             var settingsProviderMock = new Mock<IAgvSettingsProvider>();
             var agvStateObserver = new AgvStateObserver(mockHub.Object);
-            var agvStateMachine = new AgvStateMachine(mockLogger.Object, mapRegistryMock.Object, agvStateObserver, new ProductionOptions { ApplicationName = null, AutoAccept = true }, settingsProviderMock.Object);
+            var agvStateMachine = new AgvStateMachine(
+                mockLogger.Object,
+                mapRegistryMock.Object,
+                graphRegistryMock.Object,
+                agvStateObserver,
+                new ProductionOptions { ApplicationName = null, AutoAccept = true },
+                settingsProviderMock.Object);
+
             var previousState = agvStateMachine.Ready;
             var currentState = agvStateMachine.Reserved;
 
@@ -42,12 +50,20 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         public async Task When_AgvSaga_StateIsInitial_AgvDiscovered_Published()
         {
             var mapRegistryMock = new Mock<IMapRegistry>();
+            var graphRegistryMock = new Mock<IGraphRegistry>();
             var mockHub = new Mock<IAgvHubContext>();
             var mockContext = new Mock<BehaviorContext<AgvSaga>>();
             var mockLogger = new Mock<ILogger<AgvStateMachine>>();
             var settingsProviderMock = new Mock<IAgvSettingsProvider>();
             var agvStateObserver = new AgvStateObserver(mockHub.Object);
-            var agvStateMachine = new AgvStateMachine(mockLogger.Object, mapRegistryMock.Object, agvStateObserver, new ProductionOptions { ApplicationName = null, AutoAccept = true }, settingsProviderMock.Object);
+            var agvStateMachine = new AgvStateMachine(
+                mockLogger.Object,
+                mapRegistryMock.Object,
+                graphRegistryMock.Object,
+                agvStateObserver,
+                new ProductionOptions { ApplicationName = null, AutoAccept = true },
+                settingsProviderMock.Object);
+
             var previousState = agvStateMachine.Idle;
             var currentState = agvStateMachine.Initial;
 

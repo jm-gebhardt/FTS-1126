@@ -39,7 +39,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Services
             if (context.Message.Type == MassTransitBusEvent.EventType.PostStarted)
             {
                 BusStarted  = true;
-                _logger.LogInformation("{MessageType} of type {EventType} occured", nameof(MassTransitBusEvent), context.Message.Type);
+                _logger.LogInformation("{MessageType} of type {EventType} occurred", nameof(MassTransitBusEvent), context.Message.Type);
             }
             return Task.CompletedTask;
         }
