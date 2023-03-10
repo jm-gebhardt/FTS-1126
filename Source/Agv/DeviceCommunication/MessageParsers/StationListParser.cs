@@ -2,7 +2,6 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 
-
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
 {
     /// <summary>
@@ -17,8 +16,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
 
         /// <summary>Indicator for graph usability (valid or not).</summary>
         private AgvGraph.GraphUsability _usability = AgvGraph.GraphUsability.Valid;
-        private AgvGraph? _agvGraph;
 
+        private AgvGraph? _agvGraph;
 
         /// <summary>
         /// Constructor.
@@ -30,7 +29,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
             _stationList = stationList;
             _graph = graph;
         }
-
 
         /// <summary>
         /// Calculate distance between <paramref name="station"/> and <paramref name="node"/>.
@@ -69,7 +67,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
                 }
 
                 if (_usability == AgvGraph.GraphUsability.Valid &&
-                    _stationList.Stations.Length == 0 )
+                    _stationList.Stations.Length == 0)
                 {
                     _usability = AgvGraph.GraphUsability.InvalidStations;
                 }
@@ -100,7 +98,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
                         bool added = additionalNodes.Add(new(station.Identifier)
                         {
                             Enabled = true,
-                            Type = AgvGraph.NodeType.PickDrop,
+                            Type = ParseNodeType(station.Function),
                             X = station.Position.X,
                             Y = station.Position.Y,
                             Z = 0f,
@@ -146,12 +144,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
                         }
                     }
 
-                    _agvGraph = new AgvGraph(   agvGraph.CorrelationId,
-                                                additionalNodes.ToArray(),
-                                                additionalEdges.ToArray(),
-                                                agvGraph.RelatedMapId,
-                                                agvGraph.RelatedMapName,
-                                                _usability);
+                    _agvGraph = new AgvGraph(agvGraph.CorrelationId,
+                        additionalNodes.ToArray(),
+                        additionalEdges.ToArray(),
+                        agvGraph.RelatedMapId,
+                        agvGraph.RelatedMapName,
+                        _usability);
                 }
                 else
                 {
@@ -161,6 +159,34 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
             }
         }
 
+        /// <summary>
+        /// Converts station <see cref="Function"/> to <see cref="AgvGraph.NodeType"/>
+        /// </summary>
+        /// <param name="function"></param>
+        /// <returns>The Mqqt.StationList.Station.function converted/mapped to AgvGraph.NodeType</returns>
+        private AgvGraph.NodeType ParseNodeType(Function function)
+        {
+            switch (function)
+            {
+                case Function.Both:
+                    return AgvGraph.NodeType.PickDrop;
+
+                case Function.Charge:
+                    return AgvGraph.NodeType.Charge;
+
+                case Function.Drop:
+                    return AgvGraph.NodeType.Drop;
+
+                case Function.Park:
+                    return AgvGraph.NodeType.Park;
+
+                case Function.Pick:
+                    return AgvGraph.NodeType.Pick;
+
+                default:
+                    return AgvGraph.NodeType.PickDrop;
+            }
+        }
 
         /// <summary>
         /// Returns the serial number of the AGV.
