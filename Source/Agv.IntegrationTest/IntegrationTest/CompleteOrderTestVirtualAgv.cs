@@ -73,28 +73,25 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest
         [TestMethod]
         public async Task SingleVirtualAgvAdd_OrderProcessedSuccessful()
         {
-            var restApi = new RestApi();
-            var restAgv = await restApi.WaitForAgv("karis0");
-            restAgv.ShouldNotBeNull();
-            
-            (await restApi.WaitForAgvData(restAgv["correlationId"]?.ToString())).ShouldNotBeNull();
-            (await restApi.WaitForAgvGraph(restAgv["correlationId"]?.ToString())).ShouldNotBeNull();
-            (await restApi.WaitForMap(restAgv["correlationId"]?.ToString())).ShouldNotBeNull();
-
-            (await restApi.SetAgvIdle(restAgv["correlationId"]?.ToString())).ShouldBeTrue();
-
-            var cancellationTokenSource = new CancellationTokenSource();
-            await AddAndCompleteOrder("Order#1");
-
-            cancellationTokenSource.Cancel();
-            cancellationTokenSource.Dispose();
-        }
-
-        private async Task AddAndCompleteOrder(string orderId)
-        {
+            const string agvId = "karis0";
+            const string orderId = "Order#1";
             const string leNo = "123";
             const string source = "PVB02";
             const string destination = "PVB03";
+
+            var restApi = new RestApi();
+            var restAgv = await restApi.WaitForAgv(agvId);
+            restAgv.ShouldNotBeNull();
+
+            var agvCorrelationId = restAgv["correlationId"]?.ToString();
+            agvCorrelationId.ShouldNotBeNullOrEmpty();
+
+            (await restApi.WaitForAgvData(agvCorrelationId)).ShouldNotBeNull();
+            (await restApi.WaitForAgvGraph(agvCorrelationId)).ShouldNotBeNull();
+            (await restApi.WaitForMap(agvCorrelationId)).ShouldNotBeNull();
+
+            (await restApi.SetAgvIdle(agvCorrelationId)).ShouldBeTrue();
+
             var context = new WcsDbContext();
 
             (await context.Database.CanConnectAsync()).ShouldBeTrue();
@@ -102,7 +99,6 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest
             await context.AddNewOrder(orderId, leNo, source, destination);
             await context.SaveChangesAsync();
 
-            var restApi = new RestApi();
             var order = await restApi.WaitForOrder(orderId);
             order.ShouldNotBeNull();
 

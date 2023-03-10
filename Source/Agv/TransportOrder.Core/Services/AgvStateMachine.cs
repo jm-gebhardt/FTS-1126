@@ -348,18 +348,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
                     t => t.Then(c => _logger.LogDebug("{MessageType} {AgvId} / {CorrelationId}, AGV became alive", nameof(AgvStatusReceived), c.Message.AgvId, c.Saga.CorrelationId)),
                     e => e.Then(c => _logger.LogTrace("{MessageType} {AgvId} / {CorrelationId}, AGV is alive", nameof(AgvStatusReceived), c.Message.AgvId, c.Saga.CorrelationId)))
                 .Then(c => UpdateAgvAgvStatus(c.Saga, c.Message.AgvStatus, true, c))
-                // When AgvData missing repeat request all x seconds
-                .If(cond => cond.Saga.AgvData == null && cond.Saga.GetTimeSpanSinceLastRequest_AgvData().TotalSeconds > AgvRequestTimeoutS,
-                    PublishRequestAgvData)
-                // When AgvData present refresh once a day
-                .If(cond => cond.Saga.AgvData != null && cond.Saga.GetTimeSpanSinceLastRequest_AgvData().TotalSeconds > DailyRequestUpdateInterval,
-                    PublishRequestAgvData)
-                // When AgvGraph missing repeat request all x seconds
-                .If(cond => cond.Saga.AgvGraph == null && cond.Saga.GetTimeSpanSinceLastRequest_AgvGraph().TotalSeconds > AgvRequestTimeoutS,
-                    PublishRequestAgvGraph)
-                // When AgvGraph present refresh once a day
-                .If(cond => cond.Saga.AgvGraph != null && cond.Saga.GetTimeSpanSinceLastRequest_AgvGraph().TotalSeconds > DailyRequestUpdateInterval,
-                    PublishRequestAgvGraph)
+                .Then(RequestAgvDataAndGraph)
                 .If(cond =>
                     _productionOptions.AutoAccept &&
                     cond.Saga.AgvData is not null &&
@@ -393,7 +382,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
             When(AgvMapReceivedEvent)
                 .Then(c => _logger.LogInformation("Incoming Map {MapId}/{MapCorrelationId} for Agv {AgvId}/{CorrelationId}",
                     c.Message.AgvMap.MapId, c.Message.AgvMap.CorrelationId, c.Saga.AgvId, c.Saga.CorrelationId))
-                .Then(c => SaveMap(c.Message.AgvMap));
+                .Then(SaveMap);
 
         private EventActivityBinder<AgvSaga, AgvOfflineMessage> AgvOfflineMessageHandler() =>
             When(AgvOfflineWatchdog.Received)
@@ -403,19 +392,42 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         #endregion
 
         #region Actions
+        private void RequestAgvDataAndGraph(BehaviorContext<AgvSaga, AgvStatusReceived> context)
+        {
+            var agvSaga = context.Saga;
+
+            // When AgvData missing repeat request all x seconds otherwise refresh once a day
+            int timeout = agvSaga.AgvData == null ? AgvRequestTimeoutS : DailyRequestUpdateInterval;
+            double timeSinceLastRequest = agvSaga.GetTimeSpanSinceLastRequest_AgvData().TotalSeconds;
+            if (timeSinceLastRequest > timeout)
+            {
+                context.Publish(new RequestAgvData(agvSaga.CorrelationId, agvSaga.AgvId));
+                agvSaga.AgvDataRequestedLastTime = DateTime.UtcNow;
+            }
+
+            // When AgvGraph is missing repeat request all x seconds otherwise refresh once a day
+            timeout = agvSaga.AgvGraph == null ? AgvRequestTimeoutS : DailyRequestUpdateInterval;
+            timeSinceLastRequest = agvSaga.GetTimeSpanSinceLastRequest_AgvGraph().TotalSeconds;
+            if (timeSinceLastRequest > timeout)
+            {
+                context.Publish(new RequestAgvGraph(agvSaga.CorrelationId, agvSaga.AgvId));
+                agvSaga.AgvGraphRequestedLastTime = DateTime.UtcNow;
+            }
+        }
+
         /// <summary>
         /// When publishing <see cref="RequestAgvData"/> automatically store <see cref="AgvSaga.AgvDataRequestedLastTime"/>.
         /// </summary>
         private EventActivityBinder<AgvSaga, AgvStatusReceived> PublishRequestAgvData(EventActivityBinder<AgvSaga, AgvStatusReceived> binder) =>
             binder.Publish(m => new RequestAgvData(m.Saga.CorrelationId, m.Saga.AgvId))
-                  .Then(c => c.Saga.AgvDataRequestedLastTime = DateTime.UtcNow);
+                .Then(c => c.Saga.AgvDataRequestedLastTime = DateTime.UtcNow);
 
         /// <summary>
         /// When publishing <see cref="RequestAgvGraph"/> automatically store <see cref="AgvSaga.AgvGraphRequestedLastTime"/>.
         /// </summary>
         private EventActivityBinder<AgvSaga, AgvStatusReceived> PublishRequestAgvGraph(EventActivityBinder<AgvSaga, AgvStatusReceived> binder) =>
             binder.Publish(m => new RequestAgvGraph(m.Saga.CorrelationId, m.Saga.AgvId))
-                  .Then(c => c.Saga.AgvGraphRequestedLastTime = DateTime.UtcNow);
+                .Then(c => c.Saga.AgvGraphRequestedLastTime = DateTime.UtcNow);
 
         private async Task PublishAgvBecameIdle(AgvSaga agvSaga, IPublishEndpoint endpoint)
         {
@@ -467,8 +479,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
             }
         }
 
-        private void SaveMap(AgvMap agvMap)
+        private void SaveMap(BehaviorContext<AgvSaga, AgvMapReceived> context)
         {
+            var agvMap = context.Message.AgvMap;
+
             if (!_mapRegistry.Exists(agvMap.CorrelationId))
             {
                 if (_mapRegistry.AddOrUpdate(agvMap.CorrelationId, agvMap.MapId, agvMap.ImageData, agvMap.Resolution, agvMap.XOffset, agvMap.YOffset, agvMap.ModificationDate))

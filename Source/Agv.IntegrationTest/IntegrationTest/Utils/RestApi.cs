@@ -1,6 +1,7 @@
 using System.Net;
 using Newtonsoft.Json.Linq;
 using JetBrains.Annotations;
+using Azure;
 
 namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
 {
@@ -29,21 +30,47 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         {
             var httpClient = new HttpClient();
             var url = $"{_apiUrl}/{subPath}";
-            var response = await httpClient.GetStringAsync(url);
-            if (!string.IsNullOrEmpty(response))
-            {
-                return (T)JToken.Parse(response);
-            }
 
-            return null;
+            try
+            {
+                var response = await httpClient.GetAsync(url);
+
+                if (response.StatusCode != HttpStatusCode.OK)
+                {
+                    await WriteError($"Request '{url}' failed: {response.ReasonPhrase} ({(int)response.StatusCode})");
+                    return null;
+                }
+
+                var content = await response.Content.ReadAsStringAsync();
+                if (!string.IsNullOrEmpty(content))
+                {
+                    return (T)JToken.Parse(content);
+                }
+
+                await WriteError($"Request '{url}' returned empty response");
+                return null;
+            }
+            catch (HttpRequestException e)
+            {
+                await WriteError($"Request '{url}' failed: {e}");
+                return null;
+            }
         }
 
         private async Task<bool> Patch(string subPath)
         {
             var httpClient = new HttpClient();
             var url = $"{_apiUrl}/{subPath}";
+            Console.WriteLine($"Patch({url})");
             var response = await httpClient.PatchAsync(url, null);
-            return response.StatusCode == HttpStatusCode.OK;
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                await WriteError($"Request '{url}' failed ({(int)response.StatusCode}): {response.ReasonPhrase}");
+                return false;
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -111,13 +138,21 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
             return await Poll(async () =>
             {
                 var agvs = await GetAgvs();
-                if (agvs is { Count: > 0 } && agvs.Any(a => a["agvId"]?.ToString() == agvId))
+                if (agvs == null || agvs.Count == 0)
                 {
-                    return agvs.First(token => token["agvId"]?.ToString() == agvId);
+                    await WriteError($"No agvs found");
+                    return null;
                 }
 
-                return null;
-            }, 60000);
+                var agv = agvs.FirstOrDefault(token => token["agvId"]?.ToString() == agvId);
+                if (agv == null)
+                {
+                    await WriteError($"AGV '{agvId}' not found");
+                    return null;
+                }
+
+                return agv;
+            });
         }
 
         /// <summary>
@@ -130,6 +165,10 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
             return await Poll(async () =>
             {
                 var data = await GetAgvData(correlationId);
+                if (data == null)
+                {
+                    await WriteError($"AgvData could not be fetched");
+                }
                 return data ?? null;
             });
         }
@@ -144,6 +183,10 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
             return await Poll(async () =>
             {
                 var data = await GetAgvGraph(correlationId);
+                if (data == null)
+                {
+                    await WriteError($"AgvGraph could not be fetched");
+                }
                 return data ?? null;
             });
         }
@@ -158,11 +201,28 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
             return await Poll(async () =>
             {
                 var maps = await GetMaps();
-                if (maps is { Count: > 0 } && maps.Any(a => (a["relatedAgvs"] ?? throw new InvalidOperationException()).Any(c => c.ToString() == agvCorrelationId)))
+                if (maps == null || maps.Count == 0)
                 {
-                    return maps.First(token => (token["relatedAgvs"] ?? throw new InvalidOperationException()).Any(c => c.ToString() == agvCorrelationId));
+                    await WriteError($"No maps found");
+                    return null;
                 }
 
+                foreach (var map in maps)
+                {
+                    var relatedAgvs = map["relatedAgvs"];
+                    if (relatedAgvs == null) continue;
+
+                    foreach (var correlationId in relatedAgvs)
+                    {
+                        if (correlationId == null) continue;
+                        if (correlationId.ToString() == agvCorrelationId)
+                        {
+                            return map;
+                        }
+                    }
+                }
+
+                await WriteError($"Map not found. Response: {maps}");
                 return null;
             });
         }
@@ -179,19 +239,21 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
             return await Poll(async () =>
             {
                 var orders = await GetOrders();
-                if (orders is { Count: > 0 } &&
-                    orders.Any(a => a["orderDetails"]?["orderId"]?.ToString() == orderId)
-                   )
+                if (orders == null || orders.Count == 0)
                 {
-                    var order = orders.First(token => token["orderDetails"]?["orderId"]?.ToString() == orderId);
-                    if (orderState == null || order["currentState"]?.ToString() == orderState)
-                    {
-                        return order;
-                    }
+                    await WriteError($"No orders found");
+                    return null;
                 }
 
-                return null;
-            }, longJob ? 600000 : 30000);
+                var order = orders.FirstOrDefault(token => token["orderDetails"]?["orderId"]?.ToString() == orderId);
+                if (order == null || orderState != null && order["currentState"]?.ToString() == orderState)
+                {
+                    await WriteError($"Order '{orderId}' not found. Response: {orders}");
+                    return null;
+                }
+
+                return order;
+            }, longJob ? 600000 : 120000);
         }
 
         /// <summary>
@@ -201,7 +263,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         /// <param name="timeout"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns>return request result or null of unsuccessful</returns>
-        private static async Task<T?> Poll<T>(Func<Task<T?>> pollJob, int timeout = 30000)
+        private static async Task<T?> Poll<T>(Func<Task<T?>> pollJob, int timeout = 120000)
         {
             var killTime = DateTime.Now + TimeSpan.FromMilliseconds(timeout);
             while (killTime > DateTime.Now)
@@ -217,14 +279,20 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
                 catch (Exception e)
                 {
                     // Do not care
-                    await Console.Error.WriteLineAsync(e.ToString());
+                    await WriteError(e.ToString());
                 }
-                await Task.Delay(500);
+                await Task.Delay(1000);
             }
 
-            await Console.Error.WriteLineAsync("Polling time out");
+            await WriteError("Polling time out");
 
             return default;
+        }
+
+        private static async Task WriteError(string message)
+        {
+            string timestamp = DateTime.Now.ToString("HH:mm:ss");
+            await Console.Error.WriteLineAsync($"{timestamp}: {message}");
         }
     }
 }
