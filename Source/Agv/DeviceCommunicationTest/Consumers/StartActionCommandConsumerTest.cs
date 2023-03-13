@@ -63,7 +63,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
                 action.CorrelationId.ShouldBe(actionCorrelationId);
                 action.AgvId.ShouldBe(agvId);
                 action.OrderId.ShouldBe(orderId);
-                action.OrderCorrelationId.ShouldBe(orderCorrelationId);
+                action.ParentId.ShouldBe(orderCorrelationId);
                 action.Source.ShouldBe(fromStationId);
                 action.Destination.ShouldBe(toStationId);
 

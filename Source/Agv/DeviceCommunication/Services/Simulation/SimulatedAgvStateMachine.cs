@@ -220,9 +220,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
                     c.Saga.Action = c.Message.Action;
                     c.Saga.ActionStartDate = DateTime.UtcNow;
 
-                    _logger.LogInformation("AGV {AgvId} / {CorrelationId} started action {ActionType} for {OrderId} / {OrderCorrelationId}. Action will be finished at {ActionFinishDate:HH:mm:ss.fff}",
+                    _logger.LogInformation("AGV {AgvId} / {CorrelationId} started action {ActionType} for {OrderId} / {ParentId}. Action will be finished at {ActionFinishDate:HH:mm:ss.fff}",
                         c.Saga.AgvId, c.Saga.CorrelationId,
-                        c.Message.Action.ActionType, c.Message.Action.OrderId, c.Message.Action.OrderCorrelationId, c.Saga.ActionFinishDate);
+                        c.Message.Action.ActionType, c.Message.Action.OrderId, c.Message.Action.ParentId, c.Saga.ActionFinishDate);
                 })
                 .TransitionTo(BusyMoving)
                 .Publish(c => new ActionStatusChangedEvent(c.Saga.Action!.CorrelationId, ActionStatusChangedType.Started))
@@ -374,8 +374,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
             }
             else
             {
-                _logger.LogInformation("AGV {AgvId} / {CorrelationId} finished action {ActionType} for {OrderId} / {OrderCorrelationId}",
-                    context.Saga.AgvId, context.Saga.CorrelationId, action.ActionType, action.OrderId, action.OrderCorrelationId);
+                _logger.LogInformation("AGV {AgvId} / {CorrelationId} finished action {ActionType} for {OrderId} / {ParentId}",
+                    context.Saga.AgvId, context.Saga.CorrelationId, action.ActionType, action.OrderId, action.ParentId);
 
                 context.Publish(new ActionStatusChangedEvent(action.CorrelationId, ActionStatusChangedType.Completed));
             }
