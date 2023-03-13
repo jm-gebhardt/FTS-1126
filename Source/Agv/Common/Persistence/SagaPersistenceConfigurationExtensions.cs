@@ -1,7 +1,8 @@
 using MassTransit;
 using MassTransit.EntityFrameworkCoreIntegration;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence {
+namespace Gebhardt.StoreWare.Agv.Common.Persistence
+{
 
     /// <summary>
     /// Saga Persistence Extensions
@@ -23,8 +24,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence {
         public static ISagaRegistrationConfigurator<TSaga> AddPersistence<TSaga, TDbContext>(
             this ISagaRegistrationConfigurator<TSaga> configurator,
             bool inMemory = false
-            ) 
-            where TDbContext: SagaDbContext 
+            )
+            where TDbContext : SagaDbContext
             where TSaga : class, ISaga
         {
             if (inMemory)

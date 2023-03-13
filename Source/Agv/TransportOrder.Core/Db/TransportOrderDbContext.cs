@@ -2,8 +2,8 @@
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
+using Gebhardt.StoreWare.Agv.Common.Persistence;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Db.Models;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Db
 {
@@ -13,9 +13,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Db
     public class TransportOrderDbContext : DbContext
     {
         /// <summary>
-        /// Configuration section where the ConnectionString is located
+        /// Configuration section where the ConnectionString for AGV Master Control is located
         /// </summary>
-        public const string ConfigSectionName = "TO";
+        public const string ConfigSectionName = "AMC";
 
         /// <summary>
         /// DataSet "AgvAction"

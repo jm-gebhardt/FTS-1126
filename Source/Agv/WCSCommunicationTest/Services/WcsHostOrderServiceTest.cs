@@ -27,7 +27,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services
         [DataRow("Order#123", "", "")]
         public async Task NewOrder_ToAgvRowIsInValid_HandlingFailed(string orderId, string source, string destination)
         {
-            var fixture = new EfPollableServiceTestFixture<WcsOrderHandler, WcsDbContext>();
+            var fixture = new EfPollableServiceTestFixture<WcsOrderHandler, WcsHostDbContext>();
             await using (var context = await fixture.DbContextFactory.CreateDbContextAsync())
             {
                 context.ToAgv.Add(ToFromAgvGenerator.GenerateToAgvEntry(orderId, source, destination));
@@ -54,7 +54,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services
         [DataRow("sc1", "dst1")]
         public async Task ValidNewOrderFoundInToAgv_HandleHostOrderWasPublished(string source, string destination)
         {
-            var fixture = new EfPollableServiceTestFixture<WcsOrderHandler, WcsDbContext>();
+            var fixture = new EfPollableServiceTestFixture<WcsOrderHandler, WcsHostDbContext>();
 
             await using (var context = await fixture.DbContextFactory.CreateDbContextAsync())
             {
@@ -90,7 +90,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services
         [DataRow("sc1", "dst1")]
         public async Task ValidNewOrderFoundInToAgv_FromAgvEntryCreated(string source, string destination)
         {
-            var fixture = new EfPollableServiceTestFixture<WcsOrderHandler, WcsDbContext>();
+            var fixture = new EfPollableServiceTestFixture<WcsOrderHandler, WcsHostDbContext>();
 
             await using (var context = await fixture.DbContextFactory.CreateDbContextAsync())
             {
@@ -118,7 +118,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services
         public async Task HandleIncomingCancelRequests_with_Valid_Orders()
         {
             // Arrange
-            var fixture = new EfPollableServiceTestFixture<WcsOrderHandler, WcsDbContext>();
+            var fixture = new EfPollableServiceTestFixture<WcsOrderHandler, WcsHostDbContext>();
 
             await using (var context = await fixture.DbContextFactory.CreateDbContextAsync())
             {
@@ -150,7 +150,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services
         public async Task HandleIncomingCancelRequests_with_Invalid_Orders(string orderId, string source, string destination)
         {
             // Arrange
-            var fixture = new EfPollableServiceTestFixture<WcsOrderHandler, WcsDbContext>();
+            var fixture = new EfPollableServiceTestFixture<WcsOrderHandler, WcsHostDbContext>();
             await using (var context = await fixture.DbContextFactory.CreateDbContextAsync())
             {
                 context.ToAgv.Add(ToFromAgvGenerator.GenerateToAgvEntry(orderId, source, destination, recordType: RecordType.OrderCancelRequest, messageStatus: MessageStatus.Pending));

@@ -7,6 +7,7 @@ using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.WCSCommunication.Db;
 using Gebhardt.StoreWare.Agv.WCSCommunication.Db.Models;
+using Gebhardt.StoreWare.Agv.WCSCommunication.Messages;
 
 namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
 {
@@ -17,7 +18,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
     {
         private readonly ILogger<WcsOrderHandler> _logger;
         private readonly IBus _bus;
-        private readonly IDbContextFactory<WcsDbContext> _contextFactory;
+        private readonly IDbContextFactory<WcsHostDbContext> _contextFactory;
 
         /// <summary>
         /// Handles all actions found in the ToAgv table
@@ -25,7 +26,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
         /// <param name="logger"></param>
         /// <param name="bus"></param>
         /// <param name="contextFactory"></param>
-        public WcsOrderHandler(ILogger<WcsOrderHandler> logger, IBus bus, IDbContextFactory<WcsDbContext> contextFactory)
+        public WcsOrderHandler(ILogger<WcsOrderHandler> logger, IBus bus, IDbContextFactory<WcsHostDbContext> contextFactory)
         {
             _logger = logger;
             _bus = bus;
@@ -66,6 +67,8 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
                     var hostOrderDetails = new OrderDetails(correlationId, order.OrderId, order.Source, order.Destination, order.LeNo, HostOrderCreator.Wms, order.Created);
 
                     await _bus.Publish(new HandleHostOrder(correlationId, hostOrderDetails), cancellationToken);
+
+                    await _bus.Publish(new CreateHostOrder(hostOrderDetails), cancellationToken);
 
                     context.FromAgv.Add(FromAgv.CreateInstance(order, OrderStatus.Pending, RecordType.TransportOrder));
                     order.MessageStatus = MessageStatus.Finished; // Mark Message as Read

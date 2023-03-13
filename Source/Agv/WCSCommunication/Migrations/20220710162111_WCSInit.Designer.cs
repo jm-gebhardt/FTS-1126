@@ -14,7 +14,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Migrations
     /// <summary>
     /// 
     /// </summary>
-    [DbContext(typeof(WcsDbContext))]
+    [DbContext(typeof(WcsHostDbContext))]
     [Migration("20220710162111_WCSInit")]
     partial class WCSInit
     {

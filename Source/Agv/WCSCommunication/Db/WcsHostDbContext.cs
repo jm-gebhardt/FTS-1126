@@ -7,14 +7,14 @@ using Microsoft.Extensions.Logging;
 namespace Gebhardt.StoreWare.Agv.WCSCommunication.Db
 {
     /// <summary>
-    /// The Wcs Database Context
+    /// The WCS database context (connection to host database)
     /// </summary>
-    public class WcsDbContext : DbContext
+    public class WcsHostDbContext : DbContext
     {
         /// <summary>
-        /// Configuration section where the ConnectionString is located
+        /// Configuration section where the ConnectionString for host database is located
         /// </summary>
-        public const string ConfigSectionName = "wcs";
+        public const string ConfigSectionName = "WCS";
 
         /// <summary>
         /// Get all Orders with <see cref="MessageStatus.Pending" />
@@ -71,7 +71,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Db
         /// WCSDbContext constructor with options
         /// </summary>
         /// <param name="options"></param>
-        public WcsDbContext(DbContextOptions<WcsDbContext> options) : base(options)
+        public WcsHostDbContext(DbContextOptions<WcsHostDbContext> options) : base(options)
         {
         }
 

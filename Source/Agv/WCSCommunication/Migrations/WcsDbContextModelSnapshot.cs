@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Gebhardt.StoreWare.Agv.WCSCommunication.Migrations
 {
-    [DbContext(typeof(WcsDbContext))]
+    [DbContext(typeof(WcsHostDbContext))]
     partial class WcsDbContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)

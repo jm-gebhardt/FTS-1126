@@ -42,7 +42,7 @@ CONNECTIONSTRINGS__WCS="Server=127.0.0.1,1433;Database=master;User Id=MyDbUser;P
 
 ### TransportOrder
 ```
-CONNECTIONSTRINGS__TO="Server=127.0.0.1,1433;Database=master;User Id=MyDbUser;Password=MyStrongPassword;"
+CONNECTIONSTRINGS__AMC="Server=127.0.0.1,1433;Database=master;User Id=MyDbUser;Password=MyStrongPassword;"
 ```
 Database persistence can be disabled using: `--enableInMemoryPersistence`
 

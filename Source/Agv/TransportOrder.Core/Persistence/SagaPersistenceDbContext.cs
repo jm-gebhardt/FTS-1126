@@ -16,9 +16,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence
     public class SagaPersistenceDbContext : SagaDbContext
     {
         /// <summary>
-        /// Configuration section where the ConnectionString is located
+        /// Configuration section where the ConnectionString for AGV Master Control is located
         /// </summary>
-        public const string ConfigSectionName = "TO";
+        public const string ConfigSectionName = "AMC";
 
         /// <summary>
         /// Name of the migration table

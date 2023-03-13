@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence
+namespace Gebhardt.StoreWare.Agv.Common.Persistence
 {
     /// <summary>
     /// EntityTypeBuilder extension 

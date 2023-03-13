@@ -138,7 +138,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         /// </summary>
         /// <param name="args"></param>
         /// <param name="timeout"></param>
-        public bool RunDockerComposeCommand(string args, int timeout = 60000)
+        public bool RunDockerComposeCommand(string args, int timeout = 120000)
         {
             return RunCommand(args, out _, true, timeout);
         }
@@ -148,7 +148,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         /// </summary>
         /// <param name="args"></param>
         /// <param name="timeout"></param>
-        public bool RunDockerCommand(string args, int timeout = 60000)
+        public bool RunDockerCommand(string args, int timeout = 120000)
         {
             return RunCommand(args, out _, false, timeout);
         }
@@ -161,7 +161,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         /// <param name="timeout"></param>
         /// <param name="stdout"></param>
         /// <returns>Returns true if exit code is zero</returns>
-        public bool RunCommand(string args, out string stdout, bool dockerComposeCommand = true, int timeout = 60000)
+        public bool RunCommand(string args, out string stdout, bool dockerComposeCommand = true, int timeout = 120000)
         {
             var cmd = String.Empty;
             if (dockerComposeCommand)

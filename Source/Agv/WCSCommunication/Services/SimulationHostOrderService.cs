@@ -5,6 +5,7 @@ using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Commands;
 using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.WCSCommunication.CmdOptions;
+using Gebhardt.StoreWare.Agv.WCSCommunication.Messages;
 
 namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
 {
@@ -64,6 +65,8 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
 
             // Send message
             await _bus.Publish(new HandleHostOrder(correlationId, orderDetails), cancellationToken);
+
+            await _bus.Publish(new CreateHostOrder(orderDetails), cancellationToken);
 
             _logger.LogInformation("Simulation HostOrder created: CorrelationId = {CorrelationId}, OrderId = {OrderId}, Source = {Src}, Dest = {Dst}, LeNo = {LeNo}", correlationId, orderId, src, dst, leNo);
         }

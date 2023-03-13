@@ -13,13 +13,21 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Consumers
     [TestClass]
     public class WcsOrderConsumerTest
     {
+        /// <summary />
+        public WcsOrderConsumerTest()
+        {
+            var fixture = new EfConsumerTestFixture<WcsHostOrderConsumer, WcsHostDbContext>();
+            // Initialize EntityFramework
+            fixture.DbContextFactory.CreateDbContext();
+        }
+
         /// <summary>
         /// Test for processing HostOrderHandlingSucceeded message
         /// </summary>
         [TestMethod]
         public async Task HostOrderSucceededMessageConsumed_OrderIdDoesNotExistInToAgv_FromAgvEntryNotWritten()
         {
-            var fixture = new EfConsumerTestFixture<WcsHostOrderConsumer, WcsDbContext>();
+            var fixture = new EfConsumerTestFixture<WcsHostOrderConsumer, WcsHostDbContext>();
 
             string orderId = "TestOrder123";
             var correlationId = orderId.ToGuid();
@@ -36,7 +44,6 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Consumers
             context.FromAgv.Count().ShouldBe(0);
         }
 
-
         /// <summary>
         /// Test for processing HostOrderHandlingSucceeded message
         /// </summary>
@@ -47,7 +54,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Consumers
         [DataRow(RecordType.OrderCancelRequest)]
         public async Task HostOrderSucceededMessageConsumed_FromAgvEntryWritten_OrderStatusFinished(RecordType recordTyp)
         {
-            var fixture = new EfConsumerTestFixture<WcsHostOrderConsumer, WcsDbContext>();
+            var fixture = new EfConsumerTestFixture<WcsHostOrderConsumer, WcsHostDbContext>();
 
             await using var context = await fixture.DbContextFactory.CreateDbContextAsync();
             context.ToAgv.Add(ToFromAgvGenerator.GenerateToAgvEntry());
@@ -86,7 +93,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Consumers
         [DataRow(RecordType.OrderCancelRequest)]
         public async Task HostOrderStartedMessageConsumed_FromAgvEntryWritten_OrderStatusInProgress(RecordType recordTyp)
         {
-            var fixture = new EfConsumerTestFixture<WcsHostOrderConsumer, WcsDbContext>();
+            var fixture = new EfConsumerTestFixture<WcsHostOrderConsumer, WcsHostDbContext>();
 
             await using var context = await fixture.DbContextFactory.CreateDbContextAsync();
             context.ToAgv.Add(ToFromAgvGenerator.GenerateToAgvEntry());
@@ -123,7 +130,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Consumers
         [DataRow(RecordType.OrderCancelRequest)]
         public async Task HostOrderHandlingFailedMessageConsumed_FromAgvEntryWritten_OrderStatusFinishedWithError(RecordType recordType)
         {
-            var fixture = new EfConsumerTestFixture<WcsHostOrderConsumer, WcsDbContext>();
+            var fixture = new EfConsumerTestFixture<WcsHostOrderConsumer, WcsHostDbContext>();
 
             await using var context = await fixture.DbContextFactory.CreateDbContextAsync();
             context.ToAgv.Add(ToFromAgvGenerator.GenerateToAgvEntry());
@@ -159,7 +166,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Consumers
         public async Task Consuming_HostOrderCancelSucceeded_Table_Entry_Examination()
         {
             // Arrange
-            var fixture = new EfConsumerTestFixture<WcsHostOrderConsumer, WcsDbContext>();
+            var fixture = new EfConsumerTestFixture<WcsHostOrderConsumer, WcsHostDbContext>();
 
             await using var context = await fixture.DbContextFactory.CreateDbContextAsync();
             context.ToAgv.Add(ToFromAgvGenerator.GenerateToAgvEntry());
@@ -196,7 +203,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Consumers
         public async Task Consuming_HostOrderCancelSucceeded_But_No_Order_Found()
         {
             // Arrange
-            var fixture = new EfConsumerTestFixture<WcsHostOrderConsumer, WcsDbContext>();
+            var fixture = new EfConsumerTestFixture<WcsHostOrderConsumer, WcsHostDbContext>();
 
             string orderId = "TestOrder123";
             var correlationId = orderId.ToGuid();
@@ -219,7 +226,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Consumers
         public async Task Consuming_HostOrderCancelFailed_Table_Entry_Examination()
         {
             // Arrange
-            var fixture = new EfConsumerTestFixture<WcsHostOrderConsumer, WcsDbContext>();
+            var fixture = new EfConsumerTestFixture<WcsHostOrderConsumer, WcsHostDbContext>();
 
             await using var context = await fixture.DbContextFactory.CreateDbContextAsync();
             context.ToAgv.Add(ToFromAgvGenerator.GenerateToAgvEntry());
@@ -256,7 +263,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Consumers
         public async Task Consuming_HostOrderCancelFailed_But_No_Order_Found()
         {
             // Arrange
-            var fixture = new EfConsumerTestFixture<WcsHostOrderConsumer, WcsDbContext>();
+            var fixture = new EfConsumerTestFixture<WcsHostOrderConsumer, WcsHostDbContext>();
 
             string orderId = "TestOrder123";
             var correlationId = orderId.ToGuid();

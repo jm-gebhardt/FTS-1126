@@ -17,7 +17,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
         IConsumer<HostOrderCancelSucceeded>,
         IConsumer<HostOrderCancelFailed>
     {
-        private readonly IDbContextFactory<WcsDbContext> _contextFactory;
+        private readonly IDbContextFactory<WcsHostDbContext> _contextFactory;
         private readonly ILogger<WcsHostOrderConsumer> _logger;
 
         /// <summary>
@@ -26,7 +26,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
         /// <param name="logger">Mandatory logger facility.</param>
         /// <param name="contextFactory"></param>
         [JetBrains.Annotations.PublicAPI]
-        public WcsHostOrderConsumer(ILogger<WcsHostOrderConsumer> logger, IDbContextFactory<WcsDbContext> contextFactory)
+        public WcsHostOrderConsumer(ILogger<WcsHostOrderConsumer> logger, IDbContextFactory<WcsHostDbContext> contextFactory)
         {
             _contextFactory = contextFactory;
             _logger = logger;

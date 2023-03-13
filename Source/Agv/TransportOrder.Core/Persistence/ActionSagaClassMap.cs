@@ -1,4 +1,5 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Core.States;
+﻿using Gebhardt.StoreWare.Agv.Common.Persistence;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.States;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
