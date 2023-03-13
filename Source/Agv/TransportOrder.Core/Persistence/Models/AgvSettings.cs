@@ -20,6 +20,19 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Models
         /// <summary>
         /// Min. distance between an AGV and a node for a node to be considered 'Occupied'
         /// </summary>
+        // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Global
         public float OccupiedDistanceThreshold { get; init; } = 1.0f;
+
+        /// <summary>Critical battery level</summary>
+        public int BatteryLevelCritical { get; init; } = 10;
+
+        /// <summary>Low battery level</summary>
+        public int BatteryLevelLow { get; init; } = 40;
+
+        /// <summary>Good battery level</summary>
+        public int BatteryLevelGood { get; init; } = 80;
+
+        /// <summary>Full battery level</summary>
+        public int BatteryLevelFull { get; init; } = 100;
     }
 }

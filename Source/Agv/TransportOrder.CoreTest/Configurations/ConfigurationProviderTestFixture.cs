@@ -8,6 +8,7 @@ using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Models;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.States;
 using JetBrains.Annotations;
 using MassTransit;
@@ -46,17 +47,17 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Configurations
         private readonly string _databaseName = Guid.NewGuid().ToString();
         private const string AgvId = "AGV1";
         private const string MapName = "Map#1";
-        private readonly Guid _correlationId = AgvId.ToGuid();
         private readonly AgvSaga _agvSaga;
         private readonly IHostBuilder _hostBuilder;
         private IHost _host = null!;
         private DatabaseConfigurationSource? _databaseConfigurationSource;
 
+        public readonly Guid CorrelationId = AgvId.ToGuid();
         public IDbContextFactory<DbSetSagaPersistenceDbContext> DbSetSagaPersistenceDbContextFactory => _host.Services.GetRequiredService<IDbContextFactory<DbSetSagaPersistenceDbContext>>();
         public IConfiguration Configuration => _host.Services.GetRequiredService<IConfiguration>();
         public SagaSettingsProvider<TSettings, TSaga, DbSetSagaPersistenceDbContext> GetSagaSettingsProvider<TSettings, TSaga>()
-        where TSettings : class, ISettings<TSettings>
-        where TSaga : class, SagaStateMachineInstance => _host.Services.GetRequiredService<SagaSettingsProvider<TSettings, TSaga, DbSetSagaPersistenceDbContext>>();
+            where TSettings : class, ISettings<TSettings>
+            where TSaga : class, SagaStateMachineInstance, ISagaDefinedSetting<ISagaSettings<TSettings>, TSettings> => _host.Services.GetRequiredService<SagaSettingsProvider<TSettings, TSaga, DbSetSagaPersistenceDbContext>>();
         public ISettingsProvider<TSettings> GetSettingsProvider<TSettings>() where TSettings : class, ISettings<TSettings> => _host.Services.GetRequiredService<ISettingsProvider<TSettings>>();
         public static IEnumerable<ConfigurationType> ConfigurationTypes => ConfigurationTypeManager.Instance.ConfigurationTypes;
 
@@ -69,7 +70,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Configurations
 
             ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
 
-            _agvSaga = new AgvSaga(_correlationId, AgvId, "TestState",
+            _agvSaga = new AgvSaga(CorrelationId, AgvId, "TestState",
             new AgvStatus(Guid.NewGuid(), "123", true, true, 10, false, false),
             new AgvGraph(Guid.NewGuid(),
                 new AgvGraph.Node[] { new("id") },
@@ -102,9 +103,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Configurations
         /// </summary>
         public ConfigurationProviderTestFixture AddDatabaseConfigurationProvider(int reloadDelay = 0, bool reloadOnChange = true)
         {
-            var logger = InitialLogger.Create<DatabaseConfigurationProviderTest>();
-            IConfigurationTypeManager configurationTypeManager = ConfigurationTypeManager.Instance;
 
+            IConfigurationTypeManager configurationTypeManager = ConfigurationTypeManager.Instance;
+            return AddDatabaseConfigurationProvider(configurationTypeManager, reloadDelay, reloadOnChange);
+        }
+
+        // ReSharper disable once MemberCanBePrivate.Global
+        public ConfigurationProviderTestFixture AddDatabaseConfigurationProvider(IConfigurationTypeManager configurationTypeManager, int reloadDelay = 0, bool reloadOnChange = true)
+        {
+            var logger = InitialLogger.Create<DatabaseConfigurationProviderTest>();
             _databaseConfigurationSource = new DatabaseConfigurationSource(configurationTypeManager, null, logger)
             {
                 ReloadOnChange = reloadOnChange,
@@ -141,11 +148,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Configurations
         }
 
         /// <summary>
-        /// Registers the <see cref="SagaSettingsProvider{TSettings, TSaga, DbSetSagaPersistenceDbContext}"/> in the service collection
+        /// Registers the <see cref="SagaSettingsProvider{TSettings,TSaga, DbSetSagaPersistenceDbContext}"/> in the service collection
         /// </summary>
         public ConfigurationProviderTestFixture AddSagaSettingsProvider<TSettings, TSaga>()
-        where TSettings : class, ISettings<TSettings>
-        where TSaga : class, SagaStateMachineInstance
+            where TSettings : class, ISettings<TSettings>
+            where TSaga : class, SagaStateMachineInstance, ISagaDefinedSetting<ISagaSettings<TSettings>, TSettings>
         {
             _hostBuilder.ConfigureServices(sp => sp.AddTransient(p =>
             {
@@ -191,17 +198,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Configurations
         /// <summary>
         /// Adds the <see cref="AgvSaga"/> settings
         /// </summary>
-        /// <param name="agvOfflineTimeoutMsWhileBusy"></param>
-        /// <param name="agvOfflineTimeoutMsWhileIdle"></param>
-        /// <param name="occupiedDistanceThreshold"></param>
-        public void AddAgvSagaSettings(int agvOfflineTimeoutMsWhileBusy, int agvOfflineTimeoutMsWhileIdle, float occupiedDistanceThreshold)
+        /// <param name="agvSagaSettings"></param>
+        public void AddAgvSagaSettings(AgvSagaSettings agvSagaSettings)
         {
-            _agvSaga.Settings = new()
-            {
-                AgvOfflineTimeoutMsWhileBusy = agvOfflineTimeoutMsWhileBusy,
-                AgvOfflineTimeoutMsWhileIdle = agvOfflineTimeoutMsWhileIdle,
-                OccupiedDistanceThreshold = occupiedDistanceThreshold
-            };
+            _agvSaga.Settings = agvSagaSettings;
         }
 
         /// <summary>
@@ -220,6 +220,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Configurations
         /// <summary>
         /// Gets the <see cref="AgvSaga"/> record
         /// </summary>
+        // ReSharper disable once UnusedMember.Global
         public async Task<AgvSaga> GetAgvSagaAsync()
         {
             IDbContextFactory<DbSetSagaPersistenceDbContext> dbContextFactory = DbSetSagaPersistenceDbContextFactory;

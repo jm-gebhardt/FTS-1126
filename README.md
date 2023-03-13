@@ -174,23 +174,7 @@ docker compose logs -f [service (wcscommunication|devicecommunication|transporto
 ```
 
 ### Database Migrations
-First, ensure that a ConnectionString is available as an ENV variable.
-#### Create Migrations
-Export required connection string, e.g:
-````
-export CONNECTIONSTRINGS__TO='Server=127.0.0.1;Database=master;User Id=sa;Password=<password>'
-````
-
-Apply existing migrations
-```
-dotnet ef database update
-```
-
-Add new migration
-```
-dotnet ef migrations add <MigrationName> 
-```
-
+Please refer to: https://dev.azure.com/GebhardtGroup/StoreWare/_wiki/wikis/StoreWare.wiki/541/Entity-Framework#
 
 ## Windows Service
 The software is designed to run as a Windows Service.

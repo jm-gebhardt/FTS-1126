@@ -66,6 +66,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                     return new AgvHubContext(hubContext, mapper);
                 });
                 services.AddTransient<IEventObserver<OrderSaga>, OrderEventObserver>();
+                services.AddTransient<IAgvSettingsProvider, AgvSettingsProvider>();
+                services.AddConfigurationTypeManager();
+                services.AddSettingsProviders(ConfigurationTypeManager.Instance);
+
                 
                 // Scoped
                 services.AddScoped<DatabaseConfigurationSeeder>();

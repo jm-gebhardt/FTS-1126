@@ -1,14 +1,14 @@
 namespace Gebhardt.StoreWare.Agv.Common.Configurations
 {
+
     /// <summary>
-    /// Implement this interface in a Saga to get it read by SagaSettingsProvider
+    /// A marker interface for the <see cref="ISettings{TSettings}"/>
+    /// Should have same properties as the actual TSettings class
+    /// But properties defined here must be marked as nullable so that the SagaSettingsProvider can determine whether to use the default values for unset property
     /// </summary>
-    public interface ISagaSetting<out TSettings>
+    // ReSharper disable once UnusedTypeParameter
+    public interface ISagaSettings<TSettings> where TSettings : ISettings
     {
-        /// <summary>
-        /// The settings object
-        /// </summary>
-        /// <returns>The settings in the Saga</returns>
-        TSettings? Settings { get; }
+
     }
 }

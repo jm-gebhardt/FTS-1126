@@ -11,7 +11,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders
     /// <typeparam name="TDbContext">The dbContext of the Saga</typeparam>
     public class SagaSettingsProvider<TSettings, TSaga, TDbContext> : ISagaSettingsProvider<TSettings, TSaga>
     where TSettings : class, ISettings<TSettings>
-    where TSaga : class, SagaStateMachineInstance
+    where TSaga : class, SagaStateMachineInstance, ISagaDefinedSetting<ISagaSettings<TSettings>, TSettings>
     where TDbContext : DbContext
     {
         private readonly IDbContextFactory<TDbContext> _dbContextFactory;
@@ -21,8 +21,8 @@ namespace Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders
         /// <summary>
         /// Ctor
         /// </summary>
-        /// <param name="dbContextFactory"></param>
-        /// <param name="settingsProvider"></param>
+        /// <param name="dbContextFactory">The context factory for the <see ref="TDbContext"/></param>
+        /// <param name="settingsProvider">The settings provider for <see ref="TSettings"/></param>
         public SagaSettingsProvider(IDbContextFactory<TDbContext> dbContextFactory, ISettingsProvider<TSettings> settingsProvider)
         {
             _dbContextFactory = dbContextFactory;
@@ -30,28 +30,53 @@ namespace Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders
         }
 
         /// <summary>
-        /// Retrieves the specific settings out of the Saga. If they are null it will dropdown to the fallback value (from the SettingsProvider), which is most likely the default value from the database
+        /// Retrieves the specific settings out of the Saga. If a value of a property is null it will dropdown to property value in the fallback layer (from the SettingsProvider), which is most likely the default value from the database
         /// </summary>
         public TSettings GetSettings(Guid correlationId)
         {
             _semaphore.Wait();
             try
             {
-                var dbContext = _dbContextFactory.CreateDbContext();
+                // default settings from configuration table or hardcoded in settings class
+                var settings = _settingsProvider.GetSettings();
+
+                using var dbContext = _dbContextFactory.CreateDbContext();
                 var saga = dbContext.Set<TSaga>().FirstOrDefault(s => s.CorrelationId == correlationId);
-                if (saga is ISagaSetting<TSettings> { Settings: { } settings })
+
+                if (saga is ISagaDefinedSetting<ISagaSettings<TSettings>, TSettings> { Settings: { } specificSettings })
                 {
-                    return settings;
+                    settings = OverwriteSpecificValues(settings, specificSettings);
                 }
-                else
-                {
-                    return _settingsProvider.GetSettings();
-                }
+
+                return settings;
             }
             finally
             {
                 _semaphore.Release();
             }
+        }
+
+        private static TSettings OverwriteSpecificValues(TSettings settings, ISagaSettings<TSettings> specificSettings)
+        {
+            foreach (var explicitSetProperty in specificSettings.GetType().GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.DeclaredOnly))
+            {
+                string propertyName = explicitSetProperty.Name;
+                var property = settings.GetType().GetProperty(propertyName);
+                object? explicitSetValue = explicitSetProperty.GetValue(specificSettings);
+
+                if (property == null)
+                {
+                    throw new ArgumentException($"{propertyName} is defined in Saga, but not in settings class!");
+                }
+
+                if (explicitSetValue != null)
+                {
+                    // set explicit set value to settings
+                    property.SetValue(settings, explicitSetValue);
+                }
+            }
+
+            return settings;
         }
     }
 }

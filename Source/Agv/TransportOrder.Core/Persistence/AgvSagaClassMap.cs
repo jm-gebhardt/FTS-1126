@@ -29,7 +29,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence
             entity.Property(x => x.AgvData).HasJsonConversion();
             entity.Property(x => x.Settings).IsRequired(false).HasJsonConversion();
             
-
             // Restrict CurrentState length
             entity.Property(x => x.CurrentState).HasMaxLength(CurrentStateMaxLength);
         }

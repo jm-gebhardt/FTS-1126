@@ -11,7 +11,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.States
     /// This stores the current AGV state
     /// </summary>
     [PublicAPI]
-    public class AgvSaga : SagaStateMachineInstance, IAgv, ISagaSetting<AgvSettings>
+    public class AgvSaga : SagaStateMachineInstance, IAgv, ISagaDefinedSetting<AgvSagaSettings, AgvSettings>
     {
         /// <inheritdoc cref="IAgv"/>
         public Guid CorrelationId { get; set; }
@@ -28,7 +28,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.States
         /// Last Received AgvStatus
         /// </summary>
         public AgvStatus? AgvStatus { get; set; }
-        
+
         /// <summary>
         /// Last Received AgvGraph
         /// </summary>
@@ -60,9 +60,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.States
         public Guid? AgvOfflineTokenId { get; set; }
 
         /// <summary>
-        /// The Agv settings
+        /// Agv Saga Settings with nullable properties
         /// </summary>
-        public AgvSettings? Settings { get; set; }
+        public AgvSagaSettings? Settings { get; set; }
 
         /// <inheritdoc />
         [System.ComponentModel.DataAnnotations.Schema.NotMapped]
@@ -74,11 +74,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.States
         /// <summary>
         /// Default constructor required to connect.
         /// </summary>
-        public AgvSaga(Guid correlationId, 
-            string agvId, 
-            string? currentState = null, 
-            AgvStatus? agvStatus = null, 
-            AgvGraph? agvGraph = null, 
+        public AgvSaga(Guid correlationId,
+            string agvId,
+            string? currentState = null,
+            AgvStatus? agvStatus = null,
+            AgvGraph? agvGraph = null,
             AgvData? agvData = null)
         {
             if (correlationId == Guid.Empty)

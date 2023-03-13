@@ -12,6 +12,8 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Core.States;
 using MassTransit.Testing;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands;
 using MassTransit;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Models;
+using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Extensions;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
 {
@@ -22,6 +24,20 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
     public class AgvChargingServiceTest
     {
         #region Setup
+        private const int BatteryLevelCritical = 10;
+        private const int BatteryLevelLow = 40;
+        private const int BatteryLevelGood = 80;
+        private const int BatteryLevelFull = 100;
+        private static readonly AgvSettings _agvSettings = new()
+        {
+            BatteryLevelCritical = BatteryLevelCritical,
+            BatteryLevelFull = BatteryLevelFull,
+            BatteryLevelGood = BatteryLevelGood,
+            BatteryLevelLow = BatteryLevelLow,
+            AgvOfflineTimeoutMsWhileIdle = 15000,
+            AgvOfflineTimeoutMsWhileBusy = 20000
+        };
+
         private MassTransitTestFixture<AgvChargingService> GetTestFixture(int batteryCharge, int countQueuedOrders)
         {
             var logger = new Mock<ILogger<AgvChargingService>>();
@@ -60,6 +76,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
                 services.AddTransient(_ => agvRegistry.Object);
                 services.AddTransient(_ => orderRegistryMock.Object);
                 services.AddSingleton(_ => graphRegistry.Object);
+                services.AddAgvSettings(_agvSettings);
             });
 
             return fixture;
@@ -104,7 +121,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         {
             string agvId = "INVALID";
             var correlationId = agvId.ToGuid();
-            int batteryCharge = AgvChargingService.BatteryLevelGood;
+            int batteryCharge = _agvSettings.BatteryLevelGood;
             await TestConsumeNoAction(new AgvBecameIdle(correlationId), batteryCharge);
         }
 
@@ -113,7 +130,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         {
             string agvId = "AGV002"; // AGV002 is has no status
             var correlationId = agvId.ToGuid();
-            int batteryCharge = AgvChargingService.BatteryLevelGood;
+            int batteryCharge = _agvSettings.BatteryLevelGood;
 
             await TestConsumeNoAction(new AgvBecameIdle(correlationId), batteryCharge);
         }
@@ -123,14 +140,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         {
             string agvId = "AGV003"; // AGV003 is has no graph
             var correlationId = agvId.ToGuid();
-            int batteryCharge = AgvChargingService.BatteryLevelGood;
+            int batteryCharge = _agvSettings.BatteryLevelGood;
 
             await TestConsumeNoAction(new AgvBecameIdle(correlationId), batteryCharge);
         }
 
         [TestMethod]
-        [DataRow(AgvChargingService.BatteryLevelFull, 0)]
-        [DataRow(AgvChargingService.BatteryLevelGood, 1)]
+        [DataRow(BatteryLevelFull, 0)]
+        [DataRow(BatteryLevelGood, 1)]
         public async Task Consume_AgvBecameIdle_publish_AgvReady_for_AGV_charged_enough(int batteryCharge, int countQueuedOrders)
         {
             string agvId = "AGV001";
@@ -140,8 +157,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         }
 
         [TestMethod]
-        [DataRow(AgvChargingService.BatteryLevelCritical, 1)]
-        [DataRow(AgvChargingService.BatteryLevelLow, 0)]
+        [DataRow(BatteryLevelCritical, 1)]
+        [DataRow(BatteryLevelLow, 0)]
         public async Task Consume_AgvBecameIdle_publish_StartActionCommand_for_AGV_needs_charging(int batteryCharge, int countQueuedOrders)
         {
             string agvId = "AGV001";
@@ -157,7 +174,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         {
             string agvId = "AGV001";
             var correlationId = agvId.ToGuid();
-            int batteryCharge = AgvChargingService.BatteryLevelCritical;
+            int batteryCharge = _agvSettings.BatteryLevelCritical;
             bool charging = true;
             var agvStatus = new AgvStatus(correlationId, "", true, true, batteryCharge, charging, false);
 
@@ -165,8 +182,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         }
 
         [TestMethod]
-        [DataRow(AgvChargingService.BatteryLevelFull, 0)]
-        [DataRow(AgvChargingService.BatteryLevelGood, 1)]
+        [DataRow(BatteryLevelFull, 0)]
+        [DataRow(BatteryLevelGood, 1)]
         public async Task Consume_AgvStatusReceived_publish_AgvStoppedCharging_for_AGV_charged_enough(int batteryCharge, int countQueuedOrders)
         {
             string agvId = "AGV001";
@@ -178,8 +195,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         }
 
         [TestMethod]
-        [DataRow(AgvChargingService.BatteryLevelCritical, 0)]
-        [DataRow(AgvChargingService.BatteryLevelLow, 0)]
+        [DataRow(BatteryLevelCritical, 0)]
+        [DataRow(BatteryLevelLow, 0)]
         public async Task Consume_AgvStatusReceived_publish_AgvNeedsCharging_for_AGV_not_charging(int batteryCharge, int countQueuedOrders)
         {
             string agvId = "AGV001";

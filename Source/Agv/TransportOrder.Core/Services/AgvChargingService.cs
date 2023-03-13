@@ -6,6 +6,8 @@ using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Routing;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Models;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations.Agvs;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
 {
@@ -17,21 +19,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         IConsumer<AgvBecameIdle>,
         IConsumer<AgvStatusReceived>
     {
-        /// <summary>Critical battery level</summary>
-        public const int BatteryLevelCritical = 10;
-
-        /// <summary>Low battery level</summary>
-        public const int BatteryLevelLow = 40;
-
-        /// <summary>Good battery level</summary>
-        public const int BatteryLevelGood = 80;
-
-        /// <summary>Full battery level</summary>
-        public const int BatteryLevelFull = 100;
-
         private readonly ILogger<AgvChargingService> _logger;
         private readonly IAgvRegistry _agvRegistry;
         private readonly IOrderRegistry _orderRegistry;
+        private readonly IAgvSettingsProvider _settingsProvider;
         private readonly IGraphRegistry _graphRegistry;
 
         /// <summary>
@@ -41,16 +32,20 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         /// <param name="agvRegistry"></param>
         /// <param name="orderRegistry"></param>
         /// <param name="graphRegistry"></param>
+        /// <param name="settingsProvider"></param>
         public AgvChargingService(
             ILogger<AgvChargingService> logger,
             IAgvRegistry agvRegistry,
             IOrderRegistry orderRegistry,
-            IGraphRegistry graphRegistry)
+            IGraphRegistry graphRegistry,
+            IAgvSettingsProvider settingsProvider
+            )
         {
             _logger = logger;
             _agvRegistry = agvRegistry;
             _orderRegistry = orderRegistry;
             _graphRegistry = graphRegistry;
+            _settingsProvider = settingsProvider;
         }
 
         /// <summary>
@@ -89,6 +84,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         public async Task Consume(ConsumeContext<AgvStatusReceived> context)
         {
             var agvStatus = context.Message.AgvStatus;
+            var agvSettings = _settingsProvider.GetSettingsForAgv(agvStatus.CorrelationId);
 
             if (agvStatus.Charging)
             {
@@ -104,12 +100,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
                     return; // AgvStoppedCharging message was already send
                 }
 
-                if (agvStatus.BatteryCharge >= BatteryLevelFull)
+                if (agvStatus.BatteryCharge >= agvSettings.BatteryLevelFull)
                 {
                     _logger.LogInformation("Agv with correlationId {CorrelationId} reached full battery level ({BatteryCharge}%)", agvStatus.CorrelationId, agvStatus.BatteryCharge);
                     await context.Publish(new AgvStoppedCharging(agvStatus.CorrelationId));
                 }
-                else if (agvStatus.BatteryCharge >= BatteryLevelGood && _orderRegistry.CountQueued > 0)
+                else if (agvStatus.BatteryCharge >= agvSettings.BatteryLevelGood && _orderRegistry.CountQueued > 0)
                 {
                     _logger.LogInformation("Agv with correlationId {CorrelationId} reached good battery level ({BatteryCharge}%)", agvStatus.CorrelationId, agvStatus.BatteryCharge);
                     await context.Publish(new AgvStoppedCharging(agvStatus.CorrelationId));
@@ -117,22 +113,22 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
             }
             else // Check battery charge of active AGV
             {
-                if (CheckAgvNeedsCharging(agvStatus))
+                if (CheckAgvNeedsCharging(agvStatus, agvSettings))
                 {
                     await context.Publish(new AgvNeedsCharging(agvStatus.CorrelationId)); // This is a placeholder, there are currently no consumers for this message
                 }
             }
         }
 
-        private bool CheckAgvNeedsCharging(AgvStatus agvStatus)
+        private bool CheckAgvNeedsCharging(AgvStatus agvStatus, AgvSettings agvSettings)
         {
-            if (agvStatus.BatteryCharge <= BatteryLevelCritical)
+            if (agvStatus.BatteryCharge <= agvSettings.BatteryLevelCritical)
             {
                 _logger.LogInformation("Agv with correlationId {CorrelationId} has critical battery level ({BatteryCharge}%)", agvStatus.CorrelationId, agvStatus.BatteryCharge);
                 return true;
             }
 
-            if (agvStatus.BatteryCharge <= BatteryLevelLow)
+            if (agvStatus.BatteryCharge <= agvSettings.BatteryLevelLow)
             {
                 _logger.LogInformation("Agv with correlationId {CorrelationId} has low battery level ({BatteryCharge}%)", agvStatus.CorrelationId, agvStatus.BatteryCharge);
 
@@ -146,6 +142,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
             // agvStatus.BatteryCharge > BatteryLevelLow
             _logger.LogDebug("Agv with correlationId {CorrelationId} has good battery level ({BatteryCharge}%)", agvStatus.CorrelationId, agvStatus.BatteryCharge);
             return false;
+        }
+
+        private bool CheckAgvNeedsCharging(AgvStatus agvStatus)
+        {
+            var agvSettings = _settingsProvider.GetSettingsForAgv(agvStatus.CorrelationId);
+            return CheckAgvNeedsCharging(agvStatus, agvSettings);
         }
 
         private async Task CreateChargingAction(IAgv agv, ConsumeContext context)
