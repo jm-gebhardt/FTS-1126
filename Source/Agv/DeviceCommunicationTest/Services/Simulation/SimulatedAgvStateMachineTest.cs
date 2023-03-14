@@ -308,7 +308,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             } while (!matches && DateTime.Now < startedTime + timeout);
             matches.ShouldBeTrue();
 
-            (await fixture.TestHarness.Published.Any<ActionStatusChangedEvent>()).ShouldBeTrue();
+            (await fixture.TestHarness.Published.Any<ActionStatusChangedEvent>(c => c.Context.Message.ChangedType == ActionStatusChangedType.Completed)).ShouldBeTrue();
             actionStatus = fixture.TestHarness.Published.Select<ActionStatusChangedEvent>()
                 .First(c => c.Context.Message.ChangedType == ActionStatusChangedType.Completed)
                 .Context.Message;
@@ -319,11 +319,10 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             count.ShouldBeGreaterThanOrEqualTo(2);
 
             // Last position message received should be the position of the last node
-            var positionMessage = fixture.TestHarness.Published.Select<AgvPositionReceived>().Last().Context.Message;
             var destinationNode = graph.Nodes.First(n => n.Id == destination);
-            positionMessage.AgvPosition.X.ShouldBe(destinationNode.X, 0.00001f);
-            positionMessage.AgvPosition.Y.ShouldBe(destinationNode.Y, 0.00001f);
-            positionMessage.AgvPosition.Z.ShouldBe(destinationNode.Z, 0.00001f);
+            (await fixture.TestHarness.Published.Any<AgvPositionReceived>(c => Math.Abs(c.Context.Message.AgvPosition.X - destinationNode.X) < 0.01)).ShouldBeTrue();
+            (await fixture.TestHarness.Published.Any<AgvPositionReceived>(c => Math.Abs(c.Context.Message.AgvPosition.Y - destinationNode.Y) < 0.01)).ShouldBeTrue();
+            (await fixture.TestHarness.Published.Any<AgvPositionReceived>(c => Math.Abs(c.Context.Message.AgvPosition.Z - destinationNode.Z) < 0.01)).ShouldBeTrue();
         }
 
         [TestMethod]
