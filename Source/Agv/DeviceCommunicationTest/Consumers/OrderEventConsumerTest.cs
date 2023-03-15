@@ -29,7 +29,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         {
             var message = new MqttOrderEvent(SerialNumber, OrderId, OrderEventType.Started);
             var published = await ConsumeMessage(message);
-            await AssertPublishedEvent(published, ActionStatusChangedType.Started);
+            await AssertPublishedEvent<ActionStartedEvent>(published);
         }
 
         /// <summary>
@@ -41,7 +41,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
             var message = new MqttOrderEvent(SerialNumber, OrderId, OrderEventType.Picked);
             var published = await ConsumeMessage(message);
 
-            await AssertPublishedEvent(published, ActionStatusChangedType.Picked);
+            await AssertPublishedEvent<ActionStartedEvent>(published);
         }
 
         /// <summary>
@@ -53,7 +53,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
             var message = new MqttOrderEvent(SerialNumber, OrderId, OrderEventType.Completed);
             var published = await ConsumeMessage(message);
 
-            await AssertPublishedEvent(published, ActionStatusChangedType.Completed);
+            await AssertPublishedEvent<ActionCompletedEvent>(published);
         }
 
         /// <summary>
@@ -65,7 +65,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
             var message = new MqttOrderEvent(SerialNumber, OrderId, OrderEventType.Cancelled);
             var published = await ConsumeMessage(message);
 
-            await AssertPublishedEvent(published, ActionStatusChangedType.Cancelled);
+            await AssertPublishedEvent<ActionCancelledEvent>(published);
         }
 
         /// <summary>
@@ -77,7 +77,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
             var message = new MqttOrderEvent(SerialNumber, OrderId, OrderEventType.CancelFailed);
             var published = await ConsumeMessage(message);
 
-            await AssertPublishedEvent(published, ActionStatusChangedType.CancelFailed);
+            await AssertPublishedEvent<ActionCancelFailedEvent>(published);
         }
 
         /// <summary>
@@ -89,7 +89,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
             var message = new MqttOrderEvent(SerialNumber, OrderId, OrderEventType.Failed);
             var published = await ConsumeMessage(message);
             
-            await AssertPublishedEvent(published, ActionStatusChangedType.Failed);
+            await AssertPublishedEvent<ActionFailedEvent>(published);
         }
 
         /// <summary>
@@ -118,13 +118,13 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
             return fixture.TestHarness.Published;
         }
 
-        private async Task AssertPublishedEvent(IPublishedMessageList published, ActionStatusChangedType changedType)
+        private async Task AssertPublishedEvent<TMessage>(IPublishedMessageList published) where TMessage : class
         {
-            (await published.Any<ActionStatusChangedEvent>()).ShouldBeTrue();
+            (await published.Any<TMessage>()).ShouldBeTrue();
 
-            IPublishedMessage<ActionStatusChangedEvent>? publishedEvent = await published.SelectAsync<ActionStatusChangedEvent>().First();
-            var actionStatusEvent = publishedEvent.MessageObject as ActionStatusChangedEvent;
-            changedType.ShouldBe(actionStatusEvent!.ChangedType);
+            IPublishedMessage<TMessage>? publishedEvent = await published.SelectAsync<TMessage>().First();
+            var actionStatusEvent = publishedEvent.MessageObject as TMessage;
+            actionStatusEvent.ShouldNotBeNull();
         }
     }
 }

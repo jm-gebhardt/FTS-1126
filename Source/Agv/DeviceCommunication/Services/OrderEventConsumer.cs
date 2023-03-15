@@ -33,37 +33,68 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
             _logger.LogInformation("Received {MessageType}.{OrderEventType} for {OrderId}", nameof(MqttOrderEvent), message.OrderEventType, message.OrderId);
 
             var actionId = message.OrderId.ToGuid();
-            ActionStatusChangedType actionStatusChangedType;
             switch (message.OrderEventType)
             {
                 case OrderEventType.Started:
-                    actionStatusChangedType = ActionStatusChangedType.Started;
+                    await context.Publish(new ActionStartedEvent(actionId));
                     break;
 
                 case OrderEventType.Picked:
-                    actionStatusChangedType = ActionStatusChangedType.Picked;
+                    await context.Publish(new ActionStartedEvent(actionId));
                     break;
 
                 case OrderEventType.Completed:
-                    actionStatusChangedType = ActionStatusChangedType.Completed;
+                    await context.Publish(new ActionCompletedEvent(actionId));
                     break;
 
                 case OrderEventType.Cancelled:
-                    actionStatusChangedType = ActionStatusChangedType.Cancelled;
+                    await context.Publish(new ActionCancelledEvent(actionId));
                     break;
 
                 case OrderEventType.CancelFailed:
-                    actionStatusChangedType = ActionStatusChangedType.CancelFailed;
+                    await context.Publish(new ActionCancelFailedEvent(actionId));
                     break;
 
                 case OrderEventType.Failed:
-                    actionStatusChangedType = ActionStatusChangedType.Failed;
+                    await context.Publish(new ActionFailedEvent(actionId));
                     break;
                 default:
                     throw new ArgumentOutOfRangeException($"Undefined OrderEventType {message.OrderEventType} for {message.OrderId}");
             }
-
-            await context.Publish(new ActionStatusChangedEvent(actionId, actionStatusChangedType));
         }
     }
 }
+
+/*
+
+/// <summary>
+/// Signals that an action has been started
+/// </summary>
+[PublicAPI]
+public record ActionStartedEvent(Guid CorrelationId) : CorrelatedBy<Guid>;
+
+/// <summary>
+/// Signals that an action has been completed
+/// </summary>
+[PublicAPI]
+public record ActionCompletedEvent(Guid CorrelationId) : CorrelatedBy<Guid>;
+
+/// <summary>
+/// Signals that an action has failed
+/// </summary>
+[PublicAPI]
+public record ActionFailedEvent(Guid CorrelationId) : CorrelatedBy<Guid>;
+
+/// <summary>
+/// Signals that an action has been cancelled
+/// </summary>
+[PublicAPI]
+public record ActionCancelledEvent(Guid CorrelationId) : CorrelatedBy<Guid>;
+
+/// <summary>
+/// Signals that an action cancelation has failed 
+/// </summary>
+[PublicAPI]
+public record ActionCancelFailedEvent(Guid CorrelationId) : CorrelatedBy<Guid>;
+
+*/

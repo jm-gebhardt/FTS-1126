@@ -127,16 +127,16 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Actions
             inserter.SaveChanges();
             var actionId = inserter.GetActionsOfOrder(orderDetails.CorrelationId)[0].Id;
 
-            await fixture.TestHarness!.Bus.Publish(new ActionStatusChangedEvent(actionId, ActionStatusChangedType.Started));
+            await fixture.TestHarness!.Bus.Publish(new ActionStartedEvent(actionId));
             (await fixture.TestHarness.Published.Any<TransportOrderStarted>()).ShouldBeTrue();
 
-            await fixture.TestHarness!.Bus.Publish(new ActionStatusChangedEvent(actionId, ActionStatusChangedType.Picked));
+            await fixture.TestHarness!.Bus.Publish(new ActionStartedEvent(actionId));
             (await fixture.TestHarness.Published.Any<TransportOrderPickCompleted>()).ShouldBeTrue();
 
-            await fixture.TestHarness!.Bus.Publish(new ActionStatusChangedEvent(actionId, ActionStatusChangedType.Cancelled));
+            await fixture.TestHarness!.Bus.Publish(new ActionCancelledEvent(actionId));
             (await fixture.TestHarness.Published.Any<TransportOrderCancelSucceeded>()).ShouldBeTrue();
 
-            await fixture.TestHarness!.Bus.Publish(new ActionStatusChangedEvent(actionId, ActionStatusChangedType.Failed));
+            await fixture.TestHarness!.Bus.Publish(new ActionFailedEvent(actionId));
             (await fixture.TestHarness.Published.Any<TransportOrderFailed>()).ShouldBeTrue();
         }
 
@@ -178,8 +178,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Actions
 
             // Complete action of first order
             var actionId1 = inserter.GetActionsOfOrder(order1.CorrelationId)[0].Id;
-            await fixture.TestHarness!.Bus.Publish(new ActionStatusChangedEvent(actionId1, ActionStatusChangedType.Completed));
-            (await fixture.TestHarness.Consumed.Any<ActionStatusChangedEvent>()).ShouldBeTrue();
+            await fixture.TestHarness!.Bus.Publish(new ActionCompletedEvent(actionId1));
+            (await fixture.TestHarness.Consumed.Any<ActionCompletedEvent>()).ShouldBeTrue();
 
             // Expect ReleaseAgv due to action completed ...
             (await fixture.TestHarness.Published.Any<ReleaseAgv>()).ShouldBeTrue();
@@ -219,8 +219,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Actions
 
             // Complete first action of first order ...
             var actionId1 = inserter.GetActionsOfOrder(order1.CorrelationId)[0].Id;
-            await fixture.TestHarness!.Bus.Publish(new ActionStatusChangedEvent(actionId1, ActionStatusChangedType.Completed));
-            (await fixture.TestHarness.Consumed.Any<ActionStatusChangedEvent>()).ShouldBeTrue();
+            await fixture.TestHarness!.Bus.Publish(new ActionCompletedEvent(actionId1));
+            (await fixture.TestHarness.Consumed.Any<ActionCompletedEvent>()).ShouldBeTrue();
             // ... and start subsequent action
             fixture.TestHarness.Published.Select<StartActionCommand>().Count().ShouldBe(2);
 

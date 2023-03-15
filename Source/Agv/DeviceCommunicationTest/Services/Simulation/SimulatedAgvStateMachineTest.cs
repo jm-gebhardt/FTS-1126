@@ -272,13 +272,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             ));
 
             // ... wait for being consumed ...
-            (await fixture.SagaHarness.Consumed.Any<StartActionCommand>()).ShouldBeTrue();
+            (await fixture.SagaHarness.Consumed.Any<ActionStartedEvent>()).ShouldBeTrue();
             // ... wait for action started is being sent (by state machine) ...
-            (await fixture.TestHarness.Published.Any<ActionStatusChangedEvent>()).ShouldBeTrue();
-            var actionStatus = fixture.TestHarness.Published.Select<ActionStatusChangedEvent>()
-                .First(c => c.Context.Message.ChangedType == ActionStatusChangedType.Started)
-                .Context.Message;
-            actionStatus.CorrelationId.ShouldBe(actionId);
+            (await fixture.TestHarness.Published.Any<ActionStartedEvent>()).ShouldBeTrue();
+            var actionStarted = fixture.TestHarness.Published.Select<ActionStartedEvent>().First().Context.Message;
+            actionStarted.CorrelationId.ShouldBe(actionId);
 
             agvSaga.AgvStatus.Busy.ShouldBeTrue();
             agvSaga.TimeToFinish.ShouldNotBeNull();
@@ -308,11 +306,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             } while (!matches && DateTime.Now < startedTime + timeout);
             matches.ShouldBeTrue();
 
-            (await fixture.TestHarness.Published.Any<ActionStatusChangedEvent>(c => c.Context.Message.ChangedType == ActionStatusChangedType.Completed)).ShouldBeTrue();
-            actionStatus = fixture.TestHarness.Published.Select<ActionStatusChangedEvent>()
-                .First(c => c.Context.Message.ChangedType == ActionStatusChangedType.Completed)
-                .Context.Message;
-            actionStatus.CorrelationId.ShouldBe(actionId);
+            (await fixture.TestHarness.Published.Any<ActionCompletedEvent>()).ShouldBeTrue();
+            var actionCompleted = fixture.TestHarness.Published.Select<ActionCompletedEvent>().First().Context.Message;
+            actionCompleted.CorrelationId.ShouldBe(actionId);
 
             // There should be at least 2 positions sent (one or two per edge and we have two edges)
             int count = fixture.SagaHarness.Consumed.Select<SimulatedAgvStateMachine.ScheduleSignalPosition>().Count();
