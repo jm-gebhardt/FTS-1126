@@ -130,9 +130,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Actions
             await fixture.TestHarness!.Bus.Publish(new ActionStartedEvent(actionId));
             (await fixture.TestHarness.Published.Any<TransportOrderStarted>()).ShouldBeTrue();
 
-            await fixture.TestHarness!.Bus.Publish(new ActionStartedEvent(actionId));
-            (await fixture.TestHarness.Published.Any<TransportOrderPickCompleted>()).ShouldBeTrue();
-
             await fixture.TestHarness!.Bus.Publish(new ActionCancelledEvent(actionId));
             (await fixture.TestHarness.Published.Any<TransportOrderCancelSucceeded>()).ShouldBeTrue();
 
@@ -173,7 +170,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Actions
 
             // Assign action of first order
             await fixture.TestHarness!.Bus.Publish(new AgvBecameReady(Guid.NewGuid()));
-//(await fixture.TestHarness.Published.Any<AgvBecameReady>()).ShouldBeTrue();
+            //(await fixture.TestHarness.Published.Any<AgvBecameReady>()).ShouldBeTrue();
             (await fixture.TestHarness.Consumed.Any<AgvBecameReady>()).ShouldBeTrue();
 
             // Complete action of first order

@@ -138,7 +138,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
         /// </summary>
         /// <typeparam name="TMessage"></typeparam>
         /// <exception cref="ArgumentOutOfRangeException"></exception>
-        public Task HandleActionStateChange<TMessage>(ConsumeContext<TMessage> context, ActionStatusChangedType changedType) where TMessage : class, CorrelatedBy<Guid>
+        private Task HandleActionStateChange<TMessage>(ConsumeContext<TMessage> context, ActionStatusChangedType changedType) where TMessage : class, CorrelatedBy<Guid>
         {
             using var orderActionRepo = new EfOrderActionRegistry(_transportOrderContextFactory);
             var action = orderActionRepo.GetActionById(context.Message.CorrelationId);
@@ -156,9 +156,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
                             context.Publish(new TransportOrderStarted(action.OrderCorrelationId, action.OrderDetails.OrderId));
                         }
                         break;
-                    case ActionStatusChangedType.Picked:
-                        context.Publish(new TransportOrderPickCompleted(action.OrderCorrelationId, action.OrderDetails.OrderId));
-                        break;
                     case ActionStatusChangedType.Cancelled:
                         context.Publish(new TransportOrderCancelSucceeded(action.OrderCorrelationId, action.OrderDetails.OrderId));
                         break;
@@ -168,8 +165,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
                     case ActionStatusChangedType.Failed:
                         context.Publish(new TransportOrderFailed(action.OrderCorrelationId, action.OrderDetails.OrderId));
                         break;
-                    case ActionStatusChangedType.Dropped:
                     case ActionStatusChangedType.Completed:
+                        if (action.Type == ActionType.Pick)
+                        {
+                            context.Publish(new TransportOrderPickCompleted(action.OrderCorrelationId, action.OrderDetails.OrderId));
+                        }
+
                         action.State = OrderActionState.Completed;
                         orderActionRepo.SaveChanges();
                         CheckNextAction(context, orderActionRepo, action.AssignedAgv!.Value, action.OrderDetails.OrderId, action.OrderCorrelationId, context.CancellationToken)

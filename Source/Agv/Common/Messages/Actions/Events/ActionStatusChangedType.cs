@@ -11,16 +11,6 @@ public enum ActionStatusChangedType
     Started,
 
     /// <summary>
-    /// Item picked
-    /// </summary>
-    Picked,
-
-    /// <summary>
-    /// Item dropped
-    /// </summary>
-    Dropped,
-
-    /// <summary>
     /// Action completed
     /// </summary>
     Completed,

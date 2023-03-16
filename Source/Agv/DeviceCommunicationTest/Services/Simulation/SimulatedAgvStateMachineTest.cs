@@ -272,7 +272,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             ));
 
             // ... wait for being consumed ...
-            (await fixture.SagaHarness.Consumed.Any<ActionStartedEvent>()).ShouldBeTrue();
+            (await fixture.SagaHarness.Consumed.Any<StartActionCommand>()).ShouldBeTrue();
             // ... wait for action started is being sent (by state machine) ...
             (await fixture.TestHarness.Published.Any<ActionStartedEvent>()).ShouldBeTrue();
             var actionStarted = fixture.TestHarness.Published.Select<ActionStartedEvent>().First().Context.Message;
