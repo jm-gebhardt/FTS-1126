@@ -85,6 +85,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
                 mqttMessage.Stations?.ToStationIdentifier.ShouldBe(string.Empty);
                 mqttMessage.OrderType.ShouldBe(OrderType.Pick);
                 mqttMessage.RecordType.ShouldBe(OrderRecordType.Order);
+
+                // ... and action Guid with parentId
+                string actionId = mqttMessage.OrderId.Split(" ")[0];
+                string parentId = mqttMessage.OrderId.Split(" ")[1];
+                actionId.ShouldBe(actionCorrelationId.ToString());
+                parentId.ShouldBe(orderId);
             }
         }
 

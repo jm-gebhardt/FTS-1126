@@ -4,7 +4,6 @@ using JetBrains.Annotations;
 using MassTransit;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Enums;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
-using Gebhardt.StoreWare.Agv.Common.Utilities;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
 {
@@ -32,7 +31,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
             var message = context.Message;
             _logger.LogInformation("Received {MessageType}.{OrderEventType} for {OrderId}", nameof(MqttOrderEvent), message.OrderEventType, message.OrderId);
 
-            var actionId = message.OrderId.ToGuid();
+            // Splitting OrderId string composed of two parts: [ActionGuid]<space>[OrderId]
+            // Incoming from <see cref="StartActionCommandConsumer"/>
+            // Temporary solution
+            var actionId = new Guid(message.OrderId.Split(" ")[0]);
+            string parentId = message.OrderId.Split(" ")[1];
+            
             ActionStatusChangedType actionStatusChangedType;
             switch (message.OrderEventType)
             {
@@ -63,7 +67,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
                     throw new ArgumentOutOfRangeException($"Undefined OrderEventType {message.OrderEventType} for {message.OrderId}");
             }
 
-            await context.Publish(new ActionStatusChangedEvent(actionId, actionStatusChangedType));
+            await context.Publish(new ActionStatusChangedEvent(actionId, actionStatusChangedType, parentId));
         }
     }
 }

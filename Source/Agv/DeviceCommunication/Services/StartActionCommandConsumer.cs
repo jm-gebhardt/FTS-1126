@@ -56,7 +56,10 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
             }
 
             // We are using the action correlation Id as "order Id"
-            await context.PublishMqtt(new MqttOrder(action.CorrelationId.ToString())
+            // And we transferring the Action's Guid and its parenting OrderId through the same string 
+            // This message will be split in <see cref="OrderEventConsumer"/>
+            // Temporary solution
+            await context.PublishMqtt(new MqttOrder(action.CorrelationId + " " + action.OrderId)
             {
                 SerialNumber = action.AgvId,
                 OrderType = orderType,
