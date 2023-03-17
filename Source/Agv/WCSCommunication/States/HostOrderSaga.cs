@@ -32,20 +32,19 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.States
         /// <summary>
         /// Pick Action's GUID
         /// </summary>
-        public Guid PickActionGuid { get; init; } = Guid.NewGuid();
+        public Guid PickActionGuid { get; } = Guid.NewGuid();
 
         /// <summary>
         /// Drop Action's GUID
         /// </summary>
-        public Guid DropActionGuid { get; init; } = Guid.NewGuid();
+        public Guid DropActionGuid { get; } = Guid.NewGuid();
 
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="orderDetails">Order details</param>
         /// <param name="currentState">Order state</param>
-        public HostOrderSaga(OrderDetails orderDetails,
-                             string? currentState = null)
+        public HostOrderSaga(OrderDetails orderDetails, string? currentState = null)
         {
             CorrelationId = orderDetails.CorrelationId;
             OrderId = orderDetails.OrderId;

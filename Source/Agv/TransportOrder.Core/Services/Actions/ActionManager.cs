@@ -38,6 +38,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
         /// Map of all available AGVs with list of assigned actions (when there are any)
         /// </summary>
         private readonly IDbContextFactory<TransportOrderDbContext> _transportOrderContextFactory;
+        private readonly IAgvActionRegistry _agvActionRegistry;
         private readonly SemaphoreSlim _lockSemaphoreSlim = new(1, 1);
 
         /// <summary/>
@@ -45,12 +46,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
             IServiceScopeFactory scopeFactory,
             ILogger<ActionManager> logger,
             IBus bus,
-            IDbContextFactory<TransportOrderDbContext> transportOrderContextFactory)
+            IDbContextFactory<TransportOrderDbContext> transportOrderContextFactory,
+            IAgvActionRegistry agvActionRegistry)
         {
             _scopeFactory = scopeFactory;
             _logger = logger;
             _bus = bus;
             _transportOrderContextFactory = transportOrderContextFactory;
+            _agvActionRegistry = agvActionRegistry;
         }
 
         /// <inheritdoc/>
@@ -68,7 +71,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
         private async Task QueueActionsForOrderAsync(OrderQueuingCommand request, CancellationToken cancellationToken)
         {
             var orderCorrelationId = request.CorrelationId;
-            
+
             // Create ActionSagas
             using var orderActionRepo = new EfOrderActionRegistry(_transportOrderContextFactory);
             orderActionRepo.Insert(request.OrderDetails, ActionType.Pick, request.OrderDetails.CreationDate, null, request.OrderDetails.Source);
@@ -191,6 +194,59 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
         }
 
         /// <summary>
+        /// Handle status chagned events from DeviceCommunication
+        /// </summary>
+        /// <exception cref="ArgumentOutOfRangeException"></exception>
+        private void HandleAgvActionStateChange(IPublishEndpoint endpoint, Guid actiondId, Guid parentId, ActionStatusChangedType changedType)
+        {
+            List<AgvAction> actions = _agvActionRegistry.GetActionsByParentId(parentId);
+
+            if (actions.Count < 2)
+            {
+                _logger.LogWarning("Action group with id {ParentId} does not contain enough actions", parentId);
+                return;
+            }
+
+            var actionPick = actions[0];
+            var actionDrop = actions[1];
+
+            switch (changedType)
+            {
+                case ActionStatusChangedType.Started:
+                    if (actiondId == actionPick.CorrelationId)
+                    {
+                        endpoint.Publish(new TransportOrderStarted(actionPick.ParentId, actionPick.OrderId));
+                    }
+                    break;
+                case ActionStatusChangedType.Cancelled:
+                    break;
+
+                case ActionStatusChangedType.CancelFailed:
+                    break;
+
+                case ActionStatusChangedType.Failed:
+                    break;
+
+                case ActionStatusChangedType.Completed:
+                    if (actiondId == actionPick.CorrelationId)
+                    {
+                        endpoint.Publish(new TransportOrderPickCompleted(actionPick.ParentId, actionPick.OrderId));
+                    }
+                    else if (actiondId == actionDrop.CorrelationId)
+                    {
+                        endpoint.Publish(new TransportOrderCompleted(actionPick.ParentId, actionPick.OrderId));
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Unknown action with id {ActiondId}", actiondId);
+                    }
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException($"Unsupported ActionStatusChangedType {changedType}");
+            }
+        }
+
+        /// <summary>
         /// Handle <see cref="ActionGroup"/> incoming from HostOrderStateMachine
         /// </summary>
         /// <param name="context"></param>
@@ -201,6 +257,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
             {
                 _logger.LogInformation("ActionGroup {ParentId} with ActionId: [{ActionId}] has been consumed... [{Type} from {Source} to {Destination}]",
                     message.CorrelationId, action.CorrelationId, action.ActionType, action.Source, action.Destination);
+
+                _agvActionRegistry.Insert(action);
             }
 
             return Task.CompletedTask;
