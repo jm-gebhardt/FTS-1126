@@ -4,7 +4,6 @@ using JetBrains.Annotations;
 using MassTransit;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Enums;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
-using Gebhardt.StoreWare.Agv.Common.Utilities;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
 {
@@ -32,31 +31,32 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
             var message = context.Message;
             _logger.LogInformation("Received {MessageType}.{OrderEventType} for {OrderId}", nameof(MqttOrderEvent), message.OrderEventType, message.OrderId);
 
-            var actionId = message.OrderId.ToGuid();
+            // Splitting OrderId string composed of two parts: [ActionGuid]<space>[OrderId]
+            // Incoming from <see cref="StartActionCommandConsumer"/>
+            // Temporary solution
+            var actionId = new Guid(message.OrderId.Split(" ")[0]);
+            string parentId = message.OrderId.Split(" ")[1];
+            
             switch (message.OrderEventType)
             {
                 case OrderEventType.Started:
-                    await context.Publish(new ActionStartedEvent(actionId));
-                    break;
-
-                case OrderEventType.Picked:
-                    await context.Publish(new ActionStartedEvent(actionId));
+                    await context.Publish(new ActionStartedEvent(actionId, parentId));
                     break;
 
                 case OrderEventType.Completed:
-                    await context.Publish(new ActionCompletedEvent(actionId));
+                    await context.Publish(new ActionCompletedEvent(actionId, parentId));
                     break;
 
                 case OrderEventType.Cancelled:
-                    await context.Publish(new ActionCancelledEvent(actionId));
+                    await context.Publish(new ActionCancelledEvent(actionId, parentId));
                     break;
 
                 case OrderEventType.CancelFailed:
-                    await context.Publish(new ActionCancelFailedEvent(actionId));
+                    await context.Publish(new ActionCancelFailedEvent(actionId, parentId));
                     break;
 
                 case OrderEventType.Failed:
-                    await context.Publish(new ActionFailedEvent(actionId));
+                    await context.Publish(new ActionFailedEvent(actionId, parentId));
                     break;
                 default:
                     throw new ArgumentOutOfRangeException($"Undefined OrderEventType {message.OrderEventType} for {message.OrderId}");
@@ -64,37 +64,3 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
         }
     }
 }
-
-/*
-
-/// <summary>
-/// Signals that an action has been started
-/// </summary>
-[PublicAPI]
-public record ActionStartedEvent(Guid CorrelationId) : CorrelatedBy<Guid>;
-
-/// <summary>
-/// Signals that an action has been completed
-/// </summary>
-[PublicAPI]
-public record ActionCompletedEvent(Guid CorrelationId) : CorrelatedBy<Guid>;
-
-/// <summary>
-/// Signals that an action has failed
-/// </summary>
-[PublicAPI]
-public record ActionFailedEvent(Guid CorrelationId) : CorrelatedBy<Guid>;
-
-/// <summary>
-/// Signals that an action has been cancelled
-/// </summary>
-[PublicAPI]
-public record ActionCancelledEvent(Guid CorrelationId) : CorrelatedBy<Guid>;
-
-/// <summary>
-/// Signals that an action cancelation has failed 
-/// </summary>
-[PublicAPI]
-public record ActionCancelFailedEvent(Guid CorrelationId) : CorrelatedBy<Guid>;
-
-*/

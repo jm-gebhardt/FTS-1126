@@ -27,7 +27,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
         IConsumer<ActionCompletedEvent>,
         IConsumer<ActionFailedEvent>,
         IConsumer<ActionCancelledEvent>,
-        IConsumer<ActionCancelFailedEvent>
+        IConsumer<ActionCancelFailedEvent>,
+        IConsumer<ActionGroup>
     {
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<ActionManager> _logger;
@@ -67,7 +68,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
         private async Task QueueActionsForOrderAsync(OrderQueuingCommand request, CancellationToken cancellationToken)
         {
             var orderCorrelationId = request.CorrelationId;
-
+            
             // Create ActionSagas
             using var orderActionRepo = new EfOrderActionRegistry(_transportOrderContextFactory);
             orderActionRepo.Insert(request.OrderDetails, ActionType.Pick, request.OrderDetails.CreationDate, null, request.OrderDetails.Source);
@@ -190,6 +191,22 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
         }
 
         /// <summary>
+        /// Handle <see cref="ActionGroup"/> incoming from HostOrderStateMachine
+        /// </summary>
+        /// <param name="context"></param>
+        public Task Consume(ConsumeContext<ActionGroup> context)
+        {
+            var message = context.Message;
+            foreach (var action in message.ActionList)
+            {
+                _logger.LogInformation("ActionGroup {ParentId} with ActionId: [{ActionId}] has been consumed... [{Type} from {Source} to {Destination}]",
+                    message.CorrelationId, action.CorrelationId, action.ActionType, action.Source, action.Destination);
+            }
+
+            return Task.CompletedTask;
+        }
+
+        /// <summary>
         /// Check if there are any subsequent actions for the given order.
         /// <para>
         /// Start any subsequent actions or clean all actions of this order when finished.
@@ -253,7 +270,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
             orderActionRepo.SaveChanges();
 
             // Notify AGV state machine
-            await _bus.Publish(new ActionStartedEvent((Guid)action.AssignedAgv!), cancellationToken);
+            await _bus.Publish(new ActionStartedEvent((Guid)action.AssignedAgv!, orderId), cancellationToken);
         }
 
         /// <summary>

@@ -7,6 +7,7 @@ using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Enums;
 using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Events;
 using Gebhardt.StoreWare.Agv.Common.Testing;
+using Gebhardt.StoreWare.Agv.Common.Utilities;
 using MassTransit;
 using Shouldly;
 
@@ -20,6 +21,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
     {
         private const string SerialNumber = "AGV0";
         private const string OrderId = "ORDER123";
+        private readonly Guid _actionGuid = OrderId.ToGuid();
 
         /// <summary>
         /// Test for consuming OrderEvent message with the event type 'Started'
@@ -27,20 +29,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         [TestMethod]
         public async Task ConsumeEventStarted()
         {
-            var message = new MqttOrderEvent(SerialNumber, OrderId, OrderEventType.Started);
+            var message = new MqttOrderEvent(_actionGuid + " " + OrderId, SerialNumber, OrderEventType.Started);
             var published = await ConsumeMessage(message);
-            await AssertPublishedEvent<ActionStartedEvent>(published);
-        }
-
-        /// <summary>
-        /// Test for consuming OrderEvent message with the event type 'Picked'
-        /// </summary>
-        [TestMethod]
-        public async Task ConsumeEventPicked()
-        {
-            var message = new MqttOrderEvent(SerialNumber, OrderId, OrderEventType.Picked);
-            var published = await ConsumeMessage(message);
-
             await AssertPublishedEvent<ActionStartedEvent>(published);
         }
 
@@ -50,7 +40,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         [TestMethod]
         public async Task ConsumeEventCompleted()
         {
-            var message = new MqttOrderEvent(SerialNumber, OrderId, OrderEventType.Completed);
+            var message = new MqttOrderEvent(_actionGuid + " " + OrderId, SerialNumber, OrderEventType.Completed);
             var published = await ConsumeMessage(message);
 
             await AssertPublishedEvent<ActionCompletedEvent>(published);
@@ -62,7 +52,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         [TestMethod]
         public async Task ConsumeEventCancelled()
         {
-            var message = new MqttOrderEvent(SerialNumber, OrderId, OrderEventType.Cancelled);
+            var message = new MqttOrderEvent(_actionGuid + " " + OrderId, SerialNumber, OrderEventType.Cancelled);
             var published = await ConsumeMessage(message);
 
             await AssertPublishedEvent<ActionCancelledEvent>(published);
@@ -74,7 +64,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         [TestMethod]
         public async Task ConsumeEventCancelFailed()
         {
-            var message = new MqttOrderEvent(SerialNumber, OrderId, OrderEventType.CancelFailed);
+            var message = new MqttOrderEvent(_actionGuid + " " + OrderId, SerialNumber, OrderEventType.CancelFailed);
             var published = await ConsumeMessage(message);
 
             await AssertPublishedEvent<ActionCancelFailedEvent>(published);
@@ -86,7 +76,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         [TestMethod]
         public async Task ConsumeEventFailed()
         {
-            var message = new MqttOrderEvent(SerialNumber, OrderId, OrderEventType.Failed);
+            var message = new MqttOrderEvent(_actionGuid + " " + OrderId, SerialNumber, OrderEventType.Failed);
             var published = await ConsumeMessage(message);
             
             await AssertPublishedEvent<ActionFailedEvent>(published);
@@ -98,7 +88,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         [TestMethod]
         public async Task ConsumeUndefined()
         {
-            var message = new MqttOrderEvent(SerialNumber, OrderId, null);
+            var message = new MqttOrderEvent(OrderId, SerialNumber, null);
             var published = await ConsumeMessage(message);
             Thread.Sleep(1); // Wait 1ms before checking if message was published
             (await published.Any<TransportOrderFailed>()).ShouldBeFalse();

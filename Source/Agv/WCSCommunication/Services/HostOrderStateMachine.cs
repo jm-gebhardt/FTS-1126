@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
+using Gebhardt.StoreWare.Agv.Common.Utilities;
+using Microsoft.Extensions.Logging;
 using MassTransit;
 using Gebhardt.StoreWare.Agv.WCSCommunication.States;
 using Gebhardt.StoreWare.Agv.WCSCommunication.Messages;
@@ -94,8 +96,22 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
             When(CreateHostOrderEvent)
                 .Then(c =>
                     _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId} received", nameof(CreateHostOrder), c.Message.OrderDetails.OrderId, c.Message.OrderDetails.CorrelationId))
-                .TransitionTo(Initial);
+                .TransitionTo(Initial)
+                .Then(c => c.Publish(new ActionGroup(c.Saga.CorrelationId, GetPickDropActions(c.Saga))));
 
+        #endregion
+
+        #region Private Methods
+        private List<AgvAction> GetPickDropActions(HostOrderSaga hostOrderSaga)
+        {
+            var pickAction = new AgvAction(hostOrderSaga.PickActionGuid, string.Empty, ActionType.Pick, hostOrderSaga.OrderId, hostOrderSaga.OrderId.ToGuid(), null, hostOrderSaga.OrderDetails.Source);
+            var dropAction = new AgvAction(hostOrderSaga.DropActionGuid, string.Empty, ActionType.Drop, hostOrderSaga.OrderId, hostOrderSaga.OrderId.ToGuid(), hostOrderSaga.OrderDetails.Source, hostOrderSaga.OrderDetails.Destination);
+            return new List<AgvAction>()
+            {
+                pickAction,
+                dropAction
+            };
+        }
         #endregion
     }
 }

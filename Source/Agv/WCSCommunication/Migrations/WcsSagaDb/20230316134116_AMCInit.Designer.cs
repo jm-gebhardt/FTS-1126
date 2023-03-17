@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Gebhardt.StoreWare.Agv.WCSCommunication.Migrations.WcsSagaDb
 {
     [DbContext(typeof(WcsSagaDbContext))]
-    [Migration("20230308125141_AMCInit")]
-    partial class AMCInit
+    [Migration("20230316134116_AMCInit")]
+    partial class AmcInit
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -68,9 +68,15 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Migrations.WcsSagaDb
                         .HasMaxLength(64)
                         .HasColumnType("nvarchar(64)");
 
+                    b.Property<Guid>("DropActionGuid")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("OrderId")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("PickActionGuid")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("CorrelationId");
 

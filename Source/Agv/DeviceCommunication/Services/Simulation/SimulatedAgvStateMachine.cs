@@ -225,9 +225,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
                         c.Message.Action.ActionType, c.Message.Action.OrderId, c.Message.Action.ParentId, c.Saga.ActionFinishDate);
                 })
                 .TransitionTo(BusyMoving)
-                .Publish(c =>
-                    new ActionStartedEvent(c.Saga.Action!.CorrelationId)
-                )
+                .Publish(c => new ActionStartedEvent(c.Saga.Action!.CorrelationId, c.Saga.Action!.OrderId))
                 .ThenAsync(PublishStatus)
                 .Schedule(FinishActionSchedule,
                     c => new ScheduleFinishAction(c.Saga.CorrelationId),
@@ -379,7 +377,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
                 _logger.LogInformation("AGV {AgvId} / {CorrelationId} finished action {ActionType} for {OrderId} / {ParentId}",
                     context.Saga.AgvId, context.Saga.CorrelationId, action.ActionType, action.OrderId, action.ParentId);
 
-                context.Publish(new ActionCompletedEvent(action.CorrelationId));
+                context.Publish(new ActionCompletedEvent(action.CorrelationId, action.OrderId));
             }
 
             context.Saga.ResetAction();

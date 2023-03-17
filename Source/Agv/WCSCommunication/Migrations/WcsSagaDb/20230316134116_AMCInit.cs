@@ -1,5 +1,4 @@
-﻿// ReSharper disable all
-using System;
+﻿using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -7,7 +6,8 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Gebhardt.StoreWare.Agv.WCSCommunication.Migrations.WcsSagaDb
 {
     /// <inheritdoc />
-    public partial class AMCInit : Migration
+    [UsedImplicitly]
+    public partial class AmcInit : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -18,7 +18,9 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Migrations.WcsSagaDb
                 {
                     CorrelationId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     OrderId = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CurrentState = table.Column<string>(type: "nvarchar(64)", maxLength: 64, nullable: false)
+                    CurrentState = table.Column<string>(type: "nvarchar(64)", maxLength: 64, nullable: false),
+                    PickActionGuid = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    DropActionGuid = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {

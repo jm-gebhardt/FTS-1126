@@ -30,6 +30,16 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.States
         public OrderDetails OrderDetails { get; set; } = null!;
 
         /// <summary>
+        /// Pick Action's GUID
+        /// </summary>
+        public Guid PickActionGuid { get; init; } = Guid.NewGuid();
+
+        /// <summary>
+        /// Drop Action's GUID
+        /// </summary>
+        public Guid DropActionGuid { get; init; } = Guid.NewGuid();
+
+        /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="orderDetails">Order details</param>
@@ -49,11 +59,15 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.States
         /// <param name="correlationId">Correlated by GUID of OrderId</param>
         /// <param name="orderId">Redundant OrderId info</param>
         /// <param name="currentState">Order state</param>
-        private HostOrderSaga(Guid correlationId, string orderId, string currentState)
+        /// <param name="pickActionGuid">Pick Action GUID</param>
+        /// <param name="dropActionGuid">Drop Action GUID</param>
+        private HostOrderSaga(Guid correlationId, string orderId, string currentState, Guid pickActionGuid, Guid dropActionGuid)
         {
             CorrelationId = correlationId;
             OrderId = orderId;
             CurrentState = currentState;
+            PickActionGuid = pickActionGuid;
+            DropActionGuid = dropActionGuid;
         }
 
         /// <summary>
