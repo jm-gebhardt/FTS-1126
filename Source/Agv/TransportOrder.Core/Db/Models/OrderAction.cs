@@ -101,7 +101,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Db.Models
         /// Creation DateTime
         /// </summary>
         public DateTime? OrderCreationDateTime { get; set; }
-        
+
         /// <summary>
         /// Constructor
         /// <para>

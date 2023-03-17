@@ -22,7 +22,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
     /// </summary>
     public class ActionManager : IConsumer<OrderQueuingCommand>,
                                  IConsumer<ActionStatusChangedEvent>,
-                                 IConsumer<AgvBecameReady>
+                                 IConsumer<AgvBecameReady>,
+                                 IConsumer<ActionGroup>
     {
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<ActionManager> _logger;
@@ -61,7 +62,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
         private async Task QueueActionsForOrderAsync(OrderQueuingCommand request, CancellationToken cancellationToken)
         {
             var orderCorrelationId = request.CorrelationId;
-
+            
             // Create ActionSagas
             using var orderActionRepo = new EfOrderActionRegistry(_transportOrderContextFactory);
             orderActionRepo.Insert(request.OrderDetails, ActionType.Pick, request.OrderDetails.CreationDate, null, request.OrderDetails.Source);
@@ -133,6 +134,22 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
             {
                 _logger.LogDebug("{MessageType} {ChangedType} but no corresponding action found for ID {OrderActionId}",
                     nameof(ActionStatusChangedEvent), context.Message.ChangedType, context.Message.CorrelationId);
+            }
+
+            return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Handle <see cref="ActionGroup"/> incoming from HostOrderStateMachine
+        /// </summary>
+        /// <param name="context"></param>
+        public Task Consume(ConsumeContext<ActionGroup> context)
+        {
+            var message = context.Message;
+            foreach (var action in message.ActionList)
+            {
+                _logger.LogInformation("ActionGroup {ParentId} with ActionId: [{ActionId}] has been consumed... [{Type} from {Source} to {Destination}]",
+                    message.CorrelationId, action.CorrelationId, action.ActionType, action.Source, action.Destination);
             }
 
             return Task.CompletedTask;

@@ -65,9 +65,15 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Migrations.WcsSagaDb
                         .HasMaxLength(64)
                         .HasColumnType("nvarchar(64)");
 
+                    b.Property<Guid>("DropActionGuid")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("OrderId")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("PickActionGuid")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("CorrelationId");
 
