@@ -44,10 +44,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
                     actionStatusChangedType = ActionStatusChangedType.Started;
                     break;
 
-                case OrderEventType.Picked:
-                    actionStatusChangedType = ActionStatusChangedType.Picked;
-                    break;
-
                 case OrderEventType.Completed:
                     actionStatusChangedType = ActionStatusChangedType.Completed;
                     break;

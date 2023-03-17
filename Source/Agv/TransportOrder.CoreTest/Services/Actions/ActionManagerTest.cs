@@ -130,9 +130,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Actions
             await fixture.TestHarness!.Bus.Publish(new ActionStatusChangedEvent(actionId, ActionStatusChangedType.Started, string.Empty));
             (await fixture.TestHarness.Published.Any<TransportOrderStarted>()).ShouldBeTrue();
 
-            await fixture.TestHarness!.Bus.Publish(new ActionStatusChangedEvent(actionId, ActionStatusChangedType.Picked, string.Empty));
-            (await fixture.TestHarness.Published.Any<TransportOrderPickCompleted>()).ShouldBeTrue();
-
             await fixture.TestHarness!.Bus.Publish(new ActionStatusChangedEvent(actionId, ActionStatusChangedType.Cancelled, string.Empty));
             (await fixture.TestHarness.Published.Any<TransportOrderCancelSucceeded>()).ShouldBeTrue();
 

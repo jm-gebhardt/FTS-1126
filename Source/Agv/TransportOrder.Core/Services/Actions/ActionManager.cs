@@ -110,9 +110,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
                             context.Publish(new TransportOrderStarted(action.OrderCorrelationId, action.OrderDetails.OrderId));
                         }
                         break;
-                    case ActionStatusChangedType.Picked:
-                        context.Publish(new TransportOrderPickCompleted(action.OrderCorrelationId, action.OrderDetails.OrderId));
-                        break;
                     case ActionStatusChangedType.Cancelled:
                         context.Publish(new TransportOrderCancelSucceeded(action.OrderCorrelationId, action.OrderDetails.OrderId));
                         break;
@@ -122,7 +119,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
                     case ActionStatusChangedType.Failed:
                         context.Publish(new TransportOrderFailed(action.OrderCorrelationId, action.OrderDetails.OrderId));
                         break;
-                    case ActionStatusChangedType.Dropped:
                     case ActionStatusChangedType.Completed:
                         action.State = OrderActionState.Completed;
                         orderActionRepo.SaveChanges();

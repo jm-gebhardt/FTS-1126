@@ -35,18 +35,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         }
 
         /// <summary>
-        /// Test for consuming OrderEvent message with the event type 'Picked'
-        /// </summary>
-        [TestMethod]
-        public async Task ConsumeEventPicked()
-        {
-            var message = new MqttOrderEvent(_actionGuid + " " + OrderId, SerialNumber, OrderEventType.Picked);
-            var published = await ConsumeMessage(message);
-
-            await AssertPublishedEvent(published, ActionStatusChangedType.Picked);
-        }
-
-        /// <summary>
         /// Test for consuming OrderEvent message with the event type 'Completed'
         /// </summary>
         [TestMethod]
