@@ -32,7 +32,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Db.Models
         Completed
     }
 
-
     /// <summary>
     /// Database entity "AgvAction"
     /// </summary>
@@ -72,7 +71,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Db.Models
         /// </summary>
         [Column(TypeName = "nvarchar(255)")]
         public OrderActionState State { get; set; }
-
 
         /// <summary>
         /// Assigned AGV (null when unassigned)

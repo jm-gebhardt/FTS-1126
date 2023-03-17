@@ -1,5 +1,6 @@
 using Gebhardt.StoreWare.Agv.Common.Contracts;
 using MassTransit;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
 {
@@ -39,11 +40,13 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
         /// <summary>
         /// The current state of the action
         /// </summary>
+        [Column(TypeName = "nvarchar(255)")]
         public ActionState State { get; set; } = ActionState.Created;
 
         /// <summary>
         /// The type of the action, e.g. Pick or Drop
         /// </summary>
+        [Column(TypeName = "nvarchar(255)")]
         public ActionType ActionType { get; init; }
 
         /// <summary>
@@ -85,6 +88,21 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
             ParentId = parentId;
             Source = source;
             Destination = destination;
+        }
+
+        /// <summary>
+        /// Just to satisfy Entity Framework
+        /// </summary>
+        [JetBrains.Annotations.UsedImplicitly]
+        private AgvAction()
+        {
+            CorrelationId = Guid.Empty;
+            AgvId = string.Empty;
+            ActionType = ActionType.Pick;
+            OrderId = string.Empty;
+            ParentId = Guid.Empty;
+            Source = string.Empty;
+            Destination = string.Empty;
         }
     }
 }

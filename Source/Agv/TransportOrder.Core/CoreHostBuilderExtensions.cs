@@ -87,6 +87,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                 services.AddSingleton<IAgvSettingsProvider, AgvSettingsProvider>();
 
                 // Registries
+                services.AddSingleton<IAgvActionRegistry, EfAgvActionRegistry>();
                 services.AddSingleton<IAgvRegistry, EfAgvRegistry>();
                 services.AddSingleton<IOrderRegistry, EfOrderRegistry>();
                 services.AddSingleton<IOrderAuditRegistry, EfOrderAuditRegistry>();
