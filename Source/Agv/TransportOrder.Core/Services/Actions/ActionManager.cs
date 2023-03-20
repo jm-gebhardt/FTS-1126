@@ -30,6 +30,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
         IConsumer<ActionCancelFailedEvent>,
         IConsumer<ActionGroup>
     {
+        private enum ActionStatusChangedType
+        {
+            Started,
+            Cancelled,
+            CancelFailed,
+            Failed,
+            Completed
+        }
+
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<ActionManager> _logger;
         private readonly IBus _bus;
@@ -102,6 +111,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
         /// </summary>
         public Task Consume(ConsumeContext<ActionStartedEvent> context)
         {
+            HandleAgvActionStateChange(context, context.Message.CorrelationId, context.Message.ParentId, ActionStatusChangedType.CancelFailed);
             return HandleActionStateChange(context);
         }
 
@@ -110,6 +120,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
         /// </summary>
         public Task Consume(ConsumeContext<ActionCompletedEvent> context)
         {
+            HandleAgvActionStateChange(context, context.Message.CorrelationId, context.Message.ParentId, ActionStatusChangedType.CancelFailed);
             return HandleActionStateChange(context);
         }
 
@@ -118,6 +129,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
         /// </summary>
         public Task Consume(ConsumeContext<ActionFailedEvent> context)
         {
+            HandleAgvActionStateChange(context, context.Message.CorrelationId, context.Message.ParentId, ActionStatusChangedType.CancelFailed);
             return HandleActionStateChange(context);
         }
 
@@ -126,6 +138,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
         /// </summary>
         public Task Consume(ConsumeContext<ActionCancelledEvent> context)
         {
+            HandleAgvActionStateChange(context, context.Message.CorrelationId, context.Message.ParentId, ActionStatusChangedType.CancelFailed);
             return HandleActionStateChange(context);
         }
 
@@ -134,6 +147,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
         /// </summary>
         public Task Consume(ConsumeContext<ActionCancelFailedEvent> context)
         {
+            HandleAgvActionStateChange(context, context.Message.CorrelationId, context.Message.ParentId, ActionStatusChangedType.CancelFailed);
             return HandleActionStateChange(context);
         }
 
@@ -142,7 +156,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
         /// </summary>
         /// <typeparam name="TMessage"></typeparam>
         /// <exception cref="ArgumentOutOfRangeException"></exception>
-        private Task HandleActionStateChange<TMessage>(ConsumeContext<TMessage> context) where TMessage : class, CorrelatedBy<Guid>, IActionEventParent<string>
+        private Task HandleActionStateChange<TMessage>(ConsumeContext<TMessage> context) where TMessage : class, CorrelatedBy<Guid>, IActionEventParent<Guid>
         {
             using var orderActionRepo = new EfOrderActionRegistry(_transportOrderContextFactory);
             var action = orderActionRepo.GetActionById(context.Message.CorrelationId);

@@ -8,28 +8,28 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
 /// Signals that an action has been started
 /// </summary>
 [PublicAPI]
-public record ActionStartedEvent(Guid CorrelationId, string ParentId) : CorrelatedBy<Guid>, IActionEventParent<string>;
+public record ActionStartedEvent(Guid CorrelationId, Guid ParentId) : CorrelatedBy<Guid>, IActionEventParent<Guid>;
 
 /// <summary>
 /// Signals that an action has been completed
 /// </summary>
 [PublicAPI]
-public record ActionCompletedEvent(Guid CorrelationId, string ParentId) : CorrelatedBy<Guid>, IActionEventParent<string>;
+public record ActionCompletedEvent(Guid CorrelationId, Guid ParentId) : CorrelatedBy<Guid>, IActionEventParent<Guid>;
 
 /// <summary>
 /// Signals that an action has failed
 /// </summary>
 [PublicAPI]
-public record ActionFailedEvent(Guid CorrelationId, string ParentId) : CorrelatedBy<Guid>, IActionEventParent<string>;
+public record ActionFailedEvent(Guid CorrelationId, Guid ParentId) : CorrelatedBy<Guid>, IActionEventParent<Guid>;
 
 /// <summary>
 /// Signals that an action has been cancelled
 /// </summary>
 [PublicAPI]
-public record ActionCancelledEvent(Guid CorrelationId, string ParentId) : CorrelatedBy<Guid>, IActionEventParent<string>;
+public record ActionCancelledEvent(Guid CorrelationId, Guid ParentId) : CorrelatedBy<Guid>, IActionEventParent<Guid>;
 
 /// <summary>
 /// Signals that an action cancelation has failed 
 /// </summary>
 [PublicAPI]
-public record ActionCancelFailedEvent(Guid CorrelationId, string ParentId) : CorrelatedBy<Guid>, IActionEventParent<string>;
+public record ActionCancelFailedEvent(Guid CorrelationId, Guid ParentId) : CorrelatedBy<Guid>, IActionEventParent<Guid>;
