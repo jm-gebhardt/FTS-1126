@@ -139,7 +139,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
         /// </summary>
         /// <typeparam name="TMessage"></typeparam>
         /// <exception cref="ArgumentOutOfRangeException"></exception>
-        private Task HandleActionStateChange<TMessage>(ConsumeContext<TMessage> context) where TMessage : class, CorrelatedBy<Guid>
+        private Task HandleActionStateChange<TMessage>(ConsumeContext<TMessage> context) where TMessage : class, CorrelatedBy<Guid>, IActionEventParent<string>
         {
             using var orderActionRepo = new EfOrderActionRegistry(_transportOrderContextFactory);
             var action = orderActionRepo.GetActionById(context.Message.CorrelationId);

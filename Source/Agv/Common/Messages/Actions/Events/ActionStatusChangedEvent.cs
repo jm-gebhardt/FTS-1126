@@ -1,3 +1,4 @@
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using JetBrains.Annotations;
 using MassTransit;
 
@@ -7,28 +8,28 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
 /// Signals that an action has been started
 /// </summary>
 [PublicAPI]
-public record ActionStartedEvent(Guid CorrelationId, string ParentId) : CorrelatedBy<Guid>;
+public record ActionStartedEvent(Guid CorrelationId, string ParentId) : CorrelatedBy<Guid>, IActionEventParent<string>;
 
 /// <summary>
 /// Signals that an action has been completed
 /// </summary>
 [PublicAPI]
-public record ActionCompletedEvent(Guid CorrelationId, string ParentId) : CorrelatedBy<Guid>;
+public record ActionCompletedEvent(Guid CorrelationId, string ParentId) : CorrelatedBy<Guid>, IActionEventParent<string>;
 
 /// <summary>
 /// Signals that an action has failed
 /// </summary>
 [PublicAPI]
-public record ActionFailedEvent(Guid CorrelationId, string ParentId) : CorrelatedBy<Guid>;
+public record ActionFailedEvent(Guid CorrelationId, string ParentId) : CorrelatedBy<Guid>, IActionEventParent<string>;
 
 /// <summary>
 /// Signals that an action has been cancelled
 /// </summary>
 [PublicAPI]
-public record ActionCancelledEvent(Guid CorrelationId, string ParentId) : CorrelatedBy<Guid>;
+public record ActionCancelledEvent(Guid CorrelationId, string ParentId) : CorrelatedBy<Guid>, IActionEventParent<string>;
 
 /// <summary>
 /// Signals that an action cancelation has failed 
 /// </summary>
 [PublicAPI]
-public record ActionCancelFailedEvent(Guid CorrelationId, string ParentId) : CorrelatedBy<Guid>;
+public record ActionCancelFailedEvent(Guid CorrelationId, string ParentId) : CorrelatedBy<Guid>, IActionEventParent<string>;
