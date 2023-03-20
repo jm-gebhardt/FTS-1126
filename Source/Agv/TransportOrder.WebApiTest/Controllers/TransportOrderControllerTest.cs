@@ -4,7 +4,7 @@ using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Commands;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Exceptions;
+using Gebhardt.StoreWare.Agv.Common.Configurations.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.States;
 using MassTransit;

@@ -49,16 +49,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Features.Maps.Handlers.
             new("465A85A6-6A02-4068-A7AA-E3B4B9821019")
         };
 
-        private readonly List<Action<IServiceCollection>> _serviceActions = new();
-
-        protected override void ConfigureServices(IServiceCollection collection)
-        {
-            foreach (Action<IServiceCollection> serviceAction in _serviceActions)
-            {
-                serviceAction.Invoke(collection);
-            }
-        }
-
         /// <summary>
         /// Adds the service to the service collection
         /// </summary>
@@ -67,7 +57,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Features.Maps.Handlers.
         [UsedImplicitly]
         public MapRequestTestFixture<TRequestClient, TConsumer> AddService(Action<IServiceCollection> serviceAction)
         {
-            _serviceActions.Add(serviceAction);
+            AddServices(serviceAction);
             return this;
         }
 
@@ -77,9 +67,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Features.Maps.Handlers.
         /// <returns></returns>
         public MapRequestTestFixture<TRequestClient, TConsumer> UseDefaultServices()
         {
-            _serviceActions.Add(sc => sc.AddTransient(_ => GetMapRegistry().Object));
-            _serviceActions.Add(sc => sc.AddTransient(_ => GetAgvRegistry().Object));
-            _serviceActions.Add(sc => sc.AddTransient(_ => GetMapper()));
+            AddServices(sc => sc.AddTransient(_ => GetMapRegistry().Object));
+            AddServices(sc => sc.AddTransient(_ => GetAgvRegistry().Object));
+            AddServices(sc => sc.AddTransient(_ => GetMapper()));
 
             return this;
         }
@@ -93,7 +83,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Features.Maps.Handlers.
             var mapRegistryMock = new Mock<IMapRegistry>();
             mapRegistryAction.Invoke(mapRegistryMock);
 
-            _serviceActions.Add(sc => sc.AddTransient(_ => mapRegistryMock.Object));
+            AddServices(sc => sc.AddTransient(_ => mapRegistryMock.Object));
 
             return this;
         }

@@ -31,6 +31,7 @@ try
                 {
                     services.AddScoped(_ => simulationOptions);
                     services.AddTransient<SimulatedAgvProvider>();
+                    services.AddSingleton<IAgvRegistry, AgvRegistry>();
                     services.ConfigureServicesMassTransit(context.Configuration,
                         x =>
                         {

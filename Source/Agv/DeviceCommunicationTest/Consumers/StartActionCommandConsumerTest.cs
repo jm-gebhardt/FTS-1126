@@ -1,6 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Extensions;
-using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Commands;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
 using MassTransit;
@@ -13,6 +12,8 @@ using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Enums;
+using Microsoft.Extensions.DependencyInjection;
+using Moq;
 using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
@@ -30,7 +31,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         [TestMethod]
         public async Task Test_Send_TransportOrder_To_AGV_Via_MQTT()
         {
-            var fixture = new MqttConsumerTestFixture<StartActionCommandConsumer>();
+            MqttConsumerTestFixture<StartActionCommandConsumer> fixture = new MqttConsumerTestFixture<StartActionCommandConsumer>()
+                .AddServices(s=>s.AddSingleton<IAgvRegistry>(new Mock<AgvRegistry>().Object))
+                .Build();
 
             // Create a publish observer
             var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
@@ -91,57 +94,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
                 string parentId = mqttMessage.OrderId.Split(" ")[1];
                 actionId.ShouldBe(actionCorrelationId.ToString());
                 parentId.ShouldBe(orderId);
-            }
-        }
-
-        /// <summary>
-        /// Test consuming an SendAgvChargeOrder message and publish an MqttOrder Mqtt message with proper bus configuration
-        /// </summary>
-        /// <returns></returns>
-        [TestMethod]
-        public async Task Test_Send_ChargeOrder_To_AGV_Via_MQTT()
-        {
-            var fixture = new MqttConsumerTestFixture<StartActionCommandConsumer>();
-
-            // Create a publish observer
-            var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
-            using (fixture.TestHarness.Bus.ConnectPublishObserver(publishObserver))
-            {
-                const string agvId = "agv0";
-                const string chargerId = "CHG1";
-
-                // Publish ExecuteTransportOrder
-                await fixture.TestHarness.Bus.Publish(new SendAgvChargeOrder(Guid.NewGuid(), agvId, chargerId));
-
-                // Check if sent
-                (await fixture.TestHarness.Published.Any<SendAgvChargeOrder>()).ShouldBeTrue();
-
-                // Get Consumer Harness
-                IConsumerTestHarness<StartActionCommandConsumer> consumerHarness = fixture.TestHarness.GetConsumerHarness<StartActionCommandConsumer>();
-
-                // Check if consumed
-                (await consumerHarness.Consumed.Any<SendAgvChargeOrder>()).ShouldBeTrue();
-
-                // Get consumed message
-                IReceivedMessage<SendAgvChargeOrder> consumedMessage = consumerHarness.Consumed.Select<SendAgvChargeOrder>().First();
-
-                // Check consumed message
-                consumedMessage.Context.Message.AgvId.ShouldBe(agvId);
-                consumedMessage.Context.Message.ToCharger.ShouldBe(chargerId);
-                Guid? correlationId = consumedMessage.Context.CorrelationId;
-
-                // Get published MqttOrder Mqtt message
-                IPublishedMessage<MqttOrder> publishedMessage = publishObserver.Messages.Select<MqttOrder>().First();
-
-                // Check routing key and content type
-                var routingKeySpecified = typeof(MqttOrder).GetCustomAttribute(typeof(RoutingKey)) as RoutingKey;
-                publishedMessage.Context.RoutingKey().ShouldBe(routingKeySpecified?.RoutingKeyValue);
-                publishedMessage.Context.ContentType.ShouldBe(SystemTextJsonRawMessageSerializer.JsonContentType);
-
-                // Check content
-                publishedMessage.Context.Message.SerialNumber.ShouldBe(agvId);
-                publishedMessage.Context.Message.OrderId.ShouldBe(correlationId.ToString());
-                publishedMessage.Context.Message.Stations?.ToStationIdentifier.ShouldBe(chargerId);
             }
         }
     }

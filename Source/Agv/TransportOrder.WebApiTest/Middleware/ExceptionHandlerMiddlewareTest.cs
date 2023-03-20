@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 using System.Net;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Exceptions;
+using Gebhardt.StoreWare.Agv.Common.Configurations.Exceptions;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Middleware
 {

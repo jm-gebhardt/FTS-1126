@@ -12,6 +12,8 @@ namespace Gebhardt.StoreWare.Agv.Common.Testing
     [PublicAPI]
     public class MassTransitTestFixture<TConsumer> where TConsumer : class, IConsumer
     {
+        private readonly List<Action<IServiceCollection>> _serviceActions = new();
+
         /// <summary>
         /// Service provider
         /// </summary>
@@ -66,7 +68,8 @@ namespace Gebhardt.StoreWare.Agv.Common.Testing
                 });
             });
 
-            foreach (Action<IServiceCollection> service in services)
+            _serviceActions.AddRange(services);
+            foreach (Action<IServiceCollection> service in _serviceActions)
             {
                 service.Invoke(collection);
             }
@@ -78,6 +81,17 @@ namespace Gebhardt.StoreWare.Agv.Common.Testing
             TestHarness.Start();
             ConsumerHarness = TestHarness.GetConsumerHarness<TConsumer>();
 
+            return this;
+        }
+
+        /// <summary>
+        /// Adds the service to the service collection
+        /// </summary>
+        /// <param name="services">The action of the service to add</param>
+        /// <returns></returns>
+        public MassTransitTestFixture<TConsumer> AddServices(Action<IServiceCollection> services)
+        {
+            _serviceActions.Add(services);
             return this;
         }
 

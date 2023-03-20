@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Exceptions
+﻿namespace Gebhardt.StoreWare.Agv.Common.Configurations.Exceptions
 {
     /// <summary>
     /// Represents errors that occur when the map is not found in the e.g. registry

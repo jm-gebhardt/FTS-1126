@@ -1,7 +1,6 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands;
-using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Commands;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Enums;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 using JetBrains.Annotations;
@@ -15,17 +14,18 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
     /// </summary>
     [UsedImplicitly]
     public class StartActionCommandConsumer :
-        IConsumer<StartActionCommand>,
-        IConsumer<SendAgvChargeOrder>
+        IConsumer<StartActionCommand>
     {
         private readonly ILogger<StartActionCommandConsumer> _logger;
+        private readonly IAgvRegistry _agvRegistry;
 
         /// <summary>
         /// Create dummy consumer with message handler delegate
         /// </summary>
-        public StartActionCommandConsumer(ILogger<StartActionCommandConsumer> logger)
+        public StartActionCommandConsumer(ILogger<StartActionCommandConsumer> logger, IAgvRegistry agvRegistry)
         {
             _logger = logger;
+            _agvRegistry = agvRegistry;
         }
 
         /// <summary>
@@ -71,32 +71,14 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
                 }
             }, context.CancellationToken);
 
+            FeedAgvRegistry(action.AgvCorrelationId, new AgvAction(action.CorrelationId, action.AgvId, action.ActionType, action.OrderId, action.ParentId, action.Source, action.Destination));
             _logger.LogInformation("Sent transport order: {OrderId} for AGV:{AgvId} from {Source} to {Destination}",
                 action.OrderId, action.AgvId, action.Source, action.Destination);
         }
 
-        /// <summary>
-        /// Handle message <see cref="SendAgvChargeOrder"/>. and send an order to the AGV of Type Charge, RecordType Order
-        /// </summary>
-        /// <param name="context">Context of the consumer wrapping details surrounding the inbound message.</param>
-        public async Task Consume(ConsumeContext<SendAgvChargeOrder> context)
+        private void FeedAgvRegistry(Guid correlationId, AgvAction agvAction)
         {
-            if (context.Message.CorrelationId == Guid.Empty)
-            {
-                _logger.LogWarning("Charge order for AGV:{AgvId} to {Destination} has no GUID!", context.Message.AgvId, context.Message.ToCharger);
-            }
-            await context.PublishMqtt(new MqttOrder(context.Message.CorrelationId.ToString()) //use correlation ID here, because we don't have an orderId here
-            {
-                SerialNumber = context.Message.AgvId,
-                OrderType = OrderType.Charge,
-                RecordType = OrderRecordType.Order,
-                Stations = new Stations()
-                {
-                    ToStationIdentifier = context.Message.ToCharger
-                }
-            }, context.CancellationToken);
-
-            _logger.LogInformation("Sent charge order: {CorrelationId} for AGV:{AgvId} to {Destination}", context.Message.CorrelationId, context.Message.AgvId, context.Message.ToCharger);
+            _agvRegistry.AddOrUpdateAgvAction(correlationId, agvAction);
         }
     }
 }

@@ -49,7 +49,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
         [UsedImplicitly]
         public TransportOrderControllerTestFixture<TRequest, TRequestHandler> AddService(Action<IServiceCollection> serviceAction)
         {
-            ServiceActions.Add(serviceAction);
+            AddServices(serviceAction);
             return this;
         }
 
@@ -69,9 +69,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
         public TransportOrderControllerTestFixture<TRequest, TRequestHandler> UseDefaultServices()
         {
 
-            ServiceActions.Add(sc => sc.AddTransient(_ => GetOrderRegistry().Object));
-            ServiceActions.Add(sc => sc.AddTransient(_ => new Mock<IBus>().Object));
-            ServiceActions.Add(sc => sc.AddTransient(_ => GetMapper()));
+            AddServices(sc => sc.AddTransient(_ => GetOrderRegistry().Object));
+            AddServices(sc => sc.AddTransient(_ => new Mock<IBus>().Object));
+            AddServices(sc => sc.AddTransient(_ => GetMapper()));
             return this;
         }
 
@@ -85,13 +85,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var orderRegistryMock = new Mock<IOrderRegistry>();
             orderRegistryAction.Invoke(orderRegistryMock);
 
-            ServiceActions.Add(sc => sc.AddTransient(_ => orderRegistryMock.Object));
+            AddServices(sc => sc.AddTransient(_ => orderRegistryMock.Object));
             return this;
         }
 
         public TransportOrderControllerTestFixture<TRequest, TRequestHandler> AddOrderRegistryMock(Mock<IOrderRegistry> orderRegistry)
         {
-            ServiceActions.Add(sc => sc.AddTransient(_ => orderRegistry.Object));
+            AddServices(sc => sc.AddTransient(_ => orderRegistry.Object));
             return this;
         }
 
