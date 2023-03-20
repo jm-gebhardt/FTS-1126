@@ -29,7 +29,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         [TestMethod]
         public async Task ConsumeEventStarted()
         {
-            var message = new MqttOrderEvent(_actionGuid + " " + OrderId, SerialNumber, OrderEventType.Started);
+            var message = new MqttOrderEvent(_actionGuid + " " + _actionGuid, SerialNumber, OrderEventType.Started);
             var published = await ConsumeMessage(message);
             await AssertPublishedEvent<ActionStartedEvent>(published);
         }
@@ -40,7 +40,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         [TestMethod]
         public async Task ConsumeEventCompleted()
         {
-            var message = new MqttOrderEvent(_actionGuid + " " + OrderId, SerialNumber, OrderEventType.Completed);
+            var message = new MqttOrderEvent(_actionGuid + " " + _actionGuid, SerialNumber, OrderEventType.Completed);
             var published = await ConsumeMessage(message);
 
             await AssertPublishedEvent<ActionCompletedEvent>(published);
@@ -52,7 +52,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         [TestMethod]
         public async Task ConsumeEventCancelled()
         {
-            var message = new MqttOrderEvent(_actionGuid + " " + OrderId, SerialNumber, OrderEventType.Cancelled);
+            var message = new MqttOrderEvent(_actionGuid + " " + _actionGuid, SerialNumber, OrderEventType.Cancelled);
             var published = await ConsumeMessage(message);
 
             await AssertPublishedEvent<ActionCancelledEvent>(published);
@@ -64,7 +64,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         [TestMethod]
         public async Task ConsumeEventCancelFailed()
         {
-            var message = new MqttOrderEvent(_actionGuid + " " + OrderId, SerialNumber, OrderEventType.CancelFailed);
+            var message = new MqttOrderEvent(_actionGuid + " " + _actionGuid, SerialNumber, OrderEventType.CancelFailed);
             var published = await ConsumeMessage(message);
 
             await AssertPublishedEvent<ActionCancelFailedEvent>(published);
@@ -76,7 +76,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         [TestMethod]
         public async Task ConsumeEventFailed()
         {
-            var message = new MqttOrderEvent(_actionGuid + " " + OrderId, SerialNumber, OrderEventType.Failed);
+            var message = new MqttOrderEvent(_actionGuid + " " + _actionGuid, SerialNumber, OrderEventType.Failed);
             var published = await ConsumeMessage(message);
             
             await AssertPublishedEvent<ActionFailedEvent>(published);

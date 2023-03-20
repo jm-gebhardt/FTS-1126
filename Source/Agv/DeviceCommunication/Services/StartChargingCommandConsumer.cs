@@ -80,7 +80,7 @@ public class StartChargingCommandConsumer : IConsumer<StartChargingCommand>
             lastNodeId);
 
         await context.Publish(new StartActionCommand(agvCorrelationId, chargeAction));
-        await context.Publish(new ActionStartedEvent(chargeAction.CorrelationId));
+        await context.Publish(new ActionStartedEvent(chargeAction.CorrelationId, Guid.Empty));
         await context.RespondAsync(new BaseResult());
     }
 }

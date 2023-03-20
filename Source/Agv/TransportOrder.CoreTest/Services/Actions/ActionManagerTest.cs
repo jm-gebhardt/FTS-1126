@@ -127,13 +127,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Actions
             inserter.SaveChanges();
             var actionId = inserter.GetActionsOfOrder(orderDetails.CorrelationId)[0].Id;
 
-            await fixture.TestHarness!.Bus.Publish(new ActionStartedEvent(actionId, string.Empty));
+            await fixture.TestHarness!.Bus.Publish(new ActionStartedEvent(actionId, Guid.Empty));
             (await fixture.TestHarness.Published.Any<TransportOrderStarted>()).ShouldBeTrue();
 
-            await fixture.TestHarness!.Bus.Publish(new ActionCancelledEvent(actionId, string.Empty));
+            await fixture.TestHarness!.Bus.Publish(new ActionCancelledEvent(actionId, Guid.Empty));
             (await fixture.TestHarness.Published.Any<TransportOrderCancelSucceeded>()).ShouldBeTrue();
 
-            await fixture.TestHarness!.Bus.Publish(new ActionFailedEvent(actionId, string.Empty));
+            await fixture.TestHarness!.Bus.Publish(new ActionFailedEvent(actionId, Guid.Empty));
             (await fixture.TestHarness.Published.Any<TransportOrderFailed>()).ShouldBeTrue();
         }
 
@@ -175,7 +175,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Actions
 
             // Complete action of first order
             var actionId1 = inserter.GetActionsOfOrder(order1.CorrelationId)[0].Id;
-            await fixture.TestHarness!.Bus.Publish(new ActionCompletedEvent(actionId1, string.Empty));
+            await fixture.TestHarness!.Bus.Publish(new ActionCompletedEvent(actionId1, Guid.Empty));
             (await fixture.TestHarness.Consumed.Any<ActionCompletedEvent>()).ShouldBeTrue();
 
             // Expect ReleaseAgv due to action completed ...
@@ -216,7 +216,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Actions
 
             // Complete first action of first order ...
             var actionId1 = inserter.GetActionsOfOrder(order1.CorrelationId)[0].Id;
-            await fixture.TestHarness!.Bus.Publish(new ActionCompletedEvent(actionId1, string.Empty));
+            await fixture.TestHarness!.Bus.Publish(new ActionCompletedEvent(actionId1, Guid.Empty));
             (await fixture.TestHarness.Consumed.Any<ActionCompletedEvent>()).ShouldBeTrue();
             // ... and start subsequent action
             fixture.TestHarness.Published.Select<StartActionCommand>().Count().ShouldBe(2);

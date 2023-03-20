@@ -193,7 +193,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
             agvAction.Nodes = route.Nodes;
 
             await context.Publish(new StartActionCommand(agv.CorrelationId, agvAction));
-            await context.Publish(new ActionStartedEvent(agv.CorrelationId, string.Empty));
+            await context.Publish(new ActionStartedEvent(agv.CorrelationId, Guid.Empty));
         }
 
         private AgvGraph.Node? ChooseChargingStation(AgvGraph agvGraph)

@@ -1,6 +1,5 @@
-﻿//ReSharper disable all
+﻿// Re Sharper disable all
 using Gebhardt.StoreWare.Agv.Common.Messages;
-using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
@@ -8,15 +7,13 @@ using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Routing;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.States;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Db;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Db.Models;
-using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using Moq;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Actions;
 
@@ -52,9 +49,10 @@ public class ActionManagerTestFixture : MassTransitTestFixture<ActionManager>, I
     public List<IAgv> Agvs => _mockAgvRegistry.Object.GetAllAgvs().ToList();
 
     public IOrderActionRegistry CreateOrderActionRegistry() => new EfOrderActionRegistry(_transportOrderContextFactory!);
- 
-    public ActionManager ActionManager { get; private set; } = default!;
 
+    public IAgvActionRegistry AgvActionRegistry { get; private set; } = default!;
+
+    public ActionManager ActionManager { get; private set; } = default!;
 
     /// <summary>
     /// Test fixture using mocked AGV registry and in-memory-database for actions.
@@ -73,6 +71,11 @@ public class ActionManagerTestFixture : MassTransitTestFixture<ActionManager>, I
             {
                 options.UseInMemoryDatabase(Guid.NewGuid().ToString());
             });
+            x.AddDbContextFactory<SagaPersistenceDbContext>(options =>
+            {
+                options.UseInMemoryDatabase(Guid.NewGuid().ToString());
+            });
+            x.AddSingleton<IAgvActionRegistry, EfAgvActionRegistry>();
             x.AddRequestClient<AssignAgv>();
         });
 
@@ -94,6 +97,7 @@ public class ActionManagerTestFixture : MassTransitTestFixture<ActionManager>, I
 
         _transportOrderContextFactory = TestHarness!.Scope.ServiceProvider.GetRequiredService<IDbContextFactory<TransportOrderDbContext>>();
         ActionManager = TestHarness!.Scope.ServiceProvider.GetRequiredService<ActionManager>();
+        AgvActionRegistry = TestHarness!.Scope.ServiceProvider.GetRequiredService<IAgvActionRegistry>();
 
         return this;
     }
