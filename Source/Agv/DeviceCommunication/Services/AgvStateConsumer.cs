@@ -14,15 +14,18 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
     public class AgvStateConsumer : IConsumer<MqttState>
     {
         private readonly ILogger<AgvStateConsumer> _logger;
+        private readonly IAgvRegistry _agvRegistry;
 
         /// <summary>
         /// Create consumer for agv status message (<see cref="MqttState"/>)
         /// </summary>
         /// <param name="logger">Mandatory logger facility.</param>
+        /// <param name="agvRegistry"></param>
         [PublicAPI]
-        public AgvStateConsumer(ILogger<AgvStateConsumer> logger)
+        public AgvStateConsumer(ILogger<AgvStateConsumer> logger, IAgvRegistry agvRegistry)
         {
             _logger = logger;
+            _agvRegistry = agvRegistry;
         }
 
         /// <summary>
@@ -40,10 +43,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
             }
             _logger.LogDebug("{MessageType} from {AgvId} received", nameof(MqttState), serialNumber);
 
-            await context.Publish(new AgvStatusReceived(
-                correlationId: serialNumber.ToGuid(),
-                agvId: serialNumber,
-                agvStatus: new AgvStatus(
+            var agvStatus = new AgvStatus(
                     serialNumber.ToGuid(),
                     GetOrderId(message),
                     GetBusy(message),
@@ -52,8 +52,14 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
                     GetCharging(message),
                     GetDisturbed(message),
                     GetLastNodeId(message)
-                    )
-                ), context.CancellationToken);
+                    );
+
+            var agvStatusReceived = new AgvStatusReceived(
+                correlationId: serialNumber.ToGuid(),
+                agvId: serialNumber,
+                agvStatus: agvStatus
+            );
+            await context.Publish(agvStatusReceived, context.CancellationToken);
 
             if (context.Message.AgvPosition != null)
             {
@@ -65,10 +71,17 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
                         x: context.Message.AgvPosition.X,
                         y: context.Message.AgvPosition.Y * -1, // Special treatment for Karis AGV. Y Axis is inverted
                         z: 0f,
-                        theta: Mathematics.ConvertToRadians(90.0f) - context.Message.AgvPosition.Theta, // Special treatment for Karis AGV. 90° in our System (AGV facing right) is 0° in our world
+                        theta: Mathematics.ConvertToRadians(90.0f) - context.Message.AgvPosition.Theta, // Special treatment for Karis AGV. 90ï¿½ in our System (AGV facing right) is 0ï¿½ in our world
                         deviationRange: context.Message.AgvPosition.DeviationRange
                     )), context.CancellationToken);
             }
+
+            FeedAgvRegistry(serialNumber.ToGuid(), agvStatusReceived);
+        }
+
+        private void FeedAgvRegistry(Guid correlationId, AgvStatusReceived agvStatusReceived)
+        {
+            _agvRegistry.AddOrUpdateAgvStatus(correlationId, agvStatusReceived);
         }
 
         private string GetSerialNumber(MqttState message)

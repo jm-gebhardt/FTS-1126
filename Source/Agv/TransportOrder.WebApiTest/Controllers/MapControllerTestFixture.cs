@@ -107,7 +107,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
         [UsedImplicitly]
         public MapControllerTestFixture<TRequest, TRequestHandler> AddService(Action<IServiceCollection> serviceAction)
         {
-            ServiceActions.Add(serviceAction);
+            AddServices(serviceAction);
             return this;
         }
 
@@ -117,9 +117,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
         /// <returns></returns>
         public MapControllerTestFixture<TRequest, TRequestHandler> UseDefaultServices()
         {
-            ServiceActions.Add(sc => sc.AddTransient(_ => GetMapRegistry().Object));
-            ServiceActions.Add(sc => sc.AddTransient(_ => GetAgvRegistry().Object));
-            ServiceActions.Add(sc => sc.AddTransient(_ => GetMapper()));
+            AddServices(sc => sc.AddTransient(_ => GetMapRegistry().Object));
+            AddServices(sc => sc.AddTransient(_ => GetAgvRegistry().Object));
+            AddServices(sc => sc.AddTransient(_ => GetMapper()));
 
             return this;
         }
@@ -134,7 +134,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var mapRegistryMock = new Mock<IMapRegistry>();
             mapRegistryAction.Invoke(mapRegistryMock);
 
-            ServiceActions.Add(sc => sc.AddTransient(_ => mapRegistryMock.Object));
+            AddServices(sc => sc.AddTransient(_ => mapRegistryMock.Object));
 
             return this;
         }
@@ -145,7 +145,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
         /// <returns></returns>
         public MapControllerTestFixture<TRequest, TRequestHandler> AddMapRegistryMock()
         {
-            ServiceActions.Add(sc => sc.AddTransient(_ => GetMapRegistry().Object));
+            AddServices(sc => sc.AddTransient(_ => GetMapRegistry().Object));
 
             return this;
         }

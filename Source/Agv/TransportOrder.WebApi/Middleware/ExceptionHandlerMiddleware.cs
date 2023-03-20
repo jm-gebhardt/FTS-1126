@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using System.Text.Json;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Exceptions;
+using Gebhardt.StoreWare.Agv.Common.Configurations.Exceptions;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Middleware
 {

@@ -70,14 +70,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             registry.Setup(x => x.GetAllAgvs()).Returns(new EnumerableQuery<IAgv>(agvs));
             registry.Setup(x => x.GetAgv(It.IsAny<Guid>())).Returns<Guid>(correlationId =>
             {
-                foreach (var agv in agvs)
-                {
-                    if (agv.CorrelationId == correlationId)
-                    {
-                        return agv;
-                    }
-                }
-                return null;
+                return agvs.FirstOrDefault(agv => agv.CorrelationId == correlationId);
             });
 
             return registry;
@@ -100,14 +93,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             registry.Setup(x => x.GetAllPositions()).Returns(agvPositions);
             registry.Setup(x => x.GetPosition(It.IsAny<Guid>())).Returns<Guid>(correlationId =>
             {
-                foreach (var agvPosition in agvPositions)
-                {
-                    if (agvPosition.CorrelationId == correlationId)
-                    {
-                        return agvPosition;
-                    }
-                }
-                return null;
+                return agvPositions.FirstOrDefault(agvPosition => agvPosition.CorrelationId == correlationId);
             });
 
             return registry;
@@ -121,7 +107,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
         [UsedImplicitly]
         public AgvControllerTestFixture<TRequest, TRequestHandler> AddService(Action<IServiceCollection> serviceAction)
         {
-            ServiceActions.Add(serviceAction);
+            AddServices(serviceAction);
             return this;
         }
 
@@ -157,11 +143,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
         /// <returns></returns>
         public AgvControllerTestFixture<TRequest, TRequestHandler> UseDefaultServices()
         {
-            ServiceActions.Add(sc => sc.AddTransient(_ => GetAgvRegistry().Object));
-            ServiceActions.Add(sc => sc.AddTransient(_ => GetAgvPositionRegistry().Object));
-            ServiceActions.Add(sc => sc.AddTransient(_ => GetMapper()));
-            ServiceActions.Add(sc => sc.AddTransient(_ => new Mock<IBus>().Object));
-            ServiceActions.Add(sc => sc.AddTransient(_ => new Mock<IAgvPositionRegistry>().Object));
+            AddServices(sc => sc.AddTransient(_ => GetAgvRegistry().Object));
+            AddServices(sc => sc.AddTransient(_ => GetAgvPositionRegistry().Object));
+            AddServices(sc => sc.AddTransient(_ => GetMapper()));
+            AddServices(sc => sc.AddTransient(_ => new Mock<IBus>().Object));
+            AddServices(sc => sc.AddTransient(_ => new Mock<IAgvPositionRegistry>().Object));
             return this;
         }
 
@@ -175,7 +161,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var agvRegistryMock = new Mock<IAgvRegistry>();
             agvRegistryAction.Invoke(agvRegistryMock);
 
-            ServiceActions.Add(sc => sc.AddTransient(_ => agvRegistryMock.Object));
+            AddServices(sc => sc.AddTransient(_ => agvRegistryMock.Object));
             return this;
         }
 

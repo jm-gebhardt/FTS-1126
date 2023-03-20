@@ -1,7 +1,7 @@
 using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Exceptions;
+using Gebhardt.StoreWare.Agv.Common.Configurations.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Common;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Requests.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services;

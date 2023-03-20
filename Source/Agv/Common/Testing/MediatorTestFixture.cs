@@ -17,6 +17,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Testing
         where TRequest : class
         where TConsumer : class, IConsumer
     {
+        private readonly List<Action<IServiceCollection>> _serviceActions = new();
 
         /// <summary>
         /// Service provider
@@ -37,7 +38,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Testing
         /// <summary>
         /// Builds the service provider based on the service collection, in order to be able to register services lazy
         /// </summary>
-        protected virtual void Build()
+        public virtual MediatorTestFixture<TRequest, TConsumer> Build()
         {
             var collection = new ServiceCollection()
                 .AddMediator(cfg =>
@@ -53,23 +54,29 @@ namespace Gebhardt.StoreWare.Agv.Common.Testing
                     });
                 });
 
-            ConfigureServices(collection);
+            foreach (Action<IServiceCollection> service in _serviceActions)
+            {
+                service.Invoke(collection);
+            }
 
             Provider = collection.BuildServiceProvider(true);
             Mediator = Provider.GetRequiredService<IMediator>();
             TestHarness = new MediatorTestHarness(Mediator);
             TestHarness.Start();
+
+            return this;
         }
 
         /// <summary>
-        /// Is executed to configure the service collection
+        /// Adds the service to the service collection
         /// </summary>
-        /// <param name="collection"></param>
-        protected virtual void ConfigureServices(IServiceCollection collection)
+        /// <param name="services">The action of the service to add</param>
+        /// <returns></returns>
+        public MediatorTestFixture<TRequest, TConsumer> AddServices(Action<IServiceCollection> services)
         {
-
+            _serviceActions.Add(services);
+            return this;
         }
-
 
         /// <summary>
         /// Gets the response from a request
