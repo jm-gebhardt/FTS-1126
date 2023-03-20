@@ -204,7 +204,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         [TestMethod]
         public async Task Transition_State_When_Message_Received_ActionStartedEvent(string initialState, string resultingState)
         {
-            var message = new ActionStartedEvent(TestAgvId.ToGuid());
+            var message = new ActionStartedEvent(TestAgvId.ToGuid(), string.Empty);
             await TransitionStateWhenMessageReceived(message, initialState, resultingState);
         }
 
@@ -217,7 +217,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
         [TestMethod]
         public async Task No_Transition_State_When_Message_Received_ActionStartedEvent(string initialState)
         {
-            var message = new ActionStartedEvent(TestAgvId.ToGuid());
+            var message = new ActionStartedEvent(TestAgvId.ToGuid(), string.Empty);
             await TransitionStateWhenMessageReceived(message, initialState, initialState); // Result state should be the same as initial state
         }
 

@@ -1,9 +1,34 @@
 using JetBrains.Annotations;
+using MassTransit;
 
 namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
 
 /// <summary>
-/// Sent as soon as the action has been successfully executed by the Agv
+/// Signals that an action has been started
 /// </summary>
 [PublicAPI]
-public record ActionStatusChangedEvent(Guid CorrelationId, ActionStatusChangedType ChangedType, string ParentId);
+public record ActionStartedEvent(Guid CorrelationId, string ParentId) : CorrelatedBy<Guid>, IActionEventParent<string>;
+
+/// <summary>
+/// Signals that an action has been completed
+/// </summary>
+[PublicAPI]
+public record ActionCompletedEvent(Guid CorrelationId, string ParentId) : CorrelatedBy<Guid>, IActionEventParent<string>;
+
+/// <summary>
+/// Signals that an action has failed
+/// </summary>
+[PublicAPI]
+public record ActionFailedEvent(Guid CorrelationId, string ParentId) : CorrelatedBy<Guid>, IActionEventParent<string>;
+
+/// <summary>
+/// Signals that an action has been cancelled
+/// </summary>
+[PublicAPI]
+public record ActionCancelledEvent(Guid CorrelationId, string ParentId) : CorrelatedBy<Guid>, IActionEventParent<string>;
+
+/// <summary>
+/// Signals that an action cancelation has failed 
+/// </summary>
+[PublicAPI]
+public record ActionCancelFailedEvent(Guid CorrelationId, string ParentId) : CorrelatedBy<Guid>, IActionEventParent<string>;

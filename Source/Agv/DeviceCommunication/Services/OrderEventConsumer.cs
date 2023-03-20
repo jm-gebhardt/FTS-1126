@@ -37,33 +37,30 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
             var actionId = new Guid(message.OrderId.Split(" ")[0]);
             string parentId = message.OrderId.Split(" ")[1];
             
-            ActionStatusChangedType actionStatusChangedType;
             switch (message.OrderEventType)
             {
                 case OrderEventType.Started:
-                    actionStatusChangedType = ActionStatusChangedType.Started;
+                    await context.Publish(new ActionStartedEvent(actionId, parentId));
                     break;
 
                 case OrderEventType.Completed:
-                    actionStatusChangedType = ActionStatusChangedType.Completed;
+                    await context.Publish(new ActionCompletedEvent(actionId, parentId));
                     break;
 
                 case OrderEventType.Cancelled:
-                    actionStatusChangedType = ActionStatusChangedType.Cancelled;
+                    await context.Publish(new ActionCancelledEvent(actionId, parentId));
                     break;
 
                 case OrderEventType.CancelFailed:
-                    actionStatusChangedType = ActionStatusChangedType.CancelFailed;
+                    await context.Publish(new ActionCancelFailedEvent(actionId, parentId));
                     break;
 
                 case OrderEventType.Failed:
-                    actionStatusChangedType = ActionStatusChangedType.Failed;
+                    await context.Publish(new ActionFailedEvent(actionId, parentId));
                     break;
                 default:
                     throw new ArgumentOutOfRangeException($"Undefined OrderEventType {message.OrderEventType} for {message.OrderId}");
             }
-
-            await context.Publish(new ActionStatusChangedEvent(actionId, actionStatusChangedType, parentId));
         }
     }
 }

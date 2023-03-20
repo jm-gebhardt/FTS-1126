@@ -20,26 +20,32 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
     /// <summary>
     /// Manages handling of actions and reports to <see cref="OrderStateMachine"/>
     /// </summary>
-    public class ActionManager : IConsumer<OrderQueuingCommand>,
-                                 IConsumer<ActionStatusChangedEvent>,
-                                 IConsumer<AgvBecameReady>,
-                                 IConsumer<ActionGroup>
+    public class ActionManager :
+        IConsumer<OrderQueuingCommand>,
+        IConsumer<AgvBecameReady>,
+        IConsumer<ActionStartedEvent>,
+        IConsumer<ActionCompletedEvent>,
+        IConsumer<ActionFailedEvent>,
+        IConsumer<ActionCancelledEvent>,
+        IConsumer<ActionCancelFailedEvent>,
+        IConsumer<ActionGroup>
     {
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<ActionManager> _logger;
         private readonly IBus _bus;
+
         /// <summary>
         /// Map of all available AGVs with list of assigned actions (when there are any)
         /// </summary>
         private readonly IDbContextFactory<TransportOrderDbContext> _transportOrderContextFactory;
         private readonly SemaphoreSlim _lockSemaphoreSlim = new(1, 1);
 
-
         /// <summary/>
-        public ActionManager(IServiceScopeFactory scopeFactory,
-                             ILogger<ActionManager> logger,
-                             IBus bus,
-                             IDbContextFactory<TransportOrderDbContext> transportOrderContextFactory)
+        public ActionManager(
+            IServiceScopeFactory scopeFactory,
+            ILogger<ActionManager> logger,
+            IBus bus,
+            IDbContextFactory<TransportOrderDbContext> transportOrderContextFactory)
         {
             _scopeFactory = scopeFactory;
             _logger = logger;
@@ -62,7 +68,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
         private async Task QueueActionsForOrderAsync(OrderQueuingCommand request, CancellationToken cancellationToken)
         {
             var orderCorrelationId = request.CorrelationId;
-            
+
             // Create ActionSagas
             using var orderActionRepo = new EfOrderActionRegistry(_transportOrderContextFactory);
             orderActionRepo.Insert(request.OrderDetails, ActionType.Pick, request.OrderDetails.CreationDate, null, request.OrderDetails.Source);
@@ -89,51 +95,95 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
         }
 
         /// <summary>
-        /// Handle <see cref="ActionStatusChangedEvent"/> from DeviceCommunication
+        /// Handle <see cref="ActionStartedEvent"/> from DeviceCommunication
         /// </summary>
-        /// <param name="context"></param>
+        public Task Consume(ConsumeContext<ActionStartedEvent> context)
+        {
+            return HandleActionStateChange(context);
+        }
+
+        /// <summary>
+        /// Handle <see cref="ActionCompletedEvent"/> from DeviceCommunication
+        /// </summary>
+        public Task Consume(ConsumeContext<ActionCompletedEvent> context)
+        {
+            return HandleActionStateChange(context);
+        }
+
+        /// <summary>
+        /// Handle <see cref="ActionFailedEvent"/> from DeviceCommunication
+        /// </summary>
+        public Task Consume(ConsumeContext<ActionFailedEvent> context)
+        {
+            return HandleActionStateChange(context);
+        }
+
+        /// <summary>
+        /// Handle <see cref="ActionCancelledEvent"/> from DeviceCommunication
+        /// </summary>
+        public Task Consume(ConsumeContext<ActionCancelledEvent> context)
+        {
+            return HandleActionStateChange(context);
+        }
+
+        /// <summary>
+        /// Handle <see cref="ActionCancelFailedEvent"/> from DeviceCommunication
+        /// </summary>
+        public Task Consume(ConsumeContext<ActionCancelFailedEvent> context)
+        {
+            return HandleActionStateChange(context);
+        }
+
+        /// <summary>
+        /// Handle status chagned events from DeviceCommunication
+        /// </summary>
+        /// <typeparam name="TMessage"></typeparam>
         /// <exception cref="ArgumentOutOfRangeException"></exception>
-        public Task Consume(ConsumeContext<ActionStatusChangedEvent> context)
+        private Task HandleActionStateChange<TMessage>(ConsumeContext<TMessage> context) where TMessage : class, CorrelatedBy<Guid>, IActionEventParent<string>
         {
             using var orderActionRepo = new EfOrderActionRegistry(_transportOrderContextFactory);
             var action = orderActionRepo.GetActionById(context.Message.CorrelationId);
-
-            if (action != null)
+            if (action == null)
             {
-                _logger.LogDebug("{MessageType} {ChangedType} from AGV {AgvId} for order {OrderId} / {CorrelationId}",
-                    nameof(ActionStatusChangedEvent), context.Message.ChangedType, action.AssignedAgvId, action.OrderDetails.OrderId, action.OrderCorrelationId);
+                _logger.LogDebug("{MessageType} but no corresponding action found for ID {OrderActionId}",
+                    nameof(TMessage), context.Message.CorrelationId);
+                return Task.CompletedTask;
+            }
 
-                switch (context.Message.ChangedType)
+            _logger.LogDebug("{MessageType} from AGV {AgvId} for order {OrderId} / {CorrelationId}",
+                nameof(TMessage), action.AssignedAgvId, action.OrderDetails.OrderId, action.OrderCorrelationId);
+
+            var messageType = typeof(TMessage);
+            if (messageType == typeof(ActionStartedEvent))
+            {
+                if (action.Type == ActionType.Pick)
                 {
-                    case ActionStatusChangedType.Started:
-                        if (action.Type == ActionType.Pick)
-                        {
-                            context.Publish(new TransportOrderStarted(action.OrderCorrelationId, action.OrderDetails.OrderId));
-                        }
-                        break;
-                    case ActionStatusChangedType.Cancelled:
-                        context.Publish(new TransportOrderCancelSucceeded(action.OrderCorrelationId, action.OrderDetails.OrderId));
-                        break;
-                    case ActionStatusChangedType.CancelFailed:
-                        context.Publish(new TransportOrderCancelFailed(action.OrderCorrelationId, action.OrderDetails.OrderId));
-                        break;
-                    case ActionStatusChangedType.Failed:
-                        context.Publish(new TransportOrderFailed(action.OrderCorrelationId, action.OrderDetails.OrderId));
-                        break;
-                    case ActionStatusChangedType.Completed:
-                        action.State = OrderActionState.Completed;
-                        orderActionRepo.SaveChanges();
-                        CheckNextAction(context, orderActionRepo, action.AssignedAgv!.Value, action.OrderDetails.OrderId, action.OrderCorrelationId, context.CancellationToken)
-                            .Wait();
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
+                    return context.Publish(new TransportOrderStarted(action.OrderCorrelationId, action.OrderDetails.OrderId));
                 }
             }
-            else
+            else if (messageType == typeof(ActionCompletedEvent))
             {
-                _logger.LogDebug("{MessageType} {ChangedType} but no corresponding action found for ID {OrderActionId}",
-                    nameof(ActionStatusChangedEvent), context.Message.ChangedType, context.Message.CorrelationId);
+                if (action.Type == ActionType.Pick)
+                {
+                    context.Publish(new TransportOrderPickCompleted(action.OrderCorrelationId, action.OrderDetails.OrderId));
+                }
+
+                action.State = OrderActionState.Completed;
+                orderActionRepo.SaveChanges();
+                CheckNextAction(context, orderActionRepo, action.AssignedAgv!.Value, action.OrderDetails.OrderId, action.OrderCorrelationId, context.CancellationToken)
+                    .Wait();
+            }
+            else if (messageType == typeof(ActionFailedEvent))
+            {
+                context.Publish(new TransportOrderFailed(action.OrderCorrelationId, action.OrderDetails.OrderId));
+            }
+            else if (messageType == typeof(ActionCancelledEvent))
+            {
+                context.Publish(new TransportOrderCancelSucceeded(action.OrderCorrelationId, action.OrderDetails.OrderId));
+            }
+            else if (messageType == typeof(ActionCancelFailedEvent))
+            {
+                context.Publish(new TransportOrderCancelFailed(action.OrderCorrelationId, action.OrderDetails.OrderId));
             }
 
             return Task.CompletedTask;
@@ -160,18 +210,19 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
         /// <para>
         /// Start any subsequent actions or clean all actions of this order when finished.
         /// </para></summary>
-        /// <param name="context"></param>
+        /// <param name="endpoint"></param>
         /// <param name="orderActionRepo"></param>
         /// <param name="assignedAgv"></param>
         /// <param name="orderId"></param>
         /// <param name="orderCorrelationId"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        private async Task CheckNextAction(ConsumeContext<ActionStatusChangedEvent> context,
-                                           IOrderActionRegistry orderActionRepo,
-                                           Guid assignedAgv,
-                                           string orderId,
-                                           Guid orderCorrelationId,
+        private async Task CheckNextAction(
+            IPublishEndpoint endpoint,
+            IOrderActionRegistry orderActionRepo,
+            Guid assignedAgv,
+            string orderId,
+            Guid orderCorrelationId,
             CancellationToken cancellationToken)
         {
             var action = orderActionRepo.GetSubsequentAction(orderCorrelationId);
@@ -183,19 +234,20 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
             {
                 orderActionRepo.DeleteOrder(orderCorrelationId);
                 orderActionRepo.SaveChanges();
-                await context.Publish(new ReleaseAgv(assignedAgv), cancellationToken);
-                await context.Publish(new TransportOrderCompleted(orderCorrelationId, orderId), cancellationToken);
+                await endpoint.Publish(new ReleaseAgv(assignedAgv), cancellationToken);
+                await endpoint.Publish(new TransportOrderCompleted(orderCorrelationId, orderId), cancellationToken);
             }
         }
 
         /// <summary>
         /// Send <see cref="StartActionCommand"/> and set action to start <see cref="OrderActionState.Started"/>.
         /// </summary>
-        private async Task StartAction(IOrderActionRegistry orderActionRepo,
-                                       OrderAction action,
-                                       string orderId,
-                                       Guid orderCorrelationId,
-                                       CancellationToken cancellationToken)
+        private async Task StartAction(
+            IOrderActionRegistry orderActionRepo,
+            OrderAction action,
+            string orderId,
+            Guid orderCorrelationId,
+            CancellationToken cancellationToken)
         {
             _logger.LogInformation("Start action {ActionType} for AGV {AgvId} for order {OrderId} / {CorrelationId}",
                 action.Type, action.AssignedAgvId, action.OrderDetails.OrderId, action.OrderCorrelationId);
@@ -218,7 +270,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
             orderActionRepo.SaveChanges();
 
             // Notify AGV state machine
-            await _bus.Publish(new ActionStartedEvent((Guid)action.AssignedAgv!), cancellationToken);
+            await _bus.Publish(new ActionStartedEvent((Guid)action.AssignedAgv!, orderId), cancellationToken);
         }
 
         /// <summary>
@@ -275,7 +327,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
                     }
                     else
                     {
-                        _logger.LogError($"Unexpected response for {nameof(AssignAgv)}: {response.Message}");
+                        _logger.LogError("Unexpected response for {MessageType}: {Response}", nameof(AssignAgv), response.Message);
                     }
                 }
 
@@ -303,11 +355,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
         /// <param name="actions">Complete list of actions belonging to that order (make sure list is not empty)</param>
         /// <param name="agvAssignmentSucceeded">Success message containing AGV information</param>
         /// <param name="cancellationToken"></param>
-        private async Task HandleAssignmentSucceeded(IOrderActionRegistry orderActionRepo,
-                                                     Guid orderCorrelationId,
-                                                     OrderAction[] actions,
-                                                     AgvAssignmentSucceeded agvAssignmentSucceeded,
-                                                     CancellationToken cancellationToken)
+        private async Task HandleAssignmentSucceeded(
+            IOrderActionRegistry orderActionRepo,
+            Guid orderCorrelationId,
+            OrderAction[] actions,
+            AgvAssignmentSucceeded agvAssignmentSucceeded,
+            CancellationToken cancellationToken)
         {
             _logger.LogDebug("{MessageType} for order {OrderId} / {CorrelationId}", nameof(AgvAssignmentSucceeded), actions[0].OrderDetails.OrderId, orderCorrelationId);
 
