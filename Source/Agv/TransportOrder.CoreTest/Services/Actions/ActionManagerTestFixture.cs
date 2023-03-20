@@ -1,4 +1,4 @@
-﻿// Re Sharper disable all
+﻿// ReSharper disable all
 using Gebhardt.StoreWare.Agv.Common.Messages;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;

@@ -22,6 +22,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         private const string SerialNumber = "AGV0";
         private const string OrderId = "ORDER123";
         private readonly Guid _actionGuid = OrderId.ToGuid();
+        private readonly Guid _parentGuid = OrderId.ToGuid();
 
         /// <summary>
         /// Test for consuming OrderEvent message with the event type 'Started'
@@ -29,7 +30,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         [TestMethod]
         public async Task ConsumeEventStarted()
         {
-            var message = new MqttOrderEvent(_actionGuid + " " + _actionGuid, SerialNumber, OrderEventType.Started);
+            var message = new MqttOrderEvent(_actionGuid + " " + _parentGuid, SerialNumber, OrderEventType.Started);
             var published = await ConsumeMessage(message);
             await AssertPublishedEvent<ActionStartedEvent>(published);
         }
@@ -40,7 +41,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         [TestMethod]
         public async Task ConsumeEventCompleted()
         {
-            var message = new MqttOrderEvent(_actionGuid + " " + _actionGuid, SerialNumber, OrderEventType.Completed);
+            var message = new MqttOrderEvent(_actionGuid + " " + _parentGuid, SerialNumber, OrderEventType.Completed);
             var published = await ConsumeMessage(message);
 
             await AssertPublishedEvent<ActionCompletedEvent>(published);
@@ -52,7 +53,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         [TestMethod]
         public async Task ConsumeEventCancelled()
         {
-            var message = new MqttOrderEvent(_actionGuid + " " + _actionGuid, SerialNumber, OrderEventType.Cancelled);
+            var message = new MqttOrderEvent(_actionGuid + " " + _parentGuid, SerialNumber, OrderEventType.Cancelled);
             var published = await ConsumeMessage(message);
 
             await AssertPublishedEvent<ActionCancelledEvent>(published);
@@ -64,7 +65,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         [TestMethod]
         public async Task ConsumeEventCancelFailed()
         {
-            var message = new MqttOrderEvent(_actionGuid + " " + _actionGuid, SerialNumber, OrderEventType.CancelFailed);
+            var message = new MqttOrderEvent(_actionGuid + " " + _parentGuid, SerialNumber, OrderEventType.CancelFailed);
             var published = await ConsumeMessage(message);
 
             await AssertPublishedEvent<ActionCancelFailedEvent>(published);
@@ -76,7 +77,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         [TestMethod]
         public async Task ConsumeEventFailed()
         {
-            var message = new MqttOrderEvent(_actionGuid + " " + _actionGuid, SerialNumber, OrderEventType.Failed);
+            var message = new MqttOrderEvent(_actionGuid + " " + _parentGuid, SerialNumber, OrderEventType.Failed);
             var published = await ConsumeMessage(message);
             
             await AssertPublishedEvent<ActionFailedEvent>(published);
@@ -88,7 +89,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         [TestMethod]
         public async Task ConsumeUndefined()
         {
-            var message = new MqttOrderEvent(OrderId, SerialNumber, null);
+            var message = new MqttOrderEvent(_actionGuid + " " + _parentGuid, SerialNumber, null);
             var published = await ConsumeMessage(message);
             Thread.Sleep(1); // Wait 1ms before checking if message was published
             (await published.Any<TransportOrderFailed>()).ShouldBeFalse();
@@ -101,9 +102,16 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
 
             var consumedMsg = fixture.ConsumerHarness.Consumed.Select<MqttOrderEvent>().First().Context.Message;
 
-            consumedMsg.SerialNumber.ShouldBe(message.SerialNumber);
             consumedMsg.OrderId.ShouldBe(message.OrderId);
+            consumedMsg.SerialNumber.ShouldBe(message.SerialNumber);
             consumedMsg.OrderEventType.ShouldBe(message.OrderEventType);
+
+            string[] split = consumedMsg.OrderId.Split(" ");
+            var actionId = new Guid(split[0]);
+            var parentId = new Guid(split[1]);
+
+            actionId.ShouldBe(_actionGuid);
+            parentId.ShouldBe(_parentGuid);
 
             return fixture.TestHarness.Published;
         }

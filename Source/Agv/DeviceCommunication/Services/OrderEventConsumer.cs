@@ -34,7 +34,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
             // Splitting OrderId string composed of two parts: [ActionGuid]<space>[OrderId]
             // Incoming from <see cref="StartActionCommandConsumer"/>
             // Temporary solution
-            var split = message.OrderId.Split(" ");
+            string[] split = message.OrderId.Split(" ");
             var actionId = new Guid(split[0]);
             var parentId = new Guid(split[1]);
             
