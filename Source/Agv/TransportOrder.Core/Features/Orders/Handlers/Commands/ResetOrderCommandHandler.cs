@@ -1,5 +1,5 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Commands;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Exceptions;
+using Gebhardt.StoreWare.Agv.Common.Configurations.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Orders.Common;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Orders.Requests.Commands;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services;

@@ -1,4 +1,4 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Core.Exceptions;
+﻿using Gebhardt.StoreWare.Agv.Common.Configurations.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Common;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Handlers.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Requests.Queries;

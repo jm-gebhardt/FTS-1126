@@ -290,7 +290,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         }
 
         /// <summary>
-        /// Updates AgvStatus
+        /// Updates AgvStatusReceived
         /// </summary>
         public void UpdateStatus(double timeDiffMs, double batteryChargeRate, double batteryDischargeRate)
         {

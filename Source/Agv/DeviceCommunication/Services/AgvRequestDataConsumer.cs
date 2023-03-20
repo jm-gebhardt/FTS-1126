@@ -4,33 +4,32 @@ using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
+namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
+
+/// <summary>
+/// Execute processing of a agv data request
+/// </summary>
+[JetBrains.Annotations.UsedImplicitly]
+public class AgvRequestDataConsumer : IConsumer<RequestAgvData>
 {
+    private readonly ILogger<AgvRequestDataConsumer> _logger;
+
     /// <summary>
-    /// Execute processing of a agv data request
+    /// Handle requesting AGV data by master control.
     /// </summary>
-    [JetBrains.Annotations.UsedImplicitly]
-    public class AgvRequestDataConsumer : IConsumer<RequestAgvData>
+    public AgvRequestDataConsumer(ILogger<AgvRequestDataConsumer> logger)
     {
-        private readonly ILogger<AgvRequestDataConsumer> _logger;
+        _logger = logger;
+    }
 
-        /// <summary>
-        /// Handle requesting AGV data by master control.
-        /// </summary>
-        public AgvRequestDataConsumer(ILogger<AgvRequestDataConsumer> logger)
-        {
-            _logger = logger;
-        }
+    /// <summary>
+    /// Handle requesting AGV data on receiving message <see cref="RequestAgvData"/> from master control.
+    /// </summary>
+    /// <param name="context">Context of the consumer wrapping details surrounding the inbound message.</param>
+    public async Task Consume(ConsumeContext<RequestAgvData> context)
+    {
+        await context.PublishMqtt(new MqttRequestData(context.Message.AgvId, Guid.NewGuid()), context.CancellationToken);
 
-        /// <summary>
-        /// Handle requesting AGV data on receiving message <see cref="RequestAgvData"/> from master control.
-        /// </summary>
-        /// <param name="context">Context of the consumer wrapping details surrounding the inbound message.</param>
-        public async Task Consume(ConsumeContext<RequestAgvData> context)
-        {
-            await context.PublishMqtt(new MqttRequestData(context.Message.AgvId, Guid.NewGuid()), context.CancellationToken);
-
-            _logger.LogInformation("{MessageType} from AGV {AgvId} / {CorrelationId} received", nameof(RequestAgvData), context.Message.AgvId, context.CorrelationId);
-        }
+        _logger.LogInformation("{MessageType} from AGV {AgvId} / {CorrelationId} received", nameof(RequestAgvData), context.Message.AgvId, context.CorrelationId);
     }
 }

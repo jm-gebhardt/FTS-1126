@@ -1,10 +1,8 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Events;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
 using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
@@ -16,15 +14,16 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
     public class AgvGraphConsumerTest
     {
         private const string AgvTestIdentifier = "#0815#";
-
+        
         /// <summary>
         /// Test for consuming AGV graph message.
         /// </summary>
         [TestMethod]
         public async Task ReceiveGraphMessage_WithValidInput_ExpectMessage()
         {
-            var fixture = new MqttConsumerTestFixture<AgvGraphConsumer>();
-
+            var fixture = new AgvGraphConsumerTestFixture()
+            .UseDefaultServices()
+            .Build();
             var nodes = new Node[] {
                 new() { NodeId = 1, X = 0f, Y = 0f, Z = 0f },
                 new() { NodeId = 2, X = 100f, Y = 100f, Z = 0f }
