@@ -67,6 +67,8 @@ try
                             configurator.AddConsumer<StartActionCommandConsumer>();
                             configurator.AddConsumer<RequestAgvMapConsumer>();
                             configurator.AddConsumer<AgvRequestDataConsumer>();
+                            configurator.AddConsumer<StartChargingCommandConsumer>();
+                            configurator.AddConsumer<StopChargingCommandConsumer>();
                         },
 
                         // ReSharper disable once UnusedParameter.Local

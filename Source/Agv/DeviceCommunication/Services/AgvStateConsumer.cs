@@ -76,6 +76,24 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
                     )), context.CancellationToken);
             }
 
+            var agvInformation = _agvRegistry.GetAgvInformation(agvStatusReceived.CorrelationId);
+            var agvStatusReceivedFromRegistry = agvInformation!.AgvStatusReceived;
+
+            if (agvStatusReceivedFromRegistry != null)
+            {
+                bool oldCharging = agvStatusReceivedFromRegistry.AgvStatus.Charging;
+                bool newCharging = GetCharging(message);
+
+                if (!oldCharging && newCharging)
+                {
+                    await context.Publish(new AgvStartedCharging(agvStatusReceived.CorrelationId));
+                }
+                else if (oldCharging && !newCharging)
+                {
+                    await context.Publish(new AgvStoppedCharging(agvStatusReceived.CorrelationId));
+                }
+            }
+
             FeedAgvRegistry(serialNumber.ToGuid(), agvStatusReceived);
         }
 
