@@ -111,7 +111,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
         /// </summary>
         public Task Consume(ConsumeContext<ActionStartedEvent> context)
         {
-            HandleAgvActionStateChange(context, context.Message.CorrelationId, context.Message.ParentId, ActionStatusChangedType.CancelFailed);
             return HandleActionStateChange(context);
         }
 
@@ -120,7 +119,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
         /// </summary>
         public Task Consume(ConsumeContext<ActionCompletedEvent> context)
         {
-            HandleAgvActionStateChange(context, context.Message.CorrelationId, context.Message.ParentId, ActionStatusChangedType.CancelFailed);
             return HandleActionStateChange(context);
         }
 
@@ -129,7 +127,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
         /// </summary>
         public Task Consume(ConsumeContext<ActionFailedEvent> context)
         {
-            HandleAgvActionStateChange(context, context.Message.CorrelationId, context.Message.ParentId, ActionStatusChangedType.CancelFailed);
             return HandleActionStateChange(context);
         }
 
@@ -138,7 +135,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
         /// </summary>
         public Task Consume(ConsumeContext<ActionCancelledEvent> context)
         {
-            HandleAgvActionStateChange(context, context.Message.CorrelationId, context.Message.ParentId, ActionStatusChangedType.CancelFailed);
             return HandleActionStateChange(context);
         }
 
@@ -147,7 +143,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
         /// </summary>
         public Task Consume(ConsumeContext<ActionCancelFailedEvent> context)
         {
-            HandleAgvActionStateChange(context, context.Message.CorrelationId, context.Message.ParentId, ActionStatusChangedType.CancelFailed);
             return HandleActionStateChange(context);
         }
 
@@ -156,7 +151,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
         /// </summary>
         /// <typeparam name="TMessage"></typeparam>
         /// <exception cref="ArgumentOutOfRangeException"></exception>
-        private Task HandleActionStateChange<TMessage>(ConsumeContext<TMessage> context) where TMessage : class, CorrelatedBy<Guid>, IActionEventParent<Guid>
+        private Task HandleActionStateChange<TMessage>(ConsumeContext<TMessage> context) where TMessage : class, CorrelatedBy<Guid>, IActionEventParent<string>
         {
             using var orderActionRepo = new EfOrderActionRegistry(_transportOrderContextFactory);
             var action = orderActionRepo.GetActionById(context.Message.CorrelationId);
@@ -201,61 +196,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
             else if (messageType == typeof(ActionCancelFailedEvent))
             {
                 context.Publish(new TransportOrderCancelFailed(action.OrderCorrelationId, action.OrderDetails.OrderId));
-            }
-
-            return Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// Handle status chagned events from DeviceCommunication
-        /// </summary>
-        /// <exception cref="ArgumentOutOfRangeException"></exception>
-        private void HandleAgvActionStateChange(IPublishEndpoint endpoint, Guid actiondId, Guid parentId, ActionStatusChangedType changedType)
-        {
-            List<AgvAction> actions = _agvActionRegistry.GetActionsByParentId(parentId);
-
-            if (actions.Count < 2)
-            {
-                _logger.LogWarning("Action group with id {ParentId} does not contain enough actions", parentId);
-                return;
-            }
-
-            var actionPick = actions[0];
-            var actionDrop = actions[1];
-
-            switch (changedType)
-            {
-                case ActionStatusChangedType.Started:
-                    if (actiondId == actionPick.CorrelationId)
-                    {
-                        endpoint.Publish(new TransportOrderStarted(actionPick.ParentId, actionPick.OrderId));
-                    }
-                    break;
-                case ActionStatusChangedType.Cancelled:
-                    break;
-
-                case ActionStatusChangedType.CancelFailed:
-                    break;
-
-                case ActionStatusChangedType.Failed:
-                    break;
-
-                case ActionStatusChangedType.Completed:
-                    if (actiondId == actionPick.CorrelationId)
-                    {
-                        endpoint.Publish(new TransportOrderPickCompleted(actionPick.ParentId, actionPick.OrderId));
-                    }
-                    else if (actiondId == actionDrop.CorrelationId)
-                    {
-                        endpoint.Publish(new TransportOrderCompleted(actionPick.ParentId, actionPick.OrderId));
-                    }
-                    else
-                    {
-                        _logger.LogWarning("Unknown action with id {ActiondId}", actiondId);
-                    }
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException($"Unsupported ActionStatusChangedType {changedType}");
             }
         }
 
