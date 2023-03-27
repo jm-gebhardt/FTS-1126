@@ -46,7 +46,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
                 const string fromStationId = "Pick1";
                 const string toStationId = "Drop5";
 
-                var action = new AgvAction(actionCorrelationId, agvId, ActionType.Pick, orderId, orderCorrelationId, fromStationId, toStationId);
+                string compositOrderId = actionCorrelationId + " " + orderCorrelationId;
+
+                var action = new AgvAction(actionCorrelationId, agvId, ActionType.Pick, compositOrderId, orderCorrelationId, fromStationId, toStationId);
                 var message = new StartActionCommand(Guid.NewGuid(), action);
 
                 // Publish ExecuteTransportOrder
@@ -65,7 +67,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
                 // Check consumed message
                 action.CorrelationId.ShouldBe(actionCorrelationId);
                 action.AgvId.ShouldBe(agvId);
-                action.OrderId.ShouldBe(orderId);
+                action.OrderId.ShouldBe(compositOrderId);
                 action.ParentId.ShouldBe(orderCorrelationId);
                 action.Source.ShouldBe(fromStationId);
                 action.Destination.ShouldBe(toStationId);
@@ -93,7 +95,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
                 string actionId = mqttMessage.OrderId.Split(" ")[0];
                 string parentId = mqttMessage.OrderId.Split(" ")[1];
                 actionId.ShouldBe(actionCorrelationId.ToString());
-                parentId.ShouldBe(orderId);
+                parentId.ShouldBe(orderCorrelationId.ToString());
             }
         }
     }

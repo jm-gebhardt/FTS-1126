@@ -1,5 +1,6 @@
 using Gebhardt.StoreWare.Agv.Common.Messages;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands;
+using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
@@ -282,7 +283,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
                     correlationId,
                     new OrderDetails(correlationId, orderId, "s1", "d2", "leno1", HostOrderCreator.Simulation)
                 )
-                { CurrentState = previousState };
+            { CurrentState = previousState };
 
             fixture.Add(orderState);
 
@@ -420,6 +421,32 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
                 var msg = fixture.TestHarness.Published.Select<HostOrderCancelFailed>().First().Context.Message;
                 errorCode.ShouldBe(msg.Error);
             }
+        }
+
+        [TestMethod]
+        public async Task Corralate_Action_By_Different_Id()
+        {
+            var testFixtureObject = new TestFixture();
+            StateMachineTestFixture<OrderStateMachine, OrderSaga> fixture = testFixtureObject.GetTestFixture();
+
+            string orderId = "ORDER01";
+            var orderCorrelationId = orderId.ToGuid();
+            var orderDedails = new OrderDetails(orderCorrelationId, orderId, "s1", "d2", "leno1", HostOrderCreator.Simulation);
+            var orderState = new OrderSaga(orderCorrelationId, orderDedails)
+            {
+                CurrentState = fixture.Machine.TransportOrderPicked.Name,
+                AssignedAgv = "AGV-01".ToGuid()
+            };
+            fixture.Add(orderState);
+
+            var actionId = Guid.NewGuid();
+            await fixture.TestHarness.Bus.Publish(new ActionCompletedEvent(actionId, orderCorrelationId));
+            (await fixture.TestHarness.Consumed.Any<ActionCompletedEvent>()).ShouldBeTrue();
+
+            IPublishedMessage<HostOrderHandlingSucceeded>? message = fixture.TestHarness.Published.Select<HostOrderHandlingSucceeded>().First();
+            message.ShouldNotBeNull();
+            message.Context.Message.CorrelationId.ShouldBe(orderCorrelationId);
+            message.Context.Message.OrderId.ShouldBe(orderId);
         }
     }
 }

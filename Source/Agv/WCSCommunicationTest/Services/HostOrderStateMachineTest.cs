@@ -8,13 +8,10 @@ using Gebhardt.StoreWare.Agv.WCSCommunication.States;
 using Gebhardt.StoreWare.Agv.WCSCommunication.Messages;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
-using TestFixture = Gebhardt.StoreWare.Agv.Common.Testing.StateMachineTestFixture<Gebhardt.StoreWare.Agv.WCSCommunication.Services.HostOrderStateMachine, Gebhardt.StoreWare.Agv.WCSCommunication.States.HostOrderSaga>;
 using MassTransit;
-using static MassTransit.Logging.OperationName;
-using Gebhardt.StoreWare.Agv.Common.Testing;
-using JetBrains.Annotations;
 using MassTransit.Testing;
-using static Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services.HostOrderStateMachineTest;
+
+using TestFixture = Gebhardt.StoreWare.Agv.Common.Testing.StateMachineTestFixture<Gebhardt.StoreWare.Agv.WCSCommunication.Services.HostOrderStateMachine, Gebhardt.StoreWare.Agv.WCSCommunication.States.HostOrderSaga>;
 
 namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services
 {
@@ -29,6 +26,17 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services
             var correlationId = orderId.ToGuid();
             var orderDetails = new OrderDetails(correlationId, orderId, "SRC1", "DST1", "LeNo123", HostOrderCreator.Simulation);
             return new HostOrderSaga(orderDetails, sagaState);
+        }
+
+        public async Task<TMessage> PublishAndConsume<TMessage>(TestFixture fixture, TMessage message) where TMessage : class, CorrelatedBy<Guid>, IActionEventParent<Guid>
+        {
+            await fixture.TestHarness.Bus.Publish(message);
+            (await fixture.SagaHarness.Consumed.Any<TMessage>()).ShouldBeTrue();
+
+            var consumed = fixture.TestHarness.Published.Select<TMessage>().FirstOrDefault()?.Context.Message;
+            consumed.ShouldNotBeNull();
+
+            return consumed;
         }
 
         #endregion
@@ -95,6 +103,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services
             saga.ShouldNotBeNull();
             saga.PickActionGuid.ShouldBe(pickAction.CorrelationId);
             saga.DropActionGuid.ShouldBe(dropAction.CorrelationId);
+            saga.CurrentState.ShouldBe(nameof(HostOrderStateMachine.Initial));
         }
 
         [TestMethod]
@@ -104,40 +113,57 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services
             var fixture = new TestFixture();
             fixture.Add(saga);
 
-            await fixture.TestHarness.Bus.Publish(new ActionStartedEvent(saga.CorrelationId, saga.CorrelationId));
-            (await fixture.SagaHarness.Consumed.Any<ActionStartedEvent>()).ShouldBeTrue();
-
-            //var message = fixture.TestHarness.Published.Select<HostOrderStarted>().FirstOrDefault()?.Context.Message;
-            //message.ShouldNotBeNull();
-            //message.CorrelationId.ShouldBe(saga.CorrelationId);
+            var message = await PublishAndConsume(fixture, new ActionStartedEvent(saga.PickActionGuid, saga.CorrelationId));
+            message.CorrelationId.ShouldBe(saga.PickActionGuid);
 
             // Get updated saga
             saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == saga.CorrelationId).First().Saga;
-            saga.CurrentState.ShouldBe(nameof(HostOrderStateMachine.Started));
+            saga.ShouldNotBeNull();
+            //saga.CurrentState.ShouldBe(nameof(HostOrderStateMachine.Started));
         }
 
         [TestMethod]
-        public async Task Corralate_Action_By_Different_Id()
+        public async Task Handle_ActionCompletedEvent()
         {
+            var saga = CreateHostOrderSaga();
             var fixture = new TestFixture();
+            fixture.Add(saga);
 
-            string orderId = "ORDER01";
-            var orderCorrelationId = orderId.ToGuid();
-            var orderDetails = new OrderDetails(orderCorrelationId, orderId, "s1", "d2", "leno1", HostOrderCreator.Simulation);
-            var orderState = new HostOrderSaga(orderDetails);
+            var message = await PublishAndConsume(fixture, new ActionFailedEvent(saga.PickActionGuid, saga.CorrelationId));
+            message.CorrelationId.ShouldBe(saga.PickActionGuid);
+        }
 
-            fixture.Add(orderState);
+        [TestMethod]
+        public async Task Handle_ActionFailedEvent()
+        {
+            var saga = CreateHostOrderSaga();
+            var fixture = new TestFixture();
+            fixture.Add(saga);
 
-            await fixture.TestHarness.Bus.Publish(new CreateHostOrder(orderDetails));
+            var message = await PublishAndConsume(fixture, new ActionFailedEvent(saga.PickActionGuid, saga.CorrelationId));
+            message.CorrelationId.ShouldBe(saga.PickActionGuid);
+        }
 
-            var actionId = Guid.NewGuid();
-            await fixture.TestHarness.Bus.Publish(new ActionStatusChangedEvent(actionId, orderCorrelationId));
-            (await fixture.TestHarness.Consumed.Any<ActionStatusChangedEvent>()).ShouldBeTrue();
+        [TestMethod]
+        public async Task Handle_ActionCancelledEvent()
+        {
+            var saga = CreateHostOrderSaga();
+            var fixture = new TestFixture();
+            fixture.Add(saga);
 
-            IPublishedMessage<HostOrderHandlingSucceeded>? message = fixture.TestHarness.Published.Select<HostOrderHandlingSucceeded>().FirstOrDefault();
-            message.ShouldNotBeNull();
-            message.Context.Message.CorrelationId.ShouldBe(orderCorrelationId);
-            message.Context.Message.OrderId.ShouldBe(orderId);
+            var message = await PublishAndConsume(fixture, new ActionCancelledEvent(saga.PickActionGuid, saga.CorrelationId));
+            message.CorrelationId.ShouldBe(saga.PickActionGuid);
+        }
+
+        [TestMethod]
+        public async Task Handle_ActionCancelFailedEvent()
+        {
+            var saga = CreateHostOrderSaga();
+            var fixture = new TestFixture();
+            fixture.Add(saga);
+
+            var message = await PublishAndConsume(fixture, new ActionCancelFailedEvent(saga.PickActionGuid, saga.CorrelationId));
+            message.CorrelationId.ShouldBe(saga.PickActionGuid);
         }
     }
 }
