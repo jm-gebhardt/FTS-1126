@@ -1,19 +1,18 @@
-﻿// ReSharper disable all
-using Gebhardt.StoreWare.Agv.Common.Messages;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Db;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.States;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Db;
 using MassTransit;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Moq;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Actions;
 
@@ -31,28 +30,28 @@ public class ActionManagerTestFixture : MassTransitTestFixture<ActionManager>, I
         var orderDetails = new List<OrderDetails>();
         for (int i = 0; i < AgvRegistryMock.Orders.Length; i++)
         {
-            var details = new OrderDetails(AgvRegistryMock.Orders[i].ToGuid(),
-                                           AgvRegistryMock.Orders[i],
-                                           AgvRegistryMock.Sources[i],
-                                           AgvRegistryMock.Destinations[i],
-                                           AgvRegistryMock.LoadUnits[i],
-                                           HostOrderCreator.Simulation,
-                                           DateTime.UtcNow);
+            var details = new OrderDetails(
+                AgvRegistryMock.Orders[i].ToGuid(),
+                AgvRegistryMock.Orders[i],
+                AgvRegistryMock.Sources[i],
+                AgvRegistryMock.Destinations[i],
+                AgvRegistryMock.LoadUnits[i],
+                HostOrderCreator.Simulation,
+                DateTime.UtcNow);
+
             orderDetails.Add(details);
         }
 
         return orderDetails.ToArray();
     }
 
+    // ReSharper disable all
     public static OrderDetails[] OrderDetails => _orderDetails ??= GetOrderDetails();
-
     public List<IAgv> Agvs => _mockAgvRegistry.Object.GetAllAgvs().ToList();
-
     public IOrderActionRegistry CreateOrderActionRegistry() => new EfOrderActionRegistry(_transportOrderContextFactory!);
-
     public IAgvActionRegistry AgvActionRegistry { get; private set; } = default!;
-
     public ActionManager ActionManager { get; private set; } = default!;
+    // ReSharper enable all
 
     /// <summary>
     /// Test fixture using mocked AGV registry and in-memory-database for actions.
@@ -144,5 +143,4 @@ public class ActionManagerTestFixture : MassTransitTestFixture<ActionManager>, I
         _busRegistrationConfigurators.Add(busRegistrationConfigurator);
         return this;
     }
-
 }
