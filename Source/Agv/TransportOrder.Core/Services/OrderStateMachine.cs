@@ -142,19 +142,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
 
             ConnectStateObserver(orderStateObserver);
             ConnectEventObserver(orderEventObserver);
-
-            Event(() => ActionCompletedEvent, x => x.CorrelateById(context => context.Message.ParentId));
-            DuringAny(HandleActionCompletedEvent());
         }
-
-        #region Test #8348
-        /// <summary/>
-        public Event<ActionCompletedEvent> ActionCompletedEvent { get; private set; } = default!;
-
-        private EventActivityBinder<OrderSaga, ActionCompletedEvent> HandleActionCompletedEvent() =>
-            When(ActionCompletedEvent)
-                .Publish(c => new HostOrderHandlingSucceeded(c.Saga.CorrelationId, c.Saga.OrderDetails.OrderId));
-        #endregion
 
         #region Init
         /// <summary>
