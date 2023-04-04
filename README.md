@@ -37,12 +37,12 @@ RABBITMQ__HOST=localhost
 
 ### WCSCommunication (Production only)
 ```
-CONNECTIONSTRINGS__WCS="Server=127.0.0.1,1433;Database=master;User Id=MyDbUser;Password=MyStrongPassword;"
+CONNECTIONSTRINGS__WCS="Server=127.0.0.1,1433;Database=master;User Id=MyDbUser;Password=MyStrongPassword;Encrypt=False"
 ```
 
 ### TransportOrder
 ```
-CONNECTIONSTRINGS__AMC="Server=127.0.0.1,1433;Database=master;User Id=MyDbUser;Password=MyStrongPassword;"
+CONNECTIONSTRINGS__AMC="Server=127.0.0.1,1433;Database=master;User Id=MyDbUser;Password=MyStrongPassword;Encrypt=False"
 ```
 Database persistence can be disabled using: `--enableInMemoryPersistence`
 

@@ -42,6 +42,8 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Persistence
                 .HasForeignKey<OrderDetails>(x => x.CorrelationId)
                 .OnDelete(DeleteBehavior.Cascade);
             entity.Navigation(x => x.OrderDetails).AutoInclude();
+            entity.Property(p => p.PickActionGuid);
+            entity.Property(p => p.DropActionGuid);
 
             // Add all Order properties
             model.Entity<OrderDetails>().ConfigureAllProperties();

@@ -30,7 +30,8 @@ try
                 {
                     services.AddDbContextFactory<WcsSagaDbContext>(builder =>
                     {
-                        builder.UseSqlServer(context.Configuration.GetConnectionString(WcsSagaDbContext.ConfigSectionName), m =>
+                        string? connectionString = context.Configuration.GetConnectionString(WcsSagaDbContext.ConfigSectionName);
+                        builder.UseSqlServer(connectionString, m =>
                         {
                             m.MigrationsHistoryTable(WcsSagaDbContext.MigrationTableName);
                         });
@@ -54,11 +55,13 @@ try
                 {
                     services.AddDbContextFactory<WcsHostDbContext>(builder =>
                     {
-                        builder.UseSqlServer(context.Configuration.GetConnectionString(WcsHostDbContext.ConfigSectionName));
+                        string? connectionString = context.Configuration.GetConnectionString(WcsHostDbContext.ConfigSectionName);
+                        builder.UseSqlServer(connectionString);
                     });
                     services.AddDbContextFactory<WcsSagaDbContext>(builder =>
                     {
-                        builder.UseSqlServer(context.Configuration.GetConnectionString(WcsSagaDbContext.ConfigSectionName), m =>
+                        string? connectionString = context.Configuration.GetConnectionString(WcsSagaDbContext.ConfigSectionName);
+                        builder.UseSqlServer(connectionString, m =>
                         {
                             m.MigrationsHistoryTable(WcsSagaDbContext.MigrationTableName);
                         });
