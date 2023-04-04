@@ -10,13 +10,16 @@ namespace Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders
     /// <typeparam name="TSaga">The type of the saga in which the setting is stored</typeparam>
     /// <typeparam name="TDbContext">The dbContext of the Saga</typeparam>
     public class SagaSettingsProvider<TSettings, TSaga, TDbContext> : ISagaSettingsProvider<TSettings, TSaga>
-    where TSettings : class, ISettings<TSettings>
-    where TSaga : class, SagaStateMachineInstance, ISagaDefinedSetting<ISagaSettings<TSettings>, TSettings>
-    where TDbContext : DbContext
+        where TSettings : class, ISettings<TSettings>
+        where TSaga : class, SagaStateMachineInstance, ISagaDefinedSetting<ISagaSettings<TSettings>, TSettings>
+        where TDbContext : DbContext
     {
         private readonly IDbContextFactory<TDbContext> _dbContextFactory;
         private readonly ISettingsProvider<TSettings> _settingsProvider;
         private readonly SemaphoreSlim _semaphore = new(1, 1);
+        private readonly Dictionary<Guid, TSettings> _cache = new();
+        private readonly Dictionary<Guid, DateTime> _lastReadTime = new();
+        private const int CacheLiveTime = 20;
 
         /// <summary>
         /// Ctor
@@ -37,16 +40,27 @@ namespace Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders
             _semaphore.Wait();
             try
             {
+                // use values from cache if they are not too old to enhance performance by preventing unnecessary requests to the db context
+                if (_lastReadTime.TryGetValue(correlationId, out var lastReadTime) && _cache.TryGetValue(correlationId, out var settings))
+                {
+                    if (lastReadTime + TimeSpan.FromSeconds(CacheLiveTime) >= DateTime.UtcNow)
+                    {
+                        return settings;
+                    }
+                }
+
                 // default settings from configuration table or hardcoded in settings class
-                var settings = _settingsProvider.GetSettings();
+                settings = _settingsProvider.GetSettings();
 
                 using var dbContext = _dbContextFactory.CreateDbContext();
                 var saga = dbContext.Set<TSaga>().FirstOrDefault(s => s.CorrelationId == correlationId);
 
-                if (saga is ISagaDefinedSetting<ISagaSettings<TSettings>, TSettings> { Settings: { } specificSettings })
+                if (saga is ISagaDefinedSetting<ISagaSettings<TSettings>, TSettings> {Settings: { } specificSettings})
                 {
                     settings = OverwriteSpecificValues(settings, specificSettings);
                 }
+                _cache[correlationId] = settings;
+                _lastReadTime[correlationId] = DateTime.UtcNow;
 
                 return settings;
             }
