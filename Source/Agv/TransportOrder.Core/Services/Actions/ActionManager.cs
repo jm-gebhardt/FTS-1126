@@ -275,7 +275,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
             orderActionRepo.SaveChanges();
 
             // Notify AGV state machine
-            await _bus.Publish(new ActionStartedEvent((Guid)action.AssignedAgv!, orderCorrelationId), cancellationToken);
+            await _bus.Publish(new ActionStartedEvent((Guid)action.AssignedAgv!, orderCorrelationId, action.AssignedAgvId!), cancellationToken);
         }
 
         /// <summary>

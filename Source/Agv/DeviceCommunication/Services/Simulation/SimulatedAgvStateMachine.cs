@@ -225,7 +225,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
                         c.Message.Action.ActionType, c.Message.Action.OrderId, c.Message.Action.ParentId, c.Saga.ActionFinishDate);
                 })
                 .TransitionTo(BusyMoving)
-                .Publish(c => new ActionStartedEvent(c.Saga.Action!.CorrelationId, c.Saga.Action!.ParentId))
+                .Publish(c => new ActionStartedEvent(c.Saga.Action!.CorrelationId, c.Saga.Action!.ParentId, c.Saga.AgvId))
                 .ThenAsync(PublishStatus)
                 .Schedule(FinishActionSchedule,
                     c => new ScheduleFinishAction(c.Saga.CorrelationId),

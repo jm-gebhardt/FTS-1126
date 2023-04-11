@@ -157,7 +157,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
                     {
                         _logger.LogInformation("Pick action started for order {OrderId} / {CorrelationId}", c.Saga.OrderId, c.Saga.CorrelationId);
 
-                        c.Publish(new HostOrderStarted(c.Saga.CorrelationId, c.Saga.OrderId, string.Empty)); //  Where does the assignedAgv come from?
+                        c.Publish(new HostOrderStarted(c.Saga.CorrelationId, c.Saga.OrderId, c.Message.AgvId));
                         c.TransitionToState(Started);
                     }
                     else

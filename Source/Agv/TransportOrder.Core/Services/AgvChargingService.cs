@@ -179,13 +179,16 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
                 _logger.LogWarning("Charging station {NodeId} is not reachable by AGV with correlationId {CorrelationId}", source, agv.CorrelationId);
                 return;
             }
+
+            var parentId = Guid.Empty; // We have no parent id in this case
+
             // ReSharper disable once UseObjectOrCollectionInitializer
             var agvAction = new AgvAction(
                 Guid.NewGuid(),
                 agv.AgvId,
                 ActionType.Charge,
-                string.Empty,
-                Guid.Empty,
+                orderId: string.Empty,
+                parentId,
                 source,
                 destination);
 
@@ -193,7 +196,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
             agvAction.Nodes = route.Nodes;
 
             await context.Publish(new StartActionCommand(agv.CorrelationId, agvAction));
-            await context.Publish(new ActionStartedEvent(agv.CorrelationId, Guid.Empty));
+            await context.Publish(new ActionStartedEvent(agv.CorrelationId, parentId, agv.AgvId));
         }
 
         private AgvGraph.Node? ChooseChargingStation(AgvGraph agvGraph)

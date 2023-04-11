@@ -37,11 +37,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
             string[] split = message.OrderId.Split(" ");
             var actionId = new Guid(split[0]);
             var parentId = new Guid(split[1]);
-            
+            string agvId = context.Message.SerialNumber ?? string.Empty; // SerialNumber should never be null but it's allowed to be null in the JSON schema
+
             switch (message.OrderEventType)
             {
                 case OrderEventType.Started:
-                    await context.Publish(new ActionStartedEvent(actionId, parentId));
+                    await context.Publish(new ActionStartedEvent(actionId, parentId, agvId));
                     break;
 
                 case OrderEventType.Completed:

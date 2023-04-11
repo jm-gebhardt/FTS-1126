@@ -7,7 +7,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
 /// Signals that an action has been started
 /// </summary>
 [PublicAPI]
-public record ActionStartedEvent(Guid CorrelationId, Guid ParentId) : CorrelatedBy<Guid>, IActionEventParent<Guid>;
+public record ActionStartedEvent(Guid CorrelationId, Guid ParentId, string AgvId) : CorrelatedBy<Guid>, IActionEventParent<Guid>;
 
 /// <summary>
 /// Signals that an action has been completed

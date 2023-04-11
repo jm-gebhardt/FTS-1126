@@ -70,17 +70,19 @@ public class StartChargingCommandConsumer : IConsumer<StartChargingCommand>
         }
 
         string agvId = agvStatusReceived.AgvId;
+        var parentId = Guid.Empty; // We have no parent id in this case
+
         var chargeAction = new AgvAction(
             Guid.NewGuid(),
             agvId,
             ActionType.Charge,
-            string.Empty,
-            Guid.Empty,
-            null,
+            orderId: string.Empty,
+            parentId,
+            source: null,
             lastNodeId);
 
         await context.Publish(new StartActionCommand(agvCorrelationId, chargeAction));
-        await context.Publish(new ActionStartedEvent(chargeAction.CorrelationId, Guid.Empty));
+        await context.Publish(new ActionStartedEvent(chargeAction.CorrelationId, parentId, agvId));
         await context.RespondAsync(new BaseResult());
     }
 }

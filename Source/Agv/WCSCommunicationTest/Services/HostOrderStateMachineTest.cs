@@ -117,8 +117,9 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services
             var saga = CreateHostOrderSaga(nameof(HostOrderStateMachine.Initial));
             var fixture = new TestFixture();
             fixture.Add(saga);
+            string agvId = "AGV001";
 
-            var message = await PublishAndConsume(fixture, new ActionStartedEvent(saga.PickActionGuid, saga.CorrelationId));
+            var message = await PublishAndConsume(fixture, new ActionStartedEvent(saga.PickActionGuid, saga.CorrelationId, agvId));
             message.CorrelationId.ShouldBe(saga.PickActionGuid);
 
             // Check new saga state
@@ -145,8 +146,9 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services
             var saga = CreateHostOrderSaga(nameof(HostOrderStateMachine.Picked));
             var fixture = new TestFixture();
             fixture.Add(saga);
+            string agvId = "AGV001";
 
-            var message = await PublishAndConsume(fixture, new ActionStartedEvent(saga.DropActionGuid, saga.CorrelationId));
+            var message = await PublishAndConsume(fixture, new ActionStartedEvent(saga.DropActionGuid, saga.CorrelationId, agvId));
             message.CorrelationId.ShouldBe(saga.DropActionGuid);
 
             // Check new saga state

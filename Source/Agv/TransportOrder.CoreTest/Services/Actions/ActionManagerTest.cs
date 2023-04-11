@@ -127,7 +127,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Actions
             inserter.SaveChanges();
             var actionId = inserter.GetActionsOfOrder(orderDetails.CorrelationId)[0].Id;
 
-            await fixture.TestHarness!.Bus.Publish(new ActionStartedEvent(actionId, Guid.Empty));
+            await fixture.TestHarness!.Bus.Publish(new ActionStartedEvent(actionId, Guid.Empty, string.Empty));
             (await fixture.TestHarness.Published.Any<TransportOrderStarted>()).ShouldBeTrue();
 
             await fixture.TestHarness!.Bus.Publish(new ActionCancelledEvent(actionId, Guid.Empty));
