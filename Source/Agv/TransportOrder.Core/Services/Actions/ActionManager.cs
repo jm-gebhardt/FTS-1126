@@ -323,8 +323,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
                         // Assign all actions
                         await HandleAssignmentSucceeded(orderActionRepo, order.OrderCorrelationId, order.OrderActions, agvAssignmentSucceeded, cancellationToken);
 
-                        await StartAction(orderActionRepo, order.OrderActions[0], orderDetails.OrderId, orderDetails.CorrelationId,
-                                          cancellationToken);
+                        await StartAction(orderActionRepo, order.OrderActions[0], orderDetails.OrderId, orderDetails.CorrelationId, cancellationToken);
                     }
                     else if (response.Message is AgvAssignmentFailed assignmentFailed)
                     {
@@ -343,8 +342,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
                         // There is no started action
                         _logger.LogDebug("Respawning actions for order {OrderId} / {CorrelationId}", orderDetails.OrderId, order.OrderCorrelationId);
 
-                        await StartAction(orderActionRepo, order.OrderActions[0], orderDetails.OrderId, orderDetails.CorrelationId,
-                                          cancellationToken);
+                        await StartAction(orderActionRepo, order.OrderActions[0], orderDetails.OrderId, orderDetails.CorrelationId, cancellationToken);
                     }
                 }
             }

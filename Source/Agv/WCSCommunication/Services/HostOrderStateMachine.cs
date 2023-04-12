@@ -162,7 +162,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
                     }
                     else
                     {
-                        _logger.LogInformation("Message {MessageType} for order {OrderId} / {CorrelationId} is not handled", nameof(c.Message), c.Saga.OrderId, c.Saga.CorrelationId);
+                        _logger.LogWarning("Message {MessageType} for order {OrderId} / {CorrelationId} is not handled", nameof(c.Message), c.Saga.OrderId, c.Saga.CorrelationId);
                     }
                 });
 
@@ -179,7 +179,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
                     }
                     else
                     {
-                        _logger.LogInformation("Message {MessageType} for order {OrderId} / {CorrelationId} is not handled", nameof(c.Message), c.Saga.OrderId, c.Saga.CorrelationId);
+                        _logger.LogWarning("Message {MessageType} for order {OrderId} / {CorrelationId} is not handled", nameof(c.Message), c.Saga.OrderId, c.Saga.CorrelationId);
                     }
                 });
 
@@ -197,7 +197,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
                     }
                     else
                     {
-                        _logger.LogInformation("Message {MessageType} for order {OrderId} / {CorrelationId} is not handled", nameof(c.Message), c.Saga.OrderId, c.Saga.CorrelationId);
+                        _logger.LogWarning("Message {MessageType} for order {OrderId} / {CorrelationId} is not handled", nameof(c.Message), c.Saga.OrderId, c.Saga.CorrelationId);
                     }
                 });
 
@@ -215,7 +215,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
                     }
                     else
                     {
-                        _logger.LogInformation("Message {MessageType} for order {OrderId} / {CorrelationId} is not handled", nameof(c.Message), c.Saga.OrderId, c.Saga.CorrelationId);
+                        _logger.LogWarning("Message {MessageType} for order {OrderId} / {CorrelationId} is not handled", nameof(c.Message), c.Saga.OrderId, c.Saga.CorrelationId);
                     }
                 });
 
