@@ -29,9 +29,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Actions.Handlers.Q
                     DateTime.MinValue, 
                     DateTime.MinValue, 
                     DateTime.MinValue,
+                    Guid.NewGuid(),
                     new []
                     {
-                        new AgvActionDto(Guid.NewGuid(), groupId0, 0, Guid.Empty, Guid.Empty, Guid.Empty, ActionState.Created , ActionType.Charge, "n0", new []{"n0"})
+                        new AgvActionDto(Guid.NewGuid(), groupId0, 0, null, null, ActionState.Created, ActionType.Charge, "n0", new []{"n0"})
                     })
             });
             

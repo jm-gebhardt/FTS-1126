@@ -7,7 +7,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos
     /// <summary>
     /// AgvAction model 
     /// </summary>
-    public record AgvActionDto : CorrelatedBy<Guid>, IParentedBy<Guid>
+    public record AgvActionDto : CorrelatedBy<Guid>
     {
         /// <inheritdoc />
         public Guid CorrelationId { get; }
