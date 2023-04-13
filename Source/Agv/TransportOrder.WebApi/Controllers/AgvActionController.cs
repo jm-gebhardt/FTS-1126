@@ -34,15 +34,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
         public async Task<ActionResult<IEnumerable<AgvActionGroupDto>>> GetActions(ActionState[] states, DateTime toDate, int limit)
         {
             Response<GetAgvActionGroupsResult> groups = await _getAgvActionGroupsRequest.GetResponse<GetAgvActionGroupsResult>( new GetAgvActionGroupsRequest(states, toDate, limit));
-                
-            // Response<GetOrdersResult> response = await _getOrdersClient.GetResponse<GetOrdersResult>(new GetOrdersRequest(paginationParameters, dateRangeParameters));
-            //
-            // Response.Headers.Add(response.Message.PaginationHeaders.HeaderName, JsonSerializer.Serialize(response.Message.PaginationHeaders));
-            // Response.Headers.Add(response.Message.DateRangeHeaders.HeaderName, JsonSerializer.Serialize(response.Message.DateRangeHeaders));
-            //
-            // return Ok(response.Message.Orders);
-            await Task.Delay(1);
-            return Ok();
+            return Ok(groups.Message.AgvActionGroups);
         }
     }
 }

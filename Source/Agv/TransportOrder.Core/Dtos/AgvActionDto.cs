@@ -19,16 +19,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos
         public int Sequence { get; }
 
         /// <inheritdoc />
-        public Guid Successor { get; }
+        public Guid? Successor { get; }
 
         /// <inheritdoc />
-        public Guid Predecessor { get; }
+        public Guid? Predecessor { get; }
         
-        /// <summary>
-        /// The CorrelationId of the assigned agv
-        /// </summary>
-        public Guid? AssignedAgv { get; }
-
         /// <summary>
         /// The current state of the action
         /// </summary>
@@ -42,7 +37,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos
         /// <summary>
         /// Target node id
         /// </summary>
-        public string NodeId { get; }
+        public string TargetNodeId { get; }
 
         /// <summary>
         /// The nodes of the trip
@@ -60,19 +55,18 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos
         /// <param name="assignedAgv"></param>
         /// <param name="state"></param>
         /// <param name="actionType"></param>
-        /// <param name="nodeId"></param>
+        /// <param name="targetNodeId"></param>
         /// <param name="nodes"></param>
-        public AgvActionDto(Guid correlationId, Guid parentId, int sequence, Guid predecessor, Guid successor, Guid? assignedAgv, ActionState state, ActionType actionType,  string nodeId, string[] nodes)
+        public AgvActionDto(Guid correlationId, Guid parentId, int sequence, Guid? predecessor, Guid? successor, ActionState state, ActionType actionType,  string targetNodeId, string[] nodes)
         {
             CorrelationId = correlationId;
             ParentId = parentId;
             Sequence = sequence;
             Predecessor = predecessor;
             Successor = successor;
-            AssignedAgv = assignedAgv;
             State = state;
             ActionType = actionType;
-            NodeId = nodeId;
+            TargetNodeId = targetNodeId;
             Nodes = nodes;
         }
     }
