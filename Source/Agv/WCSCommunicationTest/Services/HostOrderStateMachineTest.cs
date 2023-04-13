@@ -166,7 +166,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services
             message.CorrelationId.ShouldBe(saga.DropActionGuid);
 
             // Check new saga state
-            CheckSagaState(fixture, saga.CorrelationId, nameof(HostOrderStateMachine.Completed));
+            CheckSagaState(fixture, saga.CorrelationId, nameof(HostOrderStateMachine.Final));
         }
 
         [TestMethod]
@@ -200,7 +200,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services
             message.CorrelationId.ShouldBe(saga.PickActionGuid);
 
             // Check new saga state
-            CheckSagaState(fixture, saga.CorrelationId, nameof(HostOrderStateMachine.Cancelled));
+            CheckSagaState(fixture, saga.CorrelationId, nameof(HostOrderStateMachine.Final));
         }
 
         [TestMethod]
