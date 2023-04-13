@@ -17,7 +17,6 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
         private readonly ILogger<HostOrderStateMachine> _logger;
 
         #region States
-
         /// <summary>
         /// Order has been split into actions and actions have been queued into action manager
         /// </summary>
@@ -47,11 +46,9 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
         /// Order has been cancelled
         /// </summary>
         public State Cancelled { get; private set; } = default!;
-
         #endregion
 
         #region Events
-
         /// <summary>
         /// New order detected. This is the initial event of the HostOrderStateMachine
         /// </summary>
@@ -60,7 +57,12 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
         /// <summary>
         /// <see cref="ActionStartedEvent"/> was received
         /// </summary>
-        public Event<ActionStartedEvent> ActionStartedEvent { get; private set; } = default!;
+        public Event<ActionStartedEvent> PickActionStartedEvent { get; private set; } = default!;
+
+        /// <summary>
+        /// <see cref="ActionStartedEvent"/> was received
+        /// </summary>
+        public Event<ActionStartedEvent> DropActionStartedEvent { get; private set; } = default!;
 
         /// <summary>
         /// <see cref="ActionCompletedEvent"/> was received
@@ -81,11 +83,9 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
         /// <see cref="ActionCancelFailedEvent"/> was received
         /// </summary>
         public Event<ActionCancelFailedEvent> ActionCancelFailedEvent { get; private set; } = default!;
-
         #endregion
 
         #region Initialization
-
         /// <summary>
         /// HostOrderStateMachine
         /// </summary>
@@ -98,7 +98,8 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
 
             Initially(SetCreateHostOrderHandler());
 
-            Event(() => ActionStartedEvent, x => x.CorrelateById(context => context.Message.ParentId));
+            Event(() => PickActionStartedEvent, x => x.CorrelateBy((instance, context) => context.Message.CorrelationId == instance.PickActionGuid));
+            Event(() => DropActionStartedEvent, x => x.CorrelateBy((instance, context) => context.Message.CorrelationId == instance.DropActionGuid));
             Event(() => ActionCompletedEvent, x => x.CorrelateById(context => context.Message.ParentId));
             Event(() => ActionFailedEvent, x => x.CorrelateById(context => context.Message.ParentId));
             Event(() => ActionCancelledEvent, x => x.CorrelateById(context => context.Message.ParentId));
@@ -122,65 +123,44 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
             Event(() => CreateHostOrderEvent, e =>
                 e.SetSagaFactory(c => new HostOrderSaga(c.Message.OrderDetails))
             );
-
         }
-
         #endregion
 
         #region Transitions
-
         /// <summary>
         /// Handler for HandleHostOrder
         /// </summary>
         /// <returns>Event Binding for HandleHostOrder</returns>
         private EventActivityBinder<HostOrderSaga, CreateHostOrder> SetCreateHostOrderHandler() =>
             When(CreateHostOrderEvent)
-                .Then(c =>
-                {
-                    _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId} received", nameof(CreateHostOrder), c.Message.OrderDetails.OrderId, c.Message.OrderDetails.CorrelationId);
-                })
+                .Then(c => { _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId} received", nameof(CreateHostOrder), c.Message.OrderDetails.OrderId, c.Message.OrderDetails.CorrelationId); })
                 .TransitionTo(Initial)
                 .Then(c => c.Publish(new ActionGroup(c.Saga.CorrelationId, GetPickDropActions(c.Saga))));
-
         #endregion
 
         #region Message Handlers
-
         private EventActivityBinder<HostOrderSaga, ActionStartedEvent> SetPickStartedEventHandler() =>
-            When(ActionStartedEvent)
+            When(PickActionStartedEvent)
                 .Then(c =>
                     _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId} received", nameof(c.Message), c.Saga.OrderId, c.Saga.CorrelationId)
                 )
                 .Then(c =>
                 {
-                    if (c.Message.CorrelationId == c.Saga.PickActionGuid)
-                    {
-                        _logger.LogInformation("Pick action started for order {OrderId} / {CorrelationId}", c.Saga.OrderId, c.Saga.CorrelationId);
+                    _logger.LogInformation("Pick action started for order {OrderId} / {CorrelationId}", c.Saga.OrderId, c.Saga.CorrelationId);
 
-                        c.Publish(new HostOrderStarted(c.Saga.CorrelationId, c.Saga.OrderId, c.Message.AgvId));
-                        c.TransitionToState(Started);
-                    }
-                    else
-                    {
-                        _logger.LogWarning("Message {MessageType} for order {OrderId} / {CorrelationId} is not handled", nameof(c.Message), c.Saga.OrderId, c.Saga.CorrelationId);
-                    }
+                    c.Publish(new HostOrderStarted(c.Saga.CorrelationId, c.Saga.OrderId, c.Message.AgvId));
+                    c.TransitionToState(Started);
                 });
 
         private EventActivityBinder<HostOrderSaga, ActionStartedEvent> SetDropStartedEventHandler() =>
-            When(ActionStartedEvent)
+            When(DropActionStartedEvent)
                 .Then(c =>
                     _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId} received", nameof(c.Message), c.Saga.OrderId, c.Saga.CorrelationId)
                 )
                 .Then(c =>
                 {
-                    if (c.Message.CorrelationId == c.Saga.DropActionGuid)
-                    {
-                        _logger.LogInformation("Drop action started for order {OrderId} / {CorrelationId}", c.Saga.OrderId, c.Saga.CorrelationId);
-                    }
-                    else
-                    {
-                        _logger.LogWarning("Message {MessageType} for order {OrderId} / {CorrelationId} is not handled", nameof(c.Message), c.Saga.OrderId, c.Saga.CorrelationId);
-                    }
+                    _logger.LogInformation("Drop action started for order {OrderId} / {CorrelationId}", c.Saga.OrderId, c.Saga.CorrelationId);
+                    c.TransitionToState(Picked);
                 });
 
         private EventActivityBinder<HostOrderSaga, ActionCompletedEvent> SetPickCompletedEventHandler() =>
@@ -239,7 +219,6 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
                     _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId} received", nameof(c.Message), c.Saga.OrderId, c.Saga.CorrelationId)
                 )
                 .TransitionTo(Failed);
-
         #endregion
 
         #region Private Methods
