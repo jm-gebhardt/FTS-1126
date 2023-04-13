@@ -625,7 +625,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
             (await fixture.SagaHarness.Exists(correlationId)).ShouldBe(correlationId);
             (await fixture.TestHarness.Published.Any<AgvReady>()).ShouldBeTrue();
         }
-        
+
         /// <summary>
         /// Checks if requests are repeated once a day
         /// </summary>

@@ -102,11 +102,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
 
                 services.AddDbContextFactory<TransportOrderDbContext>(builder =>
                 {
-                    builder.UseSqlServer(context.Configuration.GetConnectionString(TransportOrderDbContext.ConfigSectionName));
+                    string? connectionString = context.Configuration.GetConnectionString(TransportOrderDbContext.ConfigSectionName);
+                    builder.UseSqlServer(connectionString);
                 });
                 services.AddDbContextFactory<SagaPersistenceDbContext>(builder =>
                 {
-                    builder.UseSqlServer(context.Configuration.GetConnectionString(SagaPersistenceDbContext.ConfigSectionName), m =>
+                    string? connectionString = context.Configuration.GetConnectionString(SagaPersistenceDbContext.ConfigSectionName);
+                    builder.UseSqlServer(connectionString, m =>
                     {
                         m.MigrationsHistoryTable(SagaPersistenceDbContext.MigrationTableName);
                     });

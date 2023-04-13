@@ -124,4 +124,88 @@ public class AgvStateConsumerTest
         publishedPos.AgvPosition.X.ShouldBe(x);
         (publishedPos.AgvPosition.Y * -1).ShouldBe(y);
     }
+
+    [TestMethod]
+    public async Task ReceiveMqttState_ChargingStateExamination_AgvStoppedCharging_Sent()
+    {
+        // Arrange
+        var fixture = new AgvStateConsumerTestFixture().UseDefaultServices().Build();
+        
+        const string orderId = "Order123";
+        var batteryState = new BatteryState
+        {
+            Charging = false
+        };
+
+        // Act
+        await fixture.TestHarness.Bus.PublishMqtt(new MqttState("AGV003", orderId)      // Initially, AGV003 has _chargingState = true
+        {
+            BatteryState = batteryState
+        }, null);
+
+        // Assert
+        (await fixture.TestHarness.Published.Any<MqttState>()).ShouldBeTrue();
+
+        var consumedState = fixture.ConsumerHarness.Consumed.Select<MqttState>().First().Context.Message;
+        consumedState.BatteryState.ShouldBe(batteryState);
+
+        (await fixture.TestHarness.Published.Any<AgvStoppedCharging>()).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task ReceiveMqttState_ChargingStateExamination_AgvStartedCharging_Sent()
+    {
+        // Arrange
+        var fixture = new AgvStateConsumerTestFixture().UseDefaultServices().Build();
+
+        const string orderId = "Order123";
+        var batteryState = new BatteryState
+        {
+            Charging = true
+        };
+
+        // Act
+        await fixture.TestHarness.Bus.PublishMqtt(new MqttState("AGV002", orderId)      // Initially, AGV002 has _chargingState = false
+        {
+            BatteryState = batteryState
+        }, null);
+
+        // Assert
+        (await fixture.TestHarness.Published.Any<MqttState>()).ShouldBeTrue();
+
+        var consumedState = fixture.ConsumerHarness.Consumed.Select<MqttState>().First().Context.Message;
+        consumedState.BatteryState.ShouldBe(batteryState);
+
+        (await fixture.TestHarness.Published.Any<AgvStartedCharging>()).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task ReceiveMqttState_ChargingStateExamination_RegistryEmpty()
+    {
+        // Arrange
+        var fixture = new AgvStateConsumerTestFixture().EmptyRegistry().Build();
+
+        const string orderId = "Order123";
+        var batteryState = new BatteryState
+        {
+            Charging = false
+        };
+
+        // Act
+        await fixture.TestHarness.Bus.PublishMqtt(new MqttState(AgvTestIdentifier02, orderId)
+        {
+            BatteryState = batteryState
+        }, null);
+
+        // Assert
+        (await fixture.TestHarness.Published.Any<MqttState>()).ShouldBeTrue();
+
+        (await fixture.ConsumerHarness.Consumed.Any<MqttState>()).ShouldBeTrue();
+
+        var consumedState = fixture.ConsumerHarness.Consumed.Select<MqttState>().First().Context.Message;
+        consumedState.BatteryState.ShouldBe(batteryState);
+
+        (await fixture.TestHarness.Published.Any<AgvStartedCharging>()).ShouldBeFalse();
+        (await fixture.TestHarness.Published.Any<AgvStoppedCharging>()).ShouldBeFalse();
+    }
 }
