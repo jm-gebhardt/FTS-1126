@@ -52,7 +52,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos
         /// <param name="sequence"></param>
         /// <param name="predecessor"></param>
         /// <param name="successor"></param>
-        /// <param name="assignedAgv"></param>
         /// <param name="state"></param>
         /// <param name="actionType"></param>
         /// <param name="targetNodeId"></param>

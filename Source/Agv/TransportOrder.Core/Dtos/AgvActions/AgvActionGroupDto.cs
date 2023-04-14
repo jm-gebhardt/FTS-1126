@@ -11,6 +11,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos
     /// <param name="Created">Creation date</param>
     /// <param name="Started">Start date</param>
     /// <param name="Ended">End date</param>
+    /// /// <param name="AssignedAgv">Assigned Agv</param>
     /// <param name="Actions">List of actions</param>
     public record AgvActionGroupDto(
         Guid CorrelationId,
