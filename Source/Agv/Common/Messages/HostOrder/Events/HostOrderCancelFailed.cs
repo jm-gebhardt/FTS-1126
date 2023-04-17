@@ -42,7 +42,6 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events
             OrderAlreadyCancelled
         }
 
-
         /// <inheritdoc/>
         public Guid CorrelationId { get; }
 

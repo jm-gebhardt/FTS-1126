@@ -112,7 +112,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
             During(Initial, Started, Picked, SetActionFailedEventHandler());
             During(Initial, Started, Picked, SetActionCancelledEventHandler());
             During(Initial, Started, Picked, SetActionCancelFailedEventHandler());
-            
+
             SetCompletedWhenFinalized();
         }
 
@@ -147,14 +147,13 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
         /// <returns>Event Binding for HandleHostOrder</returns>
         private EventActivityBinder<HostOrderSaga, CreateHostOrder> SetCreateHostOrderHandler() =>
             When(CreateHostOrderEvent)
-                .Then(c => {
+                .Then(c =>
+                {
                     _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId} received", nameof(CreateHostOrder), c.Message.OrderDetails.OrderId, c.Message.OrderDetails.CorrelationId);
                 })
                 .TransitionTo(Initial)
                 .Then(c => c.Publish(new ActionGroup(c.Saga.CorrelationId, GetPickDropActions(c.Saga))));
-        #endregion
 
-        #region Message Handlers
         private EventActivityBinder<HostOrderSaga, ActionStartedEvent> SetPickStartedEventHandler() =>
             When(ActionStartedEvent, context => context.Message.CorrelationId == context.Saga.PickActionGuid)
                 .Then(c =>
@@ -191,6 +190,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
                 .Then(c =>
                     _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId} received", nameof(c.Message), c.Saga.OrderId, c.Saga.CorrelationId)
                 )
+                .Publish(c => new HostOrderHandlingFailed(c.Saga.CorrelationId, c.Saga.OrderId, GetHandlingFailedErrorCode(c.Saga.CurrentState)))
                 .TransitionTo(Failed);
 
         private EventActivityBinder<HostOrderSaga, ActionCancelledEvent> SetActionCancelledEventHandler() =>
@@ -198,6 +198,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
                 .Then(c =>
                     _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId} received", nameof(c.Message), c.Saga.OrderId, c.Saga.CorrelationId)
                 )
+                .Publish(c => new HostOrderCancelSucceeded(c.Saga.CorrelationId, c.Saga.OrderId))
                 .TransitionTo(Cancelled)
                 .Finalize();
 
@@ -206,6 +207,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
                 .Then(c =>
                     _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId} received", nameof(c.Message), c.Saga.OrderId, c.Saga.CorrelationId)
                 )
+                .Publish(c => new HostOrderCancelFailed(c.Saga.CorrelationId, c.Saga.OrderId, GetCancelFailedErrorCode(c.Saga.CurrentState)))
                 .TransitionTo(CancelFailed);
         #endregion
 
@@ -219,6 +221,46 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
                 pickAction,
                 dropAction
             };
+        }
+
+        private HostOrderHandlingFailed.ErrorCode GetHandlingFailedErrorCode(string currentState)
+        {
+            if (currentState == nameof(Initial))
+            {
+                return HostOrderHandlingFailed.ErrorCode.InvalidOrderData;
+            }
+
+            if (currentState == nameof(Started))
+            {
+                return HostOrderHandlingFailed.ErrorCode.FailedByTransportLayer;
+            }
+
+            if (currentState == nameof(Picked))
+            {
+                return HostOrderHandlingFailed.ErrorCode.FailedByTransportLayer;
+            }
+
+            return HostOrderHandlingFailed.ErrorCode.UnknownError;
+        }
+
+        private HostOrderCancelFailed.ErrorCode GetCancelFailedErrorCode(string currentState)
+        {
+            if (currentState == nameof(Initial))
+            {
+                return HostOrderCancelFailed.ErrorCode.OrderDoesNotExist;
+            }
+
+            if (currentState == nameof(Started))
+            {
+                return HostOrderCancelFailed.ErrorCode.OrderAlreadyStarted;
+            }
+
+            if (currentState == nameof(Picked))
+            {
+                return HostOrderCancelFailed.ErrorCode.OrderAlreadyFinished;
+            }
+
+            return HostOrderCancelFailed.ErrorCode.OrderAlreadyCancelled;
         }
         #endregion
     }

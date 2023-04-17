@@ -28,9 +28,13 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events
             /// <summary>
             /// Order failed by transport layer (e.g. AGV)
             /// </summary>
-            FailedByTransportLayer
-        }
+            FailedByTransportLayer,
 
+            /// <summary>
+            /// Order failed due to an unexpected event
+            /// </summary>
+            UnknownError
+        }
 
         /// <inheritdoc/>
         public Guid CorrelationId { get; }
