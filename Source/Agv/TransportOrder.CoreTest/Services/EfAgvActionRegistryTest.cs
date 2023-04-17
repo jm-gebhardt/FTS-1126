@@ -1,190 +1,235 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
-using Gebhardt.StoreWare.Agv.Common.Utilities;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Gebhardt.StoreWare.Agv.Common.Exceptions;
+using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services
+namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services;
+
+[TestClass]
+public class EfAgvActionRegistryTest
 {
-    [TestClass]
-    public class EfAgvActionRegistryTest
+    #region Setup
+    private static void CompareActions(AgvAction? agvAction1, AgvAction? agvAction2)
     {
-        #region Setup
-        private class EfAgvActionRegistryTestFixture
+        agvAction1.ShouldNotBeNull();
+        agvAction2.ShouldNotBeNull();
+
+        agvAction1.CorrelationId.ShouldBe(agvAction2.CorrelationId);
+        agvAction1.ParentId.ShouldBe(agvAction2.ParentId);
+        agvAction1.Sequence.ShouldBe(agvAction2.Sequence);
+        agvAction1.Successor.ShouldBe(agvAction2.Successor);
+        agvAction1.Predecessor.ShouldBe(agvAction2.Predecessor);
+        agvAction1.AgvId.ShouldBe(agvAction2.AgvId);
+        agvAction1.AssignedAgv.ShouldBe(agvAction2.AssignedAgv);
+        agvAction1.State.ShouldBe(agvAction2.State);
+        agvAction1.ActionType.ShouldBe(agvAction2.ActionType);
+        agvAction1.OrderId.ShouldBe(agvAction2.OrderId);
+        agvAction1.TargetNodeId.ShouldBe(agvAction2.TargetNodeId);
+        agvAction1.Nodes.ShouldBe(agvAction2.Nodes);
+    }
+    #endregion
+
+    [TestMethod]
+    public void Test_Insert_GetActionById()
+    {
+        var fixture = new EfAgvActionRegistryTestFixture();
+        List<AgvAction> testActions = EfAgvActionRegistryTestFixture.CreateTestActions();
+
+        var testAction = testActions[0];
+
+        var agvAction = fixture.Registry.GetActionById(testAction.CorrelationId);
+        agvAction.ShouldBeNull(); // Should not exist yet
+
+        fixture.Registry.Insert(testAction);
+
+        agvAction = fixture.Registry.GetActionById(testAction.CorrelationId);
+        CompareActions(agvAction, testAction);
+    }
+
+    [TestMethod]
+    public void Test_GetPendingActions()
+    {
+        var fixture = new EfAgvActionRegistryTestFixture();
+        List<AgvAction> testActions = EfAgvActionRegistryTestFixture.CreateTestActions();
+        fixture.InitTestData(testActions);
+
+        List<AgvAction> pendingActions = fixture.Registry.GetPendingActions();
+
+        for (int i = 0; i < pendingActions.Count; i++)
         {
-            private ServiceProvider Provider { get; }
-            private IDbContextFactory<SagaPersistenceDbContext> ContextFactory { get; }
-            public EfAgvActionRegistry Registry { get; }
-
-            public EfAgvActionRegistryTestFixture()
-            {
-                var collection = new ServiceCollection()
-                    .AddDbContextFactory<SagaPersistenceDbContext>(options =>
-                    {
-                        options.UseInMemoryDatabase(Guid.NewGuid().ToString());
-                    }
-                );
-                Provider = collection.BuildServiceProvider(true);
-                ContextFactory = Provider.GetService<IDbContextFactory<SagaPersistenceDbContext>>()!;
-                Registry = new EfAgvActionRegistry(ContextFactory);
-            }
-
-            public void InitTestData(List<AgvAction> actions)
-            {
-                foreach (var action in actions)
-                {
-                    Registry.Insert(action);
-                }
-            }
-
-            public List<AgvAction> CreateTestActions(int count = 4)
-            {
-                var actions = new List<AgvAction>();
-                string orderId = "";
-
-                for (int i = 1; i <= count; i++)
-                {
-                    if (i % 2 == 1) // Group 2 actions with one order/parent
-                    {
-                        orderId = $"AGV{i / 2:D3}";
-                    }
-                    var actionType = i % 2 == 0 ? ActionType.Drop : ActionType.Pick; // Alternating pick/drop
-
-                    string agvId = $"AGV{i:D3}";
-                    string source = $"S{i:D3}";
-                    string destination = $"D{i:D3}";
-                    string[] nodes = { source, "W001", destination };
-                    actions.Add(new AgvAction(Guid.NewGuid(), agvId, actionType, orderId, orderId.ToGuid(), source, destination) { Nodes = nodes });
-                }
-
-                return actions;
-            }
-        }
-
-        private static void CompareActions(AgvAction? agvAction1, AgvAction? agvAction2)
-        {
-            agvAction1.ShouldNotBeNull();
-            agvAction2.ShouldNotBeNull();
-
-            agvAction1.CorrelationId.ShouldBe(agvAction2.CorrelationId);
-            agvAction1.ParentId.ShouldBe(agvAction2.ParentId);
-            agvAction1.Sequence.ShouldBe(agvAction2.Sequence);
-            agvAction1.Successor.ShouldBe(agvAction2.Successor);
-            agvAction1.Predecessor.ShouldBe(agvAction2.Predecessor);
-            agvAction1.AgvId.ShouldBe(agvAction2.AgvId);
-            agvAction1.AgvCorrelationId.ShouldBe(agvAction2.AgvCorrelationId);
-            agvAction1.State.ShouldBe(agvAction2.State);
-            agvAction1.ActionType.ShouldBe(agvAction2.ActionType);
-            agvAction1.OrderId.ShouldBe(agvAction2.OrderId);
-            agvAction1.Source.ShouldBe(agvAction2.Source);
-            agvAction1.Destination.ShouldBe(agvAction2.Destination);
-            agvAction1.Nodes.ShouldBe(agvAction2.Nodes);
-        }
-        #endregion
-
-        [TestMethod]
-        public void Test_Insert_GetActionById()
-        {
-            var fixture = new EfAgvActionRegistryTestFixture();
-            List<AgvAction> testActions = fixture.CreateTestActions();
-
-            var testAction = testActions[0];
-
-            var agvAction = fixture.Registry.GetActionById(testAction.CorrelationId);
-            agvAction.ShouldBeNull(); // Should not exist yet
-
-            fixture.Registry.Insert(testAction);
-
-            agvAction = fixture.Registry.GetActionById(testAction.CorrelationId);
+            var testAction = testActions[i];
+            var agvAction = pendingActions[i];
             CompareActions(agvAction, testAction);
         }
+    }
 
-        [TestMethod]
-        public void Test_GetPendingActions()
+    [TestMethod]
+    public void GetActionsByParentId_WhenItemsExist_ShouldReturnAllOfThem()
+    {
+        var fixture = new EfAgvActionRegistryTestFixture();
+        List<AgvAction> testActions = EfAgvActionRegistryTestFixture.CreateTestActions();
+        fixture.InitTestData(testActions);
+
+        var testAction = testActions[0];
+
+        List<AgvAction> groupedActions = fixture.Registry.GetActionsByParentId(testAction.ParentId);
+        groupedActions.ShouldNotBeNull();
+        groupedActions.Count.ShouldBe(2);
+
+        for (int i = 0; i < groupedActions.Count; i++)
         {
-            var fixture = new EfAgvActionRegistryTestFixture();
-            List<AgvAction> testActions = fixture.CreateTestActions();
-            fixture.InitTestData(testActions);
-
-            List<AgvAction> pendingActions = fixture.Registry.GetPendingActions();
-
-            for (int i = 0; i < pendingActions.Count; i++)
-            {
-                var testAction = testActions[i];
-                var agvAction = pendingActions[i];
-                CompareActions(agvAction, testAction);
-            }
+            testAction = testActions[i];
+            var agvAction = groupedActions[i];
+            CompareActions(agvAction, testAction);
         }
+    }
 
-        [TestMethod]
-        public void Test_GetActionsByParentId()
-        {
-            var fixture = new EfAgvActionRegistryTestFixture();
-            List<AgvAction> testActions = fixture.CreateTestActions();
-            fixture.InitTestData(testActions);
+    [TestMethod]
+    public void UpdateState_WhenThereIsNoItemWithThisGuid_ShouldThrow()
+    {
+        var fixture = new EfAgvActionRegistryTestFixture();
+        List<AgvAction> testActions = EfAgvActionRegistryTestFixture.CreateTestActions();
+        fixture.InitTestData(testActions);
 
-            var testAction = testActions[0];
+        Should.Throw<ActionUpdateFailedException>(() => fixture.Registry.UpdateState(Guid.Empty, ActionState.Completed));
+    }
 
-            List<AgvAction> groupedActions = fixture.Registry.GetActionsByParentId(testAction.ParentId);
-            groupedActions.ShouldNotBeNull();
-            groupedActions.Count.ShouldBe(2);
+    [TestMethod]
+    public void UpdateState_WhenItemExists_ShouldUpdateState()
+    {
+        var fixture = new EfAgvActionRegistryTestFixture();
+        List<AgvAction> testActions = EfAgvActionRegistryTestFixture.CreateTestActions();
+        fixture.InitTestData(testActions);
 
-            for (int i = 0; i < groupedActions.Count; i++)
-            {
-                testAction = testActions[i];
-                var agvAction = groupedActions[i];
-                CompareActions(agvAction, testAction);
-            }
-        }
+        fixture.Registry.UpdateState(testActions[0].CorrelationId, ActionState.Completed);
 
-        [TestMethod]
-        public void Test_UpdateState()
-        {
-            var fixture = new EfAgvActionRegistryTestFixture();
-            List<AgvAction> testActions = fixture.CreateTestActions();
-            fixture.InitTestData(testActions);
+        var agvAction = fixture.Registry.GetActionById(testActions[0].CorrelationId);
+        agvAction.ShouldNotBeNull();
+        agvAction.State.ShouldBe(ActionState.Completed);
+    }
 
-            // Negative test
-            bool success = fixture.Registry.UpdateState(Guid.Empty, ActionState.Completed);
-            success.ShouldBeFalse();
+    [TestMethod]
+    public void GetSubsequentAction_WhenThereIsASubsequentAction_ShouldReturnSubsequentAction()
+    {
+        var fixture = new EfAgvActionRegistryTestFixture();
+        List<AgvAction> testActions = EfAgvActionRegistryTestFixture.CreateTestActions();
+        testActions[0].State = ActionState.Completed;
+        testActions[1].State = ActionState.Assigned;
+        fixture.InitTestData(testActions);
 
-            // Positive test
-            success = fixture.Registry.UpdateState(testActions[0].CorrelationId, ActionState.Completed);
-            success.ShouldBeTrue();
-            var agvAction = fixture.Registry.GetActionById(testActions[0].CorrelationId);
-            agvAction.ShouldNotBeNull();
-            agvAction.State.ShouldBe(ActionState.Completed);
-        }
+        var subsequentAction = fixture.Registry.GetSubsequentAction(testActions[0].ParentId); // Search with parent id of first action
+        CompareActions(subsequentAction, testActions[1]); // Should be second action
+    }
 
-        [TestMethod]
-        public void Test_GetSubsequentAction()
-        {
-            var fixture = new EfAgvActionRegistryTestFixture();
-            List<AgvAction> testActions = fixture.CreateTestActions();
-            testActions[0].State = ActionState.Completed;
-            testActions[1].State = ActionState.Assigned;
-            fixture.InitTestData(testActions);
-            
-            var subsequentAction = fixture.Registry.GetSubsequentAction(testActions[0].ParentId); // Search with parent id of first action
-            CompareActions(subsequentAction, testActions[1]); // Should be second action
-        }
+    [TestMethod]
+    public void Delete_WhenDeletedByParentId_ShouldRemoveAction()
+    {
+        var fixture = new EfAgvActionRegistryTestFixture();
+        List<AgvAction> testActions = EfAgvActionRegistryTestFixture.CreateTestActions();
+        fixture.InitTestData(testActions);
 
-        [TestMethod]
-        public void Test_DeleteByParentId()
-        {
-            var fixture = new EfAgvActionRegistryTestFixture();
-            List<AgvAction> testActions = fixture.CreateTestActions();
-            fixture.InitTestData(testActions);
+        var testAction = testActions[0];
 
-            var testAction = testActions[0];
+        fixture.Registry.DeleteByParentId(testAction.ParentId);
 
-            fixture.Registry.DeleteByParentId(testAction.ParentId);
+        var deletedAction = fixture.Registry.GetActionById(testAction.CorrelationId);
+        deletedAction.ShouldBeNull(); // Should not exist anymore
+    }
 
-            var deletedAction = fixture.Registry.GetActionById(testAction.CorrelationId);
-            deletedAction.ShouldBeNull(); // Should not exist enymore
-        }
+    [TestMethod]
+    public void GetSubsequentAction_WhenThereIsSubsequentAction_ReturnAction()
+    {
+        const string agvId = "AGV011";
+        var fixture = new EfAgvActionRegistryTestFixture();
+        List<AgvAction> testActions = EfAgvActionRegistryTestFixture.CreateTestActionGroups();
+
+        fixture.InitTestData(testActions);
+
+        // Search with parent id of first action
+        var subsequentAction = fixture.Registry.GetSubsequentAction(agvId);
+        CompareActions(subsequentAction, testActions[4]); // Should be second action
+    }
+
+    [TestMethod]
+    [DataRow("AGV011")]
+    [DataRow("NoDataAgv")]
+    public void GetSubsequentAction_WhenThereIsNoSubsequentAction_ReturnNull(string agvId)
+    {
+        var fixture = new EfAgvActionRegistryTestFixture();
+        List<AgvAction> testActions = EfAgvActionRegistryTestFixture.CreateTestActionGroups();
+        testActions[4].State = ActionState.Completed;
+        testActions[5].State = ActionState.Started;
+
+        fixture.InitTestData(testActions);
+
+        // Search with parent id of first action
+        var subsequentAction = fixture.Registry.GetSubsequentAction(agvId);
+        subsequentAction.ShouldBeNull();
+    }
+
+    [TestMethod]
+    public void GetNotStartedActionGroups_WhenThereAreNotStartedActionGroups_ReturnActionGroupsWithNotStartedActions()
+    {
+        var fixture = new EfAgvActionRegistryTestFixture();
+        List<AgvAction> testActions = EfAgvActionRegistryTestFixture.CreateTestActionGroups();
+        testActions[3].State = ActionState.Created;
+        testActions[2].State = ActionState.Created;
+        testActions[1].State = ActionState.Created;
+        testActions[0].State = ActionState.Started;
+
+        fixture.InitTestData(testActions);
+
+        List<ActionGroup> notStartedActionGroup = fixture.Registry.GetNotStartedActionGroups();
+        notStartedActionGroup.ShouldNotBeEmpty();
+        IEnumerable<ActionGroup> startedActionGroup = notStartedActionGroup.Where(a => a.ActionList.Any(action => action.State is ActionState.Started or ActionState.Completed));
+        startedActionGroup.ShouldBeEmpty();
+    }
+
+    [TestMethod]
+    public void GetNotStartedActionGroups_WhenThereAreNoNotStartedActionGroups_ReturnNoActions()
+    {
+        var fixture = new EfAgvActionRegistryTestFixture();
+        List<AgvAction> testActions = EfAgvActionRegistryTestFixture.CreateTestActionGroups();
+        testActions[7].State = ActionState.Assigned;
+        testActions[6].State = ActionState.Started;
+        testActions[5].State = ActionState.Assigned;
+        testActions[4].State = ActionState.Completed;
+        testActions[3].State = ActionState.Started;
+        testActions[2].State = ActionState.Created;
+        testActions[1].State = ActionState.Created;
+        testActions[0].State = ActionState.Started;
+
+        fixture.InitTestData(testActions);
+
+        List<ActionGroup> notStartedActionGroup = fixture.Registry.GetNotStartedActionGroups();
+        notStartedActionGroup.ShouldBeEmpty();
+    }
+
+    [TestMethod]
+    public void GetUnfinishedActions_WhenThereArePendingActions_ReturnActions()
+    {
+        const string agvId = "AGV011";
+        var fixture = new EfAgvActionRegistryTestFixture();
+        List<AgvAction> testActions = EfAgvActionRegistryTestFixture.CreateTestActionGroups();
+        testActions[4].State = ActionState.Started;
+
+        fixture.InitTestData(testActions);
+
+        IEnumerable<AgvAction> notStartedActionGroup = fixture.Registry.GetUnfinishedActions(agvId);
+        notStartedActionGroup.ShouldNotBeEmpty();
+    }
+
+    [TestMethod]
+    [DataRow("AGV011")]
+    [DataRow("NoDataAgv")]
+    public void GetUnfinishedActions_WhenThereAreNoPendingActions_ReturnNoActions(string agvId)
+    {
+        var fixture = new EfAgvActionRegistryTestFixture();
+        List<AgvAction> testActions = EfAgvActionRegistryTestFixture.CreateTestActionGroups();
+
+        fixture.InitTestData(testActions);
+
+        IEnumerable<AgvAction> notStartedActionGroup = fixture.Registry.GetUnfinishedActions(agvId);
+        notStartedActionGroup.ShouldBeEmpty();
     }
 }

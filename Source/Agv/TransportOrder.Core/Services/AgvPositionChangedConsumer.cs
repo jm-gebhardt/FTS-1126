@@ -13,14 +13,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
     [JetBrains.Annotations.PublicAPI]
     public class AgvPositionChangedConsumer : IConsumer<AgvPositionChanged>
     {
-        private readonly ILogger<AgvPositionReceivedConsumer> _logger;
+        private readonly ILogger<AgvPositionChangedConsumer> _logger;
         private readonly IAgvHubContext _agvHubContext;
         private readonly IMapper _mapper;
 
         /// <summary>
         /// </summary>
         public AgvPositionChangedConsumer(
-            ILogger<AgvPositionReceivedConsumer> logger,
+            ILogger<AgvPositionChangedConsumer> logger,
             IAgvHubContext agvHubContext,
             IMapper mapper)
         {

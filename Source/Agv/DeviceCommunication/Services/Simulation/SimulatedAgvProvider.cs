@@ -93,7 +93,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
 
                             if (response.Message.CorrelationId == agv.CorrelationId)
                             {
-                                _logger?.LogInformation("AGV[{AgvId}]. State machine ready. Agv created.", agv.AgvId);
+                                _logger?.LogInformation("AGV[{AgvId}]: state machine ready, agv was created", agv.AgvId);
                             }
                         }, token.Token);
             }

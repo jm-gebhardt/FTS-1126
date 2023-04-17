@@ -1,6 +1,5 @@
 using Gebhardt.StoreWare.Agv.Common.Contracts;
 using MassTransit;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
 {
@@ -8,45 +7,43 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
     /// Agv Action
     /// </summary>
     [JetBrains.Annotations.PublicAPI]
-    public record AgvAction : CorrelatedBy<Guid>, IParentedBy<Guid>
+    public record AgvAction : CorrelatedBy<Guid>, IParentedBy<Guid>, ISaga
     {
         /// <summary>
         /// Unique correlation ID of this action (see order action repository)
         /// </summary>
-        public Guid CorrelationId { get; }
+        public Guid CorrelationId { get; set; }
 
         /// <inheritdoc/>
         public Guid ParentId { get; }
 
         /// <inheritdoc/>
-        public int Sequence { get; }
+        public int Sequence { get; init; }
 
         /// <inheritdoc/>
-        public Guid Successor { get; }
+        public Guid Successor { get; init; }
 
         /// <inheritdoc/>
-        public Guid Predecessor { get; }
+        public Guid Predecessor { get; init; }
 
         /// <summary>
         /// AGV ID
         /// </summary>
-        public string AgvId { get; init; }
+        public string? AgvId { get; init; }
 
         /// <summary>
         /// The CorrelationId of the assigned agv
         /// </summary>
-        public Guid AgvCorrelationId { get; set; }
+        public Guid? AssignedAgv { get; set; }
 
         /// <summary>
         /// The current state of the action
         /// </summary>
-        [Column(TypeName = "nvarchar(255)")]
         public ActionState State { get; set; } = ActionState.Created;
 
         /// <summary>
         /// The type of the action, e.g. Pick or Drop
         /// </summary>
-        [Column(TypeName = "nvarchar(255)")]
         public ActionType ActionType { get; init; }
 
         /// <summary>
@@ -55,14 +52,9 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
         public string OrderId { get; init; }
 
         /// <summary>
-        /// Source of the trip, null when unknown (last node ID will be assumed)
+        /// Target node id of the action
         /// </summary>
-        public string? Source { get; init; }
-
-        /// <summary>
-        /// Destination of the trip
-        /// </summary>
-        public string Destination { get; init; }
+        public string TargetNodeId { get; init; }
 
         /// <summary>
         /// The nodes of the trip
@@ -77,17 +69,15 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
         /// <param name="actionType">The type of the action, e.g. Pick or Drop</param>
         /// <param name="orderId">Order ID</param>
         /// <param name="parentId">The id of the clamped object</param>
-        /// <param name="source">Source of the trip, null when unknown (last node ID will be assumed)</param>
-        /// <param name="destination">Destination of the trip</param>
-        public AgvAction(Guid correlationId, string agvId, ActionType actionType, string orderId, Guid parentId, string? source, string destination)
+        /// <param name="targetNodeId">Target node id of the action</param>
+        public AgvAction(Guid correlationId, string agvId, ActionType actionType, string orderId, Guid parentId, string targetNodeId)
         {
             CorrelationId = correlationId;
             AgvId = agvId;
             ActionType = actionType;
             OrderId = orderId;
             ParentId = parentId;
-            Source = source;
-            Destination = destination;
+            TargetNodeId = targetNodeId;
         }
 
         /// <summary>
@@ -101,8 +91,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
             ActionType = ActionType.Pick;
             OrderId = string.Empty;
             ParentId = Guid.Empty;
-            Source = string.Empty;
-            Destination = string.Empty;
+            TargetNodeId = string.Empty;
         }
     }
 }

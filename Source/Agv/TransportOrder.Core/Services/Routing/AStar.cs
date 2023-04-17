@@ -159,7 +159,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Routing
                     // Estimate distance to final destination.
                     successor.H = EuclideanDistance(successor, destination);
                 }
-
+                
                 _openList.TryAdd(successor.Node.Id, successor);
             }
         }

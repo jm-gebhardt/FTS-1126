@@ -51,8 +51,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         }
 
         /// <inheritdoc/>
-        public IAgv? GetAgv(Guid correlationId)
+        public IAgv? GetAgv(Guid? correlationId)
         {
+            if (correlationId == null)
+            {
+                return null;
+            }
+
             return AgvSagas
                 .Where(x => x.CorrelationId == correlationId)
                 .Cast<IAgv>()

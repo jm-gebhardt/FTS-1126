@@ -1,5 +1,5 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Commands;
-using Gebhardt.StoreWare.Agv.Common.Configurations.Exceptions;
+using Gebhardt.StoreWare.Agv.Common.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Orders.Common;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Orders.Requests.Commands;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services;
@@ -37,13 +37,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Orders.Handlers.Co
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
+        /// <exception cref="OrderNotFoundException"></exception>
+        /// <exception cref="NotInCorrectStateException"></exception>
         public async Task Consume(ConsumeContext<ResetOrderCommand> context)
         {
             var request = context.Message;
             var order = _orderRegistry.GetOrder(request.CorrelationId);
             if (order == null)
             {
-                throw new NotFoundException(nameof(order), nameof(request.CorrelationId), request.CorrelationId);
+                throw new OrderNotFoundException(request.CorrelationId);
             }
 
             if (order.CurrentState != nameof(OrderStateMachine.OrderFailed) && order.CurrentState != nameof(OrderStateMachine.Final))

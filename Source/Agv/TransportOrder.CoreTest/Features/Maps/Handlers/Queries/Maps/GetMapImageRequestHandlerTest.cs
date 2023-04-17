@@ -1,5 +1,4 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Configurations.Exceptions;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Common;
+﻿using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Common;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Handlers.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Requests.Queries;
 using MassTransit;
@@ -7,6 +6,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 using System.Text;
+using Gebhardt.StoreWare.Agv.Common.Exceptions;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Features.Maps.Handlers.Queries.Maps
 {

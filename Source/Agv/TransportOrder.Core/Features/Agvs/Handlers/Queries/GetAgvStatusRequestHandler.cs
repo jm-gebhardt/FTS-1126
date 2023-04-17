@@ -1,6 +1,6 @@
 using AutoMapper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
-using Gebhardt.StoreWare.Agv.Common.Configurations.Exceptions;
+using Gebhardt.StoreWare.Agv.Common.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Common;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Requests.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services;
@@ -35,18 +35,20 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Quer
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
+        /// <exception cref="AgvNotFoundException"></exception>
+        /// <exception cref="AgvStatusNotFoundException"></exception>
         public async Task Consume(ConsumeContext<GetAgvStatusRequest> context)
         {
             var request = context.Message;
             var agv = _agvRegistry.GetAgv(request.CorrelationId);
             if (agv == null)
             {
-                throw new NotFoundException(nameof(agv), nameof(request.CorrelationId), request.CorrelationId);
+                throw new AgvNotFoundException(request.CorrelationId);
             }
 
             if (agv.AgvStatus == null)
             {
-                throw new NoContentException(nameof(AgvStateDto));
+                throw new AgvStatusNotFoundException(agv);
             }
 
             var agvStateDto = _mapper.Map<AgvStateDto>(agv);

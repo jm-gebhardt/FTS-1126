@@ -16,7 +16,6 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
         private readonly ILogger<HostOrderStateMachine> _logger;
 
         #region States
-
         /// <summary>
         /// Order has been split into actions and actions have been queued into action manager
         /// </summary>
@@ -46,20 +45,16 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
         /// Order has been cancelled
         /// </summary>
         public State Cancelled { get; private set; } = default!;
-
         #endregion
 
         #region Events
-
         /// <summary>
         /// New order detected. This is the initial event of the HostOrderStateMachine
         /// </summary>
         public Event<CreateHostOrder> CreateHostOrderEvent { get; private set; } = default!;
-
         #endregion
 
         #region Initialization
-
         /// <summary>
         /// HostOrderStateMachine
         /// </summary>
@@ -83,11 +78,9 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
                 e.SetSagaFactory(c => new HostOrderSaga(c.Message.OrderDetails))
             );
         }
-
         #endregion
 
         #region Transitions
-
         /// <summary>
         /// Handler for HandleHostOrder
         /// </summary>
@@ -97,20 +90,30 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
                 .Then(c =>
                     _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId} received", nameof(CreateHostOrder), c.Message.OrderDetails.OrderId, c.Message.OrderDetails.CorrelationId))
                 .TransitionTo(Initial)
-                .Then(c => c.Publish(new ActionGroup(c.Saga.CorrelationId, GetPickDropActions(c.Saga))));
-
+                .Then(c => c.Publish(GetActionGroup(c.Saga)));
         #endregion
 
         #region Private Methods
-        private List<AgvAction> GetPickDropActions(HostOrderSaga hostOrderSaga)
+        private ActionGroup GetActionGroup(HostOrderSaga hostOrderSaga)
         {
-            var pickAction = new AgvAction(hostOrderSaga.PickActionGuid, string.Empty, ActionType.Pick, hostOrderSaga.OrderId, hostOrderSaga.OrderId.ToGuid(), null, hostOrderSaga.OrderDetails.Source);
-            var dropAction = new AgvAction(hostOrderSaga.DropActionGuid, string.Empty, ActionType.Drop, hostOrderSaga.OrderId, hostOrderSaga.OrderId.ToGuid(), hostOrderSaga.OrderDetails.Source, hostOrderSaga.OrderDetails.Destination);
-            return new List<AgvAction>()
+            var dropActionGuid = hostOrderSaga.DropActionGuid;
+            var pickActionGuid = hostOrderSaga.PickActionGuid;
+            var pickAction = new AgvAction(pickActionGuid, string.Empty, ActionType.Pick, hostOrderSaga.OrderId, hostOrderSaga.OrderId.ToGuid(), hostOrderSaga.OrderDetails.Source)
+            {
+                Successor = dropActionGuid,
+                Sequence = 0
+            };
+            var dropAction = new AgvAction(dropActionGuid, string.Empty, ActionType.Drop, hostOrderSaga.OrderId, hostOrderSaga.OrderId.ToGuid(), hostOrderSaga.OrderDetails.Destination)
+            {
+                Predecessor = pickActionGuid,
+                Sequence = 1
+            };
+
+            return new ActionGroup(hostOrderSaga.CorrelationId, new List<AgvAction>()
             {
                 pickAction,
                 dropAction
-            };
+            });
         }
         #endregion
     }

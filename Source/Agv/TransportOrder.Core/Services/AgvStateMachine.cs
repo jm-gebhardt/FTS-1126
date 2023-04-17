@@ -308,13 +308,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         private EventActivityBinder<AgvSaga, AgvStartedCharging> AgvStartedChargingReceivedHandler() =>
             When(AgvStartedChargingEvent)
                 .TransitionTo(Charging)
-                .Then(c => _logger.LogInformation("{AgvId} / {CorrelationId} has reached charging station (BatteryLevel: {batteryLevel}%) => Transitioned to {State}",
+                .Then(c => _logger.LogInformation("{AgvId} / {CorrelationId} has reached charging station (BatteryLevel: {BatteryLevel}%) => Transitioned to {State}",
                     c.Saga.AgvId, c.Saga.CorrelationId, c.Saga.AgvStatus!.BatteryCharge, nameof(Charging)));
 
         private EventActivityBinder<AgvSaga, AgvStoppedCharging> AgvStoppedChargingReceivedHandler() =>
             When(AgvStoppedChargingEvent)
                 .TransitionTo(Ready)
-                .Then(c => _logger.LogInformation("{AgvId} / {CorrelationId} reloaded its battery level to {batteryLevel}% => Transitioned to {State}",
+                .Then(c => _logger.LogInformation("{AgvId} / {CorrelationId} reloaded its battery level to {BatteryLevel}% => Transitioned to {State}",
                     c.Saga.AgvId, c.Saga.CorrelationId, c.Saga.AgvStatus!.BatteryCharge, nameof(Idle)))
                 .ThenAsync(c => PublishAgvBecameReady(c.Saga, c));
 

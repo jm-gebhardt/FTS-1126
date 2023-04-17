@@ -71,7 +71,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                 services.AddConfigurationTypeManager();
                 services.AddSettingsProviders(ConfigurationTypeManager.Instance);
 
-                
+
                 // Scoped
                 services.AddScoped<DatabaseConfigurationSeeder>();
 
@@ -83,8 +83,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                 services.AddSingleton(_ => productionOptions);
                 services.AddSingleton<MassTransitBusEventConsumer>();
                 services.AddSingleton<ActionManager>();
+                services.AddSingleton<ActionManagerNew>();
                 services.AddSingleton<ISagaSettingsProvider<AgvSettings, AgvSaga>, SagaSettingsProvider<AgvSettings, AgvSaga, SagaPersistenceDbContext>>();
                 services.AddSingleton<IAgvSettingsProvider, AgvSettingsProvider>();
+                services.AddSingleton<IRouteService, RouteService>();
+                services.AddSingleton<IMaintenanceService, MaintenanceService>();
+                services.AddSingleton<IAgvLoadCapabilityService, AgvLoadCapabilityService>();
+                services.AddSingleton<IStartActionService, StartActionService>();
+                services.AddSingleton<IChargingPointManager, BaseChargingPointManager>();
+                services.AddSingleton<IChargingService, BaseAgvChargingService>();
 
                 // Registries
                 services.AddSingleton<IAgvActionRegistry, EfAgvActionRegistry>();
@@ -128,7 +135,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
 
                         x.AddConsumer<AssignAgvConsumer>();
                         x.AddConsumer<MassTransitBusEventConsumer>();
-                        x.AddConsumer<ActionManager>();
+                        x.AddConsumer<ActionManagerNew>();
                         x.AddConsumer<AgvChargingService>();
                         x.AddConsumer<TransportOrderChangedConsumer>();
                         x.AddConsumer<AgvPositionReceivedConsumer>();

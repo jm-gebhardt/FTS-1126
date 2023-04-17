@@ -1,4 +1,4 @@
-using Gebhardt.StoreWare.Agv.Common.Configurations.Exceptions;
+using Gebhardt.StoreWare.Agv.Common.Exceptions;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
@@ -37,7 +37,7 @@ public class StopChargingCommandConsumerTest
         .Build();
 
         var stopChargingCommand = new StopChargingCommand(correlationId);
-        await MediatorShould.ThrowRequestExceptionAsync<NoContentException>(async () => await fixture.GetResponseAsync<BaseResult>(stopChargingCommand));
+        await MediatorShould.ThrowRequestExceptionAsync<AgvStatusReceivedNotFoundException>(async () => await fixture.GetResponseAsync<BaseResult>(stopChargingCommand));
 
         bool publishCheck = await fixture.TestHarness!.Published.Any<AgvStoppedCharging>();
         publishCheck.ShouldBeFalse();

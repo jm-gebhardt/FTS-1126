@@ -1,5 +1,5 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
-using Gebhardt.StoreWare.Agv.Common.Configurations.Exceptions;
+using Gebhardt.StoreWare.Agv.Common.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Common;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Requests.Commands;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services;
@@ -34,13 +34,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Comm
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
+        /// <exception cref="AgvNotFoundException"></exception>
+        /// <exception cref="NotInCorrectStateException"></exception>
         public async Task Consume(ConsumeContext<SetIdleCommand> context)
         {
             var request = context.Message;
             var agv = _agvRegistry.GetAgv(request.CorrelationId);
             if (agv == null)
             {
-                throw new NotFoundException(nameof(agv), nameof(request.CorrelationId), request.CorrelationId);
+                throw new AgvNotFoundException(request.CorrelationId);
             }
 
             if (agv.CurrentState != nameof(AgvStateMachine.Discovered) && agv.CurrentState != nameof(AgvStateMachine.Locked))

@@ -23,19 +23,19 @@ Insert into [master].[dbo].[ToAgv]
            ,[TimeStamp])
      VALUES
            ('TransportOrder',
-            'Pending',
-            FLOOR(RAND()*100000) ,
-            'Transport',
-            '-',
-            'S1', /* Put source node*/
-            'D2', /* Put destination node*/
-            null,
-            'Initial',
-            null,
-            'Simulation',
-            GETDATE(),
-            1,
-            GETDATE())
+            'Pending',
+            FLOOR(RAND()*100000) ,
+            'Transport',
+            '-',
+            'S1', /* Put source node*/
+            'D2', /* Put destination node*/
+            null,
+            'Initial',
+            null,
+            'Simulation',
+            GETDATE(),
+            1,
+            GETDATE())
 SET @cnt = @cnt + 1;
 WAITFOR DELAY '00:00:02' /* Delay between orders*/
 END;

@@ -1,4 +1,4 @@
-using Gebhardt.StoreWare.Agv.Common.Configurations.Exceptions;
+using Gebhardt.StoreWare.Agv.Common.Exceptions;
 using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Events;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Orders.Common;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Orders.Requests.Commands;
@@ -35,13 +35,14 @@ public class CompleteOrderCommandHandler : IConsumer<CompleteOrderCommand>
     /// </summary>
     /// <param name="context"></param>
     /// <returns></returns>
+    /// <exception cref="OrderNotFoundException"></exception>
     public async Task Consume(ConsumeContext<CompleteOrderCommand> context)
     {
         var request = context.Message;
         var order = _orderRegistry.GetOrder(request.CorrelationId);
         if (order == null)
         {
-            throw new NotFoundException(nameof(order), nameof(request.CorrelationId), request.CorrelationId);
+            throw new OrderNotFoundException(request.CorrelationId);
         }
 
         await _bus.Publish(new ManuallyCompleteTransportOrder(order.CorrelationId));

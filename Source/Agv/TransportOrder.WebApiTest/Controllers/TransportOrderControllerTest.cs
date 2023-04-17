@@ -4,7 +4,7 @@ using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Commands;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
-using Gebhardt.StoreWare.Agv.Common.Configurations.Exceptions;
+using Gebhardt.StoreWare.Agv.Common.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.States;
 using MassTransit;
@@ -131,7 +131,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var controller = fixture.Controller;
             var correlationId = Guid.Empty;
 
-            await MediatorShould.ThrowRequestExceptionAsync<NotFoundException>(async () => await controller.ResetOrder(correlationId));
+            await MediatorShould.ThrowRequestExceptionAsync<OrderNotFoundException>(async () => await controller.ResetOrder(correlationId));
         }
 
         [TestMethod]
@@ -189,7 +189,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var controller = fixture.Controller;
             var correlationId = Guid.Empty;
 
-            await MediatorShould.ThrowRequestExceptionAsync<NotFoundException>(async () => await controller.CompleteOrder(correlationId));
+            await MediatorShould.ThrowRequestExceptionAsync<OrderNotFoundException>(async () => await controller.CompleteOrder(correlationId));
         }
     }
 }

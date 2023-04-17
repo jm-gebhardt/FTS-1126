@@ -1,4 +1,5 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Extensions;
+﻿using Gebhardt.StoreWare.Agv.Common.Exceptions;
+using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Enums;
@@ -32,27 +33,35 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
         /// Handle message <see cref="StartActionCommand"/>. and send an order to the AGV of Type Transport, RecordType Order
         /// </summary>
         /// <param name="context">Context of the consumer wrapping details surrounding the inbound message.</param>
+        /// <exception cref="AssignedAgvNotFoundException"></exception>
         public async Task Consume(ConsumeContext<StartActionCommand> context)
         {
             var action = context.Message.Action;
             var actionType = action.ActionType;
+            string targetNodeId = action.TargetNodeId;
             OrderType orderType;
             string sourceToSend = string.Empty;
             string destinationToSend = string.Empty;
 
+            if (action.AssignedAgv == null || string.IsNullOrEmpty(action.AgvId))
+            {
+                throw new AssignedAgvNotFoundException(action);
+            }
+            var assignedAgv = (Guid) action.AssignedAgv;
+
             if (actionType == ActionType.Pick)
             {
                 orderType = OrderType.Pick;
-                sourceToSend = action.Destination;
+                sourceToSend = action.TargetNodeId;
             }
             else if (actionType == ActionType.Drop)
             {
                 orderType = OrderType.Drop;
-                destinationToSend = action.Destination;
+                destinationToSend = action.TargetNodeId;
             }
             else
             {
-                throw new NotImplementedException($"Can't handle {actionType} yet");
+                throw new InvalidOperationException($"Can't handle {actionType} yet");
             }
 
             // We are using the action correlation Id as "order Id"
@@ -71,9 +80,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
                 }
             }, context.CancellationToken);
 
-            FeedAgvRegistry(action.AgvCorrelationId, new AgvAction(action.CorrelationId, action.AgvId, action.ActionType, action.OrderId, action.ParentId, action.Source, action.Destination));
-            _logger.LogInformation("Sent transport order: {OrderId} for AGV:{AgvId} from {Source} to {Destination}",
-                action.OrderId, action.AgvId, action.Source, action.Destination);
+            FeedAgvRegistry(assignedAgv, new AgvAction(action.CorrelationId, action.AgvId, action.ActionType, action.OrderId, action.ParentId, targetNodeId));
+            _logger.LogInformation("Sent transport order: {OrderId} for AGV:{AgvId} at target: {TargetNodeId}",
+                action.OrderId, action.AgvId, targetNodeId);
         }
 
         private void FeedAgvRegistry(Guid correlationId, AgvAction agvAction)

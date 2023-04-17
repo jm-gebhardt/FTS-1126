@@ -186,10 +186,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
                 ActionType.Charge,
                 string.Empty,
                 Guid.Empty,
-                source,
                 destination);
 
-            agvAction.AgvCorrelationId = agv.CorrelationId;
+            agvAction.AssignedAgv = agv.CorrelationId;
             agvAction.Nodes = route.Nodes;
 
             await context.Publish(new StartActionCommand(agv.CorrelationId, agvAction));

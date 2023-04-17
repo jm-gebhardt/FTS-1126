@@ -90,7 +90,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Could not add map.");
+                _logger.LogError(e, "Could not add map");
                 return false;
             }
         }

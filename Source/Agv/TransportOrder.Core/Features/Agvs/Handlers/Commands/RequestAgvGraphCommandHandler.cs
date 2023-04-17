@@ -1,5 +1,5 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
-using Gebhardt.StoreWare.Agv.Common.Configurations.Exceptions;
+using Gebhardt.StoreWare.Agv.Common.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Common;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Requests.Commands;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services;
@@ -34,6 +34,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Comm
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
+        /// <exception cref="AgvNotFoundException"></exception>
         public async Task Consume(ConsumeContext<RequestAgvGraphCommand> context)
         {
             var request = context.Message;
@@ -41,7 +42,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Comm
 
             if (agv == null)
             {
-                throw new NotFoundException(nameof(agv), nameof(request.CorrelationId), request.CorrelationId);
+                throw new AgvNotFoundException(request.CorrelationId);
             }
 
             await _bus.Publish(new RequestAgvGraph(agv.CorrelationId, agv.AgvId));

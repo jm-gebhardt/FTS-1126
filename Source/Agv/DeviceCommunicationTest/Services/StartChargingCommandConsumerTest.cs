@@ -7,8 +7,9 @@ using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.CommonTest.Helpers;
 using Shouldly;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
-using Gebhardt.StoreWare.Agv.Common.Configurations.Exceptions;
+using Gebhardt.StoreWare.Agv.Common.Exceptions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Exceptions;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services;
 
@@ -27,8 +28,7 @@ public class StartChargingCommandConsumerTest
         await fixture.GetResponseAsync<BaseResult>(startChargingCommand);
 
         bool publishCheck = await fixture.TestHarness!.Published.Any<StartActionCommand>(s => s.Context.Message.Action.ActionType == ActionType.Charge
-                                                                                              && s.Context.Message.Action.Destination == lastNodeId
-                                                                                              && s.Context.Message.Action.Source == null);
+                                                                                              && s.Context.Message.Action.TargetNodeId == lastNodeId);
         publishCheck.ShouldBeTrue();
     }
 
@@ -91,7 +91,7 @@ public class StartChargingCommandConsumerTest
         .Build();
 
         var startChargingCommand = new StartChargingCommand(correlationId);
-        await MediatorShould.ThrowRequestExceptionAsync<NoContentException>(async () => await fixture.GetResponseAsync<BaseResult>(startChargingCommand));
+        await MediatorShould.ThrowRequestExceptionAsync<AgvInformationNotFoundException>(async () => await fixture.GetResponseAsync<BaseResult>(startChargingCommand));
 
         bool publishCheck = await fixture.TestHarness!.Published.Any<StartActionCommand>(s => s.Context.Message.Action.ActionType == ActionType.Charge);
         publishCheck.ShouldBeFalse();
@@ -105,7 +105,7 @@ public class StartChargingCommandConsumerTest
         .Build();
 
         var startChargingCommand = new StartChargingCommand(correlationId);
-        await MediatorShould.ThrowRequestExceptionAsync<NoContentException>(async () => await fixture.GetResponseAsync<BaseResult>(startChargingCommand));
+        await MediatorShould.ThrowRequestExceptionAsync<AgvStatusReceivedNotFoundException>(async () => await fixture.GetResponseAsync<BaseResult>(startChargingCommand));
 
         bool publishCheck = await fixture.TestHarness!.Published.Any<StartActionCommand>(s => s.Context.Message.Action.ActionType == ActionType.Charge);
         publishCheck.ShouldBeFalse();

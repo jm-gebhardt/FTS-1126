@@ -265,7 +265,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
 
             // Start action: Publish StartActionCommand ...
             await fixture.TestHarness.Bus.Publish(new StartActionCommand(agv,
-                new AgvAction(actionId, agvId, ActionType.Drop, orderId, orderCorrelationId, source, destination)
+                new AgvAction(actionId, agvId, ActionType.Drop, orderId, orderCorrelationId, destination)
                 {
                     Nodes = path
                 }

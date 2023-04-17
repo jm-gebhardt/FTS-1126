@@ -32,6 +32,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         /// Get specific AGV
         /// </summary>
         /// <returns>IAgv object or null if no AGV with the given correlationId was found</returns>
-        public IAgv? GetAgv(Guid correlationId);
+        public IAgv? GetAgv(Guid? correlationId);
     }
 }

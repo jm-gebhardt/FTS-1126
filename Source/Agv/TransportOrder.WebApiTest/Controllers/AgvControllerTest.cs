@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
 using Shouldly;
-using Gebhardt.StoreWare.Agv.Common.Configurations.Exceptions;
+using Gebhardt.StoreWare.Agv.Common.Exceptions;
 using Gebhardt.StoreWare.Agv.CommonTest.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Commands;
@@ -79,7 +79,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var controller = fixture.Controller;
             var correlationId = Guid.Empty;
 
-            await MediatorShould.ThrowRequestExceptionAsync<NotFoundException>(async () => await controller.GetAgvGraph(correlationId));
+            await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await controller.GetAgvGraph(correlationId));
         }
 
         [TestMethod]
@@ -112,7 +112,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var controller = fixture.Controller;
             var correlationId = Guid.Empty;
 
-            await MediatorShould.ThrowRequestExceptionAsync<NotFoundException>(async () => await controller.GetAgvStatus(correlationId));
+            await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await controller.GetAgvStatus(correlationId));
         }
 
         [TestMethod]
@@ -124,7 +124,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var controller = fixture.Controller;
             var correlationId = fixture.AgvIds[2].ToGuid(); // AGV without AgvStatus
 
-            await MediatorShould.ThrowRequestExceptionAsync<NoContentException>(async () => await controller.GetAgvStatus(correlationId));
+            await MediatorShould.ThrowRequestExceptionAsync<AgvStatusNotFoundException>(async () => await controller.GetAgvStatus(correlationId));
         }
 
         [TestMethod]
@@ -157,7 +157,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var controller = fixture.Controller;
             var correlationId = Guid.Empty;
 
-            await MediatorShould.ThrowRequestExceptionAsync<NotFoundException>(async () => await controller.GetAgvData(correlationId));
+            await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await controller.GetAgvData(correlationId));
         }
 
         [TestMethod]
@@ -170,9 +170,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var correlationId = Guid.Empty;
 
             Should.Throw<AggregateException>(() => controller.SetIdle(correlationId).Result)
-                .GetBaseException().GetBaseException().ShouldBeOfType<NotFoundException>();
+                .GetBaseException().GetBaseException().ShouldBeOfType<AgvNotFoundException>();
 
-            await MediatorShould.ThrowRequestExceptionAsync<NotFoundException>(async () => await controller.SetIdle(correlationId));
+            await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await controller.SetIdle(correlationId));
         }
 
         [TestMethod]
@@ -213,7 +213,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var controller = fixture.Controller;
             var correlationId = Guid.Empty;
 
-            await MediatorShould.ThrowRequestExceptionAsync<NotFoundException>(async () => await controller.LockAgv(correlationId));
+            await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await controller.LockAgv(correlationId));
         }
 
         [TestMethod]
@@ -242,7 +242,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var controller = fixture.Controller;
             var correlationId = Guid.Empty;
 
-            await MediatorShould.ThrowRequestExceptionAsync<NotFoundException>(async () => await controller.EmitRequestData(correlationId));
+            await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await controller.EmitRequestData(correlationId));
         }
 
         [TestMethod]
@@ -271,7 +271,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var controller = fixture.Controller;
             var correlationId = Guid.Empty;
 
-            await MediatorShould.ThrowRequestExceptionAsync<NotFoundException>(async () => await controller.EmitRequestGraph(correlationId));
+            await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await controller.EmitRequestGraph(correlationId));
         }
 
         [TestMethod]

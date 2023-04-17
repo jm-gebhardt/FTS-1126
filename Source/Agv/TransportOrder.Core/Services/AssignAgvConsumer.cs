@@ -134,7 +134,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         /// </summary>
         /// <param name="correlationId">Correlation ID of the AGV</param>
         /// <param name="cancellationToken"></param>
-        /// <returns>True in case the agv reservation was successful</returns>
+        /// <returns>True in case the Agv reservation was successful</returns>
         private async Task<bool> ReserveAgv(Guid correlationId, CancellationToken cancellationToken)
         {
             Response<AgvReservationSucceeded, AgvReservationRejected> response = await _client.GetResponse<AgvReservationSucceeded, AgvReservationRejected>(
@@ -156,7 +156,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
             IEnumerable<IAgv> agvs = _agvRegistry.GetAllAgvs()
                 .Where(agv => agv.AgvGraph != null);
 
-            return agvs.Any(agv => agvChooser.CalculateRoute(agv, order) != null);
+            return agvs.Any(agv => agvChooser.CalculateRoute(agv, order.Source, order.Destination) != null);
         }
 
     }

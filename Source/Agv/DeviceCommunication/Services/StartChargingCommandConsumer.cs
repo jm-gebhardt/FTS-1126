@@ -4,7 +4,8 @@ using JetBrains.Annotations;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
 using static Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.AgvGraph;
-using Gebhardt.StoreWare.Agv.Common.Configurations.Exceptions;
+using Gebhardt.StoreWare.Agv.Common.Exceptions;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Exceptions;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
 
@@ -29,6 +30,10 @@ public class StartChargingCommandConsumer : IConsumer<StartChargingCommand>
     /// Validates (checks current node, if charging node and not busy and if battery charge less than 100), then sends charging action to Agv
     /// </summary>
     /// <param name="context"></param>
+    /// <exception cref="AgvInformationNotFoundException"></exception>
+    /// <exception cref="AgvStatusReceivedNotFoundException"></exception>
+    /// <exception cref="AgvLocationUnknownException"></exception>
+    /// <exception cref="NotInCorrectStateException"></exception>
     public async Task Consume(ConsumeContext<StartChargingCommand> context)
     {
         var agvCorrelationId = context.Message.CorrelationId;
@@ -36,13 +41,13 @@ public class StartChargingCommandConsumer : IConsumer<StartChargingCommand>
 
         if (agvInformation == null)
         {
-            throw new NoContentException(nameof(agvInformation));
+            throw new AgvInformationNotFoundException(agvCorrelationId);
         }
 
         var agvStatusReceived = agvInformation.AgvStatusReceived;
         if (agvStatusReceived == null)
         {
-            throw new NoContentException(nameof(agvStatusReceived));
+            throw new AgvStatusReceivedNotFoundException(agvCorrelationId);
         }
 
         var agvStatus = agvStatusReceived.AgvStatus;
@@ -50,9 +55,9 @@ public class StartChargingCommandConsumer : IConsumer<StartChargingCommand>
 
         if (lastNodeId == null)
         {
-            throw new NoContentException(nameof(lastNodeId));
+            throw new AgvLocationUnknownException(agvCorrelationId);
         }
-
+        
         if (agvStatus.Busy)
         {
             throw new NotInCorrectStateException("Agv charging cannot be started because agv is busy.");
@@ -76,7 +81,6 @@ public class StartChargingCommandConsumer : IConsumer<StartChargingCommand>
             ActionType.Charge,
             string.Empty,
             Guid.Empty,
-            null,
             lastNodeId);
 
         await context.Publish(new StartActionCommand(agvCorrelationId, chargeAction));

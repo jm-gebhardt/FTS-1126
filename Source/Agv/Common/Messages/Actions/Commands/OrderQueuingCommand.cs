@@ -1,4 +1,5 @@
-﻿using MassTransit;
+﻿using JetBrains.Annotations;
+using MassTransit;
 
 namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands;
 
@@ -14,6 +15,7 @@ public record OrderQueuingCommand : CorrelatedBy<Guid>
     /// <summary>
     /// The details of the TransportOrder to be split
     /// </summary>
+    [UsedImplicitly]
     public OrderDetails OrderDetails { get; }
 
     /// <summary>

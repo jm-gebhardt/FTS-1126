@@ -89,7 +89,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
 
             foreach (var agv in agvDataEnumeration)
             {
-                var route = CalculateRoute(agv, order);
+                var route = CalculateRoute(agv, order.Source, order.Destination);
                 if (route != null)
                 {
                     routeListing.Add(agv.CorrelationId, route);
@@ -106,16 +106,17 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         /// Calculate Route for the given AGV and order
         /// </summary>
         /// <param name="agv"></param>
-        /// <param name="order"></param>
+        /// <param name="source"></param>
+        /// <param name="destination"></param>
         /// <exception cref="ArgumentException">Thrown if <see cref="OrderDetails.Source"/> or <see cref="OrderDetails.Destination"/> are empty</exception>
         /// <returns>Route for the agv to process the order. Null if the route does not exist</returns>
-        public IGraphAlgorithm.Route? CalculateRoute(IAgv agv, OrderDetails order)
+        public IGraphAlgorithm.Route? CalculateRoute(IAgv agv, string source, string destination)
         {
-            if (string.IsNullOrEmpty(order.Source))
+            if (string.IsNullOrEmpty(source))
             {
                 throw new ArgumentException("Source is missing in order.");
             }
-            if (string.IsNullOrEmpty(order.Destination))
+            if (string.IsNullOrEmpty(destination))
             {
                 throw new ArgumentException("Destination is missing in order.");
             }
@@ -123,10 +124,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
             var algorithm = AlgorithmFactory(agv);
             if (agv.AgvStatus != null && !string.IsNullOrEmpty(agv.AgvStatus.LastNodeId))
             {
-                return algorithm.CalculateRoute(agv.AgvStatus.LastNodeId, order.Source, order.Destination);
+                return algorithm.CalculateRoute(agv.AgvStatus.LastNodeId, source, destination);
             }
 
-            return algorithm.CalculateRoute(order.Source, order.Destination);
+            return algorithm.CalculateRoute(source, destination);
         }
     }
 }

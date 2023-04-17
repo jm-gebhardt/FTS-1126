@@ -170,7 +170,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
             When(OrderQueuedEvent)
                 .Then(_ =>
                 {
-                    _logger.LogInformation("{nameOf}", nameof(SetOrderQueuedEventHandler));
+                    _logger.LogInformation("{EventHandler}", nameof(SetOrderQueuedEventHandler));
                 })
                 .TransitionTo(OrderQueued);
 

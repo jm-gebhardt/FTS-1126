@@ -1,0 +1,18 @@
+
+namespace Gebhardt.StoreWare.Agv.Common.Exceptions;
+
+/// <summary>
+/// Agv was not found
+/// </summary>
+public class AgvNotFoundException : NotFoundException
+{
+    
+    /// <summary>
+    /// Agv was not found with Agv Correlation Id
+    /// </summary>
+    /// <param name="correlationId">Correlation Id of Agv</param>
+    public AgvNotFoundException(Guid? correlationId) 
+        : base("Agv", nameof(correlationId), correlationId)
+    {
+    }
+}

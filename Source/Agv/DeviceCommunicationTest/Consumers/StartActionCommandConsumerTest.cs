@@ -43,10 +43,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
                 const string agvId = "agv0";
                 const string orderId = "1234";
                 var orderCorrelationId = orderId.ToGuid();
-                const string fromStationId = "Pick1";
                 const string toStationId = "Drop5";
 
-                var action = new AgvAction(actionCorrelationId, agvId, ActionType.Pick, orderId, orderCorrelationId, fromStationId, toStationId);
+                var action = new AgvAction(actionCorrelationId, agvId, ActionType.Pick, orderId, orderCorrelationId, toStationId)
+                {
+                    AssignedAgv = Guid.NewGuid()
+                };
                 var message = new StartActionCommand(Guid.NewGuid(), action);
 
                 // Publish ExecuteTransportOrder
@@ -67,8 +69,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
                 action.AgvId.ShouldBe(agvId);
                 action.OrderId.ShouldBe(orderId);
                 action.ParentId.ShouldBe(orderCorrelationId);
-                action.Source.ShouldBe(fromStationId);
-                action.Destination.ShouldBe(toStationId);
+                action.TargetNodeId.ShouldBe(toStationId);
 
                 // Get published MqttOrder Mqtt message
                 IPublishedMessage<MqttOrder> publishedMessage = publishObserver.Messages.Select<MqttOrder>().First();

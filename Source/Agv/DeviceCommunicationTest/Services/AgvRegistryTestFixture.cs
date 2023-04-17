@@ -76,7 +76,7 @@ public class AgvRegistryTestFixture
             var correlationId = agvId.ToGuid();
             var agvStatus = new AgvStatus(correlationId, order, state == "Busy", true, 25 * i, _chargingState[i], false, _sources[i]);
             var agvGraph = new AgvGraph(correlationId, Nodes, Edges, MapName.ToGuid(), MapName);
-            var agvAction = new AgvAction($"Action#{agvId}".ToGuid(), agvId, ActionType.Pick, order, order.ToGuid(), "Pick1", "Drop5");
+            var agvAction = new AgvAction($"Action#{agvId}".ToGuid(), agvId, ActionType.Pick, order, order.ToGuid(), "Drop5");
 
             var agvInformation = new AgvInformation { AgvStatusReceived = GetAgvStatusReceived(agvStatus), AgvGraph = agvGraph, AgvAction = agvAction };
             AgvRegistry.AddOrUpdate(correlationId, agvInformation);

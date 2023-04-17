@@ -1,7 +1,6 @@
 using Gebhardt.StoreWare.Agv.Common.Configurations;
 using Gebhardt.StoreWare.Agv.Common.Configurations.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Configurations.Models;
-using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Models;
 using MassTransit.EntityFrameworkCoreIntegration;
 using Microsoft.EntityFrameworkCore;
@@ -44,8 +43,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence
             {
                 yield return new OrderSagaClassMap();
                 yield return new AgvSagaClassMap();
-                yield return new MapClassMap();
                 yield return new OrderChangedClassMap();
+                yield return new MapClassMap();
+                yield return new AgvActionClassMap();
             }
         }
 
@@ -53,12 +53,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence
         /// A DbSet of <see cref="ConfigurationSetting"/> used for querying and saving instances.
         /// </summary>
         public DbSet<ConfigurationSetting> ConfigurationSettings { get; set; } = null!;
-
-        /// <summary>
-        /// DataSet "AgvAction"
-        /// </summary>
-        [JetBrains.Annotations.PublicAPI]
-        public DbSet<AgvAction> AgvActions { get; set; } = null!;
 
         /// <summary>
         /// A DbSet of <see cref="Node"/> used for querying and saving instances.
@@ -94,14 +88,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.BuildConfigurationSetting();
-
-            EntityTypeBuilder<AgvAction> agvActions = modelBuilder.Entity<AgvAction>();
-            agvActions.HasKey(nameof(AgvAction.CorrelationId));
-            agvActions.Property(e => e.ParentId);
-            agvActions.Property(e => e.Sequence);
-            agvActions.Property(e => e.Successor);
-            agvActions.Property(e => e.Predecessor);
-            agvActions.Property(e => e.Nodes).HasJsonConversion();
 
             EntityTypeBuilder<Edge> edges = modelBuilder.Entity<Edge>();
 

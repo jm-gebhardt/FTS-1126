@@ -1,4 +1,4 @@
-using Gebhardt.StoreWare.Agv.Common.Configurations.Exceptions;
+using Gebhardt.StoreWare.Agv.Common.Exceptions;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
@@ -28,6 +28,8 @@ public class StopChargingCommandConsumer : IConsumer<StopChargingCommand>
     /// If the Agv is charging it stops the charging
     /// </summary>
     /// <param name="context"></param>
+    /// <exception cref="AgvStatusReceivedNotFoundException"></exception>
+    /// <exception cref="NotInCorrectStateException"></exception>
     public async Task Consume(ConsumeContext<StopChargingCommand> context)
     {
         var correlationId = context.Message.CorrelationId;
@@ -35,7 +37,7 @@ public class StopChargingCommandConsumer : IConsumer<StopChargingCommand>
 
         if (agvInformation?.AgvStatusReceived == null)
         {
-            throw new NoContentException(nameof(agvInformation.AgvStatusReceived));
+            throw new AgvStatusReceivedNotFoundException(correlationId);
         }
         
         if (!agvInformation.AgvStatusReceived.AgvStatus.Charging)

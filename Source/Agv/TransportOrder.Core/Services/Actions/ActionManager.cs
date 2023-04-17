@@ -1,4 +1,4 @@
-using MassTransit;
+﻿using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
@@ -198,8 +198,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
             var message = context.Message;
             foreach (var action in message.ActionList)
             {
-                _logger.LogInformation("ActionGroup {ParentId} with ActionId: [{ActionId}] has been consumed... [{Type} from {Source} to {Destination}]",
-                    message.CorrelationId, action.CorrelationId, action.ActionType, action.Source, action.Destination);
+                _logger.LogInformation("ActionGroup {ParentId} with ActionId: [{ActionId}] has been consumed... [{Type} to {TargetNodeId}]",
+                    message.CorrelationId, action.CorrelationId, action.ActionType, action.TargetNodeId);
             }
 
             return Task.CompletedTask;
@@ -258,13 +258,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
                 action.Type,
                 orderId,
                 orderCorrelationId,
-                action.Source,
                 action.Destination!)
             {
                 Nodes = action.Nodes!
             };
             // Start AGV
-            await _bus.Publish(new StartActionCommand(agvAction.AgvId.ToGuid(), agvAction), cancellationToken);
+            await _bus.Publish(new StartActionCommand(agvAction.AgvId!.ToGuid(), agvAction), cancellationToken);
 
             action.State = OrderActionState.Started;
             orderActionRepo.SaveChanges();

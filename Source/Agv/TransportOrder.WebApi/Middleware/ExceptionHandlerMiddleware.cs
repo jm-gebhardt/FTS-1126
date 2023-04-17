@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using System.Text.Json;
-using Gebhardt.StoreWare.Agv.Common.Configurations.Exceptions;
+using Gebhardt.StoreWare.Agv.Common.Exceptions;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Middleware
 {
@@ -38,9 +38,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Middleware
                 case NotFoundException:
                 case MapNotFoundException:
                     statusCode = HttpStatusCode.NotFound;
-                    break;
-                case NoContentException:
-                    statusCode = HttpStatusCode.NoContent;
                     break;
                 case NotInCorrectStateException:
                     statusCode = HttpStatusCode.BadRequest;

@@ -177,7 +177,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
                 }
                 catch (Exception e)
                 {
-                    _logger.LogError(e, "Could not add or update graph.");
+                    _logger.LogError(e, "Could not add or update graph");
                     return false;
                 }
             }
@@ -197,7 +197,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
 
                     if (!nodes.Any())
                     {
-                        _logger.LogWarning("Node {NodeId} not found.", nodeId);
+                        _logger.LogWarning("Node {NodeId} not found", nodeId);
                         return false;
                     }
 
@@ -209,7 +209,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
                 }
                 catch (Exception e)
                 {
-                    _logger.LogError(e, "Could not update node.");
+                    _logger.LogError(e, "Could not update node");
                     return false;
                 }
             }
@@ -229,7 +229,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
 
                     if (!nodes.Any())
                     {
-                        _logger.LogWarning("Node {NodeId} not found.", nodeId);
+                        _logger.LogWarning("Node {NodeId} not found", nodeId);
                         return false;
                     }
 
@@ -241,7 +241,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
                 }
                 catch (Exception e)
                 {
-                    _logger.LogError(e, "Could not update node.");
+                    _logger.LogError(e, "Could not update node");
                     return false;
                 }
             }
@@ -265,7 +265,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
                 }
                 catch (Exception e)
                 {
-                    _logger.LogError(e, "Could not update node.");
+                    _logger.LogError(e, "Could not update node");
                     return false;
                 }
             }
@@ -369,7 +369,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
                 }
                 catch (Exception e)
                 {
-                    _logger.LogError(e, "Could not add or update graph.");
+                    _logger.LogError(e, "Could not add or update graph");
                     return false;
                 }
             }
