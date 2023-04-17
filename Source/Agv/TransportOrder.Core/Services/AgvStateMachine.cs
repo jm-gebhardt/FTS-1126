@@ -347,7 +347,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
                 .IfElse(cond => !cond.Saga.Alive,
                     t => t.Then(c => _logger.LogDebug("{MessageType} {AgvId} / {CorrelationId}, AGV became alive", nameof(AgvStatusReceived), c.Message.AgvId, c.Saga.CorrelationId)),
                     e => e.Then(c => _logger.LogTrace("{MessageType} {AgvId} / {CorrelationId}, AGV is alive", nameof(AgvStatusReceived), c.Message.AgvId, c.Saga.CorrelationId)))
-                .Then(c => UpdateAgvAgvStatus(c.Saga, c.Message.AgvStatus, true, c))
+                .Then(c => UpdateAgvStatus(c.Saga, c.Message.AgvStatus, true, c))
                 .Then(RequestAgvDataAndGraph)
                 .If(cond =>
                     _productionOptions.AutoAccept &&
@@ -386,7 +386,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
 
         private EventActivityBinder<AgvSaga, AgvOfflineMessage> AgvOfflineMessageHandler() =>
             When(AgvOfflineWatchdog.Received)
-                .Then(c => UpdateAgvAgvStatus(c.Saga, c.Saga.AgvStatus, false, c))
+                .Then(c => UpdateAgvStatus(c.Saga, c.Saga.AgvStatus, false, c))
                 .Then(c => _logger.LogWarning("{MessageType} {AgvId} / {CorrelationId} received after timeout of {Timeout} ms, AGV is offline",
                     nameof(AgvOfflineMessage), c.Saga.AgvId, c.Saga.CorrelationId, (DateTime.UtcNow - c.Message.Created).TotalMilliseconds));
         #endregion
@@ -441,8 +441,19 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
             _logger.LogDebug("Agv {AgvId}/{CorrelationId} transitioned to Ready", agvSaga.AgvId, agvSaga.CorrelationId);
         }
 
-        private void UpdateAgvAgvStatus(AgvSaga agvSaga, AgvStatus? newStatus, bool newAlive, IPublishEndpoint endpoint)
+        private void UpdateAgvStatus(AgvSaga agvSaga, AgvStatus? newStatus, bool newAlive, IPublishEndpoint endpoint)
         {
+            if (agvSaga.AgvStatus != null && newStatus != null)
+            {
+                int oldCharge = agvSaga.AgvStatus.BatteryCharge;
+                int newCharge = newStatus.BatteryCharge;
+
+                if (oldCharge != newCharge)
+                {
+                    endpoint.Publish(new AgvBatteryChargeChanged(agvSaga.CorrelationId, oldCharge, newCharge));
+                }
+            }
+
             bool aliveChanged = agvSaga.Alive != newAlive; // AGV alive has changed
             bool stateChanged = !Equals(agvSaga.AgvStatus, newStatus); // Equals() checks value equality for record types
 

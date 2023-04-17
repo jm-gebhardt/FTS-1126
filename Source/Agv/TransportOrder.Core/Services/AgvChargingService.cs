@@ -78,7 +78,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services
         }
 
         /// <summary>
-        /// Handle AgvBecameIdle event
+        /// Handle AgvStatusReceived event
         /// </summary>
         /// <param name="context"></param>
         public async Task Consume(ConsumeContext<AgvStatusReceived> context)

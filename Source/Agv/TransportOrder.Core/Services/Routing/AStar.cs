@@ -160,10 +160,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Routing
                     successor.H = EuclideanDistance(successor, destination);
                 }
 
-                if (!_openList.ContainsKey(successor.Node.Id))
-                {
-                    _openList.Add(successor.Node.Id, successor);
-                }
+                _openList.TryAdd(successor.Node.Id, successor);
             }
         }
 

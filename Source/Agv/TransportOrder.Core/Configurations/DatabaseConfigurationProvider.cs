@@ -75,16 +75,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations
                         continue;
                     }
 
-                    string? value = setting.Value;
-
-                    if (Data.ContainsKey(key))
-                    {
-                        Data[key] = value;
-                    }
-                    else
-                    {
-                        Data.Add(key, value);
-                    }
+                    Data.Add(key, setting.Value);
                 }
             }
             catch (Exception ex)
