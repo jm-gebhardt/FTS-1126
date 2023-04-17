@@ -17,8 +17,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos
         Guid CorrelationId,
         ActionState State,
         DateTime Created,
-        DateTime Started,
-        DateTime Ended,
+        DateTime? Started,
+        DateTime? Ended,
         Guid? AssignedAgv, 
         IEnumerable<AgvActionDto> Actions
     ) : CorrelatedBy<Guid>;
