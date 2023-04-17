@@ -46,6 +46,11 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
         /// Order has been cancelled
         /// </summary>
         public State Cancelled { get; private set; } = default!;
+
+        /// <summary>
+        /// Order has cancel failed
+        /// </summary>
+        public State CancelFailed { get; private set; } = default!;
         #endregion
 
         #region Events
@@ -142,7 +147,9 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
         /// <returns>Event Binding for HandleHostOrder</returns>
         private EventActivityBinder<HostOrderSaga, CreateHostOrder> SetCreateHostOrderHandler() =>
             When(CreateHostOrderEvent)
-                .Then(c => { _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId} received", nameof(CreateHostOrder), c.Message.OrderDetails.OrderId, c.Message.OrderDetails.CorrelationId); })
+                .Then(c => {
+                    _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId} received", nameof(CreateHostOrder), c.Message.OrderDetails.OrderId, c.Message.OrderDetails.CorrelationId);
+                })
                 .TransitionTo(Initial)
                 .Then(c => c.Publish(new ActionGroup(c.Saga.CorrelationId, GetPickDropActions(c.Saga))));
         #endregion
@@ -199,7 +206,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
                 .Then(c =>
                     _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId} received", nameof(c.Message), c.Saga.OrderId, c.Saga.CorrelationId)
                 )
-                .TransitionTo(Failed);
+                .TransitionTo(CancelFailed);
         #endregion
 
         #region Private Methods
