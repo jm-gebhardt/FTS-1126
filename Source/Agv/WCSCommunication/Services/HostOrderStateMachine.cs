@@ -199,8 +199,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
                     _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId} received", nameof(c.Message), c.Saga.OrderId, c.Saga.CorrelationId)
                 )
                 .Publish(c => new HostOrderCancelSucceeded(c.Saga.CorrelationId, c.Saga.OrderId))
-                .TransitionTo(Cancelled)
-                .Finalize();
+                .TransitionTo(Cancelled);
 
         private EventActivityBinder<HostOrderSaga, ActionCancelFailedEvent> SetActionCancelFailedEventHandler() =>
             When(ActionCancelFailedEvent)

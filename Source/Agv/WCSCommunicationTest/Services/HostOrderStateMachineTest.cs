@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using MassTransit;
 using Shouldly;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.Common.Messages;
@@ -7,7 +8,7 @@ using Gebhardt.StoreWare.Agv.WCSCommunication.Services;
 using Gebhardt.StoreWare.Agv.WCSCommunication.States;
 using Gebhardt.StoreWare.Agv.WCSCommunication.Messages;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
-using MassTransit;
+using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
 
 using TestFixture = Gebhardt.StoreWare.Agv.Common.Testing.StateMachineTestFixture<Gebhardt.StoreWare.Agv.WCSCommunication.Services.HostOrderStateMachine, Gebhardt.StoreWare.Agv.WCSCommunication.States.HostOrderSaga>;
 
@@ -44,6 +45,17 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services
             saga.CurrentState.ShouldBe(sagaState);
         }
 
+        private void CheckSagaStateTransition<TMessage>(TestFixture fixture, Guid correlationId, string sagaState, Action<TMessage>? verifyMessage = null) where TMessage : class, CorrelatedBy<Guid>
+        {
+            var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
+            saga.ShouldNotBeNull();
+            saga.CurrentState.ShouldBe(sagaState);
+
+            var message = fixture.TestHarness.Published.Select<TMessage>().FirstOrDefault()?.Context.Message;
+            message.ShouldNotBeNull();
+
+            verifyMessage?.Invoke(message);
+        }
         #endregion
 
         /// <summary>
@@ -117,13 +129,12 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services
             var saga = CreateHostOrderSaga(nameof(HostOrderStateMachine.Initial));
             var fixture = new TestFixture();
             fixture.Add(saga);
-            string agvId = "AGV001";
 
-            var message = await PublishAndConsume(fixture, new ActionStartedEvent(saga.PickActionGuid, saga.CorrelationId, agvId));
+            var message = await PublishAndConsume(fixture, new ActionStartedEvent(saga.PickActionGuid, saga.CorrelationId, "AGV001"));
             message.CorrelationId.ShouldBe(saga.PickActionGuid);
 
             // Check new saga state
-            CheckSagaState(fixture, saga.CorrelationId, nameof(HostOrderStateMachine.Started));
+            CheckSagaStateTransition<HostOrderStarted>(fixture, saga.CorrelationId, nameof(HostOrderStateMachine.Started));
         }
 
         [TestMethod]
@@ -146,9 +157,8 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services
             var saga = CreateHostOrderSaga(nameof(HostOrderStateMachine.Picked));
             var fixture = new TestFixture();
             fixture.Add(saga);
-            string agvId = "AGV001";
 
-            var message = await PublishAndConsume(fixture, new ActionStartedEvent(saga.DropActionGuid, saga.CorrelationId, agvId));
+            var message = await PublishAndConsume(fixture, new ActionStartedEvent(saga.DropActionGuid, saga.CorrelationId, "AGV001"));
             message.CorrelationId.ShouldBe(saga.DropActionGuid);
 
             // Check new saga state
@@ -166,14 +176,14 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services
             message.CorrelationId.ShouldBe(saga.DropActionGuid);
 
             // Check new saga state
-            CheckSagaState(fixture, saga.CorrelationId, nameof(HostOrderStateMachine.Final));
+            CheckSagaStateTransition<HostOrderHandlingSucceeded>(fixture, saga.CorrelationId, nameof(HostOrderStateMachine.Final));
         }
 
         [TestMethod]
-        [DataRow(nameof(HostOrderStateMachine.Initial))]
-        [DataRow(nameof(HostOrderStateMachine.Started))]
-        [DataRow(nameof(HostOrderStateMachine.Picked))]
-        public async Task Handle_ActionFailedEvent(string sagaState)
+        [DataRow(nameof(HostOrderStateMachine.Initial), HostOrderHandlingFailed.ErrorCode.InvalidOrderData)]
+        [DataRow(nameof(HostOrderStateMachine.Started), HostOrderHandlingFailed.ErrorCode.FailedByTransportLayer)]
+        [DataRow(nameof(HostOrderStateMachine.Picked), HostOrderHandlingFailed.ErrorCode.FailedByTransportLayer)]
+        public async Task Handle_ActionFailedEvent(string sagaState, HostOrderHandlingFailed.ErrorCode errorCode)
         {
             var saga = CreateHostOrderSaga(sagaState);
             var fixture = new TestFixture();
@@ -183,7 +193,9 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services
             message.CorrelationId.ShouldBe(saga.PickActionGuid);
 
             // Check new saga state
-            CheckSagaState(fixture, saga.CorrelationId, nameof(HostOrderStateMachine.Failed));
+            CheckSagaStateTransition<HostOrderHandlingFailed>(fixture, saga.CorrelationId, nameof(HostOrderStateMachine.Failed),
+                m => m.Error.ShouldBe(errorCode)
+            );
         }
 
         [TestMethod]
@@ -200,14 +212,14 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services
             message.CorrelationId.ShouldBe(saga.PickActionGuid);
 
             // Check new saga state
-            CheckSagaState(fixture, saga.CorrelationId, nameof(HostOrderStateMachine.Final));
+            CheckSagaStateTransition<HostOrderCancelSucceeded>(fixture, saga.CorrelationId, nameof(HostOrderStateMachine.Cancelled));
         }
 
         [TestMethod]
-        [DataRow(nameof(HostOrderStateMachine.Initial))]
-        [DataRow(nameof(HostOrderStateMachine.Started))]
-        [DataRow(nameof(HostOrderStateMachine.Picked))]
-        public async Task Handle_ActionCancelFailedEvent(string sagaState)
+        [DataRow(nameof(HostOrderStateMachine.Initial), HostOrderCancelFailed.ErrorCode.OrderDoesNotExist)]
+        [DataRow(nameof(HostOrderStateMachine.Started), HostOrderCancelFailed.ErrorCode.OrderAlreadyStarted)]
+        [DataRow(nameof(HostOrderStateMachine.Picked), HostOrderCancelFailed.ErrorCode.OrderAlreadyFinished)]
+        public async Task Handle_ActionCancelFailedEvent(string sagaState, HostOrderCancelFailed.ErrorCode errorCode)
         {
             var saga = CreateHostOrderSaga(sagaState);
             var fixture = new TestFixture();
@@ -217,7 +229,9 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services
             message.CorrelationId.ShouldBe(saga.PickActionGuid);
 
             // Check new saga state
-            CheckSagaState(fixture, saga.CorrelationId, nameof(HostOrderStateMachine.Failed));
+            CheckSagaStateTransition<HostOrderCancelFailed>(fixture, saga.CorrelationId, nameof(HostOrderStateMachine.CancelFailed),
+                m => m.Error.ShouldBe(errorCode)
+            );
         }
     }
 }
