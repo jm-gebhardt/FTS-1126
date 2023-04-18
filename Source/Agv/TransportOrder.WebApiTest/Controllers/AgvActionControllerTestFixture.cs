@@ -17,6 +17,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
     {
         public AgvActionControllerTestFixture<TRequest, TRequestHandler> UseDefaultServices()
         {
+            
             AddServices(sc => sc.AddTransient(_ => GetAgvActionRegistry().Object));
             return this;
         }
@@ -32,7 +33,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
                     new ActionContext(
                         new DefaultHttpContext(),
                         new RouteData(),
-                        new ControllerActionDescriptor()))
+                        new ControllerActionDescriptor()
+                        )
+                    )
             };
             return controller;
         }
@@ -41,7 +44,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
         {
             var registry = new Mock<IAgvActionRegistry>();
             
-            // TODO: registry must return something
             return registry;
         }
     }

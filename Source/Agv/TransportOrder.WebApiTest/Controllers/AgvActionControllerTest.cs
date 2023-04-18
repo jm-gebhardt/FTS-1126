@@ -10,7 +10,5 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
         {
             
         }
-
-        
     }
 }
