@@ -1,0 +1,1307 @@
+{
+    "annotations": {
+        "list": [
+            {
+                "builtIn": 1,
+                "datasource": {
+                    "type": "grafana",
+                    "uid": "-- Grafana --"
+                },
+                "enable": true,
+                "hide": true,
+                "iconColor": "rgba(0, 211, 255, 1)",
+                "name": "Annotations & Alerts",
+                "target": {
+                    "limit": 100,
+                    "matchAny": false,
+                    "tags": [],
+                    "type": "dashboard"
+                },
+                "type": "dashboard"
+            }
+        ]
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "id": 8,
+    "iteration": 1682578889858,
+    "links": [],
+    "liveNow": false,
+    "panels": [
+        {
+            "collapsed": false,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 0
+            },
+            "id": 8,
+            "panels": [],
+            "title": "Regular Consumed Messages",
+            "type": "row"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "fixedColor": "semi-dark-green",
+                        "mode": "fixed"
+                    },
+                    "displayName": "${__series.name}",
+                    "mappings": [],
+                    "min": 0,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 80
+                            }
+                        ]
+                    },
+                    "unit": "Messages"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 16,
+                "w": 11,
+                "x": 0,
+                "y": 1
+            },
+            "id": 14,
+            "options": {
+                "displayMode": "basic",
+                "minVizHeight": 10,
+                "minVizWidth": 0,
+                "orientation": "horizontal",
+                "reduceOptions": {
+                    "calcs": [],
+                    "fields": "",
+                    "values": true
+                },
+                "showUnfilled": true,
+                "text": {
+                    "titleSize": 18
+                }
+            },
+            "pluginVersion": "9.0.2",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "PBFA97CFB590B2093"
+                    },
+                    "editorMode": "code",
+                    "exemplar": false,
+                    "expr": "sort_desc(increase(mt_consume_total{consumer_type=~\"$Consumer\", job=~\"$Service\"}[$__range])) > 0 and topk($RegularTopK, increase(mt_consume_total[$__range]))",
+                    "format": "time_series",
+                    "instant": true,
+                    "interval": "",
+                    "legendFormat": "{{message_type}} ({{consumer_type}})",
+                    "range": false,
+                    "refId": "A"
+                }
+            ],
+            "title": "No. of Messages consumed ordered by Consumer",
+            "transformations": [],
+            "transparent": true,
+            "type": "bargauge"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "axisLabel": "",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "drawStyle": "line",
+                        "fillOpacity": 0,
+                        "gradientMode": "none",
+                        "hideFrom": {
+                            "legend": false,
+                            "tooltip": false,
+                            "viz": false
+                        },
+                        "lineInterpolation": "smooth",
+                        "lineWidth": 1,
+                        "pointSize": 5,
+                        "scaleDistribution": {
+                            "type": "linear"
+                        },
+                        "showPoints": "never",
+                        "spanNulls": false,
+                        "stacking": {
+                            "group": "A",
+                            "mode": "none"
+                        },
+                        "thresholdsStyle": {
+                            "mode": "off"
+                        }
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 80
+                            }
+                        ]
+                    },
+                    "unit": "Msg/s"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 16,
+                "w": 12,
+                "x": 11,
+                "y": 1
+            },
+            "id": 12,
+            "options": {
+                "legend": {
+                    "calcs": [],
+                    "displayMode": "table",
+                    "placement": "right"
+                },
+                "tooltip": {
+                    "mode": "single",
+                    "sort": "none"
+                }
+            },
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "PBFA97CFB590B2093"
+                    },
+                    "editorMode": "code",
+                    "exemplar": false,
+                    "expr": "rate(mt_consume_duration_seconds_count{consumer_type=~\"$Consumer\", job=~\"$Service\"}[$__rate_interval]) > 0",
+                    "hide": false,
+                    "instant": false,
+                    "interval": "1m",
+                    "legendFormat": "{{message_type}} ({{consumer_type}}) [{{job}}]",
+                    "range": true,
+                    "refId": "C"
+                }
+            ],
+            "title": "Rate of consumed Messages ordered by Message",
+            "transparent": true,
+            "type": "timeseries"
+        },
+        {
+            "collapsed": false,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 17
+            },
+            "id": 26,
+            "panels": [],
+            "title": "Regular Publish Messages",
+            "type": "row"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "fixedColor": "semi-dark-green",
+                        "mode": "fixed"
+                    },
+                    "displayName": "${__series.name}",
+                    "mappings": [],
+                    "min": 0,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 80
+                            }
+                        ]
+                    },
+                    "unit": "Messages"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 16,
+                "w": 11,
+                "x": 0,
+                "y": 18
+            },
+            "id": 22,
+            "options": {
+                "displayMode": "basic",
+                "minVizHeight": 10,
+                "minVizWidth": 0,
+                "orientation": "horizontal",
+                "reduceOptions": {
+                    "calcs": [],
+                    "fields": "",
+                    "values": true
+                },
+                "showUnfilled": true,
+                "text": {
+                    "titleSize": 18
+                }
+            },
+            "pluginVersion": "9.0.2",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "PBFA97CFB590B2093"
+                    },
+                    "editorMode": "code",
+                    "exemplar": false,
+                    "expr": "sort_desc(increase(mt_publish_total{job=~\"$Service\"}[$__range])) > 0 and topk($RegularTopK, increase(mt_publish_total[$__range]))",
+                    "format": "time_series",
+                    "instant": true,
+                    "interval": "",
+                    "legendFormat": "{{message_type}}",
+                    "range": false,
+                    "refId": "A"
+                }
+            ],
+            "title": "No. of Messages published ordered by Message",
+            "transformations": [],
+            "transparent": true,
+            "type": "bargauge"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "axisLabel": "",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "drawStyle": "line",
+                        "fillOpacity": 0,
+                        "gradientMode": "none",
+                        "hideFrom": {
+                            "legend": false,
+                            "tooltip": false,
+                            "viz": false
+                        },
+                        "lineInterpolation": "smooth",
+                        "lineWidth": 1,
+                        "pointSize": 5,
+                        "scaleDistribution": {
+                            "type": "linear"
+                        },
+                        "showPoints": "never",
+                        "spanNulls": false,
+                        "stacking": {
+                            "group": "A",
+                            "mode": "none"
+                        },
+                        "thresholdsStyle": {
+                            "mode": "off"
+                        }
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 80
+                            }
+                        ]
+                    },
+                    "unit": "Msg/s"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 16,
+                "w": 12,
+                "x": 12,
+                "y": 18
+            },
+            "id": 24,
+            "options": {
+                "legend": {
+                    "calcs": [],
+                    "displayMode": "table",
+                    "placement": "right"
+                },
+                "tooltip": {
+                    "mode": "single",
+                    "sort": "none"
+                }
+            },
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "PBFA97CFB590B2093"
+                    },
+                    "editorMode": "code",
+                    "exemplar": false,
+                    "expr": "rate(mt_publish_total{job=~\"$Service\"}[$__rate_interval]) > 0",
+                    "hide": false,
+                    "instant": false,
+                    "interval": "1m",
+                    "legendFormat": "{{message_type}} [{{job}}]",
+                    "range": true,
+                    "refId": "C"
+                }
+            ],
+            "title": "Rate of published Messages ordered by Message",
+            "transparent": true,
+            "type": "timeseries"
+        },
+        {
+            "collapsed": false,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 34
+            },
+            "id": 34,
+            "panels": [],
+            "title": "Regular Sent Messages",
+            "type": "row"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "fixedColor": "semi-dark-green",
+                        "mode": "fixed"
+                    },
+                    "displayName": "${__series.name}",
+                    "mappings": [],
+                    "min": 0,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 80
+                            }
+                        ]
+                    },
+                    "unit": "Messages"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 16,
+                "w": 11,
+                "x": 0,
+                "y": 35
+            },
+            "id": 36,
+            "options": {
+                "displayMode": "basic",
+                "minVizHeight": 10,
+                "minVizWidth": 0,
+                "orientation": "horizontal",
+                "reduceOptions": {
+                    "calcs": [],
+                    "fields": "",
+                    "values": true
+                },
+                "showUnfilled": true,
+                "text": {
+                    "titleSize": 18
+                }
+            },
+            "pluginVersion": "9.0.2",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "PBFA97CFB590B2093"
+                    },
+                    "editorMode": "code",
+                    "exemplar": false,
+                    "expr": "sort_desc(increase(mt_send_total{job=~\"$Service\"}[$__range])) > 0 and topk($RegularTopK, increase(mt_send_total[$__range]))",
+                    "format": "time_series",
+                    "instant": true,
+                    "interval": "",
+                    "legendFormat": "{{message_type}}",
+                    "range": false,
+                    "refId": "A"
+                }
+            ],
+            "title": "No. of Messages sent ordered by Message",
+            "transformations": [],
+            "transparent": true,
+            "type": "bargauge"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "axisLabel": "",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "drawStyle": "line",
+                        "fillOpacity": 0,
+                        "gradientMode": "none",
+                        "hideFrom": {
+                            "legend": false,
+                            "tooltip": false,
+                            "viz": false
+                        },
+                        "lineInterpolation": "smooth",
+                        "lineWidth": 1,
+                        "pointSize": 5,
+                        "scaleDistribution": {
+                            "type": "linear"
+                        },
+                        "showPoints": "never",
+                        "spanNulls": false,
+                        "stacking": {
+                            "group": "A",
+                            "mode": "none"
+                        },
+                        "thresholdsStyle": {
+                            "mode": "off"
+                        }
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 80
+                            }
+                        ]
+                    },
+                    "unit": "Msg/s"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 16,
+                "w": 12,
+                "x": 11,
+                "y": 35
+            },
+            "id": 38,
+            "options": {
+                "legend": {
+                    "calcs": [],
+                    "displayMode": "table",
+                    "placement": "right"
+                },
+                "tooltip": {
+                    "mode": "single",
+                    "sort": "none"
+                }
+            },
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "PBFA97CFB590B2093"
+                    },
+                    "editorMode": "code",
+                    "exemplar": false,
+                    "expr": "rate(mt_send_total{job=~\"$Service\"}[$__rate_interval]) > 0",
+                    "hide": false,
+                    "instant": false,
+                    "interval": "1m",
+                    "legendFormat": "{{message_type}} [{{job}}]",
+                    "range": true,
+                    "refId": "C"
+                }
+            ],
+            "title": "Rate of sent Messages ordered by Message",
+            "transparent": true,
+            "type": "timeseries"
+        },
+        {
+            "collapsed": false,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 51
+            },
+            "id": 4,
+            "panels": [],
+            "title": "Fault Consumed Messages",
+            "type": "row"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+            },
+            "description": "",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "fixedColor": "dark-red",
+                        "mode": "fixed"
+                    },
+                    "displayName": "${__series.name}",
+                    "mappings": [],
+                    "min": 0,
+                    "thresholds": {
+                        "mode": "percentage",
+                        "steps": [
+                            {
+                                "color": "dark-red",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 80
+                            }
+                        ]
+                    },
+                    "unit": "Messages"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 11,
+                "x": 0,
+                "y": 52
+            },
+            "id": 2,
+            "options": {
+                "displayMode": "basic",
+                "minVizHeight": 8,
+                "minVizWidth": 0,
+                "orientation": "horizontal",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "showUnfilled": true,
+                "text": {
+                    "titleSize": 18
+                }
+            },
+            "pluginVersion": "9.0.2",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "PBFA97CFB590B2093"
+                    },
+                    "editorMode": "code",
+                    "exemplar": false,
+                    "expr": "increase(mt_consume_fault_total{job=~\"$Service\"}[$__range]) > 0 and topk($FaultTopK, increase(mt_consume_fault_total[$__range]))",
+                    "hide": false,
+                    "instant": true,
+                    "legendFormat": "{{exception_type}} - {{message_type}} ({{consumer_type}}) [{{job}}]",
+                    "range": false,
+                    "refId": "B"
+                }
+            ],
+            "title": "Consumed Fault Messages",
+            "transparent": true,
+            "type": "bargauge"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "continuous-BlYlRd"
+                    },
+                    "custom": {
+                        "axisLabel": "",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "drawStyle": "line",
+                        "fillOpacity": 0,
+                        "gradientMode": "none",
+                        "hideFrom": {
+                            "legend": false,
+                            "tooltip": false,
+                            "viz": false
+                        },
+                        "lineInterpolation": "smooth",
+                        "lineStyle": {
+                            "fill": "solid"
+                        },
+                        "lineWidth": 1,
+                        "pointSize": 8,
+                        "scaleDistribution": {
+                            "type": "linear"
+                        },
+                        "showPoints": "never",
+                        "spanNulls": false,
+                        "stacking": {
+                            "group": "A",
+                            "mode": "none"
+                        },
+                        "thresholdsStyle": {
+                            "mode": "off"
+                        }
+                    },
+                    "mappings": [],
+                    "min": 0,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 80
+                            }
+                        ]
+                    },
+                    "unit": "Msg/s"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 11,
+                "y": 52
+            },
+            "id": 6,
+            "options": {
+                "legend": {
+                    "calcs": [],
+                    "displayMode": "table",
+                    "placement": "right"
+                },
+                "tooltip": {
+                    "mode": "single",
+                    "sort": "none"
+                }
+            },
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "PBFA97CFB590B2093"
+                    },
+                    "editorMode": "code",
+                    "expr": "rate(mt_consume_fault_total{job=~\"$Service\"}[$__rate_interval]) > 0",
+                    "interval": "1m",
+                    "legendFormat": "{{exception_type}} - {{message_type}} ({{consumer_type}}) [{{job}}]",
+                    "range": true,
+                    "refId": "A"
+                }
+            ],
+            "title": "Rate Fault Consumed Messages",
+            "transparent": true,
+            "type": "timeseries"
+        },
+        {
+            "collapsed": false,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 60
+            },
+            "id": 16,
+            "panels": [],
+            "title": "Fault Publish Messages",
+            "type": "row"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+            },
+            "description": "",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "fixedColor": "dark-red",
+                        "mode": "fixed"
+                    },
+                    "displayName": "${__series.name}",
+                    "mappings": [],
+                    "min": 0,
+                    "thresholds": {
+                        "mode": "percentage",
+                        "steps": [
+                            {
+                                "color": "dark-red",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 80
+                            }
+                        ]
+                    },
+                    "unit": "Messages"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 11,
+                "x": 0,
+                "y": 61
+            },
+            "id": 18,
+            "options": {
+                "displayMode": "basic",
+                "minVizHeight": 10,
+                "minVizWidth": 0,
+                "orientation": "horizontal",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "showUnfilled": true
+            },
+            "pluginVersion": "9.0.2",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "PBFA97CFB590B2093"
+                    },
+                    "editorMode": "code",
+                    "expr": "increase(mt_publish_fault_total{job=~\"$Service\"}[$__range]) > 0 and topk($FaultTopK, increase(mt_publish_fault_total[$__range]))",
+                    "hide": false,
+                    "legendFormat": "{{exception_type}} - {{message_type}} ({{consumer_type}}) [{{job}}]",
+                    "range": true,
+                    "refId": "B"
+                }
+            ],
+            "title": "Publish Fault Messages",
+            "transparent": true,
+            "type": "bargauge"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "continuous-BlYlRd"
+                    },
+                    "custom": {
+                        "axisLabel": "",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "drawStyle": "line",
+                        "fillOpacity": 0,
+                        "gradientMode": "none",
+                        "hideFrom": {
+                            "legend": false,
+                            "tooltip": false,
+                            "viz": false
+                        },
+                        "lineInterpolation": "smooth",
+                        "lineStyle": {
+                            "fill": "solid"
+                        },
+                        "lineWidth": 1,
+                        "pointSize": 8,
+                        "scaleDistribution": {
+                            "type": "linear"
+                        },
+                        "showPoints": "never",
+                        "spanNulls": false,
+                        "stacking": {
+                            "group": "A",
+                            "mode": "none"
+                        },
+                        "thresholdsStyle": {
+                            "mode": "off"
+                        }
+                    },
+                    "mappings": [],
+                    "min": 0,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 80
+                            }
+                        ]
+                    },
+                    "unit": "Msg/s"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 11,
+                "y": 61
+            },
+            "id": 20,
+            "options": {
+                "legend": {
+                    "calcs": [],
+                    "displayMode": "table",
+                    "placement": "right"
+                },
+                "tooltip": {
+                    "mode": "single",
+                    "sort": "none"
+                }
+            },
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "PBFA97CFB590B2093"
+                    },
+                    "editorMode": "code",
+                    "expr": "rate(mt_publish_fault_total{job=~\"$Service\"}[$__rate_interval]) > 0",
+                    "interval": "1m",
+                    "legendFormat": "{{exception_type}} - {{message_type}} ({{consumer_type}}) [{{job}}]",
+                    "range": true,
+                    "refId": "A"
+                }
+            ],
+            "title": "Rate Fault Published Messages",
+            "transparent": true,
+            "type": "timeseries"
+        },
+        {
+            "collapsed": false,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 69
+            },
+            "id": 28,
+            "panels": [],
+            "title": "Fault Sent Messages",
+            "type": "row"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+            },
+            "description": "",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "fixedColor": "dark-red",
+                        "mode": "fixed"
+                    },
+                    "displayName": "${__series.name}",
+                    "mappings": [],
+                    "min": 0,
+                    "thresholds": {
+                        "mode": "percentage",
+                        "steps": [
+                            {
+                                "color": "dark-red",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 80
+                            }
+                        ]
+                    },
+                    "unit": "Messages"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 11,
+                "x": 0,
+                "y": 70
+            },
+            "id": 30,
+            "options": {
+                "displayMode": "basic",
+                "minVizHeight": 10,
+                "minVizWidth": 0,
+                "orientation": "horizontal",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "showUnfilled": true,
+                "text": {
+                    "titleSize": 18
+                }
+            },
+            "pluginVersion": "9.0.2",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "PBFA97CFB590B2093"
+                    },
+                    "editorMode": "code",
+                    "exemplar": false,
+                    "expr": "increase(mt_send_fault_total{job=~\"$Service\"}[$__range]) > 0 and topk($FaultTopK, increase(mt_send_fault_total[$__range]))",
+                    "hide": false,
+                    "instant": true,
+                    "legendFormat": "{{exception_type}} - {{message_type}} ({{consumer_type}}) [{{job}}]",
+                    "range": false,
+                    "refId": "B"
+                }
+            ],
+            "title": "Sent Fault Messages",
+            "transparent": true,
+            "type": "bargauge"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "continuous-BlYlRd"
+                    },
+                    "custom": {
+                        "axisLabel": "",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "drawStyle": "line",
+                        "fillOpacity": 0,
+                        "gradientMode": "none",
+                        "hideFrom": {
+                            "legend": false,
+                            "tooltip": false,
+                            "viz": false
+                        },
+                        "lineInterpolation": "smooth",
+                        "lineStyle": {
+                            "fill": "solid"
+                        },
+                        "lineWidth": 1,
+                        "pointSize": 8,
+                        "scaleDistribution": {
+                            "type": "linear"
+                        },
+                        "showPoints": "never",
+                        "spanNulls": false,
+                        "stacking": {
+                            "group": "A",
+                            "mode": "none"
+                        },
+                        "thresholdsStyle": {
+                            "mode": "off"
+                        }
+                    },
+                    "mappings": [],
+                    "min": 0,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 80
+                            }
+                        ]
+                    },
+                    "unit": "Msg/s"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 11,
+                "y": 70
+            },
+            "id": 32,
+            "options": {
+                "legend": {
+                    "calcs": [],
+                    "displayMode": "table",
+                    "placement": "right"
+                },
+                "tooltip": {
+                    "mode": "single",
+                    "sort": "none"
+                }
+            },
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "PBFA97CFB590B2093"
+                    },
+                    "editorMode": "code",
+                    "expr": "rate(mt_send_fault_total{job=~\"$Service\"}[$__rate_interval]) > 0",
+                    "interval": "1m",
+                    "legendFormat": "{{exception_type}} - {{message_type}} ({{consumer_type}}) [{{job}}]",
+                    "range": true,
+                    "refId": "A"
+                }
+            ],
+            "title": "Rate Fault Sent Messages",
+            "transparent": true,
+            "type": "timeseries"
+        }
+    ],
+    "refresh": "5s",
+    "schemaVersion": 36,
+    "style": "dark",
+    "tags": [],
+    "templating": {
+        "list": [
+            {
+                "current": {
+                    "selected": false,
+                    "text": "10",
+                    "value": "10"
+                },
+                "hide": 0,
+                "includeAll": false,
+                "multi": false,
+                "name": "RegularTopK",
+                "options": [
+                    {
+                        "selected": false,
+                        "text": "3",
+                        "value": "3"
+                    },
+                    {
+                        "selected": false,
+                        "text": "5",
+                        "value": "5"
+                    },
+                    {
+                        "selected": true,
+                        "text": "10",
+                        "value": "10"
+                    },
+                    {
+                        "selected": false,
+                        "text": "20",
+                        "value": "20"
+                    },
+                    {
+                        "selected": false,
+                        "text": "50",
+                        "value": "50"
+                    },
+                    {
+                        "selected": false,
+                        "text": "100",
+                        "value": "100"
+                    }
+                ],
+                "query": "3,5,10,20,50,100",
+                "queryValue": "",
+                "skipUrlSync": false,
+                "type": "custom"
+            },
+            {
+                "current": {
+                    "selected": false,
+                    "text": "3",
+                    "value": "3"
+                },
+                "hide": 0,
+                "includeAll": false,
+                "multi": false,
+                "name": "FaultTopK",
+                "options": [
+                    {
+                        "selected": true,
+                        "text": "3",
+                        "value": "3"
+                    },
+                    {
+                        "selected": false,
+                        "text": "5",
+                        "value": "5"
+                    },
+                    {
+                        "selected": false,
+                        "text": "10",
+                        "value": "10"
+                    },
+                    {
+                        "selected": false,
+                        "text": "20",
+                        "value": "20"
+                    },
+                    {
+                        "selected": false,
+                        "text": "50",
+                        "value": "50"
+                    },
+                    {
+                        "selected": false,
+                        "text": "100",
+                        "value": "100"
+                    }
+                ],
+                "query": "3,5,10,20,50,100",
+                "queryValue": "",
+                "skipUrlSync": false,
+                "type": "custom"
+            },
+            {
+                "current": {
+                    "selected": false,
+                    "text": "All",
+                    "value": "$__all"
+                },
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "PBFA97CFB590B2093"
+                },
+                "definition": "label_values(consumer_type)",
+                "hide": 0,
+                "includeAll": true,
+                "multi": false,
+                "name": "Consumer",
+                "options": [],
+                "query": {
+                    "query": "label_values(consumer_type)",
+                    "refId": "StandardVariableQuery"
+                },
+                "refresh": 2,
+                "regex": "",
+                "skipUrlSync": false,
+                "sort": 0,
+                "type": "query"
+            },
+            {
+                "allValue": "",
+                "current": {
+                    "selected": true,
+                    "text": [
+                        "All"
+                    ],
+                    "value": [
+                        "$__all"
+                    ]
+                },
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "PBFA97CFB590B2093"
+                },
+                "definition": "label_values(job)",
+                "hide": 0,
+                "includeAll": true,
+                "multi": true,
+                "name": "Service",
+                "options": [],
+                "query": {
+                    "query": "label_values(job)",
+                    "refId": "StandardVariableQuery"
+                },
+                "refresh": 2,
+                "regex": "[A-Z].*",
+                "skipUrlSync": false,
+                "sort": 1,
+                "type": "query"
+            }
+        ]
+    },
+    "time": {
+        "from": "now-1h",
+        "to": "now"
+    },
+    "timepicker": {},
+    "timezone": "",
+    "title": "ConsumerMonitor",
+    "uid": "SjAJpJE4k",
+    "version": 12,
+    "weekStart": ""
+}
