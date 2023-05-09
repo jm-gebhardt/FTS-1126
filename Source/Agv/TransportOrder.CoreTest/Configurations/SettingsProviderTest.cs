@@ -1,7 +1,4 @@
-using Gebhardt.StoreWare.Agv.Common.Configurations.Models;
 using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Models;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 using static Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Configurations.ConfigurationProviderTestFixture;
@@ -11,70 +8,75 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Configurations
     [TestClass]
     public class SettingsProviderTest
     {
+        
         [TestMethod]
-        public void GetSettings_ShouldReturnDefaultAgvSettings_WhenUsingDefaultConfigurationProvider()
+        public void GetSettings_WhenUsingDefaultConfigurationProvider_ReturnDefaultSettings()
         {
             var testFixture = new ConfigurationProviderTestFixture()
-                .AddSettingsProvider<AgvSettings>()
+                .AddSettingsProvider<TestSettings>()
                 .AddDefaultConfigurationProvider()
                 .Build();
 
-            ISettingsProvider<AgvSettings> settingsProvider = testFixture.GetSettingsProvider<AgvSettings>();
+            ISettingsProvider<TestSettings> settingsProvider = testFixture.GetSettingsProvider<TestSettings>();
 
-            var expectedAgvSettings = new AgvSettings();
-            var actualAgvSettings = settingsProvider.GetSettings();
+            var expectedSettings = new TestSettings();
+            var actualSettings = settingsProvider.GetSettings();
 
-            actualAgvSettings.ShouldNotBeNull();
-            actualAgvSettings.AgvOfflineTimeoutMsWhileBusy.ShouldBe(expectedAgvSettings.AgvOfflineTimeoutMsWhileBusy);
-            actualAgvSettings.AgvOfflineTimeoutMsWhileIdle.ShouldBe(expectedAgvSettings.AgvOfflineTimeoutMsWhileIdle);
+            actualSettings.ShouldNotBeNull();
+            actualSettings.BoolValue.ShouldBe(expectedSettings.BoolValue);
+            actualSettings.IntValue.ShouldBe(expectedSettings.IntValue);
+            TestSettings.EnumValue.ShouldBe(TestSettings.EnumValue);
         }
-
+        
         [TestMethod]
-        public async Task GetSettings_ShouldReturnDatabaseAgvSettings_WhenUsingDatabaseConfigurationProvider()
+        public void GetSettings_DefaultAndEmptyDatabaseRegistered_ReturnDefaultSettings()
         {
             var testFixture = new ConfigurationProviderTestFixture()
-                .AddSettingsProvider<AgvSettings>()
-                .AddDbSetSagaDbContext()
+                .AddSettingsProvider<TestSettings>()
+                .AddDefaultConfigurationProvider()
+                .AddDatabase()
                 .AddDatabaseConfigurationProvider()
                 .Build();
 
-            IDbContextFactory<DbSetSagaPersistenceDbContext> dbContextFactory = testFixture.DbSetSagaPersistenceDbContextFactory;
-            await using var ctx = await dbContextFactory.CreateDbContextAsync();
-            string agvOfflineTimeoutMsWhileBusyKey = $"{nameof(AgvSettings)}:{nameof(AgvSettings.AgvOfflineTimeoutMsWhileBusy)}";
+            ISettingsProvider<TestSettings> settingsProvider = testFixture.GetSettingsProvider<TestSettings>();
 
-            await UpdateConfigurationSettingAsync(ctx, agvOfflineTimeoutMsWhileBusyKey, "123", nameof(AgvSettings));
+            var expectedSettings = new TestSettings();
+            var actualSettings = settingsProvider.GetSettings();
 
-            ISettingsProvider<AgvSettings> settingsProvider = testFixture.GetSettingsProvider<AgvSettings>();
-
-            var startedTime = DateTime.Now;
-            var timeout = TimeSpan.FromMilliseconds(1000);
-            bool exist;
-            do
-            {
-                exist = settingsProvider.DoTheSettingsExist();
-            } while (!exist && DateTime.Now < startedTime + timeout);
-            exist.ShouldBeTrue();
-
-            var agvSettings = settingsProvider.GetSettings();
-            agvSettings.ShouldNotBeNull();
-            agvSettings.AgvOfflineTimeoutMsWhileBusy.ShouldBe(123);
+            actualSettings.ShouldNotBeNull();
+            actualSettings.BoolValue.ShouldBe(expectedSettings.BoolValue);
+            actualSettings.IntValue.ShouldBe(expectedSettings.IntValue);
+            TestSettings.EnumValue.ShouldBe(TestSettings.EnumValue);
         }
-
-        private static async Task UpdateConfigurationSettingAsync(DbSetSagaPersistenceDbContext ctx, string key, string value, string configurationType)
+        
+        [TestMethod]
+        public async Task GetSettings_DefaultAndDatabaseRegistered_DatabaseSettingOverrides()
         {
-            var configuration = ctx.ConfigurationSettings.FirstOrDefault(c => c.Key == key);
+            var testFixture = new ConfigurationProviderTestFixture()
+                .AddSettingsProvider<TestSettings>()
+                .AddDefaultConfigurationProvider()
+                .AddDatabase()
+                .AddDatabaseConfigurationProvider()
+                .Build();
 
-            if (configuration == null)
-            {
-                await ctx.ConfigurationSettings.AddAsync(new ConfigurationSetting { Key = key, Value = value, ConfigurationType = configurationType });
-            }
-            else
-            {
-                configuration.Value = value;
-                ctx.ConfigurationSettings.Update(configuration);
-            }
+            ISettingsProvider<TestSettings> settingsProvider = testFixture.GetSettingsProvider<TestSettings>();
 
-            await ctx.SaveChangesAsync();
+            var expectedSettings = new TestSettings();
+            var actualSettings = settingsProvider.GetSettings();
+
+            actualSettings.ShouldNotBeNull();
+            actualSettings.BoolValue.ShouldBe(expectedSettings.BoolValue);
+            actualSettings.IntValue.ShouldBe(expectedSettings.IntValue);
+            TestSettings.EnumValue.ShouldBe(TestSettings.EnumValue);
+
+            await testFixture.UpdateConfigurationSettingAsync($"{nameof(TestSettings)}:{nameof(TestSettings.BoolValue)}", false.ToString(), nameof(TestSettings));
+       
+            var updatedSettings = settingsProvider.GetSettings();
+
+            updatedSettings.ShouldNotBeNull();
+            updatedSettings.BoolValue.ShouldBe(false);
+            updatedSettings.IntValue.ShouldBe(expectedSettings.IntValue);
+            TestSettings.EnumValue.ShouldBe(TestSettings.EnumValue);
         }
     }
 }

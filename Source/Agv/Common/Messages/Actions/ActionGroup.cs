@@ -14,17 +14,17 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
         /// <summary>
         /// List of actions
         /// </summary>
-        public List<AgvAction> ActionList { get; }
+        public List<AgvAction> Actions { get; }
 
         /// <summary>
         /// Generating an instance of <see cref="ActionGroup"/>
         /// </summary>
         /// <param name="correlationId"></param>
-        /// <param name="actionList"></param>
-        public ActionGroup(Guid correlationId, List<AgvAction> actionList)
+        /// <param name="actions"></param>
+        public ActionGroup(Guid correlationId, List<AgvAction> actions)
         {
             CorrelationId = correlationId;
-            ActionList = actionList;
+            Actions = actions;
         }
     }
 }

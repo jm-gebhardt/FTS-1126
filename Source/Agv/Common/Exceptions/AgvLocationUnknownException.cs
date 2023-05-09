@@ -9,6 +9,7 @@ public class AgvLocationUnknownException : Exception
 {
     /// <see cref="AgvLocationUnknownException"/>>
     /// <param name="agv">The Agv where the LastNodeId is null</param>
+    [JetBrains.Annotations.UsedImplicitly]
     public AgvLocationUnknownException(IAgv agv) : base($"Last node of Agv: {agv} is unknown")
     {
         

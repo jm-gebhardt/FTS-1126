@@ -1,3 +1,5 @@
+using JetBrains.Annotations;
+
 namespace Gebhardt.StoreWare.Agv.Common.Configurations
 {
     /// <summary>
@@ -22,6 +24,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Configurations
         /// Let the EntityChangeObserver know an entity has changed.
         /// </summary>
         /// <param name="e">Event arguments for events relating to tracked Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntrys.</param>
+        [UsedImplicitly]
         public void OnChanged(EventArgs e)
         {
             ThreadPool.QueueUserWorkItem(_ => Changed?.Invoke(this, e));

@@ -1,10 +1,10 @@
-using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Commands;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.Extensions.DependencyInjection;
-using Moq;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.WCSCommunication.CmdOptions;
+using Gebhardt.StoreWare.Agv.WCSCommunication.Messages;
 using Gebhardt.StoreWare.Agv.WCSCommunication.Services;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services
@@ -31,7 +31,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services
                 });
             });
             await fixture.Pollable.Poll(It.IsAny<CancellationToken>());
-            (await fixture.TestHarness.Published.Any<HandleHostOrder>()).ShouldBeTrue();
+            (await fixture.TestHarness.Published.Any<CreateHostOrder>()).ShouldBeTrue();
         }
     }
 }

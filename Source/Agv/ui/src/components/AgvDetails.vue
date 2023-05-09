@@ -101,9 +101,9 @@ let actionItems: ComputedRef<ActionItem<IAgv>[]> = computed(() => {
   return [
     // Actions
     {
-      label: 'Set Idle',
+      label: 'Unlock',
       data: props.modelValue,
-      action: setAgvIdle
+      action: unlockAgv
     },
     {
       label: 'Lock',
@@ -122,7 +122,7 @@ let agvImagePath: ComputedRef<string | undefined> = computed(() => {
   return import.meta.env.VITE_BASE_PATH + props.agvData?.model + '.png'
 })
 
-function setAgvIdle(agv: IAgv | null): void {
+function unlockAgv(agv: IAgv | null): void {
   if (agv === null) return
 
   const $confirm = useConfirm()
@@ -133,7 +133,7 @@ function setAgvIdle(agv: IAgv | null): void {
       // According to the balm-ui documentation 'result' should be a boolean but in the node module code it's declared as a void
       // During runtime it actually is a boolean, so we need to cast it
       if (result as boolean) {
-        AgvService.setAgvIdle(agv.correlationId)
+        AgvService.unlockAgv(agv.correlationId)
       }
     })
 }

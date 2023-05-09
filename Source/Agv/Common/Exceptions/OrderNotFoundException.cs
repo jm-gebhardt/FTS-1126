@@ -5,6 +5,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Exceptions;
 /// <summary>
 /// Order not found
 /// </summary>
+[JetBrains.Annotations.UsedImplicitly]
 public class OrderNotFoundException : NotFoundException
 {
     /// <summary>

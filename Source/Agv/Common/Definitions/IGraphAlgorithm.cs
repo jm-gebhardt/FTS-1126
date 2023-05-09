@@ -88,5 +88,14 @@
         /// <returns>Returns the route costs of the best route. When no route exists null is returned.</returns>
         [JetBrains.Annotations.PublicAPI]
         public Route? CalculateRoute(string currentNode, string source, string destination);
+
+        /// <summary>
+        /// Calculate best route for the given <paramref name="waypoints"/> in the graph>
+        /// Meaning it determines the route from the first element to the next and ends at the last element
+        /// </summary>
+        /// <param name="waypoints">List of Node IDs that define the waypoints that need to be traversed on the given order</param>
+        /// <returns>Returns the full aggregated route or null when no path found</returns>
+        [JetBrains.Annotations.PublicAPI]
+        public Route? CalculateRoute(string[] waypoints);
     }
 }

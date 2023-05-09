@@ -2,7 +2,6 @@ using Gebhardt.StoreWare.Agv.Common.Configurations.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Configurations
 {
     [TestClass]
@@ -12,9 +11,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Configurations
         public async Task ConfigurationSettings_ShouldPopulateDefaultConfigurationData_WhenUsingDatabaseConfigurationProvider()
         {
             var testFixture = new ConfigurationProviderTestFixture()
-                                .AddDbSetSagaDbContext()
-                                .AddDatabaseConfigurationProvider()
-                                .Build();
+                .AddSettingsProvider<ConfigurationProviderTestFixture.TestSettings>()
+                .AddDefaultConfigurationProvider()
+                .AddDatabase()
+                .AddDatabaseConfigurationProvider()
+                .AddSeeder()
+                .Build();
 
             await testFixture.SeedConfigurationTypesAsync();
 

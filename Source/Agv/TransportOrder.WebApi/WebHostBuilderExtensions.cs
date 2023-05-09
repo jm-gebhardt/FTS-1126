@@ -108,7 +108,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
-                endpoints.MapHub<OrderHub>(OrderHub.UrlPath);
                 endpoints.MapHub<AgvHub>(AgvHub.UrlPath);
             });
 

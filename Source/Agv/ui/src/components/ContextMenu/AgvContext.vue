@@ -32,7 +32,7 @@ export default defineComponent({
           icon: 'play_arrow',
           id: '',
           action(): void {
-            AgvService.setAgvIdle(this.id)
+            AgvService.unlockAgv(this.id)
           }
         }
       ]

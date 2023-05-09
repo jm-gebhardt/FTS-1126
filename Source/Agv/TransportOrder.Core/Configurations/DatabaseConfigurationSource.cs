@@ -1,5 +1,6 @@
 using Gebhardt.StoreWare.Agv.Common.Configurations;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Saga;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -8,7 +9,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations
     /// <summary>
     /// Represents a database source of configuration key/values
     /// </summary>
-    public class DatabaseConfigurationSource : IConfigurationSource
+    public class DatabaseConfigurationSource<TDbContext> : IConfigurationSource
+    where TDbContext : DbContext
     {
         /// <summary>
         /// <see cref="ConfigurationTypeManager"/>
@@ -18,7 +20,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations
         /// <summary>
         /// The <see cref="SagaPersistenceDbContext"/> to use for retrieving the data
         /// </summary>
-        public SagaPersistenceDbContext? DbContext { get; private set; }
+        public IDbContextFactory<TDbContext>? DbContextFactory { get; private set; }
 
         private readonly ILogger _logger;
 
@@ -33,37 +35,35 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations
         public int ReloadDelay { get; init; } = 500;
 
         /// <summary>
-        /// Fired once the <see cref="DbContext"/> got updated
+        /// Fired once the <see cref="DbContextFactory"/> got updated
         /// </summary>
         public event EventHandler? OnDbContextUpdated;
 
-        /// <summary>
-        /// <inheritdoc cref="DatabaseConfigurationSource"/>
-        /// </summary>
+        /// <inheritdoc cref="DatabaseConfigurationSource{TDbContext}"/>
         /// <param name="configurationTypeManager"></param>
-        /// <param name="dbContext">This can be null if it is not yet available. Must be set later in <see cref="UpdateDbContext"/> method!</param>
+        /// <param name="dbContextFactory">This can be null if it is not yet available. Must be set later in <see cref="UpdateDbContextFactory"/> method!</param>
         /// <param name="logger">The logger to log events</param>
-        public DatabaseConfigurationSource(IConfigurationTypeManager configurationTypeManager, SagaPersistenceDbContext? dbContext, ILogger logger)
+        public DatabaseConfigurationSource(IConfigurationTypeManager configurationTypeManager, IDbContextFactory<TDbContext>? dbContextFactory, ILogger logger)
         {
             ConfigurationTypeManager = configurationTypeManager;
-            DbContext = dbContext;
+            DbContextFactory = dbContextFactory;
             _logger = logger;
         }
 
         /// <inheritdoc/>
         public IConfigurationProvider Build(IConfigurationBuilder builder)
         {
-            return new DatabaseConfigurationProvider(this, _logger);
+            return new DatabaseConfigurationProvider<TDbContext>(this, _logger);
         }
 
         /// <summary>
-        /// Is required to be able to set the <see cref="DbContext"/> lately
+        /// Is required to be able to set the <see cref="DbContextFactory"/> later
         /// Updates the db context to use
         /// </summary>
-        /// <param name="dbContext"></param>
-        public void UpdateDbContext(SagaPersistenceDbContext dbContext)
+        /// <param name="dbContextFactory"></param>
+        public void UpdateDbContextFactory(IDbContextFactory<TDbContext> dbContextFactory)
         {
-            DbContext = dbContext;
+            DbContextFactory = dbContextFactory;
             OnDbContextUpdated?.Invoke(this, EventArgs.Empty);
         }
     }

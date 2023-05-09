@@ -8,19 +8,23 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Messages
     internal class Agv : IAgv
     {
         /// <summary/>
+        [JetBrains.Annotations.UsedImplicitly]
         public Guid CorrelationId { get; init; } = Guid.NewGuid();
 
         /// <summary/>
+        [JetBrains.Annotations.UsedImplicitly]
         public string AgvId { get; init; } = "";
 
         /// <summary/>
+        [JetBrains.Annotations.UsedImplicitly]
         public string CurrentState { get; } = "";
+
+        /// <summary/>'
+        [JetBrains.Annotations.UsedImplicitly]
+        public AgvStatus? AgvStatus { get; init; }
 
         /// <summary/>
         [JetBrains.Annotations.UsedImplicitly]
-        public AgvStatus? AgvStatus { get; }
-
-        /// <summary/>
         public AgvGraph? AgvGraph { get; init; }
 
         /// <summary/>
@@ -39,7 +43,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Messages
             Array.Empty<AgvData.Sensor>());
 
         /// <summary/>
-        public bool Alive { get; } = true;
+        public bool IsOnline { get; } = true;
+
+        public bool IsLocked { get; set; } = false;
 
         /// <summary/>
         [JetBrains.Annotations.UsedImplicitly]

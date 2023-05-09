@@ -6,7 +6,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Models
     /// Interface representing the Map table in Database
     /// </summary>
     [JetBrains.Annotations.PublicAPI]
-    public interface IMap : ISaga
+    public interface IMap: CorrelatedBy<Guid>
     {
         /// <summary>
         /// MapId

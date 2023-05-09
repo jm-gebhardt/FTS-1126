@@ -41,7 +41,8 @@
         </AssemblyAttribute>
     </ItemGroup>
     <ItemGroup>
-      <Folder Include="Features\Maps\Requests\Commands\" />
+      <Folder Include="Migrations\Saga\" />
+      <Folder Include="Migrations\TransportOrder\" />
     </ItemGroup>
     <Target Name="DisableWarnings" BeforeTargets="CoreCompile">
         <ItemGroup>

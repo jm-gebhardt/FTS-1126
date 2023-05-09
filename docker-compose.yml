@@ -142,7 +142,7 @@ services:
       - MSSQL_PID=Express
       - SA_PASSWORD=${MSSQL_SA_PASSWORD}
     ports:
-      - "1433:1433"
+      - "127.0.0.1:1433:1433"
     restart: unless-stopped
     depends_on:
       fluent:

@@ -57,7 +57,7 @@ public class StartChargingCommandConsumer : IConsumer<StartChargingCommand>
         {
             throw new AgvLocationUnknownException(agvCorrelationId);
         }
-        
+
         if (agvStatus.Busy)
         {
             throw new NotInCorrectStateException("Agv charging cannot be started because agv is busy.");

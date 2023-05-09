@@ -29,7 +29,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
         /// <summary>
         /// AGV ID
         /// </summary>
-        public string? AgvId { get; init; }
+        public string? AgvId { get; set; }
 
         /// <summary>
         /// The CorrelationId of the assigned agv

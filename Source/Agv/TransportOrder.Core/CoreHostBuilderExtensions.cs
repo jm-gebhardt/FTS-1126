@@ -1,19 +1,13 @@
 ﻿using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Configurations;
-using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.Common.Services.Detectors;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.CmdOptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations.Agvs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Hubs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Models;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Models;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Routing;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.States;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Db;
 using MassTransit;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
@@ -26,10 +20,19 @@ using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Commands;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Handlers.Queries;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Orders.Handlers.Commands;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Orders.Handlers.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Requests.Queries;
 using Gebhardt.StoreWare.Agv.Common.Persistence;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db.Settings;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Saga;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Charging;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Choosers;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Maintenance;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Parking;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Registries;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Maps;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
 {
@@ -51,14 +54,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
 
             hostBuilder.ConfigureServices((context, services) =>
             {
-                // Transients
-                services.AddTransient<IOrderHubContext>(provider =>
-                {
-                    var hubContext = provider.GetRequiredService<IHubContext<OrderHub>>();
-                    var mapper = provider.GetRequiredService<IMapper>();
-
-                    return new OrderHubContext(hubContext, mapper);
-                });
                 services.AddTransient<IAgvHubContext>(provider =>
                 {
                     var hubContext = provider.GetRequiredService<IHubContext<AgvHub>>();
@@ -66,59 +61,52 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
 
                     return new AgvHubContext(hubContext, mapper);
                 });
-                services.AddTransient<IEventObserver<OrderSaga>, OrderEventObserver>();
-                services.AddTransient<IAgvSettingsProvider, AgvSettingsProvider>();
+                
                 services.AddConfigurationTypeManager();
                 services.AddSettingsProviders(ConfigurationTypeManager.Instance);
 
-
                 // Scoped
-                services.AddScoped<DatabaseConfigurationSeeder>();
+                services.AddScoped<DatabaseConfigurationSeeder<TransportOrderDbContext>>();
 
                 // Singletons
-                services.AddSingleton<IStateObserver<OrderSaga>, OrderStateObserver>();
                 services.AddSingleton<IStateObserver<AgvSaga>, AgvStateObserver>();
                 services.AddSingleton<IChangeDetector<AgvPositionStatus>, ChangeDetector<AgvPositionStatus>>();
                 services.AddSingleton<IRoutingPlausibilityChecker, NoCheckPlausibilityChecker>();
                 services.AddSingleton(_ => productionOptions);
-                services.AddSingleton<MassTransitBusEventConsumer>();
-                services.AddSingleton<ActionManager>();
-                services.AddSingleton<ActionManagerNew>();
-                services.AddSingleton<ISagaSettingsProvider<AgvSettings, AgvSaga>, SagaSettingsProvider<AgvSettings, AgvSaga, SagaPersistenceDbContext>>();
-                services.AddSingleton<IAgvSettingsProvider, AgvSettingsProvider>();
+                services.AddSingleton<IActionManager, ActionManager>();
+                services.AddSingleton<IChooseAgvActionGroupService, ShortestRouteChooser>();
+                services.AddSingleton<IAgvService, AgvService>();
+                services.AddSingleton<ISettingsProvider<AgvSettings>, SettingsProvider<AgvSettings>>();
                 services.AddSingleton<IRouteService, RouteService>();
+                services.AddSingleton<IChargingService, BaseAgvChargingService>();
                 services.AddSingleton<IMaintenanceService, MaintenanceService>();
                 services.AddSingleton<IAgvLoadCapabilityService, AgvLoadCapabilityService>();
                 services.AddSingleton<IStartActionService, StartActionService>();
-                services.AddSingleton<IChargingPointManager, BaseChargingPointManager>();
-                services.AddSingleton<IChargingService, BaseAgvChargingService>();
+                services.AddSingleton<IChargingPointManager, ChargingPointManager>();
+                services.AddSingleton<IParkPointService, ParkPointService>();
+
+                services.AddSingleton<IAgvStateService, AgvStateService>();
 
                 // Registries
                 services.AddSingleton<IAgvActionRegistry, EfAgvActionRegistry>();
                 services.AddSingleton<IAgvRegistry, EfAgvRegistry>();
-                services.AddSingleton<IOrderRegistry, EfOrderRegistry>();
-                services.AddSingleton<IOrderAuditRegistry, EfOrderAuditRegistry>();
                 services.AddSingleton<IMapRegistry, EfMapRegistry>();
                 services.AddSingleton<IGraphRegistry, EfGraphRegistry>();
+                services.AddSingleton<INodeStateRegistry, EfNodeStateRegistry>();
                 services.AddSingleton<IAgvPositionRegistry, AgvPositionRegistry>();
 
                 services.AddConfigurationTypeManager();
                 services.AddSettingsProviders(ConfigurationTypeManager.Instance);
 
-                services.AddHostedService<ActionManagerBackgroundService>();
-
                 services.AddDbContextFactory<TransportOrderDbContext>(builder =>
                 {
                     string? connectionString = context.Configuration.GetConnectionString(TransportOrderDbContext.ConfigSectionName);
-                    builder.UseSqlServer(connectionString);
+                    builder.UseSqlServer(connectionString, m => { m.MigrationsHistoryTable(TransportOrderDbContext.MigrationTableName); });
                 });
                 services.AddDbContextFactory<SagaPersistenceDbContext>(builder =>
                 {
                     string? connectionString = context.Configuration.GetConnectionString(SagaPersistenceDbContext.ConfigSectionName);
-                    builder.UseSqlServer(connectionString, m =>
-                    {
-                        m.MigrationsHistoryTable(SagaPersistenceDbContext.MigrationTableName);
-                    });
+                    builder.UseSqlServer(connectionString, m => { m.MigrationsHistoryTable(SagaPersistenceDbContext.MigrationTableName); });
                 });
 
                 // Automapper
@@ -128,20 +116,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                 {
                     services.ConfigureServicesMassTransit(context.Configuration, x =>
                     {
-                        x.AddSagaStateMachine<OrderStateMachine, OrderSaga>()
-                            .AddPersistence<OrderSaga, SagaPersistenceDbContext>();
                         x.AddSagaStateMachine<AgvStateMachine, AgvSaga>()
                             .AddPersistence<AgvSaga, SagaPersistenceDbContext>();
 
-                        x.AddConsumer<AssignAgvConsumer>();
-                        x.AddConsumer<MassTransitBusEventConsumer>();
-                        x.AddConsumer<ActionManagerNew>();
-                        x.AddConsumer<AgvChargingService>();
-                        x.AddConsumer<TransportOrderChangedConsumer>();
+                        x.AddConsumer<ActionConsumer>();
                         x.AddConsumer<AgvPositionReceivedConsumer>();
                         x.AddConsumer<AgvPositionChangedConsumer>();
                         x.AddConsumer<AgvPropertyChangedConsumer>();
-                        x.AddConsumer<AgvInitializer>();
+                        x.AddConsumer<AgvBatteryChangedConsumer>();
 
                         // maps
                         x.AddConsumer<GetMapImageRequestHandler>();
@@ -156,12 +138,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                         x.AddConsumer<GetAgvsRequestHandler>();
                         x.AddConsumer<GetAgvStatusRequestHandler>();
                         x.AddConsumer<LockAgvCommandHandler>();
-                        x.AddConsumer<SetIdleCommandHandler>();
-
-                        // orders
-                        x.AddConsumer<CompleteOrderCommandHandler>();
-                        x.AddConsumer<GetOrdersRequestHandler>();
-                        x.AddConsumer<ResetOrderCommandHandler>();
+                        x.AddConsumer<UnlockAgvCommandHandler>();
 
                         // request clients
                         // ########################################
@@ -178,25 +155,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                         x.AddRequestClient<GetAgvsRequestHandler>();
                         x.AddRequestClient<GetAgvStatusRequestHandler>();
                         x.AddRequestClient<LockAgvCommandHandler>();
-                        x.AddRequestClient<SetIdleCommandHandler>();
-
-                        // orders
-                        x.AddConsumer<CompleteOrderCommandHandler>();
-                        x.AddConsumer<GetOrdersRequestHandler>();
-                        x.AddConsumer<ResetOrderCommandHandler>();
+                        x.AddRequestClient<UnlockAgvCommandHandler>();
 
                         x.AddDelayedMessageScheduler();
-                    }, rabbitMqConfiguration: (_, cfg) =>
-                    {
-                        cfg.UseDelayedMessageScheduler();
-                        cfg.ConnectBusObserver(new BusObserver());
-                    });
+                    }, rabbitMqConfiguration: (_, cfg) => { cfg.UseDelayedMessageScheduler(); });
                 }
                 catch (InvalidOperationException e)
                 {
                     initialLogger.LogError(e, "MassTransit could not be started");
                 }
-
             });
 
             return hostBuilder;

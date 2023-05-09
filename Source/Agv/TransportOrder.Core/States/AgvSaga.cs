@@ -1,17 +1,16 @@
-using Gebhardt.StoreWare.Agv.Common.Configurations;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Models;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
 using JetBrains.Annotations;
 using MassTransit;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.States
 {
     /// <summary>
-    /// AGV Saga used by <see cref="Services.AgvStateMachine"/>.
+    /// AGV Saga used by <see cref="AgvStateMachine"/>.
     /// This stores the current AGV state
     /// </summary>
     [PublicAPI]
-    public class AgvSaga : SagaStateMachineInstance, IAgv, ISagaDefinedSetting<AgvSagaSettings, AgvSettings>
+    public class AgvSaga : SagaStateMachineInstance, IAgv
     {
         /// <inheritdoc cref="IAgv"/>
         public Guid CorrelationId { get; set; }
@@ -52,24 +51,22 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.States
         public DateTime? AgvGraphRequestedLastTime { get; set; }
 
         /// <inheritdoc />
-        public bool Alive { get; set; }
+        public bool IsOnline { get; set; }
+        
+        /// <inheritdoc />
+        public bool IsLocked { get; set; }
 
         /// <summary>
         /// Token used by the send status update schedule
         /// </summary>
         public Guid? AgvOfflineTokenId { get; set; }
-
-        /// <summary>
-        /// Agv Saga Settings with nullable properties
-        /// </summary>
-        public AgvSagaSettings? Settings { get; set; }
-
+        
         /// <inheritdoc />
         [System.ComponentModel.DataAnnotations.Schema.NotMapped]
         public bool Assignable =>
             AgvGraph is not null &&
             AgvGraph.Usability == AgvGraph.GraphUsability.Valid &&
-            Alive;
+            IsOnline;
 
         /// <summary>
         /// Default constructor required to connect.
@@ -79,7 +76,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.States
             string? currentState = null,
             AgvStatus? agvStatus = null,
             AgvGraph? agvGraph = null,
-            AgvData? agvData = null)
+            AgvData? agvData = null,
+            bool isLocked = false)
         {
             if (correlationId == Guid.Empty)
             {
@@ -91,6 +89,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.States
             AgvStatus = agvStatus;
             AgvGraph = agvGraph;
             AgvData = agvData;
+            IsLocked = isLocked;
         }
 
         /// <summary>

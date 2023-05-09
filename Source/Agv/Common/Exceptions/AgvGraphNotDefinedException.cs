@@ -17,6 +17,7 @@ public class AgvGraphNotDefinedException : NotFoundException
     /// Agv Graph with Agv correlationId was not found
     /// </summary>
     /// <param name="correlationId">The correlation Id of the Agv</param>
+    [JetBrains.Annotations.UsedImplicitly]
     public AgvGraphNotDefinedException(Guid correlationId) 
         : base(nameof(AgvGraph), nameof(correlationId), correlationId)
     {

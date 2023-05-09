@@ -50,6 +50,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions
                 _gridRows = value;
             }
         }
+
         private readonly int _gridRows;
 
         /// <summary>

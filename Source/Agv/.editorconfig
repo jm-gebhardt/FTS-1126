@@ -5,8 +5,8 @@ indent_style = space
 indent_size = 4
 end_of_line = crlf
 
-[**/Migrations/*.cs]
+[**/Migrations/**/*.cs]
 generated_code = true
 
-[{*.vue, *.ts, *.scss, *.css, *.js, *.cjs, *.json, *.html}]
+[{*.vue,*.ts,*.scss,*.css,*.js,*.cjs,*.json,*.html}]
 indent_size = 2

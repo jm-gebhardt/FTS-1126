@@ -68,12 +68,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.States
             var saga = CreateSimulatedAgvSaga();
             saga.SimulatedBatteryCharge = chargeInit;
 
-            saga.Alive.ShouldBeTrue();
+            saga.IsOnline.ShouldBeTrue();
 
             saga.CurrentNode = new("node01") { Type = NodeType.Pick };
             saga.UpdateStatus(timeDiff, chargeDiff, chargeDiff);
 
-            saga.Alive.ShouldBeFalse();
+            saga.IsOnline.ShouldBeFalse();
         }
     }
 }

@@ -36,7 +36,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
             // Temporary solution
             var actionId = new Guid(message.OrderId.Split(" ")[0]);
             string parentId = message.OrderId.Split(" ")[1];
-            
+
             switch (message.OrderEventType)
             {
                 case OrderEventType.Started:

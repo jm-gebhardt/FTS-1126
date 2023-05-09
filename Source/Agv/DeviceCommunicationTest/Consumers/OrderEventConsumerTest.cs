@@ -5,7 +5,6 @@ using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Enums;
-using Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Events;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using MassTransit;
@@ -78,20 +77,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         {
             var message = new MqttOrderEvent(_actionGuid + " " + OrderId, SerialNumber, OrderEventType.Failed);
             var published = await ConsumeMessage(message);
-            
-            await AssertPublishedEvent<ActionFailedEvent>(published);
-        }
 
-        /// <summary>
-        /// Test for consuming OrderEvent message with an undefined event type
-        /// </summary>
-        [TestMethod]
-        public async Task ConsumeUndefined()
-        {
-            var message = new MqttOrderEvent(OrderId, SerialNumber, null);
-            var published = await ConsumeMessage(message);
-            Thread.Sleep(1); // Wait 1ms before checking if message was published
-            (await published.Any<TransportOrderFailed>()).ShouldBeFalse();
+            await AssertPublishedEvent<ActionFailedEvent>(published);
         }
 
         private async Task<IPublishedMessageList> ConsumeMessage(MqttOrderEvent message)

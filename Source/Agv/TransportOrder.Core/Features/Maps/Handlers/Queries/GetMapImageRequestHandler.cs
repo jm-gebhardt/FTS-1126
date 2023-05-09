@@ -1,7 +1,7 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Common;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Requests.Queries;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Maps;
 using JetBrains.Annotations;
 using MassTransit;
 

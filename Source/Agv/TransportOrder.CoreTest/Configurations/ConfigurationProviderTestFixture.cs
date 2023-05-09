@@ -4,19 +4,14 @@ using Gebhardt.StoreWare.Agv.Common.Configurations.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Configurations.Models;
 using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
 using Gebhardt.StoreWare.Agv.Common.Logging;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Models;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.States;
-using JetBrains.Annotations;
-using MassTransit;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db.ClassMaps;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Configurations
 {
@@ -25,39 +20,40 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Configurations
     /// </summary>
     public class ConfigurationProviderTestFixture
     {
-        [UsedImplicitly]
-        private class DbContextOptionsHelper<TDbContext> where TDbContext : DbContext
+        public class TestConfigurationDbContext : ConfigurableDbContext
         {
-            public static DbContextOptions<TDbContext> GetOptions(string databaseName)
+            public TestConfigurationDbContext(DbContextOptions options) : base(options)
             {
-                var dbContextOptionsBuilder = new DbContextOptionsBuilder<TDbContext>();
-                dbContextOptionsBuilder.UseInMemoryDatabase(databaseName);
-                return dbContextOptionsBuilder.Options;
+            }
+
+            protected override IEnumerable<IClassMap> Configurations
+            {
+                get
+                {
+                    yield return new ConfigurationSettingsClassMap();
+                }
             }
         }
-
-        public class DbSetSagaPersistenceDbContext : SagaPersistenceDbContext
+        
+        public record TestSettings : SettingsBase<TestSettings>
         {
-            // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
-            public DbSet<AgvSaga> AgvSagas { get; set; } = null!;
-
-            public DbSetSagaPersistenceDbContext(string databaseName) : base(DbContextOptionsHelper<SagaPersistenceDbContext>.GetOptions(databaseName)) { }
+            public enum TestEnum
+            {
+                Test1
+            }
+            public bool BoolValue { get; init; } = true;
+            public int IntValue { get; } = 1;
+            public static TestEnum EnumValue => TestEnum.Test1;
         }
 
-        private readonly string _databaseName = Guid.NewGuid().ToString();
-        private const string AgvId = "AGV1";
-        private const string MapName = "Map#1";
-        private readonly AgvSaga _agvSaga;
+   
         private readonly IHostBuilder _hostBuilder;
         private IHost _host = null!;
-        private DatabaseConfigurationSource? _databaseConfigurationSource;
 
-        public readonly Guid CorrelationId = AgvId.ToGuid();
-        public IDbContextFactory<DbSetSagaPersistenceDbContext> DbSetSagaPersistenceDbContextFactory => _host.Services.GetRequiredService<IDbContextFactory<DbSetSagaPersistenceDbContext>>();
+        private DatabaseConfigurationSource<TestConfigurationDbContext>? _databaseConfigurationSource;
+        private IDbContextFactory<TestConfigurationDbContext> DbFactory => _host.Services.GetRequiredService<IDbContextFactory<TestConfigurationDbContext>>();
         public IConfiguration Configuration => _host.Services.GetRequiredService<IConfiguration>();
-        public SagaSettingsProvider<TSettings, TSaga, DbSetSagaPersistenceDbContext> GetSagaSettingsProvider<TSettings, TSaga>()
-            where TSettings : class, ISettings<TSettings>
-            where TSaga : class, SagaStateMachineInstance, ISagaDefinedSetting<ISagaSettings<TSettings>, TSettings> => _host.Services.GetRequiredService<SagaSettingsProvider<TSettings, TSaga, DbSetSagaPersistenceDbContext>>();
+      
         public ISettingsProvider<TSettings> GetSettingsProvider<TSettings>() where TSettings : class, ISettings<TSettings> => _host.Services.GetRequiredService<ISettingsProvider<TSettings>>();
         public static IEnumerable<ConfigurationType> ConfigurationTypes => ConfigurationTypeManager.Instance.ConfigurationTypes;
 
@@ -67,64 +63,32 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Configurations
         public ConfigurationProviderTestFixture()
         {
             _hostBuilder = Host.CreateDefaultBuilder();
-
             ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
-
-            _agvSaga = new AgvSaga(CorrelationId, AgvId, "TestState",
-            new AgvStatus(Guid.NewGuid(), "123", true, true, 10, false, false),
-            new AgvGraph(Guid.NewGuid(),
-                new AgvGraph.Node[] { new("id") },
-                new AgvGraph.Edge[] { new("from", "to") },
-            MapName.ToGuid(),
-            MapName));
-
         }
 
-        /// <summary>
-        /// Registers the <see cref="DbSetSagaPersistenceDbContext"/> in the service collection
-        /// </summary>
-        public ConfigurationProviderTestFixture AddDbSetSagaDbContext()
+        public ConfigurationProviderTestFixture AddDatabase()
         {
-            _hostBuilder.ConfigureServices(sp => sp.AddDbContextFactory<DbSetSagaPersistenceDbContext>());
-            _hostBuilder.ConfigureServices(sp => sp.AddSingleton(_databaseName));
-            _hostBuilder.ConfigureServices(sp => sp.AddDbContext<DbSetSagaPersistenceDbContext>());
-            _hostBuilder.ConfigureServices(sp => sp.AddSingleton<DatabaseConfigurationSeeder>(s =>
+            _hostBuilder.ConfigureServices(s =>
             {
-                var dbContext = s.GetService<DbSetSagaPersistenceDbContext>()!;
-                var logger = s.GetService<ILogger<DatabaseConfigurationSeeder>>()!;
-                return new DatabaseConfigurationSeeder(ConfigurationTypeManager.Instance, dbContext, logger);
-            }));
-
+                s.AddDbContextFactory<TestConfigurationDbContext>(options =>
+                    {
+                        options.UseInMemoryDatabase(Guid.NewGuid().ToString());
+                    }
+                );
+            });
             return this;
         }
-
-        /// <summary>
-        /// Registers the <see cref="DatabaseConfigurationProvider"/> in the app configuration
-        /// </summary>
+        
+        // ReSharper disable once MemberCanBePrivate.Global
         public ConfigurationProviderTestFixture AddDatabaseConfigurationProvider(int reloadDelay = 0, bool reloadOnChange = true)
         {
-
-            IConfigurationTypeManager configurationTypeManager = ConfigurationTypeManager.Instance;
-            return AddDatabaseConfigurationProvider(configurationTypeManager, reloadDelay, reloadOnChange);
-        }
-
-        // ReSharper disable once MemberCanBePrivate.Global
-        public ConfigurationProviderTestFixture AddDatabaseConfigurationProvider(IConfigurationTypeManager configurationTypeManager, int reloadDelay = 0, bool reloadOnChange = true)
-        {
             var logger = InitialLogger.Create<DatabaseConfigurationProviderTest>();
-            _databaseConfigurationSource = new DatabaseConfigurationSource(configurationTypeManager, null, logger)
-            {
-                ReloadOnChange = reloadOnChange,
-                ReloadDelay = reloadDelay
-            };
-
+            
             _hostBuilder.ConfigureAppConfiguration((_, config) =>
             {
-                config.AddDatabaseConfigurationSource(_databaseConfigurationSource);
+                _databaseConfigurationSource = config.AddDatabaseConfiguration<TestConfigurationDbContext>(ConfigurationTypeManager.Instance, logger, reloadDelay, reloadOnChange);
+                _databaseConfigurationSource.ShouldNotBeNull();
             });
-
-            _hostBuilder.ConfigureServices(sp => sp.AddSingleton(_databaseConfigurationSource));
-
             return this;
         }
 
@@ -133,7 +97,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Configurations
         /// </summary>
         public ConfigurationProviderTestFixture AddDefaultConfigurationProvider()
         {
-            _hostBuilder.ConfigureAppConfiguration((_, config) => config.AddDefaultConfiguration(ConfigurationTypeManager.Instance));
+            _hostBuilder.ConfigureAppConfiguration((_, builder) =>
+            {
+                builder.Add(new DefaultConfigurationSource(ConfigurationTypeManager.Instance));
+            });
             return this;
         }
 
@@ -147,20 +114,24 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Configurations
             return this;
         }
 
-        /// <summary>
-        /// Registers the <see cref="SagaSettingsProvider{TSettings,TSaga, DbSetSagaPersistenceDbContext}"/> in the service collection
-        /// </summary>
-        public ConfigurationProviderTestFixture AddSagaSettingsProvider<TSettings, TSaga>()
-            where TSettings : class, ISettings<TSettings>
-            where TSaga : class, SagaStateMachineInstance, ISagaDefinedSetting<ISagaSettings<TSettings>, TSettings>
+        public ConfigurationProviderTestFixture AddSeeder()
         {
-            _hostBuilder.ConfigureServices(sp => sp.AddTransient(p =>
+            // Scoped
+            _hostBuilder.ConfigureServices(sp =>
             {
-                IDbContextFactory<DbSetSagaPersistenceDbContext> dbContextFactory = DbSetSagaPersistenceDbContextFactory;
-                var settingsProvider = p.GetRequiredService<ISettingsProvider<TSettings>>();
-
-                return new SagaSettingsProvider<TSettings, TSaga, DbSetSagaPersistenceDbContext>(dbContextFactory, settingsProvider);
-            }));
+                sp.AddScoped<IConfigurationTypeManager>(_ => ConfigurationTypeManager.Instance);
+                sp.AddScoped<DatabaseConfigurationSeeder<TestConfigurationDbContext>>();
+            });
+            return this;
+        }
+        
+        /// <summary>
+        /// Builds the service provider based on the service collection, in order to register lazy services
+        /// </summary>
+        public ConfigurationProviderTestFixture Build()
+        {
+            _host = _hostBuilder.Build();
+            _databaseConfigurationSource?.UpdateDbContextFactory(DbFactory);
             return this;
         }
 
@@ -169,65 +140,42 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Configurations
         /// </summary>
         public async Task SeedConfigurationTypesAsync()
         {
-            var dbConfigurationSeeder = _host.Services.GetRequiredService<DatabaseConfigurationSeeder>();
+            var dbConfigurationSeeder = _host.Services.GetRequiredService<DatabaseConfigurationSeeder<TestConfigurationDbContext>>();
             await dbConfigurationSeeder.SeedDefaultConfigurationAsync();
         }
-
-        /// <summary>
-        /// Builds the service provider based on the service collection, in order to register lazy services
-        /// </summary>
-        public ConfigurationProviderTestFixture Build()
-        {
-            _host = _hostBuilder.Build();
-            var source = _host.Services.GetService<DatabaseConfigurationSource>();
-            source?.UpdateDbContext(DbSetSagaPersistenceDbContextFactory.CreateDbContext());
-            return this;
-        }
-
+        
         /// <summary>
         /// Gets the <see cref="ConfigurationSetting"/> from the database
         /// </summary>
         /// <returns></returns>
         public async Task<IList<ConfigurationSetting>> GetConfigurationSettingsAsync()
         {
-            IDbContextFactory<DbSetSagaPersistenceDbContext> dbContextFactory = DbSetSagaPersistenceDbContextFactory;
+            IDbContextFactory<TestConfigurationDbContext> dbContextFactory = DbFactory;
             await using var dbContext = await dbContextFactory.CreateDbContextAsync();
-            return await dbContext.ConfigurationSettings.ToListAsync();
+            return await dbContext.Set<ConfigurationSetting>().ToListAsync();
         }
-
-        /// <summary>
-        /// Adds the <see cref="AgvSaga"/> settings
-        /// </summary>
-        /// <param name="agvSagaSettings"></param>
-        public void AddAgvSagaSettings(AgvSagaSettings agvSagaSettings)
+        
+        public async Task UpdateConfigurationSettingAsync(string key, string value, string configurationType)
         {
-            _agvSaga.Settings = agvSagaSettings;
+            await using var ctx = await DbFactory.CreateDbContextAsync();
+            DbSet<ConfigurationSetting> dbSet = ctx.Set<ConfigurationSetting>();
+            var configuration = dbSet.FirstOrDefault(c => c.Key == key);
+
+            if (configuration == null)
+            {
+                await dbSet.AddAsync(new ConfigurationSetting { Key = key, Value = value, ConfigurationType = configurationType });
+            }
+            else
+            {
+                configuration.Value = value;
+                dbSet.Update(configuration);
+            }
+
+            await ctx.SaveChangesAsync();
+            
+            // Force the Configuration source to reload from database
+            _databaseConfigurationSource!.UpdateDbContextFactory(DbFactory);
         }
-
-        /// <summary>
-        /// Creates an <see cref="AgvSaga"/> record
-        /// </summary>
-        public async Task CreateAgvSagaAsync()
-        {
-            IDbContextFactory<DbSetSagaPersistenceDbContext> dbContextFactory = DbSetSagaPersistenceDbContextFactory;
-            await using var dbContext = await dbContextFactory.CreateDbContextAsync();
-            await dbContext.Database.EnsureCreatedAsync();
-
-            await dbContext.AgvSagas.AddAsync(_agvSaga);
-            await dbContext.SaveChangesAsync();
-        }
-
-        /// <summary>
-        /// Gets the <see cref="AgvSaga"/> record
-        /// </summary>
-        // ReSharper disable once UnusedMember.Global
-        public async Task<AgvSaga> GetAgvSagaAsync()
-        {
-            IDbContextFactory<DbSetSagaPersistenceDbContext> dbContextFactory = DbSetSagaPersistenceDbContextFactory;
-            await using var dbContext = await dbContextFactory.CreateDbContextAsync();
-            var restoredAgvSaga = await dbContext.AgvSagas.FirstAsync();
-
-            return restoredAgvSaga;
-        }
+     
     }
 }

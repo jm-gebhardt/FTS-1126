@@ -18,7 +18,7 @@
         </ui-item-text-content>
         <template #after="{ iconClass }">
           <ui-icon :class="iconClass">
-            {{ AgvAliveIcon(item.alive) }}
+            {{ AgvAliveIcon(item.isOnline) }}
           </ui-icon>
         </template>
       </ui-item>

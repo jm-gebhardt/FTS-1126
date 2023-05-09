@@ -1,4 +1,5 @@
-﻿using MassTransit;
+﻿using JetBrains.Annotations;
+using MassTransit;
 
 namespace Gebhardt.StoreWare.Agv.Common.Testing;
 
@@ -7,6 +8,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Testing;
 /// </summary>
 /// <typeparam name="TRequest">The request type to handle</typeparam>
 /// <typeparam name="TResponse">The response type to send</typeparam>
+[UsedImplicitly]
 public class ConstantRequestHandler<TRequest, TResponse> : IConsumer<TRequest> where TResponse : class where TRequest : class
 {
     private readonly TResponse _response;

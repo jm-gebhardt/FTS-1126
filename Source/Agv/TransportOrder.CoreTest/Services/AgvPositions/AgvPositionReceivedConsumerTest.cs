@@ -2,7 +2,7 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Models;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;

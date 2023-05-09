@@ -1,14 +1,10 @@
-﻿using MassTransit;
+using MassTransit;
 
 namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events
 {
     /// <summary>
-    /// Event sent when an AGV needs to be moved to a charging station
+    /// Event sent when an AGV needs to be moved to a charging station, because it's Soc is decreased (below low)
+    /// <param name="CorrelationId">AGV CorrelationId</param>
     /// </summary>
-    [JetBrains.Annotations.PublicAPI]
-    public record AgvNeedsCharging(Guid CorrelationId) : CorrelatedBy<Guid>
-    {
-        /// <inheritdoc/>
-        public Guid CorrelationId { get; } = CorrelationId;
-    }
+    public record AgvNeedsCharging(Guid CorrelationId) : CorrelatedBy<Guid>;
 }

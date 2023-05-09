@@ -19,7 +19,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
         private readonly IRequestClient<GetAgvStatusRequest> _getAgvStatusClient;
         private readonly IRequestClient<GetAgvDataRequest> _getAgvDataClient;
         private readonly IRequestClient<GetAgvPositionsRequest> _getAgvPositionsClient;
-        private readonly IRequestClient<SetIdleCommand> _setIdleClient;
+        private readonly IRequestClient<UnlockAgvCommand> _setIdleClient;
         private readonly IRequestClient<LockAgvCommand> _lockAgvClient;
         private readonly IRequestClient<RequestAgvDataCommand> _emitRequestDataClient;
         private readonly IRequestClient<RequestAgvGraphCommand> _emitRequestGraphClient;
@@ -32,7 +32,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
                              IRequestClient<GetAgvStatusRequest> getAgvStatusClient,
                              IRequestClient<GetAgvDataRequest> getAgvDataClient,
                              IRequestClient<GetAgvPositionsRequest> getAgvPositionsClient,
-                             IRequestClient<SetIdleCommand> setIdleClient,
+                             IRequestClient<UnlockAgvCommand> setIdleClient,
                              IRequestClient<LockAgvCommand> lockAgvClient,
                              IRequestClient<RequestAgvDataCommand> emitRequestDataClient,
                              IRequestClient<RequestAgvGraphCommand> emitRequestGraphClient)
@@ -56,7 +56,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
         [Route("/agvs")]
         public async Task<ActionResult<IEnumerable<AgvDto>>> GetAgvs()
         {
-            Response<GetAgvsResult> response = await _getAgvsClient.GetResponse<GetAgvsResult>(new GetAgvsRequest(Guid.NewGuid()));
+            Response<GetAgvsResult> response = await _getAgvsClient.GetResponse<GetAgvsResult>(new GetAgvsRequest());
             return Ok(response.Message.Agvs);
         }
 
@@ -115,26 +115,26 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
         }
 
         /// <summary>
-        /// Set status of agv from Discovered to Idle
+        /// Unlock AGV to allow it to be assigned to transport orders
         /// </summary>
         /// <response code="200">Ok: AGV status was successfully set to Idle</response>
         /// <response code="400">Bad Request: AGV is not in State 'Discovered'</response>
         /// <response code="404">Not Found: AGV with the given correlationId does not exist</response>
         [HttpPatch]
-        [Route("/agvs/{correlationId}/setIdle")]
-        public async Task<ActionResult> SetIdle(Guid correlationId)
+        [Route("/agvs/{correlationId}/unlock")]
+        public async Task<ActionResult> UnlockAgv(Guid correlationId)
         {
-            await _setIdleClient.GetResponse<SetIdleResult>(new SetIdleCommand(correlationId));
+            await _setIdleClient.GetResponse<UnlockAgvResult>(new UnlockAgvCommand(correlationId));
             return Ok();
         }
 
         /// <summary>
         /// Lock AGV to prevent it from being assigned to transport orders
         /// </summary>
-        /// <response code="200">Ok: AGV status was successfully set to Idle</response>
+        /// <response code="200">Ok: AGV status was successfully unlocked</response>
         /// <response code="404">Not Found: AGV with the given correlationId does not exist</response>
         [HttpPatch]
-        [Route("/agvs/{correlationId}/lockAgv")]
+        [Route("/agvs/{correlationId}/lock")]
         public async Task<ActionResult> LockAgv(Guid correlationId)
         {
             await _lockAgvClient.GetResponse<LockAgvResult>(new LockAgvCommand(correlationId));

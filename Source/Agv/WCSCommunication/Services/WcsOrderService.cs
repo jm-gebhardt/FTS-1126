@@ -65,9 +65,6 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
                     _logger.LogInformation("New order in ToAgv: {OrderId} / {CorrelationId}", order.OrderId, correlationId);
 
                     var hostOrderDetails = new OrderDetails(correlationId, order.OrderId, order.Source, order.Destination, order.LeNo, HostOrderCreator.Wms, order.Created);
-
-                    await _bus.Publish(new HandleHostOrder(correlationId, hostOrderDetails), cancellationToken);
-
                     await _bus.Publish(new CreateHostOrder(hostOrderDetails), cancellationToken);
 
                     context.FromAgv.Add(FromAgv.CreateInstance(order, OrderStatus.Pending, RecordType.TransportOrder));

@@ -79,13 +79,13 @@ export class Agvs<
    * No description
    *
    * @tags Agv
-   * @name SetIdlePartialUpdate
-   * @summary Set status of agv from Discovered to Idle
-   * @request PATCH:/agvs/{correlationId}/setIdle
+   * @name UnlockPartialUpdate
+   * @summary Unlock AGV to allow it to be assigned to transport orders
+   * @request PATCH:/agvs/{correlationId}/unlock
    */
-  setIdlePartialUpdate = (correlationId: string, params: RequestParams = {}) =>
+  unlockPartialUpdate = (correlationId: string, params: RequestParams = {}) =>
     this.request<void, void>({
-      path: `/agvs/${correlationId}/setIdle`,
+      path: `/agvs/${correlationId}/unlock`,
       method: 'PATCH',
       ...params
     })
@@ -93,13 +93,13 @@ export class Agvs<
    * No description
    *
    * @tags Agv
-   * @name LockAgvPartialUpdate
+   * @name LockPartialUpdate
    * @summary Lock AGV to prevent it from being assigned to transport orders
-   * @request PATCH:/agvs/{correlationId}/lockAgv
+   * @request PATCH:/agvs/{correlationId}/lock
    */
-  lockAgvPartialUpdate = (correlationId: string, params: RequestParams = {}) =>
+  lockPartialUpdate = (correlationId: string, params: RequestParams = {}) =>
     this.request<void, void>({
-      path: `/agvs/${correlationId}/lockAgv`,
+      path: `/agvs/${correlationId}/lock`,
       method: 'PATCH',
       ...params
     })

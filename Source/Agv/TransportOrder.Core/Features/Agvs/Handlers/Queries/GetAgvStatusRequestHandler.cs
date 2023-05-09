@@ -1,9 +1,10 @@
 using AutoMapper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
 using Gebhardt.StoreWare.Agv.Common.Exceptions;
+using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Common;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Requests.Queries;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
 using JetBrains.Annotations;
 using MassTransit;
 
@@ -46,10 +47,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Quer
                 throw new AgvNotFoundException(request.CorrelationId);
             }
 
-            if (agv.AgvStatus == null)
-            {
-                throw new AgvStatusNotFoundException(agv);
-            }
+            agv.RequireAgvStatus();
 
             var agvStateDto = _mapper.Map<AgvStateDto>(agv);
 

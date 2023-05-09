@@ -1,5 +1,5 @@
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations.Agvs;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Models;
+using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db.Settings;
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -20,8 +20,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Extensions
         [UsedImplicitly]
         public static IServiceCollection AddInMemorySettings(this IServiceCollection services, AgvSettings? settings = null)
         {
-            var settingsProviderMock = new Mock<IAgvSettingsProvider>();
-            settingsProviderMock.Setup(m => m.GetSettingsForAgv(It.IsAny<Guid>())).Returns(() => settings ?? new AgvSettings());
+            var settingsProviderMock = new Mock<ISettingsProvider<AgvSettings>>();
+            settingsProviderMock.Setup(m => m.GetSettings()).Returns(() => settings ?? new AgvSettings());
             services.AddSingleton(settingsProviderMock.Object);
 
             return services;

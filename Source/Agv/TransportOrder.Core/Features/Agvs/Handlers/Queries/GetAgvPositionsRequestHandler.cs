@@ -1,10 +1,10 @@
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services;
 using JetBrains.Annotations;
 using MassTransit;
 using AutoMapper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Common;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Requests.Queries;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Queries
 {

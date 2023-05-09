@@ -4,7 +4,7 @@
 namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands
 {
     /// <summary>
-    /// Lock AGV to prevent it from being assigned to transport orders
+    /// Request an AGV to lock
     /// </summary>
     [JetBrains.Annotations.PublicAPI]
     public record LockAgv : CorrelatedBy<Guid>

@@ -224,12 +224,12 @@
         }
       }
     },
-    "/agvs/{correlationId}/setIdle": {
+    "/agvs/{correlationId}/unlock": {
       "patch": {
         "tags": [
           "Agv"
         ],
-        "summary": "Set status of agv from Discovered to Idle",
+        "summary": "Unlock AGV to allow it to be assigned to transport orders",
         "parameters": [
           {
             "name": "correlationId",
@@ -254,7 +254,7 @@
         }
       }
     },
-    "/agvs/{correlationId}/lockAgv": {
+    "/agvs/{correlationId}/lock": {
       "patch": {
         "tags": [
           "Agv"
@@ -273,7 +273,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Ok: AGV status was successfully set to Idle"
+            "description": "Ok: AGV status was successfully unlocked"
           },
           "404": {
             "description": "Not Found: AGV with the given correlationId does not exist"
@@ -437,142 +437,6 @@
           }
         }
       }
-    },
-    "/orders": {
-      "get": {
-        "tags": [
-          "TransportOrder"
-        ],
-        "summary": "Retrieve active transport orders\r\nIf correlation Id is provided, all other parameters are ignored",
-        "parameters": [
-          {
-            "name": "PageNumber",
-            "in": "query",
-            "description": "Page Number",
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "default": 1
-            }
-          },
-          {
-            "name": "PageSize",
-            "in": "query",
-            "description": "Page Size",
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "default": 25
-            }
-          },
-          {
-            "name": "Start",
-            "in": "query",
-            "description": "Start date of range",
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            }
-          },
-          {
-            "name": "End",
-            "in": "query",
-            "description": "End date of range",
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Ok",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Order"
-                  }
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Order"
-                  }
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Order"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/orders/{correlationId}/resetOrder": {
-      "patch": {
-        "tags": [
-          "TransportOrder"
-        ],
-        "summary": "Resets order and starts a new transport",
-        "parameters": [
-          {
-            "name": "correlationId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Ok: Order was reset"
-          },
-          "400": {
-            "description": "BadRequest: Order is not completed yet"
-          },
-          "404": {
-            "description": "Not Found: Order with the given correlationId does not exist"
-          }
-        }
-      }
-    },
-    "/orders/{correlationId}/completeOrder": {
-      "patch": {
-        "tags": [
-          "TransportOrder"
-        ],
-        "summary": "Completes order manually",
-        "parameters": [
-          {
-            "name": "correlationId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Ok: Order was completed"
-          },
-          "404": {
-            "description": "Not Found: Order with the given correlationId does not exist"
-          }
-        }
-      }
     }
   },
   "components": {
@@ -580,9 +444,10 @@
       "Agv": {
         "required": [
           "agvId",
-          "alive",
           "correlationId",
-          "currentState"
+          "currentState",
+          "isLocked",
+          "isOnline"
         ],
         "type": "object",
         "properties": {
@@ -599,9 +464,13 @@
             "type": "string",
             "description": "Current State"
           },
-          "alive": {
+          "isOnline": {
             "type": "boolean",
             "description": "Communication alive state"
+          },
+          "isLocked": {
+            "type": "boolean",
+            "description": "Locked state"
           }
         },
         "additionalProperties": false,
@@ -890,17 +759,8 @@
         "additionalProperties": false,
         "description": "Model for drawing a graph in the UI"
       },
-      "HostOrderCreator": {
-        "enum": [
-          "Wms",
-          "Simulation"
-        ],
-        "type": "string",
-        "description": "Defines the creator of a host order"
-      },
       "HubMethods": {
         "enum": [
-          "OrderStateChanged",
           "AgvDiscovered",
           "AgvStateChanged",
           "AgvPositionChanged"
@@ -959,6 +819,7 @@
         "required": [
           "enabled",
           "id",
+          "state",
           "theta",
           "type",
           "x",
@@ -974,6 +835,14 @@
           "enabled": {
             "type": "boolean",
             "description": "Node enabled/disabled."
+          },
+          "state": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/NodeState"
+              }
+            ],
+            "description": "Node state."
           },
           "type": {
             "allOf": [
@@ -1007,6 +876,16 @@
         "additionalProperties": false,
         "description": "Node representation."
       },
+      "NodeState": {
+        "enum": [
+          "Free",
+          "Reserved",
+          "Occupied",
+          "Locked"
+        ],
+        "type": "string",
+        "description": "Node state"
+      },
       "NodeType": {
         "enum": [
           "WayPoint",
@@ -1018,96 +897,6 @@
         ],
         "type": "string",
         "description": "Node types.\r\n<br>\r\nThese types are coming from the specification.\r\n"
-      },
-      "Order": {
-        "required": [
-          "correlationId",
-          "currentState",
-          "orderDetails"
-        ],
-        "type": "object",
-        "properties": {
-          "currentState": {
-            "type": "string",
-            "description": "Current State"
-          },
-          "assignedAgv": {
-            "type": "string",
-            "description": "AgvId",
-            "format": "uuid",
-            "nullable": true
-          },
-          "orderDetails": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/OrderDetails"
-              }
-            ],
-            "description": "Order object used by all messages that require the order details"
-          },
-          "correlationId": {
-            "type": "string",
-            "description": "Used to identify a message as correlated so that the CorrelationId can be returned",
-            "format": "uuid"
-          },
-          "failedReason": {
-            "type": "string",
-            "description": "Reason why an order failed",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false,
-        "description": "Order Model\r\n            \r\nThis is a simply copy of the Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.IOrder to overcome a json serialization problems\r\n<see href=\"https://github.com/dotnet/runtime/issues/41749\" />"
-      },
-      "OrderDetails": {
-        "required": [
-          "correlationId",
-          "creationDate",
-          "creator",
-          "destination",
-          "leNo",
-          "orderId",
-          "source"
-        ],
-        "type": "object",
-        "properties": {
-          "correlationId": {
-            "type": "string",
-            "description": "Used to identify a message as correlated so that the CorrelationId can be returned",
-            "format": "uuid"
-          },
-          "orderId": {
-            "type": "string",
-            "description": "The unique ID of the order known by the host system"
-          },
-          "source": {
-            "type": "string",
-            "description": "The source where to pick up the order"
-          },
-          "destination": {
-            "type": "string",
-            "description": "The destination where to drop the order"
-          },
-          "leNo": {
-            "type": "string",
-            "description": "The LeNo of the orders handled box or transportation good"
-          },
-          "creator": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/HostOrderCreator"
-              }
-            ],
-            "description": "The creator of the host order"
-          },
-          "creationDate": {
-            "type": "string",
-            "description": "The UTC timestamp when the order was created",
-            "format": "date-time"
-          }
-        },
-        "additionalProperties": false,
-        "description": "Order object used by all messages that require the order details"
       },
       "Sensor": {
         "type": "object",
@@ -1135,10 +924,6 @@
     {
       "name": "Meta",
       "description": "Controller for meta data"
-    },
-    {
-      "name": "TransportOrder",
-      "description": "Controller for host order data"
     }
   ]
 }

@@ -11,11 +11,6 @@
         public enum HubMethods
         {
             /// <summary>
-            /// Hub method for order state changed event
-            /// </summary>
-            OrderStateChanged,
-            
-            /// <summary>
             /// New AGV was discovered
             /// </summary>
             AgvDiscovered,

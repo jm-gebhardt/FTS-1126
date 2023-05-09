@@ -1,6 +1,6 @@
 using Gebhardt.StoreWare.Agv.Common.Configurations;
 using Gebhardt.StoreWare.Agv.Common.Configurations.Models;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations
@@ -8,19 +8,20 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations
     /// <summary>
     /// Seeds the default settings into the database
     /// </summary>
-    public class DatabaseConfigurationSeeder
+    public class DatabaseConfigurationSeeder<TDbContext>
+        where TDbContext : DbContext
     {
         private readonly IConfigurationTypeManager _configurationTypeManager;
-        private readonly SagaPersistenceDbContext _dbContext;
-        private readonly ILogger<DatabaseConfigurationSeeder> _logger;
+        private readonly TDbContext _dbContext;
+        private readonly ILogger<DatabaseConfigurationSeeder<TDbContext>> _logger;
 
         /// <summary>
-        /// <inheritdoc cref="DatabaseConfigurationSeeder"/>
+        /// Construtor
         /// </summary>
         /// <param name="configurationTypeManager"></param>
         /// <param name="dbContext"></param>
         /// <param name="logger"></param>
-        public DatabaseConfigurationSeeder(IConfigurationTypeManager configurationTypeManager, SagaPersistenceDbContext dbContext, ILogger<DatabaseConfigurationSeeder> logger)
+        public DatabaseConfigurationSeeder(IConfigurationTypeManager configurationTypeManager, TDbContext dbContext, ILogger<DatabaseConfigurationSeeder<TDbContext>> logger)
         {
             _configurationTypeManager = configurationTypeManager;
             _dbContext = dbContext;
@@ -36,7 +37,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations
             {
                 foreach (var configurationType in _configurationTypeManager.ConfigurationTypes.Where(t => t.AutoSeedToDatabase))
                 {
-                    List<ConfigurationSetting> settings = _dbContext.ConfigurationSettings.Where(c => c.ConfigurationType == configurationType.Name).ToList();
+                    List<ConfigurationSetting> settings = _dbContext.Set<ConfigurationSetting>().Where(c => c.ConfigurationType == configurationType.Name).ToList();
                     if (!settings.Any())
                     {
                         foreach (var configurationTypeProperty in configurationType.Properties.Where(p => p.AutoSeedToDatabase))
@@ -45,7 +46,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations
                             var setting = settings.FirstOrDefault(s => s.Key == key);
                             if (setting == null)
                             {
-                                await _dbContext.ConfigurationSettings.AddAsync(new()
+                                await _dbContext.Set<ConfigurationSetting>().AddAsync(new()
                                 {
                                     Key = key,
                                     Value = configurationTypeProperty.Value,

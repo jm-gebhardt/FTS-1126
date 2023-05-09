@@ -226,5 +226,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Routing
             var aStar = new AStar(agvGraph);
             return aStar.CalculateRouteInternal(source, destination);
         }
+
+        /// <inheritdoc cref="BaseGraphAlgorithm.CalculateRoute(string[])"/>>
+        public static IGraphAlgorithm.Route? CalculateRouteStatic(AgvGraph agvGraph, string[] waypoints)
+        {
+            var aStar = new AStar(agvGraph);
+            return aStar.CalculateRoute(waypoints);
+        }
     }
 }

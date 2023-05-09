@@ -34,12 +34,16 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
         /// Returns true when there is a life sign of the AGV in regular time intervals,
         /// returns false when there is no life sign for a certain time.
         /// </summary>
-        public bool Alive { get; }
+        public bool IsOnline { get; }
+        
+        /// <summary>
+        /// is AGV locked?
+        /// </summary>
+        public bool IsLocked { get; set; }
 
         /// <summary>
         /// Returns true when the AGV is assignable for any transport order.
         /// </summary>
         public bool Assignable { get; }
-
     }
 }

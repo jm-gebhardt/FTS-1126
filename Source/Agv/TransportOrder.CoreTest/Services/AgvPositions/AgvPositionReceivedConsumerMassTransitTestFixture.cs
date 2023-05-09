@@ -2,7 +2,8 @@
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Hubs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Models;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 

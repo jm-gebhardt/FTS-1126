@@ -1,6 +1,6 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Services.Detectors;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Models;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
 using MassTransit;
 using Moq;
 

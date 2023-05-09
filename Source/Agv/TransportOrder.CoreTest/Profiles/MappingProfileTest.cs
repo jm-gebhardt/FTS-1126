@@ -1,12 +1,12 @@
 ﻿using System.Collections.Immutable;
 using System.Text;
 using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Messages;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Models;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db.Models;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Profiles;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.States;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -115,7 +115,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Profiles
         }
 
         /// <summary>
-        /// Maps the <see cref="Core.Persistence.Models.Map"/> to <see cref="MapDto"/> and should map correctly
+        /// Maps the <see cref="Map"/> to <see cref="MapDto"/> and should map correctly
         /// </summary>
         [TestMethod]
         public void Map_ShouldMapAllPropertiesCorrectly_WherePersistenceMapIsMappedToDtoMap()
@@ -124,7 +124,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Profiles
             const string base64String = "dGhlIHF1aWNrIGJyb3duIGZveCBqdW1wIG92ZXIgdGhlIGxhenkgZG9n";
             var correlationId = Guid.NewGuid();
 
-            var persistenceMap = new Core.Persistence.Models.Map(correlationId, "Area51_Floor1_Compartment47", Encoding.UTF8.GetBytes(base64String), 0.01, 1, 2, DateTime.UtcNow);
+            var persistenceMap = new Map(correlationId, "Area51_Floor1_Compartment47", Encoding.UTF8.GetBytes(base64String), 0.01, 1, 2, DateTime.UtcNow);
             ImmutableDictionary<Guid, Guid[]> agvMapRelation = new Dictionary<Guid, Guid[]>
             {
                 {
@@ -147,38 +147,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Profiles
             dtoMap.XOffset.ShouldBe(persistenceMap.XOffset);
             dtoMap.YOffset.ShouldBe(persistenceMap.YOffset);
             dtoMap.RelatedAgvs.ShouldAllBe(p => agvMapRelation.Any(kvp => kvp.Key.Equals(dtoMap.CorrelationId) && kvp.Value.Contains(p)));
-        }
-
-        /// <summary>
-        /// Maps the <see cref="TransportOrder.Core.States.OrderSaga"/> to <see cref="OrderDto"/> and should map correctly
-        /// </summary>
-        [TestMethod]
-        public void Map_ShouldMapAllPropertiesCorrectly_WhereOrderSagaIsMappedToOrder()
-        {
-            string orderId = "Order123";
-            var orderSaga = new OrderSaga(
-                orderId.ToGuid(),
-                new OrderDetails(orderId.ToGuid(), orderId, "S1", "D1", "1234", HostOrderCreator.Simulation),
-                                 nameof(Core.Services.OrderStateMachine.TransportOrderSent),
-                                 null
-            );
-
-            var mapper = GetMapper();
-            var order = mapper.Map<OrderDto>(orderSaga);
-
-            order.ShouldNotBeNull();
-            order.CurrentState.ShouldBe(orderSaga.CurrentState);
-            order.AssignedAgv.ShouldBe(orderSaga.AssignedAgv);
-            order.CorrelationId.ShouldBe(orderSaga.CorrelationId);
-            order.FailedReason.ShouldBe(orderSaga.FailedReason);
-
-            order.OrderDetails.ShouldSatisfyAllConditions(p => p.CorrelationId.ShouldBe(orderSaga.OrderDetails.CorrelationId),
-                p => p.OrderId.ShouldBe(orderSaga.OrderDetails.OrderId),
-                p => p.Source.ShouldBe(orderSaga.OrderDetails.Source),
-                p => p.Destination.ShouldBe(orderSaga.OrderDetails.Destination),
-                p => p.LeNo.ShouldBe(orderSaga.OrderDetails.LeNo),
-                p => p.Creator.ShouldBe(orderSaga.OrderDetails.Creator),
-                p => p.CreationDate.ShouldBe(orderSaga.OrderDetails.CreationDate));
         }
 
         /// <summary>

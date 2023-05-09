@@ -265,7 +265,7 @@ export class MapCanvas {
     let secondary = undefined
 
     // Hardware states (priority over software state)
-    if (agvState.alive === false) {
+    if (agvState.isOnline === false) {
       primary = '#808080' // grey
       secondary = undefined
     } else if (agvState.agvStatus.disturbed === true) {

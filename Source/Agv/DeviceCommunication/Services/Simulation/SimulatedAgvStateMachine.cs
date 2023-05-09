@@ -143,7 +143,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
             StatusUpdateIntervalMs = Math.Clamp(_simulateOptions.NodeTravelTime / 2, 100, 10000); // Send twice per node (min 0.1s, max 10s)
             SignalPositionIntervalMs = Math.Clamp(_simulateOptions.NodeTravelTime / 10, 200, 2000); // Send 10x per node (min 0.2s, max 2s)
 
-            _logger.LogInformation("Initialized SimulatedAgvStateMachine with {GridRows} rows and node travel time of {NodetravelTime} ms",
+            _logger.LogInformation("Initialized SimulatedAgvStateMachine with {GridRows} rows and node travel time of {NodeTravelTime} ms",
                 _simulateOptions.GridRows, _simulateOptions.NodeTravelTime);
 
             SetSagaFactory();
@@ -302,18 +302,19 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
 
             bool startedCharging = !prevCharging && context.Saga.AgvStatus.Charging; // Check if AGV has switched charging to true
 
-            if (context.Saga.Alive) // Only send status if AGV is still alive
+            if (context.Saga.IsOnline) // Only send status if AGV is still alive
             {
                 await context.Publish(new AgvStatusReceived(
                     context.Saga.CorrelationId,
                     context.Saga.AgvId,
                     context.Saga.AgvStatus
                 ), context.CancellationToken);
+            }
 
-                if (startedCharging)
-                {
-                    await context.Publish(new AgvStartedCharging(context.Saga.CorrelationId));
-                }
+            // publish started charging regardless of IsOnline flag, because otherwise you can never reanimate dead Agvs
+            if (startedCharging)
+            {
+                await context.Publish(new AgvStartedCharging(context.Saga.CorrelationId));
             }
         }
 

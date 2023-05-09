@@ -6,8 +6,8 @@ export abstract class AgvService {
     baseUrl: import.meta.env.VITE_API_URL
   })
 
-  public static setAgvIdle(id: string): void {
-    AgvService.agvApi.setIdlePartialUpdate(id).catch((response) => {
+  public static unlockAgv(id: string): void {
+    AgvService.agvApi.unlockPartialUpdate(id).catch((response) => {
       console.error('Set AGV idle: ' + response.statusText)
       response.text().then((body: unknown) => {
         const $alert = useAlert()
@@ -17,7 +17,7 @@ export abstract class AgvService {
   }
 
   public static lockAgv(id: string): void {
-    AgvService.agvApi.lockAgvPartialUpdate(id).catch((response) => {
+    AgvService.agvApi.lockPartialUpdate(id).catch((response) => {
       console.error('lock agv: ' + response.statusText)
       response.text().then((body: unknown) => {
         const $alert = useAlert()

@@ -1,6 +1,7 @@
 using Gebhardt.StoreWare.Agv.Common.Configurations;
 using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
 using JetBrains.Annotations;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -16,11 +17,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations
         /// </summary>
         /// <param name="builder">The builder to build the application configuration</param>
         /// <param name="configurationTypeManager"></param>
+        /// <param name="index">Index position where the configuration source is added using insert</param>
         /// <returns>The <see cref="IConfigurationBuilder"/> object</returns>
         [UsedImplicitly]
-        public static IConfigurationBuilder AddDefaultConfiguration(this IConfigurationBuilder builder, IConfigurationTypeManager configurationTypeManager)
+        public static IConfigurationBuilder AddDefaultConfiguration(this IConfigurationBuilder builder, IConfigurationTypeManager configurationTypeManager, int index=0)
         {
-            return builder.Add(new DefaultConfigurationSource(configurationTypeManager));
+            // DefaultConfigurationProvider should be at index 0 of the provider layer, so that environment variable can overwrite the hardcoded values of a ISettings
+            builder.Sources.Insert(index, new DefaultConfigurationSource(ConfigurationTypeManager.Instance));
+            return builder;
         }
 
         /// <summary>
@@ -32,9 +36,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations
         /// <param name="reloadDelay">Delays the reload of configuration. The value is expressed in milliseconds</param>
         /// <param name="reloadOnChange">Whether to reload the configuration from database when there is a change in the entity</param>
         /// <returns>The <see cref="IConfigurationBuilder"/> object</returns>
-        public static DatabaseConfigurationSource AddDatabaseConfiguration(this IConfigurationBuilder builder, IConfigurationTypeManager configurationTypeManager, ILogger logger, int reloadDelay = 500, bool reloadOnChange = false)
+        public static DatabaseConfigurationSource<TDbContext> AddDatabaseConfiguration<TDbContext>(this IConfigurationBuilder builder, IConfigurationTypeManager configurationTypeManager, ILogger logger, int reloadDelay = 500, bool reloadOnChange = false)
+            where TDbContext : DbContext
         {
-            var databaseConfigurationSource = new DatabaseConfigurationSource(configurationTypeManager, null, logger)
+            var databaseConfigurationSource = new DatabaseConfigurationSource<TDbContext>(configurationTypeManager, null, logger)
             {
                 ReloadOnChange = reloadOnChange,
                 ReloadDelay = reloadDelay
@@ -50,7 +55,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations
         /// <param name="databaseConfigurationSource"></param>
         /// <returns></returns>
         [UsedImplicitly]
-        public static IConfigurationBuilder AddDatabaseConfigurationSource(this IConfigurationBuilder builder, DatabaseConfigurationSource databaseConfigurationSource)
+        public static IConfigurationBuilder AddDatabaseConfigurationSource<TDbContext>(this IConfigurationBuilder builder, DatabaseConfigurationSource<TDbContext> databaseConfigurationSource)
+            where TDbContext : DbContext
         {
             return builder.Add(databaseConfigurationSource);
         }

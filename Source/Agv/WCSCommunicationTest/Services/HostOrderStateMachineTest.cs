@@ -4,6 +4,7 @@ using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.Common.Messages;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
+using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands;
 using Gebhardt.StoreWare.Agv.WCSCommunication.Services;
 using Gebhardt.StoreWare.Agv.WCSCommunication.States;
 using Gebhardt.StoreWare.Agv.WCSCommunication.Messages;
@@ -51,12 +52,12 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services
             // Assert
             (await fixture.SagaHarness.Consumed.Any<CreateHostOrder>()).ShouldBeTrue();
 
-            (await fixture.TestHarness.Published.Any<ActionGroup>()).ShouldBeTrue();
+            (await fixture.TestHarness.Published.Any<QueueActionGroup>()).ShouldBeTrue();
 
-            var msg = fixture.TestHarness.Published.Select<ActionGroup>().First().Context.Message;
+            var msg = fixture.TestHarness.Published.Select<QueueActionGroup>().First().Context.Message;
             msg.CorrelationId.ShouldBe(correlationId);
-            var pickAction = msg.ActionList[0];
-            var dropAction = msg.ActionList[1];
+            var pickAction = msg.ActionGroup.Actions[0];
+            var dropAction = msg.ActionGroup.Actions[1];
 
             pickAction.ShouldNotBeNull();
             dropAction.ShouldNotBeNull();

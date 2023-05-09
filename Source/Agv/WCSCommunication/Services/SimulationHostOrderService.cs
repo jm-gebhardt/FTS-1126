@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using MassTransit;
 using Gebhardt.StoreWare.Agv.Common.Messages;
-using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Commands;
+
 using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.WCSCommunication.CmdOptions;
@@ -62,9 +62,6 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
             const string leNo = "9999";
             var correlationId = orderId.ToGuid();
             var orderDetails = new OrderDetails(correlationId, orderId, src, dst, leNo, HostOrderCreator.Simulation);
-
-            // Send message
-            await _bus.Publish(new HandleHostOrder(correlationId, orderDetails), cancellationToken);
 
             await _bus.Publish(new CreateHostOrder(orderDetails), cancellationToken);
 

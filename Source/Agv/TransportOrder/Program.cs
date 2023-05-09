@@ -4,8 +4,6 @@ using Gebhardt.StoreWare.Agv.Common.Configurations;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.CmdOptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Db;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -13,7 +11,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Prometheus;
-using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Saga;
 
 var initialLogger = Gebhardt.StoreWare.Agv.Common.Logging.InitialLogger.Create<Program>();
 
@@ -31,7 +30,7 @@ try
     // By using the generic overload of WithParsed above hostBuilder will be null for invalid command line arguments.
     if (hostBuilder != null)
     {
-        DatabaseConfigurationSource? databaseConfigurationSource = null;
+        DatabaseConfigurationSource<TransportOrderDbContext>? databaseConfigurationSource = null;
 
         hostBuilder.ConfigureWebHost(host =>
         {
@@ -40,11 +39,9 @@ try
                 .ConfigureAppConfiguration((_, config) =>
                 {
                     ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
+                    config.AddDefaultConfiguration(ConfigurationTypeManager.Instance);
 
-                    // DefaultConfigurationProvider should be at index 0 of the provider layer, so that environment variable can overwrite the hardcoded values of a ISettings
-                    config.Sources.Insert(0, new DefaultConfigurationSource(ConfigurationTypeManager.Instance));
-
-                    databaseConfigurationSource = config.AddDatabaseConfiguration(ConfigurationTypeManager.Instance, initialLogger, 0, true);
+                    databaseConfigurationSource = config.AddDatabaseConfiguration<TransportOrderDbContext>(ConfigurationTypeManager.Instance, initialLogger, 0, true);
                 })
                 .Configure(app =>
                 {
@@ -64,12 +61,12 @@ try
             var db2 = scope.ServiceProvider.GetRequiredService<TransportOrderDbContext>();
             await db2.Database.MigrateAsync();
 
-            var dbConfigurationSeeder = scope.ServiceProvider.GetService<DatabaseConfigurationSeeder>()!;
+            var dbConfigurationSeeder = scope.ServiceProvider.GetService<DatabaseConfigurationSeeder<TransportOrderDbContext>>()!;
             await dbConfigurationSeeder.SeedDefaultConfigurationAsync();
         }
 
         // we need to set the DbContext manually and after instantiation, because the AppConfiguration is built before the services (dbContext) are built
-        databaseConfigurationSource!.UpdateDbContext(host.Services.GetRequiredService<SagaPersistenceDbContext>());
+        databaseConfigurationSource!.UpdateDbContextFactory(host.Services.GetRequiredService<IDbContextFactory<TransportOrderDbContext>>());
 
         host.Run();
         return 0;

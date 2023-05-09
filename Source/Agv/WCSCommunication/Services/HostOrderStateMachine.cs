@@ -1,4 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
+using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Microsoft.Extensions.Logging;
 using MassTransit;
@@ -90,7 +91,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
                 .Then(c =>
                     _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId} received", nameof(CreateHostOrder), c.Message.OrderDetails.OrderId, c.Message.OrderDetails.CorrelationId))
                 .TransitionTo(Initial)
-                .Then(c => c.Publish(GetActionGroup(c.Saga)));
+                .Then(c => c.Publish(new QueueActionGroup(GetActionGroup(c.Saga))));
         #endregion
 
         #region Private Methods

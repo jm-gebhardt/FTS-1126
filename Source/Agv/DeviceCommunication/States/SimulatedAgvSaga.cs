@@ -37,7 +37,10 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         public string CurrentState { get; set; }
 
         /// <inheritdoc cref="IAgv" />
-        public bool Alive { get; set; } = true;
+        public bool IsOnline { get; set; } = true;
+
+        /// <inheritdoc />
+        public bool IsLocked { get; set; }
 
         /// <inheritdoc cref="IAgv" />
         public bool Assignable => true;
@@ -315,7 +318,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
             }.Any(c => c == CurrentState);
 
             SimulatedBatteryCharge = Math.Clamp(SimulatedBatteryCharge + chargeDiff, 0, 100);
-            Alive = SimulatedBatteryCharge > AliveChargeThreshold;
+            IsOnline = SimulatedBatteryCharge > AliveChargeThreshold;
 
             AgvStatus = new(
                 AgvStatus.CorrelationId,

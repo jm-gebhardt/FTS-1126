@@ -30,16 +30,14 @@ try
                 .ConfigureServices((context, services) =>
                 {
                     services.AddScoped(_ => simulationOptions);
-                    services.AddTransient<SimulatedAgvProvider>();
                     services.AddSingleton<IAgvRegistry, AgvRegistry>();
+                    services.AddHostedService<SimulatedAgvProvider>();
                     services.ConfigureServicesMassTransit(context.Configuration,
                         x =>
                         {
                             x.AddDelayedMessageScheduler();
                             x.AddSagaStateMachine<SimulatedAgvStateMachine, SimulatedAgvSaga>()
                                 .InMemoryRepository();
-                            x.AddRequestClient<SimulatedAgvProvider>();
-                            x.AddConsumer<SimulatedAgvProvider>();
                         }, rabbitMqConfiguration: (_, cfg) =>
                         {
                             cfg.UseDelayedMessageScheduler();

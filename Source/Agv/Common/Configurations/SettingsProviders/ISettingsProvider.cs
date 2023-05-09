@@ -1,3 +1,5 @@
+using JetBrains.Annotations;
+
 namespace Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders
 {
     /// <summary>
@@ -16,6 +18,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders
         /// Returns true if the settings were found
         /// </summary>
         /// <returns></returns>
+        [UsedImplicitly] 
         bool DoTheSettingsExist();
     }
 }

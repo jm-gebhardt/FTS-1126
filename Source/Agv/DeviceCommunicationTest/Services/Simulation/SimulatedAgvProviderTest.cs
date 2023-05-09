@@ -1,4 +1,3 @@
-using Gebhardt.StoreWare.Agv.Common.Messages;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using MassTransit;
@@ -7,6 +6,7 @@ using Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.States;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
@@ -18,7 +18,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
     public class SimulatedAgvProviderTest
     {
         [TestMethod]
-        public async Task BusReadyPublished_SimulatedAgvProvider_Create_Triggered_CreateAgv_Published()
+        public async Task SimulatedAgvProvider_Create_Triggered_CreateAgv_Published()
         {
             var options = new SimulateOptions()
             {
@@ -32,17 +32,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
                 services: s =>
                 {
                     s.AddSingleton(options);
-                    s.AddTransient<SimulatedAgvProvider>();
-                },
-                busRegistrationConfigurator:
-                x =>
-                {
-                    x.AddConsumer<SimulatedAgvProvider>();
-                    x.AddRequestClient<SimulatedAgvProvider>();
+                    s.AddLogging();
+                    s.AddHostedService<SimulatedAgvProvider>();
                 });
 
-            await fixture.TestHarness.Bus.Publish(new MassTransitBusEvent(MassTransitBusEvent.EventType.PostStarted));
-            bool result = await fixture.TestHarness.Published.Any<SimulatedAgvStateMachine.CreateAgv>();
+            (fixture.Provider.GetRequiredService<IHostedService>() as SimulatedAgvProvider).ShouldNotBeNull();
+            bool result = await fixture.SagaHarness.Consumed.Any<SimulatedAgvStateMachine.CreateAgv>();
             result.ShouldBeTrue();
         }
 
@@ -62,19 +57,17 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
                 services: s =>
                 {
                     s.AddSingleton(options);
-                    s.AddScoped<SimulatedAgvProvider>();
+                    s.AddLogging();
+                    s.AddHostedService<SimulatedAgvProvider>();
                 },
                 inMemoryConfiguration: (_, cfg) => { cfg.UseDelayedMessageScheduler(); },
                 busRegistrationConfigurator:
                 x =>
                 {
                     x.AddDelayedMessageScheduler();
-                    x.AddConsumer<SimulatedAgvProvider>();
-                    x.AddRequestClient<SimulatedAgvProvider>();
+                    x.AddHostedService<SimulatedAgvProvider>();
                 });
-
-            await fixture.TestHarness.Bus.Publish(new MassTransitBusEvent(MassTransitBusEvent.EventType.PostStarted));
-
+            
             (await fixture.TestHarness.Published.Any<SimulatedAgvStateMachine.CreateAgv>()).ShouldBeTrue();
             
             (await fixture.SagaHarness.Consumed.Any<SimulatedAgvStateMachine.CreateAgv>()).ShouldBeTrue();

@@ -19,7 +19,10 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
         public string CurrentState { get; }
 
         /// <inheritdoc />
-        public bool Alive { get; }
+        public bool IsOnline { get; }
+
+        /// <inheritdoc />
+        public bool IsLocked { get; set; }
 
         /// <inheritdoc />
         public bool Assignable { get; }

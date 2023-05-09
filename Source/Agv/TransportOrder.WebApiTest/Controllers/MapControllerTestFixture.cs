@@ -1,8 +1,9 @@
 ﻿using System.Text;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Requests.Queries;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Models;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db.Models;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Maps;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.States;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers;
 using JetBrains.Annotations;
@@ -91,8 +92,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             }
 
             registryMock.SetupGet(x => x.Count).Returns(agvs.Count);
-            registryMock.SetupGet(x => x.CountIdle).Returns(agvs.Where(x => x.CurrentState == nameof(AgvStateMachine.Ready)).Count);
-            registryMock.Setup(x => x.GetReadyAgvs()).Returns(new EnumerableQuery<IAgv>(agvs.Where(x => x.CurrentState == nameof(AgvStateMachine.Ready))));
+            registryMock.SetupGet(x => x.CountIdle).Returns(agvs.Where(x => x.CurrentState == nameof(AgvStateMachine.Idle)).Count);
+            registryMock.Setup(x => x.GetIdleAgvs()).Returns(new EnumerableQuery<IAgv>(agvs.Where(x => x.CurrentState == nameof(AgvStateMachine.Idle))));
             registryMock.Setup(x => x.GetAllAgvs()).Returns(new EnumerableQuery<IAgv>(agvs));
             registryMock.Setup(x => x.GetAgv(It.IsAny<Guid>())).Returns<Guid>(correlationId => agvs.SingleOrDefault(a => a.CorrelationId == correlationId));
 

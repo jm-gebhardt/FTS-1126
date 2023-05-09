@@ -55,6 +55,11 @@ public abstract class BaseGraphAlgorithm : IGraphAlgorithm
             return null;
         }
 
+        if (source == destination) // Already at destination -> 0 cost
+        {
+            return new IGraphAlgorithm.Route(0f, new[] { source });
+        }
+
         return CalculateRouteInternal(source, destination);
     }
 
@@ -96,5 +101,33 @@ public abstract class BaseGraphAlgorithm : IGraphAlgorithm
 
         // Return combined routes
         return routeToSource + route;
+    }
+
+    /// <inheritdoc cref="IGraphAlgorithm.CalculateRoute(string[])" />
+    /// <exception cref="KeyNotFoundException">A waypoint node was not found.</exception>
+    public virtual IGraphAlgorithm.Route? CalculateRoute(string[] waypoints)
+    {
+        if (waypoints.Length < 2)
+        {
+            return null;
+        }
+
+        var totalRoute = new IGraphAlgorithm.Route(0, Array.Empty<string>());
+
+        for (int i = 0; i < waypoints.Length - 1; i++)
+        {
+            string source = waypoints[i];
+            string destination = waypoints[i + 1];
+
+            var route = CalculateRoute(source, destination);
+            if (route == null)
+            {
+                return null;
+            }
+
+            totalRoute += route;
+        }
+
+        return totalRoute;
     }
 }

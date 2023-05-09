@@ -1,12 +1,13 @@
 ﻿using AutoMapper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Profiles;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services;
 using MassTransit;
 using System.Collections.Immutable;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Common;
 using JetBrains.Annotations;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Requests.Queries;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Maps;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Handlers.Queries
 {

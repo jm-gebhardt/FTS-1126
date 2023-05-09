@@ -1,6 +1,6 @@
-using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Commands;
 using Gebhardt.StoreWare.Agv.WCSCommunication.Db;
 using Gebhardt.StoreWare.Agv.WCSCommunication.Db.Models;
+using Gebhardt.StoreWare.Agv.WCSCommunication.Messages;
 using Gebhardt.StoreWare.Agv.WCSCommunication.Services;
 using Gebhardt.StoreWare.Agv.WCSCommunicationTest.Fixtures;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -64,7 +64,8 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services
 
             await fixture.Pollable.HandleNewTransportOrders(It.IsAny<CancellationToken>());
 
-            IPublishedMessage<HandleHostOrder>? message = fixture.TestHarness.Published.Select<HandleHostOrder>().First();
+            (await fixture.TestHarness.Published.Any<CreateHostOrder>()).ShouldBeTrue();
+            IPublishedMessage<CreateHostOrder>? message = fixture.TestHarness.Published.Select<CreateHostOrder>().First();
 
             message.ShouldNotBeNull();
 

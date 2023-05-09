@@ -23,7 +23,9 @@ export interface IAgv {
   /** Current State */
   currentState: string
   /** Communication alive state */
-  alive: boolean
+  isOnline: boolean
+  /** Locked state */
+  isLocked: boolean
 }
 
 /**
@@ -181,18 +183,9 @@ export interface IGraph {
 }
 
 /**
- * Defines the creator of a host order
- */
-export enum IHostOrderCreator {
-  Wms = 'Wms',
-  Simulation = 'Simulation'
-}
-
-/**
  * SignalR hub methods
  */
 export enum IHubMethods {
-  OrderStateChanged = 'OrderStateChanged',
   AgvDiscovered = 'AgvDiscovered',
   AgvStateChanged = 'AgvStateChanged',
   AgvPositionChanged = 'AgvPositionChanged'
@@ -236,6 +229,8 @@ export interface INode {
   id: string
   /** Node enabled/disabled. */
   enabled: boolean
+  /** Node state. */
+  state: INodeState
   /** Node type of the node. */
   type: INodeType
   /**
@@ -264,6 +259,16 @@ export interface INode {
 }
 
 /**
+ * Node state
+ */
+export enum INodeState {
+  Free = 'Free',
+  Reserved = 'Reserved',
+  Occupied = 'Occupied',
+  Locked = 'Locked'
+}
+
+/**
 * Node types.
 <br>
 These types are coming from the specification.
@@ -275,57 +280,6 @@ export enum INodeType {
   Drop = 'Drop',
   PickDrop = 'PickDrop',
   Park = 'Park'
-}
-
-/**
-* Order Model
-            
-This is a simply copy of the Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.IOrder to overcome a json serialization problems
-<see href="https://github.com/dotnet/runtime/issues/41749" />
-*/
-export interface IOrder {
-  /** Current State */
-  currentState: string
-  /**
-   * AgvId
-   * @format uuid
-   */
-  assignedAgv?: string | null
-  /** Order object used by all messages that require the order details */
-  orderDetails: IOrderDetails
-  /**
-   * Used to identify a message as correlated so that the CorrelationId can be returned
-   * @format uuid
-   */
-  correlationId: string
-  /** Reason why an order failed */
-  failedReason?: string | null
-}
-
-/**
- * Order object used by all messages that require the order details
- */
-export interface IOrderDetails {
-  /**
-   * Used to identify a message as correlated so that the CorrelationId can be returned
-   * @format uuid
-   */
-  correlationId: string
-  /** The unique ID of the order known by the host system */
-  orderId: string
-  /** The source where to pick up the order */
-  source: string
-  /** The destination where to drop the order */
-  destination: string
-  /** The LeNo of the orders handled box or transportation good */
-  leNo: string
-  /** The creator of the host order */
-  creator: IHostOrderCreator
-  /**
-   * The UTC timestamp when the order was created
-   * @format date-time
-   */
-  creationDate: string
 }
 
 /**

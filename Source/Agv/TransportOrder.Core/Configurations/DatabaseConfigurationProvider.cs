@@ -1,5 +1,6 @@
 using Gebhardt.StoreWare.Agv.Common.Configurations;
 using Gebhardt.StoreWare.Agv.Common.Configurations.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -8,18 +9,18 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations
     /// <summary>
     /// Implementation of a database configuration provider
     /// </summary>
-    public class DatabaseConfigurationProvider : ConfigurationProvider
+    public class DatabaseConfigurationProvider<TDbContext> : ConfigurationProvider
+        where TDbContext : DbContext
     {
-        private readonly DatabaseConfigurationSource _source;
+        private readonly DatabaseConfigurationSource<TDbContext> _source;
         private readonly ILogger _logger;
-        private readonly SemaphoreSlim _lockSemaphoreSlim = new(1, 1);
 
         /// <summary>
-        /// <inheritdoc cref="DatabaseConfigurationProvider" />
+        /// <inheritdoc cref="ConfigurationProvider" />
         /// </summary>
         /// <param name="source">The database configuration source</param>
         /// <param name="logger">The logger to log events</param>
-        public DatabaseConfigurationProvider(DatabaseConfigurationSource source, ILogger logger)
+        public DatabaseConfigurationProvider(DatabaseConfigurationSource<TDbContext> source, ILogger logger)
         {
             _source = source;
             _logger = logger;
@@ -42,22 +43,19 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations
         /// </summary>
         public override void Load()
         {
-            var context = _source.DbContext;
-            if (context == null)
+            if (_source.DbContextFactory == null)
             {
-                // context not yet set. Will be set with UpdateDbContext method
+                // context factory not yet set. Will be set with UpdateDbContext method
                 return;
             }
 
             try
             {
-                _lockSemaphoreSlim.Wait();
-                var dbContext = context;
-                dbContext.Database.EnsureCreated();
-
+                using var dbContext = _source.DbContextFactory.CreateDbContext();
+       
                 Data = new Dictionary<string, string>()!;
 
-                List<ConfigurationSetting> configurationSettings = dbContext.ConfigurationSettings.ToList();
+                List<ConfigurationSetting> configurationSettings = dbContext.Set<ConfigurationSetting>().ToList();
                 foreach (var setting in configurationSettings)
                 {
                     var configuration = _source.ConfigurationTypeManager.GetConfigurationTypeByTypeName(setting.ConfigurationType);
@@ -82,10 +80,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations
             {
                 _logger.LogError(ex, nameof(Load));
                 throw;
-            }
-            finally
-            {
-                _lockSemaphoreSlim.Release();
             }
         }
     }

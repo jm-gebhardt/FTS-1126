@@ -6,11 +6,6 @@ namespace Gebhardt.StoreWare.Agv.Common.Configurations.Models
     public class ConfigurationSetting
     {
         /// <summary>
-        /// The constant table name of the configuration setting
-        /// </summary>
-        public const string TableName = "Configuration";
-
-        /// <summary>
         /// The unique key of the configuration setting
         /// </summary>
         public string Key { get; set; } = null!;
