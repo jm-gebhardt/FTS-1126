@@ -10,63 +10,63 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
         /// <inheritdoc />
         /// Parenting ID
         public Guid CorrelationId { get; }
-        
+
         /// <summary>
         /// A unique ID of the order that clamps all the corresponding actions
         /// </summary>
         public string OrderId { get; init; }
-        
+
         /// <summary>
         /// Assigned AGV that will execute the action group
         /// </summary>
-        public Guid? AssignedAgv;
+        public Guid? AssignedAgv { get; set; }
 
         /// <summary>
         /// Date the action was created
         /// </summary>
-        public DateTime DtCreated;
+        public DateTime CreatedDate { get; init; }
 
         /// <summary>
         /// Date the action has started
         /// </summary>
-        public DateTime? DtStarted;
+        public DateTime? StartedDate { get; init; }
 
         /// <summary>
         /// Date the action has completed
         /// </summary>
-        public DateTime? DtCompleted;
+        public DateTime? CompletedDate { get; init; }
 
         /// <summary>
         /// State of the action group
         /// </summary>
-        public ActionGroupState State;
-        
+        public ActionGroupState State { get; set; } = ActionGroupState.Created;
+
         /// <summary>
         /// List of actions
         /// </summary>
-        public AgvAction[] Actions { get; }
+        public List<AgvAction> Actions { get; init; }
 
         /// <summary>
         /// Generating an instance of <see cref="ActionGroup"/>
         /// </summary>
         /// <param name="correlationId"></param>
-        /// <param name="dtCompleted"></param>
+        /// <param name="completedDate"></param>
         /// <param name="state"></param>
         /// <param name="actions"></param>
         /// <param name="orderId"></param>
         /// <param name="assignedAgv"></param>
-        /// <param name="dtCreated"></param>
-        /// <param name="dtStarted"></param>
-        public ActionGroup(Guid correlationId, string orderId, AgvAction[] actions, DateTime dtCreated, DateTime? dtStarted = null, DateTime? dtCompleted = null, ActionGroupState state = ActionGroupState.Created, Guid? assignedAgv = null)
+        /// <param name="createdDate"></param>
+        /// <param name="startedDate"></param>
+        public ActionGroup(Guid correlationId, string orderId, List<AgvAction> actions, DateTime createdDate, DateTime? startedDate = null, DateTime? completedDate = null, ActionGroupState state = ActionGroupState.Created, Guid? assignedAgv = null)
         {
             CorrelationId = correlationId;
             OrderId = orderId;
             AssignedAgv = assignedAgv;
-            DtCreated = dtCreated;
-            DtStarted = dtStarted;
-            DtStarted = dtCompleted;
+            CreatedDate = createdDate;
+            StartedDate = startedDate;
+            StartedDate = completedDate;
             State = state;
-            DtCompleted = dtCompleted;
+            CompletedDate = completedDate;
             Actions = actions;
         }
 
@@ -76,12 +76,12 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
         /// <param name="correlationId"></param>
         /// <param name="orderId"></param>
         /// <param name="actions"></param>
-        public ActionGroup(Guid correlationId, string orderId, AgvAction[] actions)
+        public ActionGroup(Guid correlationId, string orderId, List<AgvAction> actions)
         {
             CorrelationId = correlationId;
             Actions = actions;
             OrderId = orderId;
-            DtCreated = DateTime.Now;
+            CreatedDate = DateTime.Now;
         }
     }
 }

@@ -19,7 +19,7 @@ public class ActionManager : BaseActionManager
 {
     /// <inheritdoc />
     public ActionManager(
-        IAgvActionRegistry agvActionRegistry,
+        IActionGroupRegistry actionGroupRegistry,
         IRouteService routeService,
         IChargingPointManager chargingPointManager,
         IParkPointService parkPointService,
@@ -31,9 +31,10 @@ public class ActionManager : BaseActionManager
         IAgvLoadCapabilityService agvLoadCapabilityService,
         IStartActionService startActionService,
         IAgvStateService agvStateService,
-        IChooseAgvActionGroupService chooseAgvActionGroupService
+        IChooseAgvActionGroupService chooseAgvActionGroupService,
+        IActionGroupService actionGroupService
     )
-        : base(agvActionRegistry,
+        : base(actionGroupRegistry,
             routeService,
             chargingPointManager,
             parkPointService,
@@ -45,7 +46,8 @@ public class ActionManager : BaseActionManager
             agvLoadCapabilityService,
             startActionService,
             agvStateService,
-            chooseAgvActionGroupService
+            chooseAgvActionGroupService,
+            actionGroupService
         )
     {
     }

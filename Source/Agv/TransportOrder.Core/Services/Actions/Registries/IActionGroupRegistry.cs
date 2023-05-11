@@ -1,29 +1,29 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 
 // ReSharper disable UnusedMemberInSuper.Global
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Registries
 {
     /// <summary>
-    /// Abstracted interface for Agv action registry
+    /// Interface for ActionGroup and AgvAction registry
     /// </summary>
-    public interface IAgvActionRegistry
+    public interface IActionGroupRegistry
     {
-        
         /// <summary>
         /// Saves the action
         /// </summary>
         /// <param name="actionGroup">Agv Action</param>
-        public bool Insert(ActionGroup actionGroup);
+        Task InsertAsync(ActionGroup actionGroup);
 
         /// <summary>
         /// Get ActionGroup
         /// </summary>
-        /// <param name="states"></param>
+        /// <param name="states">Can be one state filter or contain multiple states which should be included in the return</param>
         /// <param name="fromDate"></param>
         /// <param name="toDate"></param>
-        /// <param name="limit"></param>
+        /// <param name="maxItems"></param>
         /// <returns></returns>
-        public IQueryable<ActionGroup> GetActionGroups(ActionGroupState[] states, DateTime? fromDate = null, DateTime? toDate = null, int limit = 0);
+        public IQueryable<ActionGroup> GetActionGroups(IEnumerable<ActionGroupState> states, DateTime? fromDate = null, DateTime? toDate = null, int maxItems = 0);
         
         /// <summary>
         /// Get ActionGroup
@@ -38,12 +38,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Registries
         /// <param name="correlationId"></param>
         /// <returns></returns>
         public ActionGroup GetRequiredActionGroup(Guid correlationId);
-
-        /// <summary>
-        /// Saves the action
-        /// </summary>
-        /// <param name="agvAction">Agv Action</param>
-        public void Insert(AgvAction agvAction);
         
         /// <summary>
         /// Get Agv action by key.
@@ -65,7 +59,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Registries
         /// <param name="sortBySequenceAsc">If true, then pending actions get sorted according to their sequence number</param>
         /// <returns>Returns the list of pending actions, empty list when there are no pending actions</returns>
         public List<AgvAction> GetPendingActions(bool sortBySequenceAsc);
-
+        
         /// <summary>
         /// Return list of all action belonging to the same parent id
         /// </summary>
@@ -112,12 +106,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Registries
         /// <param name="agvCorrelationId">The AgvCorrelationId of the agv to check</param>
         /// <returns>True if there is any not completed drop action for the given Agv</returns>
         bool HasUnfinishedDropActions(Guid agvCorrelationId);
-
+   
         /// <summary>
-        /// Updates or insert the action with <see cref="ActionState"/>.Started
+        /// Updates the action group in the repository
         /// </summary>
-        /// <param name="action">The action</param>
+        /// <param name="actionGroup"></param>
         /// <returns></returns>
-        Task SetActionStartedAsync(AgvAction action);
+        Task UpdateActionGroupAsync(ActionGroup actionGroup);
     }
 }

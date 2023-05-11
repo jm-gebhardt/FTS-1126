@@ -1,0 +1,16 @@
+using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
+
+namespace Gebhardt.StoreWare.Agv.Common.Exceptions;
+
+/// <summary>
+/// Agv Action Group was not found
+/// </summary>
+public class ActionGroupNotFoundException : NotFoundException
+{
+    /// <inheritdoc cref="ActionGroupNotFoundException"/>
+    /// <param name="actionGroupCorrelationId"></param>
+    public ActionGroupNotFoundException(Guid actionGroupCorrelationId) 
+        : base(nameof(ActionGroup), "ActionGroupCorrelationId", actionGroupCorrelationId)
+    {
+    }
+}

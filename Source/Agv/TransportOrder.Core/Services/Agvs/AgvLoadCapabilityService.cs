@@ -5,20 +5,20 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
 /// <inheritdoc />
 public class AgvLoadCapabilityService : IAgvLoadCapabilityService
 {
-    private readonly IAgvActionRegistry _agvActionRegistry;
+    private readonly IActionGroupRegistry _actionGroupRegistry;
 
     /// <summary>
     /// Constructor
     /// </summary>
-    public AgvLoadCapabilityService(IAgvActionRegistry agvActionRegistry)
+    public AgvLoadCapabilityService(IActionGroupRegistry actionGroupRegistry)
     {
-        _agvActionRegistry = agvActionRegistry;
+        _actionGroupRegistry = actionGroupRegistry;
     }
 
     /// <inheritdoc />
     public bool IsCarryingLoad(Guid agvCorrelationId)
     {
-        return _agvActionRegistry.HasUnfinishedDropActions(agvCorrelationId);
+        return _actionGroupRegistry.HasUnfinishedDropActions(agvCorrelationId);
     }
 
     /// <inheritdoc />

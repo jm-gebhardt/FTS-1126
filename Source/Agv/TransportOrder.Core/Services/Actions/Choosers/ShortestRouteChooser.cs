@@ -14,21 +14,21 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Choosers;
 public class ShortestRouteChooser : IChooseAgvActionGroupService
 {
     private readonly IRouteService _routeService;
-    private readonly IAgvActionRegistry _agvActionRegistry;
+    private readonly IActionGroupRegistry _actionGroupRegistry;
     private readonly ILogger<ShortestRouteChooser> _logger;
 
     /// <inheritdoc cref="ShortestRouteChooser"/>>
     /// <param name="routeService"></param>
-    /// <param name="agvActionRegistry"></param>
+    /// <param name="actionGroupRegistry"></param>
     /// <param name="logger"></param>
     public ShortestRouteChooser(
         IRouteService routeService,
-        IAgvActionRegistry agvActionRegistry,
+        IActionGroupRegistry actionGroupRegistry,
         ILogger<ShortestRouteChooser> logger
         )
     {
         _routeService = routeService;
-        _agvActionRegistry = agvActionRegistry;
+        _actionGroupRegistry = actionGroupRegistry;
         _logger = logger;
     }
 
@@ -81,7 +81,7 @@ public class ShortestRouteChooser : IChooseAgvActionGroupService
         _logger.LogInformation("start GetNextParentedByAction for agvId: {AgvId}", agv.AgvId);
         agv.GetRequiredAgvStatus().RequireLastNodeId();
 
-        List<ActionGroup> notStartedActionGroups = _agvActionRegistry.GetNotStartedActionGroups().ToList();
+        List<ActionGroup> notStartedActionGroups = _actionGroupRegistry.GetNotStartedActionGroups().ToList();
         var nextParentedByAction = (notStartedActionGroups
             .Select(a => a.Actions.Select(action =>
             {
