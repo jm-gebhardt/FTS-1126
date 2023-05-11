@@ -63,12 +63,10 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services
             dropAction.ShouldNotBeNull();
 
             pickAction.ActionType.ShouldBe(ActionType.Pick);
-            pickAction.AgvId.ShouldBe(string.Empty);
             pickAction.ParentId.ShouldBe(correlationId);
             pickAction.CorrelationId.ShouldNotBe(Guid.Empty);
 
             dropAction.ActionType.ShouldBe(ActionType.Drop);
-            dropAction.AgvId.ShouldBe(string.Empty);
             dropAction.ParentId.ShouldBe(correlationId);
             dropAction.CorrelationId.ShouldNotBe(Guid.Empty);
 

@@ -21,6 +21,30 @@ public class EfAgvActionRegistry : IAgvActionRegistry
         _dbContextFactory = dbContextFactory;
     }
 
+    /// <inheritdoc />
+    public bool Insert(ActionGroup actionGroup)
+    {
+        throw new NotImplementedException();
+    }
+
+    /// <inheritdoc />
+    public IQueryable<ActionGroup> GetActionGroups(ActionGroupState[] states, DateTime? fromDate = null, DateTime? toDate = null, int limit = 0)
+    {
+        throw new NotImplementedException();
+    }
+
+    /// <inheritdoc />
+    public ActionGroup? GetActionGroup(Guid correlationId)
+    {
+        throw new NotImplementedException();
+    }
+
+    /// <inheritdoc />
+    public ActionGroup GetRequiredActionGroup(Guid correlationId)
+    {
+        throw new NotImplementedException();
+    }
+
     /// <inheritdoc cref="IAgvActionRegistry"/>
     public void Insert(AgvAction agvAction)
     {

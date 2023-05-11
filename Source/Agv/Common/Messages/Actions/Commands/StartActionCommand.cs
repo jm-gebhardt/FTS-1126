@@ -9,6 +9,11 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands
     {
         /// <inheritdoc />
         public Guid CorrelationId { get; }
+        
+        /// <summary>
+        /// Id of the agv the action is send to
+        /// </summary>
+        public string AgvId { get; init; }
 
         /// <summary>
         /// Action to be executed
@@ -19,11 +24,13 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands
         /// Constructor
         /// </summary>
         /// <param name="correlationId">CorrelationId</param>
+        /// <param name="agvId"></param>
         /// <param name="action">Action to be executed</param>
-        public StartActionCommand(Guid correlationId, AgvAction action)
+        public StartActionCommand(Guid correlationId, string agvId, AgvAction action)
         {
             CorrelationId = correlationId;
             Action = action;
+            AgvId = agvId;
         }
     }
 }
