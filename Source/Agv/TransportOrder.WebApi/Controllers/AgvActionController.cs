@@ -34,9 +34,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
         /// <response code="200">Ok</response>
         [HttpGet]
         [Route("/actionGroups")]
-        public async Task<ActionResult<IEnumerable<AgvActionGroupDto>>> GetActionGroups(ActionState[] states, DateTime toDate, int limit)
+        public async Task<ActionResult<IEnumerable<AgvActionGroupDto>>> GetActionGroups(ActionState[] states, DateTime? fromDate, DateTime? toDate, int limit=1000)
         {
-            Response<GetAgvActionGroupsResult> groups = await _getAgvActionGroupsRequest.GetResponse<GetAgvActionGroupsResult>( new GetAgvActionGroupsRequest(states, toDate, limit));
+            Response<GetAgvActionGroupsResult> groups = await _getAgvActionGroupsRequest.GetResponse<GetAgvActionGroupsResult>( new GetAgvActionGroupsRequest(
+                states, 
+                fromDate ?? DateTime.MinValue, 
+                toDate ?? DateTime.MaxValue, 
+                limit));
             return Ok(groups.Message.AgvActionGroups);
         }
 

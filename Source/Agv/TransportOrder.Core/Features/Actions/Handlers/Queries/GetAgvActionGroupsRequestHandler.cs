@@ -25,7 +25,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Actions.Handlers.Q
             {
                 new(
                     groupId0, 
-                    ActionState.Created, 
+                    ActionGroupState.Created, 
                     DateTime.MinValue, 
                     DateTime.MinValue, 
                     DateTime.MinValue,

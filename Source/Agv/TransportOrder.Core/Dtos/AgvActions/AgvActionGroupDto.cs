@@ -15,7 +15,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos
     /// <param name="Actions">List of actions</param>
     public record AgvActionGroupDto(
         Guid CorrelationId,
-        ActionState State,
+        ActionGroupState State,
         DateTime Created,
         DateTime? Started,
         DateTime? Ended,
