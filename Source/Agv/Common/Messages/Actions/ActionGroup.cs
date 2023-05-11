@@ -12,9 +12,14 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
         public Guid CorrelationId { get; }
         
         /// <summary>
+        /// A unique ID of the order that clamps all the corresponding actions
+        /// </summary>
+        public string OrderId { get; init; }
+        
+        /// <summary>
         /// Assigned AGV that will execute the action group
         /// </summary>
-        public Guid? AssignAgv;
+        public Guid? AssignedAgv;
 
         /// <summary>
         /// Date the action was created
@@ -34,29 +39,33 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
         /// <summary>
         /// State of the action group
         /// </summary>
-        public ActionState State;
-
+        public ActionGroupState State;
+        
         /// <summary>
         /// List of actions
         /// </summary>
-        public List<AgvAction> Actions { get; }
+        public AgvAction[] Actions { get; }
 
         /// <summary>
         /// Generating an instance of <see cref="ActionGroup"/>
         /// </summary>
         /// <param name="correlationId"></param>
         /// <param name="dtCompleted"></param>
+        /// <param name="state"></param>
         /// <param name="actions"></param>
-        /// <param name="assignAgv"></param>
+        /// <param name="orderId"></param>
+        /// <param name="assignedAgv"></param>
         /// <param name="dtCreated"></param>
         /// <param name="dtStarted"></param>
-        public ActionGroup(Guid correlationId, Guid? assignAgv, DateTime dtCreated, DateTime? dtStarted, DateTime? dtCompleted, List<AgvAction> actions)
+        public ActionGroup(Guid correlationId, string orderId, AgvAction[] actions, DateTime dtCreated, DateTime? dtStarted = null, DateTime? dtCompleted = null, ActionGroupState state = ActionGroupState.Created, Guid? assignedAgv = null)
         {
             CorrelationId = correlationId;
-            AssignAgv = assignAgv;
+            OrderId = orderId;
+            AssignedAgv = assignedAgv;
             DtCreated = dtCreated;
             DtStarted = dtStarted;
             DtStarted = dtCompleted;
+            State = state;
             DtCompleted = dtCompleted;
             Actions = actions;
         }
@@ -65,11 +74,13 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
         /// Constructor which auto creates Started date using DateTime.Now
         /// </summary>
         /// <param name="correlationId"></param>
+        /// <param name="orderId"></param>
         /// <param name="actions"></param>
-        public ActionGroup(Guid correlationId, List<AgvAction> actions)
+        public ActionGroup(Guid correlationId, string orderId, AgvAction[] actions)
         {
             CorrelationId = correlationId;
             Actions = actions;
+            OrderId = orderId;
             DtCreated = DateTime.Now;
         }
     }

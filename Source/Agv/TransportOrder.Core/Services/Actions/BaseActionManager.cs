@@ -98,15 +98,16 @@ public abstract class BaseActionManager : IActionManager
         _startActionService = startActionService;
     }
 
-    private static AgvAction CreateAgvAction(IAgv agv, AgvGraph.Node node, ActionType actionType = ActionType.Move)
+    private static ActionGroup CreateActionGroup(IAgv agv, AgvGraph.Node node, ActionType actionType = ActionType.Move)
     {
-        return new AgvAction(
-            Guid.NewGuid(),
-            agv.AgvId,
-            actionType,
-            string.Empty,
-            Guid.Empty,
-            node.Id);
+        Guid groupCorrelationId = Guid.NewGuid();
+        return new ActionGroup(
+            groupCorrelationId,
+            $"{nameof(actionType)}-{groupCorrelationId}",
+            new[] { new AgvAction(Guid.NewGuid(), actionType, groupCorrelationId, node.Id) },
+            DateTime.Now,
+            assignedAgv: agv.CorrelationId
+        );
     }
 
     /// <inheritdoc />
@@ -116,11 +117,8 @@ public abstract class BaseActionManager : IActionManager
 
         try
         {
-            foreach (var action in actionGroup.Actions)
-            {
-                await AddAgvActionAsync(action);
-            }
-
+            _agvActionRegistry.Insert(actionGroup);
+            
             var agv = await ChooseAgv(actionGroup);
 
             if (agv != null)
@@ -170,13 +168,12 @@ public abstract class BaseActionManager : IActionManager
     {
         Logger.LogDebug("Starting action with CorrelationId: {ActionCorrelationId}", action.CorrelationId);
         string[] nodes = _routeService.GetRoute(assignedAgv, action.TargetNodeId).Nodes;
-        action.AssignedAgv = assignedAgv.CorrelationId;
-        action.AgvId = assignedAgv.AgvId;
         action.Nodes = nodes;
+        // TODO: Group must change state to started
         await _agvActionRegistry.SetActionStartedAsync(action);
 
         await _agvStateService.SetBusyAsync(assignedAgv, true);
-        await _startActionService.StartAction(action, cancellationToken);
+        await _startActionService.StartAction(assignedAgv, action, cancellationToken);
         Logger.LogTrace("Starting action done");
     }
 
@@ -185,7 +182,9 @@ public abstract class BaseActionManager : IActionManager
     {
         Logger.LogDebug("Completing action with CorrelationId: {ActionCorrelationId}", correlationId);
         var action = await GetAgvActionAsync(correlationId);
-        var agv = await GetAgvByCorrelationIdAsync(action.AssignedAgv);
+        var actionGroup = await GetActionGroupAsync(action.ParentId);
+        
+        var agv = await GetAgvByCorrelationIdAsync(actionGroup.AssignedAgv);
 
         await UpdateActionStateAsync(action, ActionState.Completed);
 
@@ -205,6 +204,14 @@ public abstract class BaseActionManager : IActionManager
     /// <returns></returns>
     /// <exception cref="ActionNotFoundException"></exception>
     private Task<AgvAction> GetAgvActionAsync(Guid correlationId) => Task.FromResult(_agvActionRegistry.GetRequiredActionById(correlationId));
+    
+    /// <summary>
+    /// Get agv action group by correlation Id for Action Event consumption
+    /// </summary>
+    /// <param name="correlationId"></param>
+    /// <returns></returns>
+    /// <exception cref="ActionNotFoundException"></exception>
+    private Task<ActionGroup> GetActionGroupAsync(Guid correlationId) => Task.FromResult(_agvActionRegistry.GetRequiredActionGroup(correlationId));
 
     /// <summary>
     /// Gets agv by correlation id
@@ -266,7 +273,9 @@ public abstract class BaseActionManager : IActionManager
         Logger.LogInformation("Starting charge action for Agv with CorrelationId: {AgvCorrelationId}", agv.CorrelationId);
 
         var chargingNode = await _chargingPointManager.ReserveChargerAsync(agv);
-        return CreateAgvAction(agv, chargingNode, ActionType.Charge);
+        var actionGroup = CreateActionGroup(agv, chargingNode, ActionType.Charge);
+        _agvActionRegistry.Insert(actionGroup);
+        return actionGroup.Actions.First();
     }
 
     private bool IsAgvCharging(IAgv agv) => agv.GetRequiredAgvStatus().Charging;
@@ -282,7 +291,9 @@ public abstract class BaseActionManager : IActionManager
         Logger.LogInformation("Starting maintenance action for Agv with CorrelationId: {AgvCorrelationId}", agv.CorrelationId);
 
         var maintenanceNode = MaintenanceService.GetMaintenanceNode(agv);
-        return Task.FromResult(CreateAgvAction(agv, maintenanceNode));
+        var actionGroup = CreateActionGroup(agv, maintenanceNode);
+        _agvActionRegistry.Insert(actionGroup);
+        return Task.FromResult(actionGroup.Actions.First());
     }
 
     /// <summary>
@@ -300,7 +311,9 @@ public abstract class BaseActionManager : IActionManager
         Logger.LogInformation("Starting park action for Agv with CorrelationId: {AgvCorrelationId}", agv.CorrelationId);
 
         var parkNode = await _parkPointService.ReserveParkAsync(agv);
-        return CreateAgvAction(agv, parkNode);
+        var actionGroup = CreateActionGroup(agv, parkNode);
+        _agvActionRegistry.Insert(actionGroup);
+        return actionGroup.Actions.First();
     }
 
     /// <summary>
