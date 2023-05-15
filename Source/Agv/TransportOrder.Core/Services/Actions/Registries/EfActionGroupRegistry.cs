@@ -1,6 +1,7 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Exceptions;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Extensions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db;
 using Microsoft.EntityFrameworkCore;
 
@@ -111,22 +112,6 @@ public class EfActionGroupRegistry : IActionGroupRegistry
         await context.SaveChangesAsync();
     }
 
-    private void UpdateActionGroupState(ActionGroup actionGroup)
-    {
-        if (actionGroup.Actions.All(a => a.State == ActionState.Completed))
-        {
-            actionGroup.State = ActionGroupState.Completed;
-        }
-        else if (actionGroup.Actions.All(a => a.State == ActionState.Created))
-        {
-            actionGroup.State = ActionGroupState.Created;
-        }
-        else if (actionGroup.Actions.Any(a => a.State == ActionState.Started))
-        {
-            actionGroup.State = ActionGroupState.Started;
-        }
-    }
-
     /// <inheritdoc />
     public async Task UpdateActionAndGroupStateAsync(AgvAction action, IAgv agv, ActionState state)
     {
@@ -144,16 +129,8 @@ public class EfActionGroupRegistry : IActionGroupRegistry
         var actionToUpdate = actionGroup.Actions.Single(a => a.CorrelationId == action.CorrelationId);
         actionToUpdate.State = state;
 
-        if (actionGroup.AssignedAgv == null)
-        {
-            actionGroup.AssignedAgv = agv.CorrelationId;
-        }
-        else if (actionGroup.AssignedAgv != agv.CorrelationId)
-        {
-            throw new NotInCorrectStateException($"Trying to assign agv ({agv.CorrelationId}) to Action group with already existing assigned agv ({actionGroup.AssignedAgv}).");
-        }
-
-        UpdateActionGroupState(actionGroup);
+        actionGroup.AssignAgvToActionGroup(agv);
+        actionGroup.UpdateActionGroupState();
 
         await context.SaveChangesAsync();
     }
