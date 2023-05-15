@@ -16,14 +16,14 @@ public class AgvLoadCapabilityService : IAgvLoadCapabilityService
     }
 
     /// <inheritdoc />
-    public bool IsCarryingLoad(Guid agvCorrelationId)
+    public Task<bool> IsCarryingLoadAsync(Guid agvCorrelationId)
     {
-        return _actionGroupRegistry.HasUnfinishedDropActions(agvCorrelationId);
+        return _actionGroupRegistry.HasUnfinishedDropActionsAsync(agvCorrelationId);
     }
 
     /// <inheritdoc />
-    public bool CanGetNewLoad(Guid agvCorrelationId)
+    public async Task<bool> CanGetNewLoadAsync(Guid agvCorrelationId)
     {
-        return !IsCarryingLoad(agvCorrelationId);
+        return !await IsCarryingLoadAsync(agvCorrelationId);
     }
 }

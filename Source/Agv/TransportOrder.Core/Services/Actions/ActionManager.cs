@@ -1,4 +1,4 @@
-using Gebhardt.StoreWare.Agv.Common.Extensions;
+﻿using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Microsoft.Extensions.Logging;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
@@ -31,8 +31,7 @@ public class ActionManager : BaseActionManager
         IAgvLoadCapabilityService agvLoadCapabilityService,
         IStartActionService startActionService,
         IAgvStateService agvStateService,
-        IChooseAgvActionGroupService chooseAgvActionGroupService,
-        IActionGroupService actionGroupService
+        IChooseAgvActionGroupService chooseAgvActionGroupService
     )
         : base(actionGroupRegistry,
             routeService,
@@ -46,8 +45,7 @@ public class ActionManager : BaseActionManager
             agvLoadCapabilityService,
             startActionService,
             agvStateService,
-            chooseAgvActionGroupService,
-            actionGroupService
+            chooseAgvActionGroupService
         )
     {
     }
@@ -58,12 +56,12 @@ public class ActionManager : BaseActionManager
         var nextAgvAction = await GetPendingActionAsync(agv) ?? await CreateIdleActionAsync(agv);
         return nextAgvAction;
     }
-    
-    private Task<AgvAction?> GetPendingActionAsync(IAgv agv)
+
+    private async Task<AgvAction?> GetPendingActionAsync(IAgv agv)
     {
         bool needsCharging = ChargingService.AgvNeedsCharging(agv);
-        bool isCarryingLoad = AgvLoadCapabilityService.IsCarryingLoad(agv.CorrelationId);
-        bool canGetNewLoad = AgvLoadCapabilityService.CanGetNewLoad(agv.CorrelationId);
+        bool isCarryingLoad = await AgvLoadCapabilityService.IsCarryingLoadAsync(agv.CorrelationId);
+        bool canGetNewLoad = await AgvLoadCapabilityService.CanGetNewLoadAsync(agv.CorrelationId);
         bool needsMaintenance = MaintenanceService.MaintenanceRequested(agv);
         Logger.LogDebug("start GetPendingAction: needsCharging: {NeedsCharging}, isCarryingLoad: {IsCarryingLoad}, canGetNewLoad: {CanGetNewLoad}, needsMaintenance: {NeedsMaintenance}", needsCharging, canGetNewLoad, canGetNewLoad, needsMaintenance);
 
@@ -72,21 +70,21 @@ public class ActionManager : BaseActionManager
         {
             if (needsCharging)
             {
-                return CreateChargingActionAsync(agv);
+                return await CreateChargingActionAsync(agv);
             }
             if (needsMaintenance)
             {
-                return CreateMaintenanceActionAsync(agv)!;
+                return await CreateMaintenanceActionAsync(agv);
             }
         }
         else if (needsCharging || needsMaintenance)
         {
             // we are loaded, and we want to get unloaded, so that we can do the charging or maintenance, therefore complete current action group
-            return GetSucceedingActionAsync(agv)!;
+            return await GetSucceedingActionAsync(agv);
         }
 
         // just get next action (complete any current ActionGroup or start a new ActionGroup)
-        return GetNextActionAsync(agv, isCarryingLoad, canGetNewLoad);
+        return await GetNextActionAsync(agv, isCarryingLoad, canGetNewLoad);
     }
 
     private Task<AgvAction?> CreateIdleActionAsync(IAgv agv)

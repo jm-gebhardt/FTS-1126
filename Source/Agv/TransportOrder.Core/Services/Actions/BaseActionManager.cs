@@ -30,7 +30,6 @@ public abstract class BaseActionManager : IActionManager
     private readonly IAgvService _agvService;
     private readonly IAgvStateService _agvStateService;
     private readonly IChooseAgvActionGroupService _chooseAgvActionGroupService;
-    private readonly IActionGroupService _actionGroupService;
     private readonly IStartActionService _startActionService;
 
     /// <summary>
@@ -69,7 +68,6 @@ public abstract class BaseActionManager : IActionManager
     /// <param name="agvRegistry">Interface for accessing the AGV registry</param>
     /// <param name="agvStateService"></param>
     /// <param name="chooseAgvActionGroupService"></param>
-    /// <param name="actionGroupService"></param>
     protected BaseActionManager(
         IActionGroupRegistry actionGroupRegistry,
         IRouteService routeService,
@@ -83,8 +81,7 @@ public abstract class BaseActionManager : IActionManager
         IAgvLoadCapabilityService agvLoadCapabilityService,
         IStartActionService startActionService,
         IAgvStateService agvStateService,
-        IChooseAgvActionGroupService chooseAgvActionGroupService,
-        IActionGroupService actionGroupService)
+        IChooseAgvActionGroupService chooseAgvActionGroupService)
     {
         _actionGroupRegistry = actionGroupRegistry;
         _routeService = routeService;
@@ -98,17 +95,16 @@ public abstract class BaseActionManager : IActionManager
         AgvLoadCapabilityService = agvLoadCapabilityService;
         _agvStateService = agvStateService;
         _chooseAgvActionGroupService = chooseAgvActionGroupService;
-        _actionGroupService = actionGroupService;
         _startActionService = startActionService;
     }
 
     private static ActionGroup CreateActionGroup(IAgv agv, AgvGraph.Node node, ActionType actionType = ActionType.Move)
     {
-        Guid groupCorrelationId = Guid.NewGuid();
+        var groupCorrelationId = Guid.NewGuid();
         return new ActionGroup(
             groupCorrelationId,
-            $"Automatic {nameof(actionType)}",
-            new List<AgvAction> { new AgvAction(Guid.NewGuid(), actionType, groupCorrelationId, node.Id) },
+            $"Automatic {actionType}",
+            new List<AgvAction> {new AgvAction(Guid.NewGuid(), actionType, groupCorrelationId, node.Id)},
             DateTime.Now,
             assignedAgv: agv.CorrelationId
         );
@@ -123,13 +119,12 @@ public abstract class BaseActionManager : IActionManager
 
     private Task AddActionGroupAsync(ActionGroup actionGroup)
     {
-        _actionGroupRegistry.Insert(actionGroup);
-        return Task.CompletedTask;
+        return _actionGroupRegistry.InsertAsync(actionGroup);
     }
-    
+
     private bool IsAgvCharging(IAgv agv) => agv.GetRequiredAgvStatus().Charging;
 
-    private Task<AgvAction> GetAgvActionAsync(Guid correlationId) => Task.FromResult(_actionGroupRegistry.GetRequiredActionById(correlationId));
+    private Task<AgvAction> GetAgvActionAsync(Guid correlationId) => _actionGroupRegistry.GetRequiredActionByIdAsync(correlationId);
 
     private Task<IAgv> GetAgvByCorrelationIdAsync(Guid? correlationId) => Task.FromResult(_agvRegistry.GetRequiredAgv(correlationId));
 
@@ -199,9 +194,10 @@ public abstract class BaseActionManager : IActionManager
         try
         {
             action.Nodes = _routeService.GetRoute(assignedAgv, action.TargetNodeId).Nodes;
+            string orderId = (await _actionGroupRegistry.GetRequiredActionGroupByIdAsync(action.ParentId)).OrderId;
 
-            await _startActionService.StartAction(assignedAgv, action, cancellationToken);
-            await _actionGroupService.UpdateActionAndGroupStateAsync(action, assignedAgv, ActionState.Started);
+            await _startActionService.StartAction(assignedAgv, action, orderId, cancellationToken);
+            await _actionGroupRegistry.UpdateActionAndGroupStateAsync(action, assignedAgv, ActionState.Started);
 
             Logger.LogTrace("Starting action done");
         }
@@ -295,7 +291,7 @@ public abstract class BaseActionManager : IActionManager
     /// <param name="agv"></param>
     /// <returns></returns>
     protected abstract Task<AgvAction?> GetNextActionAsync(IAgv agv);
-    
+
     /// <inheritdoc />
     public async Task AddActionGroupAsync(ActionGroup actionGroup, CancellationToken cancellationToken)
     {
@@ -331,10 +327,10 @@ public abstract class BaseActionManager : IActionManager
         Logger.LogDebug("Completing action with CorrelationId: {ActionCorrelationId}", correlationId);
         var action = await GetAgvActionAsync(correlationId);
 
-        var actionGroup = _actionGroupService.GetActionGroup(action.ParentId);
-       
+        var actionGroup = await _actionGroupRegistry.GetRequiredActionGroupByIdAsync(action.ParentId);
+
         var agv = await GetAgvByCorrelationIdAsync(actionGroup.AssignedAgv);
-        await _actionGroupService.UpdateActionAndGroupStateAsync(action, agv, ActionState.Completed);
+        await _actionGroupRegistry.UpdateActionAndGroupStateAsync(action, agv, ActionState.Completed);
 
         // charge will switch to charging state and can not be released immediately
         if (action.ActionType != ActionType.Charge)

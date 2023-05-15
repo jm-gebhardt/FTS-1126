@@ -13,11 +13,6 @@ public enum ActionGroupState
     Created,
 
     /// <summary>
-    /// Action assigned
-    /// </summary>
-    Assigned,
-
-    /// <summary>
     /// Action transmitted to DeviceCommunication
     /// </summary>
     Started,

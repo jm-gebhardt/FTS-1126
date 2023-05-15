@@ -5,7 +5,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
     /// <summary>
     /// Grouping actions and sending them across service modules
     /// </summary>
-    public record ActionGroup : CorrelatedBy<Guid>
+    public class ActionGroup : CorrelatedBy<Guid>
     {
         /// <inheritdoc />
         /// Parenting ID
@@ -44,7 +44,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
         /// <summary>
         /// List of actions
         /// </summary>
-        public List<AgvAction> Actions { get; init; }
+        public List<AgvAction> Actions { get; init; } = new();
 
         /// <summary>
         /// Generating an instance of <see cref="ActionGroup"/>
@@ -82,6 +82,14 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
             Actions = actions;
             OrderId = orderId;
             CreatedDate = DateTime.Now;
+        }
+
+        /// <summary>
+        /// Json ctor
+        /// </summary>
+        public ActionGroup()
+        {
+            OrderId = "";
         }
     }
 }

@@ -23,63 +23,61 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Registries
         /// <param name="toDate"></param>
         /// <param name="maxItems"></param>
         /// <returns></returns>
-        public IQueryable<ActionGroup> GetActionGroups(IEnumerable<ActionGroupState> states, DateTime? fromDate = null, DateTime? toDate = null, int maxItems = 0);
-        
+        public Task<IReadOnlyList<ActionGroup>> GetActionGroupsAsync(IEnumerable<ActionGroupState> states, DateTime? fromDate = null, DateTime? toDate = null, int maxItems = 0);
+
         /// <summary>
         /// Get ActionGroup
         /// </summary>
         /// <param name="correlationId"></param>
         /// <returns></returns>
-        public ActionGroup? GetActionGroup(Guid correlationId);
-        
+        public Task<ActionGroup?> GetActionGroupAsync(Guid correlationId);
+
         /// <summary>
         /// Get ActionGroup
         /// </summary>
         /// <param name="correlationId"></param>
         /// <returns></returns>
-        public ActionGroup GetRequiredActionGroup(Guid correlationId);
-        
+        public Task<ActionGroup> GetRequiredActionGroupByIdAsync(Guid correlationId);
+
         /// <summary>
         /// Get Agv action by key.
         /// </summary>
         /// <param name="correlationId">Unique ID per action</param>
         /// <returns>Returns Agv action identified by key or null when not found</returns>
-        public AgvAction? GetActionById(Guid correlationId);
+        public Task<AgvAction?> GetActionByIdAsync(Guid correlationId);
 
         /// <summary>
         /// Get Agv action by key.
         /// </summary>
         /// <param name="correlationId">Unique ID per action</param>
         /// <returns>Returns Agv action identified by key or throws when not found</returns>
-        public AgvAction GetRequiredActionById(Guid correlationId);
+        public Task<AgvAction> GetRequiredActionByIdAsync(Guid correlationId);
 
         /// <summary>
-        /// Return list of all actions not started yet
+        /// Delete all actions with the same parent id
         /// </summary>
-        /// <param name="sortBySequenceAsc">If true, then pending actions get sorted according to their sequence number</param>
-        /// <returns>Returns the list of pending actions, empty list when there are no pending actions</returns>
-        public List<AgvAction> GetPendingActions(bool sortBySequenceAsc);
+        /// <param name="parentId">Correlation id of the parent object</param>
+        public Task DeleteByParentIdAsync(Guid parentId);
         
         /// <summary>
-        /// Return list of all action belonging to the same parent id
+        /// Updates the action of the existing ActionGroup and also the ActionGroup State
         /// </summary>
-        /// <param name="parentId">Correlation ID of the parent object</param>
-        /// <returns>Returns the list of actions, empty list when there are no actions</returns>
-        public List<AgvAction> GetActionsByParentId(Guid parentId);
+        /// <param name="action">The action to be started</param>
+        /// <param name="agv">The assigned Agv</param>
+        /// <param name="state">The new state</param>
+        public Task UpdateActionAndGroupStateAsync(AgvAction action, IAgv agv, ActionState state);
 
         /// <summary>
-        /// Updates state of an AGV action
+        /// Determine if there is any drop action which is not completed (Agv loaded)
         /// </summary>
-        /// <param name="id">Id of Agv action</param>
-        /// <param name="state">New state</param>
-        public void UpdateState(Guid id, ActionState state);
+        /// <param name="agvCorrelationId">The AgvCorrelationId of the agv to check</param>
+        /// <returns>True if there is any not completed drop action for the given Agv</returns>
+        Task<bool> HasUnfinishedDropActionsAsync(Guid agvCorrelationId);
 
         /// <summary>
-        /// Return the subsequent action for a parent object that is not started yet
+        /// Get ActionGroups where no action was started yet
         /// </summary>
-        /// <param name="parentId">Correlation ID of the parent object</param>
-        /// <returns>Returns subsequent action or null when there are no more subsequent actions</returns>
-        public AgvAction? GetSubsequentActionByParentId(Guid parentId);
+        public Task<IReadOnlyList<ActionGroup>> GetNotStartedActionGroupsAsync();
 
         /// <summary>
         /// Return the subsequent action for the Agv that is not started yet.
@@ -88,30 +86,5 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Registries
         /// <param name="agvCorrelationId"></param>
         /// <returns>Returns subsequent action</returns>
         public Task<AgvAction> GetSubsequentActionAsync(Guid agvCorrelationId);
-
-        /// <summary>
-        /// Delete all actions with the same parent id
-        /// </summary>
-        /// <param name="parentId">Correlation id of the parent object</param>
-        public void DeleteByParentId(Guid parentId);
-
-        /// <summary>
-        /// Get ActionGroups where no action was started yet
-        /// </summary>
-        public List<ActionGroup> GetNotStartedActionGroups();
-
-        /// <summary>
-        /// Determine if there is any drop action which is not completed (Agv loaded)
-        /// </summary>
-        /// <param name="agvCorrelationId">The AgvCorrelationId of the agv to check</param>
-        /// <returns>True if there is any not completed drop action for the given Agv</returns>
-        bool HasUnfinishedDropActions(Guid agvCorrelationId);
-   
-        /// <summary>
-        /// Updates the action group in the repository
-        /// </summary>
-        /// <param name="actionGroup"></param>
-        /// <returns></returns>
-        Task UpdateActionGroupAsync(ActionGroup actionGroup);
     }
 }

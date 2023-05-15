@@ -25,7 +25,7 @@ public class ShortestRouteChooser : IChooseAgvActionGroupService
         IRouteService routeService,
         IActionGroupRegistry actionGroupRegistry,
         ILogger<ShortestRouteChooser> logger
-        )
+    )
     {
         _routeService = routeService;
         _actionGroupRegistry = actionGroupRegistry;
@@ -76,12 +76,12 @@ public class ShortestRouteChooser : IChooseAgvActionGroupService
     /// <param name="agv"></param>
     /// <returns></returns>
     /// <exception cref="AgvLocationUnknownException"></exception>
-    public Task<AgvAction?> GetActionGroupAsync(IAgv agv)
+    public async Task<AgvAction?> GetActionGroupAsync(IAgv agv)
     {
         _logger.LogInformation("start GetNextParentedByAction for agvId: {AgvId}", agv.AgvId);
         agv.GetRequiredAgvStatus().RequireLastNodeId();
 
-        List<ActionGroup> notStartedActionGroups = _actionGroupRegistry.GetNotStartedActionGroups().ToList();
+        IReadOnlyList<ActionGroup> notStartedActionGroups = await _actionGroupRegistry.GetNotStartedActionGroupsAsync();
         var nextParentedByAction = (notStartedActionGroups
             .Select(a => a.Actions.Select(action =>
             {
@@ -94,6 +94,6 @@ public class ShortestRouteChooser : IChooseAgvActionGroupService
             .MinBy(actionGroup => actionGroup.MinBy(p => p.action.Sequence).costs)?
             .FirstOrDefault())?.action;
 
-        return Task.FromResult(nextParentedByAction);
+        return nextParentedByAction;
     }
 }

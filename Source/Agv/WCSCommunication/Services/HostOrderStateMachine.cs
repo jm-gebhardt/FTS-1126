@@ -110,7 +110,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
                 Sequence = 1
             };
 
-            return new ActionGroup(hostOrderSaga.CorrelationId, hostOrderSaga.OrderId , new[] { pickAction, dropAction }, hostOrderSaga.OrderDetails.CreationDate);
+            return new ActionGroup(hostOrderSaga.CorrelationId, hostOrderSaga.OrderId, new List<AgvAction> {pickAction, dropAction}, hostOrderSaga.OrderDetails.CreationDate);
         }
         #endregion
     }
