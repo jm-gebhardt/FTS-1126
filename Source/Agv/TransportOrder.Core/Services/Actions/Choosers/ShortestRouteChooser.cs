@@ -46,7 +46,7 @@ public class ShortestRouteChooser : IChooseAgvActionGroupService
         }
 
         // Create a list of waypoints from the action targets
-        List<string> waypoints = actionGroup.Actions.OrderBy(a => a.Sequence).Select(a => a.TargetNodeId).ToList();
+        List<string> waypoints = actionGroup.GetRequiredActions().OrderBy(a => a.Sequence).Select(a => a.TargetNodeId).ToList();
         string firstWaypointId = waypoints.First();
 
         List<KeyValuePair<IAgv, (bool hasRoute, float? costs)>> agvWithRoute = agvs
@@ -83,7 +83,7 @@ public class ShortestRouteChooser : IChooseAgvActionGroupService
 
         IReadOnlyList<ActionGroup> notStartedActionGroups = await _actionGroupRegistry.GetNotStartedActionGroupsAsync();
         var nextParentedByAction = (notStartedActionGroups
-            .Select(a => a.Actions.Select(action =>
+            .Select(a => a.GetRequiredActions().Select(action =>
             {
                 bool hasRoute = _routeService.HasRoute(agv, action.TargetNodeId, out float? costs);
                 return (hasRoute, action, costs);

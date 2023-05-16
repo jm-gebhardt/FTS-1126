@@ -1,7 +1,7 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Exceptions;
+using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Extensions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db;
 using Microsoft.EntityFrameworkCore;
 
@@ -51,7 +51,11 @@ public class EfActionGroupRegistry : IActionGroupRegistry
             actionGroups = actionGroups.Where(g => g.CreatedDate <= toDate);
         }
 
-        List<ActionGroup> actionGroupsAsync = await actionGroups.Take(maxItems).ToListAsync();
+        List<ActionGroup> actionGroupsAsync = await actionGroups
+            .Include(g => g.Actions)
+            .AsNoTracking()
+            .Take(maxItems)
+            .ToListAsync();
         return actionGroupsAsync;
     }
 
@@ -60,7 +64,16 @@ public class EfActionGroupRegistry : IActionGroupRegistry
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
-        var actionGroup = await queryable.FindAsync(correlationId);
+        var actionGroup = await queryable
+            .FindAsync(correlationId);
+
+        if (actionGroup != null)
+        {
+            await context.Entry(actionGroup)
+                .Collection(g => g.Actions!)
+                .LoadAsync();
+        }
+
         return actionGroup;
     }
 
@@ -82,9 +95,12 @@ public class EfActionGroupRegistry : IActionGroupRegistry
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
 
-        var action = await queryable.SingleOrDefaultAsync(actionGroup => actionGroup.Actions.Any(a => a.CorrelationId == correlationId));
+        var action = await queryable
+            .Include(actionGroup => actionGroup.Actions)
+            .AsNoTracking()
+            .SingleOrDefaultAsync(actionGroup => actionGroup.Actions!.Any(a => a.CorrelationId == correlationId));
 
-        return action?.Actions.SingleOrDefault(a => a.CorrelationId == correlationId);
+        return action?.Actions!.SingleOrDefault(a => a.CorrelationId == correlationId);
     }
 
     /// <inheritdoc cref="IActionGroupRegistry"/>
@@ -119,14 +135,16 @@ public class EfActionGroupRegistry : IActionGroupRegistry
 
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
-        var actionGroup = await queryable.FindAsync(actionGroupCorrelationId);
+        var actionGroup = await queryable
+            .FindAsync(actionGroupCorrelationId);
 
         if (actionGroup == null)
         {
             throw new ActionGroupNotFoundException(actionGroupCorrelationId);
         }
+        await context.Entry(actionGroup).Collection(g => g.Actions!).LoadAsync();
 
-        var actionToUpdate = actionGroup.Actions.Single(a => a.CorrelationId == action.CorrelationId);
+        var actionToUpdate = actionGroup.Actions!.Single(a => a.CorrelationId == action.CorrelationId);
         actionToUpdate.State = state;
 
         actionGroup.AssignAgvToActionGroup(agv);
@@ -140,12 +158,14 @@ public class EfActionGroupRegistry : IActionGroupRegistry
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
-        List<ActionGroup> unfinishedGroups = await queryable.Where(actionGroup =>
-            actionGroup.AssignedAgv == agvCorrelationId &&
-            actionGroup.State != ActionGroupState.Completed).ToListAsync();
-
-        // must materialize here, if Any statement is put in the IQueryable it can not be translated
-        bool hasUnfinishedDropActions = unfinishedGroups.Any(g => g.Actions.Any(a => a.State != ActionState.Completed && a.ActionType == ActionType.Drop));
+        bool hasUnfinishedDropActions = await queryable.Where(actionGroup =>
+                actionGroup.AssignedAgv == agvCorrelationId &&
+                actionGroup.State != ActionGroupState.Completed &&
+                actionGroup.Actions!.Any(a => a.State != ActionState.Completed && a.ActionType == ActionType.Drop)
+            )
+            .Include(g => g.Actions)
+            .AsNoTracking()
+            .AnyAsync();
 
         return hasUnfinishedDropActions;
     }
@@ -155,7 +175,11 @@ public class EfActionGroupRegistry : IActionGroupRegistry
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
-        List<ActionGroup> notStartedActionGroups = await queryable.Where(actionGroup => actionGroup.State != ActionGroupState.Created).ToListAsync();
+        List<ActionGroup> notStartedActionGroups = await queryable
+            .Where(actionGroup => actionGroup.State == ActionGroupState.Created)
+            .Include(g => g.Actions)
+            .AsNoTracking()
+            .ToListAsync();
 
         return notStartedActionGroups;
     }
@@ -167,9 +191,12 @@ public class EfActionGroupRegistry : IActionGroupRegistry
         DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
         var startedGroup = await queryable
             .Where(actionGroup => actionGroup.AssignedAgv == agvCorrelationId &&
-                                  actionGroup.State == ActionGroupState.Started).FirstOrDefaultAsync();
+                                  actionGroup.State == ActionGroupState.Started)
+            .Include(g => g.Actions)
+            .AsNoTracking()
+            .FirstOrDefaultAsync();
 
-        var subsequentAction = startedGroup?.Actions.Where(action => action.State == ActionState.Created).MinBy(a => a.Sequence);
+        var subsequentAction = startedGroup?.Actions!.Where(action => action.State == ActionState.Created).MinBy(a => a.Sequence);
 
         if (subsequentAction == null)
         {

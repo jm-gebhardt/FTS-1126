@@ -101,20 +101,22 @@ public abstract class BaseActionManager : IActionManager
     private static ActionGroup CreateActionGroup(IAgv agv, AgvGraph.Node node, ActionType actionType = ActionType.Move)
     {
         var groupCorrelationId = Guid.NewGuid();
-        return new ActionGroup(
+        var actionGroup = new ActionGroup(
             groupCorrelationId,
             $"Automatic {actionType}",
-            new List<AgvAction> {new AgvAction(Guid.NewGuid(), actionType, groupCorrelationId, node.Id)},
-            DateTime.Now,
             assignedAgv: agv.CorrelationId
         );
+
+        actionGroup.Actions = new List<AgvAction> {new(Guid.NewGuid(), actionType, actionGroup, node.Id)};
+
+        return actionGroup;
     }
 
     private async Task<AgvAction> AddActionAsync(IAgv agv, AgvGraph.Node node, ActionType actionType)
     {
         var actionGroup = CreateActionGroup(agv, node, actionType);
         await AddActionGroupAsync(actionGroup);
-        return actionGroup.Actions.First();
+        return actionGroup.Actions!.First();
     }
 
     private Task AddActionGroupAsync(ActionGroup actionGroup)

@@ -1,5 +1,4 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
-using Gebhardt.StoreWare.Agv.Common.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -19,9 +18,13 @@ public class ActionGroupClassMap : ClassMap<ActionGroup>
     /// <param name="model"></param>
     protected override void Configure(EntityTypeBuilder<ActionGroup> entity, ModelBuilder model)
     {
-        entity.ConfigureAllProperties();
-        entity.HasKey(x => x.CorrelationId);
-        entity.Property(e => e.State).HasMaxLength(MaxStateLength);
-        entity.Property(x => x.Actions).HasJsonConversion();
+        entity.HasKey(g => g.CorrelationId);
+        entity.Property(g => g.State).HasMaxLength(MaxStateLength);
+
+        entity.HasMany(g => g.Actions)
+            .WithOne(a => a.ActionGroup)
+            .HasForeignKey(a => a.ParentId)
+            .HasPrincipalKey(g => g.CorrelationId)
+            .OnDelete(DeleteBehavior.ClientCascade);
     }
 }

@@ -14,8 +14,13 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
         /// </summary>
         public Guid CorrelationId { get; set; }
 
+        /// <summary>
+        /// The action group this action belongs to
+        /// </summary>
+        public ActionGroup ActionGroup { get; set; }
+
         /// <inheritdoc/>
-        public Guid ParentId { get; }
+        public Guid ParentId { get; init; }
 
         /// <inheritdoc/>
         public int Sequence { get; init; }
@@ -25,7 +30,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
 
         /// <inheritdoc/>
         public Guid Predecessor { get; init; }
-        
+
         /// <summary>
         /// The current state of the action
         /// </summary>
@@ -51,13 +56,13 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
         /// </summary>
         /// <param name="correlationId">Unique correlation ID of this action (see order action repository)</param>
         /// <param name="actionType">The type of the action, e.g. Pick or Drop</param>
-        /// <param name="parentId">The id of the clamped object</param>
+        /// <param name="actionGroup">The parent ActionGroup</param>
         /// <param name="targetNodeId">Target node id of the action</param>
-        public AgvAction(Guid correlationId, ActionType actionType, Guid parentId, string targetNodeId)
+        public AgvAction(Guid correlationId, ActionType actionType, ActionGroup actionGroup, string targetNodeId)
         {
             CorrelationId = correlationId;
             ActionType = actionType;
-            ParentId = parentId;
+            ActionGroup = actionGroup;
             TargetNodeId = targetNodeId;
         }
 
@@ -69,7 +74,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
         {
             CorrelationId = Guid.Empty;
             ActionType = ActionType.Pick;
-            ParentId = Guid.Empty;
+            ActionGroup = null!;
             TargetNodeId = string.Empty;
         }
     }

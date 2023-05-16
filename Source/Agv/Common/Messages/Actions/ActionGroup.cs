@@ -9,7 +9,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
     {
         /// <inheritdoc />
         /// Parenting ID
-        public Guid CorrelationId { get; }
+        public Guid CorrelationId { get; init; }
 
         /// <summary>
         /// A unique ID of the order that clamps all the corresponding actions
@@ -44,7 +44,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
         /// <summary>
         /// List of actions
         /// </summary>
-        public List<AgvAction> Actions { get; init; } = new();
+        public ICollection<AgvAction>? Actions { get; set; }
 
         /// <summary>
         /// Generating an instance of <see cref="ActionGroup"/>
@@ -57,12 +57,12 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
         /// <param name="assignedAgv"></param>
         /// <param name="createdDate"></param>
         /// <param name="startedDate"></param>
-        public ActionGroup(Guid correlationId, string orderId, List<AgvAction> actions, DateTime createdDate, DateTime? startedDate = null, DateTime? completedDate = null, ActionGroupState state = ActionGroupState.Created, Guid? assignedAgv = null)
+        public ActionGroup(Guid correlationId, string orderId, DateTime? createdDate = default, List<AgvAction>? actions = null, DateTime? startedDate = null, DateTime? completedDate = null, ActionGroupState state = ActionGroupState.Created, Guid? assignedAgv = null)
         {
             CorrelationId = correlationId;
             OrderId = orderId;
             AssignedAgv = assignedAgv;
-            CreatedDate = createdDate;
+            CreatedDate = createdDate.GetValueOrDefault(DateTime.UtcNow);
             StartedDate = startedDate;
             StartedDate = completedDate;
             State = state;
@@ -76,7 +76,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
         /// <param name="correlationId"></param>
         /// <param name="orderId"></param>
         /// <param name="actions"></param>
-        public ActionGroup(Guid correlationId, string orderId, List<AgvAction> actions)
+        public ActionGroup(Guid correlationId, string orderId, List<AgvAction>? actions = null)
         {
             CorrelationId = correlationId;
             Actions = actions;

@@ -56,8 +56,8 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services
 
             var msg = fixture.TestHarness.Published.Select<QueueActionGroup>().First().Context.Message;
             msg.CorrelationId.ShouldBe(correlationId);
-            var pickAction = msg.ActionGroup.Actions[0];
-            var dropAction = msg.ActionGroup.Actions[1];
+            var pickAction = msg.ActionGroup.Actions!.First();
+            var dropAction = msg.ActionGroup.Actions!.Last();
 
             pickAction.ShouldNotBeNull();
             dropAction.ShouldNotBeNull();
