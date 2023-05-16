@@ -34,11 +34,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.States
         public AgvGraph? AgvGraph { get; set; }
 
         /// <summary>
-        /// Last Received AgvData
-        /// </summary>
-        public AgvData? AgvData { get; set; }
-
-        /// <summary>
         /// UTC timestamp when AGV data was requested
         /// </summary>
         /// <remarks>Nullable declaration required to make data model mappable according to EF Core</remarks>
@@ -76,7 +71,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.States
             string? currentState = null,
             AgvStatus? agvStatus = null,
             AgvGraph? agvGraph = null,
-            AgvData? agvData = null,
             bool isLocked = false)
         {
             if (correlationId == Guid.Empty)
@@ -88,7 +82,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.States
             CurrentState = currentState ?? default!;
             AgvStatus = agvStatus;
             AgvGraph = agvGraph;
-            AgvData = agvData;
             IsLocked = isLocked;
         }
 

@@ -24,15 +24,17 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
         [TestMethod]
         public async Task When_AgvSaga_State_Changed_AgvStateChanged_Published()
         {
+            var mockLogger = new Mock<ILogger<AgvStateMachine>>();
+            var agvDataRegistryMock = new Mock<IAgvDataRegistry>();
             var mapRegistryMock = new Mock<IMapRegistry>();
             var graphRegistryMock = new Mock<IGraphRegistry>();
             var mockHub = new Mock<IAgvHubContext>();
             var mockContext = new Mock<BehaviorContext<AgvSaga>>();
-            var mockLogger = new Mock<ILogger<AgvStateMachine>>();
-            var settingsProviderMock = new Mock<ISettingsProvider<AgvSettings>>();
             var agvStateObserver = new AgvStateObserver(mockHub.Object);
+            var settingsProviderMock = new Mock<ISettingsProvider<AgvSettings>>();
             var agvStateMachine = new AgvStateMachine(
                 mockLogger.Object,
+                agvDataRegistryMock.Object,
                 mapRegistryMock.Object,
                 graphRegistryMock.Object,
                 agvStateObserver,
@@ -52,15 +54,17 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
         [TestMethod]
         public async Task When_AgvSaga_StateIsInitial_AgvDiscovered_Published()
         {
+            var mockLogger = new Mock<ILogger<AgvStateMachine>>();
+            var agvDataRegistryMock = new Mock<IAgvDataRegistry>();
             var mapRegistryMock = new Mock<IMapRegistry>();
             var graphRegistryMock = new Mock<IGraphRegistry>();
             var mockHub = new Mock<IAgvHubContext>();
             var mockContext = new Mock<BehaviorContext<AgvSaga>>();
-            var mockLogger = new Mock<ILogger<AgvStateMachine>>();
-            var settingsProviderMock = new Mock<ISettingsProvider<AgvSettings>>();
             var agvStateObserver = new AgvStateObserver(mockHub.Object);
+            var settingsProviderMock = new Mock<ISettingsProvider<AgvSettings>>();
             var agvStateMachine = new AgvStateMachine(
                 mockLogger.Object,
+                agvDataRegistryMock.Object,
                 mapRegistryMock.Object,
                 graphRegistryMock.Object,
                 agvStateObserver,

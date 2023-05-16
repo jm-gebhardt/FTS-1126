@@ -158,7 +158,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var controller = fixture.Controller;
             var correlationId = Guid.Empty;
 
-            await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await controller.GetAgvData(correlationId));
+            await MediatorShould.ThrowRequestExceptionAsync<AgvDataNotFoundException>(async () => await controller.GetAgvData(correlationId));
         }
 
         [TestMethod]

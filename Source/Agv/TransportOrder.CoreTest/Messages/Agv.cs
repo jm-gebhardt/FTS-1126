@@ -28,21 +28,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Messages
         public AgvGraph? AgvGraph { get; init; }
 
         /// <summary/>
-        public AgvData? AgvData { get; } = new(Guid.Empty,
-            "",
-            "",
-            "",
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0,
-            Array.Empty<AgvData.Sensor>());
-
-        /// <summary/>
         public bool IsOnline { get; } = true;
 
         public bool IsLocked { get; set; } = false;

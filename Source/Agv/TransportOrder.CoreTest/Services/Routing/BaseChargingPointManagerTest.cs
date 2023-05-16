@@ -17,11 +17,11 @@ public class BaseChargingPointManagerTest
         var fixture = new BaseChargingPointManagerTestFixture();
         var agvGraph = fixture.GetAgvGraph(true, correlationId);
         var graph = fixture.GetGraphWhereNoOneUnderstandWhyWeHaveTwoDifferentGraphTypes(agvGraph);
-        var agv = fixture.GetAgv(correlationId, agvId,"Idle","","",agvGraph);
+        var agv = fixture.GetAgv(correlationId, agvId, "Idle", "", agvGraph);
 
         fixture.SetupGraphRegistry(graph);
         fixture.SetupNodeLocker(true, true, true);
-        
+
         var bestCharger = await fixture.CreateBaseChargingPointManager().GetBestChargerAsync(agv);
         bestCharger.ShouldNotBeNull();
         bestCharger.State.ShouldBe(AgvGraph.NodeState.Free);
@@ -36,11 +36,11 @@ public class BaseChargingPointManagerTest
         var fixture = new BaseChargingPointManagerTestFixture();
         var agvGraph = fixture.GetAgvGraph(false, correlationId);
         var graph = fixture.GetGraphWhereNoOneUnderstandWhyWeHaveTwoDifferentGraphTypes(agvGraph);
-        var agv = fixture.GetAgv(correlationId, agvId,"Idle","","",agvGraph);
+        var agv = fixture.GetAgv(correlationId, agvId, "Idle", "", agvGraph);
 
         fixture.SetupGraphRegistry(graph);
         fixture.SetupNodeLocker(true, true, true);
-        
+
         var bestCharger = await fixture.CreateBaseChargingPointManager().GetBestChargerAsync(agv);
         bestCharger.ShouldBeNull();
     }
@@ -53,17 +53,17 @@ public class BaseChargingPointManagerTest
         var fixture = new BaseChargingPointManagerTestFixture();
         var agvGraph = fixture.GetAgvGraph(true, correlationId);
         var graph = fixture.GetGraphWhereNoOneUnderstandWhyWeHaveTwoDifferentGraphTypes(agvGraph);
-        var agv = fixture.GetAgv(correlationId, agvId,"Idle","","",agvGraph);
+        var agv = fixture.GetAgv(correlationId, agvId, "Idle", "", agvGraph);
 
         fixture.SetupGraphRegistry(graph);
         fixture.SetupNodeLocker(true, true, true);
-        
+
         var baseChargingPointManager = fixture.CreateBaseChargingPointManager();
         var bestCharger = await baseChargingPointManager.GetBestChargerAsync(agv);
         bestCharger.ShouldNotBeNull();
         bestCharger.State.ShouldBe(AgvGraph.NodeState.Free);
         bestCharger.Type.ShouldBe(AgvGraph.NodeType.Charge);
-        
+
         await baseChargingPointManager.ReserveChargerAsync(bestCharger, correlationId);
         fixture.NodeStateRegistry.Verify(x => x.ReserveNodeAsync(bestCharger.Id, correlationId), Times.Once);
     }
@@ -83,7 +83,7 @@ public class BaseChargingPointManagerTest
 
         fixture.SetupGraphRegistry(graph);
         fixture.SetupNodeLocker(true, true, true);
-        
+
         await fixture.CreateBaseChargingPointManager().ReserveChargerAsync(notChargerNode, correlationId);
     }
 
@@ -95,14 +95,14 @@ public class BaseChargingPointManagerTest
         var fixture = new BaseChargingPointManagerTestFixture();
         var agvGraph = fixture.GetAgvGraph(true, correlationId);
         var graph = fixture.GetGraphWhereNoOneUnderstandWhyWeHaveTwoDifferentGraphTypes(agvGraph);
-        var agv = fixture.GetAgv(correlationId, agvId,"Idle","","",agvGraph);
+        var agv = fixture.GetAgv(correlationId, agvId, "Idle", "", agvGraph);
 
         fixture.SetupGraphRegistry(graph);
         fixture.SetupNodeLocker(true, true, true);
-        
+
         var agvNodeResult = await fixture.CreateBaseChargingPointManager().ReserveChargerAsync(agv);
         agvNodeResult.ShouldNotBeNull();
-        fixture.NodeStateRegistry.Verify(r => r.ReserveNodeAsync(agvNodeResult.Id,correlationId), Times.Once);
+        fixture.NodeStateRegistry.Verify(r => r.ReserveNodeAsync(agvNodeResult.Id, correlationId), Times.Once);
         agvNodeResult.Type.ShouldBe(AgvGraph.NodeType.Charge);
     }
 
@@ -114,11 +114,11 @@ public class BaseChargingPointManagerTest
         var fixture = new BaseChargingPointManagerTestFixture();
         var agvGraph = fixture.GetAgvGraph(false, correlationId);
         var graph = fixture.GetGraphWhereNoOneUnderstandWhyWeHaveTwoDifferentGraphTypes(agvGraph);
-        var agv = fixture.GetAgv(correlationId, agvId,"Idle","","",agvGraph);
-        
+        var agv = fixture.GetAgv(correlationId, agvId, "Idle", "", agvGraph);
+
         fixture.SetupGraphRegistry(graph);
         fixture.SetupNodeLocker(true, true, true);
-        
+
         await Should.ThrowAsync<Exception>(async () => await fixture.CreateBaseChargingPointManager().ReserveChargerAsync(agv));
     }
 }

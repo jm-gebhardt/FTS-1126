@@ -12,19 +12,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Features.Agvs.Handlers.
 public class GetAgvDataRequestHandlerTest
 {
     [TestMethod]
-    public async Task GetAgvDataRequest_AgvNotFound_ExceptionThrown()
-    {
-        var fixture = new AgvRequestsHandlerTestFixture<GetAgvDataRequestHandler>();
-
-        await fixture.TestHarness!.Bus.Publish(new GetAgvDataRequest(Guid.Empty));
-        (await fixture.TestHarness.Consumed.Any<GetAgvDataRequest>()).ShouldBeTrue();
-        fixture.ShouldContainFault<GetAgvDataRequest, AgvNotFoundException>();
-    }
-    
-    [TestMethod]
     public async Task GetAgvDataRequest_AgvDataNotFound_ExceptionThrown()
     {
-
         var fixture = new AgvRequestsHandlerTestFixture<GetAgvDataRequestHandler>();
         fixture.AgvRegistryMock.Setup(r => r.GetAgv(It.IsAny<Guid>())).Returns(Mock.Of<IAgv>());
 

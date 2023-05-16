@@ -21,6 +21,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
     {
         private readonly ILogger<AgvStateMachine> _logger;
 
+        private readonly IAgvDataRegistry _agvDataRegistry;
         private readonly IMapRegistry _mapRegistry;
         private readonly IGraphRegistry _graphRegistry;
 
@@ -124,11 +125,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
         public Event<AgvGraphReceived> AgvGraphReceivedEvent { get; private set; } = default!;
 
         /// <summary>
-        /// The data of the Agv was received
-        /// </summary>
-        public Event<AgvDataReceived> AgvDataReceivedEvent { get; private set; } = default!;
-
-        /// <summary>
         /// Agv map is incoming
         /// </summary>
         public Event<AgvMapReceived> AgvMapReceivedEvent { get; private set; } = default!;
@@ -165,6 +161,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
         /// Constructor of AgvStateMachine
         /// </summary>
         /// <param name="logger"></param>
+        /// <param name="agvDataRegistry"></param>
         /// <param name="mapRegistry"></param>
         /// <param name="graphRegistry"></param>
         /// <param name="agvStateObserver"></param>
@@ -172,6 +169,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
         /// <param name="agvSettingsProvider"></param>
         public AgvStateMachine(
             ILogger<AgvStateMachine> logger,
+            IAgvDataRegistry agvDataRegistry,
             IMapRegistry mapRegistry,
             IGraphRegistry graphRegistry,
             IStateObserver<AgvSaga> agvStateObserver,
@@ -179,6 +177,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
             ISettingsProvider<AgvSettings> agvSettingsProvider)
         {
             _logger = logger;
+            _agvDataRegistry = agvDataRegistry;
             _mapRegistry = mapRegistry;
             _graphRegistry = graphRegistry;
             _productionOptions = productionOptions;
@@ -204,7 +203,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
             DuringAny(AgvInitializeMessageHandler());
             DuringAny(AgvStatusReceivedHandler());
             DuringAny(AgvGraphReceivedHandler());
-            DuringAny(AgvDataReceivedHandler());
             DuringAny(AgvMapReceivedHandler());
             DuringAny(AgvOfflineMessageHandler());
 
@@ -242,11 +240,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
             When(AgvStatusReceivedEvent)
                 .TransitionTo(Discovered)
                 .Then(c =>
-                    _logger.LogInformation("New AGV {AgvId} / {CorrelationId} discovered", c.Message.AgvId, c.Saga.CorrelationId))
-                .If(cond => cond.Saga.AgvData == null,
-                    PublishRequestAgvData)
-                .If(cond => cond.Saga.AgvGraph == null,
-                    PublishRequestAgvGraph);
+                    _logger.LogInformation("New AGV {AgvId} / {CorrelationId} discovered", c.Message.AgvId, c.Saga.CorrelationId)
+                )
+                .Then(PublishRequestAgvData)
+                .If(cond => cond.Saga.AgvGraph == null, PublishRequestAgvGraph);
 
         private EventActivityBinder<AgvSaga, RequestCanAgvTransitionToBusy> SetAgvBusyAvailableEventHandler() =>
             When(AgvBusyAvailabilityEvent)
@@ -272,7 +269,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
             bool isReady = saga is
                            {
                                AgvGraph: not null,
-                               AgvData: not null,
                                AgvStatus: not null,
                                AgvStatus.LastNodeId: not null,
                                IsLocked: false
@@ -352,7 +348,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
                 .Then(RequestAgvDataAndGraph)
                 .If(cond =>
                         _productionOptions.AutoAccept &&
-                        cond.Saga.AgvData is not null &&
+                        _agvDataRegistry.Exists(cond.Saga.CorrelationId) &&
                         cond.Saga.AgvGraph is not null &&
                         _mapRegistry.Exists(cond.Saga.AgvGraph.RelatedMapId) &&
                         cond.Saga.CurrentState == nameof(Discovered),
@@ -373,12 +369,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
                 .Then(c => c.Saga.AgvGraph = c.Message.Graph)
                 .Then(SaveGraph);
 
-        private EventActivityBinder<AgvSaga, AgvDataReceived> AgvDataReceivedHandler() =>
-            When(AgvDataReceivedEvent)
-                .Then(c =>
-                    _logger.LogInformation("{MessageType} {AgvId} / {CorrelationId}", nameof(AgvDataReceived), c.Message.AgvId, c.Saga.CorrelationId))
-                .Then(c => c.Saga.AgvData = c.Message.Data);
-
         private EventActivityBinder<AgvSaga, AgvMapReceived> AgvMapReceivedHandler() =>
             When(AgvMapReceivedEvent)
                 .Then(c => _logger.LogInformation("Incoming Map {MapId}/{MapCorrelationId} for Agv {AgvId}/{CorrelationId}",
@@ -398,7 +388,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
             var agvSaga = context.Saga;
 
             // When AgvData missing repeat request all x seconds otherwise refresh once a day
-            int timeout = agvSaga.AgvData == null ? AgvRequestTimeoutS : DailyRequestUpdateInterval;
+            int timeout = _agvDataRegistry.Exists(context.Saga.CorrelationId) ? DailyRequestUpdateInterval : AgvRequestTimeoutS;
             double timeSinceLastRequest = agvSaga.GetTimeSpanSinceLastRequest_AgvData().TotalSeconds;
             if (timeSinceLastRequest > timeout)
             {
@@ -419,9 +409,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
         /// <summary>
         /// When publishing <see cref="RequestAgvData"/> automatically store <see cref="AgvSaga.AgvDataRequestedLastTime"/>.
         /// </summary>
-        private EventActivityBinder<AgvSaga, AgvStatusReceived> PublishRequestAgvData(EventActivityBinder<AgvSaga, AgvStatusReceived> binder) =>
-            binder.Publish(m => new RequestAgvData(m.Saga.CorrelationId, m.Saga.AgvId))
-                .Then(c => c.Saga.AgvDataRequestedLastTime = DateTime.UtcNow);
+        private void PublishRequestAgvData(BehaviorContext<AgvSaga, AgvStatusReceived> context)
+        {
+            context.Publish(new RequestAgvData(context.Saga.CorrelationId, context.Saga.AgvId));
+            context.Saga.AgvDataRequestedLastTime = DateTime.UtcNow;
+        }
 
         /// <summary>
         /// When publishing <see cref="RequestAgvGraph"/> automatically store <see cref="AgvSaga.AgvGraphRequestedLastTime"/>.
@@ -468,6 +460,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
                 endpoint.Publish(new AgvPropertyChanged(agvSaga, agvSaga.CorrelationId));
             }
 
+            // TODO: Is this right? I guess we only are allowed to publish this when we are actually idle!
             if (aliveChanged && newAlive && agvSaga.CurrentState == nameof(Idle)) // Transition to Ready must happen before triggering order assignment
             {
                 endpoint.Publish(new AgvBecameIdle(agvSaga.CorrelationId));

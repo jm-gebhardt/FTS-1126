@@ -61,7 +61,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
 
                     return new AgvHubContext(hubContext, mapper);
                 });
-                
+
                 services.AddConfigurationTypeManager();
                 services.AddSettingsProviders(ConfigurationTypeManager.Instance);
 
@@ -90,6 +90,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                 // Registries
                 services.AddSingleton<IAgvActionRegistry, EfAgvActionRegistry>();
                 services.AddSingleton<IAgvRegistry, EfAgvRegistry>();
+                services.AddSingleton<IAgvDataRegistry, EfAgvDataRegistry>();
                 services.AddSingleton<IMapRegistry, EfMapRegistry>();
                 services.AddSingleton<IGraphRegistry, EfGraphRegistry>();
                 services.AddSingleton<INodeStateRegistry, EfNodeStateRegistry>();
@@ -119,6 +120,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                         x.AddSagaStateMachine<AgvStateMachine, AgvSaga>()
                             .AddPersistence<AgvSaga, SagaPersistenceDbContext>();
 
+                        x.AddConsumer<AgvDataConsumer>();
                         x.AddConsumer<ActionConsumer>();
                         x.AddConsumer<AgvPositionReceivedConsumer>();
                         x.AddConsumer<AgvPositionChangedConsumer>();

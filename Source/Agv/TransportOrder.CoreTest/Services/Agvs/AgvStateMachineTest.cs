@@ -26,10 +26,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
 
         private class AgvStateMachineTestFixture
         {
+            public Mock<IAgvDataRegistry> AgvDataRegistry { get; }
             public Mock<IMapRegistry> MockMapRegistry { get; }
             private Mock<IGraphRegistry> MockGraphRegistry { get; }
             public Mock<IStateObserver<AgvSaga>> MockObserver { get; }
             public StateMachineTestFixture<AgvStateMachine, AgvSaga> Fixture { get; }
+
+            private Dictionary<Guid, AgvData> Agvdata { get; } = new();
 
             /// <summary>
             /// Create AgvStateMachine test fixture with mocked services
@@ -40,19 +43,35 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
                 AgvSettings? settings = null,
                 TimeSpan? inactivityTimeout = null)
             {
+                AgvDataRegistry = new Mock<IAgvDataRegistry>();
                 MockMapRegistry = new Mock<IMapRegistry>();
                 MockGraphRegistry = new Mock<IGraphRegistry>();
                 MockObserver = new Mock<IStateObserver<AgvSaga>>();
 
                 MockMapRegistry.Setup(s => s.GetAllMaps()).Returns(new EnumerableQuery<Map>(new List<Map>()));
 
+                AgvDataRegistry.Setup(x => x.Exists(It.IsAny<Guid>())).Returns<Guid>(correlationId => Agvdata.ContainsKey(correlationId));
+                AgvDataRegistry.Setup(x => x.GetAgvData(It.IsAny<Guid>()))
+                    .Returns<Guid>(correlationId =>
+                    {
+                        Agvdata.TryGetValue(correlationId, out var agvData);
+                        return agvData;
+                    });
+                AgvDataRegistry.Setup(x => x.AddOrUpdate(It.IsAny<AgvData>()))
+                    .Returns<AgvData>(agvData =>
+                    {
+                        Agvdata[agvData.CorrelationId] = agvData;
+                        return true;
+                    });
+
                 Fixture = new StateMachineTestFixture<AgvStateMachine, AgvSaga>(
                     busRegistrationConfigurator: busRegistrationConfigurator,
                     services: s =>
                     {
+                        s.AddSingleton(_ => AgvDataRegistry.Object);
+                        s.AddSingleton(_ => MockMapRegistry.Object);
+                        s.AddSingleton(_ => MockGraphRegistry.Object);
                         s.AddSingleton(_ => MockObserver.Object);
-                        s.AddTransient(_ => MockMapRegistry.Object);
-                        s.AddTransient(_ => MockGraphRegistry.Object);
                         s.AddSingleton(_ => new ProductionOptions()
                         {
                             ApplicationName = null,
@@ -120,14 +139,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
             return new AgvMap(mapId.ToGuid(), mapId, modificationDate, imageData, resolution, xOffset, yOffset);
         }
 
-        /// <summary>
-        /// Create a standardized AgvData for testing purposes
-        /// </summary>
-        private AgvData CreateTestAgvData()
-        {
-            return new AgvData(Guid.Empty, "Karis", "BF 2", null, 80, 1.2, 0.6, 0.8, 0.7, 0.9, 2.5, 1000, Array.Empty<AgvData.Sensor>());
-        }
-
         #endregion
 
         #region State Transitions
@@ -187,8 +198,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
                 agvId,
                 initialSate,
                 new AgvStatus(correlationId, null, true, true, 10, true, true, "R1"),
-                new AgvGraph(correlationId, Array.Empty<AgvGraph.Node>(), Array.Empty<AgvGraph.Edge>(), Guid.Empty, "EmptyMap"),
-                new AgvData(correlationId, "", "", null, 0, 0, 0, 0, 0, 0, 0, 0, Array.Empty<AgvData.Sensor>())
+                new AgvGraph(correlationId, Array.Empty<AgvGraph.Node>(), Array.Empty<AgvGraph.Edge>(), Guid.Empty, "EmptyMap")
             );
  
             fixture.Add(agvSaga);
@@ -243,7 +253,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
             saga.AgvId.ShouldBe(agvId);
             saga.AgvStatus.ShouldNotBeNull();
             saga.AgvGraph.ShouldBeNull();
-            saga.AgvData.ShouldBeNull();
         }
 
         [TestMethod]
@@ -488,17 +497,17 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
             StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = agvStateMachine.Fixture;
             var token = new CancellationTokenSource();
 
-            var agvData = CreateTestAgvData();
-
             const string agvId = "AGV_01";
             var correlationId = agvId.ToGuid();
+
+            var agvData = new AgvData(correlationId, "Karis", "BF 2", null, 80, 1.2, 0.6, 0.8, 0.7, 0.9, 2.5, 1000, Array.Empty<AgvData.Sensor>());
+            agvStateMachine.AgvDataRegistry.Object.AddOrUpdate(agvData);
 
             var agvSaga = new AgvSaga(
                 correlationId,
                 agvId,
                 currentState: fixture.Machine.Discovered.Name,
-                agvStatus: new AgvStatus(correlationId, null, true, true, 10, true, true),
-                agvData: agvData
+                agvStatus: new AgvStatus(correlationId, null, true, true, 10, true, true)
             )
             {
                 // Repeat request exceeded but no daily request
@@ -524,7 +533,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
             (await fixture.TestHarness.Published.Any<RequestAgvGraph>()).ShouldBeTrue();
             (await fixture.TestHarness.Published.Any<RequestAgvData>(token.Token)).ShouldBeFalse();
         }
-
 
         [TestMethod]
         public async Task When_AgvBatteryChargeChange_Send_AgvBatteryChargeChanged()
@@ -571,7 +579,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
             StateMachineTestFixture<AgvStateMachine, AgvSaga> fixture = agvStateMachine.Fixture;
 
             var agvGraph = CreateTestAgvGraph();
-            var agvData = CreateTestAgvData();
 
             const string agvId = "AGV_01";
             var correlationId = agvId.ToGuid();
@@ -581,8 +588,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
                 agvId,
                 currentState: fixture.Machine.Discovered.Name,
                 agvStatus: new AgvStatus(correlationId, null, true, true, 10, true, true),
-                agvGraph: agvGraph,
-                agvData: agvData
+                agvGraph: agvGraph
             )
             {
                 AgvGraphRequestedLastTime = DateTime.UtcNow - new TimeSpan(24, 0, 1),
@@ -812,8 +818,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
                 agvId,
                 stateBefore.Name,
                 new AgvStatus(correlationId, null, true, true, 10, true, true, "R1"),
-                new AgvGraph(correlationId, Array.Empty<AgvGraph.Node>(), Array.Empty<AgvGraph.Edge>(), Guid.Empty, "EmptyMap"),
-                new AgvData(correlationId, "", "", null, 0, 0, 0, 0, 0, 0, 0, 0, Array.Empty<AgvData.Sensor>())
+                new AgvGraph(correlationId, Array.Empty<AgvGraph.Node>(), Array.Empty<AgvGraph.Edge>(), Guid.Empty, "EmptyMap")
             );
 
             fixture.Add(agvSaga);

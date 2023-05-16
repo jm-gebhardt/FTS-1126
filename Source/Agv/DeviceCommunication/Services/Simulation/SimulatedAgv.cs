@@ -1,6 +1,7 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 
 // ReSharper disable ConvertToPrimaryConstructor
+// ReSharper disable InheritdocInvalidUsage
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
 {
     /// <summary>

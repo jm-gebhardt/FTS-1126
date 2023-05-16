@@ -27,7 +27,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Saga.ClassMaps
             entity.Ignore(nameof(AgvSaga.Assignable));
             entity.Property(x => x.AgvStatus).HasJsonConversion();
             entity.Property(x => x.AgvGraph).HasJsonConversion();
-            entity.Property(x => x.AgvData).HasJsonConversion();
             
             // Restrict CurrentState length
             entity.Property(x => x.CurrentState).HasMaxLength(CurrentStateMaxLength);

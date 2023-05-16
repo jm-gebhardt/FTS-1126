@@ -9,17 +9,16 @@ using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Features.Agvs.Handlers.Queries;
 
-public class AgvRequestsHandlerTestFixture<T> : MassTransitTestFixture<T>
-where T : class, IConsumer
+public class AgvRequestsHandlerTestFixture<T> : MassTransitTestFixture<T> where T : class, IConsumer
 {
-
-    public readonly Mock<IAgvRegistry> AgvRegistryMock = new ();
+    public readonly Mock<IAgvRegistry> AgvRegistryMock = new();
 
     protected override void ConfigureServices(IServiceCollection collection)
     {
         base.ConfigureServices(collection);
-        collection.AddTransient<IAgvRegistry>(_ => AgvRegistryMock.Object);
-        collection.AddTransient<IMapper>(_ => Mock.Of<IMapper>());
+        collection.AddTransient(_ => AgvRegistryMock.Object);
+        collection.AddTransient(_ => Mock.Of<IAgvDataRegistry>());
+        collection.AddTransient(_ => Mock.Of<IMapper>());
     }
 
     public async void ShouldContainFault<TMessage, TException>()
