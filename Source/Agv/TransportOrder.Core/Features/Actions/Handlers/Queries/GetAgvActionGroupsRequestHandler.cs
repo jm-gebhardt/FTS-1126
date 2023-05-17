@@ -3,6 +3,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Actions.Common;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Actions.Requests.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Requests.Queries;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Registries;
 using MassTransit;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Actions.Handlers.Queries
@@ -12,6 +13,18 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Actions.Handlers.Q
     /// </summary>
     public class GetAgvActionGroupsRequestHandler: IConsumer<GetAgvActionGroupsRequest>
     {
+        private readonly IActionGroupRegistry _actionGroupRegistry;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="???"></param>
+        public GetAgvActionGroupsRequestHandler(IActionGroupRegistry actionGroupRegistry)
+        {
+            _actionGroupRegistry = actionGroupRegistry;
+        }
+        
+        
         /// <summary>
         /// <inheritdoc cref="GetAgvActionGroupsRequestHandler"/>
         /// </summary>
@@ -20,21 +33,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Actions.Handlers.Q
         /// <exception cref="NotImplementedException"></exception>
         public async Task Consume(ConsumeContext<GetAgvActionGroupsRequest> context)
         {
-            Guid groupId0 = Guid.NewGuid();
-            var result = new GetAgvActionGroupsResult(new List<AgvActionGroupDto>()
-            {
-                new(
-                    groupId0, 
-                    ActionGroupState.Created, 
-                    DateTime.MinValue, 
-                    DateTime.MinValue, 
-                    DateTime.MinValue,
-                    Guid.NewGuid(),
-                    new []
-                    {
-                        new AgvActionDto(Guid.NewGuid(), groupId0, 0, null, null, ActionState.Created, ActionType.Charge, "n0", new []{"n0"})
-                    })
-            });
+            IReadOnlyList<ActionGroup> actionGroups = await _actionGroupRegistry.GetActionGroupsAsync(context.Message.States, context.Message.FromDate, context.Message.ToDate, context.Message.Limit);
+            
+            var result = new GetAgvActionGroupsResult(actionGroups);
             
             await context.RespondAsync(result);
         }
