@@ -10,13 +10,12 @@ public interface IAgvLoadCapabilityService
     /// </summary>
     /// <param name="agvCorrelationId"></param>
     /// <returns>True if it carrying any load</returns>
-    public bool IsCarryingLoad(Guid agvCorrelationId);
-
+    public Task<bool> IsCarryingLoadAsync(Guid agvCorrelationId);
 
     /// <summary>
     /// Checks if Agv can get new load
     /// </summary>
     /// <param name="agvCorrelationId"></param>
     /// <returns>True if it can take a new load</returns>
-    public bool CanGetNewLoad(Guid agvCorrelationId);
+    public Task<bool> CanGetNewLoadAsync(Guid agvCorrelationId);
 }

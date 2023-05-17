@@ -34,6 +34,7 @@ public class StartChargingCommandConsumer : IConsumer<StartChargingCommand>
     /// <exception cref="AgvStatusReceivedNotFoundException"></exception>
     /// <exception cref="AgvLocationUnknownException"></exception>
     /// <exception cref="NotInCorrectStateException"></exception>
+    // TODO: Why do we have a start charging command consumer and a start action command consumer?
     public async Task Consume(ConsumeContext<StartChargingCommand> context)
     {
         var agvCorrelationId = context.Message.CorrelationId;
@@ -77,14 +78,13 @@ public class StartChargingCommandConsumer : IConsumer<StartChargingCommand>
         string agvId = agvStatusReceived.AgvId;
         var chargeAction = new AgvAction(
             Guid.NewGuid(),
-            agvId,
             ActionType.Charge,
-            string.Empty,
-            Guid.Empty,
+            null!,
             lastNodeId);
 
-        await context.Publish(new StartActionCommand(agvCorrelationId, chargeAction));
+        await context.Publish(new StartActionCommand(agvCorrelationId, agvId, "charge", chargeAction));
         await context.Publish(new ActionStartedEvent(chargeAction.CorrelationId, string.Empty));
         await context.RespondAsync(new BaseResult());
+        throw new NotImplementedException("We must lead this request through the ActionManager. It's not allowed to create actions outside!");
     }
 }

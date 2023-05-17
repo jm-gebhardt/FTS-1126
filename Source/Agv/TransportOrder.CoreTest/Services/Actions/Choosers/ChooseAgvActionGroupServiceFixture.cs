@@ -18,7 +18,7 @@ public class ChooseAgvActionGroupServiceFixture
 
     public Mock<IRouteService> RouteService { get; } = new();
 
-    public Mock<IAgvActionRegistry> AgvActionRegistry { get; } = new();
+    public Mock<IActionGroupRegistry> AgvActionRegistry { get; } = new();
 
     public ShortestRouteChooser ShortestRouteChooser { get; private set; }
 

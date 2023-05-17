@@ -5,59 +5,68 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
     /// <summary>
     /// Grouping actions and sending them across service modules
     /// </summary>
-    public record ActionGroup : CorrelatedBy<Guid>
+    public class ActionGroup : CorrelatedBy<Guid>
     {
         /// <inheritdoc />
         /// Parenting ID
-        public Guid CorrelationId { get; }
-        
+        public Guid CorrelationId { get; init; }
+
+        /// <summary>
+        /// A unique ID of the order that clamps all the corresponding actions
+        /// </summary>
+        public string OrderId { get; init; }
+
         /// <summary>
         /// Assigned AGV that will execute the action group
         /// </summary>
-        public Guid? AssignAgv;
+        public Guid? AssignedAgv { get; set; }
 
         /// <summary>
         /// Date the action was created
         /// </summary>
-        public DateTime DtCreated;
+        public DateTime CreatedDate { get; init; }
 
         /// <summary>
         /// Date the action has started
         /// </summary>
-        public DateTime? DtStarted;
+        public DateTime? StartedDate { get; init; }
 
         /// <summary>
         /// Date the action has completed
         /// </summary>
-        public DateTime? DtCompleted;
+        public DateTime? CompletedDate { get; init; }
 
         /// <summary>
         /// State of the action group
         /// </summary>
-        public ActionState State;
+        public ActionGroupState State { get; set; } = ActionGroupState.Created;
 
         /// <summary>
         /// List of actions
         /// </summary>
-        public List<AgvAction> Actions { get; }
+        public ICollection<AgvAction>? Actions { get; set; }
 
         /// <summary>
         /// Generating an instance of <see cref="ActionGroup"/>
         /// </summary>
         /// <param name="correlationId"></param>
-        /// <param name="dtCompleted"></param>
+        /// <param name="completedDate"></param>
+        /// <param name="state"></param>
         /// <param name="actions"></param>
-        /// <param name="assignAgv"></param>
-        /// <param name="dtCreated"></param>
-        /// <param name="dtStarted"></param>
-        public ActionGroup(Guid correlationId, Guid? assignAgv, DateTime dtCreated, DateTime? dtStarted, DateTime? dtCompleted, List<AgvAction> actions)
+        /// <param name="orderId"></param>
+        /// <param name="assignedAgv"></param>
+        /// <param name="createdDate"></param>
+        /// <param name="startedDate"></param>
+        public ActionGroup(Guid correlationId, string orderId, DateTime? createdDate = default, List<AgvAction>? actions = null, DateTime? startedDate = null, DateTime? completedDate = null, ActionGroupState state = ActionGroupState.Created, Guid? assignedAgv = null)
         {
             CorrelationId = correlationId;
-            AssignAgv = assignAgv;
-            DtCreated = dtCreated;
-            DtStarted = dtStarted;
-            DtStarted = dtCompleted;
-            DtCompleted = dtCompleted;
+            OrderId = orderId;
+            AssignedAgv = assignedAgv;
+            CreatedDate = createdDate.GetValueOrDefault(DateTime.UtcNow);
+            StartedDate = startedDate;
+            StartedDate = completedDate;
+            State = state;
+            CompletedDate = completedDate;
             Actions = actions;
         }
 
@@ -65,12 +74,22 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
         /// Constructor which auto creates Started date using DateTime.Now
         /// </summary>
         /// <param name="correlationId"></param>
+        /// <param name="orderId"></param>
         /// <param name="actions"></param>
-        public ActionGroup(Guid correlationId, List<AgvAction> actions)
+        public ActionGroup(Guid correlationId, string orderId, List<AgvAction>? actions = null)
         {
             CorrelationId = correlationId;
             Actions = actions;
-            DtCreated = DateTime.Now;
+            OrderId = orderId;
+            CreatedDate = DateTime.Now;
+        }
+
+        /// <summary>
+        /// Json ctor
+        /// </summary>
+        public ActionGroup()
+        {
+            OrderId = "";
         }
     }
 }

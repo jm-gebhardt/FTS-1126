@@ -65,6 +65,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         public AgvAction? Action { get; set; }
 
         /// <summary>
+        /// A unique ID of the order that clamps all the corresponding actions
+        /// </summary>
+        public string? OrderId { get; set; }
+
+        /// <summary>
         /// Token used by the send status update schedule
         /// </summary>
         public Guid? SendStatusUpdateTokenId { get; set; }
@@ -241,10 +246,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
             AgvGraph = agvGraph;
             AgvData = agvData;
             AgvMap = agvMap;
-
+            
             AgvStatus = new(
                 CorrelationId,
-                Action?.OrderId,
+                // TODO: Why do we want orderId here? i think we need action correlationId!
+                // ToString is very very wrong here! just for the sake of satisfying the compiler
+                Action?.CorrelationId.ToString(),
                 busy: false,
                 automatic: true,
                 initialBatteryCharge,

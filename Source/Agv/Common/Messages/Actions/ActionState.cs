@@ -14,12 +14,6 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
         Created,
 
         /// <summary>
-        /// Action assigned
-        /// </summary>
-        [PublicAPI]
-        Assigned,
-
-        /// <summary>
         /// Action transmitted to DeviceCommunication
         /// </summary>
         [PublicAPI]

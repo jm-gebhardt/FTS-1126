@@ -14,8 +14,13 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
         /// </summary>
         public Guid CorrelationId { get; set; }
 
+        /// <summary>
+        /// The action group this action belongs to
+        /// </summary>
+        public ActionGroup ActionGroup { get; set; }
+
         /// <inheritdoc/>
-        public Guid ParentId { get; }
+        public Guid ParentId { get; init; }
 
         /// <inheritdoc/>
         public int Sequence { get; init; }
@@ -27,16 +32,6 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
         public Guid Predecessor { get; init; }
 
         /// <summary>
-        /// AGV ID
-        /// </summary>
-        public string? AgvId { get; set; }
-
-        /// <summary>
-        /// The CorrelationId of the assigned agv
-        /// </summary>
-        public Guid? AssignedAgv { get; set; }
-
-        /// <summary>
         /// The current state of the action
         /// </summary>
         public ActionState State { get; set; } = ActionState.Created;
@@ -45,11 +40,6 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
         /// The type of the action, e.g. Pick or Drop
         /// </summary>
         public ActionType ActionType { get; init; }
-
-        /// <summary>
-        /// Order ID of the order that clamps all the corresponding actions
-        /// </summary>
-        public string OrderId { get; init; }
 
         /// <summary>
         /// Target node id of the action
@@ -65,18 +55,14 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
         /// Constructor
         /// </summary>
         /// <param name="correlationId">Unique correlation ID of this action (see order action repository)</param>
-        /// <param name="agvId">AGV ID</param>
         /// <param name="actionType">The type of the action, e.g. Pick or Drop</param>
-        /// <param name="orderId">Order ID</param>
-        /// <param name="parentId">The id of the clamped object</param>
+        /// <param name="actionGroup">The parent ActionGroup</param>
         /// <param name="targetNodeId">Target node id of the action</param>
-        public AgvAction(Guid correlationId, string agvId, ActionType actionType, string orderId, Guid parentId, string targetNodeId)
+        public AgvAction(Guid correlationId, ActionType actionType, ActionGroup actionGroup, string targetNodeId)
         {
             CorrelationId = correlationId;
-            AgvId = agvId;
             ActionType = actionType;
-            OrderId = orderId;
-            ParentId = parentId;
+            ActionGroup = actionGroup;
             TargetNodeId = targetNodeId;
         }
 
@@ -87,10 +73,8 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
         private AgvAction()
         {
             CorrelationId = Guid.Empty;
-            AgvId = string.Empty;
             ActionType = ActionType.Pick;
-            OrderId = string.Empty;
-            ParentId = Guid.Empty;
+            ActionGroup = null!;
             TargetNodeId = string.Empty;
         }
     }

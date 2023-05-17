@@ -88,7 +88,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                 services.AddSingleton<IAgvStateService, AgvStateService>();
 
                 // Registries
-                services.AddSingleton<IAgvActionRegistry, EfAgvActionRegistry>();
+                services.AddSingleton<IActionGroupRegistry, EfActionGroupRegistry>();
                 services.AddSingleton<IAgvRegistry, EfAgvRegistry>();
                 services.AddSingleton<IAgvDataRegistry, EfAgvDataRegistry>();
                 services.AddSingleton<IMapRegistry, EfMapRegistry>();
@@ -141,7 +141,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                         x.AddConsumer<GetAgvStatusRequestHandler>();
                         x.AddConsumer<LockAgvCommandHandler>();
                         x.AddConsumer<UnlockAgvCommandHandler>();
-
+                        
                         // request clients
                         // ########################################
                         // maps

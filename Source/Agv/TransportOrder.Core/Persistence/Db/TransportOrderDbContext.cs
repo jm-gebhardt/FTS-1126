@@ -55,6 +55,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db
                 yield return new NodeLockClassMap();
                 yield return new MapClassMap();
                 yield return new AgvActionClassMap();
+                yield return new ActionGroupClassMap();
                 yield return new ConfigurationSettingsClassMap();
                 yield return new EdgeClassMap();
                 yield return new NodeClassMap();
