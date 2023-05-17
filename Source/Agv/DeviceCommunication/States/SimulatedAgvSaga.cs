@@ -241,12 +241,10 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
             AgvGraph = agvGraph;
             AgvData = agvData;
             AgvMap = agvMap;
-            
+
             AgvStatus = new(
                 CorrelationId,
-                // TODO: Why do we want orderId here? i think we need action correlationId!
-                // ToString is very very wrong here! just for the sake of satisfying the compiler
-                Action?.CorrelationId.ToString(),
+                Action?.OrderId,
                 busy: false,
                 automatic: true,
                 initialBatteryCharge,

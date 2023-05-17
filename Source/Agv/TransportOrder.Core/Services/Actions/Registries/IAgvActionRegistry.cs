@@ -8,43 +8,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Registries
     /// </summary>
     public interface IAgvActionRegistry
     {
-        
-        /// <summary>
-        /// Saves the action
-        /// </summary>
-        /// <param name="actionGroup">Agv Action</param>
-        public bool Insert(ActionGroup actionGroup);
-
-        /// <summary>
-        /// Get ActionGroup
-        /// </summary>
-        /// <param name="states"></param>
-        /// <param name="fromDate"></param>
-        /// <param name="toDate"></param>
-        /// <param name="limit"></param>
-        /// <returns></returns>
-        public IQueryable<ActionGroup> GetActionGroups(ActionGroupState[] states, DateTime? fromDate = null, DateTime? toDate = null, int limit = 0);
-        
-        /// <summary>
-        /// Get ActionGroup
-        /// </summary>
-        /// <param name="correlationId"></param>
-        /// <returns></returns>
-        public ActionGroup? GetActionGroup(Guid correlationId);
-        
-        /// <summary>
-        /// Get ActionGroup
-        /// </summary>
-        /// <param name="correlationId"></param>
-        /// <returns></returns>
-        public ActionGroup GetRequiredActionGroup(Guid correlationId);
-
         /// <summary>
         /// Saves the action
         /// </summary>
         /// <param name="agvAction">Agv Action</param>
         public void Insert(AgvAction agvAction);
-        
+
         /// <summary>
         /// Get Agv action by key.
         /// </summary>

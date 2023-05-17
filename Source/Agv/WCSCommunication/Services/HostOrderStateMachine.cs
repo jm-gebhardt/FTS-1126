@@ -99,18 +99,22 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
         {
             var dropActionGuid = hostOrderSaga.DropActionGuid;
             var pickActionGuid = hostOrderSaga.PickActionGuid;
-            var pickAction = new AgvAction(pickActionGuid, ActionType.Pick, hostOrderSaga.CorrelationId, hostOrderSaga.OrderDetails.Source)
+            var pickAction = new AgvAction(pickActionGuid, string.Empty, ActionType.Pick, hostOrderSaga.OrderId, hostOrderSaga.OrderId.ToGuid(), hostOrderSaga.OrderDetails.Source)
             {
                 Successor = dropActionGuid,
                 Sequence = 0
             };
-            var dropAction = new AgvAction(dropActionGuid, ActionType.Drop, hostOrderSaga.CorrelationId, hostOrderSaga.OrderDetails.Destination)
+            var dropAction = new AgvAction(dropActionGuid, string.Empty, ActionType.Drop, hostOrderSaga.OrderId, hostOrderSaga.OrderId.ToGuid(), hostOrderSaga.OrderDetails.Destination)
             {
                 Predecessor = pickActionGuid,
                 Sequence = 1
             };
 
-            return new ActionGroup(hostOrderSaga.CorrelationId, hostOrderSaga.OrderId , new[] { pickAction, dropAction }, hostOrderSaga.OrderDetails.CreationDate);
+            return new ActionGroup(hostOrderSaga.CorrelationId, new List<AgvAction>()
+            {
+                pickAction,
+                dropAction
+            });
         }
         #endregion
     }

@@ -56,7 +56,7 @@ public class ActionManager : BaseActionManager
         var nextAgvAction = await GetPendingActionAsync(agv) ?? await CreateIdleActionAsync(agv);
         return nextAgvAction;
     }
-    
+
     private Task<AgvAction?> GetPendingActionAsync(IAgv agv)
     {
         bool needsCharging = ChargingService.AgvNeedsCharging(agv);

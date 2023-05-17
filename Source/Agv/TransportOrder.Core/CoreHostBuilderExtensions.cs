@@ -22,8 +22,6 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Commands
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Handlers.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Requests.Queries;
 using Gebhardt.StoreWare.Agv.Common.Persistence;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Actions.Common;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Actions.Handlers.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Saga;
@@ -143,10 +141,23 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                         x.AddConsumer<GetAgvStatusRequestHandler>();
                         x.AddConsumer<LockAgvCommandHandler>();
                         x.AddConsumer<UnlockAgvCommandHandler>();
-                        
-                        // Actions
-                        x.AddConsumer<GetAgvActionGroupsRequestHandler>();
-                        x.AddConsumer<GetAgvActionGroupCountsByStateHandler>();
+
+                        // request clients
+                        // ########################################
+                        // maps
+                        x.AddRequestClient<GetMapImageRequest>();
+                        x.AddRequestClient<GetMapListRequest>();
+
+                        // agv
+                        x.AddRequestClient<RequestAgvDataCommandHandler>();
+                        x.AddRequestClient<RequestAgvGraphCommandHandler>();
+                        x.AddRequestClient<GetAgvDataRequestHandler>();
+                        x.AddRequestClient<GetAgvGraphRequestHandler>();
+                        x.AddRequestClient<GetAgvPositionsRequestHandler>();
+                        x.AddRequestClient<GetAgvsRequestHandler>();
+                        x.AddRequestClient<GetAgvStatusRequestHandler>();
+                        x.AddRequestClient<LockAgvCommandHandler>();
+                        x.AddRequestClient<UnlockAgvCommandHandler>();
 
                         x.AddDelayedMessageScheduler();
                     }, rabbitMqConfiguration: (_, cfg) => { cfg.UseDelayedMessageScheduler(); });

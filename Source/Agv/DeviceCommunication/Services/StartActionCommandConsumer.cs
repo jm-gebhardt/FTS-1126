@@ -42,13 +42,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
             OrderType orderType;
             string sourceToSend = string.Empty;
             string destinationToSend = string.Empty;
-            string agvId = context.Message.AgvId;
-            var assignedAgv = context.Message.CorrelationId;
-            
-            if (string.IsNullOrEmpty(agvId))
+
+            if (action.AssignedAgv == null || string.IsNullOrEmpty(action.AgvId))
             {
-                throw new AssignedAgvNotFoundException(assignedAgv, agvId, action);
+                throw new AssignedAgvNotFoundException(action);
             }
+            var assignedAgv = (Guid) action.AssignedAgv;
 
             if (actionType == ActionType.Pick)
             {
@@ -69,9 +68,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
             // And we transferring the Action's Guid and its parenting OrderId through the same string 
             // This message will be split in <see cref="OrderEventConsumer"/>
             // Temporary solution
-            await context.PublishMqtt(new MqttOrder(action.CorrelationId.ToString())
+            await context.PublishMqtt(new MqttOrder(action.CorrelationId + " " + action.OrderId)
             {
-                SerialNumber = agvId,
+                SerialNumber = action.AgvId,
                 OrderType = orderType,
                 RecordType = OrderRecordType.Order,
                 Stations = new Stations
@@ -81,9 +80,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
                 }
             }, context.CancellationToken);
 
-            FeedAgvRegistry(assignedAgv, action);
-            _logger.LogInformation("Sent transport order: {OrderId} for AGV:{assignedAgv}/{AgvId} at target: {TargetNodeId}",
-                action.CorrelationId, assignedAgv, agvId, targetNodeId);
+            FeedAgvRegistry(assignedAgv, new AgvAction(action.CorrelationId, action.AgvId, action.ActionType, action.OrderId, action.ParentId, targetNodeId));
+            _logger.LogInformation("Sent transport order: {OrderId} for AGV:{AgvId} at target: {TargetNodeId}",
+                action.OrderId, action.AgvId, targetNodeId);
         }
 
         private void FeedAgvRegistry(Guid correlationId, AgvAction agvAction)
