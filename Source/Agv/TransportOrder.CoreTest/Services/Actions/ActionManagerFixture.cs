@@ -36,8 +36,6 @@ public class ActionManagerFixture
 
     public Mock<IChargingPointManager> ChargingPointManager { get; } = new();
 
-    public Mock<IAgvStateService> AgvLocker { get; } = new();
-
     public Mock<IParkPointService> ParkPointService { get; } = new();
 
     public Mock<IAgvLoadCapabilityService> AgvLoadCapabilityService { get; } = new();
@@ -171,7 +169,7 @@ public class ActionManagerFixture
 
     public ActionManagerFixture ChooseNextActionGroup(IAgv agv, ActionGroup actionGroup)
     {
-        ChooseAgvActionGroupService.Setup(x => x.GetActionGroupAsync(agv)).ReturnsAsync(actionGroup.Actions.FirstOrDefault());
+        ChooseAgvActionGroupService.Setup(x => x.GetActionGroupAsync(agv)).ReturnsAsync(actionGroup.Actions!.FirstOrDefault());
         return this;
     }
 
@@ -183,7 +181,6 @@ public class ActionManagerFixture
 
     public ActionManagerFixture SetSubsequentAction(IAgv agv, AgvAction subsequentAction)
     {
-        // AgvActionRegistry.Setup(x => x.GetSubsequentActionAsync(agv.CorrelationId)).Returns(Task.FromResult(subsequentAction));
         ActionGroupRegistry.Setup(x => x.GetSubsequentActionAsync(agv.CorrelationId)).ReturnsAsync(subsequentAction);
         return this;
     }
@@ -191,7 +188,7 @@ public class ActionManagerFixture
     public ActionManagerFixture UpdateActionAndGroupState(ActionGroup actionGroup, AgvAction action, IAgv agv, ActionState state)
     {
         actionGroup.AssignAgvToActionGroup(agv);
-        var actionInGroup = actionGroup.Actions.First(x => x.CorrelationId == action.CorrelationId);
+        var actionInGroup = actionGroup.Actions!.First(x => x.CorrelationId == action.CorrelationId);
         actionInGroup.State = state;
         ActionGroupRegistry.Setup(x => x.GetRequiredActionGroupByIdAsync(actionGroup.CorrelationId)).ReturnsAsync(actionGroup);
         return this;
@@ -206,8 +203,8 @@ public class ActionManagerFixture
         }
         else
         {
-            AgvLocker.Setup(x => x.IsAgvReadyForBusyAsync(agv, false)).ReturnsAsync(readyForLock);
-            AgvLocker.Setup(x => x.IsAgvReadyForBusyAsync(agv, true)).ReturnsAsync(readyForLockWhenIgnoreChargingFlag);
+            AgvStateService.Setup(x => x.IsAgvReadyForBusyAsync(agv, false)).ReturnsAsync(readyForLock);
+            AgvStateService.Setup(x => x.IsAgvReadyForBusyAsync(agv, true)).ReturnsAsync(readyForLockWhenIgnoreChargingFlag);
         }
 
         SetupDefaultAgv(agv);

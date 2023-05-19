@@ -24,7 +24,7 @@ public class ChooseAgvActionGroupServiceFixture
 
     public ChooseAgvActionGroupServiceFixture()
     {
-        AgvActionRegistry.Setup(x => x.GetNotStartedActionGroups()).Returns(NotStartedActionGroups);
+        AgvActionRegistry.Setup(x => x.GetNotStartedActionGroupsAsync()).ReturnsAsync(NotStartedActionGroups);
         ShortestRouteChooser = new ShortestRouteChooser(
             RouteService.Object,
             AgvActionRegistry.Object,

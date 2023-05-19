@@ -94,6 +94,6 @@ public class ShortestRouteChooserTest
             .WithAgvHasRouteToDestination(agv);
 
         var agvAction = await fixture.ShortestRouteChooser.GetActionGroupAsync(agv);
-        agvAction.ShouldBe(actionGroup.Actions.First());
+        agvAction.ShouldBe(actionGroup.Actions!.First());
     }
 }
