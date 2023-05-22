@@ -8,17 +8,17 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 public enum ActionGroupState
 {
     /// <summary>
-    /// Action created
+    /// Action is created
     /// </summary>
     Created,
 
     /// <summary>
-    /// Action transmitted to DeviceCommunication
+    /// Action has been started
     /// </summary>
     Started,
 
     /// <summary>
-    /// Action completed
+    /// Action has been completed
     /// </summary>
     Completed
 }

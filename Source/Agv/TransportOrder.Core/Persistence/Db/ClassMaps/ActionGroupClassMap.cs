@@ -22,7 +22,7 @@ public class ActionGroupClassMap : ClassMap<ActionGroup>
         entity.Property(g => g.State).HasMaxLength(MaxStateLength);
 
         entity.HasMany(g => g.Actions)
-            .WithOne(a => a.ActionGroup)
+            .WithOne()
             .HasForeignKey(a => a.ParentId)
             .HasPrincipalKey(g => g.CorrelationId)
             .OnDelete(DeleteBehavior.ClientCascade);

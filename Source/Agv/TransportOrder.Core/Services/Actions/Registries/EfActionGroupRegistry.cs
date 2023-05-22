@@ -144,8 +144,11 @@ public class EfActionGroupRegistry : IActionGroupRegistry
         }
         await context.Entry(actionGroup).Collection(g => g.Actions!).LoadAsync();
 
+        action.UpdateActionState(state);
+        
         var actionToUpdate = actionGroup.Actions!.Single(a => a.CorrelationId == action.CorrelationId);
-        actionToUpdate.State = state;
+        actionGroup.Actions!.Remove(actionToUpdate);
+        actionGroup.Actions!.Add(action);
 
         actionGroup.AssignAgvToActionGroup(agv);
         actionGroup.UpdateActionGroupState();

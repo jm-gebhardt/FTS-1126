@@ -20,11 +20,8 @@ public class AgvActionClassMap : ClassMap<AgvAction>
     /// <param name="model"></param>
     protected override void Configure(EntityTypeBuilder<AgvAction> entity, ModelBuilder model)
     {
-        // entity.ConfigureAllProperties(x => x.Name is not nameof(AgvAction.ActionGroup));
         entity.HasKey(o => o.CorrelationId);
-        entity.Property(e => e.Predecessor).HasColumnOrder(2);
-        entity.Property(e => e.Successor).HasColumnOrder(3);
-        entity.Property(e => e.Sequence).HasColumnOrder(4);
+        entity.Property(e => e.Sequence);
         entity.Property(e => e.Nodes).HasJsonConversion();
         entity.Property(e => e.State).HasMaxLength(MaxStateLength);
         entity.Property(e => e.ActionType).HasMaxLength(MaxActionTypeLength);

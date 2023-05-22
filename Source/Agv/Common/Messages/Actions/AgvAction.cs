@@ -14,22 +14,11 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
         /// </summary>
         public Guid CorrelationId { get; set; }
 
-        /// <summary>
-        /// The action group this action belongs to
-        /// </summary>
-        public ActionGroup ActionGroup { get; set; }
-
         /// <inheritdoc/>
         public Guid ParentId { get; init; }
 
         /// <inheritdoc/>
         public int Sequence { get; init; }
-
-        /// <inheritdoc/>
-        public Guid Successor { get; init; }
-
-        /// <inheritdoc/>
-        public Guid Predecessor { get; init; }
 
         /// <summary>
         /// The current state of the action
@@ -52,17 +41,30 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
         public string[] Nodes { get; set; } = Array.Empty<string>();
 
         /// <summary>
+        /// Date the action was created
+        /// </summary>
+        public DateTime CreatedDate { get; init; } = DateTime.UtcNow;
+
+        /// <summary>
+        /// Date the action has been started
+        /// </summary>
+        public DateTime? StartedDate { get; set; }
+
+        /// <summary>
+        /// Date the action has been completed
+        /// </summary>
+        public DateTime? CompletedDate { get; set; }
+
+        /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="correlationId">Unique correlation ID of this action (see order action repository)</param>
         /// <param name="actionType">The type of the action, e.g. Pick or Drop</param>
-        /// <param name="actionGroup">The parent ActionGroup</param>
         /// <param name="targetNodeId">Target node id of the action</param>
-        public AgvAction(Guid correlationId, ActionType actionType, ActionGroup actionGroup, string targetNodeId)
+        public AgvAction(Guid correlationId, ActionType actionType, string targetNodeId)
         {
             CorrelationId = correlationId;
             ActionType = actionType;
-            ActionGroup = actionGroup;
             TargetNodeId = targetNodeId;
         }
 
@@ -74,7 +76,6 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
         {
             CorrelationId = Guid.Empty;
             ActionType = ActionType.Pick;
-            ActionGroup = null!;
             TargetNodeId = string.Empty;
         }
     }

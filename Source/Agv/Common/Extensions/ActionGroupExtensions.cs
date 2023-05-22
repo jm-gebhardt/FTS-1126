@@ -9,6 +9,8 @@ namespace Gebhardt.StoreWare.Agv.Common.Extensions;
 /// </summary>
 public static class ActionGroupExtensions
 {
+    private static DateTime GetCurrentDate() => DateTime.UtcNow;
+
     /// <summary>
     /// Updates the state of the ActionGroup based on the state of its Actions
     /// </summary>
@@ -16,6 +18,7 @@ public static class ActionGroupExtensions
     public static void UpdateActionGroupState(this ActionGroup actionGroup)
     {
         ICollection<AgvAction> actions = actionGroup.GetRequiredActions();
+        var previousState = actionGroup.State;
         if (actions.All(a => a.State == ActionState.Completed))
         {
             actionGroup.State = ActionGroupState.Completed;
@@ -27,6 +30,26 @@ public static class ActionGroupExtensions
         else if (actions.Any(a => a.State == ActionState.Started))
         {
             actionGroup.State = ActionGroupState.Started;
+        }
+
+        SetDates(actionGroup, previousState);
+    }
+
+    private static void SetDates(ActionGroup actionGroup, ActionGroupState previousState)
+    {
+        var state = actionGroup.State;
+        if (previousState != state)
+        {
+            switch (state)
+            {
+                case ActionGroupState.Started:
+                    actionGroup.StartedDate = GetCurrentDate();
+                    break;
+
+                case ActionGroupState.Completed:
+                    actionGroup.CompletedDate = GetCurrentDate();
+                    break;
+            }
         }
     }
 

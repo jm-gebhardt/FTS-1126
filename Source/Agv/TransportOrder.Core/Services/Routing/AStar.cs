@@ -224,7 +224,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Routing
         public static IGraphAlgorithm.Route? CalculateRouteStatic(AgvGraph agvGraph, string source, string destination)
         {
             var aStar = new AStar(agvGraph);
-            return aStar.CalculateRouteInternal(source, destination);
+            return aStar.CalculateRoute(source, destination);
         }
 
         /// <inheritdoc cref="BaseGraphAlgorithm.CalculateRoute(string[])"/>>

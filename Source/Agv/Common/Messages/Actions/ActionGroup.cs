@@ -24,17 +24,17 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
         /// <summary>
         /// Date the action was created
         /// </summary>
-        public DateTime CreatedDate { get; init; }
+        public DateTime CreatedDate { get; init; } = DateTime.UtcNow;
 
         /// <summary>
-        /// Date the action has started
+        /// Date the action has been started
         /// </summary>
-        public DateTime? StartedDate { get; init; }
+        public DateTime? StartedDate { get; set; }
 
         /// <summary>
-        /// Date the action has completed
+        /// Date the action has been completed
         /// </summary>
-        public DateTime? CompletedDate { get; init; }
+        public DateTime? CompletedDate { get; set; }
 
         /// <summary>
         /// State of the action group
@@ -81,7 +81,6 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
             CorrelationId = correlationId;
             Actions = actions;
             OrderId = orderId;
-            CreatedDate = DateTime.Now;
         }
 
         /// <summary>
