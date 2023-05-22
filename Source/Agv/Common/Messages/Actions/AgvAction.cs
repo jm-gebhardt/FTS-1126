@@ -41,17 +41,17 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
         public string[] Nodes { get; set; } = Array.Empty<string>();
 
         /// <summary>
-        /// Date the action was created
+        /// Date the action was created (UTC)
         /// </summary>
         public DateTime CreatedDate { get; init; } = DateTime.UtcNow;
 
         /// <summary>
-        /// Date the action has been started
+        /// Date the action has been started (UTC)
         /// </summary>
         public DateTime? StartedDate { get; set; }
 
         /// <summary>
-        /// Date the action has been completed
+        /// Date the action has been completed (UTC)
         /// </summary>
         public DateTime? CompletedDate { get; set; }
 

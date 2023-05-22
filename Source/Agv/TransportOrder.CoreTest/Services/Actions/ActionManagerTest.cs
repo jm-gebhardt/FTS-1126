@@ -14,7 +14,7 @@ public class ActionManagerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
-        var subsequentAction = actionGroup.Actions!.Last();
+        var subsequentAction = actionGroup.Actions.Last();
         var fixture = new ActionManagerFixture()
             .AddReadyAgv(agv)
             .AddNotStartedActionGroup(actionGroup)
@@ -122,7 +122,7 @@ public class ActionManagerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
-        var firstAction = actionGroup.Actions!.First();
+        var firstAction = actionGroup.Actions.First();
         var fixture = new ActionManagerFixture()
             .AddReadyAgv(agv)
             .AddNotStartedActionGroup(actionGroup)
@@ -236,7 +236,7 @@ public class ActionManagerTest
     {
         var agv = AgvGenerator.GenerateChargingAgv();
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
-        var firstAction = actionGroup.Actions!.First();
+        var firstAction = actionGroup.Actions.First();
         var fixture = new ActionManagerFixture()
             .AddReadyAgv(agv, readyForLockWhenIgnoreChargingFlag: true)
             .AddNotStartedActionGroup(actionGroup)
@@ -353,7 +353,7 @@ public class ActionManagerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
-        var subsequentAction = actionGroup.Actions!.First();
+        var subsequentAction = actionGroup.Actions.First();
 
         var fixture = new ActionManagerFixture()
             .AddReadyAgv(agv)
@@ -402,7 +402,7 @@ public class ActionManagerTest
         var agv0 = AgvGenerator.GenerateIdleAgv(index: 0);
         var agv1 = AgvGenerator.GenerateIdleAgv(index: 1);
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
-        var firstAction = actionGroup.Actions!.First();
+        var firstAction = actionGroup.Actions.First();
         var fixture = new ActionManagerFixture()
             .AddReadyAgv(agv0)
             .AddReadyAgv(agv1)

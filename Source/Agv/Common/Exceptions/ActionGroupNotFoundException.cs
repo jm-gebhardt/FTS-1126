@@ -3,7 +3,7 @@ using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 namespace Gebhardt.StoreWare.Agv.Common.Exceptions;
 
 /// <summary>
-/// Agv Action Group was not found
+/// ActionGroup was not found
 /// </summary>
 public class ActionGroupNotFoundException : NotFoundException
 {

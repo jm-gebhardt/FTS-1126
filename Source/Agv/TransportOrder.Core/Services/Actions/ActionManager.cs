@@ -79,7 +79,7 @@ public class ActionManager : BaseActionManager
         }
         else if (needsCharging || needsMaintenance)
         {
-            // we are loaded, and we want to get unloaded, so that we can do the charging or maintenance, therefore complete current action group
+            // we are loaded, and we want to get unloaded, so that we can do the charging or maintenance, therefore complete current ActionGroup
             return await GetSucceedingActionAsync(agv);
         }
 

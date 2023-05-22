@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using Gebhardt.StoreWare.Agv.Common.Definitions;
+using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Extensions;
@@ -188,7 +189,7 @@ public class ActionManagerFixture
     public ActionManagerFixture UpdateActionAndGroupState(ActionGroup actionGroup, AgvAction action, IAgv agv, ActionState state)
     {
         actionGroup.AssignAgvToActionGroup(agv);
-        var actionInGroup = actionGroup.Actions!.First(x => x.CorrelationId == action.CorrelationId);
+        var actionInGroup = actionGroup.Actions.First(x => x.CorrelationId == action.CorrelationId);
         actionInGroup.State = state;
         ActionGroupRegistry.Setup(x => x.GetRequiredActionGroupByIdAsync(actionGroup.CorrelationId)).ReturnsAsync(actionGroup);
         return this;

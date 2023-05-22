@@ -115,7 +115,7 @@ public abstract class BaseActionManager : IActionManager
     {
         var actionGroup = CreateActionGroup(agv, node, actionDescription ?? actionType.ToString(), actionType);
         await AddActionGroupAsync(actionGroup);
-        return actionGroup.Actions!.First();
+        return actionGroup.Actions.First();
     }
 
     private Task AddActionGroupAsync(ActionGroup actionGroup)
@@ -313,7 +313,7 @@ public abstract class BaseActionManager : IActionManager
             else
             {
                 // no AGV found, will be assigned later
-                Logger.LogDebug("No AGV was directly found for action group {ActionGroupId}", actionGroup.CorrelationId);
+                Logger.LogDebug("No AGV was directly found for ActionGroup {ActionGroupId}", actionGroup.CorrelationId);
             }
         }
         finally

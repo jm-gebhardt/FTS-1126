@@ -157,7 +157,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
                     return _position;
                 }
 
-                int lastNodeIndex = (int)(Action!.Nodes.Length * orderProgress.Value);
+                int lastNodeIndex = (int) (Action!.Nodes.Length * orderProgress.Value);
                 if (lastNodeIndex >= Action!.Nodes.Length)
                 {
                     // This happens when accessing position when or after order has finished
@@ -167,13 +167,13 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
                 var lastNode = AgvGraph!.Nodes.First(x => x.Id == Action!.Nodes[lastNodeIndex]);
                 if (lastNodeIndex < Action!.Nodes.Length - 1)
                 {
-                    double partialProgress = (orderProgress.Value - lastNodeIndex / (double)Action!.Nodes.Length) * Action!.Nodes.Length;
+                    double partialProgress = (orderProgress.Value - lastNodeIndex / (double) Action!.Nodes.Length) * Action!.Nodes.Length;
                     var nextNode = AgvGraph!.Nodes.First(x => x.Id == Action!.Nodes[lastNodeIndex + 1]);
                     var vectorLast = new System.Numerics.Vector3(lastNode.X, lastNode.Y, lastNode.Z);
                     var vectorNext = new System.Numerics.Vector3(nextNode.X, nextNode.Y, nextNode.Z);
-                    float theta = (float)(Math.Atan2(vectorNext.Y - vectorLast.Y, vectorNext.X - vectorLast.X) + Math.PI / 2);
+                    float theta = (float) (Math.Atan2(vectorNext.Y - vectorLast.Y, vectorNext.X - vectorLast.X) + Math.PI / 2);
                     var vectorEdge = vectorNext - vectorLast;
-                    vectorEdge *= (float)partialProgress;
+                    vectorEdge *= (float) partialProgress;
                     vectorEdge = vectorLast + vectorEdge;
 
                     _position = new AgvPosition(true, vectorEdge.X, vectorEdge.Y, vectorEdge.Z, theta, 0f);
@@ -214,9 +214,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         /// <summary>
         /// Action progress as percentage [0..1]
         /// </summary>
-        public double? ActionProgress => TimeToFinish != null && ActionDuration != null
-            ? Math.Clamp(1 - TimeToFinish.Value.TotalSeconds / ActionDuration.Value.TotalSeconds, 0, 1)
-            : null;
+        public double? ActionProgress => TimeToFinish != null && ActionDuration != null ? Math.Clamp(1 - TimeToFinish.Value.TotalSeconds / ActionDuration.Value.TotalSeconds, 0, 1) : null;
 
         /// <summary>
         /// SimulatedAgvSaga constructor used for testing
@@ -252,12 +250,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
             AgvGraph = agvGraph;
             AgvData = agvData;
             AgvMap = agvMap;
-            
+
             AgvStatus = new(
                 CorrelationId,
-                // TODO: Why do we want orderId here? i think we need action correlationId!
-                // ToString is very very wrong here! just for the sake of satisfying the compiler
-                Action?.CorrelationId.ToString(),
                 busy: false,
                 automatic: true,
                 initialBatteryCharge,
@@ -286,10 +281,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
 
             AgvStatus = new(
                 CorrelationId,
-                null,
                 busy: false,
                 automatic: true,
-                (int)SimulatedBatteryCharge,
+                (int) SimulatedBatteryCharge,
                 charging: false,
                 disturbed: false,
                 LastNodeId
@@ -326,7 +320,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
                 chargeDiff = timeDiffMs * -batteryDischargeRate;
             }
 
-            bool busy = new[] {
+            bool busy = new[]
+            {
                 nameof(SimulatedAgvStateMachine.BusyMoving)
             }.Any(c => c == CurrentState);
 
@@ -335,7 +330,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
 
             AgvStatus = new(
                 AgvStatus.CorrelationId,
-                AgvStatus.OrderId,
                 busy,
                 AgvStatus.Automatic,
                 SimulatedBatteryCharge,

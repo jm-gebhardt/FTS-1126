@@ -109,8 +109,8 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
             {
                 Sequence = 1
             };
-            
-            var actionGroup = new ActionGroup(actionGroupId, hostOrderSaga.OrderId, hostOrderSaga.OrderDetails.CreationDate, new List<AgvAction> {pickAction, dropAction});
+
+            var actionGroup = new ActionGroup(actionGroupId, hostOrderSaga.OrderId, new List<AgvAction> {pickAction, dropAction}, hostOrderSaga.OrderDetails.CreationDate);
 
             return actionGroup;
         }

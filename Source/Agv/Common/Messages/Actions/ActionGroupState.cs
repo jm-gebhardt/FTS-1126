@@ -3,7 +3,7 @@ using JetBrains.Annotations;
 namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 
 /// <summary>
-/// State of an AGV action group
+/// States of ActionGroup
 /// </summary>
 public enum ActionGroupState
 {

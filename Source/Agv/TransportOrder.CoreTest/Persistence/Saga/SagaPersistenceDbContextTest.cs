@@ -17,14 +17,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Persistence.Saga
     public class SagaPersistenceDbContextTest
     {
         private const string DatabaseName = "saga";
+
         private class DbSetSagaPersistenceDbContext : SagaPersistenceDbContext
         {
             // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
-            public DbSet<AgvSaga> AgvSagas { get; set; }  = null!;
+            public DbSet<AgvSaga> AgvSagas { get; set; } = null!;
 
             public DbSetSagaPersistenceDbContext(DbContextOptions<DbSetSagaPersistenceDbContext> options) : base(GetOptions())
             {
-            
             }
 
             private static DbContextOptions<SagaPersistenceDbContext> GetOptions()
@@ -34,7 +34,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Persistence.Saga
                 return dbContextOptionsBuilder.Options;
             }
         }
-        
+
         /// <summary>
         /// Test if all AgvState properties are restored
         /// </summary>
@@ -42,29 +42,26 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Persistence.Saga
         public void DbContext_SaveAgvState_AllPropertiesRestored()
         {
             var collection = new ServiceCollection()
-                .AddDbContextFactory<DbSetSagaPersistenceDbContext>(options =>
-                    {
-                        options.UseInMemoryDatabase(DatabaseName);
-                    }
+                .AddDbContextFactory<DbSetSagaPersistenceDbContext>(options => { options.UseInMemoryDatabase(DatabaseName); }
                 );
             var provider = collection.BuildServiceProvider(true);
             var dbContextFactory = provider.GetService<IDbContextFactory<DbSetSagaPersistenceDbContext>>()!;
-        
+
             const string agvId = "AGV1";
             var correlationId = agvId.ToGuid();
             const string mapName = "Map#1";
-            var agvSaga = new AgvSaga(correlationId, agvId, "TestState", 
-                new AgvStatus(Guid.NewGuid(), "123", true, true, 10,false, false),
-                new AgvGraph(Guid.NewGuid(), 
-                    new AgvGraph.Node[] { new("id") }, 
-                    new AgvGraph.Edge[] { new("from", "to") },
+            var agvSaga = new AgvSaga(correlationId, agvId, "TestState",
+                new AgvStatus(Guid.NewGuid(), true, true, 10, false, false),
+                new AgvGraph(Guid.NewGuid(),
+                    new AgvGraph.Node[] {new("id")},
+                    new AgvGraph.Edge[] {new("from", "to")},
                     mapName.ToGuid(),
                     mapName)
             );
             using (var dbContext = dbContextFactory.CreateDbContext())
             {
                 dbContext.Database.EnsureCreated();
-            
+
                 dbContext.AgvSagas.Add(agvSaga);
                 dbContext.SaveChanges();
             }
@@ -76,6 +73,5 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Persistence.Saga
                 JsonConvert.SerializeObject(restoredAgvSaga).ShouldBe(JsonConvert.SerializeObject(agvSaga));
             }
         }
-    
     }
 }

@@ -44,15 +44,14 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
             _logger.LogDebug("{MessageType} from {AgvId} received", nameof(MqttState), serialNumber);
 
             var agvStatus = new AgvStatus(
-                    serialNumber.ToGuid(),
-                    GetOrderId(message),
-                    GetBusy(message),
-                    GetAutomatic(message),
-                    GetBatteryCharge(message),
-                    GetCharging(message),
-                    GetDisturbed(message),
-                    GetLastNodeId(message)
-                    );
+                serialNumber.ToGuid(),
+                GetBusy(message),
+                GetAutomatic(message),
+                GetBatteryCharge(message),
+                GetCharging(message),
+                GetDisturbed(message),
+                GetLastNodeId(message)
+            );
 
             var agvStatusReceived = new AgvStatusReceived(
                 correlationId: serialNumber.ToGuid(),

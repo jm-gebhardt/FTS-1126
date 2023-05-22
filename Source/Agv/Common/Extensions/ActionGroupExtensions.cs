@@ -80,7 +80,7 @@ public static class ActionGroupExtensions
     public static ICollection<AgvAction> GetRequiredActions(this ActionGroup actionGroup)
     {
         actionGroup.RequireActions();
-        return actionGroup.Actions!;
+        return actionGroup.Actions;
     }
 
     /// <summary>
@@ -91,10 +91,10 @@ public static class ActionGroupExtensions
     // ReSharper disable once MemberCanBePrivate.Global
     public static void RequireActions(this ActionGroup actionGroup)
     {
-        ICollection<AgvAction>? actionGroupActions = actionGroup.Actions;
-        if (actionGroupActions == null)
+        ICollection<AgvAction> actionGroupActions = actionGroup.Actions;
+        if (!actionGroupActions.Any())
         {
-            throw new ArgumentException("ActionGroup must have Actions");
+            throw new ActionsInActionGroupEmptyException(actionGroup.CorrelationId);
         }
     }
 }

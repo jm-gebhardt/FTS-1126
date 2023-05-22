@@ -3,7 +3,7 @@ using MassTransit;
 namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands
 {
     /// <summary>
-    /// Command to queue an action group
+    /// Command to queue an ActionGroup
     /// </summary>
     /// <param name="ActionGroup"></param>
     public record QueueActionGroup(ActionGroup ActionGroup) : CorrelatedBy<Guid>

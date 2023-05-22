@@ -33,7 +33,7 @@ public class ShortestRouteChooser : IChooseAgvActionGroupService
     }
 
     /// <summary>
-    /// Tries to find a suitable AGV for this action group
+    /// Tries to find a suitable AGV for this ActionGroup
     /// Find AGV with shortest route to pick
     /// </summary>
     public Task<IAgv?> GetAgvAsync(ActionGroup actionGroup, IList<IAgv> agvs)
@@ -71,7 +71,7 @@ public class ShortestRouteChooser : IChooseAgvActionGroupService
     }
 
     /// <summary>
-    /// Get not started action groups, returns the first action in the first action group that Agv can handle all actions
+    /// Get not started ActionGroups, returns the first action in the first action group that Agv can handle all actions
     /// </summary>
     /// <param name="agv"></param>
     /// <returns></returns>

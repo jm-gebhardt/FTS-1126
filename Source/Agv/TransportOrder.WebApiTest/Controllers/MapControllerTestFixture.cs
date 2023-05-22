@@ -83,7 +83,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
 
                 const string mapName = "Map#1";
                 var agvGraph = new AgvGraph(correlationId, _nodes, _edges, _correlationIds[2], mapName);
-                var agvStatus = new AgvStatus(correlationId, order, true, true, 10, true, true);
+                var agvStatus = new AgvStatus(correlationId, true, true, 10, true, true);
 
                 agvs.Add(new AgvSaga(correlationId, agvId, state, agvStatus, agvGraph));
             }

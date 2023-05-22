@@ -34,7 +34,6 @@ public class StartChargingCommandConsumer : IConsumer<StartChargingCommand>
     /// <exception cref="AgvStatusReceivedNotFoundException"></exception>
     /// <exception cref="AgvLocationUnknownException"></exception>
     /// <exception cref="NotInCorrectStateException"></exception>
-    // TODO: Why do we have a start charging command consumer and a start action command consumer?
     public async Task Consume(ConsumeContext<StartChargingCommand> context)
     {
         var agvCorrelationId = context.Message.CorrelationId;
