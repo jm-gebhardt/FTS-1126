@@ -147,14 +147,14 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
             }
         }
 
-        private int GetBatteryCharge(MqttState message)
+        private float GetBatteryCharge(MqttState message)
         {
             if (message.BatteryState == null)
             {
                 return 0;
             }
 
-            return (int)(message.BatteryState.BatteryCharge + 0.5);
+            return message.BatteryState.BatteryCharge;
         }
 
         private bool GetCharging(MqttState message)

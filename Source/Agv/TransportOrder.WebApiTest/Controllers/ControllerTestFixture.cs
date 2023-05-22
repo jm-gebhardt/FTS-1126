@@ -1,6 +1,6 @@
 using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Testing;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Profiles;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Profiles.Profiles;
 using MassTransit;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -24,7 +24,13 @@ public abstract class ControllerTestFixture<TRequest, TRequestHandler, TControll
 
     protected IMapper GetMapper()
     {
-        var mapperConfig = new MapperConfiguration(cfg => { cfg.AddProfile(new MappingProfile()); });
+        var mapperConfig = new MapperConfiguration(cfg =>
+        {
+            cfg.AddProfile(new AgvProfile());
+            cfg.AddProfile(new AgvGraphProfile());
+            cfg.AddProfile(new AgvPositionProfile());
+            cfg.AddProfile(new MapProfile());
+        });
         var mapper = new Mapper(mapperConfig);
         return mapper;
     }

@@ -35,5 +35,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Messages
         /// <summary/>
         [JetBrains.Annotations.UsedImplicitly]
         public bool Assignable { get; } = true;
+
+        /// <inheritdoc />
+        public DateTime TimeOfStateTransition { get; set; }
+        
+        /// <inheritdoc />
+        public DateTime TimeOfLockStateChanged { get; set; }
     }
 }

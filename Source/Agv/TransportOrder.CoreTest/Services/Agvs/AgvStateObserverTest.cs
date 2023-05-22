@@ -22,7 +22,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
         /// When AgvSaga state has changed check if observer was triggered
         /// </summary>
         [TestMethod]
-        public async Task When_AgvSaga_State_Changed_AgvStateChanged_Published()
+        public async Task When_AgvSaga_State_Changed_AgvChanged_Published()
         {
             var mockLogger = new Mock<ILogger<AgvStateMachine>>();
             var agvDataRegistryMock = new Mock<IAgvDataRegistry>();
@@ -48,7 +48,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
 
             await agvStateObserver.StateChanged(mockContext.Object, currentState, previousState);
 
-            mockHub.Verify(s => s.SendAgvStateToAllClients(nameof(Defines.HubMethods.AgvStateChanged), It.IsAny<IAgv>(), It.IsAny<CancellationToken>()), Times.Once);
+            mockHub.Verify(s => s.SendAgvStateToAllClients(nameof(Defines.HubMethods.AgvChanged), It.IsAny<IAgv>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [TestMethod]

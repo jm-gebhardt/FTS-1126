@@ -16,7 +16,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
     {
         private readonly IRequestClient<GetAgvsRequest> _getAgvsClient;
         private readonly IRequestClient<GetAgvGraphRequest> _getAgvGraphClient;
-        private readonly IRequestClient<GetAgvStatusRequest> _getAgvStatusClient;
         private readonly IRequestClient<GetAgvDataRequest> _getAgvDataClient;
         private readonly IRequestClient<GetAgvPositionsRequest> _getAgvPositionsClient;
         private readonly IRequestClient<UnlockAgvCommand> _setIdleClient;
@@ -29,7 +28,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
         /// </summary>
         public AgvController(IRequestClient<GetAgvsRequest> getAgvsClient,
                              IRequestClient<GetAgvGraphRequest> getAgvGraphClient,
-                             IRequestClient<GetAgvStatusRequest> getAgvStatusClient,
                              IRequestClient<GetAgvDataRequest> getAgvDataClient,
                              IRequestClient<GetAgvPositionsRequest> getAgvPositionsClient,
                              IRequestClient<UnlockAgvCommand> setIdleClient,
@@ -39,7 +37,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
         {
             _getAgvsClient = getAgvsClient;
             _getAgvGraphClient = getAgvGraphClient;
-            _getAgvStatusClient = getAgvStatusClient;
             _getAgvDataClient = getAgvDataClient;
             _getAgvPositionsClient = getAgvPositionsClient;
             _setIdleClient = setIdleClient;
@@ -72,20 +69,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
         {
             Response<GetAgvGraphResult> response = await _getAgvGraphClient.GetResponse<GetAgvGraphResult>(new GetAgvGraphRequest(correlationId));
             return Ok(response.Message.AgvGraph);
-        }
-
-        /// <summary>
-        /// Retrieve status for agv
-        /// </summary>
-        /// <response code="200">Ok</response>
-        /// <response code="204">No content</response>
-        /// <response code="404">Not found</response>
-        [HttpGet]
-        [Route("/agvs/{correlationId:guid}/status")]
-        public async Task<ActionResult<AgvStateDto>> GetAgvStatus(Guid correlationId)
-        {
-            Response<GetAgvStateResult> response = await _getAgvStatusClient.GetResponse<GetAgvStateResult>(new GetAgvStatusRequest(correlationId));
-            return Ok(response.Message.AgvState);
         }
 
         /// <summary>

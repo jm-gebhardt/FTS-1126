@@ -31,25 +31,18 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
         /// Time that has to pass before resending a request telegram in case AgvGraph or AgvData are still null
         /// </summary>
         /// <remarks>Interval indicated in seconds</remarks>
-        public int AgvRequestTimeoutS => 30;
+        public int AgvRequestTimeout => 30;
 
         /// <summary>
         /// Time that has to pass before resending a request telegram in case AgvGraph or AgvData are already given
         /// </summary>
         /// <remarks>Interval indicated in seconds</remarks>
         private const int DailyRequestUpdateInterval = 24 * 3600;
+        
+        private const double BatteryChargeChangedThreshold = 0.01;
 
         private readonly ISettingsProvider<AgvSettings> _agvSettingsProvider;
-
-        #region Message handlers
-        /// <summary>
-        /// Internal message send once during startup to initialize AGV and start AGV supervision.
-        /// </summary>
-        /// <param name="CorrelationId"></param>
-        /// <param name="AgvId"></param>
-        public record AgvInitializeMessage(Guid CorrelationId, string AgvId) : CorrelatedBy<Guid>;
-        #endregion
-
+        
         #region States
         /// <summary>
         /// New AGV discovered by receiving AgvStatusReceived while missing information evaluating the current state of the AGV.
@@ -74,10 +67,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
         #endregion
 
         #region Events
-        /// <summary>
-        /// Request for AGV initialization
-        /// </summary>
-        public Event<AgvInitializeMessage> AgvInitializeMessageEvent { get; private set; } = default!;
 
         /// <summary>
         /// Agv status has been received
@@ -200,11 +189,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
             DuringAny(LockAgvHandler());
             DuringAny(UnlockAgvHandler());
             DuringAny(ForceSetIdleHandler());
-            DuringAny(AgvInitializeMessageHandler());
             DuringAny(AgvStatusReceivedHandler());
             DuringAny(AgvGraphReceivedHandler());
             DuringAny(AgvMapReceivedHandler());
             DuringAny(AgvOfflineMessageHandler());
+            
+            WhenEnterAny(UpdateTimeOfStateTransition);
 
             ConnectStateObserver(agvStateObserver);
         }
@@ -301,13 +291,21 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
 
         private EventActivityBinder<AgvSaga, LockAgv> LockAgvHandler() =>
             When(LockAgvEvent)
-                .Then(c => c.Saga.IsLocked = true)
+                .Then(c =>
+                {
+                    c.Saga.IsLocked = true;
+                    c.Saga.TimeOfLockStateChanged = DateTime.Now;
+                })
                 .Then(c =>
                     _logger.LogDebug("Agv {AgvId}/{CorrelationId} was locked", c.Saga.AgvId, c.Saga.CorrelationId));
 
         private EventActivityBinder<AgvSaga, UnlockAgv> UnlockAgvHandler() =>
             When(UnlockAgvEvent)
-                .Then(c => c.Saga.IsLocked = false)
+                .Then(c =>
+                {
+                    c.Saga.IsLocked = false;
+                    c.Saga.TimeOfLockStateChanged = DateTime.Now;
+                })
                 .Then(c =>
                     _logger.LogDebug("Agv {AgvId}/{CorrelationId} was unlocked", c.Saga.AgvId, c.Saga.CorrelationId));
 
@@ -326,15 +324,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
         #endregion
 
         #region Message Handlers
-        /// <summary>
-        /// Handle <see cref="AgvInitializeMessage"/> message
-        /// </summary>
-        private EventActivityBinder<AgvSaga, AgvInitializeMessage> AgvInitializeMessageHandler() =>
-            When(AgvInitializeMessageEvent)
-                .Schedule(AgvOfflineWatchdog,
-                    c => new AgvOfflineMessage(c.Saga.CorrelationId, DateTime.UtcNow),
-                    c => TimeSpan.FromMilliseconds(GetSettings(c.Saga).AgvOfflineTimeoutMsWhileBusy))
-                .Then(c => _logger.LogTrace("{AgvId} watchdog started", c.Message.AgvId));
 
         /// <summary>
         /// Handle <see cref="AgvStatusReceived"/> message
@@ -388,7 +377,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
             var agvSaga = context.Saga;
 
             // When AgvData missing repeat request all x seconds otherwise refresh once a day
-            int timeout = _agvDataRegistry.Exists(context.Saga.CorrelationId) ? DailyRequestUpdateInterval : AgvRequestTimeoutS;
+            int timeout = _agvDataRegistry.Exists(context.Saga.CorrelationId) ? DailyRequestUpdateInterval : AgvRequestTimeout;
             double timeSinceLastRequest = agvSaga.GetTimeSpanSinceLastRequest_AgvData().TotalSeconds;
             if (timeSinceLastRequest > timeout)
             {
@@ -397,7 +386,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
             }
 
             // When AgvGraph is missing repeat request all x seconds otherwise refresh once a day
-            timeout = agvSaga.AgvGraph == null ? AgvRequestTimeoutS : DailyRequestUpdateInterval;
+            timeout = agvSaga.AgvGraph == null ? AgvRequestTimeout : DailyRequestUpdateInterval;
             timeSinceLastRequest = agvSaga.GetTimeSpanSinceLastRequest_AgvGraph().TotalSeconds;
             if (timeSinceLastRequest > timeout)
             {
@@ -432,10 +421,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
         {
             if (agvSaga.AgvStatus != null && newStatus != null)
             {
-                int oldCharge = agvSaga.AgvStatus.BatteryCharge;
-                int newCharge = newStatus.BatteryCharge;
+                double oldCharge = agvSaga.AgvStatus.BatteryCharge;
+                double newCharge = newStatus.BatteryCharge;
 
-                if (oldCharge != newCharge)
+                if (Math.Abs(oldCharge - newCharge) > BatteryChargeChangedThreshold)
                 {
                     endpoint.Publish(new AgvBatteryChargeChanged(agvSaga.CorrelationId, oldCharge, newCharge));
                 }
@@ -513,6 +502,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
                 }
             }
         }
+
+        private EventActivityBinder<AgvSaga> UpdateTimeOfStateTransition(EventActivityBinder<AgvSaga> eventActivity) =>
+            eventActivity.Then(ctx => ctx.Saga.TimeOfStateTransition = DateTime.UtcNow);
+
         #endregion
     }
 }

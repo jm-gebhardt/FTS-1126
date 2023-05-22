@@ -2,6 +2,6 @@ import { RouteLocationRaw } from 'vue-router'
 
 export interface ListItem {
   label: string
-  value: string | null | undefined
+  value: string | null | undefined | boolean
   route: RouteLocationRaw | null
 }

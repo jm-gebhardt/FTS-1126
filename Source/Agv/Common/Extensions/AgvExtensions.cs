@@ -22,11 +22,11 @@ public static class AgvExtensions
     }
 
     /// <summary>
-    /// Throws if <see cref="IAgv.AgvStatus"/> is null
+    /// Get AgvStatus
     /// </summary>
     /// <param name="agv"></param>
     /// <exception cref="AgvStatusNotFoundException"></exception>
-    public static void RequireAgvStatus(this IAgv agv)
+    private static void RequireAgvStatus(this IAgv agv)
     {
         var agvStatus = agv.AgvStatus;
         if (agvStatus == null)

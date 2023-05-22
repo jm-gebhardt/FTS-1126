@@ -21,11 +21,42 @@ export interface IAgv {
   /** AGV Serial Number */
   agvId: string
   /** Current State */
-  currentState: string
+  currentState: IAgvState
+  /**
+   * Time of the last state transition
+   * @format date-time
+   */
+  timeOfStateTransition: string
+  /**
+   * Time of the last lock state change
+   * @format date-time
+   */
+  timeOfLockStateChanged: string
   /** Communication alive state */
   isOnline: boolean
   /** Locked state */
   isLocked: boolean
+  /** Is agv disturbed. There is at least one error with level "FATAL" */
+  isDisturbed: boolean
+  /** AGV is in automatic mode */
+  isAutomatic: boolean
+  /**
+   * Battery charge level (Soc)
+   * @format double
+   */
+  batteryCharge: number
+  /** Is Battery currently charging */
+  isCharging: boolean
+  /**
+   * Lower battery level in [%] for signaling "battery bad" (defined by VDA5050)
+   * @format int32
+   */
+  badBatteryLevel: number
+  /**
+   * Upper battery level in [%] for signaling "battery good" (defined by VDA5050)
+   * @format int32
+   */
+  goodBatteryLevel: number
 }
 
 /**
@@ -136,25 +167,14 @@ export interface IAgvPositionStatus {
 }
 
 /**
- * AgvState model
+ * Agv State
  */
-export type IAgvState = IAgv & {
-  /** AGV Status */
-  agvStatus: IAgvStatus
-}
-
-/**
- * AgvStatus model
- */
-export interface IAgvStatus {
-  orderId?: string | null
-  busy?: boolean | null
-  automatic?: boolean | null
-  /** @format int32 */
-  batteryCharge?: number | null
-  charging?: boolean | null
-  disturbed?: boolean | null
-  lastNodeId?: string | null
+export enum IAgvState {
+  Initial = 'Initial',
+  Discovered = 'Discovered',
+  Idle = 'Idle',
+  Busy = 'Busy',
+  Charging = 'Charging'
 }
 
 /**
@@ -187,7 +207,7 @@ export interface IGraph {
  */
 export enum IHubMethods {
   AgvDiscovered = 'AgvDiscovered',
-  AgvStateChanged = 'AgvStateChanged',
+  AgvChanged = 'AgvChanged',
   AgvPositionChanged = 'AgvPositionChanged'
 }
 

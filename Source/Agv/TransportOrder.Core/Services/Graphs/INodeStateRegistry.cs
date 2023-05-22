@@ -30,7 +30,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs
         /// <returns></returns>
         public Task<bool> ReserveNodeAsync(string nodeId, Guid agvCorrelationId);
         
-        
         /// <summary>
         /// Free a reserved or occupied node.
         /// If the node is locked, it will not be freed.

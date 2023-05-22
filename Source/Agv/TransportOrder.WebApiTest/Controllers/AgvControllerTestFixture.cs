@@ -22,6 +22,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
         where TRequestHandler : class, IConsumer
     {
         public string[] AgvIds { get; } = { "AGV001", "AGV002", "AGV003" };
+        // ReSharper disable once MemberCanBePrivate.Global
         public string[] Orders { get; } = { "ORDER001", "ORDER002", "" };
         public string[] States { get; } = { nameof(AgvStateMachine.Idle), nameof(AgvStateMachine.Busy), nameof(AgvStateMachine.Discovered) };
         public string[] Ips { get; } = { "127.0.0.1", "127.0.0.2", "127.0.0.3" };
@@ -135,7 +136,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
         {
             IRequestClient<GetAgvsRequest> getAgvsRequestClient = GetRequestClient<GetAgvsRequest>();
             IRequestClient<GetAgvGraphRequest> getAgvGraphRequestClient = GetRequestClient<GetAgvGraphRequest>();
-            IRequestClient<GetAgvStatusRequest> getAgvStatusRequestClient = GetRequestClient<GetAgvStatusRequest>();
             IRequestClient<GetAgvDataRequest> getAgvDataRequestClient = GetRequestClient<GetAgvDataRequest>();
             IRequestClient<GetAgvPositionsRequest> getAgvPositionsRequestClient = GetRequestClient<GetAgvPositionsRequest>();
             IRequestClient<UnlockAgvCommand> setIdleRequestClient = GetRequestClient<UnlockAgvCommand>();
@@ -143,7 +143,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             IRequestClient<RequestAgvDataCommand> emitRequestDataRequestClient = GetRequestClient<RequestAgvDataCommand>();
             IRequestClient<RequestAgvGraphCommand> emitRequestGraphRequestClient = GetRequestClient<RequestAgvGraphCommand>();
 
-            var controller = new AgvController(getAgvsRequestClient, getAgvGraphRequestClient, getAgvStatusRequestClient, getAgvDataRequestClient,
+            var controller = new AgvController(getAgvsRequestClient, getAgvGraphRequestClient, getAgvDataRequestClient,
                 getAgvPositionsRequestClient, setIdleRequestClient, lockAgvRequestClient, emitRequestDataRequestClient, emitRequestGraphRequestClient)
             {
                 ControllerContext = new ControllerContext(

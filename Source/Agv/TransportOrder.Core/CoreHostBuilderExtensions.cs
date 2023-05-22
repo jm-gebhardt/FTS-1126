@@ -20,8 +20,8 @@ using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Commands;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Handlers.Queries;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Requests.Queries;
 using Gebhardt.StoreWare.Agv.Common.Persistence;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Requests.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Saga;
@@ -138,10 +138,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                         x.AddConsumer<GetAgvGraphRequestHandler>();
                         x.AddConsumer<GetAgvPositionsRequestHandler>();
                         x.AddConsumer<GetAgvsRequestHandler>();
-                        x.AddConsumer<GetAgvStatusRequestHandler>();
                         x.AddConsumer<LockAgvCommandHandler>();
                         x.AddConsumer<UnlockAgvCommandHandler>();
-
+                        
                         // request clients
                         // ########################################
                         // maps
@@ -155,10 +154,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                         x.AddRequestClient<GetAgvGraphRequestHandler>();
                         x.AddRequestClient<GetAgvPositionsRequestHandler>();
                         x.AddRequestClient<GetAgvsRequestHandler>();
-                        x.AddRequestClient<GetAgvStatusRequestHandler>();
                         x.AddRequestClient<LockAgvCommandHandler>();
                         x.AddRequestClient<UnlockAgvCommandHandler>();
-
+                        
                         x.AddDelayedMessageScheduler();
                     }, rabbitMqConfiguration: (_, cfg) => { cfg.UseDelayedMessageScheduler(); });
                 }

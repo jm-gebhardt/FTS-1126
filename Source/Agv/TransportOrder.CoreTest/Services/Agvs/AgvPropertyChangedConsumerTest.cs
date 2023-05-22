@@ -38,7 +38,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
             (await fixture.TestHarness.Published.Any<AgvPropertyChanged>()).ShouldBeTrue();
             (await fixture.ConsumerHarness!.Consumed.Any<AgvPropertyChanged>()).ShouldBeTrue();
 
-            const string method = nameof(Defines.HubMethods.AgvStateChanged);
+            const string method = nameof(Defines.HubMethods.AgvChanged);
             mockHub.Verify(h => h.SendAgvStateToAllClients(method,
                                                            It.Is<IAgv>(o => o.CorrelationId == AgvId.ToGuid()),
                                                            It.IsAny<CancellationToken>()), Times.Once);

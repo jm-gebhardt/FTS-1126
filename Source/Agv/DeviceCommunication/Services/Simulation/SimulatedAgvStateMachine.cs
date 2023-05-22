@@ -161,6 +161,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
             DuringAny(SetRequestAgvMapHandler());
             DuringAny(SetSignalPositionHandler());
             DuringAny(SetRequestStatusSendHandler());
+            
+            WhenEnterAny(UpdateTimeOfStateTransition);
 
             SetCompletedWhenFinalized(); // Delete when finalized
         }
@@ -383,6 +385,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
 
             context.Saga.ResetAction();
         }
+        
+        private EventActivityBinder<SimulatedAgvSaga> UpdateTimeOfStateTransition(EventActivityBinder<SimulatedAgvSaga> eventActivity) =>
+            eventActivity.Then(ctx => ctx.Saga.TimeOfStateTransition = DateTime.UtcNow);
         #endregion
     }
 }
