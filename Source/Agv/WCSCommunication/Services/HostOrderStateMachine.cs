@@ -1,6 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands;
-using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Microsoft.Extensions.Logging;
 using MassTransit;
 using Gebhardt.StoreWare.Agv.WCSCommunication.States;

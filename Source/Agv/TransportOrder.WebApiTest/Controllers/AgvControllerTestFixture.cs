@@ -65,14 +65,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             for (int i = 0; i < AgvIds.Length; i++)
             {
                 string agvId = AgvIds[i];
-                string order = Orders[i];
+                string orderId = Orders[i];
                 string state = States[i];
                 string ip = Ips[i];
                 var correlationId = agvId.ToGuid();
 
                 const string mapName = "Map#1";
                 var agvGraph = new AgvGraph(correlationId, Nodes, Edges, mapName.ToGuid(), mapName);
-                var agvStatus = agvId == "AGV003" ? null : new AgvStatus(correlationId, true, true, 10, true, true);
+                var agvStatus = agvId == "AGV003" ? null : new AgvStatus(correlationId, orderId, true, true, 10, true, true);
                 var agvData = new AgvData(correlationId, "Karis", "BF1", ip, 1.8, 120.0, 0.6, 0.8, 0.7, 1, 2.5, 1000, Array.Empty<AgvData.Sensor>());
 
                 agvs.Add(new AgvSaga(correlationId, agvId, state, agvStatus, agvGraph));

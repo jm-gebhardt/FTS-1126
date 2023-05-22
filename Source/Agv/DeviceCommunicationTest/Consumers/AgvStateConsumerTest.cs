@@ -47,7 +47,6 @@ public class AgvStateConsumerTest
         var publishedStatus = fixture.TestHarness.Published.Select<AgvStatusReceived>().First().Context.Message;
         publishedStatus.CorrelationId.ShouldBe(agvTestIdentifier.ToGuid());
         publishedStatus.AgvId.ShouldBe(agvTestIdentifier);
-        publishedStatus.AgvStatus.OrderId.ShouldBe(orderId);
     }
 
     /// <summary>

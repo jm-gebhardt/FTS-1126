@@ -253,6 +253,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
 
             AgvStatus = new(
                 CorrelationId,
+                GetOrderId(),
                 busy: false,
                 automatic: true,
                 initialBatteryCharge,
@@ -261,6 +262,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
                 LastNodeId
             );
         }
+
+        private string? GetOrderId() => Action?.CorrelationId.ToString();
 
         /// <summary>
         /// SimulatedAgvSaga constructor used by state machine
@@ -281,6 +284,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
 
             AgvStatus = new(
                 CorrelationId,
+                GetOrderId(),
                 busy: false,
                 automatic: true,
                 (int) SimulatedBatteryCharge,
@@ -330,6 +334,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
 
             AgvStatus = new(
                 AgvStatus.CorrelationId,
+                GetOrderId(),
                 busy,
                 AgvStatus.Automatic,
                 SimulatedBatteryCharge,

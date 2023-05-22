@@ -16,6 +16,16 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
         public Guid CorrelationId { get; }
 
         /// <summary>
+        /// Current or previous order ID (Internally we are using the ActionCorrelationId).
+        /// </summary>
+        /// <remarks>
+        /// VDA5050.state.schema.orderId
+        /// The order ID is kept until a new order is received.
+        /// </remarks>
+        [UsedImplicitly]
+        public string? OrderId { get; }
+
+        /// <summary>
         /// AGV is busy (not idle).
         /// </summary>
         /// <remarks>
@@ -93,15 +103,17 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
         /// Constructor of AgvStatus
         /// </summary>
         /// <param name="correlationId"></param>
+        /// <param name="orderId">Internally we are using the ActionCorrelationId</param>
         /// <param name="busy"></param>
         /// <param name="automatic"></param>
         /// <param name="batteryCharge"></param>
         /// <param name="charging"></param>
         /// <param name="disturbed"></param>
         /// <param name="lastNodeId"></param>
-        public AgvStatus(Guid correlationId, bool busy, bool automatic, double batteryCharge, bool charging, bool disturbed, string? lastNodeId = null)
+        public AgvStatus(Guid correlationId, string? orderId, bool busy, bool automatic, double batteryCharge, bool charging, bool disturbed, string? lastNodeId = null)
         {
             CorrelationId = correlationId;
+            OrderId = orderId;
             Busy = busy;
             Automatic = automatic;
             BatteryCharge = batteryCharge;

@@ -45,6 +45,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
 
             var agvStatus = new AgvStatus(
                 serialNumber.ToGuid(),
+                GetOrderId(message),
                 GetBusy(message),
                 GetAutomatic(message),
                 GetBatteryCharge(message),

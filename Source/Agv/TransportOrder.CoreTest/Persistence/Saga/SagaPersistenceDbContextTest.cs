@@ -51,7 +51,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Persistence.Saga
             var correlationId = agvId.ToGuid();
             const string mapName = "Map#1";
             var agvSaga = new AgvSaga(correlationId, agvId, "TestState",
-                new AgvStatus(Guid.NewGuid(), true, true, 10, false, false),
+                new AgvStatus(Guid.NewGuid(), "123", true, true, 10, false, false),
                 new AgvGraph(Guid.NewGuid(),
                     new AgvGraph.Node[] {new("id")},
                     new AgvGraph.Edge[] {new("from", "to")},

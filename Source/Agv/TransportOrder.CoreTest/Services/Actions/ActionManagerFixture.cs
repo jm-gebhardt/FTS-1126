@@ -3,7 +3,6 @@ using Gebhardt.StoreWare.Agv.Common.Definitions;
 using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Extensions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Charging;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Choosers;
@@ -170,7 +169,7 @@ public class ActionManagerFixture
 
     public ActionManagerFixture ChooseNextActionGroup(IAgv agv, ActionGroup actionGroup)
     {
-        ChooseAgvActionGroupService.Setup(x => x.GetActionGroupAsync(agv)).ReturnsAsync(actionGroup.Actions!.FirstOrDefault());
+        ChooseAgvActionGroupService.Setup(x => x.GetActionGroupAsync(agv)).ReturnsAsync(actionGroup.Actions.FirstOrDefault());
         return this;
     }
 

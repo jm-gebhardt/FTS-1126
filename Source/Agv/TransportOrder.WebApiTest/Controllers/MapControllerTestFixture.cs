@@ -19,25 +19,28 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
     {
         public const string Base64String = "dGhlIHF1aWNrIGJyb3duIGZveCBqdW1wIG92ZXIgdGhlIGxhenkgZG9n";
 
-        private readonly string[] _agvIds = { "AGV001", "AGV002", "AGV003" };
-        private readonly string[] _orders = { "ORDER001", "ORDER002", "" };
-        private readonly string[] _states = { nameof(AgvStateMachine.Idle), nameof(AgvStateMachine.Busy), nameof(AgvStateMachine.Discovered) };
+        private readonly string[] _agvIds = {"AGV001", "AGV002", "AGV003"};
+        private readonly string[] _orders = {"ORDER001", "ORDER002", ""};
+        private readonly string[] _states = {nameof(AgvStateMachine.Idle), nameof(AgvStateMachine.Busy), nameof(AgvStateMachine.Discovered)};
 
-        private readonly AgvGraph.Node[] _nodes = {
-            new("node00") { X = 0f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
-            new("node10") { X = 1f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
-            new("node01") { X = 0f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
-            new("node11") { X = 1f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint }
+        private readonly AgvGraph.Node[] _nodes =
+        {
+            new("node00") {X = 0f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint},
+            new("node10") {X = 1f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint},
+            new("node01") {X = 0f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint},
+            new("node11") {X = 1f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint}
         };
 
-        private readonly AgvGraph.Edge[] _edges = {
+        private readonly AgvGraph.Edge[] _edges =
+        {
             new("node00", "node01"),
             new("node01", "node11"),
             new("node11", "node10"),
             new("node10", "node00")
         };
 
-        private readonly Guid[] _correlationIds = {
+        private readonly Guid[] _correlationIds =
+        {
             new("7FE9372B-4219-4D09-8885-966EE125A350"),
             new("041AD79E-1952-4AB7-BD3E-9EC972E27FBF"),
             new("465A85A6-6A02-4068-A7AA-E3B4B9821019")
@@ -77,13 +80,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             for (int i = 0; i < _agvIds.Length; i++)
             {
                 string agvId = _agvIds[i];
-                string order = _orders[i];
+                string orderId = _orders[i];
                 string state = _states[i];
                 var correlationId = _correlationIds[i];
 
                 const string mapName = "Map#1";
                 var agvGraph = new AgvGraph(correlationId, _nodes, _edges, _correlationIds[2], mapName);
-                var agvStatus = new AgvStatus(correlationId, true, true, 10, true, true);
+                var agvStatus = new AgvStatus(correlationId, orderId, true, true, 10, true, true);
 
                 agvs.Add(new AgvSaga(correlationId, agvId, state, agvStatus, agvGraph));
             }

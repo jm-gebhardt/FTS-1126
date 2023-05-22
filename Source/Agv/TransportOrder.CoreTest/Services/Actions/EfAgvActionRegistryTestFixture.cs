@@ -13,7 +13,7 @@ public class EfAgvActionRegistryTestFixture
 
         private IDbContextFactory<TransportOrderDbContext> ContextFactory { get; }
 
-        public EfAgvActionRegistry Registry { get; }
+        public EfActionGroupRegistry Registry { get; }
 
         public EfAgvActionRegistryTestFixture()
         {
@@ -22,15 +22,12 @@ public class EfAgvActionRegistryTestFixture
                 );
             Provider = collection.BuildServiceProvider(true);
             ContextFactory = Provider.GetRequiredService<IDbContextFactory<TransportOrderDbContext>>();
-            Registry = new EfAgvActionRegistry(ContextFactory);
+            Registry = new EfActionGroupRegistry(ContextFactory);
         }
 
-        public void InitTestData(List<AgvAction> actions)
+        public Task InitTestData(ActionGroup actionGroup)
         {
-            foreach (var action in actions)
-            {
-                Registry.Insert(action);
-            }
+            return Registry.InsertAsync(actionGroup);
         }
 
         public static List<AgvAction> CreateTestActionGroups()

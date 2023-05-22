@@ -21,7 +21,7 @@ public class StartChargingCommandConsumerTest
     {
         var correlationId = "AGV004".ToGuid();
         var fixture = new StartChargingCommandConsumerTestFixture()
-        .Build();
+            .Build();
         string? lastNodeId = fixture.GetAgvInformation(correlationId)?.AgvStatusReceived?.AgvStatus.LastNodeId;
 
         var startChargingCommand = new StartChargingCommand(correlationId);
@@ -39,7 +39,7 @@ public class StartChargingCommandConsumerTest
         var correlationId = Guid.NewGuid();
         var agvStatus = new AgvStatus(correlationId, "TestOrder", isBusy, true, 25, false, false, "CRG1");
         MediatorTestFixture<StartChargingCommand, StartChargingCommandConsumer> fixture = new StartChargingCommandConsumerTestFixture().AddAgvInformationWithSpecificAgvStatus(correlationId, agvStatus)
-        .Build();
+            .Build();
 
         var startChargingCommand = new StartChargingCommand(correlationId);
         await MediatorShould.ThrowRequestExceptionAsync<NotInCorrectStateException>(async () => await fixture.GetResponseAsync<BaseResult>(startChargingCommand));
@@ -56,7 +56,7 @@ public class StartChargingCommandConsumerTest
         var correlationId = Guid.NewGuid();
         var agvStatus = new AgvStatus(correlationId, "TestOrder", false, true, batteryCharge, false, false, "CRG1");
         MediatorTestFixture<StartChargingCommand, StartChargingCommandConsumer> fixture = new StartChargingCommandConsumerTestFixture().AddAgvInformationWithSpecificAgvStatus(correlationId, agvStatus)
-        .Build();
+            .Build();
 
         var startChargingCommand = new StartChargingCommand(correlationId);
         await MediatorShould.ThrowRequestExceptionAsync<NotInCorrectStateException>(async () => await fixture.GetResponseAsync<BaseResult>(startChargingCommand));
@@ -73,8 +73,8 @@ public class StartChargingCommandConsumerTest
         var correlationId = Guid.NewGuid();
         var agvStatus = new AgvStatus(correlationId, "TestOrder", false, true, 25, false, false, lastNodeId);
         MediatorTestFixture<StartChargingCommand, StartChargingCommandConsumer> fixture = new StartChargingCommandConsumerTestFixture()
-        .AddAgvInformationWithSpecificAgvStatus(correlationId, agvStatus)
-        .Build();
+            .AddAgvInformationWithSpecificAgvStatus(correlationId, agvStatus)
+            .Build();
 
         var startChargingCommand = new StartChargingCommand(correlationId);
         await MediatorShould.ThrowRequestExceptionAsync<NotInCorrectStateException>(async () => await fixture.GetResponseAsync<BaseResult>(startChargingCommand));
@@ -88,7 +88,7 @@ public class StartChargingCommandConsumerTest
     {
         var correlationId = "NotExisting".ToGuid();
         MediatorTestFixture<StartChargingCommand, StartChargingCommandConsumer> fixture = new StartChargingCommandConsumerTestFixture()
-        .Build();
+            .Build();
 
         var startChargingCommand = new StartChargingCommand(correlationId);
         await MediatorShould.ThrowRequestExceptionAsync<AgvInformationNotFoundException>(async () => await fixture.GetResponseAsync<BaseResult>(startChargingCommand));
@@ -102,7 +102,7 @@ public class StartChargingCommandConsumerTest
     {
         var correlationId = Guid.NewGuid();
         MediatorTestFixture<StartChargingCommand, StartChargingCommandConsumer> fixture = new StartChargingCommandConsumerTestFixture().AddAgvInformationWithSpecificAgvStatus(correlationId, null)
-        .Build();
+            .Build();
 
         var startChargingCommand = new StartChargingCommand(correlationId);
         await MediatorShould.ThrowRequestExceptionAsync<AgvStatusReceivedNotFoundException>(async () => await fixture.GetResponseAsync<BaseResult>(startChargingCommand));

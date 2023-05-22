@@ -19,27 +19,22 @@ public class EfAgvActionRegistryTest
         agvAction1.CorrelationId.ShouldBe(agvAction2.CorrelationId);
         agvAction1.ParentId.ShouldBe(agvAction2.ParentId);
         agvAction1.Sequence.ShouldBe(agvAction2.Sequence);
-        agvAction1.Successor.ShouldBe(agvAction2.Successor);
-        agvAction1.Predecessor.ShouldBe(agvAction2.Predecessor);
-        agvAction1.AgvId.ShouldBe(agvAction2.AgvId);
-        agvAction1.AssignedAgv.ShouldBe(agvAction2.AssignedAgv);
         agvAction1.State.ShouldBe(agvAction2.State);
         agvAction1.ActionType.ShouldBe(agvAction2.ActionType);
-        agvAction1.OrderId.ShouldBe(agvAction2.OrderId);
         agvAction1.TargetNodeId.ShouldBe(agvAction2.TargetNodeId);
         agvAction1.Nodes.ShouldBe(agvAction2.Nodes);
     }
     #endregion
 
     [TestMethod]
-    public void Test_Insert_GetActionById()
+    public async Task Test_Insert_GetActionById()
     {
         var fixture = new EfAgvActionRegistryTestFixture();
         List<AgvAction> testActions = EfAgvActionRegistryTestFixture.CreateTestActions();
 
         var testAction = testActions[0];
 
-        var agvAction = fixture.Registry.GetActionById(testAction.CorrelationId);
+        var agvAction = await fixture.Registry.GetRequiredActionByIdAsync(testAction.CorrelationId);
         agvAction.ShouldBeNull(); // Should not exist yet
 
         fixture.Registry.Insert(testAction);

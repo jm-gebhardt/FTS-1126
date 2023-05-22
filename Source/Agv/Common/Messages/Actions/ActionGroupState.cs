@@ -1,5 +1,3 @@
-using JetBrains.Annotations;
-
 namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 
 /// <summary>
