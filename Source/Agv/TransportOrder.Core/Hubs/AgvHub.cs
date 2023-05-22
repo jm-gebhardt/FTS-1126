@@ -47,7 +47,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Hubs
         public async Task SendAgvStateToAllClients(string method, IAgv agv, CancellationToken cancellationToken)
         {
             // Combine Agv and AgvStatus into AgvStatusDto
-            var agvStateDto = _mapper.Map<AgvStateDto>(agv);
+            var agvStateDto = _mapper.Map<AgvDto>(agv);
 
             string message = JsonSerializer.Serialize(agvStateDto, _serializerOptions);
             await _hubContext.Clients.All.SendAsync(method, message, cancellationToken);

@@ -41,7 +41,9 @@
         </AssemblyAttribute>
     </ItemGroup>
     <ItemGroup>
+      <Folder Include="Migrations\Db_TransportOrderDbContext\" />
       <Folder Include="Migrations\Saga\" />
+      <Folder Include="Migrations\Saga_SagaPersistenceDbContext\" />
       <Folder Include="Migrations\TransportOrder\" />
     </ItemGroup>
     <Target Name="DisableWarnings" BeforeTargets="CoreCompile">

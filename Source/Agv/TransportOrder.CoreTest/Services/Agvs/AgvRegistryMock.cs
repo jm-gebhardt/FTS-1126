@@ -13,7 +13,6 @@ public static class AgvRegistryMock
     private static readonly string[] _destinations = { "DST1", "DST2", "DST3" };
     private static readonly string[] _agvIds = { "AGV001", "AGV002", "AGV003" };
     private static readonly string[] _agvStates = { "Ready", "Busy", "Idle" };
-    private static readonly string[] _ips = { "127.0.0.1", "127.0.0.2", "127.0.0.3" };
     
     public static Mock<IAgvRegistry> GetAgvRegistry()
     {
@@ -74,13 +73,11 @@ public static class AgvRegistryMock
             string agvId = _agvIds[i];
             string order = _orders[i];
             string state = _agvStates[i];
-            string ip = _ips[i];
             var correlationId = agvId.ToGuid();
 
             var agvStatus = new AgvStatus(correlationId, order, true, true, 10, false, false, _sources[i]);
-            var agvData = new AgvData(correlationId, "Karis", "BF1", ip, 1.8, 120.0, 0.6, 0.8, 0.7, 1, 2.5, 1000, Array.Empty<AgvData.Sensor>());
 
-            agvs.Add(new AgvSaga(correlationId, agvId, state, agvStatus, agvGraph, agvData) { IsOnline = true });
+            agvs.Add(new AgvSaga(correlationId, agvId, state, agvStatus, agvGraph) { IsOnline = true });
         }
 
         registry.SetupGet(x => x.Count).Returns(agvs.Count);

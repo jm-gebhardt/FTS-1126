@@ -22,7 +22,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
         private readonly string[] _agvIds = { "AGV001", "AGV002", "AGV003" };
         private readonly string[] _orders = { "ORDER001", "ORDER002", "" };
         private readonly string[] _states = { nameof(AgvStateMachine.Idle), nameof(AgvStateMachine.Busy), nameof(AgvStateMachine.Discovered) };
-        private readonly string[] _ips = { "127.0.0.1", "127.0.0.2", "127.0.0.3" };
 
         private readonly AgvGraph.Node[] _nodes = {
             new("node00") { X = 0f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
@@ -80,15 +79,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
                 string agvId = _agvIds[i];
                 string order = _orders[i];
                 string state = _states[i];
-                string ip = _ips[i];
                 var correlationId = _correlationIds[i];
 
                 const string mapName = "Map#1";
                 var agvGraph = new AgvGraph(correlationId, _nodes, _edges, _correlationIds[2], mapName);
                 var agvStatus = new AgvStatus(correlationId, order, true, true, 10, true, true);
-                var agvData = new AgvData(correlationId, "Karis", "BF1", ip, 1.8, 120.0, 0.6, 0.8, 0.7, 1, 2.5, 1000, Array.Empty<AgvData.Sensor>());
 
-                agvs.Add(new AgvSaga(correlationId, agvId, state, agvStatus, agvGraph, agvData));
+                agvs.Add(new AgvSaga(correlationId, agvId, state, agvStatus, agvGraph));
             }
 
             registryMock.SetupGet(x => x.Count).Returns(agvs.Count);

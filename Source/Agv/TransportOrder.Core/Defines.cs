@@ -18,7 +18,7 @@
             /// <summary>
             /// Hub method for agv state and/or properties changed event
             /// </summary>
-            AgvStateChanged,
+            AgvChanged,
 
             /// <summary>
             /// Hub method for agv position changed event

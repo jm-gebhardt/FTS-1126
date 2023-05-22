@@ -16,17 +16,17 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Quer
     [UsedImplicitly]
     public class GetAgvDataRequestHandler : IConsumer<GetAgvDataRequest>
     {
-        private readonly IAgvRegistry _agvRegistry;
+        private readonly IAgvDataRegistry _agvDataRegistry;
         private readonly IMapper _mapper;
 
         /// <summary>
         /// <inheritdoc cref="GetAgvDataRequestHandler"/>
         /// </summary>
-        /// <param name="agvRegistry"></param>
+        /// <param name="agvDataRegistry"></param>
         /// <param name="mapper"></param>
-        public GetAgvDataRequestHandler(IAgvRegistry agvRegistry, IMapper mapper)
+        public GetAgvDataRequestHandler(IAgvDataRegistry agvDataRegistry, IMapper mapper)
         {
-            _agvRegistry = agvRegistry;
+            _agvDataRegistry = agvDataRegistry;
             _mapper = mapper;
         }
 
@@ -40,18 +40,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Quer
         public async Task Consume(ConsumeContext<GetAgvDataRequest> context)
         {
             var request = context.Message;
-            var agv = _agvRegistry.GetAgv(request.CorrelationId);
-            if (agv == null)
+            var agvData = _agvDataRegistry.GetAgvData(request.CorrelationId);
+            if (agvData == null)
             {
-                throw new AgvNotFoundException(request.CorrelationId);
+                throw new AgvDataNotFoundException(request.CorrelationId);
             }
 
-            if (agv.AgvData == null)
-            {
-                throw new AgvDataNotFoundException(agv);
-            }
-
-            var agvDataDto = _mapper.Map<AgvDataDto>(agv.AgvData);
+            var agvDataDto = _mapper.Map<AgvDataDto>(agvData);
             await context.RespondAsync(new GetAgvDataResult(agvDataDto));
         }
     }

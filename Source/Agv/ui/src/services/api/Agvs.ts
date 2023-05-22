@@ -9,7 +9,7 @@
  * ---------------------------------------------------------------
  */
 
-import { IAgv, IAgvData, IAgvState, IGraph } from './data-contracts'
+import { IAgv, IAgvData, IGraph } from './data-contracts'
 import { HttpClient, RequestParams } from './http-client'
 
 export class Agvs<
@@ -41,21 +41,6 @@ export class Agvs<
   graphDetail = (correlationId: string, params: RequestParams = {}) =>
     this.request<IGraph, void>({
       path: `/agvs/${correlationId}/graph`,
-      method: 'GET',
-      format: 'json',
-      ...params
-    })
-  /**
-   * No description
-   *
-   * @tags Agv
-   * @name StatusDetail
-   * @summary Retrieve status for agv
-   * @request GET:/agvs/{correlationId}/status
-   */
-  statusDetail = (correlationId: string, params: RequestParams = {}) =>
-    this.request<IAgvState, void>({
-      path: `/agvs/${correlationId}/status`,
       method: 'GET',
       format: 'json',
       ...params

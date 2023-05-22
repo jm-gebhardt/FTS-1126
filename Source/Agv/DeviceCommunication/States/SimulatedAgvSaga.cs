@@ -45,6 +45,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         /// <inheritdoc cref="IAgv" />
         public bool Assignable => true;
 
+        /// <inheritdoc />
+        public DateTime TimeOfStateTransition { get; set; } = DateTime.Now;
+
+        /// <inheritdoc />
+        public DateTime TimeOfLockStateChanged { get; set; } = DateTime.Now;
+
         /// <inheritdoc cref="IAgv" />
         public AgvStatus AgvStatus { get; private set; }
 
@@ -332,7 +338,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
                 AgvStatus.OrderId,
                 busy,
                 AgvStatus.Automatic,
-                (int)SimulatedBatteryCharge,
+                SimulatedBatteryCharge,
                 charging,
                 AgvStatus.Disturbed,
                 LastNodeId

@@ -43,7 +43,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
 
                 agvs[index].CorrelationId.ShouldBe(agvId.ToGuid());
                 agvs[index].AgvId.ShouldBe(agvId);
-                agvs[index].CurrentState.ShouldBe(state);
+                Enum.TryParse(state, out AgvState agvState);
+                agvs[index].CurrentState.ShouldBe(agvState);
             }
         }
 
@@ -86,51 +87,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
         [TestMethod]
         [DataRow(0)]
         [DataRow(1)]
-        public async Task GetAgvStatus_Successfully(int index)
-        {
-            AgvControllerTestFixture<GetAgvStatusRequest, GetAgvStatusRequestHandler> fixture = new AgvControllerTestFixture<GetAgvStatusRequest, GetAgvStatusRequestHandler>()
-                .UseDefaultServices()
-                .Build();
-            var controller = fixture.Controller;
-            var correlationId = fixture.AgvIds[index].ToGuid();
-            ActionResult<AgvStateDto> response = await controller.GetAgvStatus(correlationId);
-            var result = response.Result as OkObjectResult;
-            result.ShouldNotBeNull();
-
-            var agvStatus = result.Value as AgvStateDto;
-            agvStatus.ShouldNotBeNull();
-
-            agvStatus.CorrelationId.ShouldBe(correlationId);
-            agvStatus.AgvStatus.OrderId.ShouldBe(fixture.Orders[index]);
-        }
-
-        [TestMethod]
-        public async Task GetAgvStatus_NotFound()
-        {
-            AgvControllerTestFixture<GetAgvStatusRequest, GetAgvStatusRequestHandler> fixture = new AgvControllerTestFixture<GetAgvStatusRequest, GetAgvStatusRequestHandler>()
-                .UseDefaultServices()
-                .Build();
-            var controller = fixture.Controller;
-            var correlationId = Guid.Empty;
-
-            await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await controller.GetAgvStatus(correlationId));
-        }
-
-        [TestMethod]
-        public async Task GetAgvStatus_NoContent()
-        {
-            AgvControllerTestFixture<GetAgvStatusRequest, GetAgvStatusRequestHandler> fixture = new AgvControllerTestFixture<GetAgvStatusRequest, GetAgvStatusRequestHandler>()
-                .UseDefaultServices()
-                .Build();
-            var controller = fixture.Controller;
-            var correlationId = fixture.AgvIds[2].ToGuid(); // AGV without AgvStatus
-
-            await MediatorShould.ThrowRequestExceptionAsync<AgvStatusNotFoundException>(async () => await controller.GetAgvStatus(correlationId));
-        }
-
-        [TestMethod]
-        [DataRow(0)]
-        [DataRow(1)]
         public async Task GetAgvData_Successfully(int index)
         {
             AgvControllerTestFixture<GetAgvDataRequest, GetAgvDataRequestHandler> fixture = new AgvControllerTestFixture<GetAgvDataRequest, GetAgvDataRequestHandler>()
@@ -158,7 +114,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var controller = fixture.Controller;
             var correlationId = Guid.Empty;
 
-            await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await controller.GetAgvData(correlationId));
+            await MediatorShould.ThrowRequestExceptionAsync<AgvDataNotFoundException>(async () => await controller.GetAgvData(correlationId));
         }
 
         [TestMethod]

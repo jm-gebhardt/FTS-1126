@@ -26,11 +26,6 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
         public AgvGraph? AgvGraph { get; }
 
         /// <summary>
-        /// AGV Data
-        /// </summary>
-        public AgvData? AgvData { get; }
-
-        /// <summary>
         /// Returns true when there is a life sign of the AGV in regular time intervals,
         /// returns false when there is no life sign for a certain time.
         /// </summary>
@@ -45,5 +40,15 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
         /// Returns true when the AGV is assignable for any transport order.
         /// </summary>
         public bool Assignable { get; }
+        
+        /// <summary>
+        /// returns the time of the last state transition
+        /// </summary>
+        public DateTime TimeOfStateTransition { get; set; }
+        
+        /// <summary>
+        /// returns the time of the last lock state change
+        /// </summary>
+        public DateTime TimeOfLockStateChanged { get; set; }
     }
 }

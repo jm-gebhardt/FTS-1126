@@ -7,7 +7,8 @@ using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Models;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db.Models;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Profiles;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Profiles.Profiles;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Profiles.Resolvers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.States;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
@@ -15,18 +16,21 @@ using Shouldly;
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Profiles
 {
     /// <summary>
-    /// Tests for <see cref="MappingProfile"/>
+    /// Tests for Mapper profiles
     /// </summary>
     [TestClass]
     public class MappingProfileTest
     {
         private const double FloatComparisonThreshold = 0.0001;
 
-        private Mapper GetMapper()
+        private Mapper GetMapper(IEnumerable<Profile> profiles)
         {
             var mapperConfig = new MapperConfiguration(cfg =>
             {
-                cfg.AddProfile(new MappingProfile());
+                foreach (var profile in profiles)
+                {
+                    cfg.AddProfile(profile);    
+                }
             });
             var mapper = new Mapper(mapperConfig);
             return mapper;
@@ -37,7 +41,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Profiles
         [TestMethod]
         public void AssertConfigurationIsValid_DoesNotThrowException_WhenMappingProfileIsDefined()
         {
-            var mapper = GetMapper();
+            var mapper = GetMapper(Enumerable.Empty<Profile>());
             mapper.ConfigurationProvider.AssertConfigurationIsValid();
         }
 
@@ -64,7 +68,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Profiles
                 mapName.ToGuid(),
                 mapName);
 
-            var mapper = GetMapper();
+            var mapper = GetMapper(new [] { new AgvGraphProfile() });
             var graph = mapper.Map<GraphDto>(agvGraph);
 
             graph.ShouldNotBeNull();
@@ -96,7 +100,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Profiles
             const string agvId = "AGV1";
             var correlationId = agvId.ToGuid();
             const string mapName = "Map#1";
-            var agvSaga = new AgvSaga(correlationId, agvId, "TestState",
+            var agvSaga = new AgvSaga(correlationId, agvId, "Idle",
                 new AgvStatus(Guid.NewGuid(), "123", true, true, 10, false, false),
                 new AgvGraph(Guid.NewGuid(),
                     new AgvGraph.Node[] { new("id") },
@@ -105,13 +109,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Profiles
                     mapName)
             );
 
-            var mapper = GetMapper();
+            var mapper = GetMapper(new [] { new AgvProfile() });
             var agv = mapper.Map<AgvDto>(agvSaga);
 
             agv.ShouldNotBeNull();
             agv.CorrelationId.ShouldBe(agvSaga.CorrelationId);
             agv.AgvId.ShouldBe(agvSaga.AgvId);
-            agv.CurrentState.ShouldBe(agvSaga.CurrentState);
+            Enum.TryParse(agvSaga.CurrentState, out AgvState agvState);
+            agv.CurrentState.ShouldBe(agvState);
         }
 
         /// <summary>
@@ -120,7 +125,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Profiles
         [TestMethod]
         public void Map_ShouldMapAllPropertiesCorrectly_WherePersistenceMapIsMappedToDtoMap()
         {
-            var mapper = GetMapper();
+            var mapper = GetMapper(new [] { new MapProfile() });
             const string base64String = "dGhlIHF1aWNrIGJyb3duIGZveCBqdW1wIG92ZXIgdGhlIGxhenkgZG9n";
             var correlationId = Guid.NewGuid();
 
@@ -137,7 +142,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Profiles
                 }
             }.ToImmutableDictionary(x => x.Key, x => x.Value);
 
-            var dtoMap = mapper.Map<MapDto>(persistenceMap, opt => opt.Items[MappingProfile.AgvMapRelationsName] = agvMapRelation);
+            var dtoMap = mapper.Map<MapDto>(persistenceMap, opt => opt.Items[RelatedMapAgvValueResolver.AgvMapRelationsName] = agvMapRelation);
 
             dtoMap.ShouldNotBeNull();
             dtoMap.CorrelationId.ShouldBe(persistenceMap.CorrelationId);
@@ -163,7 +168,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Profiles
                 agvId.ToGuid()
             );
 
-            var mapper = GetMapper();
+            var mapper = GetMapper(new [] { new AgvPositionProfile() });
             var agvPositionStatus = mapper.Map<AgvPositionStatus>(agvPositionChanged);
 
             agvPositionStatus.ShouldNotBeNull();
@@ -191,7 +196,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Profiles
                 new AgvPosition(false, 0, 0, 0, 0)
             );
 
-            var mapper = GetMapper();
+            var mapper = GetMapper(new [] { new AgvPositionProfile() });
             var agvPositionStatus = mapper.Map<AgvPositionStatus>(agvPositionReceived);
 
             agvPositionStatus.ShouldNotBeNull();
@@ -217,7 +222,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Profiles
                 new AgvPosition(false, 0, 0, 0, 0)
                 );
 
-            var mapper = GetMapper();
+            var mapper = GetMapper(new [] { new AgvPositionProfile() });
             var agvPositionStatusDto = mapper.Map<AgvPositionStatusDto>(agvPositionStatus);
 
             agvPositionStatusDto.ShouldNotBeNull();
@@ -237,7 +242,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Profiles
         public void Map_ShouldMapAllPropertiesCorrectly_WhereAgvDataDtoIsMappedToAgvData()
         {
             var agvData = new AgvData(Guid.NewGuid(), "Karis", "BF1", "127.0.0.1", 1.8, 120.0, 0.6, 0.8, 0.7, 1, 2.5, 1000, Array.Empty<AgvData.Sensor>());
-            var mapper = GetMapper();
+            var mapper = GetMapper(new [] { new AgvProfile() });
             var agvDataDto = mapper.Map<AgvDataDto>(agvData);
 
             agvDataDto.ShouldNotBeNull();

@@ -22,14 +22,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
         where TRequestHandler : class, IConsumer
     {
         public string[] AgvIds { get; } = { "AGV001", "AGV002", "AGV003" };
-
+        // ReSharper disable once MemberCanBePrivate.Global
         public string[] Orders { get; } = { "ORDER001", "ORDER002", "" };
-
         public string[] States { get; } = { nameof(AgvStateMachine.Idle), nameof(AgvStateMachine.Busy), nameof(AgvStateMachine.Discovered) };
-
         public string[] Ips { get; } = { "127.0.0.1", "127.0.0.2", "127.0.0.3" };
 
         public Mock<IAgvRegistry> AgvRegistry { get; }
+        private Mock<IAgvDataRegistry> AgvDataRegistry { get; }
 
         public AgvGraph.Node[] Nodes { get; } =
         {
@@ -50,12 +49,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
         public AgvControllerTestFixture()
         {
             AgvRegistry = new Mock<IAgvRegistry>();
+            AgvDataRegistry = new Mock<IAgvDataRegistry>();
         }
 
         [UsedImplicitly]
         public AgvControllerTestFixture<TRequest, TRequestHandler> SetupAgvRegistryWithDefaultData()
         {
             var agvs = new List<IAgv>();
+            var data = new Dictionary<Guid, AgvData>();
 
             for (int i = 0; i < AgvIds.Length; i++)
             {
@@ -70,7 +71,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
                 var agvStatus = agvId == "AGV003" ? null : new AgvStatus(correlationId, order, true, true, 10, true, true);
                 var agvData = new AgvData(correlationId, "Karis", "BF1", ip, 1.8, 120.0, 0.6, 0.8, 0.7, 1, 2.5, 1000, Array.Empty<AgvData.Sensor>());
 
-                agvs.Add(new AgvSaga(correlationId, agvId, state, agvStatus, agvGraph, agvData));
+                agvs.Add(new AgvSaga(correlationId, agvId, state, agvStatus, agvGraph));
+                data[correlationId] = agvData;
             }
 
             AgvRegistry.SetupGet(x => x.Count).Returns(agvs.Count);
@@ -79,6 +81,20 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             AgvRegistry.Setup(x => x.GetAllAgvs()).Returns(new EnumerableQuery<IAgv>(agvs));
             AgvRegistry.Setup(x => x.GetAgv(It.IsAny<Guid>())).Returns<Guid>(correlationId => { return agvs.FirstOrDefault(agv => agv.CorrelationId == correlationId); });
             AgvRegistry.Setup(x => x.GetRequiredAgv(It.IsAny<Guid>())).Returns<Guid>(correlationId => { return agvs.First(agv => agv.CorrelationId == correlationId); });
+
+            AgvDataRegistry.Setup(x => x.Exists(It.IsAny<Guid>())).Returns<Guid>(correlationId => data.ContainsKey(correlationId));
+            AgvDataRegistry.Setup(x => x.GetAgvData(It.IsAny<Guid>()))
+                .Returns<Guid>(correlationId =>
+                {
+                    data.TryGetValue(correlationId, out var agvData);
+                    return agvData;
+                });
+            AgvDataRegistry.Setup(x => x.AddOrUpdate(It.IsAny<AgvData>()))
+                .Returns<AgvData>(agvData =>
+                {
+                    data[agvData.CorrelationId] = agvData;
+                    return true;
+                });
 
             return this;
         }
@@ -120,7 +136,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
         {
             IRequestClient<GetAgvsRequest> getAgvsRequestClient = GetRequestClient<GetAgvsRequest>();
             IRequestClient<GetAgvGraphRequest> getAgvGraphRequestClient = GetRequestClient<GetAgvGraphRequest>();
-            IRequestClient<GetAgvStatusRequest> getAgvStatusRequestClient = GetRequestClient<GetAgvStatusRequest>();
             IRequestClient<GetAgvDataRequest> getAgvDataRequestClient = GetRequestClient<GetAgvDataRequest>();
             IRequestClient<GetAgvPositionsRequest> getAgvPositionsRequestClient = GetRequestClient<GetAgvPositionsRequest>();
             IRequestClient<UnlockAgvCommand> setIdleRequestClient = GetRequestClient<UnlockAgvCommand>();
@@ -128,7 +143,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             IRequestClient<RequestAgvDataCommand> emitRequestDataRequestClient = GetRequestClient<RequestAgvDataCommand>();
             IRequestClient<RequestAgvGraphCommand> emitRequestGraphRequestClient = GetRequestClient<RequestAgvGraphCommand>();
 
-            var controller = new AgvController(getAgvsRequestClient, getAgvGraphRequestClient, getAgvStatusRequestClient, getAgvDataRequestClient,
+            var controller = new AgvController(getAgvsRequestClient, getAgvGraphRequestClient, getAgvDataRequestClient,
                 getAgvPositionsRequestClient, setIdleRequestClient, lockAgvRequestClient, emitRequestDataRequestClient, emitRequestGraphRequestClient)
             {
                 ControllerContext = new ControllerContext(
@@ -149,6 +164,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
         {
             SetupAgvRegistryWithDefaultData();
             AddServices(sc => sc.AddTransient(_ => AgvRegistry.Object));
+            AddServices(sc => sc.AddTransient(_ => AgvDataRegistry.Object));
             AddServices(sc => sc.AddTransient(_ => GetAgvPositionRegistry().Object));
             AddServices(sc => sc.AddTransient(_ => GetMapper()));
             AddServices(sc => sc.AddTransient(_ => new Mock<IBus>().Object));

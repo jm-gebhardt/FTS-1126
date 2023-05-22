@@ -1,21 +1,22 @@
 import Konva from 'konva'
 import {
-  IGraph,
+  IAgv,
+  IAgvPosition,
   IAgvPositionStatus,
-  IEdge,
-  INode,
-  INodeType,
   IAgvState,
-  IAgvPosition
+  IEdge,
+  IGraph,
+  INode,
+  INodeType
 } from '@/services/api/data-contracts'
 import {
-  MapNode,
   Charge,
   Edge,
+  GraphDimensions,
+  MapNode,
   Park,
   Station,
-  WayPoint,
-  GraphDimensions
+  WayPoint
 } from './MapNodes'
 import { Agv } from './MapAgv'
 import { Vector2d } from 'konva/lib/types'
@@ -255,53 +256,34 @@ export class MapCanvas {
     agvNode.tag.visible(visible)
   }
 
-  updateAgvState(agvState: IAgvState): void {
-    let agvNode = this._agvs.get(agvState.correlationId)
+  updateAgv(agv: IAgv): void {
+    let agvNode = this._agvs.get(agv.correlationId)
     if (!agvNode) {
-      agvNode = this.createAgv(agvState.correlationId, agvState.agvId)
+      agvNode = this.createAgv(agv.correlationId, agv.agvId)
     }
 
     let primary = '#FFFFFF' // white
     let secondary = undefined
 
     // Hardware states (priority over software state)
-    if (agvState.isOnline === false) {
+    if (agv.isOnline === false) {
       primary = '#808080' // grey
-      secondary = undefined
-    } else if (agvState.agvStatus.disturbed === true) {
+    } else if (agv.isDisturbed === true) {
       primary = 'FF8000' // darker orange
-      secondary = undefined
-    } else if (agvState.agvStatus.automatic === false) {
+    } else if (agv.isAutomatic === false) {
       primary = '#0000FF' // blue
-      secondary = undefined
-    } else if (agvState.agvStatus.charging === true) {
+    } else if (agv.isCharging === true) {
       primary = '#FFFF00' /// yellow
-      secondary = undefined
     }
     // Software states
-    else if (agvState.currentState === 'Discovered') {
+    else if (agv.currentState === IAgvState.Discovered) {
       primary = '#808080' // grey
-      secondary = undefined
-    } else if (agvState.currentState === 'Idle') {
+    } else if (agv.currentState === IAgvState.Idle) {
       primary = '#FFFFFF' // white
-      secondary = undefined
-    } else if (agvState.currentState === 'Ready') {
+    } else if (agv.currentState === IAgvState.Busy) {
       primary = '#008000' // green
-      secondary = undefined
-    } else if (agvState.currentState === 'Reserved') {
-      primary = '#008000' // green
-      secondary = '#00FF00' // lime
-    } else if (agvState.currentState === 'Busy') {
-      primary = '#008000' // green
-      secondary = '#00FF00' // lime
-    } else if (agvState.currentState === 'PendingLock') {
-      primary = '#FF0000' // red
-      secondary = '#FF8000' // darker orange
-    } else if (agvState.currentState === 'Locked') {
-      primary = '#FF0000' // red
-      secondary = undefined
     }
-
+    secondary = agv.isLocked ? '#FF0000' : undefined
     agvNode.setColor(primary, secondary)
   }
 

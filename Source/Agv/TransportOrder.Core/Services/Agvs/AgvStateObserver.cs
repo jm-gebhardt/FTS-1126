@@ -30,7 +30,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
             }
             else
             {
-                await _agvHubContext.SendAgvStateToAllClients(nameof(Defines.HubMethods.AgvStateChanged), context.Saga, context.CancellationToken);
+                await _agvHubContext.SendAgvStateToAllClients(nameof(Defines.HubMethods.AgvChanged), context.Saga, context.CancellationToken);
             }
         }
     }

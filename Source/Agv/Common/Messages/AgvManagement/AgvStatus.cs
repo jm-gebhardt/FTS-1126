@@ -54,7 +54,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
         /// <para>Less than or equal <see cref="BadBatteryLevel"/>% is regarded as "battery low", charging required.</para>
         /// </remarks>
         [UsedImplicitly]
-        public int BatteryCharge { get; }
+        public double BatteryCharge { get; }
 
         /// <summary>
         /// AGV is charging.
@@ -110,7 +110,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
         /// <param name="charging"></param>
         /// <param name="disturbed"></param>
         /// <param name="lastNodeId"></param>
-        public AgvStatus(Guid correlationId, string? orderId, bool busy, bool automatic, int batteryCharge, bool charging, bool disturbed, string? lastNodeId = null)
+        public AgvStatus(Guid correlationId, string? orderId, bool busy, bool automatic, double batteryCharge, bool charging, bool disturbed, string? lastNodeId = null)
         {
             CorrelationId = correlationId;
             OrderId = orderId;

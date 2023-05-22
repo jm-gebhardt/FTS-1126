@@ -62,7 +62,7 @@ public class BaseChargingPointManagerTestFixture
         {
             return new AgvGraph(correlationId ?? Guid.NewGuid(), nodes, edges, MapName.ToGuid(), MapName);
         }
-        
+
         nodes = nodes.Where(n => n.Type != AgvGraph.NodeType.Charge).ToArray();
         edges = edges.Where(edge => nodes.FirstOrDefault(node => node.Id == edge.From)?.Type != AgvGraph.NodeType.Charge
                                     || nodes.FirstOrDefault(node => node.Id == edge.To)?.Type != AgvGraph.NodeType.Charge).ToArray();
@@ -103,17 +103,17 @@ public class BaseChargingPointManagerTestFixture
     {
         return new ChargingPointManager(GraphRegistry.Object, NodeStateRegistry.Object);
     }
-    
+
     public void SetupNodeLocker(bool reserveSuccess, bool lockSuccess, bool unlockSuccess, Func<IQueryable<Node>, IQueryable<Node>>? filterFreeUnlockedNodesFunction = null)
     {
         NodeStateRegistry.Setup(s => s.ReserveNodeAsync(It.IsAny<string>(), It.IsAny<Guid>())).Returns(Task.FromResult(reserveSuccess));
         NodeStateRegistry.Setup(s => s.LockNodeAsync(It.IsAny<string>())).Returns(Task.FromResult(lockSuccess));
         NodeStateRegistry.Setup(s => s.UnlockNodeAsync(It.IsAny<string>())).Returns(Task.FromResult(unlockSuccess));
-        
+
         filterFreeUnlockedNodesFunction ??= nodes => nodes;
         NodeStateRegistry.Setup(s => s.FilterFreeUnlockedNodes(It.IsAny<IQueryable<Node>>())).Returns(filterFreeUnlockedNodesFunction);
     }
-    
+
     public void SetupGraphRegistry(Graph graph)
     {
         GraphRegistry.Setup(x => x.GetGraph()).Returns(graph);
@@ -121,11 +121,10 @@ public class BaseChargingPointManagerTestFixture
             .Returns<Expression<Func<Node, bool>>, IEnumerable<IAgv>?>((f, _) => graph.Nodes.AsQueryable().Where(f));
     }
 
-    public IAgv GetAgv(Guid correlationId, string agvId, string state, string order, string ip, AgvGraph agvGraph)
+    public IAgv GetAgv(Guid correlationId, string agvId, string state, string order, AgvGraph agvGraph)
     {
         var agvStatus = new AgvStatus(correlationId, order, true, true, 10, false, false);
-        var agvData = new AgvData(correlationId, "Karis", "BF1", ip, 1.8, 120.0, 0.6, 0.8, 0.7, 1, 2.5, 1000, Array.Empty<AgvData.Sensor>());
 
-        return new AgvSaga(correlationId, agvId, state, agvStatus, agvGraph, agvData) { IsOnline = true };
+        return new AgvSaga(correlationId, agvId, state, agvStatus, agvGraph) { IsOnline = true };
     }
 }

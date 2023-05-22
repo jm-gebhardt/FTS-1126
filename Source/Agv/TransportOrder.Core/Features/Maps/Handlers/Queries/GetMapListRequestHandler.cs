@@ -1,11 +1,11 @@
 ﻿using AutoMapper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Profiles;
 using MassTransit;
 using System.Collections.Immutable;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Common;
 using JetBrains.Annotations;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Requests.Queries;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Profiles.Resolvers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Maps;
 
@@ -47,7 +47,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Handlers.Quer
                 .ToImmutableDictionary(x => x.Key, x => x.Select(m => m.CorrelationId).ToArray()
                 );
 
-            var maps = _mapper.Map<List<MapDto>>(_mapRegistry.GetAllMaps().AsEnumerable(), opt => opt.Items[MappingProfile.AgvMapRelationsName] = agvMapRelation);
+            var maps = _mapper.Map<List<MapDto>>(_mapRegistry.GetAllMaps().AsEnumerable(), opt => opt.Items[RelatedMapAgvValueResolver.AgvMapRelationsName] = agvMapRelation);
 
             await context.RespondAsync(new GetMapListResult { Maps = maps });
         }

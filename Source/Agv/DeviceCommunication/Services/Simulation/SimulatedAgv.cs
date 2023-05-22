@@ -1,6 +1,7 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 
 // ReSharper disable ConvertToPrimaryConstructor
+// ReSharper disable InheritdocInvalidUsage
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
 {
     /// <summary>
@@ -26,6 +27,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
 
         /// <inheritdoc />
         public bool Assignable { get; }
+
+        /// <inheritdoc />
+        public DateTime TimeOfStateTransition { get; set; }
+
+        /// <inheritdoc />
+        public DateTime TimeOfLockStateChanged { get; set; }
 
         /// <inheritdoc />
         public AgvStatus? AgvStatus { get; }
