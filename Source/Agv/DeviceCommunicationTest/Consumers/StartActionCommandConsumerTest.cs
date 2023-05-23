@@ -45,8 +45,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
                 const string orderId = "1234";
                 var orderCorrelationId = orderId.ToGuid();
                 const string toStationId = "Drop5";
+                var actionGroupId = Guid.Empty;
 
-                var action = new AgvAction(actionCorrelationId, ActionType.Pick, toStationId);
+                var action = new AgvAction(actionCorrelationId, ActionType.Pick, toStationId, actionGroupId);
                 var message = new StartActionCommand(Guid.NewGuid(), agvId, orderId, action);
 
                 // Publish ExecuteTransportOrder
@@ -98,7 +99,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         public async Task Test_StartAction_EmptyAssignedAgv_ThrowsException()
         {
             var fixture = new MassTransitTestFixture<StartActionCommandConsumer>(s => { s.AddTransient<IAgvRegistry>(_ => Mock.Of<IAgvRegistry>()); });
-            var action = new AgvAction(Guid.Empty, ActionType.Pick, string.Empty);
+            var action = new AgvAction(Guid.Empty, ActionType.Pick, string.Empty, Guid.Empty);
             await fixture.TestHarness!.Bus.Publish(new StartActionCommand(Guid.Empty, "agv", "orderId", action));
             (await fixture.TestHarness.Consumed.Any<StartActionCommand>()).ShouldBeTrue();
             (await fixture.TestHarness.Published.Any<Fault<StartActionCommand>>()).ShouldBeTrue();

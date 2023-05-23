@@ -100,11 +100,11 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
             var pickActionGuid = hostOrderSaga.PickActionGuid;
             var actionGroupId = hostOrderSaga.CorrelationId;
 
-            var pickAction = new AgvAction(pickActionGuid, ActionType.Pick, hostOrderSaga.OrderDetails.Source)
+            var pickAction = new AgvAction(pickActionGuid, ActionType.Pick, hostOrderSaga.OrderDetails.Source, actionGroupId)
             {
                 Sequence = 0
             };
-            var dropAction = new AgvAction(dropActionGuid, ActionType.Drop, hostOrderSaga.OrderDetails.Destination)
+            var dropAction = new AgvAction(dropActionGuid, ActionType.Drop, hostOrderSaga.OrderDetails.Destination, actionGroupId)
             {
                 Sequence = 1
             };

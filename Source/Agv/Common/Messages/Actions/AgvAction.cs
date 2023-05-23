@@ -61,11 +61,13 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
         /// <param name="correlationId">Unique correlation ID of this action (see order action repository)</param>
         /// <param name="actionType">The type of the action, e.g. Pick or Drop</param>
         /// <param name="targetNodeId">Target node id of the action</param>
-        public AgvAction(Guid correlationId, ActionType actionType, string targetNodeId)
+        /// <param name="parentId">The CorrelationId of the ActionGroup where this action belongs to</param>
+        public AgvAction(Guid correlationId, ActionType actionType, string targetNodeId, Guid parentId)
         {
             CorrelationId = correlationId;
             ActionType = actionType;
             TargetNodeId = targetNodeId;
+            ParentId = parentId;
         }
 
         /// <summary>
@@ -77,6 +79,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
             CorrelationId = Guid.Empty;
             ActionType = ActionType.Pick;
             TargetNodeId = string.Empty;
+            ParentId = Guid.Empty;
         }
     }
 }

@@ -4,15 +4,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 
 public static class AgvActionGenerator
 {
-    public static AgvAction GenerateDropAction(string? targetNodeId = null)
+    public static AgvAction GenerateDropAction(string? targetNodeId = null, Guid? parentId = null)
     {
-        var dropAction = new AgvAction(Guid.NewGuid(), ActionType.Drop, targetNodeId ?? "Dest-1");
+        var dropAction = new AgvAction(Guid.NewGuid(), ActionType.Drop, targetNodeId ?? "Dest-1", parentId ?? Guid.NewGuid());
         return dropAction;
     }
 
-    public static AgvAction GenerateChargeAction(string? targetNodeId = null)
+    public static AgvAction GenerateChargeAction(string? targetNodeId = null, Guid? parentId = null)
     {
-        var chargeAction = new AgvAction(Guid.NewGuid(), ActionType.Charge, targetNodeId ?? "Charge-1");
+        var chargeAction = new AgvAction(Guid.NewGuid(), ActionType.Charge, targetNodeId ?? "Charge-1", parentId ?? Guid.NewGuid());
         if (targetNodeId != null)
         {
             chargeAction.Nodes = new[] {targetNodeId};
@@ -20,9 +20,9 @@ public static class AgvActionGenerator
         return chargeAction;
     }
 
-    public static AgvAction GenerateMaintenanceAction(string? targetNodeId = null)
+    public static AgvAction GenerateMaintenanceAction(string? targetNodeId = null, Guid? parentId = null)
     {
-        var maintenanceAction = new AgvAction(Guid.NewGuid(), ActionType.Move, targetNodeId ?? "Mnt-1");
+        var maintenanceAction = new AgvAction(Guid.NewGuid(), ActionType.Move, targetNodeId ?? "Mnt-1", parentId ?? Guid.NewGuid());
         if (targetNodeId != null)
         {
             maintenanceAction.Nodes = new[] {targetNodeId};
@@ -30,9 +30,9 @@ public static class AgvActionGenerator
         return maintenanceAction;
     }
 
-    public static AgvAction GenerateParkAction(string? targetNodeId = null)
+    public static AgvAction GenerateParkAction(string? targetNodeId = null, Guid? parentId = null)
     {
-        var parkAction = new AgvAction(Guid.NewGuid(), ActionType.Move, targetNodeId ?? "Prk-1");
+        var parkAction = new AgvAction(Guid.NewGuid(), ActionType.Move, targetNodeId ?? "Prk-1", parentId ?? Guid.NewGuid());
         if (targetNodeId != null)
         {
             parkAction.Nodes = new[] {targetNodeId};
@@ -40,21 +40,26 @@ public static class AgvActionGenerator
         return parkAction;
     }
 
-    public static ActionGroup GeneratePickDropActionGroup()
+    public static ActionGroup GeneratePickDropActionGroup(ActionGroupState actionGroupState = ActionGroupState.Created)
     {
         const string orderId = "orderId";
+        var groupId = Guid.NewGuid();
 
         var pickActionGuid = Guid.NewGuid();
         var dropActionGuid = Guid.NewGuid();
-        var pickAction = new AgvAction(pickActionGuid, ActionType.Pick, "Src-1")
+        var pickAction = new AgvAction(pickActionGuid, ActionType.Pick, "Src-1", groupId)
         {
             Sequence = 0
         };
-        var dropAction = new AgvAction(dropActionGuid, ActionType.Drop, "Dst-1")
+        var dropAction = new AgvAction(dropActionGuid, ActionType.Drop, "Dst-1", groupId)
         {
             Sequence = 1
         };
-        var actionGroup = new ActionGroup(Guid.NewGuid(), orderId, new List<AgvAction> {pickAction, dropAction});
+        
+        var actionGroup = new ActionGroup(groupId, orderId, new List<AgvAction> {pickAction, dropAction})
+        {
+            State = actionGroupState
+        };
 
         return actionGroup;
     }
@@ -62,17 +67,18 @@ public static class AgvActionGenerator
     public static ActionGroup GenerateChargingActionGroup()
     {
         const string orderId = "orderId";
+        var groupId = Guid.NewGuid();
 
         var chargingActionGuid = Guid.NewGuid();
-        var chargingAction = new AgvAction(chargingActionGuid, ActionType.Charge, "Src-1")
+        var chargingAction = new AgvAction(chargingActionGuid, ActionType.Charge, "Src-1", groupId)
         {
             Sequence = 0
         };
-        var parkAction = new AgvAction(chargingActionGuid, ActionType.Move, "Src-1")
+        var parkAction = new AgvAction(chargingActionGuid, ActionType.Move, "Src-1", groupId)
         {
             Sequence = 1
         };
-        var actionGroup = new ActionGroup(Guid.NewGuid(), orderId, new List<AgvAction> {chargingAction, parkAction});
+        var actionGroup = new ActionGroup(groupId, orderId, new List<AgvAction> {chargingAction, parkAction});
 
         return actionGroup;
     }

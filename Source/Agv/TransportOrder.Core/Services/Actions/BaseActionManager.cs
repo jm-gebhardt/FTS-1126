@@ -104,7 +104,7 @@ public abstract class BaseActionManager : IActionManager
         var actionGroup = new ActionGroup(
             groupCorrelationId,
             $"Automatic {actionDescription}",
-            actions: new List<AgvAction> {new(Guid.NewGuid(), actionType, node.Id)},
+            actions: new List<AgvAction> {new(Guid.NewGuid(), actionType, node.Id, groupCorrelationId)},
             assignedAgv: agv.CorrelationId
         );
 
