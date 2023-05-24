@@ -50,6 +50,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos
     /// <param name="IsCharging">Is Battery currently charging</param>
     /// <param name="BadBatteryLevel">Lower battery level in [%] for signaling "battery bad" (defined by VDA5050)</param>
     /// <param name="GoodBatteryLevel">Upper battery level in [%] for signaling "battery good" (defined by VDA5050)</param>
+    /// <param name="CurrentActionGroup"></param>
     [PublicAPI]
     public record AgvDto(
         Guid CorrelationId, 
@@ -65,6 +66,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos
         double BatteryCharge,
         bool IsCharging,
         int BadBatteryLevel,
-        int GoodBatteryLevel
+        int GoodBatteryLevel,
+        // Action
+        ActionGroupDto? CurrentActionGroup
         );
 }

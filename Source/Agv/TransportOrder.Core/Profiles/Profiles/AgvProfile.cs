@@ -1,4 +1,5 @@
 using AutoMapper;
+using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
 
@@ -19,7 +20,15 @@ public class AgvProfile: Profile
             .ForCtorParam(nameof(AgvDto.IsCharging), opt => opt.MapFrom((src, _) => src.AgvStatus?.Charging))
             .ForCtorParam(nameof(AgvDto.BadBatteryLevel), opt => opt.MapFrom((_, _) => AgvStatus.BadBatteryLevel))
             .ForCtorParam(nameof(AgvDto.GoodBatteryLevel), opt => opt.MapFrom((_, _) => AgvStatus.GoodBatteryLevel));
-        
+
+        CreateMap<(IAgv agv, ActionGroup? actionGroup), AgvDto>()
+            .ForCtorParam(nameof(AgvDto.IsDisturbed), opt => opt.MapFrom((src, _) => src.agv.AgvStatus?.Disturbed))
+            .ForCtorParam(nameof(AgvDto.IsAutomatic), opt => opt.MapFrom((src, _) => src.agv.AgvStatus?.Automatic))
+            .ForCtorParam(nameof(AgvDto.BatteryCharge), opt => opt.MapFrom((src, _) => src.agv.AgvStatus?.BatteryCharge))
+            .ForCtorParam(nameof(AgvDto.IsCharging), opt => opt.MapFrom((src, _) => src.agv.AgvStatus?.Charging))
+            .ForCtorParam(nameof(AgvDto.BadBatteryLevel), opt => opt.MapFrom((_, _) => AgvStatus.BadBatteryLevel))
+            .ForCtorParam(nameof(AgvDto.GoodBatteryLevel), opt => opt.MapFrom((_, _) => AgvStatus.GoodBatteryLevel))
+            .ForCtorParam(nameof(AgvDto.CurrentActionGroup), opt => opt.MapFrom((src, _) => src.actionGroup));
         
         CreateMap<AgvData, AgvDataDto>();
         CreateMap<AgvStatus, AgvStatusDto>();

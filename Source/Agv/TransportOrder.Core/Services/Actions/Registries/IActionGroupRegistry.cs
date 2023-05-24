@@ -26,6 +26,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Registries
         public Task<IReadOnlyList<ActionGroup>> GetActionGroupsAsync(IEnumerable<ActionGroupState> states, DateTime? fromDate = null, DateTime? toDate = null, int maxItems = 0);
 
         /// <summary>
+        /// Get currently assigned action groups of provided AGVs
+        /// </summary>
+        /// <param name="agvCorrelationIds"></param>
+        /// <returns></returns>
+        public Task<IReadOnlyDictionary<Guid, ActionGroup?>> GetCurrentAssignedActionGroups(IEnumerable<Guid> agvCorrelationIds);
+
+        /// <summary>
         /// Get ActionGroup
         /// </summary>
         /// <param name="correlationId"></param>
