@@ -1,8 +1,8 @@
+using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Actions.Common;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Actions.Requests.Queries;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Requests.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Registries;
 using MassTransit;
 
@@ -14,14 +14,17 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Actions.Handlers.Q
     public class GetAgvActionGroupsRequestHandler: IConsumer<GetAgvActionGroupsRequest>
     {
         private readonly IActionGroupRegistry _actionGroupRegistry;
+        private readonly IMapper _mapper;
 
         /// <summary>
-        /// 
+        ///  Constructor
         /// </summary>
-        /// <param name="???"></param>
-        public GetAgvActionGroupsRequestHandler(IActionGroupRegistry actionGroupRegistry)
+        /// <param name="actionGroupRegistry"></param>
+        /// <param name="mapper"></param>
+        public GetAgvActionGroupsRequestHandler(IActionGroupRegistry actionGroupRegistry, IMapper mapper)
         {
             _actionGroupRegistry = actionGroupRegistry;
+            _mapper = mapper;
         }
         
         
@@ -35,7 +38,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Actions.Handlers.Q
         {
             IReadOnlyList<ActionGroup> actionGroups = await _actionGroupRegistry.GetActionGroupsAsync(context.Message.States, context.Message.FromDate, context.Message.ToDate, context.Message.Limit);
             
-            var result = new GetAgvActionGroupsResult(actionGroups);
+            var result = new GetAgvActionGroupsResult(actionGroups.Select(g => _mapper.Map<ActionGroupDto>(g)).ToList());
             
             await context.RespondAsync(result);
         }
