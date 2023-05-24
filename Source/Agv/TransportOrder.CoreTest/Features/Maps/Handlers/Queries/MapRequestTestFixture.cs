@@ -3,7 +3,7 @@ using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db.Models;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Profiles;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Profiles.Profiles;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Maps;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.States;
@@ -141,7 +141,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Features.Maps.Handlers.
         {
             var mapperConfig = new MapperConfiguration(cfg =>
             {
-                cfg.AddProfile(new MappingProfile());
+                cfg.AddProfile(new AgvProfile());
+                cfg.AddProfile(new AgvGraphProfile());
+                cfg.AddProfile(new AgvPositionProfile());
+                cfg.AddProfile(new MapProfile());
             });
             var mapper = new Mapper(mapperConfig);
             return mapper;

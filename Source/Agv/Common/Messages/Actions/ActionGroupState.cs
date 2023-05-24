@@ -1,24 +1,22 @@
-using JetBrains.Annotations;
-
 namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 
 /// <summary>
-/// State of an AGV action group
+/// States of ActionGroup
 /// </summary>
 public enum ActionGroupState
 {
     /// <summary>
-    /// Action created
+    /// Action is created
     /// </summary>
     Created,
 
     /// <summary>
-    /// Action transmitted to DeviceCommunication
+    /// Action has been started
     /// </summary>
     Started,
 
     /// <summary>
-    /// Action completed
+    /// Action has been completed
     /// </summary>
     Completed
 }

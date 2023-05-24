@@ -16,7 +16,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
         public Guid CorrelationId { get; }
 
         /// <summary>
-        /// Current or previous order ID.
+        /// Current or previous order ID (Internally we are using the ActionCorrelationId).
         /// </summary>
         /// <remarks>
         /// VDA5050.state.schema.orderId
@@ -54,7 +54,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
         /// <para>Less than or equal <see cref="BadBatteryLevel"/>% is regarded as "battery low", charging required.</para>
         /// </remarks>
         [UsedImplicitly]
-        public int BatteryCharge { get; }
+        public double BatteryCharge { get; }
 
         /// <summary>
         /// AGV is charging.
@@ -103,14 +103,14 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
         /// Constructor of AgvStatus
         /// </summary>
         /// <param name="correlationId"></param>
-        /// <param name="orderId"></param>
+        /// <param name="orderId">Internally we are using the ActionCorrelationId</param>
         /// <param name="busy"></param>
         /// <param name="automatic"></param>
         /// <param name="batteryCharge"></param>
         /// <param name="charging"></param>
         /// <param name="disturbed"></param>
         /// <param name="lastNodeId"></param>
-        public AgvStatus(Guid correlationId, string? orderId, bool busy, bool automatic, int batteryCharge, bool charging, bool disturbed, string? lastNodeId = null)
+        public AgvStatus(Guid correlationId, string? orderId, bool busy, bool automatic, double batteryCharge, bool charging, bool disturbed, string? lastNodeId = null)
         {
             CorrelationId = correlationId;
             OrderId = orderId;

@@ -45,12 +45,10 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
                 const string orderId = "1234";
                 var orderCorrelationId = orderId.ToGuid();
                 const string toStationId = "Drop5";
+                var actionGroupId = Guid.Empty;
 
-                var action = new AgvAction(actionCorrelationId, agvId, ActionType.Pick, orderId, orderCorrelationId, toStationId)
-                {
-                    AssignedAgv = Guid.NewGuid()
-                };
-                var message = new StartActionCommand(Guid.NewGuid(), action);
+                var action = new AgvAction(actionCorrelationId, ActionType.Pick, toStationId, actionGroupId);
+                var message = new StartActionCommand(Guid.NewGuid(), agvId, orderId, action);
 
                 // Publish ExecuteTransportOrder
                 await fixture.TestHarness.Bus.Publish(message);
@@ -67,8 +65,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
 
                 // Check consumed message
                 action.CorrelationId.ShouldBe(actionCorrelationId);
-                action.AgvId.ShouldBe(agvId);
-                action.OrderId.ShouldBe(orderId);
                 action.ParentId.ShouldBe(orderCorrelationId);
                 action.TargetNodeId.ShouldBe(toStationId);
 
@@ -102,12 +98,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         [TestMethod]
         public async Task Test_StartAction_EmptyAssignedAgv_ThrowsException()
         {
-            var fixture = new MassTransitTestFixture<StartActionCommandConsumer>(s =>
-            {
-                s.AddTransient<IAgvRegistry>(_ => Mock.Of<IAgvRegistry>());
-            });
-            var action = new AgvAction(Guid.Empty, string.Empty, ActionType.Pick, string.Empty, Guid.Empty, string.Empty);
-            await fixture.TestHarness!.Bus.Publish(new StartActionCommand(Guid.Empty, action));
+            var fixture = new MassTransitTestFixture<StartActionCommandConsumer>(s => { s.AddTransient<IAgvRegistry>(_ => Mock.Of<IAgvRegistry>()); });
+            var action = new AgvAction(Guid.Empty, ActionType.Pick, string.Empty, Guid.Empty);
+            await fixture.TestHarness!.Bus.Publish(new StartActionCommand(Guid.Empty, "agv", "orderId", action));
             (await fixture.TestHarness.Consumed.Any<StartActionCommand>()).ShouldBeTrue();
             (await fixture.TestHarness.Published.Any<Fault<StartActionCommand>>()).ShouldBeTrue();
 

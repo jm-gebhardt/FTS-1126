@@ -98,25 +98,24 @@ public abstract class BaseActionManager : IActionManager
         _startActionService = startActionService;
     }
 
-    private static ActionGroup CreateActionGroup(IAgv agv, AgvGraph.Node node, ActionType actionType = ActionType.Move)
+    private static ActionGroup CreateActionGroup(IAgv agv, AgvGraph.Node node, string actionDescription, ActionType actionType = ActionType.Move)
     {
         var groupCorrelationId = Guid.NewGuid();
         var actionGroup = new ActionGroup(
             groupCorrelationId,
-            $"Automatic {actionType}",
+            $"Automatic {actionDescription}",
+            actions: new List<AgvAction> {new(Guid.NewGuid(), actionType, node.Id, groupCorrelationId)},
             assignedAgv: agv.CorrelationId
         );
-
-        actionGroup.Actions = new List<AgvAction> {new(Guid.NewGuid(), actionType, actionGroup, node.Id)};
 
         return actionGroup;
     }
 
-    private async Task<AgvAction> AddActionAsync(IAgv agv, AgvGraph.Node node, ActionType actionType)
+    private async Task<AgvAction> AddActionAsync(IAgv agv, AgvGraph.Node node, ActionType actionType, string? actionDescription = null)
     {
-        var actionGroup = CreateActionGroup(agv, node, actionType);
+        var actionGroup = CreateActionGroup(agv, node, actionDescription ?? actionType.ToString(), actionType);
         await AddActionGroupAsync(actionGroup);
-        return actionGroup.Actions!.First();
+        return actionGroup.Actions.First();
     }
 
     private Task AddActionGroupAsync(ActionGroup actionGroup)
@@ -255,7 +254,7 @@ public abstract class BaseActionManager : IActionManager
         Logger.LogInformation("Starting maintenance action for Agv with CorrelationId: {AgvCorrelationId}", agv.CorrelationId);
 
         var maintenanceNode = MaintenanceService.GetMaintenanceNode(agv);
-        var action = await AddActionAsync(agv, maintenanceNode, ActionType.Charge);
+        var action = await AddActionAsync(agv, maintenanceNode, ActionType.Move, "maintenance");
 
         return action;
     }
@@ -275,7 +274,7 @@ public abstract class BaseActionManager : IActionManager
         Logger.LogInformation("Starting park action for Agv with CorrelationId: {AgvCorrelationId}", agv.CorrelationId);
 
         var parkNode = await _parkPointService.ReserveParkAsync(agv);
-        var action = await AddActionAsync(agv, parkNode, ActionType.Charge);
+        var action = await AddActionAsync(agv, parkNode, ActionType.Move, "park");
 
         return action;
     }
@@ -314,7 +313,7 @@ public abstract class BaseActionManager : IActionManager
             else
             {
                 // no AGV found, will be assigned later
-                Logger.LogDebug("No AGV was directly found for action group {ActionGroupId}", actionGroup.CorrelationId);
+                Logger.LogDebug("No AGV was directly found for ActionGroup {ActionGroupId}", actionGroup.CorrelationId);
             }
         }
         finally

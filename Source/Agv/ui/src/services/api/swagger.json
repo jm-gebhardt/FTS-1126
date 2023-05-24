@@ -91,53 +91,6 @@
         }
       }
     },
-    "/agvs/{correlationId}/status": {
-      "get": {
-        "tags": [
-          "Agv"
-        ],
-        "summary": "Retrieve status for agv",
-        "parameters": [
-          {
-            "name": "correlationId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Ok",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/AgvState"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AgvState"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AgvState"
-                }
-              }
-            }
-          },
-          "204": {
-            "description": "No content"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        }
-      }
-    },
     "/agvs/{correlationId}/data": {
       "get": {
         "tags": [
@@ -444,10 +397,18 @@
       "Agv": {
         "required": [
           "agvId",
+          "badBatteryLevel",
+          "batteryCharge",
           "correlationId",
           "currentState",
+          "goodBatteryLevel",
+          "isAutomatic",
+          "isCharging",
+          "isDisturbed",
           "isLocked",
-          "isOnline"
+          "isOnline",
+          "timeOfLockStateChanged",
+          "timeOfStateTransition"
         ],
         "type": "object",
         "properties": {
@@ -461,8 +422,22 @@
             "description": "AGV Serial Number"
           },
           "currentState": {
-            "type": "string",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AgvState"
+              }
+            ],
             "description": "Current State"
+          },
+          "timeOfStateTransition": {
+            "type": "string",
+            "description": "Time of the last state transition",
+            "format": "date-time"
+          },
+          "timeOfLockStateChanged": {
+            "type": "string",
+            "description": "Time of the last lock state change",
+            "format": "date-time"
           },
           "isOnline": {
             "type": "boolean",
@@ -471,6 +446,33 @@
           "isLocked": {
             "type": "boolean",
             "description": "Locked state"
+          },
+          "isDisturbed": {
+            "type": "boolean",
+            "description": "Is agv disturbed. There is at least one error with level \"FATAL\""
+          },
+          "isAutomatic": {
+            "type": "boolean",
+            "description": "AGV is in automatic mode"
+          },
+          "batteryCharge": {
+            "type": "number",
+            "description": "Battery charge level (Soc)",
+            "format": "double"
+          },
+          "isCharging": {
+            "type": "boolean",
+            "description": "Is Battery currently charging"
+          },
+          "badBatteryLevel": {
+            "type": "integer",
+            "description": "Lower battery level in [%] for signaling \"battery bad\" (defined by VDA5050)",
+            "format": "int32"
+          },
+          "goodBatteryLevel": {
+            "type": "integer",
+            "description": "Upper battery level in [%] for signaling \"battery good\" (defined by VDA5050)",
+            "format": "int32"
           }
         },
         "additionalProperties": false,
@@ -636,70 +638,15 @@
         "description": "Model for the status of the AGV position"
       },
       "AgvState": {
-        "required": [
-          "agvStatus"
+        "enum": [
+          "Initial",
+          "Discovered",
+          "Idle",
+          "Busy",
+          "Charging"
         ],
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/Agv"
-          }
-        ],
-        "properties": {
-          "agvStatus": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/AgvStatus"
-              }
-            ],
-            "description": "AGV Status"
-          }
-        },
-        "additionalProperties": false,
-        "description": "AgvState model"
-      },
-      "AgvStatus": {
-        "type": "object",
-        "properties": {
-          "orderId": {
-            "type": "string",
-            "description": "",
-            "nullable": true
-          },
-          "busy": {
-            "type": "boolean",
-            "description": "",
-            "nullable": true
-          },
-          "automatic": {
-            "type": "boolean",
-            "description": "",
-            "nullable": true
-          },
-          "batteryCharge": {
-            "type": "integer",
-            "description": "",
-            "format": "int32",
-            "nullable": true
-          },
-          "charging": {
-            "type": "boolean",
-            "description": "",
-            "nullable": true
-          },
-          "disturbed": {
-            "type": "boolean",
-            "description": "",
-            "nullable": true
-          },
-          "lastNodeId": {
-            "type": "string",
-            "description": "",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false,
-        "description": "AgvStatus model"
+        "type": "string",
+        "description": "Agv State"
       },
       "Edge": {
         "required": [
@@ -762,7 +709,7 @@
       "HubMethods": {
         "enum": [
           "AgvDiscovered",
-          "AgvStateChanged",
+          "AgvChanged",
           "AgvPositionChanged"
         ],
         "type": "string",

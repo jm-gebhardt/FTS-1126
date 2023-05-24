@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
 {
     /// <summary>
-    /// Consumes <see cref="AgvPropertyChanged"/> and sends message of type <see cref="Defines.HubMethods.AgvStateChanged"/> via <see cref="IAgvHubContext"/>.
+    /// Consumes <see cref="AgvPropertyChanged"/> and sends message of type <see cref="Defines.HubMethods.AgvChanged"/> via <see cref="IAgvHubContext"/>.
     /// </summary>
     [JetBrains.Annotations.PublicAPI]
     public class AgvPropertyChangedConsumer : IConsumer<AgvPropertyChanged>
@@ -34,7 +34,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
         {
             _logger.LogTrace("{MessageType} {AgvId}/{CorrelationId} received", nameof(AgvPropertyChanged), context.Message.Agv.AgvId, context.Message.Agv.CorrelationId);
 
-            await _agvHubContext.SendAgvStateToAllClients(nameof(Defines.HubMethods.AgvStateChanged), context.Message.Agv, context.CancellationToken);
+            await _agvHubContext.SendAgvStateToAllClients(nameof(Defines.HubMethods.AgvChanged), context.Message.Agv, context.CancellationToken);
         }
     }
 }

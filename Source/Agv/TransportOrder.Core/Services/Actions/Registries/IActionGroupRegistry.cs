@@ -60,7 +60,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Registries
         public Task DeleteByParentIdAsync(Guid parentId);
         
         /// <summary>
-        /// Updates the action of the existing ActionGroup and also the ActionGroup State
+        /// Updates the Action State/Date of the existing ActionGroup and also the ActionGroup State/Date
         /// </summary>
         /// <param name="action">The action to be started</param>
         /// <param name="agv">The assigned Agv</param>

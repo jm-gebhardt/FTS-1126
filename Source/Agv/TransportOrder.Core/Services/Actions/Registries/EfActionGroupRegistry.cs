@@ -70,7 +70,7 @@ public class EfActionGroupRegistry : IActionGroupRegistry
         if (actionGroup != null)
         {
             await context.Entry(actionGroup)
-                .Collection(g => g.Actions!)
+                .Collection(g => g.Actions)
                 .LoadAsync();
         }
 
@@ -98,9 +98,9 @@ public class EfActionGroupRegistry : IActionGroupRegistry
         var action = await queryable
             .Include(actionGroup => actionGroup.Actions)
             .AsNoTracking()
-            .SingleOrDefaultAsync(actionGroup => actionGroup.Actions!.Any(a => a.CorrelationId == correlationId));
+            .SingleOrDefaultAsync(actionGroup => actionGroup.Actions.Any(a => a.CorrelationId == correlationId));
 
-        return action?.Actions!.SingleOrDefault(a => a.CorrelationId == correlationId);
+        return action?.Actions.SingleOrDefault(a => a.CorrelationId == correlationId);
     }
 
     /// <inheritdoc cref="IActionGroupRegistry"/>
@@ -142,10 +142,13 @@ public class EfActionGroupRegistry : IActionGroupRegistry
         {
             throw new ActionGroupNotFoundException(actionGroupCorrelationId);
         }
-        await context.Entry(actionGroup).Collection(g => g.Actions!).LoadAsync();
+        await context.Entry(actionGroup).Collection(g => g.Actions).LoadAsync();
 
-        var actionToUpdate = actionGroup.Actions!.Single(a => a.CorrelationId == action.CorrelationId);
-        actionToUpdate.State = state;
+        action.UpdateActionState(state);
+        
+        var actionToUpdate = actionGroup.Actions.Single(a => a.CorrelationId == action.CorrelationId);
+        actionGroup.Actions.Remove(actionToUpdate);
+        actionGroup.Actions.Add(action);
 
         actionGroup.AssignAgvToActionGroup(agv);
         actionGroup.UpdateActionGroupState();
@@ -161,9 +164,8 @@ public class EfActionGroupRegistry : IActionGroupRegistry
         bool hasUnfinishedDropActions = await queryable.Where(actionGroup =>
                 actionGroup.AssignedAgv == agvCorrelationId &&
                 actionGroup.State != ActionGroupState.Completed &&
-                actionGroup.Actions!.Any(a => a.State != ActionState.Completed && a.ActionType == ActionType.Drop)
+                actionGroup.Actions.Any(a => a.State != ActionState.Completed && a.ActionType == ActionType.Drop)
             )
-            .Include(g => g.Actions)
             .AsNoTracking()
             .AnyAsync();
 
@@ -196,7 +198,7 @@ public class EfActionGroupRegistry : IActionGroupRegistry
             .AsNoTracking()
             .FirstOrDefaultAsync();
 
-        var subsequentAction = startedGroup?.Actions!.Where(action => action.State == ActionState.Created).MinBy(a => a.Sequence);
+        var subsequentAction = startedGroup?.Actions.Where(action => action.State == ActionState.Created).MinBy(a => a.Sequence);
 
         if (subsequentAction == null)
         {

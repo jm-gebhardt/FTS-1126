@@ -1,8 +1,8 @@
 using System.Linq.Expressions;
 using Gebhardt.StoreWare.Agv.Common.Definitions;
+using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Extensions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Charging;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Choosers;
@@ -35,8 +35,6 @@ public class ActionManagerFixture
     public Mock<IMaintenanceService> MaintenanceService { get; } = new();
 
     public Mock<IChargingPointManager> ChargingPointManager { get; } = new();
-
-    public Mock<IAgvStateService> AgvLocker { get; } = new();
 
     public Mock<IParkPointService> ParkPointService { get; } = new();
 
@@ -183,7 +181,6 @@ public class ActionManagerFixture
 
     public ActionManagerFixture SetSubsequentAction(IAgv agv, AgvAction subsequentAction)
     {
-        // AgvActionRegistry.Setup(x => x.GetSubsequentActionAsync(agv.CorrelationId)).Returns(Task.FromResult(subsequentAction));
         ActionGroupRegistry.Setup(x => x.GetSubsequentActionAsync(agv.CorrelationId)).ReturnsAsync(subsequentAction);
         return this;
     }
@@ -206,8 +203,8 @@ public class ActionManagerFixture
         }
         else
         {
-            AgvLocker.Setup(x => x.IsAgvReadyForBusyAsync(agv, false)).ReturnsAsync(readyForLock);
-            AgvLocker.Setup(x => x.IsAgvReadyForBusyAsync(agv, true)).ReturnsAsync(readyForLockWhenIgnoreChargingFlag);
+            AgvStateService.Setup(x => x.IsAgvReadyForBusyAsync(agv, false)).ReturnsAsync(readyForLock);
+            AgvStateService.Setup(x => x.IsAgvReadyForBusyAsync(agv, true)).ReturnsAsync(readyForLockWhenIgnoreChargingFlag);
         }
 
         SetupDefaultAgv(agv);

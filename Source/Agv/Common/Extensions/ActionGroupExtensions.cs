@@ -9,6 +9,8 @@ namespace Gebhardt.StoreWare.Agv.Common.Extensions;
 /// </summary>
 public static class ActionGroupExtensions
 {
+    private static DateTime GetCurrentDate() => DateTime.UtcNow;
+
     /// <summary>
     /// Updates the state of the ActionGroup based on the state of its Actions
     /// </summary>
@@ -16,6 +18,7 @@ public static class ActionGroupExtensions
     public static void UpdateActionGroupState(this ActionGroup actionGroup)
     {
         ICollection<AgvAction> actions = actionGroup.GetRequiredActions();
+        var previousState = actionGroup.State;
         if (actions.All(a => a.State == ActionState.Completed))
         {
             actionGroup.State = ActionGroupState.Completed;
@@ -27,6 +30,26 @@ public static class ActionGroupExtensions
         else if (actions.Any(a => a.State == ActionState.Started))
         {
             actionGroup.State = ActionGroupState.Started;
+        }
+
+        SetDates(actionGroup, previousState);
+    }
+
+    private static void SetDates(ActionGroup actionGroup, ActionGroupState previousState)
+    {
+        var state = actionGroup.State;
+        if (previousState != state)
+        {
+            switch (state)
+            {
+                case ActionGroupState.Started:
+                    actionGroup.StartedDate = GetCurrentDate();
+                    break;
+
+                case ActionGroupState.Completed:
+                    actionGroup.CompletedDate = GetCurrentDate();
+                    break;
+            }
         }
     }
 
@@ -57,7 +80,7 @@ public static class ActionGroupExtensions
     public static ICollection<AgvAction> GetRequiredActions(this ActionGroup actionGroup)
     {
         actionGroup.RequireActions();
-        return actionGroup.Actions!;
+        return actionGroup.Actions;
     }
 
     /// <summary>
@@ -68,10 +91,10 @@ public static class ActionGroupExtensions
     // ReSharper disable once MemberCanBePrivate.Global
     public static void RequireActions(this ActionGroup actionGroup)
     {
-        ICollection<AgvAction>? actionGroupActions = actionGroup.Actions;
-        if (actionGroupActions == null)
+        ICollection<AgvAction> actionGroupActions = actionGroup.Actions;
+        if (!actionGroupActions.Any())
         {
-            throw new ArgumentException("ActionGroup must have Actions");
+            throw new ActionsInActionGroupEmptyException(actionGroup.CorrelationId);
         }
     }
 }

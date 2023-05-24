@@ -29,8 +29,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Charging
         {
             var agvSettings = _settingsProvider.GetSettings();
 
-            int oldSoc = context.Message.OldBatteryCharge;
-            int newSoc = context.Message.NewBatteryCharge;
+            double oldSoc = context.Message.OldBatteryCharge;
+            double newSoc = context.Message.NewBatteryCharge;
 
             bool isCharging = oldSoc < newSoc;
             bool wasGood = oldSoc > agvSettings.BatteryLevelLow;

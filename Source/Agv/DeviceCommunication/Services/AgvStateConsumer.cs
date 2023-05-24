@@ -44,15 +44,15 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
             _logger.LogDebug("{MessageType} from {AgvId} received", nameof(MqttState), serialNumber);
 
             var agvStatus = new AgvStatus(
-                    serialNumber.ToGuid(),
-                    GetOrderId(message),
-                    GetBusy(message),
-                    GetAutomatic(message),
-                    GetBatteryCharge(message),
-                    GetCharging(message),
-                    GetDisturbed(message),
-                    GetLastNodeId(message)
-                    );
+                serialNumber.ToGuid(),
+                GetOrderId(message),
+                GetBusy(message),
+                GetAutomatic(message),
+                GetBatteryCharge(message),
+                GetCharging(message),
+                GetDisturbed(message),
+                GetLastNodeId(message)
+            );
 
             var agvStatusReceived = new AgvStatusReceived(
                 correlationId: serialNumber.ToGuid(),
@@ -147,14 +147,14 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
             }
         }
 
-        private int GetBatteryCharge(MqttState message)
+        private float GetBatteryCharge(MqttState message)
         {
             if (message.BatteryState == null)
             {
                 return 0;
             }
 
-            return (int)(message.BatteryState.BatteryCharge + 0.5);
+            return message.BatteryState.BatteryCharge;
         }
 
         private bool GetCharging(MqttState message)

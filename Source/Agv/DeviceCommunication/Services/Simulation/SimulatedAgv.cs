@@ -29,6 +29,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
         public bool Assignable { get; }
 
         /// <inheritdoc />
+        public DateTime TimeOfStateTransition { get; set; }
+
+        /// <inheritdoc />
+        public DateTime TimeOfLockStateChanged { get; set; }
+
+        /// <inheritdoc />
         public AgvStatus? AgvStatus { get; }
 
         /// <inheritdoc />

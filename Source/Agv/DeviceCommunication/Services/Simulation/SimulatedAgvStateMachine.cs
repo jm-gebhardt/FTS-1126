@@ -161,6 +161,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
             DuringAny(SetRequestAgvMapHandler());
             DuringAny(SetSignalPositionHandler());
             DuringAny(SetRequestStatusSendHandler());
+            
+            WhenEnterAny(UpdateTimeOfStateTransition);
 
             SetCompletedWhenFinalized(); // Delete when finalized
         }
@@ -374,7 +376,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
         private void FinishAction(BehaviorContext<SimulatedAgvSaga, ScheduleFinishAction> context)
         {
             var action = context.Saga.Action;
-            string? orderId = context.Saga.OrderId;
+            string orderId = context.Saga.OrderId!;
 
             if (action == null)
             {
@@ -385,11 +387,14 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
                 _logger.LogInformation("AGV {AgvId} / {CorrelationId} finished action {ActionType} for {OrderId} / {ParentId}",
                     context.Saga.AgvId, context.Saga.CorrelationId, action.ActionType, orderId, action.ParentId);
 
-                context.Publish(new ActionCompletedEvent(action.CorrelationId, orderId!));
+                context.Publish(new ActionCompletedEvent(action.CorrelationId, orderId));
             }
 
             context.Saga.ResetAction();
         }
+        
+        private EventActivityBinder<SimulatedAgvSaga> UpdateTimeOfStateTransition(EventActivityBinder<SimulatedAgvSaga> eventActivity) =>
+            eventActivity.Then(ctx => ctx.Saga.TimeOfStateTransition = DateTime.UtcNow);
         #endregion
     }
 }

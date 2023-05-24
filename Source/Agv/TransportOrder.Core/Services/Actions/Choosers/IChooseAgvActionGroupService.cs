@@ -10,13 +10,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Choosers;
 public interface IChooseAgvActionGroupService
 {
     /// <summary>
-    /// Tries to find a suitable AGV for this action group
+    /// Tries to find a suitable AGV for this ActionGroup
     /// Find AGV with shortest route to pick
     /// </summary>
     Task<IAgv?> GetAgvAsync(ActionGroup actionGroup, IList<IAgv> agvs);
 
     /// <summary>
-    /// Get not started action groups, returns the best action in the first action group that Agv can handle all actions
+    /// Get not started ActionGroups, returns the best action in the first action group that Agv can handle all actions
     /// </summary>
     /// <param name="agv"></param>
     /// <returns></returns>

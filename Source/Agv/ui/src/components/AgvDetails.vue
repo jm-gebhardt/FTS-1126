@@ -7,9 +7,7 @@
       <ui-list-group-subheader>Status information</ui-list-group-subheader>
       <details-list v-model="statusItems"></details-list>
       <ui-list-divider></ui-list-divider>
-      <battery-charge-indicator
-        :charge="props.agvState?.agvStatus.batteryCharge"
-      />
+      <battery-charge-indicator :charge="props.modelValue?.batteryCharge" />
       <ui-list-divider></ui-list-divider>
       <ui-list-group-subheader>Data information</ui-list-group-subheader>
       <details-list v-model="dataItems"></details-list>
@@ -30,7 +28,7 @@ export default {
 </script>
 
 <script lang="ts" setup>
-import { IAgv, IAgvData, IAgvState } from '@/services/api/data-contracts'
+import { IAgv, IAgvData } from '@/services/api/data-contracts'
 import { computed, ComputedRef, onMounted } from 'vue'
 import DetailsList from '@/components/DetailsList.vue'
 import ActionsList from '@/components/ActionsList.vue'
@@ -51,7 +49,6 @@ const agvApi = new AgvApi({
 interface Props {
   modelValue: IAgv | null
   agvData: IAgvData | null | undefined
-  agvState: IAgvState | null | undefined
 }
 
 const props = defineProps<Props>()
@@ -73,12 +70,10 @@ let statusItems: ComputedRef<ListItem[]> = computed(() => {
   }
   return [
     // Status information
-    { label: 'OrderID', value: props.agvState?.agvStatus.orderId },
-    { label: 'Busy', value: props.agvState?.agvStatus.busy },
-    { label: 'Automatic', value: props.agvState?.agvStatus.automatic },
-    { label: 'Disturbed', value: props.agvState?.agvStatus.disturbed },
-    { label: 'LastNodeID', value: props.agvState?.agvStatus.lastNodeId },
-    { label: 'Charging', value: props.agvState?.agvStatus.charging }
+    { label: 'Automatic', value: props.modelValue.isAutomatic },
+    { label: 'Disturbed', value: props.modelValue.isDisturbed },
+    { label: 'Charging', value: props.modelValue.isCharging },
+    { label: 'Locked', value: props.modelValue.isLocked }
   ] as ListItem[]
 })
 
@@ -127,7 +122,7 @@ function unlockAgv(agv: IAgv | null): void {
 
   const $confirm = useConfirm()
 
-  $confirm(`Set state of AGV '${agv.agvId}' to Idle?`)
+  $confirm(`Unlock AGV '${agv.agvId}'?`)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .then((result: any) => {
       // According to the balm-ui documentation 'result' should be a boolean but in the node module code it's declared as a void

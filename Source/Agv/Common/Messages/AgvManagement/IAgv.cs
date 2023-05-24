@@ -40,5 +40,15 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
         /// Returns true when the AGV is assignable for any transport order.
         /// </summary>
         public bool Assignable { get; }
+        
+        /// <summary>
+        /// returns the time of the last state transition
+        /// </summary>
+        public DateTime TimeOfStateTransition { get; set; }
+        
+        /// <summary>
+        /// returns the time of the last lock state change
+        /// </summary>
+        public DateTime TimeOfLockStateChanged { get; set; }
     }
 }

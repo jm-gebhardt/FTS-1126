@@ -56,7 +56,6 @@ import { useAgvStore } from '@/services/AgvStore'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import {
   IAgv,
-  IAgvState,
   IGraph,
   IMap,
   IAgvPositionStatus
@@ -87,11 +86,10 @@ const agvPosApi = new AgvPosApi({
   baseUrl: import.meta.env.VITE_API_URL
 })
 
-const agvHub = new AgvHub(undefined, onAgvStateChanged, onAgvPositionChanged)
+const agvHub = new AgvHub(undefined, onAgvChanged, onAgvPositionChanged)
 
-const { agvs, agvStates, agvGraph, maps } = storeToRefs(useAgvStore())
-const { fetchAgvs, fetchState, updateAgvState, fetchGraph, fetchMaps, MapUrl } =
-  useAgvStore()
+const { agvs, agvGraph, maps } = storeToRefs(useAgvStore())
+const { fetchAgvs, fetchGraph, fetchMaps, MapUrl } = useAgvStore()
 
 /*-------------------------------------*/
 
@@ -123,9 +121,8 @@ onBeforeUnmount(async () => {
 /**
  * Handler for hub event 'onAgvStateChanged'
  */
-async function onAgvStateChanged(agvState: IAgvState): Promise<void> {
-  await updateAgvState(agvState) // Update store
-  mapComponent.value.updateAgvState(agvState)
+async function onAgvChanged(agv: IAgv): Promise<void> {
+  mapComponent.value.updateAgvState(agv)
 }
 
 /**
@@ -142,16 +139,6 @@ async function onAgvPositionChanged(
  */
 function updateAgvs(): void {
   fetchAgvs().then(() => {
-    // Get status for AGVs
-    agvs.value.data.forEach((agv) => {
-      fetchState(agv.correlationId).then(() => {
-        const agvState = agvStates.value.data.get(agv.correlationId)
-        if (agvState) {
-          mapComponent.value.updateAgvState(agvState)
-        }
-      })
-    })
-
     // Only show selected AGVs
     const relevantAgvs: IAgv[] = []
     for (const agvCorrelationId of selectedMapRelatedAgvs.value) {
@@ -181,15 +168,6 @@ function updateAgvPositions(): void {
     .then((response) => {
       response.data.forEach((agvPositionStatus) => {
         onAgvPositionChanged(agvPositionStatus)
-
-        fetchState(agvPositionStatus.correlationId).then(() => {
-          const agvState = agvStates.value.data.get(
-            agvPositionStatus.correlationId
-          )
-          if (agvState) {
-            mapComponent.value.updateAgvState(agvState)
-          }
-        })
       })
     })
     .catch((response) => {

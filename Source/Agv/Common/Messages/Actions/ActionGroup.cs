@@ -17,71 +17,59 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
         public string OrderId { get; init; }
 
         /// <summary>
-        /// Assigned AGV that will execute the action group
+        /// Assigned AGV that will execute the ActionGroup
         /// </summary>
         public Guid? AssignedAgv { get; set; }
 
         /// <summary>
-        /// Date the action was created
+        /// Date the action was created (UTC)
         /// </summary>
-        public DateTime CreatedDate { get; init; }
+        public DateTime CreatedDate { get; init; } = DateTime.UtcNow;
 
         /// <summary>
-        /// Date the action has started
+        /// Date the action has been started (UTC)
         /// </summary>
-        public DateTime? StartedDate { get; init; }
+        public DateTime? StartedDate { get; set; }
 
         /// <summary>
-        /// Date the action has completed
+        /// Date the action has been completed (UTC)
         /// </summary>
-        public DateTime? CompletedDate { get; init; }
+        public DateTime? CompletedDate { get; set; }
 
         /// <summary>
-        /// State of the action group
+        /// State of the ActionGroup
         /// </summary>
         public ActionGroupState State { get; set; } = ActionGroupState.Created;
 
         /// <summary>
         /// List of actions
         /// </summary>
-        public ICollection<AgvAction>? Actions { get; set; }
+        public ICollection<AgvAction> Actions { get; init; } = new List<AgvAction>();
 
         /// <summary>
         /// Generating an instance of <see cref="ActionGroup"/>
         /// </summary>
-        /// <param name="correlationId"></param>
-        /// <param name="completedDate"></param>
-        /// <param name="state"></param>
-        /// <param name="actions"></param>
-        /// <param name="orderId"></param>
-        /// <param name="assignedAgv"></param>
-        /// <param name="createdDate"></param>
-        /// <param name="startedDate"></param>
-        public ActionGroup(Guid correlationId, string orderId, DateTime? createdDate = default, List<AgvAction>? actions = null, DateTime? startedDate = null, DateTime? completedDate = null, ActionGroupState state = ActionGroupState.Created, Guid? assignedAgv = null)
+        /// <param name="correlationId">The CorrelationId of the ActionGroup</param>
+        /// <param name="actions">The child Actions of the ActionGroup</param>
+        /// <param name="orderId">The OrderID</param>
+        /// <param name="assignedAgv">The assigned Agv of this ActionGroup</param>
+        /// <param name="createdDate">The date of the creation of this ActionGroup</param>
+        public ActionGroup(Guid correlationId, string orderId, ICollection<AgvAction> actions, DateTime? createdDate = default, Guid? assignedAgv = null) : this(correlationId, orderId)
         {
-            CorrelationId = correlationId;
-            OrderId = orderId;
             AssignedAgv = assignedAgv;
             CreatedDate = createdDate.GetValueOrDefault(DateTime.UtcNow);
-            StartedDate = startedDate;
-            StartedDate = completedDate;
-            State = state;
-            CompletedDate = completedDate;
             Actions = actions;
         }
 
         /// <summary>
         /// Constructor which auto creates Started date using DateTime.Now
         /// </summary>
-        /// <param name="correlationId"></param>
-        /// <param name="orderId"></param>
-        /// <param name="actions"></param>
-        public ActionGroup(Guid correlationId, string orderId, List<AgvAction>? actions = null)
+        /// <param name="correlationId">The CorrelationId of the ActionGroup</param>
+        /// <param name="orderId">The OrderID</param>
+        public ActionGroup(Guid correlationId, string orderId)
         {
             CorrelationId = correlationId;
-            Actions = actions;
             OrderId = orderId;
-            CreatedDate = DateTime.Now;
         }
 
         /// <summary>

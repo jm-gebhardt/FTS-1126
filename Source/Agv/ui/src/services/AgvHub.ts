@@ -4,8 +4,8 @@ import {
   HubConnectionState
 } from '@microsoft/signalr'
 import {
+  IAgv,
   IAgvPositionStatus,
-  IAgvState,
   IHubMethods
 } from '@/services/api/data-contracts'
 
@@ -15,20 +15,20 @@ import {
 export class AgvHub {
   client: HubConnection
   _onAgvDiscovered?: () => Promise<void>
-  _onAgvStateChanged?: (agvState: IAgvState) => Promise<void>
+  _onAgvChanged?: (agvState: IAgv) => Promise<void>
   _onAgvPositionChanged?: (
     agvPositionStatus: IAgvPositionStatus
   ) => Promise<void>
 
   constructor(
     onAgvDiscovered?: () => Promise<void>,
-    onAgvStateChanged?: (agvState: IAgvState) => Promise<void>,
+    onAgvChanged?: (agvState: IAgv) => Promise<void>,
     onAgvPositionChanged?: (
       agvPositionStatus: IAgvPositionStatus
     ) => Promise<void>
   ) {
     this._onAgvDiscovered = onAgvDiscovered
-    this._onAgvStateChanged = onAgvStateChanged
+    this._onAgvChanged = onAgvChanged
     this._onAgvPositionChanged = onAgvPositionChanged
 
     const hubUrl = import.meta.env.VITE_HUB_URL
@@ -36,16 +36,16 @@ export class AgvHub {
 
     // Hub endpoints with respective handlers
     this.client.on(IHubMethods.AgvDiscovered, async () => {
-      if (this._onAgvDiscovered) this._onAgvDiscovered()
+      if (this._onAgvDiscovered) await this._onAgvDiscovered()
     })
 
-    this.client.on(IHubMethods.AgvStateChanged, async (message: string) => {
-      if (this._onAgvStateChanged) this._onAgvStateChanged(JSON.parse(message))
+    this.client.on(IHubMethods.AgvChanged, async (message: string) => {
+      if (this._onAgvChanged) await this._onAgvChanged(JSON.parse(message))
     })
 
     this.client.on(IHubMethods.AgvPositionChanged, async (message: string) => {
       if (this._onAgvPositionChanged)
-        this._onAgvPositionChanged(JSON.parse(message))
+        await this._onAgvPositionChanged(JSON.parse(message))
     })
   }
 

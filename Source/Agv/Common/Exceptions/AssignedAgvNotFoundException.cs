@@ -14,7 +14,7 @@ public class AssignedAgvNotFoundException : Exception
     /// <param name="agv"></param>
     /// <param name="action">The AgvAction where the Agv should be assigned to</param>
     public AssignedAgvNotFoundException(IAgv agv, AgvAction action)
-        : base($"No assigned Agv for action with correlation Id: {action.CorrelationId} " +
+        : base($"No assigned Agv for action with CorrelationId: {action.CorrelationId} " +
                $"AssignedAgv: {agv.CorrelationId} " +
                $"AgvId: {agv.AgvId}")
     {
@@ -27,7 +27,7 @@ public class AssignedAgvNotFoundException : Exception
     /// <param name="action">The AgvAction where the Agv should be assigned to</param>
     /// <param name="correlationId"></param>
     public AssignedAgvNotFoundException(Guid correlationId, string agvId, AgvAction action)
-        : base($"No assigned Agv for action with correlation Id: {action.CorrelationId} " +
+        : base($"No assigned Agv for action with CorrelationId: {action.CorrelationId} " +
                $"AssignedAgv: {correlationId} " +
                $"AgvId: {agvId}")
     {

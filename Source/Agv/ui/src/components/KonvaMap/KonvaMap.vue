@@ -9,11 +9,7 @@
 import AgvContext from '../ContextMenu/AgvContext.vue'
 import { onMounted, ref } from 'vue'
 import { MapCanvas } from './MapCanvas'
-import {
-  IGraph,
-  IAgvPositionStatus,
-  IAgvState
-} from '../../services/api/data-contracts'
+import { IGraph, IAgvPositionStatus } from '../../services/api/data-contracts'
 
 const map = ref()
 let graphMap: MapCanvas | undefined
@@ -34,9 +30,6 @@ defineExpose({
   },
   updateAgvPosition(agv: IAgvPositionStatus) {
     graphMap?.updateAgvPosition(agv)
-  },
-  updateAgvState(agvState: IAgvState) {
-    graphMap?.updateAgvState(agvState)
   },
   setBackground: (
     background: HTMLImageElement,

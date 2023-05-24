@@ -30,15 +30,15 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             var options = new SimulateOptions()
             {
                 Agvs = 1,
-                Sources = new[] { "S1" },
-                Destinations = new[] { "D1" }
+                Sources = new[] {"S1"},
+                Destinations = new[] {"D1"}
             };
             var fixture = new StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(
                 services => services.AddSingleton(options)
             );
             const string agvId = "Agv#1";
             var correlationId = agvId.ToGuid();
-            var graph = new GridGraphGenerator(new[] { "S1" }, new[] { "D1" }).Generate(correlationId);
+            var graph = new GridGraphGenerator(new[] {"S1"}, new[] {"D1"}).Generate(correlationId);
 
             // Create saga in idle state with graph
             var agvSaga = new SimulatedAgvSaga(correlationId, agvId, 5000, InitialBatteryCharge, currentState: nameof(SimulatedAgvStateMachine.Idle), agvGraph: graph);
@@ -63,8 +63,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             var options = new SimulateOptions()
             {
                 Agvs = 1,
-                Sources = new[] { "S1" },
-                Destinations = new[] { "D1" }
+                Sources = new[] {"S1"},
+                Destinations = new[] {"D1"}
             };
             var fixture = new StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(
                 services => services.AddSingleton(options)
@@ -92,8 +92,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             var options = new SimulateOptions()
             {
                 Agvs = 1,
-                Sources = new[] { "S1" },
-                Destinations = new[] { "D1" }
+                Sources = new[] {"S1"},
+                Destinations = new[] {"D1"}
             };
             var fixture = new StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(
                 services => services.AddSingleton(options)
@@ -121,8 +121,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             var options = new SimulateOptions()
             {
                 Agvs = 1,
-                Sources = new[] { "S1" },
-                Destinations = new[] { "D1" }
+                Sources = new[] {"S1"},
+                Destinations = new[] {"D1"}
             };
             var fixture = new StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(
                 services => services.AddSingleton(options)
@@ -154,8 +154,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             var options = new SimulateOptions()
             {
                 Agvs = 1,
-                Sources = new[] { "S1" },
-                Destinations = new[] { "D1" }
+                Sources = new[] {"S1"},
+                Destinations = new[] {"D1"}
             };
             var fixture = new StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(
                 services => services.AddSingleton(options)
@@ -163,7 +163,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             const string agvId = "Agv#1";
             const string mapId = "Map#1";
             var correlationId = agvId.ToGuid();
-            var graph = new GridGraphGenerator(new[] { "S1" }, new[] { "D1" }).Generate(correlationId);
+            var graph = new GridGraphGenerator(new[] {"S1"}, new[] {"D1"}).Generate(correlationId);
             var map = new MapGenerator(graph).Generate();
 
             // Create saga in idle state with agv map
@@ -189,8 +189,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             var options = new SimulateOptions()
             {
                 Agvs = 1,
-                Sources = new[] { "S1" },
-                Destinations = new[] { "D1" }
+                Sources = new[] {"S1"},
+                Destinations = new[] {"D1"}
             };
             var fixture = new StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(
                 services => services.AddSingleton(options)
@@ -219,8 +219,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             var options = new SimulateOptions()
             {
                 Agvs = 1,
-                Sources = new[] { "S1" },
-                Destinations = new[] { "D1" }
+                Sources = new[] {"S1"},
+                Destinations = new[] {"D1"}
             };
             // ReSharper disable once UseObjectOrCollectionInitializer
             var fixture = new StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(
@@ -234,8 +234,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             const string agvId = "Agv#1";
             var agv = agvId.ToGuid();
             const string orderId = "Order#1";
-            var orderCorrelationId = orderId.ToGuid();
             var actionId = Guid.NewGuid();
+            var actionGroupId = Guid.Empty;
             string source = "S1";
             string destination = "D1";
             /*   S1 (5.0/2.5)
@@ -243,7 +243,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
              *   WP (5.0/5.0)
              *    |
              *   D1 (5.0/7,5)   */
-            var graph = new GridGraphGenerator(new[] { source }, new[] { destination }, gridRows: 1).Generate(agv);
+            var graph = new GridGraphGenerator(new[] {source}, new[] {destination}, gridRows: 1).Generate(agv);
             //   S1 -> WP -> D1
             string[] path =
             {
@@ -253,7 +253,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             };
             var data = new AgvData(agv, "model", "type", null, 10, 1, 1, 1, 1, 1, 1, 1, Array.Empty<AgvData.Sensor>());
             // Travel duration per edge will be set about twice of the position message interval.
-            int nodeTravelTime = (int)(2f * fixture.Machine.SignalPositionIntervalMs);
+            int nodeTravelTime = (int) (2f * fixture.Machine.SignalPositionIntervalMs);
 
             // Create saga in idle state
             var agvSaga = new SimulatedAgvSaga(agv, agvId, nodeTravelTime, InitialBatteryCharge, currentState: nameof(SimulatedAgvStateMachine.Idle), agvGraph: graph, agvData: data);
@@ -264,12 +264,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             agvSaga.NextNodeId.ShouldBeNull();
 
             // Start action: Publish StartActionCommand ...
-            await fixture.TestHarness.Bus.Publish(new StartActionCommand(agv,
-                new AgvAction(actionId, agvId, ActionType.Drop, orderId, orderCorrelationId, destination)
+            await fixture.TestHarness.Bus.Publish(new StartActionCommand(agv, agvId, orderId,
+                new AgvAction(actionId, ActionType.Drop, destination, actionGroupId)
                 {
                     Nodes = path
-                }
-            ));
+                }));
 
             // ... wait for being consumed ...
             (await fixture.SagaHarness.Consumed.Any<StartActionCommand>()).ShouldBeTrue();
@@ -327,8 +326,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             var options = new SimulateOptions()
             {
                 Agvs = 1,
-                Sources = new[] { "S1" },
-                Destinations = new[] { "D1" },
+                Sources = new[] {"S1"},
+                Destinations = new[] {"D1"},
                 NodeTravelTime = 500
             };
             var fixture = new StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(
@@ -368,8 +367,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             var options = new SimulateOptions()
             {
                 Agvs = 1,
-                Sources = new[] { "S1" },
-                Destinations = new[] { "D1" },
+                Sources = new[] {"S1"},
+                Destinations = new[] {"D1"},
                 NodeTravelTime = 500
             };
             var fixture = new StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(

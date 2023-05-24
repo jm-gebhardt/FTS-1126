@@ -63,6 +63,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.States
             AgvGraph.Usability == AgvGraph.GraphUsability.Valid &&
             IsOnline;
 
+        /// <inheritdoc />
+        public DateTime TimeOfStateTransition { get; set; }
+
+        /// <inheritdoc />
+        public DateTime TimeOfLockStateChanged { get; set; }
+
         /// <summary>
         /// Default constructor required to connect.
         /// </summary>
