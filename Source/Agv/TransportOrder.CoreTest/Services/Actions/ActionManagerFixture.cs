@@ -77,7 +77,7 @@ public class ActionManagerFixture
 
     public ActionManagerFixture AddAssignedActionGroupAndAgv(ActionGroup actionGroup, IAgv agv, AgvAction? action = null)
     {
-        actionGroup.AssignAgvToActionGroup(agv);
+        actionGroup.Assign(agv);
         if (action != null)
         {
             AddAction(action);

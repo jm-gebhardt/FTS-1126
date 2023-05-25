@@ -144,7 +144,7 @@ public class EfActionGroupRegistry : IActionGroupRegistry
         var actionToUpdate = actionGroup.Actions.Single(a => a.CorrelationId == action.CorrelationId);
         context.Entry(actionToUpdate).CurrentValues.SetValues(action);
 
-        actionGroup.AssignAgvToActionGroup(agv);
+        actionGroup.Assign(agv);
         actionGroup.UpdateActionGroupState();
 
         await context.SaveChangesAsync();
