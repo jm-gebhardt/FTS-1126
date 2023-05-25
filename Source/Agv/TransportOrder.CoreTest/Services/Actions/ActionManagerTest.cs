@@ -24,7 +24,7 @@ public class ActionManagerTest
             .WithAgvCarryingLoad(agv);
 
         await fixture.ActionManager.AssignExclusivelyAsync(agv);
-        fixture.VerifyActionStarted(agv, subsequentAction, actionGroup.OrderId);
+        fixture.VerifyActionStarted(agv, subsequentAction);
     }
 
     [TestMethod]
@@ -42,7 +42,7 @@ public class ActionManagerTest
             .WithAgvMaintenanceRequested(agv);
 
         await fixture.ActionManager.AssignExclusivelyAsync(agv);
-        fixture.VerifyActionStarted(agv, subsequentAction, actionGroup.OrderId);
+        fixture.VerifyActionStarted(agv, subsequentAction);
     }
 
     [TestMethod]
@@ -62,7 +62,7 @@ public class ActionManagerTest
             .WithAgvHasRouteToDestination(agv);
 
         await fixture.ActionManager.AssignExclusivelyAsync(agv);
-        fixture.VerifyActionStarted(agv, subsequentAction, actionGroup.OrderId);
+        fixture.VerifyActionStarted(agv, subsequentAction);
     }
 
     [TestMethod]
@@ -79,7 +79,7 @@ public class ActionManagerTest
             .WithAgvCarryingLoad(agv);
 
         await fixture.ActionManager.AssignExclusivelyAsync(agv);
-        fixture.VerifyActionStarted(agv, subsequentAction, actionGroup.OrderId);
+        fixture.VerifyActionStarted(agv, subsequentAction);
     }
 
     [TestMethod]
@@ -96,7 +96,7 @@ public class ActionManagerTest
             .WithAgvCarryingLoad(agv);
 
         await fixture.ActionManager.AssignExclusivelyAsync(agv);
-        fixture.VerifyActionStarted(agv, subsequentAction, actionGroup.OrderId);
+        fixture.VerifyActionStarted(agv, subsequentAction);
     }
 
     [TestMethod]
@@ -131,7 +131,7 @@ public class ActionManagerTest
             .WithAgvCanGetNewLoad(agv);
 
         await fixture.ActionManager.AssignExclusivelyAsync(agv, cancellationToken: CancellationToken.None);
-        fixture.VerifyActionStarted(agv, firstAction, actionGroup.OrderId);
+        fixture.VerifyActionStarted(agv, firstAction);
     }
 
     [TestMethod]
@@ -242,7 +242,7 @@ public class ActionManagerTest
             .WithAgvCanGetNewLoad(agv);
 
         await fixture.ActionManager.AssignExclusivelyAsync(agv, ignoreChargingFlag: true, cancellationToken: CancellationToken.None);
-        fixture.VerifyActionStarted(agv, firstAction, actionGroup.OrderId);
+        fixture.VerifyActionStarted(agv, firstAction);
     }
 
     [TestMethod]
@@ -359,7 +359,7 @@ public class ActionManagerTest
             .ChooseNextAgv(agv, actionGroup);
 
         await fixture.ActionManager.AddActionGroupAsync(actionGroup, CancellationToken.None);
-        fixture.VerifyActionStarted(agv, subsequentAction, actionGroup.OrderId);
+        fixture.VerifyActionStarted(agv, subsequentAction);
     }
 
     [TestMethod]
@@ -408,7 +408,7 @@ public class ActionManagerTest
             .ChooseNextAgv(agv0, actionGroup);
 
         await fixture.ActionManager.AddActionGroupAsync(actionGroup, CancellationToken.None);
-        fixture.VerifyActionStarted(a => a == agv0, a => a == firstAction, actionGroup.OrderId);
+        fixture.VerifyActionStarted(a => a == agv0, a => a == firstAction);
     }
 
     [TestMethod]
@@ -429,6 +429,6 @@ public class ActionManagerTest
             .ChooseNextAgv(agv1, actionGroup);
 
         await fixture.ActionManager.AddActionGroupAsync(actionGroup, CancellationToken.None);
-        fixture.VerifyActionStarted(a => a == agv1, a => a == firstAction, actionGroup.OrderId);
+        fixture.VerifyActionStarted(a => a == agv1, a => a == firstAction);
     }
 }

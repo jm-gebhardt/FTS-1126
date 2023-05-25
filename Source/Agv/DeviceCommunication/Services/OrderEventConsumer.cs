@@ -1,4 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
+using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Microsoft.Extensions.Logging;
 using JetBrains.Annotations;
 using MassTransit;
@@ -31,33 +32,30 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
             var message = context.Message;
             _logger.LogInformation("Received {MessageType}.{OrderEventType} for {OrderId}", nameof(MqttOrderEvent), message.OrderEventType, message.OrderId);
 
-            // Splitting OrderId string composed of two parts: [ActionGuid]<space>[OrderId]
-            // Incoming from <see cref="StartActionCommandConsumer"/>
-            // Temporary solution
-            var actionId = new Guid(message.OrderId.Split(" ")[0]);
-            string parentId = message.OrderId.Split(" ")[1];
+            var actionId = message.OrderId.ToGuid();
 
             switch (message.OrderEventType)
             {
                 case OrderEventType.Started:
-                    await context.Publish(new ActionStartedEvent(actionId, parentId));
+                    await context.Publish(new ActionStartedEvent(actionId));
                     break;
 
                 case OrderEventType.Completed:
-                    await context.Publish(new ActionCompletedEvent(actionId, parentId));
+                    await context.Publish(new ActionCompletedEvent(actionId));
                     break;
 
                 case OrderEventType.Cancelled:
-                    await context.Publish(new ActionCancelledEvent(actionId, parentId));
+                    await context.Publish(new ActionCancelledEvent(actionId));
                     break;
 
                 case OrderEventType.CancelFailed:
-                    await context.Publish(new ActionCancelFailedEvent(actionId, parentId));
+                    await context.Publish(new ActionCancelFailedEvent(actionId));
                     break;
 
                 case OrderEventType.Failed:
-                    await context.Publish(new ActionFailedEvent(actionId, parentId));
+                    await context.Publish(new ActionFailedEvent(actionId));
                     break;
+
                 default:
                     throw new ArgumentOutOfRangeException($"Undefined OrderEventType {message.OrderEventType} for {message.OrderId}");
             }

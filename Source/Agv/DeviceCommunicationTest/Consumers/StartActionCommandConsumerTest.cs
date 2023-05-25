@@ -48,7 +48,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
 
                 var action = new AgvAction(actionCorrelationId, ActionType.Pick, toStationId, orderCorrelationId);
                 var correlationId = Guid.NewGuid();
-                var message = new StartActionCommand(correlationId, agvId, orderId, action);
+                var message = new StartActionCommand(correlationId, agvId, action);
 
                 // Publish ExecuteTransportOrder
                 await fixture.TestHarness.Bus.Publish(message);
@@ -95,7 +95,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         {
             var fixture = new MassTransitTestFixture<StartActionCommandConsumer>(s => { s.AddTransient<IAgvRegistry>(_ => Mock.Of<IAgvRegistry>()); });
             var action = new AgvAction(Guid.Empty, ActionType.Pick, string.Empty, Guid.Empty);
-            await fixture.TestHarness!.Bus.Publish(new StartActionCommand(Guid.Empty, "", "orderId", action));
+            await fixture.TestHarness!.Bus.Publish(new StartActionCommand(Guid.Empty, "", action));
             (await fixture.TestHarness.Consumed.Any<StartActionCommand>()).ShouldBeTrue();
             (await fixture.TestHarness.Published.Any<Fault<StartActionCommand>>()).ShouldBeTrue();
 

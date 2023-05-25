@@ -44,7 +44,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
         /// <summary>
         /// List of actions
         /// </summary>
-        public ICollection<AgvAction> Actions { get; init; } = new List<AgvAction>();
+        public ICollection<AgvAction> Actions { get; init; }
 
         /// <summary>
         /// Generating an instance of <see cref="ActionGroup"/>
@@ -70,6 +70,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
         {
             CorrelationId = correlationId;
             OrderId = orderId;
+            Actions = new List<AgvAction>();
         }
 
         /// <summary>
@@ -78,6 +79,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
         public ActionGroup()
         {
             OrderId = "";
+            Actions = new List<AgvAction>();
         }
     }
 }

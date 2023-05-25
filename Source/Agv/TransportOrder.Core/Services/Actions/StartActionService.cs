@@ -21,13 +21,13 @@ public class StartActionService : IStartActionService
 
     /// <inheritdoc />
     /// <exception cref="ArgumentNullException"></exception>
-    public async Task StartAction(IAgv agv, AgvAction action, string orderId, CancellationToken cancellationToken)
+    public async Task StartAction(IAgv agv, AgvAction action, CancellationToken cancellationToken)
     {
         if (action.Nodes == null || !action.Nodes.Any())
         {
             throw new ArgumentNullException(nameof(action.Nodes));
         }
 
-        await _bus.Publish(new StartActionCommand(agv.CorrelationId, agv.AgvId, orderId, action), cancellationToken);
+        await _bus.Publish(new StartActionCommand(agv.CorrelationId, agv.AgvId, action), cancellationToken);
     }
 }

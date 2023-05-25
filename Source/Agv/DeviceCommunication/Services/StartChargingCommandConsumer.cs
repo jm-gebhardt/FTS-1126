@@ -81,8 +81,8 @@ public class StartChargingCommandConsumer : IConsumer<StartChargingCommand>
             lastNodeId,
             Guid.Empty);
 
-        await context.Publish(new StartActionCommand(agvCorrelationId, agvId, "charge", chargeAction));
-        await context.Publish(new ActionStartedEvent(chargeAction.CorrelationId, string.Empty));
+        await context.Publish(new StartActionCommand(agvCorrelationId, agvId, chargeAction));
+        await context.Publish(new ActionStartedEvent(chargeAction.CorrelationId));
         await context.RespondAsync(new BaseResult());
         // TODO: We must lead this request through the ActionManager. It's not allowed to create actions outside!
     }

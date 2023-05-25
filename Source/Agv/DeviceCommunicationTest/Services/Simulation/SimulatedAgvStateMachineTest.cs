@@ -233,7 +233,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
 
             const string agvId = "Agv#1";
             var agv = agvId.ToGuid();
-            const string orderId = "Order#1";
             var actionId = Guid.NewGuid();
             var actionGroupId = Guid.Empty;
             string source = "S1";
@@ -264,7 +263,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             agvSaga.NextNodeId.ShouldBeNull();
 
             // Start action: Publish StartActionCommand ...
-            await fixture.TestHarness.Bus.Publish(new StartActionCommand(agv, agvId, orderId,
+            await fixture.TestHarness.Bus.Publish(new StartActionCommand(agv, agvId,
                 new AgvAction(actionId, ActionType.Drop, destination, actionGroupId)
                 {
                     Nodes = path
