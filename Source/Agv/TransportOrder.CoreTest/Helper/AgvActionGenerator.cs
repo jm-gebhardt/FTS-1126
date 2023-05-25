@@ -10,14 +10,22 @@ public static class AgvActionGenerator
         return dropAction;
     }
 
-    public static AgvAction GenerateChargeAction(string? targetNodeId = null, Guid? parentId = null)
+    public static ActionGroup GenerateChargeActionGroup(string? targetNodeId = null)
     {
-        var chargeAction = new AgvAction(Guid.NewGuid(), ActionType.Charge, targetNodeId ?? "Charge-1", parentId ?? Guid.NewGuid());
+        const string orderId = "charge";
+        var groupId = Guid.NewGuid();
+        var chargeAction = new AgvAction(Guid.NewGuid(), ActionType.Charge, targetNodeId ?? "Charge-1", groupId);
         if (targetNodeId != null)
         {
             chargeAction.Nodes = new[] {targetNodeId};
         }
-        return chargeAction;
+
+        var actionGroup = new ActionGroup(groupId, orderId, new List<AgvAction> {chargeAction})
+        {
+            State = ActionGroupState.Created
+        };
+
+        return actionGroup;
     }
 
     public static AgvAction GenerateMaintenanceAction(string? targetNodeId = null, Guid? parentId = null)
@@ -55,7 +63,7 @@ public static class AgvActionGenerator
         {
             Sequence = 1
         };
-        
+
         var actionGroup = new ActionGroup(groupId, orderId, new List<AgvAction> {pickAction, dropAction})
         {
             State = actionGroupState

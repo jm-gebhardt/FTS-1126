@@ -147,8 +147,7 @@ public class EfActionGroupRegistry : IActionGroupRegistry
         action.UpdateActionState(state);
         
         var actionToUpdate = actionGroup.Actions.Single(a => a.CorrelationId == action.CorrelationId);
-        actionGroup.Actions.Remove(actionToUpdate);
-        actionGroup.Actions.Add(action);
+        context.Entry(actionToUpdate).CurrentValues.SetValues(action);
 
         actionGroup.AssignAgvToActionGroup(agv);
         actionGroup.UpdateActionGroupState();

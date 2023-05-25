@@ -2,6 +2,7 @@ using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
+using Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Helper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
@@ -19,8 +20,8 @@ public class AgvStateConsumerTest
     public async Task ReceiveStatusMessage_WithInvalidContent_NoMessageSend()
     {
         var fixture = new AgvStateConsumerTestFixture()
-                    .UseDefaultServices()
-                    .Build();
+            .UseDefaultServices()
+            .Build();
         await fixture.TestHarness.Bus.PublishMqtt(new MqttState("", ""), null);
 
         (await fixture.TestHarness.Published.Any<AgvStatusReceived>()).ShouldBeFalse();
@@ -128,8 +129,12 @@ public class AgvStateConsumerTest
     public async Task ReceiveMqttState_ChargingStateExamination_AgvStoppedCharging_Sent()
     {
         // Arrange
-        var fixture = new AgvStateConsumerTestFixture().UseDefaultServices().Build();
-        
+        string serialNumber = "AGV003";
+        var fixture = new AgvStateConsumerTestFixture()
+            .UseDefaultServices()
+            .WithAgvInformation(AgvInformationGenerator.GetAgvInformation(2, agvCorrelationId: serialNumber.ToGuid()))
+            .Build();
+
         const string orderId = "Order123";
         var batteryState = new BatteryState
         {
@@ -137,7 +142,7 @@ public class AgvStateConsumerTest
         };
 
         // Act
-        await fixture.TestHarness.Bus.PublishMqtt(new MqttState("AGV003", orderId)      // Initially, AGV003 has _chargingState = true
+        await fixture.TestHarness.Bus.PublishMqtt(new MqttState(serialNumber, orderId) // Initially, AGV003 has _chargingState = true
         {
             BatteryState = batteryState
         }, null);
@@ -155,7 +160,11 @@ public class AgvStateConsumerTest
     public async Task ReceiveMqttState_ChargingStateExamination_AgvStartedCharging_Sent()
     {
         // Arrange
-        var fixture = new AgvStateConsumerTestFixture().UseDefaultServices().Build();
+        string serialNumber = "AGV002";
+        var fixture = new AgvStateConsumerTestFixture()
+            .UseDefaultServices()
+            .WithAgvInformation(AgvInformationGenerator.GetAgvInformation(agvCorrelationId: serialNumber.ToGuid()))
+            .Build();
 
         const string orderId = "Order123";
         var batteryState = new BatteryState
@@ -163,8 +172,7 @@ public class AgvStateConsumerTest
             Charging = true
         };
 
-        // Act
-        await fixture.TestHarness.Bus.PublishMqtt(new MqttState("AGV002", orderId)      // Initially, AGV002 has _chargingState = false
+        await fixture.TestHarness.Bus.PublishMqtt(new MqttState(serialNumber, orderId) // Initially, AGV002 has _chargingState = false
         {
             BatteryState = batteryState
         }, null);

@@ -2,6 +2,7 @@ using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
+using Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Helper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
@@ -13,209 +14,167 @@ public class AgvRegistryTest
     private const string MapName = "Map#1";
 
     [TestMethod]
-    [DataRow("AGV001", "ORDER001", "Idle", "SRC1", false, 0)]
-    [DataRow("AGV002", "ORDER002", "Busy", "SRC2", false, 25)]
-    [DataRow("AGV003", "ORDER003", "Busy", "CRG2", true, 50)]
-    [DataRow("AGV004", "ORDER004", "Ready", "CRG1", false, 75)]
-    [DataRow("AGV005", "ORDER005", "Ready", "CRG3", false, 100)]
-    public void GetAgvStatusAndGraph_WhenCorrelationIdExists(string agvId, string expectedOrderId, string expectedState, string expectedLastNodeId, bool expectedIsCharging, int expectedBatteryCharge)
+    public void GetAgvStatusAndGraph_WhenCorrelationIdExists()
     {
-        var correlationId = agvId.ToGuid();
-        var actionCorrelationId = $"Action#{agvId}".ToGuid();    
-        var actionGroupId = Guid.Empty;
-        var testFixture = new AgvRegistryTestFixture();
-        var agvRegistry = testFixture.AgvRegistry;
-        var actualAgvInformation = agvRegistry.GetAgvInformation(agvId.ToGuid());
+        var agvInformation = AgvInformationGenerator.GetAgvInformation();
+        var agvCorrelationId = agvInformation.AgvStatusReceived!.AgvStatus.CorrelationId;
+        var fixture = new AgvRegistryTestFixture()
+            .WithAgvInformation(agvInformation);
+        var actualAgvInformation = fixture.AgvRegistry.GetAgvInformation(agvCorrelationId);
 
-        var expectedAgvStatus = AgvRegistryTestFixture.GetAgvStatusReceived(new AgvStatus(correlationId, expectedOrderId, expectedState == "Busy", true, expectedBatteryCharge, expectedIsCharging, false, expectedLastNodeId));
-        var expectedAgvGraph = new AgvGraph(correlationId, actualAgvInformation!.AgvGraph!.Nodes, actualAgvInformation.AgvGraph.Edges, MapName.ToGuid(), MapName);
-        var expectedAgvAction = new AgvAction(actionCorrelationId, ActionType.Pick, "Drop5", actionGroupId);
-        var expectedAgvInformation = new AgvInformation {AgvStatusReceived = expectedAgvStatus, AgvGraph = expectedAgvGraph, AgvAction = expectedAgvAction};
-
-        actualAgvInformation.ShouldNotBeNull();
-        expectedAgvInformation.ShouldNotBeNull();
-        TestCompareAgvStatusAndGraph(actualAgvInformation, expectedAgvInformation);
+        VerifyAgvInformation(actualAgvInformation, agvInformation);
     }
 
     [TestMethod]
     public void GetAgvInformation_WhenCorrelationIdDoesNotExists_ReturnsNull()
     {
         var correlationId = Guid.NewGuid();
-        var agvRegistry = new AgvRegistryTestFixture().AgvRegistry;
-        var actualAgvInformation = agvRegistry.GetAgvInformation(correlationId);
+        var fixture = new AgvRegistryTestFixture();
+        var actualAgvInformation = fixture.AgvRegistry.GetAgvInformation(correlationId);
         actualAgvInformation.ShouldBeNull();
     }
 
     [TestMethod]
-    [DataRow("AGV001")]
-    [DataRow("AGV002")]
-    [DataRow("AGV003")]
-    [DataRow("AGV004")]
-    public void AddOrUpdate_WhenCorrelationIdExists_SuccessfullyUpdateEntry(string agvId)
+    public void AddOrUpdate_WhenCorrelationIdExists_SuccessfullyUpdateEntry()
     {
-        var correlationId = agvId.ToGuid();
-        var testFixture = new AgvRegistryTestFixture();
-        var agvRegistry = testFixture.AgvRegistry;
-        var actionGroupId = Guid.Empty;
-        agvRegistry.GetAgvInformation(correlationId).ShouldNotBeNull();
+        var agvInformation = AgvInformationGenerator.GetAgvInformation();
+        var agvCorrelationId = agvInformation.AgvStatusReceived!.AgvStatus.CorrelationId;
+        var fixture = new AgvRegistryTestFixture()
+            .WithAgvInformation(agvInformation);
+        var actualAgvInformation = fixture.AgvRegistry.GetAgvInformation(agvCorrelationId);
 
-        var agvStatus = AgvRegistryTestFixture.GetAgvStatusReceived(new AgvStatus(correlationId, null, false, true, 99, false, false, "CRG5"));
-        var agvGraph = new AgvGraph(correlationId, Array.Empty<AgvGraph.Node>(), Array.Empty<AgvGraph.Edge>(), MapName.ToGuid(), MapName);
-        var agvAction = new AgvAction($"Action#{agvId}".ToGuid(), ActionType.Move, "Pick88", actionGroupId);
-        var testAgvInformation = new AgvInformation {AgvStatusReceived = agvStatus, AgvGraph = agvGraph, AgvAction = agvAction};
-        agvRegistry.AddOrUpdate(correlationId, testAgvInformation);
+        VerifyAgvInformation(actualAgvInformation, agvInformation);
+        var agvStatus = new AgvStatus(agvCorrelationId, null, false, true, 99, false, false, "CRG5");
+        var agvGraph = new AgvGraph(agvCorrelationId, Array.Empty<AgvGraph.Node>(), Array.Empty<AgvGraph.Edge>(), MapName.ToGuid(), MapName);
+        var agvAction = new AgvAction($"Action#123".ToGuid(), ActionType.Move, "Pick88", Guid.Empty);
+        agvInformation = AgvInformationGenerator.GetAgvInformation(agvStatus, agvGraph, agvAction);
 
-        var actualAgvInformation = agvRegistry.GetAgvInformation(correlationId);
-        actualAgvInformation.ShouldNotBeNull();
-        TestCompareAgvStatusAndGraph(actualAgvInformation, testAgvInformation);
+        fixture.AgvRegistry.AddOrUpdate(agvCorrelationId, agvInformation);
+        actualAgvInformation = fixture.AgvRegistry.GetAgvInformation(agvCorrelationId);
+        VerifyAgvInformation(actualAgvInformation, agvInformation);
     }
 
     [TestMethod]
     public void AddOrUpdate_WhenCorrelationIdDoestNotExists_SuccessfullyAddEntry()
     {
-        var correlationId = Guid.NewGuid();
-        var testFixture = new AgvRegistryTestFixture();
-        var agvRegistry = testFixture.AgvRegistry;
-        var actionGroupId = Guid.Empty;
-        agvRegistry.GetAgvInformation(correlationId).ShouldBeNull();
+        var agvInformation = AgvInformationGenerator.GetAgvInformation();
+        var agvCorrelationId = agvInformation.AgvStatusReceived!.AgvStatus.CorrelationId;
+        var fixture = new AgvRegistryTestFixture();
 
-        var agvStatus = AgvRegistryTestFixture.GetAgvStatusReceived(new AgvStatus(correlationId, null, false, true, 99, false, false, "CRG5"));
-        var agvGraph = new AgvGraph(correlationId, Array.Empty<AgvGraph.Node>(), Array.Empty<AgvGraph.Edge>(), MapName.ToGuid(), MapName);
-        var agvAction = new AgvAction($"Action#{correlationId}".ToGuid(), ActionType.Move, "Pick88", actionGroupId);
-        var testAgvInformation = new AgvInformation {AgvStatusReceived = agvStatus, AgvGraph = agvGraph, AgvAction = agvAction};
-        agvRegistry.AddOrUpdate(correlationId, testAgvInformation);
-
-        var actualAgvInformation = agvRegistry.GetAgvInformation(correlationId);
+        fixture.AgvRegistry.AddOrUpdate(agvCorrelationId, agvInformation);
+        var actualAgvInformation = fixture.AgvRegistry.GetAgvInformation(agvCorrelationId);
         actualAgvInformation.ShouldNotBeNull();
-        TestCompareAgvStatusAndGraph(actualAgvInformation, testAgvInformation);
+        VerifyAgvInformation(actualAgvInformation, agvInformation);
     }
 
     [TestMethod]
-    [DataRow("AGV001")]
-    [DataRow("AGV002")]
-    [DataRow("AGV003")]
-    [DataRow("AGV004")]
-    public void AddOrUpdateAgvStatus_WhenCorrelationIdExist_SuccessfullyUpdateEntry(string agvId)
+    public void AddOrUpdateAgvStatus_WhenCorrelationIdExist_SuccessfullyUpdateEntry()
     {
-        var correlationId = agvId.ToGuid();
-        var testFixture = new AgvRegistryTestFixture();
-        var agvRegistry = testFixture.AgvRegistry;
-        var agvInformation = agvRegistry.GetAgvInformation(correlationId);
-        agvInformation.ShouldNotBeNull();
+        var agvInformation = AgvInformationGenerator.GetAgvInformation();
+        var agvCorrelationId = agvInformation.AgvStatusReceived!.AgvStatus.CorrelationId;
+        var fixture = new AgvRegistryTestFixture()
+            .WithAgvInformation(agvInformation);
+        var actualAgvInformation = fixture.AgvRegistry.GetAgvInformation(agvCorrelationId);
 
-        var agvStatus = new AgvStatus(correlationId, null, false, true, 89, false, false, "CRG6");
-        var agvStatusReceived = AgvRegistryTestFixture.GetAgvStatusReceived(agvStatus);
-        var expectedAgvInformation = agvInformation with {AgvStatusReceived = agvStatusReceived};
-        agvRegistry.AddOrUpdateAgvStatus(correlationId, agvStatusReceived!);
+        VerifyAgvInformation(actualAgvInformation, agvInformation);
+        var agvStatus = new AgvStatus(agvCorrelationId, null, false, true, 89, false, false, "CRG6");
+        var agvStatusReceived = AgvInformationGenerator.GetAgvStatusReceived(agvStatus);
 
-        var actualAgvInformation = agvRegistry.GetAgvInformation(correlationId);
-        actualAgvInformation.ShouldNotBeNull();
-        TestCompareAgvStatusAndGraph(actualAgvInformation, expectedAgvInformation);
+        fixture.AgvRegistry.AddOrUpdateAgvStatus(agvCorrelationId, agvStatusReceived!);
+        actualAgvInformation = fixture.AgvRegistry.GetAgvInformation(agvCorrelationId);
+        VerifyAgvInformation(actualAgvInformation, agvInformation);
     }
 
     [TestMethod]
     public void AddOrUpdateAgvStatus_WhenCorrelationIdDoesNotExist_SuccessfullyAddEntry()
     {
-        var correlationId = Guid.NewGuid();
-        var testFixture = new AgvRegistryTestFixture();
-        var agvRegistry = testFixture.AgvRegistry;
-        var agvInformation = agvRegistry.GetAgvInformation(correlationId);
-        agvInformation.ShouldBeNull();
+        var agvInformation = AgvInformationGenerator.GetAgvInformation();
+        var agvCorrelationId = agvInformation.AgvStatusReceived!.AgvStatus.CorrelationId;
+        var fixture = new AgvRegistryTestFixture();
+        var actualAgvInformation = fixture.AgvRegistry.GetAgvInformation(agvCorrelationId);
+        actualAgvInformation.ShouldBeNull();
 
-        var agvStatus = new AgvStatus(correlationId, null, false, true, 89, false, false, "CRG6");
-        var agvStatusReceived = AgvRegistryTestFixture.GetAgvStatusReceived(agvStatus);
-        var expectedAgvInformation = new AgvInformation {AgvStatusReceived = agvStatusReceived, AgvGraph = agvInformation?.AgvGraph, AgvAction = agvInformation?.AgvAction};
-        agvRegistry.AddOrUpdateAgvStatus(correlationId, agvStatusReceived!);
+        var agvStatus = new AgvStatus(agvCorrelationId, null, false, true, 89, false, false, "CRG6");
+        var agvStatusReceived = AgvInformationGenerator.GetAgvStatusReceived(agvStatus);
 
-        var actualAgvInformation = agvRegistry.GetAgvInformation(correlationId);
+        fixture.AgvRegistry.AddOrUpdateAgvStatus(agvCorrelationId, agvStatusReceived!);
+        actualAgvInformation = fixture.AgvRegistry.GetAgvInformation(agvCorrelationId);
         actualAgvInformation.ShouldNotBeNull();
-        TestCompareAgvStatusAndGraph(actualAgvInformation, expectedAgvInformation);
+        actualAgvInformation.AgvStatusReceived.ShouldBe(agvStatusReceived);
     }
 
     [TestMethod]
-    [DataRow("AGV001")]
-    [DataRow("AGV002")]
-    [DataRow("AGV003")]
-    [DataRow("AGV004")]
-    public void AddOrUpdateAgvGraph_WhenCorrelationIdExists_SuccessfullyUpdateEntry(string agvId)
+    public void AddOrUpdateAgvGraph_WhenCorrelationIdExists_SuccessfullyUpdateEntry()
     {
-        var correlationId = agvId.ToGuid();
-        var agvRegistry = new AgvRegistryTestFixture().AgvRegistry;
-        var agvInformation = agvRegistry.GetAgvInformation(correlationId);
-        agvInformation.ShouldNotBeNull();
+        var agvInformation = AgvInformationGenerator.GetAgvInformation();
+        var agvCorrelationId = agvInformation.AgvStatusReceived!.AgvStatus.CorrelationId;
+        var fixture = new AgvRegistryTestFixture()
+            .WithAgvInformation(agvInformation);
+        var actualAgvInformation = fixture.AgvRegistry.GetAgvInformation(agvCorrelationId);
 
-        var testAgvGraph = new AgvGraph(correlationId, Array.Empty<AgvGraph.Node>(), Array.Empty<AgvGraph.Edge>(), MapName.ToGuid(), MapName);
-        var expectedAgvInformation = agvInformation with {AgvGraph = testAgvGraph};
-        agvRegistry.AddOrUpdateAgvGraph(correlationId, testAgvGraph);
+        VerifyAgvInformation(actualAgvInformation, agvInformation);
+        var testAgvGraph = new AgvGraph(agvCorrelationId, Array.Empty<AgvGraph.Node>(), Array.Empty<AgvGraph.Edge>(), MapName.ToGuid(), MapName);
 
-        var actualAgvInformation = agvRegistry.GetAgvInformation(correlationId);
-        actualAgvInformation.ShouldNotBeNull();
-        TestCompareAgvStatusAndGraph(actualAgvInformation, expectedAgvInformation);
+        fixture.AgvRegistry.AddOrUpdateAgvGraph(agvCorrelationId, testAgvGraph);
+        actualAgvInformation = fixture.AgvRegistry.GetAgvInformation(agvCorrelationId);
+        VerifyAgvInformation(actualAgvInformation, agvInformation);
     }
 
     [TestMethod]
     public void AddOrUpdateAgvGraph_WhenCorrelationIdDoesNotExist_SuccessfullyAddEntry()
     {
-        var correlationId = Guid.NewGuid();
-        var agvRegistry = new AgvRegistryTestFixture().AgvRegistry;
-        var agvInformation = agvRegistry.GetAgvInformation(correlationId);
-        agvInformation.ShouldBeNull();
+        var agvInformation = AgvInformationGenerator.GetAgvInformation();
+        var agvCorrelationId = agvInformation.AgvStatusReceived!.AgvStatus.CorrelationId;
+        var agvGraph = agvInformation.AgvGraph!;
+        var fixture = new AgvRegistryTestFixture();
+        var actualAgvInformation = fixture.AgvRegistry.GetAgvInformation(agvCorrelationId);
+        actualAgvInformation.ShouldBeNull();
 
-        var testAgvGraph = new AgvGraph(correlationId, Array.Empty<AgvGraph.Node>(), Array.Empty<AgvGraph.Edge>(), MapName.ToGuid(), MapName);
-        var expectedAgvInformation = new AgvInformation {AgvStatusReceived = agvInformation?.AgvStatusReceived, AgvGraph = testAgvGraph, AgvAction = agvInformation?.AgvAction};
-        agvRegistry.AddOrUpdateAgvGraph(correlationId, testAgvGraph);
-
-        var actualAgvInformation = agvRegistry.GetAgvInformation(correlationId);
+        fixture.AgvRegistry.AddOrUpdateAgvGraph(agvCorrelationId, agvGraph);
+        actualAgvInformation = fixture.AgvRegistry.GetAgvInformation(agvCorrelationId);
         actualAgvInformation.ShouldNotBeNull();
-        TestCompareAgvStatusAndGraph(actualAgvInformation, expectedAgvInformation);
+        actualAgvInformation.AgvGraph.ShouldBe(agvGraph);
     }
 
     [TestMethod]
-    [DataRow("AGV001")]
-    [DataRow("AGV002")]
-    [DataRow("AGV003")]
-    [DataRow("AGV004")]
-    public void AddOrUpdateAgvAction_WhenCorrelationIdExist_SuccessfullyUpdateEntry(string agvId)
+    public void AddOrUpdateAgvAction_WhenCorrelationIdExist_SuccessfullyUpdateEntry()
     {
-        var correlationId = agvId.ToGuid();
-        var actionCorrelationId = Guid.NewGuid();
-        var agvRegistry = new AgvRegistryTestFixture().AgvRegistry;
-        var agvInformation = agvRegistry.GetAgvInformation(correlationId);
-        agvInformation.ShouldNotBeNull();
-        var actionGroupId = Guid.Empty;
+        var agvInformation = AgvInformationGenerator.GetAgvInformation();
+        var agvCorrelationId = agvInformation.AgvStatusReceived!.AgvStatus.CorrelationId;
+        var fixture = new AgvRegistryTestFixture()
+            .WithAgvInformation(agvInformation);
+        var actualAgvInformation = fixture.AgvRegistry.GetAgvInformation(agvCorrelationId);
 
-        var testAgvAction = new AgvAction(actionCorrelationId, ActionType.Drop, "Charge00", actionGroupId);
-        var expectedAgvInformation = agvInformation with {AgvAction = testAgvAction};
-        agvRegistry.AddOrUpdateAgvAction(correlationId, testAgvAction);
+        VerifyAgvInformation(actualAgvInformation, agvInformation);
+        var testAgvAction = new AgvAction(Guid.NewGuid(), ActionType.Drop, "Charge00", Guid.NewGuid());
 
-        var actualAgvInformation = agvRegistry.GetAgvInformation(correlationId);
-        actualAgvInformation.ShouldNotBeNull();
-        TestCompareAgvStatusAndGraph(actualAgvInformation, expectedAgvInformation);
+        fixture.AgvRegistry.AddOrUpdateAgvAction(agvCorrelationId, testAgvAction);
+        actualAgvInformation = fixture.AgvRegistry.GetAgvInformation(agvCorrelationId);
+        VerifyAgvInformation(actualAgvInformation, agvInformation);
     }
 
     [TestMethod]
     public void AddOrUpdateAgvAction_WhenCorrelationIdDoesNotExist_SuccessfullyAddEntry()
     {
-        var correlationId = Guid.NewGuid();
-        var actionCorrelationId = Guid.NewGuid();
-        var agvRegistry = new AgvRegistryTestFixture().AgvRegistry;
-        var agvInformation = agvRegistry.GetAgvInformation(correlationId);
-        var actionGroupId = Guid.Empty;
-        agvInformation.ShouldBeNull();
+        var agvCorrelationId = Guid.NewGuid();
+        var fixture = new AgvRegistryTestFixture();
+        var actualAgvInformation = fixture.AgvRegistry.GetAgvInformation(agvCorrelationId);
+        actualAgvInformation.ShouldBeNull();
 
-        var testAgvAction = new AgvAction(actionCorrelationId, ActionType.Drop, "Charge00", actionGroupId);
-        var expectedAgvInformation = new AgvInformation {AgvStatusReceived = agvInformation?.AgvStatusReceived, AgvGraph = agvInformation?.AgvGraph, AgvAction = testAgvAction};
-        agvRegistry.AddOrUpdateAgvAction(correlationId, testAgvAction);
+        var testAgvAction = new AgvAction(Guid.NewGuid(), ActionType.Drop, "Charge00", Guid.NewGuid());
 
-        var actualAgvInformation = agvRegistry.GetAgvInformation(correlationId);
+        fixture.AgvRegistry.AddOrUpdateAgvAction(agvCorrelationId, testAgvAction);
+        actualAgvInformation = fixture.AgvRegistry.GetAgvInformation(agvCorrelationId);
         actualAgvInformation.ShouldNotBeNull();
-        TestCompareAgvStatusAndGraph(actualAgvInformation, expectedAgvInformation);
+        actualAgvInformation.AgvAction.ShouldBe(testAgvAction);
     }
 
-    private static void TestCompareAgvStatusAndGraph(AgvInformation actualAgvInformation, AgvInformation expectedAgvInformation)
+    private static void VerifyAgvInformation(AgvInformation? actualAgvInformation, AgvInformation expectedAgvInformation)
     {
+        actualAgvInformation.ShouldNotBeNull();
+
         actualAgvInformation.AgvStatusReceived!.ShouldBe(expectedAgvInformation.AgvStatusReceived);
-        actualAgvInformation.AgvAction!.ShouldBe(expectedAgvInformation.AgvAction);
+        actualAgvInformation.AgvAction!.ShouldBeEquivalentTo(expectedAgvInformation.AgvAction);
 
         if (expectedAgvInformation.AgvGraph == null)
         {

@@ -53,6 +53,7 @@ public class ActionManagerFixture
     public ActionManagerFixture()
     {
         ActionGroupRegistry.Setup(x => x.GetNotStartedActionGroupsAsync()).ReturnsAsync(_notStartedActionGroups);
+        ActionGroupRegistry.Setup(x => x.InsertAsync(It.IsAny<ActionGroup>())).Callback((ActionGroup actionGroup) => { AddActionGroup(actionGroup); });
 
         ChargingService.Setup(x => x.GetChargingAgvsWithGoodBatteryLevel()).Returns(_chargingAgvsWithGoodBatteryLevel);
         AgvRegistry.Setup(x => x.GetAllAgvs()).Returns(_agvs.AsQueryable());
@@ -74,12 +75,15 @@ public class ActionManagerFixture
         );
     }
 
-    public ActionManagerFixture AddAssignedActionGroupAndAgv(ActionGroup actionGroup, AgvAction action, IAgv agv)
+    public ActionManagerFixture AddAssignedActionGroupAndAgv(ActionGroup actionGroup, IAgv agv, AgvAction? action = null)
     {
         actionGroup.AssignAgvToActionGroup(agv);
-        AddAction(action);
+        if (action != null)
+        {
+            AddAction(action);
+        }
         AddAgv(agv);
-        ActionGroupRegistry.Setup(x => x.GetRequiredActionGroupByIdAsync(action.ParentId)).ReturnsAsync(actionGroup);
+        AddActionGroup(actionGroup);
 
         return this;
     }
@@ -87,8 +91,6 @@ public class ActionManagerFixture
     // ReSharper disable once UnusedMethodReturnValue.Local
     private ActionManagerFixture AddAction(AgvAction action)
     {
-        ActionGroupRegistry.Setup(x => x.GetRequiredActionByIdAsync(action.CorrelationId)).ReturnsAsync(action);
-
         ActionGroupRegistry.Setup(x => x.GetActionByIdAsync(action.CorrelationId)).ReturnsAsync(action);
         ActionGroupRegistry.Setup(x => x.GetRequiredActionByIdAsync(action.CorrelationId)).ReturnsAsync(action);
         return this;
@@ -98,6 +100,13 @@ public class ActionManagerFixture
     private ActionManagerFixture AddAgv(IAgv agv)
     {
         AgvRegistry.Setup(x => x.GetRequiredAgv(agv.CorrelationId)).Returns(agv);
+        return this;
+    }
+
+    // ReSharper disable once UnusedMethodReturnValue.Local
+    private ActionManagerFixture AddActionGroup(ActionGroup actionGroup)
+    {
+        ActionGroupRegistry.Setup(x => x.GetRequiredActionGroupByIdAsync(actionGroup.CorrelationId)).ReturnsAsync(actionGroup);
         return this;
     }
 
@@ -176,21 +185,15 @@ public class ActionManagerFixture
     public ActionManagerFixture AddNotStartedActionGroup(ActionGroup actionGroup)
     {
         _notStartedActionGroups.Add(actionGroup);
+        AddActionGroup(actionGroup);
+
         return this;
     }
 
     public ActionManagerFixture SetSubsequentAction(IAgv agv, AgvAction subsequentAction)
     {
+        AddAction(subsequentAction);
         ActionGroupRegistry.Setup(x => x.GetSubsequentActionAsync(agv.CorrelationId)).ReturnsAsync(subsequentAction);
-        return this;
-    }
-
-    public ActionManagerFixture UpdateActionAndGroupState(ActionGroup actionGroup, AgvAction action, IAgv agv, ActionState state)
-    {
-        actionGroup.AssignAgvToActionGroup(agv);
-        var actionInGroup = actionGroup.Actions.First(x => x.CorrelationId == action.CorrelationId);
-        actionInGroup.State = state;
-        ActionGroupRegistry.Setup(x => x.GetRequiredActionGroupByIdAsync(actionGroup.CorrelationId)).ReturnsAsync(actionGroup);
         return this;
     }
 
@@ -230,4 +233,6 @@ public class ActionManagerFixture
     public void VerifyNoActionStarted() => StartActionService.Verify(sa => sa.StartAction(It.IsAny<IAgv>(), It.IsAny<AgvAction>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
 
     public void VerifyActionStarted(Expression<Func<IAgv, bool>> filterAgv, Expression<Func<AgvAction, bool>> filterAction, string orderId) => StartActionService.Verify(sa => sa.StartAction(It.Is(filterAgv), It.Is(filterAction), orderId, It.IsAny<CancellationToken>()), Times.Once);
+
+    public void VerifyActionStarted(Expression<Func<IAgv, bool>> filterAgv, Expression<Func<AgvAction, bool>> filterAction) => StartActionService.Verify(sa => sa.StartAction(It.Is(filterAgv), It.Is(filterAction), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
 }

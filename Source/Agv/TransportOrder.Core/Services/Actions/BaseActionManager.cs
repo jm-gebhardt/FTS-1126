@@ -206,6 +206,7 @@ public abstract class BaseActionManager : IActionManager
         {
             // release Agv in case of error
             await _agvStateService.SetIdleAsync(assignedAgv);
+            throw;
         }
     }
 
