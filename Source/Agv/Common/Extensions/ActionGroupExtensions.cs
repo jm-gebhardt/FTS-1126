@@ -58,6 +58,7 @@ public static class ActionGroupExtensions
     /// </summary>
     /// <param name="actionGroup"></param>
     /// <param name="agvToAssign"></param>
+    // ReSharper disable once UnusedMethodReturnValue.Global
     public static ActionGroup AssignAgvToActionGroup(this ActionGroup actionGroup, IAgv agvToAssign)
     {
         if (actionGroup.AssignedAgv == null)

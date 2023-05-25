@@ -4,12 +4,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 
 public static class AgvActionGenerator
 {
-    public static AgvAction GenerateDropAction(string? targetNodeId = null, Guid? parentId = null)
-    {
-        var dropAction = new AgvAction(Guid.NewGuid(), ActionType.Drop, targetNodeId ?? "Dest-1", parentId ?? Guid.NewGuid());
-        return dropAction;
-    }
-
     public static ActionGroup GenerateChargeActionGroup(string? targetNodeId = null)
     {
         const string orderId = "charge";
@@ -26,16 +20,6 @@ public static class AgvActionGenerator
         };
 
         return actionGroup;
-    }
-
-    public static AgvAction GenerateMaintenanceAction(string? targetNodeId = null, Guid? parentId = null)
-    {
-        var maintenanceAction = new AgvAction(Guid.NewGuid(), ActionType.Move, targetNodeId ?? "Mnt-1", parentId ?? Guid.NewGuid());
-        if (targetNodeId != null)
-        {
-            maintenanceAction.Nodes = new[] {targetNodeId};
-        }
-        return maintenanceAction;
     }
 
     public static AgvAction GenerateParkAction(string? targetNodeId = null, Guid? parentId = null)
@@ -68,25 +52,6 @@ public static class AgvActionGenerator
         {
             State = actionGroupState
         };
-
-        return actionGroup;
-    }
-
-    public static ActionGroup GenerateChargingActionGroup()
-    {
-        const string orderId = "orderId";
-        var groupId = Guid.NewGuid();
-
-        var chargingActionGuid = Guid.NewGuid();
-        var chargingAction = new AgvAction(chargingActionGuid, ActionType.Charge, "Src-1", groupId)
-        {
-            Sequence = 0
-        };
-        var parkAction = new AgvAction(chargingActionGuid, ActionType.Move, "Src-1", groupId)
-        {
-            Sequence = 1
-        };
-        var actionGroup = new ActionGroup(groupId, orderId, new List<AgvAction> {chargingAction, parkAction});
 
         return actionGroup;
     }

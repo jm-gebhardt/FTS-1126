@@ -46,7 +46,7 @@ public class AgvRegistryTest
         VerifyAgvInformation(actualAgvInformation, agvInformation);
         var agvStatus = new AgvStatus(agvCorrelationId, null, false, true, 99, false, false, "CRG5");
         var agvGraph = new AgvGraph(agvCorrelationId, Array.Empty<AgvGraph.Node>(), Array.Empty<AgvGraph.Edge>(), MapName.ToGuid(), MapName);
-        var agvAction = new AgvAction($"Action#123".ToGuid(), ActionType.Move, "Pick88", Guid.Empty);
+        var agvAction = new AgvAction("Action#123".ToGuid(), ActionType.Move, "Pick88", Guid.Empty);
         agvInformation = AgvInformationGenerator.GetAgvInformation(agvStatus, agvGraph, agvAction);
 
         fixture.AgvRegistry.AddOrUpdate(agvCorrelationId, agvInformation);
