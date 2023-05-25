@@ -54,7 +54,7 @@ public static class ActionGroupExtensions
     }
 
     /// <summary>
-    /// Sets the AssignedAgv of ActionGroup
+    /// Sets the AssignedAgv of ActionGroup if not already assigned
     /// </summary>
     /// <param name="actionGroup"></param>
     /// <param name="agvToAssign"></param>
