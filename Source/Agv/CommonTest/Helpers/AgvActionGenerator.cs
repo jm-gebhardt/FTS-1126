@@ -1,6 +1,6 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
+namespace Gebhardt.StoreWare.Agv.CommonTest.Helpers;
 
 public static class AgvActionGenerator
 {
@@ -54,5 +54,16 @@ public static class AgvActionGenerator
         };
 
         return actionGroup;
+    }
+
+    public static ActionGroup GenerateActionGroup(IList<AgvAction> actions, ActionGroupState actionGroupState = ActionGroupState.Created)
+    {
+        var groupId = Guid.NewGuid();
+        const string orderId = "orderId";
+        
+        return new ActionGroup(groupId, orderId, actions)
+        {
+            State = actionGroupState
+        };
     }
 }

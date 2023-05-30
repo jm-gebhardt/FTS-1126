@@ -31,6 +31,10 @@ public static class ActionGroupExtensions
         {
             actionGroup.State = ActionGroupState.Started;
         }
+        else
+        {
+            throw new ActionGroupStateInvalidException(actionGroup);
+        }
 
         SetDates(actionGroup, previousState);
     }

@@ -1,6 +1,6 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
+namespace Gebhardt.StoreWare.Agv.CommonTest.Helpers;
 
 public static class NodeGenerator
 {

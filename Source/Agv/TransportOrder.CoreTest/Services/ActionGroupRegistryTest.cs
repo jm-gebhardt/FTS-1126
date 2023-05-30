@@ -1,6 +1,7 @@
 using Gebhardt.StoreWare.Agv.Common.Exceptions;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
-using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
+using Gebhardt.StoreWare.Agv.CommonTest.Helpers;
+using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
@@ -70,7 +71,8 @@ public class ActionGroupRegistryTest
         await fixture.ActionGroupRegistry.InsertAsync(actionGroup);
         var actionGroupInRegistry = await fixture.ActionGroupRegistry.GetActionGroupAsync(actionGroup.CorrelationId);
 
-        actionGroupInRegistry.ShouldNotBeNull();
+        actionGroupInRegistry.ShouldNotBeNull();           
+        actionGroupInRegistry.Actions.ShouldNotBeEmpty();
         VerifyActionGroup(actionGroupInRegistry, actionGroup);
     }
 
@@ -95,12 +97,13 @@ public class ActionGroupRegistryTest
             .BuildAsync();
 
         IReadOnlyList<ActionGroup> actionGroupsResult = await fixture.ActionGroupRegistry.GetActionGroupsAsync(new List<ActionGroupState> { actionGroupState }, fromDate: null, toDate: null, maxItems: maxItem);
-
+        
         foreach (var actionGroupInRegistry in actionGroupsResult)
         {
             actionGroupInRegistry.State.ShouldBe(actionGroupState);
+            actionGroupInRegistry.Actions.ShouldNotBeEmpty();
         }
-
+        
         actionGroupsResult.Count.ShouldBeLessThanOrEqualTo(maxItem);
     }
 
@@ -124,6 +127,7 @@ public class ActionGroupRegistryTest
         foreach (var actionGroupInRegistry in actionGroupsResult)
         {
             actionGroupInRegistry.CreatedDate.ShouldBeInRange(fromDate, toDate);
+            actionGroupInRegistry.Actions.ShouldNotBeEmpty();
         }
 
         actionGroupsResult.Count.ShouldBeLessThanOrEqualTo(maxItem);
@@ -215,6 +219,7 @@ public class ActionGroupRegistryTest
 
         actionGroupInRegistry = await fixture.ActionGroupRegistry.GetActionGroupAsync(actionGroup.CorrelationId);
         actionGroupInRegistry.ShouldNotBeNull();
+        actionGroupInRegistry.Actions.ShouldNotBeEmpty();
         actionGroupInRegistry.Actions.First(a => a.CorrelationId == actionToUpdateState.CorrelationId).State.ShouldBe(ActionState.Started);
         actionGroupInRegistry.State.ShouldBe(ActionGroupState.Started);
         actionGroupInRegistry.AssignedAgv.ShouldBe(agv.CorrelationId);
@@ -234,12 +239,14 @@ public class ActionGroupRegistryTest
         foreach (var notStartedActionGroup in notStartedActionGroups)
         {
             notStartedActionGroup.State.ShouldBe(ActionGroupState.Created);
+            notStartedActionGroup.Actions.ShouldNotBeEmpty();
         }
         notStartedActionGroups.Count.ShouldBe(totalItemsInRegistry);
     }
 
     [TestMethod]
     public async Task GetSubsequentActionAsync_ReturnsSubsequentAction()
+
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(ActionGroupState.Started);
         var agv = AgvGenerator.GenerateIdleAgv();
