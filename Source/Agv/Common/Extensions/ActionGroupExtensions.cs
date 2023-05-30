@@ -1,6 +1,7 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Exceptions;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Services;
 
 namespace Gebhardt.StoreWare.Agv.Common.Extensions;
 
@@ -9,7 +10,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Extensions;
 /// </summary>
 public static class ActionGroupExtensions
 {
-    private static DateTime GetCurrentDate() => DateTime.UtcNow;
+    private static DateTime GetCurrentDate() => TimeProvider.Now;
 
     /// <summary>
     /// Updates the state of the ActionGroup based on the state of its Actions
