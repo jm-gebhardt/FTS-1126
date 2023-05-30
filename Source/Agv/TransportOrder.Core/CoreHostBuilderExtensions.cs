@@ -62,9 +62,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                     return new AgvHubContext(hubContext, mapper);
                 });
 
-                services.AddConfigurationTypeManager();
-                services.AddSettingsProviders(ConfigurationTypeManager.Instance);
-
                 // Scoped
                 services.AddScoped<DatabaseConfigurationSeeder<TransportOrderDbContext>>();
 
