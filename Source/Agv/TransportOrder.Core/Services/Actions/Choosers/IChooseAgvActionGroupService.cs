@@ -16,7 +16,7 @@ public interface IChooseAgvActionGroupService
     Task<IAgv?> GetAgvAsync(ActionGroup actionGroup, IList<IAgv> agvs);
 
     /// <summary>
-    /// Get not started ActionGroups, returns the best action in the first action group that Agv can handle all actions
+    /// Get not started ActionGroups, returns the best action in the first ActionGroup that Agv can handle all actions
     /// </summary>
     /// <param name="agv"></param>
     /// <returns></returns>
