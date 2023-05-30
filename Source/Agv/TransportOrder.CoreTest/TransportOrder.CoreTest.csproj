@@ -27,17 +27,4 @@
       <ProjectReference Include="..\CommonTest\CommonTest.csproj" />
       <ProjectReference Include="..\TransportOrder.Core\TransportOrder.Core.csproj" />
     </ItemGroup>
-    <ItemGroup>
-      <Compile Remove="Helper\AgvActionGenerator.cs" />
-      <Compile Remove="Helper\AgvGenerator.cs" />
-    </ItemGroup>
-    <ItemGroup>
-      <Folder Include="Helper\" />
-    </ItemGroup>
-    <ItemGroup>
-      <Compile Remove="Helper\NodeGenerator.cs" />
-    </ItemGroup>
-    <ItemGroup>
-      <Folder Include="Helper\" />
-    </ItemGroup>
 </Project>

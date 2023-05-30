@@ -4,7 +4,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.States;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helpers;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 
 public static class AgvGenerator
 {
