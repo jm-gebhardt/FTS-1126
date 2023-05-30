@@ -10,14 +10,18 @@ public class AgvDummy : IAgv
 
     public string CurrentState { get; }
 
+    // ReSharper disable once UnusedAutoPropertyAccessor.Global
     public AgvStatus? AgvStatus { get; init; }
 
+    // ReSharper disable once UnusedAutoPropertyAccessor.Global
     public AgvGraph? AgvGraph { get; init; }
 
+    // ReSharper disable once UnusedAutoPropertyAccessor.Global
     public bool IsOnline { get; init; }
 
     public bool IsLocked { get; set; }
-
+    
+    // ReSharper disable once UnusedAutoPropertyAccessor.Global
     public bool Assignable { get; init; }
 
     public DateTime TimeOfStateTransition { get; set; }
