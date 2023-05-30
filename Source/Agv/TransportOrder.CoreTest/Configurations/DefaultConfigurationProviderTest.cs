@@ -15,7 +15,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Configurations
                                 .AddDefaultConfigurationProvider()
                                 .Build();
                     
-            foreach (var configurationType in ConfigurationProviderTestFixture.ConfigurationTypes)
+            foreach (var configurationType in testFixture.ConfigurationTypes)
             {
                 foreach (var configurationTypeProperty in configurationType.Properties)
                 {

@@ -37,7 +37,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations
             {
                 foreach (var configurationType in _configurationTypeManager.ConfigurationTypes.Where(t => t.AutoSeedToDatabase))
                 {
-                    List<ConfigurationSetting> settings = _dbContext.Set<ConfigurationSetting>().Where(c => c.ConfigurationType == configurationType.Name).ToList();
+                    DbSet<ConfigurationSetting> dbSet = _dbContext.Set<ConfigurationSetting>();
+                    List<ConfigurationSetting> settings = await dbSet.Where(c => c.ConfigurationType == configurationType.Name).ToListAsync();
                     if (!settings.Any())
                     {
                         foreach (var configurationTypeProperty in configurationType.Properties.Where(p => p.AutoSeedToDatabase))
@@ -46,7 +47,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations
                             var setting = settings.FirstOrDefault(s => s.Key == key);
                             if (setting == null)
                             {
-                                await _dbContext.Set<ConfigurationSetting>().AddAsync(new()
+                                await dbSet.AddAsync(new()
                                 {
                                     Key = key,
                                     Value = configurationTypeProperty.Value,

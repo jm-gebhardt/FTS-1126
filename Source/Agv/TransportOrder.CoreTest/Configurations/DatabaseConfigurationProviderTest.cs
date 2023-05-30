@@ -23,14 +23,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Configurations
             IList<ConfigurationSetting> configurationSettings = await testFixture.GetConfigurationSettingsAsync();
             configurationSettings.ShouldNotBeEmpty();
 
-            foreach (var configurationType in ConfigurationProviderTestFixture.ConfigurationTypes.Where(t => t.AutoSeedToDatabase))
+            foreach (var configurationType in testFixture.ConfigurationTypes.Where(t => t.AutoSeedToDatabase))
             {
                 List<ConfigurationSetting> settings = configurationSettings.Where(cf => cf.ConfigurationType == configurationType.Name).ToList();
-                if (!settings.Any())
+                if (configurationType.Properties.Any(p => p.AutoSeedToDatabase))
                 {
-                    throw new Exception($"Empty settings: {configurationType.Name}");
+                    settings.ShouldNotBeEmpty();
                 }
-                settings.ShouldNotBeEmpty();
 
                 foreach (var configurationTypeProperty in configurationType.Properties.Where(p => p.AutoSeedToDatabase))
                 {
