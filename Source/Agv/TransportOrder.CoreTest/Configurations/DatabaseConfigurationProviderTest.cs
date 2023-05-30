@@ -26,7 +26,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Configurations
             foreach (var configurationType in ConfigurationProviderTestFixture.ConfigurationTypes.Where(t => t.AutoSeedToDatabase))
             {
                 List<ConfigurationSetting> settings = configurationSettings.Where(cf => cf.ConfigurationType == configurationType.Name).ToList();
-                if (settings == null)
+                if (settings.Any())
                 {
                     throw new Exception($"Empty settings: {configurationType.Name}");
                 }
@@ -51,7 +51,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Configurations
                     setting.ConfigurationType.ShouldBe(configurationType.Name);
                 }
             }
-
         }
     }
 }
