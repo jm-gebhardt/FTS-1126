@@ -51,8 +51,6 @@ public class ActionGroupExtensionsTest
     [TestMethod]
     public void UpdateActionGroupState_WhenActionGroupStateIsStartedAndSameFromPreviousState_UpdateActionGroupStateToStartedAndDoesNotSetStartedDate()
     {
-        var now = DateTime.UtcNow;
-        TimeProvider.Set(() => now);
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         const ActionGroupState actionGroupState = ActionGroupState.Started;
         var previousDate = DateTime.Today.AddDays(-10);
@@ -64,7 +62,7 @@ public class ActionGroupExtensionsTest
         actionGroup.UpdateActionGroupState();
 
         actionGroup.State.ShouldBe(actionGroupState);
-        actionGroup.StartedDate.Value.ShouldBe(now);
+        actionGroup.StartedDate.Value.ShouldBe(previousDate);
     }
 
     [TestMethod]
