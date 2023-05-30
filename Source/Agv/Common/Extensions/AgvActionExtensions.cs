@@ -1,4 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
+using Gebhardt.StoreWare.Agv.Common.Services;
 
 namespace Gebhardt.StoreWare.Agv.Common.Extensions;
 
@@ -7,7 +8,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Extensions;
 /// </summary>
 public static class AgvActionExtensions
 {
-    private static DateTime GetCurrentDate() => DateTime.UtcNow;
+    private static DateTime GetCurrentDate() => TimeProvider.Now;
 
     /// <summary>
     /// Updates the state of the Action and its Dates

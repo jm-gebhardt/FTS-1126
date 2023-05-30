@@ -10,6 +10,7 @@ using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
 using Gebhardt.StoreWare.Agv.Common.Exceptions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Exceptions;
+using Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Helper;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services;
 
@@ -20,7 +21,10 @@ public class StartChargingCommandConsumerTest
     public async Task ConsumeStartChargingCommand_WhenInCorrectState_PublishesStartActionCommand()
     {
         var correlationId = "AGV004".ToGuid();
+        var agvInformation = AgvInformationGenerator.GetAgvInformation();
+        agvInformation.AgvStatusReceived = AgvInformationGenerator.GetAgvStatusReceived(new AgvStatus(correlationId, "orderId", false, true, 0, false, false, "CRG2"));
         var fixture = new StartChargingCommandConsumerTestFixture()
+            .AddAgvInformation(correlationId, agvInformation)
             .Build();
         string? lastNodeId = fixture.GetAgvInformation(correlationId)?.AgvStatusReceived?.AgvStatus.LastNodeId;
 

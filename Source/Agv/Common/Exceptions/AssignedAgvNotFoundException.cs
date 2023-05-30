@@ -1,5 +1,6 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.Common.Exceptions;
 
@@ -13,6 +14,7 @@ public class AssignedAgvNotFoundException : Exception
     /// </summary>
     /// <param name="agv"></param>
     /// <param name="action">The AgvAction where the Agv should be assigned to</param>
+    [UsedImplicitly]
     public AssignedAgvNotFoundException(IAgv agv, AgvAction action)
         : base($"No assigned Agv for action with CorrelationId: {action.CorrelationId} " +
                $"AssignedAgv: {agv.CorrelationId} " +

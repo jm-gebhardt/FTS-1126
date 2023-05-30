@@ -39,7 +39,7 @@ public class EfActionGroupRegistry : IActionGroupRegistry
 
         IQueryable<ActionGroup> actionGroups = queryable
             .Where(g => states.Contains(g.State))
-            .OrderBy(g => g.CreatedDate);
+            .OrderByDescending(g => g.CreatedDate);
 
         if (fromDate != null)
         {
@@ -135,11 +135,7 @@ public class EfActionGroupRegistry : IActionGroupRegistry
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
-        queryable
-            .RemoveRange(
-                queryable
-                    .Where(a => a.CorrelationId == parentId)
-            );
+        queryable.RemoveRange(queryable.Where(a => a.CorrelationId == parentId));
         await context.SaveChangesAsync();
     }
 
@@ -150,8 +146,7 @@ public class EfActionGroupRegistry : IActionGroupRegistry
 
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
-        var actionGroup = await queryable
-            .FindAsync(actionGroupCorrelationId);
+        var actionGroup = await queryable.FindAsync(actionGroupCorrelationId);
 
         if (actionGroup == null)
         {
@@ -160,12 +155,11 @@ public class EfActionGroupRegistry : IActionGroupRegistry
         await context.Entry(actionGroup).Collection(g => g.Actions).LoadAsync();
 
         action.UpdateActionState(state);
-        
-        var actionToUpdate = actionGroup.Actions.Single(a => a.CorrelationId == action.CorrelationId);
-        actionGroup.Actions.Remove(actionToUpdate);
-        actionGroup.Actions.Add(action);
 
-        actionGroup.AssignAgvToActionGroup(agv);
+        var actionToUpdate = actionGroup.Actions.Single(a => a.CorrelationId == action.CorrelationId);
+        context.Entry(actionToUpdate).CurrentValues.SetValues(action);
+
+        actionGroup.Assign(agv);
         actionGroup.UpdateActionGroupState();
 
         await context.SaveChangesAsync();

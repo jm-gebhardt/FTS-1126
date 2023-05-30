@@ -21,7 +21,7 @@ namespace Gebhardt.StoreWare.Agv.CommonTest
         {
             var configuration = new ConfigurationBuilder().AddInMemoryCollection(
                 new Dictionary<string, string?>()
-                ).Build();
+            ).Build();
             ServiceCollection services = new();
             services.ConfigureServicesMassTransit(configuration);
         }
@@ -32,10 +32,10 @@ namespace Gebhardt.StoreWare.Agv.CommonTest
         [TestMethod]
         public void ConfigureServices_ValidConfigProvided()
         {
-            string sectionName = ConfigurationTypeManager.Instance.GetSectionName<MassTransitConfiguration>();
+            string sectionName = new ConfigurationTypeManager().GetSectionName<MassTransitConfiguration>();
             var configuration = new ConfigurationBuilder().AddInMemoryCollection(
-                new Dictionary<string, string?> { { $"{sectionName}:Url", "127.0.0.1" } }
-                ).Build();
+                new Dictionary<string, string?> {{$"{sectionName}:Url", "127.0.0.1"}}
+            ).Build();
             ServiceCollection services = new();
 
             services.ConfigureServicesMassTransit(configuration);

@@ -161,7 +161,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
             DuringAny(SetRequestAgvMapHandler());
             DuringAny(SetSignalPositionHandler());
             DuringAny(SetRequestStatusSendHandler());
-            
+
             WhenEnterAny(UpdateTimeOfStateTransition);
 
             SetCompletedWhenFinalized(); // Delete when finalized
@@ -221,12 +221,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
                 {
                     SetCurrentAction(c);
 
-                    _logger.LogInformation("AGV {AgvId} / {CorrelationId} started action {ActionType} for {OrderId} / {ParentId}. Action will be finished at {ActionFinishDate:HH:mm:ss.fff}",
+                    _logger.LogInformation("AGV {AgvId} / {CorrelationId} started action {ActionType} for {ParentId}. Action will be finished at {ActionFinishDate:HH:mm:ss.fff}",
                         c.Saga.AgvId, c.Saga.CorrelationId,
-                        c.Message.Action.ActionType, c.Message.OrderId, c.Message.Action.ParentId, c.Saga.ActionFinishDate);
+                        c.Message.Action.ActionType, c.Message.Action.ParentId, c.Saga.ActionFinishDate);
                 })
                 .TransitionTo(BusyMoving)
-                .Publish(c => new ActionStartedEvent(c.Saga.Action!.CorrelationId, c.Saga.OrderId!))
+                .Publish(c => new ActionStartedEvent(c.Saga.Action!.CorrelationId))
                 .ThenAsync(PublishStatus)
                 .Schedule(FinishActionSchedule,
                     c => new ScheduleFinishAction(c.Saga.CorrelationId),
@@ -239,7 +239,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
         {
             c.Saga.Action = c.Message.Action;
             c.Saga.ActionStartDate = DateTime.UtcNow;
-            c.Saga.OrderId = c.Message.OrderId;
         }
 
         private EventActivityBinder<SimulatedAgvSaga, ScheduleFinishAction> SetFinishActionHandler() =>
@@ -376,7 +375,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
         private void FinishAction(BehaviorContext<SimulatedAgvSaga, ScheduleFinishAction> context)
         {
             var action = context.Saga.Action;
-            string orderId = context.Saga.OrderId!;
 
             if (action == null)
             {
@@ -384,15 +382,15 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
             }
             else
             {
-                _logger.LogInformation("AGV {AgvId} / {CorrelationId} finished action {ActionType} for {OrderId} / {ParentId}",
-                    context.Saga.AgvId, context.Saga.CorrelationId, action.ActionType, orderId, action.ParentId);
+                _logger.LogInformation("AGV {AgvId} / {CorrelationId} finished action {ActionType} for {OrderId}",
+                    context.Saga.AgvId, context.Saga.CorrelationId, action.ActionType, action.ParentId);
 
-                context.Publish(new ActionCompletedEvent(action.CorrelationId, orderId));
+                context.Publish(new ActionCompletedEvent(action.CorrelationId));
             }
 
             context.Saga.ResetAction();
         }
-        
+
         private EventActivityBinder<SimulatedAgvSaga> UpdateTimeOfStateTransition(EventActivityBinder<SimulatedAgvSaga> eventActivity) =>
             eventActivity.Then(ctx => ctx.Saga.TimeOfStateTransition = DateTime.UtcNow);
         #endregion

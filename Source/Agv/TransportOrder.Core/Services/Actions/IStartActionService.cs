@@ -14,7 +14,6 @@ public interface IStartActionService
     /// </summary>
     /// <param name="agv">The Agv to start the Action</param>
     /// <param name="action">The Action to start</param>
-    /// <param name="orderId">The corresponding OrderId</param>
     /// <param name="cancellationToken"></param>
-    public Task StartAction(IAgv agv, AgvAction action, string orderId, CancellationToken cancellationToken);
+    public Task StartAction(IAgv agv, AgvAction action, CancellationToken cancellationToken);
 }

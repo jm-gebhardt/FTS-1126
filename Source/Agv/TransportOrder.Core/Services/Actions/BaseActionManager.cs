@@ -125,8 +125,6 @@ public abstract class BaseActionManager : IActionManager
 
     private bool IsAgvCharging(IAgv agv) => agv.GetRequiredAgvStatus().Charging;
 
-    private Task<AgvAction> GetAgvActionAsync(Guid correlationId) => _actionGroupRegistry.GetRequiredActionByIdAsync(correlationId);
-
     private Task<IAgv> GetAgvByCorrelationIdAsync(Guid? correlationId) => Task.FromResult(_agvRegistry.GetRequiredAgv(correlationId));
 
     /// <summary>
@@ -195,9 +193,8 @@ public abstract class BaseActionManager : IActionManager
         try
         {
             action.Nodes = _routeService.GetRoute(assignedAgv, action.TargetNodeId).Nodes;
-            string orderId = (await _actionGroupRegistry.GetRequiredActionGroupByIdAsync(action.ParentId)).OrderId;
 
-            await _startActionService.StartAction(assignedAgv, action, orderId, cancellationToken);
+            await _startActionService.StartAction(assignedAgv, action, cancellationToken);
             await _actionGroupRegistry.UpdateActionAndGroupStateAsync(action, assignedAgv, ActionState.Started);
 
             Logger.LogTrace("Starting action done");
@@ -206,6 +203,7 @@ public abstract class BaseActionManager : IActionManager
         {
             // release Agv in case of error
             await _agvStateService.SetIdleAsync(assignedAgv);
+            throw;
         }
     }
 
@@ -326,7 +324,7 @@ public abstract class BaseActionManager : IActionManager
     public async Task CompleteActionAsync(Guid correlationId, CancellationToken cancellationToken)
     {
         Logger.LogDebug("Completing action with CorrelationId: {ActionCorrelationId}", correlationId);
-        var action = await GetAgvActionAsync(correlationId);
+        var action = await _actionGroupRegistry.GetRequiredActionByIdAsync(correlationId);
 
         var actionGroup = await _actionGroupRegistry.GetRequiredActionGroupByIdAsync(action.ParentId);
 

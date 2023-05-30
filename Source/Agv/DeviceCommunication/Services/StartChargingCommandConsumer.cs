@@ -71,7 +71,7 @@ public class StartChargingCommandConsumer : IConsumer<StartChargingCommand>
         NodeType? lastNodeType = agvInformation.AgvGraph?.Nodes.FirstOrDefault(node => node.Id == lastNodeId)?.Type;
         if (lastNodeType != NodeType.Charge)
         {
-            throw new NotInCorrectStateException($"Agv charging cannot be started because agv is not in charging node. [{nameof(lastNodeId)} ({lastNodeId})] [{nameof(NodeType)} ({lastNodeType})]");
+            throw new NotInCorrectStateException($"Agv charging cannot be started because agv is not on charging node. [{nameof(lastNodeId)} ({lastNodeId})] [{nameof(NodeType)} ({lastNodeType})]");
         }
 
         string agvId = agvStatusReceived.AgvId;
@@ -81,9 +81,8 @@ public class StartChargingCommandConsumer : IConsumer<StartChargingCommand>
             lastNodeId,
             Guid.Empty);
 
-        await context.Publish(new StartActionCommand(agvCorrelationId, agvId, "charge", chargeAction));
-        await context.Publish(new ActionStartedEvent(chargeAction.CorrelationId, string.Empty));
+        await context.Publish(new StartActionCommand(agvCorrelationId, agvId, chargeAction));
+        await context.Publish(new ActionStartedEvent(chargeAction.CorrelationId));
         await context.RespondAsync(new BaseResult());
-        throw new NotImplementedException("We must lead this request through the ActionManager. It's not allowed to create actions outside!");
     }
 }

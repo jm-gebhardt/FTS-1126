@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using JetBrains.Annotations;
 using MassTransit;
 
@@ -81,7 +82,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
         /// </summary>
         [UsedImplicitly]
         public const int BadBatteryLevel = 20;
-        
+
         /// <summary>
         /// Upper battery level in [%] for signaling "battery good" (defined by VDA5050).
         /// </summary>
@@ -98,7 +99,6 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
         [UsedImplicitly]
         public string? LastNodeId { get; }
 
-
         /// <summary>
         /// Constructor of AgvStatus
         /// </summary>
@@ -110,6 +110,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
         /// <param name="charging"></param>
         /// <param name="disturbed"></param>
         /// <param name="lastNodeId"></param>
+        [JsonConstructor]
         public AgvStatus(Guid correlationId, string? orderId, bool busy, bool automatic, double batteryCharge, bool charging, bool disturbed, string? lastNodeId = null)
         {
             CorrelationId = correlationId;
@@ -120,6 +121,21 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
             Charging = charging;
             Disturbed = disturbed;
             LastNodeId = lastNodeId;
+        }
+
+        /// <summary>
+        /// For mocking
+        /// </summary>
+        public AgvStatus()
+        {
+            CorrelationId = Guid.Empty;
+            OrderId = null;
+            Busy = false;
+            Automatic = false;
+            BatteryCharge = 0;
+            Charging = false;
+            Disturbed = false;
+            LastNodeId = null;
         }
     }
 }
