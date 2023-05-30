@@ -9,7 +9,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands
     {
         /// <inheritdoc />
         public Guid CorrelationId { get; }
-
+        
         /// <summary>
         /// Id of the agv the action is send to
         /// </summary>

@@ -14,14 +14,14 @@ public class ActionRequestHandlerTestFixture<T> : MassTransitTestFixture<T>
     where T : class, IConsumer
 {
 
-    public readonly Mock<IAgvActionRegistry> ActionRegistryMock = new ();
+    public readonly Mock<IActionGroupRegistry> ActionRegistryMock = new ();
 
     public ActionGroupState[] AllActionGroupStates => Enum.GetValues(typeof(ActionGroupState)).Cast<ActionGroupState>().ToArray();
 
     protected override void ConfigureServices(IServiceCollection collection)
     {
         base.ConfigureServices(collection);
-        collection.AddTransient<IAgvActionRegistry>(_ => ActionRegistryMock.Object);
+        collection.AddTransient<IActionGroupRegistry>(_ => ActionRegistryMock.Object);
         collection.AddTransient<IMapper>(_ => Mock.Of<IMapper>());
     }
 

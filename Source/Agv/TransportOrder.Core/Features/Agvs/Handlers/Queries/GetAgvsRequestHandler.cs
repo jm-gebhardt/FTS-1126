@@ -43,7 +43,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Quer
         public async Task Consume(ConsumeContext<GetAgvsRequest> context)
         {
             List<IAgv> agvs = _agvRegistry.GetAllAgvs().OrderBy(a => a.AgvId).ToList();
-            IReadOnlyDictionary<Guid, ActionGroup?> actions = await _actionGroupRegistry.GetCurrentAssignedActionGroups(agvs.Select(a => a.CorrelationId));
+            IReadOnlyDictionary<Guid, ActionGroup?> actions = await _actionGroupRegistry.GetCurrentAssignedActionGroupsAsync(agvs.Select(a => a.CorrelationId));
             List<AgvDto> agvDtos = agvs.Select(agv => _mapper.Map<AgvDto>((agv, actions[agv.CorrelationId]))).ToList();
             await context.RespondAsync(new GetAgvsResult(agvDtos));
         }

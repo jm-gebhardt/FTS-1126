@@ -30,7 +30,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Registries
         /// </summary>
         /// <param name="agvCorrelationIds"></param>
         /// <returns></returns>
-        public Task<IReadOnlyDictionary<Guid, ActionGroup?>> GetCurrentAssignedActionGroups(IEnumerable<Guid> agvCorrelationIds);
+        public Task<IReadOnlyDictionary<Guid, ActionGroup?>> GetCurrentAssignedActionGroupsAsync(IEnumerable<Guid> agvCorrelationIds);
 
         /// <summary>
         /// Get ActionGroup

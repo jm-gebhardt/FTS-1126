@@ -60,17 +60,18 @@ public class EfActionGroupRegistry : IActionGroupRegistry
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyDictionary<Guid, ActionGroup?>> GetCurrentAssignedActionGroups(IEnumerable<Guid> agvCorrelationIds)
+    public async Task<IReadOnlyDictionary<Guid, ActionGroup?>> GetCurrentAssignedActionGroupsAsync(IEnumerable<Guid> agvCorrelationIds)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
         var actions = new Dictionary<Guid, ActionGroup?>();
-        foreach (var agv in agvCorrelationIds)
-        {
-            // TODO: efficiency, should be store the current action in the agv so we do not have to do this query?
-            // TODO: How do we know whats the currently assigned action, should be store it in IAgv/AgvSaga?
-            actions[agv] = await queryable.OrderBy(g => g.CreatedDate).SingleOrDefaultAsync(a => a.AssignedAgv == agv);
-        }
+        
+        // Once agv is assigned, status is set to started. We can use StartedDate to get current assigned ActionGroup 
+        await Task.WhenAll(agvCorrelationIds
+            .Select(agv => queryable.OrderByDescending(g => g.StartedDate)
+                .FirstOrDefaultAsync(a => a.AssignedAgv == agv)
+                .ContinueWith(o => actions[agv] = o.Result)));
+        
         return actions;
     }
 
