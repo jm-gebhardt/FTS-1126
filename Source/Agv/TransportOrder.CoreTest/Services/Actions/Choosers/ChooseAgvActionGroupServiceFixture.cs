@@ -18,13 +18,13 @@ public class ChooseAgvActionGroupServiceFixture
 
     public Mock<IRouteService> RouteService { get; } = new();
 
-    public Mock<IAgvActionRegistry> AgvActionRegistry { get; } = new();
+    public Mock<IActionGroupRegistry> AgvActionRegistry { get; } = new();
 
     public ShortestRouteChooser ShortestRouteChooser { get; private set; }
 
     public ChooseAgvActionGroupServiceFixture()
     {
-        AgvActionRegistry.Setup(x => x.GetNotStartedActionGroups()).Returns(NotStartedActionGroups);
+        AgvActionRegistry.Setup(x => x.GetNotStartedActionGroupsAsync()).ReturnsAsync(NotStartedActionGroups);
         ShortestRouteChooser = new ShortestRouteChooser(
             RouteService.Object,
             AgvActionRegistry.Object,

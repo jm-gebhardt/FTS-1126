@@ -449,7 +449,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
                 endpoint.Publish(new AgvPropertyChanged(agvSaga, agvSaga.CorrelationId));
             }
 
-            // TODO: Is this right? I guess we only are allowed to publish this when we are actually idle!
             if (aliveChanged && newAlive && agvSaga.CurrentState == nameof(Idle)) // Transition to Ready must happen before triggering order assignment
             {
                 endpoint.Publish(new AgvBecameIdle(agvSaga.CorrelationId));

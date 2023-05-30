@@ -1,18 +1,19 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands;
-using JetBrains.Annotations;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions;
 
 /// <summary>
-/// Handles the start of an AgvAction 
+/// Handles the start of an AgvAction (send to Agv)
 /// </summary>
 public interface IStartActionService
 {
     /// <summary>
     /// Send <see cref="StartActionCommand"/> to Agv
     /// </summary>
-    /// <param name="action">The action to start</param>
+    /// <param name="agv">The Agv to start the Action</param>
+    /// <param name="action">The Action to start</param>
     /// <param name="cancellationToken"></param>
-    public Task StartAction([UsedImplicitly] AgvAction action,[UsedImplicitly] CancellationToken cancellationToken);
+    public Task StartAction(IAgv agv, AgvAction action, CancellationToken cancellationToken);
 }

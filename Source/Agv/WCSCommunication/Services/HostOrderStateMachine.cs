@@ -1,6 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands;
-using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Microsoft.Extensions.Logging;
 using MassTransit;
 using Gebhardt.StoreWare.Agv.WCSCommunication.States;
@@ -99,22 +98,20 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
         {
             var dropActionGuid = hostOrderSaga.DropActionGuid;
             var pickActionGuid = hostOrderSaga.PickActionGuid;
-            var pickAction = new AgvAction(pickActionGuid, string.Empty, ActionType.Pick, hostOrderSaga.OrderId, hostOrderSaga.OrderId.ToGuid(), hostOrderSaga.OrderDetails.Source)
+            var actionGroupId = hostOrderSaga.CorrelationId;
+
+            var pickAction = new AgvAction(pickActionGuid, ActionType.Pick, hostOrderSaga.OrderDetails.Source, actionGroupId)
             {
-                Successor = dropActionGuid,
                 Sequence = 0
             };
-            var dropAction = new AgvAction(dropActionGuid, string.Empty, ActionType.Drop, hostOrderSaga.OrderId, hostOrderSaga.OrderId.ToGuid(), hostOrderSaga.OrderDetails.Destination)
+            var dropAction = new AgvAction(dropActionGuid, ActionType.Drop, hostOrderSaga.OrderDetails.Destination, actionGroupId)
             {
-                Predecessor = pickActionGuid,
                 Sequence = 1
             };
 
-            return new ActionGroup(hostOrderSaga.CorrelationId, new List<AgvAction>()
-            {
-                pickAction,
-                dropAction
-            });
+            var actionGroup = new ActionGroup(actionGroupId, hostOrderSaga.OrderId, new List<AgvAction> {pickAction, dropAction}, hostOrderSaga.OrderDetails.CreationDate);
+
+            return actionGroup;
         }
         #endregion
     }

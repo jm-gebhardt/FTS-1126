@@ -8,16 +8,16 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 
 public static class AgvGenerator
 {
-    private static string GetAgvId(int index) =>  $"AGV{index:D3}";
+    private static string GetAgvId(int index) => $"AGV{index:D3}";
 
-    public static IAgv GenerateIdleAgv(int index = 0, string? lastNodeId = "lastNodeId")
+    public static IAgv GenerateIdleAgv(int index = 0, string? lastNodeId = "lastNodeId", AgvGraph? agvGraph = null)
     {
         string agvId = GetAgvId(index);
         var correlationId = agvId.ToGuid();
-        var agvStatus = new AgvStatus(correlationId, "", false, true, 100, false, false, lastNodeId);
-        return new AgvSaga(correlationId, agvId, nameof(AgvStateMachine.Idle), agvStatus);
+        var agvStatus = new AgvStatus(correlationId, "orderId",false, true, 100, false, false, lastNodeId);
+        return new AgvSaga(correlationId, agvId, nameof(AgvStateMachine.Idle), agvStatus, agvGraph: agvGraph);
     }
-    
+
     [UsedImplicitly]
     public static IAgv GenerateIdleAgv(AgvStatus? agvStatus, int index = 0)
     {
@@ -30,7 +30,7 @@ public static class AgvGenerator
     {
         string agvId = GetAgvId(index);
         var correlationId = agvId.ToGuid();
-        var agvStatus = new AgvStatus(correlationId, "", true, true, 1, true, false, lastNodeId);
+        var agvStatus = new AgvStatus(correlationId, "orderId",true, true, 1, true, false, lastNodeId);
         return new AgvSaga(correlationId, agvId, nameof(AgvStateMachine.Charging), agvStatus);
     }
 }

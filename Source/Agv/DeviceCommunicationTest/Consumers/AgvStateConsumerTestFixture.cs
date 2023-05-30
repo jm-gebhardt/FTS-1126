@@ -1,6 +1,5 @@
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
-using Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 
@@ -12,14 +11,19 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
 
         public AgvStateConsumerTestFixture()
         {
-            var agvRegistryTestFixture = new AgvRegistryTestFixture();
-            AgvRegistry = agvRegistryTestFixture.AgvRegistry;
+            AgvRegistry = new AgvRegistry();
         }
-        
+
+        public AgvStateConsumerTestFixture WithAgvInformation(AgvInformation agvInformation)
+        {
+            AgvRegistry.AddOrUpdate(agvInformation.AgvStatusReceived!.AgvStatus.CorrelationId, agvInformation);
+            return this;
+        }
+
         public AgvStateConsumerTestFixture UseDefaultServices()
         {
-             AddServices(sc => sc.AddSingleton(_ => AgvRegistry));
-             return this;
+            AddServices(sc => sc.AddSingleton(_ => AgvRegistry));
+            return this;
         }
 
         public AgvStateConsumerTestFixture Build()

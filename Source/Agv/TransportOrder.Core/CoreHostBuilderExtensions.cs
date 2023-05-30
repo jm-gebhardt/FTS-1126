@@ -62,9 +62,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                     return new AgvHubContext(hubContext, mapper);
                 });
 
-                services.AddConfigurationTypeManager();
-                services.AddSettingsProviders(ConfigurationTypeManager.Instance);
-
                 // Scoped
                 services.AddScoped<DatabaseConfigurationSeeder<TransportOrderDbContext>>();
 
@@ -88,7 +85,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                 services.AddSingleton<IAgvStateService, AgvStateService>();
 
                 // Registries
-                services.AddSingleton<IAgvActionRegistry, EfAgvActionRegistry>();
+                services.AddSingleton<IActionGroupRegistry, EfActionGroupRegistry>();
                 services.AddSingleton<IAgvRegistry, EfAgvRegistry>();
                 services.AddSingleton<IAgvDataRegistry, EfAgvDataRegistry>();
                 services.AddSingleton<IMapRegistry, EfMapRegistry>();

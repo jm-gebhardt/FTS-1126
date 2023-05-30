@@ -7,6 +7,7 @@ using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.CommonTest.Helpers;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
+using Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Helper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
@@ -19,8 +20,12 @@ public class StopChargingCommandConsumerTest
     public async Task ConsumeStopChargingCommand_WhenInCorrectState_PublishesAgvStoppedCharging()
     {
         var correlationId = "AGV003".ToGuid();
+        var agvInformation = AgvInformationGenerator.GetAgvInformation();
+        agvInformation.AgvStatusReceived = AgvInformationGenerator.GetAgvStatusReceived(new AgvStatus(correlationId, "orderId", false, true, 0, true, false, "CRG2"));
+
         MediatorTestFixture<StopChargingCommand, StopChargingCommandConsumer> fixture = new StopChargingCommandConsumerTestFixture()
-        .Build();
+            .AddAgvInformation(correlationId, agvInformation)
+            .Build();
 
         var stopChargingCommand = new StopChargingCommand(correlationId);
         await fixture.GetResponseAsync<BaseResult>(stopChargingCommand);
@@ -34,7 +39,7 @@ public class StopChargingCommandConsumerTest
     {
         var correlationId = Guid.NewGuid();
         MediatorTestFixture<StopChargingCommand, StopChargingCommandConsumer> fixture = new StopChargingCommandConsumerTestFixture().AddAgvInformationWithSpecificAgvStatus(correlationId, null)
-        .Build();
+            .Build();
 
         var stopChargingCommand = new StopChargingCommand(correlationId);
         await MediatorShould.ThrowRequestExceptionAsync<AgvStatusReceivedNotFoundException>(async () => await fixture.GetResponseAsync<BaseResult>(stopChargingCommand));
@@ -50,7 +55,7 @@ public class StopChargingCommandConsumerTest
         var correlationId = Guid.NewGuid();
         var agvStatus = new AgvStatus(correlationId, "TestOrder", false, true, 25, isCharging, false, "CRG1");
         MediatorTestFixture<StopChargingCommand, StopChargingCommandConsumer> fixture = new StopChargingCommandConsumerTestFixture().AddAgvInformationWithSpecificAgvStatus(correlationId, agvStatus)
-        .Build();
+            .Build();
 
         var stopChargingCommand = new StopChargingCommand(correlationId);
         await MediatorShould.ThrowRequestExceptionAsync<NotInCorrectStateException>(async () => await fixture.GetResponseAsync<BaseResult>(stopChargingCommand));

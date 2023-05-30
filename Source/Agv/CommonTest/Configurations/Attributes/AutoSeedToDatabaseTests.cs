@@ -13,7 +13,7 @@ namespace Gebhardt.StoreWare.Agv.CommonTest.Configurations.Attributes
         [DataRow("TestSettingWithoutAutoSeedAttribute", true)]
         public void InitializeConfigurationTypes_WhereAttributePropertyIsAppliedToClass_SetsCorrectAutoSeedToDatabaseInConfigurationType(string configurationTypeName, bool expectedAutoSeedToDatabase)
         {
-            var typeManager = ConfigurationTypeManager.Instance;
+            var typeManager = new ConfigurationTypeManager();
 
             var configurationType = typeManager.ConfigurationTypes.First(config => config.Name == configurationTypeName);
             configurationType.Name.ShouldBe(configurationTypeName);
@@ -25,7 +25,7 @@ namespace Gebhardt.StoreWare.Agv.CommonTest.Configurations.Attributes
         [DataRow("TestSettingWithAutoSeedAttributeTrueForProperty", true)]
         public void InitializeConfigurationTypes_WhereAttributePropertyIsAppliedToProperty_SetsCorrectAutoSeedToDatabaseInConfigurationType(string configurationTypeName, bool expectedAutoSeedToDatabase)
         {
-            var typeManager = ConfigurationTypeManager.Instance;
+            var typeManager = new ConfigurationTypeManager();
 
             var configurationType = typeManager.ConfigurationTypes.First(config => config.Name == configurationTypeName);
             configurationType.Name.ShouldBe(configurationTypeName);

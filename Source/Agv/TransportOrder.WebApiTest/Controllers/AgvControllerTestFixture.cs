@@ -21,21 +21,25 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
         where TRequest : class
         where TRequestHandler : class, IConsumer
     {
-        public string[] AgvIds { get; } = { "AGV001", "AGV002", "AGV003" };
+        public string[] AgvIds { get; } = {"AGV001", "AGV002", "AGV003"};
+
         // ReSharper disable once MemberCanBePrivate.Global
-        public string[] Orders { get; } = { "ORDER001", "ORDER002", "" };
-        public string[] States { get; } = { nameof(AgvStateMachine.Idle), nameof(AgvStateMachine.Busy), nameof(AgvStateMachine.Discovered) };
-        public string[] Ips { get; } = { "127.0.0.1", "127.0.0.2", "127.0.0.3" };
+        public string[] Orders { get; } = {"ORDER001", "ORDER002", ""};
+
+        public string[] States { get; } = {nameof(AgvStateMachine.Idle), nameof(AgvStateMachine.Busy), nameof(AgvStateMachine.Discovered)};
+
+        public string[] Ips { get; } = {"127.0.0.1", "127.0.0.2", "127.0.0.3"};
 
         public Mock<IAgvRegistry> AgvRegistry { get; }
+
         private Mock<IAgvDataRegistry> AgvDataRegistry { get; }
 
         public AgvGraph.Node[] Nodes { get; } =
         {
-            new("node00") { X = 0f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
-            new("node10") { X = 1f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
-            new("node01") { X = 0f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
-            new("node11") { X = 1f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint }
+            new("node00") {X = 0f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint},
+            new("node10") {X = 1f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint},
+            new("node01") {X = 0f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint},
+            new("node11") {X = 1f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint}
         };
 
         public AgvGraph.Edge[] Edges { get; } =
@@ -61,14 +65,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             for (int i = 0; i < AgvIds.Length; i++)
             {
                 string agvId = AgvIds[i];
-                string order = Orders[i];
+                string orderId = Orders[i];
                 string state = States[i];
                 string ip = Ips[i];
                 var correlationId = agvId.ToGuid();
 
                 const string mapName = "Map#1";
                 var agvGraph = new AgvGraph(correlationId, Nodes, Edges, mapName.ToGuid(), mapName);
-                var agvStatus = agvId == "AGV003" ? null : new AgvStatus(correlationId, order, true, true, 10, true, true);
+                var agvStatus = agvId == "AGV003" ? null : new AgvStatus(correlationId, orderId, true, true, 10, true, true);
                 var agvData = new AgvData(correlationId, "Karis", "BF1", ip, 1.8, 120.0, 0.6, 0.8, 0.7, 1, 2.5, 1000, Array.Empty<AgvData.Sensor>());
 
                 agvs.Add(new AgvSaga(correlationId, agvId, state, agvStatus, agvGraph));

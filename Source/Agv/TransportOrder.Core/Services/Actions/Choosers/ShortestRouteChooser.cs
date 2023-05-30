@@ -14,26 +14,26 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Choosers;
 public class ShortestRouteChooser : IChooseAgvActionGroupService
 {
     private readonly IRouteService _routeService;
-    private readonly IAgvActionRegistry _agvActionRegistry;
+    private readonly IActionGroupRegistry _actionGroupRegistry;
     private readonly ILogger<ShortestRouteChooser> _logger;
 
     /// <inheritdoc cref="ShortestRouteChooser"/>>
     /// <param name="routeService"></param>
-    /// <param name="agvActionRegistry"></param>
+    /// <param name="actionGroupRegistry"></param>
     /// <param name="logger"></param>
     public ShortestRouteChooser(
         IRouteService routeService,
-        IAgvActionRegistry agvActionRegistry,
+        IActionGroupRegistry actionGroupRegistry,
         ILogger<ShortestRouteChooser> logger
-        )
+    )
     {
         _routeService = routeService;
-        _agvActionRegistry = agvActionRegistry;
+        _actionGroupRegistry = actionGroupRegistry;
         _logger = logger;
     }
 
     /// <summary>
-    /// Tries to find a suitable AGV for this action group
+    /// Tries to find a suitable AGV for this ActionGroup
     /// Find AGV with shortest route to pick
     /// </summary>
     public Task<IAgv?> GetAgvAsync(ActionGroup actionGroup, IList<IAgv> agvs)
@@ -46,7 +46,7 @@ public class ShortestRouteChooser : IChooseAgvActionGroupService
         }
 
         // Create a list of waypoints from the action targets
-        List<string> waypoints = actionGroup.Actions.OrderBy(a => a.Sequence).Select(a => a.TargetNodeId).ToList();
+        List<string> waypoints = actionGroup.GetRequiredActions().OrderBy(a => a.Sequence).Select(a => a.TargetNodeId).ToList();
         string firstWaypointId = waypoints.First();
 
         List<KeyValuePair<IAgv, (bool hasRoute, float? costs)>> agvWithRoute = agvs
@@ -71,19 +71,19 @@ public class ShortestRouteChooser : IChooseAgvActionGroupService
     }
 
     /// <summary>
-    /// Get not started action groups, returns the first action in the first action group that Agv can handle all actions
+    /// Get not started ActionGroups, returns the first action in the first ActionGroup that Agv can handle all actions
     /// </summary>
     /// <param name="agv"></param>
     /// <returns></returns>
     /// <exception cref="AgvLocationUnknownException"></exception>
-    public Task<AgvAction?> GetActionGroupAsync(IAgv agv)
+    public async Task<AgvAction?> GetActionGroupAsync(IAgv agv)
     {
         _logger.LogInformation("start GetNextParentedByAction for agvId: {AgvId}", agv.AgvId);
         agv.GetRequiredAgvStatus().RequireLastNodeId();
 
-        List<ActionGroup> notStartedActionGroups = _agvActionRegistry.GetNotStartedActionGroups().ToList();
+        IReadOnlyList<ActionGroup> notStartedActionGroups = await _actionGroupRegistry.GetNotStartedActionGroupsAsync();
         var nextParentedByAction = (notStartedActionGroups
-            .Select(a => a.Actions.Select(action =>
+            .Select(a => a.GetRequiredActions().Select(action =>
             {
                 bool hasRoute = _routeService.HasRoute(agv, action.TargetNodeId, out float? costs);
                 return (hasRoute, action, costs);
@@ -94,6 +94,6 @@ public class ShortestRouteChooser : IChooseAgvActionGroupService
             .MinBy(actionGroup => actionGroup.MinBy(p => p.action.Sequence).costs)?
             .FirstOrDefault())?.action;
 
-        return Task.FromResult(nextParentedByAction);
+        return nextParentedByAction;
     }
 }

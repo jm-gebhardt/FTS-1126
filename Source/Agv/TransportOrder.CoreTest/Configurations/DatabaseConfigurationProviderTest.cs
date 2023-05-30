@@ -23,10 +23,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Configurations
             IList<ConfigurationSetting> configurationSettings = await testFixture.GetConfigurationSettingsAsync();
             configurationSettings.ShouldNotBeEmpty();
 
-            foreach (var configurationType in ConfigurationProviderTestFixture.ConfigurationTypes.Where(t => t.AutoSeedToDatabase))
+            foreach (var configurationType in testFixture.ConfigurationTypes.Where(t => t.AutoSeedToDatabase))
             {
                 List<ConfigurationSetting> settings = configurationSettings.Where(cf => cf.ConfigurationType == configurationType.Name).ToList();
-                settings.ShouldNotBeEmpty();
+                if (configurationType.Properties.Any(p => p.AutoSeedToDatabase))
+                {
+                    settings.ShouldNotBeEmpty();
+                }
 
                 foreach (var configurationTypeProperty in configurationType.Properties.Where(p => p.AutoSeedToDatabase))
                 {
@@ -47,7 +50,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Configurations
                     setting.ConfigurationType.ShouldBe(configurationType.Name);
                 }
             }
-
         }
     }
 }

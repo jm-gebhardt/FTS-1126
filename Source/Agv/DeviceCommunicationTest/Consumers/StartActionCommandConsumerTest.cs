@@ -33,7 +33,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
         public async Task Test_Send_TransportOrder_To_AGV_Via_MQTT()
         {
             MqttConsumerTestFixture<StartActionCommandConsumer> fixture = new MqttConsumerTestFixture<StartActionCommandConsumer>()
-                .AddServices(s => s.AddSingleton<IAgvRegistry>(new Mock<AgvRegistry>().Object))
+                .AddServices(s => s.AddSingleton(Mock.Of<IAgvRegistry>()))
                 .Build();
 
             // Create a publish observer
@@ -46,11 +46,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
                 var orderCorrelationId = orderId.ToGuid();
                 const string toStationId = "Drop5";
 
-                var action = new AgvAction(actionCorrelationId, agvId, ActionType.Pick, orderId, orderCorrelationId, toStationId)
-                {
-                    AssignedAgv = Guid.NewGuid()
-                };
-                var message = new StartActionCommand(Guid.NewGuid(), action);
+                var action = new AgvAction(actionCorrelationId, ActionType.Pick, toStationId, orderCorrelationId);
+                var correlationId = Guid.NewGuid();
+                var message = new StartActionCommand(correlationId, agvId, action);
 
                 // Publish ExecuteTransportOrder
                 await fixture.TestHarness.Bus.Publish(message);
@@ -60,15 +58,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
 
                 // Check if consumed
                 (await consumerHarness.Consumed.Any<StartActionCommand>()).ShouldBeTrue();
-
                 // Get consumed message
                 IReceivedMessage<StartActionCommand> consumedMessage = consumerHarness.Consumed.Select<StartActionCommand>().First();
                 action = consumedMessage.Context.Message.Action;
 
                 // Check consumed message
                 action.CorrelationId.ShouldBe(actionCorrelationId);
-                action.AgvId.ShouldBe(agvId);
-                action.OrderId.ShouldBe(orderId);
                 action.ParentId.ShouldBe(orderCorrelationId);
                 action.TargetNodeId.ShouldBe(toStationId);
 
@@ -91,23 +86,16 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
                 mqttMessage.OrderType.ShouldBe(OrderType.Pick);
                 mqttMessage.RecordType.ShouldBe(OrderRecordType.Order);
 
-                // ... and action Guid with parentId
-                string actionId = mqttMessage.OrderId.Split(" ")[0];
-                string parentId = mqttMessage.OrderId.Split(" ")[1];
-                actionId.ShouldBe(actionCorrelationId.ToString());
-                parentId.ShouldBe(orderId);
+                mqttMessage.OrderId.ShouldBe(action.CorrelationId.ToString());
             }
         }
 
         [TestMethod]
         public async Task Test_StartAction_EmptyAssignedAgv_ThrowsException()
         {
-            var fixture = new MassTransitTestFixture<StartActionCommandConsumer>(s =>
-            {
-                s.AddTransient<IAgvRegistry>(_ => Mock.Of<IAgvRegistry>());
-            });
-            var action = new AgvAction(Guid.Empty, string.Empty, ActionType.Pick, string.Empty, Guid.Empty, string.Empty);
-            await fixture.TestHarness!.Bus.Publish(new StartActionCommand(Guid.Empty, action));
+            var fixture = new MassTransitTestFixture<StartActionCommandConsumer>(s => { s.AddTransient<IAgvRegistry>(_ => Mock.Of<IAgvRegistry>()); });
+            var action = new AgvAction(Guid.Empty, ActionType.Pick, string.Empty, Guid.Empty);
+            await fixture.TestHarness!.Bus.Publish(new StartActionCommand(Guid.Empty, "", action));
             (await fixture.TestHarness.Consumed.Any<StartActionCommand>()).ShouldBeTrue();
             (await fixture.TestHarness.Published.Any<Fault<StartActionCommand>>()).ShouldBeTrue();
 
