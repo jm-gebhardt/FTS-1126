@@ -32,7 +32,7 @@ public static class AgvActionGenerator
         return parkAction;
     }
 
-    public static ActionGroup GeneratePickDropActionGroup(ActionGroupState actionGroupState = ActionGroupState.Created)
+    public static ActionGroup GeneratePickDropActionGroup(ActionGroupState actionGroupState = ActionGroupState.Created, ActionState actionState = ActionState.Created)
     {
         const string orderId = "orderId";
         var groupId = Guid.NewGuid();
@@ -41,11 +41,13 @@ public static class AgvActionGenerator
         var dropActionGuid = Guid.NewGuid();
         var pickAction = new AgvAction(pickActionGuid, ActionType.Pick, "Src-1", groupId)
         {
-            Sequence = 0
+            Sequence = 0,
+            State = actionState
         };
         var dropAction = new AgvAction(dropActionGuid, ActionType.Drop, "Dst-1", groupId)
         {
-            Sequence = 1
+            Sequence = 1,
+            State = actionState
         };
 
         var actionGroup = new ActionGroup(groupId, orderId, new List<AgvAction> {pickAction, dropAction})

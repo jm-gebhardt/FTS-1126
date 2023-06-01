@@ -60,13 +60,35 @@ public class EfActionGroupRegistry : IActionGroupRegistry
     }
 
     /// <inheritdoc />
+    public async Task<int> GetActionGroupsCountAsync(IEnumerable<ActionGroupState> states, DateTime? fromDate = null, DateTime? toDate = null)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
+        
+        IQueryable<ActionGroup> actionGroups = queryable
+            .Where(g => states.Contains(g.State));
+
+        if (fromDate != null)
+        {
+            actionGroups = actionGroups.Where(g => g.CreatedDate >= fromDate);
+        }
+
+        if (toDate != null)
+        {
+            actionGroups = actionGroups.Where(g => g.CreatedDate <= toDate);
+        }
+
+        return await actionGroups.CountAsync();
+    }
+
+    /// <inheritdoc />
     public async Task<IReadOnlyDictionary<Guid, ActionGroup?>> GetCurrentAssignedActionGroupsAsync(IEnumerable<Guid> agvCorrelationIds)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
         var actions = new Dictionary<Guid, ActionGroup?>();
         
-        // Once agv is assigned, status is set to started. We can use StartedDate to get current assigned ActionGroup 
+        // Once Agv is assigned to ActionGroup, Status is immediately set to started (and StartedDate), therefore we can use StartedDate to get current assigned ActionGroup 
         await Task.WhenAll(agvCorrelationIds
             .Select(agv => queryable.OrderByDescending(g => g.StartedDate)
                 .FirstOrDefaultAsync(a => a.AssignedAgv == agv)

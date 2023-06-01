@@ -1,5 +1,4 @@
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Actions.Requests.Queries;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Registries;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers;
 using MassTransit;
@@ -41,9 +40,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             return controller;
         }
 
-        private Mock<IAgvActionRegistry> GetAgvActionRegistry()
+        private Mock<IActionGroupRegistry> GetAgvActionRegistry()
         {
-            var registry = new Mock<IAgvActionRegistry>();
+            var registry = new Mock<IActionGroupRegistry>();
             
             return registry;
         }

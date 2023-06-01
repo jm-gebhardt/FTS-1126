@@ -35,9 +35,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Quer
             _mapper = mapper;
         }
 
-        /// <summary>
         /// <inheritdoc cref="GetAgvsRequestHandler"/>
-        /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
         public async Task Consume(ConsumeContext<GetAgvsRequest> context)

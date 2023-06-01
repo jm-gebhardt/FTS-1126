@@ -1,6 +1,6 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos.AgvActions
 {
     /// <summary>
     /// Count of AgvGroup in specific state

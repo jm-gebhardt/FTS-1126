@@ -2,7 +2,7 @@ using Gebhardt.StoreWare.Agv.Common.Contracts;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos.AgvActions
 {
     /// <summary>
     /// AgvAction model

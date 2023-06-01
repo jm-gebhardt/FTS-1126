@@ -26,6 +26,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Registries
         public Task<IReadOnlyList<ActionGroup>> GetActionGroupsAsync(IEnumerable<ActionGroupState> states, DateTime? fromDate = null, DateTime? toDate = null, int maxItems = 0);
 
         /// <summary>
+        /// Get ActionGroup count which have the given state (and date range filter)
+        /// </summary>
+        /// <param name="states">Can be one state filter or contain multiple states which should be included in the return</param>
+        /// <param name="fromDate"></param>
+        /// <param name="toDate"></param>
+        /// <returns></returns>
+        public Task<int> GetActionGroupsCountAsync(IEnumerable<ActionGroupState> states, DateTime? fromDate = null, DateTime? toDate = null);
+
+        /// <summary>
         /// Get currently assigned action groups of provided AGVs
         /// </summary>
         /// <param name="agvCorrelationIds"></param>
