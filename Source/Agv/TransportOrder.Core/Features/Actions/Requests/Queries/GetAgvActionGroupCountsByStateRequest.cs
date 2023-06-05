@@ -3,5 +3,5 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Actions.Requests.Q
     /// <summary>
     /// GetAgvActionGroupCountsByStateRequest
     /// </summary>
-    public record GetAgvActionGroupCountsByStateRequest();
+    public record GetAgvActionGroupCountsByStateRequest;
 }

@@ -32,14 +32,16 @@ public class EfActionGroupRegistry : IActionGroupRegistry
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<ActionGroup>> GetActionGroupsAsync(IEnumerable<ActionGroupState> states, DateTime? fromDate = null, DateTime? toDate = null, int maxItems = 0)
+    public async Task<IReadOnlyList<ActionGroup>> GetActionGroupsAsync(IEnumerable<ActionGroupState>? states = null, DateTime? fromDate = null, DateTime? toDate = null, int maxItems = 0)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
-
-        IQueryable<ActionGroup> actionGroups = queryable
-            .Where(g => states.Contains(g.State))
+        IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>()
             .OrderByDescending(g => g.CreatedDate);
+
+        if (states != null)
+        {
+            actionGroups = actionGroups.Where(g => states.Contains(g.State));
+        }
 
         if (fromDate != null)
         {
@@ -64,7 +66,7 @@ public class EfActionGroupRegistry : IActionGroupRegistry
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
-        
+
         IQueryable<ActionGroup> actionGroups = queryable
             .Where(g => states.Contains(g.State));
 
@@ -87,13 +89,13 @@ public class EfActionGroupRegistry : IActionGroupRegistry
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
         var actions = new Dictionary<Guid, ActionGroup?>();
-        
+
         // Once Agv is assigned to ActionGroup, Status is immediately set to started (and StartedDate), therefore we can use StartedDate to get current assigned ActionGroup 
         await Task.WhenAll(agvCorrelationIds
             .Select(agv => queryable.OrderByDescending(g => g.StartedDate)
                 .FirstOrDefaultAsync(a => a.AssignedAgv == agv)
                 .ContinueWith(o => actions[agv] = o.Result)));
-        
+
         return actions;
     }
 

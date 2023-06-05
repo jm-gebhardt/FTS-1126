@@ -47,7 +47,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos.AgvActions
         /// <summary>
         /// List of actions
         /// </summary>
-        public ICollection<AgvActionDto> Actions { get; }
+        public IList<AgvActionDto> Actions { get; }
 
         /// <param name="correlationId"></param>
         /// <param name="orderId"></param>
@@ -65,7 +65,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos.AgvActions
             DateTime? startedDate,
             DateTime? completedDate,
             ActionGroupState state,
-            ICollection<AgvActionDto> actions
+            IList<AgvActionDto> actions
         )
         {
             CorrelationId = correlationId;

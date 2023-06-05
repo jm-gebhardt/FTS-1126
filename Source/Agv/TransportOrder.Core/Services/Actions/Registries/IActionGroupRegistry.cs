@@ -18,12 +18,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Registries
         /// <summary>
         /// Get ActionGroup
         /// </summary>
-        /// <param name="states">Can be one state filter or contain multiple states which should be included in the return</param>
-        /// <param name="fromDate"></param>
-        /// <param name="toDate"></param>
-        /// <param name="maxItems"></param>
+        /// <param name="states">Can be one state filter or contain multiple states which should be included in the return. If null, the filter is inactive</param>
+        /// <param name="fromDate">The UTC from Date, only items with a greater CreatedDate will be considered</param>
+        /// <param name="toDate">The UTC from Date, only items with a less CreatedDate will be considered</param>
+        /// <param name="maxItems">The max item count to return</param>
         /// <returns></returns>
-        public Task<IReadOnlyList<ActionGroup>> GetActionGroupsAsync(IEnumerable<ActionGroupState> states, DateTime? fromDate = null, DateTime? toDate = null, int maxItems = 0);
+        public Task<IReadOnlyList<ActionGroup>> GetActionGroupsAsync(IEnumerable<ActionGroupState>? states = null, DateTime? fromDate = null, DateTime? toDate = null, int maxItems = 0);
 
         /// <summary>
         /// Get ActionGroup count which have the given state (and date range filter)

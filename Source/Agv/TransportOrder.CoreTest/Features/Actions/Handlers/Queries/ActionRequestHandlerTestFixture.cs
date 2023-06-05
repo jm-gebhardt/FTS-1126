@@ -2,6 +2,7 @@ using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Registries;
+using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -12,27 +13,27 @@ public class ActionRequestHandlerTestFixture<TRequestClient, TConsumer>  : Media
     where TRequestClient : class
     where TConsumer : class, IConsumer
 {
-    public readonly Mock<IActionGroupRegistry> ActionGroupRegistry = new();
+    private readonly ActionGroupRegistryTestFixture _actionGroupRegistryFixture;
     public ActionGroupState[] AllActionGroupStates => Enum.GetValues(typeof(ActionGroupState)).Cast<ActionGroupState>().ToArray();
 
     public ActionRequestHandlerTestFixture()
     {
-        AddServices(s => s.AddTransient<IActionGroupRegistry>(_ => ActionGroupRegistry.Object));
-        AddServices(s => s.AddTransient<IMapper>(_ => Mock.Of<IMapper>()));
+        _actionGroupRegistryFixture = new ActionGroupRegistryTestFixture();
     }
     
-    public ActionRequestHandlerTestFixture<TRequestClient, TConsumer> WithActionGroup(ActionGroup[] actionGroups)
+    public ActionRequestHandlerTestFixture<TRequestClient, TConsumer> WithActionGroups(IEnumerable<ActionGroup> actionGroups)
     {
-        ActionGroupRegistry
-            .Setup(x => x.GetActionGroupsAsync(AllActionGroupStates, It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>()))
-            .ReturnsAsync(actionGroups);
-
+        _actionGroupRegistryFixture.WithActionGroups(actionGroups);
         return this;
     }
 
-    public new ActionRequestHandlerTestFixture<TRequestClient, TConsumer> Build()
+    public async Task<ActionRequestHandlerTestFixture<TRequestClient, TConsumer>> BuildAsync()
     {
+        await _actionGroupRegistryFixture.BuildAsync();
+        AddServices(s => s.AddTransient<IActionGroupRegistry>(_ => _actionGroupRegistryFixture.ActionGroupRegistry));
+        AddServices(s => s.AddTransient<IMapper>(_ => Mock.Of<IMapper>()));
         base.Build();
+        
         return this;
     }
 }

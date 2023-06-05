@@ -11,7 +11,7 @@ using Moq;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
 {
-    public class AgvActionControllerTestFixture<TRequest, TRequestHandler> : ControllerTestFixture<TRequest, TRequestHandler, AgvActionController>
+    public class AgvActionControllerTestFixture<TRequest, TRequestHandler> : ControllerTestFixture<TRequest, TRequestHandler, ActionGroupController>
         where TRequest : class
         where TRequestHandler : class, IConsumer
     {
@@ -22,12 +22,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             return this;
         }
         
-        protected override AgvActionController GetController()
+        protected override ActionGroupController GetController()
         {
             IRequestClient<GetAgvActionGroupsRequest> getAgvActionGroupsRequest = GetRequestClient<GetAgvActionGroupsRequest>();
             IRequestClient<GetAgvActionGroupCountsByStateRequest> getAgvActionGroupCountsByStateRequest = GetRequestClient<GetAgvActionGroupCountsByStateRequest>();
             
-            var controller = new AgvActionController(getAgvActionGroupsRequest, getAgvActionGroupCountsByStateRequest)
+            var controller = new ActionGroupController(getAgvActionGroupsRequest, getAgvActionGroupCountsByStateRequest)
             {
                 ControllerContext = new ControllerContext(
                     new ActionContext(

@@ -1,8 +1,10 @@
+using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Profiles.Profiles;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.States;
+using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
@@ -20,6 +22,7 @@ public class AgvProfileTest
         const string agvId = "AGV1";
         var correlationId = agvId.ToGuid();
         const string mapName = "Map#1";
+        
         var agvSaga = new AgvSaga(correlationId, agvId, "Idle",
             new AgvStatus(Guid.NewGuid(), "123", true, true, 10, false, false),
             new AgvGraph(Guid.NewGuid(),
@@ -38,12 +41,12 @@ public class AgvProfileTest
         Enum.TryParse(agvSaga.CurrentState, out AgvState agvState);
         agv.CurrentState.ShouldBe(agvState);
     }
-    
+
     [TestMethod]
     public void Map_ShouldMapAllPropertiesCorrectly_WhereAgvDataDtoIsMappedToAgvData()
     {
         var agvData = new AgvData(Guid.NewGuid(), "Karis", "BF1", "127.0.0.1", 1.8, 120.0, 0.6, 0.8, 0.7, 1, 2.5, 1000, Array.Empty<AgvData.Sensor>());
-        var mapper = new MappingProfileTestFixture().GetMapper(new[] { new AgvProfile() });
+        var mapper = new MappingProfileTestFixture().GetMapper(new Profile[] { new AgvProfile(), new ActionProfile() });
         var agvDataDto = mapper.Map<AgvDataDto>(agvData);
 
         agvDataDto.ShouldNotBeNull();
@@ -59,5 +62,44 @@ public class AgvProfileTest
         agvDataDto.Payload.ShouldBe(agvData.Payload);
         agvDataDto.Width.ShouldBe(agvData.Width);
         agvDataDto.Sensors.ShouldBe(agvData.Sensors);
+    }
+
+    [TestMethod]
+    public void Map_ShouldMapAllPropertiesCorrectly_WhereAgvStatusDtoIsMappedToAgvStatus()
+    {
+        var mapper = new MappingProfileTestFixture().GetMapper(new Profile[] { new AgvProfile(), new ActionProfile() });
+        var agvStatus = new AgvStatus(Guid.NewGuid(), "123", true, true, 10, false, false, "lastNodeId");
+        var agvStatusDto = mapper.Map<AgvStatusDto>(agvStatus);
+        agvStatusDto.ShouldSatisfyAllConditions(
+            o => o.OrderId.ShouldBe(agvStatus.OrderId),
+            o => o.Busy.ShouldBe(agvStatus.Busy),
+            o => o.Automatic.ShouldBe(agvStatus.Automatic),
+            o => ((double)o.BatteryCharge!.Value).ShouldBe(agvStatus.BatteryCharge),
+            o => o.Charging.ShouldBe(agvStatus.Charging),
+            o => o.Disturbed.ShouldBe(agvStatus.Disturbed),
+            o => o.LastNodeId.ShouldBe(agvStatus.LastNodeId));
+    }
+
+    [TestMethod]
+    public void Map_ShouldMapAllPropertiesCorrectly_WhereAgvDtoIsMappedToAgvWithAgvStatus()
+    {
+        var mapper = new MappingProfileTestFixture().GetMapper(new Profile[] { new AgvProfile(), new ActionProfile() });
+        var agvStatus = new AgvStatus(Guid.NewGuid(), "OrderId#123", false, true, 98, false, false, "lastNodeId#123");
+        var agv = AgvGenerator.GenerateIdleAgv(agvStatus: agvStatus);
+
+        var agvDto = mapper.Map<AgvDto>(agv);
+        agvDto.ShouldSatisfyAllConditions(
+            o => o.AgvId.ShouldBe(agv.AgvId),
+            o => o.CorrelationId.ShouldBe(agv.CorrelationId),
+            o => o.CurrentState.ToString().ShouldBe(agv.CurrentState),
+            o => o.TimeOfStateTransition.ShouldBe(agv.TimeOfStateTransition),
+            o => o.TimeOfLockStateChanged.ShouldBe(agv.TimeOfLockStateChanged),
+            o => o.IsOnline.ShouldBe(agv.IsOnline),
+            o => o.IsLocked.ShouldBe(agv.IsLocked),
+            o => o.IsDisturbed.ShouldBe(agv.AgvStatus!.Disturbed),
+            o => o.IsAutomatic.ShouldBe(agv.AgvStatus!.Automatic),
+            o => o.BatteryCharge.ShouldBe(agv.AgvStatus!.BatteryCharge),
+            o => o.IsCharging.ShouldBe(agv.AgvStatus!.Charging) 
+        );
     }
 }

@@ -10,10 +10,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
     /// <summary>
     /// Controller for <see cref="AgvAction"/>
     /// </summary>
-    public class AgvActionController: Controller
+    public class ActionGroupController: Controller
     {
-
-
         private readonly IRequestClient<GetAgvActionGroupsRequest> _getAgvActionGroupsRequest;
         private readonly IRequestClient<GetAgvActionGroupCountsByStateRequest> _getAgvActionGroupCountsByStateRequest;
 
@@ -22,7 +20,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
         /// </summary>
         /// <param name="getAgvActionGroupsRequest"></param>
         /// <param name="getAgvActionGroupCountsByStateRequest"></param>
-        public AgvActionController(IRequestClient<GetAgvActionGroupsRequest> getAgvActionGroupsRequest, IRequestClient<GetAgvActionGroupCountsByStateRequest> getAgvActionGroupCountsByStateRequest)
+        public ActionGroupController(IRequestClient<GetAgvActionGroupsRequest> getAgvActionGroupsRequest, IRequestClient<GetAgvActionGroupCountsByStateRequest> getAgvActionGroupCountsByStateRequest)
         {
             _getAgvActionGroupsRequest = getAgvActionGroupsRequest;
             _getAgvActionGroupCountsByStateRequest = getAgvActionGroupCountsByStateRequest;

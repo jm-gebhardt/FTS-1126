@@ -7,14 +7,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Profiles.Profiles;
 /// <summary>
 /// Profile for Actions
 /// </summary>
-public class ActionProfile: Profile
+public class ActionProfile : Profile
 {
     /// <summary>
     /// Constructor
     /// </summary>
     public ActionProfile()
     {
-        CreateMap<ActionGroup, ActionGroupDto>();
+        CreateMap<ActionGroup, ActionGroupDto>()
+            .ForMember(nameof(ActionGroupDto.Actions), opt => opt.MapFrom(src => src.Actions.OrderBy(a => a.Sequence)));
         CreateMap<AgvAction, AgvActionDto>();
     }
 }

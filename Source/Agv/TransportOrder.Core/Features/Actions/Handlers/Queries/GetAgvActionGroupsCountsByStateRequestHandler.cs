@@ -3,6 +3,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos.AgvActions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Actions.Common;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Actions.Requests.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Registries;
+using JetBrains.Annotations;
 using MassTransit;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Actions.Handlers.Queries
@@ -10,6 +11,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Actions.Handlers.Q
     /// <summary>
     /// Defines a handler for the GetAgvActionGroups request
     /// </summary>
+    [PublicAPI]
     public class GetAgvActionGroupCountsByStateRequestHandler : IConsumer<GetAgvActionGroupCountsByStateRequest>
     {
         private readonly IActionGroupRegistry _actionGroupRegistry;

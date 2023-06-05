@@ -9,5 +9,5 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Actions.Requests.Q
     /// <param name="FromDate"></param>
     /// <param name="ToDate"></param>
     /// <param name="Limit"></param>
-    public record GetAgvActionGroupsRequest(ActionGroupState[] States, DateTime FromDate, DateTime ToDate, int Limit);
+    public record GetAgvActionGroupsRequest(ActionGroupState[] States, DateTime FromDate, DateTime ToDate, int Limit = 1000);
 }

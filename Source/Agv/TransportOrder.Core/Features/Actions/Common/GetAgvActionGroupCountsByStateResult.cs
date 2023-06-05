@@ -7,5 +7,5 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Actions.Common
     /// Defines a result for the GetAgvActionGroupCountsByState request
     /// </summary>
     /// <param name="AgvGroupCountByState"></param>
-    public record GetAgvActionGroupCountsByStateResult(IEnumerable<AgvGroupCountByStateDto> AgvGroupCountByState);
+    public record GetAgvActionGroupCountsByStateResult(IList<AgvGroupCountByStateDto> AgvGroupCountByState);
 }

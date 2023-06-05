@@ -19,10 +19,7 @@ public class AgvProfile : Profile
             .ForMember(nameof(AgvDto.IsAutomatic), opt => opt.MapFrom(src => src.Automatic))
             .ForMember(nameof(AgvDto.IsCharging), opt => opt.MapFrom(src => src.Charging))
             .ForMember(nameof(AgvDto.BadBatteryLevel), opt => opt.MapFrom(src => AgvStatus.BadBatteryLevel))
-            .ForMember(nameof(AgvDto.GoodBatteryLevel), opt => opt.MapFrom(src => AgvStatus.GoodBatteryLevel))
-            ;
-
-        CreateMap<ActionGroup, ActionGroupDto>();
+            .ForMember(nameof(AgvDto.GoodBatteryLevel), opt => opt.MapFrom(src => AgvStatus.GoodBatteryLevel));
 
         CreateMap<IAgv, AgvDto>(MemberList.None)
             .IncludeMembers(s => s.AgvStatus);

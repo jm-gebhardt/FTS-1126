@@ -4,6 +4,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos.AgvActions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Actions.Common;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Actions.Requests.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Registries;
+using JetBrains.Annotations;
 using MassTransit;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Actions.Handlers.Queries
@@ -11,7 +12,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Actions.Handlers.Q
     /// <summary>
     /// Defines a handler for the GetAgvActionGroups request
     /// </summary>
-    public class GetAgvActionGroupsRequestHandler: IConsumer<GetAgvActionGroupsRequest>
+    [PublicAPI]
+    public class GetAgvActionGroupsRequestHandler : IConsumer<GetAgvActionGroupsRequest>
     {
         private readonly IActionGroupRegistry _actionGroupRegistry;
         private readonly IMapper _mapper;
@@ -26,8 +28,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Actions.Handlers.Q
             _actionGroupRegistry = actionGroupRegistry;
             _mapper = mapper;
         }
-        
-        
+
         /// <summary>
         /// <inheritdoc cref="GetAgvActionGroupsRequestHandler"/>
         /// </summary>
@@ -36,13 +37,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Actions.Handlers.Q
         /// <exception cref="NotImplementedException"></exception>
         public async Task Consume(ConsumeContext<GetAgvActionGroupsRequest> context)
         {
-            IReadOnlyList<ActionGroup> actionGroups = await _actionGroupRegistry.GetActionGroupsAsync(context.Message.States, context.Message.FromDate, context.Message.ToDate, context.Message.Limit);
-            
+            var request = context.Message;
+            IReadOnlyList<ActionGroup> actionGroups = await _actionGroupRegistry.GetActionGroupsAsync(request.States, request.FromDate, request.ToDate, request.Limit);
+
             var result = new GetAgvActionGroupsResult(actionGroups.Select(g => _mapper.Map<ActionGroupDto>(g)).ToList());
-            
+
             await context.RespondAsync(result);
         }
     }
 }
-
-

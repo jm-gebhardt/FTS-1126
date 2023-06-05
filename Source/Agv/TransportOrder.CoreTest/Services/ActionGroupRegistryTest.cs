@@ -55,11 +55,14 @@ public class ActionGroupRegistryTest
             actionGroups.Add(AgvActionGenerator.GeneratePickDropActionGroup(actionGroupState));
         }
 
-        foreach (var otherActionGroupState in actionGroupStates.Except(new List<ActionGroupState> { actionGroupState }))
-        {
-            actionGroups.Add(AgvActionGenerator.GeneratePickDropActionGroup(otherActionGroupState));
-        }
+        IEnumerable<ActionGroupState> otherStatesForTestingExclusion = actionGroupStates.Except(new List<ActionGroupState> { actionGroupState });
+        actionGroups.AddRange(CreateInitialActionGroups(otherStatesForTestingExclusion));
         return actionGroups;
+    }
+
+    private static IEnumerable<ActionGroup> CreateInitialActionGroups(IEnumerable<ActionGroupState> actionGroupStates)
+    {
+        return actionGroupStates.Select(actionGroupState => AgvActionGenerator.GeneratePickDropActionGroup(actionGroupState)).ToList();
     }
 
     [TestMethod]
@@ -71,7 +74,7 @@ public class ActionGroupRegistryTest
         await fixture.ActionGroupRegistry.InsertAsync(actionGroup);
         var actionGroupInRegistry = await fixture.ActionGroupRegistry.GetActionGroupAsync(actionGroup.CorrelationId);
 
-        actionGroupInRegistry.ShouldNotBeNull();           
+        actionGroupInRegistry.ShouldNotBeNull();
         actionGroupInRegistry.Actions.ShouldNotBeEmpty();
         VerifyActionGroup(actionGroupInRegistry, actionGroup);
     }
@@ -97,13 +100,13 @@ public class ActionGroupRegistryTest
             .BuildAsync();
 
         IReadOnlyList<ActionGroup> actionGroupsResult = await fixture.ActionGroupRegistry.GetActionGroupsAsync(new List<ActionGroupState> { actionGroupState }, fromDate: null, toDate: null, maxItems: maxItem);
-        
+
         foreach (var actionGroupInRegistry in actionGroupsResult)
         {
             actionGroupInRegistry.State.ShouldBe(actionGroupState);
             actionGroupInRegistry.Actions.ShouldNotBeEmpty();
         }
-        
+
         actionGroupsResult.Count.ShouldBeLessThanOrEqualTo(maxItem);
     }
 
@@ -150,6 +153,39 @@ public class ActionGroupRegistryTest
 
         IReadOnlyList<ActionGroup> actionGroupsResult = await fixture.ActionGroupRegistry.GetActionGroupsAsync(new List<ActionGroupState> { ActionGroupState.Created }, fromDate: fromDate, toDate: toDate, maxItems: maxItem);
         actionGroupsResult.ShouldBeEmpty();
+    }
+
+    [TestMethod]
+    public async Task GetActionGroupsAsync_WhenThereAreNoStateProvided_ReturnActionGroupsAllStates()
+    {
+        ActionGroupState[] actionGroupStates = Enum.GetValues<ActionGroupState>();
+        IEnumerable<ActionGroup> actionGroups = CreateInitialActionGroups(actionGroupStates);
+        var fixture = await new ActionGroupRegistryTestFixture()
+            .WithActionGroups(actionGroups)
+            .BuildAsync();
+
+        IReadOnlyList<ActionGroup> actionGroupsResult = await fixture.ActionGroupRegistry.GetActionGroupsAsync(maxItems: 10);
+        actionGroupsResult.ShouldNotBeEmpty();
+        foreach (var actionGroupState in actionGroupStates)
+        {
+            actionGroupsResult.ShouldContain(x => x.State == actionGroupState);
+        }
+    }
+
+    [TestMethod]
+    [DataRow(ActionGroupState.Completed, 12)]
+    [DataRow(ActionGroupState.Started, 12)]
+    [DataRow(ActionGroupState.Created, 12)]
+    [DataRow(ActionGroupState.Completed, 0)]
+    public async Task GetActionGroupsCountAsync_WhenThereIsActionGroupForGivenState_ReturnCountOfActionGroups(ActionGroupState state, int expectedActionGroupCount)
+    {
+        IEnumerable<ActionGroup> actionGroups = CreateInitialActionGroups(expectedActionGroupCount, state);
+        var fixture = await new ActionGroupRegistryTestFixture()
+            .WithActionGroups(actionGroups)
+            .BuildAsync();
+
+        int actualActionGroupCount = await fixture.ActionGroupRegistry.GetActionGroupsCountAsync(new[] { state });
+        actualActionGroupCount.ShouldBe(expectedActionGroupCount);
     }
 
     [TestMethod]
