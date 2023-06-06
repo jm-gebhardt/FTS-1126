@@ -24,6 +24,8 @@ public class AgvProfile : Profile
         CreateMap<IAgv, AgvDto>(MemberList.None)
             .IncludeMembers(s => s.AgvStatus);
 
+        CreateMap<(IAgv, ActionGroup?), AgvData>();
+
         CreateMap<AgvData, AgvDataDto>();
         CreateMap<AgvStatus, AgvStatusDto>();
     }
