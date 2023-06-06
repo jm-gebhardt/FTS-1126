@@ -1,6 +1,6 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 
-namespace Gebhardt.StoreWare.Agv.CommonTest.Helpers;
+namespace Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 
 public class AgvDummy : IAgv
 {
