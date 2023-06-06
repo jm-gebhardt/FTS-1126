@@ -36,7 +36,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
 
         private Mock<IAgvDataRegistry> AgvDataRegistry { get; }
 
-        public Mock<IActionGroupRegistry> ActionGroupRegistry { get; }
+        private Mock<IActionGroupRegistry> ActionGroupRegistry { get; }
 
         public AgvGraph.Node[] Nodes { get; } =
         {

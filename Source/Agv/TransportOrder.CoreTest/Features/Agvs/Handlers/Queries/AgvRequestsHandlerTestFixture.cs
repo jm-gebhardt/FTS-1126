@@ -14,7 +14,10 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
     where TRequestClient : class
     where TConsumer : class, IConsumer
 {
+    // ReSharper disable once MemberCanBePrivate.Global
     public readonly Mock<IAgvRegistry> AgvRegistry = new();
+
+    // ReSharper disable once MemberCanBePrivate.Global
     public readonly Mock<IActionGroupRegistry> ActionGroupRegistry = new();
 
     public AgvRequestsHandlerTestFixture()
