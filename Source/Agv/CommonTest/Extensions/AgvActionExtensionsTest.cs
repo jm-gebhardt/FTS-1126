@@ -1,7 +1,7 @@
 using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.Common.Services;
-using Gebhardt.StoreWare.Agv.CommonTest.Helpers;
+using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 

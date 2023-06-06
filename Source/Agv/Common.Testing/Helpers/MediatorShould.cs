@@ -1,7 +1,7 @@
 using MassTransit;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.CommonTest.Helpers
+namespace Gebhardt.StoreWare.Agv.Common.Testing.Helpers
 {
     /// <summary>
     /// Helper class for asserting Mediator request/client exceptionss
