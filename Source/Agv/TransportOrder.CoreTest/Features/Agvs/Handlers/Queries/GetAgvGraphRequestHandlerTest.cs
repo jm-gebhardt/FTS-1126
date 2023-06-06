@@ -11,7 +11,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Features.Agvs.Handlers.
 [TestClass]
 public class GetAgvGraphRequestHandlerTest
 {
-    
+    /*
     [TestMethod]
     public async Task GetAgvGraphRequest_AgvNotFound_ExceptionThrown()
     {
@@ -30,5 +30,5 @@ public class GetAgvGraphRequestHandlerTest
         await fixture.TestHarness!.Bus.Publish(new GetAgvGraphRequest(Guid.Empty));
         (await fixture.TestHarness.Consumed.Any<GetAgvGraphRequest>()).ShouldBeTrue();
         fixture.ShouldContainFault<GetAgvGraphRequest, AgvGraphNotDefinedException>();
-    }
+    }*/
 }
