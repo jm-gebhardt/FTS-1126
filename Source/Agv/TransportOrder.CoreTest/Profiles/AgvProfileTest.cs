@@ -1,7 +1,10 @@
 using AutoMapper;
+using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
+using Gebhardt.StoreWare.Agv.CommonTest.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos.AgvActions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Profiles.Profiles;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.States;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
@@ -22,7 +25,7 @@ public class AgvProfileTest
         const string agvId = "AGV1";
         var correlationId = agvId.ToGuid();
         const string mapName = "Map#1";
-        
+
         var agvSaga = new AgvSaga(correlationId, agvId, "Idle",
             new AgvStatus(Guid.NewGuid(), "123", true, true, 10, false, false),
             new AgvGraph(Guid.NewGuid(),
@@ -99,7 +102,18 @@ public class AgvProfileTest
             o => o.IsDisturbed.ShouldBe(agv.AgvStatus!.Disturbed),
             o => o.IsAutomatic.ShouldBe(agv.AgvStatus!.Automatic),
             o => o.BatteryCharge.ShouldBe(agv.AgvStatus!.BatteryCharge),
-            o => o.IsCharging.ShouldBe(agv.AgvStatus!.Charging) 
+            o => o.IsCharging.ShouldBe(agv.AgvStatus!.Charging)
         );
+    }
+
+    [TestMethod]
+    public void Map_ShouldMapAllPropertiesCorrectlyInOrderBySequence_WhenActionGroupDtoIsMappedToActionGroup()
+    {
+        var mapper = new MappingProfileTestFixture().GetMapper(new Profile[] { new AgvProfile(), new ActionProfile() });
+
+        List<AgvAction> actions = AgvActionGenerator.GeneratePickDropActionGroup().Actions.OrderByDescending(x => x.Sequence).ToList();
+        var actionGroup = AgvActionGenerator.GenerateActionGroup(actions);
+        var actionGroupDto = mapper.Map<ActionGroupDto>(actionGroup);
+        actionGroupDto.Actions.Select(a => a.Sequence).ShouldBeInOrder(SortDirection.Ascending);
     }
 }

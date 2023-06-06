@@ -2,7 +2,6 @@ using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos.AgvActions;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Profiles.Profiles;
 
@@ -24,7 +23,7 @@ public class AgvProfile : Profile
         CreateMap<IAgv, AgvDto>(MemberList.None)
             .IncludeMembers(s => s.AgvStatus);
 
-        CreateMap<(IAgv, ActionGroup?), AgvData>();
+        CreateMap<ActionGroup, AgvDto>(MemberList.None);
 
         CreateMap<AgvData, AgvDataDto>();
         CreateMap<AgvStatus, AgvStatusDto>();

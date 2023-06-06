@@ -33,6 +33,12 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
         return this;
     }
 
+    public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithAgv(IAgv agv)
+    {
+        AgvRegistry.Setup(r => r.GetAgv(agv.CorrelationId)).Returns(agv);
+        return this;
+    }
+
     public new AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> Build()
     {
         base.Build();

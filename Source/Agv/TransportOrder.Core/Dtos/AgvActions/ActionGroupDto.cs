@@ -9,6 +9,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos.AgvActions
     [PublicAPI]
     public record ActionGroupDto
     {
+        private IList<AgvActionDto> _actions = new List<AgvActionDto>();
+
         /// <summary>
         /// CorrelationId of ActionGroup
         /// </summary>
@@ -47,7 +49,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos.AgvActions
         /// <summary>
         /// List of actions
         /// </summary>
-        public IList<AgvActionDto> Actions { get; }
+        public IList<AgvActionDto> Actions
+        {
+            get => _actions;
+            init => _actions = value.OrderBy(a => a.Sequence).ToList();
+        }
 
         /// <param name="correlationId"></param>
         /// <param name="orderId"></param>

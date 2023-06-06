@@ -42,7 +42,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Quer
         {
             List<IAgv> agvs = _agvRegistry.GetAllAgvs().OrderBy(a => a.AgvId).ToList();
             IReadOnlyDictionary<Guid, ActionGroup?> actions = await _actionGroupRegistry.GetCurrentAssignedActionGroupsAsync(agvs.Select(a => a.CorrelationId));
-            List<AgvDto> agvDtos = agvs.Select(agv => _mapper.Map<AgvDto>((agv, actions[agv.CorrelationId]))).ToList();
+            List<AgvDto> agvDtos = agvs.Select(agv =>
+            {
+                var agvDto =  _mapper.Map<AgvDto>(agv);
+                _mapper.Map(actions[agv.CorrelationId], agvDto);
+                return agvDto;
+            }).ToList();
             await context.RespondAsync(new GetAgvsResult(agvDtos));
         }
     }

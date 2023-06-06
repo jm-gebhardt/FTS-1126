@@ -86,19 +86,22 @@ public class EfActionGroupRegistry : IActionGroupRegistry
     /// <inheritdoc />
     public async Task<IReadOnlyDictionary<Guid, ActionGroup?>> GetCurrentAssignedActionGroupsAsync(IEnumerable<Guid> agvCorrelationIds)
     {
-        // Once Agv is assigned to ActionGroup, Status is immediately set to started (and StartedDate), therefore we can use StartedDate to get current assigned ActionGroup 
-        List<Task<(Guid agvCorrelationId, ActionGroup? agv)>> tasks = agvCorrelationIds
+        // Once Agv is assigned to ActionGroup, Status is immediately set to started (and StartedDate), therefore we can use StartedDate to get current assigned ActionGroup  
+        List<Task<(Guid agvCorrelationId, ActionGroup? actionGroup)>> tasks = agvCorrelationIds
             .Select(async agvCorrelationId =>
             {
                 await using var context = await _dbContextFactory.CreateDbContextAsync();
                 DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
-                var agv = await queryable.OrderByDescending(g => g.StartedDate)
+                
+                var actionGroup = await queryable.OrderByDescending(g => g.StartedDate)
+                    .Include(g=>g.Actions)
                     .FirstOrDefaultAsync(a => a.AssignedAgv == agvCorrelationId);
-                return (agvCorrelationId, agv);
+                
+                return (agvCorrelationId, actionGroup);
             }).ToList();
         await Task.WhenAll(tasks);
 
-        Dictionary<Guid, ActionGroup?> actions = tasks.ToDictionary(t => t.Result.agvCorrelationId, t => t.Result.agv);
+        Dictionary<Guid, ActionGroup?> actions = tasks.ToDictionary(t => t.Result.agvCorrelationId, t => t.Result.actionGroup);
 
         return actions;
     }
