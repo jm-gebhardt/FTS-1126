@@ -4,7 +4,7 @@ using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
 using Gebhardt.StoreWare.Agv.Common.Testing;
-using Gebhardt.StoreWare.Agv.CommonTest.Helpers;
+using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Shouldly;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
 using Gebhardt.StoreWare.Agv.Common.Exceptions;

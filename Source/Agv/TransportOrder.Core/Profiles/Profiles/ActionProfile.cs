@@ -14,8 +14,7 @@ public class ActionProfile : Profile
     /// </summary>
     public ActionProfile()
     {
-        CreateMap<ActionGroup, ActionGroupDto>()
-            .ForMember(nameof(ActionGroupDto.Actions), opt => opt.MapFrom(src => src.Actions.OrderBy(a => a.Sequence)));
+        CreateMap<ActionGroup, ActionGroupDto>();
         CreateMap<AgvAction, AgvActionDto>();
     }
 }

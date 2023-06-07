@@ -14,7 +14,10 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
     where TRequestClient : class
     where TConsumer : class, IConsumer
 {
+    // ReSharper disable once MemberCanBePrivate.Global
     public readonly Mock<IAgvRegistry> AgvRegistry = new();
+
+    // ReSharper disable once MemberCanBePrivate.Global
     public readonly Mock<IActionGroupRegistry> ActionGroupRegistry = new();
 
     public AgvRequestsHandlerTestFixture()
@@ -30,6 +33,12 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
         AgvRegistry.Setup(s => s.GetAllAgvs()).Returns(agvs.AsQueryable());
         ActionGroupRegistry.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>()))
             .ReturnsAsync(agvs.ToDictionary(a => a.CorrelationId, _ => actionGroup));
+        return this;
+    }
+
+    public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithAgv(IAgv agv)
+    {
+        AgvRegistry.Setup(r => r.GetAgv(agv.CorrelationId)).Returns(agv);
         return this;
     }
 

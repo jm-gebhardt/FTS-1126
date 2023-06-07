@@ -179,6 +179,7 @@ stages:
           reports: '$(Pipeline.Workspace)/coverageReports/**/coverage.cobertura.xml;$(Pipeline.Workspace)/coverageReportsWeb/*.xml'
           targetdir: '$(Agent.TempDirectory)/CoverageResults'
           reporttypes: 'Cobertura'
+          classfilters: '-*Common.Testing*'
       - task: PublishCodeCoverageResults@1
         displayName: 'Publish code coverage report'
         inputs:

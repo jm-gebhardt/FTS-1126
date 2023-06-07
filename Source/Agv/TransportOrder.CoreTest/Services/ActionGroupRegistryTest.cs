@@ -1,6 +1,6 @@
 using Gebhardt.StoreWare.Agv.Common.Exceptions;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
-using Gebhardt.StoreWare.Agv.CommonTest.Helpers;
+using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
@@ -47,7 +47,7 @@ public class ActionGroupRegistryTest
 
     private static IEnumerable<ActionGroup> CreateInitialActionGroups(int totalItems, ActionGroupState actionGroupState = ActionGroupState.Created)
     {
-        var actionGroupStates = new List<ActionGroupState> { ActionGroupState.Created, ActionGroupState.Started, ActionGroupState.Completed };
+        ActionGroupState[] actionGroupStates = Enum.GetValues<ActionGroupState>();
         var actionGroups = new List<ActionGroup>();
 
         for (int i = 0; i < totalItems; i++)
@@ -282,7 +282,6 @@ public class ActionGroupRegistryTest
 
     [TestMethod]
     public async Task GetSubsequentActionAsync_ReturnsSubsequentAction()
-
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(ActionGroupState.Started);
         var agv = AgvGenerator.GenerateIdleAgv();
@@ -300,5 +299,41 @@ public class ActionGroupRegistryTest
 
         var subsequentActionInRegistry = await fixture.ActionGroupRegistry.GetSubsequentActionAsync(agv.CorrelationId);
         VerifyAgvAction(subsequentActionInRegistry, subsequentAction);
+    }
+
+    [TestMethod]
+    public async Task GetCurrentAssignedActionGroupAsync_WhenAgvProvidedHaveCurrentAssignedActionGroup_ReturnTupleWithCurrentAssignedActionGroup()
+    {  
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(ActionGroupState.Started);
+        var agv = AgvGenerator.GenerateIdleAgv();
+        actionGroup.AssignedAgv = agv.CorrelationId;
+
+        var fixture = await new ActionGroupRegistryTestFixture()
+            .WithActionGroup(actionGroup)
+            .BuildAsync();
+
+        IReadOnlyDictionary<Guid, ActionGroup?> currentAssignedActionGroupsAsync = await fixture.ActionGroupRegistry.GetCurrentAssignedActionGroupsAsync(new[] { agv.CorrelationId });
+        currentAssignedActionGroupsAsync.Count.ShouldBe(1);
+        KeyValuePair<Guid, ActionGroup?> currentActionGroup = currentAssignedActionGroupsAsync.First();
+        currentActionGroup.Key.ShouldBe(agv.CorrelationId);
+        currentActionGroup.Value.ShouldNotBeNull();
+        VerifyActionGroup(currentActionGroup.Value, actionGroup);
+    }
+    
+    [TestMethod]
+    public async Task GetCurrentAssignedActionGroupAsync_WhenAgvProvidedHaveNoCurrentAssignedActionGroup_ReturnTupleWithNullValueForCurrentAssignedActionGroup()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(ActionGroupState.Started);
+        var agv = AgvGenerator.GenerateIdleAgv();
+        actionGroup.AssignedAgv = Guid.NewGuid();
+
+        var fixture = await new ActionGroupRegistryTestFixture()
+            .WithActionGroup(actionGroup)
+            .BuildAsync();
+
+        IReadOnlyDictionary<Guid, ActionGroup?> currentAssignedActionGroup = await fixture.ActionGroupRegistry.GetCurrentAssignedActionGroupsAsync(new[] { agv.CorrelationId });
+        currentAssignedActionGroup.Count.ShouldBe(1);
+        currentAssignedActionGroup.First().Key.ShouldBe(agv.CorrelationId);
+        currentAssignedActionGroup.First().Value.ShouldBeNull();
     }
 }
