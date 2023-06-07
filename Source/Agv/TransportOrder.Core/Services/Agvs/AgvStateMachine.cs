@@ -177,6 +177,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
             InstanceState(x => x.CurrentState);
             Initially(InitialAgvStatusReceivedHandler());
 
+            During(Discovered, UnlockDiscoveredAgvHandler());
             During(Idle, Charging, AcceptSetBusyRequestHandler());
             During(Discovered, Busy, RejectSetBusyRequestHandler());
             During(Discovered, Busy, AcceptSetIdleRequestHandler());
@@ -269,8 +270,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
         private EventActivityBinder<AgvSaga, SetAgvIdle> AcceptSetIdleRequestHandler() =>
             When(SetAgvIdleEvent)
                 .TransitionTo(Idle)
-                .Then(c =>
-                    _logger.LogDebug("AGV {AgvId} / {CorrelationId} idle", c.Saga.AgvId, c.Saga.CorrelationId))
+                .Then(c =>_logger.LogDebug("AGV {AgvId} / {CorrelationId} was set to Idle", c.Saga.AgvId, c.Saga.CorrelationId))
                 .Respond(c => new SetAgvIdleSucceeded(c.Message.CorrelationId))
                 .ThenAsync(c => PublishAgvBecameIdle(c.Saga, c));
 
@@ -296,9 +296,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
                     c.Saga.IsLocked = true;
                     c.Saga.TimeOfLockStateChanged = DateTime.Now;
                 })
-                .Then(c =>
-                    _logger.LogDebug("Agv {AgvId}/{CorrelationId} was locked", c.Saga.AgvId, c.Saga.CorrelationId));
+                .Then(c => _logger.LogDebug("Agv {AgvId}/{CorrelationId} was locked", c.Saga.AgvId, c.Saga.CorrelationId));
 
+        private EventActivityBinder<AgvSaga, UnlockAgv> UnlockDiscoveredAgvHandler() =>
+            When(UnlockAgvEvent)
+                .TransitionTo(Idle)
+                .Then(c => _logger.LogDebug("AGV {AgvId} / {CorrelationId} was set to Idle", c.Saga.AgvId, c.Saga.CorrelationId))
+                .ThenAsync(c => PublishAgvBecameIdle(c.Saga, c));
+       
         private EventActivityBinder<AgvSaga, UnlockAgv> UnlockAgvHandler() =>
             When(UnlockAgvEvent)
                 .Then(c =>
@@ -306,8 +311,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
                     c.Saga.IsLocked = false;
                     c.Saga.TimeOfLockStateChanged = DateTime.Now;
                 })
-                .Then(c =>
-                    _logger.LogDebug("Agv {AgvId}/{CorrelationId} was unlocked", c.Saga.AgvId, c.Saga.CorrelationId));
+                .Then(c => _logger.LogDebug("Agv {AgvId}/{CorrelationId} was unlocked", c.Saga.AgvId, c.Saga.CorrelationId));
 
         private EventActivityBinder<AgvSaga, AgvStartedCharging> AgvStartedChargingReceivedHandler() =>
             When(AgvStartedChargingEvent)
