@@ -1,4 +1,5 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
+using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos.AgvActions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Actions.Common;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Actions.Requests.Queries;
@@ -41,15 +42,16 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
             // DEBUG
             if (limit == 1)
             {
-
                 var groupId = Guid.Parse("10106e12-84f6-0301-daa0-138020db9422");
+                var assignedAgv = "karis0".ToGuid();
+
                 var result = new ActionGroupDto(
-                   groupId,
-                    "WOOT_10",
-                    null,
-                    DateTime.Now,
-                    null,
-                    null,
+                    groupId,
+                    "Order#1",
+                    assignedAgv, // AssignedAgv
+                    DateTime.Now, // createdDate
+                    null, // startedDate
+                    null, // completedDate
                     ActionGroupState.Created,
                     new List<AgvActionDto>()
                     {
@@ -59,11 +61,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
                             0,
                             ActionState.Created,
                             ActionType.Pick,
-                            "S1",
+                            "PVB02",
                             new string[0],
-                            DateTime.Now,
-                            null,
-                            null
+                            DateTime.Now, // createdDate
+                            null, // startedDate
+                            null // completedDate
                         ),
                         new AgvActionDto(
                             Guid.Parse("65469fa1-548a-446f-a8de-ad1cbb7c16ad"),
@@ -71,11 +73,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
                             1,
                             ActionState.Created,
                             ActionType.Drop,
-                            "D1",
+                            "PVB03",
                             new string[0],
-                            DateTime.Now,
-                            null,
-                            null
+                            DateTime.Now, // createdDate
+                            null, // startedDate
+                            null // completedDate
                         )
                     }
                 );
@@ -84,10 +86,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
                 return Ok(result);
             }
 
-            Response<GetAgvActionGroupsResult> groups = await _getAgvActionGroupsRequest.GetResponse<GetAgvActionGroupsResult>( new GetAgvActionGroupsRequest(
-                states, 
-                fromDate ?? DateTime.MinValue, 
-                toDate ?? DateTime.MaxValue, 
+            Response<GetAgvActionGroupsResult> groups = await _getAgvActionGroupsRequest.GetResponse<GetAgvActionGroupsResult>(new GetAgvActionGroupsRequest(
+                states,
+                fromDate ?? DateTime.MinValue,
+                toDate ?? DateTime.MaxValue,
                 limit));
             return Ok(groups.Message.AgvActionGroups);
         }

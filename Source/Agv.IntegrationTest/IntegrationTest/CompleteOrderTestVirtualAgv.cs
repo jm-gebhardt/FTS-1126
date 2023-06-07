@@ -4,7 +4,6 @@ using Gebhardt.StoreWare.Agv.IntegrationTest.Utils.Db.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-
 namespace Gebhardt.StoreWare.Agv.IntegrationTest
 {
     /// <summary>
@@ -16,27 +15,27 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest
         private DockerCompose? _dockerCompose;
         private DockerCompose? _dockerComposeVirtualAgv;
 
-        private const string DockerRegistry = "registry.gitlab.com";
-        private const string DockerRegistryRepository = "registry.gitlab.com/tar4/karis_virtual";
-
-        private const string DockerRegistryUser = "gebhardt";
-
-        private readonly string _dockerRegistryPassword =
-            Environment.GetEnvironmentVariable(EnvVars.DockerRegistryPassword)
-            ?? throw new InvalidOperationException($"Environment variable {EnvVars.DockerRegistryPassword} must be set.");
-
         /// <summary>
         /// Start all docker services before each test
         /// </summary>
-        [TestInitialize]
+        //[TestInitialize]
         public void StartServices()
         {
+            const string DockerRegistry = "registry.gitlab.com";
+            const string DockerRegistryRepository = "registry.gitlab.com/tar4/karis_virtual";
+            const string DockerRegistryUser = "gebhardt";
+            string? dockerRegistryPassword = Environment.GetEnvironmentVariable(EnvVars.DockerRegistryPassword);
+            if (string.IsNullOrEmpty(dockerRegistryPassword))
+            {
+                throw new InvalidOperationException($"Environment variable {EnvVars.DockerRegistryPassword} must be set.");
+            }
+
             _dockerCompose.ShouldBeNull();
             _dockerComposeVirtualAgv.ShouldBeNull();
 
             _dockerCompose = new DockerCompose(EnvVars.ComposeFileEnvVar);
             _dockerComposeVirtualAgv = new DockerCompose(EnvVars.ComposeFileEnvVarVirtualAgv, DockerRegistry,
-                DockerRegistryRepository, DockerRegistryUser, _dockerRegistryPassword);
+                DockerRegistryRepository, DockerRegistryUser, dockerRegistryPassword);
             _dockerCompose.AreRemoved().ShouldBeTrue();
             _dockerComposeVirtualAgv.AreRemoved().ShouldBeTrue();
 
@@ -54,7 +53,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest
         /// <summary>
         /// Remove all docker services after test
         /// </summary>
-        [TestCleanup]
+        //[TestCleanup]
         public void StopServices()
         {
             _dockerComposeVirtualAgv.ShouldNotBeNull();
@@ -79,7 +78,8 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest
             const string source = "PVB02";
             const string destination = "PVB03";
 
-            var restApi = new RestApi();
+            var restApi = new RestApi("http://127.0.0.1:5000");
+
             var restAgv = await restApi.WaitForAgv(agvId);
             restAgv.ShouldNotBeNull();
 
@@ -90,7 +90,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest
             (await restApi.WaitForAgvGraph(agvCorrelationId)).ShouldNotBeNull();
             (await restApi.WaitForMap(agvCorrelationId)).ShouldNotBeNull();
 
-            (await restApi.SetAgvIdle(agvCorrelationId)).ShouldBeTrue();
+            (await restApi.UnlockAgv(agvCorrelationId)).ShouldBeTrue();
 
             var context = new WcsDbContext();
 
@@ -102,7 +102,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest
             var order = await restApi.WaitForOrder(orderId);
             order.ShouldNotBeNull();
 
-            order = await restApi.WaitForOrder(orderId, "Final", true);
+            order = await restApi.WaitForOrder(orderId, "Completed", true);
             order.ShouldNotBeNull();
 
             context.FromAgv.Any(o => o.OrderId == orderId && o.Status == OrderStatus.Finished).ShouldBeTrue();

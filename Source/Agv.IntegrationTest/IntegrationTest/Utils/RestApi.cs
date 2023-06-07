@@ -117,15 +117,24 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         {
             return await Request<JArray>("orders");
         }
+        
+        /// <summary>
+        /// Get all Maps
+        /// </summary>
+        /// <returns>JArray of Orders or null if request is unsuccessful</returns>
+        public async Task<JArray?> GetActionsGroup()
+        {
+            return await Request<JArray>("actionGroups?limit=1");
+        }
 
         /// <summary>
         /// Set status of agv from Discovered to Idle
         /// </summary>
         /// <param name="correlationId"></param>
         /// <returns></returns>
-        public async Task<bool> SetAgvIdle(string? correlationId)
+        public async Task<bool> UnlockAgv(string? correlationId)
         {
-            return await Patch($"agvs/{correlationId}/setIdle");
+            return await Patch($"agvs/{correlationId}/unlock");
         }
 
         /// <summary>
@@ -232,7 +241,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         /// </summary>
         /// <param name="orderId"></param>
         /// <param name="orderState"></param>
-        /// <param name="longJob">Indicates that waiting can take a long time. Currently max. 10 min for long job. Default 30s for not long job [false] </param>
+        /// <param name="longJob">Indicates that waiting can take a long time. Currently max. 20 min for long job. Default 60s for not long job [false] </param>
         /// <returns>JObject of Order or null if not found or unsuccessful</returns>
         public async Task<JToken?> WaitForOrder(string orderId, string? orderState = null, bool longJob = false)
         {
@@ -245,10 +254,17 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
                     return null;
                 }
 
-                var order = orders.FirstOrDefault(token => token["orderDetails"]?["orderId"]?.ToString() == orderId);
-                if (order == null || orderState != null && order["currentState"]?.ToString() == orderState)
+                var order = orders.FirstOrDefault(token => token?["orderId"]?.ToString() == orderId);
+                if (order == null)
                 {
                     await WriteError($"Order '{orderId}' not found. Response: {orders}");
+                    return null;
+                }
+
+                var currentState = order["currentState"]?.ToString();
+                if (orderState != null && currentState == orderState)
+                {
+                    await WriteError($"Order '{orderId}' does not have the correct state (expected: {orderState}, actual: {currentState})");
                     return null;
                 }
 

@@ -19,7 +19,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
         private readonly string[] _sources;
         private readonly string[] _destinations;
 
-        private const string AgvPrefix = "SimAgv";
+        private const string AgvPrefix = "karis"; // "SimAgv-";
         private const string Model = "R2-D2";
         private const string Type = "Simulated AGV";
         private const double Width = 1;
@@ -82,7 +82,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
 
         private SimulatedAgv GenerateAgv(int agvIndex)
         {
-            string agvId = $"{AgvPrefix}-{agvIndex}";
+            string agvId = $"{AgvPrefix}{agvIndex}";
             var correlationId = agvId.ToGuid();
             // Next even number from rows as number of service nodes.
             int serviceNodeCount = (_simulateOptions.GridRows / 2 + _simulateOptions.GridRows % 2) * 2;
