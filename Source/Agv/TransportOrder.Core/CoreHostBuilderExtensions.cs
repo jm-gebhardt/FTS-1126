@@ -138,7 +138,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                         x.AddConsumer<GetAgvsRequestHandler>();
                         x.AddConsumer<LockAgvCommandHandler>();
                         x.AddConsumer<UnlockAgvCommandHandler>();
-                        
+                        x.AddConsumer<GetAgvActionGroupsRequestHandler>();
+
                         // request clients
                         // ########################################
                         // maps
@@ -154,7 +155,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                         x.AddRequestClient<GetAgvsRequestHandler>();
                         x.AddRequestClient<LockAgvCommandHandler>();
                         x.AddRequestClient<UnlockAgvCommandHandler>();
-                        x.AddConsumer<GetAgvActionGroupsRequestHandler>();
+                        x.AddRequestClient<GetAgvActionGroupsRequestHandler>();
                         
                         x.AddDelayedMessageScheduler();
                     }, rabbitMqConfiguration: (_, cfg) => { cfg.UseDelayedMessageScheduler(); });

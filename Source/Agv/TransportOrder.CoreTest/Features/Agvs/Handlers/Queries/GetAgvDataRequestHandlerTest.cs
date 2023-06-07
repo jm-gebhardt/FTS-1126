@@ -10,7 +10,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Features.Agvs.Handlers.
 [TestClass]
 public class GetAgvDataRequestHandlerTest
 {
-    /*[TestMethod]
+    [TestMethod]
     public async Task GetAgvDataRequest_AgvDataNotFound_ExceptionThrown()
     {
         AgvRequestsHandlerTestFixture<GetAgvDataRequest, GetAgvDataRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvDataRequest, GetAgvDataRequestHandler>()

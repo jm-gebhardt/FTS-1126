@@ -38,7 +38,7 @@ public class EfActionGroupRegistry : IActionGroupRegistry
         IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>()
             .OrderByDescending(g => g.CreatedDate);
 
-        if (states != null)
+        if (states?.Any() == true)
         {
             actionGroups = actionGroups.Where(g => states.Contains(g.State));
         }

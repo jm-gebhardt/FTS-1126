@@ -4,13 +4,17 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Actions.Common;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Actions.Requests.Queries;
 using MassTransit;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
+using static MassTransit.Transports.ReceiveEndpoint;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
 {
     /// <summary>
     /// Controller for <see cref="AgvAction"/>
     /// </summary>
-    public class ActionGroupController: Controller
+    public class ActionGroupController : Controller
     {
         private readonly IRequestClient<GetAgvActionGroupsRequest> _getAgvActionGroupsRequest;
         private readonly IRequestClient<GetAgvActionGroupCountsByStateRequest> _getAgvActionGroupCountsByStateRequest;
@@ -32,8 +36,54 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
         /// <response code="200">Ok</response>
         [HttpGet]
         [Route("/actionGroups")]
-        public async Task<ActionResult<IEnumerable<ActionGroupDto>>> GetActionGroups(ActionGroupState[] states, DateTime? fromDate, DateTime? toDate, int limit=1000)
+        public async Task<ActionResult<IEnumerable<ActionGroupDto>>> GetActionGroups(ActionGroupState[] states, DateTime? fromDate, DateTime? toDate, int limit = 1000)
         {
+            // DEBUG
+            if (limit == 1)
+            {
+
+                var groupId = Guid.Parse("10106e12-84f6-0301-daa0-138020db9422");
+                var result = new ActionGroupDto(
+                   groupId,
+                    "WOOT_10",
+                    null,
+                    DateTime.Now,
+                    null,
+                    null,
+                    ActionGroupState.Created,
+                    new List<AgvActionDto>()
+                    {
+                        new AgvActionDto(
+                            Guid.Parse("e2bbb93d-3ff2-451a-92f8-1fa01bd413b3"),
+                            groupId,
+                            0,
+                            ActionState.Created,
+                            ActionType.Pick,
+                            "S1",
+                            new string[0],
+                            DateTime.Now,
+                            null,
+                            null
+                        ),
+                        new AgvActionDto(
+                            Guid.Parse("65469fa1-548a-446f-a8de-ad1cbb7c16ad"),
+                            groupId,
+                            1,
+                            ActionState.Created,
+                            ActionType.Drop,
+                            "D1",
+                            new string[0],
+                            DateTime.Now,
+                            null,
+                            null
+                        )
+                    }
+                );
+
+                await Task.CompletedTask;
+                return Ok(result);
+            }
+
             Response<GetAgvActionGroupsResult> groups = await _getAgvActionGroupsRequest.GetResponse<GetAgvActionGroupsResult>( new GetAgvActionGroupsRequest(
                 states, 
                 fromDate ?? DateTime.MinValue, 
