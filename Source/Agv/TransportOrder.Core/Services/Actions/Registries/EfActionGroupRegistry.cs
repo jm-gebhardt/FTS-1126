@@ -32,23 +32,23 @@ public class EfActionGroupRegistry : IActionGroupRegistry
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<ActionGroup>> GetActionGroupsAsync(IEnumerable<ActionGroupState>? states = null, DateTime? fromDate = null, DateTime? toDate = null, int maxItems = 0)
+    public async Task<IReadOnlyList<ActionGroup>> GetActionGroupsAsync(IList<ActionGroupState>? states = null, DateTime? fromDate = null, DateTime? toDate = null, int maxItems = 0)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>()
             .OrderByDescending(g => g.CreatedDate);
 
-        if (states != null)
+        if (states?.Any() ?? false)
         {
             actionGroups = actionGroups.Where(g => states.Contains(g.State));
         }
 
-        if (fromDate != null)
+        if (fromDate != null && fromDate != DateTime.MinValue)
         {
             actionGroups = actionGroups.Where(g => g.CreatedDate >= fromDate);
         }
 
-        if (toDate != null)
+        if (toDate != null && toDate != DateTime.MaxValue)
         {
             actionGroups = actionGroups.Where(g => g.CreatedDate <= toDate);
         }
@@ -92,11 +92,11 @@ public class EfActionGroupRegistry : IActionGroupRegistry
             {
                 await using var context = await _dbContextFactory.CreateDbContextAsync();
                 DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
-                
+
                 var actionGroup = await queryable.OrderByDescending(g => g.StartedDate)
-                    .Include(g=>g.Actions)
+                    .Include(g => g.Actions)
                     .FirstOrDefaultAsync(a => a.AssignedAgv == agvCorrelationId);
-                
+
                 return (agvCorrelationId, actionGroup);
             }).ToList();
         await Task.WhenAll(tasks);
