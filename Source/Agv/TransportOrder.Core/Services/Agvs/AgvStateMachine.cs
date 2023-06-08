@@ -38,11 +38,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
         /// </summary>
         /// <remarks>Interval indicated in seconds</remarks>
         private const int DailyRequestUpdateInterval = 24 * 3600;
-        
+
         private const double BatteryChargeChangedThreshold = 0.01;
 
         private readonly ISettingsProvider<AgvSettings> _agvSettingsProvider;
-        
+
         #region States
         /// <summary>
         /// New AGV discovered by receiving AgvStatusReceived while missing information evaluating the current state of the AGV.
@@ -67,7 +67,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
         #endregion
 
         #region Events
-
         /// <summary>
         /// Agv status has been received
         /// </summary>
@@ -193,7 +192,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
             DuringAny(AgvGraphReceivedHandler());
             DuringAny(AgvMapReceivedHandler());
             DuringAny(AgvOfflineMessageHandler());
-            
+
             WhenEnterAny(UpdateTimeOfStateTransition);
 
             ConnectStateObserver(agvStateObserver);
@@ -237,32 +236,32 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
 
         private EventActivityBinder<AgvSaga, RequestCanAgvTransitionToBusy> SetAgvBusyAvailableEventHandler() =>
             When(AgvBusyAvailabilityEvent)
-                .Respond(c => 
+                .Respond(c =>
                     new CanAgvTransitionToBusyResponse(
-                        c.Message.CorrelationId, 
-                        IsAgvCompleteAndUnlocked(c.Saga) 
-                        && (c.Saga.CurrentState is nameof(Idle) ||  (c.Saga.CurrentState is nameof(Charging) && c.Message.IgnoreCharging))
-                ));
+                        c.Message.CorrelationId,
+                        IsAgvCompleteAndUnlocked(c.Saga)
+                        && (c.Saga.CurrentState is nameof(Idle) || (c.Saga.CurrentState is nameof(Charging) && c.Message.IgnoreCharging))
+                    ));
 
         private EventActivityBinder<AgvSaga, SetAgvBusy> AcceptSetBusyRequestHandler() =>
             When(SetAgvBusyEvent)
-            .IfElse(c => IsAgvCompleteAndUnlocked(c.Saga), ifContext =>
-                    ifContext.TransitionTo(Busy)
-                        .Then(c => _logger.LogDebug("Transition AGV {AgvId} / {CorrelationId} to busy", c.Saga.AgvId, c.Saga.CorrelationId))
-                        .Respond(c => new SetAgvBusySucceeded(c.Message.CorrelationId)),
-                elseContext =>
-                    elseContext.Then(c => _logger.LogError("Could not transition AGV {AgvId} / {CorrelationId} to busy, AGV not Ready", c.Saga.AgvId, c.Saga.CorrelationId))
-                    .Respond(c => new SetAgvBusyRejected(c.Message.CorrelationId)));
+                .IfElse(c => IsAgvCompleteAndUnlocked(c.Saga), ifContext =>
+                        ifContext.TransitionTo(Busy)
+                            .Then(c => _logger.LogDebug("Transition AGV {AgvId} / {CorrelationId} to busy", c.Saga.AgvId, c.Saga.CorrelationId))
+                            .Respond(c => new SetAgvBusySucceeded(c.Message.CorrelationId)),
+                    elseContext =>
+                        elseContext.Then(c => _logger.LogError("Could not transition AGV {AgvId} / {CorrelationId} to busy, AGV not Ready", c.Saga.AgvId, c.Saga.CorrelationId))
+                            .Respond(c => new SetAgvBusyRejected(c.Message.CorrelationId)));
 
         private bool IsAgvCompleteAndUnlocked(AgvSaga saga)
         {
             bool isReady = saga is
-                           {
-                               AgvGraph: not null,
-                               AgvStatus: not null,
-                               AgvStatus.LastNodeId: not null,
-                               IsLocked: false
-                           };
+            {
+                AgvGraph: not null,
+                AgvStatus: not null,
+                AgvStatus.LastNodeId: not null,
+                IsLocked: false
+            };
             return isReady;
         }
 
@@ -291,21 +290,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
 
         private EventActivityBinder<AgvSaga, LockAgv> LockAgvHandler() =>
             When(LockAgvEvent)
-                .Then(c =>
-                {
-                    c.Saga.IsLocked = true;
-                    c.Saga.TimeOfLockStateChanged = DateTime.Now;
-                })
+                .Then(c => { Lock(c, true); })
                 .Then(c =>
                     _logger.LogDebug("Agv {AgvId}/{CorrelationId} was locked", c.Saga.AgvId, c.Saga.CorrelationId));
 
+
         private EventActivityBinder<AgvSaga, UnlockAgv> UnlockAgvHandler() =>
             When(UnlockAgvEvent)
-                .Then(c =>
-                {
-                    c.Saga.IsLocked = false;
-                    c.Saga.TimeOfLockStateChanged = DateTime.Now;
-                })
+                .Then(c => { Lock(c, false); })
                 .Then(c =>
                     _logger.LogDebug("Agv {AgvId}/{CorrelationId} was unlocked", c.Saga.AgvId, c.Saga.CorrelationId));
 
@@ -324,7 +316,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
         #endregion
 
         #region Message Handlers
-
         /// <summary>
         /// Handle <see cref="AgvStatusReceived"/> message
         /// </summary>
@@ -428,7 +419,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
                 {
                     endpoint.Publish(new AgvBatteryChargeChanged(agvSaga.CorrelationId, oldCharge, newCharge));
                 }
-                
+
                 string? oldLastNodeId = agvSaga.AgvStatus.LastNodeId;
                 string? newLastNodeId = newStatus.LastNodeId;
 
@@ -452,6 +443,19 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
             if (aliveChanged && newAlive && agvSaga.CurrentState == nameof(Idle)) // Transition to Ready must happen before triggering order assignment
             {
                 endpoint.Publish(new AgvBecameIdle(agvSaga.CorrelationId));
+            }
+        }
+        
+        private static void Lock(BehaviorContext<AgvSaga, object> c, bool isLocked)
+        {
+            var agvSaga = c.Saga;
+            bool changed = agvSaga.IsLocked != isLocked;
+            agvSaga.IsLocked = isLocked;
+            agvSaga.TimeOfLockStateChanged = DateTime.Now;
+
+            if (changed)
+            {
+                c.Publish(new AgvPropertyChanged(agvSaga, agvSaga.CorrelationId));
             }
         }
 
@@ -504,7 +508,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
 
         private EventActivityBinder<AgvSaga> UpdateTimeOfStateTransition(EventActivityBinder<AgvSaga> eventActivity) =>
             eventActivity.Then(ctx => ctx.Saga.TimeOfStateTransition = DateTime.UtcNow);
-
         #endregion
     }
 }
