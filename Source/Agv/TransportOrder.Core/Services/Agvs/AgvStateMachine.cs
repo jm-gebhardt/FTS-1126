@@ -294,7 +294,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
                 .Then(c =>
                 {
                     c.Saga.IsLocked = true;
-                    c.Saga.TimeOfLockStateChanged = DateTime.Now;
+                    c.Saga.TimeOfLockStateChanged = DateTime.UtcNow;
                 })
                 .Then(c =>
                     _logger.LogDebug("Agv {AgvId}/{CorrelationId} was locked", c.Saga.AgvId, c.Saga.CorrelationId));
@@ -304,7 +304,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
                 .Then(c =>
                 {
                     c.Saga.IsLocked = false;
-                    c.Saga.TimeOfLockStateChanged = DateTime.Now;
+                    c.Saga.TimeOfLockStateChanged = DateTime.UtcNow;
                 })
                 .Then(c =>
                     _logger.LogDebug("Agv {AgvId}/{CorrelationId} was unlocked", c.Saga.AgvId, c.Saga.CorrelationId));

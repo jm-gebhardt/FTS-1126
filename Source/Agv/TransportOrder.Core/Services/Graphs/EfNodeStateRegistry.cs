@@ -217,11 +217,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs
                 .FirstOrDefaultAsync(n => n.NodeId == nodeId);
             if (currentLock == null)
             {
-                await dbContext.AddAsync(new NodeLock(nodeId, nodeState, false, agvCorrelationId, DateTime.Now));
+                await dbContext.AddAsync(new NodeLock(nodeId, nodeState, false, agvCorrelationId, DateTime.UtcNow));
             }
             else if (currentLock.NodeState != nodeState)
             {
-                dbContext.Update(new NodeLock(nodeId, nodeState, currentLock.IsLocked, agvCorrelationId, DateTime.Now));
+                dbContext.Update(new NodeLock(nodeId, nodeState, currentLock.IsLocked, agvCorrelationId, DateTime.UtcNow));
             }
             else
             {
@@ -243,11 +243,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs
                 .FirstOrDefaultAsync(n => n.NodeId == nodeId);
             if (currentLock == null)
             {
-                await dbContext.AddAsync(new NodeLock(nodeId, NodeLockState.Free, isLocked, null, DateTime.Now));
+                await dbContext.AddAsync(new NodeLock(nodeId, NodeLockState.Free, isLocked, null, DateTime.UtcNow));
             }
             else if (currentLock.IsLocked != isLocked)
             {
-                dbContext.Update(new NodeLock(nodeId, currentLock.NodeState, isLocked, currentLock.AgvCorrelationId, DateTime.Now));
+                dbContext.Update(new NodeLock(nodeId, currentLock.NodeState, isLocked, currentLock.AgvCorrelationId, DateTime.UtcNow));
             }
             else
             {
