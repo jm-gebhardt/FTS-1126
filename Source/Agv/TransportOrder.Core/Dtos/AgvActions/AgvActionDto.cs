@@ -12,52 +12,52 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos.AgvActions
         /// <summary>
         /// 
         /// </summary>
-        public Guid CorrelationId { get; }
+        public Guid CorrelationId { get; init; }
 
         /// <summary>
         /// 
         /// </summary>
-        public Guid ParentId { get; }
+        public Guid ParentId { get; init; }
 
         /// <summary>
         /// 
         /// </summary>
-        public int Sequence { get; }
+        public int Sequence { get; init; }
 
         /// <summary>
         /// 
         /// </summary>
-        public ActionState State { get; }
+        public ActionState State { get; init; }
 
         /// <summary>
         /// 
         /// </summary>
-        public ActionType ActionType { get; }
+        public ActionType ActionType { get; init; }
 
         /// <summary>
         /// 
         /// </summary>
-        public string TargetNodeId { get; }
+        public string TargetNodeId { get; init; }
 
         /// <summary>
         /// 
         /// </summary>
-        public string[] Nodes { get; }
+        public string[] Nodes { get; init; }
 
         /// <summary>
         /// 
         /// </summary>
-        public DateTime CreatedDate { get; }
+        public DateTime CreatedDate { get; init; }
 
         /// <summary>
         /// 
         /// </summary>
-        public DateTime? StartedDate { get; }
+        public DateTime? StartedDate { get; init; }
 
         /// <summary>
         /// 
         /// </summary>
-        public DateTime? CompletedDate { get; }
+        public DateTime? CompletedDate { get; init; }
 
         /// <summary>
         /// AgvAction model

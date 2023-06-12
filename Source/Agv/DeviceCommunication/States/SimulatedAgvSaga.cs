@@ -46,10 +46,10 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         public bool Assignable => true;
 
         /// <inheritdoc />
-        public DateTime TimeOfStateTransition { get; set; } = DateTime.Now;
+        public DateTime TimeOfStateTransition { get; set; } = DateTime.UtcNow;
 
         /// <inheritdoc />
-        public DateTime TimeOfLockStateChanged { get; set; } = DateTime.Now;
+        public DateTime TimeOfLockStateChanged { get; set; } = DateTime.UtcNow;
 
         /// <inheritdoc cref="IAgv" />
         public AgvStatus AgvStatus { get; private set; }
