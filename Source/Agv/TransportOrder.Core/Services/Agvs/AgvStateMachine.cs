@@ -294,7 +294,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
                 .Then(c =>
                     _logger.LogDebug("Agv {AgvId}/{CorrelationId} was locked", c.Saga.AgvId, c.Saga.CorrelationId));
 
-
         private EventActivityBinder<AgvSaga, UnlockAgv> UnlockAgvHandler() =>
             When(UnlockAgvEvent)
                 .Then(c => { Lock(c, false); })
@@ -445,13 +444,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
                 endpoint.Publish(new AgvBecameIdle(agvSaga.CorrelationId));
             }
         }
-        
+
         private static void Lock(BehaviorContext<AgvSaga, object> c, bool isLocked)
         {
             var agvSaga = c.Saga;
             bool changed = agvSaga.IsLocked != isLocked;
             agvSaga.IsLocked = isLocked;
-            agvSaga.TimeOfLockStateChanged = DateTime.Now;
+            agvSaga.TimeOfLockStateChanged = DateTime.UtcNow;
 
             if (changed)
             {

@@ -1,8 +1,10 @@
+using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Requests.Commands;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Requests.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Models;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Registries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.States;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers;
@@ -21,25 +23,27 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
         where TRequest : class
         where TRequestHandler : class, IConsumer
     {
-        public string[] AgvIds { get; } = {"AGV001", "AGV002", "AGV003"};
+        public string[] AgvIds { get; } = { "AGV001", "AGV002", "AGV003" };
 
         // ReSharper disable once MemberCanBePrivate.Global
-        public string[] Orders { get; } = {"ORDER001", "ORDER002", ""};
+        public string[] Orders { get; } = { "ORDER001", "ORDER002", "" };
 
-        public string[] States { get; } = {nameof(AgvStateMachine.Idle), nameof(AgvStateMachine.Busy), nameof(AgvStateMachine.Discovered)};
+        public string[] States { get; } = { nameof(AgvStateMachine.Idle), nameof(AgvStateMachine.Busy), nameof(AgvStateMachine.Discovered) };
 
-        public string[] Ips { get; } = {"127.0.0.1", "127.0.0.2", "127.0.0.3"};
+        public string[] Ips { get; } = { "127.0.0.1", "127.0.0.2", "127.0.0.3" };
 
         public Mock<IAgvRegistry> AgvRegistry { get; }
 
         private Mock<IAgvDataRegistry> AgvDataRegistry { get; }
 
+        private Mock<IActionGroupRegistry> ActionGroupRegistry { get; }
+
         public AgvGraph.Node[] Nodes { get; } =
         {
-            new("node00") {X = 0f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint},
-            new("node10") {X = 1f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint},
-            new("node01") {X = 0f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint},
-            new("node11") {X = 1f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint}
+            new("node00") { X = 0f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
+            new("node10") { X = 1f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
+            new("node01") { X = 0f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
+            new("node11") { X = 1f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint }
         };
 
         public AgvGraph.Edge[] Edges { get; } =
@@ -54,6 +58,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
         {
             AgvRegistry = new Mock<IAgvRegistry>();
             AgvDataRegistry = new Mock<IAgvDataRegistry>();
+            ActionGroupRegistry = new Mock<IActionGroupRegistry>();
+            ActionGroupRegistry.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (ActionGroup?)null));
         }
 
         [UsedImplicitly]
@@ -68,7 +74,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
                 string orderId = Orders[i];
                 string state = States[i];
                 string ip = Ips[i];
-                var correlationId = agvId.ToGuid();
+                var correlationId = GetGuid(agvId);
 
                 const string mapName = "Map#1";
                 var agvGraph = new AgvGraph(correlationId, Nodes, Edges, mapName.ToGuid(), mapName);
@@ -102,6 +108,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
 
             return this;
         }
+
+        private static Guid GetGuid(string agvId) => agvId.ToGuid();
 
         private Mock<IAgvPositionRegistry> GetAgvPositionRegistry()
         {
@@ -173,6 +181,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             AddServices(sc => sc.AddTransient(_ => GetMapper()));
             AddServices(sc => sc.AddTransient(_ => new Mock<IBus>().Object));
             AddServices(sc => sc.AddTransient(_ => new Mock<IAgvPositionRegistry>().Object));
+            AddServices(sc => sc.AddTransient(_ => ActionGroupRegistry.Object));
             return this;
         }
 

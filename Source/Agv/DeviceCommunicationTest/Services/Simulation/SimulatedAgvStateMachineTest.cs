@@ -290,7 +290,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             (await fixture.SagaHarness.Consumed.Any<SimulatedAgvStateMachine.ScheduleFinishAction>()).ShouldBeTrue();
 
             //wait until saga is updated
-            var startedTime = DateTime.Now;
+            var startedTime = DateTime.UtcNow;
             var timeout = TimeSpan.FromMilliseconds(2500);
             bool matches;
             do
@@ -301,7 +301,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
                 matches = matches && agvSaga.ActionFinishDate == null;
                 matches = matches && agvSaga.LastNodeId == destination;
                 matches = matches && agvSaga.NextNodeId == destination;
-            } while (!matches && DateTime.Now < startedTime + timeout);
+            } while (!matches && DateTime.UtcNow < startedTime + timeout);
             matches.ShouldBeTrue();
 
             (await fixture.TestHarness.Published.Any<ActionCompletedEvent>()).ShouldBeTrue();

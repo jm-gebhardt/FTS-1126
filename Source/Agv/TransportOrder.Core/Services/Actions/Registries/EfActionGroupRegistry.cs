@@ -32,14 +32,43 @@ public class EfActionGroupRegistry : IActionGroupRegistry
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<ActionGroup>> GetActionGroupsAsync(IEnumerable<ActionGroupState> states, DateTime? fromDate = null, DateTime? toDate = null, int maxItems = 0)
+    public async Task<IReadOnlyList<ActionGroup>> GetActionGroupsAsync(IList<ActionGroupState>? states = null, DateTime? fromDate = null, DateTime? toDate = null, int maxItems = 0)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>()
+            .OrderByDescending(g => g.CreatedDate);
+
+        if (states?.Any() ?? false)
+        {
+            actionGroups = actionGroups.Where(g => states.Contains(g.State));
+        }
+
+        if (fromDate != null && fromDate != DateTime.MinValue)
+        {
+            actionGroups = actionGroups.Where(g => g.CreatedDate >= fromDate);
+        }
+
+        if (toDate != null && toDate != DateTime.MaxValue)
+        {
+            actionGroups = actionGroups.Where(g => g.CreatedDate <= toDate);
+        }
+
+        List<ActionGroup> actionGroupsAsync = await actionGroups
+            .Include(g => g.Actions)
+            .AsNoTracking()
+            .Take(maxItems)
+            .ToListAsync();
+        return actionGroupsAsync;
+    }
+
+    /// <inheritdoc />
+    public async Task<int> GetActionGroupsCountAsync(IEnumerable<ActionGroupState> states, DateTime? fromDate = null, DateTime? toDate = null)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
 
         IQueryable<ActionGroup> actionGroups = queryable
-            .Where(g => states.Contains(g.State))
-            .OrderByDescending(g => g.CreatedDate);
+            .Where(g => states.Contains(g.State));
 
         if (fromDate != null)
         {
@@ -51,12 +80,30 @@ public class EfActionGroupRegistry : IActionGroupRegistry
             actionGroups = actionGroups.Where(g => g.CreatedDate <= toDate);
         }
 
-        List<ActionGroup> actionGroupsAsync = await actionGroups
-            .Include(g => g.Actions)
-            .AsNoTracking()
-            .Take(maxItems)
-            .ToListAsync();
-        return actionGroupsAsync;
+        return await actionGroups.CountAsync();
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyDictionary<Guid, ActionGroup?>> GetCurrentAssignedActionGroupsAsync(IEnumerable<Guid> agvCorrelationIds)
+    {
+        // Once Agv is assigned to ActionGroup, Status is immediately set to started (and StartedDate), therefore we can use StartedDate to get current assigned ActionGroup  
+        List<Task<(Guid agvCorrelationId, ActionGroup? actionGroup)>> tasks = agvCorrelationIds
+            .Select(async agvCorrelationId =>
+            {
+                await using var context = await _dbContextFactory.CreateDbContextAsync();
+                DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
+
+                var actionGroup = await queryable.OrderByDescending(g => g.StartedDate)
+                    .Include(g => g.Actions)
+                    .FirstOrDefaultAsync(a => a.AssignedAgv == agvCorrelationId);
+
+                return (agvCorrelationId, actionGroup);
+            }).ToList();
+        await Task.WhenAll(tasks);
+
+        Dictionary<Guid, ActionGroup?> actions = tasks.ToDictionary(t => t.Result.agvCorrelationId, t => t.Result.actionGroup);
+
+        return actions;
     }
 
     /// <inheritdoc />

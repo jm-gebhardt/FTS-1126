@@ -62,7 +62,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
         }
 
         /// <summary>
-        /// Constructor which auto creates Started date using DateTime.Now
+        /// Constructor which auto creates Started date using DateTime.UtcNow
         /// </summary>
         /// <param name="correlationId">The CorrelationId of the ActionGroup</param>
         /// <param name="orderId">The OrderID</param>

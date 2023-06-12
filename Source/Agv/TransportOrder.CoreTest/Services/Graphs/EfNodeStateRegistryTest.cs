@@ -25,7 +25,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Graphs
         {
             var fixture = new EfNodeStateRegistryTestFixture();
             const string nodeId = "TestNode";
-            var initialNodeLock = new NodeLock(nodeId, NodeLockState.Free, false, Guid.NewGuid(), DateTime.Now);
+            var initialNodeLock = new NodeLock(nodeId, NodeLockState.Free, false, Guid.NewGuid(), DateTime.UtcNow);
             fixture.Add(initialNodeLock);
             
             (await fixture.Registry.LockNodeAsync(nodeId)).ShouldBeTrue();
@@ -44,7 +44,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Graphs
         {
             var fixture = new EfNodeStateRegistryTestFixture();
             const string nodeId = "TestNode";
-            var initialNodeLock = new NodeLock(nodeId, NodeLockState.Free, true, Guid.NewGuid(), DateTime.Now);
+            var initialNodeLock = new NodeLock(nodeId, NodeLockState.Free, true, Guid.NewGuid(), DateTime.UtcNow);
             fixture.Add(initialNodeLock);
             
             (await fixture.Registry.UnlockNodeAsync(nodeId)).ShouldBeTrue();
@@ -63,7 +63,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Graphs
         {
             var fixture = new EfNodeStateRegistryTestFixture();
             const string nodeId = "TestNode";
-            var initialNodeLock = new NodeLock(nodeId, NodeLockState.Free, true, Guid.NewGuid(), DateTime.Now);
+            var initialNodeLock = new NodeLock(nodeId, NodeLockState.Free, true, Guid.NewGuid(), DateTime.UtcNow);
             fixture.Add(initialNodeLock);
             
             (await fixture.Registry.UnlockNodeAsync(nodeId)).ShouldBeTrue();
@@ -93,7 +93,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Graphs
         {
             var fixture = new EfNodeStateRegistryTestFixture();
             const string nodeId = "TestNode";
-            var initialNodeLock = new NodeLock(nodeId, NodeLockState.Free, false, Guid.NewGuid(), DateTime.Now);
+            var initialNodeLock = new NodeLock(nodeId, NodeLockState.Free, false, Guid.NewGuid(), DateTime.UtcNow);
             fixture.Add(initialNodeLock);
             
             (await fixture.Registry.UnlockNodeAsync(nodeId)).ShouldBeFalse();
@@ -125,7 +125,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Graphs
             const string nodeId = "TestNode";
             var agvCorrelationId = Guid.NewGuid();
             
-            var initialNodeLock = new NodeLock(nodeId, NodeLockState.Free, false, Guid.NewGuid(), DateTime.Now);
+            var initialNodeLock = new NodeLock(nodeId, NodeLockState.Free, false, Guid.NewGuid(), DateTime.UtcNow);
             fixture.Add(initialNodeLock);
             
             (await fixture.Registry.ReserveNodeAsync(nodeId, agvCorrelationId)).ShouldBeTrue();
@@ -145,7 +145,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Graphs
             const string nodeId = "TestNode";
             var agvCorrelationId = Guid.NewGuid();
             
-            var initialNodeLock = new NodeLock(nodeId, NodeLockState.Occupied, false, Guid.NewGuid(), DateTime.Now);
+            var initialNodeLock = new NodeLock(nodeId, NodeLockState.Occupied, false, Guid.NewGuid(), DateTime.UtcNow);
             fixture.Add(initialNodeLock);
             
             (await fixture.Registry.ReserveNodeAsync(nodeId, agvCorrelationId)).ShouldBeFalse();
@@ -162,7 +162,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Graphs
             const string nodeId = "TestNode";
             var agvCorrelationId = Guid.NewGuid();
             
-            var initialNodeLock = new NodeLock(nodeId, NodeLockState.Free, true, null, DateTime.Now);
+            var initialNodeLock = new NodeLock(nodeId, NodeLockState.Free, true, null, DateTime.UtcNow);
             fixture.Add(initialNodeLock);
             
             (await fixture.Registry.ReserveNodeAsync(nodeId, agvCorrelationId)).ShouldBeFalse();
@@ -179,7 +179,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Graphs
             const string nodeId = "TestNode";
             var agvCorrelationId = Guid.NewGuid();
             
-            var initialNodeLock = new NodeLock(nodeId, NodeLockState.Reserved, false, agvCorrelationId, DateTime.Now);
+            var initialNodeLock = new NodeLock(nodeId, NodeLockState.Reserved, false, agvCorrelationId, DateTime.UtcNow);
             fixture.Add(initialNodeLock);
             
             (await fixture.Registry.UnReserveNodeAsync(agvCorrelationId)).ShouldBeTrue();
@@ -201,7 +201,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Graphs
             const string nodeId = "TestNode";
             var agvCorrelationId = Guid.NewGuid();
             
-            var initialNodeLock = new NodeLock(nodeId, state, false, Guid.NewGuid(), DateTime.Now);
+            var initialNodeLock = new NodeLock(nodeId, state, false, Guid.NewGuid(), DateTime.UtcNow);
             fixture.Add(initialNodeLock);
             
             (await fixture.Registry.UnReserveNodeAsync(agvCorrelationId)).ShouldBeFalse();
@@ -233,7 +233,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Graphs
             const string nodeId = "TestNode";
             var agvCorrelationId = Guid.NewGuid();
             
-            var initialNodeLock = new NodeLock(nodeId, NodeLockState.Free, false, Guid.NewGuid(), DateTime.Now);
+            var initialNodeLock = new NodeLock(nodeId, NodeLockState.Free, false, Guid.NewGuid(), DateTime.UtcNow);
             fixture.Add(initialNodeLock);
             
             (await fixture.Registry.OccupyNodeAsync(nodeId, agvCorrelationId)).ShouldBeTrue();
@@ -253,7 +253,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Graphs
             const string nodeId = "TestNode";
             var agvCorrelationId = Guid.NewGuid();
             
-            var initialNodeLock = new NodeLock(nodeId, NodeLockState.Reserved, false, Guid.NewGuid(), DateTime.Now);
+            var initialNodeLock = new NodeLock(nodeId, NodeLockState.Reserved, false, Guid.NewGuid(), DateTime.UtcNow);
             fixture.Add(initialNodeLock);
             
             (await fixture.Registry.OccupyNodeAsync(nodeId, agvCorrelationId)).ShouldBeTrue();
@@ -275,7 +275,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Graphs
             const string nodeId = "TestNode";
             var agvCorrelationId = Guid.NewGuid();
             
-            var initialNodeLock = new NodeLock(nodeId, state, false, Guid.NewGuid(), DateTime.Now);
+            var initialNodeLock = new NodeLock(nodeId, state, false, Guid.NewGuid(), DateTime.UtcNow);
             fixture.Add(initialNodeLock);
             
             (await fixture.Registry.UnOccupyNodeAsync(agvCorrelationId)).ShouldBeFalse();
