@@ -51,17 +51,18 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils.Db
         /// </summary>
         [PublicAPI]
         public DbSet<ToAgv> ToAgv { get; set; }  = null!;
-        
+
+        //private const string ConnectString = $"Server=127.0.0.1;Database=master;User Id=sa;Password={EnvFile.DefaultPassword};Encrypt=False";
+        private const string ConnectString = "Server=202203-irs-hv02;Database=agv;Trusted_Connection=True;TrustServerCertificate=True";
+
         /// <summary>
         /// Create with default password
         /// 
         /// </summary>
         public WcsDbContext(): base(
             new DbContextOptionsBuilder()
-            .UseSqlServer(
-                $"Server=127.0.0.1;Database=master;User Id=sa;Password={EnvFile.DefaultPassword};Encrypt=False"
-                )
-            .Options
+                .UseSqlServer(ConnectString)
+                .Options
             )
         {
         }

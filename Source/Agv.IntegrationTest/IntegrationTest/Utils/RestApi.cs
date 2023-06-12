@@ -55,6 +55,11 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
                 await WriteError($"Request '{url}' failed: {e}");
                 return null;
             }
+            catch (Exception e)
+            {
+                await WriteError($"Exception: {e}");
+                return null;
+            }
         }
 
         private async Task<bool> Patch(string subPath)
@@ -124,7 +129,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         /// <returns>JArray of Orders or null if request is unsuccessful</returns>
         public async Task<JArray?> GetActionsGroup()
         {
-            return await Request<JArray>("actionGroups?limit=1");
+            return await Request<JArray>("actionGroups");
         }
 
         /// <summary>
@@ -247,24 +252,24 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         {
             return await Poll(async () =>
             {
-                var orders = await GetOrders();
-                if (orders == null || orders.Count == 0)
+                var actions = await GetActionsGroup();
+                if (actions == null || actions.Count == 0)
                 {
-                    await WriteError($"No orders found");
+                    await WriteError($"No actions found");
                     return null;
                 }
 
-                var order = orders.FirstOrDefault(token => token?["orderId"]?.ToString() == orderId);
+                var order = actions.FirstOrDefault(token => token?["orderId"]?.ToString() == orderId);
                 if (order == null)
                 {
-                    await WriteError($"Order '{orderId}' not found. Response: {orders}");
+                    await WriteError($"Order '{orderId}' not found. Response: {actions}");
                     return null;
                 }
 
-                var currentState = order["currentState"]?.ToString();
-                if (orderState != null && currentState == orderState)
+                var state = order["state"]?.ToString();
+                if (orderState != null && orderState != state)
                 {
-                    await WriteError($"Order '{orderId}' does not have the correct state (expected: {orderState}, actual: {currentState})");
+                    await WriteError($"Order '{orderId}' does not have the correct state (expected: {orderState}, actual: {state})");
                     return null;
                 }
 

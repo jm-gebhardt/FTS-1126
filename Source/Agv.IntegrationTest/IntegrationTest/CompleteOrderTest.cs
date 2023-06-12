@@ -88,11 +88,13 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest
             var restAgv = await restApi.WaitForAgv(agv.AgvId);
             restAgv.ShouldNotBeNull();
 
-            (await restApi.WaitForAgvData(restAgv["correlationId"]?.ToString())).ShouldNotBeNull();
-            (await restApi.WaitForAgvGraph(restAgv["correlationId"]?.ToString())).ShouldNotBeNull();
-            (await restApi.WaitForMap(restAgv["correlationId"]?.ToString())).ShouldNotBeNull();
+            string? correlationId = restAgv["correlationId"]?.ToString();
+            correlationId.ShouldNotBeNull();
 
-            (await restApi.SetAgvIdle(restAgv["correlationId"]?.ToString())).ShouldBeTrue();
+            (await restApi.WaitForAgvData(correlationId)).ShouldNotBeNull();
+            (await restApi.WaitForAgvGraph(correlationId)).ShouldNotBeNull();
+            (await restApi.WaitForMap(correlationId)).ShouldNotBeNull();
+            (await restApi.UnlockAgv(correlationId)).ShouldBeTrue();
 
             return agv;
         }

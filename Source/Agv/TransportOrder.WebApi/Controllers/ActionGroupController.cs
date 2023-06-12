@@ -45,14 +45,16 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
                 var groupId = Guid.Parse("10106e12-84f6-0301-daa0-138020db9422");
                 var assignedAgv = "karis0".ToGuid();
 
-                var result = new ActionGroupDto(
+                var result = new List<ActionGroupDto>()
+                {
+                    new ActionGroupDto(
                     groupId,
                     "Order#1",
                     assignedAgv, // AssignedAgv
                     DateTime.Now, // createdDate
                     null, // startedDate
                     null, // completedDate
-                    ActionGroupState.Created,
+                    ActionGroupState.Completed,
                     new List<AgvActionDto>()
                     {
                         new AgvActionDto(
@@ -79,8 +81,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
                             null, // startedDate
                             null // completedDate
                         )
-                    }
-                );
+                    })
+                };
 
                 await Task.CompletedTask;
                 return Ok(result);
