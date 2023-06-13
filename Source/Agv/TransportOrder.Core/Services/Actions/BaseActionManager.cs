@@ -3,6 +3,7 @@ using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Charging;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Choosers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Maintenance;
@@ -11,6 +12,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Registries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Routing;
 using JetBrains.Annotations;
+using MassTransit;
 using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions;
@@ -22,6 +24,7 @@ public abstract class BaseActionManager : IActionManager
 {
     private readonly SemaphoreSlim _lockSemaphoreSlim = new(1, 1);
 
+    private readonly IBus _bus;
     private readonly IActionGroupRegistry _actionGroupRegistry;
     private readonly IRouteService _routeService;
     private readonly IChargingPointManager _chargingPointManager;
@@ -55,6 +58,7 @@ public abstract class BaseActionManager : IActionManager
     /// <summary>
     /// Constructor
     /// </summary>
+    /// <param name="bus">Abstracted interface for Agv action registry</param>
     /// <param name="actionGroupRegistry">Abstracted interface for Agv action registry</param>
     /// <param name="routeService">Service for computation of Route for Agv</param>
     /// <param name="chargingPointManager">Finds and Reserves charging node for agv</param>
@@ -69,6 +73,7 @@ public abstract class BaseActionManager : IActionManager
     /// <param name="agvStateService"></param>
     /// <param name="chooseAgvActionGroupService"></param>
     protected BaseActionManager(
+        IBus bus,
         IActionGroupRegistry actionGroupRegistry,
         IRouteService routeService,
         IChargingPointManager chargingPointManager,
@@ -83,6 +88,7 @@ public abstract class BaseActionManager : IActionManager
         IAgvStateService agvStateService,
         IChooseAgvActionGroupService chooseAgvActionGroupService)
     {
+        _bus = bus;
         _actionGroupRegistry = actionGroupRegistry;
         _routeService = routeService;
         _chargingPointManager = chargingPointManager;
@@ -104,7 +110,7 @@ public abstract class BaseActionManager : IActionManager
         var actionGroup = new ActionGroup(
             groupCorrelationId,
             $"Automatic {actionDescription}",
-            actions: new List<AgvAction> {new(Guid.NewGuid(), actionType, node.Id, groupCorrelationId)},
+            actions: new List<AgvAction> { new(Guid.NewGuid(), actionType, node.Id, groupCorrelationId) },
             assignedAgv: agv.CorrelationId
         );
 
@@ -328,6 +334,11 @@ public abstract class BaseActionManager : IActionManager
 
         var actionGroup = await _actionGroupRegistry.GetRequiredActionGroupByIdAsync(action.ParentId);
 
+        if (actionGroup.AssignedAgv == null)
+        {
+            return;
+        }
+
         var agv = await GetAgvByCorrelationIdAsync(actionGroup.AssignedAgv);
         await _actionGroupRegistry.UpdateActionAndGroupStateAsync(action, agv, ActionState.Completed);
 
@@ -337,6 +348,11 @@ public abstract class BaseActionManager : IActionManager
             Logger.LogDebug("Setting Agv with CorrelationId: {AgvCorrelationId}, because action has been completed and type is not charge", agv.CorrelationId);
 
             await _agvStateService.SetIdleAsync(agv);
+        }
+
+        if (action.ActionType == ActionType.Drop && actionGroup.State == ActionGroupState.Completed)
+        {
+            await _bus.Publish(new HostOrderHandlingSucceeded(actionGroup.CorrelationId, actionGroup.OrderId));
         }
     }
 

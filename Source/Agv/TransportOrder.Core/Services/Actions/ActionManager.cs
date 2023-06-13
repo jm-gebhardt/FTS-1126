@@ -9,6 +9,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Parking;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Registries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Routing;
+using MassTransit;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions;
 
@@ -19,6 +20,7 @@ public class ActionManager : BaseActionManager
 {
     /// <inheritdoc />
     public ActionManager(
+        IBus bus,
         IActionGroupRegistry actionGroupRegistry,
         IRouteService routeService,
         IChargingPointManager chargingPointManager,
@@ -33,7 +35,9 @@ public class ActionManager : BaseActionManager
         IAgvStateService agvStateService,
         IChooseAgvActionGroupService chooseAgvActionGroupService
     )
-        : base(actionGroupRegistry,
+        : base(
+            bus,
+            actionGroupRegistry,
             routeService,
             chargingPointManager,
             parkPointService,

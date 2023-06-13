@@ -10,7 +10,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
     /// <summary>
     /// Consumes HostOrder related messages from TransportOrder
     /// </summary>
-    public class WcsHostOrderConsumer:
+    public class WcsHostOrderConsumer :
         IConsumer<HostOrderHandlingSucceeded>,
         IConsumer<HostOrderStarted>,
         IConsumer<HostOrderHandlingFailed>,
@@ -40,19 +40,19 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
         public async Task Consume(ConsumeContext<HostOrderHandlingSucceeded> context)
         {
             await using var dbContext = await _contextFactory.CreateDbContextAsync(context.CancellationToken);
-            
-            if ( dbContext.LatestOrderStatus(context.Message.OrderId) is { } order)
+
+            if (dbContext.LatestOrderStatus(context.Message.OrderId) is { } order)
             {
                 dbContext.FromAgv.Add(FromAgv.CreateInstance(order, OrderStatus.Finished, RecordType.TransportOrder));
                 await dbContext.SaveChangesAsync(context.CancellationToken);
             }
             else
             {
-                _logger.LogError("Corresponding order with id {OrderId} / {CorrelationId} could not be found in ToAgv", 
+                _logger.LogError("Corresponding order with id {OrderId} / {CorrelationId} could not be found in ToAgv",
                     context.Message.OrderId, context.Message.CorrelationId);
             }
         }
-        
+
         /// <summary>
         /// Handle message <see cref="HostOrderStarted"/> by writing to <see cref="FromAgv" /> table.
         /// An order with <see cref="HostOrderHandlingSucceeded.OrderId"/> must be available in <see cref="ToAgv"/>.
@@ -61,8 +61,8 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
         public async Task Consume(ConsumeContext<HostOrderStarted> context)
         {
             await using var dbContext = await _contextFactory.CreateDbContextAsync(context.CancellationToken);
-            
-            if ( dbContext.LatestOrderStatus(context.Message.OrderId) is { } order)
+
+            if (dbContext.LatestOrderStatus(context.Message.OrderId) is { } order)
             {
                 dbContext.FromAgv.Add(
                     FromAgv.CreateInstance(order, OrderStatus.InProgress, RecordType.TransportOrder, vehicle: context.Message.AssignedAgv)
@@ -71,11 +71,11 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
             }
             else
             {
-                _logger.LogError("Corresponding order with id {OrderId} / {CorrelationId} could not be found in ToAgv", 
+                _logger.LogError("Corresponding order with id {OrderId} / {CorrelationId} could not be found in ToAgv",
                     context.Message.OrderId, context.Message.CorrelationId);
             }
         }
-        
+
         /// <summary>
         /// Handle message <see cref="HostOrderHandlingFailed"/> by writing to <see cref="FromAgv" /> table.
         /// An order with <see cref="HostOrderHandlingSucceeded.OrderId"/> must be available in <see cref="ToAgv"/>.
@@ -84,8 +84,8 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
         public async Task Consume(ConsumeContext<HostOrderHandlingFailed> context)
         {
             await using var dbContext = await _contextFactory.CreateDbContextAsync(context.CancellationToken);
-            
-            if ( dbContext.LatestOrderStatus(context.Message.OrderId) is { } order)
+
+            if (dbContext.LatestOrderStatus(context.Message.OrderId) is { } order)
             {
                 dbContext.FromAgv.Add(
                     FromAgv.CreateInstance(order, OrderStatus.Finished, RecordType.TransportOrder, error: context.Message.Error.ToString())
@@ -94,7 +94,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
             }
             else
             {
-                _logger.LogError("Corresponding order with id {OrderId} / {CorrelationId} could not be found in ToAgv", 
+                _logger.LogError("Corresponding order with id {OrderId} / {CorrelationId} could not be found in ToAgv",
                     context.Message.OrderId, context.Message.CorrelationId);
             }
         }
