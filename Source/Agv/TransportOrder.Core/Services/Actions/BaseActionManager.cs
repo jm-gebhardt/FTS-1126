@@ -328,6 +328,11 @@ public abstract class BaseActionManager : IActionManager
 
         var actionGroup = await _actionGroupRegistry.GetRequiredActionGroupByIdAsync(action.ParentId);
 
+        if (actionGroup.AssignedAgv == null)
+        {
+            return;
+        }
+
         var agv = await GetAgvByCorrelationIdAsync(actionGroup.AssignedAgv);
         await _actionGroupRegistry.UpdateActionAndGroupStateAsync(action, agv, ActionState.Completed);
 
