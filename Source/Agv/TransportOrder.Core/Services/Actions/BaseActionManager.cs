@@ -350,9 +350,10 @@ public abstract class BaseActionManager : IActionManager
             await _agvStateService.SetIdleAsync(agv);
         }
 
-        if (action.ActionType == ActionType.Drop && actionGroup.State == ActionGroupState.Completed)
+        var lastAction = actionGroup.Actions.Last();
+        if (action.ActionType == ActionType.Drop && action.CorrelationId == lastAction.CorrelationId)
         {
-            await _bus.Publish(new HostOrderHandlingSucceeded(actionGroup.CorrelationId, actionGroup.OrderId));
+            await _bus.Publish(new HostOrderHandlingSucceeded(actionGroup.CorrelationId, actionGroup.OrderId), cancellationToken);
         }
     }
 
