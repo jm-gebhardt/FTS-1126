@@ -11,6 +11,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Parking;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Registries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Routing;
+using MassTransit;
 using Microsoft.Extensions.Logging;
 using Moq;
 
@@ -25,6 +26,8 @@ public class ActionManagerFixture
     private readonly List<IAgv> _agvs = new();
 
     public ActionManager ActionManager { get; private set; }
+
+    public Mock<IBus> Bus { get; } = new();
 
     public Mock<IChargingService> ChargingService { get; } = new();
 
@@ -59,6 +62,7 @@ public class ActionManagerFixture
         AgvRegistry.Setup(x => x.GetAllAgvs()).Returns(_agvs.AsQueryable());
 
         ActionManager = new ActionManager(
+            Bus.Object,
             ActionGroupRegistry.Object,
             RouteService.Object,
             ChargingPointManager.Object,

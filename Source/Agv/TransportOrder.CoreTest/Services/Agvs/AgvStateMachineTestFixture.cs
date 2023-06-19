@@ -15,7 +15,7 @@ using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs;
 
-public class AgvStateMachineTestFixture: BaseStateMachineTestFixture<AgvStateMachine, AgvSaga>
+public class AgvStateMachineTestFixture : BaseStateMachineTestFixture<AgvStateMachine, AgvSaga>
 {
     public Mock<IAgvDataRegistry> MockAgvDataRegistry { get; } = new();
 
@@ -36,15 +36,15 @@ public class AgvStateMachineTestFixture: BaseStateMachineTestFixture<AgvStateMac
         Action<IBusRegistrationConfigurator>? busRegistrationConfigurator = null,
         Action<IBusRegistrationContext, IInMemoryBusFactoryConfigurator>? inMemoryConfiguration = null,
         AgvSettings? settings = null,
-        TimeSpan? inactivityTimeout = null) 
-         : base(services, busRegistrationConfigurator, inMemoryConfiguration, inactivityTimeout)
-        {
-            ConfigureServices();
-            AgvSettings = settings;
-            SetupSettingsRegistry();
-            SetupAgvDataRegistry();
-            Build();
-        }
+        TimeSpan? inactivityTimeout = null)
+        : base(services, busRegistrationConfigurator, inMemoryConfiguration, inactivityTimeout)
+    {
+        ConfigureServices();
+        AgvSettings = settings;
+        SetupSettingsRegistry();
+        SetupAgvDataRegistry();
+        Build();
+    }
 
     private void ConfigureServices()
     {
@@ -52,13 +52,13 @@ public class AgvStateMachineTestFixture: BaseStateMachineTestFixture<AgvStateMac
         ServiceCollection.AddSingleton<IMapRegistry>(_ => MockMapRegistry.Object);
         ServiceCollection.AddSingleton<IGraphRegistry>(_ => MockGraphRegistry.Object);
         ServiceCollection.AddSingleton<IStateObserver<AgvSaga>>(_ => MockObserver.Object);
-        
+
         ServiceCollection.AddSingleton(_ => new ProductionOptions()
         {
             ApplicationName = null,
             AutoAccept = true
         });
-        
+
         ServiceCollection.AddSingleton(MockSettingsProvider.Object);
     }
 
@@ -94,19 +94,19 @@ public class AgvStateMachineTestFixture: BaseStateMachineTestFixture<AgvStateMac
     {
         correlationId ??= Guid.NewGuid();
         string agvId = correlationId.ToString()!;
-        
-        var agvGraph = hasGraph? CreateTestAgvGraph() : null;
+
+        var agvGraph = hasGraph ? CreateTestAgvGraph() : null;
         var agvStatus = new AgvStatus(
-            correlationId.Value, 
-            null, 
-            true, 
-            true, 
-            10, 
-            true, 
-            true, 
+            correlationId.Value,
+            null,
+            true,
+            true,
+            10,
+            true,
+            true,
             lastNodeId: agvGraph?.Nodes.First().Id
-            ); 
-        
+        );
+
         var agvSaga = new AgvSaga(
             correlationId.Value,
             agvId,
@@ -116,7 +116,7 @@ public class AgvStateMachineTestFixture: BaseStateMachineTestFixture<AgvStateMac
         );
         return agvSaga;
     }
-    
+
     /// <summary>
     /// Create a standardized AgvGraph for testing purposes
     /// </summary>
@@ -126,11 +126,11 @@ public class AgvStateMachineTestFixture: BaseStateMachineTestFixture<AgvStateMac
         var agvGraph = new AgvGraph(Guid.Empty,
             new[]
             {
-                new AgvGraph.Node("node01"){ Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 0f, Z = 0f},
-                new AgvGraph.Node("node02"){ Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 4f, Y = 0f, Z = 0f}
+                new AgvGraph.Node("node01") {Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 0f, Z = 0f},
+                new AgvGraph.Node("node02") {Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 4f, Y = 0f, Z = 0f}
             }, new[]
             {
-                new AgvGraph.Edge("node01", "node02"){ Metric = 4f}
+                new AgvGraph.Edge("node01", "node02") {Metric = 4f}
             },
             mapName.ToGuid(),
             mapName);
@@ -152,8 +152,8 @@ public class AgvStateMachineTestFixture: BaseStateMachineTestFixture<AgvStateMac
 
         return new AgvMap(mapId.ToGuid(), mapId, modificationDate, imageData, resolution, xOffset, yOffset);
     }
-    
-    public async Task<AgvSaga> TransitionStateOnRequest<TRequest, TExpectedResponse, TUnexpectedResponse>(TRequest request, AgvSaga agvSaga, string resultingState) 
+
+    public async Task<AgvSaga> TransitionStateOnRequest<TRequest, TExpectedResponse, TUnexpectedResponse>(TRequest request, AgvSaga agvSaga, string resultingState)
         where TRequest : class, CorrelatedBy<Guid>
         where TExpectedResponse : class
         where TUnexpectedResponse : class
@@ -174,10 +174,7 @@ public class AgvStateMachineTestFixture: BaseStateMachineTestFixture<AgvStateMac
         bool assertAreEqual = true)
         where TRequest : class, CorrelatedBy<Guid>
     {
-        await TestHarness.Bus.Publish(message);
-
-        (await TestHarness.Published.Any<TRequest>()).ShouldBeTrue();
-        (await SagaHarness.Consumed.Any<TRequest>()).ShouldBeTrue();
+        await SendAndVerifyMessage(message);
 
         var saga = SagaHarness.Sagas.Select(s => s.CorrelationId == agvSaga.CorrelationId).First().Saga;
         if (assertAreEqual)
@@ -188,5 +185,18 @@ public class AgvStateMachineTestFixture: BaseStateMachineTestFixture<AgvStateMac
         {
             saga.CurrentState.ShouldNotBe(resultingState);
         }
+    }
+
+    public async Task SendAndVerifyMessage<TRequest>(TRequest message) where TRequest : class, CorrelatedBy<Guid>
+    {
+        await TestHarness.Bus.Publish(message);
+
+        (await TestHarness.Published.Any<TRequest>()).ShouldBeTrue();
+        (await SagaHarness.Consumed.Any<TRequest>()).ShouldBeTrue();
+    }
+
+    public async Task VerifyMessagePublishedAsync<T>() where T : class
+    {
+        (await TestHarness.Published.Any<T>()).ShouldBeTrue();
     }
 }

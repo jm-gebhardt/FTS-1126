@@ -89,9 +89,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
             }
 
             Response<GetAgvActionGroupsResult> groups = await _getAgvActionGroupsRequest.GetResponse<GetAgvActionGroupsResult>(new GetAgvActionGroupsRequest(
-                states,
-                fromDate ?? DateTime.MinValue,
-                toDate ?? DateTime.MaxValue,
+                states, 
+                fromDate ?? DateTime.MinValue, 
+                toDate ?? DateTime.MaxValue, 
                 limit));
             return Ok(groups.Message.AgvActionGroups);
         }

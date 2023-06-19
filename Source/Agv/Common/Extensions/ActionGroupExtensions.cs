@@ -28,16 +28,16 @@ public static class ActionGroupExtensions
         {
             actionGroup.State = ActionGroupState.Created;
         }
-        else if (actions.Any(a => a.State == ActionState.Started))
-        {
-            actionGroup.State = ActionGroupState.Started;
-        }
         else
         {
-            throw new ActionGroupStateInvalidException(actionGroup);
+            actionGroup.State = ActionGroupState.Started;
+            //throw new ActionGroupStateInvalidException(actionGroup);
         }
 
-        SetDates(actionGroup, previousState);
+        if (actionGroup.State != previousState)
+        {
+            SetDates(actionGroup, previousState);
+        }
     }
 
     private static void SetDates(ActionGroup actionGroup, ActionGroupState previousState)
