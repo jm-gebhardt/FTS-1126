@@ -172,7 +172,7 @@ public class EfActionGroupRegistry : IActionGroupRegistry
     }
 
     /// <inheritdoc />
-    public async Task UpdateActionAndGroupStateAsync(AgvAction action, IAgv agv, ActionState state)
+    public async Task<ActionGroupState> UpdateActionAndGroupStateAsync(AgvAction action, IAgv agv, ActionState state)
     {
         var actionGroupCorrelationId = action.ParentId;
 
@@ -195,6 +195,8 @@ public class EfActionGroupRegistry : IActionGroupRegistry
         actionGroup.UpdateActionGroupState();
 
         await context.SaveChangesAsync();
+
+        return actionGroup.State;
     }
 
     /// <inheritdoc/>

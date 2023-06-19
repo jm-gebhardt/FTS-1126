@@ -45,6 +45,8 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
             {
                 dbContext.FromAgv.Add(FromAgv.CreateInstance(order, OrderStatus.Finished, RecordType.TransportOrder));
                 await dbContext.SaveChangesAsync(context.CancellationToken);
+
+                _logger.LogInformation("Order {OrderId} / {CorrelationId} was finished", context.Message.OrderId, context.Message.CorrelationId);
             }
             else
             {
@@ -66,7 +68,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
             {
                 dbContext.FromAgv.Add(
                     FromAgv.CreateInstance(order, OrderStatus.InProgress, RecordType.TransportOrder, vehicle: context.Message.AssignedAgv)
-                    );
+                );
                 await dbContext.SaveChangesAsync(context.CancellationToken);
             }
             else
@@ -89,7 +91,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
             {
                 dbContext.FromAgv.Add(
                     FromAgv.CreateInstance(order, OrderStatus.Finished, RecordType.TransportOrder, error: context.Message.Error.ToString())
-                    );
+                );
                 await dbContext.SaveChangesAsync(context.CancellationToken);
             }
             else
@@ -110,7 +112,8 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
             if (dbContext.LatestOrderStatus(context.Message.OrderId) is { } order)
             {
                 dbContext.FromAgv.Add(
-                    FromAgv.CreateInstance(order, OrderStatus.Cancelled, RecordType.OrderCancelAcknowledge));
+                    FromAgv.CreateInstance(order, OrderStatus.Cancelled, RecordType.OrderCancelAcknowledge)
+                );
                 await dbContext.SaveChangesAsync(context.CancellationToken);
             }
             else
@@ -131,7 +134,8 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
             if (dbContext.LatestOrderStatus(context.Message.OrderId) is { } order)
             {
                 dbContext.FromAgv.Add(
-                    FromAgv.CreateInstance(order, OrderStatus.Cancelled, RecordType.OrderCancelFailed, error: context.Message.Error.ToString()));
+                    FromAgv.CreateInstance(order, OrderStatus.Cancelled, RecordType.OrderCancelFailed, error: context.Message.Error.ToString())
+                );
                 await dbContext.SaveChangesAsync(context.CancellationToken);
             }
             else

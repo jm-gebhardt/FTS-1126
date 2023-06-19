@@ -81,7 +81,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Registries
         /// <param name="action">The action to be started</param>
         /// <param name="agv">The assigned Agv</param>
         /// <param name="state">The new state</param>
-        public Task UpdateActionAndGroupStateAsync(AgvAction action, IAgv agv, ActionState state);
+        public Task<ActionGroupState> UpdateActionAndGroupStateAsync(AgvAction action, IAgv agv, ActionState state);
 
         /// <summary>
         /// Determine if there is any drop action which is not completed (Agv loaded)

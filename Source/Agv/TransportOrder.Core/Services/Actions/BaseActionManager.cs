@@ -340,7 +340,7 @@ public abstract class BaseActionManager : IActionManager
         }
 
         var agv = await GetAgvByCorrelationIdAsync(actionGroup.AssignedAgv);
-        await _actionGroupRegistry.UpdateActionAndGroupStateAsync(action, agv, ActionState.Completed);
+        var actionGroupState = await _actionGroupRegistry.UpdateActionAndGroupStateAsync(action, agv, ActionState.Completed);
 
         // charge will switch to charging state and can not be released immediately
         if (action.ActionType != ActionType.Charge)
@@ -350,8 +350,7 @@ public abstract class BaseActionManager : IActionManager
             await _agvStateService.SetIdleAsync(agv);
         }
 
-        var lastAction = actionGroup.Actions.Last();
-        if (action.ActionType == ActionType.Drop && action.CorrelationId == lastAction.CorrelationId)
+        if (action.ActionType == ActionType.Drop && actionGroupState == ActionGroupState.Completed)
         {
             await _bus.Publish(new HostOrderHandlingSucceeded(actionGroup.CorrelationId, actionGroup.OrderId), cancellationToken);
         }

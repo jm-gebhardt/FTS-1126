@@ -251,7 +251,8 @@ public class ActionGroupRegistryTest
         actionGroupInRegistry.Actions.First(a => a.CorrelationId == actionToUpdateState.CorrelationId).State.ShouldBe(actionToUpdateState.State);
         actionGroupInRegistry.AssignedAgv.ShouldBeNull();
 
-        await fixture.ActionGroupRegistry.UpdateActionAndGroupStateAsync(actionToUpdateState, agv, ActionState.Started);
+        var actionGroupState = await fixture.ActionGroupRegistry.UpdateActionAndGroupStateAsync(actionToUpdateState, agv, ActionState.Started);
+        actionGroupState.ShouldBe(ActionGroupState.Started);
 
         actionGroupInRegistry = await fixture.ActionGroupRegistry.GetActionGroupAsync(actionGroup.CorrelationId);
         actionGroupInRegistry.ShouldNotBeNull();
