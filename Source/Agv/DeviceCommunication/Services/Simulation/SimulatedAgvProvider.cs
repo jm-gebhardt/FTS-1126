@@ -19,7 +19,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
         private readonly string[] _sources;
         private readonly string[] _destinations;
 
-        private const string AgvPrefix = "karis"; // "SimAgv-";
+        private const string AgvPrefix = "SimAgv-";
         private const string Model = "R2-D2";
         private const string Type = "Simulated AGV";
         private const double Width = 1;

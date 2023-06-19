@@ -72,20 +72,20 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             
             (await fixture.SagaHarness.Consumed.Any<SimulatedAgvStateMachine.CreateAgv>()).ShouldBeTrue();
             
-            const string AgvPrefix = "karis"; // "SimAgv-";
+            const string agvPrefix = "SimAgv-";
 
             for (int i = 0; i < numberOfAgvs; i++)
             {
                 int i1 = i;
-                var createdSaga = fixture.SagaHarness.Sagas.Select(c => c.CorrelationId == $"{AgvPrefix}{i1}".ToGuid()).First().Saga;
+                var createdSaga = fixture.SagaHarness.Sagas.Select(c => c.CorrelationId == $"{agvPrefix}{i1}".ToGuid()).First().Saga;
 
-                createdSaga.CorrelationId.ShouldBe($"{AgvPrefix}{i}".ToGuid());
-                createdSaga.AgvId.ShouldBe($"{AgvPrefix}{i}");
+                createdSaga.CorrelationId.ShouldBe($"{agvPrefix}{i}".ToGuid());
+                createdSaga.AgvId.ShouldBe($"{agvPrefix}{i}");
                 createdSaga.AgvStatus.ShouldNotBeNull();
                 createdSaga.AgvGraph.ShouldNotBeNull();
                 createdSaga.AgvData.ShouldNotBeNull();
 
-                (await fixture.TestHarness.Consumed.Any<SimulatedAgvStateMachine.CreateAgvResponse>(c => c.Context.CorrelationId == $"{AgvPrefix}{i}".ToGuid())).ShouldBeTrue();
+                (await fixture.TestHarness.Consumed.Any<SimulatedAgvStateMachine.CreateAgvResponse>(c => c.Context.CorrelationId == $"{agvPrefix}{i}".ToGuid())).ShouldBeTrue();
             }
         }
     }

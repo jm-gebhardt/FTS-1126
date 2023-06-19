@@ -18,7 +18,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest
         /// <summary>
         /// Start all docker services before each test
         /// </summary>
-        //[TestInitialize]
+        [TestInitialize]
         public void StartServices()
         {
             const string DockerRegistry = "registry.gitlab.com";
@@ -53,7 +53,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest
         /// <summary>
         /// Remove all docker services after test
         /// </summary>
-        //[TestCleanup]
+        [TestCleanup]
         public void StopServices()
         {
             _dockerComposeVirtualAgv.ShouldNotBeNull();
@@ -78,7 +78,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest
             const string source = "PVB02";
             const string destination = "PVB03";
 
-            var restApi = new RestApi("http://127.0.0.1:5000");
+            var restApi = new RestApi();
 
             var restAgv = await restApi.WaitForAgv(agvId);
             restAgv.ShouldNotBeNull();
