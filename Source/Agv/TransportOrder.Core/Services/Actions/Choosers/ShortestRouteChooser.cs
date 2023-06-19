@@ -67,7 +67,7 @@ public class ShortestRouteChooser : IChooseAgvActionGroupService
 
         bestAgv = agvWithRoute.MinBy(cba => cba.Value.costs).Key;
 
-        return Task.FromResult((IAgv?) bestAgv);
+        return Task.FromResult((IAgv?)bestAgv);
     }
 
     /// <summary>
@@ -82,18 +82,51 @@ public class ShortestRouteChooser : IChooseAgvActionGroupService
         agv.GetRequiredAgvStatus().RequireLastNodeId();
 
         IReadOnlyList<ActionGroup> notStartedActionGroups = await _actionGroupRegistry.GetNotStartedActionGroupsAsync();
-        var nextParentedByAction = (notStartedActionGroups
-            .Select(a => a.GetRequiredActions().Select(action =>
+
+        float? minCosts = null;
+        AgvAction? nextParentedByAction = null;
+        foreach (var actiongroup in notStartedActionGroups)
+        {
+            bool isReachable = ActionGroupIsReachableByAgv(agv, actiongroup, out var firstAction, out float? firstNodeCost);
+            if (!isReachable || firstAction == null || firstNodeCost == null)
             {
-                bool hasRoute = _routeService.HasRoute(agv, action.TargetNodeId, out float? costs);
-                return (hasRoute, action, costs);
-            }))
-            .Where(actionGroup => actionGroup.All(al => al.hasRoute))
-            // out of the ActionGroup: take action with lowest sequence number = pick
-            // take ActionGroup where this pick action has the lowest costs
-            .MinBy(actionGroup => actionGroup.MinBy(p => p.action.Sequence).costs)?
-            .FirstOrDefault())?.action;
+                continue; // Not all actions of this actionGroup can be reached by the AGV -> skip
+            }
+
+            // Find actionGroup with the lowest first node cost
+            if (minCosts == null || firstNodeCost < minCosts)
+            {
+                nextParentedByAction = firstAction;
+                minCosts = firstNodeCost;
+            }
+        }
 
         return nextParentedByAction;
+    }
+
+    private bool ActionGroupIsReachableByAgv(IAgv agv, ActionGroup actionGroup, out AgvAction? firstAction, out float? firstNodeCost)
+    {
+        firstAction = null;
+        firstNodeCost = null;
+
+        int minSequence = 0;
+        ICollection<AgvAction> actions = actionGroup.GetRequiredActions(); // Throws exception if there are no actions
+        foreach (var action in actions)
+        {
+            if (!_routeService.HasRoute(agv, action.TargetNodeId, out float? costs))
+            {
+                return false; // Break if a target node is not reachable
+            }
+
+            // Get action with lowest sequence (this should always be the first action)
+            if (firstNodeCost == null || action.Sequence < minSequence)
+            {
+                firstAction = action;
+                firstNodeCost = costs;
+                minSequence = action.Sequence;
+            }
+        }
+
+        return true;
     }
 }

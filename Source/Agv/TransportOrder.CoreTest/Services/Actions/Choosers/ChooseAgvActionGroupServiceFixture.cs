@@ -32,7 +32,9 @@ public class ChooseAgvActionGroupServiceFixture
     }
 
     public ChooseAgvActionGroupServiceFixture WithAgvHasRouteToDestination(IAgv agv, bool hasRoute = true, float? routeCosts = null)
-    {
+    {       
+        routeCosts ??= hasRoute ? 1f : null;  // if routeCosts are not explicitly set, use default value based on hasRoute
+
         RouteService.Setup(x => x.HasRoute(agv, It.IsAny<string>(), out routeCosts)).Returns(hasRoute);
         RouteService.Setup(x => x.GetRoute(agv, It.IsAny<string>())).Returns(new IGraphAlgorithm.Route(1f, Array.Empty<string>()));
         return this;
