@@ -100,7 +100,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         public bool AreRemoved()
         {
             var success = RunCommand("ps -a --format=json", out var stdout);
-            Trace.WriteLine($"Running docker container: {stdout}");    
+            Trace.WriteLine($"Running docker container: {stdout}");
 
             if (!success)
             {
@@ -142,7 +142,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         {
             return RunCommand(args, out _, true, timeout);
         }
-        
+
         /// <summary>
         /// Run a docker compose command, output will be printed to stdout/stderr
         /// </summary>
@@ -172,8 +172,8 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
             {
                 cmd = " ";
             }
-            
-            _logger.LogInformation("Executing docker {Command }{CommandArguments}", cmd, args);
+
+            _logger.LogInformation("Executing docker {Command}{CommandArguments}", cmd, args);
 
             var processInfo = new ProcessStartInfo("docker", cmd + args)
             {
@@ -208,7 +208,14 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
 
             var exitCode = process.ExitCode;
             process.Close();
-            return exitCode == 0;
+
+            if (exitCode == 0)
+            {
+                _logger.LogError("Process exited with code {ExitCode}", exitCode);
+                return false;
+            }
+
+            return true;
         }
     }
 }
