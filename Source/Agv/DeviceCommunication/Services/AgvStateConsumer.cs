@@ -77,11 +77,10 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
             }
 
             var agvInformation = _agvRegistry.GetAgvInformation(agvStatusReceived.CorrelationId);
-            var agvStatusReceivedFromRegistry = agvInformation!.AgvStatusReceived;
 
-            if (agvStatusReceivedFromRegistry != null)
+            if (agvInformation?.AgvStatusReceived != null)
             {
-                bool oldCharging = agvStatusReceivedFromRegistry.AgvStatus.Charging;
+                bool oldCharging = agvInformation.AgvStatusReceived.AgvStatus.Charging;
                 bool newCharging = GetCharging(message);
 
                 if (!oldCharging && newCharging)
