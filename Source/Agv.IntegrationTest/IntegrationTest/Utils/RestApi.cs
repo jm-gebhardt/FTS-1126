@@ -118,15 +118,6 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         /// Get all Maps
         /// </summary>
         /// <returns>JArray of Orders or null if request is unsuccessful</returns>
-        public async Task<JArray?> GetOrders()
-        {
-            return await Request<JArray>("orders");
-        }
-        
-        /// <summary>
-        /// Get all Maps
-        /// </summary>
-        /// <returns>JArray of Orders or null if request is unsuccessful</returns>
         public async Task<JArray?> GetActionsGroup()
         {
             return await Request<JArray>("actionGroups?limit");

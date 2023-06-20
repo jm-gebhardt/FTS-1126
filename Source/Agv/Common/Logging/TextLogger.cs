@@ -61,7 +61,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Logging
 
             if (EventId == 0 || EventId == eventId.Id)
             {
-                var timeNow = DateTime.UtcNow;
+                var timeNow = DateTime.Now;
 
                 var logMessage = new StringBuilder();
                 logMessage.Append($"{logLevel}|EventId:{eventId.Id}".PadRight(EventIdPaddingRight));
@@ -79,11 +79,11 @@ namespace Gebhardt.StoreWare.Agv.Common.Logging
 
             if (logLevel == LogLevel.Error)
             {
-                filePath = DateTime.UtcNow.ToString("dd") + LoggingConstants.ErrorFileSuffix;
+                filePath = DateTime.Now.ToString("dd") + LoggingConstants.ErrorFileSuffix;
             }
             else
             {
-                filePath = DateTime.UtcNow.ToString("dd") + LoggingConstants.NonErrorFileSuffix;
+                filePath = DateTime.Now.ToString("dd") + LoggingConstants.NonErrorFileSuffix;
             }
 
             if (!File.Exists(FolderPath + filePath))

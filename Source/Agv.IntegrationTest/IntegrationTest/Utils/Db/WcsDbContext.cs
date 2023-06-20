@@ -52,8 +52,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils.Db
         [PublicAPI]
         public DbSet<ToAgv> ToAgv { get; set; }  = null!;
 
-        //private const string ConnectString = $"Server=127.0.0.1;Database=master;User Id=sa;Password={EnvFile.DefaultPassword};Encrypt=False";
-        private const string ConnectString = "Server=202203-irs-hv02;Database=agv;Trusted_Connection=True;TrustServerCertificate=True";
+        private const string ConnectString = $"Server=127.0.0.1;Database=master;User Id=sa;Password={EnvFile.DefaultPassword};Encrypt=False";
 
         /// <summary>
         /// Create with default password
