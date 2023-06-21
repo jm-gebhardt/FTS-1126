@@ -51,6 +51,7 @@ try
                 .ConfigureServices((context, services) =>
                 {
                     services.AddScoped(_ => productionOptions);
+                    services.AddSingleton<IAgvRegistry, AgvRegistry>();
                     services.ConfigureServicesMassTransit(context.Configuration,
                         busRegistrationConfiguration: configurator =>
                         {
