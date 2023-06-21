@@ -209,7 +209,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
             var exitCode = process.ExitCode;
             process.Close();
 
-            if (exitCode == 0)
+            if (exitCode != 0)
             {
                 _logger.LogError("Process exited with code {ExitCode}", exitCode);
                 return false;
