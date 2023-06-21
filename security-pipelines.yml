@@ -23,6 +23,9 @@ steps:
       packageType: 'sdk'
       version: '6.0.x'
       performMultiLevelLookup: true
+  - task: NuGetToolInstaller@1
+    inputs:
+      checkLatest: true
   - task: NuGetAuthenticate@1
   - task: NuGetCommand@2
     displayName: 'Restoring based on NuGet.config'
