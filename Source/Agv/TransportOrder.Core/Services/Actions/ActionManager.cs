@@ -53,7 +53,13 @@ public class ActionManager : BaseActionManager
     /// <inheritdoc />
     protected override async Task<AgvAction?> GetNextActionAsync(IAgv agv)
     {
-        var nextAgvAction = await GetPendingActionAsync(agv) ?? await CreateIdleActionAsync(agv);
+        var nextAgvAction = await GetPendingActionAsync(agv);
+        // ReSharper disable once ConvertIfStatementToNullCoalescingExpression
+        if (nextAgvAction == null)
+        {
+            nextAgvAction = await CreateIdleActionAsync(agv);
+        }
+
         return nextAgvAction;
     }
 

@@ -67,6 +67,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
         }
 
         /// <inheritdoc />
-        public IAgv GetRequiredAgv(Guid? correlationId) => GetAgv(correlationId) ?? throw new AgvNotFoundException(correlationId);
+        public IAgv GetRequiredAgv(Guid? correlationId)
+        {
+            var agv = GetAgv(correlationId);
+            if (agv == null)
+            {
+                throw new AgvNotFoundException(correlationId);
+            }
+
+            return agv;
+        }
     }
 }
