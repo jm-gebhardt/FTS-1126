@@ -19,7 +19,7 @@
     }
 }
 
-*:80 {
+:80 {
     handle_errors {
         header Content-Type text/plain
         respond "{http.error.status_code} {http.error.status_text}"

@@ -8,29 +8,35 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 
 public static class AgvGenerator
 {
-    private static string GetAgvId(int index) => $"AGV{index:D3}";
-
-    public static IAgv GenerateIdleAgv(int index = 0, string? lastNodeId = "lastNodeId", AgvGraph? agvGraph = null)
+    public static IAgv GenerateIdleAgv(int index = 0, string? lastNodeId = null, AgvGraph? agvGraph = null)
     {
-        string agvId = GetAgvId(index);
-        var correlationId = agvId.ToGuid();
-        var agvStatus = new AgvStatus(correlationId, "orderId",false, true, 100, false, false, lastNodeId);
-        return new AgvSaga(correlationId, agvId, nameof(AgvStateMachine.Idle), agvStatus, agvGraph: agvGraph);
+        return GenerateAgv(nameof(AgvStateMachine.Idle), index, lastNodeId, null, agvGraph);
     }
 
     [UsedImplicitly]
-    public static IAgv GenerateIdleAgv(AgvStatus? agvStatus, int index = 0)
+    public static IAgv GenerateIdleAgv(AgvStatus agvStatus, int index = 0)
     {
-        string agvId = GetAgvId(index);
-        var correlationId = agvId.ToGuid();
-        return new AgvSaga(correlationId, agvId, nameof(AgvStateMachine.Idle), agvStatus);
+        return GenerateAgv(nameof(AgvStateMachine.Idle), index, null, agvStatus);
     }
 
-    public static IAgv GenerateChargingAgv(int index = 0, string? lastNodeId = "lastNodeId")
+    public static IAgv GenerateChargingAgv(int index = 0, string? lastNodeId = null)
+    {
+        return GenerateAgv(nameof(AgvStateMachine.Charging), index, lastNodeId, charging: true);
+    }
+
+    private static IAgv GenerateAgv(
+        string state,
+        int index,
+        string? lastNodeId,
+        AgvStatus? agvStatus = null,
+        AgvGraph? agvGraph = null,
+        bool charging = false)
     {
         string agvId = GetAgvId(index);
         var correlationId = agvId.ToGuid();
-        var agvStatus = new AgvStatus(correlationId, "orderId",true, true, 1, true, false, lastNodeId);
-        return new AgvSaga(correlationId, agvId, nameof(AgvStateMachine.Charging), agvStatus);
+        agvStatus ??= new AgvStatus(correlationId, "orderId", true, true, 1, charging, false, lastNodeId);
+        return new AgvSaga(correlationId, agvId, state, agvStatus, agvGraph);
     }
+
+    private static string GetAgvId(int index) => $"AGV{index:D3}";
 }

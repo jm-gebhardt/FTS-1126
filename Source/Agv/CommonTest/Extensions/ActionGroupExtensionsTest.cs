@@ -20,6 +20,21 @@ public class ActionGroupExtensionsTest
     }
 
     [TestMethod]
+    [DataRow(ActionState.Created, ActionState.Created, ActionGroupState.Created)]
+    [DataRow(ActionState.Started, ActionState.Created, ActionGroupState.Started)]
+    [DataRow(ActionState.Completed, ActionState.Created, ActionGroupState.Started)]
+    [DataRow(ActionState.Completed, ActionState.Started, ActionGroupState.Started)]
+    [DataRow(ActionState.Completed, ActionState.Completed, ActionGroupState.Completed)]
+    public void VerifyAllStateTransition_ForActionGroupWithTwoActions(ActionState actionState1, ActionState actionState2, ActionGroupState actionGroupState)
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        actionGroup.Actions.ElementAt(0).State = actionState1;
+        actionGroup.Actions.ElementAt(1).State = actionState2;
+        actionGroup.UpdateActionGroupState();
+        actionGroup.State.ShouldBe(actionGroupState);
+    }
+
+    [TestMethod]
     public void UpdateActionGroupState_WhenAllActionsInStateCreated_SetActionGroupStateToCreated()
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();

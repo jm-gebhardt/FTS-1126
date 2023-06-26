@@ -31,7 +31,6 @@ public static class ActionGroupExtensions
         else
         {
             actionGroup.State = ActionGroupState.Started;
-            //throw new ActionGroupStateInvalidException(actionGroup);
         }
 
         if (actionGroup.State != previousState)

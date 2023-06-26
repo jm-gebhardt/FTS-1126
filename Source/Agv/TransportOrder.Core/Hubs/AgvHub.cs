@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using System.Text.Json.Serialization;
 using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
@@ -30,7 +31,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Hubs
     /// </summary>
     public class AgvHubContext : IAgvHubContext
     {
-        private static readonly JsonSerializerOptions _serializerOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+        private static readonly JsonSerializerOptions _serializerOptions = new()
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            Converters = { new JsonStringEnumConverter() }
+        };
         private readonly IHubContext<AgvHub> _hubContext;
         private readonly IMapper _mapper;
 

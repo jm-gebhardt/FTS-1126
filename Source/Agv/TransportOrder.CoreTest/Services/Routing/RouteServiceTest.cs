@@ -1,8 +1,7 @@
+using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Routing;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
-using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Graphs;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
 using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Routing;
@@ -14,9 +13,8 @@ public class RouteServiceTest
     public void GetRoute_WhenAgvCurrentPositionIsDestinationNode_ReturnsRoute()
     {
         var routeService = new RouteService();
-        var graphFixture = new Mock<AgvGraphTestFixture>().Object;
-        var agvGraph = graphFixture.Graph;
-        string node = agvGraph.Nodes.First().Id; 
+        var agvGraph = AgvGraphGenerator.CreateDefaultGraph();
+        string node = AgvGraphGenerator.DestinationClose.Id;
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeId:node, agvGraph: agvGraph);
         
         var actualRoute = routeService.GetRoute(agv, node);
