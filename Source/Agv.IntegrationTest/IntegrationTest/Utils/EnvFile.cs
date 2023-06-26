@@ -75,19 +75,6 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
             Trace.WriteLine($"FilePath for .env file: {FilePath}");
             File.WriteAllLines(FilePath, from kvp in _dict select kvp.Key + "=" + kvp.Value);
 
-            Console.WriteLine(".env file:");
-            foreach (var kvp in _dict)
-            {
-                if (kvp.Key.Contains("PASSWORD", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    Console.WriteLine(kvp.Key + "=*****");
-                }
-                else
-                {
-                    Console.WriteLine(kvp.Key + "=" + kvp.Value);
-                }
-            }
-
             return FilePath;
         }
     }
