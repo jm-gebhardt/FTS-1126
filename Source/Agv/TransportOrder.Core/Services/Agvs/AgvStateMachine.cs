@@ -269,7 +269,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
         private EventActivityBinder<AgvSaga, SetAgvIdle> AcceptSetIdleRequestHandler() =>
             When(SetAgvIdleEvent)
                 .TransitionTo(Idle)
-                .Then(c =>_logger.LogDebug("AGV {AgvId} / {CorrelationId} was set to Idle", c.Saga.AgvId, c.Saga.CorrelationId))
+                .Then(c => _logger.LogDebug("AGV {AgvId} / {CorrelationId} was set to Idle", c.Saga.AgvId, c.Saga.CorrelationId))
                 .Respond(c => new SetAgvIdleSucceeded(c.Message.CorrelationId))
                 .ThenAsync(c => PublishAgvBecameIdle(c.Saga, c));
 
@@ -291,27 +291,18 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
         private EventActivityBinder<AgvSaga, LockAgv> LockAgvHandler() =>
             When(LockAgvEvent)
                 .Then(c => { Lock(c, true); })
-                .Then(c =>
-                {
-                    c.Saga.IsLocked = true;
-                    c.Saga.TimeOfLockStateChanged = DateTime.UtcNow;
-                })
                 .Then(c => _logger.LogDebug("Agv {AgvId}/{CorrelationId} was locked", c.Saga.AgvId, c.Saga.CorrelationId));
 
         private EventActivityBinder<AgvSaga, UnlockAgv> UnlockDiscoveredAgvHandler() =>
             When(UnlockAgvEvent)
                 .TransitionTo(Idle)
+                .Then(c => { Lock(c, false); })
                 .Then(c => _logger.LogDebug("AGV {AgvId} / {CorrelationId} was set to Idle", c.Saga.AgvId, c.Saga.CorrelationId))
                 .ThenAsync(c => PublishAgvBecameIdle(c.Saga, c));
-       
+
         private EventActivityBinder<AgvSaga, UnlockAgv> UnlockAgvHandler() =>
             When(UnlockAgvEvent)
                 .Then(c => { Lock(c, false); })
-                .Then(c =>
-                {
-                    c.Saga.IsLocked = false;
-                    c.Saga.TimeOfLockStateChanged = DateTime.UtcNow;
-                })
                 .Then(c => _logger.LogDebug("Agv {AgvId}/{CorrelationId} was unlocked", c.Saga.AgvId, c.Saga.CorrelationId));
 
         private EventActivityBinder<AgvSaga, AgvStartedCharging> AgvStartedChargingReceivedHandler() =>
