@@ -1,7 +1,9 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Common;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Requests.Queries;
+using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using MassTransit;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
@@ -23,7 +25,7 @@ public class GetAgvsRequestHandlerTest
     }
 
     [TestMethod]
-    public async Task GetAgvsRequestHandler_RegistryContainsAgv_AgvReturned()
+    public async Task GetAgvsRequestHandler_RegistryContainsAgv_NoActionGroup_AgvReturned()
     {
         var agvs = new List<IAgv> { Mock.Of<IAgv>() };
         AgvRequestsHandlerTestFixture<GetAgvsRequest, GetAgvsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvsRequest, GetAgvsRequestHandler>()
@@ -32,5 +34,33 @@ public class GetAgvsRequestHandlerTest
 
         Response<GetAgvsResult> response = await fixture.GetResponseAsync<GetAgvsResult>(new GetAgvsRequest());
         response.Message.Agvs.ShouldNotBeEmpty();
+        response.Message.Agvs.Count.ShouldBe(1);
+        var agvDto = response.Message.Agvs.First();
+        agvDto.CorrelationId.ShouldBe(agvs.First().CorrelationId);
+        agvDto.AgvId.ShouldBe(agvs.First().AgvId);
+        agvDto.CurrentActionGroup.ShouldBeNull();
+    }
+    
+    [TestMethod]
+    public async Task GetAgvsRequestHandler_RegistryContainsAgv_HasCurrentAction_AgvReturned()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        AgvRequestsHandlerTestFixture<GetAgvsRequest, GetAgvsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvsRequest, GetAgvsRequestHandler>()
+            .WithAgvs(new List<IAgv> { agv }, actionGroup)
+            .Build();
+
+        Response<GetAgvsResult> response = await fixture.GetResponseAsync<GetAgvsResult>(new GetAgvsRequest());
+        response.Message.Agvs.ShouldNotBeEmpty();
+        response.Message.Agvs.Count.ShouldBe(1);
+        var respondAgv = response.Message.Agvs.First();
+        respondAgv.CorrelationId.ShouldBe(agv.CorrelationId);
+        respondAgv.CurrentActionGroup.ShouldNotBeNull();
+        
+        var respondActionGroup = respondAgv.CurrentActionGroup;
+        respondActionGroup.CorrelationId.ShouldBe(actionGroup.CorrelationId);
+        respondActionGroup.Actions.Count.ShouldBe(actionGroup.Actions.Count);
+        respondActionGroup.Actions.First().ActionType.ShouldBe(actionGroup.Actions.First().ActionType);
+        respondActionGroup.Actions.First().CorrelationId.ShouldBe(actionGroup.Actions.First().CorrelationId);
     }
 }

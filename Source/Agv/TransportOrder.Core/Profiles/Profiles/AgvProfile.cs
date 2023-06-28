@@ -24,6 +24,7 @@ public class AgvProfile : Profile
             .IncludeMembers(s => s.AgvStatus);
 
         CreateMap<ActionGroup, AgvDto>(MemberList.None)
+            .ForMember(d => d.CurrentActionGroup, opt => opt.MapFrom(s => s))
             // ignore CorrelationId, as it's set from the other mapping already, otherwise this would overwrite the CorrelationId of the AgvDto (Agv) with the CorrelationId of the ActionGroup
             .ForMember(x => x.CorrelationId, opt => opt.Ignore());
 
