@@ -120,7 +120,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         /// <returns>JArray of Orders or null if request is unsuccessful</returns>
         public async Task<JArray?> GetActionsGroup()
         {
-            return await Request<JArray>("actionGroups?limit");
+            return await Request<JArray>("actionGroups");
         }
 
         /// <summary>
