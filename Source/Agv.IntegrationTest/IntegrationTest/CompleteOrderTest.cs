@@ -115,7 +115,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest
             var order = await restApi.WaitForOrder(orderId);
             order.ShouldNotBeNull();
 
-            order = await restApi.WaitForOrder(orderId, "Final");
+            order = await restApi.WaitForOrder(orderId, "Completed", true);
             order.ShouldNotBeNull();
 
             context.FromAgv.Any(o => o.OrderId == orderId && o.Status == OrderStatus.Finished).ShouldBeTrue();
