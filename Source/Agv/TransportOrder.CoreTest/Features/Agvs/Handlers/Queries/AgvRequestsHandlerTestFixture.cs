@@ -2,6 +2,7 @@ using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Testing;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Profiles.Profiles;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Registries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
 using MassTransit;
@@ -25,7 +26,7 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
         AddServices(s => s.AddTransient(_ => AgvRegistry.Object));
         AddServices(s => s.AddTransient(_ => ActionGroupRegistry.Object));
         AddServices(s => s.AddTransient(_ => Mock.Of<IAgvDataRegistry>()));
-        AddServices(s => s.AddTransient(_ => Mock.Of<IMapper>()));
+        AddServices(sc => sc.AddTransient(_ => GetMapper()));
     }
 
     public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithAgvs(IList<IAgv> agvs, ActionGroup? actionGroup = null)
@@ -46,5 +47,16 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
     {
         base.Build();
         return this;
+    }
+    
+    private IMapper GetMapper()
+    {
+        var mapperConfig = new MapperConfiguration(cfg =>
+        {
+            cfg.AddProfile(new AgvProfile());
+            cfg.AddProfile(new ActionProfile());
+        });
+        var mapper = new Mapper(mapperConfig);
+        return mapper;
     }
 }
