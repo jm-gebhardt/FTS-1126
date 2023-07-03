@@ -1,3 +1,4 @@
+using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
@@ -15,17 +16,20 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
     {
         private readonly ILogger<AgvStateConsumer> _logger;
         private readonly IAgvRegistry _agvRegistry;
+        private readonly IMapper _mapper;
 
         /// <summary>
         /// Create consumer for agv status message (<see cref="MqttState"/>)
         /// </summary>
         /// <param name="logger">Mandatory logger facility.</param>
         /// <param name="agvRegistry"></param>
+        /// <param name="mapper"></param>
         [PublicAPI]
-        public AgvStateConsumer(ILogger<AgvStateConsumer> logger, IAgvRegistry agvRegistry)
+        public AgvStateConsumer(ILogger<AgvStateConsumer> logger, IAgvRegistry agvRegistry, IMapper mapper)
         {
             _logger = logger;
             _agvRegistry = agvRegistry;
+            _mapper = mapper;
         }
 
         /// <summary>
@@ -34,6 +38,16 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
         public async Task Consume(ConsumeContext<MqttState> context)
         {
             var message = context.Message;
+            string serialNumber = GetSerialNumber(context, message);
+            var agvCorrelationId = serialNumber.ToGuid();
+
+            await SendAgvStatusAsync(context, agvCorrelationId, message, serialNumber);
+            await SendAgvPositionAsync(context, agvCorrelationId, serialNumber);
+            await SendAgvErrorStatusAsync(context, agvCorrelationId, message);
+        }
+
+        private string GetSerialNumber(ConsumeContext<MqttState> context, MqttState message)
+        {
             string serialNumber = GetSerialNumber(message);
 
             if (string.IsNullOrEmpty(serialNumber))
@@ -42,9 +56,13 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
                 throw new InvalidOperationException($"Cannot handle {typeof(MqttState)} message, serialNumber must not be null or empty");
             }
             _logger.LogDebug("{MessageType} from {AgvId} received", nameof(MqttState), serialNumber);
+            return serialNumber;
+        }
 
+        private async Task SendAgvStatusAsync(ConsumeContext<MqttState> context, Guid agvCorrelationId, MqttState message, string serialNumber)
+        {
             var agvStatus = new AgvStatus(
-                serialNumber.ToGuid(),
+                agvCorrelationId,
                 GetOrderId(message),
                 GetBusy(message),
                 GetAutomatic(message),
@@ -55,32 +73,18 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
             );
 
             var agvStatusReceived = new AgvStatusReceived(
-                correlationId: serialNumber.ToGuid(),
+                correlationId: agvCorrelationId,
                 agvId: serialNumber,
                 agvStatus: agvStatus
             );
             await context.Publish(agvStatusReceived, context.CancellationToken);
 
-            if (context.Message.AgvPosition != null)
-            {
-                await context.Publish(new AgvPositionReceived(
-                    correlationId: serialNumber.ToGuid(),
-                    agvId: serialNumber,
-                    agvPosition: new Common.Messages.AgvManagement.AgvPosition(
-                        positionInitialized: context.Message.AgvPosition.PositionInitialized,
-                        x: context.Message.AgvPosition.X,
-                        y: context.Message.AgvPosition.Y * -1, // Special treatment for Karis AGV. Y Axis is inverted
-                        z: 0f,
-                        theta: Mathematics.ConvertToRadians(90.0f) - context.Message.AgvPosition.Theta, // Special treatment for Karis AGV. 90� in our System (AGV facing right) is 0� in our world
-                        deviationRange: context.Message.AgvPosition.DeviationRange
-                    )), context.CancellationToken);
-            }
-
             var agvInformation = _agvRegistry.GetAgvInformation(agvStatusReceived.CorrelationId);
+            var agvStatusReceivedFromRegistry = agvInformation?.AgvStatusReceived;
 
-            if (agvInformation?.AgvStatusReceived != null)
+            if (agvStatusReceivedFromRegistry != null)
             {
-                bool oldCharging = agvInformation.AgvStatusReceived.AgvStatus.Charging;
+                bool oldCharging = agvStatusReceivedFromRegistry.AgvStatus.Charging;
                 bool newCharging = GetCharging(message);
 
                 if (!oldCharging && newCharging)
@@ -93,7 +97,38 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
                 }
             }
 
-            FeedAgvRegistry(serialNumber.ToGuid(), agvStatusReceived);
+            FeedAgvRegistry(agvCorrelationId, agvStatusReceived);
+        }
+
+        private static async Task SendAgvPositionAsync(ConsumeContext<MqttState> context, Guid agvCorrelationId, string serialNumber)
+        {
+            if (context.Message.AgvPosition != null)
+            {
+                await context.Publish(new AgvPositionReceived(
+                    correlationId: agvCorrelationId,
+                    agvId: serialNumber,
+                    agvPosition: new AgvPosition(
+                        positionInitialized: context.Message.AgvPosition.PositionInitialized,
+                        x: context.Message.AgvPosition.X,
+                        y: context.Message.AgvPosition.Y * -1, // Special treatment for Karis AGV. Y Axis is inverted
+                        z: 0f,
+                        theta: Mathematics.ConvertToRadians(90.0f) - context.Message.AgvPosition.Theta, // Special treatment for Karis AGV. 90� in our System (AGV facing right) is 0� in our world
+                        deviationRange: context.Message.AgvPosition.DeviationRange
+                    )), context.CancellationToken);
+            }
+        }
+
+        private async Task SendAgvErrorStatusAsync(ConsumeContext<MqttState> context, Guid agvCorrelationId, MqttState message)
+        {
+            var agvErrorStatusReceived = new AgvErrorStatusReceived(agvCorrelationId, message.Errors?.Select(e =>
+            {
+                var agvError = _mapper.Map<AgvError>(e);
+                // overwrite AgvCorrelationId in a 2. step, as we are mapping from two sources to one destination, which isn't supported by AutoMapper
+                _mapper.Map(agvCorrelationId, agvError);
+                return agvError;
+            }).ToList());
+
+            await context.Publish(agvErrorStatusReceived, context.CancellationToken);
         }
 
         private void FeedAgvRegistry(Guid correlationId, AgvStatusReceived agvStatusReceived)
@@ -101,15 +136,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
             _agvRegistry.AddOrUpdateAgvStatus(correlationId, agvStatusReceived);
         }
 
-        private string GetSerialNumber(MqttState message)
-        {
-            return message.SerialNumber;
-        }
+        private string GetSerialNumber(MqttState message) => message.SerialNumber;
 
-        private string GetOrderId(MqttState message)
-        {
-            return message.OrderId;
-        }
+        private string GetOrderId(MqttState message) => message.OrderId;
 
         private bool GetBusy(MqttState message)
         {
@@ -120,13 +149,13 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
 
             foreach (var actionState in message.ActionStates)
             {
-                switch (actionState.ActionStatus)
+                switch (actionState.MqttActionStatus)
                 {
-                    case ActionStatus.Failed: break;
-                    case ActionStatus.Finished: break;
-                    case ActionStatus.Initializing: return true;
-                    case ActionStatus.Running: return true;
-                    case ActionStatus.Waiting: break;
+                    case MqttActionStatus.Failed: break;
+                    case MqttActionStatus.Finished: break;
+                    case MqttActionStatus.Initializing: return true;
+                    case MqttActionStatus.Running: return true;
+                    case MqttActionStatus.Waiting: break;
                 }
             }
 
@@ -135,13 +164,13 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
 
         private bool GetAutomatic(MqttState message)
         {
-            switch (message.OperatingMode)
+            switch (message.MqttOperatingMode)
             {
-                case OperatingMode.Automatic: return true;
-                case OperatingMode.Manual: return false;
-                case OperatingMode.Semiautomatic: return false;
-                case OperatingMode.Service: return false;
-                case OperatingMode.Teachin: return false;
+                case MqttOperatingMode.Automatic: return true;
+                case MqttOperatingMode.Manual: return false;
+                case MqttOperatingMode.Semiautomatic: return false;
+                case MqttOperatingMode.Service: return false;
+                case MqttOperatingMode.Teachin: return false;
                 default: return false;
             }
         }
@@ -170,7 +199,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
         {
             if (message.SafetyState != null)
             {
-                if (message.SafetyState.EStop != EStop.None)
+                if (message.SafetyState.MqttEStop != MqttEStop.None)
                 {
                     return true;
                 }

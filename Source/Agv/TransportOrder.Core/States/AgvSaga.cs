@@ -50,6 +50,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.States
         
         /// <inheritdoc />
         public bool IsLocked { get; set; }
+        
+        /// <inheritdoc />
+        public bool HasError { get; set; }
 
         /// <summary>
         /// Token used by the send status update schedule

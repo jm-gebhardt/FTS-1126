@@ -1,5 +1,6 @@
 using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Testing;
+using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Profiles.Profiles;
 using MassTransit;
 using Microsoft.AspNetCore.Http;
@@ -20,18 +21,18 @@ public abstract class ControllerTestFixture<TRequest, TRequestHandler, TControll
 
     protected abstract TController GetController();
 
-    protected IRequestClient<TClient> GetRequestClient<TClient>() where TClient : class => typeof(TRequest) == typeof(TClient) ? (IRequestClient<TClient>)GetRequestClient() : null!;
+    protected IRequestClient<TClient> GetRequestClient<TClient>() where TClient : class => typeof(TRequest) == typeof(TClient) ? (IRequestClient<TClient>) GetRequestClient() : null!;
 
     protected IMapper GetMapper()
     {
-        var mapperConfig = new MapperConfiguration(cfg =>
+        var mapper = MappingHelper.GetMapper(new List<Profile>()
         {
-            cfg.AddProfile(new AgvProfile());
-            cfg.AddProfile(new AgvGraphProfile());
-            cfg.AddProfile(new AgvPositionProfile());
-            cfg.AddProfile(new MapProfile());
+            new AgvProfile(),
+            new AgvGraphProfile(),
+            new AgvPositionProfile(),
+            new MapProfile(),
+            new AgvErrorProfile()
         });
-        var mapper = new Mapper(mapperConfig);
         return mapper;
     }
 

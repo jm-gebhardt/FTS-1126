@@ -21,7 +21,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
 
         public AgvStateConsumerTestFixture UseDefaultServices()
         {
-            AddServices(sc => sc.AddSingleton(_ => AgvRegistry));
+            AddServices(services =>
+            {
+                services.AddSingleton(_ => AgvRegistry);
+                services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+            });
             return this;
         }
 

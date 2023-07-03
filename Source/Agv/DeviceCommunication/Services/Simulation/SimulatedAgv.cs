@@ -1,7 +1,7 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 
 // ReSharper disable ConvertToPrimaryConstructor
-// ReSharper disable InheritdocInvalidUsage
+// ReSharper disable InvalidUsage
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
 {
     /// <summary>
@@ -29,6 +29,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
         public bool Assignable { get; }
 
         /// <inheritdoc />
+        public bool HasError { get; }
+
+        /// <inheritdoc />
         public DateTime TimeOfStateTransition { get; set; }
 
         /// <inheritdoc />
@@ -40,14 +43,13 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
         /// <inheritdoc />
         public AgvGraph? AgvGraph { get; }
 
-        /// <inheritdoc />
+        /// <inheritdoc cref="IAgv" />
         public AgvData? AgvData { get; }
 
         /// <summary>
         /// AGV map
         /// </summary>
         public AgvMap? AgvMap { get; }
-
 
         /// <summary>
         /// Build simulated AGV
@@ -59,11 +61,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
         /// <param name="agvData">AGV data</param>
         /// <param name="agvMap">AGV map</param>
         public SimulatedAgv(Guid correlationId,
-                            string agvId,
-                            string currentState,
-                            AgvGraph? agvGraph,
-                            AgvData? agvData,
-                            AgvMap? agvMap)
+            string agvId,
+            string currentState,
+            AgvGraph? agvGraph,
+            AgvData? agvData,
+            AgvMap? agvMap)
         {
             CorrelationId = correlationId;
             AgvId = agvId;

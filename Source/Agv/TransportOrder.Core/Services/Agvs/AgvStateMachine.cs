@@ -131,6 +131,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
         /// <see cref="ActionStartedEvent"/> was received
         /// </summary>
         public Event<ActionStartedEvent> ActionStartedEvent { get; private set; } = default!;
+
+        /// <summary>
+        /// Agv error status was received
+        /// </summary>
+        public Event<AgvErrorStatusReceived> AgvErrorStatusReceivedEvent { get; private set; } = default!;
         #endregion
 
         /// <summary>
@@ -192,7 +197,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
             DuringAny(AgvGraphReceivedHandler());
             DuringAny(AgvMapReceivedHandler());
             DuringAny(AgvOfflineMessageHandler());
-
+            DuringAny(AgvErrorStatusReceivedHandler());
+            
             WhenEnterAny(UpdateTimeOfStateTransition);
 
             ConnectStateObserver(agvStateObserver);
@@ -260,7 +266,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
                 AgvGraph: not null,
                 AgvStatus: not null,
                 AgvStatus.LastNodeId: not null,
-                IsLocked: false
+                IsLocked: false,
+                HasError: false
             };
             return isReady;
         }
@@ -359,6 +366,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
                 .Then(c => UpdateAgvStatus(c.Saga, c.Saga.AgvStatus, false, c))
                 .Then(c => _logger.LogWarning("{MessageType} {AgvId} / {CorrelationId} received after timeout of {Timeout} ms, AGV is offline",
                     nameof(AgvOfflineMessage), c.Saga.AgvId, c.Saga.CorrelationId, (DateTime.UtcNow - c.Message.Created).TotalMilliseconds));
+
+        /// <summary>
+        /// Handle <see cref="AgvErrorStatusReceived"/> message
+        /// </summary>
+        private EventActivityBinder<AgvSaga, AgvErrorStatusReceived> AgvErrorStatusReceivedHandler() =>
+            When(AgvErrorStatusReceivedEvent)
+                .Then(c => UpdateAgvErrorStatus(c.Saga, c.Message.Errors?.Any() ?? false, c));
         #endregion
 
         #region Actions
@@ -455,6 +469,17 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
             if (changed)
             {
                 c.Publish(new AgvPropertyChanged(agvSaga, agvSaga.CorrelationId));
+            }
+        }
+
+        private void UpdateAgvErrorStatus(AgvSaga agvSaga, bool isInError, IPublishEndpoint endpoint)
+        {
+            bool agvIsInErrorChanged = agvSaga.HasError != isInError;
+            agvSaga.HasError = isInError;
+
+            if (agvIsInErrorChanged)
+            {
+                endpoint.Publish(new AgvPropertyChanged(agvSaga, agvSaga.CorrelationId));
             }
         }
 

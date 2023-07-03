@@ -33,7 +33,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Publish
 
             using (fixture.TestHarness.Bus.ConnectPublishObserver(publishObserver))
             {
-                await fixture.TestHarness.Bus.PublishMqtt(new MqttState(serialNumber, orderId) { OperatingMode = OperatingMode.Automatic }, null);
+                await fixture.TestHarness.Bus.PublishMqtt(new MqttState(serialNumber, orderId) { MqttOperatingMode = MqttOperatingMode.Automatic }, null);
 
                 IPublishedMessage<MqttState> publishedMessage = publishObserver.Messages.Select<MqttState>().First();
 
@@ -41,7 +41,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Publish
                 publishedMessage.Context.ContentType.ShouldBe(SystemTextJsonRawMessageSerializer.JsonContentType);
                 publishedMessage.Context.Message.SerialNumber.ShouldBe(serialNumber);
                 publishedMessage.Context.Message.OrderId.ShouldBe(orderId);
-                publishedMessage.Context.Message.OperatingMode.ShouldBe(OperatingMode.Automatic);
+                publishedMessage.Context.Message.MqttOperatingMode.ShouldBe(MqttOperatingMode.Automatic);
             }
         }
     }
