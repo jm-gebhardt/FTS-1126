@@ -7,38 +7,43 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Messages
     /// </summary>
     internal class Agv : IAgv
     {
-        /// <summary/>
+        /// <inheritdoc/>
         [JetBrains.Annotations.UsedImplicitly]
         public Guid CorrelationId { get; init; } = Guid.NewGuid();
 
-        /// <summary/>
+        /// <inheritdoc/>
         [JetBrains.Annotations.UsedImplicitly]
         public string AgvId { get; init; } = "";
 
-        /// <summary/>
+        /// <inheritdoc/>
         [JetBrains.Annotations.UsedImplicitly]
         public string CurrentState { get; } = "";
 
-        /// <summary/>'
+        /// <inheritdoc/>'
         [JetBrains.Annotations.UsedImplicitly]
         public AgvStatus? AgvStatus { get; init; }
 
-        /// <summary/>
+        /// <inheritdoc/>
         [JetBrains.Annotations.UsedImplicitly]
         public AgvGraph? AgvGraph { get; init; }
 
-        /// <summary/>
+        /// <inheritdoc/>
         public bool IsOnline { get; } = true;
 
+        /// <inheritdoc/>
         public bool IsLocked { get; set; } = false;
 
-        /// <summary/>
+        /// <inheritdoc/>
+        [JetBrains.Annotations.UsedImplicitly]
+        public bool HasError { get; set; }
+
+        /// <inheritdoc/>
         [JetBrains.Annotations.UsedImplicitly]
         public bool Assignable { get; } = true;
 
         /// <inheritdoc />
         public DateTime TimeOfStateTransition { get; set; }
-        
+
         /// <inheritdoc />
         public DateTime TimeOfLockStateChanged { get; set; }
     }

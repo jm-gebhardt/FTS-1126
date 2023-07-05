@@ -60,6 +60,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db
                 yield return new EdgeClassMap();
                 yield return new NodeClassMap();
                 yield return new AgvDataClassMap();
+                yield return new AgvErrorClassMap();
             }
         }
     }

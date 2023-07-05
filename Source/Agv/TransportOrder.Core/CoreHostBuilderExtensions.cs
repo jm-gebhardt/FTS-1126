@@ -32,6 +32,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Maintenance;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Parking;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Registries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs.Errors;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Maps;
 
@@ -93,6 +94,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                 services.AddSingleton<IGraphRegistry, EfGraphRegistry>();
                 services.AddSingleton<INodeStateRegistry, EfNodeStateRegistry>();
                 services.AddSingleton<IAgvPositionRegistry, AgvPositionRegistry>();
+                services.AddSingleton<IAgvErrorRegistry, EfAgvErrorRegistry>();
 
                 services.AddConfigurationTypeManager();
                 services.AddSettingsProviders(ConfigurationTypeManager.Instance);
@@ -140,6 +142,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                         x.AddConsumer<UnlockAgvCommandHandler>();
                         x.AddConsumer<GetAgvActionGroupsRequestHandler>();
                         x.AddConsumer<GetAgvActionGroupCountsByStateRequestHandler>();
+                        
+                        // error
+                        x.AddConsumer<GetActiveAgvErrorsRequestHandler>();
+                        x.AddConsumer<GetAgvErrorsRequestHandler>();
+                        x.AddConsumer<AgvErrorStatusConsumer>();
                             
                         // request clients
                         // ########################################
@@ -158,6 +165,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                         x.AddRequestClient<UnlockAgvCommandHandler>();
                         x.AddRequestClient<GetAgvActionGroupsRequestHandler>();
                         x.AddRequestClient<GetAgvActionGroupCountsByStateRequestHandler>();
+                        x.AddRequestClient<GetActiveAgvErrorsRequestHandler>();
+                        x.AddRequestClient<GetAgvErrorsRequestHandler>();
                         
                         x.AddDelayedMessageScheduler();
                     }, rabbitMqConfiguration: (_, cfg) => { cfg.UseDelayedMessageScheduler(); });

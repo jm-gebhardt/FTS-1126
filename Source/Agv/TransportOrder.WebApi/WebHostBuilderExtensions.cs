@@ -111,7 +111,20 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi
                 endpoints.MapHub<AgvHub>(AgvHub.UrlPath);
             });
 
-            app.UseSwagger();
+            app.UseSwagger(c =>
+            {
+                c.PreSerializeFilters.Add((swaggerDoc, request) =>
+                {
+                    // If the request is coming from a proxy, set the server path to the proxy sub path.
+                    if (request.Headers.TryGetValue("X-Forwarded-Prefix", out var serverPath))
+                    {
+                        swaggerDoc.Servers = new List<OpenApiServer>()
+                        {
+                            new() { Description = "Server behind Proxy", Url = serverPath }
+                        };
+                    }
+                });
+            });
             app.UseSwaggerUI();
             return app;
         }

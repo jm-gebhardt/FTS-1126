@@ -77,7 +77,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
                 var correlationId = GetGuid(agvId);
 
                 const string mapName = "Map#1";
-                var agvGraph = new AgvGraph(correlationId, Nodes, Edges, mapName.ToGuid(), mapName);
+                var agvGraph = new AgvGraph(correlationId, Nodes, Edges, GetGuid(mapName), mapName);
                 var agvStatus = agvId == "AGV003" ? null : new AgvStatus(correlationId, orderId, true, true, 10, true, true);
                 var agvData = new AgvData(correlationId, "Karis", "BF1", ip, 1.8, 120.0, 0.6, 0.8, 0.7, 1, 2.5, 1000, Array.Empty<AgvData.Sensor>());
 
@@ -119,7 +119,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             for (int i = 0; i < AgvIds.Length; i++)
             {
                 string agvId = AgvIds[i];
-                var correlationId = agvId.ToGuid();
+                var correlationId = GetGuid(agvId);
                 var node = Nodes[i];
 
                 agvPositions.Add(new AgvPositionStatus(correlationId, agvId, new AgvPosition(true, node.X, node.Y, node.Z, 0.5f)));
@@ -154,9 +154,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             IRequestClient<LockAgvCommand> lockAgvRequestClient = GetRequestClient<LockAgvCommand>();
             IRequestClient<RequestAgvDataCommand> emitRequestDataRequestClient = GetRequestClient<RequestAgvDataCommand>();
             IRequestClient<RequestAgvGraphCommand> emitRequestGraphRequestClient = GetRequestClient<RequestAgvGraphCommand>();
+            IRequestClient<GetActiveAgvErrorsRequest> getAgvErrorsRequestClient = GetRequestClient<GetActiveAgvErrorsRequest>();
+            IRequestClient<GetAgvErrorsRequest> getAgvErrorHistoryRequestClient = GetRequestClient<GetAgvErrorsRequest>();
 
             var controller = new AgvController(getAgvsRequestClient, getAgvGraphRequestClient, getAgvDataRequestClient,
-                getAgvPositionsRequestClient, setIdleRequestClient, lockAgvRequestClient, emitRequestDataRequestClient, emitRequestGraphRequestClient)
+                getAgvPositionsRequestClient, setIdleRequestClient, lockAgvRequestClient, emitRequestDataRequestClient, emitRequestGraphRequestClient, getAgvErrorsRequestClient, getAgvErrorHistoryRequestClient)
             {
                 ControllerContext = new ControllerContext(
                     new ActionContext(

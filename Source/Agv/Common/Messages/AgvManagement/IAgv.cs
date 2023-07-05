@@ -40,6 +40,11 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
         /// Returns true when the AGV is assignable for any transport order.
         /// </summary>
         public bool Assignable { get; }
+
+        /// <summary>
+        /// Returns True if Agv is in error (has any error) and not ready to drive
+        /// </summary>
+        public bool HasError { get; }
         
         /// <summary>
         /// returns the time of the last state transition

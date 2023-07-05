@@ -32,17 +32,17 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         /// to finished and if applicable with the corresponding resultDescription. The actionStates
         /// are kept until a new order is received.
         /// </summary>
-        public List<ActionState>? ActionStates { get; set; }
+        public List<MqttActionState>? ActionStates { get; set; }
 
         /// <summary>
         /// The AGVs position
         /// </summary>
-        public AgvPosition? AgvPosition { get; set; }
+        public MqttAgvPosition? AgvPosition { get; set; }
 
         /// <summary>
         /// All information relating to the battery.
         /// </summary>
-        public BatteryState? BatteryState { get; set; }
+        public MqttBatteryState? BatteryState { get; set; }
 
         /// <summary>
         /// Used by line guided vehicles to indicate the distance it has been driving past the
@@ -62,12 +62,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         /// Information about the edges the AGV still has to drive over. Empty list if the AGV is
         /// idle.
         /// </summary>
-        public List<EdgeState>? EdgeStates { get; set; }
+        public List<MqttEdgeState>? EdgeStates { get; set; }
 
         /// <summary>
         /// Array of errors. Errors are kept until resolution.
         /// </summary>
-        public List<Error>? Errors { get; set; }
+        public List<MqttError>? Errors { get; set; }
 
         /// <summary>
         /// headerId of the message. The headerId is defined per topic and incremented by 1 with each
@@ -79,7 +79,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         /// Array of information messages. Messages are only for visualization/debugging. There's no
         /// specification when these messages are deleted.
         /// </summary>
-        public List<Information>? Information { get; set; }
+        public List<MqttInformation>? Information { get; set; }
 
         /// <summary>
         /// nodeID of last reached node or, if AGV is currently on a node, current node.
@@ -100,7 +100,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         /// state, it shall not send this field. If an empty field is sent, MC is to assume that the
         /// AGV can reason about its load state and that the AGV currently does not carry a load.
         /// </summary>
-        public List<Load>? Loads { get; set; }
+        public List<MqttLoad>? Loads { get; set; }
 
         /// <summary>
         /// Manufacturer of the AGV
@@ -117,12 +117,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         /// <summary>
         /// Information about the nodes the AGV still has to drive over. Empty list if idle.
         /// </summary>
-        public List<NodeState>? NodeStates { get; set; }
+        public List<MqttNodeState>? NodeStates { get; set; }
 
         /// <summary>
         /// Current operating mode of the AGV.
         /// </summary>
-        public OperatingMode OperatingMode { get; set; }
+        public MqttOperatingMode MqttOperatingMode { get; set; }
 
         /// <summary>
         /// Order Update Identification to identify that an order update has been accepted by the
@@ -140,7 +140,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         /// <summary>
         /// Object that holds information about the safety status
         /// </summary>
-        public SafetyState? SafetyState { get; set; }
+        public MqttSafetyState? SafetyState { get; set; }
 
         /// <summary>
         /// Timestamp in ISO8601 format.
@@ -150,7 +150,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         /// <summary>
         /// The AGVs velocity in vehicle coordinates
         /// </summary>
-        public Velocity? Velocity { get; set; }
+        public MqttVelocity? Velocity { get; set; }
 
         /// <summary>
         /// Version of the protocol [Major].[Minor].[Patch]
@@ -178,7 +178,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
     /// Handling the ActionState
     /// </summary>
     [PublicAPI]
-    public record ActionState
+    public record MqttActionState
     {
         /// <summary>
         /// Additional information on the action.
@@ -194,7 +194,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         /// WAITING: waiting for trigger
         /// FAILED: action could not be performed.
         /// </summary>
-        public ActionStatus ActionStatus { get; set; }
+        public MqttActionStatus MqttActionStatus { get; set; }
 
         /// <summary>
         /// actionType of the action.
@@ -212,7 +212,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
     /// The AGVs position
     /// </summary>
     [PublicAPI]
-    public record AgvPosition
+    public record MqttAgvPosition
     {
         /// <summary>
         /// Value for position deviation range in meters. Can be used if the AGV is able to derive it.
@@ -262,7 +262,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
     /// All information relating to the battery.
     /// </summary>
     [PublicAPI]
-    public record BatteryState
+    public record MqttBatteryState
     {
         /// <summary>
         /// AgvState of Charge:
@@ -296,7 +296,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
     /// All information relating to the edges
     /// </summary>
     [PublicAPI]
-    public record EdgeState
+    public record MqttEdgeState
     {
         /// <summary>
         /// Verbose Edge description
@@ -324,7 +324,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         /// Trajectory segments are from the point where the AGV starts to enter the edge until the
         /// point where it reports that the next node was traversed.
         /// </summary>
-        public Trajectory? Trajectory { get; set; }
+        public MqttTrajectory? Trajectory { get; set; }
     }
 
     /// <summary>
@@ -334,13 +334,13 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
     /// point where it reports that the next node was traversed.
     /// </summary>
     [PublicAPI]
-    public record Trajectory
+    public record MqttTrajectory
     {
         /// <summary>
         /// List of JSON controlPoint objects defining the control points of the NURBS. This includes
         /// the start and end point.
         /// </summary>
-        public List<ControlPoint>? ControlPoints { get; set; }
+        public List<MqttControlPoint>? ControlPoints { get; set; }
 
         /// <summary>
         /// The degree of the NURBS.
@@ -358,7 +358,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
     /// Handling the control points
     /// </summary>
     [PublicAPI]
-    public record ControlPoint
+    public record MqttControlPoint
     {
         /// <summary>
         /// The weight with which this control point pulls no the curve.
@@ -380,7 +380,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
     /// Information related to processing errors
     /// </summary>
     [PublicAPI]
-    public record Error
+    public record MqttError
     {
         /// <summary>
         /// Verbose description of error.
@@ -391,12 +391,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         /// warning: AGV is ready to drive without human intervention
         /// fatal: AGV is not in running condition.
         /// </summary>
-        public ErrorLevel ErrorLevel { get; set; }
+        public MqttErrorLevel ErrorLevel { get; set; }
 
         /// <summary>
         /// List of above mentioned ErrorReferences
         /// </summary>
-        public List<ErrorReference>? ErrorReferences { get; set; }
+        public List<MqttErrorReference>? ErrorReferences { get; set; }
 
         /// <summary>
         /// Type of error.
@@ -409,7 +409,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
     /// key-value pairs.
     /// </summary>
     [PublicAPI]
-    public record ErrorReference
+    public record MqttErrorReference
     {
         /// <summary>
         /// Property for reference key
@@ -425,7 +425,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
     /// 
     /// </summary>
     [PublicAPI]
-    public record Information
+    public record MqttInformation
     {
         /// <summary>
         /// Verbose description of error.
@@ -435,12 +435,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         /// <summary>
         /// Type of information
         /// </summary>
-        public InfoLevel InfoLevel { get; set; }
+        public MqttInfoLevel MqttInfoLevel { get; set; }
 
         /// <summary>
         /// List of above mentioned InfoReferences
         /// </summary>
-        public List<InfoReference>? InfoReferences { get; set; }
+        public List<MqttInfoReference>? InfoReferences { get; set; }
 
         /// <summary>
         /// Type of Information.
@@ -453,7 +453,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
     /// key-value pairs.
     /// </summary>
     [PublicAPI]
-    public record InfoReference
+    public record MqttInfoReference
     {
         /// <summary>
         /// Property for reference key
@@ -469,19 +469,19 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
     /// Load object that describes the load if the AGV has information about it.
     /// </summary>
     [PublicAPI]
-    public record Load
+    public record MqttLoad
     {
         /// <summary>
         /// This point describes the loads position on the AGV in the vehicle coordinates. The
         /// boundingBoxReference point is in the middle of the footprint of the load, so length/2 and
         /// width/2.
         /// </summary>
-        public BoundingBoxReference? BoundingBoxReference { get; set; }
+        public MqttBoundingBoxReference? BoundingBoxReference { get; set; }
 
         /// <summary>
         /// Dimensions of the loads bounding box in meters.
         /// </summary>
-        public LoadDimensions? LoadDimensions { get; set; }
+        public MqttLoadDimensions? LoadDimensions { get; set; }
 
         /// <summary>
         /// Unique identification number of the load (e. g. barcode or RFID)
@@ -515,7 +515,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
     /// width/2.
     /// </summary>
     [PublicAPI]
-    public record BoundingBoxReference
+    public record MqttBoundingBoxReference
     {
         /// <summary>
         /// Theta component of bounding box reference
@@ -539,7 +539,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
     /// Dimensions of the load's bounding box in meters.
     /// </summary>
     [PublicAPI]
-    public record LoadDimensions
+    public record MqttLoadDimensions
     {
         /// <summary>
         /// Absolute height of the loads bounding box in meter.
@@ -563,7 +563,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
     /// All information related to Node states
     /// </summary>
     [PublicAPI]
-    public record NodeState
+    public record MqttNodeState
     {
         /// <summary>
         /// Verbose node description
@@ -582,7 +582,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         /// Master control has this information. Can be sent additionally, e. g. for debugging
         /// purposes.
         /// </summary>
-        public NodePosition? NodePosition { get; set; }
+        public MqttNodePosition? NodePosition { get; set; }
 
         /// <summary>
         /// True: indicates that the node is part of the base. False: indicates that the node is part
@@ -604,7 +604,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
     /// purposes.
     /// </summary>
     [PublicAPI]
-    public record NodePosition
+    public record MqttNodePosition
     {
         /// <summary>
         /// The id of the node in the map
@@ -628,12 +628,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
     /// Object that holds information about the safety status
     /// </summary>
     [PublicAPI]
-    public record SafetyState
+    public record MqttSafetyState
     {
         /// <summary>
         /// autoAck, manual, remote, none
         /// </summary>
-        public EStop EStop { get; set; }
+        public MqttEStop MqttEStop { get; set; }
 
         /// <summary>
         /// Protective field violation
@@ -645,7 +645,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
     /// The AGVs velocity in vehicle coordinates
     /// </summary>
     [PublicAPI]
-    public record Velocity
+    public record MqttVelocity
     {
         /// <summary>
         /// The direction of the velocity vector
@@ -666,7 +666,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
     /// FAILED: action could not be performed.
     /// </summary>
     [PublicAPI]
-    public enum ActionStatus
+    public enum MqttActionStatus
     {
         /// <summary/>
         Failed,
@@ -685,7 +685,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
     /// fatal: AGV is not in running condition.
     /// </summary>
     [PublicAPI]
-    public enum ErrorLevel
+    public enum MqttErrorLevel
     {
         /// <summary/>
         Fatal,
@@ -697,7 +697,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
     /// Type of information
     /// </summary>
     [PublicAPI]
-    public enum InfoLevel
+    public enum MqttInfoLevel
     {
         /// <summary/>
         Debug,
@@ -709,7 +709,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
     /// Current operating mode of the AGV.
     /// </summary>
     [PublicAPI]
-    public enum OperatingMode
+    public enum MqttOperatingMode
     {
         /// <summary/>
         Automatic,
@@ -721,13 +721,13 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         Service,
         /// <summary/>
         Teachin
-    };
+    }
 
     /// <summary>
     /// autoAck, manual, remote, none
     /// </summary>
     [PublicAPI]
-    public enum EStop
+    public enum MqttEStop
     {
         /// <summary/>
         AutoAck,

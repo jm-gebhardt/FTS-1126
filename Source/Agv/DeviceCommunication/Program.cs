@@ -18,7 +18,7 @@ using Gebhardt.StoreWare.Agv.Common.Configurations.Extensions;
 var initialLogger = Gebhardt.StoreWare.Agv.Common.Logging.InitialLogger.Create<Program>();
 try
 {
-    IHost? host = null;
+    IHostBuilder? hostBuilder = null;
 
     Parser.Default.ParseArguments<SimulateOptions, ProductionOptions>(args)
         .WithParsed<SimulateOptions>(simulationOptions =>
@@ -26,11 +26,10 @@ try
             // Enable serialization/deserialization of enum values as string.
             SystemTextJsonMessageSerializer.Options.Converters.Add(new JsonStringEnumConverter());
 
-            host = GebhardtStartup.CreateHostBuilder(args)
+            hostBuilder = GebhardtStartup.CreateHostBuilder(args)
                 .ConfigureServices((context, services) =>
                 {
                     services.AddScoped(_ => simulationOptions);
-                    services.AddSingleton<IAgvRegistry, AgvRegistry>();
                     services.AddHostedService<SimulatedAgvProvider>();
                     services.ConfigureServicesMassTransit(context.Configuration,
                         x =>
@@ -42,12 +41,11 @@ try
                         {
                             cfg.UseDelayedMessageScheduler();
                         });
-                })
-                .Build();
+                });
         })
         .WithParsed<ProductionOptions>(productionOptions =>
         {
-            host = GebhardtStartup.CreateHostBuilder(args)
+            hostBuilder = GebhardtStartup.CreateHostBuilder(args)
                 .ConfigureServices((context, services) =>
                 {
                     services.AddScoped(_ => productionOptions);
@@ -84,13 +82,21 @@ try
                             var serializerFactory = new SystemTextJsonRawMessageSerializerFactory();
                             configurator.AddSerializer(serializerFactory, false);
                         });
-                })
-                .Build();
+                });
         });
 
     // By using the generic overload of WithParsed above host will be null for invalid command line arguments.
-    if (host != null)
+    if (hostBuilder != null)
     {
+        hostBuilder.ConfigureServices((_, services) =>
+        {
+            services.AddSingleton<IAgvRegistry, AgvRegistry>();
+
+            services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+        });
+        
+
+        var host = hostBuilder.Build();
         host.Run();
         return 0;
     }

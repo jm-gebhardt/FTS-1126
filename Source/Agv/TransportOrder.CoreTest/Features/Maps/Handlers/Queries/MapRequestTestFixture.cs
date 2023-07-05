@@ -2,6 +2,7 @@
 using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Testing;
+using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db.Models;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Profiles.Profiles;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
@@ -139,14 +140,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Features.Maps.Handlers.
 
         private IMapper GetMapper()
         {
-            var mapperConfig = new MapperConfiguration(cfg =>
+            var mapper = MappingHelper.GetMapper(new List<Profile>()
             {
-                cfg.AddProfile(new AgvProfile());
-                cfg.AddProfile(new AgvGraphProfile());
-                cfg.AddProfile(new AgvPositionProfile());
-                cfg.AddProfile(new MapProfile());
+                new AgvProfile(),
+                new AgvGraphProfile(),
+                new AgvPositionProfile(),
+                new MapProfile(),
+                new AgvErrorProfile()
             });
-            var mapper = new Mapper(mapperConfig);
             return mapper;
         }
 

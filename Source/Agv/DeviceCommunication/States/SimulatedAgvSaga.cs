@@ -46,6 +46,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         public bool Assignable => true;
 
         /// <inheritdoc />
+        public bool HasError { get; }
+
+        /// <inheritdoc />
         public DateTime TimeOfStateTransition { get; set; } = DateTime.UtcNow;
 
         /// <inheritdoc />

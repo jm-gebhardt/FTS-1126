@@ -22,18 +22,22 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
         private readonly IRequestClient<LockAgvCommand> _lockAgvClient;
         private readonly IRequestClient<RequestAgvDataCommand> _emitRequestDataClient;
         private readonly IRequestClient<RequestAgvGraphCommand> _emitRequestGraphClient;
+        private readonly IRequestClient<GetActiveAgvErrorsRequest> _getAgvErrorsRequestClient;
+        private readonly IRequestClient<GetAgvErrorsRequest> _getAgvErrorHistoryRequestClient;
 
         /// <summary>
         /// Init controller
         /// </summary>
         public AgvController(IRequestClient<GetAgvsRequest> getAgvsClient,
-                             IRequestClient<GetAgvGraphRequest> getAgvGraphClient,
-                             IRequestClient<GetAgvDataRequest> getAgvDataClient,
-                             IRequestClient<GetAgvPositionsRequest> getAgvPositionsClient,
-                             IRequestClient<UnlockAgvCommand> setIdleClient,
-                             IRequestClient<LockAgvCommand> lockAgvClient,
-                             IRequestClient<RequestAgvDataCommand> emitRequestDataClient,
-                             IRequestClient<RequestAgvGraphCommand> emitRequestGraphClient)
+            IRequestClient<GetAgvGraphRequest> getAgvGraphClient,
+            IRequestClient<GetAgvDataRequest> getAgvDataClient,
+            IRequestClient<GetAgvPositionsRequest> getAgvPositionsClient,
+            IRequestClient<UnlockAgvCommand> setIdleClient,
+            IRequestClient<LockAgvCommand> lockAgvClient,
+            IRequestClient<RequestAgvDataCommand> emitRequestDataClient,
+            IRequestClient<RequestAgvGraphCommand> emitRequestGraphClient,
+            IRequestClient<GetActiveAgvErrorsRequest> getAgvErrorsRequestClient,
+            IRequestClient<GetAgvErrorsRequest> getAgvErrorHistoryRequestClient)
         {
             _getAgvsClient = getAgvsClient;
             _getAgvGraphClient = getAgvGraphClient;
@@ -43,6 +47,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
             _lockAgvClient = lockAgvClient;
             _emitRequestDataClient = emitRequestDataClient;
             _emitRequestGraphClient = emitRequestGraphClient;
+            _getAgvErrorsRequestClient = getAgvErrorsRequestClient;
+            _getAgvErrorHistoryRequestClient = getAgvErrorHistoryRequestClient;
         }
 
         /// <summary>
@@ -148,6 +154,33 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
         {
             await _emitRequestGraphClient.GetResponse<RequestAgvGraphResult>(new RequestAgvGraphCommand(correlationId));
             return Ok();
+        }
+
+        /// <summary>
+        /// Get active errors for given Agv
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        [Route("/agvs/{agvCorrelationId}/errors")]
+        public async Task<ActionResult<IEnumerable<AgvErrorDto>>> GetAgvErrors(Guid agvCorrelationId)
+        {
+            Response<GetActiveAgvErrorsResult> response = await _getAgvErrorsRequestClient.GetResponse<GetActiveAgvErrorsResult>(new GetActiveAgvErrorsRequest(agvCorrelationId));
+            return Ok(response.Message.AgvErrorsDto);
+        }
+
+        /// <summary>
+        /// Get all historic (solved and unsolved) errors for given Agv including resolved errors
+        /// </summary>
+        /// <param name="agvCorrelationId"></param>
+        /// <param name="dateFrom">Only consider errors with a ErrorReceived newer than this parameter (if set)</param>
+        /// <param name="dateTo">Only consider errors a ErrorReceived older than this parameter (if set)</param>
+        /// <returns></returns>
+        [HttpGet]
+        [Route("/agvs/{agvCorrelationId}/errorHistory")]
+        public async Task<ActionResult<IEnumerable<AgvErrorDto>>> GetAgvErrorHistory(Guid agvCorrelationId, DateTime? dateFrom, DateTime? dateTo)
+        {
+            Response<GetAgvErrorsResult> response = await _getAgvErrorHistoryRequestClient.GetResponse<GetAgvErrorsResult>(new GetAgvErrorsRequest(agvCorrelationId, dateFrom ?? DateTime.MinValue, dateTo ?? DateTime.MaxValue));
+            return Ok(response.Message.AgvErrorsDto);
         }
     }
 }

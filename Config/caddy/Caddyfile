@@ -8,7 +8,9 @@
 (sub) {
     redir /{args.0} /{args.0}/
     handle_path /{args.0}/* {
-        reverse_proxy {args.1}
+        reverse_proxy {args.1} {
+            header_up X-Forwarded-Prefix /{args.0}
+        }
     }
 }
 

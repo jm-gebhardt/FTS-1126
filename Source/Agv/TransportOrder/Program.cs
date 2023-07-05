@@ -31,7 +31,6 @@ try
     if (hostBuilder != null)
     {
         DatabaseConfigurationSource<TransportOrderDbContext>? databaseConfigurationSource = null;
-
         hostBuilder.ConfigureWebHost(host =>
         {
             host.UseKestrel()

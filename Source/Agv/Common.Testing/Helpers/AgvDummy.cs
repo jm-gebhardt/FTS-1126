@@ -24,6 +24,9 @@ public class AgvDummy : IAgv
     // ReSharper disable once UnusedAutoPropertyAccessor.Global
     public bool Assignable { get; init; }
 
+    // ReSharper disable once UnassignedGetOnlyAutoProperty
+    public bool HasError { get; }
+
     public DateTime TimeOfStateTransition { get; set; }
 
     public DateTime TimeOfLockStateChanged { get; set; }

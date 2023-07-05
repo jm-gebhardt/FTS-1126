@@ -89,7 +89,7 @@ public class AgvStateConsumerTest
 
         await fixture.TestHarness.Bus.PublishMqtt(new MqttState(AgvTestIdentifier02, orderId)
         {
-            AgvPosition = new AgvPosition()
+            AgvPosition = new MqttAgvPosition()
             {
                 DeviationRange = deviationRange,
                 PositionInitialized = positionInitialized,
@@ -136,7 +136,7 @@ public class AgvStateConsumerTest
             .Build();
 
         const string orderId = "Order123";
-        var batteryState = new BatteryState
+        var batteryState = new MqttBatteryState
         {
             Charging = false
         };
@@ -167,7 +167,7 @@ public class AgvStateConsumerTest
             .Build();
 
         const string orderId = "Order123";
-        var batteryState = new BatteryState
+        var batteryState = new MqttBatteryState
         {
             Charging = true
         };
@@ -190,10 +190,13 @@ public class AgvStateConsumerTest
     public async Task ReceiveMqttState_ChargingStateExamination_RegistryEmpty()
     {
         // Arrange
-        var fixture = new AgvStateConsumerTestFixture().EmptyRegistry().Build();
+        var fixture = new AgvStateConsumerTestFixture()
+            .EmptyRegistry()
+            .UseDefaultServices()
+            .Build();
 
         const string orderId = "Order123";
-        var batteryState = new BatteryState
+        var batteryState = new MqttBatteryState
         {
             Charging = false
         };
@@ -217,5 +220,50 @@ public class AgvStateConsumerTest
 
         var agv = fixture.AgvRegistry.GetAgvInformation(AgvTestIdentifier02.ToGuid());
         agv.ShouldNotBeNull();
+    }
+
+    [TestMethod]
+    public async Task ReceiveMqttState_WhenMessageHasErrors_PublishAgvErrorStatusReceived()
+    {
+        const string serialNumber = "AGV002";
+        const string orderId = "Order123";
+        var fixture = new AgvStateConsumerTestFixture()
+            .UseDefaultServices()
+            .WithAgvInformation(AgvInformationGenerator.GetAgvInformation(agvCorrelationId: serialNumber.ToGuid()))
+            .Build();
+        var error = new MqttError
+        {
+            ErrorDescription = "error description",
+            ErrorLevel = MqttErrorLevel.Fatal,
+            ErrorReferences = new List<MqttErrorReference>
+            {
+                new() {ReferenceKey = "testKey", ReferenceValue = "testValue"}
+            },
+            ErrorType = "error type"
+        };
+        var expectedErrors = new List<MqttError>
+        {
+            error
+        };
+
+        await fixture.TestHarness.Bus.PublishMqtt(new MqttState(serialNumber, orderId) // Initially, AGV002 has _chargingState = false
+        {
+            Errors = expectedErrors
+        }, null);
+
+        (await fixture.TestHarness.Published.Any<MqttState>()).ShouldBeTrue();
+        (await fixture.ConsumerHarness.Consumed.Any<MqttState>()).ShouldBeTrue();
+
+        var agvErrorStatus = fixture.TestHarness.Published.Select<AgvErrorStatusReceived>().First().Context.Message;
+        agvErrorStatus.Errors.ShouldNotBeNull();
+        agvErrorStatus.Errors.Count.ShouldBe(1);
+        agvErrorStatus.Errors.First().ShouldSatisfyAllConditions(
+            e => e.ErrorDescription.ShouldBe(error.ErrorDescription),
+            e => e.ErrorLevel.ToString().ShouldBe(error.ErrorLevel.ToString()),
+            e => e.ErrorType.ShouldBe(error.ErrorType),
+            e => e.ErrorReferences.ShouldNotBeNull(),
+            e => e.ErrorReferences!.First().ShouldSatisfyAllConditions(
+                r => r.ReferenceKey.ShouldBe(error.ErrorReferences!.First().ReferenceKey),
+                r => r.ReferenceValue.ShouldBe(error.ErrorReferences!.First().ReferenceValue)));
     }
 }
