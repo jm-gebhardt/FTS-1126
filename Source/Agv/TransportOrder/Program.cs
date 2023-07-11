@@ -5,14 +5,15 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Core;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.CmdOptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi;
+using Gebhardt.StoreWare.Agv.TransportOrder;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Saga;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Prometheus;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Saga;
 
 var initialLogger = Gebhardt.StoreWare.Agv.Common.Logging.InitialLogger.Create<Program>();
 
@@ -24,7 +25,8 @@ try
         .WithParsed(productionOptions =>
         {
             hostBuilder = GebhardtStartup.CreateHostBuilder(args)
-                .AddTransportOrderCore(initialLogger, productionOptions);
+                .AddMassTransit(initialLogger)
+                .AddTransportOrderCore(productionOptions);
         });
 
     // By using the generic overload of WithParsed above hostBuilder will be null for invalid command line arguments.

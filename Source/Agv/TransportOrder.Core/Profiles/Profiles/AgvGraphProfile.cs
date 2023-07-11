@@ -8,7 +8,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Profiles.Profiles;
 /// <summary>
 /// Profile for AgvGraph
 /// </summary>
-public class AgvGraphProfile: Profile
+public class AgvGraphProfile : Profile
 {
     /// <inheritdoc />
     public AgvGraphProfile()

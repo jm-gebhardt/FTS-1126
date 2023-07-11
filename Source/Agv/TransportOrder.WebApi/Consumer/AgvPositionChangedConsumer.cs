@@ -1,12 +1,12 @@
 ﻿using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Hubs;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using AgvPositionStatus = Gebhardt.StoreWare.Agv.TransportOrder.Core.Models.AgvPositionStatus;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
+namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Consumer
 {
     /// <summary>
     /// Consumes <see cref="AgvPositionChanged"/> and sends messages to <see cref="IAgvHubContext"/>.
@@ -47,7 +47,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
 
             var agvPositionStatus = _mapper.Map<AgvPositionStatus>(context.Message);
 
-            await _agvHubContext.SendAgvPositionToAllClients(nameof(Defines.HubMethods.AgvPositionChanged), agvPositionStatus, context.CancellationToken);
+            await _agvHubContext.SendAgvPositionToAllClients(agvPositionStatus);
         }
 
         /// <summary>

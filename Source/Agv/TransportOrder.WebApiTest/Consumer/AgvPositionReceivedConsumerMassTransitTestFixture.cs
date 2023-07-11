@@ -1,13 +1,13 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Services.Detectors;
 using Gebhardt.StoreWare.Agv.Common.Testing;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Hubs;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Models;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.AgvPositions
+namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Consumer
 {
     internal class AgvPositionReceivedConsumerMassTransitTestFixture : MassTransitTestFixture<AgvPositionReceivedConsumer>, ITestFixtureBuilder<AgvPositionReceivedConsumerMassTransitTestFixture>
     {
@@ -53,6 +53,5 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.AgvPositions
             services.AddTransient(_ => new Mock<IAgvHubContext>().Object);
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
         }
-
     }
 }

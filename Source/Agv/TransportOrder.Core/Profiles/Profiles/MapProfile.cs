@@ -8,7 +8,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Profiles.Profiles;
 /// <summary>
 /// Profile for Map
 /// </summary>
-public class MapProfile: Profile
+public class MapProfile : Profile
 {
     /// <summary>
     /// Constructor

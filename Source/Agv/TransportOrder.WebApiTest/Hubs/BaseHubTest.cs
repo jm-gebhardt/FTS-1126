@@ -1,19 +1,24 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Core.Hubs;
+﻿using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Hubs
+namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Hubs
 {
     /// <summary>
-    /// Test for agv hub instantiation
+    /// Test for SignalR hub instantiation
     /// </summary>
     [TestClass]
-    public class AgvHubTest
+    public class BaseHubTest
     {
-        private class DummyLogger : ILogger<AgvHub>
+        private interface IDummyHubClient
+        {
+
+        }
+        
+        private class DummyLogger : ILogger<BaseHub<IDummyHubClient>>
         {
             public string? LastMessage { get; private set; }
 
@@ -33,6 +38,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Hubs
             }
         }
 
+        private class DummyHub : BaseHub<IDummyHubClient>
+        {
+            public DummyHub(ILogger logger) : base(logger)
+            {
+            }
+        }
+
         /// <summary>
         /// Test connect to client
         /// </summary>
@@ -41,7 +53,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Hubs
         {
             var mockContext = new Mock<HubCallerContext>();
             var dummyLogger = new DummyLogger();
-            var agvHub = new AgvHub(dummyLogger);
+            var agvHub = new DummyHub(dummyLogger);
             agvHub.Context = mockContext.Object;
 
             const string connectionId = "1337";
@@ -59,7 +71,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Hubs
         {
             var mockContext = new Mock<HubCallerContext>();
             var dummyLogger = new DummyLogger();
-            var agvHub = new AgvHub(dummyLogger);
+            var agvHub = new DummyHub(dummyLogger);
             agvHub.Context = mockContext.Object;
 
             const string connectionId = "1337";
@@ -77,7 +89,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Hubs
         {
             var mockContext = new Mock<HubCallerContext>();
             var dummyLogger = new DummyLogger();
-            var agvHub = new AgvHub(dummyLogger);
+            var agvHub = new DummyHub(dummyLogger);
             agvHub.Context = mockContext.Object;
 
             const string connectionId = "1337";

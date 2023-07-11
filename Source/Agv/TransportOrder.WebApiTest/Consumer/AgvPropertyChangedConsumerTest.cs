@@ -1,16 +1,14 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
-using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Hubs;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Consumer;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
+namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Consumer
 {
     [TestClass]
     public class AgvPropertyChangedConsumerTest
@@ -22,13 +20,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
         [DataRow(false)]
         public async Task Receiving_AgvPropertyChanged_SendAgvStateToAllClients(bool alive)
         {
-            var mockHub = new Mock<IAgvHubContext>();
-            var fixture = new MassTransitTestFixture<AgvPropertyChangedConsumer>(services =>
-            {
-                services.AddTransient(_ => mockHub.Object);
-                services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-            });
-
+            var fixture = new ConsumerHubTestFixture<AgvPropertyChangedConsumer, IAgvHubContext>();
             await fixture.TestHarness!.Bus.Publish(
                 new AgvPropertyChanged(
                     new Core.States.AgvSaga(AgvId.ToGuid(), AgvId, nameof(AgvStateMachine.Idle)) { IsOnline = alive },
@@ -38,10 +30,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
             (await fixture.TestHarness.Published.Any<AgvPropertyChanged>()).ShouldBeTrue();
             (await fixture.ConsumerHarness!.Consumed.Any<AgvPropertyChanged>()).ShouldBeTrue();
 
-            const string method = nameof(Defines.HubMethods.AgvChanged);
-            mockHub.Verify(h => h.SendAgvStateToAllClients(method,
-                                                           It.Is<IAgv>(o => o.CorrelationId == AgvId.ToGuid()),
-                                                           It.IsAny<CancellationToken>()), Times.Once);
+            fixture.MockHub.Verify(h => h.SendAgvStateToAllClients(
+                It.Is<IAgv>(o => o.CorrelationId == AgvId.ToGuid()), false), Times.Once);
         }
     }
 }

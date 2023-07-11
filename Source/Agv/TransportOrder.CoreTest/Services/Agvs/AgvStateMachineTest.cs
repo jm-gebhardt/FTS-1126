@@ -6,7 +6,6 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.States;
 using MassTransit;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
@@ -16,6 +15,17 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
     [TestClass]
     public class AgvStateMachineTest
     {
+        #region Dummy consumer
+        [JetBrains.Annotations.PublicAPI]
+        public class AgvPropertyChangedConsumerDummy : IConsumer<AgvPropertyChanged>
+        {
+            public async Task Consume(ConsumeContext<AgvPropertyChanged> context)
+            {
+                await Task.CompletedTask;
+            }
+        }
+        #endregion
+
         #region State Transitions
         [DataRow(nameof(AgvStateMachine.Idle), nameof(AgvStateMachine.Idle))]
         [DataRow(nameof(AgvStateMachine.Charging), nameof(AgvStateMachine.Charging))]
@@ -713,13 +723,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
             const int agvOfflineTimeoutMsWhileIdle = 100;
             const int agvOfflineTimeoutMsWhileBusy = 200;
 
-            var mockHub = new Mock<Core.Hubs.IAgvHubContext>();
             var fixture = new AgvStateMachineTestFixture(
                 busRegistrationConfigurator: x =>
                 {
                     x.AddDelayedMessageScheduler();
-                    x.AddConsumer<AgvPropertyChangedConsumer>();
-                    x.AddTransient(_ => mockHub.Object);
+                    x.AddConsumer<AgvPropertyChangedConsumerDummy>();
                 },
                 inMemoryConfiguration: (_, cfg) => cfg.UseDelayedMessageScheduler(),
                 settings: new AgvSettings {AgvOfflineTimeoutMsWhileIdle = agvOfflineTimeoutMsWhileIdle, AgvOfflineTimeoutMsWhileBusy = agvOfflineTimeoutMsWhileBusy},
@@ -755,8 +763,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
             var now = DateTime.UtcNow;
             var msg = fixture.SagaHarness.Consumed.Select<AgvOfflineMessage>().First().Context.Message;
             // When triggered by AgvStatusReceived, the timeout depends on the state (and this AGV is idle)
-            ((now - msg.Created).TotalMilliseconds > 0.9 * agvOfflineTimeoutMsWhileBusy).ShouldBeTrue();
-            ((now - msg.Created).TotalMilliseconds < 1.5 * agvOfflineTimeoutMsWhileBusy).ShouldBeTrue();
+            double duarationMin = 0.9 * agvOfflineTimeoutMsWhileBusy;
+            double durationMax = 1.5 * agvOfflineTimeoutMsWhileBusy;
+            double duration = (now - msg.Created).TotalMilliseconds;
+            duration.ShouldBeInRange(duarationMin, durationMax);
 
             agv = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
             agv.IsOnline.ShouldBeFalse();
@@ -773,13 +783,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
             const int agvOfflineTimeoutMsWhileIdle = 100;
             const int agvOfflineTimeoutMsWhileBusy = 200;
 
-            var mockHub = new Mock<Core.Hubs.IAgvHubContext>();
             var fixture = new AgvStateMachineTestFixture(
                 busRegistrationConfigurator: x =>
                 {
                     x.AddDelayedMessageScheduler();
-                    x.AddConsumer<AgvPropertyChangedConsumer>();
-                    x.AddTransient(_ => mockHub.Object);
+                    x.AddConsumer<AgvPropertyChangedConsumerDummy>();
                 },
                 inMemoryConfiguration: (_, cfg) => cfg.UseDelayedMessageScheduler(),
                 settings: new AgvSettings {AgvOfflineTimeoutMsWhileIdle = agvOfflineTimeoutMsWhileIdle, AgvOfflineTimeoutMsWhileBusy = agvOfflineTimeoutMsWhileBusy},
@@ -817,8 +825,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
             var now = DateTime.UtcNow;
             var msg = fixture.SagaHarness.Consumed.Select<AgvOfflineMessage>().First().Context.Message;
             // When triggered by AgvStatusReceived, the timeout depends on the state (and this AGV is idle)
-            ((now - msg.Created).TotalMilliseconds > 0.9 * agvOfflineTimeoutMsWhileIdle).ShouldBeTrue();
-            ((now - msg.Created).TotalMilliseconds < 1.5 * agvOfflineTimeoutMsWhileIdle).ShouldBeTrue();
+            double duarationMin = 0.9 * agvOfflineTimeoutMsWhileIdle;
+            double durationMax = 1.5 * agvOfflineTimeoutMsWhileIdle;
+            double duration = (now - msg.Created).TotalMilliseconds;
+            duration.ShouldBeInRange(duarationMin, durationMax);
 
             agv = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
             agv.IsOnline.ShouldBeFalse();

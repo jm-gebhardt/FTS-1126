@@ -8,7 +8,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.AgvPositions
+namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Consumer
 {
     /// <summary>
     /// Test for AgvPositionReceivedConsumer

@@ -1,17 +1,16 @@
 using Gebhardt.StoreWare.Agv.Common.Testing;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Hubs;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.AgvPositions
+namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Consumer
 {
-    public class AgvPositionChangedConsumerTestFixture: MassTransitTestFixture<AgvPositionChangedConsumer>
+    public class ConsumerHubTestFixture<TConsumer, THubContext> : MassTransitTestFixture<TConsumer>
+        where TConsumer : class, MassTransit.IConsumer
+        where THubContext : class
     {
-        public readonly Mock<IAgvHubContext> MockHub = new();
+        public readonly Mock<THubContext> MockHub = new();
         public readonly Mock<INodeStateRegistry> MockNodeStateRegistry = new();
-        
         
         protected override void ConfigureServices(IServiceCollection collection)
         {
@@ -21,5 +20,3 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.AgvPositions
         }
     }
 }
-
-

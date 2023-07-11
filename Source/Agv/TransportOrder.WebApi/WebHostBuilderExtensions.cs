@@ -1,6 +1,6 @@
 using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Hubs;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.SchemaFilter;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Middleware;
 using Microsoft.AspNetCore.Builder;
@@ -12,6 +12,9 @@ using System.Reflection;
 using System.Text.Json.Serialization;
 using System.Xml.Linq;
 using System.Xml.XPath;
+using AutoMapper;
+using Microsoft.AspNetCore.SignalR;
+using System.Text.Json;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi
 {
@@ -30,6 +33,22 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi
 
             webHostBuilder.ConfigureServices(services =>
             {
+                services.AddTransient<IActionHubContext>(provider =>
+                {
+                    var hubContext = provider.GetRequiredService<IHubContext<ActionHub, IActionHubClient>>();
+                    var mapper = provider.GetRequiredService<IMapper>();
+
+                    return new ActionHubContext(hubContext, mapper);
+                });
+
+                services.AddTransient<IAgvHubContext>(provider =>
+                {
+                    var hubContext = provider.GetRequiredService<IHubContext<AgvHub, IAgvHubClient>>();
+                    var mapper = provider.GetRequiredService<IMapper>();
+
+                    return new AgvHubContext(hubContext, mapper);
+                });
+
                 services.AddScoped<ExceptionHandlerMiddleware>();
                 services.AddMvc();
                 services.AddControllers()
@@ -57,7 +76,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi
 
                     IncludeXmlComments(options);
                 });
-                services.AddSignalR();
+                services.AddSignalR()
+                    .AddJsonProtocol(options =>
+                    {
+                        options.PayloadSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+                        options.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                    });
             });
 
             return webHostBuilder;
@@ -109,6 +133,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi
             {
                 endpoints.MapControllers();
                 endpoints.MapHub<AgvHub>(AgvHub.UrlPath);
+                endpoints.MapHub<ActionHub>(ActionHub.UrlPath);
             });
 
             app.UseSwagger(c =>

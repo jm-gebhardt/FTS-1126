@@ -39,14 +39,17 @@ export class AgvHub {
       if (this._onAgvDiscovered) await this._onAgvDiscovered()
     })
 
-    this.client.on(IHubMethods.AgvChanged, async (message: string) => {
-      if (this._onAgvChanged) await this._onAgvChanged(JSON.parse(message))
+    this.client.on(IHubMethods.AgvChanged, async (agv: IAgv) => {
+      if (this._onAgvChanged) await this._onAgvChanged(agv)
     })
 
-    this.client.on(IHubMethods.AgvPositionChanged, async (message: string) => {
-      if (this._onAgvPositionChanged)
-        await this._onAgvPositionChanged(JSON.parse(message))
-    })
+    this.client.on(
+      IHubMethods.AgvPositionChanged,
+      async (IAgvPositionStatus: IAgvPositionStatus) => {
+        if (this._onAgvPositionChanged)
+          await this._onAgvPositionChanged(IAgvPositionStatus)
+      }
+    )
   }
 
   /**

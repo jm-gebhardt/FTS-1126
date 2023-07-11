@@ -2,6 +2,7 @@ using Gebhardt.StoreWare.Agv.Common.Exceptions;
 using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands;
+using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Charging;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Choosers;
@@ -11,6 +12,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Registries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Routing;
 using JetBrains.Annotations;
+using MassTransit;
 using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions;
@@ -22,6 +24,7 @@ public abstract class BaseActionManager : IActionManager
 {
     private readonly SemaphoreSlim _lockSemaphoreSlim = new(1, 1);
 
+    private readonly IBus _bus;
     private readonly IActionGroupRegistry _actionGroupRegistry;
     private readonly IRouteService _routeService;
     private readonly IChargingPointManager _chargingPointManager;
@@ -55,6 +58,7 @@ public abstract class BaseActionManager : IActionManager
     /// <summary>
     /// Constructor
     /// </summary>
+    /// <param name="bus">Abstracted interface for Agv action registry</param>
     /// <param name="actionGroupRegistry">Abstracted interface for Agv action registry</param>
     /// <param name="routeService">Service for computation of Route for Agv</param>
     /// <param name="chargingPointManager">Finds and Reserves charging node for agv</param>
@@ -69,6 +73,7 @@ public abstract class BaseActionManager : IActionManager
     /// <param name="agvStateService"></param>
     /// <param name="chooseAgvActionGroupService"></param>
     protected BaseActionManager(
+        IBus bus,
         IActionGroupRegistry actionGroupRegistry,
         IRouteService routeService,
         IChargingPointManager chargingPointManager,
@@ -83,6 +88,7 @@ public abstract class BaseActionManager : IActionManager
         IAgvStateService agvStateService,
         IChooseAgvActionGroupService chooseAgvActionGroupService)
     {
+        _bus = bus;
         _actionGroupRegistry = actionGroupRegistry;
         _routeService = routeService;
         _chargingPointManager = chargingPointManager;
@@ -104,7 +110,7 @@ public abstract class BaseActionManager : IActionManager
         var actionGroup = new ActionGroup(
             groupCorrelationId,
             $"Automatic {actionDescription}",
-            actions: new List<AgvAction> {new(Guid.NewGuid(), actionType, node.Id, groupCorrelationId)},
+            actions: new List<AgvAction> { new(Guid.NewGuid(), actionType, node.Id, groupCorrelationId) },
             assignedAgv: agv.CorrelationId
         );
 
@@ -118,9 +124,16 @@ public abstract class BaseActionManager : IActionManager
         return actionGroup.Actions.First();
     }
 
-    private Task AddActionGroupAsync(ActionGroup actionGroup)
+    private async Task AddActionGroupAsync(ActionGroup actionGroup)
     {
-        return _actionGroupRegistry.InsertAsync(actionGroup);
+        await _actionGroupRegistry.InsertAsync(actionGroup);
+        await _bus.Publish(new ActionGroupCreated(actionGroup, actionGroup.CorrelationId));
+    }
+
+    private async Task UpdateActionGroupAsync(AgvAction action, IAgv agv, ActionState state, CancellationToken cancellationToken)
+    {
+        var actionGroup = await _actionGroupRegistry.UpdateActionAndGroupStateAsync(action, agv, state);
+        await _bus.Publish(new ActionGroupChanged(actionGroup, actionGroup.CorrelationId), cancellationToken);
     }
 
     private bool IsAgvCharging(IAgv agv) => agv.GetRequiredAgvStatus().Charging;
@@ -195,7 +208,7 @@ public abstract class BaseActionManager : IActionManager
             action.Nodes = _routeService.GetRoute(assignedAgv, action.TargetNodeId).Nodes;
 
             await _startActionService.StartAction(assignedAgv, action, cancellationToken);
-            await _actionGroupRegistry.UpdateActionAndGroupStateAsync(action, assignedAgv, ActionState.Started);
+            await UpdateActionGroupAsync(action, assignedAgv, ActionState.Started, cancellationToken);
 
             Logger.LogTrace("Starting action done");
         }
@@ -327,9 +340,9 @@ public abstract class BaseActionManager : IActionManager
         var action = await _actionGroupRegistry.GetRequiredActionByIdAsync(correlationId);
 
         var actionGroup = await _actionGroupRegistry.GetRequiredActionGroupByIdAsync(action.ParentId);
-
         var agv = await GetAgvByCorrelationIdAsync(actionGroup.AssignedAgv);
-        await _actionGroupRegistry.UpdateActionAndGroupStateAsync(action, agv, ActionState.Completed);
+
+        await UpdateActionGroupAsync(action, agv, ActionState.Completed, cancellationToken);
 
         // charge will switch to charging state and can not be released immediately
         if (action.ActionType != ActionType.Charge)

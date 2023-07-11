@@ -11,6 +11,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Parking;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Registries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Routing;
+using MassTransit;
 using Microsoft.Extensions.Logging;
 using Moq;
 
@@ -20,11 +21,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Actions;
 
 public class ActionManagerFixture
 {
+    private readonly Dictionary<Guid, ActionGroup> _actionGroups = new();
     private readonly List<ActionGroup> _notStartedActionGroups = new();
     private readonly List<IAgv> _chargingAgvsWithGoodBatteryLevel = new();
     private readonly List<IAgv> _agvs = new();
 
     public ActionManager ActionManager { get; private set; }
+
+    public Mock<IBus> Bus { get; } = new();
 
     public Mock<IChargingService> ChargingService { get; } = new();
 
@@ -54,11 +58,20 @@ public class ActionManagerFixture
     {
         ActionGroupRegistry.Setup(x => x.GetNotStartedActionGroupsAsync()).ReturnsAsync(_notStartedActionGroups);
         ActionGroupRegistry.Setup(x => x.InsertAsync(It.IsAny<ActionGroup>())).Callback((ActionGroup actionGroup) => { AddActionGroup(actionGroup); });
+        ActionGroupRegistry.Setup(x => x.GetRequiredActionGroupByIdAsync(It.IsAny<Guid>())).ReturnsAsync((Guid correlationId) => _actionGroups[correlationId]);
+        ActionGroupRegistry.Setup(x => x.UpdateActionAndGroupStateAsync(It.IsAny<AgvAction>(), It.IsAny<IAgv>(), It.IsAny<ActionState>()))
+        .ReturnsAsync((AgvAction agvAction, IAgv _, ActionState _) =>
+        {
+            var actionGroup = _actionGroups[agvAction.ParentId];
+            actionGroup.UpdateActionGroupState();
+            return actionGroup;
+        });
 
         ChargingService.Setup(x => x.GetChargingAgvsWithGoodBatteryLevel()).Returns(_chargingAgvsWithGoodBatteryLevel);
         AgvRegistry.Setup(x => x.GetAllAgvs()).Returns(_agvs.AsQueryable());
 
         ActionManager = new ActionManager(
+            Bus.Object,
             ActionGroupRegistry.Object,
             RouteService.Object,
             ChargingPointManager.Object,
@@ -106,7 +119,7 @@ public class ActionManagerFixture
     // ReSharper disable once UnusedMethodReturnValue.Local
     private ActionManagerFixture AddActionGroup(ActionGroup actionGroup)
     {
-        ActionGroupRegistry.Setup(x => x.GetRequiredActionGroupByIdAsync(actionGroup.CorrelationId)).ReturnsAsync(actionGroup);
+        _actionGroups[actionGroup.CorrelationId] = actionGroup;
         return this;
     }
 

@@ -1,4 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
+using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -285,6 +286,7 @@ public class ActionManagerTest
 
         await fixture.ActionManager.CompleteActionAsync(agvAction.CorrelationId, CancellationToken.None);
         fixture.ActionGroupRegistry.Verify(x => x.UpdateActionAndGroupStateAsync(agvAction, agv, ActionState.Completed), Times.Once);
+        fixture.Bus.Verify(x => x.Publish(It.Is<ActionGroupChanged>(a => a.ActionGroup.State == ActionGroupState.Created), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [TestMethod]

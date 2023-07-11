@@ -251,7 +251,7 @@ public class ActionGroupRegistryTest
         actionGroupInRegistry.Actions.First(a => a.CorrelationId == actionToUpdateState.CorrelationId).State.ShouldBe(actionToUpdateState.State);
         actionGroupInRegistry.AssignedAgv.ShouldBeNull();
 
-        await fixture.ActionGroupRegistry.UpdateActionAndGroupStateAsync(actionToUpdateState, agv, ActionState.Started);
+        var updatedActionGroup = await fixture.ActionGroupRegistry.UpdateActionAndGroupStateAsync(actionToUpdateState, agv, ActionState.Started);
 
         actionGroupInRegistry = await fixture.ActionGroupRegistry.GetActionGroupAsync(actionGroup.CorrelationId);
         actionGroupInRegistry.ShouldNotBeNull();
@@ -259,6 +259,8 @@ public class ActionGroupRegistryTest
         actionGroupInRegistry.Actions.First(a => a.CorrelationId == actionToUpdateState.CorrelationId).State.ShouldBe(ActionState.Started);
         actionGroupInRegistry.State.ShouldBe(ActionGroupState.Started);
         actionGroupInRegistry.AssignedAgv.ShouldBe(agv.CorrelationId);
+
+        actionGroupInRegistry.ShouldBeEquivalentTo(updatedActionGroup);
     }
 
     [TestMethod]
@@ -303,7 +305,7 @@ public class ActionGroupRegistryTest
 
     [TestMethod]
     public async Task GetCurrentAssignedActionGroupAsync_WhenAgvProvidedHaveCurrentAssignedActionGroup_ReturnTupleWithCurrentAssignedActionGroup()
-    {  
+    {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(ActionGroupState.Started);
         var agv = AgvGenerator.GenerateIdleAgv();
         actionGroup.AssignedAgv = agv.CorrelationId;
@@ -319,7 +321,7 @@ public class ActionGroupRegistryTest
         currentActionGroup.Value.ShouldNotBeNull();
         VerifyActionGroup(currentActionGroup.Value, actionGroup);
     }
-    
+
     [TestMethod]
     public async Task GetCurrentAssignedActionGroupAsync_WhenAgvProvidedHaveNoCurrentAssignedActionGroup_ReturnTupleWithNullValueForCurrentAssignedActionGroup()
     {
