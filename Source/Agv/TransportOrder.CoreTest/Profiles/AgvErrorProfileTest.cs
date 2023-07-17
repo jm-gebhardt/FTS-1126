@@ -1,6 +1,6 @@
+using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Profiles.Profiles;
-using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
@@ -15,7 +15,7 @@ public class AgvErrorProfileTest
         var agvCorrelationId = Guid.NewGuid();
         var agvError = AgvErrorGenerator.GenerateAgvError(agvCorrelationId);
 
-        var mapper = new MappingProfileTestFixture().GetMapper(new[] { new AgvErrorProfile() });
+        var mapper = MappingHelper.GetMapper(new AgvErrorProfile());
         var agvErrorDto = mapper.Map<AgvErrorDto>(agvError);
 
         agvErrorDto.ShouldNotBeNull();

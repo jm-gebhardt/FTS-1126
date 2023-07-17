@@ -1,7 +1,7 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
+namespace Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 
 /// <summary>
 /// Helper class to generate AgvError test data
@@ -26,14 +26,17 @@ public static class AgvErrorGenerator
         return new AgvErrorStatusReceived(agvCorrelationId, errors);
     }
 
-    public static AgvError GenerateAgvError(Guid? agvCorrelationId = null)
+    public static AgvError GenerateAgvError(Guid? agvCorrelationId = null, List<ErrorReference>? errorReferences = null)
     {
         agvCorrelationId ??= Guid.NewGuid();
         return new AgvError(agvCorrelationId.Value,
-            $"errorDescription({agvCorrelationId})",
+            $"ErrorDescription({agvCorrelationId})",
             ErrorLevel.Fatal,
-            $"errorType({agvCorrelationId})",
-            null,
+            $"ErrorType({agvCorrelationId})",
+            errorReferences ?? new List<ErrorReference>
+            {
+                new() { ReferenceKey = $"ReferenceKey#{agvCorrelationId}", ReferenceValue = $"ReferenceValue#{agvCorrelationId}" }
+            },
             DateTime.Now);
     }
 }

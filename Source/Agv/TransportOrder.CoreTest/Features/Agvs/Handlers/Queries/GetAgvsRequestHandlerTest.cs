@@ -27,7 +27,7 @@ public class GetAgvsRequestHandlerTest
     [TestMethod]
     public async Task GetAgvsRequestHandler_RegistryContainsAgv_NoActionGroup_AgvReturned()
     {
-        var agvs = new List<IAgv> { Mock.Of<IAgv>() };
+        var agvs = new List<IAgv> {Mock.Of<IAgv>()};
         AgvRequestsHandlerTestFixture<GetAgvsRequest, GetAgvsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvsRequest, GetAgvsRequestHandler>()
             .WithAgvs(agvs)
             .Build();
@@ -40,14 +40,14 @@ public class GetAgvsRequestHandlerTest
         agvDto.AgvId.ShouldBe(agvs.First().AgvId);
         agvDto.CurrentActionGroup.ShouldBeNull();
     }
-    
+
     [TestMethod]
     public async Task GetAgvsRequestHandler_RegistryContainsAgv_HasCurrentAction_AgvReturned()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         AgvRequestsHandlerTestFixture<GetAgvsRequest, GetAgvsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvsRequest, GetAgvsRequestHandler>()
-            .WithAgvs(new List<IAgv> { agv }, actionGroup)
+            .WithAgvs(new List<IAgv> {agv}, actionGroup)
             .Build();
 
         Response<GetAgvsResult> response = await fixture.GetResponseAsync<GetAgvsResult>(new GetAgvsRequest());
@@ -56,11 +56,55 @@ public class GetAgvsRequestHandlerTest
         var respondAgv = response.Message.Agvs.First();
         respondAgv.CorrelationId.ShouldBe(agv.CorrelationId);
         respondAgv.CurrentActionGroup.ShouldNotBeNull();
-        
+
         var respondActionGroup = respondAgv.CurrentActionGroup;
         respondActionGroup.CorrelationId.ShouldBe(actionGroup.CorrelationId);
         respondActionGroup.Actions.Count.ShouldBe(actionGroup.Actions.Count);
         respondActionGroup.Actions.First().ActionType.ShouldBe(actionGroup.Actions.First().ActionType);
         respondActionGroup.Actions.First().CorrelationId.ShouldBe(actionGroup.Actions.First().CorrelationId);
+    }
+
+    [TestMethod]
+    public async Task GetAgvsRequestHandler_AgvHasError_ReturnsAgvWithAgvErrorList()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var expectedAgvErrors = new List<AgvError>
+        {
+            AgvErrorGenerator.GenerateAgvError(agv.CorrelationId)
+        };
+
+        AgvRequestsHandlerTestFixture<GetAgvsRequest, GetAgvsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvsRequest, GetAgvsRequestHandler>()
+            .WithAgvs(new List<IAgv> {agv})
+            .WithActiveAgvErrors(agv.CorrelationId, expectedAgvErrors)
+            .Build();
+
+        Response<GetAgvsResult> response = await fixture.GetResponseAsync<GetAgvsResult>(new GetAgvsRequest());
+        response.Message.Agvs.Count.ShouldBe(1);
+        foreach (var agvError in response.Message.Agvs.First().Errors)
+        {
+            agvError.AgvCorrelationId.ShouldBe(agvError.AgvCorrelationId);
+            var expectedAgvError = expectedAgvErrors.Find(e => e.ErrorType == agvError.ErrorType);
+            expectedAgvError.ShouldNotBeNull();
+            agvError.ErrorDescription.ShouldBe(expectedAgvError.ErrorDescription);
+            agvError.ErrorLevel.ShouldBe(expectedAgvError.ErrorLevel);
+            agvError.ErrorType.ShouldBe(expectedAgvError.ErrorType);
+            agvError.ErrorReferences.ShouldBe(expectedAgvError.ErrorReferences);
+            agvError.ErrorReceived.ShouldBe(expectedAgvError.ErrorReceived);
+            agvError.CorrelationId.ShouldBe(expectedAgvError.CorrelationId);
+            agvError.ErrorResolved.ShouldBe(expectedAgvError.ErrorResolved);
+        }
+    }
+
+    [TestMethod]
+    public async Task GetAgvsRequestHandler_AgvDoesNotHaveError_ReturnsAgvWithEmptyAgvErrorList()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        AgvRequestsHandlerTestFixture<GetAgvsRequest, GetAgvsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvsRequest, GetAgvsRequestHandler>()
+            .WithAgvs(new List<IAgv> {agv})
+            .Build();
+
+        Response<GetAgvsResult> response = await fixture.GetResponseAsync<GetAgvsResult>(new GetAgvsRequest());
+        response.Message.Agvs.Count.ShouldBe(1);
+        response.Message.Agvs.First().Errors.ShouldBeEmpty();
     }
 }

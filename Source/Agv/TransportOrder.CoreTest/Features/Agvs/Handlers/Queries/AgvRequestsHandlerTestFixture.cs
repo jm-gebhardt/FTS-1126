@@ -1,4 +1,3 @@
-using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Testing;
@@ -6,6 +5,7 @@ using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Profiles.Profiles;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Registries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs.Errors;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -22,6 +22,9 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
     // ReSharper disable once MemberCanBePrivate.Global
     public readonly Mock<IActionGroupRegistry> ActionGroupRegistry = new();
 
+    // ReSharper disable once MemberCanBePrivate.Global
+    public readonly Mock<IAgvErrorRegistry> AgvErrorRegistry = new();
+
     public AgvRequestsHandlerTestFixture()
     {
         AddServices(s =>
@@ -29,9 +32,13 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
             s.AddTransient(_ => AgvRegistry.Object);
             s.AddTransient(_ => ActionGroupRegistry.Object);
             s.AddTransient(_ => Mock.Of<IAgvDataRegistry>());
-            s.AddTransient(_ => MappingHelper.GetMapper(new List<Profile> {new AgvProfile(), new ActionProfile()}));
+            s.AddTransient(_ => MappingHelper.GetMapper(new AgvProfile(), new ActionProfile()));
             s.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+            s.AddTransient(_ => AgvErrorRegistry.Object);
         });
+
+        AgvErrorRegistry.Setup(x => x.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(new List<AgvError>());
+        AgvErrorRegistry.Setup(x => x.GetActiveErrorsAsync(It.IsAny<IList<Guid>>())).ReturnsAsync(new List<AgvError>());
     }
 
     public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithAgvs(IList<IAgv> agvs, ActionGroup? actionGroup = null)
@@ -45,6 +52,12 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
     public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithAgv(IAgv agv)
     {
         AgvRegistry.Setup(r => r.GetAgv(agv.CorrelationId)).Returns(agv);
+        return this;
+    }
+
+    public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithActiveAgvErrors(Guid agvCorrelationId, IList<AgvError> agvErrors)
+    {
+        AgvErrorRegistry.Setup(x => x.GetActiveErrorsAsync(agvCorrelationId)).ReturnsAsync(agvErrors);
         return this;
     }
 

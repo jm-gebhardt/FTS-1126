@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using System.Text;
 using AutoMapper;
+using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db.Models;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Profiles.Profiles;
@@ -28,7 +29,7 @@ public class MapProfileTest
     [TestMethod]
     public void Map_ShouldMapAllPropertiesCorrectly_WherePersistenceMapIsMappedToDtoMap()
     {
-        var mapper = new MappingProfileTestFixture().GetMapper(new[] { new MapProfile() });
+        var mapper = MappingHelper.GetMapper(new MapProfile());
         const string base64String = "dGhlIHF1aWNrIGJyb3duIGZveCBqdW1wIG92ZXIgdGhlIGxhenkgZG9n";
         var correlationId = Guid.NewGuid();
 

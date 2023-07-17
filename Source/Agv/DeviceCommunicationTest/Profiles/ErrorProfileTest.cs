@@ -1,4 +1,3 @@
-using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Profiles;
@@ -24,7 +23,7 @@ public class ErrorProfileTest
             ErrorType = "error type"
         };
 
-        var mapper = MappingHelper.GetMapper(new Profile[] { new MqttErrorProfile() });
+        var mapper = MappingHelper.GetMapper(new MqttErrorProfile());
         var commonMessagesError = mapper.Map<Common.Messages.AgvManagement.AgvError>(mqttMessagesError);
 
         commonMessagesError.ShouldSatisfyAllConditions(

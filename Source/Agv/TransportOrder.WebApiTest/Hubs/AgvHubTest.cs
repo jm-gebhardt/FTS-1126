@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
+﻿using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Models;
@@ -16,7 +15,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Hubs
     public class AgvHubTest
     {
         private const string AgvId = "AGV001";
-        
+
         private Mock<IHubContext<AgvHub, IAgvHubClient>> GetMock()
         {
             var mockHubClient = new Mock<IAgvHubClient>();
@@ -33,7 +32,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Hubs
         public async Task SendAgvStateToAllClients_AgvDiscovered()
         {
             Mock<IHubContext<AgvHub, IAgvHubClient>> mockHubContext = GetMock();
-            var mapper = MappingHelper.GetMapper(new List<Profile> { new AgvProfile() });
+            var mapper = MappingHelper.GetMapper(new AgvProfile());
             var agvHubContext = new AgvHubContext(mockHubContext.Object, mapper);
 
             var agv = new AgvSaga(AgvId.ToGuid(), AgvId);
@@ -46,7 +45,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Hubs
         public async Task SendAgvStateToAllClients_AgvChanged()
         {
             Mock<IHubContext<AgvHub, IAgvHubClient>> mockHubContext = GetMock();
-            var mapper = MappingHelper.GetMapper(new List<Profile> { new AgvProfile() });
+            var mapper = MappingHelper.GetMapper(new AgvProfile());
             var agvHubContext = new AgvHubContext(mockHubContext.Object, mapper);
 
             var agv = new AgvSaga(AgvId.ToGuid(), AgvId);
@@ -59,12 +58,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Hubs
         public async Task SendAgvPositionToAllClients_AgvPositionChanged()
         {
             Mock<IHubContext<AgvHub, IAgvHubClient>> mockHubContext = GetMock();
-            var mapper = MappingHelper.GetMapper(new List<Profile> { new AgvPositionProfile() });
+            var mapper = MappingHelper.GetMapper(new AgvPositionProfile());
+
             var agvHubContext = new AgvHubContext(mockHubContext.Object, mapper);
 
             var agv = new AgvSaga(AgvId.ToGuid(), AgvId);
-            var agvPosition = new Common.Messages.AgvManagement.AgvPosition(true, 1.0f, 1.0f, 1,0f, 1.0f);
+            var agvPosition = new Common.Messages.AgvManagement.AgvPosition(true, 1.0f, 1.0f, 1f, 0f, 1.0f);
             var agvPositionStatus = new AgvPositionStatus(agv.CorrelationId, agv.AgvId, agvPosition);
+
             await agvHubContext.SendAgvPositionToAllClients(agvPositionStatus);
 
             mockHubContext.Verify(c => c.Clients.All.AgvPositionChanged(It.Is<AgvPositionStatusDto>(a => a.CorrelationId == agv.CorrelationId)), Times.Once);

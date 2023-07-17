@@ -42,22 +42,28 @@ public class EfAgvErrorRegistry : IAgvErrorRegistry
     }
 
     /// <inheritdoc />
-    public async Task<IList<AgvError>> GetActiveErrorsAsync(Guid agvCorrelationId)
+    public Task<IList<AgvError>> GetActiveErrorsAsync(Guid agvCorrelationId) => GetActiveErrorsAsync(new List<Guid> {agvCorrelationId});
+
+    /// <inheritdoc />
+    public async Task<IList<AgvError>> GetActiveErrorsAsync(IList<Guid> agvCorrelationIds)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         List<AgvError> agvErrorsInRegistry = await context.Set<AgvError>()
-            .Where(e => e.AgvCorrelationId == agvCorrelationId && e.ErrorResolved == null)
+            .Where(e => agvCorrelationIds.Contains(e.AgvCorrelationId) && e.ErrorResolved == null)
             .OrderByDescending(e => e.ErrorReceived)
             .ToListAsync();
         return agvErrorsInRegistry;
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<AgvError>> GetErrorsAsync(Guid agvCorrelationId, DateTime dateFrom, DateTime dateTo)
+    public Task<IReadOnlyList<AgvError>> GetErrorsAsync(Guid agvCorrelationId, DateTime dateFrom, DateTime dateTo) => GetErrorsAsync(new List<Guid> {agvCorrelationId}, dateFrom, dateTo);
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<AgvError>> GetErrorsAsync(IList<Guid> agvCorrelationIds, DateTime dateFrom, DateTime dateTo)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         List<AgvError> agvErrorsInRegistry = await context.Set<AgvError>()
-            .Where(e => e.AgvCorrelationId == agvCorrelationId && e.ErrorReceived >= dateFrom && e.ErrorReceived <= dateTo)
+            .Where(e => agvCorrelationIds.Contains(e.AgvCorrelationId) && e.ErrorReceived >= dateFrom && e.ErrorReceived <= dateTo)
             .ToListAsync();
         return agvErrorsInRegistry;
     }

@@ -1,4 +1,5 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Profiles.Profiles;
@@ -35,7 +36,7 @@ public class AgvGraphProfileTest
             mapName.ToGuid(),
             mapName);
 
-        var mapper = new MappingProfileTestFixture().GetMapper(new[] { new AgvGraphProfile() });
+        var mapper = MappingHelper.GetMapper(new AgvGraphProfile());
         var graph = mapper.Map<GraphDto>(agvGraph);
 
         graph.ShouldNotBeNull();

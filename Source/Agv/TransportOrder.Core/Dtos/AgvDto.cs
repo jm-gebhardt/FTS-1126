@@ -89,6 +89,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos
         /// </summary>
         public ActionGroupDto? CurrentActionGroup { get; init; }
 
+        /// <summary>
+        /// List of Agv errors. Empty List if there is no error.
+        /// </summary>
+        public List<AgvErrorDto> Errors { get; set; } = new();
 
         /// <param name="correlationId">CorrelationId</param>
         /// <param name="agvId">AGV Serial Number</param>
@@ -104,6 +108,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos
         /// <param name="badBatteryLevel">Lower battery level in [%] for signaling "battery bad" (defined by VDA5050)</param>
         /// <param name="goodBatteryLevel">Upper battery level in [%] for signaling "battery good" (defined by VDA5050)</param>
         /// <param name="currentActionGroup">The recent ActionGroup of the Agv</param>
+        /// <param name="agvErrorDto">List of Agv errors</param>
         [PublicAPI]
         public AgvDto(
             Guid correlationId,
@@ -119,7 +124,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos
             bool isCharging,
             int badBatteryLevel,
             int goodBatteryLevel,
-            ActionGroupDto? currentActionGroup
+            ActionGroupDto? currentActionGroup,
+            List<AgvErrorDto> agvErrorDto
         )
         {
             CorrelationId = correlationId;
@@ -136,6 +142,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos
             BadBatteryLevel = badBatteryLevel;
             GoodBatteryLevel = goodBatteryLevel;
             CurrentActionGroup = currentActionGroup;
+            Errors = agvErrorDto;
         }
 
         /// <summary>

@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos.AgvActions;
@@ -30,7 +29,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Hubs
         public async Task SendActionGroupStateToAllClients_ActionGroupChanged()
         {
             Mock<IHubContext<ActionHub, IActionHubClient>> mockHubContext = GetMock();
-            var mapper = MappingHelper.GetMapper(new List<Profile> { new ActionProfile() });
+            var mapper = MappingHelper.GetMapper(new ActionProfile());
             var actionHubContext = new ActionHubContext(mockHubContext.Object, mapper);
 
             const string orderId = "Order123";

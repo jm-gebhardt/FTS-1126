@@ -27,7 +27,7 @@ public class GetActiveAgvErrorsRequestHandler : IConsumer<GetActiveAgvErrorsRequ
         _agvErrorRegistry = agvErrorRegistry;
         _mapper = mapper;
     }
-    
+
     /// <inheritdoc cref="GetActiveAgvErrorsRequestHandler"/>
     /// <param name="context"></param>
     /// <returns>Returns list of active AgvErrors excluding the resolved errors</returns>

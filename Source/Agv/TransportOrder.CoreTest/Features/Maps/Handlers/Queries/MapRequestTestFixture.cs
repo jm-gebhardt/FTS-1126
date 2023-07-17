@@ -20,31 +20,34 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Features.Maps.Handlers.
     /// </summary>
     /// <typeparam name="TRequestClient"></typeparam>
     /// <typeparam name="TConsumer"></typeparam>
-    public class MapRequestTestFixture<TRequestClient, TConsumer> : MediatorTestFixture<TRequestClient, TConsumer> 
+    public class MapRequestTestFixture<TRequestClient, TConsumer> : MediatorTestFixture<TRequestClient, TConsumer>
         where TRequestClient : class
         where TConsumer : class, IConsumer
     {
         public const string Base64String = "dGhlIHF1aWNrIGJyb3duIGZveCBqdW1wIG92ZXIgdGhlIGxhenkgZG9n";
 
-        private readonly string[] _agvIds = { "AGV001", "AGV002" };
-        private readonly string[] _orders = { "ORDER001", "ORDER002", "" };
-        private readonly string[] _states = { nameof(AgvStateMachine.Busy), nameof(AgvStateMachine.Discovered) };
+        private readonly string[] _agvIds = {"AGV001", "AGV002"};
+        private readonly string[] _orders = {"ORDER001", "ORDER002", ""};
+        private readonly string[] _states = {nameof(AgvStateMachine.Busy), nameof(AgvStateMachine.Discovered)};
 
-        private readonly AgvGraph.Node[] _nodes = {
-            new("node00") { X = 0f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
-            new("node10") { X = 1f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
-            new("node01") { X = 0f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
-            new("node11") { X = 1f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint }
+        private readonly AgvGraph.Node[] _nodes =
+        {
+            new("node00") {X = 0f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint},
+            new("node10") {X = 1f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint},
+            new("node01") {X = 0f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint},
+            new("node11") {X = 1f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint}
         };
 
-        private readonly AgvGraph.Edge[] _edges = {
+        private readonly AgvGraph.Edge[] _edges =
+        {
             new("node00", "node01"),
             new("node01", "node11"),
             new("node11", "node10"),
             new("node10", "node00")
         };
 
-        private readonly Guid[] _correlationIds = {
+        private readonly Guid[] _correlationIds =
+        {
             new("7FE9372B-4219-4D09-8885-966EE125A350"),
             new("041AD79E-1952-4AB7-BD3E-9EC972E27FBF"),
             new("465A85A6-6A02-4068-A7AA-E3B4B9821019")
@@ -140,16 +143,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Features.Maps.Handlers.
 
         private IMapper GetMapper()
         {
-            var mapper = MappingHelper.GetMapper(new List<Profile>()
-            {
+            var mapper = MappingHelper.GetMapper(
                 new AgvProfile(),
                 new AgvGraphProfile(),
                 new AgvPositionProfile(),
                 new MapProfile(),
                 new AgvErrorProfile()
-            });
+            );
             return mapper;
         }
-
     }
 }

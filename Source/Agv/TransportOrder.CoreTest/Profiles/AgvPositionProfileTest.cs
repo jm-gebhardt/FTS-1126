@@ -1,5 +1,6 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
+using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Models;
@@ -26,7 +27,7 @@ public class AgvPositionProfileTest
             agvId.ToGuid()
         );
 
-        var mapper = new MappingProfileTestFixture().GetMapper(new[] { new AgvPositionProfile() });
+        var mapper = MappingHelper.GetMapper(new AgvPositionProfile());
         var agvPositionStatus = mapper.Map<AgvPositionStatus>(agvPositionChanged);
 
         agvPositionStatus.ShouldNotBeNull();
@@ -54,7 +55,7 @@ public class AgvPositionProfileTest
             new AgvPosition(false, 0, 0, 0, 0)
         );
 
-        var mapper = new MappingProfileTestFixture().GetMapper(new[] { new AgvPositionProfile() });
+        var mapper = MappingHelper.GetMapper(new AgvPositionProfile());
         var agvPositionStatus = mapper.Map<AgvPositionStatus>(agvPositionReceived);
 
         agvPositionStatus.ShouldNotBeNull();
@@ -80,7 +81,7 @@ public class AgvPositionProfileTest
             new AgvPosition(false, 0, 0, 0, 0)
         );
 
-        var mapper = new MappingProfileTestFixture().GetMapper(new[] { new AgvPositionProfile() });
+        var mapper = MappingHelper.GetMapper(new AgvPositionProfile());
         var agvPositionStatusDto = mapper.Map<AgvPositionStatusDto>(agvPositionStatus);
 
         agvPositionStatusDto.ShouldNotBeNull();

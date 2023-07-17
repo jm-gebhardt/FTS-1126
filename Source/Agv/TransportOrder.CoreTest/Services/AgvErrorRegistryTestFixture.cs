@@ -19,7 +19,7 @@ public class AgvErrorRegistryTestFixture
     {
         var collection = new ServiceCollection()
             .AddDbContextFactory<TransportOrderDbContext>(options => { options.UseInMemoryDatabase(Guid.NewGuid().ToString()); })
-            .AddTransient<IMapper>(_ => MappingHelper.GetMapper(new List<Profile> {new AgvErrorProfile()}));
+            .AddTransient<IMapper>(_ => MappingHelper.GetMapper(new AgvErrorProfile()));
         var provider = collection.BuildServiceProvider(true);
         var contextFactory = provider.GetRequiredService<IDbContextFactory<TransportOrderDbContext>>();
         AgvErrorRegistry = new EfAgvErrorRegistry(contextFactory);

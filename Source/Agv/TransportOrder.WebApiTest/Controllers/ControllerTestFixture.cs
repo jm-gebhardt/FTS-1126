@@ -25,14 +25,13 @@ public abstract class ControllerTestFixture<TRequest, TRequestHandler, TControll
 
     protected IMapper GetMapper()
     {
-        var mapper = MappingHelper.GetMapper(new List<Profile>()
-        {
+        var mapper = MappingHelper.GetMapper(
             new AgvProfile(),
             new AgvGraphProfile(),
             new AgvPositionProfile(),
             new MapProfile(),
             new AgvErrorProfile()
-        });
+        );
         return mapper;
     }
 

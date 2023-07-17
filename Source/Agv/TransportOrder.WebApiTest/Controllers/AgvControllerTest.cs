@@ -4,6 +4,7 @@ using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
 using Shouldly;
 using Gebhardt.StoreWare.Agv.Common.Exceptions;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Commands;
@@ -29,10 +30,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var result = response.Result as OkObjectResult;
             result.ShouldNotBeNull();
 
-            var agvsIterable = result.Value as IEnumerable<AgvDto>;
-            // ReSharper disable once PossibleMultipleEnumeration
+            var agvsIterable = result.Value as IList<AgvDto>;
             agvsIterable.ShouldNotBeNull();
-            // ReSharper disable once PossibleMultipleEnumeration
             List<AgvDto> agvs = agvsIterable.ToList();
             agvs.Count.ShouldBe(fixture.AgvIds.Length);
 
@@ -45,6 +44,47 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
                 agvs[index].AgvId.ShouldBe(agvId);
                 Enum.TryParse(state, out AgvState agvState);
                 agvs[index].CurrentState.ShouldBe(agvState);
+                agvs[index].Errors.ShouldBeEmpty();
+            }
+        }
+
+        [TestMethod]
+        public async Task GetAgvs_WhenAgvHasAgvError_ReturnsAgvWithAgvErrorList()
+        {
+            var fixture = new AgvControllerTestFixture<GetAgvsRequest, GetAgvsRequestHandler>();
+            List<AgvError> expectedAgvErrors = fixture.AgvIds.Select(agvId => AgvErrorGenerator.GenerateAgvError(agvId.ToGuid())).ToList();
+
+            fixture.UseDefaultServices()
+                .WithActiveAgvErrors(expectedAgvErrors)
+                .Build();
+
+            var controller = fixture.Controller;
+            ActionResult<IEnumerable<AgvDto>> response = await controller.GetAgvs();
+
+            var result = response.Result as OkObjectResult;
+            result.ShouldNotBeNull();
+
+            var agvsIterable = result.Value as IList<AgvDto>;
+            agvsIterable.ShouldNotBeNull();
+            List<AgvDto> agvs = agvsIterable.ToList();
+            agvs.Count.ShouldBe(fixture.AgvIds.Length);
+
+            for (int index = 0; index < fixture.AgvIds.Length; index++)
+            {
+                agvs[index].Errors.ShouldNotBeEmpty();
+                foreach (var agvDtoError in agvs[index].Errors)
+                {
+                    agvDtoError.AgvCorrelationId.ShouldBe(agvDtoError.AgvCorrelationId);
+                    var expectedAgvError = expectedAgvErrors.Find(e => e.ErrorType == agvDtoError.ErrorType);
+                    expectedAgvError.ShouldNotBeNull();
+                    agvDtoError.ErrorDescription.ShouldBe(expectedAgvError.ErrorDescription);
+                    agvDtoError.ErrorLevel.ShouldBe(expectedAgvError.ErrorLevel);
+                    agvDtoError.ErrorType.ShouldBe(expectedAgvError.ErrorType);
+                    agvDtoError.ErrorReferences.ShouldBe(expectedAgvError.ErrorReferences);
+                    agvDtoError.ErrorReceived.ShouldBe(expectedAgvError.ErrorReceived);
+                    agvDtoError.CorrelationId.ShouldBe(expectedAgvError.CorrelationId);
+                    agvDtoError.ErrorResolved.ShouldBe(expectedAgvError.ErrorResolved);
+                }
             }
         }
 

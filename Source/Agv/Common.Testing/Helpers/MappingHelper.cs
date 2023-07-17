@@ -7,9 +7,9 @@ namespace Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 /// </summary>
 public static class MappingHelper
 {
-    public static Mapper GetMapper(IList<Profile> profiles)
+    public static Mapper GetMapper(params Profile[] profiles)
     {
-        var mapperConfig = new MapperConfiguration(cfg => 
+        var mapperConfig = new MapperConfiguration(cfg =>
         {
             foreach (var profile in profiles)
             {
