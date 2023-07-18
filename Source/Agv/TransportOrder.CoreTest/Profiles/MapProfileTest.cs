@@ -1,6 +1,5 @@
 using System.Collections.Immutable;
 using System.Text;
-using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db.Models;
@@ -19,10 +18,10 @@ public class MapProfileTest
     [TestMethod]
     public void AssertConfigurationIsValid_DoesNotThrowException_WhenMappingProfileIsDefined()
     {
-        var mapper = new MappingProfileTestFixture().GetMapper(Enumerable.Empty<Profile>());
+        var mapper = MappingHelper.GetMapper();
         mapper.ConfigurationProvider.AssertConfigurationIsValid();
     }
-    
+
     /// <summary>
     /// Maps the <see cref="Map"/> to <see cref="MapDto"/> and should map correctly
     /// </summary>

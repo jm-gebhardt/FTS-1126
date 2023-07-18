@@ -31,12 +31,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         /// <summary>
         /// The list of nodes in the graph
         /// </summary>
-        public Node[]? Nodes { get; }
+        public MqttNode[]? Nodes { get; }
 
         /// <summary>
         /// The list of edges in the graph
         /// </summary>
-        public Edge[]? Edges { get; }
+        public MqttEdge[]? Edges { get; }
 
         /// <summary>
         /// The unique ID of the map that belongs to the graph
@@ -55,8 +55,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         public MqttGraph(
             string serialNumber,
             DateTimeOffset modificationDate,
-            Node[] nodes,
-            Edge[] edges,
+            MqttNode[] nodes,
+            MqttEdge[] edges,
             string relatedMapId,
             Guid? requestId = null)
         {
@@ -73,7 +73,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
     /// Node representation
     /// </summary>
     [JetBrains.Annotations.PublicAPI]
-    public record Node
+    public record MqttNode
     {
         /// <summary>
         /// The unique ID of the node
@@ -101,7 +101,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
     /// Edge representation
     /// </summary>
     [JetBrains.Annotations.PublicAPI]
-    public record Edge
+    public record MqttEdge
     {
         /// <summary>
         /// The unique ID of the edge
@@ -131,14 +131,14 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages
         /// <summary>
         /// The list of attributes attached to the edge
         /// </summary>
-        public Attribute[]? Attributes { get; set; }
+        public MqttAttribute[]? Attributes { get; set; }
     }
 
     /// <summary>
     /// Node attribute
     /// </summary>
     [JetBrains.Annotations.PublicAPI]
-    public record Attribute
+    public record MqttAttribute
     {
         /// <summary>
         /// The key (name) of the attribute

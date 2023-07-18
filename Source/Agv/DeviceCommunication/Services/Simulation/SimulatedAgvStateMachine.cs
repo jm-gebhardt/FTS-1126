@@ -207,11 +207,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
             When(CreateAgvEvent)
                 .Then(c => _logger.LogDebug("{MessageType} {AgvId} / {CorrelationId} received", nameof(CreateAgv), c.Message.Agv.AgvId, c.Saga.CorrelationId))
                 .TransitionTo(Idle)
-                .ThenAsync(PublishStatus)
-                .ThenAsync(PublishPosition)
+                .ThenAsync(PublishStatusAsync)
+                .ThenAsync(PublishPositionAsync)
                 .Schedule(StatusUpdateSchedule, c => new ScheduleStatusUpdate(c.Saga.CorrelationId), _ => TimeSpan.FromMilliseconds(StatusUpdateIntervalMs))
                 .Schedule(SignalPositionSchedule, c => new ScheduleSignalPosition(c.Saga.CorrelationId), _ => TimeSpan.FromMilliseconds(SignalPositionIntervalMs))
-                .Then(c => c.RespondAsync(new CreateAgvResponse(c.Saga.CorrelationId)));
+                .Respond(c => new CreateAgvResponse(c.Saga.CorrelationId));
 
         private EventActivityBinder<SimulatedAgvSaga, StartActionCommand> SetStartActionHandler() =>
             When(StartActionCommandEvent)
@@ -227,7 +227,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
                 })
                 .TransitionTo(BusyMoving)
                 .Publish(c => new ActionStartedEvent(c.Saga.Action!.CorrelationId))
-                .ThenAsync(PublishStatus)
+                .ThenAsync(PublishStatusAsync)
                 .Schedule(FinishActionSchedule,
                     c => new ScheduleFinishAction(c.Saga.CorrelationId),
                     c => c.Saga.ActionDuration!.Value)
@@ -244,10 +244,10 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
         private EventActivityBinder<SimulatedAgvSaga, ScheduleFinishAction> SetFinishActionHandler() =>
             When(FinishActionSchedule.Received)
                 .Then(c => _logger.LogDebug("{MessageType} {CorrelationId} received", nameof(ScheduleFinishAction), c.Saga.CorrelationId))
-                .Then(FinishAction)
+                .ThenAsync(FinishActionAsync)
                 .TransitionTo(Idle)
-                .ThenAsync(PublishStatus)
-                .ThenAsync(PublishPosition);
+                .ThenAsync(PublishStatusAsync)
+                .ThenAsync(PublishPositionAsync);
         #endregion
 
         #region Message handlers
@@ -259,13 +259,13 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
         private EventActivityBinder<SimulatedAgvSaga, ScheduleStatusUpdate> SetSendAgvStatusHandler() =>
             When(StatusUpdateSchedule.Received)
                 .Then(c => { _logger.LogTrace("{MessageType} {CorrelationId} received", nameof(ScheduleStatusUpdate), c.Saga.CorrelationId); })
-                .ThenAsync(PublishStatus)
+                .ThenAsync(PublishStatusAsync)
                 .Schedule(StatusUpdateSchedule, c => new ScheduleStatusUpdate(c.Saga.CorrelationId), _ => TimeSpan.FromMilliseconds(StatusUpdateIntervalMs));
 
         private EventActivityBinder<SimulatedAgvSaga, ScheduleSignalPosition> SetSignalPositionHandler() =>
             When(SignalPositionSchedule.Received)
                 .Then(c => _logger.LogTrace("{MessageType} {CorrelationId} received", nameof(ScheduleSignalPosition), c.Saga.CorrelationId))
-                .ThenAsync(PublishPosition)
+                .ThenAsync(PublishPositionAsync)
                 .Schedule(SignalPositionSchedule, c => new ScheduleSignalPosition(c.Saga.CorrelationId), _ => TimeSpan.FromMilliseconds(SignalPositionIntervalMs));
 
         private EventActivityBinder<SimulatedAgvSaga, RequestAgvData> SetRequestAgvDataHandler() =>
@@ -297,7 +297,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
         #endregion
 
         #region Actions
-        private async Task PublishStatus(BehaviorContext<SimulatedAgvSaga> context)
+        private async Task PublishStatusAsync(BehaviorContext<SimulatedAgvSaga> context)
         {
             _logger.LogTrace("Status event from AGV {AgvId} / {CorrelationId}",
                 context.Saga.AgvId, context.Saga.CorrelationId);
@@ -325,7 +325,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
             }
         }
 
-        private async Task PublishPosition(BehaviorContext<SimulatedAgvSaga> context)
+        private async Task PublishPositionAsync(BehaviorContext<SimulatedAgvSaga> context)
         {
             var position = context.Saga.Position;
             if (position != null)
@@ -372,7 +372,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
             }
         }
 
-        private void FinishAction(BehaviorContext<SimulatedAgvSaga, ScheduleFinishAction> context)
+        private async Task FinishActionAsync(BehaviorContext<SimulatedAgvSaga, ScheduleFinishAction> context)
         {
             var action = context.Saga.Action;
 
@@ -385,7 +385,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
                 _logger.LogInformation("AGV {AgvId} / {CorrelationId} finished action {ActionType} for {OrderId}",
                     context.Saga.AgvId, context.Saga.CorrelationId, action.ActionType, action.ParentId);
 
-                context.Publish(new ActionCompletedEvent(action.CorrelationId));
+                await context.Publish(new ActionCompletedEvent(action.CorrelationId));
             }
 
             context.Saga.ResetAction();

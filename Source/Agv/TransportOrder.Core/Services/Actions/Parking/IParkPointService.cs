@@ -12,7 +12,7 @@ public interface IParkPointService
     /// </summary>
     /// <param name="agv"></param>
     /// <returns></returns>
-    Task<AgvGraph.Node> ReserveParkAsync(IAgv agv);
+    Task<GraphNode> ReserveParkAsync(IAgv agv);
 
     /// <summary>
     /// Checks if the agv is on a park node

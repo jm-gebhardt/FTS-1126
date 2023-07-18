@@ -1,7 +1,7 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Helpers;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
-
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
 {
@@ -16,8 +16,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
         private readonly MqttGraph _graph;
 
         private string? _serialNumber;
-        private readonly HashSet<AgvGraph.Node> _nodes;
-        private readonly HashSet<AgvGraph.Edge> _edges;
+        private readonly HashSet<GraphNode> _nodes;
+        private readonly HashSet<GraphEdge> _edges;
 
         private bool _checkedVelocity;
         private bool _considerVelocity;
@@ -26,8 +26,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
 
         /// <summary>Indicator for graph usability (valid or not).</summary>
         private AgvGraph.GraphUsability _usability = AgvGraph.GraphUsability.Valid;
-        private AgvGraph? _agvGraph;
 
+        private AgvGraph? _agvGraph;
 
         /// <summary>
         /// Constructor.
@@ -36,23 +36,22 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
         public GraphParser(MqttGraph graph)
         {
             _graph = graph;
-            _nodes = new(new NodeIdComparer());
-            _edges = new(new EdgeIdComparer());
+            _nodes = new(new GraphNodeComparer());
+            _edges = new(new GraphEdgeComparer());
         }
 
-
         /// <summary>
-        /// Calculate distance of the <paramref name="edge"/>.
+        /// Calculate distance of the <paramref name="mqttEdge"/>.
         /// </summary>
-        /// <param name="edge">The edge for which the metric will be calculated.</param>
+        /// <param name="mqttEdge">The edge for which the metric will be calculated.</param>
         /// <param name="nodes">List of nodes e.g. required for getting coordinates.</param>
         /// <returns>Distance of the edge.</returns>
         /// <exception cref="InvalidOperationException">Nodes addressed by the edge cannot be found
         /// in the nodes listing or isn't unique.</exception>
-        private static float CalculateDistance(Edge edge, Node[] nodes)
+        private static float CalculateDistance(MqttEdge mqttEdge, MqttNode[] nodes)
         {
-            var start = nodes.SingleOrDefault(x => x.NodeId == edge.StartId);
-            var end = nodes.SingleOrDefault(x => x.NodeId == edge.EndId);
+            var start = nodes.SingleOrDefault(x => x.NodeId == mqttEdge.StartId);
+            var end = nodes.SingleOrDefault(x => x.NodeId == mqttEdge.EndId);
 
             if (start == null || end == null)
             {
@@ -81,21 +80,30 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
         /// Helper to create new edge from AGV edge and calculate average graph attributes.
         /// </summary>
         /// <returns>Returns true when add has been added</returns>
-        private bool BuildEdge(Edge edge, float metric, float distance, bool swap = false)
+        private bool BuildEdge(MqttEdge mqttEdge, float metric, float distance, bool swap = false)
         {
-            bool added = _edges.Add(new AgvGraph.Edge(swap ? edge.StartId.ToString() : edge.EndId.ToString(),
-                                                      swap ? edge.EndId.ToString() : edge.StartId.ToString())
-            {
-                Metric = metric
-            });
+            var (fromNode, toNode) = GetFromToNodes(mqttEdge);
+            string fromNodeId = swap ? fromNode.Id : toNode.Id;
+            string toNodeId = swap ? toNode.Id : fromNode.Id;
+            var id = GraphHelper.ToGuid(fromNodeId, metric, toNodeId);
+            bool added = _edges.Add(new GraphEdge(fromNodeId, toNodeId, metric, id));
             if (added && _considerVelocity)
             {
                 _overallDistance += distance;
                 // No division by zero due to _considerVelocity.
-                _overallDuration += distance / edge.MaxVelocity;
+                _overallDuration += distance / mqttEdge.MaxVelocity;
             }
 
             return added;
+        }
+
+        private (GraphNode fromNode, GraphNode toNode) GetFromToNodes(MqttEdge mqttEdge)
+        {
+            string fromNodeId = mqttEdge.StartId.ToString();
+            string toNodeId = mqttEdge.EndId.ToString();
+            var fromNode = _nodes.Single(n => n.Id == fromNodeId);
+            var toNode = _nodes.Single(n => n.Id == toNodeId);
+            return (fromNode, toNode);
         }
 
         /// <summary>
@@ -144,10 +152,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
 
             foreach (var node in _graph.Nodes!)
             {
-                allAdded &= _nodes.Add(new AgvGraph.Node(node.NodeId.ToString())
+                allAdded &= _nodes.Add(new GraphNode(node.NodeId.ToString())
                 {
-                    Enabled = true,
-
                     Type = AgvGraph.NodeType.WayPoint,
                     X = node.X,
                     Y = node.Y,
@@ -157,7 +163,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
 
             return allAdded;
         }
-
 
         /// <summary>
         /// Parse graph message and create <see cref="AgvGraph"/> (to be stored in <see cref="_agvGraph"/>.
@@ -180,29 +185,28 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
                 }
 
                 if (_usability == AgvGraph.GraphUsability.Valid &&
-                     ( _graph.Nodes!.Length == 0 ||
-                       ParseNodes() == false ))
+                    (_graph.Nodes!.Length == 0 ||
+                     ParseNodes() == false))
                 {
                     _usability = AgvGraph.GraphUsability.InvalidNodes;
                 }
 
                 if (_usability == AgvGraph.GraphUsability.Valid &&
-                     ( _graph.Edges!.Length == 0 ||
-                       ParseEdges() == false ))
+                    (_graph.Edges!.Length == 0 ||
+                     ParseEdges() == false))
                 {
                     _usability = AgvGraph.GraphUsability.InvalidEdges;
                 }
 
-                _agvGraph = new( _serialNumber?.ToGuid() ?? Guid.Empty,
-                                 _nodes.ToArray(),
-                                 _edges.ToArray(),
-                                 _graph.RelatedMapId.ToGuid(),
-                                 _graph.RelatedMapId,
-                                 _usability
+                _agvGraph = new(_serialNumber?.ToGuid() ?? Guid.Empty,
+                    _nodes,
+                    _edges,
+                    _graph.RelatedMapId.ToGuid(),
+                    _graph.RelatedMapId,
+                    _usability
                 );
             }
         }
-
 
         /// <summary>
         /// Returns the serial number of the AGV.

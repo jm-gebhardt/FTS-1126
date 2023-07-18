@@ -24,10 +24,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Messages
         public AgvStatus? AgvStatus { get; init; }
 
         /// <inheritdoc/>
-        [JetBrains.Annotations.UsedImplicitly]
-        public AgvGraph? AgvGraph { get; init; }
-
-        /// <inheritdoc/>
         public bool IsOnline { get; } = true;
 
         /// <inheritdoc/>
@@ -36,10 +32,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Messages
         /// <inheritdoc/>
         [JetBrains.Annotations.UsedImplicitly]
         public bool HasError { get; set; }
-
-        /// <inheritdoc/>
-        [JetBrains.Annotations.UsedImplicitly]
-        public bool Assignable { get; } = true;
 
         /// <inheritdoc />
         public DateTime TimeOfStateTransition { get; set; }

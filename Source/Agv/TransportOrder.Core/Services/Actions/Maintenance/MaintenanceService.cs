@@ -1,7 +1,6 @@
 using System.Linq.Expressions;
 using Gebhardt.StoreWare.Agv.Common.Exceptions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db.Models;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Nodes;
 
@@ -13,9 +12,9 @@ public class MaintenanceService : BaseNodePicker, IMaintenanceService
     /// <summary>
     /// Ctor
     /// </summary>
-    /// <param name="graphRegistry">The graph registry</param>
+    /// <param name="agvGraphRegistry">The graph registry</param>
     /// <param name="nodeStateRegistry"></param>
-    public MaintenanceService(IGraphRegistry graphRegistry, INodeStateRegistry nodeStateRegistry) : base(graphRegistry, nodeStateRegistry)
+    public MaintenanceService(IAgvGraphRegistry agvGraphRegistry, INodeStateRegistry nodeStateRegistry) : base(agvGraphRegistry, nodeStateRegistry)
     {
     }
 
@@ -31,11 +30,11 @@ public class MaintenanceService : BaseNodePicker, IMaintenanceService
     /// <inheritdoc />
     /// <exception cref="AgvGraphNotDefinedException"></exception>
     /// <exception cref="NodeNotFoundException"></exception>
-    public AgvGraph.Node GetMaintenanceNode(IAgv agv)
+    public async Task<GraphNode> GetMaintenanceNode(IAgv agv)
     {
-        return PickNode(agv);
+        return await PickNode(agv);
     }
 
     /// <inheritdoc />
-    protected override Expression<Func<Node, bool>> NodeFilter => node => node.Type == AgvGraph.NodeType.Park;
+    protected override Expression<Func<GraphNode, bool>> NodeFilter => node => node.Type == AgvGraph.NodeType.Park;
 }

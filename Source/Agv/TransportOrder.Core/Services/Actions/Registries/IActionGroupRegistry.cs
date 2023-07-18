@@ -13,7 +13,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Registries
         /// Saves the action
         /// </summary>
         /// <param name="actionGroup">Agv Action</param>
-        Task InsertAsync(ActionGroup actionGroup);
+        Task AddAsync(ActionGroup actionGroup);
 
         /// <summary>
         /// Get ActionGroup

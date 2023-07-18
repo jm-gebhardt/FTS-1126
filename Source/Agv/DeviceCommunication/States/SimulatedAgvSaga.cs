@@ -23,7 +23,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         /// <summary>
         /// Current node of this AGV
         /// </summary>
-        public AgvGraph.Node? CurrentNode { get; set; }
+        public GraphNode? CurrentNode { get; set; }
 
         /// <summary>
         /// Correlation ID
@@ -42,9 +42,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         /// <inheritdoc />
         public bool IsLocked { get; set; }
 
-        /// <inheritdoc cref="IAgv" />
-        public bool Assignable => true;
-
         /// <inheritdoc />
         public bool HasError { get; }
 
@@ -57,7 +54,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
         /// <inheritdoc cref="IAgv" />
         public AgvStatus AgvStatus { get; private set; }
 
-        /// <inheritdoc cref="IAgv" />
+        /// <summary>
+        /// We still save the graph in the simulated Agv for convenience
+        /// </summary>
         public AgvGraph? AgvGraph { get; }
 
         /// <inheritdoc cref="IAgv" />
@@ -136,7 +135,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
                     if (_position == null)
                     {
                         // Init position to random station node
-                        List<AgvGraph.Node> stations = AgvGraph.Nodes.Where(n =>
+                        List<GraphNode> stations = AgvGraph.Nodes.Where(n =>
                         {
                             switch (n.Type)
                             {

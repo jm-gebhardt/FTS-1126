@@ -22,7 +22,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
         [TestMethod]
         public void Parse_WithoutSerialNumber_GraphInvalid()
         {
-            var parser = new GraphParser(new MqttGraph("", DateTimeOffset.UtcNow, Array.Empty<Node>(), Array.Empty<Edge>(), string.Empty));
+            var parser = new GraphParser(new MqttGraph("", DateTimeOffset.UtcNow, Array.Empty<MqttNode>(), Array.Empty<MqttEdge>(), string.Empty));
             var graph = parser.Graph;
 
             graph.Usability.ShouldBe(AgvGraph.GraphUsability.SerialNumberMissing);
@@ -34,7 +34,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
         [TestMethod]
         public void Parse_WithEmptyNodes_GraphInvalid()
         {
-            var parser = new GraphParser(new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow, Array.Empty<Node>(), Array.Empty<Edge>(), string.Empty));
+            var parser = new GraphParser(new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow, Array.Empty<MqttNode>(), Array.Empty<MqttEdge>(), string.Empty));
             Should.Throw<InvalidOperationException>(() => parser.SerialNumber);
 
             var graph = parser.Graph;
@@ -47,11 +47,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
         [TestMethod]
         public void Parse_WithEmptyEdges_GraphInvalid()
         {
-            var nodes = new Node[]
+            var nodes = new MqttNode[]
             {
                 new() { NodeId = 1, X = 0f, Y = 0f, Z = 0f }
             };
-            var parser = new GraphParser(new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow, nodes, Array.Empty<Edge>(), string.Empty));
+            var parser = new GraphParser(new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow, nodes, Array.Empty<MqttEdge>(), string.Empty));
             Should.Throw<InvalidOperationException>(() => parser.SerialNumber);
 
             var graph = parser.Graph;
@@ -64,12 +64,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
         [TestMethod]
         public void Parse_ValidInput_GraphValid()
         {
-            var nodes = new Node[]
+            var nodes = new MqttNode[]
             {
                 new() { NodeId = 1, X = 0f, Y = 0f, Z = 0f },
                 new() { NodeId = 2, X = 0f, Y = 0f, Z = 0f }
             };
-            var edges = new Edge[]
+            var edges = new MqttEdge[]
             {
                 new() { EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = false, MaxVelocity = 1 }
             };
@@ -78,8 +78,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
 
             parser.SerialNumber.ShouldBe(AgvTestIdentifier01);
             graph.Usability.ShouldBe(AgvGraph.GraphUsability.Valid);
-            graph.Nodes.Length.ShouldBe(2);
-            graph.Edges.Length.ShouldBe(1);
+            graph.Nodes.Count.ShouldBe(2);
+            graph.Edges.Count.ShouldBe(1);
         }
 
         /// <summary>
@@ -90,12 +90,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
         {
             const string mapId = "MAP01";
 
-            var nodes = new Node[]
+            var nodes = new MqttNode[]
             {
                 new() { NodeId = 1, X = 0f, Y = 0f, Z = 0f },
                 new() { NodeId = 2, X = 0f, Y = 0f, Z = 0f }
             };
-            var edges = new Edge[]
+            var edges = new MqttEdge[]
             {
                 new() { EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = false, MaxVelocity = 1 }
             };
@@ -115,7 +115,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
         [TestMethod]
         public void Parse_InvalidGraph_ExceptionWhenGettingVelocityInformation()
         {
-            var parser = new GraphParser(new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow, Array.Empty<Node>(), Array.Empty<Edge>(), string.Empty));
+            var parser = new GraphParser(new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow, Array.Empty<MqttNode>(), Array.Empty<MqttEdge>(), string.Empty));
 
             Should.Throw<InvalidOperationException>(() => parser.ConsiderVelocity);
             Should.Throw<InvalidOperationException>(() => parser.AverageVelocity);
@@ -130,12 +130,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
         [TestMethod]
         public void Parse_WithoutVelocityButAccessVelocity_ExceptionButGraphValid()
         {
-            var nodes = new Node[]
+            var nodes = new MqttNode[]
             {
                 new() { NodeId = 1, X = 0f, Y = 0f, Z = 0f },
                 new() { NodeId = 2, X = 0f, Y = 0f, Z = 0f }
             };
-            var edges = new Edge[]
+            var edges = new MqttEdge[]
             {
                 new() { EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = false, MaxVelocity = 0 }
             };
@@ -154,12 +154,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
         [TestMethod]
         public void Parse_WithUnidirectionalEdge_ExpectOne2OneConversion()
         {
-            var nodes = new Node[]
+            var nodes = new MqttNode[]
             {
                 new() { NodeId = 1, X = 0f, Y = 0f, Z = 0f },
                 new() { NodeId = 2, X = 100f, Y = 100f, Z = 0f }
             };
-            var edges = new Edge[]
+            var edges = new MqttEdge[]
             {
                 new() { EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = false, MaxVelocity = 1 }
             };
@@ -168,8 +168,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
             var graph = parser.Graph;
             parser.SerialNumber.ShouldBe(AgvTestIdentifier02);
             graph.Usability.ShouldBe(AgvGraph.GraphUsability.Valid);
-            graph.Nodes.Length.ShouldBe(2);
-            graph.Edges.Length.ShouldBe(1);
+            graph.Nodes.Count.ShouldBe(2);
+            graph.Edges.Count.ShouldBe(1);
         }
 
         /// <summary>
@@ -178,12 +178,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
         [TestMethod]
         public void Parse_WithBidirectionalEdge_ExpectOne2TwoConversion()
         {
-            var nodes = new Node[]
+            var nodes = new MqttNode[]
             {
                 new() { NodeId = 1, X = 0f, Y = 0f, Z = 0f },
                 new() { NodeId = 2, X = 100f, Y = 100f, Z = 0f }
             };
-            var edges = new Edge[]
+            var edges = new MqttEdge[]
             {
                 new() { EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = true, MaxVelocity = 1 }
             };
@@ -193,9 +193,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
             var graph = parser.Graph;
             parser.SerialNumber.ShouldBe(AgvTestIdentifier02);
             graph.Usability.ShouldBe(AgvGraph.GraphUsability.Valid);
-            graph.Nodes.Length.ShouldBe(2);
+            graph.Nodes.Count.ShouldBe(2);
             // Edge has to be duplicated because it is bidirectional.
-            graph.Edges.Length.ShouldBe(2);
+            graph.Edges.Count.ShouldBe(2);
         }
 
         /// <summary>
@@ -204,7 +204,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
         [TestMethod]
         public void Parse_WithVelocity_ExpectNoAdditionalEdges()
         {
-            var nodes = new Node[]
+            var nodes = new MqttNode[]
             {
                 // Square with 4 edges.
                 new() { NodeId = 1, X = 0f, Y = 0f, Z = 0f },
@@ -212,7 +212,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
                 new() { NodeId = 3, X = 10f, Y = 10f, Z = 0f },
                 new() { NodeId = 4, X = 0f, Y = 10f, Z = 0f }
             };
-            var edges = new Edge[]
+            var edges = new MqttEdge[]
             {
                 new() { EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = false, MaxVelocity = 10 },
                 new() { EdgeId = 2, StartId = 2, EndId = 3, Bidirectional = false, MaxVelocity = 20 },
@@ -225,8 +225,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
             var graph = parser.Graph;
             parser.SerialNumber.ShouldBe(AgvTestIdentifier02);
             graph.Usability.ShouldBe(AgvGraph.GraphUsability.Valid);
-            graph.Nodes.Length.ShouldBe(4);
-            graph.Edges.Length.ShouldBe(4);
+            graph.Nodes.Count.ShouldBe(4);
+            graph.Edges.Count.ShouldBe(4);
             //              4x distance / 4x durations
             parser.AverageVelocity.ShouldBe(4f * 10 / (10f / 10 + 10f / 20 + 10f / 40 + 10f / 10), 0.00001);
         }
@@ -237,13 +237,13 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
         [TestMethod]
         public void Parse_WithInvalidNodes_GraphInvalid()
         {
-            var nodes = new Node[]
+            var nodes = new MqttNode[]
             {
                 new() { NodeId = 1, X = 0f, Y = 0f, Z = 0f },
                 // Ambiguous node id
                 new() { NodeId = 1, X = 10f, Y = 0f, Z = 0f }
             };
-            var edges = new Edge[]
+            var edges = new MqttEdge[]
             {
                 new() { EdgeId = 1, StartId = 1, EndId = 1, Bidirectional = false, MaxVelocity = 10 }
             };
@@ -261,12 +261,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
         [TestMethod]
         public void Parse_WithInvalidEdges_GraphInvalid()
         {
-            var nodes = new Node[]
+            var nodes = new MqttNode[]
             {
                 new() { NodeId = 1, X = 0f, Y = 0f, Z = 0f },
                 new() { NodeId = 2, X = 10f, Y = 0f, Z = 0f }
             };
-            Edge[] edges = Array.Empty<Edge>();
+            MqttEdge[] edges = Array.Empty<MqttEdge>();
 
             var parser = new GraphParser(new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
             Should.Throw<InvalidOperationException>(() => parser.SerialNumber);
@@ -278,12 +278,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers
         [TestMethod]
         public void Parse_WithDuplicateEdges_GraphInvalid()
         {
-            var nodes = new Node[]
+            var nodes = new MqttNode[]
             {
                 new() { NodeId = 1, X = 0f, Y = 0f, Z = 0f },
                 new() { NodeId = 2, X = 10f, Y = 0f, Z = 0f }
             };
-            var edges = new Edge[]
+            var edges = new MqttEdge[]
             {
                 new() { EdgeId = 1, StartId = 1, EndId = 1, Bidirectional = false, MaxVelocity = 10 },
                 // Duplicate edge

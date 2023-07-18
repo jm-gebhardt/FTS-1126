@@ -33,7 +33,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.States
 
             var saga = CreateSimulatedAgvSaga();
             saga.SimulatedBatteryCharge = chargeInit;
-            saga.CurrentNode = new("node01") { Type = NodeType.Charge };
+            saga.CurrentNode = new GraphNode("node01") { Type = NodeType.Charge };
 
             saga.UpdateStatus(timeDiff, chargeDiff, chargeDiff);
 
@@ -50,7 +50,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.States
 
             var saga = CreateSimulatedAgvSaga();
             saga.SimulatedBatteryCharge = chargeInit;
-            saga.CurrentNode = new("node01") { Type = NodeType.Pick };
+            saga.CurrentNode = new GraphNode("node01") { Type = NodeType.Pick };
 
             saga.UpdateStatus(timeDiff, chargeDiff, chargeDiff);
 
@@ -59,7 +59,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.States
         }
 
         [TestMethod]
-        public void Not_alive_when_below_charg_threshold()
+        public void Not_alive_when_below_charge_threshold()
         {
             double chargeInit = 10;
             double chargeDiff = 0.1;
@@ -70,7 +70,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.States
 
             saga.IsOnline.ShouldBeTrue();
 
-            saga.CurrentNode = new("node01") { Type = NodeType.Pick };
+            saga.CurrentNode = new GraphNode("node01") { Type = NodeType.Pick };
             saga.UpdateStatus(timeDiff, chargeDiff, chargeDiff);
 
             saga.IsOnline.ShouldBeFalse();

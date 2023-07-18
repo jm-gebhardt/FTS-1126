@@ -1,7 +1,7 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos.Graphs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Profiles.Profiles;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
@@ -23,15 +23,15 @@ public class AgvGraphProfileTest
         var agvGraph = new AgvGraph(Guid.NewGuid(),
             new[]
             {
-                new AgvGraph.Node("S1") { Enabled = true, Type = AgvGraph.NodeType.Pick, X = 0f, Y = -2f, Z = 0f },
-                new AgvGraph.Node("D1") { Enabled = true, Type = AgvGraph.NodeType.Drop, X = 4f, Y = 6f, Z = 0f },
-                new AgvGraph.Node("S2") { Enabled = true, Type = AgvGraph.NodeType.Pick, X = 7f, Y = 4f, Z = 0f },
-                new AgvGraph.Node("D2") { Enabled = true, Type = AgvGraph.NodeType.Drop, X = -3f, Y = 0f, Z = 0f }
+                new GraphNode("S1") {Type = AgvGraph.NodeType.Pick, X = 0f, Y = -2f, Z = 0f},
+                new GraphNode("D1") {Type = AgvGraph.NodeType.Drop, X = 4f, Y = 6f, Z = 0f},
+                new GraphNode("S2") {Type = AgvGraph.NodeType.Pick, X = 7f, Y = 4f, Z = 0f},
+                new GraphNode("D2") {Type = AgvGraph.NodeType.Drop, X = -3f, Y = 0f, Z = 0f}
             },
             new[]
             {
-                new AgvGraph.Edge("S1", "D1") { Metric = 8.944f }, // Just take the distance
-                new AgvGraph.Edge("S2", "D2") { Metric = 10.77f } // as metric.
+                new GraphEdge("S1", "D1", 8.944f), // Just take the distance
+                new GraphEdge("S2", "D2", 10.77f) // as metric.
             },
             mapName.ToGuid(),
             mapName);
@@ -44,18 +44,17 @@ public class AgvGraphProfileTest
         graph.Nodes.ShouldNotBeEmpty();
         graph.Edges.ShouldNotBeEmpty();
 
-        graph.Nodes.Count.ShouldBe(agvGraph.Nodes.Length);
-        graph.Edges.Count.ShouldBe(agvGraph.Edges.Length);
+        graph.Nodes.Count.ShouldBe(agvGraph.Nodes.Count);
+        graph.Edges.Count.ShouldBe(agvGraph.Edges.Count);
 
         graph.CorrelationId.ShouldBe(agvGraph.CorrelationId);
 
-        graph.Nodes.ShouldAllBe(x => agvGraph.Nodes.Any(n => n.Equals(x) &&
+        graph.Nodes.ShouldAllBe(x => agvGraph.Nodes.Any(n => 
                                                              n.Id == x.Id &&
-                                                             n.Enabled == x.Enabled &&
-                                                             n.Type == x.Type &&
+                                                             n.Type.ToString() == x.Type.ToString() &&
                                                              Math.Abs(n.X - x.X) < FloatComparisonThreshold &&
                                                              Math.Abs(n.Y - x.Y) < FloatComparisonThreshold &&
                                                              Math.Abs(n.Z - x.Z) < FloatComparisonThreshold));
-        graph.Edges.ShouldAllBe(x => agvGraph.Edges.Any(e => e.From == x.From.Id && e.To == x.To.Id));
+        graph.Edges.ShouldAllBe(x => agvGraph.Edges.Any(e => e.FromNodeId == x.From.Id && e.ToNodeId == x.To.Id));
     }
 }

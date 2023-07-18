@@ -34,7 +34,7 @@ public interface IRouteService
     /// <param name="destinationNodeId">The destination node Id</param>
     /// <returns>The found route</returns>
     /// <exception cref="RouteNotFoundException"></exception>
-    IGraphAlgorithm.Route GetRoute(IAgv agv, string destinationNodeId);
+    Task<IGraphAlgorithm.Route> GetRouteAsync(IAgv agv, string destinationNodeId);
 
     /// <summary>
     /// Determine route for Agv from its last node to the destination nodes one after the other
@@ -44,5 +44,5 @@ public interface IRouteService
     /// <returns>The found route</returns>
     /// <exception cref="RouteNotFoundException"></exception>
     [PublicAPI]
-    IGraphAlgorithm.Route GetRoute(IAgv agv, IList<string> destinationNodeIds);
+    Task<IGraphAlgorithm.Route> GetRouteAsync(IAgv agv, IList<string> destinationNodeIds);
 }

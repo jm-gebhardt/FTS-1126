@@ -6,6 +6,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Requests.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Models;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Registries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs.Errors;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.States;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers;
@@ -39,9 +40,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
 
         private Mock<IActionGroupRegistry> ActionGroupRegistry { get; }
 
+        private Mock<IAgvGraphRegistry> AgvGraphRegistry { get; }
+
         private Mock<IAgvErrorRegistry> AgvErrorRegistry { get; }
 
-        public AgvGraph.Node[] Nodes { get; } =
+        private readonly GraphNode[] _nodes =
         {
             new("node00") {X = 0f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint},
             new("node10") {X = 1f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint},
@@ -49,16 +52,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             new("node11") {X = 1f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint}
         };
 
-        public AgvGraph.Edge[] Edges { get; } =
-        {
-            new("node00", "node01"),
-            new("node01", "node11"),
-            new("node11", "node10"),
-            new("node10", "node00")
-        };
-
         public AgvControllerTestFixture()
         {
+            AgvGraphRegistry = new Mock<IAgvGraphRegistry>();
             AgvErrorRegistry = new Mock<IAgvErrorRegistry>();
             AgvRegistry = new Mock<IAgvRegistry>();
             AgvDataRegistry = new Mock<IAgvDataRegistry>();
@@ -81,13 +77,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
                 string state = States[i];
                 string ip = Ips[i];
                 var correlationId = GetGuid(agvId);
-
-                const string mapName = "Map#1";
-                var agvGraph = new AgvGraph(correlationId, Nodes, Edges, GetGuid(mapName), mapName);
                 var agvStatus = agvId == "AGV003" ? null : new AgvStatus(correlationId, orderId, true, true, 10, true, true);
                 var agvData = new AgvData(correlationId, "Karis", "BF1", ip, 1.8, 120.0, 0.6, 0.8, 0.7, 1, 2.5, 1000, Array.Empty<AgvData.Sensor>());
 
-                agvs.Add(new AgvSaga(correlationId, agvId, state, agvStatus, agvGraph));
+                agvs.Add(new AgvSaga(correlationId, agvId, state, agvStatus));
                 data[correlationId] = agvData;
             }
 
@@ -126,7 +119,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             {
                 string agvId = AgvIds[i];
                 var correlationId = GetGuid(agvId);
-                var node = Nodes[i];
+                var node = _nodes[i];
 
                 agvPositions.Add(new AgvPositionStatus(correlationId, agvId, new AgvPosition(true, node.X, node.Y, node.Z, 0.5f)));
             }
@@ -176,6 +169,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             return controller;
         }
 
+        public AgvControllerTestFixture<TRequest, TRequestHandler> WithAgvGraph(Guid correlationId, AgvGraph agvGraph)
+        {
+            AgvGraphRegistry.Setup(x => x.GetAgvGraphAsync(correlationId)).ReturnsAsync(agvGraph);
+            return this;
+        }
+
         /// <summary>
         /// Uses the default services
         /// </summary>
@@ -183,14 +182,18 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
         public AgvControllerTestFixture<TRequest, TRequestHandler> UseDefaultServices()
         {
             SetupAgvRegistryWithDefaultData();
-            AddServices(sc => sc.AddTransient(_ => AgvRegistry.Object));
-            AddServices(sc => sc.AddTransient(_ => AgvDataRegistry.Object));
-            AddServices(sc => sc.AddTransient(_ => GetAgvPositionRegistry().Object));
-            AddServices(sc => sc.AddTransient(_ => GetMapper()));
-            AddServices(sc => sc.AddTransient(_ => new Mock<IBus>().Object));
-            AddServices(sc => sc.AddTransient(_ => new Mock<IAgvPositionRegistry>().Object));
-            AddServices(sc => sc.AddTransient(_ => ActionGroupRegistry.Object));
-            AddServices(sc => sc.AddTransient(_ => AgvErrorRegistry.Object));
+            AddServices(sc =>
+            {
+                sc.AddTransient(_ => AgvRegistry.Object);
+                sc.AddTransient(_ => AgvDataRegistry.Object);
+                sc.AddTransient(_ => GetAgvPositionRegistry().Object);
+                sc.AddTransient(_ => GetMapper());
+                sc.AddTransient(_ => new Mock<IBus>().Object);
+                sc.AddTransient(_ => new Mock<IAgvPositionRegistry>().Object);
+                sc.AddTransient(_ => ActionGroupRegistry.Object);
+                sc.AddTransient(_ => AgvErrorRegistry.Object);
+                sc.AddTransient(_ => AgvGraphRegistry.Object);
+            });
             return this;
         }
 

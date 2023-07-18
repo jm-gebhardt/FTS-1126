@@ -22,14 +22,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
         [TestMethod]
         public async Task WhenAgvSagaStateChanged_AgvStateChangedPublished()
         {
-            var agv = (AgvSaga)AgvGenerator.GenerateIdleAgv();
-
-
+            var agv = (AgvSaga) AgvGenerator.GenerateIdleAgv();
 
             var mockLogger = new Mock<ILogger<AgvStateMachine>>();
             var agvDataRegistryMock = new Mock<IAgvDataRegistry>();
             var mapRegistryMock = new Mock<IMapRegistry>();
-            var graphRegistryMock = new Mock<IGraphRegistry>();
+            var graphRegistryMock = new Mock<IAgvGraphRegistry>();
             var mockContext = new Mock<BehaviorContext<AgvSaga>>();
             var agvStateObserver = new AgvStateObserver();
             var settingsProviderMock = new Mock<ISettingsProvider<AgvSettings>>();
@@ -37,10 +35,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
                 mockLogger.Object,
                 agvDataRegistryMock.Object,
                 mapRegistryMock.Object,
-                graphRegistryMock.Object,
                 agvStateObserver,
-                new ProductionOptions { ApplicationName = null, AutoAccept = true },
-                settingsProviderMock.Object);
+                new ProductionOptions {ApplicationName = null, AutoAccept = true},
+                settingsProviderMock.Object,
+                graphRegistryMock.Object);
 
             var previousState = agvStateMachine.Idle;
             var currentState = agvStateMachine.Busy;
@@ -49,8 +47,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
             mockContext.Setup(m => m.Saga).Returns(agv);
 
             await agvStateObserver.StateChanged(mockContext.Object, currentState, previousState);
-
-            //mockBus.Verify(x => x.Publish(It.IsAny<AgvStateChanged>(), It.IsAny<CancellationToken>()), Times.Once);
         }
     }
 }

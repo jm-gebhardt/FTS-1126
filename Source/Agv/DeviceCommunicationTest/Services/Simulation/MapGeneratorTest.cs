@@ -25,17 +25,17 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
 
             const string mapName = "Map#1";
             var graph = new AgvGraph(Guid.Empty,
-                new[]
+                new GraphNode[]
                 {
-                    new AgvGraph.Node("S1") { Enabled = true, Type = AgvGraph.NodeType.Pick, X = 0f, Y = -2f, Z = 0f },
-                    new AgvGraph.Node("D1") { Enabled = true, Type = AgvGraph.NodeType.Drop, X = 4f, Y = 6f, Z = 0f },
-                    new AgvGraph.Node("S2") { Enabled = true, Type = AgvGraph.NodeType.Pick, X = 7f, Y = 4f, Z = 0f },
-                    new AgvGraph.Node("D2") { Enabled = true, Type = AgvGraph.NodeType.Drop, X = -3f, Y = 0f, Z = 0f }
+                    new("S1") { Type = AgvGraph.NodeType.Pick, X = 0f, Y = -2f, Z = 0f },
+                    new("D1") { Type = AgvGraph.NodeType.Drop, X = 4f, Y = 6f, Z = 0f },
+                    new("S2") { Type = AgvGraph.NodeType.Pick, X = 7f, Y = 4f, Z = 0f },
+                    new("D2") { Type = AgvGraph.NodeType.Drop, X = -3f, Y = 0f, Z = 0f }
                 },
-                new[]
+                new GraphEdge[]
                 {
-                    new AgvGraph.Edge("S1", "D1") { Metric = 8.944f }, // Just take the distance
-                    new AgvGraph.Edge("S2", "D2") { Metric = 10.77f } // as metric.
+                    new("S1", "D1", 8.944f), // Just take the distance
+                    new("S2", "D2", 10.77f) // as metric.
                 },
                 mapName.ToGuid(),
                 mapName);
@@ -67,12 +67,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             var graph = new AgvGraph(Guid.Empty,
                 new[]
                 {
-                    new AgvGraph.Node("S1") { Enabled = true, Type = AgvGraph.NodeType.Pick, X = 1000f, Y = 1000f, Z = 0f },
-                    new AgvGraph.Node("D1") { Enabled = true, Type = AgvGraph.NodeType.Drop, X = 1010f, Y = 1010f, Z = 0f }
+                    new GraphNode("S1") { Type = AgvGraph.NodeType.Pick, X = 1000f, Y = 1000f, Z = 0f },
+                    new GraphNode("D1") { Type = AgvGraph.NodeType.Drop, X = 1010f, Y = 1010f, Z = 0f }
                 },
                 new[]
                 {
-                    new AgvGraph.Edge("S1", "D1") { Metric = 14f }
+                    new GraphEdge("S1", "D1", 14f)
                 },
                 mapName.ToGuid(),
                 mapName);
@@ -88,7 +88,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
         [ExpectedException(typeof(InvalidOperationException))]
         public void GenerateMap_EmptyGraph_Failure()
         {
-            var graph = new AgvGraph(Guid.Empty, Array.Empty<AgvGraph.Node>(), Array.Empty<AgvGraph.Edge>(), Guid.Empty, "");
+            var graph = new AgvGraph(Guid.Empty, Array.Empty<GraphNode>(), Array.Empty<GraphEdge>(), Guid.Empty, "");
             var map = new MapGenerator(graph);
             map.Generate();
         }

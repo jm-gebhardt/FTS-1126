@@ -37,7 +37,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             int gridWidth = Math.Max(sources.Length, destinations.Length);
             
             graph.CorrelationId.ShouldBe(correlationId);
-            graph.Nodes.Length.ShouldBe(sources.Length + 
+            graph.Nodes.Count.ShouldBe(sources.Length + 
                                             destinations.Length + 
                                             gridWidth * gridRows);
 
@@ -53,7 +53,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
                 expectedNumberOfEdges = 0;
             }
             
-            graph.Edges.Length.ShouldBe(expectedNumberOfEdges);
+            graph.Edges.Count.ShouldBe(expectedNumberOfEdges);
             
             foreach (string s in sources)
             {
@@ -109,7 +109,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             string[] destinations = GenerateNodeIds("D", 2);
             var generator = new GridGraphGenerator(sources, destinations, 2, serviceNodes);
             var graph = generator.Generate(Guid.NewGuid());
-            graph.Nodes.Length.ShouldBe(new HashSet<string>(graph.Nodes.Select(n => n.Id)).Count);
+            graph.Nodes.Count.ShouldBe(new HashSet<string>(graph.Nodes.Select(n => n.Id)).Count);
         }
         
         /// <summary>
@@ -123,7 +123,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             string[] destinations = GenerateNodeIds("D", 2);
             var generator = new GridGraphGenerator(sources, destinations, 2, serviceNodes);
             var graph = generator.Generate(Guid.NewGuid());
-            graph.Edges.Length.ShouldBe(new HashSet<string>(graph.Edges.Select(n => $"{n.From}.{n.To}")).Count);
+            graph.Edges.Count.ShouldBe(new HashSet<string>(graph.Edges.Select(n => $"{n.FromNodeId}.{n.ToNodeId}")).Count);
         }
 
         [TestMethod]
@@ -156,7 +156,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
                 new [] {"Park-1", "N001-001"}
             };
 
-            string[] graphEdges = graph.Edges.Select(e => $"{e.From}-{e.To}").ToArray();
+            string[] graphEdges = graph.Edges.Select(e => $"{e.FromNodeId}-{e.ToNodeId}").ToArray();
 
             // Check for edges including bidirectional
             foreach (string[] edge in expectedEdges.Concat(expectedEdges.Reverse()))
@@ -166,7 +166,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation
             }
 
             // 2*Expect for bidirectional
-            graph.Edges.Length.ShouldBe(expectedEdges.Length * 2);
+            graph.Edges.Count.ShouldBe(expectedEdges.Length * 2);
         }
 
         [TestMethod]

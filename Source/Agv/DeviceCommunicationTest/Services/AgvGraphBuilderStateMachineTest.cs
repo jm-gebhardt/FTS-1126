@@ -105,12 +105,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services
 
             var requestIdGraph = saga.CurrentMqttRequestId; // Has been chosen by the state machine as request ID for MQTT.
             var graph = new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow,
-                new Node[]
+                new MqttNode[]
                 {
                     new() { NodeId = 1, X = 0f, Y = 0f, Z = 0f },
                     new() { NodeId = 2, X = 9f, Y = 9f, Z = 0f }
                 },
-                new Edge[]
+                new MqttEdge[]
                 {
                     new() { EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = true, MaxVelocity = 1 }
                 },
@@ -129,9 +129,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services
             publishedData.CorrelationId.ShouldBe(correlationId);
             publishedData.Graph.CorrelationId.ShouldBe(AgvTestIdentifier01.ToGuid());
             // 2 stations + 2 nodes
-            publishedData.Graph.Nodes.Length.ShouldBe(2 + 2);
+            publishedData.Graph.Nodes.Count.ShouldBe(2 + 2);
             // 4 edges (2 (bidirectional) per station + 2 edges (bidirectional) from graph
-            publishedData.Graph.Edges.Length.ShouldBe(2 + 4);
+            publishedData.Graph.Edges.Count.ShouldBe(2 + 4);
         }
 
         /// <summary>
@@ -178,12 +178,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services
 
             var requestIdGraph = saga.CurrentMqttRequestId; // Has been chosen by the state machine as request ID for MQTT.
             var graph = new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow,
-                new Node[]
+                new MqttNode[]
                 {
                     new() { NodeId = 1, X = 0f, Y = 0f, Z = 0f },
                     new() { NodeId = 2, X = 9f, Y = 9f, Z = 0f }
                 },
-                new Edge[]
+                new MqttEdge[]
                 {
                     new() { EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = true, MaxVelocity = 1 }
                 },

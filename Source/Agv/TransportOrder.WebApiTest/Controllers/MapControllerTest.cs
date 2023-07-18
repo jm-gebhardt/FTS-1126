@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 using System.Text;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
 {
@@ -15,7 +17,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
         [TestMethod]
         public async Task GetMaps_ShouldSendProperCommandToMediator_WhereRequestIsNotDefined()
         {
+            var expectedAgvGraphs = new List<AgvGraph>
+            {
+                AgvGraphGenerator.CreateDefaultGraph(Guid.NewGuid()),
+                AgvGraphGenerator.CreateDefaultGraph(Guid.NewGuid())
+            };
+
             MapControllerTestFixture<GetMapListRequest, GetMapListRequestHandler> fixture = new MapControllerTestFixture<GetMapListRequest, GetMapListRequestHandler>()
+                .WithAgvGraphs(expectedAgvGraphs)
                 .UseDefaultServices()
                 .Build();
             var mapController = fixture.Controller;

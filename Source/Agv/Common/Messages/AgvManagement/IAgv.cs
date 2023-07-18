@@ -21,11 +21,6 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
         public AgvStatus? AgvStatus { get; }
 
         /// <summary>
-        /// AGV Graph
-        /// </summary>
-        public AgvGraph? AgvGraph { get; }
-
-        /// <summary>
         /// Returns true when there is a life sign of the AGV in regular time intervals,
         /// returns false when there is no life sign for a certain time.
         /// </summary>
@@ -35,11 +30,6 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement
         /// is AGV locked?
         /// </summary>
         public bool IsLocked { get; set; }
-
-        /// <summary>
-        /// Returns true when the AGV is assignable for any transport order.
-        /// </summary>
-        public bool Assignable { get; }
 
         /// <summary>
         /// Returns True if Agv is in error (has any error) and not ready to drive

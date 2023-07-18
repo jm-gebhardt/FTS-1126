@@ -1,4 +1,4 @@
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos.Graphs;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Common
 {

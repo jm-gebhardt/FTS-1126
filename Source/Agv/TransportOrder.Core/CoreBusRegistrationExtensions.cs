@@ -51,6 +51,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
             busRegistrationConfigurator.AddConsumer<UnlockAgvCommandHandler>();
             busRegistrationConfigurator.AddConsumer<GetAgvActionGroupsRequestHandler>();
             busRegistrationConfigurator.AddConsumer<GetAgvActionGroupCountsByStateRequestHandler>();
+            busRegistrationConfigurator.AddConsumer<AgvGraphReceivedConsumer>();
 
             // error
             busRegistrationConfigurator.AddConsumer<GetActiveAgvErrorsRequestHandler>();

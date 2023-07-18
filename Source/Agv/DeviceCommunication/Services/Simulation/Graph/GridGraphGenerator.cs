@@ -1,5 +1,6 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Helpers;
 using Microsoft.OpenApi.Extensions;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph
@@ -19,7 +20,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph
     ///           D0  D1  D2
     /// 
     /// </summary>
-    public class GridGraphGenerator: IGraphGenerator
+    public class GridGraphGenerator : IGraphGenerator
     {
         /// <summary>
         /// GridGraphGenerator Constructor
@@ -29,8 +30,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph
         /// <param name="gridRows"></param>
         /// <param name="serviceNodes"></param>
         public GridGraphGenerator(
-            string[] sources, 
-            string[] destinations, 
+            string[] sources,
+            string[] destinations,
             int gridRows = 3,
             AgvGraph.NodeType[]? serviceNodes = null)
         {
@@ -54,12 +55,13 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph
         private const float OriginYOffset = 5;
         private const float NodeOffset = 5;
         private const float EdgeMetric = 1;
+
         private int GridWidth => Math.Max(Destinations.Length, Sources.Length);
 
-        private readonly List<AgvGraph.Node> _gridNodes = new();
-        private readonly List<AgvGraph.Node> _otherNodes = new();
-        private readonly List<AgvGraph.Edge> _edges = new();
-    
+        private readonly List<GraphNode> _gridNodes = new();
+        private readonly List<GraphNode> _otherNodes = new();
+        private readonly List<GraphEdge> _edges = new();
+
         private readonly int _gridRows;
         private readonly AgvGraph.NodeType[] _serviceNodeTypes;
 
@@ -76,7 +78,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph
             AddSourceNodes();
             AddDestinationNodes();
             AddServiceNodes();
-        
+
             return new AgvGraph(
                 correlationId,
                 _otherNodes.Concat(_gridNodes).ToArray(),
@@ -103,7 +105,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph
             {
                 for (int x = 0; x < GridWidth; x++)
                 {
-                    _gridNodes.Add(new AgvGraph.Node($"N{x:000}-{y:000}")
+                    _gridNodes.Add(new GraphNode($"N{x:000}-{y:000}")
                     {
                         Type = AgvGraph.NodeType.WayPoint,
                         X = x * NodeOffset + OriginXOffset,
@@ -119,10 +121,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph
                     // Connect horizontal
                     if (x != GridWidth - 1)
                     {
-                    
                         AddEdge(
-                            _gridNodes[y * GridWidth + x].Id,
-                            _gridNodes[y * GridWidth + x + 1].Id
+                            _gridNodes[y * GridWidth + x],
+                            _gridNodes[y * GridWidth + x + 1]
                         );
                     }
 
@@ -130,14 +131,14 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph
                     if (y != _gridRows - 1)
                     {
                         AddEdge(
-                            _gridNodes[y * GridWidth + x].Id,
-                            _gridNodes[(y + 1) * GridWidth + x].Id
+                            _gridNodes[y * GridWidth + x],
+                            _gridNodes[(y + 1) * GridWidth + x]
                         );
                     }
                 }
             }
         }
-    
+
         /// <summary>
         /// Add sources nodes and edges
         /// </summary>
@@ -147,16 +148,17 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph
             {
                 string nodeId = Sources[index];
                 var gridNode = _gridNodes[index];
-                _otherNodes.Add(new AgvGraph.Node(nodeId)
+                var sourceNode = new GraphNode(nodeId)
                 {
                     Type = AgvGraph.NodeType.Pick,
                     X = gridNode.X,
                     Y = gridNode.Y - OriginYOffset / 2
-                });
-                AddEdge(nodeId, gridNode.Id);
+                };
+                _otherNodes.Add(sourceNode);
+                AddEdge(sourceNode, gridNode);
             }
         }
-    
+
         /// <summary>
         /// Add destination nodes and edges
         /// </summary>
@@ -166,13 +168,14 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph
             {
                 string nodeId = Destinations[Destinations.Length - index - 1];
                 var gridNode = _gridNodes[_gridNodes.Count - index - 1];
-                _otherNodes.Add(new AgvGraph.Node(nodeId)
+                var destinationNode = new GraphNode(nodeId)
                 {
                     Type = AgvGraph.NodeType.Drop,
                     X = gridNode.X,
                     Y = gridNode.Y + OriginYOffset / 2
-                });
-                AddEdge(nodeId, gridNode.Id);
+                };
+                _otherNodes.Add(destinationNode);
+                AddEdge(destinationNode, gridNode);
             }
         }
 
@@ -186,7 +189,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph
                 AddServiceNode(_serviceNodeTypes[index], index);
             }
         }
-    
+
         /// <summary>
         /// Add service node to the side of the node grid.
         /// Nodes are place to the left and right side of the grid.
@@ -201,13 +204,14 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph
             var gridNode = _gridNodes[connectedGridNodeIdx];
             string nodeId = $"{nodeType.GetDisplayName()}-{index}";
 
-            _otherNodes.Add(new AgvGraph.Node(nodeId)
+            var serviceNode = new GraphNode(nodeId)
             {
                 Type = nodeType,
                 X = gridNode.X + OriginXOffset / 2 * side,
                 Y = gridNode.Y
-            });
-            AddEdge(nodeId, gridNode.Id);
+            };
+            _otherNodes.Add(serviceNode);
+            AddEdge(serviceNode, gridNode);
         }
 
         private int FindConnectedGridNodeIndex(int serviceNodeIndex, out int side)
@@ -222,7 +226,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph
             }
 
             float step = 2.0f * _gridRows / _serviceNodeTypes.Length;
-            int nodeIdx = (int)(step * serviceNodeIndex + 0.5);
+            int nodeIdx = (int) (step * serviceNodeIndex + 0.5);
 
             if (nodeIdx % 2 == 0)
             {
@@ -236,21 +240,22 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph
                 side = 1;
                 return nodeIdx / 2 * GridWidth + GridWidth - 1;
             }
-
         }
 
         /// <summary>
         /// Add Edge
         /// </summary>
-        /// <param name="from"></param>
-        /// <param name="to"></param>
+        /// <param name="fromNode"></param>
+        /// <param name="toNode"></param>
         /// <param name="bidirectional"></param>
-        private void AddEdge(string from, string to, bool bidirectional = true)
+        private void AddEdge(GraphNode fromNode, GraphNode toNode, bool bidirectional = true)
         {
-            _edges.Add(new AgvGraph.Edge(from, to) {Metric = EdgeMetric});
+            string fromNodeId = fromNode.Id;
+            string toNodeId = toNode.Id;
+            _edges.Add(new GraphEdge(fromNodeId, toNodeId, EdgeMetric, GraphHelper.ToGuid(fromNodeId, EdgeMetric, toNodeId)));
             if (bidirectional)
             {
-                _edges.Add(new AgvGraph.Edge(to, from){Metric = EdgeMetric});
+                _edges.Add(new GraphEdge(toNodeId, fromNodeId, EdgeMetric, GraphHelper.ToGuid(toNodeId, EdgeMetric, fromNodeId)));
             }
         }
     }

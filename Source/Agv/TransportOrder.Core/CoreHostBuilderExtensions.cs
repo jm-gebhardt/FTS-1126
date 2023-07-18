@@ -72,7 +72,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                 services.AddSingleton<IAgvRegistry, EfAgvRegistry>();
                 services.AddSingleton<IAgvDataRegistry, EfAgvDataRegistry>();
                 services.AddSingleton<IMapRegistry, EfMapRegistry>();
-                services.AddSingleton<IGraphRegistry, EfGraphRegistry>();
+                services.AddSingleton<IAgvGraphRegistry, EfAgvGraphRegistry>();
                 services.AddSingleton<INodeStateRegistry, EfNodeStateRegistry>();
                 services.AddSingleton<IAgvPositionRegistry, AgvPositionRegistry>();
                 services.AddSingleton<IAgvErrorRegistry, EfAgvErrorRegistry>();

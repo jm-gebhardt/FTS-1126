@@ -18,7 +18,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Routing
         /// <param name="end">The destination node</param>
         /// <returns>True if none is a action type (Pick, Drop, Pick/Drop) or if the start is a source and the end is a destination<br/>
         /// Otherwise False</returns>
-        public bool IsPlausible(AgvGraph.Node start, AgvGraph.Node end)
+        public bool IsPlausible(GraphNode start, GraphNode end)
         {
             if (NodeTypeHelper.IsActionNodeType(start.Type) || NodeTypeHelper.IsActionNodeType(end.Type))
             {

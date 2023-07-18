@@ -24,11 +24,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
             var fixture = new AgvGraphConsumerTestFixture()
             .UseDefaultServices()
             .Build();
-            var nodes = new Node[] {
+            var nodes = new MqttNode[] {
                 new() { NodeId = 1, X = 0f, Y = 0f, Z = 0f },
                 new() { NodeId = 2, X = 100f, Y = 100f, Z = 0f }
             };
-            var edges = new Edge[]
+            var edges = new MqttEdge[]
             {
                 new() { EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = false, MaxVelocity = 1 }
             };

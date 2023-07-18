@@ -34,7 +34,7 @@ public class ActionGroupRegistryTestFixture
 
     public ActionGroupRegistryTestFixture WithActionGroup(ActionGroup actionGroup)
     {
-        _actionGroupTasks.Add(ActionGroupRegistry.InsertAsync(actionGroup));
+        _actionGroupTasks.Add(ActionGroupRegistry.AddAsync(actionGroup));
         return this;
     }
 

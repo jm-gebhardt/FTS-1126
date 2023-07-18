@@ -1,3 +1,4 @@
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db.Models;
 using Microsoft.EntityFrameworkCore;
@@ -155,7 +156,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs
         }
 
         /// <inheritdoc />
-        public IEnumerable<Node> FilterFreeUnlockedNodes(IEnumerable<Node> nodes)
+        public IEnumerable<GraphNode> FilterFreeUnlockedNodes(IEnumerable<GraphNode> nodes)
         {
             List<NodeLock> blockedNodes = _dbContextFactory.CreateDbContext()
                 .Set<NodeLock>()

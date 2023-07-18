@@ -13,7 +13,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Consumer
     {
         private bool _useAgvPositionRegistryMock;
         public Mock<IAgvPositionRegistry>? AgvPositionRegistryMock { get; private set; }
-        private Mock<IGraphRegistry>? GraphRegistryMock { get; set; }
+        private Mock<IAgvGraphRegistry>? GraphRegistryMock { get; set; }
 
         public AgvPositionReceivedConsumerMassTransitTestFixture()
         {
@@ -34,7 +34,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Consumer
 
         protected override void ConfigureServices(IServiceCollection services)
         {
-            GraphRegistryMock = new Mock<IGraphRegistry>();
+            GraphRegistryMock = new Mock<IAgvGraphRegistry>();
 
             if (_useAgvPositionRegistryMock)
             {

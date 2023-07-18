@@ -18,7 +18,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Routing
 
         [DataTestMethod]
         [DynamicData(nameof(AllNodeToNodes), DynamicDataSourceType.Method)]
-        public void IsPlausible_ReturnsTrue_WhereAnyParameter(AgvGraph.Node source, AgvGraph.Node destination)
+        public void IsPlausible_ReturnsTrue_WhereAnyParameter(GraphNode source, GraphNode destination)
         {
             bool isPlausible = _routingPlausibilityChecker.IsPlausible(source, destination);
             isPlausible.ShouldBeTrue();
@@ -40,9 +40,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Routing
             return Enum.GetValues<AgvGraph.NodeType>();
         }
 
-        private static AgvGraph.Node CreateNode(AgvGraph.NodeType nodeType)
+        private static GraphNode CreateNode(AgvGraph.NodeType nodeType)
         {
-            return new AgvGraph.Node(Guid.NewGuid().ToString())
+            return new GraphNode(Guid.NewGuid().ToString())
             {
                 Type = nodeType
             };

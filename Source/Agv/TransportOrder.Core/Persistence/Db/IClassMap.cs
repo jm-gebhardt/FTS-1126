@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db
 {
-
     /// <summary>
     /// Map Class to specific type
     /// </summary>
@@ -14,7 +13,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db
         /// </summary>
         [UsedImplicitly]
         Type ClassType { get; }
-        
+
         /// <summary>
         /// Entity table name.
         /// Defaults to ClassType.Name
@@ -22,14 +21,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db
         /// </summary>
         [UsedImplicitly]
         string TableName { get; }
-        
+
         /// <summary>
         /// Configure the entity
         /// </summary>
         /// <param name="model"></param>
         void Configure(ModelBuilder model);
     }
-    
+
     /// <summary>
     /// Map Class to specific type
     /// </summary>
@@ -37,6 +36,5 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db
     public interface IClassMap<T> : IClassMap
         where T : class
     {
-
     }
 }

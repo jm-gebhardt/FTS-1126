@@ -22,5 +22,5 @@ public interface IMaintenanceService
     /// <param name="agv"></param>
     /// <returns></returns>
     [PublicAPI]
-    public AgvGraph.Node GetMaintenanceNode(IAgv agv);
+    public Task<GraphNode> GetMaintenanceNode(IAgv agv);
 }

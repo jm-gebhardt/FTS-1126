@@ -65,7 +65,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
             readyAgv.CurrentState.ShouldBe(agvSaga.CurrentState);
             readyAgv.AgvId.ShouldBe(agvSaga.AgvId);
             readyAgv.AgvStatus.ShouldBe(agvSaga.AgvStatus);
-            readyAgv.AgvGraph.ShouldBe(agvSaga.AgvGraph);
             readyAgv.IsOnline.ShouldBeFalse();
         }
 
@@ -85,7 +84,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
             readyAgv.CurrentState.ShouldBe(agvSaga.CurrentState);
             readyAgv.AgvId.ShouldBe(agvSaga.AgvId);
             readyAgv.AgvStatus.ShouldBe(agvSaga.AgvStatus);
-            readyAgv.AgvGraph.ShouldBe(agvSaga.AgvGraph);
         }
 
         [TestMethod]

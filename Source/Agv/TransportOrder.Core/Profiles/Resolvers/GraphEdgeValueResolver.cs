@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos.Graphs;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Profiles.Resolvers
 {
@@ -19,16 +19,18 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Profiles.Resolvers
         /// <returns></returns>
         public object Resolve(AgvGraph source, GraphDto destination, object destMember, ResolutionContext context)
         {
-            var graphEdges = new List<GraphDto.Edge>();
+            var graphEdges = new List<GraphEdgeDto>();
 
-            Dictionary<string, AgvGraph.Node> nodeDict = source.Nodes.ToDictionary(node => node.Id);
+            Dictionary<string, GraphNode> nodeDict = source.Nodes.ToDictionary(node => node.Id);
 
             foreach (var edge in source.Edges)
             {
-                if (nodeDict.TryGetValue(edge.From, out var fromString) &&
-                    nodeDict.TryGetValue(edge.To, out var toString))
+                if (nodeDict.TryGetValue(edge.FromNodeId, out var fromNode) &&
+                    nodeDict.TryGetValue(edge.ToNodeId, out var toNode))
                 {
-                    graphEdges.Add(new(fromString, toString));
+                    var fromNodeDto = context.Mapper.Map<GraphNodeDto>(fromNode);
+                    var toNodeDto = context.Mapper.Map<GraphNodeDto>(toNode);
+                    graphEdges.Add(new GraphEdgeDto {From = fromNodeDto, To = toNodeDto});
                 }
             }
 

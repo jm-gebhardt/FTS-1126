@@ -11,10 +11,10 @@ public abstract class BaseGraphAlgorithm : IGraphAlgorithm
     private readonly IRoutingPlausibilityChecker? _routingPlausibilityChecker;
 
     /// <summary>List of edges coming from the AGV graph.</summary>
-    protected AgvGraph.Edge[] Edges { get; }
+    protected ICollection<GraphEdge> Edges { get; }
 
     /// <summary>List of nodes build from the AGV graph.</summary>
-    private AgvGraph.Node[] Nodes { get; }
+    private ICollection<GraphNode> Nodes { get; }
 
     /// <summary>
     /// Constructor which initializes the base properties
@@ -69,7 +69,7 @@ public abstract class BaseGraphAlgorithm : IGraphAlgorithm
     /// <param name="start">Source node</param>
     /// <param name="end">Destination node</param>
     /// <returns>True if it is plausible</returns>
-    private bool IsPlausible(AgvGraph.Node start, AgvGraph.Node end)
+    private bool IsPlausible(GraphNode start, GraphNode end)
     {
         return _routingPlausibilityChecker == null || _routingPlausibilityChecker.IsPlausible(start, end);
     }

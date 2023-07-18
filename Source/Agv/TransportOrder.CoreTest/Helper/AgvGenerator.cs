@@ -8,9 +8,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 
 public static class AgvGenerator
 {
-    public static IAgv GenerateIdleAgv(int index = 0, string? lastNodeId = null, AgvGraph? agvGraph = null)
+    public static IAgv GenerateIdleAgv(int index = 0, string? lastNodeId = null)
     {
-        return GenerateAgv(nameof(AgvStateMachine.Idle), index, lastNodeId, null, agvGraph);
+        return GenerateAgv(nameof(AgvStateMachine.Idle), index, lastNodeId);
     }
 
     [UsedImplicitly]
@@ -29,13 +29,12 @@ public static class AgvGenerator
         int index,
         string? lastNodeId,
         AgvStatus? agvStatus = null,
-        AgvGraph? agvGraph = null,
         bool charging = false)
     {
         string agvId = GetAgvId(index);
         var correlationId = agvId.ToGuid();
         agvStatus ??= new AgvStatus(correlationId, "orderId", true, true, 1, charging, false, lastNodeId);
-        return new AgvSaga(correlationId, agvId, state, agvStatus, agvGraph);
+        return new AgvSaga(correlationId, agvId, state, agvStatus);
     }
 
     private static string GetAgvId(int index) => $"AGV{index:D3}";

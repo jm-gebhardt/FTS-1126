@@ -104,7 +104,7 @@ public abstract class BaseActionManager : IActionManager
         _startActionService = startActionService;
     }
 
-    private static ActionGroup CreateActionGroup(IAgv agv, AgvGraph.Node node, string actionDescription, ActionType actionType = ActionType.Move)
+    private static ActionGroup CreateActionGroup(IAgv agv, GraphNode node, string actionDescription, ActionType actionType = ActionType.Move)
     {
         var groupCorrelationId = Guid.NewGuid();
         var actionGroup = new ActionGroup(
@@ -117,7 +117,7 @@ public abstract class BaseActionManager : IActionManager
         return actionGroup;
     }
 
-    private async Task<AgvAction> AddActionAsync(IAgv agv, AgvGraph.Node node, ActionType actionType, string? actionDescription = null)
+    private async Task<AgvAction> AddActionAsync(IAgv agv, GraphNode node, ActionType actionType, string? actionDescription = null)
     {
         var actionGroup = CreateActionGroup(agv, node, actionDescription ?? actionType.ToString(), actionType);
         await AddActionGroupAsync(actionGroup);
@@ -126,7 +126,7 @@ public abstract class BaseActionManager : IActionManager
 
     private async Task AddActionGroupAsync(ActionGroup actionGroup)
     {
-        await _actionGroupRegistry.InsertAsync(actionGroup);
+        await _actionGroupRegistry.AddAsync(actionGroup);
         await _bus.Publish(new ActionGroupCreated(actionGroup, actionGroup.CorrelationId));
     }
 
@@ -205,7 +205,7 @@ public abstract class BaseActionManager : IActionManager
 
         try
         {
-            action.Nodes = _routeService.GetRoute(assignedAgv, action.TargetNodeId).Nodes;
+            action.Nodes = (await _routeService.GetRouteAsync(assignedAgv, action.TargetNodeId)).Nodes;
 
             await _startActionService.StartAction(assignedAgv, action, cancellationToken);
             await UpdateActionGroupAsync(action, assignedAgv, ActionState.Started, cancellationToken);
@@ -264,7 +264,7 @@ public abstract class BaseActionManager : IActionManager
     {
         Logger.LogInformation("Starting maintenance action for Agv with CorrelationId: {AgvCorrelationId}", agv.CorrelationId);
 
-        var maintenanceNode = MaintenanceService.GetMaintenanceNode(agv);
+        var maintenanceNode = await MaintenanceService.GetMaintenanceNode(agv);
         var action = await AddActionAsync(agv, maintenanceNode, ActionType.Move, "maintenance");
 
         return action;

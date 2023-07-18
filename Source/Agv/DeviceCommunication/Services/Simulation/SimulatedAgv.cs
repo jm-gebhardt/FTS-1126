@@ -1,6 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 
-// ReSharper disable ConvertToPrimaryConstructor
 // ReSharper disable InvalidUsage
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
 {
@@ -26,9 +25,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
         public bool IsLocked { get; set; }
 
         /// <inheritdoc />
-        public bool Assignable { get; }
-
-        /// <inheritdoc />
         public bool HasError { get; }
 
         /// <inheritdoc />
@@ -40,7 +36,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
         /// <inheritdoc />
         public AgvStatus? AgvStatus { get; }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// We still save the graph in the simulated Agv for convenience
+        /// </summary>
         public AgvGraph? AgvGraph { get; }
 
         /// <inheritdoc cref="IAgv" />

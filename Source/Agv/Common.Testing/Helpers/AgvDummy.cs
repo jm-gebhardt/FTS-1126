@@ -14,15 +14,9 @@ public class AgvDummy : IAgv
     public AgvStatus? AgvStatus { get; init; }
 
     // ReSharper disable once UnusedAutoPropertyAccessor.Global
-    public AgvGraph? AgvGraph { get; init; }
-
-    // ReSharper disable once UnusedAutoPropertyAccessor.Global
     public bool IsOnline { get; init; }
 
     public bool IsLocked { get; set; }
-    
-    // ReSharper disable once UnusedAutoPropertyAccessor.Global
-    public bool Assignable { get; init; }
 
     // ReSharper disable once UnassignedGetOnlyAutoProperty
     public bool HasError { get; }

@@ -1,9 +1,10 @@
 using AutoMapper;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
 using Gebhardt.StoreWare.Agv.Common.Exceptions;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos.Graphs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Common;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Requests.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs;
 using JetBrains.Annotations;
 using MassTransit;
 
@@ -18,16 +19,19 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Quer
     {
         private readonly IAgvRegistry _agvRegistry;
         private readonly IMapper _mapper;
+        private readonly IAgvGraphRegistry _agvGraphRegistry;
 
         /// <summary>
         /// <inheritdoc cref="GetAgvGraphRequestHandler"/>
         /// </summary>
         /// <param name="agvRegistry"></param>
         /// <param name="mapper"></param>
-        public GetAgvGraphRequestHandler(IAgvRegistry agvRegistry, IMapper mapper)
+        /// <param name="agvGraphRegistry"></param>
+        public GetAgvGraphRequestHandler(IAgvRegistry agvRegistry, IMapper mapper, IAgvGraphRegistry agvGraphRegistry)
         {
             _agvRegistry = agvRegistry;
             _mapper = mapper;
+            _agvGraphRegistry = agvGraphRegistry;
         }
 
         /// <summary>
@@ -46,12 +50,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Quer
                 throw new AgvNotFoundException(request.CorrelationId);
             }
 
-            if (agv.AgvGraph == null)
-            {
-                throw new AgvGraphNotDefinedException(agv);
-            }
-
-            var graph = _mapper.Map<GraphDto>(agv.AgvGraph);
+            var agvGraph = await _agvGraphRegistry.GetAgvGraphAsync(agv.CorrelationId);
+            
+            var graph = _mapper.Map<GraphDto>(agvGraph);
             await context.RespondAsync(new GetAgvGraphResult(graph));
         }
     }

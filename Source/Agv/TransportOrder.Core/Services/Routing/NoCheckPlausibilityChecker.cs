@@ -13,7 +13,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Routing
         /// <param name="start">Does not matter</param>
         /// <param name="end">Does not matter</param>
         /// <returns>True</returns>
-        public bool IsPlausible(AgvGraph.Node start, AgvGraph.Node end)
+        public bool IsPlausible(GraphNode start, GraphNode end)
         {
             return true;
         }

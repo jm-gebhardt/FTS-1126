@@ -57,7 +57,7 @@ public class ActionManagerFixture
     public ActionManagerFixture()
     {
         ActionGroupRegistry.Setup(x => x.GetNotStartedActionGroupsAsync()).ReturnsAsync(_notStartedActionGroups);
-        ActionGroupRegistry.Setup(x => x.InsertAsync(It.IsAny<ActionGroup>())).Callback((ActionGroup actionGroup) => { AddActionGroup(actionGroup); });
+        ActionGroupRegistry.Setup(x => x.AddAsync(It.IsAny<ActionGroup>())).Callback((ActionGroup actionGroup) => { AddActionGroup(actionGroup); });
         ActionGroupRegistry.Setup(x => x.GetRequiredActionGroupByIdAsync(It.IsAny<Guid>())).ReturnsAsync((Guid correlationId) => _actionGroups[correlationId]);
         ActionGroupRegistry.Setup(x => x.UpdateActionAndGroupStateAsync(It.IsAny<AgvAction>(), It.IsAny<IAgv>(), It.IsAny<ActionState>()))
         .ReturnsAsync((AgvAction agvAction, IAgv _, ActionState _) =>
@@ -66,6 +66,7 @@ public class ActionManagerFixture
             actionGroup.UpdateActionGroupState();
             return actionGroup;
         });
+        ActionGroupRegistry.Setup(x => x.AddAsync(It.IsAny<ActionGroup>())).Callback((ActionGroup actionGroup) => { AddActionGroup(actionGroup); });
 
         ChargingService.Setup(x => x.GetChargingAgvsWithGoodBatteryLevel()).Returns(_chargingAgvsWithGoodBatteryLevel);
         AgvRegistry.Setup(x => x.GetAllAgvs()).Returns(_agvs.AsQueryable());
@@ -123,23 +124,23 @@ public class ActionManagerFixture
         return this;
     }
 
-    public ActionManagerFixture AddReservableChargingNode(AgvGraph.Node chargingNode)
+    public ActionManagerFixture AddReservableChargingNode(GraphNode chargingNode)
     {
         ChargingPointManager.Setup(x => x.ReserveChargerAsync(It.IsAny<IAgv>())).ReturnsAsync(chargingNode);
         return this;
     }
 
-    public ActionManagerFixture AddReservableParkingNode(AgvGraph.Node parkingNode)
+    public ActionManagerFixture AddReservableParkingNode(GraphNode parkingNode)
     {
         ParkPointService.Setup(x => x.ReserveParkAsync(It.IsAny<IAgv>())).ReturnsAsync(parkingNode);
         return this;
     }
 
-    public ActionManagerFixture WithAgvMaintenanceRequested(IAgv agv, bool maintenanceRequested = true, AgvGraph.Node? maintenanceNode = null)
+    public ActionManagerFixture WithAgvMaintenanceRequested(IAgv agv, bool maintenanceRequested = true, GraphNode? maintenanceNode = null)
     {
         if (maintenanceNode != null)
         {
-            MaintenanceService.Setup(m => m.GetMaintenanceNode(agv)).Returns(maintenanceNode);
+            MaintenanceService.Setup(m => m.GetMaintenanceNode(agv)).ReturnsAsync(maintenanceNode);
         }
         MaintenanceService.Setup(m => m.MaintenanceRequested(agv)).Returns(maintenanceRequested);
         return this;
@@ -173,7 +174,7 @@ public class ActionManagerFixture
     {
         float? routeCosts;
         RouteService.Setup(x => x.HasRoute(agv, It.IsAny<string>(), out routeCosts)).Returns(hasRoute);
-        RouteService.Setup(x => x.GetRoute(agv, It.IsAny<string>())).Returns(new IGraphAlgorithm.Route(1f, Array.Empty<string>()));
+        RouteService.Setup(x => x.GetRouteAsync(agv, It.IsAny<string>())).ReturnsAsync(new IGraphAlgorithm.Route(1f, Array.Empty<string>()));
         return this;
     }
 

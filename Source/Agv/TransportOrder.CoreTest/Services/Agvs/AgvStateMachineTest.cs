@@ -72,7 +72,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
             saga.CurrentState.ShouldBe(fixture.SagaHarness.StateMachine.Discovered.Name);
             saga.AgvId.ShouldBe(agvId);
             saga.AgvStatus.ShouldNotBeNull();
-            saga.AgvGraph.ShouldBeNull();
         }
 
         [TestMethod]
@@ -142,7 +141,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
         [TestMethod]
         public async Task When_SetAgvBusyRequest_AcceptAgvSetBusy(string initialState)
         {
-            var fixture = new AgvStateMachineTestFixture();
+            var fixture = new AgvStateMachineTestFixture()
+                .WithAgvGraphExists();
             var agvSaga = fixture.CreateTestAgvSaga(initialState);
             fixture.Add(agvSaga);
             await fixture.TransitionStateOnRequest<SetAgvBusy, SetAgvBusySucceeded, SetAgvBusyRejected>(new SetAgvBusy(agvSaga.CorrelationId), agvSaga, nameof(AgvStateMachine.Busy));
@@ -262,7 +262,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
             // Request timeout already exceeded
             var utcStart = DateTime.UtcNow;
             // agvSaga.AgvDataRequestedLastTime is max
-            agvSaga.AgvGraphRequestedLastTime = utcStart - new TimeSpan(0, 0, fixture.Machine.AgvRequestTimeout + 1);
+            const int dailyRequestUpdateInterval = 24 * 3600;
+            agvSaga.AgvGraphRequestedLastTime = utcStart - new TimeSpan(0, 0, dailyRequestUpdateInterval + 1);
 
             fixture.Add(agvSaga);
 
@@ -297,8 +298,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
             var fixture = new AgvStateMachineTestFixture(inactivityTimeout: TimeSpan.FromSeconds(5));
             var token = new CancellationTokenSource();
 
-            var agvGraph = fixture.CreateTestAgvGraph();
-
             const string agvId = "AGV_01";
             var correlationId = agvId.ToGuid();
 
@@ -306,13 +305,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
                 correlationId,
                 agvId,
                 currentState: fixture.Machine.Discovered.Name,
-                agvStatus: new AgvStatus(correlationId, null, true, true, 10, true, true),
-                agvGraph: agvGraph
+                agvStatus: new AgvStatus(correlationId, null, true, true, 10, true, true)
             )
             {
                 // Repeat request exceeded but no daily request
-                AgvGraphRequestedLastTime = DateTime.UtcNow - new TimeSpan(0, 0, fixture.Machine.AgvRequestTimeout + 1),
-                AgvDataRequestedLastTime = DateTime.UtcNow - new TimeSpan(0, 0, fixture.Machine.AgvRequestTimeout + 1)
+                AgvGraphRequestedLastTime = DateTime.UtcNow - new TimeSpan(0, 0, AgvStateMachine.AgvRequestTimeout + 1),
+                AgvDataRequestedLastTime = DateTime.UtcNow - new TimeSpan(0, 0, AgvStateMachine.AgvRequestTimeout + 1)
             };
 
             fixture.Add(agvSaga);
@@ -350,6 +348,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
 
             var agvData = new AgvData(correlationId, "Karis", "BF 2", null, 80, 1.2, 0.6, 0.8, 0.7, 0.9, 2.5, 1000, Array.Empty<AgvData.Sensor>());
             fixture.MockAgvDataRegistry.Object.AddOrUpdate(agvData);
+            const int dailyRequestUpdateInterval = 24 * 3600;
 
             var agvSaga = new AgvSaga(
                 correlationId,
@@ -359,8 +358,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
             )
             {
                 // Repeat request exceeded but no daily request
-                AgvGraphRequestedLastTime = DateTime.UtcNow - new TimeSpan(0, 0, fixture.Machine.AgvRequestTimeout + 1),
-                AgvDataRequestedLastTime = DateTime.UtcNow - new TimeSpan(0, 0, fixture.Machine.AgvRequestTimeout + 1)
+                AgvGraphRequestedLastTime = DateTime.UtcNow - new TimeSpan(0, 0, dailyRequestUpdateInterval + 1),
+                AgvDataRequestedLastTime = DateTime.UtcNow - new TimeSpan(0, 0, AgvStateMachine.AgvRequestTimeout + 1)
             };
 
             fixture.Add(agvSaga);
@@ -424,8 +423,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
             // Arrange
             var fixture = new AgvStateMachineTestFixture();
 
-            var agvGraph = fixture.CreateTestAgvGraph();
-
             const string agvId = "AGV_01";
             var correlationId = agvId.ToGuid();
 
@@ -436,8 +433,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
                 correlationId,
                 agvId,
                 currentState: fixture.Machine.Discovered.Name,
-                agvStatus: new AgvStatus(correlationId, null, true, true, 10, true, true),
-                agvGraph: agvGraph
+                agvStatus: new AgvStatus(correlationId, null, true, true, 10, true, true)
             )
             {
                 AgvGraphRequestedLastTime = DateTime.UtcNow - new TimeSpan(24, 0, 1),
@@ -524,11 +520,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
             fixture.MockMapRegistry.Setup(mo => mo.Exists(agvGraph.RelatedMapId)).Returns(true);
 
             // Act
-            await fixture.TestHarness.Bus.Publish(new AgvGraphReceived(agvSaga.CorrelationId, agvSaga.AgvId, agvGraph));
+            await fixture.TestHarness.Bus.Publish(new AgvGraphChanged(agvSaga.CorrelationId, agvGraph));
 
             // Assert
-            (await fixture.TestHarness.Published.Any<AgvGraphReceived>()).ShouldBeTrue();
-            (await fixture.SagaHarness.Consumed.Any<AgvGraphReceived>()).ShouldBeTrue();
+            (await fixture.TestHarness.Published.Any<AgvGraphChanged>()).ShouldBeTrue();
             (await fixture.TestHarness.Published.Any<RequestAgvMap>()).ShouldBeFalse();
         }
 
@@ -686,7 +681,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
         [TestMethod]
         public async Task When_AgvSaga_State_Changed_Trigger_Observer()
         {
-            var fixture = new AgvStateMachineTestFixture();
+            var fixture = new AgvStateMachineTestFixture()
+                .WithAgvGraphExists();
 
             const string agvId = "AGV#1";
             var correlationId = agvId.ToGuid();
@@ -697,8 +693,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
                 correlationId,
                 agvId,
                 stateBefore.Name,
-                new AgvStatus(correlationId, null, true, true, 10, true, true, "R1"),
-                new AgvGraph(correlationId, Array.Empty<AgvGraph.Node>(), Array.Empty<AgvGraph.Edge>(), Guid.Empty, "EmptyMap")
+                new AgvStatus(correlationId, null, true, true, 10, true, true, "R1")
             );
 
             fixture.Add(agvSaga);

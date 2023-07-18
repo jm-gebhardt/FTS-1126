@@ -1,5 +1,6 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Helpers;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
@@ -36,7 +37,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
         /// <param name="station"></param>
         /// <param name="node"></param>
         /// <returns></returns>
-        private float GetDistance(Station station, Common.Messages.AgvManagement.AgvGraph.Node node)
+        private float GetDistance(Station station, GraphNode node)
         {
             var vectorStation = new System.Numerics.Vector3(station.Position.X, station.Position.Y, 0f);
             var vectorNode = new System.Numerics.Vector3(node.X, node.Y, node.Z);
@@ -75,13 +76,13 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
                 if (_usability == AgvGraph.GraphUsability.Valid)
                 {
                     bool allAdded = true;
-                    HashSet<Common.Messages.AgvManagement.AgvGraph.Node> additionalNodes = new(new Common.Utilities.NodeIdComparer());
-                    HashSet<Common.Messages.AgvManagement.AgvGraph.Edge> additionalEdges = new(new Common.Utilities.EdgeIdComparer());
+                    HashSet<GraphNode> additionalNodes = new(new Common.Utilities.GraphNodeComparer());
+                    HashSet<GraphEdge> additionalEdges = new(new Common.Utilities.GraphEdgeComparer());
 
                     foreach (var station in _stationList.Stations)
                     {
                         // Search node from graph closest to this station.
-                        Common.Messages.AgvManagement.AgvGraph.Node? nodeNearby = null;
+                        GraphNode? nodeNearby = null;
                         float nearbyDistance = 0f;
                         foreach (var node in agvGraph.Nodes)
                         {
@@ -94,27 +95,28 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
                             }
                         }
 
-                        // Add node and bidirectional edges.
-                        bool added = additionalNodes.Add(new(station.Identifier)
+                        if (nodeNearby == null)
                         {
-                            Enabled = true,
+                            throw new ArgumentException("No node nearby found");
+                        }
+
+                        // Add node and bidirectional edges.
+                        var graphNode = new GraphNode(station.Identifier)
+                        {
                             Type = ParseNodeType(station.Function),
                             X = station.Position.X,
                             Y = station.Position.Y,
                             Z = 0f,
                             Theta = station.Position.Theta
-                        });
+                        };
+                        bool added = additionalNodes.Add(graphNode);
                         if (added)
                         {
                             float metric = graphParser.ConsiderVelocity ? nearbyDistance / graphParser.AverageVelocity : nearbyDistance;
-                            additionalEdges.Add(new(station.Identifier, nodeNearby!.Id)
-                            {
-                                Metric = metric
-                            });
-                            additionalEdges.Add(new(nodeNearby.Id, station.Identifier)
-                            {
-                                Metric = metric
-                            });
+                            string graphNodeId = graphNode.Id;
+                            string nodeNearbyId = nodeNearby.Id;
+                            additionalEdges.Add(new(graphNodeId, nodeNearbyId, metric, GraphHelper.ToGuid(graphNodeId, metric, nodeNearbyId)));
+                            additionalEdges.Add(new(nodeNearbyId, graphNodeId, metric, GraphHelper.ToGuid(nodeNearbyId, metric, graphNodeId)));
                         }
                         allAdded &= added;
                     }

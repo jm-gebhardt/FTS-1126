@@ -22,34 +22,6 @@ public static class AgvInformationGenerator
     private static readonly string _charge2 = _sources[2];
     private const string MapName = "Map#1";
 
-    private static AgvGraph.Node[] Nodes => new[]
-    {
-        new AgvGraph.Node(_sources[3]) {Enabled = true, Type = AgvGraph.NodeType.Charge, X = -2f, Y = -2f, Z = 0f},
-        new AgvGraph.Node(_sources[0]) {Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 0f, Z = 0f},
-        new AgvGraph.Node(_sources[1]) {Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 4f, Y = 0f, Z = 0f},
-        new AgvGraph.Node(_destinations[0]) {Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 3f, Z = 0f},
-        new AgvGraph.Node(_destinations[1]) {Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 4f, Y = 3f, Z = 0f},
-        new AgvGraph.Node(_sources[2]) {Enabled = true, Type = AgvGraph.NodeType.Charge, X = 6f, Y = 9f, Z = 0f},
-        new AgvGraph.Node(_destinations[2]) {Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 13f, Y = 5f, Z = 0f}
-    };
-
-    private static AgvGraph.Edge[] Edges => new[]
-    {
-        new AgvGraph.Edge(_charge, _node01) {Metric = 2f},
-        new AgvGraph.Edge(_node01, _charge) {Metric = 2f},
-        new AgvGraph.Edge(_node01, _node02) {Metric = 4f},
-        new AgvGraph.Edge(_node01, _node03) {Metric = 3f},
-        new AgvGraph.Edge(_node01, _node04) {Metric = 5f},
-        new AgvGraph.Edge(_node02, _node01) {Metric = 4f},
-        new AgvGraph.Edge(_node02, _node04) {Metric = 6f},
-        new AgvGraph.Edge(_node03, _node01) {Metric = 3f},
-        new AgvGraph.Edge(_node03, _node04) {Metric = 4f},
-        new AgvGraph.Edge(_node04, _node01) {Metric = 5f},
-        new AgvGraph.Edge(_node04, _node02) {Metric = 6f},
-        new AgvGraph.Edge(_node04, _node03) {Metric = 4f},
-        new AgvGraph.Edge(_charge2, _node04) {Metric = 4f}
-    };
-
     public static AgvStatusReceived? GetAgvStatusReceived(AgvStatus? agvStatus)
     {
         return agvStatus != null ? new AgvStatusReceived(agvStatus.CorrelationId, "agvId", agvStatus) : null;
@@ -63,7 +35,7 @@ public static class AgvInformationGenerator
         var correlationId = agvCorrelationId != default ? agvCorrelationId : agvId.ToGuid();
         var actionGroupId = Guid.Empty;
         var agvStatus = new AgvStatus(correlationId, order, state == "Busy", true, 25 * i, _chargingState[i], false, _sources[i]);
-        var agvGraph = new AgvGraph(correlationId, Nodes, Edges, MapName.ToGuid(), MapName);
+        var agvGraph = new AgvGraph(correlationId, GetNodes(), GetEdges(), MapName.ToGuid(), MapName);
         var agvAction = new AgvAction($"Action#{agvId}".ToGuid(), ActionType.Pick, "Drop5", actionGroupId);
         var agvInformation = GetAgvInformation(agvStatus, agvGraph, agvAction);
         return agvInformation;
@@ -73,5 +45,39 @@ public static class AgvInformationGenerator
     {
         var agvInformation = new AgvInformation {AgvStatusReceived = GetAgvStatusReceived(agvStatus), AgvGraph = agvGraph, AgvAction = agvAction};
         return agvInformation;
+    }
+
+    private static GraphEdge[] GetEdges()
+    {
+        return new GraphEdge[]
+        {
+            new(_charge, _node01, 2f),
+            new(_node01, _charge, 2f),
+            new(_node01, _node02, 4f),
+            new(_node01, _node03, 3f),
+            new(_node01, _node04, 5f),
+            new(_node02, _node01, 4f),
+            new(_node02, _node04, 6f),
+            new(_node03, _node01, 3f),
+            new(_node03, _node04, 4f),
+            new(_node04, _node01, 5f),
+            new(_node04, _node02, 6f),
+            new(_node04, _node03, 4f),
+            new(_charge2, _node04, 4f)
+        };
+    }
+
+    private static GraphNode[] GetNodes()
+    {
+        return new[]
+        {
+            new GraphNode(_sources[3]) {Type = AgvGraph.NodeType.Charge, X = -2f, Y = -2f, Z = 0f},
+            new GraphNode(_sources[0]) {Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 0f, Z = 0f},
+            new GraphNode(_sources[1]) {Type = AgvGraph.NodeType.PickDrop, X = 4f, Y = 0f, Z = 0f},
+            new GraphNode(_destinations[0]) {Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 3f, Z = 0f},
+            new GraphNode(_destinations[1]) {Type = AgvGraph.NodeType.PickDrop, X = 4f, Y = 3f, Z = 0f},
+            new GraphNode(_sources[2]) {Type = AgvGraph.NodeType.Charge, X = 6f, Y = 9f, Z = 0f},
+            new GraphNode(_destinations[2]) {Type = AgvGraph.NodeType.PickDrop, X = 13f, Y = 5f, Z = 0f}
+        };
     }
 }

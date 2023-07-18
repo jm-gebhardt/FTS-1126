@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Models;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 
@@ -15,7 +14,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
     {
         private readonly ILogger<AgvPositionReceivedConsumer> _logger;
         private readonly IAgvPositionRegistry _agvPositionRegistry;
-        private readonly IGraphRegistry _graphRegistry;
         private readonly IMapper _mapper;
 
         /// <summary>
@@ -24,12 +22,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
         public AgvPositionReceivedConsumer(
             ILogger<AgvPositionReceivedConsumer> logger,
             IAgvPositionRegistry agvPositionRegistry,
-            IGraphRegistry graphRegistry,
             IMapper mapper)
         {
             _logger = logger;
             _agvPositionRegistry = agvPositionRegistry;
-            _graphRegistry = graphRegistry;
             _mapper = mapper;
         }
 
@@ -52,11 +48,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
             _agvPositionRegistry.UpdatePosition(agvPositionStatus);
 
             return Task.CompletedTask;
-        }
-
-        private void UpdateNodeOccupancy()
-        {
-            
         }
     }
 }

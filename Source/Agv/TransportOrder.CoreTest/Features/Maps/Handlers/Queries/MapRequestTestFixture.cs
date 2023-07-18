@@ -6,6 +6,7 @@ using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db.Models;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Profiles.Profiles;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Maps;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.States;
 using JetBrains.Annotations;
@@ -30,7 +31,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Features.Maps.Handlers.
         private readonly string[] _orders = {"ORDER001", "ORDER002", ""};
         private readonly string[] _states = {nameof(AgvStateMachine.Busy), nameof(AgvStateMachine.Discovered)};
 
-        private readonly AgvGraph.Node[] _nodes =
+        private readonly GraphNode[] _nodes =
         {
             new("node00") {X = 0f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint},
             new("node10") {X = 1f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint},
@@ -38,19 +39,19 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Features.Maps.Handlers.
             new("node11") {X = 1f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint}
         };
 
-        private readonly AgvGraph.Edge[] _edges =
-        {
-            new("node00", "node01"),
-            new("node01", "node11"),
-            new("node11", "node10"),
-            new("node10", "node00")
-        };
-
         private readonly Guid[] _correlationIds =
         {
             new("7FE9372B-4219-4D09-8885-966EE125A350"),
             new("041AD79E-1952-4AB7-BD3E-9EC972E27FBF"),
             new("465A85A6-6A02-4068-A7AA-E3B4B9821019")
+        };
+
+        private readonly GraphEdge[] _edges =
+        {
+            new("node00", "node01", 1f),
+            new("node01", "node11", 1f),
+            new("node11", "node10", 1f),
+            new("node10", "node00", 1f)
         };
 
         /// <summary>
@@ -71,10 +72,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Features.Maps.Handlers.
         /// <returns></returns>
         public MapRequestTestFixture<TRequestClient, TConsumer> UseDefaultServices()
         {
-            AddServices(sc => sc.AddTransient(_ => GetMapRegistry().Object));
-            AddServices(sc => sc.AddTransient(_ => GetAgvRegistry().Object));
-            AddServices(sc => sc.AddTransient(_ => GetMapper()));
-
+            AddServices(sc =>
+            {
+                sc.AddTransient(_ => GetMapRegistry().Object);
+                sc.AddTransient(_ => GetAgvRegistry().Object);
+                sc.AddTransient(_ => GetMapper());
+                sc.AddTransient(_ => GetAgvGraphRegistry().Object);
+            });
             return this;
         }
 
@@ -124,12 +128,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Features.Maps.Handlers.
                 string order = _orders[i];
                 string state = _states[i];
                 var correlationId = _correlationIds[i];
-
-                const string mapName = "Map#1";
-                var agvGraph = new AgvGraph(correlationId, _nodes, _edges, _correlationIds[2], mapName);
                 var agvStatus = new AgvStatus(correlationId, order, true, true, 10, true, true);
 
-                agvs.Add(new AgvSaga(correlationId, agvId, state, agvStatus, agvGraph));
+                agvs.Add(new AgvSaga(correlationId, agvId, state, agvStatus));
             }
 
             registryMock.SetupGet(x => x.Count).Returns(agvs.Count);
@@ -138,6 +139,23 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Features.Maps.Handlers.
             registryMock.Setup(x => x.GetAllAgvs()).Returns(new EnumerableQuery<IAgv>(agvs));
             registryMock.Setup(x => x.GetAgv(It.IsAny<Guid>())).Returns<Guid>(correlationId => agvs.SingleOrDefault(a => a.CorrelationId == correlationId));
 
+            return registryMock;
+        }
+
+        private Mock<IAgvGraphRegistry> GetAgvGraphRegistry()
+        {
+            var registryMock = new Mock<IAgvGraphRegistry>();
+            const string mapName = "Map#1";
+
+            var agvGraphs = new List<AgvGraph>();
+            for (int i = 0; i < _agvIds.Length; i++)
+            {
+                var correlationId = _correlationIds[i];
+
+                agvGraphs.Add(new AgvGraph(correlationId, _nodes, _edges, _correlationIds[2], mapName));
+            }
+
+            registryMock.Setup(x => x.GetAllAgvGraphsAsync()).ReturnsAsync(agvGraphs);
             return registryMock;
         }
 

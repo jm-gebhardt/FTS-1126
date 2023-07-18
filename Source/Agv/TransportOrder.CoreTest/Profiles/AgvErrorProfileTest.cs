@@ -27,6 +27,6 @@ public class AgvErrorProfileTest
             o => o.ErrorReceived.ShouldBe(agvError.ErrorReceived),
             o => o.ErrorDescription.ShouldBe(agvError.ErrorDescription),
             o => o.ErrorResolved.ShouldBe(agvError.ErrorResolved)
-            );
+        );
     }
 }

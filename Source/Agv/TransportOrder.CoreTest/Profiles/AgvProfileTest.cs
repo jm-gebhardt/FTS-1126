@@ -23,15 +23,9 @@ public class AgvProfileTest
     {
         const string agvId = "AGV1";
         var correlationId = agvId.ToGuid();
-        const string mapName = "Map#1";
 
         var agvSaga = new AgvSaga(correlationId, agvId, "Idle",
-            new AgvStatus(Guid.NewGuid(), "123", true, true, 10, false, false),
-            new AgvGraph(Guid.NewGuid(),
-                new AgvGraph.Node[] { new("id") },
-                new AgvGraph.Edge[] { new("from", "to") },
-                mapName.ToGuid(),
-                mapName)
+            new AgvStatus(Guid.NewGuid(), "123", true, true, 10, false, false)
         );
 
         var mapper = MappingHelper.GetMapper(new AgvProfile());
@@ -76,7 +70,7 @@ public class AgvProfileTest
             o => o.OrderId.ShouldBe(agvStatus.OrderId),
             o => o.Busy.ShouldBe(agvStatus.Busy),
             o => o.Automatic.ShouldBe(agvStatus.Automatic),
-            o => ((double)o.BatteryCharge!.Value).ShouldBe(agvStatus.BatteryCharge),
+            o => ((double) o.BatteryCharge!.Value).ShouldBe(agvStatus.BatteryCharge),
             o => o.Charging.ShouldBe(agvStatus.Charging),
             o => o.Disturbed.ShouldBe(agvStatus.Disturbed),
             o => o.LastNodeId.ShouldBe(agvStatus.LastNodeId));

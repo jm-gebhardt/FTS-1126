@@ -41,7 +41,7 @@ public class AgvPositionProfileTest
         agvPositionStatus.AgvId.ShouldBe(agvPositionChanged.AgvId);
         agvPositionStatus.CorrelationId.ShouldBe(agvPositionChanged.CorrelationId);
     }
-    
+
     /// <summary>
     /// Maps the <see cref="AgvPositionReceived"/> to <see cref="AgvPositionStatus"/> and should map correctly
     /// </summary>
@@ -69,7 +69,7 @@ public class AgvPositionProfileTest
         agvPositionStatus.AgvId.ShouldBe(agvPositionReceived.AgvId);
         agvPositionStatus.CorrelationId.ShouldBe(agvPositionReceived.CorrelationId);
     }
-    
+
     [TestMethod]
     public void Map_ShouldMapAllPropertiesCorrectly_WhereAgvPositionStatusDtoIsMappedToAgvPositionStatus()
     {

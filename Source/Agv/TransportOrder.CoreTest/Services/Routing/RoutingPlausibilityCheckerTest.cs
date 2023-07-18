@@ -18,7 +18,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Routing
 
         [DataTestMethod]
         [DynamicData(nameof(NoneIsActionType), DynamicDataSourceType.Method)]
-        public void IsPlausible_ReturnsTrue_WhenNoneIsOfActionType(AgvGraph.Node source, AgvGraph.Node destination)
+        public void IsPlausible_ReturnsTrue_WhenNoneIsOfActionType(GraphNode source, GraphNode destination)
         {
             bool isPlausible = _routingPlausibilityChecker.IsPlausible(source, destination);
             isPlausible.ShouldBeTrue();
@@ -26,7 +26,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Routing
 
         [DataTestMethod]
         [DynamicData(nameof(SourcesGoesToDestination), DynamicDataSourceType.Method)]
-        public void IsPlausible_ReturnsTrue_WhenSourceGoesToDestination(AgvGraph.Node source, AgvGraph.Node destination)
+        public void IsPlausible_ReturnsTrue_WhenSourceGoesToDestination(GraphNode source, GraphNode destination)
         {
             bool isPlausible = _routingPlausibilityChecker.IsPlausible(source, destination);
             isPlausible.ShouldBeTrue();
@@ -35,7 +35,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Routing
         [DataTestMethod]
         [DynamicData(nameof(SourcesGoesNotToDestination), DynamicDataSourceType.Method)]
         [DynamicData(nameof(NoSourcesGoesToDestination), DynamicDataSourceType.Method)]
-        public void IsPlausible_ReturnsFalse_WhenSourceGoesNotToDestination(AgvGraph.Node source, AgvGraph.Node destination)
+        public void IsPlausible_ReturnsFalse_WhenSourceGoesNotToDestination(GraphNode source, GraphNode destination)
         {
             bool isPlausible = _routingPlausibilityChecker.IsPlausible(source, destination);
             isPlausible.ShouldBeFalse();
@@ -43,7 +43,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Routing
 
         [DataTestMethod]
         [DynamicData(nameof(OnlyOneIsActionType), DynamicDataSourceType.Method)]
-        public void IsPlausible_ReturnsFalse_WhenSourceGoesToDestination(AgvGraph.Node source, AgvGraph.Node destination)
+        public void IsPlausible_ReturnsFalse_WhenSourceGoesToDestination(GraphNode source, GraphNode destination)
         {
             bool isPlausible = _routingPlausibilityChecker.IsPlausible(source, destination);
             isPlausible.ShouldBeFalse();
@@ -137,9 +137,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Routing
             yield return new object[] { CreateNode(AgvGraph.NodeType.WayPoint), CreateNode(AgvGraph.NodeType.Park) };
         }
 
-        private static AgvGraph.Node CreateNode(AgvGraph.NodeType nodeType)
+        private static GraphNode CreateNode(AgvGraph.NodeType nodeType)
         {
-            return new AgvGraph.Node(Guid.NewGuid().ToString())
+            return new GraphNode(Guid.NewGuid().ToString())
             {
                 Type = nodeType
             };

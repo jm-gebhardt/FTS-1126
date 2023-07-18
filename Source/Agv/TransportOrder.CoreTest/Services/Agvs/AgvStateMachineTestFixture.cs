@@ -23,7 +23,7 @@ public class AgvStateMachineTestFixture : BaseStateMachineTestFixture<AgvStateMa
 
     public Mock<IMapRegistry> MockMapRegistry { get; } = new();
 
-    private Mock<IGraphRegistry> MockGraphRegistry { get; } = new();
+    private Mock<IAgvGraphRegistry> MockAgvGraphRegistry { get; } = new();
 
     public Mock<IStateObserver<AgvSaga>> MockObserver { get; } = new();
 
@@ -50,8 +50,8 @@ public class AgvStateMachineTestFixture : BaseStateMachineTestFixture<AgvStateMa
     {
         ServiceCollection.AddSingleton<IAgvDataRegistry>(_ => MockAgvDataRegistry.Object);
         ServiceCollection.AddSingleton<IMapRegistry>(_ => MockMapRegistry.Object);
-        ServiceCollection.AddSingleton<IGraphRegistry>(_ => MockGraphRegistry.Object);
         ServiceCollection.AddSingleton<IStateObserver<AgvSaga>>(_ => MockObserver.Object);
+        ServiceCollection.AddSingleton<IAgvGraphRegistry>(_ => MockAgvGraphRegistry.Object);
 
         ServiceCollection.AddSingleton(_ => new ProductionOptions()
         {
@@ -65,6 +65,12 @@ public class AgvStateMachineTestFixture : BaseStateMachineTestFixture<AgvStateMa
     private void SetupSettingsRegistry()
     {
         MockSettingsProvider.Setup(m => m.GetSettings()).Returns(() => AgvSettings ?? new AgvSettings());
+    }
+
+    public AgvStateMachineTestFixture WithAgvGraphExists()
+    {
+        MockAgvGraphRegistry.Setup(r => r.ExistsAsync(It.IsAny<Guid>())).ReturnsAsync(() => true);
+        return this;
     }
 
     private void SetupAgvDataRegistry()
@@ -111,8 +117,7 @@ public class AgvStateMachineTestFixture : BaseStateMachineTestFixture<AgvStateMa
             correlationId.Value,
             agvId,
             currentState: state,
-            agvStatus: agvStatus,
-            agvGraph: agvGraph
+            agvStatus: agvStatus
         );
         return agvSaga;
     }
@@ -126,11 +131,11 @@ public class AgvStateMachineTestFixture : BaseStateMachineTestFixture<AgvStateMa
         var agvGraph = new AgvGraph(Guid.Empty,
             new[]
             {
-                new AgvGraph.Node("node01") {Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 0f, Z = 0f},
-                new AgvGraph.Node("node02") {Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 4f, Y = 0f, Z = 0f}
+                new GraphNode("node01") {Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 0f, Z = 0f},
+                new GraphNode("node02") {Type = AgvGraph.NodeType.PickDrop, X = 4f, Y = 0f, Z = 0f}
             }, new[]
             {
-                new AgvGraph.Edge("node01", "node02") {Metric = 4f}
+                new GraphEdge("node01", "node02", 4f)
             },
             mapName.ToGuid(),
             mapName);

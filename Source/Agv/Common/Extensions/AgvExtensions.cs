@@ -48,32 +48,4 @@ public static class AgvExtensions
         lastNodeId = statusLastNodeId!;
         return string.IsNullOrEmpty(statusLastNodeId);
     }
-    
-    /// <summary>
-    /// Returns the <see cref="IAgv.AgvGraph"/>, throws if null
-    /// </summary>
-    /// <param name="agv"></param>
-    /// <returns>The AgvGraph</returns>
-    /// <exception cref="AgvGraphNotDefinedException"></exception>
-    public static AgvGraph GetRequiredAgvGraph(this IAgv agv)
-    {
-        var agvGraph = agv.AgvGraph;
-        RequireAgvGraph(agv);
-        return agvGraph!;
-    }
-
-    /// <summary>
-    /// Throws if <see cref="IAgv.AgvGraph"/> is null
-    /// </summary>
-    /// <param name="agv"></param>
-    /// <exception cref="AgvGraphNotDefinedException"></exception>
-    [JetBrains.Annotations.UsedImplicitly]
-    public static void RequireAgvGraph(this IAgv agv)
-    {
-        var agvAgvGraph = agv.AgvGraph;
-        if (agvAgvGraph == null)
-        {
-            throw new AgvGraphNotDefinedException(agv);
-        }
-    }
 }

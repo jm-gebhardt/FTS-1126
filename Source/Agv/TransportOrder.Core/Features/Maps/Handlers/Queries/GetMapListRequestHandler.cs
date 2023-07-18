@@ -6,7 +6,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Common;
 using JetBrains.Annotations;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Requests.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Profiles.Resolvers;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Maps;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Handlers.Queries
@@ -17,19 +17,19 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Handlers.Quer
     [UsedImplicitly]
     public class GetMapListRequestHandler : IConsumer<GetMapListRequest>
     {
-        private readonly IAgvRegistry _agvRegistry;
         private readonly IMapRegistry _mapRegistry;
         private readonly IMapper _mapper;
+        private readonly IAgvGraphRegistry _agvGraphRegistry;
 
         /// <summary/>
-        /// <param name="agvRegistry"></param>
         /// <param name="mapRegistry"></param>
         /// <param name="mapper"></param>
-        public GetMapListRequestHandler(IAgvRegistry agvRegistry, IMapRegistry mapRegistry, IMapper mapper)
+        /// <param name="agvGraphRegistry"></param>
+        public GetMapListRequestHandler(IMapRegistry mapRegistry, IMapper mapper, IAgvGraphRegistry agvGraphRegistry)
         {
-            _agvRegistry = agvRegistry;
             _mapRegistry = mapRegistry;
             _mapper = mapper;
+            _agvGraphRegistry = agvGraphRegistry;
         }
 
         /// <summary>
@@ -39,14 +39,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Handlers.Quer
         /// <returns>Maps with an existing AgvGraph</returns>
         public async Task Consume(ConsumeContext<GetMapListRequest> context)
         {
-            ImmutableDictionary<Guid, Guid[]> agvMapRelation = _agvRegistry.GetAllAgvs()
-                .Where(a => a.AgvGraph != null)
-                .Select(a => new { a.AgvGraph!.RelatedMapId, a.CorrelationId })
-                .AsEnumerable()
+            ImmutableDictionary<Guid, Guid[]> agvMapRelation = (await _agvGraphRegistry.GetAllAgvGraphsAsync())
                 .GroupBy(a => a.RelatedMapId)
-                .ToImmutableDictionary(x => x.Key, x => x.Select(m => m.CorrelationId).ToArray()
-                );
-
+                .ToImmutableDictionary(x => x.Key, x => x.Select(m => m.CorrelationId).ToArray());
+             
             var maps = _mapper.Map<List<MapDto>>(_mapRegistry.GetAllMaps().AsEnumerable(), opt => opt.Items[RelatedMapAgvValueResolver.AgvMapRelationsName] = agvMapRelation);
 
             await context.RespondAsync(new GetMapListResult { Maps = maps });

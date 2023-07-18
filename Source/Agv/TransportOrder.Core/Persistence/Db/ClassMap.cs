@@ -8,14 +8,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db
     /// Entity Framework Mapping
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public abstract class ClassMap<T>: IClassMap<T>
-    where T : class
+    public abstract class ClassMap<T> : IClassMap<T>
+        where T : class
     {
         /// <inheritdoc />
         public Type ClassType => typeof(T);
 
         /// <inheritdoc />
-        public string TableName => ClassType.Name;
+        public virtual string TableName => ClassType.Name;
 
         /// <inheritdoc />
         public void Configure(ModelBuilder model)

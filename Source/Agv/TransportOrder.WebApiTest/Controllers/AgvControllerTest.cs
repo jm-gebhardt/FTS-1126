@@ -6,6 +6,7 @@ using Shouldly;
 using Gebhardt.StoreWare.Agv.Common.Exceptions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos.Graphs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Commands;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Requests.Queries;
@@ -93,12 +94,16 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
         [DataRow(1)]
         public async Task GetAgvGraph_Successfully(int index)
         {
-            AgvControllerTestFixture<GetAgvGraphRequest, GetAgvGraphRequestHandler> fixture = new AgvControllerTestFixture<GetAgvGraphRequest, GetAgvGraphRequestHandler>()
+            var fixture = new AgvControllerTestFixture<GetAgvGraphRequest, GetAgvGraphRequestHandler>();
+            var correlationId = fixture.AgvIds[index].ToGuid();
+            var agvGraph = AgvGraphGenerator.CreateDefaultGraph(correlationId);
+            
+            fixture
+                .WithAgvGraph(correlationId, agvGraph)
                 .UseDefaultServices()
                 .Build();
+            
             var controller = fixture.Controller;
-            var correlationId = fixture.AgvIds[index].ToGuid();
-
             ActionResult<GraphDto> response = await controller.GetAgvGraph(correlationId);
             var result = response.Result as OkObjectResult;
             result.ShouldNotBeNull();
@@ -107,9 +112,26 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             graph.ShouldNotBeNull();
 
             graph.CorrelationId.ShouldBe(correlationId);
-            graph.Nodes[index].Id.ShouldBe(fixture.Nodes[index].Id);
-            graph.Edges[index].From.Id.ShouldBe(fixture.Edges[index].From);
-            graph.Edges[index].To.Id.ShouldBe(fixture.Edges[index].To);
+            graph.Nodes.Count.ShouldBe(agvGraph.Nodes.Count);
+            graph.Edges.Count.ShouldBe(agvGraph.Edges.Count);
+
+            for (int i = 0; i < graph.Nodes.Count; i++)
+            {
+                graph.Nodes[i].ShouldSatisfyAllConditions(
+                    n => n.Id.ShouldBe(agvGraph.Nodes.ElementAt(i).Id),
+                    n => n.X.ShouldBe(agvGraph.Nodes.ElementAt(i).X),
+                    n => n.Y.ShouldBe(agvGraph.Nodes.ElementAt(i).Y),
+                    n => n.Z.ShouldBe(agvGraph.Nodes.ElementAt(i).Z),
+                    n => n.Theta.ShouldBe(agvGraph.Nodes.ElementAt(i).Theta),
+                    x => x.Type.ToString().ShouldBe(agvGraph.Nodes.ElementAt(i).Type.ToString()));
+            }
+
+            for (int i = 0; i < graph.Edges.Count; i++)
+            {
+                graph.Edges[i].ShouldSatisfyAllConditions(
+                    e => e.From.Id.ShouldBe(agvGraph.Edges.ElementAt(i).FromNodeId),
+                    e => e.To.Id.ShouldBe(agvGraph.Edges.ElementAt(i).ToNodeId));
+            }
         }
 
         [TestMethod]

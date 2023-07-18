@@ -1,4 +1,4 @@
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db.Models;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs
 {
@@ -74,6 +74,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs
         /// Get free and unlocked nodes
         /// </summary>
         /// <returns></returns>
-        public IEnumerable<Node> FilterFreeUnlockedNodes(IEnumerable<Node> nodes);
+        public IEnumerable<GraphNode> FilterFreeUnlockedNodes(IEnumerable<GraphNode> nodes);
     }
 }

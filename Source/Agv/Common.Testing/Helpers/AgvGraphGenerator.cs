@@ -5,10 +5,9 @@ namespace Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
-
 public static class AgvGraphGenerator
 {
-    ///////// Defaut graph for unit tests /////////
+    ///////// Default graph for unit tests /////////
     // 0 ---- 1 ---- 2 ---- 3 ---- 4 ---- 5 ---- //
     // |                                         //
     // 1                   Src2          Src3    //
@@ -43,99 +42,112 @@ public static class AgvGraphGenerator
     /// <summary>
     /// Returns default nodes
     /// </summary>
-    public static AgvGraph.Node[] Nodes { get; } = new[]
+    public static GraphNode[] Nodes { get; } =
     {
-        new AgvGraph.Node(Src1) { Enabled = true, Type = AgvGraph.NodeType.Pick,     X = 2f, Y = 2f, Z = 0f }, // 0
-        new AgvGraph.Node(Src2) { Enabled = true, Type = AgvGraph.NodeType.Pick,     X = 3f, Y = 1f, Z = 0f }, // 1
-        new AgvGraph.Node(Src3) { Enabled = true, Type = AgvGraph.NodeType.Pick,     X = 5f, Y = 1f, Z = 0f }, // 2 
-        new AgvGraph.Node(Dst1) { Enabled = true, Type = AgvGraph.NodeType.Drop,     X = 2f, Y = 5f, Z = 0f }, // 3 
-        new AgvGraph.Node(Dst2) { Enabled = true, Type = AgvGraph.NodeType.Drop,     X = 3f, Y = 6f, Z = 0f }, // 4
-        new AgvGraph.Node(Dst3) { Enabled = true, Type = AgvGraph.NodeType.Drop,     X = 5f, Y = 6f, Z = 0f }, // 5 
-        new AgvGraph.Node(Prk1) { Enabled = true, Type = AgvGraph.NodeType.Park,     X = 1f, Y = 3f, Z = 0f }, // 6 
-        new AgvGraph.Node(Prk2) { Enabled = true, Type = AgvGraph.NodeType.Park,     X = 5f, Y = 3f, Z = 0f }, // 7 
-        new AgvGraph.Node(Crg1) { Enabled = true, Type = AgvGraph.NodeType.Charge,   X = 1f, Y = 4f, Z = 0f }, // 8 
-        new AgvGraph.Node(Crg2) { Enabled = true, Type = AgvGraph.NodeType.Charge,   X = 5f, Y = 4f, Z = 0f }, // 9 
-        new AgvGraph.Node(Way1) { Enabled = true, Type = AgvGraph.NodeType.WayPoint, X = 2f, Y = 3f, Z = 0f }, // 10
-        new AgvGraph.Node(Way2) { Enabled = true, Type = AgvGraph.NodeType.WayPoint, X = 3f, Y = 3f, Z = 0f }, // 11
-        new AgvGraph.Node(Way3) { Enabled = true, Type = AgvGraph.NodeType.WayPoint, X = 2f, Y = 4f, Z = 0f }, // 12
-        new AgvGraph.Node(Way4) { Enabled = true, Type = AgvGraph.NodeType.WayPoint, X = 3f, Y = 4f, Z = 0f }  // 13
+        new(Src1) { Type = AgvGraph.NodeType.Pick, X = 2f, Y = 2f, Z = 0f }, // 0
+        new(Src2) { Type = AgvGraph.NodeType.Pick, X = 3f, Y = 1f, Z = 0f }, // 1
+        new(Src3) { Type = AgvGraph.NodeType.Pick, X = 5f, Y = 1f, Z = 0f }, // 2 
+        new(Dst1) { Type = AgvGraph.NodeType.Drop, X = 2f, Y = 5f, Z = 0f }, // 3 
+        new(Dst2) { Type = AgvGraph.NodeType.Drop, X = 3f, Y = 6f, Z = 0f }, // 4
+        new(Dst3) { Type = AgvGraph.NodeType.Drop, X = 5f, Y = 6f, Z = 0f }, // 5 
+        new(Prk1) { Type = AgvGraph.NodeType.Park, X = 1f, Y = 3f, Z = 0f }, // 6 
+        new(Prk2) { Type = AgvGraph.NodeType.Park, X = 5f, Y = 3f, Z = 0f }, // 7 
+        new(Crg1) { Type = AgvGraph.NodeType.Charge, X = 1f, Y = 4f, Z = 0f }, // 8 
+        new(Crg2) { Type = AgvGraph.NodeType.Charge, X = 5f, Y = 4f, Z = 0f }, // 9 
+        new(Way1) { Type = AgvGraph.NodeType.WayPoint, X = 2f, Y = 3f, Z = 0f }, // 10
+        new(Way2) { Type = AgvGraph.NodeType.WayPoint, X = 3f, Y = 3f, Z = 0f }, // 11
+        new(Way3) { Type = AgvGraph.NodeType.WayPoint, X = 2f, Y = 4f, Z = 0f }, // 12
+        new(Way4) { Type = AgvGraph.NodeType.WayPoint, X = 3f, Y = 4f, Z = 0f } // 13
     };
 
-    public static AgvGraph.Node SourceClose            { get; } = Nodes[0];
-    public static AgvGraph.Node SourceFar              { get; } = Nodes[1];
-    public static AgvGraph.Node SourceUnreachable      { get; } = Nodes[2];
-    public static AgvGraph.Node DestinationClose       { get; } = Nodes[3];
-    public static AgvGraph.Node DestinationFar         { get; } = Nodes[4];
-    public static AgvGraph.Node DestinationUnreachable { get; } = Nodes[5];
-    public static AgvGraph.Node ParkClose              { get; } = Nodes[6];
-    public static AgvGraph.Node ParkFar                { get; } = Nodes[7];
-    public static AgvGraph.Node ChargingClose          { get; } = Nodes[8];
-    public static AgvGraph.Node ChargingFar            { get; } = Nodes[9];
-    public static AgvGraph.Node Waypoint1              { get; } = Nodes[10];
-    public static AgvGraph.Node Waypoint2              { get; } = Nodes[11];
-    public static AgvGraph.Node Waypoint3              { get; } = Nodes[12];
-    public static AgvGraph.Node Waypoint4              { get; } = Nodes[13];
+    public static GraphNode SourceClose { get; } = Nodes[0];
+
+    public static GraphNode SourceFar { get; } = Nodes[1];
+
+    public static GraphNode SourceUnreachable { get; } = Nodes[2];
+
+    public static GraphNode DestinationClose { get; } = Nodes[3];
+
+    public static GraphNode DestinationFar { get; } = Nodes[4];
+
+    public static GraphNode DestinationUnreachable { get; } = Nodes[5];
+
+    public static GraphNode ParkClose { get; } = Nodes[6];
+
+    public static GraphNode ParkFar { get; } = Nodes[7];
+
+    public static GraphNode ChargingClose { get; } = Nodes[8];
+
+    public static GraphNode ChargingFar { get; } = Nodes[9];
+
+    public static GraphNode Waypoint1 { get; } = Nodes[10];
+
+    public static GraphNode Waypoint2 { get; } = Nodes[11];
+
+    public static GraphNode Waypoint3 { get; } = Nodes[12];
+
+    public static GraphNode Waypoint4 { get; } = Nodes[13];
 
     /// <summary>
     /// Returns default edges
     /// </summary>
-    public static AgvGraph.Edge[] Edges { get; }  = new[]
+    public static GraphEdge[] Edges { get; } =
     {
         // Src1 <-> Way1
-        new AgvGraph.Edge(Src1, Way1) { Metric = 1f },
-        new AgvGraph.Edge(Way1, Src1) { Metric = 1f },
+        new(Src1, Way1, 1f),
+        new(Way1, Src1, 1f),
 
         // Src2 <-> Way2
-        new AgvGraph.Edge(Src2, Way2) { Metric = 3f },
-        new AgvGraph.Edge(Way2, Src2) { Metric = 3f },
+        new(Src2, Way2, 3f),
+        new(Way2, Src2, 3f),
 
         // Dst1 <-> Way3
-        new AgvGraph.Edge(Dst1, Way3) { Metric = 1f },
-        new AgvGraph.Edge(Way3, Dst1) { Metric = 1f },
+        new(Dst1, Way3, 1f),
+        new(Way3, Dst1, 1f),
 
         // Dst2 <-> Way4
-        new AgvGraph.Edge(Dst2, Way4) { Metric = 3f },
-        new AgvGraph.Edge(Way4, Dst2) { Metric = 3f },
+        new(Dst2, Way4, 3f),
+        new(Way4, Dst2, 3f),
 
         // Prk1 <-> Way1
-        new AgvGraph.Edge(Prk1, Way1) { Metric = 1f },
-        new AgvGraph.Edge(Way1, Prk1) { Metric = 1f },
+        new(Prk1, Way1, 1f),
+        new(Way1, Prk1, 1f),
 
         // Prk2 <-> Way2
-        new AgvGraph.Edge(Prk2, Way2) { Metric = 3f },
-        new AgvGraph.Edge(Way2, Prk2) { Metric = 3f },
+        new(Prk2, Way2, 3f),
+        new(Way2, Prk2, 3f),
 
         // Crg1 <-> Way3
-        new AgvGraph.Edge(Crg1, Way3) { Metric = 1f },
-        new AgvGraph.Edge(Way3, Crg1) { Metric = 1f },
+        new(Crg1, Way3, 1f),
+        new(Way3, Crg1, 1f),
 
         // Crg2 <-> Way4
-        new AgvGraph.Edge(Crg2, Way4) { Metric = 3f },
-        new AgvGraph.Edge(Way4, Crg2) { Metric = 3f },
+        new(Crg2, Way4, 3f),
+        new(Way4, Crg2, 3f),
 
         // Way1 <-> Way2
-        new AgvGraph.Edge(Way1, Way2) { Metric = 1f },
-        new AgvGraph.Edge(Way2, Way1) { Metric = 1f },
+        new(Way1, Way2, 1f),
+        new(Way2, Way1, 1f),
 
         // Way2 <-> Way4
-        new AgvGraph.Edge(Way2, Way4) { Metric = 1f },
-        new AgvGraph.Edge(Way4, Way2) { Metric = 1f },
+        new(Way2, Way4, 1f),
+        new(Way4, Way2, 1f),
 
         // Way4 <-> Way3
-        new AgvGraph.Edge(Way4, Way3) { Metric = 1f },
-        new AgvGraph.Edge(Way3, Way4) { Metric = 1f },
+        new(Way4, Way3, 1f),
+        new(Way3, Way4, 1f),
 
         // Way3 <-> Way1
-        new AgvGraph.Edge(Way3, Way1) { Metric = 1f },
-        new AgvGraph.Edge(Way1, Way3) { Metric = 1f }
+        new(Way3, Way1, 1f),
+        new(Way1, Way3, 1f)
     };
 
     /// <summary>
     /// Generates a default agv graph
     /// </summary>
-    public static AgvGraph CreateDefaultGraph()
+    public static AgvGraph CreateDefaultGraph(Guid? correlationId = null)
     {
         const string mapName = "Map#1";
-        return new AgvGraph(Guid.Empty, Nodes, Edges, mapName.ToGuid(), "Map#1");
+        return new AgvGraph(correlationId ?? Guid.NewGuid(), Nodes, Edges, mapName.ToGuid(), "Map#1");
     }
 }

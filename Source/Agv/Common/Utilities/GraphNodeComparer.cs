@@ -6,16 +6,16 @@ namespace Gebhardt.StoreWare.Agv.Common.Utilities
     /// Comparer to check for equal node ID.
     /// </summary>
     [JetBrains.Annotations.PublicAPI]
-    public class NodeIdComparer : IEqualityComparer<AgvGraph.Node>
+    public class GraphNodeComparer : IEqualityComparer<GraphNode>
     {
         /// <inheritdoc />
-        public bool Equals(AgvGraph.Node? n1, AgvGraph.Node? n2)
+        public bool Equals(GraphNode? n1, GraphNode? n2)
         {
             return n1 != null && n2 != null && n1.Id == n2.Id;
         }
 
         /// <inheritdoc />
-        public int GetHashCode(AgvGraph.Node n)
+        public int GetHashCode(GraphNode n)
         {
             return n.Id.GetHashCode();
         }

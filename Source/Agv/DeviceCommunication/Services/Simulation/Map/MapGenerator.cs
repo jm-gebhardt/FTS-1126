@@ -61,7 +61,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Map
         /// </summary>
         private readonly AgvGraph _graph;
 
-
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -78,21 +77,19 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Map
         /// <exception cref="InvalidOperationException">Graph nodes is empty.</exception>
         public AgvMap Generate()
         {
-            if (_graph.Nodes.Length == 0)
+            if (_graph.Nodes.Count == 0)
             {
                 throw new InvalidOperationException("Failed to create simulation map due to empty node list.");
             }
 
             byte[] map;
 
-            var node = _graph.Nodes[0];
-            var min = new SKPoint(node.X, node.Y);
-            var max = new SKPoint(node.X, node.Y);
+            var min = new SKPoint(float.MaxValue, float.MaxValue);
+            var max = new SKPoint(float.MinValue, float.MinValue);
 
             // Iterate once for better performance.
-            for (int i = 1; i < _graph.Nodes.Length; ++i)
+            foreach (var node in _graph.Nodes)
             {
-                node = _graph.Nodes[i];
                 if (node.X < min.X)
                 {
                     min.X = node.X;
@@ -115,8 +112,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Map
             float xOffset = -min.X + WallDistance;
             float yOffset = -min.Y + WallDistance;
 
-            int imageHeightPx = (int)Math.Ceiling((max.Y - min.Y + 2 * WallDistance) / resolution);
-            float wallThicknessPx = WallThickness / resolution;  // Wall thickness: 24 cm
+            int imageHeightPx = (int) Math.Ceiling((max.Y - min.Y + 2 * WallDistance) / resolution);
+            float wallThicknessPx = WallThickness / resolution; // Wall thickness: 24 cm
 
             var imageInfo = new SKImageInfo(ImageWidth, imageHeightPx);
             using (var surface = SKSurface.Create(imageInfo))
@@ -136,7 +133,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Map
                 using (var paint = new SKPaint())
                 {
                     paint.Color = SKColors.LightGray;
-                    paint.TextSize = 36;    // Just an initial value for getting a base to calculate the final font size value.
+                    paint.TextSize = 36; // Just an initial value for getting a base to calculate the final font size value.
                     paint.IsAntialias = true;
                     paint.TextAlign = SKTextAlign.Right;
                     paint.MeasureText(Signature, ref bounds);
@@ -145,7 +142,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Map
                         float ratio = wallThicknessPx * 1.5f / bounds.Height;
                         paint.TextSize = ratio * paint.TextSize;
                     }
-                    canvas.DrawText(Signature, ImageWidth - 2 * wallThicknessPx, imageHeightPx - (int)(2.0 * wallThicknessPx + 0.5), paint);
+                    canvas.DrawText(Signature, ImageWidth - 2 * wallThicknessPx, imageHeightPx - (int) (2.0 * wallThicknessPx + 0.5), paint);
                 }
 
                 using (var image = surface.Snapshot())

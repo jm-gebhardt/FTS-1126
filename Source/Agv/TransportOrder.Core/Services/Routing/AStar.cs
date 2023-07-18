@@ -26,7 +26,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Routing
             /// <summary>
             /// Node representation.
             /// </summary>
-            public AgvGraph.Node Node { get; }
+            public GraphNode Node { get; }
 
             /// <summary>
             /// Reset members used for path calculation.
@@ -62,7 +62,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Routing
             /// Clone <see cref="Node"/>.
             /// </summary>
             /// <param name="node"></param>
-            public ANode(AgvGraph.Node node)
+            public ANode(GraphNode node)
             {
                 Node = node;
             }
@@ -137,15 +137,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Routing
         /// <param name="destination"></param>
         private void ExpandNode(ANode current, ANode destination)
         {
-            foreach (var edge in Edges.Where(x => x.From == current.Node.Id && !x.IsBlocked))
+            foreach (var edge in Edges.Where(x => x.FromNodeId == current.Node.Id))
             {
-                if (_closedList.Any(x => x == edge.To))
+                if (_closedList.Any(x => x == edge.ToNodeId))
                 {
                     continue;
                 }
 
                 float g = current.G + edge.Metric;
-                var successor = _nodes[edge.To];
+                var successor = _nodes[edge.ToNodeId];
 
                 if (_openList.ContainsKey(successor.Node.Id) && g >= successor.G)
                 {
@@ -159,7 +159,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Routing
                     // Estimate distance to final destination.
                     successor.H = EuclideanDistance(successor, destination);
                 }
-                
+
                 _openList.TryAdd(successor.Node.Id, successor);
             }
         }
@@ -196,7 +196,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Routing
 
             if (end.Predecessor != "")
             {
-                var route = new List<string> { end.Node.Id };
+                var route = new List<string> {end.Node.Id};
                 current = end;
 
                 // Write path found.

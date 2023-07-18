@@ -14,6 +14,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Routing
         /// <param name="start">The source node of the route</param>
         /// <param name="end">The destination node of the route</param>
         /// <returns>True if it is plausible</returns>
-        bool IsPlausible(AgvGraph.Node start, AgvGraph.Node end);
+        bool IsPlausible(GraphNode start, GraphNode end);
     }
 }

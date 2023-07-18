@@ -45,7 +45,7 @@ public class AgvRegistryTest
 
         VerifyAgvInformation(actualAgvInformation, agvInformation);
         var agvStatus = new AgvStatus(agvCorrelationId, null, false, true, 99, false, false, "CRG5");
-        var agvGraph = new AgvGraph(agvCorrelationId, Array.Empty<AgvGraph.Node>(), Array.Empty<AgvGraph.Edge>(), MapName.ToGuid(), MapName);
+        var agvGraph = new AgvGraph(agvCorrelationId, Array.Empty<GraphNode>(), Array.Empty<GraphEdge>(), MapName.ToGuid(), MapName);
         var agvAction = new AgvAction("Action#123".ToGuid(), ActionType.Move, "Pick88", Guid.Empty);
         agvInformation = AgvInformationGenerator.GetAgvInformation(agvStatus, agvGraph, agvAction);
 
@@ -113,7 +113,7 @@ public class AgvRegistryTest
         var actualAgvInformation = fixture.AgvRegistry.GetAgvInformation(agvCorrelationId);
 
         VerifyAgvInformation(actualAgvInformation, agvInformation);
-        var testAgvGraph = new AgvGraph(agvCorrelationId, Array.Empty<AgvGraph.Node>(), Array.Empty<AgvGraph.Edge>(), MapName.ToGuid(), MapName);
+        var testAgvGraph = new AgvGraph(agvCorrelationId, Array.Empty<GraphNode>(), Array.Empty<GraphEdge>(), MapName.ToGuid(), MapName);
 
         fixture.AgvRegistry.AddOrUpdateAgvGraph(agvCorrelationId, testAgvGraph);
         actualAgvInformation = fixture.AgvRegistry.GetAgvInformation(agvCorrelationId);
@@ -189,26 +189,26 @@ public class AgvRegistryTest
                 p => p?.Usability.ShouldBe(expectedAgvInformation.AgvGraph.Usability)
             );
 
-            for (int i = 0; i < actualAgvInformation.AgvGraph!.Edges.Length; i++)
+            for (int i = 0; i < actualAgvInformation.AgvGraph!.Edges.Count; i++)
             {
-                actualAgvInformation.AgvGraph.Edges[i].ShouldSatisfyAllConditions(
-                    p => p.From.ShouldBe(expectedAgvInformation.AgvGraph.Edges[i].From),
-                    p => p.IsBlocked.ShouldBe(expectedAgvInformation.AgvGraph.Edges[i].IsBlocked),
-                    p => p.Metric.ShouldBe(expectedAgvInformation.AgvGraph.Edges[i].Metric),
-                    p => p.To.ShouldBe(expectedAgvInformation.AgvGraph.Edges[i].To));
+                var actualEdge = actualAgvInformation.AgvGraph.Edges.ElementAt(i);
+                var expectedEdge = expectedAgvInformation.AgvGraph.Edges.ElementAt(i);
+                actualEdge.ShouldSatisfyAllConditions(
+                    p => p.FromNodeId.ShouldBe(expectedEdge.FromNodeId),
+                    p => p.Metric.ShouldBe(expectedEdge.Metric),
+                    p => p.ToNodeId.ShouldBe(expectedEdge.ToNodeId));
             }
 
-            for (int i = 0; i < actualAgvInformation.AgvGraph.Nodes.Length; i++)
+            for (int i = 0; i < actualAgvInformation.AgvGraph.Nodes.Count; i++)
             {
-                actualAgvInformation.AgvGraph.Nodes[i].ShouldSatisfyAllConditions(
-                    p => p.Enabled.ShouldBe(expectedAgvInformation.AgvGraph.Nodes[i].Enabled),
-                    p => p.Id.ShouldBe(expectedAgvInformation.AgvGraph.Nodes[i].Id),
-                    p => p.State.ShouldBe(expectedAgvInformation.AgvGraph.Nodes[i].State),
-                    p => p.Theta.ShouldBe(expectedAgvInformation.AgvGraph.Nodes[i].Theta),
-                    p => p.Type.ShouldBe(expectedAgvInformation.AgvGraph.Nodes[i].Type),
-                    p => p.X.ShouldBe(expectedAgvInformation.AgvGraph.Nodes[i].X),
-                    p => p.Y.ShouldBe(expectedAgvInformation.AgvGraph.Nodes[i].Y),
-                    p => p.Z.ShouldBe(expectedAgvInformation.AgvGraph.Nodes[i].Z));
+                var expectedNode = expectedAgvInformation.AgvGraph.Nodes.ElementAt(i);
+                actualAgvInformation.AgvGraph.Nodes.ElementAt(i).ShouldSatisfyAllConditions(
+                    p => p.Id.ShouldBe(expectedNode.Id),
+                    p => p.Theta.ShouldBe(expectedNode.Theta),
+                    p => p.Type.ShouldBe(expectedNode.Type),
+                    p => p.X.ShouldBe(expectedNode.X),
+                    p => p.Y.ShouldBe(expectedNode.Y),
+                    p => p.Z.ShouldBe(expectedNode.Z));
             }
         }
     }

@@ -24,7 +24,7 @@ public class EfActionGroupRegistry : IActionGroupRegistry
     }
 
     /// <inheritdoc />
-    public async Task InsertAsync(ActionGroup actionGroup)
+    public async Task AddAsync(ActionGroup actionGroup)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         await context.AddAsync(actionGroup);

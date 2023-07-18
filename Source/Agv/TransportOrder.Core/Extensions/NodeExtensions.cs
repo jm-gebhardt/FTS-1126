@@ -1,10 +1,10 @@
 ﻿using System.Numerics;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db.Models;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Extensions;
 
 /// <summary>
-/// Extension methods for <see cref="Node"/>
+/// Extension methods for <see cref="GraphNode"/>
 /// </summary>
 public static class NodeExtensions
 {
@@ -14,7 +14,7 @@ public static class NodeExtensions
     /// <param name="nodeA"></param>
     /// <param name="nodeB"></param>
     /// <returns></returns>
-    public static double DistanceTo(this Node nodeA, Node nodeB)
+    public static double DistanceTo(this GraphNode nodeA, GraphNode nodeB)
     {
         var nodeAVector = new Vector2(nodeA.X, nodeA.Y);
         var nodeBVector = new Vector2(nodeB.X, nodeB.Y);

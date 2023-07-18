@@ -71,7 +71,7 @@ public class ActionGroupRegistryTest
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         var fixture = new ActionGroupRegistryTestFixture();
 
-        await fixture.ActionGroupRegistry.InsertAsync(actionGroup);
+        await fixture.ActionGroupRegistry.AddAsync(actionGroup);
         var actionGroupInRegistry = await fixture.ActionGroupRegistry.GetActionGroupAsync(actionGroup.CorrelationId);
 
         actionGroupInRegistry.ShouldNotBeNull();

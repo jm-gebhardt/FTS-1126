@@ -26,36 +26,36 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Routing
         {
             const string mapName = "Map#1";
             _graph = new AgvGraph(Guid.Empty,
-                new[]
+                new GraphNode[]
                 {
-                    new AgvGraph.Node("1") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 5f, Z = 0f },
-                    new AgvGraph.Node("2") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 1f, Y = 5f, Z = 0f },
-                    new AgvGraph.Node("3") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 1f, Y = 2f, Z = 0f },
-                    new AgvGraph.Node("4") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 3f, Y = 3f, Z = 0f },
-                    new AgvGraph.Node("5") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 3f, Y = 6f, Z = 0f },
-                    new AgvGraph.Node("6") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 3f, Y = 2f, Z = 0f },
-                    new AgvGraph.Node("7") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 6f, Y = 0f, Z = 0f },
-                    new AgvGraph.Node("8") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 7f, Y = 1f, Z = 0f },
-                    new AgvGraph.Node("9") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 8f, Y = 2f, Z = 0f },
-                    new AgvGraph.Node("10") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 8f, Y = 5f, Z = 0f }
+                    new("1") { Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 5f, Z = 0f },
+                    new("2") { Type = AgvGraph.NodeType.PickDrop, X = 1f, Y = 5f, Z = 0f },
+                    new("3") { Type = AgvGraph.NodeType.PickDrop, X = 1f, Y = 2f, Z = 0f },
+                    new("4") { Type = AgvGraph.NodeType.PickDrop, X = 3f, Y = 3f, Z = 0f },
+                    new("5") { Type = AgvGraph.NodeType.PickDrop, X = 3f, Y = 6f, Z = 0f },
+                    new("6") { Type = AgvGraph.NodeType.PickDrop, X = 3f, Y = 2f, Z = 0f },
+                    new("7") { Type = AgvGraph.NodeType.PickDrop, X = 6f, Y = 0f, Z = 0f },
+                    new("8") { Type = AgvGraph.NodeType.PickDrop, X = 7f, Y = 1f, Z = 0f },
+                    new("9") { Type = AgvGraph.NodeType.PickDrop, X = 8f, Y = 2f, Z = 0f },
+                    new("10") { Type = AgvGraph.NodeType.PickDrop, X = 8f, Y = 5f, Z = 0f }
                 },
-                new[]
+                new GraphEdge[]
                 {
-                    new AgvGraph.Edge("1", "2") { Metric = 1f },
-                    new AgvGraph.Edge("1", "4") { Metric = 4f },
-                    new AgvGraph.Edge("4", "1") { Metric = 4f },
-                    new AgvGraph.Edge("2", "5") { Metric = 3f },
-                    new AgvGraph.Edge("3", "5") { Metric = 5f },
-                    new AgvGraph.Edge("3", "4") { Metric = 3f },
-                    new AgvGraph.Edge("4", "3") { Metric = 3f },
-                    new AgvGraph.Edge("3", "6") { Metric = 2f },
-                    new AgvGraph.Edge("6", "3") { Metric = 2f },
-                    new AgvGraph.Edge("5", "8") { Metric = 7f },
-                    new AgvGraph.Edge("8", "5") { Metric = 7f },
-                    new AgvGraph.Edge("8", "7") { Metric = 1f },
-                    new AgvGraph.Edge("7", "8") { Metric = 1f },
-                    new AgvGraph.Edge("9", "8") { Metric = 1f },
-                    new AgvGraph.Edge("7", "10") { Metric = 6f }
+                    new("1", "2", 1f),
+                    new("1", "4", 4f),
+                    new("4", "1", 4f),
+                    new("2", "5", 3f),
+                    new("3", "5", 5f),
+                    new("3", "4", 3f),
+                    new("4", "3", 3f),
+                    new("3", "6", 2f),
+                    new("6", "3", 2f),
+                    new("5", "8", 7f),
+                    new("8", "5", 7f),
+                    new("8", "7", 1f),
+                    new("7", "8", 1f),
+                    new("9", "8", 1f),
+                    new("7", "10", 6f)
                 },
                 mapName.ToGuid(),
                 mapName);
@@ -90,8 +90,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Routing
                 "                                            xxxxx ", // 24
                 "                                                  " // 25
             }; // 1030 nodes / 3548 edges
-            var nodes = new List<AgvGraph.Node>();
-            var edges = new List<AgvGraph.Edge>();
+            var nodes = new List<GraphNode>();
+            var edges = new List<GraphEdge>();
             int x, y = 1;
             foreach (string line in map)
             {
@@ -100,19 +100,19 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Routing
                 {
                     if (c == ' ')
                     {
-                        var next = new AgvGraph.Node($"{x:D2}/{y:D2}") { X = x, Y = y, Z = 0f, Type = AgvGraph.NodeType.WayPoint };
+                        var next = new GraphNode($"{x:D2}/{y:D2}") { X = x, Y = y, Z = 0f, Type = AgvGraph.NodeType.WayPoint };
                         nodes.Add(next);
                         var prev = nodes.SingleOrDefault(n => n.Id == $"{x - 1:D2}/{y:D2}");
                         if (prev != null)
                         {
-                            edges.Add(new AgvGraph.Edge(prev.Id, next.Id) { Metric = 1f });
-                            edges.Add(new AgvGraph.Edge(next.Id, prev.Id) { Metric = 1f });
+                            edges.Add(new GraphEdge(prev.Id, next.Id, 1f));
+                            edges.Add(new GraphEdge(next.Id, prev.Id, 1f));
                         }
                         prev = nodes.SingleOrDefault(n => n.Id == $"{x:D2}/{y - 1:D2}");
                         if (prev != null)
                         {
-                            edges.Add(new AgvGraph.Edge(prev.Id, next.Id) { Metric = 1f });
-                            edges.Add(new AgvGraph.Edge(next.Id, prev.Id) { Metric = 1f });
+                            edges.Add(new GraphEdge(prev.Id, next.Id, 1f) { Metric = 1f });
+                            edges.Add(new GraphEdge(next.Id, prev.Id, 1f) { Metric = 1f });
                         }
                     }
                     ++x;
@@ -122,33 +122,33 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Routing
             _grid = new AgvGraph(Guid.Empty, nodes.ToArray(), edges.ToArray(), mapName.ToGuid(), mapName);
 
             _wikiExample = new AgvGraph(Guid.Empty,
-                new[]
+                new GraphNode[]
                 {
-                    new AgvGraph.Node("Saarbrücken") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 0f, Z = 0f },
-                    new AgvGraph.Node("Kaiserslautern") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 42f, Y = 80f, Z = 0f },
-                    new AgvGraph.Node("Frankfurt") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 104f, Y = 100f, Z = 0f },
-                    new AgvGraph.Node("Ludwigshafen") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 96f, Y = 60f, Z = 0f },
-                    new AgvGraph.Node("Karlsruhe") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 104f, Y = -10f, Z = 0f },
-                    new AgvGraph.Node("Heilbronn") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 150f, Y = 20f, Z = 0f },
-                    new AgvGraph.Node("Würzburg") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 200f, Y = 92f, Z = 0f }
+                    new("Saarbrücken") { Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 0f, Z = 0f },
+                    new("Kaiserslautern") { Type = AgvGraph.NodeType.PickDrop, X = 42f, Y = 80f, Z = 0f },
+                    new("Frankfurt") { Type = AgvGraph.NodeType.PickDrop, X = 104f, Y = 100f, Z = 0f },
+                    new("Ludwigshafen") { Type = AgvGraph.NodeType.PickDrop, X = 96f, Y = 60f, Z = 0f },
+                    new("Karlsruhe") { Type = AgvGraph.NodeType.PickDrop, X = 104f, Y = -10f, Z = 0f },
+                    new("Heilbronn") { Type = AgvGraph.NodeType.PickDrop, X = 150f, Y = 20f, Z = 0f },
+                    new("Würzburg") { Type = AgvGraph.NodeType.PickDrop, X = 200f, Y = 92f, Z = 0f }
                 },
-                new[]
+                new GraphEdge[]
                 {
-                    new AgvGraph.Edge("Saarbrücken", "Kaiserslautern") { Metric = 70f },
-                    new AgvGraph.Edge("Saarbrücken", "Karlsruhe") { Metric = 145f },
-                    new AgvGraph.Edge("Karlsruhe", "Saarbrücken") { Metric = 145f },
-                    new AgvGraph.Edge("Kaiserslautern", "Frankfurt") { Metric = 103f },
-                    new AgvGraph.Edge("Kaiserslautern", "Ludwigshafen") { Metric = 53f },
-                    new AgvGraph.Edge("Karlsruhe", "Heilbronn") { Metric = 84f },
-                    new AgvGraph.Edge("Frankfurt", "Würzburg") { Metric = 116f },
-                    new AgvGraph.Edge("Ludwigshafen", "Würzburg") { Metric = 183f },
-                    new AgvGraph.Edge("Heilbronn", "Würzburg") { Metric = 102f }
+                    new("Saarbrücken", "Kaiserslautern", 70f),
+                    new("Saarbrücken", "Karlsruhe", 145f),
+                    new("Karlsruhe", "Saarbrücken", 145f),
+                    new("Kaiserslautern", "Frankfurt", 103f),
+                    new("Kaiserslautern", "Ludwigshafen", 53f),
+                    new("Karlsruhe", "Heilbronn", 84f),
+                    new("Frankfurt", "Würzburg", 116f),
+                    new("Ludwigshafen", "Würzburg", 183f),
+                    new("Heilbronn", "Würzburg", 102f)
                 },
                 mapName.ToGuid(),
                 mapName);
 
             _routingPlausibilityCheckerMock = new Mock<IRoutingPlausibilityChecker>();
-            _routingPlausibilityCheckerMock.Setup(c => c.IsPlausible(It.IsAny<AgvGraph.Node>(), It.IsAny<AgvGraph.Node>()))
+            _routingPlausibilityCheckerMock.Setup(c => c.IsPlausible(It.IsAny<GraphNode>(), It.IsAny<GraphNode>()))
                 .Returns(true);
         }
 
@@ -314,25 +314,25 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Routing
             var graph = new AgvGraph(Guid.Empty,
                 new[]
                 {
-                    new AgvGraph.Node("1") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 5f, Z = 0f },
-                    new AgvGraph.Node("2") { Enabled = true, Type = AgvGraph.NodeType.Drop, X = 1f, Y = 5f, Z = 0f }
+                    new GraphNode("1") { Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 5f, Z = 0f },
+                    new GraphNode("2") { Type = AgvGraph.NodeType.Drop, X = 1f, Y = 5f, Z = 0f }
                 },
                 new[]
                 {
-                    new AgvGraph.Edge("1", "2") { Metric = 1f },
-                    new AgvGraph.Edge("2", "1") { Metric = 4f }
+                    new GraphEdge("1", "2", 1f),
+                    new GraphEdge("2", "1", 4f)
                 },
                 mapName.ToGuid(),
                 mapName);
 
             var routingPlausibilityCheckerMock = new Mock<IRoutingPlausibilityChecker>();
-            routingPlausibilityCheckerMock.Setup(r => r.IsPlausible(It.IsAny<AgvGraph.Node>(), It.IsAny<AgvGraph.Node>())).Returns(true);
+            routingPlausibilityCheckerMock.Setup(r => r.IsPlausible(It.IsAny<GraphNode>(), It.IsAny<GraphNode>())).Returns(true);
 
             var aStar = new AStar(graph, routingPlausibilityCheckerMock.Object);
             var route = aStar.CalculateRoute("1", "2");
             route.ShouldNotBeNull();
 
-            routingPlausibilityCheckerMock.Setup(r => r.IsPlausible(It.IsAny<AgvGraph.Node>(), It.IsAny<AgvGraph.Node>())).Returns(false);
+            routingPlausibilityCheckerMock.Setup(r => r.IsPlausible(It.IsAny<GraphNode>(), It.IsAny<GraphNode>())).Returns(false);
             aStar = new AStar(graph, routingPlausibilityCheckerMock.Object);
             route = aStar.CalculateRoute("1", "2");
             route.ShouldBeNull();
@@ -352,7 +352,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Routing
             var agvGraphTextFixture = agvGraphTextFixtureMock.Object;
 
             AssertFindsShortestPath("Saarbrücken", "Würzburg", agvGraphTextFixture);
-            AssertWhenEdgeBlock_FindsAlternativePath("Saarbrücken", "Würzburg", agvGraphTextFixture);
         }
 
         [TestMethod]
@@ -367,7 +366,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Routing
             var agvGraphTextFixture = agvGraphTextFixtureMock.Object;
 
             AssertFindsShortestPath("Saarbrücken", "LoneDestination", agvGraphTextFixture);
-            AssertWhenEdgeBlock_FindsAlternativePath("Saarbrücken", "LoneDestination", agvGraphTextFixture);
         }
 
         private void AssertFindsShortestPath(string source, string destination, AgvGraphTestFixture agvGraphTextFixture)
@@ -379,70 +377,55 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Routing
             route.Nodes.ShouldBe(agvGraphTextFixture.GetAllPossibleRoutesOrdered().First());
         }
 
-        private void AssertWhenEdgeBlock_FindsAlternativePath(string source, string destination, AgvGraphTestFixture agvGraphTextFixture)
-        {
-            string[][] possibleRoutesOrdered = agvGraphTextFixture.GetAllPossibleRoutesOrdered();
-            for (int routeNum = 0; routeNum < possibleRoutesOrdered.Length; routeNum++)
-            {
-                // remove node of possible route one by one until there is none anymore
-                agvGraphTextFixture.BlockEdgeInRoute(possibleRoutesOrdered[routeNum]);
-                var aStar = new AStar(agvGraphTextFixture.Graph, RoutingPlausibilityChecker);
-                var route = aStar.CalculateRoute(source, destination);
-
-                if (routeNum != possibleRoutesOrdered.Length - 1)
-                {
-                    route.ShouldNotBeNull();
-                    route.Nodes.ShouldBe(possibleRoutesOrdered[routeNum + 1]);
-                }
-                else
-                {
-                    route.ShouldBeNull();
-                }
-            }
-        }
-
         [TestMethod]
         [DataRow(true)]
         [DataRow(false)]
-        public void TestStaticCalculateRoute_FindsRoute_And_NoRoute(bool blockEdgesThatLeadToNoRoute)
+        public void TestStaticCalculateRoute_FindsRoute_And_NoRoute(bool isEdgePlausible)
         {
             var graph = new AgvGraph(Guid.Empty,
-                new[]
+                new GraphNode[]
                 {
-                    new AgvGraph.Node("1") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 5f, Z = 0f },
-                    new AgvGraph.Node("2") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 1f, Y = 5f, Z = 0f },
-                    new AgvGraph.Node("3") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 1f, Y = 2f, Z = 0f },
-                    new AgvGraph.Node("4") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 3f, Y = 3f, Z = 0f },
-                    new AgvGraph.Node("5") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 3f, Y = 6f, Z = 0f },
-                    new AgvGraph.Node("6") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 3f, Y = 2f, Z = 0f },
-                    new AgvGraph.Node("7") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 6f, Y = 0f, Z = 0f },
-                    new AgvGraph.Node("8") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 7f, Y = 1f, Z = 0f },
-                    new AgvGraph.Node("9") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 8f, Y = 2f, Z = 0f },
-                    new AgvGraph.Node("10") { Enabled = true, Type = AgvGraph.NodeType.PickDrop, X = 8f, Y = 5f, Z = 0f }
+                    new("1") { Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 5f, Z = 0f },
+                    new("2") { Type = AgvGraph.NodeType.PickDrop, X = 1f, Y = 5f, Z = 0f },
+                    new("3") { Type = AgvGraph.NodeType.PickDrop, X = 1f, Y = 2f, Z = 0f },
+                    new("4") { Type = AgvGraph.NodeType.PickDrop, X = 3f, Y = 3f, Z = 0f },
+                    new("5") { Type = AgvGraph.NodeType.PickDrop, X = 3f, Y = 6f, Z = 0f },
+                    new("6") { Type = AgvGraph.NodeType.PickDrop, X = 3f, Y = 2f, Z = 0f },
+                    new("7") { Type = AgvGraph.NodeType.PickDrop, X = 6f, Y = 0f, Z = 0f },
+                    new("8") { Type = AgvGraph.NodeType.PickDrop, X = 7f, Y = 1f, Z = 0f },
+                    new("9") { Type = AgvGraph.NodeType.PickDrop, X = 8f, Y = 2f, Z = 0f },
+                    new("10") { Type = AgvGraph.NodeType.PickDrop, X = 8f, Y = 5f, Z = 0f }
                 },
-                new[]
+                new GraphEdge[]
                 {
-                    new AgvGraph.Edge("1", "2", blockEdgesThatLeadToNoRoute) { Metric = 1f },
-                    new AgvGraph.Edge("1", "4", blockEdgesThatLeadToNoRoute) { Metric = 4f },
-                    new AgvGraph.Edge("4", "1") { Metric = 4f },
-                    new AgvGraph.Edge("2", "5", blockEdgesThatLeadToNoRoute) { Metric = 3f },
-                    new AgvGraph.Edge("3", "5", blockEdgesThatLeadToNoRoute) { Metric = 5f },
-                    new AgvGraph.Edge("3", "4", blockEdgesThatLeadToNoRoute) { Metric = 3f },
-                    new AgvGraph.Edge("4", "3") { Metric = 3f },
-                    new AgvGraph.Edge("3", "6", blockEdgesThatLeadToNoRoute) { Metric = 2f },
-                    new AgvGraph.Edge("6", "3") { Metric = 2f },
-                    new AgvGraph.Edge("5", "8", blockEdgesThatLeadToNoRoute) { Metric = 7f },
-                    new AgvGraph.Edge("8", "5") { Metric = 7f },
-                    new AgvGraph.Edge("8", "7", blockEdgesThatLeadToNoRoute) { Metric = 1f },
-                    new AgvGraph.Edge("7", "8") { Metric = 1f },
-                    new AgvGraph.Edge("9", "8", blockEdgesThatLeadToNoRoute) { Metric = 1f },
-                    new AgvGraph.Edge("7", "10") { Metric = 6f }
+                    new("1", "2", 1f),
+                    new("1", "4", 4f),
+                    new("4", "1", 4f),
+                    new("2", "5", 3f),
+                    new("3", "5", 5f),
+                    new("3", "4", 3f),
+                    new("4", "3", 3f),
+                    new("3", "6", 2f),
+                    new("6", "3", 2f),
+                    new("5", "8", 7f),
+                    new("8", "5", 7f),
+                    new("8", "7", 1f),
+                    new("7", "8", 1f),
+                    new("9", "8", 1f),
+                    new("7", "10", 6f)
                 },
                 "Test".ToGuid(),
                 "Test");
-            var route = AStar.CalculateRouteStatic(graph, "1", "8");
-            bool routeNull = route == null;
-            routeNull.ShouldBe(blockEdgesThatLeadToNoRoute);
+
+            var sourceNode = graph.Nodes.First(x => x.Id == "1");
+            var destinationNode = graph.Nodes.First(x => x.Id == "8");
+            
+            var routingPlausibilityChecker = new Mock<IRoutingPlausibilityChecker>();
+            routingPlausibilityChecker.Setup(x => x.IsPlausible(sourceNode, destinationNode)).Returns(isEdgePlausible);
+            var aStar = new AStar(graph, routingPlausibilityChecker.Object);
+            var route = aStar.CalculateRoute(sourceNode.Id, destinationNode.Id);
+            bool hasRoute = route != null;
+            hasRoute.ShouldBe(isEdgePlausible);
         }
     }
 }

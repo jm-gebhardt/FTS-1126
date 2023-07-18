@@ -30,22 +30,20 @@ namespace Gebhardt.StoreWare.Agv.CommonTest
         [TestMethod]
         public void NodeIdComparer()
         {
-            var comparer = new NodeIdComparer();
-            var node1 = new AgvGraph.Node("1") { X = 1f, Y = 2f, Z = 3f, Enabled = true, Type = AgvGraph.NodeType.Charge };
-            var node2 = new AgvGraph.Node("2") { X = 1f, Y = 2f, Z = 3f, Enabled = true, Type = AgvGraph.NodeType.Charge };
+            var comparer = new GraphNodeComparer();
+            var node1 = new GraphNode("1") { X = 1f, Y = 2f, Z = 3f, Type = AgvGraph.NodeType.Charge };
+            var node2 = new GraphNode("2") { X = 1f, Y = 2f, Z = 3f, Type = AgvGraph.NodeType.Charge };
+            var node3 = new GraphNode("1") { X = 1f, Y = 2f, Z = 3f, Type = AgvGraph.NodeType.Charge };
+            var node4 = new GraphNode("1") { X = 0f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.Park };
 
             comparer.Equals(node1, node2).ShouldBeFalse();
             comparer.GetHashCode(node2).ShouldNotBe(comparer.GetHashCode(node1));
-            node2.Id = "1";
-            comparer.Equals(node1, node2).ShouldBeTrue();
-            comparer.GetHashCode(node1).ShouldBe(comparer.GetHashCode(node2));
-            node2.X = 0f;
-            node2.Y = 0f;
-            node2.Z = 0f;
-            node2.Enabled = false;
-            node2.Type = AgvGraph.NodeType.Park;
-            comparer.Equals(node1, node2).ShouldBeTrue();
-            comparer.GetHashCode(node1).ShouldBe(comparer.GetHashCode(node2));
+
+            comparer.Equals(node1, node3).ShouldBeTrue();
+            comparer.GetHashCode(node1).ShouldBe(comparer.GetHashCode(node3));
+
+            comparer.Equals(node1, node4).ShouldBeTrue();
+            comparer.GetHashCode(node1).ShouldBe(comparer.GetHashCode(node4));
         }
 
         /// <summary>
@@ -54,19 +52,16 @@ namespace Gebhardt.StoreWare.Agv.CommonTest
         [TestMethod]
         public void EdgeIdComparer()
         {
-            var comparer = new EdgeIdComparer();
-            var edge1 = new AgvGraph.Edge("1", "2") { Metric = 1f };
-            var edge2 = new AgvGraph.Edge("2", "1") { Metric = 1f };
+            var comparer = new GraphEdgeComparer();
+            var edge1 = new GraphEdge("1", "2", 1f);
+            var edge2 = new GraphEdge("2", "1", 1f);
+            var edge3 = new GraphEdge("1", "2", 2f);
 
             comparer.Equals(edge1, edge2).ShouldBeFalse();
             comparer.GetHashCode(edge1).ShouldNotBe(comparer.GetHashCode(edge2));
-            edge2.From = "1";
-            edge2.To = "2";
-            comparer.Equals(edge1, edge2).ShouldBeTrue();
-            comparer.GetHashCode(edge1).ShouldBe(comparer.GetHashCode(edge2));
-            edge2.Metric = 2f;
-            comparer.Equals(edge1, edge2).ShouldBeTrue();
-            comparer.GetHashCode(edge1).ShouldBe(comparer.GetHashCode(edge2));
+
+            comparer.Equals(edge1, edge3).ShouldBeTrue();
+            comparer.GetHashCode(edge1).ShouldBe(comparer.GetHashCode(edge3));
         }
     }
 }

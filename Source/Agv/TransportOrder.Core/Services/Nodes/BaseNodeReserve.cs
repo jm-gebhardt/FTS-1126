@@ -14,12 +14,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Nodes
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="graphRegistry"></param>
+        /// <param name="agvGraphRegistry"></param>
         /// <param name="nodeStateRegistry"></param>
         protected BaseNodeReserve(
-            IGraphRegistry graphRegistry,
+            IAgvGraphRegistry agvGraphRegistry,
             INodeStateRegistry nodeStateRegistry
-        ) : base(graphRegistry, nodeStateRegistry)
+        ) : base(agvGraphRegistry, nodeStateRegistry)
         {
         }
 
@@ -28,12 +28,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Nodes
         /// </summary>
         /// <param name="agv"></param>
         /// <returns></returns>
-        protected async Task<AgvGraph.Node> PickAndReserveNodeAsync(IAgv agv)
+        protected async Task<GraphNode> PickAndReserveNodeAsync(IAgv agv)
         {
             await _reserveSemaphoreSlim.WaitAsync();
             try
             {
-                var node = PickNode(agv);
+                var node = await PickNode(agv);
 
                 await ReserveNodeAsync(node.Id, agv.CorrelationId);
                 return node;

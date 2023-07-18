@@ -330,7 +330,7 @@ public class ActionManagerTest
 
         await fixture.ActionManager.AddActionGroupAsync(actionGroup, CancellationToken.None);
 
-        fixture.ActionGroupRegistry.Verify(x => x.InsertAsync(actionGroup), Times.Once);
+        fixture.ActionGroupRegistry.Verify(x => x.AddAsync(actionGroup), Times.Once);
     }
 
     [TestMethod]

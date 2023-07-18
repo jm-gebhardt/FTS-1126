@@ -26,6 +26,7 @@ public class GetAgvGraphRequestHandlerTest
         var agv = AgvGenerator.GenerateIdleAgv();
 
         AgvRequestsHandlerTestFixture<GetAgvGraphRequest, GetAgvGraphRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvGraphRequest, GetAgvGraphRequestHandler>()
+            .WithEmptyGraphRegistry()
             .WithAgv(agv)
             .Build();
 
