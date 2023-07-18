@@ -6,17 +6,32 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 public enum ActionGroupState
 {
     /// <summary>
-    /// Action is created
+    /// Action group is created
     /// </summary>
     Created,
 
     /// <summary>
-    /// Action has been started
+    /// Action group has been started
     /// </summary>
     Started,
 
     /// <summary>
-    /// Action has been completed
+    /// Action group has been completed
     /// </summary>
-    Completed
+    Completed,
+    
+    /// <summary>
+    /// Action group has been canceled
+    /// </summary>
+    Canceled,
+    
+    /// <summary>
+    /// Action group failed
+    /// </summary>
+    Failed,
+    
+    /// <summary>
+    /// Action group is invalid
+    /// </summary>
+    Invalid
 }

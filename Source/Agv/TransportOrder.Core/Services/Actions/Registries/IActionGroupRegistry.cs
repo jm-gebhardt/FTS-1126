@@ -94,6 +94,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Registries
         /// Get ActionGroups where no action was started yet
         /// </summary>
         public Task<IReadOnlyList<ActionGroup>> GetNotStartedActionGroupsAsync();
+        
+        /// <summary>
+        /// Get ActionGroups where one or more actions are invalid
+        /// </summary>
+        public Task<IReadOnlyList<ActionGroup>> GetInvalidActionGroupsAsync();
 
         /// <summary>
         /// Return the subsequent action for the Agv that is not started yet.

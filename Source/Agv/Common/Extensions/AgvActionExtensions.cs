@@ -35,6 +35,8 @@ public static class AgvActionExtensions
                     break;
 
                 case ActionState.Completed:
+                case ActionState.Failed:
+                case ActionState.Canceled:
                     action.CompletedDate = GetCurrentDate();
                     break;
             }

@@ -23,6 +23,21 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
         /// Action completed
         /// </summary>
         [PublicAPI]
-        Completed
+        Completed,
+        
+        /// <summary>
+        /// Action has been canceled
+        /// </summary>
+        Canceled,
+    
+        /// <summary>
+        /// Action failed
+        /// </summary>
+        Failed,
+    
+        /// <summary>
+        /// Action is invalid
+        /// </summary>
+        Invalid
     }
 }

@@ -114,6 +114,37 @@ public class ActionGroupExtensionsTest
         actionGroup.CompletedDate.Value.Date.ShouldBe(previousDate);
     }
 
+    [DataRow(ActionState.Failed, ActionGroupState.Failed)]
+    [DataRow(ActionState.Canceled, ActionGroupState.Canceled)]
+    [TestMethod]
+    public void UpdateActionGroupState_WhenOneActionFailedOrCanceled_ActionGroupFailesOrIsCanceled(ActionState actionState, ActionGroupState actionGroupState)
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        const ActionGroupState prevActionGroupState = ActionGroupState.Started;
+        var now = DateTime.UtcNow;
+        TimeProvider.Set(() => now);
+        actionGroup.State = prevActionGroupState;
+        actionGroup.Actions.First().State = actionState;
+        actionGroup.UpdateActionGroupState();
+
+        actionGroup.State.ShouldNotBe(prevActionGroupState);
+        actionGroup.CompletedDate.ShouldNotBeNull();
+        actionGroup.CompletedDate.Value.ShouldBe(now);
+    }
+
+    [TestMethod]
+    public void UpdateActionGroupState_WhenOneActionInvalid_ActionGroupInvalid()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        const ActionGroupState prevActionGroupState = ActionGroupState.Created;
+        actionGroup.State = prevActionGroupState;
+        actionGroup.Actions.First().State = ActionState.Invalid;
+        actionGroup.UpdateActionGroupState();
+
+        actionGroup.State.ShouldBe(ActionGroupState.Invalid);
+        actionGroup.CompletedDate.ShouldBeNull();
+    }
+
     [TestMethod]
     public void AssignAgvToActionGroup_WhenActionGroupAssignedAgvIsNull_SetActionGroupAssignedAgv()
     {

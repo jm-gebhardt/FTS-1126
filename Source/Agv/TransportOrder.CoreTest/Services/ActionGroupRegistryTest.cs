@@ -266,8 +266,9 @@ public class ActionGroupRegistryTest
     [TestMethod]
     public async Task GetNotStartedActionGroupAsync_ReturnsNotStartedActionGroup()
     {
-        const int totalItemsInRegistry = 10;
-        IEnumerable<ActionGroup> actionGroups = CreateInitialActionGroups(totalItemsInRegistry);
+        const int totalItemsInRegistryWithStateCreated = 10;
+        
+        IEnumerable<ActionGroup> actionGroups = CreateInitialActionGroups(totalItemsInRegistryWithStateCreated);
         var fixture = await new ActionGroupRegistryTestFixture()
             .WithActionGroups(actionGroups)
             .BuildAsync();
@@ -279,7 +280,29 @@ public class ActionGroupRegistryTest
             notStartedActionGroup.State.ShouldBe(ActionGroupState.Created);
             notStartedActionGroup.Actions.ShouldNotBeEmpty();
         }
-        notStartedActionGroups.Count.ShouldBe(totalItemsInRegistry);
+
+        notStartedActionGroups.Count.ShouldBe(totalItemsInRegistryWithStateCreated);
+    }
+    
+    [TestMethod]
+    public async Task GetInvalidActionGroupAsync_ReturnsNotStartedActionGroup()
+    {
+        const int totalItemsInRegistryWithStateInvalid= 5;
+        
+        IEnumerable<ActionGroup> actionGroups = CreateInitialActionGroups(totalItemsInRegistryWithStateInvalid, ActionGroupState.Invalid);
+        var fixture = await new ActionGroupRegistryTestFixture()
+            .WithActionGroups(actionGroups)
+            .BuildAsync();
+
+        IReadOnlyList<ActionGroup> notStartedActionGroups = await fixture.ActionGroupRegistry.GetInvalidActionGroupsAsync();
+
+        foreach (var notStartedActionGroup in notStartedActionGroups)
+        {
+            notStartedActionGroup.State.ShouldBe(ActionGroupState.Invalid);
+            notStartedActionGroup.Actions.ShouldNotBeEmpty();
+        }
+
+        notStartedActionGroups.Count.ShouldBe(totalItemsInRegistryWithStateInvalid);
     }
 
     [TestMethod]

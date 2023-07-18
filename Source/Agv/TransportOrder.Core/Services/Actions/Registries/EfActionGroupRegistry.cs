@@ -228,6 +228,20 @@ public class EfActionGroupRegistry : IActionGroupRegistry
 
         return notStartedActionGroups;
     }
+    
+    /// <inheritdoc/>
+    public async Task<IReadOnlyList<ActionGroup>> GetInvalidActionGroupsAsync()
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
+        List<ActionGroup> notStartedActionGroups = await queryable
+            .Where(actionGroup => actionGroup.State == ActionGroupState.Invalid)
+            .Include(g => g.Actions)
+            .AsNoTracking()
+            .ToListAsync();
+
+        return notStartedActionGroups;
+    }
 
     /// <inheritdoc/>
     public async Task<AgvAction> GetSubsequentActionAsync(Guid agvCorrelationId)

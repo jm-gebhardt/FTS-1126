@@ -28,6 +28,18 @@ public static class ActionGroupExtensions
         {
             actionGroup.State = ActionGroupState.Created;
         }
+        else if (actions.Any(a => a.State == ActionState.Invalid))
+        {
+            actionGroup.State = ActionGroupState.Invalid;
+        }
+        else if (actions.Any(a => a.State == ActionState.Failed))
+        {
+            actionGroup.State = ActionGroupState.Failed;
+        }
+        else if (actions.Any(a => a.State == ActionState.Canceled))
+        {
+            actionGroup.State = ActionGroupState.Canceled;
+        }
         else
         {
             actionGroup.State = ActionGroupState.Started;
@@ -51,6 +63,8 @@ public static class ActionGroupExtensions
                     break;
 
                 case ActionGroupState.Completed:
+                case ActionGroupState.Failed:
+                case ActionGroupState.Canceled:
                     actionGroup.CompletedDate = GetCurrentDate();
                     break;
             }
