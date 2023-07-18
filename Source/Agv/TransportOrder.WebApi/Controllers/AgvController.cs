@@ -6,6 +6,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Core.Models;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Common;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Requests.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Requests.Commands;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
 {
@@ -61,8 +62,28 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
         [Route("/agvs")]
         public async Task<ActionResult<IEnumerable<AgvDto>>> GetAgvs()
         {
-            Response<GetAgvsResult> response = await _getAgvsClient.GetResponse<GetAgvsResult>(new GetAgvsRequest());
+            Response<GetAgvsResult> response = await _getAgvsClient.GetResponse<GetAgvsResult>(new GetAgvsRequest(new List<Guid>()));
             return Ok(response.Message.Agvs);
+        }
+
+        /// <summary>
+        /// Retrieve agv by correlationId
+        /// </summary>
+        /// <response code="200">Ok</response>
+        /// <response code="404">AGV with given correlationId doesn't exist</response>
+        [HttpGet]
+        [Route("/agvs/{correlationId:guid}")]
+        public async Task<ActionResult<AgvDto>> GetAgv(Guid correlationId)
+        {
+            var correlationIds = new List<Guid>() { correlationId };
+            Response<GetAgvsResult> response = await _getAgvsClient.GetResponse<GetAgvsResult>(new GetAgvsRequest(correlationIds));
+
+            if (response.Message.Agvs.IsNullOrEmpty())
+            {
+                return NotFound();
+            }
+
+            return Ok(response.Message.Agvs[0]);
         }
 
         /// <summary>

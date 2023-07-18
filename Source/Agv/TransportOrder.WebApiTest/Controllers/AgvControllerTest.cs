@@ -19,6 +19,44 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
     public class AgvControllerTest
     {
         [TestMethod]
+        public async Task GetSingleAgv_Successfully()
+        {
+            AgvControllerTestFixture<GetAgvsRequest, GetAgvsRequestHandler> fixture = new AgvControllerTestFixture<GetAgvsRequest, GetAgvsRequestHandler>()
+                .UseDefaultServices()
+                .Build();
+
+            string agvId = fixture.AgvIds[0];
+            var correlationId = agvId.ToGuid();
+
+            var controller = fixture.Controller;
+            ActionResult<AgvDto> response = await controller.GetAgv(correlationId);
+
+            var result = response.Result as OkObjectResult;
+            result.ShouldNotBeNull();
+
+            var agvDto = result.Value as AgvDto;
+            agvDto.ShouldNotBeNull();
+            agvDto.AgvId.ShouldBe(agvId);
+        }
+
+        [TestMethod]
+        public async Task GetSingleAgv_NotFound()
+        {
+            AgvControllerTestFixture<GetAgvsRequest, GetAgvsRequestHandler> fixture = new AgvControllerTestFixture<GetAgvsRequest, GetAgvsRequestHandler>()
+                .UseDefaultServices()
+                .Build();
+
+            string agvId = "INVALID";
+            var correlationId = agvId.ToGuid();
+
+            var controller = fixture.Controller;
+            ActionResult<AgvDto> response = await controller.GetAgv(correlationId);
+
+            var result = response.Result as NotFoundResult;
+            result.ShouldNotBeNull();
+        }
+
+        [TestMethod]
         public async Task GetAgvs_Successfully()
         {
             AgvControllerTestFixture<GetAgvsRequest, GetAgvsRequestHandler> fixture = new AgvControllerTestFixture<GetAgvsRequest, GetAgvsRequestHandler>()
