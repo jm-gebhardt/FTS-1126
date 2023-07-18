@@ -12,6 +12,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
     /// Controller for host order data
     /// </summary>
     [ApiController]
+    [ApiExplorerSettings(GroupName = RestApiGroup.GroupName)]
     public class AgvController : Controller
     {
         private readonly IRequestClient<GetAgvsRequest> _getAgvsClient;

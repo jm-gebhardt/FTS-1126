@@ -10,6 +10,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
     /// <summary>
     /// Controller for <see cref="AgvAction"/>
     /// </summary>
+    [ApiExplorerSettings(GroupName = RestApiGroup.GroupName)]
     public class ActionGroupController: Controller
     {
         private readonly IRequestClient<GetAgvActionGroupsRequest> _getAgvActionGroupsRequest;

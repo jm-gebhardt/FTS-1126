@@ -10,14 +10,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs
     /// <summary>
     /// Action client methods
     /// </summary>
+    [SignalRHub(path: ActionHub.UrlPath, documentNames: new[] { HubApiGroup.GroupName })]
     public interface IActionHubClient
     {
         /// <summary>
         /// ActionGroup changed
         /// </summary>
-        /// <param name="agv"></param>
+        /// <param name="actionGroup"></param>
         [SignalRMethod("ActionGroupChanged")]
-        public Task ActionGroupChanged(ActionGroupDto agv);       
+        public Task ActionGroupChanged(ActionGroupDto actionGroup);       
     }
 
     /// <summary>
@@ -28,7 +29,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs
         /// <summary>
         /// Url path
         /// </summary>
-        public static string UrlPath => "/hub/action";
+        public const string UrlPath = "/hub/action";
 
         /// <summary>
         /// Initializes a new instance of <see cref="ActionHub"/>

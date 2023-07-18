@@ -1,0 +1,23 @@
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Swagger;
+
+namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs;
+
+/// <summary>
+/// Api Group for SignalR
+/// </summary>
+public class HubApiGroup : ApiGroup
+{
+    /// <summary>
+    /// Api group name to be used with SignalRHub attribute
+    /// </summary>
+    public const string GroupName = "signalr";
+
+    /// <inheritdoc />
+    public override string Name => GroupName;
+
+    /// <inheritdoc />
+    public override string Title => "SignalR Hub";
+
+    /// <inheritdoc />
+    public override string Version => "v1";
+}

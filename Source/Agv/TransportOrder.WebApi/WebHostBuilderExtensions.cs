@@ -15,6 +15,8 @@ using System.Xml.XPath;
 using AutoMapper;
 using Microsoft.AspNetCore.SignalR;
 using System.Text.Json;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Swagger;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi
 {
@@ -62,12 +64,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi
 
                 services.AddSwaggerGen(options =>
                 {
-                    options.SwaggerDoc("v1", new OpenApiInfo
+                    options.SwaggerDoc(new RestApiGroup());
+                    options.SwaggerDoc(new HubApiGroup());
+                    options.AddSignalRSwaggerGen(opt =>
                     {
-                        Version = "v1",
-                        Title = "TransportOrder Monitoring API"
+                        opt.ScanAssemblies(Assembly.GetExecutingAssembly());
                     });
-                    options.AddSignalRSwaggerGen();
                     options.SchemaFilter<RequireNonNullablePropertiesSchemaFilter>();
                     options.SupportNonNullableReferenceTypes(); // Sets Nullable flags appropriately.
                     options.UseAllOfToExtendReferenceSchemas(); // Allows $ref enums to be nullable
@@ -149,6 +151,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi
                         };
                     }
                 });
+            });
+            app.UseSwaggerUI(options =>
+            {
+                options.SwaggerEndpoint(new RestApiGroup());
+                options.SwaggerEndpoint(new HubApiGroup());
             });
             app.UseSwaggerUI();
             return app;

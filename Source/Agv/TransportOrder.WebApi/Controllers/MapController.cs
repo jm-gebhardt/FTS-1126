@@ -10,6 +10,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
     /// Map Rest API Controller
     /// </summary>
     [ApiController]
+    [ApiExplorerSettings(GroupName = RestApiGroup.GroupName)]
     public class MapController : Controller
     {
         private readonly IRequestClient<GetMapListRequest> _getMapListClient;

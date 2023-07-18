@@ -11,6 +11,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs
     /// <summary>
     /// AGV client methods
     /// </summary>
+    [SignalRHub(path: AgvHub.UrlPath, documentNames: new[] { HubApiGroup.GroupName })]
+        
     public interface IAgvHubClient
     {
         /// <summary>
@@ -43,7 +45,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs
         /// <summary>
         /// Url path
         /// </summary>
-        public static string UrlPath => "/hub/agv";
+        public const string UrlPath = "/hub/agv";
 
         /// <summary>
         /// Initializes a new instance of <see cref="AgvHub"/>
