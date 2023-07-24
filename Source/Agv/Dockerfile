@@ -1,14 +1,14 @@
 # syntax=docker/dockerfile:1
 
 # Common Docker file for all AGV projects
-# Usage: docker build --build-arg PROJECT=<project> [OPTIONS] PATH
-#        project      Project name (e.g. DeviceCommunication)
-
+# Usage: docker build --build-arg PROJECT=<project> DOTNET_VERSION=<version> [OPTIONS] PATH
+#        PROJECT             Project name (e.g. DeviceCommunication)
+#        DOTNET_VERSION      .NET version (e.g. 6.0)
 
 ARG PROJECT
+ARG DOTNET_VERSION=6.0
 
-
-FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build-env
+FROM mcr.microsoft.com/dotnet/sdk:${DOTNET_VERSION} AS build-env
 ARG PROJECT
 WORKDIR /app
 
@@ -21,10 +21,9 @@ RUN dotnet restore ${PROJECT}/${PROJECT}.csproj
 # Build/publish
 RUN dotnet publish -c Release -o out --no-restore ${PROJECT}/${PROJECT}.csproj
 
-
 # Build runtime image
-FROM mcr.microsoft.com/dotnet/aspnet:6.0
-ARG PROJECT
+FROM mcr.microsoft.com/dotnet/aspnet:${DOTNET_VERSION}
+
 ENV PROJECT=${PROJECT}
 WORKDIR /app
 

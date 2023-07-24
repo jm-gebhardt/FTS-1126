@@ -18,7 +18,6 @@ Each Service is build as a separate project.
     - WCSCommunication: Taking HostOrders from StoreWare and sending them to be managed by TransportOrder
 ```
 
-
 ## Build
 ```
 dotnet build Source/Agv/CompileAgv.sln
@@ -79,16 +78,6 @@ http://localhost/transportorder/swagger/
 ### WebUI
 See the WebUI [README.md](Source/Agv/ui/README.md) for more information
 
-
-## Provide certificates
-Quite now the system is using self-signed certificates.
-To create all required certificates and keys the following script need to be executed once:
-```
-.\Config\create_cert.bat
-```
-For a detailed description see [Transportsicherheit](https://dev.azure.com/GebhardtGroup/StoreWare/_wiki/wikis/StoreWare.wiki/167/Transportsicherheit-(TLS-Transport-Layer-Security)) in Wiki.
-
-
 ## Run Simulation
 Ensure that `RABBITMQ__HOST` is set
 ```
@@ -97,15 +86,16 @@ dotnet run --project TransportOrder production --autoAccept
 dotnet run --project DeviceCommunication simulate --sources=S1,S2 --destinations=D1,D2,D3 --agvs=3 --nodetraveltime=5000 --gridrows=4
 ```
 
-
 ## Run UnitTests
 ```
 dotnet test Source/Agv/CompileAgv.sln
 ```
 
-
 ## Run Integration Tests
 Integration tests are using docker to run. For running the integrations tests make sure to update the container images.
+The docker-compose file is located in a different repository: [AgvDevComb](https://dev.azure.com/GebhardtGroup/StoreWare/_git/AgvDevComb)
+This repository is a submodule of this repository.
+It is required to run the integration  tests
 ```
 cd <projectFolder>
 docker compose build
@@ -143,35 +133,6 @@ For this case temporarily delete
 `Source/Agv.IntegrationsTest/NuGet.Config`  
 in your local source repository for downloading the NuGet packages from it's origin.  
 Make sure the keep `NuGet.Config` in the published Git repository!
-
-
-## Docker
-
-The software is designed to run within docker optionally.
-Orchestration is done using ```docker compose```.
-You must create a certificate first by running `.\Config\create_cert.bat`
-
-### Docker environment
-
-Docker environment is set using the environment file ```.env```.
-There is a template ```.env.template``` that can be used as a template. Copy this file to ```.env``` and set the environment variables provided within that file.
-
-### Build images
-```
-docker compose build
-```
-
-### Run containers
-```
-docker compose up
-```
-
-You can now access the Web Service under: http://localhost
-
-#### Check console logs
-```
-docker compose logs -f [service (wcscommunication|devicecommunication|transportorder|rabbitmq)]
-```
 
 ### Database Migrations
 Please refer to: https://dev.azure.com/GebhardtGroup/StoreWare/_wiki/wikis/StoreWare.wiki/541/Entity-Framework#

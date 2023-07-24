@@ -92,11 +92,7 @@ bld/
 **/Properties/launchSettings.json
 
 # IRS/Kn: Runtime environment (may contain sensitive data), do not publish! Use .env.template for template.
-.env
-
-# IRS/Kn
-/Certs
-/Config/rabbitmq/rabbitmq.conf
+**/.env
 
 #WebUi
 /Config/caddy/html/ui/*
