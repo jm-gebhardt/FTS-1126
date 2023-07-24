@@ -78,7 +78,7 @@ public class GetAgvsRequestHandlerTest
         var correlationIds = new List<Guid>() { agv2.CorrelationId };
         Response<GetAgvsResult> response = await fixture.GetResponseAsync<GetAgvsResult>(new GetAgvsRequest(correlationIds));
         response.Message.Agvs.Count.ShouldBe(1);
-        response.Message.Agvs[0].CorrelationId.ShouldBe(agv2.CorrelationId);
+        response.Message.Agvs.First().CorrelationId.ShouldBe(agv2.CorrelationId);
     }
 
     [TestMethod]

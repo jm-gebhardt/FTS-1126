@@ -31,7 +31,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
         /// <summary>
         /// Init controller
         /// </summary>
-        public AgvController(IRequestClient<GetAgvsRequest> getAgvsClient,
+        public AgvController(
+            IRequestClient<GetAgvsRequest> getAgvsClient,
             IRequestClient<GetAgvGraphRequest> getAgvGraphClient,
             IRequestClient<GetAgvDataRequest> getAgvDataClient,
             IRequestClient<GetAgvPositionsRequest> getAgvPositionsClient,
@@ -83,7 +84,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
                 return NotFound();
             }
 
-            return Ok(response.Message.Agvs[0]);
+            return Ok(response.Message.Agvs.First());
         }
 
         /// <summary>

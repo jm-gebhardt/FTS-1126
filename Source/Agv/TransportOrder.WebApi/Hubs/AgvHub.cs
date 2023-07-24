@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Models;
 using Microsoft.AspNetCore.SignalR;
@@ -64,7 +63,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs
         /// <summary>
         /// Broadcasts the status of an agv to all clients
         /// </summary>
-        public Task SendAgvStateToAllClients(IAgv agv, bool isInitialState);
+        public Task SendAgvStateToAllClients(AgvDto agv, bool isInitialState);
 
         /// <summary>
         /// Broadcasts the position of an agv to all clients
@@ -90,18 +89,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs
         }
 
         /// <inheritdoc/>
-        public async Task SendAgvStateToAllClients(IAgv agv, bool isInitialState)
+        public async Task SendAgvStateToAllClients(AgvDto agv, bool isInitialState)
         {
-            // Combine Agv and AgvStatus into AgvStatusDto
-            var agvDto = _mapper.Map<AgvDto>(agv);
-
             if (isInitialState)
             {
-                await _hubContext.Clients.All.AgvDiscovered(agvDto);
+                await _hubContext.Clients.All.AgvDiscovered(agv);
             }
             else
             {
-                await _hubContext.Clients.All.AgvChanged(agvDto);
+                await _hubContext.Clients.All.AgvChanged(agv);
             }
         }
 

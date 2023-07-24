@@ -1,7 +1,10 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Common;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Requests.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs;
 using MassTransit;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Consumer
 {
@@ -13,16 +16,20 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Consumer
     {
         private readonly ILogger<AgvPropertyChangedConsumer> _logger;
         private readonly IAgvHubContext _agvHubContext;
+        private readonly IRequestClient<GetAgvsRequest> _getAgvsClient;
 
         /// <summary>
         /// Constructor
         /// </summary>
         public AgvPropertyChangedConsumer(
             ILogger<AgvPropertyChangedConsumer> logger,
-            IAgvHubContext agvHubContext)
+            IAgvHubContext agvHubContext,
+            IRequestClient<GetAgvsRequest> getAgvsClient
+            )
         {
             _logger = logger;
             _agvHubContext = agvHubContext;
+            _getAgvsClient = getAgvsClient;
         }
 
         /// <summary>
@@ -32,8 +39,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Consumer
         public async Task Consume(ConsumeContext<AgvPropertyChanged> context)
         {
             _logger.LogTrace("{MessageType} {AgvId}/{CorrelationId} received", nameof(AgvPropertyChanged), context.Message.Agv.AgvId, context.Message.Agv.CorrelationId);
+            
+            Response<GetAgvsResult> response = await _getAgvsClient.GetResponse<GetAgvsResult>(new GetAgvsRequest(new[] { context.Message.Agv.CorrelationId }));
 
-            await _agvHubContext.SendAgvStateToAllClients(context.Message.Agv, false);
+            if (!response.Message.Agvs.IsNullOrEmpty())
+            {
+                await _agvHubContext.SendAgvStateToAllClients(response.Message.Agvs.First(), false);
+            }
         }
     }
 }

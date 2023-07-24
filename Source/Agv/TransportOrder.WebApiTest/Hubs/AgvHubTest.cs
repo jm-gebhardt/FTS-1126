@@ -36,7 +36,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Hubs
             var agvHubContext = new AgvHubContext(mockHubContext.Object, mapper);
 
             var agv = new AgvSaga(AgvId.ToGuid(), AgvId);
-            await agvHubContext.SendAgvStateToAllClients(agv, true);
+            var agvDto = mapper.Map<AgvDto>(agv);
+            await agvHubContext.SendAgvStateToAllClients(agvDto, true);
 
             mockHubContext.Verify(c => c.Clients.All.AgvDiscovered(It.Is<AgvDto>(a => a.CorrelationId == agv.CorrelationId)), Times.Once);
         }
@@ -49,7 +50,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Hubs
             var agvHubContext = new AgvHubContext(mockHubContext.Object, mapper);
 
             var agv = new AgvSaga(AgvId.ToGuid(), AgvId);
-            await agvHubContext.SendAgvStateToAllClients(agv, false);
+            var agvDto = mapper.Map<AgvDto>(agv);
+            await agvHubContext.SendAgvStateToAllClients(agvDto, false);
 
             mockHubContext.Verify(c => c.Clients.All.AgvChanged(It.Is<AgvDto>(a => a.CorrelationId == agv.CorrelationId)), Times.Once);
         }
