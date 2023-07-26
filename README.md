@@ -63,8 +63,8 @@ DeviceCommunication:
 ASPNETCORE_URLS=http://127.0.0.1:5020
 ```
 
-#### WebAPI
-The TransportOrder module runs a web API in order to monitor the service from outside.
+#### REST API
+The TransportOrder module runs a REST API in order to monitor the service from outside.
 You can access the UI with this URL
 ```
 ASPNETCORE_URLS/swagger (typically http://127.0.0.1:5010/swagger)
@@ -74,9 +74,6 @@ If you are running the service in docker, you need to expose the swagger URL to 
 ```
 http://localhost/transportorder/swagger/
 ```
-
-### WebUI
-See the WebUI [README.md](Source/Agv/ui/README.md) for more information
 
 ## Run Simulation
 Ensure that `RABBITMQ__HOST` is set

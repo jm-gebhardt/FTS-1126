@@ -94,6 +94,3 @@ bld/
 # IRS/Kn: Runtime environment (may contain sensitive data), do not publish! Use .env.template for template.
 **/.env
 
-#WebUi
-/Config/caddy/html/ui/*
-/Source/Agv/ui/public/Karis-BF3-VierfachLAM.png
