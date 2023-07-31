@@ -84,18 +84,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
         {
             string agvId = $"{AgvPrefix}-{agvIndex}";
             var correlationId = agvId.ToGuid();
-            // Next even number from rows as number of service nodes.
-            int serviceNodeCount = (_simulateOptions.GridRows / 2 + _simulateOptions.GridRows % 2) * 2;
-            var serviceNodes = new AgvGraph.NodeType[serviceNodeCount];
-            for (; serviceNodeCount > 0; --serviceNodeCount)
-            {
-                serviceNodes[serviceNodeCount - 1] = serviceNodeCount % 2 == 0 ? AgvGraph.NodeType.Park : AgvGraph.NodeType.Charge;
-            }
+            
             var grid = new GridGraphGenerator(
                 _sources,
                 _destinations,
                 _simulateOptions.GridRows,
-                serviceNodes
+                CreateServiceNodes()
             ).Generate(correlationId);
             var mapGenerator = new MapGenerator(grid);
             return new SimulatedAgv(
@@ -106,6 +100,22 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
                 GenerateData(correlationId),
                 mapGenerator.Generate()
             );
+        }
+
+        /// <summary>
+        /// Create a service node for each side of the grid
+        /// Park on left, charge on right
+        /// </summary>
+        /// <returns></returns>
+        private AgvGraph.NodeType[] CreateServiceNodes()
+        {
+            int serviceNodeCount = _simulateOptions.GridRows * 2;
+            var serviceNodes = new AgvGraph.NodeType[serviceNodeCount];
+            for(int idx = 0; idx < serviceNodeCount; idx++)
+            {
+                serviceNodes[idx] = idx % 2 == 0 ? AgvGraph.NodeType.Park : AgvGraph.NodeType.Charge;
+            }
+            return serviceNodes;
         }
 
         private AgvData GenerateData(Guid correlationId)
