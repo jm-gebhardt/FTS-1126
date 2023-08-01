@@ -4,7 +4,7 @@
 namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands
 {
     /// <summary>
-    /// Request an AGV to lunock
+    /// Request an AGV to unlock
     /// </summary>
     [JetBrains.Annotations.PublicAPI]
     public record UnlockAgv : CorrelatedBy<Guid>
@@ -12,9 +12,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands
         /// <inheritdoc/>
         public Guid CorrelationId { get; }
 
-        /// <summary>
-        /// Build message.
-        /// </summary>
+        /// <inheritdoc cref="UnlockAgv"/>
         /// <param name="correlationId"></param>
         public UnlockAgv(Guid correlationId)
         {

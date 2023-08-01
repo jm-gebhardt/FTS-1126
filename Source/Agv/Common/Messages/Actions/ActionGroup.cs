@@ -47,6 +47,11 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
         public ICollection<AgvAction> Actions { get; init; }
 
         /// <summary>
+        /// If true, then this ActionGroup was created manually, not by the system
+        /// </summary>
+        public bool IsManual { get; set; }
+
+        /// <summary>
         /// Generating an instance of <see cref="ActionGroup"/>
         /// </summary>
         /// <param name="correlationId">The CorrelationId of the ActionGroup</param>
@@ -54,9 +59,11 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
         /// <param name="orderId">The OrderID</param>
         /// <param name="assignedAgv">The assigned Agv of this ActionGroup</param>
         /// <param name="createdDate">The date of the creation of this ActionGroup</param>
-        public ActionGroup(Guid correlationId, string orderId, ICollection<AgvAction> actions, DateTime? createdDate = default, Guid? assignedAgv = null) : this(correlationId, orderId)
+        /// <param name="isManual">If true, then this ActionGroup was created manually, not by the system</param>
+        public ActionGroup(Guid correlationId, string orderId, ICollection<AgvAction> actions, DateTime? createdDate = default, Guid? assignedAgv = null, bool isManual = false) : this(correlationId, orderId)
         {
             AssignedAgv = assignedAgv;
+            IsManual = isManual;
             CreatedDate = createdDate.GetValueOrDefault(DateTime.UtcNow);
             Actions = actions;
         }

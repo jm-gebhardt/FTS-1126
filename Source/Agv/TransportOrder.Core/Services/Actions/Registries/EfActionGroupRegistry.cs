@@ -2,6 +2,7 @@
 using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Extensions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db;
 using Microsoft.EntityFrameworkCore;
 
@@ -32,7 +33,11 @@ public class EfActionGroupRegistry : IActionGroupRegistry
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<ActionGroup>> GetActionGroupsAsync(IList<ActionGroupState>? states = null, DateTime? fromDate = null, DateTime? toDate = null, int maxItems = 0)
+    public async Task<IReadOnlyList<ActionGroup>> GetActionGroupsAsync(ActionGroupState state, DateTime? fromDate = null, DateTime? toDate = null, int maxItems = 0, Guid? assignedAgvCorrelationId = null, bool? isManual = null)
+        => await GetActionGroupsAsync(new List<ActionGroupState> {state}, fromDate, toDate, maxItems, assignedAgvCorrelationId, isManual);
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<ActionGroup>> GetActionGroupsAsync(IList<ActionGroupState>? states = null, DateTime? fromDate = null, DateTime? toDate = null, int maxItems = 100, Guid? assignedAgvCorrelationId = null, bool? isManual = null)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>()
@@ -41,6 +46,16 @@ public class EfActionGroupRegistry : IActionGroupRegistry
         if (states?.Any() ?? false)
         {
             actionGroups = actionGroups.Where(g => states.Contains(g.State));
+        }
+
+        if (isManual != null)
+        {
+            actionGroups = actionGroups.Where(g => g.IsManual == isManual);
+        }
+
+        if (assignedAgvCorrelationId != null)
+        {
+            actionGroups = actionGroups.Where(g => g.AssignedAgv == assignedAgvCorrelationId);
         }
 
         if (fromDate != null && fromDate != DateTime.MinValue)
@@ -54,6 +69,8 @@ public class EfActionGroupRegistry : IActionGroupRegistry
         }
 
         List<ActionGroup> actionGroupsAsync = await actionGroups
+            .OrderBy(g => g.CreatedDate)
+            .ThenByDescending(g => g.IsManual)
             .Include(g => g.Actions)
             .AsNoTracking()
             .Take(maxItems)
@@ -216,19 +233,23 @@ public class EfActionGroupRegistry : IActionGroupRegistry
     }
 
     /// <inheritdoc/>
-    public async Task<IReadOnlyList<ActionGroup>> GetNotStartedActionGroupsAsync()
+    public async Task<IReadOnlyList<ActionGroup>> GetNotStartedActionGroupsAsync(Guid agvCorrelationId)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
         List<ActionGroup> notStartedActionGroups = await queryable
-            .Where(actionGroup => actionGroup.State == ActionGroupState.Created)
+            .Where(actionGroup => actionGroup.State == ActionGroupState.Created &&
+                                  (actionGroup.AssignedAgv == null || actionGroup.AssignedAgv == agvCorrelationId)
+            )
+            .OrderBy(g => g.CreatedDate)
+            .ThenByDescending(g => g.IsManual)
             .Include(g => g.Actions)
             .AsNoTracking()
             .ToListAsync();
 
         return notStartedActionGroups;
     }
-    
+
     /// <inheritdoc/>
     public async Task<IReadOnlyList<ActionGroup>> GetInvalidActionGroupsAsync()
     {

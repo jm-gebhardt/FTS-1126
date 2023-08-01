@@ -25,7 +25,7 @@ public class ActionManagerTest
             .WithAgvNeedsCharging(agv)
             .WithAgvCarryingLoad(agv);
 
-        await fixture.ActionManager.AssignExclusivelyAsync(agv);
+        await fixture.ActionManager.AssignExclusivelyIfAgvReadyAsync(agv.CorrelationId);
         fixture.VerifyActionStarted(agv, subsequentAction);
     }
 
@@ -43,7 +43,7 @@ public class ActionManagerTest
             .WithAgvCarryingLoad(agv)
             .WithAgvMaintenanceRequested(agv);
 
-        await fixture.ActionManager.AssignExclusivelyAsync(agv);
+        await fixture.ActionManager.AssignExclusivelyIfAgvReadyAsync(agv.CorrelationId);
         fixture.VerifyActionStarted(agv, subsequentAction);
     }
 
@@ -63,7 +63,7 @@ public class ActionManagerTest
             .WithAgvCanGetNewLoad(agv)
             .WithAgvHasRouteToDestination(agv);
 
-        await fixture.ActionManager.AssignExclusivelyAsync(agv);
+        await fixture.ActionManager.AssignExclusivelyIfAgvReadyAsync(agv.CorrelationId);
         fixture.VerifyActionStarted(agv, subsequentAction);
     }
 
@@ -80,7 +80,7 @@ public class ActionManagerTest
             .SetSubsequentAction(agv, subsequentAction)
             .WithAgvCarryingLoad(agv);
 
-        await fixture.ActionManager.AssignExclusivelyAsync(agv);
+        await fixture.ActionManager.AssignExclusivelyIfAgvReadyAsync(agv.CorrelationId);
         fixture.VerifyActionStarted(agv, subsequentAction);
     }
 
@@ -97,7 +97,7 @@ public class ActionManagerTest
             .SetSubsequentAction(agv, subsequentAction)
             .WithAgvCarryingLoad(agv);
 
-        await fixture.ActionManager.AssignExclusivelyAsync(agv);
+        await fixture.ActionManager.AssignExclusivelyIfAgvReadyAsync(agv.CorrelationId);
         fixture.VerifyActionStarted(agv, subsequentAction);
     }
 
@@ -114,7 +114,7 @@ public class ActionManagerTest
             .AddReservableChargingNode(chargingNode)
             .WithAgvNeedsCharging(agv);
 
-        await fixture.ActionManager.AssignExclusivelyAsync(agv);
+        await fixture.ActionManager.AssignExclusivelyIfAgvReadyAsync(agv.CorrelationId);
         fixture.VerifyActionStarted(a => a == agv, o => o.ActionType == ActionType.Charge && o.TargetNodeId == chargingNode.Id);
     }
 
@@ -132,7 +132,7 @@ public class ActionManagerTest
             .WithAgvHasRouteToDestination(agv)
             .WithAgvCanGetNewLoad(agv);
 
-        await fixture.ActionManager.AssignExclusivelyAsync(agv, cancellationToken: CancellationToken.None);
+        await fixture.ActionManager.AssignExclusivelyIfAgvReadyAsync(agv.CorrelationId, cancellationToken: CancellationToken.None);
         fixture.VerifyActionStarted(agv, firstAction);
     }
 
@@ -147,7 +147,7 @@ public class ActionManagerTest
             .AddNotStartedActionGroup(actionGroup)
             .WithAgvMaintenanceRequested(agv, maintenanceNode: maintenanceNode);
 
-        await fixture.ActionManager.AssignExclusivelyAsync(agv, cancellationToken: CancellationToken.None);
+        await fixture.ActionManager.AssignExclusivelyIfAgvReadyAsync(agv.CorrelationId, cancellationToken: CancellationToken.None);
         fixture.VerifyActionStarted(a => a == agv, o => o.ActionType == ActionType.Move && o.TargetNodeId == maintenanceNode.Id);
     }
 
@@ -164,7 +164,7 @@ public class ActionManagerTest
             .AddReservableChargingNode(chargingNode)
             .WithAgvEligibleForCharging(agv);
 
-        await fixture.ActionManager.AssignExclusivelyAsync(agv);
+        await fixture.ActionManager.AssignExclusivelyIfAgvReadyAsync(agv.CorrelationId);
         fixture.VerifyActionStarted(a => a == agv, a => a.ActionType == ActionType.Charge && a.TargetNodeId == chargingNode.Id);
     }
 
@@ -180,7 +180,7 @@ public class ActionManagerTest
             .AddAssignedActionGroupAndAgv(actionGroup, agv, parkingAction)
             .AddReservableParkingNode(parkingNode);
 
-        await fixture.ActionManager.AssignExclusivelyAsync(agv);
+        await fixture.ActionManager.AssignExclusivelyIfAgvReadyAsync(agv.CorrelationId);
         fixture.VerifyActionStarted(a => a == agv, o => o.ActionType == ActionType.Move &&
                                                         o.TargetNodeId == parkingNode.Id);
     }
@@ -195,7 +195,7 @@ public class ActionManagerTest
             .AddReservableChargingNode(chargingNode)
             .WithAgvEligibleForCharging(agv);
 
-        await fixture.ActionManager.AssignExclusivelyAsync(agv);
+        await fixture.ActionManager.AssignExclusivelyIfAgvReadyAsync(agv.CorrelationId);
         fixture.VerifyNoActionStarted();
     }
 
@@ -209,7 +209,7 @@ public class ActionManagerTest
             .AddReservableParkingNode(parkingNode)
             .WithAgvOnAParkNode(agv);
 
-        await fixture.ActionManager.AssignExclusivelyAsync(agv);
+        await fixture.ActionManager.AssignExclusivelyIfAgvReadyAsync(agv.CorrelationId);
         fixture.VerifyNoActionStarted();
     }
 
@@ -225,8 +225,8 @@ public class ActionManagerTest
             .WithAgvHasRouteToDestination(agv)
             .WithAgvCanGetNewLoad(agv);
 
-        await fixture.ActionManager.AssignExclusivelyAsync(agv, cancellationToken: CancellationToken.None);
-        fixture.AgvStateService.Verify(a => a.SetBusyAsync(agv, It.IsAny<bool>()));
+        await fixture.ActionManager.AssignExclusivelyIfAgvReadyAsync(agv.CorrelationId, cancellationToken: CancellationToken.None);
+        fixture.AgvStateService.Verify(a => a.SetBusyAsync(agv, It.IsAny<bool>(), It.IsAny<bool>(), CancellationToken.None));
     }
 
     [TestMethod]
@@ -236,14 +236,14 @@ public class ActionManagerTest
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         var firstAction = actionGroup.Actions.First();
         var fixture = new ActionManagerFixture()
-            .AddReadyAgv(agv, readyForLockWhenIgnoreChargingFlag: true)
+            .AddReadyAgv(agv, readyForBusyWhenIgnoreChargingFlag: true)
             .AddNotStartedActionGroup(actionGroup)
             .AddAssignedActionGroupAndAgv(actionGroup, agv, firstAction)
             .ChooseNextActionGroup(agv, actionGroup)
             .WithAgvHasRouteToDestination(agv)
             .WithAgvCanGetNewLoad(agv);
 
-        await fixture.ActionManager.AssignExclusivelyAsync(agv, ignoreChargingFlag: true, cancellationToken: CancellationToken.None);
+        await fixture.ActionManager.AssignExclusivelyIfAgvReadyAsync(agv.CorrelationId, cancellationToken: CancellationToken.None);
         fixture.VerifyActionStarted(agv, firstAction);
     }
 
@@ -254,7 +254,7 @@ public class ActionManagerTest
         var fixture = new ActionManagerFixture()
             .AddReadyAgv(agv, false);
 
-        await fixture.ActionManager.AssignExclusivelyAsync(agv, ignoreChargingFlag: true, cancellationToken: CancellationToken.None);
+        await fixture.ActionManager.AssignExclusivelyIfAgvReadyAsync(agv.CorrelationId, cancellationToken: CancellationToken.None);
         fixture.VerifyNoActionStarted();
     }
 
@@ -268,8 +268,49 @@ public class ActionManagerTest
             .AddNotStartedActionGroup(actionGroup)
             .WithAgvHasRouteToDestination(agv);
 
-        await fixture.ActionManager.AssignExclusivelyAsync(agv, cancellationToken: CancellationToken.None);
+        await fixture.ActionManager.AssignExclusivelyIfAgvReadyAsync(agv.CorrelationId, cancellationToken: CancellationToken.None);
         fixture.VerifyNoActionStarted();
+    }
+
+    [TestMethod]
+    public async Task AssignExclusivelyAsync_WhenAgvIsCarryingLoadButIsLockedAndHasManualActionGroup_StartsManualActionGroup()
+    {
+        const string destinationNodeId = "Test Destination Node Id";
+        var agv = AgvGenerator.GenerateIdleAgv(isLocked: true);
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        var subsequentAction = actionGroup.Actions.Last();
+        var moveActionGroup = AgvActionGenerator.GenerateMoveActionGroup(destinationNodeId, true);
+        var fixture = new ActionManagerFixture()
+            .AddReadyAgv(agv)
+            .AddNotStartedActionGroup(actionGroup)
+            .AddAssignedActionGroupAndAgv(actionGroup, agv, subsequentAction)
+            .AddManuallyTriggeredActionGroup(agv, moveActionGroup)
+            .SetSubsequentAction(agv, subsequentAction)
+            .WithAgvCarryingLoad(agv);
+
+        await fixture.ActionManager.AssignExclusivelyIfAgvReadyAsync(agv.CorrelationId, CancellationToken.None);
+        fixture.VerifyActionStarted(agv, moveActionGroup.Actions.First());
+    }
+
+    [TestMethod]
+    public async Task AssignExclusivelyAsync_WhenAgvCanGetNewLoadAndHasManualActionGroup_StartsManualActionGroup()
+    {
+        const string destinationNodeId = "Test Destination Node Id";
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        var moveActionGroup = AgvActionGenerator.GenerateMoveActionGroup(destinationNodeId, true);
+        var firstAction = actionGroup.Actions.First();
+        var fixture = new ActionManagerFixture()
+            .AddReadyAgv(agv)
+            .AddNotStartedActionGroup(actionGroup)
+            .AddAssignedActionGroupAndAgv(actionGroup, agv, firstAction)
+            .AddManuallyTriggeredActionGroup(agv, moveActionGroup)
+            .ChooseNextActionGroup(agv, moveActionGroup)
+            .WithAgvHasRouteToDestination(agv)
+            .WithAgvCanGetNewLoad(agv);
+
+        await fixture.ActionManager.AssignExclusivelyIfAgvReadyAsync(agv.CorrelationId, cancellationToken: CancellationToken.None);
+        fixture.VerifyActionStarted(agv, moveActionGroup.Actions.First());
     }
 
     [TestMethod]
@@ -302,7 +343,7 @@ public class ActionManagerTest
             .AddAssignedActionGroupAndAgv(actionGroup, agv, agvAction);
 
         await fixture.ActionManager.CompleteActionAsync(agvAction.CorrelationId, CancellationToken.None);
-        fixture.AgvStateService.Verify(x => x.SetIdleAsync(agv), Times.Once);
+        fixture.AgvStateService.Verify(x => x.SetIdleAsync(agv.CorrelationId, CancellationToken.None), Times.Once);
     }
 
     [TestMethod]
@@ -318,7 +359,7 @@ public class ActionManagerTest
             .AddAssignedActionGroupAndAgv(chargeActionGroup, agv, chargeAction);
 
         await fixture.ActionManager.CompleteActionAsync(chargeAction.CorrelationId, CancellationToken.None);
-        fixture.AgvStateService.Verify(x => x.SetIdleAsync(agv), Times.Never);
+        fixture.AgvStateService.Verify(x => x.SetIdleAsync(agv.CorrelationId, CancellationToken.None), Times.Never);
     }
 
     [TestMethod]

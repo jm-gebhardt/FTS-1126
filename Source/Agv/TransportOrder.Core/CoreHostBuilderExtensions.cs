@@ -64,6 +64,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
                 services.AddSingleton<IStartActionService, StartActionService>();
                 services.AddSingleton<IChargingPointManager, ChargingPointManager>();
                 services.AddSingleton<IParkPointService, ParkPointService>();
+                services.AddSingleton<IAgvReadyService, AgvReadyService>();
 
                 services.AddSingleton<IAgvStateService, AgvStateService>();
 

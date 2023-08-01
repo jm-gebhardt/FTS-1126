@@ -21,5 +21,5 @@ public interface IChooseAgvActionGroupService
     /// <param name="agv"></param>
     /// <returns></returns>
     /// <exception cref="AgvLocationUnknownException"></exception>
-    Task<AgvAction?> GetActionGroupAsync(IAgv agv);
+    Task<ActionGroup?> GetNotStartedActionGroupAsync(IAgv agv);
 }

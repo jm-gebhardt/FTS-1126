@@ -3,7 +3,7 @@ using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Services;
 
-namespace Gebhardt.StoreWare.Agv.Common.Extensions;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Extensions;
 
 /// <summary>
 /// Extension methods for <see cref="ActionGroup"/>
@@ -85,7 +85,7 @@ public static class ActionGroupExtensions
         }
         else if (actionGroup.AssignedAgv != agvToAssign.CorrelationId)
         {
-            throw new ActionGroupAlreadyAssignedException(actionGroup.AssignedAgv, agvToAssign.CorrelationId);
+            throw new ActionGroupAlreadyAssignedException(actionGroup, agvToAssign.CorrelationId);
         }
         return actionGroup;
     }

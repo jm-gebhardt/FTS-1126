@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
+using Microsoft.AspNetCore.Mvc;
 using MassTransit;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos.Graphs;
@@ -6,7 +7,6 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Core.Models;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Common;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Requests.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Requests.Commands;
-using Microsoft.IdentityModel.Tokens;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
 {
@@ -17,7 +17,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
     [ApiExplorerSettings(GroupName = RestApiGroup.GroupName)]
     public class AgvController : Controller
     {
-        private readonly IRequestClient<GetAgvsRequest> _getAgvsClient;
+        private readonly IRequestClient<GetAgvDtoRequest> _getAgvClient;
+        private readonly IRequestClient<GetAgvsDtoRequest> _getAgvsClient;
         private readonly IRequestClient<GetAgvGraphRequest> _getAgvGraphClient;
         private readonly IRequestClient<GetAgvDataRequest> _getAgvDataClient;
         private readonly IRequestClient<GetAgvPositionsRequest> _getAgvPositionsClient;
@@ -27,12 +28,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
         private readonly IRequestClient<RequestAgvGraphCommand> _emitRequestGraphClient;
         private readonly IRequestClient<GetActiveAgvErrorsRequest> _getAgvErrorsRequestClient;
         private readonly IRequestClient<GetAgvErrorsRequest> _getAgvErrorHistoryRequestClient;
+        private readonly IRequestClient<MoveAgv> _moveAgvClient;
 
         /// <summary>
         /// Init controller
         /// </summary>
-        public AgvController(
-            IRequestClient<GetAgvsRequest> getAgvsClient,
+        public AgvController(IRequestClient<GetAgvDtoRequest> getAgvClient,
+            IRequestClient<GetAgvsDtoRequest> getAgvsClient,
             IRequestClient<GetAgvGraphRequest> getAgvGraphClient,
             IRequestClient<GetAgvDataRequest> getAgvDataClient,
             IRequestClient<GetAgvPositionsRequest> getAgvPositionsClient,
@@ -41,8 +43,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
             IRequestClient<RequestAgvDataCommand> emitRequestDataClient,
             IRequestClient<RequestAgvGraphCommand> emitRequestGraphClient,
             IRequestClient<GetActiveAgvErrorsRequest> getAgvErrorsRequestClient,
-            IRequestClient<GetAgvErrorsRequest> getAgvErrorHistoryRequestClient)
+            IRequestClient<GetAgvErrorsRequest> getAgvErrorHistoryRequestClient,
+            IRequestClient<MoveAgv> moveAgvClient)
         {
+            _getAgvClient = getAgvClient;
             _getAgvsClient = getAgvsClient;
             _getAgvGraphClient = getAgvGraphClient;
             _getAgvDataClient = getAgvDataClient;
@@ -53,6 +57,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
             _emitRequestGraphClient = emitRequestGraphClient;
             _getAgvErrorsRequestClient = getAgvErrorsRequestClient;
             _getAgvErrorHistoryRequestClient = getAgvErrorHistoryRequestClient;
+            _moveAgvClient = moveAgvClient;
         }
 
         /// <summary>
@@ -63,7 +68,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
         [Route("/agvs")]
         public async Task<ActionResult<IEnumerable<AgvDto>>> GetAgvs()
         {
-            Response<GetAgvsResult> response = await _getAgvsClient.GetResponse<GetAgvsResult>(new GetAgvsRequest(new List<Guid>()));
+            Response<GetAgvsDtoResult> response = await _getAgvsClient.GetResponse<GetAgvsDtoResult>(new GetAgvsDtoRequest(new List<Guid>()));
             return Ok(response.Message.Agvs);
         }
 
@@ -74,17 +79,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
         /// <response code="404">AGV with given correlationId doesn't exist</response>
         [HttpGet]
         [Route("/agvs/{correlationId:guid}")]
-        public async Task<ActionResult<AgvDto>> GetAgv(Guid correlationId)
+        public async Task<ActionResult<AgvDto>> GetAgv(Guid agvCorrelationId)
         {
-            var correlationIds = new List<Guid>() { correlationId };
-            Response<GetAgvsResult> response = await _getAgvsClient.GetResponse<GetAgvsResult>(new GetAgvsRequest(correlationIds));
+            Response<GetAgvDtoResult> response = await _getAgvClient.GetResponse<GetAgvDtoResult>(new GetAgvDtoRequest(agvCorrelationId));
 
-            if (response.Message.Agvs.IsNullOrEmpty())
-            {
-                return NotFound();
-            }
-
-            return Ok(response.Message.Agvs.First());
+            return Ok(response.Message.Agv);
         }
 
         /// <summary>
@@ -131,7 +130,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
         /// Unlock AGV to allow it to be assigned to transport orders
         /// </summary>
         /// <response code="200">Ok: AGV status was successfully set to Idle</response>
-        /// <response code="400">Bad Request: AGV is not in State 'Discovered'</response>
         /// <response code="404">Not Found: AGV with the given correlationId does not exist</response>
         [HttpPatch]
         [Route("/agvs/{correlationId}/unlock")]
@@ -205,6 +203,20 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
         {
             Response<GetAgvErrorsResult> response = await _getAgvErrorHistoryRequestClient.GetResponse<GetAgvErrorsResult>(new GetAgvErrorsRequest(agvCorrelationId, dateFrom ?? DateTime.MinValue, dateTo ?? DateTime.MaxValue));
             return Ok(response.Message.AgvErrorsDto);
+        }
+
+        /// <summary>
+        /// Move Agv manually to a specific node. This will be executed as the next ActionGroup
+        /// </summary>
+        /// <response code="200">Ok: The ActionGroup for the move was created and is going to be processed</response>
+        /// <response code="404">Not Found: Agv with the given correlationId does not exist</response>
+        /// <returns>The CorrelationId of the created ActionGroup</returns>
+        [HttpPost]
+        [Route("/agvs/{correlationId}/move")]
+        public async Task<ActionResult> MoveAgv(Guid correlationId, string destinationNodeId)
+        {
+            Response<MoveAgvResult> response = await _moveAgvClient.GetResponse<MoveAgvResult>(new MoveAgv(correlationId, destinationNodeId));
+            return Ok(response.Message.ActionGroupCorrelationId);
         }
     }
 }

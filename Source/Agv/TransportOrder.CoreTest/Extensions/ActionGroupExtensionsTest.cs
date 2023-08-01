@@ -1,12 +1,12 @@
 using Gebhardt.StoreWare.Agv.Common.Exceptions;
-using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.CommonTest.Extensions;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Extensions;
 
 [TestClass]
 public class ActionGroupExtensionsTest

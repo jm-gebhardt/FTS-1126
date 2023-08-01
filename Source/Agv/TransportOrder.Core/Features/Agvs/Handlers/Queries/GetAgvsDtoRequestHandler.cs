@@ -13,11 +13,11 @@ using MassTransit;
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Queries
 {
     /// <summary>
-    /// Defines a handler for the GetAgv request
+    /// Defines a handler for the GetAgv <see cref="GetAgvsDtoRequest"/>
     /// Gets all Agv from AgvRegistry sorted by AgvId ascending, returns IEnumerable of Agv
     /// </summary>
     [UsedImplicitly]
-    public class GetAgvsRequestHandler : IConsumer<GetAgvsRequest>
+    public class GetAgvsDtoRequestHandler : IConsumer<GetAgvsDtoRequest>
     {
         private readonly IAgvRegistry _agvRegistry;
         private readonly IActionGroupRegistry _actionGroupRegistry;
@@ -25,13 +25,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Quer
         private readonly IAgvErrorRegistry _agvErrorRegistry;
 
         /// <summary>
-        /// <inheritdoc cref="GetAgvsRequestHandler"/>
+        /// <inheritdoc cref="GetAgvsDtoRequestHandler"/>
         /// </summary>
         /// <param name="agvRegistry"></param>
         /// <param name="actionGroupRegistry"></param>
         /// <param name="mapper"></param>
         /// <param name="agvErrorRegistry"></param>
-        public GetAgvsRequestHandler(IAgvRegistry agvRegistry, IActionGroupRegistry actionGroupRegistry, IMapper mapper, IAgvErrorRegistry agvErrorRegistry)
+        public GetAgvsDtoRequestHandler(IAgvRegistry agvRegistry, IActionGroupRegistry actionGroupRegistry, IMapper mapper, IAgvErrorRegistry agvErrorRegistry)
         {
             _agvRegistry = agvRegistry;
             _actionGroupRegistry = actionGroupRegistry;
@@ -39,15 +39,16 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Quer
             _agvErrorRegistry = agvErrorRegistry;
         }
 
-        /// <inheritdoc cref="GetAgvsRequestHandler"/>
+        /// <inheritdoc cref="GetAgvsDtoRequestHandler"/>
         /// <param name="context"></param>
         /// <returns></returns>
-        public async Task Consume(ConsumeContext<GetAgvsRequest> context)
+        public async Task Consume(ConsumeContext<GetAgvsDtoRequest> context)
         {
             IQueryable<IAgv> query = _agvRegistry.GetAllAgvs();
-            if (context.Message.CorrelationIds.Any()) // Optionally filter for specific correlation ids
+            ICollection<Guid> correlationIds = context.Message.CorrelationIds;
+            if (correlationIds.Any()) // Optionally filter for specific correlation ids
             {
-                query = query.Where(a => context.Message.CorrelationIds.Contains(a.CorrelationId));
+                query = query.Where(a => correlationIds.Contains(a.CorrelationId));
             }
 
             List<IAgv> agvs = query.OrderBy(a => a.AgvId).ToList();
@@ -73,7 +74,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Quer
                 }
                 return agvDto;
             }).ToList();
-            await context.RespondAsync(new GetAgvsResult(agvDtos));
+            await context.RespondAsync(new GetAgvsDtoResult(agvDtos));
         }
     }
 }

@@ -46,7 +46,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Comm
             }
 
             await _bus.Publish(new RequestAgvGraph(agv.CorrelationId, agv.AgvId));
-            await context.RespondAsync(new RequestAgvGraphResult());
+            await context.RespondAsync(new RequestAgvGraphResult(agv.CorrelationId));
         }
     }
 

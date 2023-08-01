@@ -3,5 +3,5 @@
     /// <summary>
     /// Defines a basic, successful result
     /// </summary>
-    public record BaseResult;
+    public record Success;
 }

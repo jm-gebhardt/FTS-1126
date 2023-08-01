@@ -16,7 +16,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Consumer
     {
         private readonly ILogger<AgvPropertyChangedConsumer> _logger;
         private readonly IAgvHubContext _agvHubContext;
-        private readonly IRequestClient<GetAgvsRequest> _getAgvsClient;
+        private readonly IRequestClient<GetAgvsDtoRequest> _getAgvsClient;
 
         /// <summary>
         /// Constructor
@@ -24,7 +24,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Consumer
         public AgvPropertyChangedConsumer(
             ILogger<AgvPropertyChangedConsumer> logger,
             IAgvHubContext agvHubContext,
-            IRequestClient<GetAgvsRequest> getAgvsClient
+            IRequestClient<GetAgvsDtoRequest> getAgvsClient
             )
         {
             _logger = logger;
@@ -40,7 +40,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Consumer
         {
             _logger.LogTrace("{MessageType} {AgvId}/{CorrelationId} received", nameof(AgvPropertyChanged), context.Message.Agv.AgvId, context.Message.Agv.CorrelationId);
             
-            Response<GetAgvsResult> response = await _getAgvsClient.GetResponse<GetAgvsResult>(new GetAgvsRequest(new[] { context.Message.Agv.CorrelationId }));
+            Response<GetAgvsDtoResult> response = await _getAgvsClient.GetResponse<GetAgvsDtoResult>(new GetAgvsDtoRequest(new[] { context.Message.Agv.CorrelationId }));
 
             if (!response.Message.Agvs.IsNullOrEmpty())
             {

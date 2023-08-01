@@ -28,7 +28,7 @@ public class StopChargingCommandConsumerTest
             .Build();
 
         var stopChargingCommand = new StopChargingCommand(correlationId);
-        await fixture.GetResponseAsync<BaseResult>(stopChargingCommand);
+        await fixture.GetResponseAsync<Success>(stopChargingCommand);
 
         bool publishCheck = await fixture.TestHarness!.Published.Any<AgvStoppedCharging>();
         publishCheck.ShouldBeTrue();
@@ -42,7 +42,7 @@ public class StopChargingCommandConsumerTest
             .Build();
 
         var stopChargingCommand = new StopChargingCommand(correlationId);
-        await MediatorShould.ThrowRequestExceptionAsync<AgvStatusReceivedNotFoundException>(async () => await fixture.GetResponseAsync<BaseResult>(stopChargingCommand));
+        await MediatorShould.ThrowRequestExceptionAsync<AgvStatusReceivedNotFoundException>(async () => await fixture.GetResponseAsync<Success>(stopChargingCommand));
 
         bool publishCheck = await fixture.TestHarness!.Published.Any<AgvStoppedCharging>();
         publishCheck.ShouldBeFalse();
@@ -58,7 +58,7 @@ public class StopChargingCommandConsumerTest
             .Build();
 
         var stopChargingCommand = new StopChargingCommand(correlationId);
-        await MediatorShould.ThrowRequestExceptionAsync<NotInCorrectStateException>(async () => await fixture.GetResponseAsync<BaseResult>(stopChargingCommand));
+        await MediatorShould.ThrowRequestExceptionAsync<NotInCorrectStateException>(async () => await fixture.GetResponseAsync<Success>(stopChargingCommand));
 
         bool publishCheck = await fixture.TestHarness!.Published.Any<AgvStoppedCharging>();
         publishCheck.ShouldBeFalse();

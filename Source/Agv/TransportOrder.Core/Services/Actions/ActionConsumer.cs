@@ -2,7 +2,6 @@ using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
@@ -22,45 +21,44 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
     {
         private readonly ILogger<ActionConsumer> _logger;
         private readonly IActionManager _actionManager;
-        private readonly IAgvRegistry _agvRegistry;
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="logger"></param>
         /// <param name="actionManager"></param>
-        /// <param name="agvRegistry"></param>
-        public ActionConsumer(ILogger<ActionConsumer> logger, IActionManager actionManager, IAgvRegistry agvRegistry)
+        public ActionConsumer(ILogger<ActionConsumer> logger, IActionManager actionManager)
         {
             _logger = logger;
             _actionManager = actionManager;
-            _agvRegistry = agvRegistry;
         }
 
         /// <inheritdoc/>
         public Task Consume(ConsumeContext<AgvBecameIdle> context)
         {
-            var agv = _agvRegistry.GetRequiredAgv(context.Message.CorrelationId);
-            return _actionManager.AssignExclusivelyAsync(agv, false, context.CancellationToken);
+            var agvCorrelationId = context.Message.CorrelationId;
+            _logger.LogDebug("{MessageType} for Agv: {AgvCorrelationId} received", nameof(AgvBecameIdle), agvCorrelationId);
+            return _actionManager.AssignExclusivelyIfAgvReadyAsync(agvCorrelationId, cancellationToken: context.CancellationToken);
         }
 
         /// <summary>
         /// Handle <see cref="ActionGroup"/> incoming from HostOrderStateMachine
         /// </summary>
         /// <param name="context"></param>
-        public Task Consume(ConsumeContext<QueueActionGroup> context)
+        public async Task Consume(ConsumeContext<QueueActionGroup> context)
         {
-            _logger.LogInformation("Queue ActionGroup {CorrelationId}", context.Message.CorrelationId);
-            return _actionManager.AddActionGroupAsync(context.Message.ActionGroup, context.CancellationToken);
+            _logger.LogInformation("{MessageType} {CorrelationId} received. The ActionGroup is Manual {IsManual}", nameof(QueueActionGroup), context.Message.CorrelationId, context.Message.ActionGroup.IsManual);
+            await _actionManager.AddActionGroupAsync(context.Message.ActionGroup, context.CancellationToken);
+            await context.RespondAsync(new Success());
         }
-        
+
         /// <summary>
         /// Handle <see cref="ActionCompletedEvent"/> from DeviceCommunication
         /// </summary>
         public Task Consume(ConsumeContext<ActionCompletedEvent> context)
         {
             var actionCorrelationId = context.Message.CorrelationId;
-            _logger.LogDebug("{MessageType} for actionId: {ActionCorrelationId}", nameof(ActionCompletedEvent), actionCorrelationId);
+            _logger.LogDebug("{MessageType} for actionId: {ActionCorrelationId} received", nameof(ActionCompletedEvent), actionCorrelationId);
             return _actionManager.CompleteActionAsync(actionCorrelationId, context.CancellationToken);
         }
 
@@ -70,6 +68,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
         /// <param name="context"></param>
         public Task Consume(ConsumeContext<ChargingAgvsCanHandleActionsAgainEvent> context)
         {
+            _logger.LogDebug("{MessageType} received", nameof(ChargingAgvsCanHandleActionsAgainEvent));
             return _actionManager.CheckChargingAgvs(context.CancellationToken);
         }
 
@@ -80,8 +79,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
         /// <returns></returns>
         public Task Consume(ConsumeContext<AgvNeedsCharging> context)
         {
-            var agv = _agvRegistry.GetRequiredAgv(context.Message.CorrelationId);
-            return _actionManager.AssignExclusivelyAsync(agv, false, context.CancellationToken);
+            var agvCorrelationId = context.Message.CorrelationId;
+            _logger.LogDebug("{MessageType} for Agv: {AgvCorrelationId} received", nameof(AgvNeedsCharging), agvCorrelationId);
+
+            return _actionManager.AssignExclusivelyIfAgvReadyAsync(agvCorrelationId, cancellationToken: context.CancellationToken);
         }
     }
 }

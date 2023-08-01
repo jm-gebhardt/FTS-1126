@@ -1,7 +1,6 @@
 using MassTransit;
 
-// ReSharper disable ConvertToPrimaryConstructor
-namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Requests.Commands
 {
     /// <summary>
     /// Request an AGV to transition to idle state

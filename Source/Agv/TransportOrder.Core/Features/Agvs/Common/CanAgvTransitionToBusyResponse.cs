@@ -1,9 +1,9 @@
 ﻿using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Common
 {
     /// <summary>
-    /// Answer whether the Agv can go to busy
+    /// Answers whether the Agv can go to busy state
     /// </summary>
     [JetBrains.Annotations.PublicAPI]
     public sealed class CanAgvTransitionToBusyResponse : CorrelatedBy<Guid>
@@ -19,8 +19,8 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events
         /// <summary>
         /// SetAgvBusySucceeded Constructor
         /// </summary>
-        /// <param name="correlationId"></param>
-        /// <param name="availability"></param>
+        /// <param name="correlationId">The CorrelationId of the Agv</param>
+        /// <param name="availability">Can the Agv go to busy state?</param>
         public CanAgvTransitionToBusyResponse(Guid correlationId, bool availability)
         {
             CorrelationId = correlationId;

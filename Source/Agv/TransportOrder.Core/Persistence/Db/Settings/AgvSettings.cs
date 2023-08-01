@@ -17,12 +17,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db.Settings
         /// </summary>
         public int AgvOfflineTimeoutMsWhileBusy { get; init; } = 20000;
 
-        /// <summary>
-        /// Min. distance between an AGV and a node for a node to be considered 'Occupied'
-        /// </summary>
-        [JetBrains.Annotations.UsedImplicitly]
-        public float OccupiedDistanceThreshold { get; init; } = 1.0f;
-
         /// <summary>Critical battery level</summary>
         public int BatteryLevelCritical { get; init; } = 10;
 

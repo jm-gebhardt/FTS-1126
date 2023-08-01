@@ -10,52 +10,52 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos.AgvActions
     public record AgvActionDto
     {
         /// <summary>
-        /// 
+        /// Unique CorrelationId of this action
         /// </summary>
         public Guid CorrelationId { get; init; }
 
         /// <summary>
-        /// 
+        /// Returns the Id of the parent element 
         /// </summary>
         public Guid ParentId { get; init; }
 
         /// <summary>
-        /// 
+        /// The sequence or natural order, if any, in which the object has to integrate 
         /// </summary>
         public int Sequence { get; init; }
 
         /// <summary>
-        /// 
+        /// The current state of the action
         /// </summary>
         public ActionState State { get; init; }
 
         /// <summary>
-        /// 
+        /// The type of the action, e.g. Pick or Drop
         /// </summary>
         public ActionType ActionType { get; init; }
 
         /// <summary>
-        /// 
+        /// Target node id of the action
         /// </summary>
         public string TargetNodeId { get; init; }
 
         /// <summary>
-        /// 
+        /// The nodes of the trip
         /// </summary>
         public string[] Nodes { get; init; }
 
         /// <summary>
-        /// 
+        /// Date the action was created (UTC)
         /// </summary>
         public DateTime CreatedDate { get; init; }
 
         /// <summary>
-        /// 
+        /// Date the action has been started (UTC)
         /// </summary>
         public DateTime? StartedDate { get; init; }
 
         /// <summary>
-        /// 
+        /// Date the action has been completed (UTC)
         /// </summary>
         public DateTime? CompletedDate { get; init; }
 
@@ -101,7 +101,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos.AgvActions
         /// <summary>
         /// AutoMapper ctor
         /// </summary>
-        public AgvActionDto()
+        private AgvActionDto()
         {
             TargetNodeId = null!;
             Nodes = null!;

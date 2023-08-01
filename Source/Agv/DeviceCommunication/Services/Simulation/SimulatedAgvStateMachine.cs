@@ -221,9 +221,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
                 {
                     SetCurrentAction(c);
 
-                    _logger.LogInformation("AGV {AgvId} / {CorrelationId} started action {ActionType} for {ParentId}. Action will be finished at {ActionFinishDate:HH:mm:ss.fff}",
+                    _logger.LogInformation("AGV {AgvId} / {CorrelationId} started action {ActionType} to {TargetNodeId} for {ParentId}. Action will be finished at {ActionFinishDate:HH:mm:ss.fff}",
                         c.Saga.AgvId, c.Saga.CorrelationId,
-                        c.Message.Action.ActionType, c.Message.Action.ParentId, c.Saga.ActionFinishDate);
+                        c.Message.Action.ActionType, c.Message.Action.TargetNodeId, c.Message.Action.ParentId, c.Saga.ActionFinishDate);
                 })
                 .TransitionTo(BusyMoving)
                 .Publish(c => new ActionStartedEvent(c.Saga.Action!.CorrelationId))
@@ -307,8 +307,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
             const double secondsPerMillisecond = 0.001;
             context.Saga.UpdateStatus(StatusUpdateIntervalMs * secondsPerMillisecond, _batteryChargeRate, _batteryDischargeRate); // Update status before each send
 
-            bool startedCharging = !prevCharging && context.Saga.AgvStatus.Charging; // Check if AGV has switched charging to true
-
+            
             if (context.Saga.IsOnline) // Only send status if AGV is still alive
             {
                 await context.Publish(new AgvStatusReceived(
@@ -317,11 +316,18 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation
                     context.Saga.AgvStatus
                 ), context.CancellationToken);
             }
-
-            // publish started charging regardless of IsOnline flag, because otherwise you can never reanimate dead Agvs
-            if (startedCharging)
+            
+            // publish started/stopped charging regardless of IsOnline flag, because otherwise you can never reanimate dead Agvs
+            // Started charging
+            
+            if (!prevCharging && context.Saga.AgvStatus.Charging)
             {
                 await context.Publish(new AgvStartedCharging(context.Saga.CorrelationId));
+            }
+            // Stopped charging
+            else if (prevCharging && !context.Saga.AgvStatus.Charging)
+            {
+                await context.Publish(new AgvStoppedCharging(context.Saga.CorrelationId));
             }
         }
 

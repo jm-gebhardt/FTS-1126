@@ -29,7 +29,7 @@ public class StartChargingCommandConsumerTest
         string? lastNodeId = fixture.GetAgvInformation(correlationId)?.AgvStatusReceived?.AgvStatus.LastNodeId;
 
         var startChargingCommand = new StartChargingCommand(correlationId);
-        await fixture.GetResponseAsync<BaseResult>(startChargingCommand);
+        await fixture.GetResponseAsync<Success>(startChargingCommand);
 
         bool publishCheck = await fixture.TestHarness!.Published.Any<StartActionCommand>(s => s.Context.Message.Action.ActionType == ActionType.Charge
                                                                                               && s.Context.Message.Action.TargetNodeId == lastNodeId);
@@ -46,7 +46,7 @@ public class StartChargingCommandConsumerTest
             .Build();
 
         var startChargingCommand = new StartChargingCommand(correlationId);
-        await MediatorShould.ThrowRequestExceptionAsync<NotInCorrectStateException>(async () => await fixture.GetResponseAsync<BaseResult>(startChargingCommand));
+        await MediatorShould.ThrowRequestExceptionAsync<NotInCorrectStateException>(async () => await fixture.GetResponseAsync<Success>(startChargingCommand));
 
         bool publishCheck = await fixture.TestHarness!.Published.Any<StartActionCommand>(s => s.Context.Message.Action.ActionType == ActionType.Charge);
         publishCheck.ShouldBeFalse();
@@ -63,7 +63,7 @@ public class StartChargingCommandConsumerTest
             .Build();
 
         var startChargingCommand = new StartChargingCommand(correlationId);
-        await MediatorShould.ThrowRequestExceptionAsync<NotInCorrectStateException>(async () => await fixture.GetResponseAsync<BaseResult>(startChargingCommand));
+        await MediatorShould.ThrowRequestExceptionAsync<NotInCorrectStateException>(async () => await fixture.GetResponseAsync<Success>(startChargingCommand));
 
         bool publishCheck = await fixture.TestHarness!.Published.Any<StartActionCommand>(s => s.Context.Message.Action.ActionType == ActionType.Charge);
         publishCheck.ShouldBeFalse();
@@ -81,7 +81,7 @@ public class StartChargingCommandConsumerTest
             .Build();
 
         var startChargingCommand = new StartChargingCommand(correlationId);
-        await MediatorShould.ThrowRequestExceptionAsync<NotInCorrectStateException>(async () => await fixture.GetResponseAsync<BaseResult>(startChargingCommand));
+        await MediatorShould.ThrowRequestExceptionAsync<NotInCorrectStateException>(async () => await fixture.GetResponseAsync<Success>(startChargingCommand));
 
         bool publishCheck = await fixture.TestHarness!.Published.Any<StartActionCommand>(s => s.Context.Message.Action.ActionType == ActionType.Charge);
         publishCheck.ShouldBeFalse();
@@ -95,7 +95,7 @@ public class StartChargingCommandConsumerTest
             .Build();
 
         var startChargingCommand = new StartChargingCommand(correlationId);
-        await MediatorShould.ThrowRequestExceptionAsync<AgvInformationNotFoundException>(async () => await fixture.GetResponseAsync<BaseResult>(startChargingCommand));
+        await MediatorShould.ThrowRequestExceptionAsync<AgvInformationNotFoundException>(async () => await fixture.GetResponseAsync<Success>(startChargingCommand));
 
         bool publishCheck = await fixture.TestHarness!.Published.Any<StartActionCommand>(s => s.Context.Message.Action.ActionType == ActionType.Charge);
         publishCheck.ShouldBeFalse();
@@ -109,7 +109,7 @@ public class StartChargingCommandConsumerTest
             .Build();
 
         var startChargingCommand = new StartChargingCommand(correlationId);
-        await MediatorShould.ThrowRequestExceptionAsync<AgvStatusReceivedNotFoundException>(async () => await fixture.GetResponseAsync<BaseResult>(startChargingCommand));
+        await MediatorShould.ThrowRequestExceptionAsync<AgvStatusReceivedNotFoundException>(async () => await fixture.GetResponseAsync<Success>(startChargingCommand));
 
         bool publishCheck = await fixture.TestHarness!.Published.Any<StartActionCommand>(s => s.Context.Message.Action.ActionType == ActionType.Charge);
         publishCheck.ShouldBeFalse();

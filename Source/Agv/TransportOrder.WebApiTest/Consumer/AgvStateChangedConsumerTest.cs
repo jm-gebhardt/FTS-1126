@@ -34,11 +34,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Consumer
             var mapper = MappingHelper.GetMapper(new AgvProfile());
             var agvDto = mapper.Map<AgvDto>(agv);
             
-            var mockGetAgvsClient = new Mock<IRequestClient<GetAgvsRequest>>();
-            var responseMock = new Mock<Response<GetAgvsResult>>();
-            responseMock.SetupGet(m => m.Message).Returns(new GetAgvsResult(new[] { agvDto }));
+            var mockGetAgvsClient = new Mock<IRequestClient<GetAgvsDtoRequest>>();
+            var responseMock = new Mock<Response<GetAgvsDtoResult>>();
+            responseMock.SetupGet(m => m.Message).Returns(new GetAgvsDtoResult(new[] { agvDto }));
             mockGetAgvsClient.Setup(
-                    m => m.GetResponse<GetAgvsResult>(It.IsAny<GetAgvsRequest>(), default, default
+                    m => m.GetResponse<GetAgvsDtoResult>(It.IsAny<GetAgvsDtoRequest>(), default, default
                     ))
                 .ReturnsAsync(responseMock.Object);
 
@@ -52,7 +52,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Consumer
             (await fixture.TestHarness.Published.Any<AgvStateChanged>()).ShouldBeTrue();
             (await fixture.ConsumerHarness!.Consumed.Any<AgvStateChanged>()).ShouldBeTrue();
             
-            mockGetAgvsClient.Verify(m => m.GetResponse<GetAgvsResult>(It.IsAny<GetAgvsRequest>(), default, default), Times.Once);
+            mockGetAgvsClient.Verify(m => m.GetResponse<GetAgvsDtoResult>(It.IsAny<GetAgvsDtoRequest>(), default, default), Times.Once);
             
             bool isInitialState = currentState == nameof(AgvStateMachine.Initial);
             fixture.MockHub.Verify(h => h.SendAgvStateToAllClients(

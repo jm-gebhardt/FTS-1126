@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using System.Text.Json;
 using Gebhardt.StoreWare.Agv.Common.Exceptions;
+using MassTransit;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Middleware
 {
@@ -27,6 +28,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Middleware
         private Task HandleExceptionAsync(HttpContext context, Exception exception)
         {
             HttpStatusCode statusCode;
+
+            if (exception is RequestFaultException or RequestException && exception.InnerException != null)
+            {
+                exception = exception.InnerException;
+            }
+
             var problem = new ProblemDetails
             {
                 Detail = exception.Message,
@@ -39,16 +46,18 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Middleware
                 case MapNotFoundException:
                     statusCode = HttpStatusCode.NotFound;
                     break;
+
                 case NotInCorrectStateException:
                     statusCode = HttpStatusCode.BadRequest;
                     break;
+
                 default:
                     statusCode = HttpStatusCode.InternalServerError;
                     break;
             }
 
             string result = JsonSerializer.Serialize(problem);
-            context.Response.StatusCode = (int)statusCode;
+            context.Response.StatusCode = (int) statusCode;
             context.Response.ContentType = "application/json";
             return context.Response.WriteAsync(result);
         }

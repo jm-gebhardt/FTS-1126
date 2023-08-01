@@ -3,5 +3,6 @@
     /// <summary>
     /// Defines a result for the EmitRequestData request
     /// </summary>
-    public record RequestAgvDataResult;
+    // ReSharper disable once NotAccessedPositionalProperty.Global
+    public record RequestAgvDataResult(Guid AgvCorrelationId);
 }

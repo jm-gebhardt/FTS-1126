@@ -1,9 +1,7 @@
-using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos.AgvActions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Profiles.Profiles;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.States;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
@@ -42,7 +40,7 @@ public class AgvProfileTest
     public void Map_ShouldMapAllPropertiesCorrectly_WhereAgvDataDtoIsMappedToAgvData()
     {
         var agvData = new AgvData(Guid.NewGuid(), "Karis", "BF1", "127.0.0.1", 1.8, 120.0, 0.6, 0.8, 0.7, 1, 2.5, 1000, Array.Empty<AgvData.Sensor>());
-        var mapper = MappingHelper.GetMapper(new AgvProfile(), new ActionProfile());
+        var mapper = MappingHelper.GetMapper(new AgvProfile());
         var agvDataDto = mapper.Map<AgvDataDto>(agvData);
 
         agvDataDto.ShouldNotBeNull();
@@ -63,7 +61,7 @@ public class AgvProfileTest
     [TestMethod]
     public void Map_ShouldMapAllPropertiesCorrectly_WhereAgvStatusDtoIsMappedToAgvStatus()
     {
-        var mapper = MappingHelper.GetMapper(new AgvProfile(), new ActionProfile());
+        var mapper = MappingHelper.GetMapper(new AgvProfile());
         var agvStatus = new AgvStatus(Guid.NewGuid(), "123", true, true, 10, false, false, "lastNodeId");
         var agvStatusDto = mapper.Map<AgvStatusDto>(agvStatus);
         agvStatusDto.ShouldSatisfyAllConditions(
@@ -79,7 +77,7 @@ public class AgvProfileTest
     [TestMethod]
     public void Map_ShouldMapAllPropertiesCorrectly_WhereAgvDtoIsMappedToAgvWithAgvStatus()
     {
-        var mapper = MappingHelper.GetMapper(new AgvProfile(), new ActionProfile());
+        var mapper = MappingHelper.GetMapper(new AgvProfile());
         var agvStatus = new AgvStatus(Guid.NewGuid(), "OrderId#123", false, true, 98, false, false, "lastNodeId#123");
         var agv = AgvGenerator.GenerateIdleAgv(agvStatus: agvStatus);
 
@@ -97,17 +95,6 @@ public class AgvProfileTest
             o => o.BatteryCharge.ShouldBe(agv.AgvStatus!.BatteryCharge),
             o => o.IsCharging.ShouldBe(agv.AgvStatus!.Charging)
         );
-    }
-
-    [TestMethod]
-    public void Map_ShouldMapAllPropertiesCorrectlyInOrderBySequence_WhenActionGroupDtoIsMappedToActionGroup()
-    {
-        var mapper = MappingHelper.GetMapper(new AgvProfile(), new ActionProfile());
-
-        List<AgvAction> actions = AgvActionGenerator.GeneratePickDropActionGroup().Actions.OrderByDescending(x => x.Sequence).ToList();
-        var actionGroup = AgvActionGenerator.GenerateActionGroup(actions);
-        var actionGroupDto = mapper.Map<ActionGroupDto>(actionGroup);
-        actionGroupDto.Actions.Select(a => a.Sequence).ShouldBeInOrder(SortDirection.Ascending);
     }
 
     [TestMethod]

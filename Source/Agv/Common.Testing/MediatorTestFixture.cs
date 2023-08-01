@@ -18,6 +18,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Testing
         where TConsumer : class, IConsumer
     {
         private readonly List<Action<IServiceCollection>> _serviceActions = new();
+        private readonly List<Action<IMediatorRegistrationConfigurator>> _configureMediatorAction = new();
 
         /// <summary>
         /// Service provider
@@ -34,25 +35,21 @@ namespace Gebhardt.StoreWare.Agv.Common.Testing
         /// </summary>
         public IMediator? Mediator;
 
-
         /// <summary>
         /// Builds the service provider based on the service collection, in order to be able to register services lazy
         /// </summary>
         public virtual MediatorTestFixture<TRequest, TConsumer> Build()
         {
             var collection = new ServiceCollection()
-                .AddMediator(cfg =>
+                .AddMediator(configurator =>
                 {
-                    cfg.AddConsumer<TConsumer>();
-                    cfg.AddRequestClient<TRequest>();
-                })
-                .AddMassTransitTestHarness(x =>
-                {
-                    x.UsingInMemory((context, cfg) =>
+                    AddRequestClient<TConsumer, TRequest>(configurator);
+                    foreach (Action<IMediatorRegistrationConfigurator> action in _configureMediatorAction)
                     {
-                        cfg.ConfigureEndpoints(context);
-                    });
-                });
+                        action.Invoke(configurator);
+                    }
+                })
+                .AddMassTransitTestHarness(x => { x.UsingInMemory((context, cfg) => { cfg.ConfigureEndpoints(context); }); });
 
             foreach (Action<IServiceCollection> service in _serviceActions)
             {
@@ -64,6 +61,22 @@ namespace Gebhardt.StoreWare.Agv.Common.Testing
             TestHarness = new MediatorTestHarness(Mediator);
             TestHarness.Start();
 
+            return this;
+        }
+
+        private static void AddRequestClient<TConsumer2, TRequest2>(IMediatorRegistrationConfigurator cfg)
+            where TRequest2 : class
+            where TConsumer2 : class, IConsumer
+        {
+            cfg.AddConsumer<TConsumer2>();
+            cfg.AddRequestClient<TRequest2>();
+        }
+
+        public virtual MediatorTestFixture<TRequest, TConsumer> ConfigureAdditionalRequestClient<TRequestHandler2, TRequest2>()
+            where TRequest2 : class
+            where TRequestHandler2 : class, IConsumer
+        {
+            _configureMediatorAction.Add(AddRequestClient<TRequestHandler2, TRequest2>);
             return this;
         }
 
@@ -84,7 +97,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Testing
         /// <typeparam name="TResult">The result type</typeparam>
         /// <param name="request">The request object</param>
         /// <returns>The response object</returns>
-        public async Task<Response<TResult>> GetResponseAsync<TResult>(TRequest request) where TResult: class
+        public async Task<Response<TResult>> GetResponseAsync<TResult>(TRequest request) where TResult : class
         {
             IRequestClient<TRequest> client = Mediator!.CreateRequestClient<TRequest>();
             Response<TResult> response = await client.GetResponse<TResult>(request);
@@ -92,5 +105,4 @@ namespace Gebhardt.StoreWare.Agv.Common.Testing
             return response;
         }
     }
-
 }

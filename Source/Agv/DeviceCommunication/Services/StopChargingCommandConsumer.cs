@@ -48,6 +48,6 @@ public class StopChargingCommandConsumer : IConsumer<StopChargingCommand>
         // the end implementation should be to send a cancel action command for the current (running) charging action, which will stop the charging internally.
         // But there is no implementation for that yet, you have to send a mqtt message to TAR in order to cancel the action
         await context.Publish(new AgvStoppedCharging(correlationId));
-        await context.RespondAsync(new BaseResult());
+        await context.RespondAsync(new Success());
     }
 }

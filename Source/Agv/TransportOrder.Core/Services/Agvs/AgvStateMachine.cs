@@ -3,7 +3,11 @@ using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.CmdOptions;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Common;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Requests.Commands;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Requests.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Maps;
@@ -42,6 +46,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
 
         private readonly ISettingsProvider<AgvSettings> _agvSettingsProvider;
         private readonly IAgvGraphRegistry _agvGraphRegistry;
+        private readonly IAgvReadyService _agvReadyService;
 
         #region States
         /// <summary>
@@ -80,17 +85,17 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
         /// <summary>
         /// Request to ask if Agv can be reserved 
         /// </summary>
-        public Event<RequestCanAgvTransitionToBusy> RequestCanAgvTransitionToBusyEvent { get; private set; } = default!;
+        public Event<CanAgvTransitionToBusyRequest> RequestCanAgvTransitionToBusyEvent { get; private set; } = default!;
+
+        /// <summary>
+        /// Requests the Agv instance 
+        /// </summary>
+        public Event<GetAgvRequest> GetAgvRequestEvent { get; private set; } = default!;
 
         /// <summary>
         /// Send AGV back to idle
         /// </summary>
         public Event<SetAgvIdle> SetAgvIdleEvent { get; private set; } = default!;
-
-        /// <summary>
-        /// AGV is ready to be assigned to orders
-        /// </summary>
-        public Event<AgvReady> AgvReadyEvent { get; private set; } = default!;
 
         /// <summary>
         /// Send AGV back to idle
@@ -160,6 +165,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
         /// <param name="productionOptions"></param>
         /// <param name="agvSettingsProvider"></param>
         /// <param name="agvGraphRegistry"></param>
+        /// <param name="agvReadyService"></param>
         public AgvStateMachine(
             ILogger<AgvStateMachine> logger,
             IAgvDataRegistry agvDataRegistry,
@@ -167,7 +173,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
             IStateObserver<AgvSaga> agvStateObserver,
             ProductionOptions productionOptions,
             ISettingsProvider<AgvSettings> agvSettingsProvider,
-            IAgvGraphRegistry agvGraphRegistry)
+            IAgvGraphRegistry agvGraphRegistry,
+            IAgvReadyService agvReadyService)
         {
             _logger = logger;
             _agvDataRegistry = agvDataRegistry;
@@ -175,6 +182,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
             _productionOptions = productionOptions;
             _agvSettingsProvider = agvSettingsProvider;
             _agvGraphRegistry = agvGraphRegistry;
+            _agvReadyService = agvReadyService;
 
             SetSagaFactory();
             SetScheduler();
@@ -183,13 +191,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
 
             During(Idle, Charging, AcceptSetBusyRequestHandler());
             During(Discovered, Busy, RejectSetBusyRequestHandler());
-            During(Discovered, Busy, AcceptSetIdleRequestHandler());
-            During(Idle, Charging, RejectSetIdleRequestHandler());
+            During(Discovered, Busy, Charging, AcceptSetIdleRequestHandler());
+            During(Idle, RejectSetIdleRequestHandler());
 
             During(Idle, Busy, AgvStartedChargingReceivedHandler());
             During(Charging, AgvStoppedChargingReceivedHandler());
 
             DuringAny(SetAgvBusyAvailableEventHandler());
+            DuringAny(GetAgvEventHandler());
             DuringAny(LockAgvHandler());
             DuringAny(UnlockAgvHandler());
             DuringAny(ForceSetIdleHandler());
@@ -246,50 +255,37 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
                     }
                 });
 
-        private EventActivityBinder<AgvSaga, RequestCanAgvTransitionToBusy> SetAgvBusyAvailableEventHandler() =>
+        private EventActivityBinder<AgvSaga, CanAgvTransitionToBusyRequest> SetAgvBusyAvailableEventHandler() =>
             When(RequestCanAgvTransitionToBusyEvent)
                 .RespondAsync(async c =>
-                    new CanAgvTransitionToBusyResponse(
+                {
+                    bool available = await _agvReadyService.IsAgvCompleteAsync(c.Saga, c.Message.IgnoreCharging, c.Message.IgnoreLocked);
+                    _logger.LogDebug("Responding for {Request} AGV {AgvId} / {CorrelationId} with available {Available} {IgnoreLocked}", nameof(CanAgvTransitionToBusyRequest), c.Saga.AgvId, c.Saga.CorrelationId, available, c.Message.IgnoreLocked);
+
+                    return new CanAgvTransitionToBusyResponse(
                         c.Message.CorrelationId,
-                        await IsAgvCompleteAndUnlocked(c.Saga)
-                        && (c.Saga.CurrentState is nameof(Idle) || (c.Saga.CurrentState is nameof(Charging) && c.Message.IgnoreCharging))
-                    ));
+                        available);
+                });
+
+        private EventActivityBinder<AgvSaga, GetAgvRequest> GetAgvEventHandler() =>
+            When(GetAgvRequestEvent)
+                .Respond(c => new GetAgvResult(c.Saga));
 
         private EventActivityBinder<AgvSaga, SetAgvBusy> AcceptSetBusyRequestHandler() =>
             When(SetAgvBusyEvent)
-                .IfElseAsync(async c => await IsAgvCompleteAndUnlocked(c.Saga), ifContext =>
+                .IfElseAsync(async c => await _agvReadyService.IsAgvCompleteAsync(c.Saga, ignoreLocked: c.Message.IgnoreLock), ifContext =>
                         ifContext.TransitionTo(Busy)
-                            .Then(c => _logger.LogDebug("Transition AGV {AgvId} / {CorrelationId} to busy", c.Saga.AgvId, c.Saga.CorrelationId))
+                            .Then(c => _logger.LogDebug("Transitioned AGV {AgvId} / {CorrelationId} to busy", c.Saga.AgvId, c.Saga.CorrelationId))
                             .Respond(c => new SetAgvBusySucceeded(c.Message.CorrelationId)),
                     elseContext =>
                         elseContext.Then(c => _logger.LogError("Could not transition AGV {AgvId} / {CorrelationId} to busy, AGV not Ready", c.Saga.AgvId, c.Saga.CorrelationId))
                             .Respond(c => new SetAgvBusyRejected(c.Message.CorrelationId)));
 
-        private async Task<bool> IsAgvCompleteAndUnlocked(AgvSaga saga)
-        {
-            bool isReady = saga is
-            {
-                AgvStatus: not null,
-                AgvStatus.LastNodeId: not null,
-                IsLocked: false,
-                HasError: false
-            };
-
-            if (!isReady)
-            {
-                return isReady;
-            }
-
-            // check graph last as this is expensive
-            bool hasGraph = await _agvGraphRegistry.ExistsAsync(saga.CorrelationId);
-            return hasGraph;
-        }
-
         private EventActivityBinder<AgvSaga, SetAgvIdle> AcceptSetIdleRequestHandler() =>
             When(SetAgvIdleEvent)
                 .TransitionTo(Idle)
                 .Then(c =>
-                    _logger.LogDebug("AGV {AgvId} / {CorrelationId} idle", c.Saga.AgvId, c.Saga.CorrelationId))
+                    _logger.LogDebug("Set AGV {AgvId} / {CorrelationId} to idle", c.Saga.AgvId, c.Saga.CorrelationId))
                 .Respond(c => new SetAgvIdleSucceeded(c.Message.CorrelationId))
                 .ThenAsync(c => PublishAgvBecameIdleAsync(c.Saga, c));
 
@@ -316,7 +312,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
 
         private EventActivityBinder<AgvSaga, UnlockAgv> UnlockAgvHandler() =>
             When(UnlockAgvEvent)
-                .ThenAsync(async c => { await LockAsync(c, false); })
+                .ThenAsync(async c =>
+                {
+                    await LockAsync(c, false);
+                    await PublishAgvBecameIdleAsync(c.Saga, c);
+                })
                 .Then(c =>
                     _logger.LogDebug("Agv {AgvId}/{CorrelationId} was unlocked", c.Saga.AgvId, c.Saga.CorrelationId));
 
@@ -438,8 +438,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
 
         private async Task PublishAgvBecameIdleAsync(AgvSaga agvSaga, IPublishEndpoint endpoint)
         {
-            await endpoint.Publish(new AgvBecameIdle(agvSaga.CorrelationId));
             _logger.LogDebug("Agv {AgvId}/{CorrelationId} was released and transitioned to Idle", agvSaga.AgvId, agvSaga.CorrelationId);
+            await endpoint.Publish(new AgvBecameIdle(agvSaga.CorrelationId));
         }
 
         private async Task UpdateAgvStatusAsync(AgvSaga agvSaga, AgvStatus? newStatus, bool newAlive, IPublishEndpoint endpoint)

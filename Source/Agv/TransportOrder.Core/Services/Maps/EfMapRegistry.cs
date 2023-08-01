@@ -40,7 +40,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Maps
         /// <inheritdoc/>
         public byte[]? GetMap(Guid correlationId)
         {
-            return Maps.First(q => q.CorrelationId == correlationId).MapValue;
+            return Maps.FirstOrDefault(q => q.CorrelationId == correlationId)?.MapValue;
         }
 
         /// <inheritdoc/>

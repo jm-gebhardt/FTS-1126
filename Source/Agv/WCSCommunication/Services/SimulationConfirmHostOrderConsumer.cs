@@ -28,29 +28,27 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services
         /// <para>Logs received message and then discards it.</para>
         /// </summary>
         /// <param name="context">Context of the consumer wrapping details surrounding the inbound message.</param>
-        public async Task Consume(ConsumeContext<HostOrderHandlingSucceeded> context)
+        public Task Consume(ConsumeContext<HostOrderHandlingSucceeded> context)
         {
-            await Task.Run(() => // Await Task to satisfy async
-            {
-                _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId}", 
-                    nameof(HostOrderHandlingSucceeded), context.Message.OrderId, context.Message.CorrelationId
-                    );
-            });
+            _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId}",
+                nameof(HostOrderHandlingSucceeded), context.Message.OrderId, context.Message.CorrelationId
+            );
+
+            return Task.CompletedTask;
         }
-        
+
         /// <summary>
         /// Simulation: Handle message <see cref="HostOrderHandlingFailed"/>.
         /// <para>Logs received message and then discards it.</para>
         /// </summary>
         /// <param name="context">Context of the consumer wrapping details surrounding the inbound message.</param>
-        public async Task Consume(ConsumeContext<HostOrderHandlingFailed> context)
+        public Task Consume(ConsumeContext<HostOrderHandlingFailed> context)
         {
-            await Task.Run(() => // Await Task to satisfy async
-            {
-                _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId}", 
-                    nameof(HostOrderHandlingFailed), context.Message.OrderId, context.Message.CorrelationId
-                );
-            });
+            _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId}",
+                nameof(HostOrderHandlingFailed), context.Message.OrderId, context.Message.CorrelationId
+            );
+
+            return Task.CompletedTask;
         }
     }
 }

@@ -1,4 +1,6 @@
-﻿namespace Gebhardt.StoreWare.Agv.Common.Exceptions;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
+
+namespace Gebhardt.StoreWare.Agv.Common.Exceptions;
 
 /// <summary>
 /// Thrown when an ActionGroup is already assigned to an Agv
@@ -6,9 +8,10 @@
 public class ActionGroupAlreadyAssignedException : Exception
 {
     /// <inheritdoc cref="ActionGroupAlreadyAssignedException"/>>
-    /// <param name="actionGroupAssignedAgv"></param>
-    /// <param name="correlationId"></param>
-    public ActionGroupAlreadyAssignedException(Guid? actionGroupAssignedAgv, Guid correlationId) : base($"ActionGroup with correlation ID {correlationId} is already assigned to Agv {actionGroupAssignedAgv}")
+    /// <param name="actionGroup"></param>
+    /// <param name="tryingToAssignAgvCorrelationId"></param>
+    public ActionGroupAlreadyAssignedException(ActionGroup actionGroup, Guid tryingToAssignAgvCorrelationId)
+        : base($"ActionGroup with CorrelationId {actionGroup.CorrelationId} {actionGroup.Actions.First().ActionType} to {actionGroup.Actions.First().TargetNodeId} is already assigned to Agv {actionGroup.AssignedAgv}, we wanted to assign Agv {tryingToAssignAgvCorrelationId}")
     {
     }
 }

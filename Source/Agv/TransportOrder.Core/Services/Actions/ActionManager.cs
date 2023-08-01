@@ -28,7 +28,6 @@ public class ActionManager : BaseActionManager
         IMaintenanceService maintenanceService,
         ILogger<ActionManager> logger,
         IChargingService chargingService,
-        IAgvRegistry agvRegistry,
         IAgvService agvService,
         IAgvLoadCapabilityService agvLoadCapabilityService,
         IStartActionService startActionService,
@@ -44,7 +43,6 @@ public class ActionManager : BaseActionManager
             maintenanceService,
             logger,
             chargingService,
-            agvRegistry,
             agvService,
             agvLoadCapabilityService,
             startActionService,
@@ -57,14 +55,14 @@ public class ActionManager : BaseActionManager
     /// <inheritdoc />
     protected override async Task<AgvAction?> GetNextActionAsync(IAgv agv)
     {
-        var nextAgvAction = await GetPendingActionAsync(agv);
-        // ReSharper disable once ConvertIfStatementToNullCoalescingExpression
-        if (nextAgvAction == null)
+        if (agv.IsLocked)
         {
-            nextAgvAction = await CreateIdleActionAsync(agv);
+            // only manual actions are allowed when Agv is locked
+            return await GetManualActionAsync(agv);
         }
 
-        return nextAgvAction;
+        var nextAgvAction = await GetPendingActionAsync(agv);
+        return nextAgvAction ?? await CreateIdleActionAsync(agv);
     }
 
     private async Task<AgvAction?> GetPendingActionAsync(IAgv agv)
@@ -73,7 +71,7 @@ public class ActionManager : BaseActionManager
         bool isCarryingLoad = await AgvLoadCapabilityService.IsCarryingLoadAsync(agv.CorrelationId);
         bool canGetNewLoad = await AgvLoadCapabilityService.CanGetNewLoadAsync(agv.CorrelationId);
         bool needsMaintenance = MaintenanceService.MaintenanceRequested(agv);
-        Logger.LogDebug("start GetPendingAction: needsCharging: {NeedsCharging}, isCarryingLoad: {IsCarryingLoad}, canGetNewLoad: {CanGetNewLoad}, needsMaintenance: {NeedsMaintenance}", needsCharging, canGetNewLoad, canGetNewLoad, needsMaintenance);
+        Logger.LogDebug("GetPendingAction for situation: needsCharging: {NeedsCharging}, isCarryingLoad: {IsCarryingLoad}, canGetNewLoad: {CanGetNewLoad}, needsMaintenance: {NeedsMaintenance}", needsCharging, canGetNewLoad, canGetNewLoad, needsMaintenance);
 
         // Always go directly to maintenance or charge, as this is prioritized (only if we are fully unloaded)
         if (!isCarryingLoad)
@@ -124,25 +122,32 @@ public class ActionManager : BaseActionManager
             return GetSucceedingActionAsync(agv)!;
         }
 
-        return GetNextActionGroupAsync(agv);
+        return GetNotStartedGroupsFirstActionAsync(agv);
     }
 
     /// <inheritdoc />
-    public override async Task CheckChargingAgvs(CancellationToken cancellationToken)
+    public override Task CheckChargingAgvs(CancellationToken cancellationToken)
     {
-        List<IAgv> goodAgvs = ChargingService.GetChargingAgvsWithGoodBatteryLevel();
-
-        // preliminary logic: just go through all potential available Agvs and try to start a new action
-        // later this should select only the best agv out of the goodAgvs list
-        foreach (var agv in goodAgvs.OrderByDescending(a => a.GetRequiredAgvStatus().BatteryCharge))
+        return ExecuteLockedAsync(async () =>
         {
-            var pendingAction = await GetPendingActionAsync(agv);
+            List<IAgv> goodAgvs = ChargingService.GetChargingAgvsWithGoodBatteryLevel();
 
-            if (pendingAction != null)
+            // preliminary logic: just go through all potential available Agvs and try to start a new action
+            // later this should select only the best agv out of the goodAgvs list
+            foreach (var agv in goodAgvs.OrderByDescending(a => a.GetRequiredAgvStatus().BatteryCharge))
             {
-                Logger.LogDebug("Trying to start a new action for charging Agv with CorrelationId: {AgvCorrelationId}", agv.CorrelationId);
-                await AssignExclusivelyAsync(agv, true, cancellationToken);
+                var pendingAction = await GetPendingActionAsync(agv);
+
+                if (pendingAction != null)
+                {
+                    Logger.LogDebug("There is a new action for the charging Agv with CorrelationId: {AgvCorrelationId}. So stop charging by setting it to idle, so that it takes the new Action", agv.CorrelationId);
+                    await AgvStateService.SetIdleAsync(agv.CorrelationId, cancellationToken);
+                    // only do this for the Agv with the best battery level and quit
+                    return;
+                }
+
+                Logger.LogDebug("No action needed for charging Agv with CorrelationId: {AgvCorrelationId}", agv.CorrelationId);
             }
-        }
+        }, cancellationToken);
     }
 }

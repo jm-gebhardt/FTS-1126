@@ -36,7 +36,8 @@ public static class AgvActionGenerator
         ActionGroupState actionGroupState = ActionGroupState.Created,
         ActionState actionState = ActionState.Created,
         string? source = null,
-        string? destination = null)
+        string? destination = null,
+        Guid? assignedAgv = null)
     {
         const string orderId = "orderId";
         var groupId = Guid.NewGuid();
@@ -56,7 +57,26 @@ public static class AgvActionGenerator
 
         var actionGroup = new ActionGroup(groupId, orderId, new List<AgvAction> {pickAction, dropAction})
         {
-            State = actionGroupState
+            State = actionGroupState,
+            AssignedAgv = assignedAgv
+        };
+
+        return actionGroup;
+    }
+    
+    public static ActionGroup GenerateMoveActionGroup(string? targetNodeId = null, bool isManual = false)
+    {
+        const string orderId = "move";
+        var groupId = Guid.NewGuid();
+        var moveAction = new AgvAction(Guid.NewGuid(), ActionType.Move, targetNodeId ?? "Move-1", groupId);
+        if (targetNodeId != null)
+        {
+            moveAction.Nodes = new[] {targetNodeId};
+        }
+
+        var actionGroup = new ActionGroup(groupId, orderId, new List<AgvAction> {moveAction}, isManual:isManual)
+        {
+            State = ActionGroupState.Created
         };
 
         return actionGroup;

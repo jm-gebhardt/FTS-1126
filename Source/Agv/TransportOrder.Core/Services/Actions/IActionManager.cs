@@ -1,5 +1,4 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
@@ -19,19 +18,18 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
         /// <summary>
         /// Update ActionState and unlock Agv
         /// </summary>
-        /// <param name="correlationId"></param>
+        /// <param name="correlationId">The CorrelationId of the action</param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         [UsedImplicitly]
         public Task CompleteActionAsync(Guid correlationId, CancellationToken cancellationToken);
 
         /// <summary>
-        /// External trigger for assigning a new ActionGroup to an Agv
+        /// External trigger for assigning a new ActionGroup to an Agv in case the Agv is ready to transition to busy state (check is done internally)
         /// </summary>
-        /// <param name="agv"></param>
-        /// <param name="ignoreChargingFlag">If true the return value will not take the charging flag of the Agv into account</param>
+        /// <param name="agvCorrelationId"></param>
         /// <param name="cancellationToken"></param>
-        public Task AssignExclusivelyAsync(IAgv agv, bool ignoreChargingFlag = false, CancellationToken cancellationToken = default);
+        public Task AssignExclusivelyIfAgvReadyAsync(Guid agvCorrelationId, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Checks if it makes sense to assign a new action to any charging Agv

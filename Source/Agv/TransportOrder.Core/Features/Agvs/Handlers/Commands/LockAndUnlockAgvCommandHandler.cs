@@ -9,28 +9,43 @@ using MassTransit;
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Commands
 {
     /// <summary>
-    /// Defines a handler for the SetIdle
-    /// Gets the agv from agvRegistry and set status of agv to Idle
+    /// Defines a handler for the LockAgvRequest
+    /// Gets agv from agvRegistry and Lock Agv to prevent it from being assigned to transport orders
     /// </summary>
     [UsedImplicitly]
-    public class UnlockAgvCommandHandler : IConsumer<UnlockAgvCommand>
+    public class LockAndUnlockAgvCommandHandler : IConsumer<LockAgvCommand>, IConsumer<UnlockAgvCommand>
     {
         private readonly IAgvRegistry _agvRegistry;
         private readonly IBus _bus;
 
         /// <summary>
-        /// <inheritdoc cref="UnlockAgvCommandHandler"/>
+        /// <inheritdoc cref="LockAndUnlockAgvCommandHandler"/>
         /// </summary>
         /// <param name="agvRegistry"></param>
         /// <param name="bus"></param>
-        public UnlockAgvCommandHandler(IAgvRegistry agvRegistry, IBus bus)
+        public LockAndUnlockAgvCommandHandler(IAgvRegistry agvRegistry, IBus bus)
         {
             _agvRegistry = agvRegistry;
             _bus = bus;
         }
 
         /// <summary>
-        /// <inheritdoc cref="UnlockAgvCommandHandler"/>
+        /// <inheritdoc cref="LockAndUnlockAgvCommandHandler"/>
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        /// <exception cref="AgvNotFoundException"></exception>
+        public async Task Consume(ConsumeContext<LockAgvCommand> context)
+        {
+            var request = context.Message;
+            var agv = _agvRegistry.GetRequiredAgv(request.CorrelationId);
+
+            await _bus.Publish(new LockAgv(agv.CorrelationId));
+            await context.RespondAsync(new LockAgvResult(agv.CorrelationId));
+        }
+
+        /// <summary>
+        /// <inheritdoc cref="LockAndUnlockAgvCommandHandler"/>
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
@@ -38,14 +53,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Comm
         public async Task Consume(ConsumeContext<UnlockAgvCommand> context)
         {
             var request = context.Message;
-            var agv = _agvRegistry.GetAgv(request.CorrelationId);
-            if (agv == null)
-            {
-                throw new AgvNotFoundException(request.CorrelationId);
-            }
+            var agv = _agvRegistry.GetRequiredAgv(request.CorrelationId);
+
             await _bus.Publish(new UnlockAgv(agv.CorrelationId));
-            await context.RespondAsync(new UnlockAgvResult());
+            await context.RespondAsync(new UnlockAgvResult(agv.CorrelationId));
         }
     }
-
 }

@@ -26,12 +26,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder
                 try
                 {
                     services.ConfigureServicesMassTransit(context.Configuration, x =>
-                    {
-                        x.AddCoreConsumer();
-                        x.AddWebApiConsumer();
-                    }
-                    , rabbitMqConfiguration: (_, cfg) => { cfg.UseDelayedMessageScheduler(); 
-                    });
+                        {
+                            x.AddCoreConsumer()
+                                .AddWebApiConsumer();
+
+                            x.AddMediator(c => c.AddMediator());
+                        }
+                        , rabbitMqConfiguration: (_, cfg) => { cfg.UseDelayedMessageScheduler(); });
                 }
                 catch (InvalidOperationException e)
                 {

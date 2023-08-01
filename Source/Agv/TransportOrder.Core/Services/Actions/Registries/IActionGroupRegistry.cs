@@ -21,10 +21,24 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Registries
         /// <param name="states">Can be one state filter or contain multiple states which should be included in the return. If null, the filter is inactive</param>
         /// <param name="fromDate">The UTC from Date, only items with a greater CreatedDate will be considered</param>
         /// <param name="toDate">The UTC from Date, only items with a less CreatedDate will be considered</param>
+        /// <param name="assignedAgvCorrelationId">Correlation Id of assigned Agv</param>
         /// <param name="maxItems">The max item count to return</param>
+        /// <param name="isManual">Action Group is triggered manually not automatic by the system</param>
         /// <returns></returns>
-        public Task<IReadOnlyList<ActionGroup>> GetActionGroupsAsync(IList<ActionGroupState>? states = null, DateTime? fromDate = null, DateTime? toDate = null, int maxItems = 0);
+        public Task<IReadOnlyList<ActionGroup>> GetActionGroupsAsync(IList<ActionGroupState>? states = null, DateTime? fromDate = null, DateTime? toDate = null, int maxItems = 0,  Guid? assignedAgvCorrelationId = null, bool? isManual = null);
 
+        /// <summary>
+        /// Get ActionGroup
+        /// </summary>
+        /// <param name="state">One state filter which should be included in the return.</param>
+        /// <param name="fromDate">The UTC from Date, only items with a greater CreatedDate will be considered</param>
+        /// <param name="toDate">The UTC from Date, only items with a less CreatedDate will be considered</param>
+        /// <param name="assignedAgvCorrelationId">Correlation Id of assigned Agv</param>
+        /// <param name="maxItems">The max item count to return</param>
+        /// <param name="isManual">Action Group was created manually or automatic. If null, the filter not considered</param>
+        /// <returns></returns>
+        public Task<IReadOnlyList<ActionGroup>> GetActionGroupsAsync(ActionGroupState state, DateTime? fromDate = null, DateTime? toDate = null, int maxItems = 0,  Guid? assignedAgvCorrelationId = null, bool? isManual = null);
+        
         /// <summary>
         /// Get ActionGroup count which have the given state (and date range filter)
         /// </summary>
@@ -93,7 +107,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Registries
         /// <summary>
         /// Get ActionGroups where no action was started yet
         /// </summary>
-        public Task<IReadOnlyList<ActionGroup>> GetNotStartedActionGroupsAsync();
+        /// <param name="agvCorrelationId">The agvCorrelationId to filter for</param>
+        public Task<IReadOnlyList<ActionGroup>> GetNotStartedActionGroupsAsync(Guid agvCorrelationId);
         
         /// <summary>
         /// Get ActionGroups where one or more actions are invalid

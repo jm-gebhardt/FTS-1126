@@ -3,5 +3,6 @@
     /// <summary>
     /// Defines a result for the SetIdle request
     /// </summary>
-    public record UnlockAgvResult;
+    // ReSharper disable once NotAccessedPositionalProperty.Global
+    public record UnlockAgvResult(Guid AgvCorrelationId);
 }

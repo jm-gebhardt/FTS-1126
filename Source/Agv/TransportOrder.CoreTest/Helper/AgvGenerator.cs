@@ -8,9 +8,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 
 public static class AgvGenerator
 {
-    public static IAgv GenerateIdleAgv(int index = 0, string? lastNodeId = null)
+    public static IAgv GenerateIdleAgv(int index = 0, string? lastNodeId = null, bool isLocked = false)
     {
-        return GenerateAgv(nameof(AgvStateMachine.Idle), index, lastNodeId);
+        var agv = GenerateAgv(nameof(AgvStateMachine.Idle), index, lastNodeId);
+        agv.IsLocked = isLocked;
+        return agv;
     }
 
     [UsedImplicitly]

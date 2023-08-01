@@ -60,6 +60,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos.AgvActions
             }
         }
 
+        /// <summary>
+        /// If true, then this ActionGroup was created manually, not by the system
+        /// </summary>
+        public bool IsManual { get; set; }
+
         /// <param name="correlationId"></param>
         /// <param name="orderId"></param>
         /// <param name="assignedAgv">Assigned Agv</param>
@@ -68,6 +73,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos.AgvActions
         /// <param name="completedDate">Completion date</param>
         /// <param name="state">State of the actionGroup</param>
         /// <param name="actions">List of actions</param>
+        /// <param name="isManual">If true, then this ActionGroup was created manually, not by the system</param>
         public ActionGroupDto(
             Guid correlationId,
             string orderId,
@@ -76,7 +82,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos.AgvActions
             DateTime? startedDate,
             DateTime? completedDate,
             ActionGroupState state,
-            IList<AgvActionDto> actions
+            IList<AgvActionDto> actions,
+            bool isManual
         )
         {
             CorrelationId = correlationId;
@@ -87,6 +94,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos.AgvActions
             CompletedDate = completedDate;
             State = state;
             Actions = actions;
+            IsManual = isManual;
         }
 
         /// <summary>

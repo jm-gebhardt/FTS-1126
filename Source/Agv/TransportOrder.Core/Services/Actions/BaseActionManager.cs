@@ -23,15 +23,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions;
 public abstract class BaseActionManager : IActionManager
 {
     private readonly SemaphoreSlim _lockSemaphoreSlim = new(1, 1);
-
     private readonly IBus _bus;
     private readonly IActionGroupRegistry _actionGroupRegistry;
     private readonly IRouteService _routeService;
     private readonly IChargingPointManager _chargingPointManager;
     private readonly IParkPointService _parkPointService;
-    private readonly IAgvRegistry _agvRegistry;
     private readonly IAgvService _agvService;
-    private readonly IAgvStateService _agvStateService;
     private readonly IChooseAgvActionGroupService _chooseAgvActionGroupService;
     private readonly IStartActionService _startActionService;
 
@@ -56,6 +53,11 @@ public abstract class BaseActionManager : IActionManager
     protected IChargingService ChargingService { get; }
 
     /// <summary>
+    /// Agv State Service
+    /// </summary>
+    protected IAgvStateService AgvStateService { get; }
+
+    /// <summary>
     /// Constructor
     /// </summary>
     /// <param name="bus">Abstracted interface for Agv action registry</param>
@@ -69,7 +71,6 @@ public abstract class BaseActionManager : IActionManager
     /// <param name="agvService"></param>
     /// <param name="agvLoadCapabilityService"></param>
     /// <param name="startActionService"></param>
-    /// <param name="agvRegistry">Interface for accessing the AGV registry</param>
     /// <param name="agvStateService"></param>
     /// <param name="chooseAgvActionGroupService"></param>
     protected BaseActionManager(
@@ -81,7 +82,6 @@ public abstract class BaseActionManager : IActionManager
         IMaintenanceService maintenanceService,
         ILogger logger,
         IChargingService chargingService,
-        IAgvRegistry agvRegistry,
         IAgvService agvService,
         IAgvLoadCapabilityService agvLoadCapabilityService,
         IStartActionService startActionService,
@@ -96,30 +96,32 @@ public abstract class BaseActionManager : IActionManager
         MaintenanceService = maintenanceService;
         Logger = logger;
         ChargingService = chargingService;
-        _agvRegistry = agvRegistry;
         _agvService = agvService;
         AgvLoadCapabilityService = agvLoadCapabilityService;
-        _agvStateService = agvStateService;
+        AgvStateService = agvStateService;
         _chooseAgvActionGroupService = chooseAgvActionGroupService;
         _startActionService = startActionService;
     }
 
-    private static ActionGroup CreateActionGroup(IAgv agv, GraphNode node, string actionDescription, ActionType actionType = ActionType.Move)
+    private static ActionGroup CreateActionGroup(Guid agvCorrelationId, string nodeId, string actionDescription, ActionType actionType = ActionType.Move)
     {
         var groupCorrelationId = Guid.NewGuid();
         var actionGroup = new ActionGroup(
             groupCorrelationId,
             $"Automatic {actionDescription}",
-            actions: new List<AgvAction> { new(Guid.NewGuid(), actionType, node.Id, groupCorrelationId) },
-            assignedAgv: agv.CorrelationId
+            actions: new List<AgvAction> {new(Guid.NewGuid(), actionType, nodeId, groupCorrelationId)},
+            assignedAgv: agvCorrelationId
         );
 
         return actionGroup;
     }
 
-    private async Task<AgvAction> AddActionAsync(IAgv agv, GraphNode node, ActionType actionType, string? actionDescription = null)
+    private async Task<AgvAction> AddActionAsync(Guid agvCorrelationId, GraphNode node, ActionType actionType, string? actionDescription = null)
+        => await AddActionAsync(agvCorrelationId, node.Id, actionType, actionDescription);
+
+    private async Task<AgvAction> AddActionAsync(Guid agvCorrelationId, string nodeId, ActionType actionType, string? actionDescription = null)
     {
-        var actionGroup = CreateActionGroup(agv, node, actionDescription ?? actionType.ToString(), actionType);
+        var actionGroup = CreateActionGroup(agvCorrelationId, nodeId, actionDescription ?? actionType.ToString(), actionType);
         await AddActionGroupAsync(actionGroup);
         return actionGroup.Actions.First();
     }
@@ -138,54 +140,92 @@ public abstract class BaseActionManager : IActionManager
 
     private bool IsAgvCharging(IAgv agv) => agv.GetRequiredAgvStatus().Charging;
 
-    private Task<IAgv> GetAgvByCorrelationIdAsync(Guid? correlationId) => Task.FromResult(_agvRegistry.GetRequiredAgv(correlationId));
+    private Task<IAgv> GetAgvAsync(Guid? correlationId, CancellationToken cancellationToken) => _agvService.GetAgvAsync(correlationId, cancellationToken);
 
     /// <summary>
-    /// Chooses the best Agv available for the given <see cref="ActionGroup"/>
+    /// Chooses the best Agv available (which is confirmed to be ready) for the given <see cref="ActionGroup"/>
     /// </summary>
     /// <param name="actionGroup"></param>
+    /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    private async Task<IAgv?> ChooseAgv(ActionGroup actionGroup)
+    private async Task<IAgv?> GetReadyAgv(ActionGroup actionGroup, CancellationToken cancellationToken)
+    {
+        Logger.LogDebug("Get ready Agv for ActionGroup with CorrelationId: {ActionGroupId}", actionGroup.CorrelationId);
+
+        Guid? assignedAgv = actionGroup.AssignedAgv;
+
+        if (assignedAgv != null)
+        {
+            Logger.LogDebug("The Agv is already assigned ActionGroup with CorrelationId: {ActionGroupId}, so verify it can be set to busy. The ActionGroup is Manual {IsManual}", actionGroup.CorrelationId, actionGroup.IsManual);
+
+            // already assigned (e.g. manual ActionGroup)
+            // we ignore the IsLocked for the manual ActionGroup
+            var agvCorrelationId = (Guid) assignedAgv;
+            return await _agvService.IsAgvReadyForBusyAsync(agvCorrelationId, cancellationToken, ignoreCharging: true, ignoreLocked: actionGroup.IsManual) ? await GetAgvAsync(agvCorrelationId, cancellationToken) : null;
+        }
+
+        List<IAgv> agvs = await GetReadyAndRecruitableAgvsAsync(cancellationToken);
+        var agv = await _chooseAgvActionGroupService.GetAgvAsync(actionGroup, agvs);
+        if (agv == null)
+        {
+            return null;
+        }
+        Logger.LogDebug("Found Agv for ActionGroup with CorrelationId: {ActionGroupId}", actionGroup.CorrelationId);
+
+        return await GetAgvAsync(agv.CorrelationId, cancellationToken);
+    }
+
+    private async Task<List<IAgv>> GetReadyAndRecruitableAgvsAsync(CancellationToken cancellationToken)
     {
         // we take all ready Agvs
-        Task<IEnumerable<IAgv>> readyAgvsTask = _agvService.GetReadyAgvsAsync(false);
+        Task<IEnumerable<IAgv>> readyAgvsTask = _agvService.GetReadyAgvsAsync(false, cancellationToken);
 
         List<IAgv> chargingAgvsWithGoodBatteryLevel = ChargingService.GetChargingAgvsWithGoodBatteryLevel();
         // + recruitable  (charging) Agvs
-        Task<IEnumerable<IAgv>> recruitableChargingAgvsTasks = _agvService.GetReadyAgvsAsync(chargingAgvsWithGoodBatteryLevel, true);
+        Task<IEnumerable<IAgv>> recruitableChargingAgvsTasks = _agvService.GetReadyAgvsAsync(chargingAgvsWithGoodBatteryLevel, true, cancellationToken);
 
         IList<IAgv> normalReadyAgvs = (await readyAgvsTask).ToList();
         IList<IAgv> recruitableChargingAgvs = (await recruitableChargingAgvsTasks).ToList();
         Logger.LogDebug("Choosing Agv for ActionGroup out of: {NormalReadyAgvsCount} normal ready Agvs and {RecruitableChargingAgvsCount} recruitable charging Agvs", normalReadyAgvs.Count, recruitableChargingAgvs.Count);
 
         List<IAgv> agvs = normalReadyAgvs.Concat(recruitableChargingAgvs).ToList();
-        return await _chooseAgvActionGroupService.GetAgvAsync(actionGroup, agvs);
+        return agvs;
     }
 
     /// <summary>
     /// Assigns a new action for Agv, but it does not use the semaphore
     /// </summary>
-    /// <param name="agv"></param>
-    /// <param name="ignoreChargingFlag">If true the return value will not take the charging flag of the Agv into account</param>
+    /// <param name="agvCorrelationId"></param>
     /// <param name="cancellationToken"></param>
-    private async Task AssignAsync(IAgv agv, bool ignoreChargingFlag, CancellationToken cancellationToken)
+    private async Task AssignIfAgvReadyAsync(Guid agvCorrelationId, CancellationToken cancellationToken)
     {
-        Logger.LogDebug("Assigning action for Agv with CorrelationId: {AgvCorrelationId}", agv.CorrelationId);
+        Logger.LogDebug("Assigning action for Agv with CorrelationId: {AgvCorrelationId} if ready", agvCorrelationId);
 
-        // set agv to busy, to lock it exclusively
-        if (!await _agvService.IsAgvReadyForBusyAsync(agv, ignoreChargingFlag))
+        // check if agv is busy, it's ok if agv is locked
+        if (!await _agvService.IsAgvReadyForBusyAsync(agvCorrelationId, cancellationToken, ignoreCharging: false, ignoreLocked: true))
         {
             // Agv might be charging
-            Logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} is not ready to be set to busy", agv.CorrelationId);
+            Logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} is not ready to be set to busy", agvCorrelationId);
             return;
         }
+        Logger.LogDebug("Assigning action for Agv with CorrelationId: {AgvCorrelationId} because it is ready", agvCorrelationId);
 
-        // Work on pending actions
-        // or if there is nothing pending go either charge if possible or park
+        await AssignAsync(agvCorrelationId, cancellationToken);
+    }
+
+    /// <summary>
+    /// Gets next action and starts it. Does not check if the Agv is ready
+    /// </summary>
+    /// <param name="agvCorrelationId"></param>
+    /// <param name="cancellationToken"></param>
+    private async Task AssignAsync(Guid agvCorrelationId, CancellationToken cancellationToken)
+    {
+        var agv = await GetAgvAsync(agvCorrelationId, cancellationToken);
         var nextAgvAction = await GetNextActionAsync(agv);
 
         if (nextAgvAction != null)
         {
+            Logger.LogDebug("Starting next: {ActionType} action for Agv with CorrelationId {AgvCorrelationId}", nextAgvAction.ActionType, agv.CorrelationId);
             await StartActionAsync(nextAgvAction, agv, cancellationToken);
         }
         else
@@ -195,19 +235,39 @@ public abstract class BaseActionManager : IActionManager
     }
 
     /// <summary>
+    /// Executes the given action in a locked context where no one else can do anything on our ActionGroups
+    /// </summary>
+    /// <param name="action"></param>
+    /// <param name="cancellationToken"></param>
+    protected async Task ExecuteLockedAsync(Func<Task> action, CancellationToken cancellationToken)
+    {
+        await _lockSemaphoreSlim.WaitAsync(cancellationToken);
+
+        try
+        {
+            await action();
+        }
+        finally
+        {
+            _lockSemaphoreSlim.Release();
+        }
+    }
+
+    /// <summary>
     /// Send <see cref="StartActionCommand"/> and set action to start>.
     /// </summary>
     [PublicAPI]
     protected async Task StartActionAsync(AgvAction action, IAgv assignedAgv, CancellationToken cancellationToken)
     {
-        Logger.LogDebug("Starting action with CorrelationId: {ActionCorrelationId}", action.CorrelationId);
-        await _agvStateService.SetBusyAsync(assignedAgv, true);
+        action.Nodes = (await _routeService.GetRouteAsync(assignedAgv, action.TargetNodeId)).Nodes;
+
+        Logger.LogDebug("Starting action with CorrelationId: {ActionCorrelationId} for Agv {AgvCorrelationId}. Setting Agv to busy in next step.", action.CorrelationId, assignedAgv.CorrelationId);
+        await AgvStateService.SetBusyAsync(assignedAgv, true, true, cancellationToken);
 
         try
         {
-            action.Nodes = (await _routeService.GetRouteAsync(assignedAgv, action.TargetNodeId)).Nodes;
-
             await _startActionService.StartAction(assignedAgv, action, cancellationToken);
+            Logger.LogDebug("Action with CorrelationId: {ActionCorrelationId} for Agv {AgvCorrelationId} has been started. Updating ActionGroup.State to Started in next step.", action.CorrelationId, assignedAgv.CorrelationId);
             await UpdateActionGroupAsync(action, assignedAgv, ActionState.Started, cancellationToken);
 
             Logger.LogTrace("Starting action done");
@@ -215,7 +275,7 @@ public abstract class BaseActionManager : IActionManager
         catch
         {
             // release Agv in case of error
-            await _agvStateService.SetIdleAsync(assignedAgv);
+            await AgvStateService.SetIdleAsync(assignedAgv.CorrelationId, cancellationToken);
             throw;
         }
     }
@@ -250,7 +310,7 @@ public abstract class BaseActionManager : IActionManager
         Logger.LogInformation("Starting charge action for Agv with CorrelationId: {AgvCorrelationId}", agv.CorrelationId);
 
         var chargingNode = await _chargingPointManager.ReserveChargerAsync(agv);
-        var action = await AddActionAsync(agv, chargingNode, ActionType.Charge);
+        var action = await AddActionAsync(agv.CorrelationId, chargingNode, ActionType.Charge);
         return action;
     }
 
@@ -265,7 +325,7 @@ public abstract class BaseActionManager : IActionManager
         Logger.LogInformation("Starting maintenance action for Agv with CorrelationId: {AgvCorrelationId}", agv.CorrelationId);
 
         var maintenanceNode = await MaintenanceService.GetMaintenanceNode(agv);
-        var action = await AddActionAsync(agv, maintenanceNode, ActionType.Move, "maintenance");
+        var action = await AddActionAsync(agv.CorrelationId, maintenanceNode, ActionType.Move, "maintenance");
 
         return action;
     }
@@ -285,7 +345,7 @@ public abstract class BaseActionManager : IActionManager
         Logger.LogInformation("Starting park action for Agv with CorrelationId: {AgvCorrelationId}", agv.CorrelationId);
 
         var parkNode = await _parkPointService.ReserveParkAsync(agv);
-        var action = await AddActionAsync(agv, parkNode, ActionType.Move, "park");
+        var action = await AddActionAsync(agv.CorrelationId, parkNode, ActionType.Move, "park");
 
         return action;
     }
@@ -295,12 +355,16 @@ public abstract class BaseActionManager : IActionManager
     /// </summary>
     /// <param name="agv"></param>
     /// <returns></returns>
-    protected Task<AgvAction?> GetNextActionGroupAsync(IAgv agv) => _chooseAgvActionGroupService.GetActionGroupAsync(agv);
+    protected async Task<AgvAction?> GetNotStartedGroupsFirstActionAsync(IAgv agv)
+    {
+        var actionGroup = await _chooseAgvActionGroupService.GetNotStartedActionGroupAsync(agv);
+        return actionGroup?.Actions.OrderBy(a => a.Sequence).First();  
+    } 
 
     /// <summary>
     /// Determine next action for agv
     /// </summary>
-    /// <param name="agv"></param>
+    /// <param name="agv">The Agv for which we want to get the next action</param>
     /// <returns></returns>
     protected abstract Task<AgvAction?> GetNextActionAsync(IAgv agv);
 
@@ -308,29 +372,24 @@ public abstract class BaseActionManager : IActionManager
     public async Task AddActionGroupAsync(ActionGroup actionGroup, CancellationToken cancellationToken)
     {
         // this must be locked as well, because we are adding a new ActionGroup (external insert) and must ensure that this is done in serial. In this scenario the AssignAsync is used without lock!
-        await _lockSemaphoreSlim.WaitAsync(cancellationToken);
-
-        try
+        await ExecuteLockedAsync(async () =>
         {
+            Logger.LogDebug("Adding ActionGroup with CorrelationId: {ActionGroupId}", actionGroup.CorrelationId);
             await AddActionGroupAsync(actionGroup);
 
-            var agv = await ChooseAgv(actionGroup);
+            var agv = await GetReadyAgv(actionGroup, cancellationToken);
 
             if (agv != null)
             {
-                Logger.LogInformation("Starting new ActionGroup directly for Agv with CorrelationId: {AgvCorrelationId}", agv.CorrelationId);
-                await AssignAsync(agv, true, cancellationToken);
+                Logger.LogInformation("Starting new ActionGroup directly for Agv {AgvId} with CorrelationId: {AgvCorrelationId}", agv.AgvId, agv.CorrelationId);
+                await StartActionAsync(actionGroup.Actions.First(), agv, cancellationToken);
             }
             else
             {
                 // no AGV found, will be assigned later
-                Logger.LogDebug("No AGV was directly found for ActionGroup {ActionGroupId}", actionGroup.CorrelationId);
+                Logger.LogDebug("No ready Agv was found directly for the ActionGroup {ActionGroupId}", actionGroup.CorrelationId);
             }
-        }
-        finally
-        {
-            _lockSemaphoreSlim.Release();
-        }
+        }, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -340,32 +399,40 @@ public abstract class BaseActionManager : IActionManager
         var action = await _actionGroupRegistry.GetRequiredActionByIdAsync(correlationId);
 
         var actionGroup = await _actionGroupRegistry.GetRequiredActionGroupByIdAsync(action.ParentId);
-        var agv = await GetAgvByCorrelationIdAsync(actionGroup.AssignedAgv);
+        var agv = await GetAgvAsync(actionGroup.AssignedAgv, cancellationToken);
 
         await UpdateActionGroupAsync(action, agv, ActionState.Completed, cancellationToken);
 
         // charge will switch to charging state and can not be released immediately
         if (action.ActionType != ActionType.Charge)
         {
-            Logger.LogDebug("Setting Agv with CorrelationId: {AgvCorrelationId}, because action has been completed and type is not charge", agv.CorrelationId);
+            Logger.LogDebug("Setting Agv with CorrelationId: {AgvCorrelationId} to idle, because action has been completed and type is not charge", agv.CorrelationId);
 
-            await _agvStateService.SetIdleAsync(agv);
+            await AgvStateService.SetIdleAsync(agv.CorrelationId, cancellationToken);
         }
     }
 
     /// <inheritdoc />
-    public async Task AssignExclusivelyAsync(IAgv agv, bool ignoreChargingFlag = false, CancellationToken cancellationToken = default)
-    {
-        await _lockSemaphoreSlim.WaitAsync(cancellationToken);
+    public Task AssignExclusivelyIfAgvReadyAsync(Guid agvCorrelationId, CancellationToken cancellationToken = default) => ExecuteLockedAsync(async () => { await AssignIfAgvReadyAsync(agvCorrelationId, cancellationToken); }, cancellationToken);
 
-        try
+    /// <summary>
+    /// Get manually triggered not started action for Agv
+    /// </summary>
+    /// <param name="agv"></param>
+    /// <returns></returns>
+    protected async Task<AgvAction?> GetManualActionAsync(IAgv agv)
+    {
+        IReadOnlyList<ActionGroup> actionGroups = await _actionGroupRegistry
+            .GetActionGroupsAsync(ActionGroupState.Created, assignedAgvCorrelationId: agv.CorrelationId, isManual: true, maxItems: 1);
+
+        var actionGroup = actionGroups.FirstOrDefault();
+        if (actionGroup?.Actions.Count > 1)
         {
-            await AssignAsync(agv, ignoreChargingFlag, cancellationToken);
+            throw new ArgumentException($"More than one actions in manual ActionGroup: {actionGroup}");
         }
-        finally
-        {
-            _lockSemaphoreSlim.Release();
-        }
+
+        var action = actionGroup?.Actions.FirstOrDefault();
+        return action;
     }
 
     /// <inheritdoc />

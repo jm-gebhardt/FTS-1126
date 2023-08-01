@@ -3,5 +3,6 @@
     /// <summary>
     /// Defines a result for the LockAgv request
     /// </summary>
-    public record LockAgvResult;
+    // ReSharper disable once NotAccessedPositionalProperty.Global
+    public record LockAgvResult(Guid AgvCorrelationId);
 }

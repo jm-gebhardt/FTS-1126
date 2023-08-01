@@ -1,8 +1,8 @@
 using System.Linq.Expressions;
 using Gebhardt.StoreWare.Agv.Common.Definitions;
-using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Extensions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Charging;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Choosers;
@@ -24,7 +24,6 @@ public class ActionManagerFixture
     private readonly Dictionary<Guid, ActionGroup> _actionGroups = new();
     private readonly List<ActionGroup> _notStartedActionGroups = new();
     private readonly List<IAgv> _chargingAgvsWithGoodBatteryLevel = new();
-    private readonly List<IAgv> _agvs = new();
 
     public ActionManager ActionManager { get; private set; }
 
@@ -33,8 +32,6 @@ public class ActionManagerFixture
     public Mock<IChargingService> ChargingService { get; } = new();
 
     public Mock<IRouteService> RouteService { get; } = new();
-
-    public Mock<IAgvRegistry> AgvRegistry { get; } = new();
 
     public Mock<IMaintenanceService> MaintenanceService { get; } = new();
 
@@ -56,20 +53,20 @@ public class ActionManagerFixture
 
     public ActionManagerFixture()
     {
-        ActionGroupRegistry.Setup(x => x.GetNotStartedActionGroupsAsync()).ReturnsAsync(_notStartedActionGroups);
+        ActionGroupRegistry.Setup(x => x.GetNotStartedActionGroupsAsync(It.IsAny<Guid>())).ReturnsAsync(_notStartedActionGroups);
         ActionGroupRegistry.Setup(x => x.AddAsync(It.IsAny<ActionGroup>())).Callback((ActionGroup actionGroup) => { AddActionGroup(actionGroup); });
         ActionGroupRegistry.Setup(x => x.GetRequiredActionGroupByIdAsync(It.IsAny<Guid>())).ReturnsAsync((Guid correlationId) => _actionGroups[correlationId]);
         ActionGroupRegistry.Setup(x => x.UpdateActionAndGroupStateAsync(It.IsAny<AgvAction>(), It.IsAny<IAgv>(), It.IsAny<ActionState>()))
-        .ReturnsAsync((AgvAction agvAction, IAgv _, ActionState _) =>
-        {
-            var actionGroup = _actionGroups[agvAction.ParentId];
-            actionGroup.UpdateActionGroupState();
-            return actionGroup;
-        });
+            .ReturnsAsync((AgvAction agvAction, IAgv _, ActionState _) =>
+            {
+                var actionGroup = _actionGroups[agvAction.ParentId];
+                actionGroup.UpdateActionGroupState();
+                return actionGroup;
+            });
         ActionGroupRegistry.Setup(x => x.AddAsync(It.IsAny<ActionGroup>())).Callback((ActionGroup actionGroup) => { AddActionGroup(actionGroup); });
-
+        ActionGroupRegistry.Setup(x => x.GetActionGroupsAsync(ActionGroupState.Created, It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid>(), true))
+            .ReturnsAsync(new List<ActionGroup>());
         ChargingService.Setup(x => x.GetChargingAgvsWithGoodBatteryLevel()).Returns(_chargingAgvsWithGoodBatteryLevel);
-        AgvRegistry.Setup(x => x.GetAllAgvs()).Returns(_agvs.AsQueryable());
 
         ActionManager = new ActionManager(
             Bus.Object,
@@ -80,7 +77,6 @@ public class ActionManagerFixture
             MaintenanceService.Object,
             new Mock<ILogger<ActionManager>>().Object,
             ChargingService.Object,
-            AgvRegistry.Object,
             AgvService.Object,
             AgvLoadCapabilityService.Object,
             StartActionService.Object,
@@ -96,7 +92,7 @@ public class ActionManagerFixture
         {
             AddAction(action);
         }
-        AddAgv(agv);
+
         AddActionGroup(actionGroup);
 
         return this;
@@ -113,13 +109,31 @@ public class ActionManagerFixture
     // ReSharper disable once UnusedMethodReturnValue.Local
     private ActionManagerFixture AddAgv(IAgv agv)
     {
-        AgvRegistry.Setup(x => x.GetRequiredAgv(agv.CorrelationId)).Returns(agv);
+        AgvService.Setup(x => x.GetAgvAsync(agv.CorrelationId, It.IsAny<CancellationToken>())).ReturnsAsync(agv);
         return this;
     }
 
     // ReSharper disable once UnusedMethodReturnValue.Local
     private ActionManagerFixture AddActionGroup(ActionGroup actionGroup)
     {
+        ActionGroupRegistry.Setup(x => x.GetRequiredActionGroupByIdAsync(actionGroup.CorrelationId)).ReturnsAsync(actionGroup);
+        if (actionGroup.State == ActionGroupState.Created)
+        {
+            _notStartedActionGroups.Add(actionGroup);
+        }
+        _actionGroups[actionGroup.CorrelationId] = actionGroup;
+        return this;
+    }
+
+    public ActionManagerFixture AddManuallyTriggeredActionGroup(IAgv agv, ActionGroup actionGroup)
+    {
+        ActionGroupRegistry.Setup(x => x.GetActionGroupsAsync(ActionGroupState.Created,It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), agv.CorrelationId, true))
+            .ReturnsAsync(new List<ActionGroup> { actionGroup });
+        
+        if (actionGroup.State == ActionGroupState.Created)
+        {
+            _notStartedActionGroups.Add(actionGroup);
+        }
         _actionGroups[actionGroup.CorrelationId] = actionGroup;
         return this;
     }
@@ -192,7 +206,7 @@ public class ActionManagerFixture
 
     public ActionManagerFixture ChooseNextActionGroup(IAgv agv, ActionGroup actionGroup)
     {
-        ChooseAgvActionGroupService.Setup(x => x.GetActionGroupAsync(agv)).ReturnsAsync(actionGroup.Actions.FirstOrDefault());
+        ChooseAgvActionGroupService.Setup(x => x.GetNotStartedActionGroupAsync(agv)).ReturnsAsync(actionGroup);
         return this;
     }
 
@@ -211,27 +225,26 @@ public class ActionManagerFixture
         return this;
     }
 
-    public ActionManagerFixture AddReadyAgv(IAgv agv, bool readyForLock = true, bool readyForLockWhenIgnoreChargingFlag = false)
+    public ActionManagerFixture AddReadyAgv(IAgv agv, bool readyForBusy = true, bool readyForBusyWhenIgnoreChargingFlag = false)
     {
-        if (readyForLock)
+        if (readyForBusy)
         {
             // if we are in general ready for lock then it does not matter what the ignoreChargingFlag is
-            AgvService.Setup(x => x.IsAgvReadyForBusyAsync(agv, It.IsAny<bool>())).ReturnsAsync(readyForLock);
+            AgvService.Setup(x => x.IsAgvReadyForBusyAsync(agv.CorrelationId, It.IsAny<CancellationToken>(), It.IsAny<bool>(), It.IsAny<bool>())).ReturnsAsync(readyForBusy);
         }
         else
         {
-            AgvStateService.Setup(x => x.IsAgvReadyForBusyAsync(agv, false)).ReturnsAsync(readyForLock);
-            AgvStateService.Setup(x => x.IsAgvReadyForBusyAsync(agv, true)).ReturnsAsync(readyForLockWhenIgnoreChargingFlag);
+            AgvStateService.Setup(x => x.IsAgvReadyForBusyAsync(agv.CorrelationId, It.IsAny<CancellationToken>(), false, false)).ReturnsAsync(readyForBusy);
+            AgvStateService.Setup(x => x.IsAgvReadyForBusyAsync(agv.CorrelationId, It.IsAny<CancellationToken>(), false, true)).ReturnsAsync(readyForBusyWhenIgnoreChargingFlag);
         }
 
         SetupDefaultAgv(agv);
+        AddAgv(agv);
         return this;
     }
 
     private void SetupDefaultAgv(IAgv agv)
     {
-        _agvs.Add(agv);
-
         // By default everything is deactivated, the caller has to set it externally if he needs it
         WithAgvMaintenanceRequested(agv, false);
         WithAgvNeedsCharging(agv, false);
@@ -247,5 +260,4 @@ public class ActionManagerFixture
     public void VerifyNoActionStarted() => StartActionService.Verify(sa => sa.StartAction(It.IsAny<IAgv>(), It.IsAny<AgvAction>(), It.IsAny<CancellationToken>()), Times.Never);
 
     public void VerifyActionStarted(Expression<Func<IAgv, bool>> filterAgv, Expression<Func<AgvAction, bool>> filterAction) => StartActionService.Verify(sa => sa.StartAction(It.Is(filterAgv), It.Is(filterAction), It.IsAny<CancellationToken>()), Times.Once);
-
 }

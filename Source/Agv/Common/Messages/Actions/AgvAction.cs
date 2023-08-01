@@ -10,7 +10,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions
     public record AgvAction : CorrelatedBy<Guid>, IParentedBy<Guid>, ISaga
     {
         /// <summary>
-        /// Unique correlation ID of this action (see order action repository)
+        /// Unique CorrelationId of this action
         /// </summary>
         public Guid CorrelationId { get; set; }
 

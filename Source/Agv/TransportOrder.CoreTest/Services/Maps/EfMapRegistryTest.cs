@@ -60,7 +60,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Maps
 
             fixture.Add(map);
 
-            Should.Throw<InvalidOperationException>(() => fixture.Registry.GetMap(Guid.NewGuid()));
+            fixture.Registry.GetMap(Guid.NewGuid()).ShouldBeNull();
         }
 
         [TestMethod]

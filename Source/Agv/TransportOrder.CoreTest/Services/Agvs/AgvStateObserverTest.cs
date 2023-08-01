@@ -31,6 +31,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
             var mockContext = new Mock<BehaviorContext<AgvSaga>>();
             var agvStateObserver = new AgvStateObserver();
             var settingsProviderMock = new Mock<ISettingsProvider<AgvSettings>>();
+            var agvReadyService = new Mock<IAgvReadyService>();
             var agvStateMachine = new AgvStateMachine(
                 mockLogger.Object,
                 agvDataRegistryMock.Object,
@@ -38,7 +39,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
                 agvStateObserver,
                 new ProductionOptions {ApplicationName = null, AutoAccept = true},
                 settingsProviderMock.Object,
-                graphRegistryMock.Object);
+                graphRegistryMock.Object, 
+                agvReadyService.Object);
 
             var previousState = agvStateMachine.Idle;
             var currentState = agvStateMachine.Busy;

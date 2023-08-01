@@ -11,23 +11,28 @@ public interface IAgvStateService
     /// Set AGV busy 
     /// </summary>
     /// <param name="agv"></param>
-    /// <returns></returns>
     /// <param name="wakeFromCharging">If True the Agv will stop charging and go to busy</param>
+    /// <param name="ignoreLock">If true the IsLocked of the Agv maybe true</param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
     [JetBrains.Annotations.UsedImplicitly]
-    Task SetBusyAsync(IAgv agv, bool wakeFromCharging);
+    Task SetBusyAsync(IAgv agv, bool wakeFromCharging, bool ignoreLock, CancellationToken cancellationToken);
 
     /// <summary>
     /// Checks if Agv can be set busy
     /// </summary>
-    /// <param name="agv"></param>
-    /// <param name="ignoreCharging">If true the return value will not take the charging flag of the Agv into account</param>
-    /// <returns>True if the agv is ready for lock</returns>
-    Task<bool> IsAgvReadyForBusyAsync(IAgv agv, bool ignoreCharging = false);
+    /// <param name="agvCorrelationId"></param>
+    /// <param name="cancellationToken"></param>
+    /// <param name="ignoreCharging">If this is set to true, the Agv may also be charging</param>
+    /// <param name="ignoreLocked">If this is set to true, the Agv.IsLocked may also be true</param>
+    /// <returns>True if the Agv is complete and ready for transition to busy</returns>>
+    Task<bool> IsAgvReadyForBusyAsync(Guid agvCorrelationId, CancellationToken cancellationToken, bool ignoreCharging = false, bool ignoreLocked = false);
 
     /// <summary>
     /// Set agv idle
     /// </summary>
-    /// <param name="agv"></param>
+    /// <param name="agvCorrelationId"></param>
+    /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    Task SetIdleAsync(IAgv agv);
+    Task SetIdleAsync(Guid agvCorrelationId, CancellationToken cancellationToken);
 }

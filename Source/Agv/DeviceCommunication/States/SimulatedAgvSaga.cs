@@ -308,7 +308,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States
             bool charging = false;
             if (CurrentNode != null) // AGV is charging if it is at a charging station
             {
-                charging = CurrentNode.Type == AgvGraph.NodeType.Charge;
+                charging = CurrentNode.Type == AgvGraph.NodeType.Charge && AgvStatus.BatteryCharge < 100;
             }
 
             double chargeDiff;

@@ -1,4 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+﻿using Gebhardt.StoreWare.Agv.Common.Exceptions;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Queries;
+using MassTransit;
 using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
@@ -8,30 +11,44 @@ public class AgvService : IAgvService
 {
     private readonly IAgvRegistry _agvRegistry;
     private readonly IAgvStateService _agvStateService;
+    private readonly IClientFactory _clientFactory;
     private readonly ILogger<AgvService> _logger;
 
     /// <inheritdoc cref="AgvService"/>
     /// <param name="agvRegistry"></param>
     /// <param name="agvStateService"></param>
+    /// <param name="clientFactory"></param>
     /// <param name="logger"></param>
-    public AgvService(IAgvRegistry agvRegistry, IAgvStateService agvStateService, ILogger<AgvService> logger)
+    public AgvService(IAgvRegistry agvRegistry, IAgvStateService agvStateService, IClientFactory clientFactory, ILogger<AgvService> logger)
     {
         _agvRegistry = agvRegistry;
         _agvStateService = agvStateService;
+        _clientFactory = clientFactory;
         _logger = logger;
     }
 
     /// <inheritdoc />
-    public Task<IEnumerable<IAgv>> GetReadyAgvsAsync(bool ignoreChargingFlag)
+    public async Task<IAgv> GetAgvAsync(Guid? agvCorrelationId, CancellationToken cancellationToken)
     {
-        IQueryable<IAgv> agvs = _agvRegistry.GetAllAgvs();
-        return GetReadyAgvsAsync(agvs, ignoreChargingFlag);
+        if (agvCorrelationId == null)
+        {
+            throw new AgvNotFoundException(agvCorrelationId);
+        }
+        return (await _clientFactory.CreateRequestClient<GetAgvRequest>().GetResponse<GetAgvResult>(new GetAgvRequest((Guid) agvCorrelationId), cancellationToken)).Message.Agv;
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<IAgv>> GetReadyAgvsAsync(IEnumerable<IAgv> agvs, bool ignoreChargingFlag)
+    public Task<IEnumerable<IAgv>> GetReadyAgvsAsync(bool ignoreChargingFlag, CancellationToken cancellationToken)
     {
-        Dictionary<Task<bool>, IAgv> readyTasksByAgv = agvs.ToDictionary(a => IsAgvReadyForBusyAsync(a, ignoreChargingFlag), a => a);
+        IQueryable<IAgv> agvs = _agvRegistry.GetAllAgvs();
+
+        return GetReadyAgvsAsync(agvs, ignoreChargingFlag, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<IEnumerable<IAgv>> GetReadyAgvsAsync(IEnumerable<IAgv> agvs, bool ignoreChargingFlag, CancellationToken cancellationToken)
+    {
+        Dictionary<Task<bool>, IAgv> readyTasksByAgv = agvs.ToDictionary(a => IsAgvReadyForBusyAsync(a.CorrelationId, cancellationToken, ignoreCharging: ignoreChargingFlag), a => a);
 
         Task<bool[]> tasks = Task.WhenAll(readyTasksByAgv.Select(r => r.Key));
 
@@ -47,11 +64,11 @@ public class AgvService : IAgvService
         {
             tasks.Exception?.InnerExceptions
                 .ToList()
-                .ForEach(e => _logger.LogError("Failed to execute task one of the IsAgvReady tasks: {Exception}", e));
+                .ForEach(e => _logger.LogError(e, "Failed to execute task one of the IsAgvReady tasks"));
             throw;
         }
     }
 
     /// <inheritdoc />
-    public Task<bool> IsAgvReadyForBusyAsync(IAgv agv, bool ignoreChargingFlag) => _agvStateService.IsAgvReadyForBusyAsync(agv, ignoreChargingFlag);
+    public Task<bool> IsAgvReadyForBusyAsync(Guid agvCorrelationId, CancellationToken cancellationToken, bool ignoreCharging = false, bool ignoreLocked = false) => _agvStateService.IsAgvReadyForBusyAsync(agvCorrelationId, cancellationToken, ignoreCharging: ignoreCharging, ignoreLocked: ignoreLocked);
 }

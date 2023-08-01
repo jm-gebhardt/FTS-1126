@@ -45,14 +45,14 @@ public class ActionGroupRegistryTest
         );
     }
 
-    private static IEnumerable<ActionGroup> CreateInitialActionGroups(int totalItems, ActionGroupState actionGroupState = ActionGroupState.Created)
+    private static IEnumerable<ActionGroup> CreateInitialActionGroups(int totalItems, ActionGroupState actionGroupState = ActionGroupState.Created, Guid? assignedAgv = null)
     {
         ActionGroupState[] actionGroupStates = Enum.GetValues<ActionGroupState>();
         var actionGroups = new List<ActionGroup>();
 
         for (int i = 0; i < totalItems; i++)
         {
-            actionGroups.Add(AgvActionGenerator.GeneratePickDropActionGroup(actionGroupState));
+            actionGroups.Add(AgvActionGenerator.GeneratePickDropActionGroup(actionGroupState, assignedAgv: assignedAgv));
         }
 
         IEnumerable<ActionGroupState> otherStatesForTestingExclusion = actionGroupStates.Except(new List<ActionGroupState> { actionGroupState });
@@ -171,6 +171,30 @@ public class ActionGroupRegistryTest
             actionGroupsResult.ShouldContain(x => x.State == actionGroupState);
         }
     }
+    
+    [TestMethod]
+    public async Task GetActionGroupsAsync_WhenGettingManualTriggeredActionGroupOnly_ReturnActionGroupsTriggeredManually()
+    {
+        List<ActionGroup> actionGroups = CreateInitialActionGroups(10).ToList();
+        var moveActionGroupManual = AgvActionGenerator.GenerateMoveActionGroup("Target Node Id", true);
+        actionGroups.Add(moveActionGroupManual);
+        
+        var fixture = await new ActionGroupRegistryTestFixture()
+            .WithActionGroups(actionGroups)
+            .BuildAsync();
+
+        var fromDate = DateTime.Today.AddDays(-1);
+        var toDate = DateTime.Today.AddDays(1);
+
+        IReadOnlyList<ActionGroup> actionGroupsResult = await fixture.ActionGroupRegistry.GetActionGroupsAsync(ActionGroupState.Created, fromDate: fromDate, toDate: toDate, maxItems: 5, isManual: true);
+        foreach (var actionGroupInRegistry in actionGroupsResult)
+        {
+            actionGroupInRegistry.CreatedDate.ShouldBeInRange(fromDate, toDate);
+            actionGroupInRegistry.Actions.ShouldNotBeEmpty();
+        }
+
+        VerifyActionGroup(actionGroupsResult.Single(), moveActionGroupManual);
+    }
 
     [TestMethod]
     [DataRow(ActionGroupState.Completed, 12)]
@@ -267,13 +291,14 @@ public class ActionGroupRegistryTest
     public async Task GetNotStartedActionGroupAsync_ReturnsNotStartedActionGroup()
     {
         const int totalItemsInRegistryWithStateCreated = 10;
+        var agvCorrelationId = Guid.NewGuid();
         
-        IEnumerable<ActionGroup> actionGroups = CreateInitialActionGroups(totalItemsInRegistryWithStateCreated);
+        IEnumerable<ActionGroup> actionGroups = CreateInitialActionGroups(totalItemsInRegistryWithStateCreated, assignedAgv: agvCorrelationId);
         var fixture = await new ActionGroupRegistryTestFixture()
             .WithActionGroups(actionGroups)
             .BuildAsync();
 
-        IReadOnlyList<ActionGroup> notStartedActionGroups = await fixture.ActionGroupRegistry.GetNotStartedActionGroupsAsync();
+        IReadOnlyList<ActionGroup> notStartedActionGroups = await fixture.ActionGroupRegistry.GetNotStartedActionGroupsAsync(agvCorrelationId);
 
         foreach (var notStartedActionGroup in notStartedActionGroups)
         {

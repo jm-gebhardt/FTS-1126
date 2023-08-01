@@ -4,7 +4,9 @@ using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
 using Shouldly;
 using Gebhardt.StoreWare.Agv.Common.Exceptions;
+using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos.Graphs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Queries;
@@ -21,7 +23,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
         [TestMethod]
         public async Task GetSingleAgv_Successfully()
         {
-            AgvControllerTestFixture<GetAgvsRequest, GetAgvsRequestHandler> fixture = new AgvControllerTestFixture<GetAgvsRequest, GetAgvsRequestHandler>()
+            AgvControllerTestFixture<GetAgvDtoRequest, GetAgvDtoRequestHandler> fixture = new AgvControllerTestFixture<GetAgvDtoRequest, GetAgvDtoRequestHandler>()
+                .ConfigureAdditionalRequestClient<GetAgvsDtoRequestHandler, GetAgvsDtoRequest>()
                 .UseDefaultServices()
                 .Build();
 
@@ -42,7 +45,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
         [TestMethod]
         public async Task GetSingleAgv_NotFound()
         {
-            AgvControllerTestFixture<GetAgvsRequest, GetAgvsRequestHandler> fixture = new AgvControllerTestFixture<GetAgvsRequest, GetAgvsRequestHandler>()
+            AgvControllerTestFixture<GetAgvDtoRequest, GetAgvDtoRequestHandler> fixture = new AgvControllerTestFixture<GetAgvDtoRequest, GetAgvDtoRequestHandler>()
+                .ConfigureAdditionalRequestClient<GetAgvsDtoRequestHandler, GetAgvsDtoRequest>()
                 .UseDefaultServices()
                 .Build();
 
@@ -50,16 +54,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var correlationId = agvId.ToGuid();
 
             var controller = fixture.Controller;
-            ActionResult<AgvDto> response = await controller.GetAgv(correlationId);
-
-            var result = response.Result as NotFoundResult;
-            result.ShouldNotBeNull();
+            await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await controller.GetAgv(correlationId));
         }
 
         [TestMethod]
         public async Task GetAgvs_Successfully()
         {
-            AgvControllerTestFixture<GetAgvsRequest, GetAgvsRequestHandler> fixture = new AgvControllerTestFixture<GetAgvsRequest, GetAgvsRequestHandler>()
+            AgvControllerTestFixture<GetAgvsDtoRequest, GetAgvsDtoRequestHandler> fixture = new AgvControllerTestFixture<GetAgvsDtoRequest, GetAgvsDtoRequestHandler>()
                 .UseDefaultServices()
                 .Build();
 
@@ -90,7 +91,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
         [TestMethod]
         public async Task GetAgvs_WhenAgvHasAgvError_ReturnsAgvWithAgvErrorList()
         {
-            var fixture = new AgvControllerTestFixture<GetAgvsRequest, GetAgvsRequestHandler>();
+            var fixture = new AgvControllerTestFixture<GetAgvsDtoRequest, GetAgvsDtoRequestHandler>();
             List<AgvError> expectedAgvErrors = fixture.AgvIds.Select(agvId => AgvErrorGenerator.GenerateAgvError(agvId.ToGuid())).ToList();
 
             fixture.UseDefaultServices()
@@ -135,12 +136,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var fixture = new AgvControllerTestFixture<GetAgvGraphRequest, GetAgvGraphRequestHandler>();
             var correlationId = fixture.AgvIds[index].ToGuid();
             var agvGraph = AgvGraphGenerator.CreateDefaultGraph(correlationId);
-            
+
             fixture
                 .WithAgvGraph(correlationId, agvGraph)
                 .UseDefaultServices()
                 .Build();
-            
+
             var controller = fixture.Controller;
             ActionResult<GraphDto> response = await controller.GetAgvGraph(correlationId);
             var result = response.Result as OkObjectResult;
@@ -220,14 +221,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
         [TestMethod]
         public async Task UnlockAgv_NotFound()
         {
-            AgvControllerTestFixture<UnlockAgvCommand, UnlockAgvCommandHandler> fixture = new AgvControllerTestFixture<UnlockAgvCommand, UnlockAgvCommandHandler>()
+            AgvControllerTestFixture<UnlockAgvCommand, LockAndUnlockAgvCommandHandler> fixture = new AgvControllerTestFixture<UnlockAgvCommand, LockAndUnlockAgvCommandHandler>()
                 .UseDefaultServices()
                 .Build();
             var controller = fixture.Controller;
             var correlationId = Guid.Empty;
-
-            Should.Throw<AggregateException>(() => controller.UnlockAgv(correlationId).Result)
-                .GetBaseException().GetBaseException().ShouldBeOfType<AgvNotFoundException>();
 
             await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await controller.UnlockAgv(correlationId));
         }
@@ -235,7 +233,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
         [TestMethod]
         public async Task UnlockAgv_WhenNotInDiscovered_UnlocksAgv()
         {
-            AgvControllerTestFixture<UnlockAgvCommand, UnlockAgvCommandHandler> fixture = new AgvControllerTestFixture<UnlockAgvCommand, UnlockAgvCommandHandler>()
+            AgvControllerTestFixture<UnlockAgvCommand, LockAndUnlockAgvCommandHandler> fixture = new AgvControllerTestFixture<UnlockAgvCommand, LockAndUnlockAgvCommandHandler>()
                 .UseDefaultServices()
                 .Build();
             var controller = fixture.Controller;
@@ -252,7 +250,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
         [TestMethod]
         public async Task UnlockAgv_Ok()
         {
-            AgvControllerTestFixture<UnlockAgvCommand, UnlockAgvCommandHandler> fixture = new AgvControllerTestFixture<UnlockAgvCommand, UnlockAgvCommandHandler>()
+            AgvControllerTestFixture<UnlockAgvCommand, LockAndUnlockAgvCommandHandler> fixture = new AgvControllerTestFixture<UnlockAgvCommand, LockAndUnlockAgvCommandHandler>()
                 .UseDefaultServices()
                 .Build();
             var controller = fixture.Controller;
@@ -269,7 +267,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
         [TestMethod]
         public async Task LockAgv_WhenAgvRegistryThrows_ThrowsAgvNotFoundException()
         {
-            AgvControllerTestFixture<LockAgvCommand, LockAgvCommandHandler> fixture = new AgvControllerTestFixture<LockAgvCommand, LockAgvCommandHandler>()
+            AgvControllerTestFixture<LockAgvCommand, LockAndUnlockAgvCommandHandler> fixture = new AgvControllerTestFixture<LockAgvCommand, LockAndUnlockAgvCommandHandler>()
                 .UseDefaultServices()
                 .Build();
 
@@ -283,7 +281,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
         [TestMethod]
         public async Task LockAgv_Ok()
         {
-            AgvControllerTestFixture<LockAgvCommand, LockAgvCommandHandler> fixture = new AgvControllerTestFixture<LockAgvCommand, LockAgvCommandHandler>()
+            AgvControllerTestFixture<LockAgvCommand, LockAndUnlockAgvCommandHandler> fixture = new AgvControllerTestFixture<LockAgvCommand, LockAndUnlockAgvCommandHandler>()
                 .UseDefaultServices()
                 .Build();
             var controller = fixture.Controller;
@@ -353,6 +351,45 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var harness = fixture.TestHarness!;
             (await harness.Consumed.Any<RequestAgvGraphCommand>()).ShouldBeTrue();
             (await harness.Published.Any<RequestAgvGraphCommand>()).ShouldBeTrue();
+        }
+
+        [TestMethod]
+        public async Task MoveAgv_Ok()
+        {
+            AgvControllerTestFixture<MoveAgv, MoveAgvCommandHandler> fixture = new AgvControllerTestFixture<MoveAgv, MoveAgvCommandHandler>()
+                .UseDefaultServices()
+                .Build();
+            var controller = fixture.Controller;
+            var correlationId = fixture.AgvIds[2].ToGuid();
+            const string targetNodeId = "Test Destination Id";
+
+            var actionResult = await controller.MoveAgv(correlationId, targetNodeId);
+            var result = actionResult as OkObjectResult;
+            result.ShouldNotBeNull();
+            result.Value.ShouldBeOfType<Guid>();
+
+            var actionGroup = fixture.SentQueueActionGroup;
+            actionGroup.ShouldNotBeNull();
+            actionGroup.AssignedAgv.ShouldBe(correlationId);
+            actionGroup.IsManual.ShouldBeTrue();
+            actionGroup.Actions.Count.ShouldBe(1);
+            var action = actionGroup.Actions.Single();
+            action.ActionType.ShouldBe(ActionType.Move);
+            action.TargetNodeId.ShouldBe(targetNodeId);
+        }
+
+        [TestMethod]
+        public async Task MoveAgv_WhenAgvRegistryThrows_ThrowsAgvNotFoundException()
+        {
+            AgvControllerTestFixture<MoveAgv, MoveAgvCommandHandler> fixture = new AgvControllerTestFixture<MoveAgv, MoveAgvCommandHandler>()
+                .UseDefaultServices()
+                .Build();
+
+            var controller = fixture.Controller;
+            var correlationId = Guid.Empty;
+            fixture.AgvRegistry.Setup(x => x.GetRequiredAgv(It.Is<Guid>(g => g == correlationId))).Returns(() => throw new AgvNotFoundException(correlationId));
+
+            await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await controller.MoveAgv(correlationId, "Test Destination Id"));
         }
     }
 }

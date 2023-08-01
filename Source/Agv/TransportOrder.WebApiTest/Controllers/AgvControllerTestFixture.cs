@@ -1,9 +1,14 @@
+using Gebhardt.StoreWare.Agv.Common.Exceptions;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
+using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands;
+using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Requests.Commands;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Requests.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Models;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Registries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs;
@@ -44,6 +49,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
 
         private Mock<IAgvErrorRegistry> AgvErrorRegistry { get; }
 
+        private Mock<IRequestClient<QueueActionGroup>> QueueActionGroupRequestClient { get; set; }
+
         private readonly GraphNode[] _nodes =
         {
             new("node00") {X = 0f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint},
@@ -52,16 +59,26 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             new("node11") {X = 1f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint}
         };
 
+        public ActionGroup? SentQueueActionGroup { get; private set; }
+
         public AgvControllerTestFixture()
         {
             AgvGraphRegistry = new Mock<IAgvGraphRegistry>();
             AgvErrorRegistry = new Mock<IAgvErrorRegistry>();
             AgvRegistry = new Mock<IAgvRegistry>();
+            QueueActionGroupRequestClient = new Mock<IRequestClient<QueueActionGroup>>();
             AgvDataRegistry = new Mock<IAgvDataRegistry>();
             ActionGroupRegistry = new Mock<IActionGroupRegistry>();
             ActionGroupRegistry.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (ActionGroup?) null));
             AgvErrorRegistry.Setup(x => x.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(new List<AgvError>());
             AgvErrorRegistry.Setup(x => x.GetActiveErrorsAsync(It.IsAny<IList<Guid>>())).ReturnsAsync(new List<AgvError>());
+            ActionGroupRegistry.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (ActionGroup?) null));
+        }
+
+        public override AgvControllerTestFixture<TRequest, TRequestHandler> ConfigureAdditionalRequestClient<TRequestHandler2, TRequest2>()
+        {
+            base.ConfigureAdditionalRequestClient<TRequestHandler2, TRequest2>();
+            return this;
         }
 
         [UsedImplicitly]
@@ -89,7 +106,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             AgvRegistry.Setup(x => x.GetIdleAgvs()).Returns(new EnumerableQuery<IAgv>(agvs.Where(x => x.CurrentState == nameof(AgvStateMachine.Idle))));
             AgvRegistry.Setup(x => x.GetAllAgvs()).Returns(new EnumerableQuery<IAgv>(agvs));
             AgvRegistry.Setup(x => x.GetAgv(It.IsAny<Guid>())).Returns<Guid>(correlationId => { return agvs.FirstOrDefault(agv => agv.CorrelationId == correlationId); });
-            AgvRegistry.Setup(x => x.GetRequiredAgv(It.IsAny<Guid>())).Returns<Guid>(correlationId => { return agvs.First(agv => agv.CorrelationId == correlationId); });
+            AgvRegistry.Setup(x => x.GetRequiredAgv(It.IsAny<Guid>())).Returns<Guid>(correlationId => { return agvs.FirstOrDefault(agv => agv.CorrelationId == correlationId) ?? throw new AgvNotFoundException(correlationId); });
 
             AgvDataRegistry.Setup(x => x.Exists(It.IsAny<Guid>())).Returns<Guid>(correlationId => data.ContainsKey(correlationId));
             AgvDataRegistry.Setup(x => x.GetAgvData(It.IsAny<Guid>()))
@@ -104,6 +121,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
                     data[agvData.CorrelationId] = agvData;
                     return true;
                 });
+
+            QueueActionGroupRequestClient = new Mock<IRequestClient<QueueActionGroup>>();
+            QueueActionGroupRequestClient.Setup(x => x.GetResponse<Success>(It.IsAny<QueueActionGroup>(), default, default))
+                .Callback((QueueActionGroup q, CancellationToken _, RequestTimeout _) => { SentQueueActionGroup = q.ActionGroup; });
 
             return this;
         }
@@ -145,7 +166,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
         /// <inheritdoc/>
         protected override AgvController GetController()
         {
-            IRequestClient<GetAgvsRequest> getAgvsRequestClient = GetRequestClient<GetAgvsRequest>();
+            IRequestClient<GetAgvDtoRequest> getAgvDtoRequestClient = GetRequestClient<GetAgvDtoRequest>();
+            IRequestClient<GetAgvsDtoRequest> getAgvsDtoRequestClient = GetRequestClient<GetAgvsDtoRequest>();
             IRequestClient<GetAgvGraphRequest> getAgvGraphRequestClient = GetRequestClient<GetAgvGraphRequest>();
             IRequestClient<GetAgvDataRequest> getAgvDataRequestClient = GetRequestClient<GetAgvDataRequest>();
             IRequestClient<GetAgvPositionsRequest> getAgvPositionsRequestClient = GetRequestClient<GetAgvPositionsRequest>();
@@ -155,9 +177,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             IRequestClient<RequestAgvGraphCommand> emitRequestGraphRequestClient = GetRequestClient<RequestAgvGraphCommand>();
             IRequestClient<GetActiveAgvErrorsRequest> getAgvErrorsRequestClient = GetRequestClient<GetActiveAgvErrorsRequest>();
             IRequestClient<GetAgvErrorsRequest> getAgvErrorHistoryRequestClient = GetRequestClient<GetAgvErrorsRequest>();
+            IRequestClient<MoveAgv> moveAgvRequestClient = GetRequestClient<MoveAgv>();
 
-            var controller = new AgvController(getAgvsRequestClient, getAgvGraphRequestClient, getAgvDataRequestClient,
-                getAgvPositionsRequestClient, setIdleRequestClient, lockAgvRequestClient, emitRequestDataRequestClient, emitRequestGraphRequestClient, getAgvErrorsRequestClient, getAgvErrorHistoryRequestClient)
+            var controller = new AgvController(getAgvDtoRequestClient, getAgvsDtoRequestClient, getAgvGraphRequestClient, getAgvDataRequestClient,
+                getAgvPositionsRequestClient, setIdleRequestClient, lockAgvRequestClient, emitRequestDataRequestClient,
+                emitRequestGraphRequestClient, getAgvErrorsRequestClient, getAgvErrorHistoryRequestClient, moveAgvRequestClient)
             {
                 ControllerContext = new ControllerContext(
                     new ActionContext(
@@ -191,9 +215,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
                 sc.AddTransient(_ => new Mock<IBus>().Object);
                 sc.AddTransient(_ => new Mock<IAgvPositionRegistry>().Object);
                 sc.AddTransient(_ => ActionGroupRegistry.Object);
-                sc.AddTransient(_ => AgvErrorRegistry.Object);
                 sc.AddTransient(_ => AgvGraphRegistry.Object);
+                sc.AddTransient(_ => new Mock<IActionManager>().Object);
+                sc.AddTransient(_ => AgvErrorRegistry.Object);
+                sc.AddTransient(_ => QueueActionGroupRequestClient.Object);
             });
+
             return this;
         }
 
@@ -207,6 +234,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
         public new AgvControllerTestFixture<TRequest, TRequestHandler> Build()
         {
             base.Build();
+
             return this;
         }
     }

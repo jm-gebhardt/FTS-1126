@@ -31,6 +31,8 @@ public class AgvStateMachineTestFixture : BaseStateMachineTestFixture<AgvStateMa
 
     private AgvSettings? AgvSettings { get; }
 
+    private Mock<IAgvReadyService> AgvReadyService { get; } = new(); 
+
     public AgvStateMachineTestFixture(
         Action<IServiceCollection>? services = null,
         Action<IBusRegistrationConfigurator>? busRegistrationConfigurator = null,
@@ -43,6 +45,7 @@ public class AgvStateMachineTestFixture : BaseStateMachineTestFixture<AgvStateMa
         AgvSettings = settings;
         SetupSettingsRegistry();
         SetupAgvDataRegistry();
+        AgvReadyService.Setup(a => a.IsAgvCompleteAsync(It.IsAny<AgvSaga>(), It.IsAny<bool>(), It.IsAny<bool>())).ReturnsAsync(true);
         Build();
     }
 
@@ -52,6 +55,7 @@ public class AgvStateMachineTestFixture : BaseStateMachineTestFixture<AgvStateMa
         ServiceCollection.AddSingleton<IMapRegistry>(_ => MockMapRegistry.Object);
         ServiceCollection.AddSingleton<IStateObserver<AgvSaga>>(_ => MockObserver.Object);
         ServiceCollection.AddSingleton<IAgvGraphRegistry>(_ => MockAgvGraphRegistry.Object);
+        ServiceCollection.AddSingleton<IAgvReadyService>(_ => AgvReadyService.Object);
 
         ServiceCollection.AddSingleton(_ => new ProductionOptions()
         {
@@ -88,38 +92,6 @@ public class AgvStateMachineTestFixture : BaseStateMachineTestFixture<AgvStateMa
                 AgvData[agvData.CorrelationId] = agvData;
                 return true;
             });
-    }
-
-    /// <summary>
-    /// Create a standardized AgvSaga for testing purposes
-    /// </summary>
-    /// <param name="state"></param>
-    /// <param name="correlationId"></param>
-    /// <param name="hasGraph"></param>
-    public AgvSaga CreateTestAgvSaga(string state, Guid? correlationId = null, bool hasGraph = true)
-    {
-        correlationId ??= Guid.NewGuid();
-        string agvId = correlationId.ToString()!;
-
-        var agvGraph = hasGraph ? CreateTestAgvGraph() : null;
-        var agvStatus = new AgvStatus(
-            correlationId.Value,
-            null,
-            true,
-            true,
-            10,
-            true,
-            true,
-            lastNodeId: agvGraph?.Nodes.First().Id
-        );
-
-        var agvSaga = new AgvSaga(
-            correlationId.Value,
-            agvId,
-            currentState: state,
-            agvStatus: agvStatus
-        );
-        return agvSaga;
     }
 
     /// <summary>

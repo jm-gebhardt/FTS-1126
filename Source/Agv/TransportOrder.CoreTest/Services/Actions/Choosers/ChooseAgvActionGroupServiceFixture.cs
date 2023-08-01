@@ -4,7 +4,6 @@ using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Choosers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Registries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Routing;
-using Microsoft.Extensions.Logging;
 using Moq;
 // ReSharper disable MemberCanBePrivate.Global
 
@@ -12,8 +11,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Actions.Choose
 
 public class ChooseAgvActionGroupServiceFixture
 {
-    private Mock<ILogger<ShortestRouteChooser>> Logger { get; } = new();
-
     public List<ActionGroup> NotStartedActionGroups { get; } = new();
 
     public Mock<IRouteService> RouteService { get; } = new();
@@ -24,11 +21,10 @@ public class ChooseAgvActionGroupServiceFixture
 
     public ChooseAgvActionGroupServiceFixture()
     {
-        AgvActionRegistry.Setup(x => x.GetNotStartedActionGroupsAsync()).ReturnsAsync(NotStartedActionGroups);
+        AgvActionRegistry.Setup(x => x.GetNotStartedActionGroupsAsync(It.IsAny<Guid>())).ReturnsAsync(NotStartedActionGroups);
         ShortestRouteChooser = new ShortestRouteChooser(
             RouteService.Object,
-            AgvActionRegistry.Object,
-            Logger.Object);
+            AgvActionRegistry.Object);
     }
 
     public ChooseAgvActionGroupServiceFixture WithAgvHasRouteToDestination(IAgv agv, bool hasRoute = true, float? routeCosts = null)

@@ -2,9 +2,11 @@ using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Requests.Commands;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.States;
+using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using MassTransit;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
@@ -28,12 +30,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
 
         #region State Transitions
         [DataRow(nameof(AgvStateMachine.Idle), nameof(AgvStateMachine.Idle))]
-        [DataRow(nameof(AgvStateMachine.Charging), nameof(AgvStateMachine.Charging))]
         [TestMethod]
         public async Task Transition_State_Should_Fail_When_Message_Received_SetAgvIdle(string initialState, string resultingState)
         {
             var fixture = new AgvStateMachineTestFixture();
-            var agvSaga = fixture.CreateTestAgvSaga(initialState);
+            var agvSaga = AgvSagaGenerator.GenerateAgvSaga(initialState);
             fixture.Add(agvSaga);
 
             var message = new SetAgvIdle(agvSaga.CorrelationId);
@@ -43,11 +44,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
         [DataRow(nameof(AgvStateMachine.Discovered), nameof(AgvStateMachine.Idle))]
         [DataRow(nameof(AgvStateMachine.Idle), nameof(AgvStateMachine.Idle))]
         [DataRow(nameof(AgvStateMachine.Busy), nameof(AgvStateMachine.Idle))]
+        [DataRow(nameof(AgvStateMachine.Charging), nameof(AgvStateMachine.Idle))]
         [TestMethod]
         public async Task Transition_State_When_Message_Received_ForceReleaseAgv(string initialState, string resultingState)
         {
             var fixture = new AgvStateMachineTestFixture();
-            var agvSaga = fixture.CreateTestAgvSaga(initialState);
+            var agvSaga = AgvSagaGenerator.GenerateAgvSaga(initialState);
             fixture.Add(agvSaga);
 
             var message = new ForceReleaseAgv(agvSaga.CorrelationId);
@@ -93,7 +95,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
         public async Task When_StateTransition_TimeOfStateTransitionUpdated()
         {
             var fixture = new AgvStateMachineTestFixture();
-            var agvSaga = fixture.CreateTestAgvSaga(nameof(AgvStateMachine.Discovered));
+            var agvSaga = AgvSagaGenerator.GenerateAgvSaga(nameof(AgvStateMachine.Discovered));
             fixture.Add(agvSaga);
             var initialTime = agvSaga.TimeOfStateTransition;
             var updatedSaga = await fixture.TransitionStateOnRequest<SetAgvIdle, SetAgvIdleSucceeded, SetAgvIdleRejected>(new SetAgvIdle(agvSaga.CorrelationId), agvSaga, nameof(AgvStateMachine.Idle));
@@ -104,7 +106,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
         public async Task When_RejectedStateTransition_TimeOfStateTransitionNotUpdated()
         {
             var fixture = new AgvStateMachineTestFixture();
-            var agvSaga = fixture.CreateTestAgvSaga(nameof(AgvStateMachine.Idle));
+            var agvSaga = AgvSagaGenerator.GenerateAgvSaga(nameof(AgvStateMachine.Idle));
             fixture.Add(agvSaga);
             var initialTime = agvSaga.TimeOfStateTransition;
             var updatedSaga = await fixture.TransitionStateOnRequest<SetAgvIdle, SetAgvIdleRejected, SetAgvIdleSucceeded>(new SetAgvIdle(agvSaga.CorrelationId), agvSaga, nameof(AgvStateMachine.Idle));
@@ -116,22 +118,22 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
         /// </summary>
         [DataRow(nameof(AgvStateMachine.Discovered))]
         [DataRow(nameof(AgvStateMachine.Busy))]
+        [DataRow(nameof(AgvStateMachine.Charging))]
         [TestMethod]
         public async Task When_SetAgvIdleRequest_AcceptAgvSetIdle(string initialState)
         {
             var fixture = new AgvStateMachineTestFixture();
-            var agvSaga = fixture.CreateTestAgvSaga(initialState);
+            var agvSaga = AgvSagaGenerator.GenerateAgvSaga(initialState);
             fixture.Add(agvSaga);
             await fixture.TransitionStateOnRequest<SetAgvIdle, SetAgvIdleSucceeded, SetAgvIdleRejected>(new SetAgvIdle(agvSaga.CorrelationId), agvSaga, nameof(AgvStateMachine.Idle));
         }
 
-        [DataRow(nameof(AgvStateMachine.Charging))]
         [DataRow(nameof(AgvStateMachine.Idle))]
         [TestMethod]
         public async Task When_SetAgvIdleRequest_RejectAgvSetIdle(string initialState)
         {
             var fixture = new AgvStateMachineTestFixture();
-            var agvSaga = fixture.CreateTestAgvSaga(initialState);
+            var agvSaga = AgvSagaGenerator.GenerateAgvSaga(initialState);
             fixture.Add(agvSaga);
             await fixture.TransitionStateOnRequest<SetAgvIdle, SetAgvIdleRejected, SetAgvIdleSucceeded>(new SetAgvIdle(agvSaga.CorrelationId), agvSaga, initialState);
         }
@@ -143,9 +145,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
         {
             var fixture = new AgvStateMachineTestFixture()
                 .WithAgvGraphExists();
-            var agvSaga = fixture.CreateTestAgvSaga(initialState);
+            var agvSaga = AgvSagaGenerator.GenerateAgvSaga(initialState);
             fixture.Add(agvSaga);
-            await fixture.TransitionStateOnRequest<SetAgvBusy, SetAgvBusySucceeded, SetAgvBusyRejected>(new SetAgvBusy(agvSaga.CorrelationId), agvSaga, nameof(AgvStateMachine.Busy));
+            await fixture.TransitionStateOnRequest<SetAgvBusy, SetAgvBusySucceeded, SetAgvBusyRejected>(new SetAgvBusy(agvSaga.CorrelationId, false), agvSaga, nameof(AgvStateMachine.Busy));
         }
 
         [DataRow(nameof(AgvStateMachine.Discovered))]
@@ -154,9 +156,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
         public async Task When_SetAgvBusyRequest_RejectAgvSetBusy(string initialState)
         {
             var fixture = new AgvStateMachineTestFixture();
-            var agvSaga = fixture.CreateTestAgvSaga(initialState);
+            var agvSaga = AgvSagaGenerator.GenerateAgvSaga(initialState);
             fixture.Add(agvSaga);
-            await fixture.TransitionStateOnRequest<SetAgvBusy, SetAgvBusyRejected, SetAgvBusySucceeded>(new SetAgvBusy(agvSaga.CorrelationId), agvSaga, initialState);
+            await fixture.TransitionStateOnRequest<SetAgvBusy, SetAgvBusyRejected, SetAgvBusySucceeded>(new SetAgvBusy(agvSaga.CorrelationId, false), agvSaga, initialState);
         }
 
         /// <summary>
@@ -512,7 +514,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
             // Arrange
             var fixture = new AgvStateMachineTestFixture();
 
-            var agvSaga = fixture.CreateTestAgvSaga(previousState); // The previous state is variable due to DuringAny()
+            var agvSaga = AgvSagaGenerator.GenerateAgvSaga(previousState); // The previous state is variable due to DuringAny()
             fixture.Add(agvSaga);
 
             var agvGraph = fixture.CreateTestAgvGraph();
@@ -541,7 +543,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
             // Arrange
             var fixture = new AgvStateMachineTestFixture();
 
-            var agvSaga = fixture.CreateTestAgvSaga(previousState); // The previous state is variable due to DuringAny()
+            var agvSaga = AgvSagaGenerator.GenerateAgvSaga(previousState); // The previous state is variable due to DuringAny()
             fixture.Add(agvSaga);
 
             var agvMap = fixture.CreateTestAgvMap();
@@ -572,7 +574,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
             // Arrange
             var fixture = new AgvStateMachineTestFixture();
 
-            var agvSaga = fixture.CreateTestAgvSaga(previousState); // The previous state is variable due to DuringAny()
+            var agvSaga = AgvSagaGenerator.GenerateAgvSaga(previousState); // The previous state is variable due to DuringAny()
             fixture.Add(agvSaga);
 
             var agvMap = fixture.CreateTestAgvMap();
@@ -599,7 +601,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
             // Arrange
             var fixture = new AgvStateMachineTestFixture();
 
-            var agvSaga = fixture.CreateTestAgvSaga(previousState);
+            var agvSaga = AgvSagaGenerator.GenerateAgvSaga(previousState);
             fixture.Add(agvSaga);
 
             // Act
@@ -622,7 +624,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
             // Arrange
             var fixture = new AgvStateMachineTestFixture();
 
-            var agvSaga = fixture.CreateTestAgvSaga(nameof(AgvStateMachine.Charging));
+            var agvSaga = AgvSagaGenerator.GenerateAgvSaga(nameof(AgvStateMachine.Charging));
             fixture.Add(agvSaga);
 
             // Act
@@ -642,7 +644,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
             // Arrange
             var fixture = new AgvStateMachineTestFixture();
 
-            var agvSaga = fixture.CreateTestAgvSaga(nameof(AgvStateMachine.Charging));
+            var agvSaga = AgvSagaGenerator.GenerateAgvSaga(nameof(AgvStateMachine.Charging));
             var dateBefore = agvSaga.TimeOfLockStateChanged;
             fixture.Add(agvSaga);
 
@@ -661,7 +663,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
             // Arrange
             var fixture = new AgvStateMachineTestFixture();
 
-            var agvSaga = fixture.CreateTestAgvSaga(nameof(AgvStateMachine.Charging));
+            var agvSaga = AgvSagaGenerator.GenerateAgvSaga(nameof(AgvStateMachine.Charging));
             agvSaga.IsLocked = true;
             var dateBefore = agvSaga.TimeOfLockStateChanged;
             fixture.Add(agvSaga);
@@ -700,7 +702,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
 
             IRequestClient<SetAgvBusy>? client = fixture.TestHarness.GetRequestClient<SetAgvBusy>();
             Response response = await client.GetResponse<SetAgvBusySucceeded, SetAgvBusyRejected>(
-                new SetAgvBusy(correlationId));
+                new SetAgvBusy(correlationId, false));
             response.Message.ShouldBeAssignableTo(typeof(SetAgvBusySucceeded));
 
             var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
