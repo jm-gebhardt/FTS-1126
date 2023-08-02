@@ -9,8 +9,7 @@ using MassTransit;
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Commands
 {
     /// <summary>
-    /// Defines a handler for the LockAgvRequest
-    /// Gets agv from agvRegistry and Lock Agv to prevent it from being assigned to transport orders
+    /// Defines a handler for the <see cref="LockAgvCommand"/> and <see cref="UnlockAgvCommand"/>
     /// </summary>
     [UsedImplicitly]
     public class LockAndUnlockAgvCommandHandler : IConsumer<LockAgvCommand>, IConsumer<UnlockAgvCommand>

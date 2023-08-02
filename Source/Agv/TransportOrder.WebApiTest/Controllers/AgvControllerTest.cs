@@ -1,19 +1,23 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.AspNetCore.Mvc;
-using Gebhardt.StoreWare.Agv.Common.Utilities;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
-using Shouldly;
-using Gebhardt.StoreWare.Agv.Common.Exceptions;
+﻿using Gebhardt.StoreWare.Agv.Common.Exceptions;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
+using Gebhardt.StoreWare.Agv.Common.Utilities;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos.Graphs;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Queries;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Common;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Commands;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Requests.Queries;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Requests.Commands;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Requests.Queries;
+using MassTransit;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
 {
@@ -216,6 +220,66 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             var correlationId = Guid.Empty;
 
             await MediatorShould.ThrowRequestExceptionAsync<AgvDataNotFoundException>(async () => await controller.GetAgvData(correlationId));
+        }
+
+        [TestMethod]
+        public async Task AcceptAgv_WhenAgvInDiscovered_ReturnOkResult()
+        {
+            var fixture = new AgvControllerTestFixture<AcceptAgvCommand, AcceptAgvCommandHandler>();
+            var correlationId = fixture.AgvIds[2].ToGuid(); // AGV in state 'Discovered'
+
+            var response1 = new AcceptAgvSucceeded(correlationId);
+            var response2 = new AcceptAgvRejected(correlationId);
+            var response3 = new AgvNotFoundResult(correlationId);
+            var responseToUse = RequestClientGenerator<AcceptAgv>.ResponseToUse.First;
+            IRequestClient<AcceptAgv> requestClient = RequestClientGenerator<AcceptAgv>.CreateDummyRequestClient(response1, response2, response3, responseToUse);
+
+            fixture.AddService(sc => sc.AddTransient(_ => requestClient))
+                .UseDefaultServices()
+                .Build();
+
+            var result = await fixture.Controller.AcceptAgv(correlationId);
+            result.ShouldBeAssignableTo<OkResult>();
+        }
+
+        [TestMethod]
+        public async Task AcceptAgv_WhenAgvNotInDiscovered_ReturnConflictResult()
+        {
+            var fixture = new AgvControllerTestFixture<AcceptAgvCommand, AcceptAgvCommandHandler>();
+            var correlationId = fixture.AgvIds[1].ToGuid(); // AGV in state 'Busy'
+
+            var response1 = new AcceptAgvSucceeded(correlationId);
+            var response2 = new AcceptAgvRejected(correlationId);
+            var response3 = new AgvNotFoundResult(correlationId);
+            var responseToUse = RequestClientGenerator<AcceptAgv>.ResponseToUse.Second;
+            IRequestClient<AcceptAgv> requestClient = RequestClientGenerator<AcceptAgv>.CreateDummyRequestClient(response1, response2, response3, responseToUse);
+
+            fixture.AddService(sc => sc.AddTransient(_ => requestClient))
+                .UseDefaultServices()
+                .Build();
+
+            var result = await fixture.Controller.AcceptAgv(correlationId);
+            result.ShouldBeAssignableTo<ConflictResult>();
+        }
+
+        [TestMethod]
+        public async Task AcceptAgv_NWhenUnknownAgv_ReturnNotFoundResult()
+        {
+            var fixture = new AgvControllerTestFixture<AcceptAgvCommand, AcceptAgvCommandHandler>();
+            var correlationId = Guid.Empty; // Invalid AGV correlationId
+
+            var response1 = new AcceptAgvSucceeded(correlationId);
+            var response2 = new AcceptAgvRejected(correlationId);
+            var response3 = new AgvNotFoundResult(correlationId);
+            var responseToUse = RequestClientGenerator<AcceptAgv>.ResponseToUse.Third;
+            IRequestClient<AcceptAgv> requestClient = RequestClientGenerator<AcceptAgv>.CreateDummyRequestClient(response1, response2, response3, responseToUse);
+
+            fixture.AddService(sc => sc.AddTransient(_ => requestClient))
+                .UseDefaultServices()
+                .Build();
+
+            var result = await fixture.Controller.AcceptAgv(correlationId);
+            result.ShouldBeAssignableTo<NotFoundResult>();
         }
 
         [TestMethod]

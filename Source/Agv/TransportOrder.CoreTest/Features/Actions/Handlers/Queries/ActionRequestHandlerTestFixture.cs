@@ -9,6 +9,7 @@ using Moq;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Features.Actions.Handlers.Queries;
 
+// ReSharper disable ConvertConstructorToMemberInitializers
 public class ActionRequestHandlerTestFixture<TRequestClient, TConsumer>  : MediatorTestFixture<TRequestClient, TConsumer>
     where TRequestClient : class
     where TConsumer : class, IConsumer

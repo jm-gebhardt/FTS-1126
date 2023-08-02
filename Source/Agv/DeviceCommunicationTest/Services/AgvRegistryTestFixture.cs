@@ -2,6 +2,7 @@ using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services;
 
+// ReSharper disable ConvertConstructorToMemberInitializers
 public class AgvRegistryTestFixture
 {
     public IAgvRegistry AgvRegistry { get; } = new AgvRegistry();

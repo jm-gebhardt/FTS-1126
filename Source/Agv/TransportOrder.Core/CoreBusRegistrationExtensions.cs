@@ -41,7 +41,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
             busRegistrationConfigurator.AddConsumer<AgvBatteryChangedConsumer>();
             busRegistrationConfigurator.AddConsumer<AgvGraphReceivedConsumer>();
             busRegistrationConfigurator.AddConsumer<AgvErrorStatusConsumer>();
-            busRegistrationConfigurator.AddRequestClient<ActionConsumer>();
+            busRegistrationConfigurator.AddConsumer<AcceptAgvCommandHandler>();
+            busRegistrationConfigurator.AddRequestClient<AcceptAgvCommand>();
 
             return busRegistrationConfigurator;
         }
@@ -78,6 +79,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
 
             configurator.AddConsumer<GetAgvsDtoRequestHandler>();
             configurator.AddRequestClient<GetAgvsDtoRequest>();
+
+            configurator.AddConsumer<GetAgvDtoRequestHandler>();
+            configurator.AddRequestClient<GetAgvDtoRequest>();
 
             configurator.AddConsumer<LockAndUnlockAgvCommandHandler>();
             configurator.AddRequestClient<LockAgvCommand>();

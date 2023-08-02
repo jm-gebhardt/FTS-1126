@@ -47,7 +47,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions
         /// <param name="context"></param>
         public async Task Consume(ConsumeContext<QueueActionGroup> context)
         {
-            _logger.LogInformation("{MessageType} {CorrelationId} received. The ActionGroup is Manual {IsManual}", nameof(QueueActionGroup), context.Message.CorrelationId, context.Message.ActionGroup.IsManual);
+            _logger.LogInformation("{MessageType} {CorrelationId} received. The ActionGroup is Manual = {IsManual}", nameof(QueueActionGroup), context.Message.CorrelationId, context.Message.ActionGroup.IsManual);
             await _actionManager.AddActionGroupAsync(context.Message.ActionGroup, context.CancellationToken);
             await context.RespondAsync(new Success());
         }

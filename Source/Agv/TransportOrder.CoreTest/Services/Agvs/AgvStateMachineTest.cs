@@ -1,8 +1,11 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Queries;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Common;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Requests.Commands;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Requests.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.States;
@@ -113,9 +116,54 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
             updatedSaga.TimeOfStateTransition.ShouldBe(initialTime);
         }
 
-        /// <summary>
-        /// When AgvReserve Requested Agv Is Idle AcceptAgvReservation
-        /// </summary>
+        #region AgvNotFoundResult
+        [TestMethod]
+        public async Task When_RequestForUknownAgvIsReceived_ReturnNotFoundResult()
+        {
+            var fixture = new AgvStateMachineTestFixture();
+            var agvSaga = AgvSagaGenerator.GenerateAgvSaga(nameof(AgvStateMachine.Discovered));
+            fixture.Add(agvSaga);
+            var correlationId = Guid.Empty;
+
+            await TestAgvNotFoundResult(new CanAgvTransitionToBusyRequest(correlationId, true, true), fixture);
+            await TestAgvNotFoundResult(new GetAgvRequest(correlationId), fixture);
+            await TestAgvNotFoundResult(new AcceptAgv(correlationId), fixture);
+            await TestAgvNotFoundResult(new SetAgvIdle(correlationId), fixture);
+            await TestAgvNotFoundResult(new SetAgvBusy(correlationId, true), fixture);
+            await TestAgvNotFoundResult(new LockAgv(correlationId), fixture);
+            await TestAgvNotFoundResult(new UnlockAgv(correlationId), fixture);
+        }
+
+        private async Task TestAgvNotFoundResult<TRequest>(TRequest request, AgvStateMachineTestFixture fixture) where TRequest : class, CorrelatedBy<Guid>
+        {
+            IRequestClient<TRequest>? client = fixture.TestHarness.GetRequestClient<TRequest>();
+            Response<AgvNotFoundResult> response = await client.GetResponse<AgvNotFoundResult>(request);
+            response.Message.ShouldBeOfType<AgvNotFoundResult>();
+        }
+        #endregion
+
+        [DataRow(nameof(AgvStateMachine.Discovered))]
+        [TestMethod]
+        public async Task When_AcceptAgvRequest_ForDiscoveredAgv_RespondWithAcceptAgvSucceeded(string initialState)
+        {
+            var fixture = new AgvStateMachineTestFixture();
+            var agvSaga = AgvSagaGenerator.GenerateAgvSaga(initialState);
+            fixture.Add(agvSaga);
+            await fixture.TransitionStateOnRequest<AcceptAgv, AcceptAgvSucceeded, AcceptAgvRejected>(new AcceptAgv(agvSaga.CorrelationId), agvSaga, nameof(AgvStateMachine.Idle));
+        }
+
+        [DataRow(nameof(AgvStateMachine.Idle))]
+        [DataRow(nameof(AgvStateMachine.Busy))]
+        [DataRow(nameof(AgvStateMachine.Charging))]
+        [TestMethod]
+        public async Task When_AcceptAgvRequest_ForNotDiscoveredAgv_RespondWithAcceptAgvRejected(string initialState)
+        {
+            var fixture = new AgvStateMachineTestFixture();
+            var agvSaga = AgvSagaGenerator.GenerateAgvSaga(initialState);
+            fixture.Add(agvSaga);
+            await fixture.TransitionStateOnRequest<AcceptAgv, AcceptAgvRejected, AcceptAgvSucceeded>(new AcceptAgv(agvSaga.CorrelationId), agvSaga, initialState);
+        }
+
         [DataRow(nameof(AgvStateMachine.Discovered))]
         [DataRow(nameof(AgvStateMachine.Busy))]
         [DataRow(nameof(AgvStateMachine.Charging))]
@@ -237,10 +285,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
             (await fixture.SagaHarness.Exists(correlationId)).ShouldBe(correlationId);
             var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
             // Publishing requests should update corresponding last requested timestamp
-            ((DateTime) saga.AgvDataRequestedLastTime!).ShouldBeGreaterThan(utcStart);
-            ((DateTime) saga.AgvDataRequestedLastTime!).ShouldBeLessThan(DateTime.UtcNow);
-            ((DateTime) saga.AgvGraphRequestedLastTime!).ShouldBeGreaterThan(utcStart);
-            ((DateTime) saga.AgvGraphRequestedLastTime!).ShouldBeLessThan(DateTime.UtcNow);
+            ((DateTime)saga.AgvDataRequestedLastTime!).ShouldBeGreaterThan(utcStart);
+            ((DateTime)saga.AgvDataRequestedLastTime!).ShouldBeLessThan(DateTime.UtcNow);
+            ((DateTime)saga.AgvGraphRequestedLastTime!).ShouldBeGreaterThan(utcStart);
+            ((DateTime)saga.AgvGraphRequestedLastTime!).ShouldBeLessThan(DateTime.UtcNow);
         }
 
         /// <summary>
@@ -727,7 +775,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
                     x.AddConsumer<AgvPropertyChangedConsumerDummy>();
                 },
                 inMemoryConfiguration: (_, cfg) => cfg.UseDelayedMessageScheduler(),
-                settings: new AgvSettings {AgvOfflineTimeoutMsWhileIdle = agvOfflineTimeoutMsWhileIdle, AgvOfflineTimeoutMsWhileBusy = agvOfflineTimeoutMsWhileBusy},
+                settings: new AgvSettings { AgvOfflineTimeoutMsWhileIdle = agvOfflineTimeoutMsWhileIdle, AgvOfflineTimeoutMsWhileBusy = agvOfflineTimeoutMsWhileBusy },
                 inactivityTimeout: TimeSpan.FromMilliseconds(2 * Math.Max(agvOfflineTimeoutMsWhileIdle, agvOfflineTimeoutMsWhileBusy))
             );
 
@@ -739,7 +787,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
                     fixture.Machine.Idle.Name,
                     new AgvStatus(correlationId, null, true, true, 10, true, true)
                 )
-                {IsOnline = true};
+            { IsOnline = true };
             fixture.Add(agv);
 
             // send status once to activate scheduler
@@ -787,7 +835,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
                     x.AddConsumer<AgvPropertyChangedConsumerDummy>();
                 },
                 inMemoryConfiguration: (_, cfg) => cfg.UseDelayedMessageScheduler(),
-                settings: new AgvSettings {AgvOfflineTimeoutMsWhileIdle = agvOfflineTimeoutMsWhileIdle, AgvOfflineTimeoutMsWhileBusy = agvOfflineTimeoutMsWhileBusy},
+                settings: new AgvSettings { AgvOfflineTimeoutMsWhileIdle = agvOfflineTimeoutMsWhileIdle, AgvOfflineTimeoutMsWhileBusy = agvOfflineTimeoutMsWhileBusy },
                 inactivityTimeout: TimeSpan.FromMilliseconds(2 * Math.Max(agvOfflineTimeoutMsWhileIdle, agvOfflineTimeoutMsWhileBusy))
             );
 
@@ -799,7 +847,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Agvs
                     fixture.Machine.Idle.Name,
                     new AgvStatus(correlationId, "first", false, true, 60, false, false)
                 )
-                {IsOnline = true};
+            { IsOnline = true };
             fixture.Add(agv);
 
             var agvStatus1 = new AgvStatus(correlationId, "first", false, true, 60, false, false);

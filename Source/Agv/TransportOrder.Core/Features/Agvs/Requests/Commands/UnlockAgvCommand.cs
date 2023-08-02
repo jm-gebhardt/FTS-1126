@@ -3,22 +3,7 @@
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Requests.Commands
 {
     /// <summary>
-    /// Represents the SetIdleRequest request
+    /// Represents the UnlockAgv request
     /// </summary>
-    public record UnlockAgvCommand : CorrelatedBy<Guid>
-    {
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public Guid CorrelationId { get; }
-
-        /// <summary>
-        /// <inheritdoc cref="UnlockAgvCommand"/>
-        /// </summary>
-        /// <param name="correlationId"></param>
-        public UnlockAgvCommand(Guid correlationId)
-        {
-            CorrelationId = correlationId;
-        }
-    }
+    public record UnlockAgvCommand(Guid CorrelationId) : CorrelatedBy<Guid>;
 }

@@ -7,7 +7,7 @@ using MassTransit;
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Queries
 {
     /// <summary>
-    /// Gets the data from the <see cref="GetAgvsDtoRequestHandler"/> and throws if there was no data
+    /// Gets the data from the <see cref="GetAgvDtoRequestHandler"/> and throws if there was no data
     /// </summary>
     [UsedImplicitly]
     public class GetAgvDtoRequestHandler : IConsumer<GetAgvDtoRequest>

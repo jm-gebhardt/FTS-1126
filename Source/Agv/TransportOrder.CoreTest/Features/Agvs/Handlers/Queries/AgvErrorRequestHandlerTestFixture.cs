@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Features.Agvs.Handlers.Queries;
 
+// ReSharper disable ConvertConstructorToMemberInitializers
 public class AgvErrorRequestHandlerTestFixture<TRequest, TConsumer> : MediatorTestFixture<TRequest, TConsumer>
     where TRequest : class
     where TConsumer : class, IConsumer

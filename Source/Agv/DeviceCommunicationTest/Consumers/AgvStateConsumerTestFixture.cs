@@ -2,6 +2,7 @@ using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
 using Microsoft.Extensions.DependencyInjection;
 
+// ReSharper disable ConvertConstructorToMemberInitializers
 namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
 {
     public class AgvStateConsumerTestFixture : MqttConsumerTestFixture<AgvStateConsumer>

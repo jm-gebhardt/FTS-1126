@@ -12,5 +12,6 @@ public class AgvNotFoundException : NotFoundException
     public AgvNotFoundException(Guid? correlationId)
         : base("Agv", nameof(correlationId), correlationId)
     {
+
     }
 }

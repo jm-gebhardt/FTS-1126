@@ -171,7 +171,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             IRequestClient<GetAgvGraphRequest> getAgvGraphRequestClient = GetRequestClient<GetAgvGraphRequest>();
             IRequestClient<GetAgvDataRequest> getAgvDataRequestClient = GetRequestClient<GetAgvDataRequest>();
             IRequestClient<GetAgvPositionsRequest> getAgvPositionsRequestClient = GetRequestClient<GetAgvPositionsRequest>();
-            IRequestClient<UnlockAgvCommand> setIdleRequestClient = GetRequestClient<UnlockAgvCommand>();
+            IRequestClient<AcceptAgvCommand> acceptAgvRequestClient = GetRequestClient<AcceptAgvCommand>();
+            IRequestClient<UnlockAgvCommand> unlockAgvRequestClient = GetRequestClient<UnlockAgvCommand>();
             IRequestClient<LockAgvCommand> lockAgvRequestClient = GetRequestClient<LockAgvCommand>();
             IRequestClient<RequestAgvDataCommand> emitRequestDataRequestClient = GetRequestClient<RequestAgvDataCommand>();
             IRequestClient<RequestAgvGraphCommand> emitRequestGraphRequestClient = GetRequestClient<RequestAgvGraphCommand>();
@@ -179,9 +180,20 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
             IRequestClient<GetAgvErrorsRequest> getAgvErrorHistoryRequestClient = GetRequestClient<GetAgvErrorsRequest>();
             IRequestClient<MoveAgv> moveAgvRequestClient = GetRequestClient<MoveAgv>();
 
-            var controller = new AgvController(getAgvDtoRequestClient, getAgvsDtoRequestClient, getAgvGraphRequestClient, getAgvDataRequestClient,
-                getAgvPositionsRequestClient, setIdleRequestClient, lockAgvRequestClient, emitRequestDataRequestClient,
-                emitRequestGraphRequestClient, getAgvErrorsRequestClient, getAgvErrorHistoryRequestClient, moveAgvRequestClient)
+            var controller = new AgvController(
+                getAgvDtoRequestClient,
+                getAgvsDtoRequestClient,
+                getAgvGraphRequestClient,
+                getAgvDataRequestClient,
+                getAgvPositionsRequestClient,
+                acceptAgvRequestClient,
+                unlockAgvRequestClient,
+                lockAgvRequestClient,
+                emitRequestDataRequestClient,
+                emitRequestGraphRequestClient,
+                getAgvErrorsRequestClient,
+                getAgvErrorHistoryRequestClient,
+                moveAgvRequestClient)
             {
                 ControllerContext = new ControllerContext(
                     new ActionContext(
