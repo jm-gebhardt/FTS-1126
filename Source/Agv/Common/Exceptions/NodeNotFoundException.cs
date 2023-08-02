@@ -1,4 +1,5 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.Common.Exceptions;
 
@@ -8,6 +9,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Exceptions;
 public class NodeNotFoundException : NotFoundException
 {
     /// <see cref="NodeNotFoundException"/>>
+    [PublicAPI]
     public NodeNotFoundException(IAgv agv, string description)
         : base(description, nameof(agv.CorrelationId), agv.CorrelationId)
     {

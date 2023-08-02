@@ -150,4 +150,11 @@ public static class AgvGraphGenerator
         const string mapName = "Map#1";
         return new AgvGraph(correlationId ?? Guid.NewGuid(), Nodes, Edges, mapName.ToGuid(), "Map#1");
     }
+    
+    public static AgvGraph CreateDefaultGraph(GraphNode[] nodes)
+    {
+        const string mapName = "Map#1";
+        return new AgvGraph(Guid.NewGuid(), nodes, Edges, mapName.ToGuid(), "Map#1");
+    }
+    
 }

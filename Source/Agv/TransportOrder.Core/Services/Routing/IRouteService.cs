@@ -45,4 +45,14 @@ public interface IRouteService
     /// <exception cref="RouteNotFoundException"></exception>
     [PublicAPI]
     Task<IGraphAlgorithm.Route> GetRouteAsync(IAgv agv, IList<string> destinationNodeIds);
+
+    /// <summary>
+    /// Returns the node from availableNodes with the lowest cost route from agv last node
+    /// </summary>
+    /// <param name="agv"></param>
+    /// <param name="availableNodes"></param>
+    /// <returns>The found destination node with lowest cost route</returns>
+    /// <exception cref="RouteNotFoundException" />
+    [PublicAPI]
+    Task<GraphNode> GetNodeWithLowestCostsAsync(IAgv agv, IList<GraphNode> availableNodes);
 }

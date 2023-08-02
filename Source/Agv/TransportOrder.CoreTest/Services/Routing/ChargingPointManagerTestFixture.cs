@@ -3,14 +3,15 @@ using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Charging;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Routing;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.States;
+using Microsoft.Extensions.Logging;
 using Moq;
 
 // ReSharper disable MemberCanBePrivate.Global
-
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Routing;
 
-public class BaseChargingPointManagerTestFixture
+public class ChargingPointManagerTestFixture
 {
     private static readonly string[] _sources = { "SRC1", "SRC2", "SRC3", "CRG1" };
     private static readonly string[] _destinations = { "DST1", "DST2", "DST3", "CRG1" };
@@ -23,8 +24,9 @@ public class BaseChargingPointManagerTestFixture
     private static readonly string _node06 = _destinations[2];
     private const string MapName = "Map#1";
 
-    public readonly Mock<IAgvGraphRegistry> GraphRegistry = new();
-    public readonly Mock<INodeStateRegistry> NodeStateRegistry = new();
+    private readonly Mock<IAgvGraphRegistry> _graphRegistry = new();
+    public Mock<INodeStateRegistry> NodeStateRegistry { get; } = new();
+    public Mock<IRouteService> RouteService { get; } = new();
 
     private readonly GraphNode[] _nodes = {
         new(_charge){ Type = AgvGraph.NodeType.Charge, X = -2f, Y = -2f, Z = 0f},
@@ -68,9 +70,9 @@ public class BaseChargingPointManagerTestFixture
         return new AgvGraph(correlationId ?? Guid.NewGuid(), nodes, edges, MapName.ToGuid(), MapName);
     }
 
-    public IChargingPointManager CreateBaseChargingPointManager()
+    public IChargingPointManager CreateChargingPointManager()
     {
-        return new ChargingPointManager(GraphRegistry.Object, NodeStateRegistry.Object);
+        return new ChargingPointManager(_graphRegistry.Object, NodeStateRegistry.Object, RouteService.Object, new Mock<ILogger<ChargingPointManager>>().Object);
     }
 
     public void SetupNodeLocker(bool reserveSuccess, bool lockSuccess, bool unlockSuccess, Func<IQueryable<GraphNode>, IQueryable<GraphNode>>? filterFreeUnlockedNodesFunction = null)
@@ -85,15 +87,35 @@ public class BaseChargingPointManagerTestFixture
 
     public void SetupGraphRegistry(AgvGraph graph)
     {
-        GraphRegistry.Setup(x => x.GetAgvGraphAsync(It.IsAny<Guid>())).ReturnsAsync(graph);
-        GraphRegistry.Setup(x => x.GetNodesAsync(It.IsAny<Guid>(), It.IsAny<Expression<Func<GraphNode, bool>>>()))
+        _graphRegistry.Setup(x => x.GetAgvGraphAsync(It.IsAny<Guid>())).ReturnsAsync(graph);
+        _graphRegistry.Setup(x => x.GetNodesAsync(It.IsAny<Guid>(), It.IsAny<Expression<Func<GraphNode, bool>>>()))
             .ReturnsAsync(new Func<Guid, Expression<Func<GraphNode, bool>>, IEnumerable<GraphNode>>((_, predicate) => graph.Nodes.AsQueryable().Where(predicate)));
     }
           
-    public IAgv GetAgv(Guid correlationId, string agvId, string state, string order)
+    public IAgv GetAgv(Guid correlationId, string agvId, string state, string order, string? lastNodeId = null)
     {
-        var agvStatus = new AgvStatus(correlationId, order, true, true, 10, false, false);
+        var agvStatus = new AgvStatus(correlationId, order, true, true, 10, false, false, lastNodeId);
 
         return new AgvSaga(correlationId, agvId, state, agvStatus) { IsOnline = true };
+    }
+
+    public ChargingPointManagerTestFixture WithAvailableNodes(IAgv agv, List<GraphNode> availableNodes)
+    {
+        _graphRegistry.Setup(x => x.GetNodesAsync(agv.CorrelationId, It.IsAny<Expression<Func<GraphNode, bool>>>()))
+            .ReturnsAsync(new Func<Guid, Expression<Func<GraphNode, bool>>, IEnumerable<GraphNode>>((_, predicate) => availableNodes.AsQueryable().Where(predicate)));
+        foreach (var availableNode in availableNodes)
+        {
+            _graphRegistry.Setup(x => x.GetNodeAsync(availableNode.Id, agv.CorrelationId))
+                .ReturnsAsync(availableNodes.First(n => n.Id == availableNode.Id));
+        }
+       
+        NodeStateRegistry.Setup(x => x.FilterFreeUnlockedNodes(availableNodes)).Returns(availableNodes);
+        return this;
+    }
+    
+    public ChargingPointManagerTestFixture WithLowestCostNode(IAgv agv, IList<GraphNode> availableNodes, GraphNode node)
+    {
+        RouteService.Setup(x => x.GetNodeWithLowestCostsAsync(agv, availableNodes)).ReturnsAsync(node);
+        return this;
     }
 }

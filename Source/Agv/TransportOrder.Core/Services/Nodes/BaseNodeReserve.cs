@@ -1,6 +1,8 @@
 using Gebhardt.StoreWare.Agv.Common.Exceptions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Routing;
+using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Nodes
 {
@@ -16,10 +18,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Nodes
         /// </summary>
         /// <param name="agvGraphRegistry"></param>
         /// <param name="nodeStateRegistry"></param>
+        /// <param name="routeService"></param>
+        /// <param name="logger"></param>
         protected BaseNodeReserve(
             IAgvGraphRegistry agvGraphRegistry,
-            INodeStateRegistry nodeStateRegistry
-        ) : base(agvGraphRegistry, nodeStateRegistry)
+            INodeStateRegistry nodeStateRegistry,
+            IRouteService routeService,
+            ILogger<BaseNodeReserve> logger
+        ) : base(agvGraphRegistry, nodeStateRegistry, routeService, logger)
         {
         }
 

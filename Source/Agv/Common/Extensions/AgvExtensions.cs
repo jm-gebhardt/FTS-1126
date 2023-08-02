@@ -1,5 +1,6 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Exceptions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.Common.Extensions;
 
@@ -41,11 +42,12 @@ public static class AgvExtensions
     /// <param name="agv">The Agv</param>
     /// <param name="lastNodeId">The lastNodeId, only set if the return value was true</param>
     /// <returns>True if the lastNodeId exists</returns>
+    [PublicAPI]    
     public static bool TryGetLastNodeId(this IAgv agv, out string lastNodeId)
     {
         string? statusLastNodeId = agv.AgvStatus?.LastNodeId;
         // if it is null, the return value was false and the caller will thus not use it
         lastNodeId = statusLastNodeId!;
-        return string.IsNullOrEmpty(statusLastNodeId);
+        return !string.IsNullOrEmpty(statusLastNodeId);
     }
 }

@@ -3,6 +3,8 @@ using Gebhardt.StoreWare.Agv.Common.Exceptions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Nodes;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Routing;
+using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Charging;
 
@@ -14,7 +16,10 @@ public class ChargingPointManager : BaseNodeReserve, IChargingPointManager
     /// </summary>
     /// <param name="graphRegistry">The graph registry</param>
     /// <param name="nodeStateRegistry"></param>
-    public ChargingPointManager(IAgvGraphRegistry graphRegistry, INodeStateRegistry nodeStateRegistry) : base(graphRegistry, nodeStateRegistry)
+    /// <param name="routeService"></param>
+    /// <param name="logger"></param>
+    public ChargingPointManager(IAgvGraphRegistry graphRegistry, INodeStateRegistry nodeStateRegistry, IRouteService routeService, ILogger<ChargingPointManager> logger) 
+        : base(graphRegistry, nodeStateRegistry, routeService, logger)
     {
     }
 
@@ -42,9 +47,6 @@ public class ChargingPointManager : BaseNodeReserve, IChargingPointManager
             return await Task.FromResult<GraphNode?>(null);
         }
     }
-
-    /// <inheritdoc />
-    protected override Task<GraphNode> SelectBestNode(IEnumerable<GraphNode> availableNodes, IAgv agv) => Task.FromResult(availableNodes.First());
 
     /// <inheritdoc />
     public Task ReserveChargerAsync(GraphNode node, Guid agvCorrelationId)

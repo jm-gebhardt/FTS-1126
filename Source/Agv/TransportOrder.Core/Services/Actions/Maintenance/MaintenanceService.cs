@@ -3,6 +3,8 @@ using Gebhardt.StoreWare.Agv.Common.Exceptions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Nodes;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Routing;
+using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Maintenance;
 
@@ -14,7 +16,10 @@ public class MaintenanceService : BaseNodePicker, IMaintenanceService
     /// </summary>
     /// <param name="agvGraphRegistry">The graph registry</param>
     /// <param name="nodeStateRegistry"></param>
-    public MaintenanceService(IAgvGraphRegistry agvGraphRegistry, INodeStateRegistry nodeStateRegistry) : base(agvGraphRegistry, nodeStateRegistry)
+    /// <param name="routeService"></param>
+    /// <param name="logger"></param>
+    public MaintenanceService(IAgvGraphRegistry agvGraphRegistry, INodeStateRegistry nodeStateRegistry, IRouteService routeService, ILogger<MaintenanceService> logger) 
+        : base(agvGraphRegistry, nodeStateRegistry, routeService, logger)
     {
     }
 

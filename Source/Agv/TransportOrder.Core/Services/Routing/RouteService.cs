@@ -3,6 +3,7 @@ using Gebhardt.StoreWare.Agv.Common.Exceptions;
 using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs;
+using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Routing;
 
@@ -10,12 +11,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Routing;
 public class RouteService : IRouteService
 {
     private readonly IAgvGraphRegistry _agvGraphRegistry;
+    private readonly ILogger<RouteService> _logger;
 
     /// <inheritdoc cref="RouteService" />
     /// <param name="agvGraphRegistry"></param>
-    public RouteService(IAgvGraphRegistry agvGraphRegistry)
+    /// <param name="logger"></param>
+    public RouteService(IAgvGraphRegistry agvGraphRegistry, ILogger<RouteService> logger)
     {
         _agvGraphRegistry = agvGraphRegistry;
+        _logger = logger;
     }
 
     private static string GetLastNodeId(IAgv agv) => agv.GetRequiredAgvStatus().GetRequiredLastNodeId();
@@ -95,5 +99,24 @@ public class RouteService : IRouteService
         }
 
         return route;
+    }
+
+    ///<inheritdoc />
+    public async Task<GraphNode> GetNodeWithLowestCostsAsync(IAgv agv, IList<GraphNode> availableNodes)
+    {
+        IEnumerable<GraphNode> graphNodes = availableNodes.ToList();
+        List<IGraphAlgorithm.Route> routes = await Task.WhenAll(graphNodes
+                .Select(n => GetRouteIfExisting(agv, n.Id)))
+                .ContinueWith(x => x.Result.Where(route => route != null)
+                .Cast<IGraphAlgorithm.Route>().ToList(), TaskContinuationOptions.NotOnFaulted);
+
+        if (!routes.Any())
+        {
+            throw new RouteNotFoundException(agv, availableNodes);
+        }
+        string lowestCostDestinationNodeId = routes.MinBy(r => r.Costs)!.Nodes.Last();
+
+        _logger.LogDebug("Destination node with lowest cost route for Agv with AgvId {AgvId} is: {Node}. This was chosen out of: {AvailableNodes}", agv.AgvId, lowestCostDestinationNodeId, graphNodes.Select(n => n.Id).ToList());
+        return graphNodes.First(n => n.Id == lowestCostDestinationNodeId);
     }
 }

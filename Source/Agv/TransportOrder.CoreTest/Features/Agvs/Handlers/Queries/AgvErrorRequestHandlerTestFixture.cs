@@ -14,12 +14,7 @@ public class AgvErrorRequestHandlerTestFixture<TRequest, TConsumer> : MediatorTe
     where TRequest : class
     where TConsumer : class, IConsumer
 {
-    private readonly AgvErrorRegistryTestFixture _agvErrorRegistryTestFixture;
-
-    public AgvErrorRequestHandlerTestFixture()
-    {
-        _agvErrorRegistryTestFixture = new AgvErrorRegistryTestFixture();
-    }
+    private readonly AgvErrorRegistryTestFixture _agvErrorRegistryTestFixture = new();
 
     public AgvErrorRequestHandlerTestFixture<TRequest, TConsumer> WithAgvErrorStatus(AgvErrorStatusReceived agvErrorStatus)
     {

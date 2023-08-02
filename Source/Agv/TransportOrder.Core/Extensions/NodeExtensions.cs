@@ -1,11 +1,13 @@
 ﻿using System.Numerics;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Extensions;
 
 /// <summary>
 /// Extension methods for <see cref="GraphNode"/>
 /// </summary>
+[PublicAPI]    
 public static class NodeExtensions
 {
     /// <summary>
@@ -14,6 +16,7 @@ public static class NodeExtensions
     /// <param name="nodeA"></param>
     /// <param name="nodeB"></param>
     /// <returns></returns>
+    [PublicAPI]    
     public static double DistanceTo(this GraphNode nodeA, GraphNode nodeB)
     {
         var nodeAVector = new Vector2(nodeA.X, nodeA.Y);

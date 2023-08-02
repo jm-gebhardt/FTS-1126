@@ -2,6 +2,9 @@
 using Gebhardt.StoreWare.Agv.Common.Exceptions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Routing;
+using JetBrains.Annotations;
+using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Nodes;
 
@@ -14,35 +17,34 @@ public abstract class BaseNodePicker
     /// The graph registry
     /// </summary>
     private readonly IAgvGraphRegistry _agvGraphRegistry;
-    
+
     /// <summary>
     /// Note State Registry
     /// </summary>
     protected readonly INodeStateRegistry NodeStateRegistry;
+
+    private readonly IRouteService _routeService;
+    private readonly ILogger<BaseNodePicker> _logger;
 
     /// <summary>
     /// Ctor
     /// </summary>
     /// <param name="agvGraphRegistry">The graph registry</param>
     /// <param name="nodeStateRegistry"></param>
-    protected BaseNodePicker(IAgvGraphRegistry agvGraphRegistry, INodeStateRegistry nodeStateRegistry)
+    /// <param name="routeService"></param>
+    /// <param name="logger"></param>
+    protected BaseNodePicker(IAgvGraphRegistry agvGraphRegistry, INodeStateRegistry nodeStateRegistry, IRouteService routeService, ILogger<BaseNodePicker> logger)
     {
         _agvGraphRegistry = agvGraphRegistry;
         NodeStateRegistry = nodeStateRegistry;
+        _routeService = routeService;
+        _logger = logger;
     }
 
     /// <summary>
     /// For what nodes are you looking for? Used for throwing of exceptions
     /// </summary>
     protected abstract string Description { get; }
-    
-    /// <summary>
-    /// Get a node from the registry
-    /// </summary>
-    /// <param name="nodeId"></param>
-    /// <param name="agv"></param>
-    /// <returns></returns>
-    protected Task<GraphNode> GetNodeAsync(string nodeId, IAgv agv) => _agvGraphRegistry.GetNodeAsync(nodeId, agv.CorrelationId);
 
     /// <summary>
     /// The external method to get the actual node which has been selected by the logic 
@@ -54,8 +56,7 @@ public abstract class BaseNodePicker
         IEnumerable<GraphNode> availableNodes = await GetAvailableNodes(agv);
         var node = await SelectBestNode(availableNodes, agv);
 
-        var agvNode = await GetAgvNode(agv, node);
-        return agvNode;
+        return node;
     }
 
     private async Task<IEnumerable<GraphNode>> GetAvailableNodes(IAgv agv)
@@ -78,30 +79,32 @@ public abstract class BaseNodePicker
     protected abstract Expression<Func<GraphNode, bool>> NodeFilter { get; }
 
     /// <summary>
-    /// Logic for selection of best node. This method can be overriden, but it's base implementation does a random selection
+    /// Logic for selection of best node. This method can be overriden, but it's base implementation does a lowest cost route selection
     /// </summary>
     /// <param name="availableNodes">The nodes which can be selected, it is ensured that it contains at least one available node</param>
     /// <param name="agv"></param>
     /// <returns>The best node</returns>
+    [PublicAPI]    
     protected virtual Task<GraphNode> SelectBestNode(IEnumerable<GraphNode> availableNodes, IAgv agv)
+    {
+        _logger.LogDebug("Choosing node with lowest costs");
+        return _routeService.GetNodeWithLowestCostsAsync(agv, availableNodes.ToList());
+    }
+
+    /// <summary>
+    /// Returns random selection of node from available nodes
+    /// </summary>
+    /// <param name="availableNodes"></param>
+    /// <param name="agv"></param>
+    /// <returns></returns>
+    [PublicAPI]
+    protected virtual Task<GraphNode> SelectRandomAvailableNode(IEnumerable<GraphNode> availableNodes, IAgv agv)
     {
         var rand = Random.Shared;
         // must use ToList, otherwise it can not be interpreted
         List<GraphNode> nodes = availableNodes.ToList();
         var node = nodes.ElementAt(rand.Next(nodes.Count));
         return Task.FromResult(node);
-    }
-
-    private async Task<GraphNode> GetAgvNode(IAgv agv, GraphNode node)
-    {
-        var agvGraph = await _agvGraphRegistry.GetAgvGraphAsync(agv.CorrelationId);
-
-        var agvNode = agvGraph.Nodes.FirstOrDefault(n => n.Id == node.Id);
-        if (agvNode == null)
-        {
-            throw new NodeNotFoundException(agv, $"NodeId: {node.Id} not found in AgvGraph");
-        }
-        return agvNode;
     }
 
     /// <summary>

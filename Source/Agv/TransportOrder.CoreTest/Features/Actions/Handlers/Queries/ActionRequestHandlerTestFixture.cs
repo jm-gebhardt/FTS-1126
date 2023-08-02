@@ -13,14 +13,9 @@ public class ActionRequestHandlerTestFixture<TRequestClient, TConsumer>  : Media
     where TRequestClient : class
     where TConsumer : class, IConsumer
 {
-    private readonly ActionGroupRegistryTestFixture _actionGroupRegistryFixture;
+    private readonly ActionGroupRegistryTestFixture _actionGroupRegistryFixture = new();
     public ActionGroupState[] AllActionGroupStates => Enum.GetValues(typeof(ActionGroupState)).Cast<ActionGroupState>().ToArray();
 
-    public ActionRequestHandlerTestFixture()
-    {
-        _actionGroupRegistryFixture = new ActionGroupRegistryTestFixture();
-    }
-    
     public ActionRequestHandlerTestFixture<TRequestClient, TConsumer> WithActionGroups(IEnumerable<ActionGroup> actionGroups)
     {
         _actionGroupRegistryFixture.WithActionGroups(actionGroups);
