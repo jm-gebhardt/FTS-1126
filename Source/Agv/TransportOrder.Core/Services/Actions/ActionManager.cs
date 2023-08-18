@@ -32,7 +32,8 @@ public class ActionManager : BaseActionManager
         IAgvLoadCapabilityService agvLoadCapabilityService,
         IStartActionService startActionService,
         IAgvStateService agvStateService,
-        IChooseAgvActionGroupService chooseAgvActionGroupService
+        IChooseAgvActionGroupService chooseAgvActionGroupService,
+        IActionManagerSemaphoreProvider semaphoreProvider
     )
         : base(
             bus,
@@ -47,7 +48,8 @@ public class ActionManager : BaseActionManager
             agvLoadCapabilityService,
             startActionService,
             agvStateService,
-            chooseAgvActionGroupService
+            chooseAgvActionGroupService,
+            semaphoreProvider
         )
     {
     }

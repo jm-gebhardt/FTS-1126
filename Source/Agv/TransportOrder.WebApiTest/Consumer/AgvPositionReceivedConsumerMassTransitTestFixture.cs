@@ -35,11 +35,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Consumer
         protected override void ConfigureServices(IServiceCollection services)
         {
             GraphRegistryMock = new Mock<IAgvGraphRegistry>();
-
+            services.AddSingleton<IConcurrentDictionaryProvider<Guid, AgvPositionStatus>, AgvPositionDictionaryProvider>();
             if (_useAgvPositionRegistryMock)
             {
                 AgvPositionRegistryMock = new Mock<IAgvPositionRegistry>();
-
                 services.AddSingleton(AgvPositionRegistryMock.Object);
                 services.AddSingleton(GraphRegistryMock.Object);
             }

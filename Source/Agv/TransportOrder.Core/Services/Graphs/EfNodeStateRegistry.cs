@@ -12,17 +12,21 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs
     public class EfNodeStateRegistry : INodeStateRegistry
 
     {
-        private readonly SemaphoreSlim _dbLock = new(1, 1);
+        private readonly INodeStateDbSemaphoreProvider _semaphoreProvider;
         private readonly IDbContextFactory<TransportOrderDbContext> _dbContextFactory;
         private readonly ILogger<EfNodeStateRegistry> _logger;
 
         /// <summary>
-        /// 
+        /// Initializes a new <see cref="EfNodeStateRegistry"/> instance.
         /// </summary>
-        public EfNodeStateRegistry(ILogger<EfNodeStateRegistry> logger, IDbContextFactory<TransportOrderDbContext> dbContextFactory)
+        /// <param name="logger"></param>
+        /// <param name="dbContextFactory"></param>
+        /// <param name="semaphoreProvider"></param>
+        public EfNodeStateRegistry(ILogger<EfNodeStateRegistry> logger, IDbContextFactory<TransportOrderDbContext> dbContextFactory, INodeStateDbSemaphoreProvider semaphoreProvider)
         {
             _dbContextFactory = dbContextFactory;
             _logger = logger;
+            _semaphoreProvider = semaphoreProvider;
         }
 
         /// <inheritdoc />
@@ -30,7 +34,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs
         {
             try
             {
-                await _dbLock.WaitAsync();
+                await _semaphoreProvider.Semaphore.WaitAsync();
                 if (!IsLocked(nodeId))
                 {
                     _logger.LogDebug("Locking node {NodeId}", nodeId);
@@ -41,7 +45,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs
             }
             finally
             {
-                _dbLock.Release();
+                _semaphoreProvider.Semaphore.Release();
             }
         }
 
@@ -50,7 +54,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs
         {
             try
             {
-                await _dbLock.WaitAsync();
+                await _semaphoreProvider.Semaphore.WaitAsync();
                 if (IsLocked(nodeId))
                 {
                     _logger.LogDebug("Unlocking node {NodeId}", nodeId);
@@ -61,7 +65,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs
             }
             finally
             {
-                _dbLock.Release();
+                _semaphoreProvider.Semaphore.Release();
             }
         }
 
@@ -70,7 +74,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs
         {
             try
             {
-                await _dbLock.WaitAsync();
+                await _semaphoreProvider.Semaphore.WaitAsync();
                 if (!IsLocked(nodeId) && IsFree(nodeId))
                 {
                     _logger.LogDebug("Reserving node {NodeId}, for Agv {CorrelationId}", nodeId, agvCorrelationId);
@@ -81,7 +85,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs
             }
             finally
             {
-                _dbLock.Release();
+                _semaphoreProvider.Semaphore.Release();
             }
         }
 
@@ -90,7 +94,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs
         {
             try
             {
-                await _dbLock.WaitAsync();
+                await _semaphoreProvider.Semaphore.WaitAsync();
                 var nodeLock = GetNodeLock(agvCorrelationId);
                 if (nodeLock != null)
                 {
@@ -102,7 +106,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs
             }
             finally
             {
-                _dbLock.Release();
+                _semaphoreProvider.Semaphore.Release();
             }
         }
 
@@ -124,7 +128,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs
         {
             try
             {
-                await _dbLock.WaitAsync();
+                await _semaphoreProvider.Semaphore.WaitAsync();
                 var nodeLock = GetNodeLock(agvCorrelationId);
                 if (nodeLock is {NodeState: NodeLockState.Occupied})
                 {
@@ -136,7 +140,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs
             }
             finally
             {
-                _dbLock.Release();
+                _semaphoreProvider.Semaphore.Release();
             }
         }
 
@@ -145,13 +149,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs
         {
             try
             {
-                await _dbLock.WaitAsync();
+                await _semaphoreProvider.Semaphore.WaitAsync();
                 _logger.LogDebug("Free node {NodeId}", nodeId);
                 return await UpdateNodeAsync(nodeId, NodeLockState.Free, null);
             }
             finally
             {
-                _dbLock.Release();
+                _semaphoreProvider.Semaphore.Release();
             }
         }
 

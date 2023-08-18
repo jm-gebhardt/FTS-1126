@@ -90,7 +90,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Maps
         }
 
         [TestMethod]
-        public void AddOrUpdate_ShouldReturnTrue_WhenAddingNewMap()
+        public async Task AddOrUpdate_ShouldReturnTrue_WhenAddingNewMap()
         {
             var fixture = new EfMapRegistryTestFixture();
 
@@ -102,7 +102,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Maps
             const float yOffset = 1;
             var modificationDate = DateTime.UtcNow;
 
-            bool result = fixture.Registry.AddOrUpdate(mapGuid, mapId, imageData, resolution, xOffset, yOffset, modificationDate);
+            bool result = await fixture.Registry.AddOrUpdateAsync(mapGuid, mapId, imageData, resolution, xOffset, yOffset, modificationDate, new CancellationToken());
             result.ShouldBeTrue();
 
             byte[]? map = fixture.Registry.GetMap(mapGuid);
@@ -111,7 +111,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Maps
         }
 
         [TestMethod]
-        public void AddOrUpdate_ShouldReturnTrue_WhenUpdatingMap()
+        public async Task AddOrUpdate_ShouldReturnTrue_WhenUpdatingMap()
         {
             var fixture = new EfMapRegistryTestFixture();
 
@@ -123,7 +123,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Maps
             float yOffset = 1;
             var modificationDate = DateTime.UtcNow;
 
-            bool result = fixture.Registry.AddOrUpdate(mapGuid, mapId, imageData, resolution, xOffset, yOffset, modificationDate);
+            bool result = await fixture.Registry.AddOrUpdateAsync(mapGuid, mapId, imageData, resolution, xOffset, yOffset, modificationDate, new CancellationToken());
             result.ShouldBeTrue();
             byte[]? map = fixture.Registry.GetMap(mapGuid);
             map.ShouldNotBeNull();
@@ -135,7 +135,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Maps
             yOffset = 2;
             modificationDate = DateTime.UtcNow;
 
-            result = fixture.Registry.AddOrUpdate(mapGuid, mapId, imageData, resolution, xOffset, yOffset, modificationDate);
+            result = await fixture.Registry.AddOrUpdateAsync(mapGuid, mapId, imageData, resolution, xOffset, yOffset, modificationDate, new CancellationToken());
             result.ShouldBeTrue();
             map = fixture.Registry.GetMap(mapGuid);
             map.ShouldNotBeNull();

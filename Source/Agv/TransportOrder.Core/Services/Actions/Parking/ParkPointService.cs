@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Parking;
 
 /// <inheritdoc cref="IParkPointService" />
-public class ParkPointService : BaseNodeReserve, IParkPointService
+public class ParkPointService : BaseNodeReservationManager, IParkPointService
 {
     /// <summary>
     /// Constructor for base charging point manager
@@ -17,9 +17,9 @@ public class ParkPointService : BaseNodeReserve, IParkPointService
     /// <param name="nodeStateRegistry"></param>
     /// <param name="routeService"></param>
     /// <param name="logger"></param>
-    public ParkPointService(IAgvGraphRegistry agvGraphRegistry, INodeStateRegistry nodeStateRegistry, IRouteService routeService, ILogger<ParkPointService> logger) : base(agvGraphRegistry, nodeStateRegistry, routeService, logger)
+    /// <param name="semaphoreProvider"></param>
+    public ParkPointService(IAgvGraphRegistry agvGraphRegistry, INodeStateRegistry nodeStateRegistry, IRouteService routeService, ILogger<ParkPointService> logger, IParkingSemaphoreProvider semaphoreProvider) : base(agvGraphRegistry, nodeStateRegistry, routeService, logger, semaphoreProvider)
     {
-
     }
 
     /// <inheritdoc />

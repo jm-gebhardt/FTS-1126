@@ -20,17 +20,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Routing
         /// Otherwise False</returns>
         public bool IsPlausible(GraphNode start, GraphNode end)
         {
-            if (NodeTypeHelper.IsActionNodeType(start.Type) || NodeTypeHelper.IsActionNodeType(end.Type))
+            if (!NodeTypeHelper.IsActionNodeType(start.Type) && !NodeTypeHelper.IsActionNodeType(end.Type))
             {
-                if (NodeTypeHelper.IsSourceNodeType(start.Type) && NodeTypeHelper.IsDestinationNodeType(end.Type))
-                {
-                    return true;
-                }
-
-                return false;
+                return true;
             }
-
-            return true;
+            return NodeTypeHelper.IsSourceNodeType(start.Type) && NodeTypeHelper.IsDestinationNodeType(end.Type);
         }
     }
 }

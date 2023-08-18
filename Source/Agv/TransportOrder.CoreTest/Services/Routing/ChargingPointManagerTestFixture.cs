@@ -72,7 +72,7 @@ public class ChargingPointManagerTestFixture
 
     public IChargingPointManager CreateChargingPointManager()
     {
-        return new ChargingPointManager(_graphRegistry.Object, NodeStateRegistry.Object, RouteService.Object, new Mock<ILogger<ChargingPointManager>>().Object);
+        return new ChargingPointManager(_graphRegistry.Object, NodeStateRegistry.Object, RouteService.Object, new Mock<ILogger<ChargingPointManager>>().Object, new ChargingSemaphoreProvider());
     }
 
     public void SetupNodeLocker(bool reserveSuccess, bool lockSuccess, bool unlockSuccess, Func<IQueryable<GraphNode>, IQueryable<GraphNode>>? filterFreeUnlockedNodesFunction = null)

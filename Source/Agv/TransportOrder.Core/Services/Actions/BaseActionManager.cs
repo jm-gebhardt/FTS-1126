@@ -4,6 +4,7 @@ using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Charging;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Choosers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Maintenance;
@@ -22,7 +23,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions;
 /// </summary>
 public abstract class BaseActionManager : IActionManager
 {
-    private readonly SemaphoreSlim _lockSemaphoreSlim = new(1, 1);
+    private readonly ISemaphoreProvider _semaphoreProvider;
     private readonly IBus _bus;
     private readonly IActionGroupRegistry _actionGroupRegistry;
     private readonly IRouteService _routeService;
@@ -73,6 +74,7 @@ public abstract class BaseActionManager : IActionManager
     /// <param name="startActionService"></param>
     /// <param name="agvStateService"></param>
     /// <param name="chooseAgvActionGroupService"></param>
+    /// <param name="semaphoreProvider"></param>
     protected BaseActionManager(
         IBus bus,
         IActionGroupRegistry actionGroupRegistry,
@@ -86,7 +88,8 @@ public abstract class BaseActionManager : IActionManager
         IAgvLoadCapabilityService agvLoadCapabilityService,
         IStartActionService startActionService,
         IAgvStateService agvStateService,
-        IChooseAgvActionGroupService chooseAgvActionGroupService)
+        IChooseAgvActionGroupService chooseAgvActionGroupService,
+        ISemaphoreProvider semaphoreProvider)
     {
         _bus = bus;
         _actionGroupRegistry = actionGroupRegistry;
@@ -101,6 +104,7 @@ public abstract class BaseActionManager : IActionManager
         AgvStateService = agvStateService;
         _chooseAgvActionGroupService = chooseAgvActionGroupService;
         _startActionService = startActionService;
+        _semaphoreProvider = semaphoreProvider;
     }
 
     private static ActionGroup CreateActionGroup(Guid agvCorrelationId, string nodeId, string actionDescription, ActionType actionType = ActionType.Move)
@@ -241,15 +245,14 @@ public abstract class BaseActionManager : IActionManager
     /// <param name="cancellationToken"></param>
     protected async Task ExecuteLockedAsync(Func<Task> action, CancellationToken cancellationToken)
     {
-        await _lockSemaphoreSlim.WaitAsync(cancellationToken);
-
         try
         {
+            await _semaphoreProvider.Semaphore.WaitAsync(cancellationToken);
             await action();
         }
         finally
         {
-            _lockSemaphoreSlim.Release();
+            _semaphoreProvider.Semaphore.Release();
         }
     }
 

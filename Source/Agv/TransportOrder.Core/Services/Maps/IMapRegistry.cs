@@ -35,7 +35,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Maps
         /// <param name="xOffset"></param>
         /// <param name="yOffset"></param>
         /// <param name="modificationDate"></param>
+        /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>True if a change has been made</returns>
-        public bool AddOrUpdate(Guid correlationId, string mapId, string base64PngImage, double resolution, double xOffset, double yOffset, DateTime modificationDate);
+        Task<bool> AddOrUpdateAsync(Guid correlationId, string mapId, string base64PngImage, double resolution, double xOffset, double yOffset, DateTime modificationDate, CancellationToken cancellationToken);
     }
 }

@@ -56,11 +56,11 @@ try
         using (var scope = host.Services.CreateScope())
         {
             // Apply migrations if SagaPersistenceDbContext is available
-            var db1 = scope.ServiceProvider.GetRequiredService<SagaPersistenceDbContext>();
-            await db1.Database.MigrateAsync();
+            var sagaDb = scope.ServiceProvider.GetRequiredService<SagaPersistenceDbContext>(); 
+            await sagaDb.Database.MigrateAsync();
 
-            var db2 = scope.ServiceProvider.GetRequiredService<TransportOrderDbContext>();
-            await db2.Database.MigrateAsync();
+            var transportOrderDb = scope.ServiceProvider.GetRequiredService<TransportOrderDbContext>();
+            await transportOrderDb.Database.MigrateAsync();
 
             var dbConfigurationSeeder = scope.ServiceProvider.GetService<DatabaseConfigurationSeeder<TransportOrderDbContext>>()!;
             await dbConfigurationSeeder.SeedDefaultConfigurationAsync();

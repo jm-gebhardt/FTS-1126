@@ -434,7 +434,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
             When(AgvMapReceivedEvent)
                 .Then(c => _logger.LogInformation("Incoming Map {MapId}/{MapCorrelationId} for Agv {AgvId}/{CorrelationId}",
                     c.Message.AgvMap.MapId, c.Message.AgvMap.CorrelationId, c.Saga.AgvId, c.Saga.CorrelationId))
-                .Then(SaveMap);
+                .ThenAsync(SaveMapAsync);
 
         private EventActivityBinder<AgvSaga, AgvOfflineMessage> AgvOfflineMessageHandler() =>
             When(AgvOfflineWatchdog.Received)
@@ -569,13 +569,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
             }
         }
 
-        private void SaveMap(BehaviorContext<AgvSaga, AgvMapReceived> context)
+        private async Task SaveMapAsync(BehaviorContext<AgvSaga, AgvMapReceived> context)
         {
             var agvMap = context.Message.AgvMap;
+            var cancellationToken = context.CancellationToken;
 
             if (!_mapRegistry.Exists(agvMap.CorrelationId))
             {
-                if (_mapRegistry.AddOrUpdate(agvMap.CorrelationId, agvMap.MapId, agvMap.ImageData, agvMap.Resolution, agvMap.XOffset, agvMap.YOffset, agvMap.ModificationDate))
+                if (await _mapRegistry.AddOrUpdateAsync(agvMap.CorrelationId, agvMap.MapId, agvMap.ImageData, agvMap.Resolution, agvMap.XOffset, agvMap.YOffset, agvMap.ModificationDate, cancellationToken))
                 {
                     _logger.LogInformation("Map {MapId}/{MapCorrelationId} inserted into Registry", agvMap.MapId, agvMap.CorrelationId);
                 }
@@ -586,7 +587,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
             }
             else
             {
-                if (_mapRegistry.AddOrUpdate(agvMap.CorrelationId, agvMap.MapId, agvMap.ImageData, agvMap.Resolution, agvMap.XOffset, agvMap.YOffset, agvMap.ModificationDate))
+                if (await _mapRegistry.AddOrUpdateAsync(agvMap.CorrelationId, agvMap.MapId, agvMap.ImageData, agvMap.Resolution, agvMap.XOffset, agvMap.YOffset, agvMap.ModificationDate, cancellationToken))
                 {
                     _logger.LogInformation("Map {MapId}/{MapCorrelationId} has been updated in Registry", agvMap.MapId, agvMap.CorrelationId);
                 }

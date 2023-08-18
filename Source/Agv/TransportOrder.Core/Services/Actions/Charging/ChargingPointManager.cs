@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Charging;
 
 /// <inheritdoc cref="IChargingPointManager"/>
-public class ChargingPointManager : BaseNodeReserve, IChargingPointManager
+public class ChargingPointManager : BaseNodeReservationManager, IChargingPointManager
 {
     /// <summary>
     /// Constructor for base charging point manager
@@ -18,8 +18,9 @@ public class ChargingPointManager : BaseNodeReserve, IChargingPointManager
     /// <param name="nodeStateRegistry"></param>
     /// <param name="routeService"></param>
     /// <param name="logger"></param>
-    public ChargingPointManager(IAgvGraphRegistry graphRegistry, INodeStateRegistry nodeStateRegistry, IRouteService routeService, ILogger<ChargingPointManager> logger) 
-        : base(graphRegistry, nodeStateRegistry, routeService, logger)
+    /// <param name="semaphoreProvider"></param>
+    public ChargingPointManager(IAgvGraphRegistry graphRegistry, INodeStateRegistry nodeStateRegistry, IRouteService routeService, ILogger<ChargingPointManager> logger, IChargingSemaphoreProvider semaphoreProvider) 
+        : base(graphRegistry, nodeStateRegistry, routeService, logger, semaphoreProvider)
     {
     }
 

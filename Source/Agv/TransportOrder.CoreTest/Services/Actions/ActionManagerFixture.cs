@@ -81,7 +81,8 @@ public class ActionManagerFixture
             AgvLoadCapabilityService.Object,
             StartActionService.Object,
             AgvStateService.Object,
-            ChooseAgvActionGroupService.Object
+            ChooseAgvActionGroupService.Object,
+            new ActionManagerSemaphoreProvider()
         );
     }
 

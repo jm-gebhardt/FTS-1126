@@ -27,7 +27,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Maps
                 );
             Provider = collection.BuildServiceProvider(true);
             ContextFactory = Provider.GetService<IDbContextFactory<TransportOrderDbContext>>()!;
-            Registry = new EfMapRegistry(ContextFactory, mockLogger.Object);
+            Registry = new EfMapRegistry(ContextFactory, mockLogger.Object, new MapRegistrySemaphoreProvider());
         }
 
         public void Add(Map map)

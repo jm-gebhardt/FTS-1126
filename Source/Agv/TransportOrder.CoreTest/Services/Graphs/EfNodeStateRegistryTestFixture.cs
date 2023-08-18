@@ -27,7 +27,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Graphs
                 );
             Provider = collection.BuildServiceProvider(true);
             ContextFactory = Provider.GetService<IDbContextFactory<TransportOrderDbContext>>()!;
-            Registry = new EfNodeStateRegistry(mockLogger.Object, ContextFactory);
+            Registry = new EfNodeStateRegistry(mockLogger.Object, ContextFactory, new NodeStateDbSemaphoreProvider());
         }
         
         public void Add(NodeLock nodeLock)

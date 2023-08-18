@@ -21,7 +21,7 @@ internal class AgvPositionRegistryTestFixture
     public AgvPositionRegistryTestFixture()
     {
         ChangeDetectorMock = new Mock<IChangeDetector<AgvPositionStatus>>();
-        AgvPositionRegistry = new AgvPositionRegistry(BusMock.Object, ChangeDetectorMock.Object);
+        AgvPositionRegistry = new AgvPositionRegistry(BusMock.Object, ChangeDetectorMock.Object, new AgvPositionDictionaryProvider());
         AgvPositionStatus = new AgvPositionStatus(CorrelationId, AgvId, _agvPosition);
     }
 

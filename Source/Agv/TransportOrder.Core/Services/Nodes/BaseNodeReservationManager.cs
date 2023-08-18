@@ -1,5 +1,6 @@
 using Gebhardt.StoreWare.Agv.Common.Exceptions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Routing;
 using Microsoft.Extensions.Logging;
@@ -9,9 +10,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Nodes
     /// <summary>
     /// Reserve Nodes
     /// </summary>
-    public abstract class BaseNodeReserve : BaseNodePicker
+    public abstract class BaseNodeReservationManager : BaseNodePicker
     {
-        private readonly SemaphoreSlim _reserveSemaphoreSlim = new(1, 1);
+        private readonly ISemaphoreProvider _semaphoreProvider;
 
         /// <summary>
         /// 
@@ -20,13 +21,16 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Nodes
         /// <param name="nodeStateRegistry"></param>
         /// <param name="routeService"></param>
         /// <param name="logger"></param>
-        protected BaseNodeReserve(
+        /// <param name="semaphoreProvider"></param>
+        protected BaseNodeReservationManager(
             IAgvGraphRegistry agvGraphRegistry,
             INodeStateRegistry nodeStateRegistry,
             IRouteService routeService,
-            ILogger<BaseNodeReserve> logger
+            ILogger<BaseNodeReservationManager> logger,
+            ISemaphoreProvider semaphoreProvider
         ) : base(agvGraphRegistry, nodeStateRegistry, routeService, logger)
         {
+            _semaphoreProvider = semaphoreProvider;
         }
 
         /// <summary>
@@ -36,9 +40,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Nodes
         /// <returns></returns>
         protected async Task<GraphNode> PickAndReserveNodeAsync(IAgv agv)
         {
-            await _reserveSemaphoreSlim.WaitAsync();
             try
             {
+                await _semaphoreProvider.Semaphore.WaitAsync();
                 var node = await PickNode(agv);
 
                 await ReserveNodeAsync(node.Id, agv.CorrelationId);
@@ -46,7 +50,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Nodes
             }
             finally
             {
-                _reserveSemaphoreSlim.Release();
+                _semaphoreProvider.Semaphore.Release();
             }
         }
 
