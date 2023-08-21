@@ -1,4 +1,7 @@
-﻿namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos.Graphs;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using JetBrains.Annotations;
+
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos.Graphs;
 
 /// <summary>
 /// Model for a node in the graph, it has X/Y/Z coordinates and a type.
@@ -16,7 +19,7 @@ public record GraphNodeDto
     /// <summary>
     /// The type of the node
     /// </summary>
-    public NodeTypeDto Type { get; init; }
+    public AgvGraph.NodeType Type { get; [UsedImplicitly] init; }
 
     /// <summary>
     /// The X coordinate of the node

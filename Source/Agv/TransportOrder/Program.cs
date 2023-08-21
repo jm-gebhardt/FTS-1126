@@ -14,6 +14,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Prometheus;
+using Microsoft.AspNetCore.Builder;
 
 var initialLogger = Gebhardt.StoreWare.Agv.Common.Logging.InitialLogger.Create<Program>();
 
@@ -48,6 +49,8 @@ try
                 {
                     app.UseMetricServer();
                     app.UseTransportOrderWebApi();
+                    app.UseDeveloperExceptionPage();
+
                 });
         });
 

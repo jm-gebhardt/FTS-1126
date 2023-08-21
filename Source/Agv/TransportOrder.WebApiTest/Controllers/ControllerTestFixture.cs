@@ -30,7 +30,8 @@ public abstract class ControllerTestFixture<TRequest, TRequestHandler, TControll
             new AgvGraphProfile(),
             new AgvPositionProfile(),
             new MapProfile(),
-            new AgvErrorProfile()
+            new AgvErrorProfile(),
+            new ActionProfile()
         );
         return mapper;
     }

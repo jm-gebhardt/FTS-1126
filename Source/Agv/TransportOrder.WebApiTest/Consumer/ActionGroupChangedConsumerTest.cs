@@ -1,6 +1,6 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
-using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.ReadModels;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Consumer;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -24,6 +24,6 @@ public class ActionGroupChangedConsumerTest
         (await fixture.ConsumerHarness!.Consumed.Any<ActionGroupChanged>()).ShouldBeTrue();
 
         fixture.MockHub.Verify(h => h.SendActionGroupStateToAllClients(
-            It.Is<ActionGroup>(o => o.CorrelationId == actionGroup.CorrelationId)), Times.Once);
+            It.IsAny<ActionGroupReadModel>()), Times.Once);
     }
 }

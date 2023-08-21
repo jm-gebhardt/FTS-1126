@@ -1,6 +1,6 @@
 using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos.AgvActions;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.ReadModels;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Profiles.Profiles;
 
@@ -14,7 +14,7 @@ public class ActionProfile : Profile
     /// </summary>
     public ActionProfile()
     {
-        CreateMap<ActionGroup, ActionGroupDto>();
-        CreateMap<AgvAction, AgvActionDto>();
+        CreateMap<ActionGroupReadModel, ActionGroupDto>();
+        CreateMap<AgvActionReadModel, AgvActionDto>();
     }
 }

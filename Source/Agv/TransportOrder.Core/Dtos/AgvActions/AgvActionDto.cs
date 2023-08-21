@@ -1,4 +1,5 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos.AgvActions;
@@ -38,6 +39,11 @@ public record AgvActionDto
     /// Target node id of the action
     /// </summary>
     public string TargetNodeId { get; init; }
+
+    /// <summary>
+    /// Type of the target node of the action
+    /// </summary>
+    public AgvGraph.NodeType TargetNodeType { get; init; }
 
     /// <summary>
     /// The nodes of the trip

@@ -3,6 +3,7 @@ using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos.AgvActions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Profiles.Profiles;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.ReadModels;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -35,7 +36,8 @@ public class ActionHubTest
         const string orderId = "Order123";
         var correlationId = orderId.ToGuid();
 
-        var actionGroup = new ActionGroup(correlationId, orderId);
+        var actionGroup = new ActionGroupReadModel(correlationId, orderId, null, DateTime.UtcNow, null, null, 
+            ActionGroupState.Created, ActionGroupCreator.TransportOrder, new List<AgvActionReadModel>(), false);
         await actionHubContext.SendActionGroupStateToAllClients(actionGroup);
 
         mockHubContext.Verify(c => c.Clients.All.ActionGroupChanged(It.Is<ActionGroupDto>(a => a.CorrelationId == actionGroup.CorrelationId)), Times.Once);

@@ -1,4 +1,6 @@
-﻿namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db.Models;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db.Models;
 
 /// <summary>
 /// Model for a node in the AGV graph, it has X/Y/Z coordinates and a type. This model is for EF only
@@ -21,7 +23,7 @@ public class EfNode
     /// <summary>
     /// The type of the node
     /// </summary>
-    public EfGraph.EfNodeType Type { get; init; }
+    public AgvGraph.NodeType Type { get; init; }
 
     /// <summary>
     /// The X coordinate of the node

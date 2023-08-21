@@ -20,6 +20,7 @@ public class GetAgvDtoRequestHandlerTest
     {
         var idleAgv = AgvGenerator.GenerateIdleAgv();
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+
         AgvRequestsHandlerTestFixture<GetAgvDtoRequest, GetAgvDtoRequestHandler> fixture = new GetAgvDtoRequestHandlerTestFixture()
             .WithAgvs(new List<IAgv> {idleAgv}, actionGroup)
             .Build();

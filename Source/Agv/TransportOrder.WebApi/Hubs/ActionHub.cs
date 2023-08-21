@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos.AgvActions;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.ReadModels;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using SignalRSwaggerGen.Attributes;
@@ -48,7 +48,7 @@ public interface IActionHubContext
     /// <summary>
     /// Broadcasts the state of action groups
     /// </summary>
-    public Task SendActionGroupStateToAllClients(ActionGroup actionGroup);
+    public Task SendActionGroupStateToAllClients(ActionGroupReadModel actionGroup);
 }
 
 /// <summary>
@@ -69,7 +69,7 @@ public class ActionHubContext : IActionHubContext
     }
 
     /// <inheritdoc/>
-    public async Task SendActionGroupStateToAllClients(ActionGroup actionGroup)
+    public async Task SendActionGroupStateToAllClients(ActionGroupReadModel actionGroup)
     {
         var actionGroupDto = _mapper.Map<ActionGroupDto>(actionGroup);
         await _hubContext.Clients.All.ActionGroupChanged(actionGroupDto);

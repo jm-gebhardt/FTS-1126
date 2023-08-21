@@ -1,7 +1,7 @@
 using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.ReadModels;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Profiles.Profiles;
 
@@ -23,7 +23,7 @@ public class AgvProfile : Profile
         CreateMap<IAgv, AgvDto>(MemberList.None)
             .IncludeMembers(s => s.AgvStatus);
 
-        CreateMap<ActionGroup, AgvDto>(MemberList.None)
+        CreateMap<ActionGroupReadModel, AgvDto>(MemberList.None)
             .ForMember(d => d.CurrentActionGroup, opt => opt.MapFrom(s => s))
             // ignore CorrelationId, as it's set from the other mapping already, otherwise this would overwrite the CorrelationId of the AgvDto (Agv) with the CorrelationId of the ActionGroup
             .ForMember(x => x.CorrelationId, opt => opt.Ignore());

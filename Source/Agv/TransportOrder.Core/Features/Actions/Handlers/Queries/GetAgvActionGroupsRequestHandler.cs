@@ -1,9 +1,8 @@
 using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos.AgvActions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Actions.Common;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Actions.Requests.Queries;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Registries;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.ReadModels;
 using JetBrains.Annotations;
 using MassTransit;
 
@@ -15,17 +14,17 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Actions.Handlers.Q
 [PublicAPI]
 public class GetAgvActionGroupsRequestHandler : IConsumer<GetAgvActionGroupsRequest>
 {
-    private readonly IActionGroupRegistry _actionGroupRegistry;
+    private readonly IActionGroupRetrievalService _retrievalService;
     private readonly IMapper _mapper;
 
     /// <summary>
     ///  Constructor
     /// </summary>
-    /// <param name="actionGroupRegistry"></param>
+    /// <param name="retrievalService"></param>
     /// <param name="mapper"></param>
-    public GetAgvActionGroupsRequestHandler(IActionGroupRegistry actionGroupRegistry, IMapper mapper)
+    public GetAgvActionGroupsRequestHandler(IActionGroupRetrievalService retrievalService, IMapper mapper)
     {
-        _actionGroupRegistry = actionGroupRegistry;
+        _retrievalService = retrievalService;
         _mapper = mapper;
     }
 
@@ -38,7 +37,7 @@ public class GetAgvActionGroupsRequestHandler : IConsumer<GetAgvActionGroupsRequ
     public async Task Consume(ConsumeContext<GetAgvActionGroupsRequest> context)
     {
         var request = context.Message;
-        IReadOnlyList<ActionGroup> actionGroups = await _actionGroupRegistry.GetActionGroupsAsync(request.States, request.FromDate, request.ToDate, request.Limit);
+        IReadOnlyList<ActionGroupReadModel> actionGroups = await _retrievalService.GetActionGroupsWithTargetNodeTypeAsync(request.States, request.FromDate, request.ToDate, request.Limit);
 
         var result = new GetAgvActionGroupsResult(actionGroups.Select(g => _mapper.Map<ActionGroupDto>(g)).ToList());
 

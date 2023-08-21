@@ -1,4 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.ReadModels;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs;
 using MassTransit;
 using Microsoft.Extensions.Logging;
@@ -13,16 +14,18 @@ public class ActionGroupChangedConsumer : IConsumer<ActionGroupChanged>
 {
     private readonly ILogger<ActionGroupChangedConsumer> _logger;
     private readonly IActionHubContext _actionHubContext;
+    private readonly IActionGroupRetrievalService _actionGroupRetrievalService;
 
     /// <summary>
     /// Constructor
     /// </summary>
     public ActionGroupChangedConsumer(
         ILogger<ActionGroupChangedConsumer> logger,
-        IActionHubContext actionHubContext)
+        IActionHubContext actionHubContext, IActionGroupRetrievalService actionGroupRetrievalService)
     {
         _logger = logger;
         _actionHubContext = actionHubContext;
+        _actionGroupRetrievalService = actionGroupRetrievalService;
     }
 
     /// <summary>
@@ -31,8 +34,9 @@ public class ActionGroupChangedConsumer : IConsumer<ActionGroupChanged>
     /// <param name="context"></param>
     public async Task Consume(ConsumeContext<ActionGroupChanged> context)
     {
-        _logger.LogTrace("{MessageType} {CorrelationId} received", nameof(ActionGroupChanged), context.Message.CorrelationId);
-
-        await _actionHubContext.SendActionGroupStateToAllClients(context.Message.ActionGroup);
+        var (actionGroup, correlationId) = context.Message;
+        _logger.LogTrace("{MessageType} {CorrelationId} received", nameof(ActionGroupChanged), correlationId);
+        var actionGroupReadModel = await _actionGroupRetrievalService.EnrichActionGroupWithTargetNodeTypesAsync(actionGroup);
+        await _actionHubContext.SendActionGroupStateToAllClients(actionGroupReadModel);
     }
 }

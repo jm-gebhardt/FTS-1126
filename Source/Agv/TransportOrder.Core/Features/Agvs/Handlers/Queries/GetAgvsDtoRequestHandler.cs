@@ -1,12 +1,11 @@
 using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Common;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Requests.Queries;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Registries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs.Errors;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.ReadModels;
 using JetBrains.Annotations;
 using MassTransit;
 
@@ -20,7 +19,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Quer
 public class GetAgvsDtoRequestHandler : IConsumer<GetAgvsDtoRequest>
 {
     private readonly IAgvRegistry _agvRegistry;
-    private readonly IActionGroupRegistry _actionGroupRegistry;
+    private readonly IActionGroupRetrievalService _actionGroupRegistry;
     private readonly IMapper _mapper;
     private readonly IAgvErrorRegistry _agvErrorRegistry;
 
@@ -31,7 +30,7 @@ public class GetAgvsDtoRequestHandler : IConsumer<GetAgvsDtoRequest>
     /// <param name="actionGroupRegistry"></param>
     /// <param name="mapper"></param>
     /// <param name="agvErrorRegistry"></param>
-    public GetAgvsDtoRequestHandler(IAgvRegistry agvRegistry, IActionGroupRegistry actionGroupRegistry, IMapper mapper, IAgvErrorRegistry agvErrorRegistry)
+    public GetAgvsDtoRequestHandler(IAgvRegistry agvRegistry, IActionGroupRetrievalService actionGroupRegistry, IMapper mapper, IAgvErrorRegistry agvErrorRegistry)
     {
         _agvRegistry = agvRegistry;
         _actionGroupRegistry = actionGroupRegistry;
@@ -46,7 +45,7 @@ public class GetAgvsDtoRequestHandler : IConsumer<GetAgvsDtoRequest>
     {
         IQueryable<IAgv> query = _agvRegistry.GetAllAgvs();
         ICollection<Guid> correlationIds = context.Message.CorrelationIds;
-        if (correlationIds.Any()) // Optionally filter for specific correlation ids
+        if (correlationIds.Any())
         {
             query = query.Where(a => correlationIds.Contains(a.CorrelationId));
         }
@@ -54,7 +53,7 @@ public class GetAgvsDtoRequestHandler : IConsumer<GetAgvsDtoRequest>
         List<IAgv> agvs = query.OrderBy(a => a.AgvId).ToList();
         List<Guid> agvCorrelationIds = agvs.Select(a => a.CorrelationId).ToList();
 
-        Task<IReadOnlyDictionary<Guid, ActionGroup?>> actionGroupsTask = _actionGroupRegistry.GetCurrentAssignedActionGroupsAsync(agvCorrelationIds);
+        Task<IReadOnlyDictionary<Guid, ActionGroupReadModel?>> actionGroupsTask = _actionGroupRegistry.GetCurrentAssignedActionGroupsWithTargetNodeTypeAsync(agvCorrelationIds);
         Task<IList<AgvError>> errorsTask = _agvErrorRegistry.GetActiveErrorsAsync(agvCorrelationIds);
 
         await Task.WhenAll(actionGroupsTask, errorsTask);

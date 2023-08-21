@@ -15,10 +15,8 @@ public class GetAgvActionGroupsRequestHandlerTest
     [TestMethod]
     public async Task GetAgvActionGroupsRequestHandler_EmptyActionGroupRegistry_ReturnsEmptyList()
     {
-        ActionRequestHandlerTestFixture<GetAgvActionGroupsRequest, GetAgvActionGroupsRequestHandler> fixture = await new ActionRequestHandlerTestFixture<GetAgvActionGroupsRequest, GetAgvActionGroupsRequestHandler>()
-            .WithActionGroups(Array.Empty<ActionGroup>())
-            .BuildAsync();
-        
+        ActionRequestHandlerTestFixture<GetAgvActionGroupsRequest, GetAgvActionGroupsRequestHandler> fixture = await (await new ActionRequestHandlerTestFixture<GetAgvActionGroupsRequest, GetAgvActionGroupsRequestHandler>()
+            .WithActionGroups(Array.Empty<ActionGroup>())).BuildAsync();
         Response<GetAgvActionGroupsResult> response = await fixture.GetResponseAsync<GetAgvActionGroupsResult>(
             new GetAgvActionGroupsRequest(fixture.AllActionGroupStates, DateTime.MinValue, DateTime.MaxValue, 100));
         response.Message.AgvActionGroups.ShouldBeEmpty();
@@ -27,9 +25,9 @@ public class GetAgvActionGroupsRequestHandlerTest
     [TestMethod]
     public async Task GetAgvActionGroupsRequestHandler_SingleActionGroup_ReturnsCreated()
     {
-        ActionGroup[] actionGroups = { AgvActionGenerator.GeneratePickDropActionGroup(actionState: ActionState.Created)};
-        ActionRequestHandlerTestFixture<GetAgvActionGroupsRequest, GetAgvActionGroupsRequestHandler> fixture = await new ActionRequestHandlerTestFixture<GetAgvActionGroupsRequest, GetAgvActionGroupsRequestHandler>()
-            .WithActionGroups(actionGroups)
+        ActionGroup[] actionGroups = { AgvActionGenerator.GeneratePickDropActionGroup(actionState: ActionState.Created) };
+        ActionRequestHandlerTestFixture<GetAgvActionGroupsRequest, GetAgvActionGroupsRequestHandler> fixture = await (await new ActionRequestHandlerTestFixture<GetAgvActionGroupsRequest, GetAgvActionGroupsRequestHandler>()
+            .WithActionGroups(actionGroups))
             .BuildAsync();
         
         Response<GetAgvActionGroupsResult> response = await fixture.GetResponseAsync<GetAgvActionGroupsResult>(

@@ -25,6 +25,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs.Errors;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Maps;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.ReadModels;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core;
 
@@ -112,6 +113,7 @@ public static class CoreHostBuilderExtensions
 
     private static void RegisterRegistryServices(IServiceCollection services)
     {
+        services.AddTransient<IActionGroupRetrievalService, ActionGroupRetrievalService>();
         services.AddTransient<IActionGroupRegistry, EfActionGroupRegistry>();
         services.AddTransient<IAgvRegistry, EfAgvRegistry>();
         services.AddTransient<IAgvDataRegistry, EfAgvDataRegistry>();

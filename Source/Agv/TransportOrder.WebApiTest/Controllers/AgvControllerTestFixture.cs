@@ -13,6 +13,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Registries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs.Errors;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.ReadModels;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.States;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers;
 using JetBrains.Annotations;
@@ -45,6 +46,8 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
 
     private Mock<IActionGroupRegistry> ActionGroupRegistry { get; }
 
+    private Mock<IActionGroupRetrievalService> ActionGroupRetrievalService { get; }
+
     private Mock<IAgvGraphRegistry> AgvGraphRegistry { get; }
 
     private Mock<IAgvErrorRegistry> AgvErrorRegistry { get; }
@@ -68,6 +71,9 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         AgvRegistry = new Mock<IAgvRegistry>();
         QueueActionGroupRequestClient = new Mock<IRequestClient<QueueActionGroup>>();
         AgvDataRegistry = new Mock<IAgvDataRegistry>();
+        ActionGroupRetrievalService = new Mock<IActionGroupRetrievalService>();
+        ActionGroupRetrievalService.Setup(r => r.GetCurrentAssignedActionGroupsWithTargetNodeTypeAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (ActionGroupReadModel?)null));
+
         ActionGroupRegistry = new Mock<IActionGroupRegistry>();
         ActionGroupRegistry.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (ActionGroup?) null));
         AgvErrorRegistry.Setup(x => x.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(new List<AgvError>());
@@ -221,6 +227,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         AddServices(sc =>
         {
             sc.AddTransient(_ => AgvRegistry.Object);
+            sc.AddTransient(_ => ActionGroupRetrievalService.Object);
             sc.AddTransient(_ => AgvDataRegistry.Object);
             sc.AddTransient(_ => GetAgvPositionRegistry().Object);
             sc.AddTransient(_ => GetMapper());

@@ -4,10 +4,11 @@ using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Profiles.Profiles;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Registries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs.Errors;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.ReadModels;
+using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -24,7 +25,7 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
     public readonly Mock<IAgvRegistry> AgvRegistry = new();
 
     // ReSharper disable once MemberCanBePrivate.Global
-    public readonly Mock<IActionGroupRegistry> ActionGroupRegistry = new();
+    public readonly Mock<IActionGroupRetrievalService> ActionGroupRegistry = new();
 
     // ReSharper disable once MemberCanBePrivate.Global
     public readonly Mock<IAgvErrorRegistry> AgvErrorRegistry = new();
@@ -56,8 +57,8 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
     public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithAgvs(IList<IAgv> agvs, ActionGroup? actionGroup = null)
     {
         AgvRegistry.Setup(s => s.GetAllAgvs()).Returns(agvs.AsQueryable());
-        ActionGroupRegistry.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>()))
-            .ReturnsAsync(agvs.ToDictionary(a => a.CorrelationId, _ => actionGroup));
+        ActionGroupRegistry.Setup(r => r.GetCurrentAssignedActionGroupsWithTargetNodeTypeAsync(It.IsAny<IEnumerable<Guid>>()))
+            .ReturnsAsync(agvs.ToDictionary(a => a.CorrelationId, _ => actionGroup.ConvertFromActionGroupWithFakeNodeType()));
         return this;
     }
 

@@ -27,8 +27,8 @@ public class GetAgvActionGroupsCountByStateHandlerTest
     [TestMethod]
     public async Task GetAgvActionGroupsRequestHandler_EmptyActionGroupRegistry_ReturnsEmptyActionGroupsCountByState()
     {
-        ActionRequestHandlerTestFixture<GetAgvActionGroupCountsByStateRequest, GetAgvActionGroupCountsByStateRequestHandler> fixture = await new ActionRequestHandlerTestFixture<GetAgvActionGroupCountsByStateRequest, GetAgvActionGroupCountsByStateRequestHandler>()
-            .WithActionGroups(Array.Empty<ActionGroup>())
+        ActionRequestHandlerTestFixture<GetAgvActionGroupCountsByStateRequest, GetAgvActionGroupCountsByStateRequestHandler> fixture = await (await new ActionRequestHandlerTestFixture<GetAgvActionGroupCountsByStateRequest, GetAgvActionGroupCountsByStateRequestHandler>()
+            .WithActionGroups(Array.Empty<ActionGroup>()))
             .BuildAsync();
         
         Response<GetAgvActionGroupCountsByStateResult> response = await fixture.GetResponseAsync<GetAgvActionGroupCountsByStateResult>(
@@ -50,8 +50,8 @@ public class GetAgvActionGroupsCountByStateHandlerTest
         actionGroups.AddRange(CreateInitialActionGroups(actionGroupCreatedCount, ActionGroupState.Created));
         actionGroups.AddRange(CreateInitialActionGroups(actionGroupStartedCount, ActionGroupState.Started));
         actionGroups.AddRange(CreateInitialActionGroups(actionGroupCompletedCount, ActionGroupState.Completed));
-        ActionRequestHandlerTestFixture<GetAgvActionGroupCountsByStateRequest, GetAgvActionGroupCountsByStateRequestHandler> fixture = await new ActionRequestHandlerTestFixture<GetAgvActionGroupCountsByStateRequest, GetAgvActionGroupCountsByStateRequestHandler>()
-            .WithActionGroups(actionGroups)
+        ActionRequestHandlerTestFixture<GetAgvActionGroupCountsByStateRequest, GetAgvActionGroupCountsByStateRequestHandler> fixture = await (await new ActionRequestHandlerTestFixture<GetAgvActionGroupCountsByStateRequest, GetAgvActionGroupCountsByStateRequestHandler>()
+            .WithActionGroups(actionGroups.ToArray()))
             .BuildAsync();
         
         Response<GetAgvActionGroupCountsByStateResult> response = await fixture.GetResponseAsync<GetAgvActionGroupCountsByStateResult>(

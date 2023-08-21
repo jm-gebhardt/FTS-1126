@@ -1,5 +1,6 @@
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.ReadModels;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -12,6 +13,7 @@ public class ConsumerHubTestFixture<TConsumer, THubContext> : MassTransitConsume
 {
     public readonly Mock<THubContext> MockHub = new();
     public readonly Mock<INodeStateRegistry> MockNodeStateRegistry = new();
+    private readonly Mock<IActionGroupRetrievalService> _mockActionGroupRetrievalService = new();
         
     public ConsumerHubTestFixture(params Action<IServiceCollection>[] services) 
         : base(services: services)
@@ -23,6 +25,7 @@ public class ConsumerHubTestFixture<TConsumer, THubContext> : MassTransitConsume
     {
         collection.AddTransient(_ => MockHub.Object);
         collection.AddTransient(_ => MockNodeStateRegistry.Object);
+        collection.AddTransient(_ => _mockActionGroupRetrievalService.Object);
         collection.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
     }
 }
