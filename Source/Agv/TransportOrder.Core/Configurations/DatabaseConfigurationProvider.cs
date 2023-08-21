@@ -4,83 +4,82 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations;
+
+/// <summary>
+/// Implementation of a database configuration provider
+/// </summary>
+public class DatabaseConfigurationProvider<TDbContext> : ConfigurationProvider
+    where TDbContext : DbContext
 {
+    private readonly DatabaseConfigurationSource<TDbContext> _source;
+    private readonly ILogger _logger;
+
     /// <summary>
-    /// Implementation of a database configuration provider
+    /// <inheritdoc cref="ConfigurationProvider" />
     /// </summary>
-    public class DatabaseConfigurationProvider<TDbContext> : ConfigurationProvider
-        where TDbContext : DbContext
+    /// <param name="source">The database configuration source</param>
+    /// <param name="logger">The logger to log events</param>
+    public DatabaseConfigurationProvider(DatabaseConfigurationSource<TDbContext> source, ILogger logger)
     {
-        private readonly DatabaseConfigurationSource<TDbContext> _source;
-        private readonly ILogger _logger;
+        _source = source;
+        _logger = logger;
 
-        /// <summary>
-        /// <inheritdoc cref="ConfigurationProvider" />
-        /// </summary>
-        /// <param name="source">The database configuration source</param>
-        /// <param name="logger">The logger to log events</param>
-        public DatabaseConfigurationProvider(DatabaseConfigurationSource<TDbContext> source, ILogger logger)
+        _source.OnDbContextUpdated += (_, _) => Load();
+        if (_source.ReloadOnChange)
         {
-            _source = source;
-            _logger = logger;
+            EntityChangeObserver.Instance.Changed += EntityChangeObserverChanged;
+        }
+    }
 
-            _source.OnDbContextUpdated += (_, _) => Load();
-            if (_source.ReloadOnChange)
-            {
-                EntityChangeObserver.Instance.Changed += EntityChangeObserverChanged;
-            }
+    private void EntityChangeObserverChanged(object? sender, EventArgs e)
+    {
+        Thread.Sleep(_source.ReloadDelay);
+        Load();
+    }
+
+    /// <summary>
+    /// Loads the key / value pairs in the Data dictionary
+    /// </summary>
+    public override void Load()
+    {
+        if (_source.DbContextFactory == null)
+        {
+            // context factory not yet set. Will be set with UpdateDbContext method
+            return;
         }
 
-        private void EntityChangeObserverChanged(object? sender, EventArgs e)
+        try
         {
-            Thread.Sleep(_source.ReloadDelay);
-            Load();
-        }
-
-        /// <summary>
-        /// Loads the key / value pairs in the Data dictionary
-        /// </summary>
-        public override void Load()
-        {
-            if (_source.DbContextFactory == null)
-            {
-                // context factory not yet set. Will be set with UpdateDbContext method
-                return;
-            }
-
-            try
-            {
-                using var dbContext = _source.DbContextFactory.CreateDbContext();
+            using var dbContext = _source.DbContextFactory.CreateDbContext();
        
-                Data = new Dictionary<string, string>()!;
+            Data = new Dictionary<string, string>()!;
 
-                List<ConfigurationSetting> configurationSettings = dbContext.Set<ConfigurationSetting>().ToList();
-                foreach (var setting in configurationSettings)
-                {
-                    var configuration = _source.ConfigurationTypeManager.GetConfigurationTypeByTypeName(setting.ConfigurationType);
-                    if (configuration == null)
-                    {
-                        _logger.LogError("Configuration setting unknown: {ConfigurationType}", setting.ConfigurationType);
-                        continue;
-                    }
-
-                    string key = setting.Key;
-                    var configurationTypeProperty = configuration.Properties.SingleOrDefault(s => s.Key == key);
-                    if (configurationTypeProperty == null)
-                    {
-                        _logger.LogError("Settings property using the key '{@ConfigurationPropertyKey}' not found", key);
-                        continue;
-                    }
-
-                    Data.Add(key, setting.Value);
-                }
-            }
-            catch (Exception ex)
+            List<ConfigurationSetting> configurationSettings = dbContext.Set<ConfigurationSetting>().ToList();
+            foreach (var setting in configurationSettings)
             {
-                _logger.LogError(ex, nameof(Load));
-                throw;
+                var configuration = _source.ConfigurationTypeManager.GetConfigurationTypeByTypeName(setting.ConfigurationType);
+                if (configuration == null)
+                {
+                    _logger.LogError("Configuration setting unknown: {ConfigurationType}", setting.ConfigurationType);
+                    continue;
+                }
+
+                string key = setting.Key;
+                var configurationTypeProperty = configuration.Properties.SingleOrDefault(s => s.Key == key);
+                if (configurationTypeProperty == null)
+                {
+                    _logger.LogError("Settings property using the key '{@ConfigurationPropertyKey}' not found", key);
+                    continue;
+                }
+
+                Data.Add(key, setting.Value);
             }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, nameof(Load));
+            throw;
         }
     }
 }

@@ -1,154 +1,103 @@
-using JetBrains.Annotations;
+﻿using System.Diagnostics;
 using MassTransit;
 using MassTransit.Testing;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Gebhardt.StoreWare.Agv.Common.Testing
+namespace Gebhardt.StoreWare.Agv.Common.Testing;
+
+/// <summary>
+/// Provides a test fixture for mass transit without any consumers.
+/// </summary>
+public class MassTransitTestFixture
 {
+    private readonly Action<IServiceCollection>? _services;
+    private readonly Action<IBusRegistrationConfigurator>? _busRegistrationConfigurator;
+    private readonly Action<ITestHarness>? _busHarnessConfigurator;
+    private readonly bool _useReducedTestInactivityTimeout;
+    private Lazy<ITestHarness> _testHarness = null!;
+
     /// <summary>
-    /// Testing fixture to test MassTransit Consumers
+    /// Initializes a new <see cref="MassTransitTestFixture" /> instance.
     /// </summary>
-    /// <typeparam name="TConsumer"></typeparam>
-    [PublicAPI]
-    public class MassTransitTestFixture<TConsumer> where TConsumer : class, IConsumer
+    /// <param name="services">A service collection action used to provide additional registrations.</param>
+    /// <param name="busRegistrationConfigurator">A configurator action for additional bus configurations.</param>
+    /// <param name="busHarnessConfigurator">A configurator action for the <see cref="ITestHarness" />.</param>
+    /// <param name="useReducedTestInactivityTimeout">
+    /// A value indicating whether the test inactivity timeout should be reduced.
+    /// This should be set to 'true' for tests asserting that a specific message has NOT been published.
+    /// </param>
+    /// <param name="start">A value indicating whether to start this instance immediately by building the service provider.</param>
+    public MassTransitTestFixture(Action<IServiceCollection>? services = null,
+        Action<IBusRegistrationConfigurator>? busRegistrationConfigurator = null,
+        Action<ITestHarness>? busHarnessConfigurator = null,
+        bool useReducedTestInactivityTimeout = false,
+        bool start = true)
     {
-        private readonly List<Action<IServiceCollection>> _serviceActions = new();
+        _services = services;
+        _busRegistrationConfigurator = busRegistrationConfigurator;
+        _busHarnessConfigurator = busHarnessConfigurator;
+        _useReducedTestInactivityTimeout = useReducedTestInactivityTimeout;
 
-        /// <summary>
-        /// Service provider
-        /// </summary>
-        public ServiceProvider? Provider;
-
-        /// <summary>
-        /// Started TestHarness
-        /// </summary>
-        public ITestHarness? TestHarness;
-
-        /// <summary>
-        /// Consumer Hardness
-        /// </summary>
-        public IConsumerTestHarness<TConsumer>? ConsumerHarness;
-
-        /// <summary>
-        /// Consumer test fixture to be used for consumer unit/integration tests
-        /// </summary>
-        /// <param name="services">Service collection instance with MassTransitTestHarness added</param>
-        /// <param name="busRegistrationConfigurator">MassTransit registration with consumer already added</param>
-        /// <param name="inMemoryConfiguration">MassTransit bus configurator</param>
-        public MassTransitTestFixture(
-            Action<IBusRegistrationConfigurator>? busRegistrationConfigurator = null,
-            Action<IBusRegistrationContext, IInMemoryBusFactoryConfigurator>? inMemoryConfiguration = null,
-            params Action<IServiceCollection>[] services)
+        if (!start)
         {
-            Build(busRegistrationConfigurator, inMemoryConfiguration, services);
+            return;
         }
-
-        /// <inheritdoc cref="Build(System.Action{Microsoft.Extensions.DependencyInjection.IServiceCollection}[])"/>
-        protected MassTransitTestFixture<TConsumer> Build(params Action<IServiceCollection>[] services) => Build(null, null, services);
-
-        /// <summary>
-        /// Builds the service provider based on the service collection, in order to be able to register services lazy
-        /// </summary>
-        /// <param name="services"></param>
-        /// <param name="busRegistrationConfigurator"></param>
-        /// <param name="inMemoryConfiguration"></param>
-        protected MassTransitTestFixture<TConsumer> Build(Action<IBusRegistrationConfigurator>? busRegistrationConfigurator,
-            Action<IBusRegistrationContext, IInMemoryBusFactoryConfigurator>? inMemoryConfiguration,
-            params Action<IServiceCollection>[] services)
-        {
-            var collection = new ServiceCollection()
-            .AddMassTransitTestHarness(x =>
-            {
-                x.AddConsumer<TConsumer>();
-                busRegistrationConfigurator?.Invoke(x);
-                x.UsingInMemory((context, cfg) =>
-                {
-                    cfg.ConfigureEndpoints(context);
-                    inMemoryConfiguration?.Invoke(context, cfg);
-                });
-            });
-
-            _serviceActions.AddRange(services);
-            foreach (Action<IServiceCollection> service in _serviceActions)
-            {
-                service.Invoke(collection);
-            }
-
-            ConfigureServices(collection);
-
-            Provider = collection.BuildServiceProvider(true);
-            TestHarness = Provider.GetTestHarness();
-            TestHarness.Start();
-            ConsumerHarness = TestHarness.GetConsumerHarness<TConsumer>();
-
-            return this;
-        }
-
-        /// <summary>
-        /// Adds the service to the service collection
-        /// </summary>
-        /// <param name="services">The action of the service to add</param>
-        /// <returns></returns>
-        public MassTransitTestFixture<TConsumer> AddServices(Action<IServiceCollection> services)
-        {
-            _serviceActions.Add(services);
-            return this;
-        }
-
-        /// <summary>
-        /// Is executed to configure the service collection
-        /// </summary>
-        /// <param name="collection"></param>
-        protected virtual void ConfigureServices(IServiceCollection collection)
-        {
-
-        }
+        Init();
+        Start();
     }
 
-    /// <summary>
-    /// Testing fixture to test MassTransit
-    /// </summary>
-    [PublicAPI]
-    public class MassTransitTestFixture
+    private void Init(IServiceCollection? serviceCollection = null)
     {
-        /// <summary>
-        /// Service provider
-        /// </summary>
-        public readonly ServiceProvider Provider;
+        ServiceCollection = serviceCollection ?? new ServiceCollection();
+        ServiceCollection
+            .AddLogging()
+            .AddMassTransitTestHarness(x =>
+            {
+                _busRegistrationConfigurator?.Invoke(x);
+                x.UsingInMemory((context, cfg) => { cfg.ConfigureEndpoints(context); });
+            });
+        _services?.Invoke(ServiceCollection);
+    }
 
-        /// <summary>
-        /// Started TestHarness
-        /// </summary>
-        public readonly ITestHarness TestHarness;
-
-
-        /// <summary>
-        /// Consumer Test Fixture to be used for Consumer Unit/Integration tests
-        /// </summary>
-        /// <param name="services">Service Collection instance with MassTransitTestHarness added</param>
-        /// <param name="busRegistrationConfigurator">MassTransit Registration with consumer already added</param>
-        /// <param name="inMemoryConfiguration">MassTransit bus configurator</param>
-        public MassTransitTestFixture(
-            Action<IServiceCollection>? services = null,
-            Action<IBusRegistrationConfigurator>? busRegistrationConfigurator = null,
-            Action<IBusRegistrationContext, IInMemoryBusFactoryConfigurator>? inMemoryConfiguration = null)
+    private void Start(IServiceProvider? serviceProvider = null)
+    {
+        Provider = serviceProvider ?? ServiceCollection!.BuildServiceProvider(true);
+        const int defaultReducedTestInactivityTimeoutInMs = 200;
+        _testHarness = new Lazy<ITestHarness>(() =>
         {
-            var collection = new ServiceCollection()
-                .AddMassTransitTestHarness(x =>
-                {
-                    busRegistrationConfigurator?.Invoke(x);
-                    x.UsingInMemory((context, cfg) =>
-                    {
-                        cfg.ConfigureEndpoints(context);
-                        inMemoryConfiguration?.Invoke(context, cfg);
-                    });
-                });
+            var harness = Provider.GetTestHarness();
+            harness.TestInactivityTimeout = Debugger.IsAttached ? TimeSpan.FromHours(1) : TimeSpan.FromSeconds(3);
+            if (_useReducedTestInactivityTimeout)
+            {
+                harness.TestInactivityTimeout = TimeSpan.FromMilliseconds(defaultReducedTestInactivityTimeoutInMs);
+            }
 
-            services?.Invoke(collection);
+            _busHarnessConfigurator?.Invoke(harness);
+            return harness;
+        });
+      
+    }
 
-            Provider = collection.BuildServiceProvider(true);
-            TestHarness = Provider.GetTestHarness();
-            TestHarness.Start();
+    private IServiceCollection? ServiceCollection { get; set; }
+
+    /// <summary>
+    /// Gets the service provider.
+    /// </summary>
+    private IServiceProvider? Provider { get; set; }
+
+    /// <summary>
+    /// Gets the test harness.
+    /// </summary>
+    public ITestHarness TestHarness
+    {
+        get
+        {
+            if (!_testHarness.IsValueCreated)
+            {
+                _testHarness.Value.Start();
+            }
+
+            return _testHarness.Value;
         }
     }
 }

@@ -55,7 +55,7 @@ public class AgvRegistryTest
     }
 
     [TestMethod]
-    public void AddOrUpdate_WhenCorrelationIdDoestNotExists_SuccessfullyAddEntry()
+    public void AddOrUpdate_WhenCorrelationIdDoesNotExists_SuccessfullyAddEntry()
     {
         var agvInformation = AgvInformationGenerator.GetAgvInformation();
         var agvCorrelationId = agvInformation.AgvStatusReceived!.AgvStatus.CorrelationId;

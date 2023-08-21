@@ -1,22 +1,21 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.CommonTest
+namespace Gebhardt.StoreWare.Agv.CommonTest;
+
+/// <summary>
+/// Test class for initial logging.
+/// </summary>
+[TestClass]
+public class LoggingInitialTest
 {
     /// <summary>
-    /// Test class for initial logging.
+    /// Just check factory, we do not need to test ILogger.
     /// </summary>
-    [TestClass]
-    public class LoggingInitialTest
+    [TestMethod]
+    public void TestFactory()
     {
-        /// <summary>
-        /// Just check factory, we do not need to test ILogger.
-        /// </summary>
-        [TestMethod]
-        public void TestFactory()
-        {
-            var initialLogger = Common.Logging.InitialLogger.Create<LoggingInitialTest>();
-            initialLogger.ShouldNotBeNull();
-        }
+        var initialLogger = Common.Logging.InitialLogger.Create<LoggingInitialTest>();
+        initialLogger.ShouldNotBeNull();
     }
 }

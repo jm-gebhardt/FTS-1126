@@ -2,54 +2,53 @@
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db;
 using Microsoft.EntityFrameworkCore;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
+
+/// <summary>
+/// Map Registry using Entity Framework to access the AgvSaga persistence storage
+/// </summary>
+public class EfAgvDataRegistry : IAgvDataRegistry
 {
+    private readonly IDbContextFactory<TransportOrderDbContext> _dbContextFactory;
+
+    private IQueryable<AgvData> AgvData => _dbContextFactory.CreateDbContext().Set<AgvData>().AsNoTracking();
+
     /// <summary>
-    /// Map Registry using Entity Framework to access the AgvSaga persistence storage
+    /// Constructor of the EF AgvDataRegistry
     /// </summary>
-    public class EfAgvDataRegistry : IAgvDataRegistry
+    /// <param name="dbContextFactory"></param>
+    public EfAgvDataRegistry(IDbContextFactory<TransportOrderDbContext> dbContextFactory)
     {
-        private readonly IDbContextFactory<TransportOrderDbContext> _dbContextFactory;
+        _dbContextFactory = dbContextFactory;
+    }
 
-        private IQueryable<AgvData> AgvData => _dbContextFactory.CreateDbContext().Set<AgvData>().AsNoTracking();
+    /// <inheritdoc/>
+    public bool Exists(Guid correlationId)
+    {
+        return AgvData.Any(q => q.CorrelationId == correlationId);
+    }
 
-        /// <summary>
-        /// Constructor of the EF AgvDataRegistry
-        /// </summary>
-        /// <param name="dbContextFactory"></param>
-        public EfAgvDataRegistry(IDbContextFactory<TransportOrderDbContext> dbContextFactory)
+    /// <inheritdoc/>
+    public AgvData? GetAgvData(Guid correlationId)
+    {
+        return AgvData.FirstOrDefault(q => q.CorrelationId == correlationId);
+    }
+
+    /// <inheritdoc/>
+    public bool AddOrUpdate(AgvData agvData)
+    {
+        var dbContext = _dbContextFactory.CreateDbContext();
+        DbSet<AgvData> dbSet = dbContext.Set<AgvData>();
+
+        if (dbSet.Any(a => a.CorrelationId == agvData.CorrelationId))
         {
-            _dbContextFactory = dbContextFactory;
+            dbSet.Update(agvData);
+        }
+        else
+        {
+            dbSet.Add(agvData);
         }
 
-        /// <inheritdoc/>
-        public bool Exists(Guid correlationId)
-        {
-            return AgvData.Any(q => q.CorrelationId == correlationId);
-        }
-
-        /// <inheritdoc/>
-        public AgvData? GetAgvData(Guid correlationId)
-        {
-            return AgvData.FirstOrDefault(q => q.CorrelationId == correlationId);
-        }
-
-        /// <inheritdoc/>
-        public bool AddOrUpdate(AgvData agvData)
-        {
-            var dbContext = _dbContextFactory.CreateDbContext();
-            DbSet<AgvData> dbSet = dbContext.Set<AgvData>();
-
-            if (dbSet.Any(a => a.CorrelationId == agvData.CorrelationId))
-            {
-                dbSet.Update(agvData);
-            }
-            else
-            {
-                dbSet.Add(agvData);
-            }
-
-            return dbContext.SaveChanges() > 0;
-        }
+        return dbContext.SaveChanges() > 0;
     }
 }

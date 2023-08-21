@@ -2,34 +2,33 @@
 using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
-namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events
+namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
+
+/// <summary>
+/// An event reporting the current position of an AGV.
+/// </summary>
+[JetBrains.Annotations.PublicAPI]
+public record AgvPositionReceived : CorrelatedBy<Guid>, IAgvId
 {
+    /// <inheritdoc/>
+    public Guid CorrelationId { get; }
+
+    /// <inheritdoc />
+    public string AgvId { get; }
+
     /// <summary>
-    /// An event reporting the current position of an AGV.
+    /// Current AGV position
     /// </summary>
-    [JetBrains.Annotations.PublicAPI]
-    public record AgvPositionReceived : CorrelatedBy<Guid>, IAgvId
+    public AgvPosition AgvPosition { get; }
+
+
+    /// <summary>
+    /// Initializes a new instance of <see cref="AgvPositionReceived"/>
+    /// </summary>
+    public AgvPositionReceived(Guid correlationId, string agvId, AgvPosition agvPosition)
     {
-        /// <inheritdoc/>
-        public Guid CorrelationId { get; }
-
-        /// <inheritdoc />
-        public string AgvId { get; }
-
-        /// <summary>
-        /// Current AGV position
-        /// </summary>
-        public AgvPosition AgvPosition { get; }
-
-
-        /// <summary>
-        /// Initializes a new instance of <see cref="AgvPositionReceived"/>
-        /// </summary>
-        public AgvPositionReceived(Guid correlationId, string agvId, AgvPosition agvPosition)
-        {
-            CorrelationId = correlationId;
-            AgvId = agvId;
-            AgvPosition = agvPosition;
-        }
+        CorrelationId = correlationId;
+        AgvId = agvId;
+        AgvPosition = agvPosition;
     }
 }

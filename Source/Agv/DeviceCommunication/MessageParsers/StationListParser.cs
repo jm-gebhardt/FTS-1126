@@ -3,230 +3,229 @@ using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Helpers;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers
+namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers;
+
+/// <summary>
+/// Parse <see cref="MqttStationList"/>.
+/// </summary>
+public class StationListParser
 {
+    private readonly MqttStationList _stationList;
+    private readonly MqttGraph _graph;
+
+    private string? _serialNumber;
+
+    /// <summary>Indicator for graph usability (valid or not).</summary>
+    private AgvGraph.GraphUsability _usability = AgvGraph.GraphUsability.Valid;
+
+    private AgvGraph? _agvGraph;
+
     /// <summary>
-    /// Parse <see cref="MqttStationList"/>.
+    /// Constructor.
     /// </summary>
-    public class StationListParser
+    /// <param name="graph"></param>
+    /// <param name="stationList"></param>
+    public StationListParser(MqttStationList stationList, MqttGraph graph)
     {
-        private readonly MqttStationList _stationList;
-        private readonly MqttGraph _graph;
+        _stationList = stationList;
+        _graph = graph;
+    }
 
-        private string? _serialNumber;
+    /// <summary>
+    /// Calculate distance between <paramref name="station"/> and <paramref name="node"/>.
+    /// </summary>
+    /// <param name="station"></param>
+    /// <param name="node"></param>
+    /// <returns></returns>
+    private float GetDistance(Station station, GraphNode node)
+    {
+        var vectorStation = new System.Numerics.Vector3(station.Position.X, station.Position.Y, 0f);
+        var vectorNode = new System.Numerics.Vector3(node.X, node.Y, node.Z);
 
-        /// <summary>Indicator for graph usability (valid or not).</summary>
-        private AgvGraph.GraphUsability _usability = AgvGraph.GraphUsability.Valid;
+        return (vectorStation - vectorNode).Length();
+    }
 
-        private AgvGraph? _agvGraph;
-
-        /// <summary>
-        /// Constructor.
-        /// </summary>
-        /// <param name="graph"></param>
-        /// <param name="stationList"></param>
-        public StationListParser(MqttStationList stationList, MqttGraph graph)
+    /// <summary>
+    /// Parse graph and station list and create <see cref="AgvGraph"/> (to be stored in <see cref="_agvGraph"/>.
+    /// <para>Performs all required parsing and validation.</para>
+    /// </summary><remarks>
+    /// This method is called by each public member.
+    /// For diagnostic purpose the graph is build even when the graph is invalid.
+    /// </remarks>
+    private void Parse()
+    {
+        if (_agvGraph == null)
         {
-            _stationList = stationList;
-            _graph = graph;
-        }
+            var graphParser = new GraphParser(_graph);
+            var agvGraph = graphParser.Graph;
+            _usability = agvGraph.Usability;
+            _serialNumber = _stationList.SerialNumber;
 
-        /// <summary>
-        /// Calculate distance between <paramref name="station"/> and <paramref name="node"/>.
-        /// </summary>
-        /// <param name="station"></param>
-        /// <param name="node"></param>
-        /// <returns></returns>
-        private float GetDistance(Station station, GraphNode node)
-        {
-            var vectorStation = new System.Numerics.Vector3(station.Position.X, station.Position.Y, 0f);
-            var vectorNode = new System.Numerics.Vector3(node.X, node.Y, node.Z);
-
-            return (vectorStation - vectorNode).Length();
-        }
-
-        /// <summary>
-        /// Parse graph and station list and create <see cref="AgvGraph"/> (to be stored in <see cref="_agvGraph"/>.
-        /// <para>Performs all required parsing and validation.</para>
-        /// </summary><remarks>
-        /// This method is called by each public member.
-        /// For diagnostic purpose the graph is build even when the graph is invalid.
-        /// </remarks>
-        private void Parse()
-        {
-            if (_agvGraph == null)
+            if (_usability == AgvGraph.GraphUsability.Valid &&
+                graphParser.SerialNumber != _serialNumber)
             {
-                var graphParser = new GraphParser(_graph);
-                var agvGraph = graphParser.Graph;
-                _usability = agvGraph.Usability;
-                _serialNumber = _stationList.SerialNumber;
+                _usability = AgvGraph.GraphUsability.SerialNumberMismatch;
+            }
 
-                if (_usability == AgvGraph.GraphUsability.Valid &&
-                    graphParser.SerialNumber != _serialNumber)
+            if (_usability == AgvGraph.GraphUsability.Valid &&
+                _stationList.Stations.Length == 0)
+            {
+                _usability = AgvGraph.GraphUsability.InvalidStations;
+            }
+
+            if (_usability == AgvGraph.GraphUsability.Valid)
+            {
+                bool allAdded = true;
+                HashSet<GraphNode> additionalNodes = new(new Common.Utilities.GraphNodeComparer());
+                HashSet<GraphEdge> additionalEdges = new(new Common.Utilities.GraphEdgeComparer());
+
+                foreach (var station in _stationList.Stations)
                 {
-                    _usability = AgvGraph.GraphUsability.SerialNumberMismatch;
+                    // Search node from graph closest to this station.
+                    GraphNode? nodeNearby = null;
+                    float nearbyDistance = 0f;
+                    foreach (var node in agvGraph.Nodes)
+                    {
+                        float distance = GetDistance(station, node);
+                        if (nodeNearby == null ||
+                            distance < nearbyDistance)
+                        {
+                            nodeNearby = node;
+                            nearbyDistance = distance;
+                        }
+                    }
+
+                    if (nodeNearby == null)
+                    {
+                        throw new ArgumentException("No node nearby found");
+                    }
+
+                    // Add node and bidirectional edges.
+                    var graphNode = new GraphNode(station.Identifier)
+                    {
+                        Type = ParseNodeType(station.Function),
+                        X = station.Position.X,
+                        Y = station.Position.Y,
+                        Z = 0f,
+                        Theta = station.Position.Theta
+                    };
+                    bool added = additionalNodes.Add(graphNode);
+                    if (added)
+                    {
+                        float metric = graphParser.ConsiderVelocity ? nearbyDistance / graphParser.AverageVelocity : nearbyDistance;
+                        string graphNodeId = graphNode.Id;
+                        string nodeNearbyId = nodeNearby.Id;
+                        additionalEdges.Add(new(graphNodeId, nodeNearbyId, metric, GraphHelper.ToGuid(graphNodeId, metric, nodeNearbyId)));
+                        additionalEdges.Add(new(nodeNearbyId, graphNodeId, metric, GraphHelper.ToGuid(nodeNearbyId, metric, graphNodeId)));
+                    }
+                    allAdded &= added;
                 }
-
-                if (_usability == AgvGraph.GraphUsability.Valid &&
-                    _stationList.Stations.Length == 0)
+                if (!allAdded)
                 {
+                    // Station names not unique
                     _usability = AgvGraph.GraphUsability.InvalidStations;
                 }
 
-                if (_usability == AgvGraph.GraphUsability.Valid)
+                if (allAdded)
                 {
-                    bool allAdded = true;
-                    HashSet<GraphNode> additionalNodes = new(new Common.Utilities.GraphNodeComparer());
-                    HashSet<GraphEdge> additionalEdges = new(new Common.Utilities.GraphEdgeComparer());
-
-                    foreach (var station in _stationList.Stations)
-                    {
-                        // Search node from graph closest to this station.
-                        GraphNode? nodeNearby = null;
-                        float nearbyDistance = 0f;
-                        foreach (var node in agvGraph.Nodes)
-                        {
-                            float distance = GetDistance(station, node);
-                            if (nodeNearby == null ||
-                                distance < nearbyDistance)
-                            {
-                                nodeNearby = node;
-                                nearbyDistance = distance;
-                            }
-                        }
-
-                        if (nodeNearby == null)
-                        {
-                            throw new ArgumentException("No node nearby found");
-                        }
-
-                        // Add node and bidirectional edges.
-                        var graphNode = new GraphNode(station.Identifier)
-                        {
-                            Type = ParseNodeType(station.Function),
-                            X = station.Position.X,
-                            Y = station.Position.Y,
-                            Z = 0f,
-                            Theta = station.Position.Theta
-                        };
-                        bool added = additionalNodes.Add(graphNode);
-                        if (added)
-                        {
-                            float metric = graphParser.ConsiderVelocity ? nearbyDistance / graphParser.AverageVelocity : nearbyDistance;
-                            string graphNodeId = graphNode.Id;
-                            string nodeNearbyId = nodeNearby.Id;
-                            additionalEdges.Add(new(graphNodeId, nodeNearbyId, metric, GraphHelper.ToGuid(graphNodeId, metric, nodeNearbyId)));
-                            additionalEdges.Add(new(nodeNearbyId, graphNodeId, metric, GraphHelper.ToGuid(nodeNearbyId, metric, graphNodeId)));
-                        }
-                        allAdded &= added;
-                    }
+                    allAdded &= additionalNodes.AddRange(agvGraph.Nodes);
                     if (!allAdded)
                     {
-                        // Station names not unique
-                        _usability = AgvGraph.GraphUsability.InvalidStations;
+                        // Ambiguous station name compared to node names
+                        _usability = AgvGraph.GraphUsability.AmbiguousStationNames;
                     }
+                }
 
-                    if (allAdded)
+                if (allAdded)
+                {
+                    allAdded &= additionalEdges.AddRange(agvGraph.Edges);
+                    if (!allAdded)
                     {
-                        allAdded &= additionalNodes.AddRange(agvGraph.Nodes);
-                        if (!allAdded)
-                        {
-                            // Ambiguous station name compared to node names
-                            _usability = AgvGraph.GraphUsability.AmbiguousStationNames;
-                        }
+                        // Edges not unique
+                        _usability = AgvGraph.GraphUsability.StationEdgeMismatch;
                     }
-
-                    if (allAdded)
-                    {
-                        allAdded &= additionalEdges.AddRange(agvGraph.Edges);
-                        if (!allAdded)
-                        {
-                            // Edges not unique
-                            _usability = AgvGraph.GraphUsability.StationEdgeMismatch;
-                        }
-                    }
-
-                    _agvGraph = new AgvGraph(agvGraph.CorrelationId,
-                        additionalNodes.ToArray(),
-                        additionalEdges.ToArray(),
-                        agvGraph.RelatedMapId,
-                        agvGraph.RelatedMapName,
-                        _usability);
                 }
-                else
-                {
-                    _agvGraph = agvGraph;
-                    _agvGraph.Usability = _usability;
-                }
+
+                _agvGraph = new AgvGraph(agvGraph.CorrelationId,
+                    additionalNodes.ToArray(),
+                    additionalEdges.ToArray(),
+                    agvGraph.RelatedMapId,
+                    agvGraph.RelatedMapName,
+                    _usability);
+            }
+            else
+            {
+                _agvGraph = agvGraph;
+                _agvGraph.Usability = _usability;
             }
         }
+    }
 
-        /// <summary>
-        /// Converts station <see cref="Function"/> to <see cref="AgvGraph.NodeType"/>
-        /// </summary>
-        /// <param name="function"></param>
-        /// <returns>The Mqqt.StationList.Station.function converted/mapped to AgvGraph.NodeType</returns>
-        private AgvGraph.NodeType ParseNodeType(Function function)
+    /// <summary>
+    /// Converts station <see cref="Function"/> to <see cref="AgvGraph.NodeType"/>
+    /// </summary>
+    /// <param name="function"></param>
+    /// <returns>The Mqqt.StationList.Station.function converted/mapped to AgvGraph.NodeType</returns>
+    private AgvGraph.NodeType ParseNodeType(Function function)
+    {
+        switch (function)
         {
-            switch (function)
-            {
-                case Function.Both:
-                    return AgvGraph.NodeType.PickDrop;
+            case Function.Both:
+                return AgvGraph.NodeType.PickDrop;
 
-                case Function.Charge:
-                    return AgvGraph.NodeType.Charge;
+            case Function.Charge:
+                return AgvGraph.NodeType.Charge;
 
-                case Function.Drop:
-                    return AgvGraph.NodeType.Drop;
+            case Function.Drop:
+                return AgvGraph.NodeType.Drop;
 
-                case Function.Park:
-                    return AgvGraph.NodeType.Park;
+            case Function.Park:
+                return AgvGraph.NodeType.Park;
 
-                case Function.Pick:
-                    return AgvGraph.NodeType.Pick;
+            case Function.Pick:
+                return AgvGraph.NodeType.Pick;
 
-                default:
-                    return AgvGraph.NodeType.PickDrop;
-            }
+            default:
+                return AgvGraph.NodeType.PickDrop;
         }
+    }
 
-        /// <summary>
-        /// Returns the serial number of the AGV.
-        /// </summary>
-        /// <exception cref="InvalidOperationException">Graph is invalid.</exception>
-        [JetBrains.Annotations.PublicAPI]
-        public string SerialNumber
+    /// <summary>
+    /// Returns the serial number of the AGV.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Graph is invalid.</exception>
+    [JetBrains.Annotations.PublicAPI]
+    public string SerialNumber
+    {
+        get
         {
-            get
+            if (_agvGraph == null)
             {
-                if (_agvGraph == null)
-                {
-                    Parse();
-                }
-                if (_agvGraph!.Usability != AgvGraph.GraphUsability.Valid)
-                {
-                    throw new InvalidOperationException("Graph is invalid.");
-                }
-
-                return _serialNumber!;
+                Parse();
             }
+            if (_agvGraph!.Usability != AgvGraph.GraphUsability.Valid)
+            {
+                throw new InvalidOperationException("Graph is invalid.");
+            }
+
+            return _serialNumber!;
         }
+    }
 
-        /// <summary>
-        /// Returns <see cref="AgvGraph"/> merged from graph and station list.
-        /// <para>Performs all required parsing and validation once if required.</para>
-        /// </summary>
-        public AgvGraph Graph
+    /// <summary>
+    /// Returns <see cref="AgvGraph"/> merged from graph and station list.
+    /// <para>Performs all required parsing and validation once if required.</para>
+    /// </summary>
+    public AgvGraph Graph
+    {
+        get
         {
-            get
+            if (_agvGraph == null)
             {
-                if (_agvGraph == null)
-                {
-                    Parse();
-                }
-
-                return _agvGraph!;
+                Parse();
             }
+
+            return _agvGraph!;
         }
     }
 }

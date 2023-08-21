@@ -1,18 +1,17 @@
-﻿namespace Gebhardt.StoreWare.Agv.Common.Utilities
+﻿namespace Gebhardt.StoreWare.Agv.Common.Utilities;
+
+/// <summary>
+/// A collection of useful mathematical functions
+/// </summary>
+public static class Mathematics
 {
     /// <summary>
-    /// A collection of useful mathematical functions
+    /// Converts an angle in degrees to radians
     /// </summary>
-    public static class Mathematics
+    /// <param name="angle">The angle in degrees</param>
+    /// <returns></returns>
+    public static float ConvertToRadians(float angle)
     {
-        /// <summary>
-        /// Converts an angle in degrees to radians
-        /// </summary>
-        /// <param name="angle">The angle in degrees</param>
-        /// <returns></returns>
-        public static float ConvertToRadians(float angle)
-        {
-            return (float)(Math.PI / 180) * angle;
-        }
+        return (float)(Math.PI / 180) * angle;
     }
 }

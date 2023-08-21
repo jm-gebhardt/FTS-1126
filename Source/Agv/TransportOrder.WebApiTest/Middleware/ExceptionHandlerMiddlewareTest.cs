@@ -5,22 +5,21 @@ using Shouldly;
 using System.Net;
 using Gebhardt.StoreWare.Agv.Common.Exceptions;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Middleware
+namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Middleware;
+
+[TestClass]
+public class ExceptionHandlerMiddlewareTest
 {
-    [TestClass]
-    public class ExceptionHandlerMiddlewareTest
+    [TestMethod]
+    public async Task Invoke_ShouldReturnNotFoundStatusCode_WhereRequestThrowsAMapNotFoundException()
     {
-        [TestMethod]
-        public async Task Invoke_ShouldReturnNotFoundStatusCode_WhereRequestThrowsAMapNotFoundException()
-        {
-            var defaultContext = new DefaultHttpContext();
+        var defaultContext = new DefaultHttpContext();
 
-            var exceptionMiddleware = new ExceptionHandlerMiddleware();
-            await exceptionMiddleware.InvokeAsync(defaultContext, _ => throw new MapNotFoundException());
+        var exceptionMiddleware = new ExceptionHandlerMiddleware();
+        await exceptionMiddleware.InvokeAsync(defaultContext, _ => throw new MapNotFoundException());
 
-            defaultContext.Response.StatusCode.ShouldBe((int)HttpStatusCode.NotFound);
-            defaultContext.Response.ContentType.ShouldBe("application/json");
-            defaultContext.Response.Body.ShouldNotBeNull();
-        }
+        defaultContext.Response.StatusCode.ShouldBe((int)HttpStatusCode.NotFound);
+        defaultContext.Response.ContentType.ShouldBe("application/json");
+        defaultContext.Response.Body.ShouldNotBeNull();
     }
 }

@@ -1,59 +1,57 @@
 using Gebhardt.StoreWare.Agv.Common.Configurations.Exceptions;
 using Microsoft.Extensions.Configuration;
 
-namespace Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders
+namespace Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
+
+/// <summary>
+/// Provides the settings from the configuration
+/// </summary>
+/// <typeparam name="TSettings"></typeparam>
+public class SettingsProvider<TSettings> : ISettingsProvider<TSettings> where TSettings : class, ISettings<TSettings>
 {
+    private readonly IConfiguration _configuration;
+    private readonly string _sectionName = ConfigurationTypeManager.Instance.GetSectionName<TSettings>();
 
     /// <summary>
-    /// Provides the settings from the configuration
+    /// Ctor
     /// </summary>
-    /// <typeparam name="TSettings"></typeparam>
-    public class SettingsProvider<TSettings> : ISettingsProvider<TSettings> where TSettings : class, ISettings<TSettings>
+    /// <param name="configuration"></param>
+    public SettingsProvider(IConfiguration configuration)
     {
-        private readonly IConfiguration _configuration;
-        private readonly string _sectionName = ConfigurationTypeManager.Instance.GetSectionName<TSettings>();
+        _configuration = configuration;
+    }
 
-        /// <summary>
-        /// Ctor
-        /// </summary>
-        /// <param name="configuration"></param>
-        public SettingsProvider(IConfiguration configuration)
+    private TSettings? TryGetSettings()
+    {
+        TSettings? settings = null;
+        try
         {
-            _configuration = configuration;
+            settings = _configuration.GetSection(_sectionName).Get<TSettings>();
+        }
+        catch
+        {
+            // ignored
         }
 
-        private TSettings? TryGetSettings()
+        return settings;
+    }
+
+    /// <inheritdoc/>
+    public TSettings GetSettings()
+    {
+        var settings = TryGetSettings();
+
+        if (settings == null)
         {
-            TSettings? settings = null;
-            try
-            {
-                settings = _configuration.GetSection(_sectionName).Get<TSettings>();
-            }
-            catch
-            {
-                // ignored
-            }
-
-            return settings;
+            throw new NoSettingsFoundException(_sectionName, typeof(TSettings).Name);
         }
+        return settings;
+    }
 
-        /// <inheritdoc/>
-        public TSettings GetSettings()
-        {
-            var settings = TryGetSettings();
-
-            if (settings == null)
-            {
-                throw new NoSettingsFoundException(_sectionName, typeof(TSettings).Name);
-            }
-            return settings;
-        }
-
-        /// <inheritdoc />
-        public bool DoTheSettingsExist()
-        {
-            var settings = TryGetSettings();
-            return settings != null;
-        }
+    /// <inheritdoc />
+    public bool DoTheSettingsExist()
+    {
+        var settings = TryGetSettings();
+        return settings != null;
     }
 }

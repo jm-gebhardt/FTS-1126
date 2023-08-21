@@ -8,46 +8,45 @@ using MassTransit;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Consumer
+namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Consumer;
+
+/// <summary>
+/// Consumes <see cref="AgvStateChanged"/> and calls <see cref="IActionHubContext.SendActionGroupStateToAllClients"/>.
+/// </summary>
+[JetBrains.Annotations.PublicAPI]
+public class AgvStateChangedConsumer : IConsumer<AgvStateChanged>
 {
+    private readonly ILogger<AgvStateChangedConsumer> _logger;
+    private readonly IAgvHubContext _agvHubContext;
+    private readonly IRequestClient<GetAgvsDtoRequest> _getAgvsClient;
+
     /// <summary>
-    /// Consumes <see cref="AgvStateChanged"/> and calls <see cref="IActionHubContext.SendActionGroupStateToAllClients"/>.
+    /// Constructor
     /// </summary>
-    [JetBrains.Annotations.PublicAPI]
-    public class AgvStateChangedConsumer : IConsumer<AgvStateChanged>
+    public AgvStateChangedConsumer(
+        ILogger<AgvStateChangedConsumer> logger,
+        IAgvHubContext agvHubContext,
+        IRequestClient<GetAgvsDtoRequest> getAgvsClient)
     {
-        private readonly ILogger<AgvStateChangedConsumer> _logger;
-        private readonly IAgvHubContext _agvHubContext;
-        private readonly IRequestClient<GetAgvsDtoRequest> _getAgvsClient;
+        _logger = logger;
+        _agvHubContext = agvHubContext;
+        _getAgvsClient = getAgvsClient;
+    }
 
-        /// <summary>
-        /// Constructor
-        /// </summary>
-        public AgvStateChangedConsumer(
-            ILogger<AgvStateChangedConsumer> logger,
-            IAgvHubContext agvHubContext,
-            IRequestClient<GetAgvsDtoRequest> getAgvsClient)
-        {
-            _logger = logger;
-            _agvHubContext = agvHubContext;
-            _getAgvsClient = getAgvsClient;
-        }
-
-        /// <summary>
-        /// Send message to all clients
-        /// </summary>
-        /// <param name="context"></param>
-        public async Task Consume(ConsumeContext<AgvStateChanged> context)
-        {
-            _logger.LogTrace("{MessageType} {CorrelationId} received", nameof(ActionGroupChanged), context.Message.CorrelationId);
+    /// <summary>
+    /// Send message to all clients
+    /// </summary>
+    /// <param name="context"></param>
+    public async Task Consume(ConsumeContext<AgvStateChanged> context)
+    {
+        _logger.LogTrace("{MessageType} {CorrelationId} received", nameof(ActionGroupChanged), context.Message.CorrelationId);
             
-            Response<GetAgvsDtoResult> response = await _getAgvsClient.GetResponse<GetAgvsDtoResult>(new GetAgvsDtoRequest(new[] { context.Message.Agv.CorrelationId }));
+        Response<GetAgvsDtoResult> response = await _getAgvsClient.GetResponse<GetAgvsDtoResult>(new GetAgvsDtoRequest(new[] { context.Message.Agv.CorrelationId }));
             
-            if (!response.Message.Agvs.IsNullOrEmpty())
-            {
-                bool isInitialState = Equals(context.Message.Agv.CurrentState, nameof(AgvStateMachine.Initial));
-                await _agvHubContext.SendAgvStateToAllClients(response.Message.Agvs.First(), isInitialState);
-            }
+        if (!response.Message.Agvs.IsNullOrEmpty())
+        {
+            bool isInitialState = Equals(context.Message.Agv.CurrentState, nameof(AgvStateMachine.Initial));
+            await _agvHubContext.SendAgvStateToAllClients(response.Message.Agvs.First(), isInitialState);
         }
     }
 }

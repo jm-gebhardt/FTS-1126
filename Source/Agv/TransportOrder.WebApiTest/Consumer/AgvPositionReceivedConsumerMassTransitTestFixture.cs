@@ -7,50 +7,50 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Consumer
+namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Consumer;
+
+internal class AgvPositionReceivedConsumerMassTransitTestFixture : MassTransitConsumerTestFixture<AgvPositionReceivedConsumer>, ITestFixtureBuilder<AgvPositionReceivedConsumerMassTransitTestFixture>
 {
-    internal class AgvPositionReceivedConsumerMassTransitTestFixture : MassTransitTestFixture<AgvPositionReceivedConsumer>, ITestFixtureBuilder<AgvPositionReceivedConsumerMassTransitTestFixture>
+    private bool _useAgvPositionRegistryMock;
+    public Mock<IAgvPositionRegistry>? AgvPositionRegistryMock { get; private set; }
+    private Mock<IAgvGraphRegistry>? GraphRegistryMock { get; set; }
+
+    public AgvPositionReceivedConsumerMassTransitTestFixture()
     {
-        private bool _useAgvPositionRegistryMock;
-        public Mock<IAgvPositionRegistry>? AgvPositionRegistryMock { get; private set; }
-        private Mock<IAgvGraphRegistry>? GraphRegistryMock { get; set; }
+        base.Build();
+    }
 
-        public AgvPositionReceivedConsumerMassTransitTestFixture()
+    public ITestFixtureBuilder<AgvPositionReceivedConsumerMassTransitTestFixture> UseAgvPositionRegistryMock()
+    {
+        _useAgvPositionRegistryMock = true;
+        return this;
+    }
+
+    public AgvPositionReceivedConsumerMassTransitTestFixture Build()
+    {
+        base.Build();
+        return this;
+    }
+
+    protected override void ConfigureServices(IServiceCollection services)
+    {
+        GraphRegistryMock = new Mock<IAgvGraphRegistry>();
+        services.AddSingleton<IConcurrentDictionaryProvider<Guid, AgvPositionStatus>, AgvPositionDictionaryProvider>();
+        if (_useAgvPositionRegistryMock)
         {
-            base.Build();
+            AgvPositionRegistryMock = new Mock<IAgvPositionRegistry>();
+
+            services.AddSingleton(AgvPositionRegistryMock.Object);
+            services.AddSingleton(GraphRegistryMock.Object);
+        }
+        else
+        {
+            services.AddSingleton<IAgvPositionRegistry, AgvPositionRegistry>();
+            services.AddSingleton(GraphRegistryMock.Object);
         }
 
-        public ITestFixtureBuilder<AgvPositionReceivedConsumerMassTransitTestFixture> UseAgvPositionRegistryMock()
-        {
-            _useAgvPositionRegistryMock = true;
-            return this;
-        }
-
-        public AgvPositionReceivedConsumerMassTransitTestFixture Build()
-        {
-            base.Build();
-            return this;
-        }
-
-        protected override void ConfigureServices(IServiceCollection services)
-        {
-            GraphRegistryMock = new Mock<IAgvGraphRegistry>();
-            services.AddSingleton<IConcurrentDictionaryProvider<Guid, AgvPositionStatus>, AgvPositionDictionaryProvider>();
-            if (_useAgvPositionRegistryMock)
-            {
-                AgvPositionRegistryMock = new Mock<IAgvPositionRegistry>();
-                services.AddSingleton(AgvPositionRegistryMock.Object);
-                services.AddSingleton(GraphRegistryMock.Object);
-            }
-            else
-            {
-                services.AddSingleton<IAgvPositionRegistry, AgvPositionRegistry>();
-                services.AddSingleton(GraphRegistryMock.Object);
-            }
-
-            services.AddSingleton<IChangeDetector<AgvPositionStatus>, ChangeDetector<AgvPositionStatus>>();
-            services.AddTransient(_ => new Mock<IAgvHubContext>().Object);
-            services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-        }
+        services.AddSingleton<IChangeDetector<AgvPositionStatus>, ChangeDetector<AgvPositionStatus>>();
+        services.AddTransient(_ => new Mock<IAgvHubContext>().Object);
+        services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
     }
 }

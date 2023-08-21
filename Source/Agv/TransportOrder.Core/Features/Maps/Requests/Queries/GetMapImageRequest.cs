@@ -1,24 +1,23 @@
 ﻿using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Requests.Queries
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Requests.Queries;
+
+/// <summary>
+/// Represents the GetMap request which returns an image of the map as byte[]
+/// </summary>
+public record GetMapImageRequest : CorrelatedBy<Guid>
 {
     /// <summary>
-    /// Represents the GetMap request which returns an image of the map as byte[]
+    /// <inheritdoc/>
     /// </summary>
-    public record GetMapImageRequest : CorrelatedBy<Guid>
-    {
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public Guid CorrelationId { get; }
+    public Guid CorrelationId { get; }
 
-        /// <summary>
-        /// <inheritdoc cref="GetMapImageRequest"/>
-        /// </summary>
-        /// <param name="correlationId"></param>
-        public GetMapImageRequest(Guid correlationId)
-        {
-            CorrelationId = correlationId;
-        }
+    /// <summary>
+    /// <inheritdoc cref="GetMapImageRequest"/>
+    /// </summary>
+    /// <param name="correlationId"></param>
+    public GetMapImageRequest(Guid correlationId)
+    {
+        CorrelationId = correlationId;
     }
 }

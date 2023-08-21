@@ -2,29 +2,28 @@
 using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
-namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands
+namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
+
+/// <summary>
+/// Command to request the data of an AGV.
+/// </summary>
+[JetBrains.Annotations.PublicAPI]
+public record RequestAgvData : CorrelatedBy<Guid>, IAgvId
 {
+    /// <inheritdoc/>
+    public Guid CorrelationId { get; }
+
+    /// <inheritdoc />
+    public string AgvId { get; }
+
     /// <summary>
-    /// Command to request the data of an AGV.
+    /// Build message
     /// </summary>
-    [JetBrains.Annotations.PublicAPI]
-    public record RequestAgvData : CorrelatedBy<Guid>, IAgvId
+    /// <param name="correlationId"></param>
+    /// <param name="agvId"></param>
+    public RequestAgvData(Guid correlationId, string agvId)
     {
-        /// <inheritdoc/>
-        public Guid CorrelationId { get; }
-
-        /// <inheritdoc />
-        public string AgvId { get; }
-
-        /// <summary>
-        /// Build message
-        /// </summary>
-        /// <param name="correlationId"></param>
-        /// <param name="agvId"></param>
-        public RequestAgvData(Guid correlationId, string agvId)
-        {
-            CorrelationId = correlationId;
-            AgvId = agvId;
-        }
+        CorrelationId = correlationId;
+        AgvId = agvId;
     }
 }

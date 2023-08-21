@@ -8,67 +8,66 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Persistence.Saga
+namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Persistence.Saga;
+
+/// <summary>
+/// SagaPersistence DbContextTest
+/// </summary>
+[TestClass]
+public class SagaPersistenceDbContextTest
 {
-    /// <summary>
-    /// SagaPersistence DbContextTest
-    /// </summary>
-    [TestClass]
-    public class SagaPersistenceDbContextTest
+    private const string DatabaseName = "saga";
+
+    private class DbSetSagaPersistenceDbContext : SagaPersistenceDbContext
     {
-        private const string DatabaseName = "saga";
+        // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
+        public DbSet<AgvSaga> AgvSagas { get; set; } = null!;
 
-        private class DbSetSagaPersistenceDbContext : SagaPersistenceDbContext
+        public DbSetSagaPersistenceDbContext(DbContextOptions<DbSetSagaPersistenceDbContext> options) : base(GetOptions())
         {
-            // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
-            public DbSet<AgvSaga> AgvSagas { get; set; } = null!;
-
-            public DbSetSagaPersistenceDbContext(DbContextOptions<DbSetSagaPersistenceDbContext> options) : base(GetOptions())
-            {
-            }
-
-            private static DbContextOptions<SagaPersistenceDbContext> GetOptions()
-            {
-                var dbContextOptionsBuilder = new DbContextOptionsBuilder<SagaPersistenceDbContext>();
-                dbContextOptionsBuilder.UseInMemoryDatabase(DatabaseName);
-                return dbContextOptionsBuilder.Options;
-            }
         }
 
-        /// <summary>
-        /// Test if all AgvState properties are restored
-        /// </summary>
-        [TestMethod]
-        public void DbContext_SaveAgvState_AllPropertiesRestored()
+        private static DbContextOptions<SagaPersistenceDbContext> GetOptions()
         {
-            var collection = new ServiceCollection()
-                .AddDbContextFactory<DbSetSagaPersistenceDbContext>(options => { options.UseInMemoryDatabase(DatabaseName); }
-                );
-            var provider = collection.BuildServiceProvider(true);
-            var dbContextFactory = provider.GetService<IDbContextFactory<DbSetSagaPersistenceDbContext>>()!;
+            var dbContextOptionsBuilder = new DbContextOptionsBuilder<SagaPersistenceDbContext>();
+            dbContextOptionsBuilder.UseInMemoryDatabase(DatabaseName);
+            return dbContextOptionsBuilder.Options;
+        }
+    }
 
-            const string agvId = "AGV1";
-            var correlationId = agvId.ToGuid();
-
-            var agvSaga = new AgvSaga(correlationId,
-                agvId, 
-                "TestState",
-                new AgvStatus(Guid.NewGuid(), "123", true, true, 10, false, false)
+    /// <summary>
+    /// Test if all AgvState properties are restored
+    /// </summary>
+    [TestMethod]
+    public void DbContext_SaveAgvState_AllPropertiesRestored()
+    {
+        var collection = new ServiceCollection()
+            .AddDbContextFactory<DbSetSagaPersistenceDbContext>(options => { options.UseInMemoryDatabase(DatabaseName); }
             );
-            using (var dbContext = dbContextFactory.CreateDbContext())
-            {
-                dbContext.Database.EnsureCreated();
+        var provider = collection.BuildServiceProvider(true);
+        var dbContextFactory = provider.GetService<IDbContextFactory<DbSetSagaPersistenceDbContext>>()!;
 
-                dbContext.AgvSagas.Add(agvSaga);
-                dbContext.SaveChanges();
-            }
+        const string agvId = "AGV1";
+        var correlationId = agvId.ToGuid();
 
-            using (var dbContext = dbContextFactory.CreateDbContext())
-            {
-                var restoredAgvSaga = dbContext.AgvSagas.First();
-                // Test if restore objects contains all properties by comparing JSON converted
-                JsonConvert.SerializeObject(restoredAgvSaga).ShouldBe(JsonConvert.SerializeObject(agvSaga));
-            }
+        var agvSaga = new AgvSaga(correlationId,
+            agvId, 
+            "TestState",
+            new AgvStatus(Guid.NewGuid(), "123", true, true, 10, false, false)
+        );
+        using (var dbContext = dbContextFactory.CreateDbContext())
+        {
+            dbContext.Database.EnsureCreated();
+
+            dbContext.AgvSagas.Add(agvSaga);
+            dbContext.SaveChanges();
+        }
+
+        using (var dbContext = dbContextFactory.CreateDbContext())
+        {
+            var restoredAgvSaga = dbContext.AgvSagas.First();
+            // Test if restore objects contains all properties by comparing JSON converted
+            JsonConvert.SerializeObject(restoredAgvSaga).ShouldBe(JsonConvert.SerializeObject(agvSaga));
         }
     }
 }

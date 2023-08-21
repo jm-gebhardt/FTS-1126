@@ -7,24 +7,23 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Consumer
+namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Consumer;
+
+[TestClass]
+public class ActionGroupCreatedConsumerTest
 {
-    [TestClass]
-    public class ActionGroupCreatedConsumerTest
+    [TestMethod]
+    public async Task Receiving_ActionGroupCreated_SendAgvStateToAllClients()
     {
-        [TestMethod]
-        public async Task Receiving_ActionGroupCreated_SendAgvStateToAllClients()
-        {
-            var fixture = new ConsumerHubTestFixture<ActionGroupCreatedConsumer, IActionHubContext>();
-            var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        var fixture = new ConsumerHubTestFixture<ActionGroupCreatedConsumer, IActionHubContext>();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
 
-            await fixture.TestHarness!.Bus.Publish(new ActionGroupCreated(actionGroup, actionGroup.CorrelationId));
+        await fixture.TestHarness!.Bus.Publish(new ActionGroupCreated(actionGroup, actionGroup.CorrelationId));
 
-            (await fixture.TestHarness.Published.Any<ActionGroupCreated>()).ShouldBeTrue();
-            (await fixture.ConsumerHarness!.Consumed.Any<ActionGroupCreated>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<ActionGroupCreated>()).ShouldBeTrue();
+        (await fixture.ConsumerHarness!.Consumed.Any<ActionGroupCreated>()).ShouldBeTrue();
 
-            fixture.MockHub.Verify(h => h.SendActionGroupStateToAllClients(
-                It.Is<ActionGroup>(o => o.CorrelationId == actionGroup.CorrelationId)), Times.Once);
-        }
+        fixture.MockHub.Verify(h => h.SendActionGroupStateToAllClients(
+            It.Is<ActionGroup>(o => o.CorrelationId == actionGroup.CorrelationId)), Times.Once);
     }
 }

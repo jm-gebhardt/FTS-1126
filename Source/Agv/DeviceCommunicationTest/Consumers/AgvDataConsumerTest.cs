@@ -7,69 +7,68 @@ using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
+namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers;
+
+/// <summary>
+/// Tests for <see cref="MqttAgvData"/> and <see cref="AgvDataReceived"/>.
+/// </summary>
+[TestClass]
+public class AgvDataConsumerTest
 {
+    private const string AgvTestIdentifier = "#0815#";
+
     /// <summary>
-    /// Tests for <see cref="MqttAgvData"/> and <see cref="AgvDataReceived"/>.
+    /// Test for consuming invalid AGV data message.
     /// </summary>
-    [TestClass]
-    public class AgvDataConsumerTest
+    [TestMethod]
+    public async Task ReceiveDataMessage_WithInvalidContent_NoMessageSend()
     {
-        private const string AgvTestIdentifier = "#0815#";
+        var fixture = new MqttConsumerTestFixture<AgvDataConsumer>();
 
-        /// <summary>
-        /// Test for consuming invalid AGV data message.
-        /// </summary>
-        [TestMethod]
-        public async Task ReceiveDataMessage_WithInvalidContent_NoMessageSend()
+        var message = new MqttAgvData("", "", "", "", 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, Array.Empty<Sensor>());
+
+        await fixture.TestHarness.Bus.PublishMqtt(message, null);
+
+        (await fixture.TestHarness.Published.Any<AgvDataReceived>()).ShouldBeFalse();
+    }
+
+    /// <summary>
+    /// Test for consuming AGV data message.
+    /// </summary>
+    [TestMethod]
+    public async Task ReceiveDataMessage_WithValidInput_ExpectMessage()
+    {
+        var fixture = new MqttConsumerTestFixture<AgvDataConsumer>();
+        var sensors = new Sensor[]
         {
-            var fixture = new MqttConsumerTestFixture<AgvDataConsumer>();
+            new() { SensorIdentifier = "Back01" },
+            new() { SensorIdentifier = "Front01" },
+            new() { SensorIdentifier = "Back02" },
+            new() { SensorIdentifier = "Front02" }
+        };
+        var message = new MqttAgvData(AgvTestIdentifier, "Karis", "BF1", "127.0.0.1", 1.8, 120.0, 0.6, 0.8, 0.7, 0.9, 2.5, 1000, sensors);
 
-            var message = new MqttAgvData("", "", "", "", 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, Array.Empty<Sensor>());
+        await fixture.TestHarness.Bus.PublishMqtt(message, null);
+        (await fixture.TestHarness.Published.Any<MqttAgvData>()).ShouldBeTrue();
 
-            await fixture.TestHarness.Bus.PublishMqtt(message, null);
+        var consumedMessage = fixture.ConsumerHarness.Consumed.Select<MqttAgvData>().First().Context.Message;
+        consumedMessage.SerialNumber.ShouldBe(AgvTestIdentifier);
+        (await fixture.TestHarness.Published.Any<AgvDataReceived>()).ShouldBeTrue();
 
-            (await fixture.TestHarness.Published.Any<AgvDataReceived>()).ShouldBeFalse();
-        }
-
-        /// <summary>
-        /// Test for consuming AGV data message.
-        /// </summary>
-        [TestMethod]
-        public async Task ReceiveDataMessage_WithValidInput_ExpectMessage()
-        {
-            var fixture = new MqttConsumerTestFixture<AgvDataConsumer>();
-            var sensors = new Sensor[]
-            {
-                new() { SensorIdentifier = "Back01" },
-                new() { SensorIdentifier = "Front01" },
-                new() { SensorIdentifier = "Back02" },
-                new() { SensorIdentifier = "Front02" }
-            };
-            var message = new MqttAgvData(AgvTestIdentifier, "Karis", "BF1", "127.0.0.1", 1.8, 120.0, 0.6, 0.8, 0.7, 0.9, 2.5, 1000, sensors);
-
-            await fixture.TestHarness.Bus.PublishMqtt(message, null);
-            (await fixture.TestHarness.Published.Any<MqttAgvData>()).ShouldBeTrue();
-
-            var consumedMessage = fixture.ConsumerHarness.Consumed.Select<MqttAgvData>().First().Context.Message;
-            consumedMessage.SerialNumber.ShouldBe(AgvTestIdentifier);
-            (await fixture.TestHarness.Published.Any<AgvDataReceived>()).ShouldBeTrue();
-
-            var publishedData = fixture.TestHarness.Published.Select<AgvDataReceived>().First().Context.Message;
-            publishedData.CorrelationId.ShouldBe(AgvTestIdentifier.ToGuid());
-            publishedData.AgvId.ShouldBe(AgvTestIdentifier);
-            publishedData.Data.Sensors.Length.ShouldBe(4);
-            publishedData.Data.Model.ShouldBe("Karis");
-            publishedData.Data.Type.ShouldNotBeNull();
-            publishedData.Data.MaxVelocityTurnOnSpot.ShouldNotBeNull();
-            publishedData.Data.MaxVelocityStraight.ShouldNotBe(0f);
-            publishedData.Data.MaxVelocityTurn.ShouldNotBeNull();
-            publishedData.Data.Width.ShouldNotBeNull();
-            publishedData.Data.Length.ShouldNotBeNull();
-            publishedData.Data.Payload.ShouldNotBeNull();
-            publishedData.Data.Acceleration.ShouldNotBeNull();
-            publishedData.Data.IpV4Address.ShouldNotBeNull();
-            publishedData.Data.BatteryCapacity.ShouldNotBe(0f);
-        }
+        var publishedData = fixture.TestHarness.Published.Select<AgvDataReceived>().First().Context.Message;
+        publishedData.CorrelationId.ShouldBe(AgvTestIdentifier.ToGuid());
+        publishedData.AgvId.ShouldBe(AgvTestIdentifier);
+        publishedData.Data.Sensors.Length.ShouldBe(4);
+        publishedData.Data.Model.ShouldBe("Karis");
+        publishedData.Data.Type.ShouldNotBeNull();
+        publishedData.Data.MaxVelocityTurnOnSpot.ShouldNotBeNull();
+        publishedData.Data.MaxVelocityStraight.ShouldNotBe(0f);
+        publishedData.Data.MaxVelocityTurn.ShouldNotBeNull();
+        publishedData.Data.Width.ShouldNotBeNull();
+        publishedData.Data.Length.ShouldNotBeNull();
+        publishedData.Data.Payload.ShouldNotBeNull();
+        publishedData.Data.Acceleration.ShouldNotBeNull();
+        publishedData.Data.IpV4Address.ShouldNotBeNull();
+        publishedData.Data.BatteryCapacity.ShouldNotBe(0f);
     }
 }

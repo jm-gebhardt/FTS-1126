@@ -10,98 +10,97 @@ using Gebhardt.StoreWare.Agv.Common.Utilities;
 using MassTransit;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
+namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers;
+
+/// <summary>
+/// Test for OrderEventConsumer
+/// </summary>
+[TestClass]
+public class OrderEventConsumerTest
 {
+    private const string SerialNumber = "AGV0";
+    private const string OrderId = "ORDER123";
+    private readonly Guid _actionGuid = OrderId.ToGuid();
+
     /// <summary>
-    /// Test for OrderEventConsumer
+    /// Test for consuming OrderEvent message with the event type 'Started'
     /// </summary>
-    [TestClass]
-    public class OrderEventConsumerTest
+    [TestMethod]
+    public async Task ConsumeEventStarted()
     {
-        private const string SerialNumber = "AGV0";
-        private const string OrderId = "ORDER123";
-        private readonly Guid _actionGuid = OrderId.ToGuid();
+        var message = new MqttOrderEvent(_actionGuid + " " + OrderId, SerialNumber, OrderEventType.Started);
+        var published = await ConsumeMessage(message);
+        await AssertPublishedEvent<ActionStartedEvent>(published);
+    }
 
-        /// <summary>
-        /// Test for consuming OrderEvent message with the event type 'Started'
-        /// </summary>
-        [TestMethod]
-        public async Task ConsumeEventStarted()
-        {
-            var message = new MqttOrderEvent(_actionGuid + " " + OrderId, SerialNumber, OrderEventType.Started);
-            var published = await ConsumeMessage(message);
-            await AssertPublishedEvent<ActionStartedEvent>(published);
-        }
+    /// <summary>
+    /// Test for consuming OrderEvent message with the event type 'Completed'
+    /// </summary>
+    [TestMethod]
+    public async Task ConsumeEventCompleted()
+    {
+        var message = new MqttOrderEvent(_actionGuid + " " + OrderId, SerialNumber, OrderEventType.Completed);
+        var published = await ConsumeMessage(message);
 
-        /// <summary>
-        /// Test for consuming OrderEvent message with the event type 'Completed'
-        /// </summary>
-        [TestMethod]
-        public async Task ConsumeEventCompleted()
-        {
-            var message = new MqttOrderEvent(_actionGuid + " " + OrderId, SerialNumber, OrderEventType.Completed);
-            var published = await ConsumeMessage(message);
+        await AssertPublishedEvent<ActionCompletedEvent>(published);
+    }
 
-            await AssertPublishedEvent<ActionCompletedEvent>(published);
-        }
+    /// <summary>
+    /// Test for consuming OrderEvent message with the event type 'Cancelled'
+    /// </summary>
+    [TestMethod]
+    public async Task ConsumeEventCancelled()
+    {
+        var message = new MqttOrderEvent(_actionGuid + " " + OrderId, SerialNumber, OrderEventType.Cancelled);
+        var published = await ConsumeMessage(message);
 
-        /// <summary>
-        /// Test for consuming OrderEvent message with the event type 'Cancelled'
-        /// </summary>
-        [TestMethod]
-        public async Task ConsumeEventCancelled()
-        {
-            var message = new MqttOrderEvent(_actionGuid + " " + OrderId, SerialNumber, OrderEventType.Cancelled);
-            var published = await ConsumeMessage(message);
+        await AssertPublishedEvent<ActionCancelledEvent>(published);
+    }
 
-            await AssertPublishedEvent<ActionCancelledEvent>(published);
-        }
+    /// <summary>
+    /// Test for consuming OrderEvent message with the event type 'CancelFailed'
+    /// </summary>
+    [TestMethod]
+    public async Task ConsumeEventCancelFailed()
+    {
+        var message = new MqttOrderEvent(_actionGuid + " " + OrderId, SerialNumber, OrderEventType.CancelFailed);
+        var published = await ConsumeMessage(message);
 
-        /// <summary>
-        /// Test for consuming OrderEvent message with the event type 'CancelFailed'
-        /// </summary>
-        [TestMethod]
-        public async Task ConsumeEventCancelFailed()
-        {
-            var message = new MqttOrderEvent(_actionGuid + " " + OrderId, SerialNumber, OrderEventType.CancelFailed);
-            var published = await ConsumeMessage(message);
+        await AssertPublishedEvent<ActionCancelFailedEvent>(published);
+    }
 
-            await AssertPublishedEvent<ActionCancelFailedEvent>(published);
-        }
+    /// <summary>
+    /// Test for consuming OrderEvent message with the event type 'Failed'
+    /// </summary>
+    [TestMethod]
+    public async Task ConsumeEventFailed()
+    {
+        var message = new MqttOrderEvent(_actionGuid + " " + OrderId, SerialNumber, OrderEventType.Failed);
+        var published = await ConsumeMessage(message);
 
-        /// <summary>
-        /// Test for consuming OrderEvent message with the event type 'Failed'
-        /// </summary>
-        [TestMethod]
-        public async Task ConsumeEventFailed()
-        {
-            var message = new MqttOrderEvent(_actionGuid + " " + OrderId, SerialNumber, OrderEventType.Failed);
-            var published = await ConsumeMessage(message);
+        await AssertPublishedEvent<ActionFailedEvent>(published);
+    }
 
-            await AssertPublishedEvent<ActionFailedEvent>(published);
-        }
+    private async Task<IPublishedMessageList> ConsumeMessage(MqttOrderEvent message)
+    {
+        var fixture = new MqttConsumerTestFixture<OrderEventConsumer>();
+        await fixture.TestHarness.Bus.PublishMqtt(message, null);
 
-        private async Task<IPublishedMessageList> ConsumeMessage(MqttOrderEvent message)
-        {
-            var fixture = new MqttConsumerTestFixture<OrderEventConsumer>();
-            await fixture.TestHarness.Bus.PublishMqtt(message, null);
+        var consumedMsg = fixture.ConsumerHarness.Consumed.Select<MqttOrderEvent>().First().Context.Message;
 
-            var consumedMsg = fixture.ConsumerHarness.Consumed.Select<MqttOrderEvent>().First().Context.Message;
+        consumedMsg.SerialNumber.ShouldBe(message.SerialNumber);
+        consumedMsg.OrderId.ShouldBe(message.OrderId);
+        consumedMsg.OrderEventType.ShouldBe(message.OrderEventType);
 
-            consumedMsg.SerialNumber.ShouldBe(message.SerialNumber);
-            consumedMsg.OrderId.ShouldBe(message.OrderId);
-            consumedMsg.OrderEventType.ShouldBe(message.OrderEventType);
+        return fixture.TestHarness.Published;
+    }
 
-            return fixture.TestHarness.Published;
-        }
+    private async Task AssertPublishedEvent<TMessage>(IPublishedMessageList published) where TMessage : class
+    {
+        (await published.Any<TMessage>()).ShouldBeTrue();
 
-        private async Task AssertPublishedEvent<TMessage>(IPublishedMessageList published) where TMessage : class
-        {
-            (await published.Any<TMessage>()).ShouldBeTrue();
-
-            IPublishedMessage<TMessage>? publishedEvent = await published.SelectAsync<TMessage>().First();
-            var actionStatusEvent = publishedEvent.MessageObject as TMessage;
-            actionStatusEvent.ShouldNotBeNull();
-        }
+        IPublishedMessage<TMessage>? publishedEvent = await published.SelectAsync<TMessage>().First();
+        var actionStatusEvent = publishedEvent.MessageObject as TMessage;
+        actionStatusEvent.ShouldNotBeNull();
     }
 }

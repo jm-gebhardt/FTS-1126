@@ -5,31 +5,30 @@ using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
 using Gebhardt.StoreWare.Agv.WCSCommunication.Services;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Consumers
+namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Consumers;
+
+/// <summary>
+/// Test for finishing host orders
+/// </summary>
+[TestClass]
+public class ConfirmHostOrderConsumerSimTest
 {
-    /// <summary>
-    /// Test for finishing host orders
-    /// </summary>
-    [TestClass]
-    public class ConfirmHostOrderConsumerSimTest
+    [TestMethod]
+    public async Task SimulationConfirmHostOrderConsumerTest()
     {
-        [TestMethod]
-        public async Task SimulationConfirmHostOrderConsumerTest()
-        {
-            var fixture = new MassTransitTestFixture<SimulationConfirmHostOrderConsumer>();
+        var fixture = new MassTransitConsumerTestFixture<SimulationConfirmHostOrderConsumer>();
 
-            string orderId = "TestOrder123";
-            var correlationId = orderId.ToGuid();
+        string orderId = "TestOrder123";
+        var correlationId = orderId.ToGuid();
 
-            await fixture.TestHarness!.Bus.Publish(new HostOrderHandlingSucceeded(correlationId, orderId));
+        await fixture.TestHarness!.Bus.Publish(new HostOrderHandlingSucceeded(correlationId, orderId));
 
-            (await fixture.TestHarness.Published.Any<HostOrderHandlingSucceeded>()).ShouldBeTrue();
-            (await fixture.TestHarness.Consumed.Any<HostOrderHandlingSucceeded>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<HostOrderHandlingSucceeded>()).ShouldBeTrue();
+        (await fixture.TestHarness.Consumed.Any<HostOrderHandlingSucceeded>()).ShouldBeTrue();
 
-            var message = fixture.ConsumerHarness!.Consumed.Select<HostOrderHandlingSucceeded>().First().Context.Message;
+        var message = fixture.ConsumerHarness!.Consumed.Select<HostOrderHandlingSucceeded>().First().Context.Message;
 
-            message.CorrelationId.ShouldBe(correlationId);
-            message.OrderId.ShouldBe(orderId);
-        }
+        message.CorrelationId.ShouldBe(correlationId);
+        message.OrderId.ShouldBe(orderId);
     }
 }

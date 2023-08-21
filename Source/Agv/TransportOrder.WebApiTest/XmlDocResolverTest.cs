@@ -5,13 +5,13 @@ using MassTransit;
 using Shouldly;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest
+namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest;
+
+[TestClass]
+public class XmlDocResolverTest
 {
-    [TestClass]
-    public class XmlDocResolverTest
-    {
-        #region Test Data
-        private const string XmlDocIn = @"<?xml version=""1.0"" encoding=""utf-8""?>
+    #region Test Data
+    private const string XmlDocIn = @"<?xml version=""1.0"" encoding=""utf-8""?>
             <doc>
               <assembly>
                <name>Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest</name>
@@ -50,7 +50,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest
               </members>
             </doc>";
 
-        private const string XmlDocOut = @"<?xml version=""1.0"" encoding=""utf-8""?>
+    private const string XmlDocOut = @"<?xml version=""1.0"" encoding=""utf-8""?>
             <doc>
               <assembly>
                <name>Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest</name>
@@ -88,66 +88,65 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest
                 </member>
               </members>
             </doc>";
-        #endregion
+    #endregion
 
-        #region Test Members
+    #region Test Members
 
-        // ReSharper disable all
-        /// <summary>Interface1</summary>
-        private interface Interface1
+    // ReSharper disable all
+    /// <summary>Interface1</summary>
+    private interface Interface1
+    {
+        /// <summary>Description for Method1</summary>
+        int Method1();
+
+        /// <summary>Description for Method2</summary>
+        int Method2();
+
+        /// <summary>Description for Method3</summary>
+        int Method3();
+    }
+
+    /// <summary>Class1</summary>
+    private class Class1 : Interface1, CorrelatedBy<Guid>
+    {
+        /// <summary>Description for <see cref="Interface1.Method1"/></summary>
+        public int Method1()
         {
-            /// <summary>Description for Method1</summary>
-            int Method1();
-
-            /// <summary>Description for Method2</summary>
-            int Method2();
-
-            /// <summary>Description for Method3</summary>
-            int Method3();
+            return 0;
         }
 
-        /// <summary>Class1</summary>
-        private class Class1 : Interface1, CorrelatedBy<Guid>
+        /// <inheritdoc cref="Interface1.Method2"/>
+        public int Method2()
         {
-            /// <summary>Description for <see cref="Interface1.Method1"/></summary>
-            public int Method1()
-            {
-                return 0;
-            }
-
-            /// <inheritdoc cref="Interface1.Method2"/>
-            public int Method2()
-            {
-                return 0;
-            }
-
-            /// <inheritdoc/>
-            public int Method3()
-            {
-                return 0;
-            }
-
-            /// <inheritdoc/>
-            public Guid CorrelationId { get; }
+            return 0;
         }
-        // ReSharper ensable all
-        #endregion
 
-        [TestMethod]
-        public void RemoveDtoSuffixIfExists()
+        /// <inheritdoc/>
+        public int Method3()
         {
-            var xmlDocs = new List<XDocument>();
-            var assemblies = new List<Assembly>();
-
-            xmlDocs.Add(XDocument.Parse(XmlDocIn));
-            assemblies.Add(Assembly.GetExecutingAssembly());
-
-            IEnumerable<XDocument> resolvedXmlDocs = XmlDocResolver.ResolveInheritedDocs(xmlDocs, assemblies);
-
-            var resolvedDoc = resolvedXmlDocs.First();
-            var targetDoc = XDocument.Parse(XmlDocOut);
-
-            resolvedDoc.ToString(SaveOptions.DisableFormatting).ShouldBe(targetDoc.ToString(SaveOptions.DisableFormatting));
+            return 0;
         }
+
+        /// <inheritdoc/>
+        public Guid CorrelationId { get; }
+    }
+    // ReSharper ensable all
+    #endregion
+
+    [TestMethod]
+    public void RemoveDtoSuffixIfExists()
+    {
+        var xmlDocs = new List<XDocument>();
+        var assemblies = new List<Assembly>();
+
+        xmlDocs.Add(XDocument.Parse(XmlDocIn));
+        assemblies.Add(Assembly.GetExecutingAssembly());
+
+        IEnumerable<XDocument> resolvedXmlDocs = XmlDocResolver.ResolveInheritedDocs(xmlDocs, assemblies);
+
+        var resolvedDoc = resolvedXmlDocs.First();
+        var targetDoc = XDocument.Parse(XmlDocOut);
+
+        resolvedDoc.ToString(SaveOptions.DisableFormatting).ShouldBe(targetDoc.ToString(SaveOptions.DisableFormatting));
     }
 }

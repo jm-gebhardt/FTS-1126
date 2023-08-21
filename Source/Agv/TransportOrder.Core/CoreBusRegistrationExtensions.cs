@@ -17,95 +17,94 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.States;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Core;
+
+/// <summary>
+/// IBusRegistrationExtensions extensions
+/// </summary>
+public static class CoreBusRegistrationExtensions
 {
     /// <summary>
-    /// IBusRegistrationExtensions extensions
+    /// 
     /// </summary>
-    public static class CoreBusRegistrationExtensions
+    /// <param name="busRegistrationConfigurator"></param>
+    /// <returns></returns>
+    public static IBusRegistrationConfigurator AddCoreConsumer(this IBusRegistrationConfigurator busRegistrationConfigurator)
     {
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="busRegistrationConfigurator"></param>
-        /// <returns></returns>
-        public static IBusRegistrationConfigurator AddCoreConsumer(this IBusRegistrationConfigurator busRegistrationConfigurator)
-        {
-            busRegistrationConfigurator.AddSagaStateMachine<AgvStateMachine, AgvSaga>()
-                .AddPersistence<AgvSaga, SagaPersistenceDbContext>();
-            busRegistrationConfigurator.AddDelayedMessageScheduler();
+        busRegistrationConfigurator.AddSagaStateMachine<AgvStateMachine, AgvSaga>()
+            .AddPersistence<AgvSaga, SagaPersistenceDbContext>();
+        busRegistrationConfigurator.AddDelayedMessageScheduler();
 
-            busRegistrationConfigurator.AddConsumer<AgvDataConsumer>();
-            busRegistrationConfigurator.AddConsumer<ActionConsumer>();
-            busRegistrationConfigurator.AddConsumer<AgvPositionReceivedConsumer>();
-            busRegistrationConfigurator.AddConsumer<AgvBatteryChangedConsumer>();
-            busRegistrationConfigurator.AddConsumer<AgvGraphReceivedConsumer>();
-            busRegistrationConfigurator.AddConsumer<AgvErrorStatusConsumer>();
-            busRegistrationConfigurator.AddConsumer<AcceptAgvCommandHandler>();
-            busRegistrationConfigurator.AddRequestClient<AcceptAgvCommand>();
+        busRegistrationConfigurator.AddConsumer<AgvDataConsumer>();
+        busRegistrationConfigurator.AddConsumer<ActionConsumer>();
+        busRegistrationConfigurator.AddConsumer<AgvPositionReceivedConsumer>();
+        busRegistrationConfigurator.AddConsumer<AgvBatteryChangedConsumer>();
+        busRegistrationConfigurator.AddConsumer<AgvGraphReceivedConsumer>();
+        busRegistrationConfigurator.AddConsumer<AgvErrorStatusConsumer>();
+        busRegistrationConfigurator.AddConsumer<AcceptAgvCommandHandler>();
+        busRegistrationConfigurator.AddRequestClient<AcceptAgvCommand>();
 
-            return busRegistrationConfigurator;
-        }
+        return busRegistrationConfigurator;
+    }
 
-        /// <summary>
-        /// Adds the MassTransit Mediator
-        /// MassTransit Mediator runs in-process and in-memory, no transport is required.
-        /// </summary>
-        /// <param name="configurator"></param>
-        public static void AddMediator(this IMediatorRegistrationConfigurator configurator)
-        {
-            // maps
-            configurator.AddConsumer<GetMapImageRequestHandler>();
-            configurator.AddRequestClient<GetMapImageRequest>();
+    /// <summary>
+    /// Adds the MassTransit Mediator
+    /// MassTransit Mediator runs in-process and in-memory, no transport is required.
+    /// </summary>
+    /// <param name="configurator"></param>
+    public static void AddMediator(this IMediatorRegistrationConfigurator configurator)
+    {
+        // maps
+        configurator.AddConsumer<GetMapImageRequestHandler>();
+        configurator.AddRequestClient<GetMapImageRequest>();
 
-            configurator.AddConsumer<GetMapListRequestHandler>();
-            configurator.AddRequestClient<GetMapListRequest>();
+        configurator.AddConsumer<GetMapListRequestHandler>();
+        configurator.AddRequestClient<GetMapListRequest>();
 
-            // agv
-            configurator.AddConsumer<RequestAgvDataCommandHandler>();
-            configurator.AddRequestClient<RequestAgvDataCommand>();
+        // agv
+        configurator.AddConsumer<RequestAgvDataCommandHandler>();
+        configurator.AddRequestClient<RequestAgvDataCommand>();
 
-            configurator.AddConsumer<RequestAgvGraphCommandHandler>();
-            configurator.AddRequestClient<RequestAgvGraphCommand>();
+        configurator.AddConsumer<RequestAgvGraphCommandHandler>();
+        configurator.AddRequestClient<RequestAgvGraphCommand>();
 
-            configurator.AddConsumer<GetAgvDataRequestHandler>();
-            configurator.AddRequestClient<GetAgvDataRequest>();
+        configurator.AddConsumer<GetAgvDataRequestHandler>();
+        configurator.AddRequestClient<GetAgvDataRequest>();
 
-            configurator.AddConsumer<GetAgvGraphRequestHandler>();
-            configurator.AddRequestClient<GetAgvGraphRequest>();
+        configurator.AddConsumer<GetAgvGraphRequestHandler>();
+        configurator.AddRequestClient<GetAgvGraphRequest>();
 
-            configurator.AddConsumer<GetAgvPositionsRequestHandler>();
-            configurator.AddRequestClient<GetAgvPositionsRequest>();
+        configurator.AddConsumer<GetAgvPositionsRequestHandler>();
+        configurator.AddRequestClient<GetAgvPositionsRequest>();
 
-            configurator.AddConsumer<GetAgvsDtoRequestHandler>();
-            configurator.AddRequestClient<GetAgvsDtoRequest>();
+        configurator.AddConsumer<GetAgvsDtoRequestHandler>();
+        configurator.AddRequestClient<GetAgvsDtoRequest>();
 
-            configurator.AddConsumer<GetAgvDtoRequestHandler>();
-            configurator.AddRequestClient<GetAgvDtoRequest>();
+        configurator.AddConsumer<GetAgvDtoRequestHandler>();
+        configurator.AddRequestClient<GetAgvDtoRequest>();
 
-            configurator.AddConsumer<LockAndUnlockAgvCommandHandler>();
-            configurator.AddRequestClient<LockAgvCommand>();
-            configurator.AddRequestClient<UnlockAgvCommand>();
+        configurator.AddConsumer<LockAndUnlockAgvCommandHandler>();
+        configurator.AddRequestClient<LockAgvCommand>();
+        configurator.AddRequestClient<UnlockAgvCommand>();
 
-            configurator.AddConsumer<GetAgvActionGroupsRequestHandler>();
-            configurator.AddRequestClient<GetAgvActionGroupsRequest>();
+        configurator.AddConsumer<GetAgvActionGroupsRequestHandler>();
+        configurator.AddRequestClient<GetAgvActionGroupsRequest>();
 
-            configurator.AddConsumer<GetAgvActionGroupCountsByStateRequestHandler>();
-            configurator.AddRequestClient<GetAgvActionGroupCountsByStateRequest>();
+        configurator.AddConsumer<GetAgvActionGroupCountsByStateRequestHandler>();
+        configurator.AddRequestClient<GetAgvActionGroupCountsByStateRequest>();
 
-            configurator.AddConsumer<MoveAgvCommandHandler>();
-            configurator.AddRequestClient<MoveAgv>();
+        configurator.AddConsumer<MoveAgvCommandHandler>();
+        configurator.AddRequestClient<MoveAgv>();
 
-            // actions
-            configurator.AddConsumer<ActionConsumer>();
-            configurator.AddRequestClient<QueueActionGroup>();
+        // actions
+        configurator.AddConsumer<ActionConsumer>();
+        configurator.AddRequestClient<QueueActionGroup>();
 
-            // error
-            configurator.AddConsumer<GetActiveAgvErrorsRequestHandler>();
-            configurator.AddRequestClient<GetActiveAgvErrorsRequest>();
+        // error
+        configurator.AddConsumer<GetActiveAgvErrorsRequestHandler>();
+        configurator.AddRequestClient<GetActiveAgvErrorsRequest>();
 
-            configurator.AddConsumer<GetAgvErrorsRequestHandler>();
-            configurator.AddRequestClient<GetAgvErrorsRequest>();
-        }
+        configurator.AddConsumer<GetAgvErrorsRequestHandler>();
+        configurator.AddRequestClient<GetAgvErrorsRequest>();
     }
 }

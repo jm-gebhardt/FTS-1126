@@ -6,43 +6,42 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 // ReSharper disable once CheckNamespace
-namespace Gebhardt.StoreWare.Agv.TransportOrder
+namespace Gebhardt.StoreWare.Agv.TransportOrder;
+
+/// <summary>
+/// IHostBuilder extensions
+/// </summary>
+public static class MassTransitHostBuilderExtensions
 {
     /// <summary>
-    /// IHostBuilder extensions
+    /// Configured the HostBuilder to use MassTransit <paramref name="hostBuilder" />
     /// </summary>
-    public static class MassTransitHostBuilderExtensions
+    /// <param name="hostBuilder"><see cref="IHostBuilder"/></param>
+    /// <param name="initialLogger"><see cref="ILogger"/></param>
+    /// <returns><see cref="IHostBuilder"/></returns>
+    public static IHostBuilder AddMassTransit(this IHostBuilder hostBuilder, ILogger initialLogger)
     {
-        /// <summary>
-        /// Configured the HostBuilder to use MassTransit <paramref name="hostBuilder" />
-        /// </summary>
-        /// <param name="hostBuilder"><see cref="IHostBuilder"/></param>
-        /// <param name="initialLogger"><see cref="ILogger"/></param>
-        /// <returns><see cref="IHostBuilder"/></returns>
-        public static IHostBuilder AddMassTransit(this IHostBuilder hostBuilder, ILogger initialLogger)
+        hostBuilder.ConfigureServices((context, services) =>
         {
-            hostBuilder.ConfigureServices((context, services) =>
+            try
             {
-                try
-                {
-                    services.ConfigureServicesMassTransit(context.Configuration, x =>
-                        {
-                            x.AddCoreConsumer()
-                                .AddWebApiConsumer();
+                services.ConfigureServicesMassTransit(context.Configuration, x =>
+                    {
+                        x.AddCoreConsumer()
+                            .AddWebApiConsumer();
 
-                            x.AddMediator(c => c.AddMediator());
-                        }
-                        , rabbitMqConfiguration: (_, cfg) => { cfg.UseDelayedMessageScheduler(); });
-                }
-                catch (InvalidOperationException e)
-                {
-                    initialLogger.LogError(e, "MassTransit could not be started");
-                    // ReSharper disable PossibleIntendedRethrow
-                    throw e;
-                }
-            });
+                        x.AddMediator(c => c.AddMediator());
+                    }
+                    , rabbitMqConfiguration: (_, cfg) => { cfg.UseDelayedMessageScheduler(); });
+            }
+            catch (InvalidOperationException e)
+            {
+                initialLogger.LogError(e, "MassTransit could not be started");
+                // ReSharper disable PossibleIntendedRethrow
+                throw e;
+            }
+        });
 
-            return hostBuilder;
-        }
+        return hostBuilder;
     }
 }

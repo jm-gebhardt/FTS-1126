@@ -1,15 +1,14 @@
 ﻿using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Common
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Common;
+
+/// <summary>
+/// Defines a result for the GetMapList request
+/// </summary>
+public record GetMapListResult
 {
     /// <summary>
-    /// Defines a result for the GetMapList request
+    /// <inheritdoc cref="GetMapImageResult"/>
     /// </summary>
-    public record GetMapListResult
-    {
-        /// <summary>
-        /// <inheritdoc cref="GetMapImageResult"/>
-        /// </summary>
-        public List<MapDto> Maps { get; init; } = null!;
-    }
+    public List<MapDto> Maps { get; init; } = null!;
 }

@@ -7,31 +7,30 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services
+namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services;
+
+/// <summary>
+/// Test for WorkerHostOrderSim
+/// </summary>
+[TestClass]
+public class SimulationHostOrderServiceTest
 {
     /// <summary>
-    /// Test for WorkerHostOrderSim
+    /// Test if WorkerHostOrderSim can publish simulated HostOrders
     /// </summary>
-    [TestClass]
-    public class SimulationHostOrderServiceTest
+    [TestMethod]
+    public async Task SimulatedPublishHostOrder()
     {
-        /// <summary>
-        /// Test if WorkerHostOrderSim can publish simulated HostOrders
-        /// </summary>
-        [TestMethod]
-        public async Task SimulatedPublishHostOrder()
+        var fixture = new PollableServiceTestFixture<SimulationHostOrderService>(services =>
         {
-            var fixture = new PollableServiceTestFixture<SimulationHostOrderService>(services =>
+            services.AddSingleton(_ => new SimulateOptions()
             {
-                services.AddSingleton(_ => new SimulateOptions()
-                {
-                    Interval = 500,
-                    Sources = new[] { "S01", "S02", "S03" },
-                    Destinations = new[] { "D01", "D02", "D03" }
-                });
+                Interval = 500,
+                Sources = new[] { "S01", "S02", "S03" },
+                Destinations = new[] { "D01", "D02", "D03" }
             });
-            await fixture.Pollable.Poll(It.IsAny<CancellationToken>());
-            (await fixture.TestHarness.Published.Any<CreateHostOrder>()).ShouldBeTrue();
-        }
+        });
+        await fixture.Pollable.Poll(It.IsAny<CancellationToken>());
+        (await fixture.TestHarness.Published.Any<CreateHostOrder>()).ShouldBeTrue();
     }
 }

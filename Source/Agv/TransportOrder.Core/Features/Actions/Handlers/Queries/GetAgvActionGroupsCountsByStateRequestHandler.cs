@@ -6,37 +6,36 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Registries;
 using JetBrains.Annotations;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Actions.Handlers.Queries
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Actions.Handlers.Queries;
+
+/// <summary>
+/// Defines a handler for the GetAgvActionGroups request
+/// </summary>
+[PublicAPI]
+public class GetAgvActionGroupCountsByStateRequestHandler : IConsumer<GetAgvActionGroupCountsByStateRequest>
 {
+    private readonly IActionGroupRegistry _actionGroupRegistry;
+
     /// <summary>
-    /// Defines a handler for the GetAgvActionGroups request
+    /// Constructor
     /// </summary>
-    [PublicAPI]
-    public class GetAgvActionGroupCountsByStateRequestHandler : IConsumer<GetAgvActionGroupCountsByStateRequest>
+    /// <param name="actionGroupRegistry"></param>
+    public GetAgvActionGroupCountsByStateRequestHandler(IActionGroupRegistry actionGroupRegistry)
     {
-        private readonly IActionGroupRegistry _actionGroupRegistry;
+        _actionGroupRegistry = actionGroupRegistry;
+    }
 
-        /// <summary>
-        /// Constructor
-        /// </summary>
-        /// <param name="actionGroupRegistry"></param>
-        public GetAgvActionGroupCountsByStateRequestHandler(IActionGroupRegistry actionGroupRegistry)
-        {
-            _actionGroupRegistry = actionGroupRegistry;
-        }
+    /// <summary>
+    /// Consumer for the GetAgvActionGroupCountsByStateRequest
+    /// </summary>
+    /// <param name="context"></param>
+    /// <returns></returns>
+    public async Task Consume(ConsumeContext<GetAgvActionGroupCountsByStateRequest> context)
+    {
+        AgvGroupCountByStateDto[] actionGroupStateCounts = await Task.WhenAll(Enum.GetValues<ActionGroupState>().Select(state =>
+            _actionGroupRegistry.GetActionGroupsCountAsync(new[] { state })
+                .ContinueWith(actionGroupCount => new AgvGroupCountByStateDto(state, actionGroupCount.Result))));
 
-        /// <summary>
-        /// Consumer for the GetAgvActionGroupCountsByStateRequest
-        /// </summary>
-        /// <param name="context"></param>
-        /// <returns></returns>
-        public async Task Consume(ConsumeContext<GetAgvActionGroupCountsByStateRequest> context)
-        {
-            AgvGroupCountByStateDto[] actionGroupStateCounts = await Task.WhenAll(Enum.GetValues<ActionGroupState>().Select(state =>
-                _actionGroupRegistry.GetActionGroupsCountAsync(new[] { state })
-                    .ContinueWith(actionGroupCount => new AgvGroupCountByStateDto(state, actionGroupCount.Result))));
-
-            await context.RespondAsync(new GetAgvActionGroupCountsByStateResult(actionGroupStateCounts));
-        }
+        await context.RespondAsync(new GetAgvActionGroupCountsByStateResult(actionGroupStateCounts));
     }
 }

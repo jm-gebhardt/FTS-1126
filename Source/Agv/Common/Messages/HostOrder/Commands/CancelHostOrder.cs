@@ -1,29 +1,28 @@
 ﻿using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
-namespace Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Commands
+namespace Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Commands;
+
+/// <summary>
+/// A command from the host system to cancel an existing transport order
+/// </summary>
+[JetBrains.Annotations.PublicAPI]
+public record CancelHostOrder : CorrelatedBy<Guid>
 {
+    /// <inheritdoc/>
+    public Guid CorrelationId { get; }
+
     /// <summary>
-    /// A command from the host system to cancel an existing transport order
+    /// The unique ID of the order known by the host system
     /// </summary>
-    [JetBrains.Annotations.PublicAPI]
-    public record CancelHostOrder : CorrelatedBy<Guid>
+    public string OrderId { get; }
+
+    /// <summary>
+    /// Initializes a new instance of <see cref="CancelHostOrder"/>
+    /// </summary>
+    public CancelHostOrder(Guid correlationId, string orderId)
     {
-        /// <inheritdoc/>
-        public Guid CorrelationId { get; }
-
-        /// <summary>
-        /// The unique ID of the order known by the host system
-        /// </summary>
-        public string OrderId { get; }
-
-        /// <summary>
-        /// Initializes a new instance of <see cref="CancelHostOrder"/>
-        /// </summary>
-        public CancelHostOrder(Guid correlationId, string orderId)
-        {
-            CorrelationId = correlationId;
-            OrderId = orderId;
-        }
+        CorrelationId = correlationId;
+        OrderId = orderId;
     }
 }

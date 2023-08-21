@@ -10,71 +10,70 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs.Errors;
 using JetBrains.Annotations;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Queries
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Queries;
+
+/// <summary>
+/// Defines a handler for the GetAgv <see cref="GetAgvsDtoRequest"/>
+/// Gets all Agv from AgvRegistry sorted by AgvId ascending, returns IEnumerable of Agv
+/// </summary>
+[UsedImplicitly]
+public class GetAgvsDtoRequestHandler : IConsumer<GetAgvsDtoRequest>
 {
+    private readonly IAgvRegistry _agvRegistry;
+    private readonly IActionGroupRegistry _actionGroupRegistry;
+    private readonly IMapper _mapper;
+    private readonly IAgvErrorRegistry _agvErrorRegistry;
+
     /// <summary>
-    /// Defines a handler for the GetAgv <see cref="GetAgvsDtoRequest"/>
-    /// Gets all Agv from AgvRegistry sorted by AgvId ascending, returns IEnumerable of Agv
+    /// <inheritdoc cref="GetAgvsDtoRequestHandler"/>
     /// </summary>
-    [UsedImplicitly]
-    public class GetAgvsDtoRequestHandler : IConsumer<GetAgvsDtoRequest>
+    /// <param name="agvRegistry"></param>
+    /// <param name="actionGroupRegistry"></param>
+    /// <param name="mapper"></param>
+    /// <param name="agvErrorRegistry"></param>
+    public GetAgvsDtoRequestHandler(IAgvRegistry agvRegistry, IActionGroupRegistry actionGroupRegistry, IMapper mapper, IAgvErrorRegistry agvErrorRegistry)
     {
-        private readonly IAgvRegistry _agvRegistry;
-        private readonly IActionGroupRegistry _actionGroupRegistry;
-        private readonly IMapper _mapper;
-        private readonly IAgvErrorRegistry _agvErrorRegistry;
+        _agvRegistry = agvRegistry;
+        _actionGroupRegistry = actionGroupRegistry;
+        _mapper = mapper;
+        _agvErrorRegistry = agvErrorRegistry;
+    }
 
-        /// <summary>
-        /// <inheritdoc cref="GetAgvsDtoRequestHandler"/>
-        /// </summary>
-        /// <param name="agvRegistry"></param>
-        /// <param name="actionGroupRegistry"></param>
-        /// <param name="mapper"></param>
-        /// <param name="agvErrorRegistry"></param>
-        public GetAgvsDtoRequestHandler(IAgvRegistry agvRegistry, IActionGroupRegistry actionGroupRegistry, IMapper mapper, IAgvErrorRegistry agvErrorRegistry)
+    /// <inheritdoc cref="GetAgvsDtoRequestHandler"/>
+    /// <param name="context"></param>
+    /// <returns></returns>
+    public async Task Consume(ConsumeContext<GetAgvsDtoRequest> context)
+    {
+        IQueryable<IAgv> query = _agvRegistry.GetAllAgvs();
+        ICollection<Guid> correlationIds = context.Message.CorrelationIds;
+        if (correlationIds.Any()) // Optionally filter for specific correlation ids
         {
-            _agvRegistry = agvRegistry;
-            _actionGroupRegistry = actionGroupRegistry;
-            _mapper = mapper;
-            _agvErrorRegistry = agvErrorRegistry;
+            query = query.Where(a => correlationIds.Contains(a.CorrelationId));
         }
 
-        /// <inheritdoc cref="GetAgvsDtoRequestHandler"/>
-        /// <param name="context"></param>
-        /// <returns></returns>
-        public async Task Consume(ConsumeContext<GetAgvsDtoRequest> context)
+        List<IAgv> agvs = query.OrderBy(a => a.AgvId).ToList();
+        List<Guid> agvCorrelationIds = agvs.Select(a => a.CorrelationId).ToList();
+
+        Task<IReadOnlyDictionary<Guid, ActionGroup?>> actionGroupsTask = _actionGroupRegistry.GetCurrentAssignedActionGroupsAsync(agvCorrelationIds);
+        Task<IList<AgvError>> errorsTask = _agvErrorRegistry.GetActiveErrorsAsync(agvCorrelationIds);
+
+        await Task.WhenAll(actionGroupsTask, errorsTask);
+
+        Dictionary<Guid, List<AgvError>> allAgvErrors = errorsTask.Result
+            .GroupBy(e => e.AgvCorrelationId)
+            .ToDictionary(e => e.Key, e => e.ToList());
+
+        List<AgvDto> agvDtos = agvs.Select(agv =>
         {
-            IQueryable<IAgv> query = _agvRegistry.GetAllAgvs();
-            ICollection<Guid> correlationIds = context.Message.CorrelationIds;
-            if (correlationIds.Any()) // Optionally filter for specific correlation ids
+            var agvDto = _mapper.Map<AgvDto>(agv);
+            _mapper.Map(actionGroupsTask.Result[agv.CorrelationId], agvDto);
+
+            if (allAgvErrors.TryGetValue(agv.CorrelationId, out List<AgvError>? agvErrors) && agvErrors.Any())
             {
-                query = query.Where(a => correlationIds.Contains(a.CorrelationId));
+                _mapper.Map(agvErrors, agvDto);
             }
-
-            List<IAgv> agvs = query.OrderBy(a => a.AgvId).ToList();
-            List<Guid> agvCorrelationIds = agvs.Select(a => a.CorrelationId).ToList();
-
-            Task<IReadOnlyDictionary<Guid, ActionGroup?>> actionGroupsTask = _actionGroupRegistry.GetCurrentAssignedActionGroupsAsync(agvCorrelationIds);
-            Task<IList<AgvError>> errorsTask = _agvErrorRegistry.GetActiveErrorsAsync(agvCorrelationIds);
-
-            await Task.WhenAll(actionGroupsTask, errorsTask);
-
-            Dictionary<Guid, List<AgvError>> allAgvErrors = errorsTask.Result
-                .GroupBy(e => e.AgvCorrelationId)
-                .ToDictionary(e => e.Key, e => e.ToList());
-
-            List<AgvDto> agvDtos = agvs.Select(agv =>
-            {
-                var agvDto = _mapper.Map<AgvDto>(agv);
-                _mapper.Map(actionGroupsTask.Result[agv.CorrelationId], agvDto);
-
-                if (allAgvErrors.TryGetValue(agv.CorrelationId, out List<AgvError>? agvErrors) && agvErrors.Any())
-                {
-                    _mapper.Map(agvErrors, agvDto);
-                }
-                return agvDto;
-            }).ToList();
-            await context.RespondAsync(new GetAgvsDtoResult(agvDtos));
-        }
+            return agvDto;
+        }).ToList();
+        await context.RespondAsync(new GetAgvsDtoResult(agvDtos));
     }
 }

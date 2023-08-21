@@ -118,7 +118,7 @@ public class AgvStateMachineTest
 
     #region AgvNotFoundResult
     [TestMethod]
-    public async Task When_RequestForUknownAgvIsReceived_ReturnNotFoundResult()
+    public async Task When_RequestForUnknownAgvIsReceived_ReturnNotFoundResult()
     {
         var fixture = new AgvStateMachineTestFixture();
         var agvSaga = AgvSagaGenerator.GenerateAgvSaga(nameof(AgvStateMachine.Discovered));
@@ -259,8 +259,8 @@ public class AgvStateMachineTest
         var agvSaga = new AgvSaga(
             correlationId,
             agvId,
-            fixture.Machine.Discovered.Name,
-            new AgvStatus(correlationId, null, true, true, 10, true, true)
+            currentState: fixture.Machine.Discovered.Name,
+            agvStatus: new AgvStatus(correlationId, null, true, true, 10, true, true)
         );
         // Request timeout already passed
         var utcStart = DateTime.UtcNow;
@@ -306,8 +306,8 @@ public class AgvStateMachineTest
         var agvSaga = new AgvSaga(
             correlationId,
             agvId,
-            fixture.Machine.Discovered.Name,
-            new AgvStatus(correlationId, null, true, true, 10, true, true)
+            currentState: fixture.Machine.Discovered.Name,
+            agvStatus: new AgvStatus(correlationId, null, true, true, 10, true, true)
         );
         // Request timeout already exceeded
         var utcStart = DateTime.UtcNow;
@@ -354,8 +354,8 @@ public class AgvStateMachineTest
         var agvSaga = new AgvSaga(
             correlationId,
             agvId,
-            fixture.Machine.Discovered.Name,
-            new AgvStatus(correlationId, null, true, true, 10, true, true)
+            currentState: fixture.Machine.Discovered.Name,
+            agvStatus: new AgvStatus(correlationId, null, true, true, 10, true, true)
         )
         {
             // Repeat request exceeded but no daily request
@@ -403,8 +403,8 @@ public class AgvStateMachineTest
         var agvSaga = new AgvSaga(
             correlationId,
             agvId,
-            fixture.Machine.Discovered.Name,
-            new AgvStatus(correlationId, null, true, true, 10, true, true)
+            currentState: fixture.Machine.Discovered.Name,
+            agvStatus: new AgvStatus(correlationId, null, true, true, 10, true, true)
         )
         {
             // Repeat request exceeded but no daily request
@@ -482,8 +482,8 @@ public class AgvStateMachineTest
         var agvSaga = new AgvSaga(
             correlationId,
             agvId,
-            fixture.Machine.Discovered.Name,
-            new AgvStatus(correlationId, null, true, true, 10, true, true)
+            currentState: fixture.Machine.Discovered.Name,
+            agvStatus: new AgvStatus(correlationId, null, true, true, 10, true, true)
         )
         {
             AgvGraphRequestedLastTime = DateTime.UtcNow - new TimeSpan(24, 0, 1),
@@ -523,8 +523,8 @@ public class AgvStateMachineTest
         var agvSaga = new AgvSaga(
             correlationId,
             agvId,
-            fixture.Machine.Initial.Name,
-            new AgvStatus(correlationId, null, true, true, 10, true, true)
+            currentState: fixture.Machine.Initial.Name,
+            agvStatus: new AgvStatus(correlationId, null, true, true, 10, true, true)
         )
         {
             AgvGraphRequestedLastTime = DateTime.UtcNow,
@@ -809,10 +809,10 @@ public class AgvStateMachineTest
         var now = DateTime.UtcNow;
         var msg = fixture.SagaHarness.Consumed.Select<AgvOfflineMessage>().First().Context.Message;
         // When triggered by AgvStatusReceived, the timeout depends on the state (and this AGV is idle)
-        double duarationMin = 0.9 * agvOfflineTimeoutMsWhileBusy;
+        double durationMin = 0.9 * agvOfflineTimeoutMsWhileBusy;
         double durationMax = 1.5 * agvOfflineTimeoutMsWhileBusy;
         double duration = (now - msg.Created).TotalMilliseconds;
-        duration.ShouldBeInRange(duarationMin, durationMax);
+        duration.ShouldBeInRange(durationMin, durationMax);
 
         agv = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
         agv.IsOnline.ShouldBeFalse();
@@ -871,10 +871,10 @@ public class AgvStateMachineTest
         var now = DateTime.UtcNow;
         var msg = fixture.SagaHarness.Consumed.Select<AgvOfflineMessage>().First().Context.Message;
         // When triggered by AgvStatusReceived, the timeout depends on the state (and this AGV is idle)
-        double duarationMin = 0.9 * agvOfflineTimeoutMsWhileIdle;
-        double durationMax = 1.5 * agvOfflineTimeoutMsWhileIdle;
+        const double durationMin = 0.9 * agvOfflineTimeoutMsWhileIdle;
+        const double durationMax = 1.5 * agvOfflineTimeoutMsWhileIdle;
         double duration = (now - msg.Created).TotalMilliseconds;
-        duration.ShouldBeInRange(duarationMin, durationMax);
+        duration.ShouldBeInRange(durationMin, durationMax);
 
         agv = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
         agv.IsOnline.ShouldBeFalse();

@@ -4,41 +4,40 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Gebhardt.StoreWare.Agv.CommonTest
+namespace Gebhardt.StoreWare.Agv.CommonTest;
+
+/// <summary>
+/// Tests for ServiceCollectionExtensions
+/// </summary>
+[TestClass]
+public class ServiceCollectionExtensionsTests
 {
     /// <summary>
-    /// Tests for ServiceCollectionExtensions
+    /// Test no RabbitMQ config provided
     /// </summary>
-    [TestClass]
-    public class ServiceCollectionExtensionsTests
+    [TestMethod]
+    [ExpectedException(typeof(InvalidOperationException))]
+    public void ConfigureServices_NoConfigProvided()
     {
-        /// <summary>
-        /// Test no RabbitMQ config provided
-        /// </summary>
-        [TestMethod]
-        [ExpectedException(typeof(InvalidOperationException))]
-        public void ConfigureServices_NoConfigProvided()
-        {
-            var configuration = new ConfigurationBuilder().AddInMemoryCollection(
-                new Dictionary<string, string?>()
-            ).Build();
-            ServiceCollection services = new();
-            services.ConfigureServicesMassTransit(configuration);
-        }
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(
+            new Dictionary<string, string?>()
+        ).Build();
+        ServiceCollection services = new();
+        services.ConfigureServicesMassTransit(configuration);
+    }
 
-        /// <summary>
-        /// Test valid RabbitMQ config provided
-        /// </summary>
-        [TestMethod]
-        public void ConfigureServices_ValidConfigProvided()
-        {
-            string sectionName = new ConfigurationTypeManager().GetSectionName<MassTransitConfiguration>();
-            var configuration = new ConfigurationBuilder().AddInMemoryCollection(
-                new Dictionary<string, string?> {{$"{sectionName}:Url", "127.0.0.1"}}
-            ).Build();
-            ServiceCollection services = new();
+    /// <summary>
+    /// Test valid RabbitMQ config provided
+    /// </summary>
+    [TestMethod]
+    public void ConfigureServices_ValidConfigProvided()
+    {
+        string sectionName = new ConfigurationTypeManager().GetSectionName<MassTransitConfiguration>();
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(
+            new Dictionary<string, string?> {{$"{sectionName}:Url", "127.0.0.1"}}
+        ).Build();
+        ServiceCollection services = new();
 
-            services.ConfigureServicesMassTransit(configuration);
-        }
+        services.ConfigureServicesMassTransit(configuration);
     }
 }

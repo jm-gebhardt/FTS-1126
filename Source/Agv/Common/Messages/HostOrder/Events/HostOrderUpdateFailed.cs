@@ -1,29 +1,28 @@
 ﻿using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
-namespace Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events
+namespace Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
+
+/// <summary>
+/// An event that reports a failed order update
+/// </summary>
+[JetBrains.Annotations.PublicAPI]
+public record HostOrderUpdateFailed : CorrelatedBy<Guid>
 {
+    /// <inheritdoc/>
+    public Guid CorrelationId { get; }
+
     /// <summary>
-    /// An event that reports a failed order update
+    /// The unique ID of the order known by the host system
     /// </summary>
-    [JetBrains.Annotations.PublicAPI]
-    public record HostOrderUpdateFailed : CorrelatedBy<Guid>
+    public string OrderId { get; }
+
+    /// <summary>
+    /// Initializes a new instance of <see cref="HostOrderUpdateFailed"/>
+    /// </summary>
+    public HostOrderUpdateFailed(Guid correlationId, string orderId)
     {
-        /// <inheritdoc/>
-        public Guid CorrelationId { get; }
-
-        /// <summary>
-        /// The unique ID of the order known by the host system
-        /// </summary>
-        public string OrderId { get; }
-
-        /// <summary>
-        /// Initializes a new instance of <see cref="HostOrderUpdateFailed"/>
-        /// </summary>
-        public HostOrderUpdateFailed(Guid correlationId, string orderId)
-        {
-            CorrelationId = correlationId;
-            OrderId = orderId;
-        }
+        CorrelationId = correlationId;
+        OrderId = orderId;
     }
 }

@@ -26,106 +26,105 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs.Errors;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Maps;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Core
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Core;
+
+/// <summary>
+/// IHostBuilder extensions
+/// </summary>
+public static class CoreHostBuilderExtensions
 {
     /// <summary>
-    /// IHostBuilder extensions
+    /// Configured the HostBuilder to used the TransportOrderCore <paramref name="hostBuilder" />
     /// </summary>
-    public static class CoreHostBuilderExtensions
+    /// <param name="hostBuilder"><see cref="IHostBuilder"/></param>
+    /// <param name="productionOptions"><see cref="ProductionOptions"/></param>
+    /// <returns><see cref="IHostBuilder"/></returns>
+    public static IHostBuilder AddTransportOrderCore(this IHostBuilder hostBuilder, ProductionOptions productionOptions)
     {
-        /// <summary>
-        /// Configured the HostBuilder to used the TransportOrderCore <paramref name="hostBuilder" />
-        /// </summary>
-        /// <param name="hostBuilder"><see cref="IHostBuilder"/></param>
-        /// <param name="productionOptions"><see cref="ProductionOptions"/></param>
-        /// <returns><see cref="IHostBuilder"/></returns>
-        public static IHostBuilder AddTransportOrderCore(this IHostBuilder hostBuilder, ProductionOptions productionOptions)
+        ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
+
+        hostBuilder.ConfigureServices((context, services) =>
         {
-            ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
 
-            hostBuilder.ConfigureServices((context, services) =>
-            {
+            RegisterConfigurationServices(productionOptions, services, context);
 
-                RegisterConfigurationServices(productionOptions, services, context);
+            RegisterMapServices(services);
 
-                RegisterMapServices(services);
+            RegisterAgvServices(services);
 
-                RegisterAgvServices(services);
+            RegisterRegistryServices(services);
 
-                RegisterRegistryServices(services);
+            services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+        });
 
-                services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-            });
+        return hostBuilder;
+    }
 
-            return hostBuilder;
-        }
-
-        private static void RegisterConfigurationServices(ProductionOptions productionOptions, IServiceCollection services, HostBuilderContext context)
+    private static void RegisterConfigurationServices(ProductionOptions productionOptions, IServiceCollection services, HostBuilderContext context)
+    {
+        // Configuration
+        services.AddConfigurationTypeManager();
+        services.AddSettingsProviders(ConfigurationTypeManager.Instance);
+        services.AddSingleton(_ => productionOptions);
+        services.AddSingleton<ISettingsProvider<AgvSettings>, SettingsProvider<AgvSettings>>();
+        // -  database
+        services.AddScoped<DatabaseConfigurationSeeder<TransportOrderDbContext>>();
+        services.AddDbContextFactory<TransportOrderDbContext>(builder =>
         {
-            // Configuration
-            services.AddConfigurationTypeManager();
-            services.AddSettingsProviders(ConfigurationTypeManager.Instance);
-            services.AddSingleton(_ => productionOptions);
-            services.AddSingleton<ISettingsProvider<AgvSettings>, SettingsProvider<AgvSettings>>();
-            // -  database
-            services.AddScoped<DatabaseConfigurationSeeder<TransportOrderDbContext>>();
-            services.AddDbContextFactory<TransportOrderDbContext>(builder =>
-            {
-                string? connectionString = context.Configuration.GetConnectionString(TransportOrderDbContext.ConfigSectionName);
-                builder.UseSqlServer(connectionString, m => { m.MigrationsHistoryTable(TransportOrderDbContext.MigrationTableName); });
-            });
-            services.AddDbContextFactory<SagaPersistenceDbContext>(builder =>
-            {
-                string? connectionString = context.Configuration.GetConnectionString(SagaPersistenceDbContext.ConfigSectionName);
-                builder.UseSqlServer(connectionString, m => { m.MigrationsHistoryTable(SagaPersistenceDbContext.MigrationTableName); });
-            });
-        }
-
-        private static void RegisterMapServices(IServiceCollection services)
+            string? connectionString = context.Configuration.GetConnectionString(TransportOrderDbContext.ConfigSectionName);
+            builder.UseSqlServer(connectionString, m => { m.MigrationsHistoryTable(TransportOrderDbContext.MigrationTableName); });
+        });
+        services.AddDbContextFactory<SagaPersistenceDbContext>(builder =>
         {
-            services.AddSingleton<IChargingSemaphoreProvider, ChargingSemaphoreProvider>();
-            services.AddTransient<IChargingPointManager, ChargingPointManager>();
-            services.AddSingleton<IParkingSemaphoreProvider, ParkingSemaphoreProvider>();
-            services.AddTransient<IParkPointService, ParkPointService>();
-            services.AddTransient<IRouteService, RouteService>();
-            services.AddTransient<IRoutingPlausibilityChecker, NoCheckPlausibilityChecker>();
-            services.AddSingleton<IChangeDetector<AgvPositionStatus>, ChangeDetector<AgvPositionStatus>>();
-        }
+            string? connectionString = context.Configuration.GetConnectionString(SagaPersistenceDbContext.ConfigSectionName);
+            builder.UseSqlServer(connectionString, m => { m.MigrationsHistoryTable(SagaPersistenceDbContext.MigrationTableName); });
+        });
+    }
 
-        private static void RegisterAgvServices(IServiceCollection services)
-        {
-            // Actions
-            services.AddTransient<IActionManager, ActionManager>();
-            services.AddSingleton<IActionManagerSemaphoreProvider, ActionManagerSemaphoreProvider>();
-            services.AddTransient<IStartActionService, StartActionService>();
-            services.AddTransient<IChooseAgvActionGroupService, ShortestRouteChooser>();
+    private static void RegisterMapServices(IServiceCollection services)
+    {
+        services.AddSingleton<IChargingSemaphoreProvider, ChargingSemaphoreProvider>();
+        services.AddTransient<IChargingPointManager, ChargingPointManager>();
+        services.AddSingleton<IParkingSemaphoreProvider, ParkingSemaphoreProvider>();
+        services.AddTransient<IParkPointService, ParkPointService>();
+        services.AddTransient<IRouteService, RouteService>();
+        services.AddTransient<IRoutingPlausibilityChecker, NoCheckPlausibilityChecker>();
+        services.AddSingleton<IChangeDetector<AgvPositionStatus>, ChangeDetector<AgvPositionStatus>>();
+    }
 
-            // Agv behaviour
-            services.AddTransient<IAgvService, AgvService>();
-            services.AddTransient<IMaintenanceService, MaintenanceService>();
-            services.AddTransient<IAgvStateService, AgvStateService>();
-            services.AddTransient<IStateObserver<AgvSaga>, AgvStateObserver>();
-            services.AddTransient<IAgvReadyService, AgvReadyService>();
-            services.AddTransient<IChargingService, BaseAgvChargingService>();
-            services.AddTransient<IAgvLoadCapabilityService, AgvLoadCapabilityService>();
-        }
+    private static void RegisterAgvServices(IServiceCollection services)
+    {
+        // Actions
+        services.AddTransient<IActionManager, ActionManager>();
+        services.AddSingleton<IActionManagerSemaphoreProvider, ActionManagerSemaphoreProvider>();
+        services.AddTransient<IStartActionService, StartActionService>();
+        services.AddTransient<IChooseAgvActionGroupService, ShortestRouteChooser>();
 
-        private static void RegisterRegistryServices(IServiceCollection services)
-        {
-            services.AddTransient<IActionGroupRegistry, EfActionGroupRegistry>();
-            services.AddTransient<IAgvRegistry, EfAgvRegistry>();
-            services.AddTransient<IAgvDataRegistry, EfAgvDataRegistry>();
+        // Agv behaviour
+        services.AddTransient<IAgvService, AgvService>();
+        services.AddTransient<IMaintenanceService, MaintenanceService>();
+        services.AddTransient<IAgvStateService, AgvStateService>();
+        services.AddTransient<IStateObserver<AgvSaga>, AgvStateObserver>();
+        services.AddTransient<IAgvReadyService, AgvReadyService>();
+        services.AddTransient<IChargingService, BaseAgvChargingService>();
+        services.AddTransient<IAgvLoadCapabilityService, AgvLoadCapabilityService>();
+    }
 
-            services.AddSingleton<IMapRegistrySemaphoreProvider, MapRegistrySemaphoreProvider>();
-            services.AddTransient<IMapRegistry, EfMapRegistry>();
-            services.AddTransient<IAgvGraphRegistry, EfAgvGraphRegistry>();
+    private static void RegisterRegistryServices(IServiceCollection services)
+    {
+        services.AddTransient<IActionGroupRegistry, EfActionGroupRegistry>();
+        services.AddTransient<IAgvRegistry, EfAgvRegistry>();
+        services.AddTransient<IAgvDataRegistry, EfAgvDataRegistry>();
 
-            services.AddSingleton<INodeStateDbSemaphoreProvider, NodeStateDbSemaphoreProvider>();
-            services.AddTransient<INodeStateRegistry, EfNodeStateRegistry>();
+        services.AddSingleton<IMapRegistrySemaphoreProvider, MapRegistrySemaphoreProvider>();
+        services.AddTransient<IMapRegistry, EfMapRegistry>();
+        services.AddTransient<IAgvGraphRegistry, EfAgvGraphRegistry>();
 
-            services.AddSingleton<IConcurrentDictionaryProvider<Guid, AgvPositionStatus>, AgvPositionDictionaryProvider>();
-            services.AddTransient<IAgvPositionRegistry, AgvPositionRegistry>();
-            services.AddTransient<IAgvErrorRegistry, EfAgvErrorRegistry>();
-        }
+        services.AddSingleton<INodeStateDbSemaphoreProvider, NodeStateDbSemaphoreProvider>();
+        services.AddTransient<INodeStateRegistry, EfNodeStateRegistry>();
+
+        services.AddSingleton<IConcurrentDictionaryProvider<Guid, AgvPositionStatus>, AgvPositionDictionaryProvider>();
+        services.AddTransient<IAgvPositionRegistry, AgvPositionRegistry>();
+        services.AddTransient<IAgvErrorRegistry, EfAgvErrorRegistry>();
     }
 }

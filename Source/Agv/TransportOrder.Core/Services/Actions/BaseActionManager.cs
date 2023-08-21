@@ -107,25 +107,26 @@ public abstract class BaseActionManager : IActionManager
         _semaphoreProvider = semaphoreProvider;
     }
 
-    private static ActionGroup CreateActionGroup(Guid agvCorrelationId, string nodeId, string actionDescription, ActionType actionType = ActionType.Move)
+    private static ActionGroup CreateActionGroup(Guid agvCorrelationId, string nodeId, string actionDescription, ActionGroupCreator creator, ActionType actionType = ActionType.Move)
     {
         var groupCorrelationId = Guid.NewGuid();
         var actionGroup = new ActionGroup(
             groupCorrelationId,
             $"Automatic {actionDescription}",
             actions: new List<AgvAction> {new(Guid.NewGuid(), actionType, nodeId, groupCorrelationId)},
-            assignedAgv: agvCorrelationId
+            assignedAgv: agvCorrelationId, 
+            creator:creator
         );
 
         return actionGroup;
     }
 
-    private async Task<AgvAction> AddActionAsync(Guid agvCorrelationId, GraphNode node, ActionType actionType, string? actionDescription = null)
-        => await AddActionAsync(agvCorrelationId, node.Id, actionType, actionDescription);
+    private async Task<AgvAction> AddActionAsync(Guid agvCorrelationId, GraphNode node, ActionType actionType, ActionGroupCreator creator, string? actionDescription = null)
+        => await AddActionAsync(agvCorrelationId, node.Id, actionType, creator, actionDescription);
 
-    private async Task<AgvAction> AddActionAsync(Guid agvCorrelationId, string nodeId, ActionType actionType, string? actionDescription = null)
+    private async Task<AgvAction> AddActionAsync(Guid agvCorrelationId, string nodeId, ActionType actionType, ActionGroupCreator creator, string? actionDescription = null)
     {
-        var actionGroup = CreateActionGroup(agvCorrelationId, nodeId, actionDescription ?? actionType.ToString(), actionType);
+        var actionGroup = CreateActionGroup(agvCorrelationId, nodeId, actionDescription ?? actionType.ToString(), creator, actionType);
         await AddActionGroupAsync(actionGroup);
         return actionGroup.Actions.First();
     }
@@ -313,7 +314,7 @@ public abstract class BaseActionManager : IActionManager
         Logger.LogInformation("Starting charge action for Agv with CorrelationId: {AgvCorrelationId}", agv.CorrelationId);
 
         var chargingNode = await _chargingPointManager.ReserveChargerAsync(agv);
-        var action = await AddActionAsync(agv.CorrelationId, chargingNode, ActionType.Charge);
+        var action = await AddActionAsync(agv.CorrelationId, chargingNode, ActionType.Charge, creator: ActionGroupCreator.TransportOrder);
         return action;
     }
 
@@ -328,7 +329,7 @@ public abstract class BaseActionManager : IActionManager
         Logger.LogInformation("Starting maintenance action for Agv with CorrelationId: {AgvCorrelationId}", agv.CorrelationId);
 
         var maintenanceNode = await MaintenanceService.GetMaintenanceNode(agv);
-        var action = await AddActionAsync(agv.CorrelationId, maintenanceNode, ActionType.Move, "maintenance");
+        var action = await AddActionAsync(agv.CorrelationId, maintenanceNode, ActionType.Move, ActionGroupCreator.TransportOrder,"maintenance");
 
         return action;
     }
@@ -348,7 +349,7 @@ public abstract class BaseActionManager : IActionManager
         Logger.LogInformation("Starting park action for Agv with CorrelationId: {AgvCorrelationId}", agv.CorrelationId);
 
         var parkNode = await _parkPointService.ReserveParkAsync(agv);
-        var action = await AddActionAsync(agv.CorrelationId, parkNode, ActionType.Move, "park");
+        var action = await AddActionAsync(agv.CorrelationId, parkNode, ActionType.Move, ActionGroupCreator.TransportOrder, "park");
 
         return action;
     }

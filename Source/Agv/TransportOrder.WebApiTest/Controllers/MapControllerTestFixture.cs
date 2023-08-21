@@ -12,142 +12,141 @@ using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
+namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers;
+
+public class MapControllerTestFixture<TRequest, TRequestHandler> : ControllerTestFixture<TRequest, TRequestHandler, MapController>
+    where TRequest : class
+    where TRequestHandler : class, IConsumer
 {
-    public class MapControllerTestFixture<TRequest, TRequestHandler> : ControllerTestFixture<TRequest, TRequestHandler, MapController>
-        where TRequest : class
-        where TRequestHandler : class, IConsumer
-    {
-        public const string Base64String = "dGhlIHF1aWNrIGJyb3duIGZveCBqdW1wIG92ZXIgdGhlIGxhenkgZG9n";
+    public const string Base64String = "dGhlIHF1aWNrIGJyb3duIGZveCBqdW1wIG92ZXIgdGhlIGxhenkgZG9n";
 
-        private readonly Mock<IAgvGraphRegistry> _agvGraphRegistry = new();
+    private readonly Mock<IAgvGraphRegistry> _agvGraphRegistry = new();
         
-        private readonly string[] _agvIds = {"AGV001", "AGV002", "AGV003"};
-        private readonly string[] _orders = {"ORDER001", "ORDER002", ""};
-        private readonly string[] _states = {nameof(AgvStateMachine.Idle), nameof(AgvStateMachine.Busy), nameof(AgvStateMachine.Discovered)};
+    private readonly string[] _agvIds = {"AGV001", "AGV002", "AGV003"};
+    private readonly string[] _orders = {"ORDER001", "ORDER002", ""};
+    private readonly string[] _states = {nameof(AgvStateMachine.Idle), nameof(AgvStateMachine.Busy), nameof(AgvStateMachine.Discovered)};
 
-        private readonly Guid[] _correlationIds =
+    private readonly Guid[] _correlationIds =
+    {
+        new("7FE9372B-4219-4D09-8885-966EE125A350"),
+        new("041AD79E-1952-4AB7-BD3E-9EC972E27FBF"),
+        new("465A85A6-6A02-4068-A7AA-E3B4B9821019")
+    };
+
+    protected override MapController GetController()
+    {
+        IRequestClient<GetMapListRequest> getMapListRequestClient = GetRequestClient<GetMapListRequest>();
+        IRequestClient<GetMapImageRequest> getMapImageRequestClient = GetRequestClient<GetMapImageRequest>();
+
+        var controller = new MapController(getMapListRequestClient, getMapImageRequestClient);
+
+        return controller;
+    }
+
+    private Mock<IMapRegistry> GetMapRegistry()
+    {
+        var mapRegistryMock = new Mock<IMapRegistry>();
+
+        mapRegistryMock.Setup(x => x.GetAllMaps()).Returns(new EnumerableQuery<Map>(new List<Map>
         {
-            new("7FE9372B-4219-4D09-8885-966EE125A350"),
-            new("041AD79E-1952-4AB7-BD3E-9EC972E27FBF"),
-            new("465A85A6-6A02-4068-A7AA-E3B4B9821019")
-        };
+            new(_correlationIds[0], "Area51_Floor1_Compartment47", Encoding.UTF8.GetBytes(Base64String), 0.01, 1, 2, DateTime.UtcNow),
+            new(_correlationIds[1], "Area51_Floor1_Compartment48", Encoding.UTF8.GetBytes(Base64String), 0.02, 2, 3, DateTime.UtcNow),
+            new(_correlationIds[2], "Area51_Floor1_Compartment49", Encoding.UTF8.GetBytes(Base64String), 0.03, 2, 1, DateTime.UtcNow)
+        }));
+        mapRegistryMock.Setup(x => x.GetMap(It.IsAny<Guid>())).Returns(Encoding.UTF8.GetBytes(Base64String));
 
-        protected override MapController GetController()
+        return mapRegistryMock;
+    }
+
+    private Mock<IAgvRegistry> GetAgvRegistry()
+    {
+        var registryMock = new Mock<IAgvRegistry>();
+
+        var agvs = new List<IAgv>();
+
+        for (int i = 0; i < _agvIds.Length; i++)
         {
-            IRequestClient<GetMapListRequest> getMapListRequestClient = GetRequestClient<GetMapListRequest>();
-            IRequestClient<GetMapImageRequest> getMapImageRequestClient = GetRequestClient<GetMapImageRequest>();
+            string agvId = _agvIds[i];
+            string orderId = _orders[i];
+            string state = _states[i];
+            var correlationId = _correlationIds[i];
+            var agvStatus = new AgvStatus(correlationId, orderId, true, true, 10, true, true);
 
-            var controller = new MapController(getMapListRequestClient, getMapImageRequestClient);
-
-            return controller;
+            agvs.Add(new AgvSaga(correlationId, agvId, state, agvStatus));
         }
 
-        private Mock<IMapRegistry> GetMapRegistry()
+        registryMock.SetupGet(x => x.Count).Returns(agvs.Count);
+        registryMock.SetupGet(x => x.CountIdle).Returns(agvs.Where(x => x.CurrentState == nameof(AgvStateMachine.Idle)).Count);
+        registryMock.Setup(x => x.GetIdleAgvs()).Returns(new EnumerableQuery<IAgv>(agvs.Where(x => x.CurrentState == nameof(AgvStateMachine.Idle))));
+        registryMock.Setup(x => x.GetAllAgvs()).Returns(new EnumerableQuery<IAgv>(agvs));
+        registryMock.Setup(x => x.GetAgv(It.IsAny<Guid>())).Returns<Guid>(correlationId => agvs.SingleOrDefault(a => a.CorrelationId == correlationId));
+
+        return registryMock;
+    }
+
+    /// <summary>
+    /// Adds the service to the service collection
+    /// </summary>
+    /// <param name="serviceAction">The action of the service to add</param>
+    /// <returns></returns>
+    [UsedImplicitly]
+    public MapControllerTestFixture<TRequest, TRequestHandler> AddService(Action<IServiceCollection> serviceAction)
+    {
+        AddServices(serviceAction);
+        return this;
+    }
+
+    /// <summary>
+    /// Uses the default services
+    /// </summary>
+    /// <returns></returns>
+    public MapControllerTestFixture<TRequest, TRequestHandler> UseDefaultServices()
+    {
+        AddServices(sc =>
         {
-            var mapRegistryMock = new Mock<IMapRegistry>();
+            sc.AddTransient(_ => GetMapRegistry().Object);
+            sc.AddTransient(_ => GetAgvRegistry().Object);
+            sc.AddTransient(_ => GetMapper());
+            sc.AddTransient(_ => _agvGraphRegistry.Object);
+        });
+        return this;
+    }
 
-            mapRegistryMock.Setup(x => x.GetAllMaps()).Returns(new EnumerableQuery<Map>(new List<Map>
-            {
-                new(_correlationIds[0], "Area51_Floor1_Compartment47", Encoding.UTF8.GetBytes(Base64String), 0.01, 1, 2, DateTime.UtcNow),
-                new(_correlationIds[1], "Area51_Floor1_Compartment48", Encoding.UTF8.GetBytes(Base64String), 0.02, 2, 3, DateTime.UtcNow),
-                new(_correlationIds[2], "Area51_Floor1_Compartment49", Encoding.UTF8.GetBytes(Base64String), 0.03, 2, 1, DateTime.UtcNow)
-            }));
-            mapRegistryMock.Setup(x => x.GetMap(It.IsAny<Guid>())).Returns(Encoding.UTF8.GetBytes(Base64String));
+    public MapControllerTestFixture<TRequest, TRequestHandler> WithAgvGraphs(List<AgvGraph> agvGraphs)
+    {
+        _agvGraphRegistry.Setup(x => x.GetAllAgvGraphsAsync()).ReturnsAsync(agvGraphs);
+        return this;
+    }
 
-            return mapRegistryMock;
-        }
+    /// <summary>
+    /// Adds the <see cref="IMapRegistry"/> mock object
+    /// </summary>
+    /// <returns></returns>
+    [UsedImplicitly]
+    public MapControllerTestFixture<TRequest, TRequestHandler> AddMapRegistryMock(Action<Mock<IMapRegistry>> mapRegistryAction)
+    {
+        var mapRegistryMock = new Mock<IMapRegistry>();
+        mapRegistryAction.Invoke(mapRegistryMock);
 
-        private Mock<IAgvRegistry> GetAgvRegistry()
-        {
-            var registryMock = new Mock<IAgvRegistry>();
+        AddServices(sc => sc.AddTransient(_ => mapRegistryMock.Object));
 
-            var agvs = new List<IAgv>();
+        return this;
+    }
 
-            for (int i = 0; i < _agvIds.Length; i++)
-            {
-                string agvId = _agvIds[i];
-                string orderId = _orders[i];
-                string state = _states[i];
-                var correlationId = _correlationIds[i];
-                var agvStatus = new AgvStatus(correlationId, orderId, true, true, 10, true, true);
+    /// <summary>
+    /// Adds the <see cref="IMapRegistry"/> mock object
+    /// </summary>
+    /// <returns></returns>
+    public MapControllerTestFixture<TRequest, TRequestHandler> AddMapRegistryMock()
+    {
+        AddServices(sc => sc.AddTransient(_ => GetMapRegistry().Object));
 
-                agvs.Add(new AgvSaga(correlationId, agvId, state, agvStatus));
-            }
+        return this;
+    }
 
-            registryMock.SetupGet(x => x.Count).Returns(agvs.Count);
-            registryMock.SetupGet(x => x.CountIdle).Returns(agvs.Where(x => x.CurrentState == nameof(AgvStateMachine.Idle)).Count);
-            registryMock.Setup(x => x.GetIdleAgvs()).Returns(new EnumerableQuery<IAgv>(agvs.Where(x => x.CurrentState == nameof(AgvStateMachine.Idle))));
-            registryMock.Setup(x => x.GetAllAgvs()).Returns(new EnumerableQuery<IAgv>(agvs));
-            registryMock.Setup(x => x.GetAgv(It.IsAny<Guid>())).Returns<Guid>(correlationId => agvs.SingleOrDefault(a => a.CorrelationId == correlationId));
-
-            return registryMock;
-        }
-
-        /// <summary>
-        /// Adds the service to the service collection
-        /// </summary>
-        /// <param name="serviceAction">The action of the service to add</param>
-        /// <returns></returns>
-        [UsedImplicitly]
-        public MapControllerTestFixture<TRequest, TRequestHandler> AddService(Action<IServiceCollection> serviceAction)
-        {
-            AddServices(serviceAction);
-            return this;
-        }
-
-        /// <summary>
-        /// Uses the default services
-        /// </summary>
-        /// <returns></returns>
-        public MapControllerTestFixture<TRequest, TRequestHandler> UseDefaultServices()
-        {
-            AddServices(sc =>
-            {
-                sc.AddTransient(_ => GetMapRegistry().Object);
-                sc.AddTransient(_ => GetAgvRegistry().Object);
-                sc.AddTransient(_ => GetMapper());
-                sc.AddTransient(_ => _agvGraphRegistry.Object);
-            });
-            return this;
-        }
-
-        public MapControllerTestFixture<TRequest, TRequestHandler> WithAgvGraphs(List<AgvGraph> agvGraphs)
-        {
-            _agvGraphRegistry.Setup(x => x.GetAllAgvGraphsAsync()).ReturnsAsync(agvGraphs);
-            return this;
-        }
-
-        /// <summary>
-        /// Adds the <see cref="IMapRegistry"/> mock object
-        /// </summary>
-        /// <returns></returns>
-        [UsedImplicitly]
-        public MapControllerTestFixture<TRequest, TRequestHandler> AddMapRegistryMock(Action<Mock<IMapRegistry>> mapRegistryAction)
-        {
-            var mapRegistryMock = new Mock<IMapRegistry>();
-            mapRegistryAction.Invoke(mapRegistryMock);
-
-            AddServices(sc => sc.AddTransient(_ => mapRegistryMock.Object));
-
-            return this;
-        }
-
-        /// <summary>
-        /// Adds the <see cref="IMapRegistry"/> mock object
-        /// </summary>
-        /// <returns></returns>
-        public MapControllerTestFixture<TRequest, TRequestHandler> AddMapRegistryMock()
-        {
-            AddServices(sc => sc.AddTransient(_ => GetMapRegistry().Object));
-
-            return this;
-        }
-
-        public new MapControllerTestFixture<TRequest, TRequestHandler> Build()
-        {
-            base.Build();
-            return this;
-        }
+    public new MapControllerTestFixture<TRequest, TRequestHandler> Build()
+    {
+        base.Build();
+        return this;
     }
 }

@@ -2,31 +2,30 @@
 using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Events
+namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Events;
+
+/// <summary>
+/// Transformation of <see cref="StationList"/> into MassTransit message.
+/// </summary>
+[JetBrains.Annotations.PublicAPI]
+public record InternalStationListReceived : CorrelatedBy<Guid>
 {
+    /// <inheritdoc/>
+    public Guid CorrelationId { get; }
+
     /// <summary>
-    /// Transformation of <see cref="StationList"/> into MassTransit message.
+    /// See <see cref="StationList"/>.
     /// </summary>
-    [JetBrains.Annotations.PublicAPI]
-    public record InternalStationListReceived : CorrelatedBy<Guid>
+    public MqttStationList StationList { get; }
+
+    /// <summary>
+    /// Build station list message.
+    /// </summary>
+    /// <param name="correlationId"></param>
+    /// <param name="stationList"></param>
+    public InternalStationListReceived(Guid correlationId, MqttStationList stationList)
     {
-        /// <inheritdoc/>
-        public Guid CorrelationId { get; }
-
-        /// <summary>
-        /// See <see cref="StationList"/>.
-        /// </summary>
-        public MqttStationList StationList { get; }
-
-        /// <summary>
-        /// Build station list message.
-        /// </summary>
-        /// <param name="correlationId"></param>
-        /// <param name="stationList"></param>
-        public InternalStationListReceived(Guid correlationId, MqttStationList stationList)
-        {
-            CorrelationId = correlationId;
-            StationList = stationList;
-        }
+        CorrelationId = correlationId;
+        StationList = stationList;
     }
 }

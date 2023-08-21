@@ -1,24 +1,23 @@
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders
+namespace Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
+
+/// <summary>
+/// Provides settings
+/// </summary>
+/// <typeparam name="TSettings"></typeparam>
+public interface ISettingsProvider<out TSettings> where TSettings : class, ISettings<TSettings>
 {
     /// <summary>
-    /// Provides settings
+    /// Retrieves the settings
     /// </summary>
-    /// <typeparam name="TSettings"></typeparam>
-    public interface ISettingsProvider<out TSettings> where TSettings : class, ISettings<TSettings>
-    {
-        /// <summary>
-        /// Retrieves the settings
-        /// </summary>
-        /// <returns></returns>
-        TSettings GetSettings();
+    /// <returns></returns>
+    TSettings GetSettings();
 
-        /// <summary>
-        /// Returns true if the settings were found
-        /// </summary>
-        /// <returns></returns>
-        [UsedImplicitly] 
-        bool DoTheSettingsExist();
-    }
+    /// <summary>
+    /// Returns true if the settings were found
+    /// </summary>
+    /// <returns></returns>
+    [UsedImplicitly] 
+    bool DoTheSettingsExist();
 }

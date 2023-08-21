@@ -5,60 +5,59 @@ using System.Text.Json;
 using Gebhardt.StoreWare.Agv.Common.Exceptions;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Middleware
+namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Middleware;
+
+/// <summary>
+/// Handler for exceptions that can occur during execution of controllers
+/// </summary>
+public class ExceptionHandlerMiddleware : IMiddleware
 {
-    /// <summary>
-    /// Handler for exceptions that can occur during execution of controllers
-    /// </summary>
-    public class ExceptionHandlerMiddleware : IMiddleware
+    /// <inheritdoc />
+    public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
-        /// <inheritdoc />
-        public async Task InvokeAsync(HttpContext context, RequestDelegate next)
+        try
         {
-            try
-            {
-                await next(context);
-            }
-            catch (Exception ex)
-            {
-                await HandleExceptionAsync(context, ex);
-            }
+            await next(context);
+        }
+        catch (Exception ex)
+        {
+            await HandleExceptionAsync(context, ex);
+        }
+    }
+
+    private Task HandleExceptionAsync(HttpContext context, Exception exception)
+    {
+        HttpStatusCode statusCode;
+
+        if (exception is RequestFaultException or RequestException && exception.InnerException != null)
+        {
+            exception = exception.InnerException;
         }
 
-        private Task HandleExceptionAsync(HttpContext context, Exception exception)
+        var problem = new ProblemDetails
         {
-            HttpStatusCode statusCode;
+            Detail = exception.Message,
+            Type = exception.GetType().ToString()
+        };
 
-            if (exception is RequestFaultException or RequestException && exception.InnerException != null)
-            {
-                exception = exception.InnerException;
-            }
+        switch (exception)
+        {
+            case NotFoundException:
+                statusCode = HttpStatusCode.NotFound;
+                break;
 
-            var problem = new ProblemDetails
-            {
-                Detail = exception.Message,
-                Type = exception.GetType().ToString()
-            };
+            case NotInCorrectStateException:
+                statusCode = HttpStatusCode.BadRequest;
+                break;
 
-            switch (exception)
-            {
-                case NotFoundException:
-                    statusCode = HttpStatusCode.NotFound;
-                    break;
-
-                case NotInCorrectStateException:
-                    statusCode = HttpStatusCode.BadRequest;
-                    break;
-
-                default:
-                    statusCode = HttpStatusCode.InternalServerError;
-                    break;
-            }
-
-            string result = JsonSerializer.Serialize(problem);
-            context.Response.StatusCode = (int) statusCode;
-            context.Response.ContentType = "application/json";
-            return context.Response.WriteAsync(result);
+            default:
+                statusCode = HttpStatusCode.InternalServerError;
+                break;
         }
+
+        string result = JsonSerializer.Serialize(problem);
+        context.Response.StatusCode = (int) statusCode;
+        context.Response.ContentType = "application/json";
+        return context.Response.WriteAsync(result);
     }
 }

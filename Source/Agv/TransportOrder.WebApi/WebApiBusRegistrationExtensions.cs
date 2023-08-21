@@ -1,25 +1,24 @@
 ﻿using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Consumer;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi
+namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi;
+
+/// <summary>
+/// IBusRegistrationExtensions extensions
+/// </summary>
+public static class WebApiBusRegistrationExtensions
 {
     /// <summary>
-    /// IBusRegistrationExtensions extensions
+    /// 
     /// </summary>
-    public static class WebApiBusRegistrationExtensions
+    /// <param name="busRegistrationConfigurator"></param>
+    /// <returns></returns>
+    public static void AddWebApiConsumer(this IBusRegistrationConfigurator busRegistrationConfigurator)
     {
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="busRegistrationConfigurator"></param>
-        /// <returns></returns>
-        public static void AddWebApiConsumer(this IBusRegistrationConfigurator busRegistrationConfigurator)
-        {
-            busRegistrationConfigurator.AddConsumer<ActionGroupCreatedConsumer>();
-            busRegistrationConfigurator.AddConsumer<ActionGroupChangedConsumer>();
-            busRegistrationConfigurator.AddConsumer<AgvPositionChangedConsumer>();
-            busRegistrationConfigurator.AddConsumer<AgvPropertyChangedConsumer>();
-            busRegistrationConfigurator.AddConsumer<AgvStateChangedConsumer>();
-        }
+        busRegistrationConfigurator.AddConsumer<ActionGroupCreatedConsumer>();
+        busRegistrationConfigurator.AddConsumer<ActionGroupChangedConsumer>();
+        busRegistrationConfigurator.AddConsumer<AgvPositionChangedConsumer>();
+        busRegistrationConfigurator.AddConsumer<AgvPropertyChangedConsumer>();
+        busRegistrationConfigurator.AddConsumer<AgvStateChangedConsumer>();
     }
 }

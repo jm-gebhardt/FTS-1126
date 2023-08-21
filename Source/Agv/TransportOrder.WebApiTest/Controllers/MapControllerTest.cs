@@ -9,67 +9,66 @@ using System.Text;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers
+namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers;
+
+[TestClass]
+public class MapControllerTest
 {
-    [TestClass]
-    public class MapControllerTest
+    [TestMethod]
+    public async Task GetMaps_ShouldSendProperCommandToMediator_WhereRequestIsNotDefined()
     {
-        [TestMethod]
-        public async Task GetMaps_ShouldSendProperCommandToMediator_WhereRequestIsNotDefined()
+        var expectedAgvGraphs = new List<AgvGraph>
         {
-            var expectedAgvGraphs = new List<AgvGraph>
-            {
-                AgvGraphGenerator.CreateDefaultGraph(Guid.NewGuid()),
-                AgvGraphGenerator.CreateDefaultGraph(Guid.NewGuid())
-            };
+            AgvGraphGenerator.CreateDefaultGraph(Guid.NewGuid()),
+            AgvGraphGenerator.CreateDefaultGraph(Guid.NewGuid())
+        };
 
-            MapControllerTestFixture<GetMapListRequest, GetMapListRequestHandler> fixture = new MapControllerTestFixture<GetMapListRequest, GetMapListRequestHandler>()
-                .WithAgvGraphs(expectedAgvGraphs)
-                .UseDefaultServices()
-                .Build();
-            var mapController = fixture.Controller;
-            ActionResult<IEnumerable<MapDto>> response = await mapController.GetMaps();
+        MapControllerTestFixture<GetMapListRequest, GetMapListRequestHandler> fixture = new MapControllerTestFixture<GetMapListRequest, GetMapListRequestHandler>()
+            .WithAgvGraphs(expectedAgvGraphs)
+            .UseDefaultServices()
+            .Build();
+        var mapController = fixture.Controller;
+        ActionResult<IEnumerable<MapDto>> response = await mapController.GetMaps();
 
-            var result = response.Result as OkObjectResult;
-            var resultValue = result!.Value as IList<MapDto>;
+        var result = response.Result as OkObjectResult;
+        var resultValue = result!.Value as IList<MapDto>;
 
-            resultValue.ShouldNotBeEmpty();
+        resultValue.ShouldNotBeEmpty();
 
-            var harness = fixture.TestHarness!;
+        var harness = fixture.TestHarness!;
 
-            (await harness.Consumed.Any<GetMapListRequest>()).ShouldBeTrue();
-            (await harness.Consumed.Any<GetMapListResult>()).ShouldBeTrue();
+        (await harness.Consumed.Any<GetMapListRequest>()).ShouldBeTrue();
+        (await harness.Consumed.Any<GetMapListResult>()).ShouldBeTrue();
 
-            (await harness.Published.Any<GetMapListRequest>()).ShouldBeTrue();
-            (await harness.Published.Any<GetMapListResult>()).ShouldBeTrue();
-        }
+        (await harness.Published.Any<GetMapListRequest>()).ShouldBeTrue();
+        (await harness.Published.Any<GetMapListResult>()).ShouldBeTrue();
+    }
 
-        [TestMethod]
-        public async Task GetMap_ShouldSendProperCommandToMediator_WhereCorrelationIdIsValid()
-        {
-            byte[] imageByteArray = Encoding.UTF8.GetBytes(MapControllerTestFixture<GetMapImageRequest, GetMapImageRequestHandler>.Base64String);
-            Guid correlationId = new("7FE9372B-4219-4D09-8885-966EE125A350");
+    [TestMethod]
+    public async Task GetMap_ShouldSendProperCommandToMediator_WhereCorrelationIdIsValid()
+    {
+        byte[] imageByteArray = Encoding.UTF8.GetBytes(MapControllerTestFixture<GetMapImageRequest, GetMapImageRequestHandler>.Base64String);
+        Guid correlationId = new("7FE9372B-4219-4D09-8885-966EE125A350");
 
-            MapControllerTestFixture<GetMapImageRequest, GetMapImageRequestHandler> fixture = new MapControllerTestFixture<GetMapImageRequest, GetMapImageRequestHandler>()
-                .AddMapRegistryMock()
-                .Build();
+        MapControllerTestFixture<GetMapImageRequest, GetMapImageRequestHandler> fixture = new MapControllerTestFixture<GetMapImageRequest, GetMapImageRequestHandler>()
+            .AddMapRegistryMock()
+            .Build();
 
-            var mapController = fixture.Controller;
-            var response = await mapController.GetMap(correlationId);
+        var mapController = fixture.Controller;
+        var response = await mapController.GetMap(correlationId);
 
-            var result = response as FileContentResult;
-            byte[] resultValue = result!.FileContents;
+        var result = response as FileContentResult;
+        byte[] resultValue = result!.FileContents;
 
-            resultValue.ShouldNotBeEmpty();
-            resultValue.ShouldBeEquivalentTo(imageByteArray);
+        resultValue.ShouldNotBeEmpty();
+        resultValue.ShouldBeEquivalentTo(imageByteArray);
 
-            var harness = fixture.TestHarness!;
+        var harness = fixture.TestHarness!;
 
-            (await harness.Consumed.Any<GetMapImageRequest>()).ShouldBeTrue();
-            (await harness.Consumed.Any<GetMapImageResult>()).ShouldBeTrue();
+        (await harness.Consumed.Any<GetMapImageRequest>()).ShouldBeTrue();
+        (await harness.Consumed.Any<GetMapImageResult>()).ShouldBeTrue();
 
-            (await harness.Published.Any<GetMapImageRequest>()).ShouldBeTrue();
-            (await harness.Published.Any<GetMapImageResult>()).ShouldBeTrue();
-        }
+        (await harness.Published.Any<GetMapImageRequest>()).ShouldBeTrue();
+        (await harness.Published.Any<GetMapImageResult>()).ShouldBeTrue();
     }
 }

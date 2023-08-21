@@ -51,7 +51,7 @@ public class ActionManagerFixture
 
     public Mock<IAgvStateService> AgvStateService { get; } = new();
 
-    public ActionManagerFixture()
+    public ActionManagerFixture(IBus? bus=null)
     {
         ActionGroupRegistry.Setup(x => x.GetNotStartedActionGroupsAsync(It.IsAny<Guid>())).ReturnsAsync(_notStartedActionGroups);
         ActionGroupRegistry.Setup(x => x.AddAsync(It.IsAny<ActionGroup>())).Callback((ActionGroup actionGroup) => { AddActionGroup(actionGroup); });
@@ -69,7 +69,7 @@ public class ActionManagerFixture
         ChargingService.Setup(x => x.GetChargingAgvsWithGoodBatteryLevel()).Returns(_chargingAgvsWithGoodBatteryLevel);
 
         ActionManager = new ActionManager(
-            Bus.Object,
+            bus??Bus.Object,
             ActionGroupRegistry.Object,
             RouteService.Object,
             ChargingPointManager.Object,

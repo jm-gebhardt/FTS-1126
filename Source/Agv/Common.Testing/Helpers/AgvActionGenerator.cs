@@ -14,7 +14,7 @@ public static class AgvActionGenerator
             chargeAction.Nodes = new[] {targetNodeId};
         }
 
-        var actionGroup = new ActionGroup(groupId, orderId, new List<AgvAction> {chargeAction})
+        var actionGroup = new ActionGroup(groupId, orderId, new List<AgvAction> {chargeAction}, ActionGroupCreator.TransportOrder)
         {
             State = ActionGroupState.Created
         };
@@ -55,7 +55,7 @@ public static class AgvActionGenerator
             State = actionState
         };
 
-        var actionGroup = new ActionGroup(groupId, orderId, new List<AgvAction> {pickAction, dropAction})
+        var actionGroup = new ActionGroup(groupId, orderId, new List<AgvAction> {pickAction, dropAction}, ActionGroupCreator.Wms)
         {
             State = actionGroupState,
             AssignedAgv = assignedAgv
@@ -74,7 +74,7 @@ public static class AgvActionGenerator
             moveAction.Nodes = new[] {targetNodeId};
         }
 
-        var actionGroup = new ActionGroup(groupId, orderId, new List<AgvAction> {moveAction}, isManual:isManual)
+        var actionGroup = new ActionGroup(groupId, orderId, new List<AgvAction> {moveAction}, isManual:isManual, creator:ActionGroupCreator.TransportOrderWebApi)
         {
             State = ActionGroupState.Created
         };
@@ -87,7 +87,7 @@ public static class AgvActionGenerator
         var groupId = Guid.NewGuid();
         const string orderId = "orderId";
         
-        return new ActionGroup(groupId, orderId, actions)
+        return new ActionGroup(groupId, orderId, actions, ActionGroupCreator.Wms)
         {
             State = actionGroupState
         };

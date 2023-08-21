@@ -7,113 +7,112 @@ using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
+namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers;
+
+/// <summary>
+/// RequestAgvMapConsumerTest
+/// </summary>
+[TestClass]
+public class AgvMapConsumerTest
 {
-    /// <summary>
-    /// RequestAgvMapConsumerTest
-    /// </summary>
-    [TestClass]
-    public class AgvMapConsumerTest
+    private const string AgvId = "Agv01";
+    private const string MapId = "baseMap";
+
+    /// <summary/>
+    public enum FaultyParameter
     {
-        private const string AgvId = "Agv01";
-        private const string MapId = "baseMap";
-
         /// <summary/>
-        public enum FaultyParameter
-        {
-            /// <summary/>
-            EmptySerialNumber,
-            /// <summary/>
-            NullMapId,
-            /// <summary/>
-            NullData
-        }
+        EmptySerialNumber,
+        /// <summary/>
+        NullMapId,
+        /// <summary/>
+        NullData
+    }
 
-        private readonly MqttMap _mqttMap = new(serialNumber: AgvId, requestId: AgvId)
-        {
-            Data = "bGlnaHQgdw==",
-            MapId = MapId,
-            ModificationDate = DateTime.UtcNow.ToString("o", System.Globalization.CultureInfo.InvariantCulture),
-            Resolution = 1,
-            XOffset = 1,
-            YOffset = 1
-        };
+    private readonly MqttMap _mqttMap = new(serialNumber: AgvId, requestId: AgvId)
+    {
+        Data = "bGlnaHQgdw==",
+        MapId = MapId,
+        ModificationDate = DateTime.UtcNow.ToString("o", System.Globalization.CultureInfo.InvariantCulture),
+        Resolution = 1,
+        XOffset = 1,
+        YOffset = 1
+    };
 
-        /// <summary>
-        /// Checks if MqttRequest is published after consuming RequestAgvMap
-        /// </summary>
-        [TestMethod]
-        public async Task Consume_RequestAgvMap_and_Publish_MqttRequestMap()
+    /// <summary>
+    /// Checks if MqttRequest is published after consuming RequestAgvMap
+    /// </summary>
+    [TestMethod]
+    public async Task Consume_RequestAgvMap_and_Publish_MqttRequestMap()
+    {
+        // Arrange
+        var fixture = new MassTransitConsumerTestFixture<RequestAgvMapConsumer>();
+
+        // Act
+        await fixture.TestHarness!.Bus.Publish(new RequestAgvMap(AgvId.ToGuid(), AgvId, MapId.ToGuid(), MapId));
+
+        // Assert
+        (await fixture.TestHarness.Published.Any<RequestAgvMap>()).ShouldBeTrue();
+        (await fixture.ConsumerHarness!.Consumed.Any<RequestAgvMap>()).ShouldBeTrue();
+
+        (await fixture.TestHarness.Published.Any<MqttRequestMap>()).ShouldBeTrue();
+        var message = fixture.TestHarness.Published.Select<MqttRequestMap>().First().Context.Message;
+        message.SerialNumber.ShouldBe(AgvId);
+    }
+
+    /// <summary>
+    /// Checks if AgvMapReceived is published after consuming valid MqttMap
+    /// </summary>
+    [TestMethod]
+    public async Task Consume_MqttMap_and_Publish_AgvMapReceived()
+    {
+        // Arrange
+        var fixture = new MqttConsumerTestFixture<MqttMapConsumer>();
+
+        // Act
+        await fixture.TestHarness.Bus.Publish(_mqttMap);
+
+        // Assert
+        (await fixture.TestHarness.Published.Any<MqttMap>()).ShouldBeTrue();
+        (await fixture.ConsumerHarness.Consumed.Any<MqttMap>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<AgvMapReceived>()).ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// Checks if AgvMapReceived is not published after consuming invalid MqttMap
+    /// </summary>
+    /// <remarks>Covering each type of invalid incoming data</remarks>
+    [DataRow(FaultyParameter.EmptySerialNumber)]
+    [DataRow(FaultyParameter.NullData)]
+    [DataRow(FaultyParameter.NullMapId)]
+    [TestMethod]
+    public async Task Consume_MqttMap_with_SerialNumber_equaling_NullOrEmpty(FaultyParameter faultyParameter)
+    {
+        switch (faultyParameter)
         {
             // Arrange
-            var fixture = new MassTransitTestFixture<RequestAgvMapConsumer>();
+            case FaultyParameter.EmptySerialNumber:
+                _mqttMap.SerialNumber = string.Empty;
+                break;
 
-            // Act
-            await fixture.TestHarness!.Bus.Publish(new RequestAgvMap(AgvId.ToGuid(), AgvId, MapId.ToGuid(), MapId));
+            case FaultyParameter.NullData:
+                _mqttMap.Data = null;
+                break;
 
-            // Assert
-            (await fixture.TestHarness.Published.Any<RequestAgvMap>()).ShouldBeTrue();
-            (await fixture.ConsumerHarness!.Consumed.Any<RequestAgvMap>()).ShouldBeTrue();
-
-            (await fixture.TestHarness.Published.Any<MqttRequestMap>()).ShouldBeTrue();
-            var message = fixture.TestHarness.Published.Select<MqttRequestMap>().First().Context.Message;
-            message.SerialNumber.ShouldBe(AgvId);
+            case FaultyParameter.NullMapId:
+                _mqttMap.MapId = null;
+                break;
         }
 
-        /// <summary>
-        /// Checks if AgvMapReceived is published after consuming valid MqttMap
-        /// </summary>
-        [TestMethod]
-        public async Task Consume_MqttMap_and_Publish_AgvMapReceived()
-        {
-            // Arrange
-            var fixture = new MqttConsumerTestFixture<MqttMapConsumer>();
-
-            // Act
-            await fixture.TestHarness.Bus.Publish(_mqttMap);
-
-            // Assert
-            (await fixture.TestHarness.Published.Any<MqttMap>()).ShouldBeTrue();
-            (await fixture.ConsumerHarness.Consumed.Any<MqttMap>()).ShouldBeTrue();
-            (await fixture.TestHarness.Published.Any<AgvMapReceived>()).ShouldBeTrue();
-        }
-
-        /// <summary>
-        /// Checks if AgvMapReceived is not published after consuming invalid MqttMap
-        /// </summary>
-        /// <remarks>Covering each type of invalid incoming data</remarks>
-        [DataRow(FaultyParameter.EmptySerialNumber)]
-        [DataRow(FaultyParameter.NullData)]
-        [DataRow(FaultyParameter.NullMapId)]
-        [TestMethod]
-        public async Task Consume_MqttMap_with_SerialNumber_equaling_NullOrEmpty(FaultyParameter faultyParameter)
-        {
-            switch (faultyParameter)
-            {
-                // Arrange
-                case FaultyParameter.EmptySerialNumber:
-                    _mqttMap.SerialNumber = string.Empty;
-                    break;
-
-                case FaultyParameter.NullData:
-                    _mqttMap.Data = null;
-                    break;
-
-                case FaultyParameter.NullMapId:
-                    _mqttMap.MapId = null;
-                    break;
-            }
-
-            var fixture = new MqttConsumerTestFixture<MqttMapConsumer>();
+        var fixture = new MqttConsumerTestFixture<MqttMapConsumer>();
             
-            // Act
-            await fixture.TestHarness.Bus.Publish(_mqttMap);
+        // Act
+        await fixture.TestHarness.Bus.Publish(_mqttMap);
 
-            // Assert
-            (await fixture.TestHarness.Published.Any<MqttMap>()).ShouldBeTrue();
-            (await fixture.ConsumerHarness.Consumed.Any<MqttMap>()).ShouldBeTrue();
+        // Assert
+        (await fixture.TestHarness.Published.Any<MqttMap>()).ShouldBeTrue();
+        (await fixture.ConsumerHarness.Consumed.Any<MqttMap>()).ShouldBeTrue();
 
-            (await fixture.TestHarness.Published.Any<AgvMapReceived>()).ShouldBeFalse();
-        }
+        (await fixture.TestHarness.Published.Any<AgvMapReceived>()).ShouldBeFalse();
     }
 }

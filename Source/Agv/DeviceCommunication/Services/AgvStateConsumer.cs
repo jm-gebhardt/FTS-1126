@@ -7,222 +7,221 @@ using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services
+namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
+
+/// <summary>
+/// Simulate finishing of host orders
+/// </summary>
+public class AgvStateConsumer : IConsumer<MqttState>
 {
+    private readonly ILogger<AgvStateConsumer> _logger;
+    private readonly IAgvRegistry _agvRegistry;
+    private readonly IMapper _mapper;
+
     /// <summary>
-    /// Simulate finishing of host orders
+    /// Create consumer for agv status message (<see cref="MqttState"/>)
     /// </summary>
-    public class AgvStateConsumer : IConsumer<MqttState>
+    /// <param name="logger">Mandatory logger facility.</param>
+    /// <param name="agvRegistry"></param>
+    /// <param name="mapper"></param>
+    [PublicAPI]
+    public AgvStateConsumer(ILogger<AgvStateConsumer> logger, IAgvRegistry agvRegistry, IMapper mapper)
     {
-        private readonly ILogger<AgvStateConsumer> _logger;
-        private readonly IAgvRegistry _agvRegistry;
-        private readonly IMapper _mapper;
+        _logger = logger;
+        _agvRegistry = agvRegistry;
+        _mapper = mapper;
+    }
 
-        /// <summary>
-        /// Create consumer for agv status message (<see cref="MqttState"/>)
-        /// </summary>
-        /// <param name="logger">Mandatory logger facility.</param>
-        /// <param name="agvRegistry"></param>
-        /// <param name="mapper"></param>
-        [PublicAPI]
-        public AgvStateConsumer(ILogger<AgvStateConsumer> logger, IAgvRegistry agvRegistry, IMapper mapper)
+    /// <summary>
+    /// Translate to AGV status message to AgvStatusReceived message
+    /// </summary>
+    public async Task Consume(ConsumeContext<MqttState> context)
+    {
+        var message = context.Message;
+        string serialNumber = GetSerialNumber(context, message);
+        var agvCorrelationId = serialNumber.ToGuid();
+
+        await SendAgvStatusAsync(context, agvCorrelationId, message, serialNumber);
+        await SendAgvPositionAsync(context, agvCorrelationId, serialNumber);
+        await SendAgvErrorStatusAsync(context, agvCorrelationId, message);
+    }
+
+    private string GetSerialNumber(ConsumeContext<MqttState> context, MqttState message)
+    {
+        string serialNumber = GetSerialNumber(message);
+
+        if (string.IsNullOrEmpty(serialNumber))
         {
-            _logger = logger;
-            _agvRegistry = agvRegistry;
-            _mapper = mapper;
+            _logger.LogError("Missing serialNumber in {MessageType} message: {Status}", nameof(MqttState), context.Message);
+            throw new InvalidOperationException($"Cannot handle {typeof(MqttState)} message, serialNumber must not be null or empty");
         }
+        _logger.LogDebug("{MessageType} from {AgvId} received", nameof(MqttState), serialNumber);
+        return serialNumber;
+    }
 
-        /// <summary>
-        /// Translate to AGV status message to AgvStatusReceived message
-        /// </summary>
-        public async Task Consume(ConsumeContext<MqttState> context)
+    private async Task SendAgvStatusAsync(ConsumeContext<MqttState> context, Guid agvCorrelationId, MqttState message, string serialNumber)
+    {
+        var agvStatus = new AgvStatus(
+            agvCorrelationId,
+            GetOrderId(message),
+            GetBusy(message),
+            GetAutomatic(message),
+            GetBatteryCharge(message),
+            GetCharging(message),
+            GetDisturbed(message),
+            GetLastNodeId(message)
+        );
+
+        var agvStatusReceived = new AgvStatusReceived(
+            correlationId: agvCorrelationId,
+            agvId: serialNumber,
+            agvStatus: agvStatus
+        );
+        await context.Publish(agvStatusReceived, context.CancellationToken);
+
+        var agvInformation = _agvRegistry.GetAgvInformation(agvStatusReceived.CorrelationId);
+        var agvStatusReceivedFromRegistry = agvInformation?.AgvStatusReceived;
+
+        if (agvStatusReceivedFromRegistry != null)
         {
-            var message = context.Message;
-            string serialNumber = GetSerialNumber(context, message);
-            var agvCorrelationId = serialNumber.ToGuid();
+            bool oldCharging = agvStatusReceivedFromRegistry.AgvStatus.Charging;
+            bool newCharging = GetCharging(message);
 
-            await SendAgvStatusAsync(context, agvCorrelationId, message, serialNumber);
-            await SendAgvPositionAsync(context, agvCorrelationId, serialNumber);
-            await SendAgvErrorStatusAsync(context, agvCorrelationId, message);
-        }
-
-        private string GetSerialNumber(ConsumeContext<MqttState> context, MqttState message)
-        {
-            string serialNumber = GetSerialNumber(message);
-
-            if (string.IsNullOrEmpty(serialNumber))
+            if (!oldCharging && newCharging)
             {
-                _logger.LogError("Missing serialNumber in {MessageType} message: {Status}", nameof(MqttState), context.Message);
-                throw new InvalidOperationException($"Cannot handle {typeof(MqttState)} message, serialNumber must not be null or empty");
+                await context.Publish(new AgvStartedCharging(agvStatusReceived.CorrelationId));
             }
-            _logger.LogDebug("{MessageType} from {AgvId} received", nameof(MqttState), serialNumber);
-            return serialNumber;
+            else if (oldCharging && !newCharging)
+            {
+                await context.Publish(new AgvStoppedCharging(agvStatusReceived.CorrelationId));
+            }
         }
 
-        private async Task SendAgvStatusAsync(ConsumeContext<MqttState> context, Guid agvCorrelationId, MqttState message, string serialNumber)
-        {
-            var agvStatus = new AgvStatus(
-                agvCorrelationId,
-                GetOrderId(message),
-                GetBusy(message),
-                GetAutomatic(message),
-                GetBatteryCharge(message),
-                GetCharging(message),
-                GetDisturbed(message),
-                GetLastNodeId(message)
-            );
+        FeedAgvRegistry(agvCorrelationId, agvStatusReceived);
+    }
 
-            var agvStatusReceived = new AgvStatusReceived(
+    private static async Task SendAgvPositionAsync(ConsumeContext<MqttState> context, Guid agvCorrelationId, string serialNumber)
+    {
+        if (context.Message.AgvPosition != null)
+        {
+            await context.Publish(new AgvPositionReceived(
                 correlationId: agvCorrelationId,
                 agvId: serialNumber,
-                agvStatus: agvStatus
-            );
-            await context.Publish(agvStatusReceived, context.CancellationToken);
-
-            var agvInformation = _agvRegistry.GetAgvInformation(agvStatusReceived.CorrelationId);
-            var agvStatusReceivedFromRegistry = agvInformation?.AgvStatusReceived;
-
-            if (agvStatusReceivedFromRegistry != null)
-            {
-                bool oldCharging = agvStatusReceivedFromRegistry.AgvStatus.Charging;
-                bool newCharging = GetCharging(message);
-
-                if (!oldCharging && newCharging)
-                {
-                    await context.Publish(new AgvStartedCharging(agvStatusReceived.CorrelationId));
-                }
-                else if (oldCharging && !newCharging)
-                {
-                    await context.Publish(new AgvStoppedCharging(agvStatusReceived.CorrelationId));
-                }
-            }
-
-            FeedAgvRegistry(agvCorrelationId, agvStatusReceived);
+                agvPosition: new AgvPosition(
+                    positionInitialized: context.Message.AgvPosition.PositionInitialized,
+                    x: context.Message.AgvPosition.X,
+                    y: context.Message.AgvPosition.Y * -1, // Special treatment for Karis AGV. Y Axis is inverted
+                    z: 0f,
+                    theta: Mathematics.ConvertToRadians(90.0f) - context.Message.AgvPosition.Theta, // Special treatment for Karis AGV. 90� in our System (AGV facing right) is 0� in our world
+                    deviationRange: context.Message.AgvPosition.DeviationRange
+                )), context.CancellationToken);
         }
+    }
 
-        private static async Task SendAgvPositionAsync(ConsumeContext<MqttState> context, Guid agvCorrelationId, string serialNumber)
+    private async Task SendAgvErrorStatusAsync(ConsumeContext<MqttState> context, Guid agvCorrelationId, MqttState message)
+    {
+        var agvErrorStatusReceived = new AgvErrorStatusReceived(agvCorrelationId, message.Errors?.Select(e =>
         {
-            if (context.Message.AgvPosition != null)
-            {
-                await context.Publish(new AgvPositionReceived(
-                    correlationId: agvCorrelationId,
-                    agvId: serialNumber,
-                    agvPosition: new AgvPosition(
-                        positionInitialized: context.Message.AgvPosition.PositionInitialized,
-                        x: context.Message.AgvPosition.X,
-                        y: context.Message.AgvPosition.Y * -1, // Special treatment for Karis AGV. Y Axis is inverted
-                        z: 0f,
-                        theta: Mathematics.ConvertToRadians(90.0f) - context.Message.AgvPosition.Theta, // Special treatment for Karis AGV. 90� in our System (AGV facing right) is 0� in our world
-                        deviationRange: context.Message.AgvPosition.DeviationRange
-                    )), context.CancellationToken);
-            }
-        }
+            var agvError = _mapper.Map<AgvError>(e);
+            // overwrite AgvCorrelationId in a 2. step, as we are mapping from two sources to one destination, which isn't supported by AutoMapper
+            _mapper.Map(agvCorrelationId, agvError);
+            return agvError;
+        }).ToList());
 
-        private async Task SendAgvErrorStatusAsync(ConsumeContext<MqttState> context, Guid agvCorrelationId, MqttState message)
+        await context.Publish(agvErrorStatusReceived, context.CancellationToken);
+    }
+
+    private void FeedAgvRegistry(Guid correlationId, AgvStatusReceived agvStatusReceived)
+    {
+        _agvRegistry.AddOrUpdateAgvStatus(correlationId, agvStatusReceived);
+    }
+
+    private string GetSerialNumber(MqttState message) => message.SerialNumber;
+
+    private string GetOrderId(MqttState message) => message.OrderId;
+
+    private bool GetBusy(MqttState message)
+    {
+        if (message.ActionStates == null)
         {
-            var agvErrorStatusReceived = new AgvErrorStatusReceived(agvCorrelationId, message.Errors?.Select(e =>
-            {
-                var agvError = _mapper.Map<AgvError>(e);
-                // overwrite AgvCorrelationId in a 2. step, as we are mapping from two sources to one destination, which isn't supported by AutoMapper
-                _mapper.Map(agvCorrelationId, agvError);
-                return agvError;
-            }).ToList());
-
-            await context.Publish(agvErrorStatusReceived, context.CancellationToken);
-        }
-
-        private void FeedAgvRegistry(Guid correlationId, AgvStatusReceived agvStatusReceived)
-        {
-            _agvRegistry.AddOrUpdateAgvStatus(correlationId, agvStatusReceived);
-        }
-
-        private string GetSerialNumber(MqttState message) => message.SerialNumber;
-
-        private string GetOrderId(MqttState message) => message.OrderId;
-
-        private bool GetBusy(MqttState message)
-        {
-            if (message.ActionStates == null)
-            {
-                return false;
-            }
-
-            foreach (var actionState in message.ActionStates)
-            {
-                switch (actionState.MqttActionStatus)
-                {
-                    case MqttActionStatus.Failed: break;
-                    case MqttActionStatus.Finished: break;
-                    case MqttActionStatus.Initializing: return true;
-                    case MqttActionStatus.Running: return true;
-                    case MqttActionStatus.Waiting: break;
-                }
-            }
-
             return false;
         }
 
-        private bool GetAutomatic(MqttState message)
+        foreach (var actionState in message.ActionStates)
         {
-            switch (message.MqttOperatingMode)
+            switch (actionState.MqttActionStatus)
             {
-                case MqttOperatingMode.Automatic: return true;
-                case MqttOperatingMode.Manual: return false;
-                case MqttOperatingMode.Semiautomatic: return false;
-                case MqttOperatingMode.Service: return false;
-                case MqttOperatingMode.Teachin: return false;
-                default: return false;
+                case MqttActionStatus.Failed: break;
+                case MqttActionStatus.Finished: break;
+                case MqttActionStatus.Initializing: return true;
+                case MqttActionStatus.Running: return true;
+                case MqttActionStatus.Waiting: break;
             }
         }
 
-        private float GetBatteryCharge(MqttState message)
-        {
-            if (message.BatteryState == null)
-            {
-                return 0;
-            }
+        return false;
+    }
 
-            return message.BatteryState.BatteryCharge;
+    private bool GetAutomatic(MqttState message)
+    {
+        switch (message.MqttOperatingMode)
+        {
+            case MqttOperatingMode.Automatic: return true;
+            case MqttOperatingMode.Manual: return false;
+            case MqttOperatingMode.Semiautomatic: return false;
+            case MqttOperatingMode.Service: return false;
+            case MqttOperatingMode.Teachin: return false;
+            default: return false;
+        }
+    }
+
+    private float GetBatteryCharge(MqttState message)
+    {
+        if (message.BatteryState == null)
+        {
+            return 0;
         }
 
-        private bool GetCharging(MqttState message)
+        return message.BatteryState.BatteryCharge;
+    }
+
+    private bool GetCharging(MqttState message)
+    {
+        if (message.BatteryState == null)
         {
-            if (message.BatteryState == null)
-            {
-                return false;
-            }
-
-            return message.BatteryState.Charging;
-        }
-
-        private bool GetDisturbed(MqttState message)
-        {
-            if (message.SafetyState != null)
-            {
-                if (message.SafetyState.MqttEStop != MqttEStop.None)
-                {
-                    return true;
-                }
-
-                if (message.SafetyState.FieldViolation)
-                {
-                    return true;
-                }
-            }
-
             return false;
         }
 
-        private string? GetLastNodeId(MqttState message)
+        return message.BatteryState.Charging;
+    }
+
+    private bool GetDisturbed(MqttState message)
+    {
+        if (message.SafetyState != null)
         {
-            if (!string.IsNullOrEmpty(message.LastNodeId))
+            if (message.SafetyState.MqttEStop != MqttEStop.None)
             {
-                return message.LastNodeId;
+                return true;
             }
-            else
+
+            if (message.SafetyState.FieldViolation)
             {
-                return null;
+                return true;
             }
+        }
+
+        return false;
+    }
+
+    private string? GetLastNodeId(MqttState message)
+    {
+        if (!string.IsNullOrEmpty(message.LastNodeId))
+        {
+            return message.LastNodeId;
+        }
+        else
+        {
+            return null;
         }
     }
 }

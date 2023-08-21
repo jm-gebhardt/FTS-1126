@@ -14,46 +14,45 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Consumer
+namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Consumer;
+
+[TestClass]
+public class AgvPropertyChangedConsumerTest
 {
-    [TestClass]
-    public class AgvPropertyChangedConsumerTest
+    private const string AgvId = "agv1";
+
+    [TestMethod]
+    [DataRow(true)]
+    [DataRow(false)]
+    public async Task Receiving_AgvPropertyChanged_SendAgvStateToAllClients(bool alive)
     {
-        private const string AgvId = "agv1";
-
-        [TestMethod]
-        [DataRow(true)]
-        [DataRow(false)]
-        public async Task Receiving_AgvPropertyChanged_SendAgvStateToAllClients(bool alive)
+        var agv = new Core.States.AgvSaga(AgvId.ToGuid(), AgvId, nameof(AgvStateMachine.Idle)) { IsOnline = alive };
+            
+        var mapper = MappingHelper.GetMapper(new AgvProfile());
+        var agvDto = mapper.Map<AgvDto>(agv);
+            
+        var mockGetAgvsClient = new Mock<IRequestClient<GetAgvsDtoRequest>>();
+        var responseMock = new Mock<Response<GetAgvsDtoResult>>();
+        responseMock.SetupGet(m => m.Message).Returns(new GetAgvsDtoResult(new[] { agvDto }));
+        mockGetAgvsClient.Setup(
+                m => m.GetResponse<GetAgvsDtoResult>(It.IsAny<GetAgvsDtoRequest>(), default, default
+                ))
+            .ReturnsAsync(responseMock.Object);
+            
+        var fixture = new ConsumerHubTestFixture<AgvPropertyChangedConsumer, IAgvHubContext>(services =>
         {
-            var agv = new Core.States.AgvSaga(AgvId.ToGuid(), AgvId, nameof(AgvStateMachine.Idle)) { IsOnline = alive };
-            
-            var mapper = MappingHelper.GetMapper(new AgvProfile());
-            var agvDto = mapper.Map<AgvDto>(agv);
-            
-            var mockGetAgvsClient = new Mock<IRequestClient<GetAgvsDtoRequest>>();
-            var responseMock = new Mock<Response<GetAgvsDtoResult>>();
-            responseMock.SetupGet(m => m.Message).Returns(new GetAgvsDtoResult(new[] { agvDto }));
-            mockGetAgvsClient.Setup(
-                    m => m.GetResponse<GetAgvsDtoResult>(It.IsAny<GetAgvsDtoRequest>(), default, default
-                    ))
-                .ReturnsAsync(responseMock.Object);
-            
-            var fixture = new ConsumerHubTestFixture<AgvPropertyChangedConsumer, IAgvHubContext>(services =>
-            {
-                services.AddSingleton(mockGetAgvsClient.Object);
-            });
-            await fixture.TestHarness!.Bus.Publish(
-                new AgvPropertyChanged(
-                    agv,
-                    agv.CorrelationId
-                ));
+            services.AddSingleton(mockGetAgvsClient.Object);
+        });
+        await fixture.TestHarness!.Bus.Publish(
+            new AgvPropertyChanged(
+                agv,
+                agv.CorrelationId
+            ));
 
-            (await fixture.TestHarness.Published.Any<AgvPropertyChanged>()).ShouldBeTrue();
-            (await fixture.ConsumerHarness!.Consumed.Any<AgvPropertyChanged>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<AgvPropertyChanged>()).ShouldBeTrue();
+        (await fixture.ConsumerHarness!.Consumed.Any<AgvPropertyChanged>()).ShouldBeTrue();
 
-            fixture.MockHub.Verify(h => h.SendAgvStateToAllClients(
-                It.Is<AgvDto>(o => o.CorrelationId == agv.CorrelationId), false), Times.Once);
-        }
+        fixture.MockHub.Verify(h => h.SendAgvStateToAllClients(
+            It.Is<AgvDto>(o => o.CorrelationId == agv.CorrelationId), false), Times.Once);
     }
 }

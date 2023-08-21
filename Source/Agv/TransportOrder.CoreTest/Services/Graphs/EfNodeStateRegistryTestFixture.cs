@@ -6,41 +6,40 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Graphs
+namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.Graphs;
+
+public class EfNodeStateRegistryTestFixture
 {
-    public class EfNodeStateRegistryTestFixture
+    private ServiceProvider Provider { get; }
+    private IDbContextFactory<TransportOrderDbContext> ContextFactory { get; }
+
+    public readonly EfNodeStateRegistry Registry;
+
+    public EfNodeStateRegistryTestFixture()
     {
-        private ServiceProvider Provider { get; }
-        private IDbContextFactory<TransportOrderDbContext> ContextFactory { get; }
-
-        public readonly EfNodeStateRegistry Registry;
-
-        public EfNodeStateRegistryTestFixture()
-        {
-            var mockLogger = new Mock<ILogger<EfNodeStateRegistry>>();
+        var mockLogger = new Mock<ILogger<EfNodeStateRegistry>>();
       
-            var collection = new ServiceCollection()
-                .AddDbContextFactory<TransportOrderDbContext>(options =>
-                    {
-                        options.UseInMemoryDatabase(Guid.NewGuid().ToString());
-                    }
-                );
-            Provider = collection.BuildServiceProvider(true);
-            ContextFactory = Provider.GetService<IDbContextFactory<TransportOrderDbContext>>()!;
-            Registry = new EfNodeStateRegistry(mockLogger.Object, ContextFactory, new NodeStateDbSemaphoreProvider());
-        }
+        var collection = new ServiceCollection()
+            .AddDbContextFactory<TransportOrderDbContext>(options =>
+                {
+                    options.UseInMemoryDatabase(Guid.NewGuid().ToString());
+                }
+            );
+        Provider = collection.BuildServiceProvider(true);
+        ContextFactory = Provider.GetService<IDbContextFactory<TransportOrderDbContext>>()!;
+        Registry = new EfNodeStateRegistry(mockLogger.Object, ContextFactory);
+    }
         
-        public void Add(NodeLock nodeLock)
-        {
-            using var context = ContextFactory.CreateDbContext();
-            context.Add(nodeLock);
-            context.SaveChanges();
-        }
+    public void Add(NodeLock nodeLock)
+    {
+        using var context = ContextFactory.CreateDbContext();
+        context.Add(nodeLock);
+        context.SaveChanges();
+    }
 
-        public NodeLock? Get(string nodeId)
-        {
-            using var context = ContextFactory.CreateDbContext();
-            return context.Set<NodeLock>().AsNoTracking().FirstOrDefault(n => n.NodeId == nodeId);
-        }
+    public NodeLock? Get(string nodeId)
+    {
+        using var context = ContextFactory.CreateDbContext();
+        return context.Set<NodeLock>().AsNoTracking().FirstOrDefault(n => n.NodeId == nodeId);
     }
 }

@@ -35,17 +35,19 @@ public class MoveAgvCommandHandler : IConsumer<MoveAgv>
     /// <exception cref="AgvNotFoundException"></exception>
     public async Task Consume(ConsumeContext<MoveAgv> context)
     {
-        var request = context.Message;
-        var agv = _agvRegistry.GetRequiredAgv(request.CorrelationId);
+        (var correlationId, string targetNodeId, var creator) = context.Message;
+
+        var agv = _agvRegistry.GetRequiredAgv(correlationId);
         var groupCorrelationId = Guid.NewGuid();
         _logger.LogInformation("{MessageType} for AgvCorrelationId: {AgvCorrelationId} to destinationNodeId:{DestinationNodeId} received. Sending QueueActionGroup {ActionGroupCorrelationId}", nameof(MoveAgv), context.Message.CorrelationId, context.Message.TargetNodeId, groupCorrelationId);
 
         var moveActionGroup = new ActionGroup(
             groupCorrelationId,
             $"Manual {ActionType.Move}",
-            actions: new List<AgvAction> {new(Guid.NewGuid(), ActionType.Move, context.Message.TargetNodeId, groupCorrelationId)},
+            actions: new List<AgvAction> {new(Guid.NewGuid(), ActionType.Move, targetNodeId, groupCorrelationId)},
             assignedAgv: agv.CorrelationId,
-            isManual: true
+            isManual: true,
+            creator: creator
         );
 
         await _queueActionGroupRequestClient.GetResponse<Success>(new QueueActionGroup(moveActionGroup));

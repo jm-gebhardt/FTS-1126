@@ -4,22 +4,21 @@ using Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 // ReSharper disable ConvertConstructorToMemberInitializers
-namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers
+namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers;
+
+public class AgvGraphConsumerTestFixture : MqttConsumerTestFixture<AgvGraphConsumer>
 {
-    public class AgvGraphConsumerTestFixture : MqttConsumerTestFixture<AgvGraphConsumer>
+    private IAgvRegistry AgvRegistry { get; } = new AgvRegistryTestFixture().AgvRegistry;
+
+    public AgvGraphConsumerTestFixture UseDefaultServices()
     {
-        private IAgvRegistry AgvRegistry { get; } = new AgvRegistryTestFixture().AgvRegistry;
+        AddServices(sc => sc.AddSingleton(_ => AgvRegistry));
+        return this;
+    }
 
-        public AgvGraphConsumerTestFixture UseDefaultServices()
-        {
-             AddServices(sc => sc.AddSingleton(_ => AgvRegistry));
-             return this;
-        }
-
-        public AgvGraphConsumerTestFixture Build()
-        {
-            base.Build();
-            return this;
-        }
+    public AgvGraphConsumerTestFixture Build()
+    {
+        base.Build();
+        return this;
     }
 }

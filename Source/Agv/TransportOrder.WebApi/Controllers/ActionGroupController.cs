@@ -5,54 +5,53 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Actions.Requests.Queri
 using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers
+namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers;
+
+/// <summary>
+/// Controller for <see cref="AgvAction"/>
+/// </summary>
+[ApiExplorerSettings(GroupName = RestApiGroup.GroupName)]
+public class ActionGroupController: Controller
 {
+    private readonly IRequestClient<GetAgvActionGroupsRequest> _getAgvActionGroupsRequest;
+    private readonly IRequestClient<GetAgvActionGroupCountsByStateRequest> _getAgvActionGroupCountsByStateRequest;
+
     /// <summary>
-    /// Controller for <see cref="AgvAction"/>
+    /// Constructor
     /// </summary>
-    [ApiExplorerSettings(GroupName = RestApiGroup.GroupName)]
-    public class ActionGroupController: Controller
+    /// <param name="getAgvActionGroupsRequest"></param>
+    /// <param name="getAgvActionGroupCountsByStateRequest"></param>
+    public ActionGroupController(IRequestClient<GetAgvActionGroupsRequest> getAgvActionGroupsRequest, IRequestClient<GetAgvActionGroupCountsByStateRequest> getAgvActionGroupCountsByStateRequest)
     {
-        private readonly IRequestClient<GetAgvActionGroupsRequest> _getAgvActionGroupsRequest;
-        private readonly IRequestClient<GetAgvActionGroupCountsByStateRequest> _getAgvActionGroupCountsByStateRequest;
+        _getAgvActionGroupsRequest = getAgvActionGroupsRequest;
+        _getAgvActionGroupCountsByStateRequest = getAgvActionGroupCountsByStateRequest;
+    }
 
-        /// <summary>
-        /// Constructor
-        /// </summary>
-        /// <param name="getAgvActionGroupsRequest"></param>
-        /// <param name="getAgvActionGroupCountsByStateRequest"></param>
-        public ActionGroupController(IRequestClient<GetAgvActionGroupsRequest> getAgvActionGroupsRequest, IRequestClient<GetAgvActionGroupCountsByStateRequest> getAgvActionGroupCountsByStateRequest)
-        {
-            _getAgvActionGroupsRequest = getAgvActionGroupsRequest;
-            _getAgvActionGroupCountsByStateRequest = getAgvActionGroupCountsByStateRequest;
-        }
+    /// <summary>
+    ///  Retrieve actions
+    /// </summary>
+    /// <response code="200">Ok</response>
+    [HttpGet]
+    [Route("/actionGroups")]
+    public async Task<ActionResult<IEnumerable<ActionGroupDto>>> GetActionGroups(ActionGroupState[] states, DateTime? fromDate, DateTime? toDate, int limit=1000)
+    {
+        Response<GetAgvActionGroupsResult> groups = await _getAgvActionGroupsRequest.GetResponse<GetAgvActionGroupsResult>( new GetAgvActionGroupsRequest(
+            states, 
+            fromDate ?? DateTime.MinValue, 
+            toDate ?? DateTime.MaxValue, 
+            limit));
+        return Ok(groups.Message.AgvActionGroups);
+    }
 
-        /// <summary>
-        ///  Retrieve actions
-        /// </summary>
-        /// <response code="200">Ok</response>
-        [HttpGet]
-        [Route("/actionGroups")]
-        public async Task<ActionResult<IEnumerable<ActionGroupDto>>> GetActionGroups(ActionGroupState[] states, DateTime? fromDate, DateTime? toDate, int limit=1000)
-        {
-            Response<GetAgvActionGroupsResult> groups = await _getAgvActionGroupsRequest.GetResponse<GetAgvActionGroupsResult>( new GetAgvActionGroupsRequest(
-                states, 
-                fromDate ?? DateTime.MinValue, 
-                toDate ?? DateTime.MaxValue, 
-                limit));
-            return Ok(groups.Message.AgvActionGroups);
-        }
-
-        /// <summary>
-        /// Get Action Group Meta
-        /// </summary>
-        /// <returns></returns>
-        [HttpGet]
-        [Route("/actionGroups/CountsByState")]
-        public async Task<ActionResult<IEnumerable<AgvGroupCountByStateDto>>> GetActionGroupCountsByState()
-        {
-            Response<GetAgvActionGroupCountsByStateResult> counts = await _getAgvActionGroupCountsByStateRequest.GetResponse<GetAgvActionGroupCountsByStateResult>(new GetAgvActionGroupCountsByStateRequest());
-            return Ok(counts.Message.AgvGroupCountByState);
-        }
+    /// <summary>
+    /// Get Action Group Meta
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet]
+    [Route("/actionGroups/CountsByState")]
+    public async Task<ActionResult<IEnumerable<AgvGroupCountByStateDto>>> GetActionGroupCountsByState()
+    {
+        Response<GetAgvActionGroupCountsByStateResult> counts = await _getAgvActionGroupCountsByStateRequest.GetResponse<GetAgvActionGroupCountsByStateResult>(new GetAgvActionGroupCountsByStateRequest());
+        return Ok(counts.Message.AgvGroupCountByState);
     }
 }

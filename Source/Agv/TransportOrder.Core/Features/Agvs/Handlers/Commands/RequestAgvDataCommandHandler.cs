@@ -6,48 +6,46 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
 using JetBrains.Annotations;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Commands
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Commands;
+
+/// <summary>
+/// Defines a handler for the EmitRequestDataRequest
+/// Gets agv from agvRegistry for specific correlationId, emits RequestData telegram when receiving patch request.
+/// </summary>
+[UsedImplicitly]
+public class RequestAgvDataCommandHandler : IConsumer<RequestAgvDataCommand>
 {
+    private readonly IAgvRegistry _agvRegistry;
+    private readonly IBus _bus;
+
     /// <summary>
-    /// Defines a handler for the EmitRequestDataRequest
-    /// Gets agv from agvRegistry for specific correlationId, emits RequestData telegram when receiving patch request.
+    /// <inheritdoc cref="RequestAgvDataCommandHandler"/>
     /// </summary>
-    [UsedImplicitly]
-    public class RequestAgvDataCommandHandler : IConsumer<RequestAgvDataCommand>
+    /// <param name="agvRegistry"></param>
+    /// <param name="bus"></param>
+    public RequestAgvDataCommandHandler(IAgvRegistry agvRegistry, IBus bus)
     {
-        private readonly IAgvRegistry _agvRegistry;
-        private readonly IBus _bus;
-
-        /// <summary>
-        /// <inheritdoc cref="RequestAgvDataCommandHandler"/>
-        /// </summary>
-        /// <param name="agvRegistry"></param>
-        /// <param name="bus"></param>
-        public RequestAgvDataCommandHandler(IAgvRegistry agvRegistry, IBus bus)
-        {
-            _agvRegistry = agvRegistry;
-            _bus = bus;
-        }
-
-        /// <summary>
-        /// <inheritdoc cref="RequestAgvDataCommandHandler"/>
-        /// </summary>
-        /// <param name="context"></param>
-        /// <returns></returns>
-        /// <exception cref="AgvNotFoundException"></exception>
-        public async Task Consume(ConsumeContext<RequestAgvDataCommand> context)
-        {
-            var request = context.Message;
-            var agv = _agvRegistry.GetAgv(request.CorrelationId);
-
-            if (agv == null)
-            {
-                throw new AgvNotFoundException(request.CorrelationId);
-            }
-
-            await _bus.Publish(new RequestAgvData(agv.CorrelationId, agv.AgvId));
-            await context.RespondAsync(new RequestAgvDataResult(agv.CorrelationId));
-        }
+        _agvRegistry = agvRegistry;
+        _bus = bus;
     }
 
+    /// <summary>
+    /// <inheritdoc cref="RequestAgvDataCommandHandler"/>
+    /// </summary>
+    /// <param name="context"></param>
+    /// <returns></returns>
+    /// <exception cref="AgvNotFoundException"></exception>
+    public async Task Consume(ConsumeContext<RequestAgvDataCommand> context)
+    {
+        var request = context.Message;
+        var agv = _agvRegistry.GetAgv(request.CorrelationId);
+
+        if (agv == null)
+        {
+            throw new AgvNotFoundException(request.CorrelationId);
+        }
+
+        await _bus.Publish(new RequestAgvData(agv.CorrelationId, agv.AgvId));
+        await context.RespondAsync(new RequestAgvDataResult(agv.CorrelationId));
+    }
 }

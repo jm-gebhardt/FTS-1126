@@ -117,7 +117,7 @@ public class ActionGroupExtensionsTest
     [DataRow(ActionState.Failed, ActionGroupState.Failed)]
     [DataRow(ActionState.Canceled, ActionGroupState.Canceled)]
     [TestMethod]
-    public void UpdateActionGroupState_WhenOneActionFailedOrCanceled_ActionGroupFailesOrIsCanceled(ActionState actionState, ActionGroupState actionGroupState)
+    public void UpdateActionGroupState_WhenOneActionFailedOrCanceled_ActionGroupFailsOrIsCanceled(ActionState actionState, ActionGroupState actionGroupState)
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         const ActionGroupState prevActionGroupState = ActionGroupState.Started;

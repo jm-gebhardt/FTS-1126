@@ -9,40 +9,39 @@ using MassTransit.Testing.Implementations;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Publish
+namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Publish;
+
+/// <summary>
+/// Test class for publishing a MQTT message with proper bus configuration
+/// </summary>
+[TestClass]
+public class ExecuteMqttPublishTest
 {
     /// <summary>
-    /// Test class for publishing a MQTT message with proper bus configuration
+    /// Test publishing a MQTT message with proper bus configuration
     /// </summary>
-    [TestClass]
-    public class ExecuteMqttPublishTest
+    /// <returns></returns>
+    [TestMethod]
+    public async Task TestPublishMqttMessageAndBusConfiguration()
     {
-        /// <summary>
-        /// Test publishing a MQTT message with proper bus configuration
-        /// </summary>
-        /// <returns></returns>
-        [TestMethod]
-        public async Task TestPublishMqttMessageAndBusConfiguration()
+        var fixture = new MqttTestFixture();
+        var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
+
+        var routingKeySpecified = typeof(MqttState).GetCustomAttribute(typeof(RoutingKey)) as RoutingKey;
+        string serialNumber = "AGV01";
+        string orderId = "1234";
+
+        using (fixture.TestHarness.Bus.ConnectPublishObserver(publishObserver))
         {
-            var fixture = new MqttTestFixture();
-            var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
+            await fixture.TestHarness.Bus.PublishMqtt(new MqttState(serialNumber, orderId) { MqttOperatingMode = MqttOperatingMode.Automatic }, null);
 
-            var routingKeySpecified = typeof(MqttState).GetCustomAttribute(typeof(RoutingKey)) as RoutingKey;
-            string serialNumber = "AGV01";
-            string orderId = "1234";
+            IPublishedMessage<MqttState> publishedMessage = publishObserver.Messages.Select<MqttState>().First();
 
-            using (fixture.TestHarness.Bus.ConnectPublishObserver(publishObserver))
-            {
-                await fixture.TestHarness.Bus.PublishMqtt(new MqttState(serialNumber, orderId) { MqttOperatingMode = MqttOperatingMode.Automatic }, null);
-
-                IPublishedMessage<MqttState> publishedMessage = publishObserver.Messages.Select<MqttState>().First();
-
-                publishedMessage.Context.RoutingKey().ShouldBe(routingKeySpecified?.RoutingKeyValue);
-                publishedMessage.Context.ContentType.ShouldBe(SystemTextJsonRawMessageSerializer.JsonContentType);
-                publishedMessage.Context.Message.SerialNumber.ShouldBe(serialNumber);
-                publishedMessage.Context.Message.OrderId.ShouldBe(orderId);
-                publishedMessage.Context.Message.MqttOperatingMode.ShouldBe(MqttOperatingMode.Automatic);
-            }
+            publishedMessage.Context.RoutingKey().ShouldBe(routingKeySpecified?.RoutingKeyValue);
+            publishedMessage.Context.ContentType.ShouldBe(SystemTextJsonRawMessageSerializer.JsonContentType);
+            publishedMessage.Context.Message.SerialNumber.ShouldBe(serialNumber);
+            publishedMessage.Context.Message.OrderId.ShouldBe(orderId);
+            publishedMessage.Context.Message.MqttOperatingMode.ShouldBe(MqttOperatingMode.Automatic);
         }
     }
 }
