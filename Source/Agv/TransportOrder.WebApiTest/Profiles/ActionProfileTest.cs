@@ -1,13 +1,13 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos.AgvActions;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Extensions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Profiles.Profiles;
-using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.AgvActions;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Profiles;
-
+namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Profiles;
 [TestClass]
 public class ActionProfileTest
 {
@@ -29,7 +29,7 @@ public class ActionProfileTest
 
         var action = AgvActionGenerator.GeneratePickDropActionGroup().Actions.First().ConvertFromAgvActionWithFakeNodeType();
         var actionDto = mapper.Map<AgvActionDto>(action);
-        
+
         actionDto.CorrelationId.ShouldBe(action!.CorrelationId);
         actionDto.ParentId.ShouldBe(action.ParentId);
         actionDto.Sequence.ShouldBe(action.Sequence);
@@ -50,7 +50,7 @@ public class ActionProfileTest
 
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup().ConvertFromActionGroupWithFakeNodeType();
         var actionGroupDto = mapper.Map<ActionGroupDto>(actionGroup);
-        
+
         actionGroupDto.CorrelationId.ShouldBe(actionGroup!.CorrelationId);
         actionGroupDto.OrderId.ShouldBe(actionGroup.OrderId);
         actionGroupDto.AssignedAgv.ShouldBe(actionGroup.AssignedAgv);

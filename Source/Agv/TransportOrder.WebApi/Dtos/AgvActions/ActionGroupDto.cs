@@ -1,10 +1,10 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos.AgvActions;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.AgvActions;
 
 /// <summary>
-/// Action Group model
+/// Provides a dto for action groups.
 /// </summary>
 [PublicAPI]
 public record ActionGroupDto
@@ -12,37 +12,37 @@ public record ActionGroupDto
     private IList<AgvActionDto> _actions = new List<AgvActionDto>();
 
     /// <summary>
-    /// Gets the correlationId of action group.
+    /// The correlationId of action group.
     /// </summary>
     public Guid CorrelationId { get; init; }
 
     /// <summary>
-    /// Gets the order id.
+    /// The order id.
     /// </summary>
     public string OrderId { get; init; }
 
     /// <summary>
-    /// Gets the assigned agv.
+    /// The assigned agv.
     /// </summary>
     public Guid? AssignedAgv { get; init; }
 
     /// <summary>
-    /// Gets the creation date.
+    /// The creation date.
     /// </summary>
     public DateTime CreatedDate { get; init; }
 
     /// <summary>
-    /// Gets the date when the action group is started.
+    /// The date when the action group is started.
     /// </summary>
     public DateTime? StartedDate { get; init; }
 
     /// <summary>
-    /// Gets the date when the action group is completed.
+    /// The date when the action group is completed.
     /// </summary>
     public DateTime? CompletedDate { get; init; }
 
     /// <summary>
-    /// Gets the state of the action group. 
+    /// The state of the action group. 
     /// </summary>
     public ActionGroupState State { get; init; }
 

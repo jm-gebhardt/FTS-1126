@@ -1,6 +1,5 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos.AgvActions;
-using JetBrains.Annotations;
-
+﻿using JetBrains.Annotations;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos.AgvActions;
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
 
 /// <summary>
@@ -87,7 +86,7 @@ public record AgvDto
     /// <summary>
     /// The recent ActionGroup of the Agv
     /// </summary>
-    public ActionGroupDto? CurrentActionGroup { get; init; }
+    public CoreActionGroupDto? CurrentActionGroup { get; init; }
 
     /// <summary>
     /// List of Agv errors. Empty List if there is no error.
@@ -124,7 +123,7 @@ public record AgvDto
         bool isCharging,
         int badBatteryLevel,
         int goodBatteryLevel,
-        ActionGroupDto? currentActionGroup,
+        CoreActionGroupDto? currentActionGroup,
         List<AgvErrorDto> agvErrorDto
     )
     {

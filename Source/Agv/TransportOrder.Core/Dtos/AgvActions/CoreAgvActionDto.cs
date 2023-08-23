@@ -8,7 +8,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos.AgvActions;
 /// AgvAction model
 /// </summary>
 [PublicAPI]
-public record AgvActionDto
+public record CoreAgvActionDto
 {
     /// <summary>
     /// Unique CorrelationId of this action
@@ -78,7 +78,7 @@ public record AgvActionDto
     /// <param name="startedDate">Date the action was started (UTC)</param>
     /// <param name="completedDate">Date the action was completed (UTC)</param>
     /// </summary>
-    public AgvActionDto
+    public CoreAgvActionDto
     (
         Guid correlationId,
         Guid parentId,
@@ -107,7 +107,7 @@ public record AgvActionDto
     /// <summary>
     /// AutoMapper ctor
     /// </summary>
-    private AgvActionDto()
+    private CoreAgvActionDto()
     {
         TargetNodeId = null!;
         Nodes = null!;

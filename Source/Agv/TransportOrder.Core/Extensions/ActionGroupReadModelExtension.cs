@@ -2,10 +2,17 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.ReadModels;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Extensions;
 
+/// <summary>
+/// Provides extension methods for testing the action group read model.
+/// </summary>
 public static class ActionGroupReadModelExtension
 {
+    /// <summary>
+    /// Converts an action group to its read model with node types using made-up fake node types.
+    /// </summary>
+    /// <param name="actionGroup">The action group to be converted.</param>
     public static ActionGroupReadModel? ConvertFromActionGroupWithFakeNodeType(this ActionGroup? actionGroup)
     {
         if (actionGroup == null)

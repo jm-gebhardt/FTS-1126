@@ -2,10 +2,17 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.ReadModels;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Extensions;
 
+/// <summary>
+/// Provides extension methods for testing the action read model.
+/// </summary>
 public static class AgvActionReadModelExtension
 {
+    /// <summary>
+    /// Converts an action to its read model with node types using made-up fake node types.
+    /// </summary>
+    /// <param name="action">The action to be converted.</param>
     public static AgvActionReadModel? ConvertFromAgvActionWithFakeNodeType(this AgvAction? action)
     {
         if (action == null)

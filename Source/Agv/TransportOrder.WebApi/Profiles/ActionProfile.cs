@@ -1,8 +1,8 @@
 using AutoMapper;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos.AgvActions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.ReadModels;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.AgvActions;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Profiles.Profiles;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles;
 
 /// <summary>
 /// Profile for Actions
@@ -16,5 +16,6 @@ public class ActionProfile : Profile
     {
         CreateMap<ActionGroupReadModel, ActionGroupDto>();
         CreateMap<AgvActionReadModel, AgvActionDto>();
+        CreateMap<AgvGroupCountByState, AgvGroupCountByStateDto>();
     }
 }

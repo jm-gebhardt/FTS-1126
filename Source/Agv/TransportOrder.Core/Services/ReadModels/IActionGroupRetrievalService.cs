@@ -28,4 +28,8 @@ public interface IActionGroupRetrievalService
     /// </summary>
     /// <param name="actionGroup">The action group to be enriched.</param>
     public Task<ActionGroupReadModel> EnrichActionGroupWithTargetNodeTypesAsync(ActionGroup actionGroup);
+
+    /// Get an action group with node types by correlation id.
+    /// <param name="correlationId">The action group correlation id.</param>
+    public Task<ActionGroupReadModel?> GetActionGroupWithTargetNodeTypesAsync(Guid correlationId);
 }

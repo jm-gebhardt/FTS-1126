@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos.AgvActions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.ReadModels;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.AgvActions;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using SignalRSwaggerGen.Attributes;

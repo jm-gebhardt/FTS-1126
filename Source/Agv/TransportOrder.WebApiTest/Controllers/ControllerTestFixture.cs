@@ -2,6 +2,7 @@ using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Profiles.Profiles;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles;
 using MassTransit;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

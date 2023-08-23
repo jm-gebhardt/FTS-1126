@@ -87,18 +87,18 @@ public static class CoreBusRegistrationExtensions
         configurator.AddRequestClient<LockAgvCommand>();
         configurator.AddRequestClient<UnlockAgvCommand>();
 
-        configurator.AddConsumer<GetAgvActionGroupsRequestHandler>();
-        configurator.AddRequestClient<GetAgvActionGroupsRequest>();
-
-        configurator.AddConsumer<GetAgvActionGroupCountsByStateRequestHandler>();
-        configurator.AddRequestClient<GetAgvActionGroupCountsByStateRequest>();
-
         configurator.AddConsumer<MoveAgvCommandHandler>();
         configurator.AddRequestClient<MoveAgv>();
 
         // actions
         configurator.AddConsumer<ActionConsumer>();
         configurator.AddRequestClient<QueueActionGroup>();
+
+        configurator.AddConsumer<ActionGroupRequestHandler>();
+        configurator.AddRequestClient<GetActionGroup>();
+        configurator.AddRequestClient<GetActionGroups>();
+        configurator.AddRequestClient<GetActionGroupCountsByState>();
+
 
         // error
         configurator.AddConsumer<GetActiveAgvErrorsRequestHandler>();

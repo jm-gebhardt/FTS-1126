@@ -35,6 +35,7 @@ public static class WebHostBuilderExtensions
 
         webHostBuilder.ConfigureServices(services =>
         {
+            services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
             services.AddTransient<IActionHubContext>(provider =>
             {
                 var hubContext = provider.GetRequiredService<IHubContext<ActionHub, IActionHubClient>>();

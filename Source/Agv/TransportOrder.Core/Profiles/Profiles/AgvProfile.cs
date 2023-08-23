@@ -1,6 +1,7 @@
 using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos.AgvActions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.ReadModels;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Profiles.Profiles;
@@ -33,5 +34,7 @@ public class AgvProfile : Profile
 
         CreateMap<AgvData, AgvDataDto>();
         CreateMap<AgvStatus, AgvStatusDto>();
+        CreateMap<ActionGroupReadModel, CoreActionGroupDto>();
+        CreateMap<AgvActionReadModel, CoreAgvActionDto>();
     }
 }
