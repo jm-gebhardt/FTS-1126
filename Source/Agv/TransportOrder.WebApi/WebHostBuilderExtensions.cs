@@ -69,7 +69,7 @@ public static class WebHostBuilderExtensions
                 options.SwaggerDoc(new HubApiGroup());
                 options.AddSignalRSwaggerGen(opt =>
                 {
-                    opt.ScanAssemblies(Assembly.GetExecutingAssembly());
+                    opt.ScanAssemblies(executingAssembly);
                 });
                 options.SchemaFilter<RequireNonNullablePropertiesSchemaFilter>();
                 options.SupportNonNullableReferenceTypes(); // Sets Nullable flags appropriately.

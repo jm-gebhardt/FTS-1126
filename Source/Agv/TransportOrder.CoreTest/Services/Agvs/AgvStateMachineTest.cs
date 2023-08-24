@@ -49,13 +49,13 @@ public class AgvStateMachineTest
     [DataRow(nameof(AgvStateMachine.Busy), nameof(AgvStateMachine.Idle))]
     [DataRow(nameof(AgvStateMachine.Charging), nameof(AgvStateMachine.Idle))]
     [TestMethod]
-    public async Task Transition_State_When_Message_Received_ForceReleaseAgv(string initialState, string resultingState)
+    public async Task SetAgvForceIdle_ValidData_AgvIsSetToIdle(string initialState, string resultingState)
     {
         var fixture = new AgvStateMachineTestFixture();
         var agvSaga = AgvSagaGenerator.GenerateAgvSaga(initialState);
         fixture.Add(agvSaga);
 
-        var message = new ForceReleaseAgv(agvSaga.CorrelationId);
+        var message = new SetAgvForceIdleRequested(agvSaga.CorrelationId);
         await fixture.TransitionStateWhenMessageReceived(message, agvSaga, resultingState);
     }
     #endregion

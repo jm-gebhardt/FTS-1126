@@ -77,4 +77,11 @@ public class EfAgvRegistry : IAgvRegistry
 
         return agv;
     }
+
+    /// <inheritdoc />
+    public async Task<bool> CheckIfAgvExistsAsync(Guid correlationId)
+    {
+        var saga = await AgvSagas.SingleOrDefaultAsync(a => a.CorrelationId == correlationId);
+        return saga != default;
+    }
 }

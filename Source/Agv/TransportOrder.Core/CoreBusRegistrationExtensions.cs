@@ -87,6 +87,9 @@ public static class CoreBusRegistrationExtensions
         configurator.AddRequestClient<LockAgvCommand>();
         configurator.AddRequestClient<UnlockAgvCommand>();
 
+        configurator.AddConsumer<SetAgvForceIdleCommandHandler>();
+        configurator.AddRequestClient<SetAgvForceIdle>();
+
         configurator.AddConsumer<MoveAgvCommandHandler>();
         configurator.AddRequestClient<MoveAgv>();
 

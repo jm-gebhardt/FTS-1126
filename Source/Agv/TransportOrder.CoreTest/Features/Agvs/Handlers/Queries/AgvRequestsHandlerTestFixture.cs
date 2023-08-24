@@ -30,7 +30,7 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
     // ReSharper disable once MemberCanBePrivate.Global
     public readonly Mock<IAgvErrorRegistry> AgvErrorRegistry = new();
 
-    public AgvRequestsHandlerTestFixture()
+    public AgvRequestsHandlerTestFixture(IBus? bus=null)
     {
         WithEmptyGraphRegistry();
         AddServices(s =>
@@ -42,6 +42,10 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
             s.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
             s.AddTransient(_ => _agvGraphRegistry.Object);
             s.AddTransient(_ => AgvErrorRegistry.Object);
+            if (bus != null)
+            {
+                s.AddTransient(_ => bus);
+            }
         });
 
         AgvErrorRegistry.Setup(x => x.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(new List<AgvError>());
@@ -65,6 +69,7 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
     public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithAgv(IAgv agv)
     {
         AgvRegistry.Setup(r => r.GetAgv(agv.CorrelationId)).Returns(agv);
+        AgvRegistry.Setup(r => r.CheckIfAgvExistsAsync(agv.CorrelationId)).ReturnsAsync(true);
         return this;
     }
 

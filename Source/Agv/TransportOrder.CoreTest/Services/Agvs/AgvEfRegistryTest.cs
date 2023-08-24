@@ -119,4 +119,24 @@ public class AgvEfRegistryTest
 
         agvRegistry.GetAgv(Guid.Empty).ShouldBeNull();
     }
+
+    [TestMethod]
+    public async Task CheckIfAgvExistsAsync_ExistingAgv_ReturnsTrue()
+    {
+        var fixture = new EfAgvRegistryTestFixture();
+        var agvSaga = new AgvSaga(Guid.NewGuid(), "agv0", nameof(AgvStateMachine.Idle));
+        fixture.Add(agvSaga);
+        
+        bool agvExists = await fixture.Registry.CheckIfAgvExistsAsync(agvSaga.CorrelationId);
+        agvExists.ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task CheckIfAgvExistsAsync_NonExistingAgv_ReturnsFalse()
+    {
+        var fixture = new EfAgvRegistryTestFixture();
+
+        bool agvExists = await fixture.Registry.CheckIfAgvExistsAsync("".ToGuid());
+        agvExists.ShouldBeFalse();
+    }
 }

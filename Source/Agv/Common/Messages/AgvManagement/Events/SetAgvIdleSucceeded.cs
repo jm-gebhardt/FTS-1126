@@ -4,7 +4,7 @@ using MassTransit;
 namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 
 /// <summary>
-/// Agv reservation request was rejected
+/// Event that is raised when an agv was successfully set to idle.
 /// </summary>
 [JetBrains.Annotations.PublicAPI]
 public record SetAgvIdleSucceeded : CorrelatedBy<Guid>

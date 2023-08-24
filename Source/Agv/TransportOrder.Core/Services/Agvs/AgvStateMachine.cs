@@ -104,11 +104,6 @@ public class AgvStateMachine : MassTransitStateMachine<AgvSaga>
     public Event<SetAgvBusy> SetAgvBusyEvent { get; private set; } = default!;
 
     /// <summary>
-    /// Set AGV back to idle in any state
-    /// </summary>
-    public Event<ForceReleaseAgv> ForceReleaseAgvEvent { get; private set; } = default!;
-
-    /// <summary>
     /// Lock AGV to prevent it from being assigned to transport orders
     /// </summary>
     public Event<LockAgv> LockAgvEvent { get; private set; } = default!;
@@ -147,6 +142,11 @@ public class AgvStateMachine : MassTransitStateMachine<AgvSaga>
     /// Agv error status was received
     /// </summary>
     public Event<AgvErrorStatusReceived> AgvErrorStatusReceivedEvent { get; private set; } = default!;
+
+    /// <summary>
+    /// <see cref="SetAgvForceIdleRequested"/> was received.
+    /// </summary>
+    public Event<SetAgvForceIdleRequested> SetAgvForceIdleRequestedEvent { get; private set; } = default!;
     #endregion
 
     /// <summary>
@@ -220,12 +220,12 @@ public class AgvStateMachine : MassTransitStateMachine<AgvSaga>
         DuringAny(GetAgvEventHandler());
         DuringAny(LockAgvHandler());
         DuringAny(UnlockAgvHandler());
-        DuringAny(ForceSetIdleHandler());
         DuringAny(AgvStatusReceivedHandler());
         DuringAny(AgvGraphChangedHandler());
         DuringAny(AgvMapReceivedHandler());
         DuringAny(AgvOfflineMessageHandler());
         DuringAny(AgvErrorStatusReceivedHandler());
+        DuringAny(SetAgvForceIdleRequestedHandler());
 
         WhenEnterAny(UpdateTimeOfStateTransition);
 
@@ -352,12 +352,7 @@ public class AgvStateMachine : MassTransitStateMachine<AgvSaga>
         When(SetAgvBusyEvent)
             .Then(c => _logger.LogDebug("Could not transition {AgvId} / {CorrelationId} to busy in state {State}", c.Saga.AgvId, c.Saga.CorrelationId, c.Saga.CurrentState))
             .Respond(c => new SetAgvBusyRejected(c.Message.CorrelationId));
-
-    private EventActivityBinder<AgvSaga, ForceReleaseAgv> ForceSetIdleHandler() =>
-        When(ForceReleaseAgvEvent)
-            .TransitionTo(Idle)
-            .ThenAsync(c => PublishAgvBecameIdleAsync(c.Saga, c));
-
+    
     private EventActivityBinder<AgvSaga, LockAgv> LockAgvHandler() =>
         When(LockAgvEvent)
             .ThenAsync(async c => { await LockAsync(c, true); })
@@ -385,6 +380,16 @@ public class AgvStateMachine : MassTransitStateMachine<AgvSaga>
             .TransitionTo(Idle)
             .Then(c => _logger.LogInformation("{AgvId} / {CorrelationId} reloaded its battery level to {BatteryLevel}% => Transitioned to {State}",
                 c.Saga.AgvId, c.Saga.CorrelationId, c.Saga.AgvStatus!.BatteryCharge, nameof(Idle)))
+            .ThenAsync(c => PublishAgvBecameIdleAsync(c.Saga, c));
+
+
+    private EventActivityBinder<AgvSaga, SetAgvForceIdleRequested> SetAgvForceIdleRequestedHandler() =>
+        When(SetAgvForceIdleRequestedEvent)
+            .TransitionTo(Idle)
+            .Then(c =>
+                _logger.LogWarning("AGV {AgvId} / {CorrelationId} was set to idle by force", c.Saga.AgvId, c.Saga.CorrelationId)
+            )
+            .Respond(c => new SetAgvForceIdleResult(c.Message.CorrelationId))
             .ThenAsync(c => PublishAgvBecameIdleAsync(c.Saga, c));
     #endregion
 
@@ -448,6 +453,7 @@ public class AgvStateMachine : MassTransitStateMachine<AgvSaga>
     private EventActivityBinder<AgvSaga, AgvErrorStatusReceived> AgvErrorStatusReceivedHandler() =>
         When(AgvErrorStatusReceivedEvent)
             .ThenAsync(async c => await UpdateAgvErrorStatusAsync(c.Saga, c.Message.Errors?.Any() ?? false, c));
+    
     #endregion
 
     #region Actions

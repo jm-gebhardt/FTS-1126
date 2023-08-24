@@ -185,6 +185,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         IRequestClient<GetActiveAgvErrorsRequest> getAgvErrorsRequestClient = GetRequestClient<GetActiveAgvErrorsRequest>();
         IRequestClient<GetAgvErrorsRequest> getAgvErrorHistoryRequestClient = GetRequestClient<GetAgvErrorsRequest>();
         IRequestClient<MoveAgv> moveAgvRequestClient = GetRequestClient<MoveAgv>();
+        IRequestClient<SetAgvForceIdle> setAgvForceIdleClient = GetRequestClient<SetAgvForceIdle>();
 
         var controller = new AgvController(
             getAgvDtoRequestClient,
@@ -199,7 +200,8 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             emitRequestGraphRequestClient,
             getAgvErrorsRequestClient,
             getAgvErrorHistoryRequestClient,
-            moveAgvRequestClient)
+            moveAgvRequestClient,
+            setAgvForceIdleClient)
         {
             ControllerContext = new ControllerContext(
                 new ActionContext(

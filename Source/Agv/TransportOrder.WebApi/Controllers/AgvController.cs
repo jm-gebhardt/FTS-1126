@@ -32,6 +32,7 @@ public class AgvController : Controller
     private readonly IRequestClient<GetActiveAgvErrorsRequest> _getAgvErrorsRequestClient;
     private readonly IRequestClient<GetAgvErrorsRequest> _getAgvErrorHistoryRequestClient;
     private readonly IRequestClient<MoveAgv> _moveAgvClient;
+    private readonly IRequestClient<SetAgvForceIdle> _setForceIdleClient;
 
     /// <summary>
     /// Init controller
@@ -48,7 +49,8 @@ public class AgvController : Controller
         IRequestClient<RequestAgvGraphCommand> emitRequestGraphClient,
         IRequestClient<GetActiveAgvErrorsRequest> getAgvErrorsRequestClient,
         IRequestClient<GetAgvErrorsRequest> getAgvErrorHistoryRequestClient,
-        IRequestClient<MoveAgv> moveAgvClient)
+        IRequestClient<MoveAgv> moveAgvClient,
+        IRequestClient<SetAgvForceIdle> setForceIdleClient)
     {
         _getAgvClient = getAgvClient;
         _getAgvsClient = getAgvsClient;
@@ -63,6 +65,7 @@ public class AgvController : Controller
         _getAgvErrorsRequestClient = getAgvErrorsRequestClient;
         _getAgvErrorHistoryRequestClient = getAgvErrorHistoryRequestClient;
         _moveAgvClient = moveAgvClient;
+        _setForceIdleClient = setForceIdleClient;
     }
 
     /// <summary>
@@ -252,5 +255,20 @@ public class AgvController : Controller
     {
         Response<MoveAgvResult> response = await _moveAgvClient.GetResponse<MoveAgvResult>(new MoveAgv(correlationId, destinationNodeId, ActionGroupCreator.TransportOrderWebApi));
         return Ok(response.Message.ActionGroupCorrelationId);
+    }
+
+    /// <summary>
+    /// Set an agv to idle by force.
+    /// </summary>
+    /// <param name="correlationId">The correlation id of the agv.</param>
+    /// <response code="200">Ok: The agv was set to idle.</response>
+    /// <response code="404">Not Found: An agv with the given correlationId does not exist</response>
+    /// <returns>The correlation id of the agv.</returns>
+    [HttpPost]
+    [Route("/agvs/{correlationId}/setForceIdle")]
+    public async Task<ActionResult> SetForceIdle(Guid correlationId)
+    {
+        await _setForceIdleClient.GetResponse<SetAgvForceIdleResult>(new SetAgvForceIdle(correlationId));
+        return Ok();
     }
 }

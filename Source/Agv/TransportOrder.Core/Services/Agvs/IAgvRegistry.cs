@@ -41,5 +41,11 @@ public interface IAgvRegistry
     /// <returns>IAgv object</returns>
     /// <exception cref="AgvNotFoundException"></exception>
     public IAgv GetRequiredAgv(Guid? correlationId);
-        
+
+    /// <summary>
+    /// Checks if the agv matching the correlation id exists.
+    /// </summary>
+    /// <param name="correlationId">The correlation id to check.</param>
+    /// <returns>If the agv exists.</returns>
+    Task<bool> CheckIfAgvExistsAsync(Guid correlationId);
 }
