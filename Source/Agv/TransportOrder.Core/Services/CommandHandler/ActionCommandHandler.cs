@@ -1,0 +1,334 @@
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
+using MassTransit;
+using Microsoft.Extensions.Logging;
+using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
+using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.SagaStateMachines;
+using JetBrains.Annotations;
+using TransportOrder.Domain.Models.ActionGroup;
+using TransportOrder.Domain.Models.Agv;
+using TransportOrder.Domain.Repositories;
+using TransportOrder.Domain.SemaphoreProvider;
+using TransportOrder.Domain.Services.ActionGroup;
+using TransportOrder.Domain.Services.Routing;
+using TransportOrder.Messages.Commands.ActionGroup;
+using TransportOrder.Messages.Events.ActionGroup;
+
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.CommandHandler;
+
+/// <summary>
+/// Provides handlers for <see cref="Action"/> related commands.
+/// </summary>
+[UsedImplicitly]
+public class ActionCommandHandler : 
+    IConsumer<StartAction>,
+    IConsumer<TryStartManualAction>,
+    IConsumer<TryStartNextActionInActionGroup>,
+    IConsumer<TryStartNewActionGroup>,
+    IConsumer<CreateParkingActionGroup>,
+    IConsumer<CreateChargingActionGroup>,
+    IConsumer<CreateMaintenanceActionGroup>
+{
+    private readonly ILogger<ActionCommandHandler> _logger;
+    private readonly IRouteService _routeService;
+    private readonly IAgvSagaCommunicationService _agvSagaCommunicationService;
+    private readonly IActionGroupRegistry _actionGroupRegistry;
+    private readonly IChooseAgvActionGroupService _chooseAgvActionGroupService;
+    private readonly IActionManagerSemaphoreProvider _semaphoreProvider;
+    private readonly IMaintenanceService _maintenanceService;
+    private readonly IChargingPointManager _chargingPointManager;
+    private readonly IParkPointService _parkPointService;
+    private readonly IChargingService _chargingService;
+
+    /// <summary>
+    /// Initializes a new <see cref="ActionCommandHandler"/> instance.
+    /// </summary>
+    public ActionCommandHandler(IMaintenanceService maintenanceService, 
+        IChargingPointManager chargingPointManager, 
+        IParkPointService parkPointService,
+        IRouteService routeService,
+        IAgvSagaCommunicationService agvSagaCommunicationService,
+        IActionGroupRegistry actionGroupRegistry,
+        IChooseAgvActionGroupService chooseAgvActionGroupService,
+        IActionManagerSemaphoreProvider semaphoreProvider,
+        IChargingService chargingService,
+        ILogger<ActionCommandHandler> logger)
+    {
+        _logger = logger;
+        _routeService = routeService;
+        _agvSagaCommunicationService = agvSagaCommunicationService;
+        _actionGroupRegistry = actionGroupRegistry;
+        _chooseAgvActionGroupService = chooseAgvActionGroupService;
+        _semaphoreProvider = semaphoreProvider;
+        _parkPointService = parkPointService;
+        _chargingPointManager = chargingPointManager;
+        _maintenanceService = maintenanceService;
+        _chargingService = chargingService;
+    }
+
+    /// <summary>
+    /// Handles the <see cref="StartAction"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<StartAction> context)
+    {
+        var (action, assignedAgvId)= context.Message;
+
+        var cancellationToken = context.CancellationToken;
+
+        var assignedAgv = await _agvSagaCommunicationService.GetAgvAsync(assignedAgvId, cancellationToken);
+
+        await StartActionForAgv(context, action, assignedAgv, cancellationToken);
+    }
+
+    /// <summary>
+    /// Handles the <see cref="TryStartManualAction"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<TryStartManualAction> context)
+    {
+        var agvCorrelationId = context.Message.Agv.CorrelationId;
+        var cancellationToken = context.CancellationToken;
+        var agv = await _agvSagaCommunicationService.GetAgvAsync(agvCorrelationId, cancellationToken);
+        if (!agv.IsLocked)
+        {
+            return;
+        }
+  
+        IReadOnlyList<ActionGroup> actionGroups = await _actionGroupRegistry
+            .GetActionGroupsAsync(ActionGroupState.Created, assignedAgvCorrelationId: agv.CorrelationId, isManual: true, maxItems: 1);
+
+        var actionGroup = actionGroups.FirstOrDefault();
+        if (actionGroup?.Actions.Count > 1)
+        {
+            throw new ArgumentException($"More than one actions in manual ActionGroup: {actionGroup}");
+        }
+
+        var action = actionGroup?.Actions.FirstOrDefault();
+
+        if (action == null)
+        {
+            _logger.LogDebug("There is no next action available for Agv with CorrelationId {AgvCorrelationId}", agv.CorrelationId);
+            await context.Publish(new AgvCanStartIdleAction(agv), cancellationToken);
+            return;
+        }
+
+        await StartActionForAgv(context, action, agv, context.CancellationToken);
+        
+    }
+
+
+    /// <summary>
+    /// Handles the <see cref="TryStartNextActionInActionGroup"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<TryStartNextActionInActionGroup> context)
+    {
+        var agvCorrelationId = context.Message.Agv.CorrelationId;
+        var cancellationToken = context.CancellationToken;
+        var agv = await _agvSagaCommunicationService.GetAgvAsync(agvCorrelationId, cancellationToken);
+        if (!await _actionGroupRegistry.HasUnfinishedDropActionsAsync(agv.CorrelationId) || agv.IsLocked)
+        {
+            return;
+        }
+        _logger.LogInformation("Starting succeeding action for Agv with CorrelationId: {AgvCorrelationId}", agv.CorrelationId);
+        try
+        {
+            var action = await _actionGroupRegistry.GetSubsequentActionAsync(agv.CorrelationId);
+            await StartActionForAgv(context, action, agv, cancellationToken);
+        }
+        catch
+        {
+            // release Agv in case of error
+            await _agvSagaCommunicationService.SetIdleAsync(agv.CorrelationId, cancellationToken);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Handles the <see cref="TryStartNewActionGroup"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<TryStartNewActionGroup> context)
+    {
+        var agvCorrelationId = context.Message.Agv.CorrelationId;
+        var cancellationToken = context.CancellationToken;
+        var agv = await _agvSagaCommunicationService.GetAgvAsync(agvCorrelationId, cancellationToken);
+
+        bool needsCharging = _chargingService.AgvNeedsCharging(agv);
+        bool isCarryingLoad = await _actionGroupRegistry.HasUnfinishedDropActionsAsync(agv.CorrelationId);
+        bool needsMaintenance = _maintenanceService.MaintenanceRequested(agv);
+
+        bool canStartNewAction = !needsCharging && !needsMaintenance && !isCarryingLoad && !agv.IsLocked;
+
+        if (!canStartNewAction)
+        {
+            return;
+        }
+
+
+        await _semaphoreProvider.ExecuteLockedAsync(async () =>
+        {
+            var actionGroup = await _chooseAgvActionGroupService.GetNotStartedActionGroupAsync(agv);
+            if (actionGroup == null)
+            {
+                _logger.LogDebug("There is no next action available for Agv with CorrelationId {AgvCorrelationId}", agv.CorrelationId);
+                return;
+            }
+            await StartActionForAgv(context, actionGroup.Actions.OrderBy(a => a.Sequence).First(), agv, context.CancellationToken);
+        }, context.CancellationToken);
+
+    }
+
+    /// <summary>
+    /// Handles the <see cref="CreateParkingActionGroup"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<CreateParkingActionGroup> context)
+    {
+        var agvCorrelationId = context.Message.Agv.CorrelationId;
+        var cancellationToken = context.CancellationToken;
+        var agv = await _agvSagaCommunicationService.GetAgvAsync(agvCorrelationId, cancellationToken);
+
+        if (_chargingService.AgvIsEligibleForCharging(agv)|| agv.IsLocked)
+        {
+            return;
+        }
+
+        if (await _parkPointService.IsOnAParkNodeAsync(agv) || await _actionGroupRegistry.IsAgvHeadingToNodeForActionOfType(agv.CorrelationId, AutomaticActionOrderId.AutomaticPark))
+        {
+            _logger.LogDebug("No need for a park action because the Agv is already in park for agvId: {AgvCorrelationId}", agv.CorrelationId);
+            return;
+        }
+        _logger.LogInformation("Starting park action for Agv with CorrelationId: {AgvCorrelationId}", agv.CorrelationId);
+
+        var parkNode = await _parkPointService.ReserveParkAsync(agv);
+
+        var groupCorrelationId = Guid.NewGuid();
+        var actionGroup = new ActionGroup(
+            groupCorrelationId,
+            nameof(AutomaticActionOrderId.AutomaticPark),
+            actions: new List<AgvAction> { new(Guid.NewGuid(), ActionType.Move, parkNode.Id, groupCorrelationId) },
+            assignedAgv: agv.CorrelationId,
+            creator: ActionGroupCreator.TransportOrder
+        );
+
+
+        await _actionGroupRegistry.AddAsync(actionGroup);
+        await context.Publish(new ActionGroupCreated(actionGroup, actionGroup.CorrelationId), cancellationToken);
+        await context.Publish(new ActionGroupCreatedForAgv(actionGroup, agv.CorrelationId), cancellationToken);
+    }
+
+    /// <summary>
+    /// Handles the <see cref="CreateChargingActionGroup"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<CreateChargingActionGroup> context)
+    {
+        var agvCorrelationId = context.Message.Agv.CorrelationId;
+        var cancellationToken = context.CancellationToken;
+        var agv = await _agvSagaCommunicationService.GetAgvAsync(agvCorrelationId, cancellationToken);
+
+        bool needsCharging = _chargingService.AgvNeedsCharging(agv);
+        bool isCarryingLoad = await _actionGroupRegistry.HasUnfinishedDropActionsAsync(agv.CorrelationId);
+
+        bool shouldCharge = !isCarryingLoad && needsCharging;
+
+        if (!_chargingService.AgvIsEligibleForCharging(agv) || !shouldCharge || agv.IsLocked)
+        {
+            return;
+        }
+
+
+        if (agv.GetRequiredAgvStatus().Charging || await _actionGroupRegistry.IsAgvHeadingToNodeForActionOfType(agv.CorrelationId, AutomaticActionOrderId.AutomaticCharge))
+        {
+            _logger.LogDebug("No need for a another charge action because the Agv is already charging for agvId: {AgvId}", agv.AgvId);
+            // This might happen if the AssignAsync action is called several times due to a low SOC value, although the Agv is already charging
+            return;
+        }
+        _logger.LogInformation("Starting charge action for Agv with CorrelationId: {AgvCorrelationId}", agv.CorrelationId);
+
+        var chargingNode = await _chargingPointManager.ReserveChargerAsync(agv);
+
+        var groupCorrelationId = Guid.NewGuid();
+        var actionGroup = new ActionGroup(
+            groupCorrelationId,
+            nameof(AutomaticActionOrderId.AutomaticCharge),
+            actions: new List<AgvAction> { new(Guid.NewGuid(), ActionType.Charge, chargingNode.Id, groupCorrelationId) },
+            assignedAgv: agv.CorrelationId,
+            creator: ActionGroupCreator.TransportOrder
+        );
+
+
+        await _actionGroupRegistry.AddAsync(actionGroup);
+        await context.Publish(new ActionGroupCreated(actionGroup, actionGroup.CorrelationId), cancellationToken);
+        await context.Publish(new ActionGroupCreatedForAgv(actionGroup, agv.CorrelationId), cancellationToken);
+    }
+
+    /// <summary>
+    /// Handles the <see cref="CreateMaintenanceActionGroup"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<CreateMaintenanceActionGroup> context)
+    {
+        var agvCorrelationId = context.Message.Agv.CorrelationId;
+        var cancellationToken = context.CancellationToken;
+        var agv = await _agvSagaCommunicationService.GetAgvAsync(agvCorrelationId, cancellationToken);
+
+        bool needsCharging = _chargingService.AgvNeedsCharging(agv);
+        bool isCarryingLoad = await _actionGroupRegistry.HasUnfinishedDropActionsAsync(agv.CorrelationId);
+        bool needsMaintenance = _maintenanceService.MaintenanceRequested(agv);
+
+        bool shouldCharge = !isCarryingLoad && needsCharging;
+        bool shouldDoMaintenance = !isCarryingLoad && needsMaintenance;
+        if (shouldCharge || !shouldDoMaintenance|| agv.IsLocked)
+        {
+            return;
+        }
+
+        if (await _actionGroupRegistry.IsAgvHeadingToNodeForActionOfType(agv.CorrelationId, AutomaticActionOrderId.AutomaticMaintenance))
+        {
+            return;
+        }
+
+        _logger.LogInformation("Starting maintenance action for Agv with CorrelationId: {AgvCorrelationId}", agv.CorrelationId);
+
+        var maintenanceNode = await _maintenanceService.GetMaintenanceNode(agv);
+
+        var groupCorrelationId = Guid.NewGuid();
+        var actionGroup = new ActionGroup(
+            groupCorrelationId,
+            nameof(AutomaticActionOrderId.AutomaticMaintenance),
+            actions: new List<AgvAction> { new(Guid.NewGuid(), ActionType.Move, maintenanceNode.Id, groupCorrelationId) },
+            assignedAgv: agv.CorrelationId,
+            creator: ActionGroupCreator.TransportOrder
+        );
+
+        await _actionGroupRegistry.AddAsync(actionGroup);
+        await context.Publish(new ActionGroupCreatedForAgv(actionGroup, agv.CorrelationId), cancellationToken);
+        await context.Publish(new ActionGroupCreated(actionGroup, actionGroup.CorrelationId), cancellationToken);
+    }
+
+
+    private async Task StartActionForAgv(IPublishEndpoint context, AgvAction action, IAgv assignedAgv, CancellationToken cancellationToken)
+    {
+        action.Nodes = (await _routeService.GetRouteAsync(assignedAgv, action.TargetNodeId)).Nodes;
+
+        _logger.LogDebug("Starting action with CorrelationId: {ActionCorrelationId} for Agv {AgvCorrelationId}. Setting Agv to busy in next step.", action.CorrelationId, assignedAgv.CorrelationId);
+        await _agvSagaCommunicationService.SetBusyAsync(assignedAgv, true, true, cancellationToken);
+        try
+        {
+            if (action.Nodes == null || !action.Nodes.Any())
+            {
+                throw new ArgumentNullException(nameof(action.Nodes));
+            }
+
+            await context.Publish(new StartActionCommand(assignedAgv.CorrelationId, assignedAgv.AgvId, action), cancellationToken);
+            _logger.LogDebug("Action with CorrelationId: {ActionCorrelationId} for Agv {AgvCorrelationId} has been started. Updating ActionGroup.State to Started in next step.", action.CorrelationId, assignedAgv.CorrelationId);
+            var actionGroup = await _actionGroupRegistry.UpdateActionAndGroupStateAsync(action, assignedAgv, ActionState.Started);
+            await context.Publish(new ActionGroupChanged(actionGroup, actionGroup.CorrelationId), cancellationToken);
+            _logger.LogTrace("Starting action done");
+        }
+        catch
+        {
+            // release Agv in case of error
+            await _agvSagaCommunicationService.SetIdleAsync(assignedAgv.CorrelationId, cancellationToken);
+            throw;
+        }
+    }
+
+}

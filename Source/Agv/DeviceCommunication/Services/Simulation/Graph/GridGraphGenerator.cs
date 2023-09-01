@@ -1,7 +1,6 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Helpers;
-using Microsoft.OpenApi.Extensions;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph;
 
@@ -202,7 +201,7 @@ public class GridGraphGenerator : IGraphGenerator
     {
         int connectedGridNodeIdx = FindConnectedGridNodeIndex(index, out int side);
         var gridNode = _gridNodes[connectedGridNodeIdx];
-        string nodeId = $"{nodeType.GetDisplayName()}-{index}";
+        string nodeId = $"{Enum.GetName(nodeType)}-{index}";
 
         var serviceNode = new GraphNode(nodeId)
         {

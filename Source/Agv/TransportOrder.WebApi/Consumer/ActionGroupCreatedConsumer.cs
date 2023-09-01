@@ -1,8 +1,8 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.ReadModels;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs;
 using MassTransit;
 using Microsoft.Extensions.Logging;
+using TransportOrder.Domain.Repositories;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Consumer;
 

@@ -1,10 +1,10 @@
 ﻿using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs;
 using MassTransit;
 using Microsoft.Extensions.Logging;
-using AgvPositionStatus = Gebhardt.StoreWare.Agv.TransportOrder.Core.Models.AgvPositionStatus;
+using TransportOrder.Domain.Repositories;
+using TransportOrder.Messages.Events.Agv;
+using TransportOrder.Messages.Requests.Agv;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Consumer;
 

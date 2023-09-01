@@ -1,0 +1,11 @@
+using MassTransit;
+
+namespace TransportOrder.Messages.Events.Agv;
+
+/// <summary>
+/// An event reporting that the last node id of an AGV has changed
+/// </summary>
+/// <param name="CorrelationId"></param>
+/// <param name="OldLastNodeId"></param>
+/// <param name="NewLastNodeId"></param>
+public record AgvLastNodeIdChanged(Guid CorrelationId, string? OldLastNodeId, string? NewLastNodeId): CorrelatedBy<Guid>;

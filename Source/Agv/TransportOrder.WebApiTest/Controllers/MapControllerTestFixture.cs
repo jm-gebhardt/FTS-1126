@@ -1,16 +1,16 @@
 ﻿using System.Text;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Requests.Queries;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db.Models;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Maps;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.States;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.SagaStateMachines;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
+using TransportOrder.Domain.Models;
+using TransportOrder.Domain.Models.Agv;
+using TransportOrder.Domain.Repositories;
+using TransportOrder.Messages.Requests.Map;
+using Map = TransportOrder.Domain.Models.Map.Map;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers;
 
@@ -21,10 +21,10 @@ public class MapControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
     public const string Base64String = "dGhlIHF1aWNrIGJyb3duIGZveCBqdW1wIG92ZXIgdGhlIGxhenkgZG9n";
 
     private readonly Mock<IAgvGraphRegistry> _agvGraphRegistry = new();
-        
-    private readonly string[] _agvIds = {"AGV001", "AGV002", "AGV003"};
-    private readonly string[] _orders = {"ORDER001", "ORDER002", ""};
-    private readonly string[] _states = {nameof(AgvStateMachine.Idle), nameof(AgvStateMachine.Busy), nameof(AgvStateMachine.Discovered)};
+
+    private readonly string[] _agvIds = { "AGV001", "AGV002", "AGV003" };
+    private readonly string[] _orders = { "ORDER001", "ORDER002", "" };
+    private readonly string[] _states = { nameof(AgvStateMachine.Idle), nameof(AgvStateMachine.Busy), nameof(AgvStateMachine.Discovered) };
 
     private readonly Guid[] _correlationIds =
     {
@@ -35,10 +35,10 @@ public class MapControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
 
     protected override MapController GetController()
     {
-        IRequestClient<GetMapListRequest> getMapListRequestClient = GetRequestClient<GetMapListRequest>();
-        IRequestClient<GetMapImageRequest> getMapImageRequestClient = GetRequestClient<GetMapImageRequest>();
+        IRequestClient<GetMapList> getMapListRequestClient = GetRequestClient<GetMapList>();
+        IRequestClient<GetMapImage> getMapImageRequestClient = GetRequestClient<GetMapImage>();
 
-        var controller = new MapController(getMapListRequestClient, getMapImageRequestClient);
+        var controller = new MapController(GetMapper(), getMapListRequestClient, getMapImageRequestClient);
 
         return controller;
     }
@@ -47,7 +47,7 @@ public class MapControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
     {
         var mapRegistryMock = new Mock<IMapRegistry>();
 
-        mapRegistryMock.Setup(x => x.GetAllMaps()).Returns(new EnumerableQuery<Map>(new List<Map>
+        mapRegistryMock.Setup(x => x.GetAllMaps()).Returns(new EnumerableQuery<IMap>(new List<Map>
         {
             new(_correlationIds[0], "Area51_Floor1_Compartment47", Encoding.UTF8.GetBytes(Base64String), 0.01, 1, 2, DateTime.UtcNow),
             new(_correlationIds[1], "Area51_Floor1_Compartment48", Encoding.UTF8.GetBytes(Base64String), 0.02, 2, 3, DateTime.UtcNow),

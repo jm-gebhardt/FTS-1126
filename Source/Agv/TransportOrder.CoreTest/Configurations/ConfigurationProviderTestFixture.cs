@@ -5,13 +5,13 @@ using Gebhardt.StoreWare.Agv.Common.Configurations.Models;
 using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
 using Gebhardt.StoreWare.Agv.Common.Logging;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db.ClassMaps;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Shouldly;
+using TransportOrder.Persistence.Ef.DataAccess;
+using TransportOrder.Persistence.Ef.DataAccess.Configuration;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Configurations;
 

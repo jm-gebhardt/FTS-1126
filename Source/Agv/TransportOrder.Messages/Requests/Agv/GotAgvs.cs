@@ -1,0 +1,7 @@
+namespace TransportOrder.Messages.Requests.Agv;
+
+/// <summary>
+/// Defines a result for the <see cref="GetAgvs"/>
+/// </summary>
+/// <param name="Agvs">The returned agvs.</param>
+public record GotAgvs(ICollection<MessageContent.Agv> Agvs);

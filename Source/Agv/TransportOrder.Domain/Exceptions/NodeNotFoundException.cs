@@ -1,0 +1,24 @@
+using Gebhardt.StoreWare.Agv.Common.Exceptions;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using JetBrains.Annotations;
+
+namespace TransportOrder.Domain.Exceptions;
+
+/// <summary>
+/// The Waypoint was not found in the graph
+/// </summary>
+public class NodeNotFoundException : NotFoundException
+{
+    /// <see cref="NodeNotFoundException"/>>
+    [PublicAPI]
+    public NodeNotFoundException(IAgv agv, string description)
+        : base(description, nameof(agv.CorrelationId), agv.CorrelationId)
+    {
+    }
+    
+    /// <see cref="NodeNotFoundException"/>>
+    public NodeNotFoundException(Guid agvCorrelationId, string description)
+        : base(description, nameof(agvCorrelationId), agvCorrelationId)
+    {
+    }
+}

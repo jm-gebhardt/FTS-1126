@@ -1,12 +1,13 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Common;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Requests.Queries;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
+﻿using AutoMapper;
+using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.SagaStateMachines;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using TransportOrder.Messages.Events.Agv;
+using TransportOrder.Messages.Requests.Agv;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Consumer;
 
@@ -18,16 +19,18 @@ public class AgvStateChangedConsumer : IConsumer<AgvStateChanged>
 {
     private readonly ILogger<AgvStateChangedConsumer> _logger;
     private readonly IAgvHubContext _agvHubContext;
-    private readonly IRequestClient<GetAgvsDtoRequest> _getAgvsClient;
+    private readonly IRequestClient<GetAgvs> _getAgvsClient;
+    private readonly IMapper _mapper;
 
     /// <summary>
     /// Constructor
     /// </summary>
-    public AgvStateChangedConsumer(
+    public AgvStateChangedConsumer(IMapper mapper,
         ILogger<AgvStateChangedConsumer> logger,
         IAgvHubContext agvHubContext,
-        IRequestClient<GetAgvsDtoRequest> getAgvsClient)
+        IRequestClient<GetAgvs> getAgvsClient)
     {
+        _mapper = mapper;
         _logger = logger;
         _agvHubContext = agvHubContext;
         _getAgvsClient = getAgvsClient;
@@ -41,12 +44,13 @@ public class AgvStateChangedConsumer : IConsumer<AgvStateChanged>
     {
         _logger.LogTrace("{MessageType} {CorrelationId} received", nameof(ActionGroupChanged), context.Message.CorrelationId);
             
-        Response<GetAgvsDtoResult> response = await _getAgvsClient.GetResponse<GetAgvsDtoResult>(new GetAgvsDtoRequest(new[] { context.Message.Agv.CorrelationId }));
+        Response<GotAgvs> response = await _getAgvsClient.GetResponse<GotAgvs>(new GetAgvs(new[] { context.Message.Agv.CorrelationId }));
             
         if (!response.Message.Agvs.IsNullOrEmpty())
         {
             bool isInitialState = Equals(context.Message.Agv.CurrentState, nameof(AgvStateMachine.Initial));
-            await _agvHubContext.SendAgvStateToAllClients(response.Message.Agvs.First(), isInitialState);
+            var agvDto = _mapper.Map<AgvDto>(response.Message.Agvs.First());
+            await _agvHubContext.SendAgvStateToAllClients(agvDto, isInitialState);
         }
     }
 }

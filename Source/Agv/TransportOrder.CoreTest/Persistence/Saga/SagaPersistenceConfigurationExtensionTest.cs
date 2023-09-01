@@ -1,7 +1,5 @@
 using Gebhardt.StoreWare.Agv.Common.Persistence;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Saga;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.States;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.SagaStateMachines;
 using MassTransit;
 using MassTransit.EntityFrameworkCoreIntegration.Saga;
 using MassTransit.Saga;
@@ -9,6 +7,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
+using TransportOrder.Domain.Models.Agv;
+using TransportOrder.Persistence.Ef.DataAccess;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Persistence.Saga;
 

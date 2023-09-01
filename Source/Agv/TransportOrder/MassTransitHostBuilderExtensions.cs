@@ -1,5 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Configurations.Extensions;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi;
 using MassTransit;
 using Microsoft.Extensions.Hosting;

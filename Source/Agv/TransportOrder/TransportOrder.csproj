@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TransportOrder.Core\TransportOrder.Core.csproj" />
+    <ProjectReference Include="..\TransportOrder.Persistence.Ef\TransportOrder.Persistence.Ef.csproj" />
     <ProjectReference Include="..\TransportOrder.WebApi\TransportOrder.WebApi.csproj" />
   </ItemGroup>
 

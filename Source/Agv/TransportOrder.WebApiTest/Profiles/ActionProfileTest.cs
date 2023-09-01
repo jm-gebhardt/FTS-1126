@@ -1,11 +1,10 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Extensions;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Profiles.Profiles;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.AgvActions;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
+using TransportOrder.Domain.ReadModels;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Profiles;
 [TestClass]
@@ -14,7 +13,7 @@ public class ActionProfileTest
     [TestMethod]
     public void Map_ActionGroupToActionGroupDto_MapsActionsInOrderBySequence()
     {
-        var mapper = MappingHelper.GetMapper(new AgvProfile(), new ActionProfile());
+        var mapper = MappingHelper.GetMapper(new AgvProfile(), new ActionProfile(), new AgvErrorProfile());
 
         List<AgvAction> actions = AgvActionGenerator.GeneratePickDropActionGroup().Actions.OrderByDescending(x => x.Sequence).ToList();
         var actionGroup = AgvActionGenerator.GenerateActionGroup(actions);

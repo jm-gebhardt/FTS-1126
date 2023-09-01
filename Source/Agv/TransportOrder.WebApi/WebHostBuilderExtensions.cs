@@ -1,7 +1,5 @@
 using Gebhardt.StoreWare.Agv.Common.Extensions;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.SchemaFilter;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Middleware;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -16,6 +14,7 @@ using AutoMapper;
 using Microsoft.AspNetCore.SignalR;
 using System.Text.Json;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.SchemaFilter;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Swagger;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi;

@@ -1,13 +1,12 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Common;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Handlers.Queries;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Requests.Queries;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 using System.Text;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Map;
+using TransportOrder.Messages.Requests.Map;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers;
 
@@ -23,7 +22,7 @@ public class MapControllerTest
             AgvGraphGenerator.CreateDefaultGraph(Guid.NewGuid())
         };
 
-        MapControllerTestFixture<GetMapListRequest, GetMapListRequestHandler> fixture = new MapControllerTestFixture<GetMapListRequest, GetMapListRequestHandler>()
+        MapControllerTestFixture<GetMapList, GetMapListRequestHandler> fixture = new MapControllerTestFixture<GetMapList, GetMapListRequestHandler>()
             .WithAgvGraphs(expectedAgvGraphs)
             .UseDefaultServices()
             .Build();
@@ -37,20 +36,20 @@ public class MapControllerTest
 
         var harness = fixture.TestHarness!;
 
-        (await harness.Consumed.Any<GetMapListRequest>()).ShouldBeTrue();
-        (await harness.Consumed.Any<GetMapListResult>()).ShouldBeTrue();
+        (await harness.Consumed.Any<GetMapList>()).ShouldBeTrue();
+        (await harness.Consumed.Any<GotMapList>()).ShouldBeTrue();
 
-        (await harness.Published.Any<GetMapListRequest>()).ShouldBeTrue();
-        (await harness.Published.Any<GetMapListResult>()).ShouldBeTrue();
+        (await harness.Published.Any<GetMapList>()).ShouldBeTrue();
+        (await harness.Published.Any<GotMapList>()).ShouldBeTrue();
     }
 
     [TestMethod]
     public async Task GetMap_ShouldSendProperCommandToMediator_WhereCorrelationIdIsValid()
     {
-        byte[] imageByteArray = Encoding.UTF8.GetBytes(MapControllerTestFixture<GetMapImageRequest, GetMapImageRequestHandler>.Base64String);
+        byte[] imageByteArray = Encoding.UTF8.GetBytes(MapControllerTestFixture<GetMapImage, GetMapImageRequestHandler>.Base64String);
         Guid correlationId = new("7FE9372B-4219-4D09-8885-966EE125A350");
 
-        MapControllerTestFixture<GetMapImageRequest, GetMapImageRequestHandler> fixture = new MapControllerTestFixture<GetMapImageRequest, GetMapImageRequestHandler>()
+        MapControllerTestFixture<GetMapImage, GetMapImageRequestHandler> fixture = new MapControllerTestFixture<GetMapImage, GetMapImageRequestHandler>()
             .AddMapRegistryMock()
             .Build();
 
@@ -65,10 +64,10 @@ public class MapControllerTest
 
         var harness = fixture.TestHarness!;
 
-        (await harness.Consumed.Any<GetMapImageRequest>()).ShouldBeTrue();
-        (await harness.Consumed.Any<GetMapImageResult>()).ShouldBeTrue();
+        (await harness.Consumed.Any<GetMapImage>()).ShouldBeTrue();
+        (await harness.Consumed.Any<GotMapImage>()).ShouldBeTrue();
 
-        (await harness.Published.Any<GetMapImageRequest>()).ShouldBeTrue();
-        (await harness.Published.Any<GetMapImageResult>()).ShouldBeTrue();
+        (await harness.Published.Any<GetMapImage>()).ShouldBeTrue();
+        (await harness.Published.Any<GotMapImage>()).ShouldBeTrue();
     }
 }

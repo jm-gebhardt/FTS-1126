@@ -1,8 +1,8 @@
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Common;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Maps.Requests.Queries;
+using AutoMapper;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Map;
 using MassTransit;
 using Microsoft.AspNetCore.Mvc;
+using TransportOrder.Messages.Requests.Map;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers;
 
@@ -13,18 +13,21 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers;
 [ApiExplorerSettings(GroupName = RestApiGroup.GroupName)]
 public class MapController : Controller
 {
-    private readonly IRequestClient<GetMapListRequest> _getMapListClient;
-    private readonly IRequestClient<GetMapImageRequest> _getMapImageClient;
+    private readonly IRequestClient<GetMapList> _getMapListClient;
+    private readonly IRequestClient<GetMapImage> _getMapImageClient;
+    private readonly IMapper _mapper;
 
     /// <summary>
     /// Constructor
     /// </summary>
+    /// <param name="mapper">AutoMapper.</param>
     /// <param name="getMapListClient"></param>
     /// <param name="getMapImageClient"></param>
-    public MapController(IRequestClient<GetMapListRequest> getMapListClient, IRequestClient<GetMapImageRequest> getMapImageClient)
+    public MapController(IMapper mapper, IRequestClient<GetMapList> getMapListClient, IRequestClient<GetMapImage> getMapImageClient)
     {
         _getMapListClient = getMapListClient;
         _getMapImageClient = getMapImageClient;
+        _mapper = mapper;
     }
 
     /// <summary>
@@ -35,8 +38,8 @@ public class MapController : Controller
     [Route("/maps")]
     public async Task<ActionResult<IEnumerable<MapDto>>> GetMaps()
     {
-        Response<GetMapListResult> response = await _getMapListClient.GetResponse<GetMapListResult>(new GetMapListRequest());
-        List<MapDto> maps = response.Message.Maps;
+        Response<GotMapList> response = await _getMapListClient.GetResponse<GotMapList>(new GetMapList());
+        var maps = _mapper.Map<List<MapDto>>(response.Message.Maps);
 
         return Ok(maps);
     }
@@ -51,7 +54,7 @@ public class MapController : Controller
     [Produces("image/png")]
     public async Task<ActionResult> GetMap(Guid correlationId)
     {
-        Response<GetMapImageResult> response = await _getMapImageClient.GetResponse<GetMapImageResult>(new GetMapImageRequest(correlationId));
+        Response<GotMapImage> response = await _getMapImageClient.GetResponse<GotMapImage>(new GetMapImage(correlationId));
         byte[] image = response.Message.Image;
 
         return File(image, "image/png");

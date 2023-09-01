@@ -51,7 +51,7 @@ public class AgvGraphBuilderSaga : SagaStateMachineInstance, CorrelatedBy<Guid>
     {
         if (correlationId == Guid.Empty)
         {
-            throw new InvalidOperationException($"{this.GetType()} requires correlation ID.");
+            throw new InvalidOperationException($"{GetType()} requires correlation ID.");
         }
         CorrelationId = correlationId;
     }

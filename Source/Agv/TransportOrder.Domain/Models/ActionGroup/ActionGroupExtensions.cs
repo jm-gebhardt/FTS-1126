@@ -1,0 +1,119 @@
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Services;
+using TransportOrder.Domain.Exceptions;
+
+namespace TransportOrder.Domain.Models.ActionGroup;
+
+/// <summary>
+/// Extension methods for <see cref="ActionGroup"/>
+/// </summary>
+public static class ActionGroupExtensions
+{
+    private static DateTime GetCurrentDate() => TimeProvider.Now;
+
+    /// <summary>
+    /// Updates the state of the ActionGroup based on the state of its Actions
+    /// </summary>
+    /// <param name="actionGroup"></param>
+    public static void UpdateActionGroupState(this Gebhardt.StoreWare.Agv.Common.Messages.Actions.ActionGroup actionGroup)
+    {
+        ICollection<AgvAction> actions = actionGroup.GetRequiredActions();
+        var previousState = actionGroup.State;
+        if (actions.All(a => a.State == ActionState.Completed))
+        {
+            actionGroup.State = ActionGroupState.Completed;
+        }
+        else if (actions.All(a => a.State == ActionState.Created))
+        {
+            actionGroup.State = ActionGroupState.Created;
+        }
+        else if (actions.Any(a => a.State == ActionState.Invalid))
+        {
+            actionGroup.State = ActionGroupState.Invalid;
+        }
+        else if (actions.Any(a => a.State == ActionState.Failed))
+        {
+            actionGroup.State = ActionGroupState.Failed;
+        }
+        else if (actions.Any(a => a.State == ActionState.Canceled))
+        {
+            actionGroup.State = ActionGroupState.Canceled;
+        }
+        else
+        {
+            actionGroup.State = ActionGroupState.Started;
+        }
+
+        if (actionGroup.State != previousState)
+        {
+            SetDates(actionGroup, previousState);
+        }
+    }
+
+    private static void SetDates(Gebhardt.StoreWare.Agv.Common.Messages.Actions.ActionGroup actionGroup, ActionGroupState previousState)
+    {
+        var state = actionGroup.State;
+        if (previousState != state)
+        {
+            switch (state)
+            {
+                case ActionGroupState.Started:
+                    actionGroup.StartedDate = GetCurrentDate();
+                    break;
+
+                case ActionGroupState.Completed:
+                case ActionGroupState.Failed:
+                case ActionGroupState.Canceled:
+                    actionGroup.CompletedDate = GetCurrentDate();
+                    break;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Sets the AssignedAgv of ActionGroup if not already assigned
+    /// </summary>
+    /// <param name="actionGroup"></param>
+    /// <param name="agvToAssign"></param>
+    // ReSharper disable once UnusedMethodReturnValue.Global
+    public static Gebhardt.StoreWare.Agv.Common.Messages.Actions.ActionGroup Assign(this Gebhardt.StoreWare.Agv.Common.Messages.Actions.ActionGroup actionGroup, IAgv agvToAssign)
+    {
+        if (actionGroup.AssignedAgv == null)
+        {
+            actionGroup.AssignedAgv = agvToAssign.CorrelationId;
+        }
+        else if (actionGroup.AssignedAgv != agvToAssign.CorrelationId)
+        {
+            throw new ActionGroupAlreadyAssignedException(actionGroup, agvToAssign.CorrelationId);
+        }
+        return actionGroup;
+    }
+
+    /// <summary>
+    /// Makes sure that the ActionGroup has Actions and returns it
+    /// </summary>
+    /// <param name="actionGroup"></param>
+    /// <returns>The Actions of the ActionGroup</returns>
+    /// <exception cref="ArgumentException"></exception>
+    public static ICollection<AgvAction> GetRequiredActions(this Gebhardt.StoreWare.Agv.Common.Messages.Actions.ActionGroup actionGroup)
+    {
+        actionGroup.RequireActions();
+        return actionGroup.Actions;
+    }
+
+    /// <summary>
+    /// Makes sure that the ActionGroup has Actions
+    /// </summary>
+    /// <param name="actionGroup"></param>
+    /// <exception cref="ArgumentException"></exception>
+    // ReSharper disable once MemberCanBePrivate.Global
+    public static void RequireActions(this Gebhardt.StoreWare.Agv.Common.Messages.Actions.ActionGroup actionGroup)
+    {
+        ICollection<AgvAction> actionGroupActions = actionGroup.Actions;
+        if (!actionGroupActions.Any())
+        {
+            throw new ActionsInActionGroupEmptyException(actionGroup.CorrelationId);
+        }
+    }
+}

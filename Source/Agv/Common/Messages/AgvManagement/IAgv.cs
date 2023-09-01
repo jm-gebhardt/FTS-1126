@@ -35,7 +35,12 @@ public interface IAgv : CorrelatedBy<Guid>, IAgvId
     /// Returns True if Agv is in error (has any error) and not ready to drive
     /// </summary>
     public bool HasError { get; }
-        
+
+    /// <summary>
+    /// If the graph of this agv exists.
+    /// </summary>
+    public bool GraphExists { get; set; }
+
     /// <summary>
     /// returns the time of the last state transition
     /// </summary>

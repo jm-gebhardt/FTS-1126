@@ -1,10 +1,9 @@
 using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Actions.Common;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Actions.Requests.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.AgvActions;
 using MassTransit;
 using Microsoft.AspNetCore.Mvc;
+using TransportOrder.Messages.Requests.ActionGroup;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers;
 

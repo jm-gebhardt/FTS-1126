@@ -21,6 +21,8 @@ public class AgvDummy : IAgv
     // ReSharper disable once UnassignedGetOnlyAutoProperty
     public bool HasError { get; }
 
+    public bool GraphExists { get; set; }
+
     public DateTime TimeOfStateTransition { get; set; }
 
     public DateTime TimeOfLockStateChanged { get; set; }

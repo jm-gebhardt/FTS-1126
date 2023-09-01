@@ -28,6 +28,9 @@ public record SimulatedAgv : IAgv
     public bool HasError { get; }
 
     /// <inheritdoc />
+    public bool GraphExists { get; set; }
+
+    /// <inheritdoc />
     public DateTime TimeOfStateTransition { get; set; }
 
     /// <inheritdoc />

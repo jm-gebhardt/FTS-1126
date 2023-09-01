@@ -7,6 +7,11 @@
     </PropertyGroup>
     <Import Project="..\SharedProjectSettings.csproj" />
     <ItemGroup>
+      <Compile Remove="WebApi\**" />
+      <EmbeddedResource Remove="WebApi\**" />
+      <None Remove="WebApi\**" />
+    </ItemGroup>
+    <ItemGroup>
         <PackageReference Include="AutoMapper" Version="12.0.1" />
         <PackageReference Include="JetBrains.Annotations" Version="2022.3.1" />
         <PackageReference Include="MassTransit" Version="8.0.8" />
@@ -26,5 +31,11 @@
     <ItemGroup>
       <ProjectReference Include="..\Common.Testing\Common.Testing.csproj" />
       <ProjectReference Include="..\TransportOrder.Core\TransportOrder.Core.csproj" />
+      <ProjectReference Include="..\TransportOrder.Domain\TransportOrder.Domain.csproj" />
+      <ProjectReference Include="..\TransportOrder.Routing\TransportOrder.Routing.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+      <Folder Include="Services\CommandHandler\Agv\" />
+      <Folder Include="Services\RequestHandler\Map\" />
     </ItemGroup>
 </Project>

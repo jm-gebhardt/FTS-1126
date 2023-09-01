@@ -28,8 +28,8 @@ public interface IOrder : CorrelatedBy<Guid>
     /// Reason why an order failed
     /// </summary>
     /// <remarks>
-    /// Primarily this is the event that leads to the failure (e.g. <see cref="Events.AgvAssignmentFailed"/>).
-    /// When this event provides an error code it's appended to the event (e.g. <see cref="Events.AgvAssignmentFailed.ErrorCode.NoRouteFound"/>).
+    /// Primarily this is the event that leads to the failure (e.g. AgvAssignmentFailed).
+    /// When this event provides an error code it's appended to the event (e.g.Events.AgvAssignmentFailed.ErrorCode.NoRouteFound).
     /// </remarks>
     public string? FailedReason { get; set; }
 }

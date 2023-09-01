@@ -1,4 +1,5 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
+using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 
@@ -22,6 +23,7 @@ public static class AgvActionGenerator
         return actionGroup;
     }
 
+    [UsedImplicitly]
     public static AgvAction GenerateParkAction(string? targetNodeId = null, Guid? parentId = null)
     {
         var parkAction = new AgvAction(Guid.NewGuid(), ActionType.Move, targetNodeId ?? "Prk-1", parentId ?? Guid.NewGuid());

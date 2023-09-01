@@ -46,6 +46,9 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
     public bool HasError { get; }
 
     /// <inheritdoc />
+    public bool GraphExists { get; set; }
+
+    /// <inheritdoc />
     public DateTime TimeOfStateTransition { get; set; } = DateTime.UtcNow;
 
     /// <inheritdoc />
@@ -238,7 +241,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
     {
         if (correlationId == Guid.Empty)
         {
-            throw new InvalidOperationException($"{this.GetType()} requires correlation ID.");
+            throw new InvalidOperationException($"{GetType()} requires correlation ID.");
         }
         CorrelationId = correlationId;
         AgvId = agvId;

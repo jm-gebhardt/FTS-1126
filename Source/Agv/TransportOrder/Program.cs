@@ -1,13 +1,10 @@
 ﻿using CommandLine;
 using Gebhardt.StoreWare.Agv.Common;
 using Gebhardt.StoreWare.Agv.Common.Configurations;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.CmdOptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi;
 using Gebhardt.StoreWare.Agv.TransportOrder;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Db;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Persistence.Saga;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,6 +12,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Prometheus;
 using Microsoft.AspNetCore.Builder;
+using TransportOrder.Persistence.Ef.DataAccess;
 
 var initialLogger = Gebhardt.StoreWare.Agv.Common.Logging.InitialLogger.Create<Program>();
 

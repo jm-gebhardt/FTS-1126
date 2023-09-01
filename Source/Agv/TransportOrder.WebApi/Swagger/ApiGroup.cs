@@ -39,8 +39,8 @@ public abstract class ApiGroup: IApiGroup
     public OpenApiInfo ApiInfo =>
         new()
         {
-            Version = this.Version,
-            Title = $"TransportOrder {this.Title}"
+            Version = Version,
+            Title = $"TransportOrder {Title}"
         };
 
     /// <inheritdoc />

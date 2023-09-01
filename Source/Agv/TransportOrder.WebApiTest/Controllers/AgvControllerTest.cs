@@ -1,23 +1,21 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Exceptions;
-using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos.Graphs;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Common;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Commands;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Handlers.Queries;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Requests.Commands;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Requests.Queries;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Graph;
 using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
+using TransportOrder.Domain.Exceptions;
+using TransportOrder.Domain.Models.Agv;
+using TransportOrder.Messages.Events.Agv;
+using TransportOrder.Messages.Requests.Agv;
+using AgvError = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.AgvError;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers;
 
@@ -25,10 +23,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers;
 public class AgvControllerTest
 {
     [TestMethod]
-    public async Task GetSingleAgv_Successfully()
+    public async Task GetSingleAgv_ValidData_ReturnsSingleAgvDto()
     {
-        AgvControllerTestFixture<GetAgvDtoRequest, GetAgvDtoRequestHandler> fixture = new AgvControllerTestFixture<GetAgvDtoRequest, GetAgvDtoRequestHandler>()
-            .ConfigureAdditionalRequestClient<GetAgvsDtoRequestHandler, GetAgvsDtoRequest>()
+        AgvControllerTestFixture<GetAgv, GetAgvsRequestHandler> fixture = new AgvControllerTestFixture<GetAgv, GetAgvsRequestHandler>()
             .UseDefaultServices()
             .Build();
 
@@ -47,10 +44,9 @@ public class AgvControllerTest
     }
 
     [TestMethod]
-    public async Task GetSingleAgv_NotFound()
+    public async Task GetSingleAgv_UnknownCorrelationId_ReturnsNotFound()
     {
-        AgvControllerTestFixture<GetAgvDtoRequest, GetAgvDtoRequestHandler> fixture = new AgvControllerTestFixture<GetAgvDtoRequest, GetAgvDtoRequestHandler>()
-            .ConfigureAdditionalRequestClient<GetAgvsDtoRequestHandler, GetAgvsDtoRequest>()
+        AgvControllerTestFixture<GetAgv, GetAgvsRequestHandler> fixture = new AgvControllerTestFixture<GetAgv, GetAgvsRequestHandler>()
             .UseDefaultServices()
             .Build();
 
@@ -62,9 +58,9 @@ public class AgvControllerTest
     }
 
     [TestMethod]
-    public async Task GetAgvs_Successfully()
+    public async Task GetAgvs_ValidData_ReturnsAgvDtos()
     {
-        AgvControllerTestFixture<GetAgvsDtoRequest, GetAgvsDtoRequestHandler> fixture = new AgvControllerTestFixture<GetAgvsDtoRequest, GetAgvsDtoRequestHandler>()
+        AgvControllerTestFixture<GetAgvs, GetAgvsRequestHandler> fixture = new AgvControllerTestFixture<GetAgvs, GetAgvsRequestHandler>()
             .UseDefaultServices()
             .Build();
 
@@ -95,7 +91,7 @@ public class AgvControllerTest
     [TestMethod]
     public async Task GetAgvs_WhenAgvHasAgvError_ReturnsAgvWithAgvErrorList()
     {
-        var fixture = new AgvControllerTestFixture<GetAgvsDtoRequest, GetAgvsDtoRequestHandler>();
+        var fixture = new AgvControllerTestFixture<GetAgvs, GetAgvsRequestHandler>();
         List<AgvError> expectedAgvErrors = fixture.AgvIds.Select(agvId => AgvErrorGenerator.GenerateAgvError(agvId.ToGuid())).ToList();
 
         fixture.UseDefaultServices()
@@ -135,9 +131,9 @@ public class AgvControllerTest
     [TestMethod]
     [DataRow(0)]
     [DataRow(1)]
-    public async Task GetAgvGraph_Successfully(int index)
+    public async Task GetAgvGraph_ValidData_ReturnsGraphDto(int index)
     {
-        var fixture = new AgvControllerTestFixture<GetAgvGraphRequest, GetAgvGraphRequestHandler>();
+        var fixture = new AgvControllerTestFixture<GetAgvGraph, GetAgvGraphRequestHandler>();
         var correlationId = fixture.AgvIds[index].ToGuid();
         var agvGraph = AgvGraphGenerator.CreateDefaultGraph(correlationId);
 
@@ -178,9 +174,9 @@ public class AgvControllerTest
     }
 
     [TestMethod]
-    public async Task GetAgvGraph_NotFoundAsync()
+    public async Task GetAgvGraph_UnknownCorrelationId_ReturnsNotFound()
     {
-        AgvControllerTestFixture<GetAgvGraphRequest, GetAgvGraphRequestHandler> fixture = new AgvControllerTestFixture<GetAgvGraphRequest, GetAgvGraphRequestHandler>()
+        AgvControllerTestFixture<GetAgvGraph, GetAgvGraphRequestHandler> fixture = new AgvControllerTestFixture<GetAgvGraph, GetAgvGraphRequestHandler>()
             .UseDefaultServices()
             .Build();
         var controller = fixture.Controller;
@@ -192,7 +188,7 @@ public class AgvControllerTest
     [TestMethod]
     [DataRow(0)]
     [DataRow(1)]
-    public async Task GetAgvData_Successfully(int index)
+    public async Task GetAgvData_ValidData_ReturnsAgvDataDto(int index)
     {
         AgvControllerTestFixture<GetAgvDataRequest, GetAgvDataRequestHandler> fixture = new AgvControllerTestFixture<GetAgvDataRequest, GetAgvDataRequestHandler>()
             .UseDefaultServices()
@@ -211,7 +207,7 @@ public class AgvControllerTest
     }
 
     [TestMethod]
-    public async Task GetAgvData_NotFound()
+    public async Task GetAgvData_UnknownCorrelationId_ReturnsNotFound()
     {
         AgvControllerTestFixture<GetAgvDataRequest, GetAgvDataRequestHandler> fixture = new AgvControllerTestFixture<GetAgvDataRequest, GetAgvDataRequestHandler>()
             .UseDefaultServices()
@@ -263,7 +259,7 @@ public class AgvControllerTest
     }
 
     [TestMethod]
-    public async Task AcceptAgv_NWhenUnknownAgv_ReturnNotFoundResult()
+    public async Task AcceptAgv_UnknownAgv_ReturnNotFoundResult()
     {
         var fixture = new AgvControllerTestFixture<AcceptAgvCommand, AcceptAgvCommandHandler>();
         var correlationId = Guid.Empty; // Invalid AGV correlationId
@@ -283,9 +279,9 @@ public class AgvControllerTest
     }
 
     [TestMethod]
-    public async Task UnlockAgv_NotFound()
+    public async Task UnlockAgv_UnknownCorrelationId_ReturnsNotFound()
     {
-        AgvControllerTestFixture<UnlockAgvCommand, LockAndUnlockAgvCommandHandler> fixture = new AgvControllerTestFixture<UnlockAgvCommand, LockAndUnlockAgvCommandHandler>()
+        AgvControllerTestFixture<global::TransportOrder.Messages.Commands.Agv.UnlockAgv, LockAndUnlockAgvCommandHandler> fixture = new AgvControllerTestFixture<global::TransportOrder.Messages.Commands.Agv.UnlockAgv, LockAndUnlockAgvCommandHandler>()
             .UseDefaultServices()
             .Build();
         var controller = fixture.Controller;
@@ -297,7 +293,7 @@ public class AgvControllerTest
     [TestMethod]
     public async Task UnlockAgv_WhenNotInDiscovered_UnlocksAgv()
     {
-        AgvControllerTestFixture<UnlockAgvCommand, LockAndUnlockAgvCommandHandler> fixture = new AgvControllerTestFixture<UnlockAgvCommand, LockAndUnlockAgvCommandHandler>()
+        AgvControllerTestFixture<global::TransportOrder.Messages.Commands.Agv.UnlockAgv, LockAndUnlockAgvCommandHandler> fixture = new AgvControllerTestFixture<global::TransportOrder.Messages.Commands.Agv.UnlockAgv, LockAndUnlockAgvCommandHandler>()
             .UseDefaultServices()
             .Build();
         var controller = fixture.Controller;
@@ -307,14 +303,14 @@ public class AgvControllerTest
         result.ShouldNotBeNull();
 
         var harness = fixture.TestHarness!;
-        (await harness.Consumed.Any<UnlockAgvCommand>()).ShouldBeTrue();
-        (await harness.Published.Any<UnlockAgvCommand>()).ShouldBeTrue();
+        (await harness.Consumed.Any<global::TransportOrder.Messages.Commands.Agv.UnlockAgv>()).ShouldBeTrue();
+        (await harness.Published.Any<global::TransportOrder.Messages.Commands.Agv.UnlockAgv>()).ShouldBeTrue();
     }
 
     [TestMethod]
     public async Task UnlockAgv_Ok()
     {
-        AgvControllerTestFixture<UnlockAgvCommand, LockAndUnlockAgvCommandHandler> fixture = new AgvControllerTestFixture<UnlockAgvCommand, LockAndUnlockAgvCommandHandler>()
+        AgvControllerTestFixture<global::TransportOrder.Messages.Commands.Agv.UnlockAgv, LockAndUnlockAgvCommandHandler> fixture = new AgvControllerTestFixture<global::TransportOrder.Messages.Commands.Agv.UnlockAgv, LockAndUnlockAgvCommandHandler>()
             .UseDefaultServices()
             .Build();
         var controller = fixture.Controller;
@@ -324,14 +320,14 @@ public class AgvControllerTest
         result.ShouldNotBeNull();
 
         var harness = fixture.TestHarness!;
-        (await harness.Consumed.Any<UnlockAgvCommand>()).ShouldBeTrue();
-        (await harness.Published.Any<UnlockAgvCommand>()).ShouldBeTrue();
+        (await harness.Consumed.Any<global::TransportOrder.Messages.Commands.Agv.UnlockAgv>()).ShouldBeTrue();
+        (await harness.Published.Any<global::TransportOrder.Messages.Commands.Agv.UnlockAgv>()).ShouldBeTrue();
     }
 
     [TestMethod]
     public async Task LockAgv_WhenAgvRegistryThrows_ThrowsAgvNotFoundException()
     {
-        AgvControllerTestFixture<LockAgvCommand, LockAndUnlockAgvCommandHandler> fixture = new AgvControllerTestFixture<LockAgvCommand, LockAndUnlockAgvCommandHandler>()
+        AgvControllerTestFixture<global::TransportOrder.Messages.Commands.Agv.LockAgv, LockAndUnlockAgvCommandHandler> fixture = new AgvControllerTestFixture<global::TransportOrder.Messages.Commands.Agv.LockAgv, LockAndUnlockAgvCommandHandler>()
             .UseDefaultServices()
             .Build();
 
@@ -345,7 +341,7 @@ public class AgvControllerTest
     [TestMethod]
     public async Task LockAgv_Ok()
     {
-        AgvControllerTestFixture<LockAgvCommand, LockAndUnlockAgvCommandHandler> fixture = new AgvControllerTestFixture<LockAgvCommand, LockAndUnlockAgvCommandHandler>()
+        AgvControllerTestFixture<global::TransportOrder.Messages.Commands.Agv.LockAgv, LockAndUnlockAgvCommandHandler> fixture = new AgvControllerTestFixture<global::TransportOrder.Messages.Commands.Agv.LockAgv, LockAndUnlockAgvCommandHandler>()
             .UseDefaultServices()
             .Build();
         var controller = fixture.Controller;
@@ -355,14 +351,14 @@ public class AgvControllerTest
         result.ShouldNotBeNull();
 
         var harness = fixture.TestHarness!;
-        (await harness.Consumed.Any<LockAgvCommand>()).ShouldBeTrue();
-        (await harness.Published.Any<LockAgvCommand>()).ShouldBeTrue();
+        (await harness.Consumed.Any<global::TransportOrder.Messages.Commands.Agv.LockAgv>()).ShouldBeTrue();
+        (await harness.Published.Any<global::TransportOrder.Messages.Commands.Agv.LockAgv>()).ShouldBeTrue();
     }
 
     [TestMethod]
     public async Task EmitRequestAgvData_NotFound()
     {
-        AgvControllerTestFixture<RequestAgvDataCommand, RequestAgvDataCommandHandler> fixture = new AgvControllerTestFixture<RequestAgvDataCommand, RequestAgvDataCommandHandler>()
+        AgvControllerTestFixture<global::TransportOrder.Messages.Commands.Agv.RequestAgvData, RequestAgvDataCommandHandler> fixture = new AgvControllerTestFixture<global::TransportOrder.Messages.Commands.Agv.RequestAgvData, RequestAgvDataCommandHandler>()
             .UseDefaultServices()
             .Build();
         var controller = fixture.Controller;
@@ -374,7 +370,7 @@ public class AgvControllerTest
     [TestMethod]
     public async Task EmitRequestAgvData_Ok()
     {
-        AgvControllerTestFixture<RequestAgvDataCommand, RequestAgvDataCommandHandler> fixture = new AgvControllerTestFixture<RequestAgvDataCommand, RequestAgvDataCommandHandler>()
+        AgvControllerTestFixture<global::TransportOrder.Messages.Commands.Agv.RequestAgvData, RequestAgvDataCommandHandler> fixture = new AgvControllerTestFixture<global::TransportOrder.Messages.Commands.Agv.RequestAgvData, RequestAgvDataCommandHandler>()
             .UseDefaultServices()
             .Build();
         var controller = fixture.Controller;
@@ -384,14 +380,14 @@ public class AgvControllerTest
         result.ShouldNotBeNull();
 
         var harness = fixture.TestHarness!;
-        (await harness.Consumed.Any<RequestAgvDataCommand>()).ShouldBeTrue();
-        (await harness.Published.Any<RequestAgvDataCommand>()).ShouldBeTrue();
+        (await harness.Consumed.Any<global::TransportOrder.Messages.Commands.Agv.RequestAgvData>()).ShouldBeTrue();
+        (await harness.Published.Any<global::TransportOrder.Messages.Commands.Agv.RequestAgvData>()).ShouldBeTrue();
     }
 
     [TestMethod]
     public async Task EmitRequestAgvGraph_NotFound()
     {
-        AgvControllerTestFixture<RequestAgvGraphCommand, RequestAgvGraphCommandHandler> fixture = new AgvControllerTestFixture<RequestAgvGraphCommand, RequestAgvGraphCommandHandler>()
+        AgvControllerTestFixture<global::TransportOrder.Messages.Commands.Agv.RequestAgvGraph, RequestAgvGraphCommandHandler> fixture = new AgvControllerTestFixture<global::TransportOrder.Messages.Commands.Agv.RequestAgvGraph, RequestAgvGraphCommandHandler>()
             .UseDefaultServices()
             .Build();
         var controller = fixture.Controller;
@@ -403,7 +399,7 @@ public class AgvControllerTest
     [TestMethod]
     public async Task EmitRequestAgvGraph_Ok()
     {
-        AgvControllerTestFixture<RequestAgvGraphCommand, RequestAgvGraphCommandHandler> fixture = new AgvControllerTestFixture<RequestAgvGraphCommand, RequestAgvGraphCommandHandler>()
+        AgvControllerTestFixture<global::TransportOrder.Messages.Commands.Agv.RequestAgvGraph, RequestAgvGraphCommandHandler> fixture = new AgvControllerTestFixture<global::TransportOrder.Messages.Commands.Agv.RequestAgvGraph, RequestAgvGraphCommandHandler>()
             .UseDefaultServices()
             .Build();
         var controller = fixture.Controller;
@@ -413,8 +409,8 @@ public class AgvControllerTest
         result.ShouldNotBeNull();
 
         var harness = fixture.TestHarness!;
-        (await harness.Consumed.Any<RequestAgvGraphCommand>()).ShouldBeTrue();
-        (await harness.Published.Any<RequestAgvGraphCommand>()).ShouldBeTrue();
+        (await harness.Consumed.Any<global::TransportOrder.Messages.Commands.Agv.RequestAgvGraph>()).ShouldBeTrue();
+        (await harness.Published.Any<global::TransportOrder.Messages.Commands.Agv.RequestAgvGraph>()).ShouldBeTrue();
     }
 
     [TestMethod]

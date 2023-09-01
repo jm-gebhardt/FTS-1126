@@ -1,12 +1,12 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Models;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
+using TransportOrder.Domain.Models.Agv;
+using TransportOrder.Domain.Repositories;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Consumer;
 
@@ -123,7 +123,7 @@ public class AgvPositionReceivedConsumerTest
         (await fixture.TestHarness.Published.Any<AgvPositionReceived>()).ShouldBeTrue();
         (await fixture.ConsumerHarness!.Consumed.Any<AgvPositionReceived>()).ShouldBeTrue();
 
-        agvPositionRegistryMock.Verify(h => h.UpdatePosition(
+        agvPositionRegistryMock.Verify(h => h.UpdatePositionAsync(
             It.Is<AgvPositionStatus>(o => o.AgvId == AgvTestIdentifier01 && o.CorrelationId == AgvTestIdentifier01.ToGuid())), Times.Once);
     }
 }

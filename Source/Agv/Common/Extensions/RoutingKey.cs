@@ -16,6 +16,6 @@ public class RoutingKey : Attribute
     /// <param name="routingKey"></param>
     public RoutingKey(string routingKey)
     {
-        this.RoutingKeyValue = routingKey;
+        RoutingKeyValue = routingKey;
     }
 }

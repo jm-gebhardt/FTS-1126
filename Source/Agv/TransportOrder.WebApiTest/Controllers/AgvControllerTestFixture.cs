@@ -1,20 +1,11 @@
-using Gebhardt.StoreWare.Agv.Common.Exceptions;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Requests.Commands;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Features.Agvs.Requests.Queries;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Models;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Actions.Registries;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Graphs;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs.Errors;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.ReadModels;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.States;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.EventHandler;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.SagaStateMachines;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers;
 using JetBrains.Annotations;
 using MassTransit;
@@ -24,6 +15,16 @@ using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
+using TransportOrder.Domain.Exceptions;
+using TransportOrder.Domain.Models.Agv;
+using TransportOrder.Domain.ReadModels;
+using TransportOrder.Domain.Repositories;
+using TransportOrder.Messages.Commands.Agv;
+using TransportOrder.Messages.Requests.Agv;
+using AgvData = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.AgvData;
+using AgvError = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.AgvError;
+using AgvPositionStatus = TransportOrder.Domain.Models.Agv.AgvPositionStatus;
+using GraphNode = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.GraphNode;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers;
 
@@ -31,14 +32,14 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
     where TRequest : class
     where TRequestHandler : class, IConsumer
 {
-    public string[] AgvIds { get; } = {"AGV001", "AGV002", "AGV003"};
+    public string[] AgvIds { get; } = { "AGV001", "AGV002", "AGV003" };
 
     // ReSharper disable once MemberCanBePrivate.Global
-    public string[] Orders { get; } = {"ORDER001", "ORDER002", ""};
+    public string[] Orders { get; } = { "ORDER001", "ORDER002", "" };
 
-    public string[] States { get; } = {nameof(AgvStateMachine.Idle), nameof(AgvStateMachine.Busy), nameof(AgvStateMachine.Discovered)};
+    public string[] States { get; } = { nameof(AgvStateMachine.Idle), nameof(AgvStateMachine.Busy), nameof(AgvStateMachine.Discovered) };
 
-    public string[] Ips { get; } = {"127.0.0.1", "127.0.0.2", "127.0.0.3"};
+    public string[] Ips { get; } = { "127.0.0.1", "127.0.0.2", "127.0.0.3" };
 
     public Mock<IAgvRegistry> AgvRegistry { get; }
 
@@ -75,18 +76,12 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         ActionGroupRetrievalService.Setup(r => r.GetCurrentAssignedActionGroupsWithTargetNodeTypeAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (ActionGroupReadModel?)null));
 
         ActionGroupRegistry = new Mock<IActionGroupRegistry>();
-        ActionGroupRegistry.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (ActionGroup?) null));
+        ActionGroupRegistry.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (ActionGroup?)null));
         AgvErrorRegistry.Setup(x => x.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(new List<AgvError>());
         AgvErrorRegistry.Setup(x => x.GetActiveErrorsAsync(It.IsAny<IList<Guid>>())).ReturnsAsync(new List<AgvError>());
-        ActionGroupRegistry.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (ActionGroup?) null));
+        ActionGroupRegistry.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (ActionGroup?)null));
     }
-
-    public override AgvControllerTestFixture<TRequest, TRequestHandler> ConfigureAdditionalRequestClient<TRequestHandler2, TRequest2>()
-    {
-        base.ConfigureAdditionalRequestClient<TRequestHandler2, TRequest2>();
-        return this;
-    }
-
+    
     [UsedImplicitly]
     public AgvControllerTestFixture<TRequest, TRequestHandler> SetupAgvRegistryWithDefaultData()
     {
@@ -121,8 +116,8 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
                 data.TryGetValue(correlationId, out var agvData);
                 return agvData;
             });
-        AgvDataRegistry.Setup(x => x.AddOrUpdate(It.IsAny<AgvData>()))
-            .Returns<AgvData>(agvData =>
+        AgvDataRegistry.Setup(x => x.AddOrUpdateAsync(It.IsAny<AgvData>()))
+            .ReturnsAsync((AgvData agvData) =>
             {
                 data[agvData.CorrelationId] = agvData;
                 return true;
@@ -172,24 +167,24 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
     /// <inheritdoc/>
     protected override AgvController GetController()
     {
-        IRequestClient<GetAgvDtoRequest> getAgvDtoRequestClient = GetRequestClient<GetAgvDtoRequest>();
-        IRequestClient<GetAgvsDtoRequest> getAgvsDtoRequestClient = GetRequestClient<GetAgvsDtoRequest>();
-        IRequestClient<GetAgvGraphRequest> getAgvGraphRequestClient = GetRequestClient<GetAgvGraphRequest>();
+        IRequestClient<GetAgv> getAgvRequestClient = GetRequestClient<GetAgv>();
+        IRequestClient<GetAgvs> getAgvsRequestClient = GetRequestClient<GetAgvs>();
+        IRequestClient<GetAgvGraph> getAgvGraphRequestClient = GetRequestClient<GetAgvGraph>();
         IRequestClient<GetAgvDataRequest> getAgvDataRequestClient = GetRequestClient<GetAgvDataRequest>();
-        IRequestClient<GetAgvPositionsRequest> getAgvPositionsRequestClient = GetRequestClient<GetAgvPositionsRequest>();
+        IRequestClient<GetAgvPositions> getAgvPositionsRequestClient = GetRequestClient<GetAgvPositions>();
         IRequestClient<AcceptAgvCommand> acceptAgvRequestClient = GetRequestClient<AcceptAgvCommand>();
-        IRequestClient<UnlockAgvCommand> unlockAgvRequestClient = GetRequestClient<UnlockAgvCommand>();
-        IRequestClient<LockAgvCommand> lockAgvRequestClient = GetRequestClient<LockAgvCommand>();
-        IRequestClient<RequestAgvDataCommand> emitRequestDataRequestClient = GetRequestClient<RequestAgvDataCommand>();
-        IRequestClient<RequestAgvGraphCommand> emitRequestGraphRequestClient = GetRequestClient<RequestAgvGraphCommand>();
+        IRequestClient<global::TransportOrder.Messages.Commands.Agv.UnlockAgv> unlockAgvRequestClient = GetRequestClient<global::TransportOrder.Messages.Commands.Agv.UnlockAgv>();
+        IRequestClient<global::TransportOrder.Messages.Commands.Agv.LockAgv> lockAgvRequestClient = GetRequestClient<global::TransportOrder.Messages.Commands.Agv.LockAgv>();
+        IRequestClient<global::TransportOrder.Messages.Commands.Agv.RequestAgvData> emitRequestDataRequestClient = GetRequestClient<global::TransportOrder.Messages.Commands.Agv.RequestAgvData>();
+        IRequestClient<global::TransportOrder.Messages.Commands.Agv.RequestAgvGraph> emitRequestGraphRequestClient = GetRequestClient<global::TransportOrder.Messages.Commands.Agv.RequestAgvGraph>();
         IRequestClient<GetActiveAgvErrorsRequest> getAgvErrorsRequestClient = GetRequestClient<GetActiveAgvErrorsRequest>();
         IRequestClient<GetAgvErrorsRequest> getAgvErrorHistoryRequestClient = GetRequestClient<GetAgvErrorsRequest>();
         IRequestClient<MoveAgv> moveAgvRequestClient = GetRequestClient<MoveAgv>();
         IRequestClient<SetAgvForceIdle> setAgvForceIdleClient = GetRequestClient<SetAgvForceIdle>();
 
-        var controller = new AgvController(
-            getAgvDtoRequestClient,
-            getAgvsDtoRequestClient,
+        var controller = new AgvController(GetMapper(),
+            getAgvRequestClient,
+            getAgvsRequestClient,
             getAgvGraphRequestClient,
             getAgvDataRequestClient,
             getAgvPositionsRequestClient,

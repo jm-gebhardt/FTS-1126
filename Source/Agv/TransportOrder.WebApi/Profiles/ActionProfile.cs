@@ -1,6 +1,6 @@
 using AutoMapper;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.ReadModels;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.AgvActions;
+using TransportOrder.Domain.ReadModels;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles;
 

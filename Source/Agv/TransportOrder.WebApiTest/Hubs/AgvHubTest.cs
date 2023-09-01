@@ -1,13 +1,14 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Dtos;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Models;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Profiles.Profiles;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.States;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
+using TransportOrder.Domain.Models.Agv;
+using TransportOrder.Messages.Requests.Agv;
+using AgvPositionStatus = TransportOrder.Messages.Requests.Agv.AgvPositionStatus;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Hubs;
 
@@ -29,13 +30,14 @@ public class AgvHubTest
     }
 
     [TestMethod]
-    public async Task SendAgvStateToAllClients_AgvDiscovered()
+    public async Task SendAgvStateToAllClients_ValidData_DiscoveredAgvDtoSent()
     {
         Mock<IHubContext<AgvHub, IAgvHubClient>> mockHubContext = GetMock();
-        var mapper = MappingHelper.GetMapper(new AgvProfile());
+        var mapper = MappingHelper.GetMapper(new AgvProfile(), new ActionProfile(), new AgvErrorProfile());
         var agvHubContext = new AgvHubContext(mockHubContext.Object, mapper);
 
-        var agv = new AgvSaga(AgvId.ToGuid(), AgvId);
+        var agv = new global::TransportOrder.Messages.MessageContent.Agv(Guid.NewGuid(), "AGV", AgvState.Initial, DateTime.UtcNow, DateTime.UtcNow, false, true, false, true, 100.0d, false, 100, 100,
+            null, new List<AgvError>() );
         var agvDto = mapper.Map<AgvDto>(agv);
         await agvHubContext.SendAgvStateToAllClients(agvDto, true);
 
@@ -43,13 +45,14 @@ public class AgvHubTest
     }
 
     [TestMethod]
-    public async Task SendAgvStateToAllClients_AgvChanged()
+    public async Task SendAgvStateToAllClients_ValidData_ChangedAgvDtoSent()
     {
         Mock<IHubContext<AgvHub, IAgvHubClient>> mockHubContext = GetMock();
-        var mapper = MappingHelper.GetMapper(new AgvProfile());
+        var mapper = MappingHelper.GetMapper(new AgvProfile(), new ActionProfile(), new AgvErrorProfile());
         var agvHubContext = new AgvHubContext(mockHubContext.Object, mapper);
 
-        var agv = new AgvSaga(AgvId.ToGuid(), AgvId);
+        var agv = new global::TransportOrder.Messages.MessageContent.Agv(Guid.NewGuid(), "AGV", AgvState.Initial, DateTime.UtcNow, DateTime.UtcNow, false, true, false, true, 100.0d, false, 100, 100,
+            null, new List<AgvError>());
         var agvDto = mapper.Map<AgvDto>(agv);
         await agvHubContext.SendAgvStateToAllClients(agvDto, false);
 

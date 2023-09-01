@@ -90,7 +90,7 @@ public sealed class HostOrderStateMachine : MassTransitStateMachine<HostOrderSag
             .Then(c =>
                 _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId} received", nameof(CreateHostOrder), c.Message.OrderDetails.OrderId, c.Message.OrderDetails.CorrelationId))
             .TransitionTo(Initial)
-            .Then(c => c.Publish(new QueueActionGroup(GetActionGroup(c.Saga))));
+            .ThenAsync(async c => await c.Publish(new QueueActionGroup(GetActionGroup(c.Saga))));
     #endregion
 
     #region Private Methods

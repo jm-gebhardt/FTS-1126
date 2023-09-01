@@ -1,8 +1,8 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.Agvs;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.States;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.SagaStateMachines;
 using JetBrains.Annotations;
+using TransportOrder.Domain.Models.Agv;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 
@@ -21,6 +21,7 @@ public static class AgvGenerator
         return GenerateAgv(nameof(AgvStateMachine.Idle), index, null, agvStatus);
     }
 
+    [UsedImplicitly]
     public static IAgv GenerateChargingAgv(int index = 0, string? lastNodeId = null)
     {
         return GenerateAgv(nameof(AgvStateMachine.Charging), index, lastNodeId, charging: true);
