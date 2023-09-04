@@ -28,7 +28,6 @@ public class ActionProfileTest
 
         var action = AgvActionGenerator.GeneratePickDropActionGroup().Actions.First().ConvertFromAgvActionWithFakeNodeType();
         var actionDto = mapper.Map<AgvActionDto>(action);
-
         actionDto.CorrelationId.ShouldBe(action!.CorrelationId);
         actionDto.ParentId.ShouldBe(action.ParentId);
         actionDto.Sequence.ShouldBe(action.Sequence);
@@ -37,9 +36,11 @@ public class ActionProfileTest
         actionDto.TargetNodeId.ShouldBe(action.TargetNodeId);
         actionDto.Nodes.ShouldBe(action.Nodes);
         actionDto.CreatedDate.ShouldBe(action.CreatedDate);
-        actionDto.StartedDate.ShouldBe(action.StartedDate);
+        actionDto.StartedDate.ShouldBe(action.StartedDate!);
         actionDto.CompletedDate.ShouldBe(action.CompletedDate);
         actionDto.TargetNodeType.ShouldBe(action.TargetNodeType);
+
+       
     }
 
     [TestMethod]

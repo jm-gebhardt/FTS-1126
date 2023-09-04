@@ -37,6 +37,6 @@ public static class AgvErrorGenerator
             {
                 new() { ReferenceKey = $"ReferenceKey#{agvCorrelationId}", ReferenceValue = $"ReferenceValue#{agvCorrelationId}" }
             },
-            DateTime.Now);
+            DateTime.UtcNow);
     }
 }

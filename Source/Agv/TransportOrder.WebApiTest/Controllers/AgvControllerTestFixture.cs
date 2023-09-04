@@ -97,7 +97,6 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             var correlationId = GetGuid(agvId);
             var agvStatus = agvId == "AGV003" ? null : new AgvStatus(correlationId, orderId, true, true, 10, true, true);
             var agvData = new AgvData(correlationId, "Karis", "BF1", ip, 1.8, 120.0, 0.6, 0.8, 0.7, 1, 2.5, 1000, Array.Empty<AgvData.Sensor>());
-
             agvs.Add(new AgvSaga(correlationId, agvId, state, agvStatus));
             data[correlationId] = agvData;
         }

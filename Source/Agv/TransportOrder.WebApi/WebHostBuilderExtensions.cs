@@ -59,6 +59,7 @@ public static class WebHostBuilderExtensions
                 {
                     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
                 });
+           
 
             services.ConfigureEventLogSettings(executingAssembly);
 
