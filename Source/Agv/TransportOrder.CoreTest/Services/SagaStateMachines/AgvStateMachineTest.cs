@@ -577,69 +577,6 @@ public class AgvStateMachineTest
     }
 
     /// <summary>
-    /// Checks if RequestAgvMap is received assuming that the registry is empty
-    /// </summary>
-    /// <remarks>When there is no match, a registry insertion must be invoked.</remarks>
-    [DataRow(nameof(AgvStateMachine.Discovered))]
-    [DataRow(nameof(AgvStateMachine.Idle))]
-    [DataRow(nameof(AgvStateMachine.Busy))]
-    [DataRow(nameof(AgvStateMachine.Charging))]
-    [TestMethod]
-    public async Task AgvMapReceived_is_Consumed_and_Processed_with_EmptyRegistry(string previousState)
-    {
-        // Arrange
-        var fixture = new AgvStateMachineTestFixture();
-
-        var cancellationToken = new CancellationToken();
-        var agvSaga = AgvSagaGenerator.GenerateAgvSaga(previousState); // The previous state is variable due to DuringAny()
-        fixture.Add(agvSaga);
-
-        var agvMap = fixture.CreateTestAgvMap();
-        fixture.MockMapRegistry.Setup(mo => mo.AddOrUpdateAsync(agvMap.CorrelationId, agvMap.MapId, agvMap.ImageData, agvMap.Resolution, agvMap.XOffset, agvMap.YOffset, agvMap.ModificationDate, cancellationToken)).ReturnsAsync(true);
-
-        // Act
-        await fixture.TestHarness.Bus.Publish(new AgvMapReceived(agvSaga.CorrelationId, agvSaga.AgvId, agvMap));
-
-        // Assert
-        (await fixture.TestHarness.Published.Any<AgvMapReceived>()).ShouldBeTrue();
-        (await fixture.SagaHarness.Consumed.Any<AgvMapReceived>()).ShouldBeTrue();
-        (await fixture.SagaHarness.Exists(agvSaga.CorrelationId)).ShouldBe(agvSaga.CorrelationId);
-
-        fixture.MockMapRegistry.Verify(mo => mo.AddOrUpdateAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<double>(), It.IsAny<double>(), It.IsAny<double>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Once());
-    }
-
-    /// <summary>
-    /// Checks if RequestAgvMap is received assuming that the registry already contains a matching entry
-    /// </summary>
-    /// <remarks>When there is a match, any registry insertion must not happen.</remarks>
-    [TestMethod]
-    [DataRow(nameof(AgvStateMachine.Discovered))]
-    [DataRow(nameof(AgvStateMachine.Idle))]
-    [DataRow(nameof(AgvStateMachine.Busy))]
-    [DataRow(nameof(AgvStateMachine.Charging))]
-    public async Task AgvMapReceived_is_Consumed_and_Processed_with_Registry_containing_entries(string previousState)
-    {
-        // Arrange
-        var fixture = new AgvStateMachineTestFixture();
-
-        var agvSaga = AgvSagaGenerator.GenerateAgvSaga(previousState); // The previous state is variable due to DuringAny()
-        fixture.Add(agvSaga);
-
-        var agvMap = fixture.CreateTestAgvMap();
-        fixture.MockMapRegistry.Setup(mo => mo.Exists(agvMap.MapId.ToGuid())).Returns(true);
-
-        // Act
-        await fixture.TestHarness.Bus.Publish(new AgvMapReceived(agvSaga.CorrelationId, agvSaga.AgvId, agvMap));
-
-        // Assert
-        (await fixture.TestHarness.Published.Any<AgvMapReceived>()).ShouldBeTrue();
-        (await fixture.SagaHarness.Consumed.Any<AgvMapReceived>()).ShouldBeTrue();
-        (await fixture.SagaHarness.Exists(agvSaga.CorrelationId)).ShouldBe(agvSaga.CorrelationId);
-
-        fixture.MockMapRegistry.Verify(mo => mo.AddOrUpdateAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<double>(), It.IsAny<double>(), It.IsAny<double>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Once());
-    }
-
-    /// <summary>
     /// Checks if <see cref="AgvStartedCharging"/> has been consumed with required state transition to <seealso cref="AgvStateMachine.Charging"/>
     /// </summary>
     [DataRow(nameof(AgvStateMachine.Idle))]

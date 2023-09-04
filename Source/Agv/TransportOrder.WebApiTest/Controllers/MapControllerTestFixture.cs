@@ -1,12 +1,10 @@
-﻿using System.Text;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.SagaStateMachines;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
-using TransportOrder.Domain.Models;
 using TransportOrder.Domain.Models.Agv;
 using TransportOrder.Domain.Repositories;
 using TransportOrder.Messages.Requests.Map;
@@ -18,7 +16,7 @@ public class MapControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
     where TRequest : class
     where TRequestHandler : class, IConsumer
 {
-    public const string Base64String = "dGhlIHF1aWNrIGJyb3duIGZveCBqdW1wIG92ZXIgdGhlIGxhenkgZG9n";
+    public const string Base64String = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
 
     private readonly Mock<IAgvGraphRegistry> _agvGraphRegistry = new();
 
@@ -47,13 +45,13 @@ public class MapControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
     {
         var mapRegistryMock = new Mock<IMapRegistry>();
 
-        mapRegistryMock.Setup(x => x.GetAllMaps()).Returns(new EnumerableQuery<IMap>(new List<Map>
+        mapRegistryMock.Setup(x => x.GetAllMaps()).Returns(new EnumerableQuery<Map>(new List<Map>
         {
-            new(_correlationIds[0], "Area51_Floor1_Compartment47", Encoding.UTF8.GetBytes(Base64String), 0.01, 1, 2, DateTime.UtcNow),
-            new(_correlationIds[1], "Area51_Floor1_Compartment48", Encoding.UTF8.GetBytes(Base64String), 0.02, 2, 3, DateTime.UtcNow),
-            new(_correlationIds[2], "Area51_Floor1_Compartment49", Encoding.UTF8.GetBytes(Base64String), 0.03, 2, 1, DateTime.UtcNow)
+            new(_correlationIds[0], "Area51_Floor1_Compartment47", Convert.FromBase64String(Base64String), 0.01, 1, 2, DateTime.UtcNow),
+            new(_correlationIds[1], "Area51_Floor1_Compartment48", Convert.FromBase64String(Base64String), 0.02, 2, 3, DateTime.UtcNow),
+            new(_correlationIds[2], "Area51_Floor1_Compartment49", Convert.FromBase64String(Base64String), 0.03, 2, 1, DateTime.UtcNow)
         }));
-        mapRegistryMock.Setup(x => x.GetMap(It.IsAny<Guid>())).Returns(Encoding.UTF8.GetBytes(Base64String));
+        mapRegistryMock.Setup(x => x.GetMap(It.IsAny<Guid>())).Returns(Convert.FromBase64String(Base64String));
 
         return mapRegistryMock;
     }

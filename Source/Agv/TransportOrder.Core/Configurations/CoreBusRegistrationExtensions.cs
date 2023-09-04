@@ -9,6 +9,7 @@ using MassTransit;
 using TransportOrder.Domain.Models.Agv;
 using TransportOrder.Messages.Commands.ActionGroup;
 using TransportOrder.Messages.Commands.Agv;
+using TransportOrder.Messages.Commands.Map;
 using TransportOrder.Messages.Requests.ActionGroup;
 using TransportOrder.Messages.Requests.Agv;
 using TransportOrder.Messages.Requests.Map;
@@ -56,6 +57,10 @@ public static class CoreBusRegistrationExtensions
                 x.UsePartitioner(partitioner, p => p.Message.Agv.CorrelationId));
         });
 
+        busRegistrationConfigurator.AddConsumer<MapCommandHandler>(cfg =>
+        {
+          cfg.Message<SaveMap>(x => x.UsePartitioner(16, p => p.Message.Map.CorrelationId));
+        });
         busRegistrationConfigurator.AddConsumer<AgvCommandHandler>();
         busRegistrationConfigurator.AddConsumer<AgvEventHandler>();
         

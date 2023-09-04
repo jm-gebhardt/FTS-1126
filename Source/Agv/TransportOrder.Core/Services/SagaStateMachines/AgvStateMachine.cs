@@ -115,11 +115,6 @@ public class AgvStateMachine : MassTransitStateMachine<AgvSaga>
     public Event<AgvGraphChanged> AgvGraphChangedEvent { get; private set; } = default!;
 
     /// <summary>
-    /// Agv map is incoming
-    /// </summary>
-    public Event<AgvMapReceived> AgvMapReceivedEvent { get; private set; } = default!;
-
-    /// <summary>
     /// Agv has started charging
     /// </summary>
     public Event<AgvStartedCharging> AgvStartedChargingEvent { get; private set; } = default!;
@@ -215,7 +210,6 @@ public class AgvStateMachine : MassTransitStateMachine<AgvSaga>
         DuringAny(UnlockAgvHandler());
         DuringAny(AgvStatusReceivedHandler());
         DuringAny(AgvGraphChangedHandler());
-        DuringAny(AgvMapReceivedHandler());
         DuringAny(AgvOfflineMessageHandler());
         DuringAny(AgvErrorStatusReceivedHandler());
         DuringAny(SetAgvForceIdleRequestedHandler());
@@ -429,13 +423,7 @@ public class AgvStateMachine : MassTransitStateMachine<AgvSaga>
             .Then(c =>
                 _logger.LogInformation("{MessageType} {CorrelationId}", nameof(AgvGraphChanged), c.Saga.CorrelationId))
             .ThenAsync(AgvGraphChangedAsync);
-
-    private EventActivityBinder<AgvSaga, AgvMapReceived> AgvMapReceivedHandler() =>
-        When(AgvMapReceivedEvent)
-            .Then(c => _logger.LogInformation("Incoming Map {MapId}/{MapCorrelationId} for Agv {AgvId}/{CorrelationId}",
-                c.Message.AgvMap.MapId, c.Message.AgvMap.CorrelationId, c.Saga.AgvId, c.Saga.CorrelationId))
-            .ThenAsync(SaveMapAsync);
-
+    
     private EventActivityBinder<AgvSaga, AgvOfflineMessage> AgvOfflineMessageHandler() =>
         When(AgvOfflineWatchdog.Received)
             .ThenAsync(async c => await UpdateAgvStatusAsync(c.Saga, c.Saga.AgvStatus, false, c))
@@ -569,35 +557,6 @@ public class AgvStateMachine : MassTransitStateMachine<AgvSaga>
         if (!_mapRegistry.Exists(agvGraph.RelatedMapId))
         {
             await context.Publish(new RequestAgvMap(context.Saga.CorrelationId, context.Saga.AgvId, agvGraph.RelatedMapId, agvGraph.RelatedMapName));
-        }
-    }
-
-    private async Task SaveMapAsync(BehaviorContext<AgvSaga, AgvMapReceived> context)
-    {
-        var agvMap = context.Message.AgvMap;
-        var cancellationToken = context.CancellationToken;
-
-        if (!_mapRegistry.Exists(agvMap.CorrelationId))
-        {
-            if (await _mapRegistry.AddOrUpdateAsync(agvMap.CorrelationId, agvMap.MapId, agvMap.ImageData, agvMap.Resolution, agvMap.XOffset, agvMap.YOffset, agvMap.ModificationDate, cancellationToken))
-            {
-                _logger.LogInformation("Map {MapId}/{MapCorrelationId} inserted into Registry", agvMap.MapId, agvMap.CorrelationId);
-            }
-            else
-            {
-                _logger.LogWarning("Failed to insert Map {MapId}/{MapCorrelationId} into Registry", agvMap.MapId, agvMap.CorrelationId);
-            }
-        }
-        else
-        {
-            if (await _mapRegistry.AddOrUpdateAsync(agvMap.CorrelationId, agvMap.MapId, agvMap.ImageData, agvMap.Resolution, agvMap.XOffset, agvMap.YOffset, agvMap.ModificationDate, cancellationToken))
-            {
-                _logger.LogInformation("Map {MapId}/{MapCorrelationId} has been updated in Registry", agvMap.MapId, agvMap.CorrelationId);
-            }
-            else
-            {
-                _logger.LogWarning("Failed to update Map {MapId}/{MapCorrelationId} in Registry", agvMap.MapId, agvMap.CorrelationId);
-            }
         }
     }
 

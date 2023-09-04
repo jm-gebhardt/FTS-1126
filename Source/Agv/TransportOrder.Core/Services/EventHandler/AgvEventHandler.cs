@@ -1,5 +1,6 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.SagaStateMachines;
 using JetBrains.Annotations;
 using MassTransit;
@@ -10,6 +11,7 @@ using TransportOrder.Domain.SemaphoreProvider;
 using TransportOrder.Domain.Services.ActionGroup;
 using TransportOrder.Messages.Commands.ActionGroup;
 using TransportOrder.Messages.Commands.Agv;
+using TransportOrder.Messages.Commands.Map;
 using TransportOrder.Messages.Events.ActionGroup;
 using TransportOrder.Messages.Events.Agv;
 
@@ -24,7 +26,8 @@ public class AgvEventHandler :
     IConsumer<AgvBecameIdle>,
     IConsumer<AgvCanStartIdleAction>,
     IConsumer<ChargingAgvsCanHandleActionsAgainEvent>,
-    IConsumer<AgvBatteryChargeChanged>
+    IConsumer<AgvBatteryChargeChanged>,
+    IConsumer<AgvMapReceived>
 {
 
     private readonly ILogger<AgvEventHandler> _logger;
@@ -184,5 +187,14 @@ public class AgvEventHandler :
         {
             await context.Publish(new AgvNeedsCharging(context.Message.CorrelationId));
         }
+    }
+
+    /// <summary>
+    /// Handles the <see cref="AgvMapReceived"/> event.
+    /// </summary>
+    public async Task Consume(ConsumeContext<AgvMapReceived> context)
+    {
+        var map = context.Message.AgvMap;
+        await context.Publish(new SaveMap(map, map.CorrelationId));
     }
 }

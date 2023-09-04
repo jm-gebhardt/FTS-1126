@@ -1,4 +1,4 @@
-﻿using TransportOrder.Domain.Models;
+﻿using TransportOrder.Domain.Models.Map;
 
 namespace TransportOrder.Domain.Repositories;
 
@@ -10,7 +10,7 @@ public interface IMapRegistry
     /// <summary>
     /// Get all maps found in MapRegistry
     /// </summary>
-    public IQueryable<IMap> GetAllMaps();
+    public IQueryable<Map> GetAllMaps();
 
     /// <summary>
     /// Get a map by its related correlationId from the MapRegistry
@@ -26,16 +26,10 @@ public interface IMapRegistry
     public bool Exists(Guid correlationId);
 
     /// <summary>
-    /// Add or update a map to/in the registry
+    /// Add or update a map to/in the registry.
     /// </summary>
-    /// <param name="correlationId">GUID of the map</param>
-    /// <param name="base64PngImage"></param>
-    /// <param name="mapId"></param>
-    /// <param name="resolution"></param>
-    /// <param name="xOffset"></param>
-    /// <param name="yOffset"></param>
-    /// <param name="modificationDate"></param>
+    /// <param name="map">The map.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>True if a change has been made</returns>
-    Task<bool> AddOrUpdateAsync(Guid correlationId, string mapId, string base64PngImage, double resolution, double xOffset, double yOffset, DateTime modificationDate, CancellationToken cancellationToken);
+    Task<bool> AddOrUpdateAsync(Map map, CancellationToken cancellationToken);
 }

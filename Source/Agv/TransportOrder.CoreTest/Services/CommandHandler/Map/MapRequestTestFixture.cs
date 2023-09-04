@@ -1,5 +1,4 @@
-﻿using System.Text;
-using AutoMapper;
+﻿using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
@@ -23,7 +22,7 @@ public class MapRequestTestFixture<TRequestClient, TConsumer> : MediatorTestFixt
     where TRequestClient : class
     where TConsumer : class, IConsumer
 {
-    public const string Base64String = "dGhlIHF1aWNrIGJyb3duIGZveCBqdW1wIG92ZXIgdGhlIGxhenkgZG9n";
+    public const string Base64String = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
 
     private readonly string[] _agvIds = {"AGV001", "AGV002"};
     private readonly string[] _orders = {"ORDER001", "ORDER002", ""};
@@ -106,9 +105,9 @@ public class MapRequestTestFixture<TRequestClient, TConsumer> : MediatorTestFixt
 
         mapRegistryMock.Setup(x => x.GetAllMaps()).Returns(new EnumerableQuery<global::TransportOrder.Domain.Models.Map.Map>(new List<global::TransportOrder.Domain.Models.Map.Map>
         {
-            new(_correlationIds[0], "Area51_Floor1_Compartment47", Encoding.UTF8.GetBytes(Base64String), 0.01, 1, 2, DateTime.UtcNow),
-            new(_correlationIds[1], "Area51_Floor1_Compartment48", Encoding.UTF8.GetBytes(Base64String), 0.02, 2, 3, DateTime.UtcNow),
-            new(_correlationIds[2], "Area51_Floor1_Compartment49", Encoding.UTF8.GetBytes(Base64String), 0.03, 2, 1, DateTime.UtcNow)
+            new(_correlationIds[0], "Area51_Floor1_Compartment47", Convert.FromBase64String(Base64String), 0.01, 1, 2, DateTime.UtcNow),
+            new(_correlationIds[1], "Area51_Floor1_Compartment48", Convert.FromBase64String(Base64String), 0.02, 2, 3, DateTime.UtcNow),
+            new(_correlationIds[2], "Area51_Floor1_Compartment49", Convert.FromBase64String(Base64String), 0.03, 2, 1, DateTime.UtcNow)
         }));
 
         return mapRegistryMock;

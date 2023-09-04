@@ -1,19 +1,21 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
-using TransportOrder.Domain.Models;
+using TransportOrder.Domain.Models.Map;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Repositories;
 
 [TestClass]
 public class EfMapRegistryTest
 {
+
+    
     [TestMethod]
     public void GetAllMaps_ReturnsEmpty_List_WhenRegistryIsEmpty()
     {
         var fixture = new EfMapRegistryTestFixture();
 
-        IQueryable<IMap> maps = fixture.Registry.GetAllMaps();
+        IQueryable<Map> maps = fixture.Registry.GetAllMaps();
         maps.ShouldBeEmpty();
     }
 
@@ -28,7 +30,7 @@ public class EfMapRegistryTest
         fixture.Add(map1);
         fixture.Add(map2);
 
-        IQueryable<IMap> maps = fixture.Registry.GetAllMaps();
+        IQueryable<Map> maps = fixture.Registry.GetAllMaps();
         maps.ShouldNotBeEmpty();
         maps.Count().ShouldBe(2);
     }
@@ -93,21 +95,14 @@ public class EfMapRegistryTest
     public async Task AddOrUpdate_ShouldReturnTrue_WhenAddingNewMap()
     {
         var fixture = new EfMapRegistryTestFixture();
+        var map = fixture.GetNewMap("mapId");
 
-        const string mapId = "basicMap";
-        var mapGuid = mapId.ToGuid();
-        const string imageData = "aW1hZ2VJbWFnZUlNQUdF";
-        const float resolution = 1;
-        const float xOffset = 1;
-        const float yOffset = 1;
-        var modificationDate = DateTime.UtcNow;
-
-        bool result = await fixture.Registry.AddOrUpdateAsync(mapGuid, mapId, imageData, resolution, xOffset, yOffset, modificationDate, new CancellationToken());
+        bool result = await fixture.Registry.AddOrUpdateAsync(map, new CancellationToken());
         result.ShouldBeTrue();
 
-        byte[]? map = fixture.Registry.GetMap(mapGuid);
-        map.ShouldNotBeNull();
-        map.ShouldBe(Convert.FromBase64String(imageData));
+        byte[]? mapImage = fixture.Registry.GetMap(map.CorrelationId);
+        mapImage.ShouldNotBeNull();
+        mapImage.ShouldBe(map.MapValue);
     }
 
     [TestMethod]
@@ -115,30 +110,29 @@ public class EfMapRegistryTest
     {
         var fixture = new EfMapRegistryTestFixture();
 
-        string mapId = "basicMap";
-        var mapGuid = mapId.ToGuid();
-        string imageData = "aW1hZ2VJbWFnZUlNQUdF";
-        float resolution = 1;
-        float xOffset = 1;
-        float yOffset = 1;
-        var modificationDate = DateTime.UtcNow;
+        var map = fixture.GetNewMap("mapId");
 
-        bool result = await fixture.Registry.AddOrUpdateAsync(mapGuid, mapId, imageData, resolution, xOffset, yOffset, modificationDate, new CancellationToken());
+        bool result = await fixture.Registry.AddOrUpdateAsync(map, new CancellationToken());
         result.ShouldBeTrue();
-        byte[]? map = fixture.Registry.GetMap(mapGuid);
-        map.ShouldNotBeNull();
-        map.ShouldBe(Convert.FromBase64String(imageData));
 
-        imageData = "TkVXaW1hZ2VOZXdJbWFnZQ==";
-        resolution = 2;
-        xOffset = 2;
-        yOffset = 2;
-        modificationDate = DateTime.UtcNow;
+        byte[]? mapImage = fixture.Registry.GetMap(map.CorrelationId);
+        mapImage.ShouldNotBeNull();
+        mapImage.ShouldBe(map.MapValue);
 
-        result = await fixture.Registry.AddOrUpdateAsync(mapGuid, mapId, imageData, resolution, xOffset, yOffset, modificationDate, new CancellationToken());
+        var mapUpdate = new Map(
+            "mapId".ToGuid(),
+            "mapId",
+            Convert.FromBase64String(EfMapRegistryTestFixture.SmallImage2),
+            2,
+            2,
+            2,
+            DateTime.UtcNow
+        );
+
+        result = await fixture.Registry.AddOrUpdateAsync(mapUpdate, new CancellationToken());
         result.ShouldBeTrue();
-        map = fixture.Registry.GetMap(mapGuid);
-        map.ShouldNotBeNull();
-        map.ShouldBe(Convert.FromBase64String(imageData));
+        mapImage = fixture.Registry.GetMap(mapUpdate.CorrelationId);
+        mapImage.ShouldNotBeNull();
+        mapImage.ShouldBe(mapUpdate.MapValue);
     }
 }

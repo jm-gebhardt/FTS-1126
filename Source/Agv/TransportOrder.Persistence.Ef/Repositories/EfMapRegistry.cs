@@ -4,7 +4,6 @@ using TransportOrder.Domain.Models.Map;
 using TransportOrder.Domain.Repositories;
 using TransportOrder.Domain.SemaphoreProvider;
 using TransportOrder.Persistence.Ef.DataAccess;
-using IMap = TransportOrder.Domain.Models.IMap;
 
 namespace TransportOrder.Persistence.Ef.Repositories;
 
@@ -36,7 +35,7 @@ public class EfMapRegistry : IMapRegistry
             .AsNoTracking(); // No need to track changes
 
     /// <inheritdoc/>
-    public IQueryable<IMap> GetAllMaps()
+    public IQueryable<Map> GetAllMaps()
     {
         return Maps;
     }
@@ -54,33 +53,25 @@ public class EfMapRegistry : IMapRegistry
     }
 
     /// <inheritdoc/>
-    public async Task<bool> AddOrUpdateAsync(Guid correlationId, string mapId, string base64PngImage, double resolution, double xOffset, double yOffset, DateTime modificationDate, CancellationToken cancellationToken)
+    public async Task<bool> AddOrUpdateAsync(Map map, CancellationToken cancellationToken)
     {
         return await _semaphoreProvider.ExecuteLockedAsync( async () =>
         {
-            if (Exists(correlationId))
+            if (Exists(map.CorrelationId))
             {
-                return await UpdateAsync(correlationId, mapId, base64PngImage, resolution, xOffset, yOffset, modificationDate);
+                return await UpdateAsync(map);
             }
-            return await AddAsync(correlationId, mapId, base64PngImage, resolution, xOffset, yOffset, modificationDate);
+            return await AddAsync(map);
         }, cancellationToken);
     }
 
-    private async Task<bool> AddAsync(Guid correlationId, string mapId, string base64PngImage, double resolution, double xOffset, double yOffset, DateTime modificationDate)
+    private async Task<bool> AddAsync(Map map)
     {
         try
         {
             await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
             dbContext
-                .Add(new Map(
-                    correlationId,
-                    mapId,
-                    Convert.FromBase64String(base64PngImage),
-                    resolution,
-                    xOffset,
-                    yOffset,
-                    modificationDate
-                ));
+                .Add(map);
 
             int stateEntries = await dbContext.SaveChangesAsync();
             return stateEntries != 0;
@@ -92,21 +83,12 @@ public class EfMapRegistry : IMapRegistry
         }
     }
 
-    private async Task<bool> UpdateAsync(Guid correlationId, string mapId, string base64PngImage, double resolution, double xOffset, double yOffset, DateTime modificationDate)
+    private async Task<bool> UpdateAsync(Map map)
     {
         try
         {
             await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
-            var map = dbContext
-                .Set<Map>()
-                .First(q => q.CorrelationId == correlationId);
-            map.MapId = mapId;
-            map.MapValue = Convert.FromBase64String(base64PngImage);
-            map.Resolution = resolution;
-            map.XOffset = xOffset;
-            map.YOffset = yOffset;
-            map.ModificationDate = modificationDate;
-
+            dbContext.Update(map);
             int stateEntries = await dbContext.SaveChangesAsync();
             return stateEntries != 0;
         }

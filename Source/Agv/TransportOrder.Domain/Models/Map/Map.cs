@@ -1,47 +1,78 @@
 ﻿using JetBrains.Annotations;
+using SkiaSharp;
 
-// ReSharper disable ConvertToPrimaryConstructor
 namespace TransportOrder.Domain.Models.Map;
 
 /// <summary>
 /// class representing the Map table in Database
 /// </summary>
-public record Map : IMap
+public class Map 
 {
-    /// <inheritdoc/>
+    /// <summary>
+    /// The correlation id o the map.
+    /// </summary>
     public Guid CorrelationId { get; set; }
 
-    /// <inheritdoc/>
-    [UsedImplicitly]
+    /// <summary>
+    /// MapId
+    /// </summary>
     public string MapId { get; set; }
 
-    /// <inheritdoc/>
-    [UsedImplicitly]
-    public byte[]? MapValue { get; set; }
 
-    /// <inheritdoc/>
+    private byte[]? _mapValue;
+    /// <summary>
+    /// Map in form bytes
+    /// </summary>
+    [UsedImplicitly]
+    public byte[]? MapValue { 
+        get => _mapValue; 
+        set
+        { 
+            _mapValue = value;
+            if (_mapValue is { Length: >= 1 })
+            {
+                SetDimensions(_mapValue);
+                return;
+            }
+            Width = 0;
+            Height = 0;
+        }
+    }
+
+    /// <summary>
+    /// Timestamp of last modification
+    /// </summary>
     [UsedImplicitly]
     public DateTime ModificationDate { get; set; }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// The resolution of the maps image. Expressed as how many [m] per pixel are represented
+    /// </summary>
     public double Resolution { get; set; }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// The x offset of the map in [m] where the mapped graph coordinate system starts. Origin is the left upper corner.
+    /// </summary>
     public double XOffset { get; set; }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// The y offset of the map in [m] where the mapped graph coordinate system starts. Origin is the left upper corner.
+    /// </summary>
     public double YOffset { get; set; }
 
     /// <summary>
-    /// Full constructor
+    /// The width of the map image [pixel].
     /// </summary>
-    /// <param name="correlationId"></param>
-    /// <param name="mapId"></param>
-    /// <param name="mapValue"></param>
-    /// <param name="resolution"></param>
-    /// <param name="xOffset"></param>
-    /// <param name="yOffset"></param>
-    /// <param name="modificationDate"></param>
+    public int Width { get; private set; }
+
+    /// <summary>
+    /// The height of the map image [pixel].
+    /// </summary>
+    public int Height { get; private set; }
+
+    /// <summary>
+    /// Initializes a new <see cref="Map"/> instance.
+    /// </summary>
     public Map(Guid correlationId, string mapId, byte[]? mapValue, double resolution, double xOffset, double yOffset, DateTime modificationDate)
     {
         CorrelationId = correlationId;
@@ -51,5 +82,12 @@ public record Map : IMap
         XOffset = xOffset;
         YOffset = yOffset;
         ModificationDate = modificationDate;
+    }
+
+    private void SetDimensions(byte[] mapValue)
+    {
+        var image = SKImage.FromEncodedData(mapValue);
+        Width = image.Width;
+        Height = image.Height;
     }
 }

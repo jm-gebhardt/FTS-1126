@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
-using System.Text;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
@@ -46,7 +45,7 @@ public class MapControllerTest
     [TestMethod]
     public async Task GetMap_ShouldSendProperCommandToMediator_WhereCorrelationIdIsValid()
     {
-        byte[] imageByteArray = Encoding.UTF8.GetBytes(MapControllerTestFixture<GetMapImage, GetMapImageRequestHandler>.Base64String);
+        byte[] imageByteArray = Convert.FromBase64String(MapControllerTestFixture<GetMapImage, GetMapImageRequestHandler>.Base64String);
         Guid correlationId = new("7FE9372B-4219-4D09-8885-966EE125A350");
 
         MapControllerTestFixture<GetMapImage, GetMapImageRequestHandler> fixture = new MapControllerTestFixture<GetMapImage, GetMapImageRequestHandler>()

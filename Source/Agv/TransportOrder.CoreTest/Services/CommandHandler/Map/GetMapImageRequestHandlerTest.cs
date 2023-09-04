@@ -1,5 +1,4 @@
-﻿using System.Text;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
+﻿using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
 using MassTransit;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
@@ -18,7 +17,7 @@ public class GetMapImageRequestHandlerTest
         MapRequestTestFixture<GetMapImage, GetMapImageRequestHandler> fixture = new MapRequestTestFixture<GetMapImage, GetMapImageRequestHandler>()
             .AddMapRegistryMock(m =>
             {
-                m.Setup(x => x.GetMap(It.IsAny<Guid>())).Returns(Encoding.UTF8.GetBytes(MapRequestTestFixture<GetMapImage, GetMapImageRequestHandler>.Base64String));
+                m.Setup(x => x.GetMap(It.IsAny<Guid>())).Returns(Convert.FromBase64String(MapRequestTestFixture<GetMapImage, GetMapImageRequestHandler>.Base64String));
             })
             .Build();
 

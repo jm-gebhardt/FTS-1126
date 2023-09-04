@@ -110,21 +110,6 @@ public class AgvStateMachineTestFixture : BaseStateMachineTestFixture<AgvStateMa
         return agvGraph;
     }
 
-    /// <summary>
-    /// Create a standardized AgvMap for testing purposes
-    /// </summary>
-    public AgvMap CreateTestAgvMap()
-    {
-        const string mapId = "basicMap";
-        const string imageData = "bGlnaHQgd29yay4=";
-        const float resolution = 1;
-        const float xOffset = 1;
-        const float yOffset = 1;
-        var modificationDate = DateTime.UtcNow;
-
-        return new AgvMap(mapId.ToGuid(), mapId, modificationDate, imageData, resolution, xOffset, yOffset);
-    }
-
     public async Task<AgvSaga> TransitionStateOnRequest<TRequest, TExpectedResponse, TUnexpectedResponse>(TRequest request, AgvSaga agvSaga, string resultingState)
         where TRequest : class, CorrelatedBy<Guid>
         where TExpectedResponse : class

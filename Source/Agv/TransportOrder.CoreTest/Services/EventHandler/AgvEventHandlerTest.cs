@@ -1,9 +1,12 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Utilities;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
+using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 using TransportOrder.Messages.Commands.ActionGroup;
 using TransportOrder.Messages.Commands.Agv;
+using TransportOrder.Messages.Commands.Map;
 using TransportOrder.Messages.Events.ActionGroup;
 using TransportOrder.Messages.Events.Agv;
 
@@ -307,5 +310,20 @@ public class AgvEventHandlerTest
 
         bool publishCheck = await fixture.TestHarness.Published.Any<ChargingAgvsCanHandleActionsAgainEvent>();
         publishCheck.ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task Consume_AgvMapReceived_ValidData_PublishesSaveMap()
+    {
+        string agvId = "AGV001";
+        var agvCorrelationId = agvId.ToGuid();
+        var map = new AgvMap(new Guid(), "", DateTime.MaxValue, "", 0.5f, 0.5f, 0.5f);
+
+        var fixture = new AgvEventHandlerTestFixture();
+        await fixture.TestHarness!.Bus.Publish(new AgvMapReceived(agvCorrelationId, agvId, map));
+
+        (await fixture.ConsumerHarness!.Consumed.Any<AgvMapReceived>()).ShouldBeTrue();
+
+        (await fixture.TestHarness!.Published.Any<SaveMap>(f => f.Context.Message == new SaveMap(map, map.CorrelationId))).ShouldBeTrue();
     }
 }

@@ -1,5 +1,4 @@
 using AutoMapper;
-using TransportOrder.Domain.Models;
 using TransportOrder.Messages.Requests.Map;
 
 namespace TransportOrder.Messages.Profiles;
@@ -14,7 +13,8 @@ public class MapProfile : Profile
     /// </summary>
     public MapProfile()
     {
-        CreateMap<IMap, Map>()
-            .ForCtorParam(nameof(Map.RelatedAgvs), opt => opt.MapFrom((src, ctx) => new RelatedMapAgvValueResolver().Resolve(src, null!, null!, ctx)));
+        CreateMap<Domain.Models.Map.Map, Map>()
+            .ForCtorParam(nameof(Map.RelatedAgvs), opt => 
+                opt.MapFrom((src, ctx) => new RelatedMapAgvValueResolver().Resolve(src, null!, null!, ctx)));
     }
 }

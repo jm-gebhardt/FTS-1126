@@ -1,6 +1,5 @@
 ﻿using System.Collections.Immutable;
 using AutoMapper;
-using TransportOrder.Domain.Models;
 using TransportOrder.Messages.Requests.Map;
 
 namespace TransportOrder.Messages.Profiles;
@@ -8,7 +7,7 @@ namespace TransportOrder.Messages.Profiles;
 /// <summary>
 /// The custom value resolver, maps from Persistence model of Map and the destination Dto Map to the RelatedAgvs property
 /// </summary>
-public class RelatedMapAgvValueResolver : IValueResolver<IMap, Map, object>
+public class RelatedMapAgvValueResolver : IValueResolver<Domain.Models.Map.Map, Map, object>
 {
     /// <summary>
     /// The constant name for the AgvMapRelation mapping
@@ -23,7 +22,7 @@ public class RelatedMapAgvValueResolver : IValueResolver<IMap, Map, object>
     /// <param name="destMember"></param>
     /// <param name="context"></param>
     /// <returns></returns>
-    public object Resolve(IMap source, Map destination, object destMember, ResolutionContext context)
+    public object Resolve(Domain.Models.Map.Map source, Map destination, object destMember, ResolutionContext context)
     {
         object agvMapRelations = context.Items[AgvMapRelationsName];
         if (agvMapRelations is ImmutableDictionary<Guid, Guid[]> relations)
