@@ -21,7 +21,6 @@
         </PackageReference>
         <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
         <PackageReference Include="Shouldly" Version="4.1.0" />
-        <PackageReference Include="System.Drawing.Common" Version="7.0.0" />
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\Common.Testing\Common.Testing.csproj" />

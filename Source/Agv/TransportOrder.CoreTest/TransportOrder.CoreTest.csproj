@@ -26,16 +26,11 @@
         </PackageReference>
         <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
         <PackageReference Include="Shouldly" Version="4.1.0" />
-        <PackageReference Include="System.Drawing.Common" Version="7.0.0" />
     </ItemGroup>
     <ItemGroup>
       <ProjectReference Include="..\Common.Testing\Common.Testing.csproj" />
       <ProjectReference Include="..\TransportOrder.Core\TransportOrder.Core.csproj" />
       <ProjectReference Include="..\TransportOrder.Domain\TransportOrder.Domain.csproj" />
       <ProjectReference Include="..\TransportOrder.Routing\TransportOrder.Routing.csproj" />
-    </ItemGroup>
-    <ItemGroup>
-      <Folder Include="Services\CommandHandler\Agv\" />
-      <Folder Include="Services\RequestHandler\Map\" />
     </ItemGroup>
 </Project>
