@@ -1,7 +1,7 @@
 using Gebhardt.StoreWare.Agv.Common.Contracts;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions;
+namespace Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 
 /// <summary>
 /// Agv Action

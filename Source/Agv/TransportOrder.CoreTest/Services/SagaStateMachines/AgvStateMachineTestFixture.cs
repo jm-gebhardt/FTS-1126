@@ -143,17 +143,4 @@ public class AgvStateMachineTestFixture : BaseStateMachineTestFixture<AgvStateMa
             saga.CurrentState.ShouldNotBe(resultingState);
         }
     }
-
-    public async Task SendAndVerifyMessage<TRequest>(TRequest message) where TRequest : class, CorrelatedBy<Guid>
-    {
-        await TestHarness.Bus.Publish(message);
-
-        (await TestHarness.Published.Any<TRequest>()).ShouldBeTrue();
-        (await SagaHarness.Consumed.Any<TRequest>()).ShouldBeTrue();
-    }
-
-    public async Task VerifyMessagePublishedAsync<T>() where T : class
-    {
-        (await TestHarness.Published.Any<T>()).ShouldBeTrue();
-    }
 }

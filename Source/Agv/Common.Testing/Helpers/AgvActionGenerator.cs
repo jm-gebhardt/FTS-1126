@@ -1,10 +1,11 @@
-using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 
 public static class AgvActionGenerator
 {
+    [UsedImplicitly]
     public static ActionGroup GenerateChargeActionGroup(string? targetNodeId = null)
     {
         const string orderId = "charge";
@@ -65,7 +66,8 @@ public static class AgvActionGenerator
 
         return actionGroup;
     }
-    
+
+    [UsedImplicitly]
     public static ActionGroup GenerateMoveActionGroup(string? targetNodeId = null, bool isManual = false)
     {
         const string orderId = "move";

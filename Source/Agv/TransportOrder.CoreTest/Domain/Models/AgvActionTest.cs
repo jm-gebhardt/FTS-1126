@@ -1,31 +1,27 @@
-using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
-using Gebhardt.StoreWare.Agv.Common.Services;
-using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
-using TransportOrder.Domain.Models.ActionGroup;
+using AgvActionGenerator = Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper.AgvActionGenerator;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Domain.Models;
 
 [TestClass]
-public class AgvActionExtensionsTest
+public class AgvActionTest
 {
     [TestMethod]
     public void UpdateActionState_WhenActionStateIsStartedAndDifferentFromPreviousState_SetStartedDate()
     {
         var now = DateTime.UtcNow;
-        TimeProvider.Set(() => now);
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         var actionToUpdateState = actionGroup.Actions.First();
         const ActionState newState = ActionState.Started;
-        actionToUpdateState.State = ActionState.Created;
         actionToUpdateState.StartedDate.ShouldBeNull();
 
         actionToUpdateState.UpdateActionState(newState);
 
         actionToUpdateState.State.ShouldBe(newState);
         actionToUpdateState.StartedDate.ShouldNotBeNull();
-        actionToUpdateState.StartedDate.Value.ShouldBe(now);
+        actionToUpdateState.StartedDate.Value.ShouldBeInRange(now, DateTime.UtcNow);
     }
 
     [TestMethod]
@@ -35,7 +31,9 @@ public class AgvActionExtensionsTest
         var actionToUpdateState = actionGroup.Actions.First();
         var previousStartedDate = DateTime.Today.AddDays(-10);
         const ActionState state = ActionState.Started;
-        actionToUpdateState.State = state;
+
+        actionToUpdateState.UpdateActionState(state);
+
         actionToUpdateState.StartedDate = previousStartedDate;
 
         actionToUpdateState.UpdateActionState(state);
@@ -48,19 +46,20 @@ public class AgvActionExtensionsTest
     public void UpdateActionState_WhenActionStateIsCompletedAndDifferentFromPreviousState_SetCompletedDate()
     {
         var now = DateTime.UtcNow;
-        TimeProvider.Set(() => now);
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         var actionToUpdateState = actionGroup.Actions.First();
         const ActionState state = ActionState.Started;
         const ActionState newState = ActionState.Completed;
-        actionToUpdateState.State = state;
+
+        actionToUpdateState.UpdateActionState(state);
+
         actionToUpdateState.CompletedDate.ShouldBeNull();
 
         actionToUpdateState.UpdateActionState(newState);
 
         actionToUpdateState.State.ShouldBe(newState);
         actionToUpdateState.CompletedDate.ShouldNotBeNull();
-        actionToUpdateState.CompletedDate.Value.ShouldBe(now);
+        actionToUpdateState.CompletedDate.Value.ShouldBeInRange(now, DateTime.UtcNow);
     }
 
     [TestMethod]
@@ -70,7 +69,7 @@ public class AgvActionExtensionsTest
         var actionToUpdateState = actionGroup.Actions.First();
         var previousCompletedDate = DateTime.Today.AddDays(-10);
         const ActionState state = ActionState.Completed;
-        actionToUpdateState.State = state;
+        actionToUpdateState.UpdateActionState(state);
         actionToUpdateState.CompletedDate = previousCompletedDate;
 
         actionToUpdateState.UpdateActionState(state);

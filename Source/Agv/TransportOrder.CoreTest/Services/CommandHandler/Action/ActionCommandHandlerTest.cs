@@ -1,10 +1,11 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands;
-using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
-using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 using TransportOrder.Messages.Commands.ActionGroup;
+using AgvActionGenerator = Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper.AgvActionGenerator;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.CommandHandler.Action;
 
@@ -15,14 +16,16 @@ public class ActionCommandHandlerTest
     public async Task Consume_StartAction_ValidData_Publishes_StartActionCommandAndActionGroupChanged()
     {
         var fixture = new ActionCommandHandlerTestFixture();
+        var mapper = ActionCommandHandlerTestFixture.GetMapper();
         var agv = AgvGenerator.GenerateIdleAgv();
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         fixture.AddAgv(agv);
         fixture.AddRoute(nodes:new[]{"Node1", "Node2"});
         fixture.SetBusyThrowsException(false);
         fixture.AddActionGroup(actionGroup);
-       
-        var startAction = new StartAction(actionGroup.Actions.First(), agv.CorrelationId);
+        fixture.AgvIsReadyForBusy();
+
+        var startAction = new StartAction(mapper.Map<AgvAction>(actionGroup.Actions.First()), agv.CorrelationId);
 
         await fixture.TestHarness!.Bus.Publish(startAction);
         (await fixture.ConsumerHarness!.Consumed.Any<StartAction>()).ShouldBeTrue();
@@ -41,6 +44,7 @@ public class ActionCommandHandlerTest
         fixture.AddRoute(nodes: new[] { "Node1", "Node2" });
         fixture.SetBusyThrowsException(false);
         fixture.AddActionGroup(actionGroup);
+        fixture.AgvIsReadyForBusy();
 
         var command = new TryStartManualAction(agv);
         await fixture.TestHarness!.Bus.Publish(command);
@@ -79,6 +83,7 @@ public class ActionCommandHandlerTest
         fixture.AddRoute(nodes: new[] { "Node1", "Node2" });
         fixture.SetBusyThrowsException(false);
         fixture.AddActionGroup(actionGroup, hasUnfinishedAction: true);
+        fixture.AgvIsReadyForBusy();
 
         var command = new TryStartNextActionInActionGroup(agv);
         await fixture.TestHarness!.Bus.Publish(command);

@@ -1,6 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
-using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands;
-using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
+﻿using AutoMapper;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
@@ -19,16 +20,19 @@ public class ActionEventHandler : IConsumer<ActionGroupCreatedForAgv>,
 {
     private readonly ILogger<AgvEventHandler> _logger;
     private readonly IActionManager _actionManager;
+    private readonly IMapper _mapper;
 
     /// <summary>
     /// Initializes a new <see cref="AgvEventHandler"/> instance.
     /// </summary>
     public ActionEventHandler(
         IActionManager actionManager,
+        IMapper mapper,
         ILogger<AgvEventHandler> logger)
     {
         _logger = logger;
         _actionManager = actionManager;
+        _mapper = mapper;
     }
 
     /// <summary>
@@ -37,8 +41,10 @@ public class ActionEventHandler : IConsumer<ActionGroupCreatedForAgv>,
     public async Task Consume(ConsumeContext<ActionGroupCreatedForAgv> context)
     {
         var (actionGroup, assignedAgv) = context.Message;
-        
-        await context.Publish(new StartAction(actionGroup.Actions.First(), assignedAgv));
+
+        var action = actionGroup.Actions.OrderBy(a => a.Sequence).First();
+
+        await context.Publish(new StartAction(action, assignedAgv));
     }
 
     /// <summary>
@@ -48,7 +54,7 @@ public class ActionEventHandler : IConsumer<ActionGroupCreatedForAgv>,
     public async Task Consume(ConsumeContext<QueueActionGroup> context)
     {
         _logger.LogInformation("{MessageType} {CorrelationId} received. The ActionGroup is Manual = {IsManual}", nameof(QueueActionGroup), context.Message.CorrelationId, context.Message.ActionGroup.IsManual);
-        await _actionManager.AddActionGroupAsync(context.Message.ActionGroup, context.CancellationToken);
+        await _actionManager.AddActionGroupAsync(_mapper.Map<global::TransportOrder.Domain.Models.ActionGroup.ActionGroup>(context.Message.ActionGroup), context.CancellationToken);
         await context.RespondAsync(new Success());
     }
 

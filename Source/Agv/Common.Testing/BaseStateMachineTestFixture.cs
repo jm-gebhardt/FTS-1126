@@ -2,6 +2,7 @@ using MassTransit;
 using MassTransit.Saga;
 using MassTransit.Testing;
 using Microsoft.Extensions.DependencyInjection;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.Common.Testing;
 
@@ -95,5 +96,17 @@ public abstract class BaseStateMachineTestFixture<TStateMachine, TInstance>
     public void Add(TInstance instance)
     {
         SagaDictionary.Add(new SagaInstance<TInstance>(instance));
+    }
+    public async Task SendAndVerifyMessage<TRequest>(TRequest message) where TRequest : class, CorrelatedBy<Guid>
+    {
+        await TestHarness.Bus.Publish(message);
+
+        (await TestHarness.Published.Any<TRequest>()).ShouldBeTrue();
+        (await SagaHarness.Consumed.Any<TRequest>()).ShouldBeTrue();
+    }
+
+    public async Task VerifyMessagePublishedAsync<T>() where T : class
+    {
+        (await TestHarness.Published.Any<T>()).ShouldBeTrue();
     }
 }

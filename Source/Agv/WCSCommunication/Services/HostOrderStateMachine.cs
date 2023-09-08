@@ -1,9 +1,10 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
-using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
 using Microsoft.Extensions.Logging;
 using MassTransit;
 using Gebhardt.StoreWare.Agv.WCSCommunication.States;
 using Gebhardt.StoreWare.Agv.WCSCommunication.Messages;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 
 namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services;
 
@@ -52,6 +53,11 @@ public sealed class HostOrderStateMachine : MassTransitStateMachine<HostOrderSag
     /// New order detected. This is the initial event of the HostOrderStateMachine
     /// </summary>
     public Event<CreateHostOrder> CreateHostOrderEvent { get; private set; } = default!;
+
+    /// <summary>
+    /// <see cref="ActionGroupInvalid"/> received
+    /// </summary>
+    public Event<ActionGroupInvalid> ActionGroupInvalidEvent { get; private set; } = default!;
     #endregion
 
     #region Initialization
@@ -66,6 +72,7 @@ public sealed class HostOrderStateMachine : MassTransitStateMachine<HostOrderSag
         InstanceState(x => x.CurrentState);
 
         Initially(SetCreateHostOrderHandler());
+        During(Initial, ActionGroupInvalidEventHandler());
     }
 
     /// <summary>
@@ -91,6 +98,11 @@ public sealed class HostOrderStateMachine : MassTransitStateMachine<HostOrderSag
                 _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId} received", nameof(CreateHostOrder), c.Message.OrderDetails.OrderId, c.Message.OrderDetails.CorrelationId))
             .TransitionTo(Initial)
             .ThenAsync(async c => await c.Publish(new QueueActionGroup(GetActionGroup(c.Saga))));
+
+    private EventActivityBinder<HostOrderSaga, ActionGroupInvalid> ActionGroupInvalidEventHandler() =>
+        When(ActionGroupInvalidEvent)
+            .Then(c => _logger.LogInformation("{MessageType} for action group with {CorrelationId} received", nameof(ActionGroupInvalid), c.Message.ActionGroup.CorrelationId))
+            .TransitionTo(Failed);
     #endregion
 
     #region Private Methods

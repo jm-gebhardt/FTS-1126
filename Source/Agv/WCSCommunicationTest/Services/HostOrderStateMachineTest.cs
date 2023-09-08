@@ -1,80 +1,94 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
-using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.Common.Messages;
-using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
-using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 using Gebhardt.StoreWare.Agv.WCSCommunication.Services;
 using Gebhardt.StoreWare.Agv.WCSCommunication.States;
 using Gebhardt.StoreWare.Agv.WCSCommunication.Messages;
+using Gebhardt.StoreWare.Agv.WCSCommunicationTest.Fixtures;
 
-namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services;
-
-[TestClass]
-public class HostOrderStateMachineTest
+namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services
 {
-    /// <summary>
-    /// When HostOrder received agv Is requested
-    /// </summary>
-    [TestMethod]
-    public async Task WhenCreateHostOrderReceived_HostOrderSagaCreated()
+    [TestClass]
+    public class HostOrderStateMachineTest
     {
-        var fixture = new StateMachineTestFixture<HostOrderStateMachine, HostOrderSaga>();
+        /// <summary>
+        /// When HostOrder received agv Is requested
+        /// </summary>
+        [TestMethod]
+        public async Task WhenCreateHostOrderReceived_HostOrderSagaCreated()
+        {
+            var fixture = new HostOrderStateMachineFixture();
 
-        const string orderId = "Order#01";
-        var correlationId = orderId.ToGuid();
-        var orderDetails = new OrderDetails(correlationId, orderId, "SRC1", "DST1", "LeNo123", HostOrderCreator.Simulation);
+            const string orderId = "Order#01";
+            var correlationId = orderId.ToGuid();
+            var orderDetails = new OrderDetails(correlationId, orderId, "SRC1", "DST1", "LeNo123", HostOrderCreator.Simulation);
 
-        await fixture.TestHarness.Bus.Publish(new CreateHostOrder(orderDetails));
-        (await fixture.SagaHarness.Consumed.Any<CreateHostOrder>()).ShouldBeTrue();
+            await fixture.SendAndVerifyMessage(new CreateHostOrder(orderDetails));
 
-        var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
+            var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
 
-        saga.CurrentState.ShouldBe("Initial");
-        saga.OrderDetails.CorrelationId.ShouldBe(correlationId);
-        saga.OrderDetails.OrderId.ShouldBe(orderId);
-    }
+            saga.CurrentState.ShouldBe("Initial");
+            saga.OrderDetails.CorrelationId.ShouldBe(correlationId);
+            saga.OrderDetails.OrderId.ShouldBe(orderId);
+        }
 
-    [TestMethod]
-    public async Task WhenCreateHostOrderReceived_ActionGroup_Sent()
-    {
-        // Arrange
-        var fixture = new StateMachineTestFixture<HostOrderStateMachine, HostOrderSaga>();
+        [TestMethod]
+        public async Task WhenActionGroupInvalidReceived_TransitionToFailed()
+        {
+            var fixture = new HostOrderStateMachineFixture();
 
-        const string orderId = "Order#01";
-        var correlationId = orderId.ToGuid();
-        var orderDetails = new OrderDetails(correlationId, orderId, "SRC1", "DST1", "LeNo123", HostOrderCreator.Simulation);
+            const string orderId = "Order#01";
+            var correlationId = orderId.ToGuid();
+            var orderDetails = new OrderDetails(correlationId, orderId, "SRC1", "DST1", "LeNo123", HostOrderCreator.Simulation);
+            fixture.Add(new HostOrderSaga(orderDetails));
+            var actionGroup = new ActionGroup(correlationId, string.Empty);
+            await fixture.SendAndVerifyMessage(new ActionGroupInvalid(actionGroup.CorrelationId, actionGroup, new List<string>()));
 
-        // Act
-        await fixture.TestHarness.Bus.Publish(new CreateHostOrder(orderDetails));
+            var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
 
-        // Assert
-        (await fixture.SagaHarness.Consumed.Any<CreateHostOrder>()).ShouldBeTrue();
+            saga.CurrentState.ShouldBe(nameof(HostOrderStateMachine.Failed));
+        }
 
-        (await fixture.TestHarness.Published.Any<QueueActionGroup>()).ShouldBeTrue();
+        [TestMethod]
+        public async Task WhenCreateHostOrderReceived_ActionGroup_Sent()
+        {
+            // Arrange
+            var fixture = new HostOrderStateMachineFixture();
 
-        var msg = fixture.TestHarness.Published.Select<QueueActionGroup>().First().Context.Message;
-        msg.CorrelationId.ShouldBe(correlationId);
+            const string orderId = "Order#01";
+            var correlationId = orderId.ToGuid();
+            var orderDetails = new OrderDetails(correlationId, orderId, "SRC1", "DST1", "LeNo123", HostOrderCreator.Simulation);
 
-        msg.ActionGroup.Creator.ShouldBe(ActionGroupCreator.Simulation);
-        var pickAction = msg.ActionGroup.Actions.First();
-        var dropAction = msg.ActionGroup.Actions.Last();
+            // Act
+            await fixture.SendAndVerifyMessage(new CreateHostOrder(orderDetails));
 
-        pickAction.ShouldNotBeNull();
-        dropAction.ShouldNotBeNull();
+            // Assert
+            (await fixture.TestHarness.Published.Any<QueueActionGroup>()).ShouldBeTrue();
 
-        pickAction.ActionType.ShouldBe(ActionType.Pick);
-        pickAction.ParentId.ShouldBe(correlationId);
-        pickAction.CorrelationId.ShouldNotBe(Guid.Empty);
+            var msg = fixture.TestHarness.Published.Select<QueueActionGroup>().First().Context.Message;
+            msg.CorrelationId.ShouldBe(correlationId);
+            var pickAction = msg.ActionGroup.Actions.First();
+            var dropAction = msg.ActionGroup.Actions.Last();
 
-        dropAction.ActionType.ShouldBe(ActionType.Drop);
-        dropAction.ParentId.ShouldBe(correlationId);
-        dropAction.CorrelationId.ShouldNotBe(Guid.Empty);
+            pickAction.ShouldNotBeNull();
+            dropAction.ShouldNotBeNull();
 
-        var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
-        saga.ShouldNotBeNull();
-        saga.PickActionGuid.ShouldBe(pickAction.CorrelationId);
-        saga.DropActionGuid.ShouldBe(dropAction.CorrelationId);
+            pickAction.ActionType.ShouldBe(ActionType.Pick);
+            pickAction.ParentId.ShouldBe(correlationId);
+            pickAction.CorrelationId.ShouldNotBe(Guid.Empty);
+
+            dropAction.ActionType.ShouldBe(ActionType.Drop);
+            dropAction.ParentId.ShouldBe(correlationId);
+            dropAction.CorrelationId.ShouldNotBe(Guid.Empty);
+
+            var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
+            saga.ShouldNotBeNull();
+            saga.PickActionGuid.ShouldBe(pickAction.CorrelationId);
+            saga.DropActionGuid.ShouldBe(dropAction.CorrelationId);
+        }
     }
 }

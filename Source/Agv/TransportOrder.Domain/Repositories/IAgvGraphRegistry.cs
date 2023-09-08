@@ -53,4 +53,11 @@ public interface IAgvGraphRegistry
     /// <param name="agvCorrelationId">The Agv CorrelationId</param>
     /// <returns>True if the AgvGraph for given Agv exists</returns>
     Task<bool> ExistsAsync(Guid agvCorrelationId);
+
+    /// <summary>
+    /// Check if a node exists in the registry regardless of an agv
+    /// </summary>
+    /// <param name="nodeId"></param>
+    /// <returns></returns>
+    Task<bool> NodeExistsAsync(string nodeId);
 }

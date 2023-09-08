@@ -4,6 +4,7 @@ using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
+using AgvActionGenerator = Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper.AgvActionGenerator;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Domain.Services.ActionGroup;
 
@@ -46,9 +47,9 @@ public class ShortestRouteChooserTest
         var agv2 = AgvGenerator.GenerateIdleAgv(index: 2, lastNodeId: AgvGraphGenerator.ChargingFar.Id);
         var agvs = new List<IAgv> { agv0, agv1, agv2 };
         var fixture = new ChooseAgvActionGroupServiceFixture()
-            .WithAgvHasRouteToDestination(agv0, routeCosts: 5f)
-            .WithAgvHasRouteToDestination(agv1, routeCosts: 2f)
-            .WithAgvHasRouteToDestination(agv2, routeCosts: 3f);
+            .WithAgvHasRouteToDestination(agv0, actionGroup, routeCosts: 5f)
+            .WithAgvHasRouteToDestination(agv1, actionGroup, routeCosts: 2f)
+            .WithAgvHasRouteToDestination(agv2, actionGroup, routeCosts: 3f);
 
         var chooseNextAgv = await fixture.ShortestRouteChooser.GetAgvAsync(actionGroup, agvs);
 
@@ -92,9 +93,9 @@ public class ShortestRouteChooserTest
             .AddNotStartedActionGroup(actionGroup1)
             .AddNotStartedActionGroup(actionGroup2)
             .AddNotStartedActionGroup(actionGroup3)
-            .WithAgvHasRouteToDestination(agv, actionGroup1.Actions.First().TargetNodeId, actionGroup1.Actions.Last().TargetNodeId, routeCosts: 10f)
-            .WithAgvHasRouteToDestination(agv, actionGroup2.Actions.First().TargetNodeId, actionGroup2.Actions.Last().TargetNodeId, routeCosts: 1f)
-            .WithAgvHasRouteToDestination(agv, actionGroup3.Actions.First().TargetNodeId, actionGroup3.Actions.Last().TargetNodeId, routeCosts: 20f);
+            .WithAgvHasRouteToDestination(agv, actionGroup1.Actions.First().TargetNodeId, actionGroup1.Actions.Last().TargetNodeId, actionGroup1, routeCosts: 10f)
+            .WithAgvHasRouteToDestination(agv, actionGroup2.Actions.First().TargetNodeId, actionGroup2.Actions.Last().TargetNodeId, actionGroup2, routeCosts: 1f)
+            .WithAgvHasRouteToDestination(agv, actionGroup3.Actions.First().TargetNodeId, actionGroup3.Actions.Last().TargetNodeId, actionGroup3, routeCosts: 20f);
 
         var chosenActionGroup = await fixture.ShortestRouteChooser.GetNotStartedActionGroupAsync(agv);
         chosenActionGroup.ShouldNotBeNull();
@@ -116,10 +117,10 @@ public class ShortestRouteChooserTest
             .AddNotStartedActionGroup(actionGroup2)
             .AddNotStartedActionGroup(moveActionGroup)
             .AddNotStartedActionGroup(actionGroup3)
-            .WithAgvHasRouteToDestination(agv, actionGroup1.Actions.First().TargetNodeId, actionGroup1.Actions.Last().TargetNodeId, routeCosts: 10f)
-            .WithAgvHasRouteToDestination(agv, actionGroup2.Actions.First().TargetNodeId, actionGroup2.Actions.Last().TargetNodeId, routeCosts: 2f)
-            .WithAgvHasRouteToDestination(agv, agvLastNodeId, moveActionGroup.Actions.First().TargetNodeId, routeCosts: 10f)
-            .WithAgvHasRouteToDestination(agv, actionGroup3.Actions.First().TargetNodeId, actionGroup3.Actions.Last().TargetNodeId, routeCosts: null);
+            .WithAgvHasRouteToDestination(agv, actionGroup1.Actions.First().TargetNodeId, actionGroup1.Actions.Last().TargetNodeId, actionGroup1, routeCosts: 10f)
+            .WithAgvHasRouteToDestination(agv, actionGroup2.Actions.First().TargetNodeId, actionGroup2.Actions.Last().TargetNodeId, actionGroup2, routeCosts: 2f)
+            .WithAgvHasRouteToDestination(agv, agvLastNodeId, moveActionGroup.Actions.First().TargetNodeId, moveActionGroup, routeCosts: 10f)
+            .WithAgvHasRouteToDestination(agv, actionGroup3.Actions.First().TargetNodeId, actionGroup3.Actions.Last().TargetNodeId, actionGroup3, routeCosts: null);
 
         var chosenActionGroup = await fixture.ShortestRouteChooser.GetNotStartedActionGroupAsync(agv);
         chosenActionGroup.ShouldNotBeNull();
@@ -137,7 +138,7 @@ public class ShortestRouteChooserTest
 
         var fixture = new ChooseAgvActionGroupServiceFixture()
             .AddNotStartedActionGroup(actionGroup)
-            .WithAgvHasRouteToDestination(agv, routeCosts: 1f);
+            .WithAgvHasRouteToDestination(agv, actionGroup, routeCosts: 1f);
 
         var chosenActionGroup = await fixture.ShortestRouteChooser.GetNotStartedActionGroupAsync(agv);
         chosenActionGroup.ShouldNotBeNull();

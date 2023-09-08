@@ -54,7 +54,6 @@ public class TransportOrderDbContext: ConfigurableDbContext
         {
             yield return new NodeLockClassMap();
             yield return new MapClassMap();
-            yield return new AgvActionClassMap();
             yield return new ActionGroupClassMap();
             yield return new ConfigurationSettingsClassMap();
             yield return new AgvGraphClassMap();

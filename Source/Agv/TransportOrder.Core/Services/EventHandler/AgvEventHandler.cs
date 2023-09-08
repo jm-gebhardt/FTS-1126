@@ -103,8 +103,9 @@ public class AgvEventHandler :
     public async Task Consume(ConsumeContext<AgvCanStartIdleAction> context)
     {
         var agv = context.Message.Agv;
-
-        if (_chargingService.AgvIsEligibleForCharging(agv))
+        bool isEligibleForCharging = _chargingService.AgvIsEligibleForCharging(agv);
+        _logger.LogDebug("Can start idle action for {CorrelationId} with charging eligibility {isEligibleForCharging}", agv.CorrelationId, isEligibleForCharging);
+        if (isEligibleForCharging)
         {
             await context.Publish(new CreateChargingActionGroup(agv));
             return;
@@ -129,6 +130,7 @@ public class AgvEventHandler :
 
             if (agv.IsLocked)
             {
+                _logger.LogDebug("Agv {CorrelationId} is locked; Trying to start manual action", agv.CorrelationId);
                 await context.Publish(new TryStartManualAction(agv));
                 return;
             }
@@ -139,6 +141,10 @@ public class AgvEventHandler :
 
             bool shouldCharge = !isCarryingLoad && needsCharging;
             bool shouldDoMaintenance = !isCarryingLoad && needsMaintenance;
+            _logger.LogDebug(
+                "Publishing pending actions for {CorrelationId} with {needsCharging} {isCarryingLoad} {needsMaintenance} {shouldCharge} {shouldDoMaintenance}",
+                agv.CorrelationId,needsCharging,isCarryingLoad, needsMaintenance, shouldCharge, shouldDoMaintenance
+            );
 
             if (shouldCharge)
             {

@@ -1,7 +1,9 @@
-using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
-using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands;
+using AutoMapper;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using MassTransit;
+using AgvAction = TransportOrder.Domain.Models.ActionGroup.AgvAction;
+using MessageAgvAction = Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.AgvAction;
 
 namespace TransportOrder.Domain.Services.ActionGroup;
 
@@ -9,14 +11,15 @@ namespace TransportOrder.Domain.Services.ActionGroup;
 public class StartActionService : IStartActionService
 {
     private readonly IBus _bus;
+    private readonly IMapper _mapper;
 
     /// <summary>
-    /// <inheritdoc cref="StartActionService"/>
+    /// Initializes a new <see cref="StartActionService"/> instance.
     /// </summary>
-    /// <param name="bus"></param>
-    public StartActionService(IBus bus)
+    public StartActionService(IBus bus, IMapper mapper)
     {
         _bus = bus;
+        _mapper = mapper;
     }
 
     /// <inheritdoc />
@@ -28,6 +31,6 @@ public class StartActionService : IStartActionService
             throw new ArgumentNullException(nameof(action.Nodes));
         }
 
-        await _bus.Publish(new StartActionCommand(agv.CorrelationId, agv.AgvId, action), cancellationToken);
+        await _bus.Publish(new StartActionCommand(agv.CorrelationId, agv.AgvId, _mapper.Map<MessageAgvAction>(action)), cancellationToken);
     }
 }

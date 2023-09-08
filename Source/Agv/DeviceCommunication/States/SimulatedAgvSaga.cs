@@ -1,7 +1,7 @@
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
 using MassTransit;
-using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States;
 

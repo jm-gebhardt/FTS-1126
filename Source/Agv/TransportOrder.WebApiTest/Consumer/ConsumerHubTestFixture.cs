@@ -5,6 +5,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
+using TransportOrder.Domain.Profiles;
 using TransportOrder.Domain.Repositories;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Consumer;
@@ -35,7 +36,8 @@ public class ConsumerHubTestFixture<TConsumer, THubContext> : MassTransitConsume
             new global::TransportOrder.Messages.Profiles.AgvProfile(),
             new global::TransportOrder.Messages.Profiles.AgvGraphProfile(),
             new global::TransportOrder.Messages.Profiles.AgvErrorProfile(),
-            new global::TransportOrder.Messages.Profiles.MapProfile()
+            new global::TransportOrder.Messages.Profiles.MapProfile(),
+            new ActionGroupProfile()
         );
         return mapper;
     }

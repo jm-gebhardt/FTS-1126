@@ -1,6 +1,7 @@
-using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
+using Gebhardt.StoreWare.Agv.Common.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using TransportOrder.Domain.Models.ActionGroup;
 
 namespace TransportOrder.Persistence.Ef.DataAccess.Configuration;
 
@@ -10,6 +11,7 @@ namespace TransportOrder.Persistence.Ef.DataAccess.Configuration;
 public class ActionGroupClassMap : ClassMap<ActionGroup>
 {
     private const int MaxStateLength = 50;
+    private const int MaxActionTypeLength = 50;
 
     /// <summary>
     /// <see cref="ActionGroup"/> Entity Framework Mapping
@@ -21,10 +23,15 @@ public class ActionGroupClassMap : ClassMap<ActionGroup>
         entity.HasKey(g => g.CorrelationId);
         entity.Property(g => g.State).HasMaxLength(MaxStateLength);
 
-        entity.HasMany(g => g.Actions)
-            .WithOne()
-            .HasForeignKey(a => a.ParentId)
-            .HasPrincipalKey(g => g.CorrelationId)
-            .OnDelete(DeleteBehavior.ClientCascade);
+        entity.OwnsMany(g => g.Actions, a =>
+        {
+            a.HasKey(o => o.CorrelationId);
+            a.Property(e => e.Sequence);
+            a.Property(e => e.Nodes).HasJsonConversion();
+            a.Property(e => e.State).HasMaxLength(MaxStateLength);
+            a.Property(e => e.ActionType).HasMaxLength(MaxActionTypeLength);
+        });
+
+        entity.Navigation(g => g.Actions).AutoInclude();
     }
 }

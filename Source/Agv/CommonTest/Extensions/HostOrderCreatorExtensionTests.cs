@@ -1,5 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages;
-using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 

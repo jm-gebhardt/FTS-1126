@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.SagaStateMachines;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs;
 using MassTransit;
@@ -45,12 +44,11 @@ public class AgvStateChangedConsumer : IConsumer<AgvStateChanged>
         _logger.LogTrace("{MessageType} {CorrelationId} received", nameof(ActionGroupChanged), context.Message.CorrelationId);
             
         Response<GotAgvs> response = await _getAgvsClient.GetResponse<GotAgvs>(new GetAgvs(new[] { context.Message.Agv.CorrelationId }));
-            
-        if (!response.Message.Agvs.IsNullOrEmpty())
+        (ICollection<global::TransportOrder.Messages.MessageContent.Agv> agvs, ICollection<bool> areInitialState) = response.Message;
+        if (!agvs.IsNullOrEmpty())
         {
-            bool isInitialState = Equals(context.Message.Agv.CurrentState, nameof(AgvStateMachine.Initial));
             var agvDto = _mapper.Map<AgvDto>(response.Message.Agvs.First());
-            await _agvHubContext.SendAgvStateToAllClients(agvDto, isInitialState);
+            await _agvHubContext.SendAgvStateToAllClients(agvDto, areInitialState.First());
         }
     }
 }

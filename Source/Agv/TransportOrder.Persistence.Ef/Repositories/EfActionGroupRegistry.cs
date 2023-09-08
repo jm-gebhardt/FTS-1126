@@ -1,10 +1,13 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using MassTransit.Initializers;
 using Microsoft.EntityFrameworkCore;
 using TransportOrder.Domain.Exceptions;
 using TransportOrder.Domain.Models.ActionGroup;
 using TransportOrder.Domain.Repositories;
 using TransportOrder.Persistence.Ef.DataAccess;
+using ActionGroup = TransportOrder.Domain.Models.ActionGroup.ActionGroup;
+using AgvAction = TransportOrder.Domain.Models.ActionGroup.AgvAction;
 
 namespace TransportOrder.Persistence.Ef.Repositories;
 
@@ -71,7 +74,6 @@ public class EfActionGroupRegistry : IActionGroupRegistry
         List<ActionGroup> actionGroupsAsync = await actionGroups
             .OrderBy(g => g.CreatedDate)
             .ThenByDescending(g => g.IsManual)
-            .Include(g => g.Actions)
             .AsNoTracking()
             .Take(maxItems)
             .ToListAsync();
@@ -111,7 +113,6 @@ public class EfActionGroupRegistry : IActionGroupRegistry
                 DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
 
                 var actionGroup = await queryable.OrderByDescending(g => g.StartedDate)
-                    .Include(g => g.Actions)
                     .FirstOrDefaultAsync(a => a.AssignedAgv == agvCorrelationId);
 
                 return (agvCorrelationId, actionGroup);
@@ -160,11 +161,11 @@ public class EfActionGroupRegistry : IActionGroupRegistry
         DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
 
         var action = await queryable
-            .Include(actionGroup => actionGroup.Actions)
             .AsNoTracking()
-            .SingleOrDefaultAsync(actionGroup => actionGroup.Actions.Any(a => a.CorrelationId == correlationId));
+            .SingleOrDefaultAsync(actionGroup => actionGroup.Actions.Any(a => a.CorrelationId == correlationId))
+            .Select(ag => ag?.Actions.SingleOrDefault(a => a.CorrelationId == correlationId));
 
-        return action?.Actions.SingleOrDefault(a => a.CorrelationId == correlationId);
+        return action;
     }
 
     /// <inheritdoc cref="IActionGroupRegistry"/>
@@ -243,7 +244,6 @@ public class EfActionGroupRegistry : IActionGroupRegistry
             )
             .OrderBy(g => g.CreatedDate)
             .ThenByDescending(g => g.IsManual)
-            .Include(g => g.Actions)
             .AsNoTracking()
             .ToListAsync();
 
@@ -257,7 +257,6 @@ public class EfActionGroupRegistry : IActionGroupRegistry
         DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
         List<ActionGroup> notStartedActionGroups = await queryable
             .Where(actionGroup => actionGroup.State == ActionGroupState.Invalid)
-            .Include(g => g.Actions)
             .AsNoTracking()
             .ToListAsync();
 
@@ -272,7 +271,6 @@ public class EfActionGroupRegistry : IActionGroupRegistry
         var startedGroup = await queryable
             .Where(actionGroup => actionGroup.AssignedAgv == agvCorrelationId &&
                                   actionGroup.State == ActionGroupState.Started)
-            .Include(g => g.Actions)
             .AsNoTracking()
             .FirstOrDefaultAsync();
 

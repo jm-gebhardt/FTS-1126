@@ -1,0 +1,259 @@
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using TransportOrder.Domain.Exceptions;
+
+namespace TransportOrder.Domain.Models.ActionGroup;
+
+/// <summary>
+/// Grouping actions and sending them across service modules
+/// </summary>
+public class ActionGroup
+{
+    /// Parenting ID
+    public Guid CorrelationId { get; init; }
+
+    /// <summary>
+    /// A unique ID of the order that clamps all the corresponding actions
+    /// </summary>
+    public string OrderId { get; init; }
+
+    /// <summary>
+    /// Assigned AGV that will execute the ActionGroup
+    /// </summary>
+    public Guid? AssignedAgv { get; set; }
+
+    /// <summary>
+    /// Date the action was created (UTC)
+    /// </summary>
+    public DateTime CreatedDate { get; init; } = DateTime.UtcNow;
+
+    /// <summary>
+    /// Date the action has been started (UTC)
+    /// </summary>
+    public DateTime? StartedDate { get; set; }
+
+    /// <summary>
+    /// Date the action has been completed (UTC)
+    /// </summary>
+    public DateTime? CompletedDate { get; set; }
+
+    /// <summary>
+    /// State of the ActionGroup
+    /// </summary>
+    public ActionGroupState State { get; private set; } = ActionGroupState.Created;
+
+    private readonly List<AgvAction> _actions;
+    /// <summary>
+    /// List of actions.
+    /// </summary>
+    public IReadOnlyCollection<AgvAction> Actions => _actions.AsReadOnly();
+    
+    /// <summary>
+    /// If true, then this ActionGroup was created manually, not by the system
+    /// </summary>
+    public bool IsManual { get; set; }
+
+    /// <summary>
+    /// The creator of the <see cref="ActionGroup"/>.
+    /// </summary>
+    public ActionGroupCreator Creator { get; set; }
+
+    /// <summary>
+    ///  Initializes a new <see cref="ActionGroup"/> instance.
+    /// </summary>
+    /// <param name="correlationId">The CorrelationId of the <see cref="ActionGroup"/></param>
+    /// <param name="actions">The child Actions of the <see cref="ActionGroup"/></param>
+    /// <param name="orderId">The OrderID</param>
+    /// <param name="assignedAgv">The assigned Agv of this <see cref="ActionGroup"/></param>
+    /// <param name="creator">The creator of this <see cref="ActionGroup"/></param>
+    /// <param name="createdDate">The date of the creation of this <see cref="ActionGroup"/></param>
+    /// <param name="isManual">If true, then this <see cref="ActionGroup"/> was created manually, not by the system</param>
+    public ActionGroup(Guid correlationId, string orderId, IEnumerable<AgvAction> actions, ActionGroupCreator creator, DateTime? createdDate = default, Guid? assignedAgv = null, bool isManual = false) : this(correlationId, orderId)
+    {
+        AssignedAgv = assignedAgv;
+        IsManual = isManual;
+        CreatedDate = createdDate.GetValueOrDefault(DateTime.UtcNow);
+        _actions = actions.OrderBy(a => a.Sequence).ToList();
+        Creator = creator;
+    }
+
+    /// <summary>
+    /// Initializes a new <see cref="ActionGroup"/> instance.
+    /// </summary>
+    /// <param name="correlationId">The CorrelationId of the ActionGroup</param>
+    /// <param name="orderId">The OrderID</param>
+    public ActionGroup(Guid correlationId, string orderId)
+    {
+        CorrelationId = correlationId;
+        OrderId = orderId;
+        _actions = new List<AgvAction>();
+    }
+
+    /// <summary>
+    /// Json ctor
+    /// </summary>
+    public ActionGroup()
+    {
+        OrderId = "";
+        _actions = new List<AgvAction>();
+    }
+
+
+    /// <summary>
+    /// Updates the state of the ActionGroup based on the state of its Actions
+    /// </summary>
+    public void UpdateActionGroupState()
+    {
+        var previousState = State;
+
+        if (!_actions.Any())
+        {
+            throw new ActionsInActionGroupEmptyException(CorrelationId);
+        }
+
+        State = _actions switch
+        {
+            _ when _actions.All(a => a.State == ActionState.Completed) => ActionGroupState.Completed,
+            _ when _actions.All(a => a.State == ActionState.Created) => ActionGroupState.Created,
+            _ when _actions.Any(a => a.State == ActionState.Invalid) => ActionGroupState.Invalid,
+            _ when _actions.Any(a => a.State == ActionState.Failed) => ActionGroupState.Failed,
+            _ when _actions.Any(a => a.State == ActionState.Canceled) => ActionGroupState.Canceled,
+            _ => ActionGroupState.Started
+        };
+
+        if (State != previousState)
+        {
+            SetDates();
+        }
+    }
+
+    /// <summary>
+    /// Validates the action group.
+    /// </summary>
+    public bool Validate()
+    {
+        if (State == ActionGroupState.Invalid)
+        {
+            return true;
+        }
+        return true;
+    }
+
+    private void SetDates()
+    {
+        var now = DateTime.UtcNow;
+        
+        switch (State)
+        {
+            case ActionGroupState.Started:
+                StartedDate = now;
+                break;
+
+            case ActionGroupState.Completed:
+            case ActionGroupState.Failed:
+            case ActionGroupState.Canceled:
+            case ActionGroupState.Invalid:
+                CompletedDate = now;
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Sets the AssignedAgv of ActionGroup if not already assigned.
+    /// </summary>
+    /// <param name="agvToAssign">The agv to assign</param>
+    /// <exception cref="ActionGroupAlreadyAssignedException">If the action group was already assigned.</exception>
+    public void Assign(IAgv agvToAssign)
+    {
+        if (AssignedAgv == null)
+        {
+            AssignedAgv = agvToAssign.CorrelationId;
+        }
+        else if (AssignedAgv != agvToAssign.CorrelationId)
+        {
+            throw new ActionGroupAlreadyAssignedException(this, agvToAssign.CorrelationId);
+        }
+    }
+
+    /// <summary>
+    /// Completes the specified action.
+    /// </summary>
+    /// <param name="actionId">The id of the action.</param>
+    public void CompleteAction(Guid actionId)
+    {
+        UpdateActionState(actionId, ActionState.Completed);
+    }
+
+    /// <summary>
+    /// Invalidates the specified action.
+    /// </summary>
+    /// <param name="actionId">The id of the action.</param>
+    public void InvalidateAction(Guid actionId)
+    {
+        UpdateActionState(actionId, ActionState.Invalid);
+    }
+
+    /// <summary>
+    /// Sets the specified action into the failed state.
+    /// </summary>
+    /// <param name="actionId">The id of the action.</param>
+    public void SetActionFailed(Guid actionId)
+    {
+        UpdateActionState(actionId, ActionState.Failed);
+    }
+
+    /// <summary>
+    /// Cancels the specified action.
+    /// </summary>
+    /// <param name="actionId">The id of the action.</param>
+    public void CancelAction(Guid actionId)
+    {
+        UpdateActionState(actionId, ActionState.Canceled);
+    }
+
+    /// <summary>
+    /// Starts the specified action.
+    /// </summary>
+    /// <param name="actionId">The id of the action.</param>
+    public void StartAction(Guid actionId)
+    {
+        UpdateActionState(actionId, ActionState.Started);
+    }
+
+    private void UpdateActionState(Guid actionId, ActionState state)
+    {
+        Actions.Single(a => a.CorrelationId == actionId).UpdateActionState(state);
+        UpdateActionGroupState();
+    }
+
+    /// <summary>
+    /// Cancels the <see cref="ActionGroup"/> and all the child <see cref="AgvAction"/>.
+    /// </summary>
+    /// <returns></returns>
+    public bool CancelActionGroup()
+    {
+        if (Actions.Any(a => a.State != ActionState.Created))
+        {
+            return false;
+        }
+        foreach (var agvAction in Actions)
+        {
+            CancelAction(agvAction.CorrelationId);
+        }
+        return true;
+    }
+
+    /// <summary>
+    /// Cancels the <see cref="ActionGroup"/> and all the child <see cref="AgvAction"/>.
+    /// </summary>
+    /// <returns></returns>
+    public bool InvalidateActionGroup()
+    {
+        foreach (var agvAction in Actions)
+        {
+            InvalidateAction(agvAction.CorrelationId);
+        }
+        return true;
+    }
+
+}

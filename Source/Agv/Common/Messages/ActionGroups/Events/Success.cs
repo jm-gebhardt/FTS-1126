@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
+﻿namespace Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 
 /// <summary>
 /// Defines a basic, successful result

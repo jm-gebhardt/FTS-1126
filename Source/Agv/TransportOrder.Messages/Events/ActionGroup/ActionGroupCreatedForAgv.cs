@@ -5,4 +5,4 @@
 /// </summary>
 /// <param name="ActionGroup">The action group.</param>
 /// <param name="AssignedAgv">The assigned agv.</param>
-public record ActionGroupCreatedForAgv(Gebhardt.StoreWare.Agv.Common.Messages.Actions.ActionGroup ActionGroup, Guid AssignedAgv);
+public record ActionGroupCreatedForAgv(Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.ActionGroup ActionGroup, Guid AssignedAgv);

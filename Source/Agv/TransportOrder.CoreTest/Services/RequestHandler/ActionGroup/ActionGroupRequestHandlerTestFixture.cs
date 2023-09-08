@@ -1,5 +1,5 @@
 using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
@@ -23,7 +23,7 @@ public class ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer>  : 
 
     public ActionGroupState[] AllActionGroupStates => Enum.GetValues(typeof(ActionGroupState)).Cast<ActionGroupState>().ToArray();
 
-    public async Task<ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer>> WithActionGroups(Common.Messages.Actions.ActionGroup[] actionGroups)
+    public async Task<ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer>> WithActionGroups(global::TransportOrder.Domain.Models.ActionGroup.ActionGroup[] actionGroups)
     {
         // ReSharper disable once CoVariantArrayConversion
         await _actionGroupRetrievalServiceTestFixture.AddRangeAsync(actionGroups);

@@ -1,4 +1,5 @@
 using JetBrains.Annotations;
+using TransportOrder.Domain.Models.ActionGroup;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.EventHandler;
 
@@ -12,7 +13,7 @@ public interface IActionManager
     /// </summary>
     /// <param name="actionGroup"></param>
     /// <param name="cancellationToken"></param>
-    public Task AddActionGroupAsync(Common.Messages.Actions.ActionGroup actionGroup, CancellationToken cancellationToken);
+    public Task AddActionGroupAsync(ActionGroup actionGroup, CancellationToken cancellationToken);
 
     /// <summary>
     /// Update ActionState and unlock Agv

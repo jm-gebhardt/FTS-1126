@@ -1,9 +1,11 @@
-using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
-using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 using TransportOrder.Domain.Exceptions;
+using ActionGroup = TransportOrder.Domain.Models.ActionGroup.ActionGroup;
+using AgvAction = TransportOrder.Domain.Models.ActionGroup.AgvAction;
+using AgvActionGenerator = Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper.AgvActionGenerator;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Repositories;
 
@@ -52,7 +54,7 @@ public class ActionGroupRegistryTest
 
         for (int i = 0; i < totalItems; i++)
         {
-            actionGroups.Add(AgvActionGenerator.GeneratePickDropActionGroup(actionGroupState, assignedAgv: assignedAgv));
+            actionGroups.Add(AgvActionGenerator.SetActionGroupToState(AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: assignedAgv),actionGroupState));
         }
 
         IEnumerable<ActionGroupState> otherStatesForTestingExclusion = actionGroupStates.Except(new List<ActionGroupState> { actionGroupState });
@@ -62,7 +64,7 @@ public class ActionGroupRegistryTest
 
     private static IEnumerable<ActionGroup> CreateInitialActionGroups(IEnumerable<ActionGroupState> actionGroupStates)
     {
-        return actionGroupStates.Select(actionGroupState => AgvActionGenerator.GeneratePickDropActionGroup(actionGroupState)).ToList();
+        return actionGroupStates.Select(actionGroupState => AgvActionGenerator.SetActionGroupToState(AgvActionGenerator.GeneratePickDropActionGroup(), actionGroupState)).ToList();
     }
 
     [TestMethod]
@@ -264,7 +266,6 @@ public class ActionGroupRegistryTest
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         var agv = AgvGenerator.GenerateIdleAgv();
         var actionToUpdateState = actionGroup.Actions.First();
-        actionToUpdateState.State = ActionState.Created;
         var fixture = await new ActionGroupRegistryTestFixture()
             .WithActionGroup(actionGroup)
             .BuildAsync();
@@ -333,15 +334,13 @@ public class ActionGroupRegistryTest
     [TestMethod]
     public async Task GetSubsequentActionAsync_ReturnsSubsequentAction()
     {
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(ActionGroupState.Started);
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         var agv = AgvGenerator.GenerateIdleAgv();
         actionGroup.AssignedAgv = agv.CorrelationId;
 
-        var firstAction = actionGroup.Actions.First();
-        firstAction.State = ActionState.Started;
-
+        actionGroup.StartAction(actionGroup.Actions.First().CorrelationId);
+        
         var subsequentAction = actionGroup.Actions.ElementAt(1);
-        subsequentAction.State = ActionState.Created;
 
         var fixture = await new ActionGroupRegistryTestFixture()
             .WithActionGroup(actionGroup)
@@ -354,7 +353,7 @@ public class ActionGroupRegistryTest
     [TestMethod]
     public async Task GetCurrentAssignedActionGroupAsync_WhenAgvProvidedHaveCurrentAssignedActionGroup_ReturnTupleWithCurrentAssignedActionGroup()
     {
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(ActionGroupState.Started);
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         var agv = AgvGenerator.GenerateIdleAgv();
         actionGroup.AssignedAgv = agv.CorrelationId;
 
@@ -373,7 +372,7 @@ public class ActionGroupRegistryTest
     [TestMethod]
     public async Task GetCurrentAssignedActionGroupAsync_WhenAgvProvidedHaveNoCurrentAssignedActionGroup_ReturnTupleWithNullValueForCurrentAssignedActionGroup()
     {
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(ActionGroupState.Started);
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         var agv = AgvGenerator.GenerateIdleAgv();
         actionGroup.AssignedAgv = Guid.NewGuid();
 

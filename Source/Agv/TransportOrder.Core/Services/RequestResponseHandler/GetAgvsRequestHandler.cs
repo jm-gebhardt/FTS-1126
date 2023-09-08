@@ -3,6 +3,7 @@ using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using JetBrains.Annotations;
 using MassTransit;
 using TransportOrder.Domain.Exceptions;
+using TransportOrder.Domain.Models.Agv;
 using TransportOrder.Domain.ReadModels;
 using TransportOrder.Domain.Repositories;
 using TransportOrder.Messages.Requests.Agv;
@@ -73,7 +74,8 @@ public class GetAgvsRequestHandler : IConsumer<GetAgvs>,
             }
             return agvMessageContent;
         }).ToList();
-        await context.RespondAsync(new GotAgvs(agvsMessageContent));
+        List<bool> areInitialState = agvsMessageContent.Select(a => a.CurrentState == AgvState.Initial).ToList();
+        await context.RespondAsync(new GotAgvs(agvsMessageContent, areInitialState));
     }
 
     /// <summary>

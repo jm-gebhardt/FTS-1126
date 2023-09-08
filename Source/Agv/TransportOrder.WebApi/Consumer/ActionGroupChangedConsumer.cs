@@ -1,7 +1,9 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
+﻿using AutoMapper;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs;
 using MassTransit;
 using Microsoft.Extensions.Logging;
+using TransportOrder.Domain.Models.ActionGroup;
 using TransportOrder.Domain.Repositories;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Consumer;
@@ -15,17 +17,22 @@ public class ActionGroupChangedConsumer : IConsumer<ActionGroupChanged>
     private readonly ILogger<ActionGroupChangedConsumer> _logger;
     private readonly IActionHubContext _actionHubContext;
     private readonly IActionGroupRetrievalService _actionGroupRetrievalService;
+    private readonly IMapper _mapper;
 
     /// <summary>
     /// Constructor
     /// </summary>
     public ActionGroupChangedConsumer(
         ILogger<ActionGroupChangedConsumer> logger,
-        IActionHubContext actionHubContext, IActionGroupRetrievalService actionGroupRetrievalService)
+        IActionHubContext actionHubContext,
+        IActionGroupRetrievalService actionGroupRetrievalService,
+        IMapper mapper)
     {
         _logger = logger;
         _actionHubContext = actionHubContext;
         _actionGroupRetrievalService = actionGroupRetrievalService;
+        _mapper = mapper;
+
     }
 
     /// <summary>
@@ -36,7 +43,7 @@ public class ActionGroupChangedConsumer : IConsumer<ActionGroupChanged>
     {
         var (actionGroup, correlationId) = context.Message;
         _logger.LogTrace("{MessageType} {CorrelationId} received", nameof(ActionGroupChanged), correlationId);
-        var actionGroupReadModel = await _actionGroupRetrievalService.EnrichActionGroupWithTargetNodeTypesAsync(actionGroup);
+        var actionGroupReadModel = await _actionGroupRetrievalService.EnrichActionGroupWithTargetNodeTypesAsync(_mapper.Map<ActionGroup>(actionGroup));
         await _actionHubContext.SendActionGroupStateToAllClients(actionGroupReadModel);
     }
 }

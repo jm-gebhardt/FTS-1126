@@ -1,4 +1,4 @@
-using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
+using ActionGroup = TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 
 namespace TransportOrder.Domain.Exceptions;
 

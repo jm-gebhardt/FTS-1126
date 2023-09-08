@@ -54,7 +54,7 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
         return this;
     }
 
-    public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithAgvs(IList<IAgv> agvs, Common.Messages.Actions.ActionGroup? actionGroup = null)
+    public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithAgvs(IList<IAgv> agvs, global::TransportOrder.Domain.Models.ActionGroup.ActionGroup? actionGroup = null)
     {
         AgvRegistry.Setup(s => s.GetAllAgvs()).Returns(agvs.AsQueryable());
         ActionGroupRegistry.Setup(r => r.GetCurrentAssignedActionGroupsWithTargetNodeTypeAsync(It.IsAny<IEnumerable<Guid>>()))
@@ -62,7 +62,7 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
         return this;
     }
 
-    public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithAgv(IAgv agv, Common.Messages.Actions.ActionGroup? actionGroup = null)
+    public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithAgv(IAgv agv, global::TransportOrder.Domain.Models.ActionGroup.ActionGroup? actionGroup = null)
     {
         AgvRegistry.Setup(r => r.GetAgv(agv.CorrelationId)).Returns(agv);
         AgvRegistry.Setup(r => r.CheckIfAgvExistsAsync(agv.CorrelationId)).ReturnsAsync(true);

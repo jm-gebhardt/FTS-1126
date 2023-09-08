@@ -1,10 +1,12 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.AgvActions;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
+using TransportOrder.Domain.Profiles;
 using TransportOrder.Domain.ReadModels;
+using ActionGroup = TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Profiles;
 [TestClass]
@@ -13,11 +15,11 @@ public class ActionProfileTest
     [TestMethod]
     public void Map_ActionGroupToActionGroupDto_MapsActionsInOrderBySequence()
     {
-        var mapper = MappingHelper.GetMapper(new AgvProfile(), new ActionProfile(), new AgvErrorProfile());
+        var mapper = MappingHelper.GetMapper(new AgvProfile(), new ActionProfile(), new AgvErrorProfile(), new ActionGroupProfile());
 
         List<AgvAction> actions = AgvActionGenerator.GeneratePickDropActionGroup().Actions.OrderByDescending(x => x.Sequence).ToList();
         var actionGroup = AgvActionGenerator.GenerateActionGroup(actions);
-        var actionGroupDto = mapper.Map<ActionGroupDto>(actionGroup.ConvertFromActionGroupWithFakeNodeType());
+        var actionGroupDto = mapper.Map<ActionGroupDto>(mapper.Map<ActionGroup>(actionGroup).ConvertFromActionGroupWithFakeNodeType());
         actionGroupDto.Actions.Select(a => a.Sequence).ShouldBeInOrder(SortDirection.Ascending);
     }
 
@@ -46,9 +48,9 @@ public class ActionProfileTest
     [TestMethod]
     public void Map_ActionGroupToActionGroupDto_MapsAllPropertiesCorrectly()
     {
-        var mapper = MappingHelper.GetMapper(new ActionProfile());
+        var mapper = MappingHelper.GetMapper(new ActionProfile(), new ActionGroupProfile());
 
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup().ConvertFromActionGroupWithFakeNodeType();
+        var actionGroup = mapper.Map<ActionGroup>(AgvActionGenerator.GeneratePickDropActionGroup()).ConvertFromActionGroupWithFakeNodeType();
         var actionGroupDto = mapper.Map<ActionGroupDto>(actionGroup);
 
         actionGroupDto.CorrelationId.ShouldBe(actionGroup!.CorrelationId);

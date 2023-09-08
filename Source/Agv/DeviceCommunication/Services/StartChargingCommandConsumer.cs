@@ -1,10 +1,10 @@
 using MassTransit;
-using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands;
 using JetBrains.Annotations;
-using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
-using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
 using static Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.AgvGraph;
 using Gebhardt.StoreWare.Agv.Common.Exceptions;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Exceptions;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services;

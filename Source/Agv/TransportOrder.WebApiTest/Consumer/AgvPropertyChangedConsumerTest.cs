@@ -33,7 +33,7 @@ public class AgvPropertyChangedConsumerTest
             
         var mockGetAgvsClient = new Mock<IRequestClient<GetAgvs>>();
         var responseMock = new Mock<Response<GotAgvs>>();
-        responseMock.SetupGet(m => m.Message).Returns(new GotAgvs(new[] { agvMessageContent }));
+        responseMock.SetupGet(m => m.Message).Returns(new GotAgvs(new[] { agvMessageContent }, new List<bool>{false}));
         mockGetAgvsClient.Setup(
                 m => m.GetResponse<GotAgvs>(It.IsAny<GetAgvs>(), default, default
                 ))

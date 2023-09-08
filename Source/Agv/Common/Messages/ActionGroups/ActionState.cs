@@ -1,7 +1,7 @@
 ﻿
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions;
+namespace Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 
 /// <summary>
 /// State of an AGV action

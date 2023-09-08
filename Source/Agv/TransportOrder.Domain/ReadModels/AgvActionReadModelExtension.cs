@@ -1,4 +1,4 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 
 namespace TransportOrder.Domain.ReadModels;

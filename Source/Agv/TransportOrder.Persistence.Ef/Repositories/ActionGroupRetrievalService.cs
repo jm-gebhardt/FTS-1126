@@ -1,9 +1,10 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Microsoft.EntityFrameworkCore;
 using TransportOrder.Domain.Models.Graph;
 using TransportOrder.Domain.ReadModels;
 using TransportOrder.Domain.Repositories;
 using TransportOrder.Persistence.Ef.DataAccess;
+using ActionGroup = TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 
 namespace TransportOrder.Persistence.Ef.Repositories;
 
@@ -47,7 +48,6 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
         return (await actionGroups
                 .OrderBy(g => g.CreatedDate)
                 .ThenByDescending(g => g.IsManual)
-                .Include(g => g.Actions)
                 .AsNoTracking()
                 .ToListAsync())
             .Select(g => new ActionGroupReadModel(g.CorrelationId,
@@ -73,7 +73,6 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
                 IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>();
                 IQueryable<EfNode> graphNodes = context.Set<EfNode>();
                 var actionGroup = (await actionGroups.OrderByDescending(g => g.StartedDate)
-                    .Include(g => g.Actions)
                     .ToListAsync())
                     .Select(g => new ActionGroupReadModel(g.CorrelationId,
                         g.OrderId, g.AssignedAgv, g.CreatedDate, g.StartedDate, g.CompletedDate, g.State, g.Creator,
@@ -115,7 +114,6 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
         IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>();
         IQueryable<EfNode> graphNodes = context.Set<EfNode>();
         return (await actionGroups.Where(g => g.CorrelationId == correlationId)
-                .Include(g => g.Actions)
                 .ToListAsync())
             .Select(g => new ActionGroupReadModel(g.CorrelationId,
                 g.OrderId, g.AssignedAgv, g.CreatedDate, g.StartedDate, g.CompletedDate, g.State, g.Creator,

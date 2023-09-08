@@ -1,4 +1,4 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Consumer;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs;

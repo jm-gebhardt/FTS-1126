@@ -17,7 +17,6 @@
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\Common\Common.csproj" />
-        <ProjectReference Include="..\TransportOrder.Core\TransportOrder.Core.csproj" />
         <ProjectReference Include="..\TransportOrder.Messages\TransportOrder.Messages.csproj" />
     </ItemGroup>
     <ItemGroup>

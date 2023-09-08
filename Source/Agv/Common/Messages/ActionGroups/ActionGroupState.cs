@@ -1,4 +1,4 @@
-namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions;
+namespace Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 
 /// <summary>
 /// States of ActionGroup

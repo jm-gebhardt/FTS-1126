@@ -4,6 +4,7 @@ using System.Net;
 using System.Text.Json;
 using Gebhardt.StoreWare.Agv.Common.Exceptions;
 using MassTransit;
+using TransportOrder.Domain.Exceptions;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Middleware;
 
@@ -47,6 +48,7 @@ public class ExceptionHandlerMiddleware : IMiddleware
                 break;
 
             case NotInCorrectStateException:
+            case ActionGroupStateInvalidException:
                 statusCode = HttpStatusCode.BadRequest;
                 break;
 

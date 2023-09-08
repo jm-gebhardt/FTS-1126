@@ -15,27 +15,40 @@ public interface IRouteService
     /// </summary>
     /// <param name="agv">The agv to calculate the route for</param>
     /// <param name="destinationNodeId">The destination node Id</param>
-    /// <param name="costs">The costs for the found route. Null if the method returns false</param>
-    bool HasRoute(IAgv agv, string destinationNodeId, out float? costs);
+    /// <param name="cancellationToken"></param>
+    /// <returns>The Cost if a route was found, otherwise null</returns>
+    Task<float?> GetCostsAsync(IAgv agv, string destinationNodeId, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Computes if Agv has route for last node to Check if the vehicle can drive from its last node to the destination nodes one after the other
+    /// Checks if given AGV has route for given ActionGroup
+    /// firstAction contains the first action of the ActionGroup or null if no route is found
+    /// firstActionCost contains the costs for the first action of the ActionGroup or float.MaxValue if no route is found
     /// </summary>
-    /// <param name="agv">The agv to calculate the route for</param>
-    /// <param name="destinationNodeIds">The list of destination node which should be approached one by one</param>
-    /// <param name="costs">The costs for the found route. Null if the method returns false</param>
+    /// <param name="agv"></param>
+    /// <param name="actionGroup"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
     [PublicAPI]
-    bool HasRoute(IAgv agv, IList<string> destinationNodeIds, out float? costs);
+    Task<float?> GetCostsForFirstActionAsync(IAgv agv, Models.ActionGroup.ActionGroup actionGroup, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Returns true once it found the first Agv which can handle the whole ActionGroup (based on it's current node)
+    /// </summary>
+    /// <param name="actionGroup">The ActionGroup containing one or more Actions of which the target node Id will be considered</param>
+    /// <param name="agvs">Agvs to consider</param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    Task<bool> HasAnyAgvRouteAsync(Models.ActionGroup.ActionGroup actionGroup, IEnumerable<IAgv> agvs, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Determine route for Agv to go to destination
     /// </summary>
     /// <param name="agv">The agv to calculate the route for</param>
     /// <param name="destinationNodeId">The destination node Id</param>
+    /// <param name="cancellationToken"></param>
     /// <returns>The found route</returns>
     /// <exception cref="RouteNotFoundException"></exception>
-    Task<IGraphAlgorithm.Route> GetRouteAsync(IAgv agv, string destinationNodeId);
-
+    Task<IGraphAlgorithm.Route> GetRouteAsync(IAgv agv, string destinationNodeId, CancellationToken cancellationToken = default);
     /// <summary>
     /// Determine route for Agv from its last node to the destination nodes one after the other
     /// </summary>

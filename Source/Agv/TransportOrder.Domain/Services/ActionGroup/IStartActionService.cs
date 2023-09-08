@@ -1,6 +1,6 @@
-using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
-using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using AgvAction = TransportOrder.Domain.Models.ActionGroup.AgvAction;
 
 namespace TransportOrder.Domain.Services.ActionGroup;
 

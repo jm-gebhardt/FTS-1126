@@ -1,4 +1,4 @@
-using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using MassTransit;
 
 namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;

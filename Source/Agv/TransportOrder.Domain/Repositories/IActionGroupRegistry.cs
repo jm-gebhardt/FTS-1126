@@ -1,6 +1,8 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using TransportOrder.Domain.Models.ActionGroup;
+using ActionGroup = TransportOrder.Domain.Models.ActionGroup.ActionGroup;
+using AgvAction = TransportOrder.Domain.Models.ActionGroup.AgvAction;
 
 // ReSharper disable UnusedMemberInSuper.Global
 namespace TransportOrder.Domain.Repositories;

@@ -2,6 +2,7 @@ using Gebhardt.StoreWare.Agv.Common.Exceptions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Microsoft.Extensions.Logging;
 using TransportOrder.Domain.Exceptions;
+using TransportOrder.Domain.Models.ActionGroup;
 using TransportOrder.Domain.Models.Agv;
 using TransportOrder.Domain.Repositories;
 using TransportOrder.Routing;
@@ -28,19 +29,27 @@ public class RouteService : IRouteService
 
     private async Task<AgvGraph> GetAgvGraph(IAgv agv) => await _agvGraphRegistry.GetAgvGraphAsync(agv.CorrelationId);
 
-    private async Task<IGraphAlgorithm.Route?> GetRouteIfExisting(IAgv agv, string destinationNodeId)
+    private async Task<IGraphAlgorithm.Route?> GetRouteIfExistingAsync(IAgv agv, string destinationNodeId, CancellationToken cancellationToken = default)
     {
         string lastNodeId = GetLastNodeId(agv);
+
         if (!await _agvGraphRegistry.ExistsAsync(agv.CorrelationId))
         {
             return null;
         }
+
+        // Checking for cancellation before proceeding
+        cancellationToken.ThrowIfCancellationRequested();
+
         var agvGraph = await GetAgvGraph(agv);
+
+        cancellationToken.ThrowIfCancellationRequested();
+
         var route = AStar.CalculateRouteStatic(agvGraph, lastNodeId, destinationNodeId);
         return route!;
     }
 
-    private async Task<IGraphAlgorithm.Route?> GetRouteIfExisting(IAgv agv, IEnumerable<string> destinationNodeIds)
+    private async Task<IGraphAlgorithm.Route?> GetRouteIfExistingAsync(IAgv agv, IEnumerable<string> destinationNodeIds, CancellationToken cancellationToken = default)
     {
         var nodes = new List<string>
         {
@@ -48,6 +57,7 @@ public class RouteService : IRouteService
         };
         nodes.AddRange(destinationNodeIds);
         var agvGraph = await GetAgvGraph(agv);
+        cancellationToken.ThrowIfCancellationRequested();
 
         var route = AStar.CalculateRouteStatic(agvGraph, nodes.ToArray());
         return route;
@@ -56,28 +66,70 @@ public class RouteService : IRouteService
     ///<inheritdoc />
     /// <exception cref="AgvLocationUnknownException"></exception>
     /// <exception cref="AgvGraphNotDefinedException"></exception>
-    public bool HasRoute(IAgv agv, string destinationNodeId, out float? costs)
+    public async Task<float?> GetCostsAsync(IAgv agv, string destinationNodeId, CancellationToken cancellationToken = default)
     {
-        var route = GetRouteIfExisting(agv, destinationNodeId).Result;
-        costs = route?.Costs;
-        return route != null;
+        var route = await GetRouteIfExistingAsync(agv, destinationNodeId, cancellationToken);
+        return route?.Costs;
     }
 
     /// <inheritdoc />
-    public bool HasRoute(IAgv agv, IList<string> destinationNodeIds, out float? costs)
+    public async Task<float?> GetCostsForFirstActionAsync(IAgv agv, Models.ActionGroup.ActionGroup actionGroup, CancellationToken cancellationToken = default)
     {
-        var route = GetRouteIfExisting(agv, destinationNodeIds).Result;
-        costs = route?.Costs;
-        return route != null;
+        AgvAction? firstAction = null;
+        float? firstActionCost = null;
+        
+        foreach (var action in actionGroup.Actions)
+        {
+            float? costs = await GetCostsAsync(agv, action.TargetNodeId, cancellationToken);
+            if (costs == null)
+            {
+                return null; // Break if a target node is not reachable
+            }
+
+            // keep first action and it's costs
+            if (firstAction != null)
+            {
+                continue;
+            }
+            firstAction = action;
+            firstActionCost = costs.GetValueOrDefault();
+        }
+
+        return firstActionCost;
+    }
+
+    /// <inheritdoc/>
+    public async Task<bool> HasAnyAgvRouteAsync(Models.ActionGroup.ActionGroup actionGroup, IEnumerable<IAgv> agvs, CancellationToken cancellationToken = default)
+    {
+        var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
+        List<Task<float?>> hasRouteTasks = agvs.Select(agv => GetCostsForFirstActionAsync(agv, actionGroup, cts.Token)).ToList();
+
+        while (hasRouteTasks.Any())
+        {
+            Task<float?> finishedTask = await Task.WhenAny(hasRouteTasks);
+
+            if (finishedTask.Result != null)
+            {
+                _logger.LogDebug("A route calculation task completed successfully. Cancelling the remaining tasks.");
+                cts.Cancel();
+                return true;
+            }
+
+            _logger.LogDebug("A route calculation task completed but returned hasRoute false. Waiting for the next completion.");
+
+            hasRouteTasks.Remove(finishedTask);
+        }
+        return false;
     }
 
     ///<inheritdoc />
     /// <exception cref="AgvLocationUnknownException"></exception>
     /// <exception cref="AgvGraphNotDefinedException"></exception>
     /// <exception cref="RouteNotFoundException"></exception>
-    public async Task<IGraphAlgorithm.Route> GetRouteAsync(IAgv agv, string destinationNodeId)
+    public async Task<IGraphAlgorithm.Route> GetRouteAsync(IAgv agv, string destinationNodeId, CancellationToken cancellationToken = default)
     {
-        var route = await GetRouteIfExisting(agv, destinationNodeId);
+        var route = await GetRouteIfExistingAsync(agv, destinationNodeId, cancellationToken);
 
         if (route == null)
         {
@@ -93,7 +145,7 @@ public class RouteService : IRouteService
     /// <exception cref="RouteNotFoundException"></exception>
     public async Task<IGraphAlgorithm.Route> GetRouteAsync(IAgv agv, IList<string> destinationNodeIds)
     {
-        var route = await GetRouteIfExisting(agv, destinationNodeIds);
+        var route = await GetRouteIfExistingAsync(agv, destinationNodeIds);
 
         if (route == null)
         {
@@ -108,7 +160,7 @@ public class RouteService : IRouteService
     {
         IEnumerable<GraphNode> graphNodes = availableNodes.ToList();
         List<IGraphAlgorithm.Route> routes = await Task.WhenAll(graphNodes
-                .Select(n => GetRouteIfExisting(agv, n.Id)))
+                .Select(n => GetRouteIfExistingAsync(agv, n.Id)))
                 .ContinueWith(x => x.Result.Where(route => route != null)
                 .Cast<IGraphAlgorithm.Route>().ToList(), TaskContinuationOptions.NotOnFaulted);
 

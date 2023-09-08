@@ -11,14 +11,18 @@ public interface IChooseAgvActionGroupService
     /// <summary>
     /// Tries to find a suitable AGV for this ActionGroup
     /// Find AGV with shortest route to pick
+    /// <param name="actionGroup"></param>
+    /// <param name="agvs">The Agvs to consider</param>
+    /// <param name="cancellationToken"></param>
     /// </summary>
-    Task<IAgv?> GetAgvAsync(Gebhardt.StoreWare.Agv.Common.Messages.Actions.ActionGroup actionGroup, IList<IAgv> agvs);
+    Task<IAgv?> GetAgvAsync(Models.ActionGroup.ActionGroup actionGroup, IList<IAgv> agvs, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Get not started ActionGroups, returns the best action in the first ActionGroup that Agv can handle all actions
     /// </summary>
     /// <param name="agv"></param>
+    /// <param name="cancellationToken"></param>
     /// <returns></returns>
     /// <exception cref="AgvLocationUnknownException"></exception>
-    Task<Gebhardt.StoreWare.Agv.Common.Messages.Actions.ActionGroup?> GetNotStartedActionGroupAsync(IAgv agv);
+    Task<Models.ActionGroup.ActionGroup?> GetNotStartedActionGroupAsync(IAgv agv, CancellationToken cancellationToken = default);
 }

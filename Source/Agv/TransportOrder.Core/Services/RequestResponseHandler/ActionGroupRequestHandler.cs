@@ -1,4 +1,4 @@
-using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using JetBrains.Annotations;
 using MassTransit;
 using TransportOrder.Domain.Exceptions;

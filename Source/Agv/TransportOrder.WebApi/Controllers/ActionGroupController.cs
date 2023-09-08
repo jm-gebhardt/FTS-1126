@@ -1,5 +1,5 @@
 using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.AgvActions;
 using MassTransit;
 using Microsoft.AspNetCore.Mvc;

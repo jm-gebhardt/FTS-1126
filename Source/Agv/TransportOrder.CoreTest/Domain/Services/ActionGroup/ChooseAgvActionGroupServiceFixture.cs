@@ -1,20 +1,23 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using JetBrains.Annotations;
 using Moq;
 using TransportOrder.Domain.Repositories;
 using TransportOrder.Domain.Services.ActionGroup;
 using TransportOrder.Domain.Services.Routing;
 using TransportOrder.Routing;
 
-// ReSharper disable MemberCanBePrivate.Global
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Domain.Services.ActionGroup;
 
 public class ChooseAgvActionGroupServiceFixture
 {
-    public List<Common.Messages.Actions.ActionGroup> NotStartedActionGroups { get; } = new();
+    [UsedImplicitly]
+    public List<global::TransportOrder.Domain.Models.ActionGroup.ActionGroup> NotStartedActionGroups { get; } = new();
 
+    [UsedImplicitly]
     public Mock<IRouteService> RouteService { get; } = new();
 
+    [UsedImplicitly]
     public Mock<IActionGroupRegistry> AgvActionRegistry { get; } = new();
 
     public ShortestRouteChooser ShortestRouteChooser { get; private set; }
@@ -27,22 +30,34 @@ public class ChooseAgvActionGroupServiceFixture
             AgvActionRegistry.Object);
     }
 
-    public ChooseAgvActionGroupServiceFixture WithAgvHasRouteToDestination(IAgv agv, bool hasRoute = true, float? routeCosts = null)
+    public ChooseAgvActionGroupServiceFixture WithAgvHasRouteToDestination(IAgv agv, global::TransportOrder.Domain.Models.ActionGroup.ActionGroup actionGroup, float? routeCosts = null)
     {
-        RouteService.Setup(x => x.HasRoute(agv, It.IsAny<string>(), out routeCosts)).Returns(hasRoute);
-        RouteService.Setup(x => x.GetRouteAsync(agv, It.IsAny<string>())).ReturnsAsync(new IGraphAlgorithm.Route(1f, Array.Empty<string>()));
-        return this;
-    }
-    
-    public ChooseAgvActionGroupServiceFixture WithAgvHasRouteToDestination(IAgv agv, string sourceNodeId, string destinationNodeId, bool hasRoute = true, float? routeCosts = null)
-    {
-        RouteService.Setup(x => x.HasRoute(agv, destinationNodeId, out routeCosts)).Returns(hasRoute);
-        RouteService.Setup(x => x.HasRoute(agv, sourceNodeId, out routeCosts)).Returns(hasRoute);
-        RouteService.Setup(x => x.GetRouteAsync(agv, It.IsAny<string>())).ReturnsAsync(new IGraphAlgorithm.Route(1f, Array.Empty<string>()));
+        RouteService.Setup(x => x.GetCostsAsync(agv, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(routeCosts);
+
+        RouteService.Setup(x => x.GetCostsForFirstActionAsync(agv, actionGroup, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(routeCosts);
+
+        RouteService.Setup(x => x.GetRouteAsync(agv, It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(new IGraphAlgorithm.Route(1f, Array.Empty<string>()));
         return this;
     }
 
-    public ChooseAgvActionGroupServiceFixture AddNotStartedActionGroup(Common.Messages.Actions.ActionGroup actionGroup)
+    public ChooseAgvActionGroupServiceFixture WithAgvHasRouteToDestination(IAgv agv, string sourceNodeId, string destinationNodeId, global::TransportOrder.Domain.Models.ActionGroup.ActionGroup actionGroup, float? routeCosts = null)
+    {
+        RouteService.Setup(x => x.GetCostsAsync(agv, destinationNodeId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(routeCosts);
+
+        RouteService.Setup(x => x.GetCostsAsync(agv, sourceNodeId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(routeCosts);
+
+        RouteService.Setup(x => x.GetCostsForFirstActionAsync(agv, actionGroup, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(routeCosts);
+
+        RouteService.Setup(x => x.GetRouteAsync(agv, It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(new IGraphAlgorithm.Route(1f, Array.Empty<string>()));
+        return this;
+    }
+
+    public ChooseAgvActionGroupServiceFixture AddNotStartedActionGroup(global::TransportOrder.Domain.Models.ActionGroup.ActionGroup actionGroup)
     {
         NotStartedActionGroups.Add(actionGroup);
         return this;

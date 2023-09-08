@@ -1,4 +1,4 @@
-using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.AgvActions;
 

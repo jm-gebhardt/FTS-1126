@@ -1,6 +1,6 @@
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands;
+namespace Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
 
 /// <summary>
 /// Command to queue an ActionGroup

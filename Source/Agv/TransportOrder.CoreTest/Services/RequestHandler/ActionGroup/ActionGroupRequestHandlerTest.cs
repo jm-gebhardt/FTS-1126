@@ -1,4 +1,4 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
@@ -9,6 +9,7 @@ using Shouldly;
 using TransportOrder.Domain.Exceptions;
 using TransportOrder.Domain.ReadModels;
 using TransportOrder.Messages.Requests.ActionGroup;
+using AgvActionGenerator = Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper.AgvActionGenerator;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.RequestHandler.ActionGroup;
 
@@ -51,7 +52,7 @@ public class ActionGroupRequestHandlerTest
     public async Task Consume_GetAgvActionGroupsRequest_EmptyActionGroupRegistry_ReturnsEmptyList()
     {
         ActionGroupRequestHandlerTestFixture<GetActionGroups, ActionGroupRequestHandler> fixture = await (await new ActionGroupRequestHandlerTestFixture<GetActionGroups, ActionGroupRequestHandler>()
-            .WithActionGroups(Array.Empty<Common.Messages.Actions.ActionGroup>())).BuildAsync();
+            .WithActionGroups(Array.Empty<global::TransportOrder.Domain.Models.ActionGroup.ActionGroup>())).BuildAsync();
         Response<GotActionGroups> response = await fixture.GetResponseAsync<GotActionGroups>(
             new GetActionGroups(fixture.AllActionGroupStates, DateTime.MinValue, DateTime.MaxValue, 100));
         response.Message.ActionGroups.ShouldBeEmpty();
@@ -60,7 +61,7 @@ public class ActionGroupRequestHandlerTest
     [TestMethod]
     public async Task Consume_GetAgvActionGroupsRequest_SingleActionGroup_ReturnsCreated()
     {
-        Common.Messages.Actions.ActionGroup[] actionGroups = { AgvActionGenerator.GeneratePickDropActionGroup(actionState: ActionState.Created) };
+        global::TransportOrder.Domain.Models.ActionGroup.ActionGroup[] actionGroups = { AgvActionGenerator.GeneratePickDropActionGroup(actionState: ActionState.Created) };
         ActionGroupRequestHandlerTestFixture<GetActionGroups, ActionGroupRequestHandler> fixture = await (await new ActionGroupRequestHandlerTestFixture<GetActionGroups, ActionGroupRequestHandler>()
                 .WithActionGroups(actionGroups))
             .BuildAsync();
@@ -70,12 +71,13 @@ public class ActionGroupRequestHandlerTest
         response.Message.ActionGroups.ShouldNotBeEmpty();
     }
 
-    private static IEnumerable<Common.Messages.Actions.ActionGroup> CreateInitialActionGroups(int totalActionGroup, ActionGroupState actionGroupState)
+    private static IEnumerable<global::TransportOrder.Domain.Models.ActionGroup.ActionGroup> CreateInitialActionGroups(int totalActionGroup, ActionGroupState actionGroupState)
     {
-        var actionGroups = new List<Common.Messages.Actions.ActionGroup>();
+        var actionGroups = new List<global::TransportOrder.Domain.Models.ActionGroup.ActionGroup>();
         for (int i = 0; i < totalActionGroup; i++)
         {
-            actionGroups.Add(AgvActionGenerator.GeneratePickDropActionGroup(actionGroupState));
+            var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+            actionGroups.Add(AgvActionGenerator.SetActionGroupToState(actionGroup, actionGroupState));
         }
         return actionGroups;
     }
@@ -84,7 +86,7 @@ public class ActionGroupRequestHandlerTest
     public async Task GetAgvActionGroupsRequestHandler_EmptyActionGroupRegistry_ReturnsEmptyActionGroupsCountByState()
     {
         ActionGroupRequestHandlerTestFixture<GetActionGroupCountsByState, ActionGroupRequestHandler> fixture = await (await new ActionGroupRequestHandlerTestFixture<GetActionGroupCountsByState, ActionGroupRequestHandler>()
-            .WithActionGroups(Array.Empty<Common.Messages.Actions.ActionGroup>()))
+            .WithActionGroups(Array.Empty<global::TransportOrder.Domain.Models.ActionGroup.ActionGroup>()))
             .BuildAsync();
 
         Response<GotActionGroupCountsByState> response = await fixture.GetResponseAsync<GotActionGroupCountsByState>(
@@ -102,7 +104,7 @@ public class ActionGroupRequestHandlerTest
     [DataRow(0, 0, 0)]
     public async Task GetAgvActionGroupsRequestHandler_WhenThereAreActionGroups_ReturnsActionGroupsCountByState(int actionGroupCreatedCount, int actionGroupStartedCount, int actionGroupCompletedCount)
     {
-        var actionGroups = new List<Common.Messages.Actions.ActionGroup>();
+        var actionGroups = new List<global::TransportOrder.Domain.Models.ActionGroup.ActionGroup>();
         actionGroups.AddRange(CreateInitialActionGroups(actionGroupCreatedCount, ActionGroupState.Created));
         actionGroups.AddRange(CreateInitialActionGroups(actionGroupStartedCount, ActionGroupState.Started));
         actionGroups.AddRange(CreateInitialActionGroups(actionGroupCompletedCount, ActionGroupState.Completed));

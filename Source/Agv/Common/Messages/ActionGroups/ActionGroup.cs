@@ -1,59 +1,70 @@
-﻿using MassTransit;
+﻿using JetBrains.Annotations;
+using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions;
+namespace Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 
 /// <summary>
 /// Grouping actions and sending them across service modules
 /// </summary>
-public class ActionGroup : CorrelatedBy<Guid>
+public record ActionGroup : CorrelatedBy<Guid>
 {
     /// <inheritdoc />
     /// Parenting ID
+    [UsedImplicitly]
     public Guid CorrelationId { get; init; }
 
     /// <summary>
     /// A unique ID of the order that clamps all the corresponding actions
     /// </summary>
+    [UsedImplicitly]
     public string OrderId { get; init; }
 
     /// <summary>
     /// Assigned AGV that will execute the ActionGroup
     /// </summary>
+    [UsedImplicitly]
     public Guid? AssignedAgv { get; set; }
 
     /// <summary>
     /// Date the action was created (UTC)
     /// </summary>
+    [UsedImplicitly]
     public DateTime CreatedDate { get; init; } = DateTime.UtcNow;
 
     /// <summary>
     /// Date the action has been started (UTC)
     /// </summary>
+    [UsedImplicitly]
     public DateTime? StartedDate { get; set; }
 
     /// <summary>
     /// Date the action has been completed (UTC)
     /// </summary>
+    [UsedImplicitly]
     public DateTime? CompletedDate { get; set; }
 
     /// <summary>
     /// State of the ActionGroup
     /// </summary>
+    [UsedImplicitly]
     public ActionGroupState State { get; set; } = ActionGroupState.Created;
 
     /// <summary>
     /// List of actions
     /// </summary>
+    [UsedImplicitly]
     public ICollection<AgvAction> Actions { get; init; }
 
     /// <summary>
     /// If true, then this ActionGroup was created manually, not by the system
     /// </summary>
+    [UsedImplicitly]
     public bool IsManual { get; set; }
 
     /// <summary>
     /// The creator of the <see cref="ActionGroup"/>.
     /// </summary>
+    [UsedImplicitly]
     public ActionGroupCreator Creator { get; set; }
 
     /// <summary>

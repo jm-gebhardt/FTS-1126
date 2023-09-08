@@ -1,4 +1,5 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Configurations;
+﻿using FluentValidation;
+using Gebhardt.StoreWare.Agv.Common.Configurations;
 using Gebhardt.StoreWare.Agv.Common.Configurations.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
 using Gebhardt.StoreWare.Agv.Common.Services.Detectors;
@@ -10,12 +11,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using TransportOrder.Domain.Models.ActionGroup;
 using TransportOrder.Domain.Models.Agv;
 using TransportOrder.Domain.Models.Settings;
 using TransportOrder.Domain.Repositories;
 using TransportOrder.Domain.SemaphoreProvider;
 using TransportOrder.Domain.Services.ActionGroup;
 using TransportOrder.Domain.Services.Routing;
+using TransportOrder.Domain.Validators;
 using TransportOrder.Persistence.Ef.DataAccess;
 using TransportOrder.Persistence.Ef.Repositories;
 using TransportOrder.Routing;
@@ -47,6 +50,8 @@ public static class CoreHostBuilderExtensions
             RegisterAgvServices(services);
 
             RegisterRegistryServices(services);
+
+            RegisterValidators(services);
 
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
         });
@@ -122,5 +127,12 @@ public static class CoreHostBuilderExtensions
         services.AddSingleton<IConcurrentDictionaryProvider<Guid, AgvPositionStatus>, AgvPositionDictionaryProvider>();
         services.AddTransient<IAgvPositionRegistry, AgvPositionRegistry>();
         services.AddTransient<IAgvErrorRegistry, EfAgvErrorRegistry>();
+    }
+
+    private static void RegisterValidators(IServiceCollection services)
+    {
+        services.AddTransient<IActionGroupValidationService, ActionGroupValidationService>();
+        services.AddTransient<IValidator<ActionGroup>, ActionGroupValidator>();
+        services.AddTransient<IValidator<AgvAction>, AgvActionValidator>();
     }
 }

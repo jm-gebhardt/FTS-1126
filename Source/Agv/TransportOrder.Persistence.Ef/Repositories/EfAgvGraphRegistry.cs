@@ -144,4 +144,16 @@ public class EfAgvGraphRegistry : IAgvGraphRegistry
 
         return exists;
     }
+
+    /// <inheritdoc />
+    public async Task<bool> NodeExistsAsync(string nodeId)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+
+        bool exists = await context.Set<EfNode>()
+            .AsNoTracking()
+            .AnyAsync(n => n.Id == nodeId);
+
+        return exists;
+    }
 }

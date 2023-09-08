@@ -1,4 +1,4 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.Actions.Events;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Microsoft.Extensions.Logging;
 using JetBrains.Annotations;

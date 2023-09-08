@@ -1,5 +1,5 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using ActionGroup = TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 
 namespace TransportOrder.Domain.ReadModels;
 

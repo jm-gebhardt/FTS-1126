@@ -1,6 +1,6 @@
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.Common.Messages.Actions.Commands;
+namespace Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
 
 /// <summary>
 /// Triggers the charging of an Agv on a charging node

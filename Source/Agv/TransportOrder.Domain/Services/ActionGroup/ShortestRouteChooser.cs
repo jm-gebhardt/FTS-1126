@@ -1,7 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Exceptions;
-using Gebhardt.StoreWare.Agv.Common.Messages.Actions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using TransportOrder.Domain.Models.ActionGroup;
 using TransportOrder.Domain.Models.Agv;
 using TransportOrder.Domain.Repositories;
 using TransportOrder.Domain.Services.Routing;
@@ -29,59 +27,25 @@ public class ShortestRouteChooser : IChooseAgvActionGroupService
     }
 
     /// <summary>
-    /// Checks if given AGV has route for given ActionGroup
-    /// firstAction contains the first action of the ActionGroup or null if no route is found
-    /// firstActionCost contains the costs for the first action of the ActionGroup or float.MaxValue if no route is found
-    /// </summary>
-    /// <param name="agv"></param>
-    /// <param name="actionGroup"></param>
-    /// <param name="firstActionCost"></param>
-    /// <returns></returns>
-    private bool HasRoute(IAgv agv, Gebhardt.StoreWare.Agv.Common.Messages.Actions.ActionGroup actionGroup, out float firstActionCost)
-    {
-        AgvAction? firstAction = null;
-        firstActionCost = float.MaxValue;
-
-        IOrderedEnumerable<AgvAction> actions = actionGroup
-            .GetRequiredActions() // Throws exception if there are no actions
-            .OrderBy(a => a.Sequence);
-        
-        foreach (var action in actions)
-        {
-            if (!_routeService.HasRoute(agv, action.TargetNodeId, out float? costs))
-            {
-                return false; // Break if a target node is not reachable
-            }
-
-            // keep first action and it's costs
-            if (firstAction == null)
-            {
-                firstAction = action;
-                firstActionCost = costs.GetValueOrDefault();
-            }
-        }
-
-        return true;
-    }
-
-    /// <summary>
     /// Tries to find a AGV with shortest route to the pick action with the condition, that all actions are reachable
     /// </summary>
-    public Task<IAgv?> GetAgvAsync(Gebhardt.StoreWare.Agv.Common.Messages.Actions.ActionGroup actionGroup, IList<IAgv> agvs)
+    public async Task<IAgv?> GetAgvAsync(Models.ActionGroup.ActionGroup actionGroup, IList<IAgv> agvs, CancellationToken cancellationToken = default)
     {
         IAgv? bestAgv = null;
         float minCosts = float.MaxValue;
         foreach (var agv in agvs)
         {
-            if (!HasRoute(agv, actionGroup, out float firstActionCost) || firstActionCost > minCosts)
+            float? firstActionCost = await _routeService.GetCostsForFirstActionAsync(agv, actionGroup, cancellationToken);
+            if (firstActionCost == null || firstActionCost.GetValueOrDefault(float.MaxValue) > minCosts)
             {
                 continue;
             }
-            minCosts = firstActionCost;
+
+            minCosts = firstActionCost.Value;
             bestAgv = agv;
         }
 
-        return Task.FromResult(bestAgv);
+        return bestAgv;
     }
 
     /// <summary>
@@ -90,13 +54,14 @@ public class ShortestRouteChooser : IChooseAgvActionGroupService
     /// <para>- The cost of the first action is the lowest</para>
     /// </summary>
     /// <param name="agv"></param>
+    /// <param name="cancellationToken"></param>
     /// <returns>AgvAction</returns>
     /// <exception cref="AgvLocationUnknownException"></exception>
-    public async Task<Gebhardt.StoreWare.Agv.Common.Messages.Actions.ActionGroup?> GetNotStartedActionGroupAsync(IAgv agv)
+    public async Task<Models.ActionGroup.ActionGroup?> GetNotStartedActionGroupAsync(IAgv agv, CancellationToken cancellationToken = default)
     {
         agv.GetRequiredAgvStatus().RequireLastNodeId();
 
-        IReadOnlyList<Gebhardt.StoreWare.Agv.Common.Messages.Actions.ActionGroup> notStartedActionGroups = await _actionGroupRegistry.GetNotStartedActionGroupsAsync(agv.CorrelationId);
+        IReadOnlyList<Models.ActionGroup.ActionGroup> notStartedActionGroups = await _actionGroupRegistry.GetNotStartedActionGroupsAsync(agv.CorrelationId);
 
         var manualActionGroup = notStartedActionGroups.FirstOrDefault(g => g.IsManual);
 
@@ -107,15 +72,19 @@ public class ShortestRouteChooser : IChooseAgvActionGroupService
         }
 
         float minCosts = float.MaxValue;
-        
-        Gebhardt.StoreWare.Agv.Common.Messages.Actions.ActionGroup? nextActionGroup = null;
+
+        Models.ActionGroup.ActionGroup? nextActionGroup = null;
         foreach (var actionGroup in notStartedActionGroups)
         {
-            if (!HasRoute(agv, actionGroup, out float firstActionCost) || firstActionCost > minCosts)
+            float? firstActionCost = await _routeService.GetCostsForFirstActionAsync(agv, actionGroup, cancellationToken);
+
+            if (firstActionCost == null || firstActionCost.GetValueOrDefault(float.MaxValue) > minCosts)
             {
                 continue;
             }
-            minCosts = firstActionCost;
+
+            minCosts = firstActionCost.Value;
+
             nextActionGroup = actionGroup;
         }
 
