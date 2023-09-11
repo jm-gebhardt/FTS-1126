@@ -1,4 +1,3 @@
-using JetBrains.Annotations;
 using TransportOrder.Domain.Models.ActionGroup;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.EventHandler;
@@ -14,14 +13,4 @@ public interface IActionManager
     /// <param name="actionGroup"></param>
     /// <param name="cancellationToken"></param>
     public Task AddActionGroupAsync(ActionGroup actionGroup, CancellationToken cancellationToken);
-
-    /// <summary>
-    /// Update ActionState and unlock Agv
-    /// </summary>
-    /// <param name="correlationId">The CorrelationId of the action</param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    [UsedImplicitly]
-    public Task CompleteActionAsync(Guid correlationId, CancellationToken cancellationToken);
-
 }

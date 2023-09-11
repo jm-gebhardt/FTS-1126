@@ -1,8 +1,9 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 using Shouldly;
 using TransportOrder.Messages.Commands.ActionGroup;
 using AgvActionGenerator = Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper.AgvActionGenerator;
@@ -31,6 +32,28 @@ public class ActionCommandHandlerTest
         (await fixture.ConsumerHarness!.Consumed.Any<StartAction>()).ShouldBeTrue();
         (await fixture.TestHarness!.Published.Any<StartActionCommand>()).ShouldBeTrue();
         (await fixture.TestHarness!.Published.Any<ActionGroupChanged>()).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task Consume_StartAction_FirstPickAction_Publishes_StartActionCommandAndActionGroupChangedActionGroupStarted()
+    {
+        var fixture = new ActionCommandHandlerTestFixture();
+        var mapper = ActionCommandHandlerTestFixture.GetMapper();
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        fixture.AddAgv(agv);
+        fixture.AddRoute(nodes: new[] { "Node1", "Node2" });
+        fixture.SetBusyThrowsException(false);
+        fixture.AgvIsReadyForBusy();
+        fixture.AddActionGroup(actionGroup);
+        var pickAction = actionGroup.Actions.First();
+        var startAction = new StartAction(mapper.Map<AgvAction>(pickAction), agv.CorrelationId);
+
+        await fixture.TestHarness!.Bus.Publish(startAction);
+        (await fixture.ConsumerHarness!.Consumed.Any<StartAction>()).ShouldBeTrue();
+        (await fixture.TestHarness!.Published.Any<StartActionCommand>()).ShouldBeTrue();
+        (await fixture.TestHarness!.Published.Any<ActionGroupChanged>()).ShouldBeTrue();
+        (await fixture.TestHarness!.Published.Any<ActionGroupStarted>()).ShouldBeTrue();
     }
 
     [TestMethod]
@@ -109,5 +132,96 @@ public class ActionCommandHandlerTest
         (await fixture.ConsumerHarness!.Consumed.Any<TryStartNextActionInActionGroup>()).ShouldBeTrue();
         (await fixture.TestHarness!.Published.Any<StartActionCommand>()).ShouldBeFalse();
         (await fixture.TestHarness!.Published.Any<ActionGroupChanged>()).ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public async Task Consume_CompleteAction_ActionGroupNotCompleteNotChargingAction_PublishesActionGroupChanged()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        agv.IsLocked = false;
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv:agv.CorrelationId);
+        var fixture = new ActionCommandHandlerTestFixture();
+        fixture.AddAgv(agv);
+        fixture.AddActionGroup(actionGroup, hasUnfinishedAction: true);
+
+        var command = new CompleteAction(actionGroup.Actions.First().CorrelationId);
+        await fixture.TestHarness!.Bus.Publish(command);
+        (await fixture.ConsumerHarness!.Consumed.Any<CompleteAction>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<ActionGroupChanged>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<ActionGroupCompleted>()).ShouldBeFalse();
+        fixture.AgvSagaCommunicationService.Verify(x =>x.SetIdleAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Once());
+    }
+
+    [TestMethod]
+    public async Task Consume_CompleteAction_ActionGroupNotCompleteChargingAction_PublishesActionGroupChangedSetIdleNotCalled()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        agv.IsLocked = false;
+        var actionGroup = AgvActionGenerator.GenerateChargeActionGroup();
+        var fixture = new ActionCommandHandlerTestFixture();
+        fixture.AddAgv(agv);
+        fixture.AddActionGroup(actionGroup, hasUnfinishedAction: false);
+
+        var command = new CompleteAction(actionGroup.Actions.First().CorrelationId);
+        await fixture.TestHarness!.Bus.Publish(command);
+        (await fixture.ConsumerHarness!.Consumed.Any<CompleteAction>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<ActionGroupChanged>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<ActionGroupCompleted>()).ShouldBeFalse();
+        fixture.AgvSagaCommunicationService.Verify(x => x.SetIdleAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never());
+    }
+
+    [TestMethod]
+    public async Task Consume_CancelActionGroup_ValidData_PublishesActionGroupCancelled()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        agv.IsLocked = false;
+        var actionGroup = AgvActionGenerator.GenerateChargeActionGroup();
+        var fixture = new ActionCommandHandlerTestFixture();
+        fixture.AddAgv(agv);
+        fixture.AddActionGroup(actionGroup);
+
+        var command = new CancelActionGroup(actionGroup.CorrelationId);
+        await fixture.TestHarness!.Bus.Publish(command);
+        (await fixture.ConsumerHarness!.Consumed.Any<CancelActionGroup>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<ActionGroupCancelled>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<ActionGroupCancelFailed>()).ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public async Task Consume_CancelActionGroup_UnknownActionGroup_PublishesActionGroupCancelFailed()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        agv.IsLocked = false;
+        var actionGroup = AgvActionGenerator.GenerateChargeActionGroup();
+        var fixture = new ActionCommandHandlerTestFixture();
+        fixture.AddAgv(agv);
+
+        var command = new CancelActionGroup(actionGroup.CorrelationId);
+        await fixture.TestHarness!.Bus.Publish(command);
+        (await fixture.ConsumerHarness!.Consumed.Any<CancelActionGroup>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<ActionGroupCancelled>()).ShouldBeFalse();
+        (await fixture.TestHarness.Published.Any<ActionGroupCancelFailed>()).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    [DataRow(nameof(ActionGroupState.Started))]
+    [DataRow(nameof(ActionGroupState.Completed))]
+    [DataRow(nameof(ActionGroupState.Failed))]
+    [DataRow(nameof(ActionGroupState.Canceled))]
+    public async Task Consume_CancelActionGroup_InvalidState_PublishesActionGroupCancelFailed(string invalidState)
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        agv.IsLocked = false;
+        var actionGroup = AgvActionGenerator.GenerateChargeActionGroup();
+        actionGroup.GetType().GetProperty(nameof(actionGroup.State))!.SetValue(actionGroup, Enum.Parse<ActionGroupState>(invalidState));
+        var fixture = new ActionCommandHandlerTestFixture();
+        fixture.AddAgv(agv);
+        fixture.AddActionGroup(actionGroup);
+
+        var command = new CancelActionGroup(actionGroup.CorrelationId);
+        await fixture.TestHarness!.Bus.Publish(command);
+        (await fixture.ConsumerHarness!.Consumed.Any<CancelActionGroup>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<ActionGroupCancelled>()).ShouldBeFalse();
+        (await fixture.TestHarness.Published.Any<ActionGroupCancelFailed>()).ShouldBeTrue();
     }
 }

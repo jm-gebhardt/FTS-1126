@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
 using MassTransit;
-using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
 using Gebhardt.StoreWare.Agv.WCSCommunication.Db;
 using Gebhardt.StoreWare.Agv.WCSCommunication.Db.Models;
+using Gebhardt.StoreWare.Agv.WCSCommunication.Messages.Events;
 using Microsoft.EntityFrameworkCore;
 
 namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services;

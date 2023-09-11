@@ -1,12 +1,10 @@
 using MassTransit;
 
-// ReSharper disable ConvertToPrimaryConstructor
-namespace Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
+namespace Gebhardt.StoreWare.Agv.WCSCommunication.Messages.Events;
 
 /// <summary>
 /// An event that reports the successful start of a transport order by the specified AGV
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
 public record HostOrderStarted : CorrelatedBy<Guid>
 {
     /// <inheritdoc/>

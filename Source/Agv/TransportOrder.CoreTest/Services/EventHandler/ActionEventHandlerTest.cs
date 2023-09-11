@@ -1,4 +1,5 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 using TransportOrder.Messages.Commands.ActionGroup;
@@ -21,5 +22,17 @@ public class ActionEventHandlerTest
 
         (await fixture.ConsumerHarness!.Consumed.Any<ActionGroupCreatedForAgv>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<StartAction>()).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task Consume_ActionCompletedEvent_ValidData_PublishesCompleteAction()
+    {
+        var fixture = new ActionEventHandlerTestFixture();
+        var actionCompletedEvent = new ActionCompletedEvent( Guid.NewGuid());
+        await fixture.TestHarness!.Bus.Publish(actionCompletedEvent);
+
+        (await fixture.ConsumerHarness!.Consumed.Any<ActionCompletedEvent>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<CompleteAction>(f => 
+            f.Context.Message == new CompleteAction(actionCompletedEvent.CorrelationId))).ShouldBeTrue();
     }
 }

@@ -8,4 +8,4 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 /// <param name="ActionGroup">Action group</param>
 /// <param name="CorrelationId">The correlationId of the action group</param>
 [JetBrains.Annotations.PublicAPI]
-public record ActionGroupCreated(ActionGroup ActionGroup, Guid CorrelationId) : CorrelatedBy<Guid>;
+public record ActionGroupCreated(ActionGroup ActionGroup, Guid CorrelationId) : CorrelatedBy<Guid>, IActionGroupEvent;

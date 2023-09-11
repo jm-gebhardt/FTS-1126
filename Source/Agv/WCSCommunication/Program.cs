@@ -13,44 +13,32 @@ using Gebhardt.StoreWare.Agv.WCSCommunication.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Gebhardt.StoreWare.Agv.Common.Configurations.Extensions;
+using MassTransit;
 
 var initialLogger = Gebhardt.StoreWare.Agv.Common.Logging.InitialLogger.Create<Program>();
 try
 {
-    IHost? host = null;
+    IHostBuilder? hostBuilder = null;
     bool simulation = false;
-    
+
     Parser.Default.ParseArguments<ProductionOptions, SimulateOptions>(args)
         // Simulation Mode
         .WithParsed<SimulateOptions>(simulationOptions =>
         {
             simulation = true;
-            host = GebhardtStartup.CreateHostBuilder(args)
-                .ConfigureServices((context, services) =>
+            hostBuilder = GebhardtStartup.CreateHostBuilder(args)
+                .ConfigureServices((_, services) =>
                 {
-                    services.AddDbContextFactory<WcsSagaDbContext>(builder =>
-                    {
-                        string? connectionString = context.Configuration.GetConnectionString(WcsSagaDbContext.ConfigSectionName);
-                        builder.UseSqlServer(connectionString, m =>
-                        {
-                            m.MigrationsHistoryTable(WcsSagaDbContext.MigrationTableName);
-                        });
-                    });
-                    services.AddSingleton(_ => simulationOptions);
                     services.AddHostedService<PollingBackgroundService<SimulationHostOrderService>>();
+
+                    services.AddSingleton(_ => simulationOptions);
                     services.AddSingleton<SimulationHostOrderService>();
-                    services.ConfigureServicesMassTransit(context.Configuration, x =>
-                    {
-                        x.AddConsumer<SimulationConfirmHostOrderConsumer>();
-                        x.AddSagaStateMachine<HostOrderStateMachine, HostOrderSaga>()
-                            .AddPersistence<HostOrderSaga, WcsSagaDbContext>();
-                    });
-                }).Build();
+                });
         })
         // Production Mode
-        .WithParsed<ProductionOptions>( _ =>
+        .WithParsed<ProductionOptions>(_ =>
         {
-            host = GebhardtStartup.CreateHostBuilder(args)
+            hostBuilder = GebhardtStartup.CreateHostBuilder(args)
                 .ConfigureServices((context, services) =>
                 {
                     services.AddDbContextFactory<WcsHostDbContext>(builder =>
@@ -58,25 +46,32 @@ try
                         string? connectionString = context.Configuration.GetConnectionString(WcsHostDbContext.ConfigSectionName);
                         builder.UseSqlServer(connectionString);
                     });
-                    services.AddDbContextFactory<WcsSagaDbContext>(builder =>
-                    {
-                        string? connectionString = context.Configuration.GetConnectionString(WcsSagaDbContext.ConfigSectionName);
-                        builder.UseSqlServer(connectionString, m =>
-                        {
-                            m.MigrationsHistoryTable(WcsSagaDbContext.MigrationTableName);
-                        });
-                    });
+
                     services.AddHostedService<PollingBackgroundService<WcsOrderHandler>>();
+
                     services.AddSingleton<WcsOrderHandler>();
-                    services.ConfigureServicesMassTransit(context.Configuration, x =>
-                    {
-                        x.AddConsumer<WcsHostOrderConsumer>();
-                        x.AddSagaStateMachine<HostOrderStateMachine, HostOrderSaga>()
-                            .AddPersistence<HostOrderSaga, WcsSagaDbContext>();
-                    });
-                })
-                .Build();
+                });
         });
+
+    hostBuilder?.ConfigureServices((context, services) =>
+    {
+        services.AddDbContextFactory<WcsSagaDbContext>(builder =>
+        {
+            string? connectionString = context.Configuration.GetConnectionString(WcsSagaDbContext.ConfigSectionName);
+            builder.UseSqlServer(connectionString, m =>
+            {
+                m.MigrationsHistoryTable(WcsSagaDbContext.MigrationTableName);
+            });
+        });
+        services.AddSingleton<IStateObserver<HostOrderSaga>, HostOrderStateObserver>();
+        services.ConfigureServicesMassTransit(context.Configuration, x =>
+        {
+            x.AddSagaStateMachine<HostOrderStateMachine, HostOrderSaga>(cfg => cfg.UseMessageRetry(c =>c.Interval(5, TimeSpan.FromSeconds(1))))
+                .AddPersistence<HostOrderSaga, WcsSagaDbContext>();
+        });
+    });
+
+    var host = hostBuilder?.Build();
 
     // By using the generic overload of WithParsed above host will be null for invalid command line arguments.
     if (host != null)

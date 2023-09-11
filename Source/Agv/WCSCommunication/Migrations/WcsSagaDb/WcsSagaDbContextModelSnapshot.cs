@@ -60,6 +60,12 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Migrations.WcsSagaDb
                     b.Property<Guid>("CorrelationId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("AssignedAgv")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("CancellationError")
+                        .HasColumnType("int");
+
                     b.Property<string>("CurrentState")
                         .IsRequired()
                         .HasMaxLength(64)
@@ -67,6 +73,9 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Migrations.WcsSagaDb
 
                     b.Property<Guid>("DropActionGuid")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("HandlingError")
+                        .HasColumnType("int");
 
                     b.Property<string>("OrderId")
                         .IsRequired()

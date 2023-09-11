@@ -1,13 +1,13 @@
 ﻿using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
-namespace Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
+namespace Gebhardt.StoreWare.Agv.WCSCommunication.Messages.Events;
 
 /// <summary>
-/// An event that reports a successful cancel of an order
+/// An event that reports a successful handling of an order
 /// </summary>
 [JetBrains.Annotations.PublicAPI]
-public record HostOrderCancelSucceeded : CorrelatedBy<Guid>
+public record HostOrderHandlingSucceeded : CorrelatedBy<Guid>
 {
     /// <inheritdoc/>
     public Guid CorrelationId { get; }
@@ -18,9 +18,9 @@ public record HostOrderCancelSucceeded : CorrelatedBy<Guid>
     public string OrderId { get; }
 
     /// <summary>
-    /// Initializes a new instance of <see cref="HostOrderCancelSucceeded"/>
+    /// Initializes a new instance of <see cref="HostOrderHandlingSucceeded"/>
     /// </summary>
-    public HostOrderCancelSucceeded(Guid correlationId, string orderId)
+    public HostOrderHandlingSucceeded(Guid correlationId, string orderId)
     {
         CorrelationId = correlationId;
         OrderId = orderId;

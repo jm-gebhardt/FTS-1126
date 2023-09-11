@@ -16,12 +16,11 @@ using TransportOrder.Domain.Services.Routing;
 using ActionGroup = TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using AgvAction = TransportOrder.Domain.Models.ActionGroup.AgvAction;
 using MessageActionGroup = Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.ActionGroup;
-using MessageAgvAction= Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.AgvAction;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.EventHandler;
 
 /// <summary>
-/// 
+/// Provides a service for actions.
 /// </summary>
 public class ActionManager : IActionManager
 {
@@ -210,25 +209,5 @@ public class ActionManager : IActionManager
         List<string> validationFailureReasons = validationFailures.Select(error => error.ErrorMessage).ToList();
 
         await _bus.Publish(new ActionGroupInvalid(actionGroup.CorrelationId, _mapper.Map<MessageActionGroup>(actionGroup), validationFailureReasons), cancellationToken);
-    }
-
-    /// <inheritdoc />
-    public async Task CompleteActionAsync(Guid correlationId, CancellationToken cancellationToken)
-    {
-        _logger.LogDebug("Completing action with CorrelationId: {ActionCorrelationId}", correlationId);
-        var action = await _actionGroupRegistry.GetRequiredActionByIdAsync(correlationId);
-
-        var actionGroup = await _actionGroupRegistry.GetRequiredActionGroupByIdAsync(action.ParentId);
-        var agv = await GetAgvAsync(actionGroup.AssignedAgv, cancellationToken);
-
-        await UpdateActionGroupAsync(action, agv, ActionState.Completed, cancellationToken);
-
-        // charge will switch to charging state and can not be released immediately
-        if (action.ActionType != ActionType.Charge)
-        {
-            _logger.LogDebug("Setting Agv with CorrelationId: {AgvCorrelationId} to idle, because action has been completed and type is not charge", agv.CorrelationId);
-
-            await _agvSagaCommunicationService.SetIdleAsync(agv.CorrelationId, cancellationToken);
-        }
     }
 }

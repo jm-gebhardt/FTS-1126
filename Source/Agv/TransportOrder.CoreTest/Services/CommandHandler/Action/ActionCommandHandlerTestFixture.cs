@@ -20,7 +20,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.CommandHandler
 
 public class ActionCommandHandlerTestFixture : MassTransitConsumerTestFixture<ActionCommandHandler>
 {
-    private readonly Mock<IAgvSagaCommunicationService> _agvSagaCommunicationService = new();
+    public readonly Mock<IAgvSagaCommunicationService> AgvSagaCommunicationService = new();
     private readonly Mock<IRouteService> _routeService = new();
     private readonly Mock<IActionGroupRegistry> _actionGroupRegistry = new();
     private readonly Mock<IChooseAgvActionGroupService> _chooseAgvActionGroupService = new();
@@ -32,7 +32,7 @@ public class ActionCommandHandlerTestFixture : MassTransitConsumerTestFixture<Ac
 
     protected override void ConfigureServices(IServiceCollection collection)
     {
-        collection.AddTransient(_ => _agvSagaCommunicationService.Object);
+        collection.AddTransient(_ => AgvSagaCommunicationService.Object);
         collection.AddTransient(_ => _actionGroupRegistry.Object);
         collection.AddTransient(_ => _routeService.Object);
         collection.AddTransient(_ => _chooseAgvActionGroupService.Object);
@@ -51,21 +51,26 @@ public class ActionCommandHandlerTestFixture : MassTransitConsumerTestFixture<Ac
        {
            TestHarness!.TestInactivityTimeout = (TimeSpan)inactivityTimeout;
        }
+       _actionGroupRegistry.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync((ActionGroup?)null);
+
     }
 
     public void AddAgv(IAgv agv)
     {
-        _agvSagaCommunicationService.Setup(x =>
+        AgvSagaCommunicationService.Setup(x =>
             x.GetAgvAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(agv);
+        AgvSagaCommunicationService.Setup( x => x.SetIdleAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).Verifiable();
     }
 
     public void AddActionGroup(ActionGroup actionGroup, bool hasUnfinishedAction=true)
     {
+        _actionGroupRegistry.Setup(x => x.GetRequiredActionGroupByIdAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup);
         _actionGroupRegistry.Setup(x => x.UpdateActionAndGroupStateAsync(It.IsAny<AgvAction>(),It.IsAny<IAgv>(), It.IsAny<ActionState>())).ReturnsAsync(actionGroup);
         _actionGroupRegistry.Setup(x => x.GetSubsequentActionAsync( It.IsAny<Guid>())).ReturnsAsync(actionGroup.Actions.First());
         _actionGroupRegistry.Setup(x => x.GetActionGroupsAsync(It.IsAny<ActionGroupState>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(),It.IsAny<bool?>())).ReturnsAsync(new List<ActionGroup>{actionGroup});
         _actionGroupRegistry.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup);
         _actionGroupRegistry.Setup(x => x.HasUnfinishedDropActionsAsync(It.IsAny<Guid>())).ReturnsAsync(hasUnfinishedAction);
+        _actionGroupRegistry.Setup(x => x.GetRequiredActionByIdAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup.Actions.First());
     }
 
     public void AddRoute(string[] nodes)
@@ -77,18 +82,18 @@ public class ActionCommandHandlerTestFixture : MassTransitConsumerTestFixture<Ac
     {
         if (throwException)
         {
-            _agvSagaCommunicationService.Setup(x =>
+            AgvSagaCommunicationService.Setup(x =>
                 x.SetBusyAsync(It.IsAny<IAgv>(), It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<CancellationToken>())).Throws<Exception>();
             return;
         }
-        _agvSagaCommunicationService.Setup(x =>
+        AgvSagaCommunicationService.Setup(x =>
             x.SetBusyAsync(It.IsAny<IAgv>(), It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<CancellationToken>())).Verifiable();
 
     }
 
     public void AgvIsReadyForBusy()
     {
-        _agvSagaCommunicationService.Setup(x => x.IsAgvReadyForBusyAsync(It.IsAny<Guid>(),
+        AgvSagaCommunicationService.Setup(x => x.IsAgvReadyForBusyAsync(It.IsAny<Guid>(),
                 It.IsAny<CancellationToken>(),
                 It.IsAny<bool>(),
                 It.IsAny<bool>()))

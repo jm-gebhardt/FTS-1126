@@ -65,6 +65,6 @@ public class ActionEventHandler : IConsumer<ActionGroupCreatedForAgv>,
     {
         var actionCorrelationId = context.Message.CorrelationId;
         _logger.LogDebug("{MessageType} for actionId: {ActionCorrelationId} received", nameof(ActionCompletedEvent), actionCorrelationId);
-        await _actionManager.CompleteActionAsync(actionCorrelationId, context.CancellationToken);
+        await context.Publish(new CompleteAction(actionCorrelationId));
     }
 }

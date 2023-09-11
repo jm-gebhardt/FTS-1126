@@ -1,5 +1,7 @@
 ﻿using MassTransit;
 using Gebhardt.StoreWare.Agv.Common.Messages;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
 
 namespace Gebhardt.StoreWare.Agv.WCSCommunication.States;
 
@@ -38,6 +40,22 @@ public class HostOrderSaga : SagaStateMachineInstance
     /// Drop Action's GUID
     /// </summary>
     public Guid DropActionGuid { get; } = Guid.NewGuid();
+
+    /// <summary>
+    /// The AGV assigned to the  action group of the saga.
+    /// </summary>
+    public string? AssignedAgv { get; private set; }
+
+    /// <summary>
+    /// The error that occurred during handling failure.
+    /// </summary>
+    public HostOrderHandlingFailedErrorCode HandlingError { get; set; }
+
+
+    /// <summary>
+    /// The error that occurred during cancellation failure.
+    /// </summary>
+    public HostOrderCancelFailedErrorCode CancellationError { get; set; }
 
     /// <summary>
     /// Constructor
@@ -85,4 +103,41 @@ public class HostOrderSaga : SagaStateMachineInstance
         CurrentState = currentState;
         OrderDetails = orderDetails;
     }
+
+    /// <summary>
+    /// Get a new pick drop action group.
+    /// </summary>
+    /// <returns></returns>
+    public ActionGroup GetPickDropActionGroup()
+    {
+        var actionGroupId = CorrelationId;
+        var actionGroupCreator = OrderDetails.Creator.ConvertToActionGroupCreator();
+
+        var pickAction = new AgvAction(PickActionGuid, ActionType.Pick, OrderDetails.Source, actionGroupId)
+        {
+            Sequence = 0
+        };
+        var dropAction = new AgvAction(DropActionGuid, ActionType.Drop, OrderDetails.Destination, actionGroupId)
+        {
+            Sequence = 1
+        };
+
+        var actionGroup = new ActionGroup(CorrelationId, OrderId, new List<AgvAction> { pickAction, dropAction }, actionGroupCreator, OrderDetails.CreationDate);
+
+        return actionGroup;
+    }
+
+    /// <summary>
+    /// Assign an agv once started.
+    /// </summary>
+    /// <param name="agv"></param>
+    public void AssignAgv(Guid? agv)
+    {
+        if (agv == null)
+        {
+            return;
+        }
+        AssignedAgv = agv.ToString();
+    }
+
 }
