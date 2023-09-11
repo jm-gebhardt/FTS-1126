@@ -3,7 +3,6 @@ using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs;
 using MassTransit;
 using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Tokens;
 using TransportOrder.Messages.Events.Agv;
 using TransportOrder.Messages.Requests.Agv;
 
@@ -45,7 +44,7 @@ public class AgvPropertyChangedConsumer : IConsumer<AgvPropertyChanged>
             
         Response<GotAgvs> response = await _getAgvsClient.GetResponse<GotAgvs>(new GetAgvs(new[] { context.Message.Agv.CorrelationId }));
 
-        if (!response.Message.Agvs.IsNullOrEmpty())
+        if (response.Message.Agvs.Any())
         {
             var agvDto = _mapper.Map<AgvDto>(response.Message.Agvs.First());
             await _agvHubContext.SendAgvStateToAllClients(agvDto, false);
