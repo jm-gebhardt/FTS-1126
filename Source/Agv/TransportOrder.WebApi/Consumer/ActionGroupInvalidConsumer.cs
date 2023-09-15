@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.ActionGroup;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
@@ -10,12 +10,12 @@ using TransportOrder.Domain.Repositories;
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Consumer;
 
 /// <summary>
-/// Consumes <see cref="ActionGroupInvalid" /> and calls <see cref="IActionHubContext.SendActionGroupStateToAllClients" />
+/// Consumes <see cref="ActionGroupInvalid" /> and sends messages via <see cref="IActionGroupPublisher"/>
 /// </summary>
 [PublicAPI]
 public class ActionGroupInvalidConsumer : IConsumer<ActionGroupInvalid>
 {
-    private readonly IActionHubContext _actionHubContext;
+    private readonly IActionGroupPublisher _actionGroupPublisher;
     private readonly ILogger<ActionGroupInvalidConsumer> _logger;
     private readonly IActionGroupRetrievalService _actionGroupRetrievalService;
     private readonly IMapper _mapper;
@@ -23,9 +23,9 @@ public class ActionGroupInvalidConsumer : IConsumer<ActionGroupInvalid>
     /// <summary>
     /// Initializes a new <see cref="ActionGroupInvalidConsumer"/> instance.
     /// </summary>
-    public ActionGroupInvalidConsumer(IActionHubContext actionHubContext, IActionGroupRetrievalService actionGroupRetrievalService, IMapper mapper,ILogger<ActionGroupInvalidConsumer> logger)
+    public ActionGroupInvalidConsumer(IActionGroupPublisher actionGroupPublisher, IActionGroupRetrievalService actionGroupRetrievalService, IMapper mapper,ILogger<ActionGroupInvalidConsumer> logger)
     {
-        _actionHubContext = actionHubContext;
+        _actionGroupPublisher = actionGroupPublisher;
         _actionGroupRetrievalService = actionGroupRetrievalService;
         _mapper = mapper;
         _logger = logger;
@@ -40,7 +40,6 @@ public class ActionGroupInvalidConsumer : IConsumer<ActionGroupInvalid>
         _logger.LogDebug("{MessageType} {CorrelationId} received", nameof(ActionGroupInvalid), context.Message.CorrelationId);
 
         var enrichedActionGroup = await _actionGroupRetrievalService.EnrichActionGroupWithTargetNodeTypesAsync(_mapper.Map<ActionGroup>(context.Message.ActionGroup));
-
-        await _actionHubContext.SendActionGroupStateToAllClients(enrichedActionGroup);
+        await _actionGroupPublisher.SendActionGroupChangedAsync(enrichedActionGroup);
     }
 }

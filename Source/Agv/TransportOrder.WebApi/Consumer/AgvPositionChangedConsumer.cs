@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Agv;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using TransportOrder.Domain.Repositories;
@@ -9,7 +9,7 @@ using TransportOrder.Messages.Requests.Agv;
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Consumer;
 
 /// <summary>
-/// Consumes <see cref="AgvPositionChanged"/> and sends messages to <see cref="IAgvHubContext"/>.
+/// Consumes <see cref="AgvPositionChanged"/> and sends messages via <see cref="IAgvPublisher"/>.
 /// </summary>
 [JetBrains.Annotations.PublicAPI]
 public class AgvPositionChangedConsumer :
@@ -17,7 +17,7 @@ public class AgvPositionChangedConsumer :
     IConsumer<AgvLastNodeIdChanged>
 {
     private readonly ILogger<AgvPositionChangedConsumer> _logger;
-    private readonly IAgvHubContext _agvHubContext;
+    private readonly IAgvPublisher _agvPublisher;
     private readonly INodeStateRegistry _nodeStateRegistry;
     private readonly IMapper _mapper;
 
@@ -25,12 +25,12 @@ public class AgvPositionChangedConsumer :
     /// </summary>
     public AgvPositionChangedConsumer(
         ILogger<AgvPositionChangedConsumer> logger,
-        IAgvHubContext agvHubContext,
+        IAgvPublisher agvPublisher,
         INodeStateRegistry nodeStateRegistry,
         IMapper mapper)
     {
         _logger = logger;
-        _agvHubContext = agvHubContext;
+        _agvPublisher = agvPublisher;
         _nodeStateRegistry = nodeStateRegistry;
         _mapper = mapper;
             
@@ -46,8 +46,7 @@ public class AgvPositionChangedConsumer :
         _logger.LogTrace("{MessageType} {AgvId}/{CorrelationId} received", nameof(AgvPositionChanged), context.Message.AgvId, context.Message.CorrelationId);
 
         var agvPositionStatus = _mapper.Map<AgvPositionStatus>(context.Message);
-
-        await _agvHubContext.SendAgvPositionToAllClients(agvPositionStatus);
+        await _agvPublisher.SendAgvPositionAsync(agvPositionStatus);
     }
 
     /// <summary>

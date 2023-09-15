@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Agv;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using TransportOrder.Messages.Events.Agv;
@@ -9,13 +8,13 @@ using TransportOrder.Messages.Requests.Agv;
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Consumer;
 
 /// <summary>
-/// Consumes <see cref="AgvPropertyChanged"/> and sends message via <see cref="IAgvHubContext"/>.
+/// Consumes <see cref="AgvPropertyChanged"/> and sends message via <see cref="IAgvPublisher"/>.
 /// </summary>
 [JetBrains.Annotations.PublicAPI]
 public class AgvPropertyChangedConsumer : IConsumer<AgvPropertyChanged>
 {
     private readonly ILogger<AgvPropertyChangedConsumer> _logger;
-    private readonly IAgvHubContext _agvHubContext;
+    private readonly IAgvPublisher _agvPublisher;
     private readonly IRequestClient<GetAgvs> _getAgvsClient;
     private readonly IMapper _mapper;
 
@@ -24,13 +23,13 @@ public class AgvPropertyChangedConsumer : IConsumer<AgvPropertyChanged>
     /// </summary>
     public AgvPropertyChangedConsumer(IMapper mapper,
         ILogger<AgvPropertyChangedConsumer> logger,
-        IAgvHubContext agvHubContext,
+        IAgvPublisher agvPublisher,
         IRequestClient<GetAgvs> getAgvsClient
     )
     {
         _mapper = mapper;
         _logger = logger;
-        _agvHubContext = agvHubContext;
+        _agvPublisher = agvPublisher;
         _getAgvsClient = getAgvsClient;
     }
 
@@ -46,8 +45,7 @@ public class AgvPropertyChangedConsumer : IConsumer<AgvPropertyChanged>
 
         if (response.Message.Agvs.Any())
         {
-            var agvDto = _mapper.Map<AgvDto>(response.Message.Agvs.First());
-            await _agvHubContext.SendAgvStateToAllClients(agvDto, false);
+            await _agvPublisher.SendAgvStateAsync(response.Message.Agvs.First(), false);
         }
     }
 }

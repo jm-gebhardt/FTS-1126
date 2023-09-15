@@ -2,8 +2,8 @@
 using Gebhardt.StoreWare.Agv.Common.Services.Detectors;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.EventHandler;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -61,7 +61,7 @@ internal class AgvPositionReceivedConsumerMassTransitTestFixture :
         }
 
         services.AddSingleton<IChangeDetector<AgvPositionStatus>, ChangeDetector<AgvPositionStatus>>();
-        services.AddTransient(_ => new Mock<IAgvHubContext>().Object);
+        services.AddTransient(_ => new Mock<IAgvPublisher>().Object);
         services.AddTransient(_ => GetMapper());
 
     }

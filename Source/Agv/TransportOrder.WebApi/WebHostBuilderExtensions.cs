@@ -10,10 +10,10 @@ using System.Reflection;
 using System.Text.Json.Serialization;
 using System.Xml.Linq;
 using System.Xml.XPath;
-using AutoMapper;
-using Microsoft.AspNetCore.SignalR;
 using System.Text.Json;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.ActionGroup;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.SchemaFilter;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Swagger;
 
@@ -35,31 +35,15 @@ public static class WebHostBuilderExtensions
         webHostBuilder.ConfigureServices(services =>
         {
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-            services.AddTransient<IActionHubContext>(provider =>
-            {
-                var hubContext = provider.GetRequiredService<IHubContext<ActionHub, IActionHubClient>>();
-                var mapper = provider.GetRequiredService<IMapper>();
 
-                return new ActionHubContext(hubContext, mapper);
-            });
-
-            services.AddTransient<IAgvHubContext>(provider =>
-            {
-                var hubContext = provider.GetRequiredService<IHubContext<AgvHub, IAgvHubClient>>();
-                var mapper = provider.GetRequiredService<IMapper>();
-
-                return new AgvHubContext(hubContext, mapper);
-            });
+            services.AddTransient<IActionGroupPublisher, ActionGroupPublisher>();
+            services.AddTransient<IAgvPublisher, AgvPublisher>();
 
             services.AddScoped<ExceptionHandlerMiddleware>();
             services.AddMvc();
             services.AddControllers()
                 .AddApplicationPart(executingAssembly)
-                .AddJsonOptions(options =>
-                {
-                    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-                });
-           
+                .AddJsonOptions(options => { options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); });
 
             services.ConfigureEventLogSettings(executingAssembly);
 
@@ -67,10 +51,7 @@ public static class WebHostBuilderExtensions
             {
                 options.SwaggerDoc(new RestApiGroup());
                 options.SwaggerDoc(new HubApiGroup());
-                options.AddSignalRSwaggerGen(opt =>
-                {
-                    opt.ScanAssemblies(executingAssembly);
-                });
+                options.AddSignalRSwaggerGen(opt => { opt.ScanAssemblies(executingAssembly); });
                 options.SchemaFilter<RequireNonNullablePropertiesSchemaFilter>();
                 options.SupportNonNullableReferenceTypes(); // Sets Nullable flags appropriately.
                 options.UseAllOfToExtendReferenceSchemas(); // Allows $ref enums to be nullable
@@ -136,7 +117,7 @@ public static class WebHostBuilderExtensions
         {
             endpoints.MapControllers();
             endpoints.MapHub<AgvHub>(AgvHub.UrlPath);
-            endpoints.MapHub<ActionHub>(ActionHub.UrlPath);
+            endpoints.MapHub<ActionGroupHub>(ActionGroupHub.UrlPath);
         });
 
         app.UseSwagger(c =>
@@ -148,7 +129,7 @@ public static class WebHostBuilderExtensions
                 {
                     swaggerDoc.Servers = new List<OpenApiServer>()
                     {
-                        new() { Description = "Server behind Proxy", Url = serverPath }
+                        new() {Description = "Server behind Proxy", Url = serverPath}
                     };
                 }
             });

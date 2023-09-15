@@ -8,12 +8,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs;
 /// </summary>
 public abstract class BaseHub<THub> : Hub<THub> where THub : class
 {
-    private readonly ILogger _logger;
+    private readonly ILogger<BaseHub<THub>> _logger;
 
     /// <summary>
-    /// Base class for a SignalR hub.
+    /// Base ctor
     /// </summary>
-    protected BaseHub(ILogger logger)
+    /// <param name="logger"></param>
+    protected BaseHub(ILogger<BaseHub<THub>> logger)
     {
         _logger = logger;
     }

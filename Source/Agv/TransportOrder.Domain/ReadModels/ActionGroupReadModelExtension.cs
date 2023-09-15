@@ -25,6 +25,23 @@ public static class ActionGroupReadModelExtension
             actionGroup.Actions.Select(a => new AgvActionReadModel(a.CorrelationId, a.ParentId, a.Sequence, a.State,
                 a.ActionType, a.TargetNodeId, AgvGraph.NodeType.Charge, a.Nodes, a.CreatedDate, a.StartedDate, a.CompletedDate)).ToList(), actionGroup.IsManual);
     }
+    
+    /// <summary>
+    /// Converts an action group to its read model with node types using made-up fake node types.
+    /// </summary>
+    /// <param name="actionGroup">The action group to be converted.</param>
+    public static ActionGroupReadModel? ConvertFromActionGroupWithFakeNodeType(this Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.ActionGroup? actionGroup)
+    {
+        if (actionGroup == null)
+        {
+            return null;
+        }
+
+        return new ActionGroupReadModel(actionGroup.CorrelationId, actionGroup.OrderId, actionGroup.AssignedAgv,
+            actionGroup.CreatedDate, actionGroup.StartedDate, actionGroup.CompletedDate, actionGroup.State, actionGroup.Creator,
+            actionGroup.Actions.Select(a => new AgvActionReadModel(a.CorrelationId, a.ParentId, a.Sequence, a.State,
+                a.ActionType, a.TargetNodeId, AgvGraph.NodeType.Charge, a.Nodes, a.CreatedDate, a.StartedDate, a.CompletedDate)).ToList(), actionGroup.IsManual);
+    }
 }
 
 

@@ -1,14 +1,12 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles;
-using Microsoft.AspNetCore.SignalR;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Helper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
-using TransportOrder.Domain.Models.Agv;
 using TransportOrder.Messages.Requests.Agv;
-using AgvPositionStatus = TransportOrder.Messages.Requests.Agv.AgvPositionStatus;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Hubs;
 
@@ -17,62 +15,42 @@ public class AgvHubTest
 {
     private const string AgvId = "AGV001";
 
-    private Mock<IHubContext<AgvHub, IAgvHubClient>> GetMock()
+    [TestMethod]
+    public async Task SendAgvStateAsync_SendsAgvDto_To_Discovered()
     {
-        var mockHubClient = new Mock<IAgvHubClient>();
-        var mockClients = new Mock<IHubClients<IAgvHubClient>>();
-        var mockHubContext = new Mock<IHubContext<AgvHub, IAgvHubClient>>();
+        HubFixture<AgvPublisher, AgvHub, IAgvClient> fixture = new HubFixture<AgvPublisher, AgvHub, IAgvClient>()
+            .WithMapper(new AgvProfile(), new global::TransportOrder.Messages.Profiles.AgvProfile(), new ActionProfile(), new AgvErrorProfile(), new AgvPositionProfile())
+            .Build();
+        var agv = fixture.Mapper.Map<global::TransportOrder.Messages.MessageContent.Agv>(AgvGenerator.GenerateIdleAgv());
 
-        mockClients.SetupGet(h => h.All).Returns(mockHubClient.Object);
-        mockHubContext.SetupGet(h => h.Clients).Returns(mockClients.Object);
+        await fixture.Publisher.SendAgvStateAsync(agv, true);
 
-        return mockHubContext;
+        fixture.HubContextMock.Verify(c => c.Clients.All.AgvDiscovered(It.Is<AgvDto>(a => a.CorrelationId == agv.CorrelationId)), Times.Once);
     }
 
     [TestMethod]
-    public async Task SendAgvStateToAllClients_ValidData_DiscoveredAgvDtoSent()
+    public async Task SendAgvStateAsync_SendsAgvDto_To_AgvChanged()
     {
-        Mock<IHubContext<AgvHub, IAgvHubClient>> mockHubContext = GetMock();
-        var mapper = MappingHelper.GetMapper(new AgvProfile(), new ActionProfile(), new AgvErrorProfile());
-        var agvHubContext = new AgvHubContext(mockHubContext.Object, mapper);
+        HubFixture<AgvPublisher, AgvHub, IAgvClient> fixture = new HubFixture<AgvPublisher, AgvHub, IAgvClient>()
+            .WithMapper(new AgvProfile(), new global::TransportOrder.Messages.Profiles.AgvProfile(), new ActionProfile(), new AgvErrorProfile(), new AgvPositionProfile())
+            .Build();
+        var agv = fixture.Mapper.Map<global::TransportOrder.Messages.MessageContent.Agv>(AgvGenerator.GenerateIdleAgv());
 
-        var agv = new global::TransportOrder.Messages.MessageContent.Agv(Guid.NewGuid(), "AGV", AgvState.Initial, DateTime.UtcNow, DateTime.UtcNow, false, true, false, true, 100.0d, false, 100, 100,
-            null, new List<AgvError>() );
-        var agvDto = mapper.Map<AgvDto>(agv);
-        await agvHubContext.SendAgvStateToAllClients(agvDto, true);
+        await fixture.Publisher.SendAgvStateAsync(agv, false);
 
-        mockHubContext.Verify(c => c.Clients.All.AgvDiscovered(It.Is<AgvDto>(a => a.CorrelationId == agv.CorrelationId)), Times.Once);
+        fixture.HubContextMock.Verify(c => c.Clients.All.AgvChanged(It.Is<AgvDto>(a => a.CorrelationId == agv.CorrelationId)), Times.Once);
     }
 
     [TestMethod]
-    public async Task SendAgvStateToAllClients_ValidData_ChangedAgvDtoSent()
+    public async Task SendAgvPositionAsync_SendsAgvPositionStatusDto_To_AgvPositionChanged()
     {
-        Mock<IHubContext<AgvHub, IAgvHubClient>> mockHubContext = GetMock();
-        var mapper = MappingHelper.GetMapper(new AgvProfile(), new ActionProfile(), new AgvErrorProfile());
-        var agvHubContext = new AgvHubContext(mockHubContext.Object, mapper);
+        HubFixture<AgvPublisher, AgvHub, IAgvClient> fixture = new HubFixture<AgvPublisher, AgvHub, IAgvClient>()
+            .WithMapper(new AgvProfile(), new ActionProfile(), new AgvErrorProfile(), new AgvPositionProfile())
+            .Build();
+        var agvPositionStatus = new AgvPositionStatus(AgvId.ToGuid(), AgvId, new AgvPosition(false, 0, 0, 0, 0));
 
-        var agv = new global::TransportOrder.Messages.MessageContent.Agv(Guid.NewGuid(), "AGV", AgvState.Initial, DateTime.UtcNow, DateTime.UtcNow, false, true, false, true, 100.0d, false, 100, 100,
-            null, new List<AgvError>());
-        var agvDto = mapper.Map<AgvDto>(agv);
-        await agvHubContext.SendAgvStateToAllClients(agvDto, false);
+        await fixture.Publisher.SendAgvPositionAsync(agvPositionStatus);
 
-        mockHubContext.Verify(c => c.Clients.All.AgvChanged(It.Is<AgvDto>(a => a.CorrelationId == agv.CorrelationId)), Times.Once);
-    }
-
-    [TestMethod]
-    public async Task SendAgvPositionToAllClients_AgvPositionChanged()
-    {
-        Mock<IHubContext<AgvHub, IAgvHubClient>> mockHubContext = GetMock();
-        var mapper = MappingHelper.GetMapper(new AgvPositionProfile());
-
-        var agvHubContext = new AgvHubContext(mockHubContext.Object, mapper);
-
-        var agv = new AgvSaga(AgvId.ToGuid(), AgvId);
-        var agvPosition = new Common.Messages.AgvManagement.AgvPosition(true, 1.0f, 1.0f, 1f, 0f, 1.0f);
-        var agvPositionStatus = new AgvPositionStatus(agv.CorrelationId, agv.AgvId, agvPosition);
-
-        await agvHubContext.SendAgvPositionToAllClients(agvPositionStatus);
-
-        mockHubContext.Verify(c => c.Clients.All.AgvPositionChanged(It.Is<AgvPositionStatusDto>(a => a.CorrelationId == agv.CorrelationId)), Times.Once);
+        fixture.HubContextMock.Verify(c => c.Clients.All.AgvPositionChanged(It.Is<AgvPositionStatusDto>(a => a.CorrelationId == agvPositionStatus.CorrelationId)), Times.Once);
     }
 }

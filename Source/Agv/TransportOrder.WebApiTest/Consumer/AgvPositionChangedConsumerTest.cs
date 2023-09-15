@@ -1,7 +1,7 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Consumer;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Agv;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
@@ -16,9 +16,9 @@ public class AgvPositionChangedConsumerTest
     private const string AgvId = "agv1";
 
     [TestMethod]
-    public async Task Receiving_AgvPositionChanged_SendsAgvPositionToAllClients()
+    public async Task Receiving_AgvPositionChanged_SendsAgvPosition()
     {
-        var fixture = new ConsumerHubTestFixture<AgvPositionChangedConsumer, IAgvHubContext>();
+        var fixture = new ConsumerHubTestFixture<AgvPositionChangedConsumer, IAgvPublisher>();
         await fixture.TestHarness!.Bus.Publish(
             new AgvPositionChanged(
                 new AgvPosition(false, 0, 0, 0, 0),
@@ -30,7 +30,7 @@ public class AgvPositionChangedConsumerTest
         (await fixture.TestHarness.Published.Any<AgvPositionChanged>()).ShouldBeTrue();
         (await fixture.ConsumerHarness!.Consumed.Any<AgvPositionChanged>()).ShouldBeTrue();
 
-        fixture.MockHub.Verify(h => h.SendAgvPositionToAllClients(It.Is<AgvPositionStatus>(o => o.AgvId == AgvId)), Times.Once);
+        fixture.MockHub.Verify(h => h.SendAgvPositionAsync(It.Is<AgvPositionStatus>(o => o.AgvId == AgvId)), Times.Once);
     }
 
     [DataRow("oldLastNodeId", "newLastNodeId")]
@@ -38,7 +38,7 @@ public class AgvPositionChangedConsumerTest
     [TestMethod]
     public async Task Receiving_AgvLastNodeIdChanged_UnOccupyCalled(string oldLastNodeId, string newLastNodeId)
     {
-        var fixture = new ConsumerHubTestFixture<AgvPositionChangedConsumer, IAgvHubContext>();
+        var fixture = new ConsumerHubTestFixture<AgvPositionChangedConsumer, IAgvPublisher>();
         await fixture.TestHarness!.Bus.Publish(
             new AgvLastNodeIdChanged(
                 AgvId.ToGuid(),
@@ -55,7 +55,7 @@ public class AgvPositionChangedConsumerTest
     [TestMethod]
     public async Task Receiving_AgvLastNodeIdChanged_UnOccupyNotCalled(string oldLastNodeId, string newLastNodeId)
     {
-        var fixture = new ConsumerHubTestFixture<AgvPositionChangedConsumer, IAgvHubContext>();
+        var fixture = new ConsumerHubTestFixture<AgvPositionChangedConsumer, IAgvPublisher>();
         await fixture.TestHarness!.Bus.Publish(
             new AgvLastNodeIdChanged(
                 AgvId.ToGuid(),
@@ -72,7 +72,7 @@ public class AgvPositionChangedConsumerTest
     [TestMethod]
     public async Task Receiving_AgvLastNodeIdChanged_NodeReserved_OccupyNodeAsyncCalled(string oldLastNodeId, string newLastNodeId)
     {
-        var fixture = new ConsumerHubTestFixture<AgvPositionChangedConsumer, IAgvHubContext>();
+        var fixture = new ConsumerHubTestFixture<AgvPositionChangedConsumer, IAgvPublisher>();
         fixture.MockNodeStateRegistry.Setup(x => x.IsNodeReservedAsync(It.IsAny<string>())).Returns(Task.FromResult(true));
         await fixture.TestHarness!.Bus.Publish(
             new AgvLastNodeIdChanged(
@@ -90,7 +90,7 @@ public class AgvPositionChangedConsumerTest
     [TestMethod]
     public async Task Receiving_AgvLastNodeIdChanged_NodeNotReserved_OccupyNodeAsyncNotCalled(string oldLastNodeId, string newLastNodeId)
     {
-        var fixture = new ConsumerHubTestFixture<AgvPositionChangedConsumer, IAgvHubContext>();
+        var fixture = new ConsumerHubTestFixture<AgvPositionChangedConsumer, IAgvPublisher>();
         fixture.MockNodeStateRegistry.Setup(x => x.IsNodeReservedAsync(It.IsAny<string>())).Returns(Task.FromResult(false));
         await fixture.TestHarness!.Bus.Publish(
             new AgvLastNodeIdChanged(

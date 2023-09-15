@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.ActionGroup;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using TransportOrder.Domain.Models.ActionGroup;
@@ -9,14 +9,13 @@ using TransportOrder.Domain.Repositories;
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Consumer;
 
 /// <summary>
-/// Consumes <see cref="ActionGroupCreated"/> and calls <see cref="IActionHubContext.SendActionGroupStateToAllClients"/>.
+/// Consumes <see cref="ActionGroupCreated"/> and sends messages via <see cref="IActionGroupPublisher"/>
 /// </summary>
 [JetBrains.Annotations.PublicAPI]
-public class ActionGroupCreatedConsumer
-    : IConsumer<ActionGroupCreated>
+public class ActionGroupCreatedConsumer : IConsumer<ActionGroupCreated>
 {
     private readonly ILogger<ActionGroupCreatedConsumer> _logger;
-    private readonly IActionHubContext _actionHubContext;
+    private readonly IActionGroupPublisher _actionGroupPublisher;
     private readonly IActionGroupRetrievalService _actionGroupRetrievalService;
     private readonly IMapper _mapper;
 
@@ -25,12 +24,12 @@ public class ActionGroupCreatedConsumer
     /// </summary>
     public ActionGroupCreatedConsumer(
         ILogger<ActionGroupCreatedConsumer> logger,
-        IActionHubContext actionHubContext,
+        IActionGroupPublisher actionGroupPublisher,
         IActionGroupRetrievalService actionGroupRetrievalService,
         IMapper mapper)
     {
         _logger = logger;
-        _actionHubContext = actionHubContext;
+        _actionGroupPublisher = actionGroupPublisher;
         _actionGroupRetrievalService = actionGroupRetrievalService;
         _mapper = mapper;
     }
@@ -42,9 +41,8 @@ public class ActionGroupCreatedConsumer
     public async Task Consume(ConsumeContext<ActionGroupCreated> context)
     {
         var (actionGroup, correlationId) = context.Message;
-            _logger.LogTrace("{MessageType} {CorrelationId} received", nameof(ActionGroupCreated), correlationId);
-
+        _logger.LogTrace("{MessageType} {CorrelationId} received", nameof(ActionGroupCreated), correlationId);
         var actionGroupReadModel = await _actionGroupRetrievalService.EnrichActionGroupWithTargetNodeTypesAsync(_mapper.Map<ActionGroup>(actionGroup));
-        await _actionHubContext.SendActionGroupStateToAllClients(actionGroupReadModel);
+        await _actionGroupPublisher.SendActionGroupCreatedAsync(actionGroupReadModel);
     }
 }

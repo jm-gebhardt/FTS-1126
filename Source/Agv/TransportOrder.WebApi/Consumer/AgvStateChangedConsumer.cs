@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Agv;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using TransportOrder.Messages.Events.Agv;
@@ -10,13 +9,13 @@ using TransportOrder.Messages.Requests.Agv;
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Consumer;
 
 /// <summary>
-/// Consumes <see cref="AgvStateChanged"/> and calls <see cref="IActionHubContext.SendActionGroupStateToAllClients"/>.
+/// Consumes <see cref="AgvStateChanged"/> and sends messages via <see cref="IAgvPublisher"/>
 /// </summary>
 [JetBrains.Annotations.PublicAPI]
 public class AgvStateChangedConsumer : IConsumer<AgvStateChanged>
 {
     private readonly ILogger<AgvStateChangedConsumer> _logger;
-    private readonly IAgvHubContext _agvHubContext;
+    private readonly IAgvPublisher _agvPublisher;
     private readonly IRequestClient<GetAgvs> _getAgvsClient;
     private readonly IMapper _mapper;
 
@@ -25,12 +24,12 @@ public class AgvStateChangedConsumer : IConsumer<AgvStateChanged>
     /// </summary>
     public AgvStateChangedConsumer(IMapper mapper,
         ILogger<AgvStateChangedConsumer> logger,
-        IAgvHubContext agvHubContext,
+        IAgvPublisher agvPublisher,
         IRequestClient<GetAgvs> getAgvsClient)
     {
         _mapper = mapper;
         _logger = logger;
-        _agvHubContext = agvHubContext;
+        _agvPublisher = agvPublisher;
         _getAgvsClient = getAgvsClient;
     }
 
@@ -41,13 +40,12 @@ public class AgvStateChangedConsumer : IConsumer<AgvStateChanged>
     public async Task Consume(ConsumeContext<AgvStateChanged> context)
     {
         _logger.LogTrace("{MessageType} {CorrelationId} received", nameof(ActionGroupChanged), context.Message.CorrelationId);
-            
-        Response<GotAgvs> response = await _getAgvsClient.GetResponse<GotAgvs>(new GetAgvs(new[] { context.Message.Agv.CorrelationId }));
-        
+
+        Response<GotAgvs> response = await _getAgvsClient.GetResponse<GotAgvs>(new GetAgvs(new[] {context.Message.Agv.CorrelationId}));
+
         if (response.Message.Agvs.Any())
         {
-            var agvDto = _mapper.Map<AgvDto>(response.Message.Agvs.First());
-            await _agvHubContext.SendAgvStateToAllClients(agvDto, response.Message.AreInitialState.First());
+            await _agvPublisher.SendAgvStateAsync(response.Message.Agvs.First(), response.Message.AreInitialState.First());
         }
     }
 }

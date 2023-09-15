@@ -15,9 +15,8 @@ public class BaseHubTest
 {
     private interface IDummyHubClient
     {
-
     }
-        
+
     private class DummyLogger : ILogger<BaseHub<IDummyHubClient>>
     {
         public string? LastMessage { get; private set; }
@@ -40,7 +39,7 @@ public class BaseHubTest
 
     private class DummyHub : BaseHub<IDummyHubClient>
     {
-        public DummyHub(ILogger logger) : base(logger)
+        public DummyHub(ILogger<BaseHub<IDummyHubClient>> logger) : base(logger)
         {
         }
     }
