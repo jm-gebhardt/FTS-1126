@@ -15,6 +15,7 @@ public class GraphNodeClassMap : ClassMap<EfNode>
     /// <inheritdoc />
     protected override void Configure(EntityTypeBuilder<EfNode> entity, ModelBuilder model)
     {
-        entity.HasKey(nameof(EfNode.GraphCorrelationId), nameof(EfNode.Id));
+        entity.HasKey(e => new {e.GraphCorrelationId, e.Id});
+        entity.HasIndex(e => e.Id);
     }
 }

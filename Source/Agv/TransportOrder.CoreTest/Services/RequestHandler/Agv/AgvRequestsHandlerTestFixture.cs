@@ -57,7 +57,7 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
     public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithAgvs(IList<IAgv> agvs, global::TransportOrder.Domain.Models.ActionGroup.ActionGroup? actionGroup = null)
     {
         AgvRegistry.Setup(s => s.GetAllAgvs()).Returns(agvs.AsQueryable());
-        ActionGroupRegistry.Setup(r => r.GetCurrentAssignedActionGroupsWithTargetNodeTypeAsync(It.IsAny<IEnumerable<Guid>>()))
+        ActionGroupRegistry.Setup(r => r.GetCurrentAssignedActionGroupsWithTargetNodeTypeAsync(It.IsAny<IReadOnlyCollection<Guid>>()))
             .ReturnsAsync(agvs.ToDictionary(a => a.CorrelationId, _ => actionGroup.ConvertFromActionGroupWithFakeNodeType()));
         return this;
     }

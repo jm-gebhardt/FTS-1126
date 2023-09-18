@@ -30,6 +30,7 @@ public class ActionGroupClassMap : ClassMap<ActionGroup>
             a.Property(e => e.Nodes).HasJsonConversion();
             a.Property(e => e.State).HasMaxLength(MaxStateLength);
             a.Property(e => e.ActionType).HasMaxLength(MaxActionTypeLength);
+            a.HasIndex(e => e.TargetNodeId);
         });
 
         entity.Navigation(g => g.Actions).AutoInclude();

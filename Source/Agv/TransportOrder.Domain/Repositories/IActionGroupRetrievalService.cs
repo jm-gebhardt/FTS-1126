@@ -16,14 +16,14 @@ public interface IActionGroupRetrievalService
     /// <param name="fromDate">The UTC from Date, only items with a greater CreatedDate will be considered.</param>
     /// <param name="toDate">The UTC from Date, only items with a less CreatedDate will be considered.</param>
     /// <param name="maxItems">The maximum number of action groups returned.</param>
-    Task<List<ActionGroupReadModel>> GetActionGroupsWithTargetNodeTypeAsync(IList<ActionGroupState> states, DateTime? fromDate, DateTime? toDate, int maxItems);
+    Task<IReadOnlyCollection<ActionGroupReadModel>> GetActionGroupsWithTargetNodeTypeAsync(IReadOnlyCollection<ActionGroupState> states, DateTime? fromDate, DateTime? toDate, int maxItems);
 
     /// <summary>
     /// Get currently assigned action groups of provided AGVs.
     /// </summary>
     /// <param name="agvCorrelationIds"></param>
     /// <returns></returns>
-    public Task<IReadOnlyDictionary<Guid, ActionGroupReadModel?>> GetCurrentAssignedActionGroupsWithTargetNodeTypeAsync(IEnumerable<Guid> agvCorrelationIds);
+    public Task<IReadOnlyDictionary<Guid, ActionGroupReadModel?>> GetCurrentAssignedActionGroupsWithTargetNodeTypeAsync(IReadOnlyCollection<Guid> agvCorrelationIds);
 
     /// <summary>
     /// Enrich an action group with the target node types.

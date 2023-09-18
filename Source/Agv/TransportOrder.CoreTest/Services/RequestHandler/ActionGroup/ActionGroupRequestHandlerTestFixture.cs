@@ -13,34 +13,49 @@ using TransportOrder.Domain.Repositories;
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.RequestHandler.ActionGroup;
 
 // ReSharper disable ConvertConstructorToMemberInitializers
-public class ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer>  : MediatorTestFixture<TRequestClient, TConsumer>
+public class ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> : MediatorTestFixture<TRequestClient, TConsumer>
     where TRequestClient : class
     where TConsumer : class, IConsumer
 {
     private readonly ActionGroupRetrievalServiceTestFixture _actionGroupRetrievalServiceTestFixture = new();
     private readonly ActionGroupRegistryTestFixture _actionGroupRegistryFixture = new();
+    private EfGraph? _efGraph;
+    private global::TransportOrder.Domain.Models.ActionGroup.ActionGroup[]? _actionGroups;
+
     private static Mapper GetMapper() => MappingHelper.GetMapper(new GraphProfile());
 
     public ActionGroupState[] AllActionGroupStates => Enum.GetValues(typeof(ActionGroupState)).Cast<ActionGroupState>().ToArray();
 
-    public async Task<ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer>> WithActionGroups(global::TransportOrder.Domain.Models.ActionGroup.ActionGroup[] actionGroups)
+    public ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> WithActionGroups(params global::TransportOrder.Domain.Models.ActionGroup.ActionGroup[] actionGroups)
     {
-        // ReSharper disable once CoVariantArrayConversion
-        await _actionGroupRetrievalServiceTestFixture.AddRangeAsync(actionGroups);
-        _actionGroupRegistryFixture.WithActionGroups(actionGroups);
+        _actionGroups = actionGroups;
+
         return this;
     }
 
-    public async Task AddDefaultGraph(Guid correlationId)
+    public ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> AddDefaultGraph(Guid correlationId = default)
     {
+        correlationId = correlationId == default ? Guid.NewGuid() : correlationId;
         var graph = AgvGraphGenerator.CreateDefaultGraph(correlationId);
         var mapper = GetMapper();
-        var efGraph = mapper.Map<EfGraph>(graph);
-        await _actionGroupRetrievalServiceTestFixture.AddAsync(efGraph);
+        _efGraph = mapper.Map<EfGraph>(graph);
+
+        return this;
     }
 
     public async Task<ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer>> BuildAsync()
     {
+        if (_actionGroups != null)
+        {
+            // ReSharper disable once CoVariantArrayConversion
+            await _actionGroupRetrievalServiceTestFixture.AddRangeAsync(_actionGroups);
+            _actionGroupRegistryFixture.WithActionGroups(_actionGroups);
+        }
+        
+        if (_efGraph != null)
+        {
+            await _actionGroupRetrievalServiceTestFixture.AddAsync(_efGraph);
+        }
         await _actionGroupRegistryFixture.BuildAsync();
         AddServices(s => s.AddTransient<IActionGroupRetrievalService>(_ => _actionGroupRetrievalServiceTestFixture.ActionGroupRetrievalService));
         AddServices(s => s.AddTransient<IActionGroupRegistry>(_ => _actionGroupRegistryFixture.ActionGroupRegistry));

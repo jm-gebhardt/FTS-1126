@@ -12,7 +12,7 @@ public static class AgvActionGenerator
     {
         const string orderId = "charge";
         var groupId = Guid.NewGuid();
-        var chargeAction = new AgvAction(Guid.NewGuid(), ActionType.Charge, targetNodeId ?? "Charge-1", groupId);
+        var chargeAction = new AgvAction(Guid.NewGuid(), ActionType.Charge, targetNodeId ?? AgvGraphGenerator.ChargingClose.Id, groupId);
         if (targetNodeId != null)
         {
             chargeAction.Nodes = new[] {targetNodeId};
@@ -25,7 +25,7 @@ public static class AgvActionGenerator
     [UsedImplicitly]
     public static AgvAction GenerateParkAction(string? targetNodeId = null, Guid? parentId = null, int sequence = 0)
     {
-        var parkAction = new AgvAction(Guid.NewGuid(), ActionType.Move, targetNodeId ?? "Prk-1", parentId ?? Guid.NewGuid())
+        var parkAction = new AgvAction(Guid.NewGuid(), ActionType.Move, targetNodeId ?? AgvGraphGenerator.ParkClose.Id, parentId ?? Guid.NewGuid())
         {
             Sequence = sequence
         };
@@ -80,7 +80,7 @@ public static class AgvActionGenerator
     {
         const string orderId = "move";
         var groupId = Guid.NewGuid();
-        var moveAction = new AgvAction(Guid.NewGuid(), ActionType.Move, targetNodeId ?? "Move-1", groupId);
+        var moveAction = new AgvAction(Guid.NewGuid(), ActionType.Move, targetNodeId ?? AgvGraphGenerator.Waypoint1.Id, groupId);
         if (targetNodeId != null)
         {
             moveAction.Nodes = new[] {targetNodeId};

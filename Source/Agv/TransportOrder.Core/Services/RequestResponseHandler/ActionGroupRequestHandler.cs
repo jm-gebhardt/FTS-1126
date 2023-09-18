@@ -50,7 +50,7 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
     public async Task Consume(ConsumeContext<GetActionGroups> context)
     {
         var request = context.Message;
-        IReadOnlyList<ActionGroupReadModel> actionGroups = await _retrievalService.GetActionGroupsWithTargetNodeTypeAsync(request.States, request.FromDate, request.ToDate, request.Limit);
+        IReadOnlyCollection<ActionGroupReadModel> actionGroups = await _retrievalService.GetActionGroupsWithTargetNodeTypeAsync(request.States, request.FromDate, request.ToDate, request.Limit);
 
         await context.RespondAsync(new GotActionGroups(actionGroups));
     }
@@ -61,7 +61,7 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
     public async Task Consume(ConsumeContext<GetActionGroupCountsByState> context)
     {
         AgvGroupCountByState[] actionGroupStateCounts = await Task.WhenAll(Enum.GetValues<ActionGroupState>().Select(state =>
-            _actionGroupRegistry.GetActionGroupsCountAsync(new[] { state })
+            _actionGroupRegistry.GetActionGroupsCountAsync(new[] {state})
                 .ContinueWith(actionGroupCount => new AgvGroupCountByState(state, actionGroupCount.Result))));
 
         await context.RespondAsync(new GotActionGroupCountsByState(actionGroupStateCounts));

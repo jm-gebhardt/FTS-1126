@@ -1,7 +1,6 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
-using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
 using MassTransit;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -19,13 +18,12 @@ public class ActionGroupRequestHandlerTest
     [TestMethod]
     public async Task Consume_GetActionGroup_ValidCorrelationId_RespondsWithActionGroup()
     {
-
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(actionState: ActionState.Created);
-        ActionGroupRequestHandlerTestFixture<GetActionGroup, ActionGroupRequestHandler> fixture = await (await new ActionGroupRequestHandlerTestFixture<GetActionGroup, ActionGroupRequestHandler>()
-                .WithActionGroups(new[]{actionGroup}))
+        ActionGroupRequestHandlerTestFixture<GetActionGroup, ActionGroupRequestHandler> fixture = await new ActionGroupRequestHandlerTestFixture<GetActionGroup, ActionGroupRequestHandler>()
+            .WithActionGroups(actionGroup)
+            .AddDefaultGraph()
             .BuildAsync();
-        await fixture.AddDefaultGraph("aGraph".ToGuid());
-        
+
         Response<GotAgvActionGroup> response = await fixture.GetResponseAsync<GotAgvActionGroup>(
             new GetActionGroup(actionGroup.CorrelationId));
 
@@ -39,7 +37,6 @@ public class ActionGroupRequestHandlerTest
     [TestMethod]
     public async Task Consume_GetActionGroup_UnknownCorrelationId_ThrowsActionGroupNotFoundException()
     {
-
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(actionState: ActionState.Created);
         ActionGroupRequestHandlerTestFixture<GetActionGroup, ActionGroupRequestHandler> fixture = await new ActionGroupRequestHandlerTestFixture<GetActionGroup, ActionGroupRequestHandler>()
             .BuildAsync();
@@ -51,8 +48,9 @@ public class ActionGroupRequestHandlerTest
     [TestMethod]
     public async Task Consume_GetAgvActionGroupsRequest_EmptyActionGroupRegistry_ReturnsEmptyList()
     {
-        ActionGroupRequestHandlerTestFixture<GetActionGroups, ActionGroupRequestHandler> fixture = await (await new ActionGroupRequestHandlerTestFixture<GetActionGroups, ActionGroupRequestHandler>()
-            .WithActionGroups(Array.Empty<global::TransportOrder.Domain.Models.ActionGroup.ActionGroup>())).BuildAsync();
+        ActionGroupRequestHandlerTestFixture<GetActionGroups, ActionGroupRequestHandler> fixture = await new ActionGroupRequestHandlerTestFixture<GetActionGroups, ActionGroupRequestHandler>()
+            .WithActionGroups(Array.Empty<global::TransportOrder.Domain.Models.ActionGroup.ActionGroup>())
+            .BuildAsync();
         Response<GotActionGroups> response = await fixture.GetResponseAsync<GotActionGroups>(
             new GetActionGroups(fixture.AllActionGroupStates, DateTime.MinValue, DateTime.MaxValue, 100));
         response.Message.ActionGroups.ShouldBeEmpty();
@@ -61,14 +59,17 @@ public class ActionGroupRequestHandlerTest
     [TestMethod]
     public async Task Consume_GetAgvActionGroupsRequest_SingleActionGroup_ReturnsCreated()
     {
-        global::TransportOrder.Domain.Models.ActionGroup.ActionGroup[] actionGroups = { AgvActionGenerator.GeneratePickDropActionGroup(actionState: ActionState.Created) };
-        ActionGroupRequestHandlerTestFixture<GetActionGroups, ActionGroupRequestHandler> fixture = await (await new ActionGroupRequestHandlerTestFixture<GetActionGroups, ActionGroupRequestHandler>()
-                .WithActionGroups(actionGroups))
+        global::TransportOrder.Domain.Models.ActionGroup.ActionGroup[] actionGroups = {AgvActionGenerator.GeneratePickDropActionGroup(actionState: ActionState.Created)};
+        ActionGroupRequestHandlerTestFixture<GetActionGroups, ActionGroupRequestHandler> fixture = await new ActionGroupRequestHandlerTestFixture<GetActionGroups, ActionGroupRequestHandler>()
+            .WithActionGroups(actionGroups)
+            .AddDefaultGraph()
             .BuildAsync();
 
         Response<GotActionGroups> response = await fixture.GetResponseAsync<GotActionGroups>(
             new GetActionGroups(fixture.AllActionGroupStates, DateTime.MinValue, DateTime.MaxValue, 100));
-        response.Message.ActionGroups.ShouldNotBeEmpty();
+        IReadOnlyCollection<ActionGroupReadModel> actionGroupReadModels = response.Message.ActionGroups;
+        actionGroupReadModels.ShouldNotBeEmpty();
+        actionGroups.ShouldAllBe(g => g.Actions.Any());
     }
 
     private static IEnumerable<global::TransportOrder.Domain.Models.ActionGroup.ActionGroup> CreateInitialActionGroups(int totalActionGroup, ActionGroupState actionGroupState)
@@ -85,8 +86,8 @@ public class ActionGroupRequestHandlerTest
     [TestMethod]
     public async Task GetAgvActionGroupsRequestHandler_EmptyActionGroupRegistry_ReturnsEmptyActionGroupsCountByState()
     {
-        ActionGroupRequestHandlerTestFixture<GetActionGroupCountsByState, ActionGroupRequestHandler> fixture = await (await new ActionGroupRequestHandlerTestFixture<GetActionGroupCountsByState, ActionGroupRequestHandler>()
-            .WithActionGroups(Array.Empty<global::TransportOrder.Domain.Models.ActionGroup.ActionGroup>()))
+        ActionGroupRequestHandlerTestFixture<GetActionGroupCountsByState, ActionGroupRequestHandler> fixture = await new ActionGroupRequestHandlerTestFixture<GetActionGroupCountsByState, ActionGroupRequestHandler>()
+            .WithActionGroups(Array.Empty<global::TransportOrder.Domain.Models.ActionGroup.ActionGroup>())
             .BuildAsync();
 
         Response<GotActionGroupCountsByState> response = await fixture.GetResponseAsync<GotActionGroupCountsByState>(
@@ -108,8 +109,8 @@ public class ActionGroupRequestHandlerTest
         actionGroups.AddRange(CreateInitialActionGroups(actionGroupCreatedCount, ActionGroupState.Created));
         actionGroups.AddRange(CreateInitialActionGroups(actionGroupStartedCount, ActionGroupState.Started));
         actionGroups.AddRange(CreateInitialActionGroups(actionGroupCompletedCount, ActionGroupState.Completed));
-        ActionGroupRequestHandlerTestFixture<GetActionGroupCountsByState, ActionGroupRequestHandler> fixture = await (await new ActionGroupRequestHandlerTestFixture<GetActionGroupCountsByState, ActionGroupRequestHandler>()
-            .WithActionGroups(actionGroups.ToArray()))
+        ActionGroupRequestHandlerTestFixture<GetActionGroupCountsByState, ActionGroupRequestHandler> fixture = await new ActionGroupRequestHandlerTestFixture<GetActionGroupCountsByState, ActionGroupRequestHandler>()
+            .WithActionGroups(actionGroups.ToArray())
             .BuildAsync();
 
         Response<GotActionGroupCountsByState> response = await fixture.GetResponseAsync<GotActionGroupCountsByState>(
@@ -120,15 +121,15 @@ public class ActionGroupRequestHandlerTest
         {
             switch (actionGroupsByState)
             {
-                case { State: ActionGroupState.Completed }:
+                case {State: ActionGroupState.Completed}:
                     actionGroupsByState.Count.ShouldBe(actionGroupCompletedCount);
                     break;
 
-                case { State: ActionGroupState.Created }:
+                case {State: ActionGroupState.Created}:
                     actionGroupsByState.Count.ShouldBe(actionGroupCreatedCount);
                     break;
 
-                case { State: ActionGroupState.Started }:
+                case {State: ActionGroupState.Started}:
                     actionGroupsByState.Count.ShouldBe(actionGroupStartedCount);
                     break;
             }
