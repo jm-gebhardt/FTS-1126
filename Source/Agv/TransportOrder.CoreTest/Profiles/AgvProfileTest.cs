@@ -2,10 +2,10 @@ using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
-using TransportOrder.Domain.Models.Agv;
-using TransportOrder.Messages.Profiles;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Profiles;
 
@@ -26,7 +26,7 @@ public class AgvProfileTest
         );
 
         var mapper = MappingHelper.GetMapper(new AgvProfile());
-        var agv = mapper.Map<IAgv, global::TransportOrder.Messages.MessageContent.Agv>(agvSaga);
+        var agv = mapper.Map<IAgv, Messages.MessageContent.Agv>(agvSaga);
 
         agv.ShouldNotBeNull();
         agv.CorrelationId.ShouldBe(agvSaga.CorrelationId);
@@ -40,7 +40,7 @@ public class AgvProfileTest
     {
         var agvData = new AgvData(Guid.NewGuid(), "Karis", "BF1", "127.0.0.1", 1.8, 120.0, 0.6, 0.8, 0.7, 1, 2.5, 1000, Array.Empty<AgvData.Sensor>());
         var mapper = MappingHelper.GetMapper(new AgvProfile());
-        var  agvDataMessageContent = mapper.Map<global::TransportOrder.Messages.Requests.Agv.AgvData>(agvData);
+        var  agvDataMessageContent = mapper.Map<Messages.Requests.Agv.AgvData>(agvData);
 
          agvDataMessageContent.ShouldNotBeNull();
          agvDataMessageContent.Acceleration.ShouldBe(agvData.Acceleration);
@@ -65,7 +65,7 @@ public class AgvProfileTest
            var agvStatus = new AgvStatus(Guid.NewGuid(), "OrderId#123", false, true, 98, false, false, "lastNodeId#123");
            var agv = AgvGenerator.GenerateIdleAgv(agvStatus: agvStatus);
   
-           var  agvMessageContent = mapper.Map<global::TransportOrder.Messages.MessageContent.Agv>(agv);
+           var  agvMessageContent = mapper.Map<Messages.MessageContent.Agv>(agv);
             agvMessageContent.ShouldSatisfyAllConditions(
                o => o.AgvId.ShouldBe(agv.AgvId),
                o => o.CorrelationId.ShouldBe(agv.CorrelationId),
@@ -86,7 +86,7 @@ public class AgvProfileTest
     {
         var mapper = MappingHelper.GetMapper(new AgvProfile(), new AgvErrorProfile());
         var agv = AgvGenerator.GenerateIdleAgv();
-        var agvMessageContent = mapper.Map<IAgv, global::TransportOrder.Messages.MessageContent.Agv>(agv);
+        var agvMessageContent = mapper.Map<IAgv, Messages.MessageContent.Agv>(agv);
         var expectedAgvErrors = new List<AgvError>
            {
                AgvErrorGenerator.GenerateAgvError(agv.CorrelationId)

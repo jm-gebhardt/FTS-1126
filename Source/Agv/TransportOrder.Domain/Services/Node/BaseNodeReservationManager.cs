@@ -1,11 +1,12 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Services;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Routing;
+using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
-using TransportOrder.Domain.Exceptions;
-using TransportOrder.Domain.Repositories;
-using TransportOrder.Domain.Services.Routing;
 
-namespace TransportOrder.Domain.Services.Node;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Node;
 
 /// <summary>
 /// Reserve Nodes
@@ -50,7 +51,7 @@ public abstract class BaseNodeReservationManager : BaseNodePicker
     }
 
     ///  <inheritdoc cref="INodeStateRegistry.ReserveNodeAsync"/>
-    [JetBrains.Annotations.UsedImplicitly]
+    [UsedImplicitly]
     protected Task<bool> TryReserveNodeAsync(string nodeId)
     {
         return NodeStateRegistry.LockNodeAsync(nodeId);

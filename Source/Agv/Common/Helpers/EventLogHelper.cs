@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Runtime.Versioning;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.EventLog;
 
 namespace Gebhardt.StoreWare.Agv.Common.Helpers;
 
@@ -12,7 +13,7 @@ public static class EventLogHelper
     [SupportedOSPlatform("windows")]
     private static void ConfigureEventLogSettingsForWindows(IServiceCollection services, Assembly? executingAssembly)
     {
-        services.Configure<Microsoft.Extensions.Logging.EventLog.EventLogSettings>(settings => { settings.SourceName = executingAssembly?.GetName().Name; });
+        services.Configure<EventLogSettings>(settings => { settings.SourceName = executingAssembly?.GetName().Name; });
     }
 
     /// <summary>

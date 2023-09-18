@@ -1,16 +1,17 @@
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
 using JetBrains.Annotations;
 using MassTransit;
-using TransportOrder.Domain.Exceptions;
-using TransportOrder.Domain.Repositories;
-using TransportOrder.Messages.Requests.Agv;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
 
 /// <summary>
-/// Defines a handler for the <see cref="global::TransportOrder.Messages.Commands.Agv.LockAgv"/> and <see cref="global::TransportOrder.Messages.Commands.Agv.UnlockAgv"/>
+/// Defines a handler for the <see cref="TransportOrder.Messages.Commands.Agv.LockAgv"/> and <see cref="TransportOrder.Messages.Commands.Agv.UnlockAgv"/>
 /// </summary>
 [UsedImplicitly]
-public class LockAndUnlockAgvCommandHandler : IConsumer<global::TransportOrder.Messages.Commands.Agv.LockAgv>, IConsumer<global::TransportOrder.Messages.Commands.Agv.UnlockAgv>
+public class LockAndUnlockAgvCommandHandler : IConsumer<LockAgv>, IConsumer<UnlockAgv>
 {
     private readonly IAgvRegistry _agvRegistry;
     private readonly IBus _bus;
@@ -32,7 +33,7 @@ public class LockAndUnlockAgvCommandHandler : IConsumer<global::TransportOrder.M
     /// <param name="context"></param>
     /// <returns></returns>
     /// <exception cref="AgvNotFoundException"></exception>
-    public async Task Consume(ConsumeContext<global::TransportOrder.Messages.Commands.Agv.LockAgv> context)
+    public async Task Consume(ConsumeContext<LockAgv> context)
     {
         var request = context.Message;
         var agv = _agvRegistry.GetRequiredAgv(request.CorrelationId);
@@ -47,7 +48,7 @@ public class LockAndUnlockAgvCommandHandler : IConsumer<global::TransportOrder.M
     /// <param name="context"></param>
     /// <returns></returns>
     /// <exception cref="AgvNotFoundException"></exception>
-    public async Task Consume(ConsumeContext<global::TransportOrder.Messages.Commands.Agv.UnlockAgv> context)
+    public async Task Consume(ConsumeContext<UnlockAgv> context)
     {
         var request = context.Message;
         var agv = _agvRegistry.GetRequiredAgv(request.CorrelationId);

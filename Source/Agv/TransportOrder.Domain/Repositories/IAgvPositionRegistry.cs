@@ -1,11 +1,12 @@
-﻿using TransportOrder.Domain.Models.Agv;
+﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
+using JetBrains.Annotations;
 
-namespace TransportOrder.Domain.Repositories;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 
 /// <summary>
 /// Define interface to access AGV position registry
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public interface IAgvPositionRegistry
 {
     /// <summary>

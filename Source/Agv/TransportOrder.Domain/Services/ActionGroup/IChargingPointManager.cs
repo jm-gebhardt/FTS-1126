@@ -1,6 +1,7 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using JetBrains.Annotations;
 
-namespace TransportOrder.Domain.Services.ActionGroup;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
 
 /// <summary>
 /// Finds free charger based on Agv Graph and reserves it
@@ -34,6 +35,6 @@ public interface IChargingPointManager
     /// </summary>
     /// <param name="agv"></param>
     /// <returns>True if the lastNodeId of the Agv is a charging point, False if the lastNodeId of the agv is null</returns>
-    [JetBrains.Annotations.UsedImplicitly]
+    [UsedImplicitly]
     Task<bool> IsOnAChargingNodeAsync(IAgv agv);
 }

@@ -1,7 +1,7 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using TransportOrder.Routing.Models;
+using Gebhardt.StoreWare.Agv.TransportOrder.Routing.Models;
 
-namespace TransportOrder.Routing.Base;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Routing.Base;
 
 /// <summary>
 /// This base class implements the basic construct of a graph algorithm

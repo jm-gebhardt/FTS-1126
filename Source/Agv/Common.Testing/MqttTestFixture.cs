@@ -1,7 +1,10 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Gebhardt.StoreWare.Agv.Common.Extensions;
+using JetBrains.Annotations;
 using MassTransit;
+using MassTransit.Configuration;
+using MassTransit.Serialization;
 using MassTransit.Testing;
-using Gebhardt.StoreWare.Agv.Common.Extensions;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Gebhardt.StoreWare.Agv.Common.Testing;
 
@@ -9,7 +12,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Testing;
 /// Testing fixture to test MQTT consumers.
 /// </summary>
 /// <typeparam name="TConsumer"></typeparam>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public class MqttConsumerTestFixture<TConsumer>
     where TConsumer : class, IConsumer
 {
@@ -55,8 +58,8 @@ public class MqttConsumerTestFixture<TConsumer>
                 x.AddMqttConsumer<TConsumer>();
                 x.UsingInMemory((context, cfg) =>
                 {
-                    cfg.AddSerializer(new MassTransit.Configuration.SystemTextJsonRawMessageSerializerFactory());
-                    cfg.SerializerContentType = MassTransit.Serialization.SystemTextJsonMessageSerializer.JsonContentType;
+                    cfg.AddSerializer(new SystemTextJsonRawMessageSerializerFactory());
+                    cfg.SerializerContentType = SystemTextJsonMessageSerializer.JsonContentType;
                     cfg.ConfigureEndpoints(context);
                 });
             });
@@ -95,7 +98,7 @@ public class MqttConsumerTestFixture<TConsumer>
 /// <summary>
 /// Testing fixture to test MQTT.
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public class MqttTestFixture
 {
     /// <summary>
@@ -120,8 +123,8 @@ public class MqttTestFixture
             {
                 x.UsingInMemory((context, cfg) =>
                 {
-                    cfg.AddSerializer(new MassTransit.Configuration.SystemTextJsonRawMessageSerializerFactory());
-                    cfg.SerializerContentType = MassTransit.Serialization.SystemTextJsonMessageSerializer.JsonContentType;
+                    cfg.AddSerializer(new SystemTextJsonRawMessageSerializerFactory());
+                    cfg.SerializerContentType = SystemTextJsonMessageSerializer.JsonContentType;
                     cfg.ConfigureEndpoints(context);
                 });
             });

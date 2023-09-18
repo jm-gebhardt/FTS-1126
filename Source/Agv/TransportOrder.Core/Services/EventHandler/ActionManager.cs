@@ -2,20 +2,18 @@ using AutoMapper;
 using FluentValidation;
 using FluentValidation.Results;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.SagaStateMachines;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Routing;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
-using TransportOrder.Domain.Repositories;
-using TransportOrder.Domain.SemaphoreProvider;
-using TransportOrder.Domain.Services.ActionGroup;
-using TransportOrder.Domain.Services.Routing;
-using ActionGroup = TransportOrder.Domain.Models.ActionGroup.ActionGroup;
-using AgvAction = TransportOrder.Domain.Models.ActionGroup.AgvAction;
-using MessageActionGroup = Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.ActionGroup;
+using ActionGroup = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
+using AgvAction = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.AgvAction;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.EventHandler;
 
@@ -64,17 +62,17 @@ public class ActionManager : IActionManager
         _mapper = mapper;
         _actionGroupValidationService = actionGroupValidationService;
     }
-    
+
     private async Task AddActionGroupAsync(ActionGroup actionGroup)
     {
         await _actionGroupRegistry.AddAsync(actionGroup);
-        await _bus.Publish(new ActionGroupCreated(_mapper.Map<MessageActionGroup>(actionGroup), actionGroup.CorrelationId));
+        await _bus.Publish(new ActionGroupCreated(_mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup), actionGroup.CorrelationId));
     }
 
     private async Task UpdateActionGroupAsync(AgvAction action, IAgv agv, ActionState state, CancellationToken cancellationToken)
     {
         var actionGroup = await _actionGroupRegistry.UpdateActionAndGroupStateAsync(action, agv, state);
-        await _bus.Publish(new ActionGroupChanged(_mapper.Map<MessageActionGroup>(actionGroup), actionGroup.CorrelationId), cancellationToken);
+        await _bus.Publish(new ActionGroupChanged(_mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup), actionGroup.CorrelationId), cancellationToken);
     }
 
     private Task<IAgv> GetAgvAsync(Guid? correlationId, CancellationToken cancellationToken) => _agvSagaCommunicationService.GetAgvAsync(correlationId, cancellationToken);
@@ -130,7 +128,7 @@ public class ActionManager : IActionManager
     }
 
     /// <summary>
-    /// Send <see cref="StartActionCommand"/> and set action to start>.
+    /// Send <see cref="Common.Messages.ActionGroups.Commands.StartActionCommand"/> and set action to start>.
     /// </summary>
     [PublicAPI]
     public async Task StartActionAsync(AgvAction action, IAgv assignedAgv, CancellationToken cancellationToken)
@@ -155,11 +153,10 @@ public class ActionManager : IActionManager
             throw;
         }
     }
-   
+
     /// <inheritdoc />
     public async Task AddActionGroupAsync(ActionGroup actionGroup, CancellationToken cancellationToken)
     {
-
         _logger.LogTrace("Validating ActionGroup with CorrelationId: {ActionGroupId}", actionGroup.CorrelationId);
         IEnumerable<ValidationFailure> validationFailures = await _actionGroupValidationService.ValidateAsync(actionGroup);
 
@@ -208,6 +205,6 @@ public class ActionManager : IActionManager
         _logger.LogDebug("ActionGroup with CorrelationId: {ActionGroupId} is not valid, publishing ActionGroupInvalid and return", actionGroup.CorrelationId);
         List<string> validationFailureReasons = validationFailures.Select(error => error.ErrorMessage).ToList();
 
-        await _bus.Publish(new ActionGroupInvalid(actionGroup.CorrelationId, _mapper.Map<MessageActionGroup>(actionGroup), validationFailureReasons), cancellationToken);
+        await _bus.Publish(new ActionGroupInvalid(actionGroup.CorrelationId, _mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup), validationFailureReasons), cancellationToken);
     }
 }

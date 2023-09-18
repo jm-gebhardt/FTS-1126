@@ -1,4 +1,6 @@
-﻿namespace Gebhardt.StoreWare.Agv.Common.Exceptions;
+﻿using JetBrains.Annotations;
+
+namespace Gebhardt.StoreWare.Agv.Common.Exceptions;
 
 /// <summary>
 /// FreeNodeFailedException
@@ -10,7 +12,7 @@ public class NodeStateException : Exception
     /// </summary>
     /// <param name="nodeId">The nodeId of the node</param>
     /// <param name="action">The action you tried to do, e.g. lock</param>
-    [JetBrains.Annotations.UsedImplicitly]
+    [UsedImplicitly]
     public NodeStateException(string nodeId, string action) : base($"Unable to {action} node with Id: {nodeId}")
     {
     }

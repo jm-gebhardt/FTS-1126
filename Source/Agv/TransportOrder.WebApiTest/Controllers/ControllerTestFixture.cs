@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Routing;
-using AgvErrorProfile = Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles.AgvErrorProfile;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers;
 
@@ -33,10 +32,10 @@ public abstract class ControllerTestFixture<TRequest, TRequestHandler, TControll
             new MapProfile(),
             new AgvErrorProfile(),
             new ActionProfile(),
-            new global::TransportOrder.Messages.Profiles.AgvProfile(),
-            new global::TransportOrder.Messages.Profiles.AgvGraphProfile(),
-            new global::TransportOrder.Messages.Profiles.AgvErrorProfile(),
-            new global::TransportOrder.Messages.Profiles.MapProfile()
+            new Messages.Profiles.AgvProfile(),
+            new Messages.Profiles.AgvGraphProfile(),
+            new Messages.Profiles.AgvErrorProfile(),
+            new Messages.Profiles.MapProfile()
         );
         return mapper;
     }

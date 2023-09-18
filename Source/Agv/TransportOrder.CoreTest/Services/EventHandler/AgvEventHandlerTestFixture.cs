@@ -3,12 +3,12 @@ using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.EventHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.SagaStateMachines;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Configurations;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
-using TransportOrder.Domain.Models.Settings;
-using TransportOrder.Domain.Repositories;
-using TransportOrder.Domain.SemaphoreProvider;
-using TransportOrder.Domain.Services.ActionGroup;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.EventHandler;
 

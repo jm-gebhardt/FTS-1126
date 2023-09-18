@@ -1,6 +1,6 @@
 ﻿using JetBrains.Annotations;
 
-namespace TransportOrder.Domain.Models.Graph;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Graph;
 
 /// <summary>
 /// An edge in the graph connects two nodes. This model is for EF only

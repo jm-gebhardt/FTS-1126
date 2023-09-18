@@ -1,8 +1,8 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using TransportOrder.Routing.Base;
-using TransportOrder.Routing.Models;
+using Gebhardt.StoreWare.Agv.TransportOrder.Routing.Base;
+using Gebhardt.StoreWare.Agv.TransportOrder.Routing.Models;
 
-namespace TransportOrder.Routing.Implementations;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Routing.Implementations;
 
 public class AStarRouteFinder : IRouteFinder
 {

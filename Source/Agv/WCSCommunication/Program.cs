@@ -1,21 +1,22 @@
-﻿using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using CommandLine;
+﻿using CommandLine;
 using Gebhardt.StoreWare.Agv.Common;
-using Gebhardt.StoreWare.Agv.Common.Services;
+using Gebhardt.StoreWare.Agv.Common.Configurations.Extensions;
+using Gebhardt.StoreWare.Agv.Common.Logging;
 using Gebhardt.StoreWare.Agv.Common.Persistence;
+using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.WCSCommunication.CmdOptions;
 using Gebhardt.StoreWare.Agv.WCSCommunication.Db;
+using Gebhardt.StoreWare.Agv.WCSCommunication.Persistence;
 using Gebhardt.StoreWare.Agv.WCSCommunication.Services;
 using Gebhardt.StoreWare.Agv.WCSCommunication.States;
-using Gebhardt.StoreWare.Agv.WCSCommunication.Persistence;
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using Gebhardt.StoreWare.Agv.Common.Configurations.Extensions;
-using MassTransit;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
-var initialLogger = Gebhardt.StoreWare.Agv.Common.Logging.InitialLogger.Create<Program>();
+var initialLogger = InitialLogger.Create<Program>();
 try
 {
     IHostBuilder? hostBuilder = null;

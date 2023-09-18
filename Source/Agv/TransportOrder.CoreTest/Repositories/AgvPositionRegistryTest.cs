@@ -1,8 +1,9 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
-using TransportOrder.Domain.Models.Agv;
-using TransportOrder.Messages.Events.Agv;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Repositories;
 
@@ -31,7 +32,7 @@ public class AgvPositionRegistryTest
     public async Task UpdatePosition_StoresNewPosition_WhenRegistryContainsSingleAgv()
     {
         var fixture = new AgvPositionRegistryTestFixture();
-        var newAgvPosition = new Common.Messages.AgvManagement.AgvPosition(true, 2, 3, 4, 0);
+        var newAgvPosition = new AgvPosition(true, 2, 3, 4, 0);
         var newAgvPositionUpdated = new AgvPositionStatus(fixture.CorrelationId, fixture.AgvId, newAgvPosition);
         var agvPositionStatus = fixture.AgvPositionStatus;
         var agvPositionRegistry = fixture.AgvPositionRegistry;

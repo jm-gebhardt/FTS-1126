@@ -1,9 +1,11 @@
+using JetBrains.Annotations;
+
 namespace Gebhardt.StoreWare.Agv.WCSCommunication.Db.Models;
 
 /// <summary>
 /// WCS writes actions for us to consume into this table
 /// </summary>
-[JetBrains.Annotations.UsedImplicitly]
+[UsedImplicitly]
 public class ToAgv : ToFromAgvBase
 {
     /// <summary>

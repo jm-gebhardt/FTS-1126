@@ -1,7 +1,7 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using JetBrains.Annotations;
 
-namespace TransportOrder.Domain.Services.ActionGroup;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
 
 /// <summary>
 /// Providing information about maintenance requests for Agvs

@@ -1,6 +1,6 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 
-namespace TransportOrder.Domain.Models.Agv;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 
 /// <summary>
 /// Extension methods for <see cref="IAgv"/>

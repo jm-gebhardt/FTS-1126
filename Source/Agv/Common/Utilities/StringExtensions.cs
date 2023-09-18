@@ -1,11 +1,13 @@
-﻿using System.Text;
+﻿using System.Security.Cryptography;
+using System.Text;
+using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.Common.Utilities;
 
 /// <summary>
 /// Extension methods to strings.
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public static class StringExtensions
 {
     /// <summary>
@@ -13,7 +15,7 @@ public static class StringExtensions
     /// </summary>
     /// <param name="str">Input string</param>
     /// <returns>Unique GUID according to <paramref name="str"/>.</returns>
-    [JetBrains.Annotations.PublicAPI]
+    [PublicAPI]
     public static Guid ToGuid(this string str)
     {
         if (Guid.TryParse(str, out var guid))
@@ -24,7 +26,7 @@ public static class StringExtensions
         byte[] stringBytes = Encoding.UTF8.GetBytes(str);
         byte[] hashedBytes;
         // Usually SHA-1 is faster than MD5 and other SHA-algorithms.
-        using (var sha = System.Security.Cryptography.SHA1.Create())
+        using (var sha = SHA1.Create())
         {
             hashedBytes = sha.ComputeHash(stringBytes);
         }

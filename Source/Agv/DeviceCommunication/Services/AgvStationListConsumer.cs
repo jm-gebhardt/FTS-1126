@@ -1,16 +1,16 @@
-﻿using Microsoft.Extensions.Logging;
-using MassTransit;
-using Gebhardt.StoreWare.Agv.Common.Utilities;
+﻿using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Events;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
-
+using JetBrains.Annotations;
+using MassTransit;
+using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
 
 /// <summary>
 /// Transform station list from AGV into MassTransit message.
 /// </summary>
-[JetBrains.Annotations.UsedImplicitly]
+[UsedImplicitly]
 public class AgvStationListConsumer : IConsumer<MqttStationList>
 {
     private readonly ILogger<AgvStationListConsumer> _logger;

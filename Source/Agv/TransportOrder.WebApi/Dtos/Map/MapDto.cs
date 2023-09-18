@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using MassTransit;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Map;
@@ -13,5 +14,5 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Map;
 /// <param name="RelatedAgvs">List of Agvs using this map</param>
 /// <param name="Width">The width of the map.</param>
 /// <param name="Height">The height of the map.</param>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public record MapDto(Guid CorrelationId, string MapId, double Resolution, double XOffset, double YOffset, Guid[] RelatedAgvs, int Width, int Height) : CorrelatedBy<Guid>;

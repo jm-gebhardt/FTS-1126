@@ -1,7 +1,7 @@
 ﻿using JetBrains.Annotations;
 using MassTransit;
 
-namespace TransportOrder.Messages.Requests.Map;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Map;
 
 /// <summary>
 /// Defines a result for the GetMapList request

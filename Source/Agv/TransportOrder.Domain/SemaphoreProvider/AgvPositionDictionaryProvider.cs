@@ -1,7 +1,7 @@
 ﻿using System.Collections.Concurrent;
-using TransportOrder.Domain.Models.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 
-namespace TransportOrder.Domain.SemaphoreProvider;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
 
 /// <inheritdoc />
 public class AgvPositionDictionaryProvider : IConcurrentDictionaryProvider<Guid, AgvPositionStatus>

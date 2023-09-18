@@ -1,11 +1,12 @@
+using JetBrains.Annotations;
 using MassTransit;
 
-namespace TransportOrder.Messages.Requests.Agv;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
 
 /// <summary>
 /// Request an AGV to transition to idle state
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public record SetAgvIdle : CorrelatedBy<Guid>
 {
     /// <inheritdoc/>

@@ -1,6 +1,6 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Exceptions;
 
-namespace TransportOrder.Domain.Exceptions;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 
 /// <summary>
 /// Exception thrown when a node could not be reserved

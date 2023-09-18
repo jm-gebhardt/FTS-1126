@@ -2,9 +2,9 @@
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.EventHandler;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Profiles;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
-using TransportOrder.Domain.Profiles;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.EventHandler;
 

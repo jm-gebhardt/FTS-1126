@@ -1,12 +1,12 @@
 using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
 using JetBrains.Annotations;
 using MassTransit;
-using TransportOrder.Domain.Exceptions;
-using TransportOrder.Domain.Models.Agv;
-using TransportOrder.Domain.ReadModels;
-using TransportOrder.Domain.Repositories;
-using TransportOrder.Messages.Requests.Agv;
 using AgvError = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.AgvError;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
@@ -17,7 +17,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHan
 /// </summary>
 [UsedImplicitly]
 public class GetAgvsRequestHandler : IConsumer<GetAgvs>,
-                                     IConsumer<GetAgv>
+    IConsumer<GetAgv>
 {
     private readonly IAgvRegistry _agvRegistry;
     private readonly IActionGroupRetrievalService _actionGroupRegistry;
@@ -63,9 +63,9 @@ public class GetAgvsRequestHandler : IConsumer<GetAgvs>,
             .GroupBy(e => e.AgvCorrelationId)
             .ToDictionary(e => e.Key, e => e.ToList());
 
-        List<global::TransportOrder.Messages.MessageContent.Agv> agvsMessageContent = agvs.Select(agv =>
+        List<Messages.MessageContent.Agv> agvsMessageContent = agvs.Select(agv =>
         {
-            var agvMessageContent = _mapper.Map<global::TransportOrder.Messages.MessageContent.Agv>(agv);
+            var agvMessageContent = _mapper.Map<Messages.MessageContent.Agv>(agv);
             _mapper.Map(actionGroupsTask.Result[agv.CorrelationId], agvMessageContent);
 
             if (allAgvErrors.TryGetValue(agv.CorrelationId, out List<AgvError>? agvErrors) && agvErrors.Any())
@@ -92,7 +92,7 @@ public class GetAgvsRequestHandler : IConsumer<GetAgvs>,
             throw new AgvNotFoundException(agvCorrelationId);
         }
 
-        var agvMessageContent = _mapper.Map<global::TransportOrder.Messages.MessageContent.Agv>(agv);
+        var agvMessageContent = _mapper.Map<Messages.MessageContent.Agv>(agv);
 
         var action = await _actionGroupRegistry.GetActionGroupWithTargetNodeTypesAsync(agvCorrelationId);
         _mapper.Map(action, agvMessageContent);

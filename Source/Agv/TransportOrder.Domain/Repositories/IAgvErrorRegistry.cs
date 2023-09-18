@@ -1,7 +1,7 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using JetBrains.Annotations;
 
-namespace TransportOrder.Domain.Repositories;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 
 /// <summary>
 /// Registry for saving errors of Agv

@@ -1,11 +1,12 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph;
 
 /// <summary>
 /// Graph Generator
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public interface IGraphGenerator
 {
 

@@ -1,12 +1,12 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Graph;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
-using TransportOrder.Messages.Requests.Agv;
-using GraphEdge = TransportOrder.Messages.Requests.Agv.GraphEdge;
-using GraphNode = TransportOrder.Messages.Requests.Agv.GraphNode;
+using GraphEdge = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.GraphEdge;
+using GraphNode = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.GraphNode;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Profiles;
 

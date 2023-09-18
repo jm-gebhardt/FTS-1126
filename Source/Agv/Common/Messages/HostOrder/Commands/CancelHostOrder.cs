@@ -1,4 +1,5 @@
-﻿using MassTransit;
+﻿using JetBrains.Annotations;
+using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
 namespace Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Commands;
@@ -6,7 +7,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Commands;
 /// <summary>
 /// A command from the host system to cancel an existing transport order
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public record CancelHostOrder : CorrelatedBy<Guid>
 {
     /// <inheritdoc/>

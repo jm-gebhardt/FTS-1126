@@ -1,10 +1,10 @@
 ﻿using System.Collections.Immutable;
 using AutoMapper;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Map;
 using JetBrains.Annotations;
 using MassTransit;
-using TransportOrder.Domain.Repositories;
-using TransportOrder.Messages.Profiles;
-using TransportOrder.Messages.Requests.Map;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
 

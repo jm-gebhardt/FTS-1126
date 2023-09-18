@@ -1,9 +1,9 @@
 using AutoMapper;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
 using JetBrains.Annotations;
 using MassTransit;
-using TransportOrder.Domain.Exceptions;
-using TransportOrder.Domain.Repositories;
-using TransportOrder.Messages.Requests.Agv;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
 

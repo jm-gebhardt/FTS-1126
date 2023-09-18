@@ -1,7 +1,7 @@
 ﻿
 using System.Collections.Concurrent;
 
-namespace TransportOrder.Domain.SemaphoreProvider;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
 
 /// <summary>
 /// Provides an interface for a provider of a concurrent dictionary.

@@ -2,7 +2,7 @@ using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using JetBrains.Annotations;
 using MassTransit;
 
-namespace TransportOrder.Domain.Models.Agv;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 
 /// <summary>
 /// AGV Saga used by AgvStateMachine.s

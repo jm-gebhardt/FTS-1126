@@ -1,6 +1,6 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Services;
 
-namespace TransportOrder.Domain.SemaphoreProvider;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
 
 /// <inheritdoc cref="INodeStateDbSemaphoreProvider" />
 public class NodeStateDbSemaphoreProvider : BaseSemaphoreProvider, INodeStateDbSemaphoreProvider

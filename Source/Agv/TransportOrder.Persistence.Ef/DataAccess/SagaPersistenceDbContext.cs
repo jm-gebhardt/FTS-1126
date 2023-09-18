@@ -1,10 +1,10 @@
+using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess.Configuration;
 using MassTransit.EntityFrameworkCoreIntegration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
-using TransportOrder.Persistence.Ef.DataAccess.Configuration;
 
-namespace TransportOrder.Persistence.Ef.DataAccess;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;
 
 /// <summary>
 /// Persistence DBContext used for sagas

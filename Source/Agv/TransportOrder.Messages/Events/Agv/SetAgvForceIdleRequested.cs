@@ -1,6 +1,6 @@
 ﻿using MassTransit;
 
-namespace TransportOrder.Messages.Events.Agv;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 
 /// <summary>
 /// Provides an event that is raised when the WebApi requests an agv to be set to idle by force.

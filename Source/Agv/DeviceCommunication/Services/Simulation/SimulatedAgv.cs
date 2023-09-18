@@ -1,4 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using JetBrains.Annotations;
 
 // ReSharper disable InvalidUsage
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
@@ -6,7 +7,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
 /// <summary>
 /// Represents an AGV for simulation.
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public record SimulatedAgv : IAgv
 {
     /// <inheritdoc />

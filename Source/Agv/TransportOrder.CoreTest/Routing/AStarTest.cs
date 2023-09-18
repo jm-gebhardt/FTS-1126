@@ -1,12 +1,13 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+﻿using System.Diagnostics;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Domain.Services.ActionGroup;
+using Gebhardt.StoreWare.Agv.TransportOrder.Routing.Base;
+using Gebhardt.StoreWare.Agv.TransportOrder.Routing.Implementations;
+using Gebhardt.StoreWare.Agv.TransportOrder.Routing.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
-using TransportOrder.Routing.Base;
-using TransportOrder.Routing.Implementations;
-using TransportOrder.Routing.Models;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Routing;
 
@@ -276,11 +277,11 @@ public class AStarTest
         c3 = aStar.CalculateRoute("33/17", "33/06");
         c3!.Costs.ShouldBe(11f, 0.00001f);
 
-        var stopWatch = new System.Diagnostics.Stopwatch();
+        var stopWatch = new Stopwatch();
         stopWatch.Start();
         costs = aStar.CalculateRoute("50/01", "33/06");
         stopWatch.Stop();
-        System.Diagnostics.Trace.WriteLine("Grid example duration: " + stopWatch.ElapsedMilliseconds.ToString() + "ms.");
+        Trace.WriteLine("Grid example duration: " + stopWatch.ElapsedMilliseconds.ToString() + "ms.");
         costs!.Costs.ShouldBe(c1.Costs + c2.Costs + c3.Costs, 0.00001f);
     }
 

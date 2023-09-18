@@ -1,6 +1,6 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 
-namespace TransportOrder.Domain.ReadModels;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
 
 /// <summary>
 ///Provides a read model for action group counts by state.

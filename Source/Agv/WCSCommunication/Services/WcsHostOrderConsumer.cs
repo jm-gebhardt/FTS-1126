@@ -1,9 +1,10 @@
-﻿using Microsoft.Extensions.Logging;
-using MassTransit;
-using Gebhardt.StoreWare.Agv.WCSCommunication.Db;
+﻿using Gebhardt.StoreWare.Agv.WCSCommunication.Db;
 using Gebhardt.StoreWare.Agv.WCSCommunication.Db.Models;
 using Gebhardt.StoreWare.Agv.WCSCommunication.Messages.Events;
+using JetBrains.Annotations;
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services;
 
@@ -25,7 +26,7 @@ public class WcsHostOrderConsumer:
     /// </summary>
     /// <param name="logger">Mandatory logger facility.</param>
     /// <param name="contextFactory"></param>
-    [JetBrains.Annotations.PublicAPI]
+    [PublicAPI]
     public WcsHostOrderConsumer(ILogger<WcsHostOrderConsumer> logger, IDbContextFactory<WcsHostDbContext> contextFactory)
     {
         _contextFactory = contextFactory;

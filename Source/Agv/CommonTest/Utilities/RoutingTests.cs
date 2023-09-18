@@ -1,6 +1,6 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Gebhardt.StoreWare.Agv.Common.Utilities;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
-using Gebhardt.StoreWare.Agv.Common.Utilities;
 
 namespace Gebhardt.StoreWare.Agv.CommonTest.Utilities;
 

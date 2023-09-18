@@ -1,6 +1,7 @@
-﻿using MassTransit;
+﻿using JetBrains.Annotations;
+using MassTransit;
 
-namespace TransportOrder.Messages.Events.Agv;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 
 /// <summary>
 /// An event reporting that the battery charge of an AGV has changed
@@ -8,5 +9,5 @@ namespace TransportOrder.Messages.Events.Agv;
 /// <param name="CorrelationId">The correlationId of the AGV</param>
 /// <param name="OldBatteryCharge">Battery charge of the AGV before the change</param>
 /// <param name="NewBatteryCharge">Battery charge of the AGV after the change</param>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public record AgvBatteryChargeChanged(Guid CorrelationId, double OldBatteryCharge, double NewBatteryCharge) : CorrelatedBy<Guid>;

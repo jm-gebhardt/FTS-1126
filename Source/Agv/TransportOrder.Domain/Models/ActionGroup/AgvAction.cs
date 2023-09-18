@@ -1,12 +1,13 @@
 using Gebhardt.StoreWare.Agv.Common.Contracts;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+using JetBrains.Annotations;
 
-namespace TransportOrder.Domain.Models.ActionGroup;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
 
 /// <summary>
 /// Agv Action
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public class AgvAction : IParentedBy<Guid>
 {
     /// <summary>
@@ -73,7 +74,7 @@ public class AgvAction : IParentedBy<Guid>
     /// <summary>
     /// Just to satisfy Entity Framework
     /// </summary>
-    [JetBrains.Annotations.UsedImplicitly]
+    [UsedImplicitly]
     private AgvAction()
     {
         CorrelationId = Guid.Empty;

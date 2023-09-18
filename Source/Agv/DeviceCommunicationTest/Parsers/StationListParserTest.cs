@@ -1,7 +1,8 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers;
@@ -26,7 +27,7 @@ public class StationListParserTest
             new MqttGraph("", DateTimeOffset.UtcNow, Array.Empty<MqttNode>(), Array.Empty<MqttEdge>(), string.Empty));
         var graph = parser.Graph;
 
-        graph.Usability.ShouldBe(Common.Messages.AgvManagement.AgvGraph.GraphUsability.SerialNumberMissing);
+        graph.Usability.ShouldBe(AgvGraph.GraphUsability.SerialNumberMissing);
     }
 
     /// <summary>
@@ -40,7 +41,7 @@ public class StationListParserTest
             new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow, Array.Empty<MqttNode>(), Array.Empty<MqttEdge>(), string.Empty));
         var graph = parser.Graph;
 
-        graph.Usability.ShouldBe(Common.Messages.AgvManagement.AgvGraph.GraphUsability.InvalidNodes);
+        graph.Usability.ShouldBe(AgvGraph.GraphUsability.InvalidNodes);
         Should.Throw<InvalidOperationException>(() => parser.SerialNumber);
     }
 
@@ -59,7 +60,7 @@ public class StationListParserTest
             new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow, nodes, Array.Empty<MqttEdge>(), string.Empty));
         var graph = parser.Graph;
 
-        graph.Usability.ShouldBe(Common.Messages.AgvManagement.AgvGraph.GraphUsability.InvalidEdges);
+        graph.Usability.ShouldBe(AgvGraph.GraphUsability.InvalidEdges);
     }
 
     /// <summary>
@@ -81,7 +82,7 @@ public class StationListParserTest
             new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
         var graph = parser.Graph;
 
-        graph.Usability.ShouldBe(Common.Messages.AgvManagement.AgvGraph.GraphUsability.InvalidStations);
+        graph.Usability.ShouldBe(AgvGraph.GraphUsability.InvalidStations);
     }
 
     /// <summary>
@@ -106,7 +107,7 @@ public class StationListParserTest
             new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
         var graph = parser.Graph;
 
-        graph.Usability.ShouldBe(Common.Messages.AgvManagement.AgvGraph.GraphUsability.Valid);
+        graph.Usability.ShouldBe(AgvGraph.GraphUsability.Valid);
         parser.SerialNumber.ShouldBe(AgvTestIdentifier01);
         //              3 = 2 nodes + 1 station
         graph.Nodes.Count.ShouldBe(3);
@@ -138,7 +139,7 @@ public class StationListParserTest
             new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow, nodes, edges, mapId, Guid.NewGuid()));
         var graph = parser.Graph;
 
-        graph.Usability.ShouldBe(Common.Messages.AgvManagement.AgvGraph.GraphUsability.Valid);
+        graph.Usability.ShouldBe(AgvGraph.GraphUsability.Valid);
         parser.SerialNumber.ShouldBe(AgvTestIdentifier01);
         graph.RelatedMapName.ShouldBe(mapId);
         graph.RelatedMapId.ShouldBe(mapId.ToGuid());
@@ -167,7 +168,7 @@ public class StationListParserTest
             new MqttGraph(AgvTestIdentifier02, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
         var graph = parser.Graph;
 
-        graph.Usability.ShouldBe(Common.Messages.AgvManagement.AgvGraph.GraphUsability.SerialNumberMismatch);
+        graph.Usability.ShouldBe(AgvGraph.GraphUsability.SerialNumberMismatch);
     }
 
     /// <summary>

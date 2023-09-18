@@ -1,7 +1,7 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using ActionGroup = TransportOrder.Domain.Models.ActionGroup.ActionGroup;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
 
-namespace TransportOrder.Domain.ReadModels;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
 
 /// <summary>
 /// Provides extension methods for testing the action group read model.
@@ -17,7 +17,6 @@ public static class ActionGroupReadModelExtension
         if (actionGroup == null)
         {
             return null;
-
         }
 
         return new ActionGroupReadModel(actionGroup.CorrelationId, actionGroup.OrderId, actionGroup.AssignedAgv,
@@ -30,7 +29,7 @@ public static class ActionGroupReadModelExtension
     /// Converts an action group to its read model with node types using made-up fake node types.
     /// </summary>
     /// <param name="actionGroup">The action group to be converted.</param>
-    public static ActionGroupReadModel? ConvertFromActionGroupWithFakeNodeType(this Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.ActionGroup? actionGroup)
+    public static ActionGroupReadModel? ConvertFromActionGroupWithFakeNodeType(this Common.Messages.ActionGroups.ActionGroup? actionGroup)
     {
         if (actionGroup == null)
         {
@@ -43,5 +42,3 @@ public static class ActionGroupReadModelExtension
                 a.ActionType, a.TargetNodeId, AgvGraph.NodeType.Charge, a.Nodes, a.CreatedDate, a.StartedDate, a.CompletedDate)).ToList(), actionGroup.IsManual);
     }
 }
-
-

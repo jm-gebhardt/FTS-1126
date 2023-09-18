@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
@@ -6,7 +7,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 /// <summary>
 /// IOrder is a read-only interface to provide current order data
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public interface IOrder : CorrelatedBy<Guid>
 {
     /// <summary>

@@ -1,9 +1,9 @@
-﻿using JetBrains.Annotations;
-using TransportOrder.Domain.Models.Agv;
-using TransportOrder.Domain.ReadModels;
-using TransportOrder.Messages.Requests.Agv;
+﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
+using JetBrains.Annotations;
 
-namespace TransportOrder.Messages.MessageContent;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
 
 /// <summary>
 /// Represents a message content for an agv.

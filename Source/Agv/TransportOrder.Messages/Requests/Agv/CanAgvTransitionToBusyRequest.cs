@@ -1,12 +1,13 @@
-﻿using MassTransit;
+﻿using JetBrains.Annotations;
+using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
-namespace TransportOrder.Messages.Requests.Agv;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
 
 /// <summary>
 /// Request if the Agv could go to the busy state, does not change any state, just a question 
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public record CanAgvTransitionToBusyRequest : CorrelatedBy<Guid>
 {
     /// <inheritdoc/>

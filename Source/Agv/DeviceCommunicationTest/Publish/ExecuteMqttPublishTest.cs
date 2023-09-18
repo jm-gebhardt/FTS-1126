@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
-using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Extensions;
+using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 using MassTransit;
 using MassTransit.Serialization;

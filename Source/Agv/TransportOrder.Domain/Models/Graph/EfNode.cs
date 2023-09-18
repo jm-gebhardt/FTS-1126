@@ -1,6 +1,6 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 
-namespace TransportOrder.Domain.Models.Graph;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Graph;
 
 /// <summary>
 /// Model for a node in the AGV graph, it has X/Y/Z coordinates and a type. This model is for EF only

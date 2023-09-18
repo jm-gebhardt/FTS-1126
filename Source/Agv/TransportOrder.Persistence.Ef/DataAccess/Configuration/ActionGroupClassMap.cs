@@ -1,9 +1,9 @@
 using Gebhardt.StoreWare.Agv.Common.Persistence;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using TransportOrder.Domain.Models.ActionGroup;
 
-namespace TransportOrder.Persistence.Ef.DataAccess.Configuration;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess.Configuration;
 
 /// <summary>
 /// <see cref="ActionGroup"/> Entity Framework Mapping

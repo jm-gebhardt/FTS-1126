@@ -1,7 +1,10 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Extensions;
+﻿using System.Numerics;
+using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Helpers;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
+using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers;
 
@@ -39,8 +42,8 @@ public class StationListParser
     /// <returns></returns>
     private float GetDistance(Station station, GraphNode node)
     {
-        var vectorStation = new System.Numerics.Vector3(station.Position.X, station.Position.Y, 0f);
-        var vectorNode = new System.Numerics.Vector3(node.X, node.Y, node.Z);
+        var vectorStation = new Vector3(station.Position.X, station.Position.Y, 0f);
+        var vectorNode = new Vector3(node.X, node.Y, node.Z);
 
         return (vectorStation - vectorNode).Length();
     }
@@ -76,8 +79,8 @@ public class StationListParser
             if (_usability == AgvGraph.GraphUsability.Valid)
             {
                 bool allAdded = true;
-                HashSet<GraphNode> additionalNodes = new(new Common.Utilities.GraphNodeComparer());
-                HashSet<GraphEdge> additionalEdges = new(new Common.Utilities.GraphEdgeComparer());
+                HashSet<GraphNode> additionalNodes = new(new GraphNodeComparer());
+                HashSet<GraphEdge> additionalEdges = new(new GraphEdgeComparer());
 
                 foreach (var station in _stationList.Stations)
                 {
@@ -194,7 +197,7 @@ public class StationListParser
     /// Returns the serial number of the AGV.
     /// </summary>
     /// <exception cref="InvalidOperationException">Graph is invalid.</exception>
-    [JetBrains.Annotations.PublicAPI]
+    [PublicAPI]
     public string SerialNumber
     {
         get

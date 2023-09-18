@@ -1,10 +1,10 @@
 using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using TransportOrder.Messages.Requests.Agv;
-using GraphEdge = TransportOrder.Messages.Requests.Agv.GraphEdge;
-using GraphNode = TransportOrder.Messages.Requests.Agv.GraphNode;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
+using GraphEdge = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.GraphEdge;
+using GraphNode = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.GraphNode;
 
-namespace TransportOrder.Messages.Profiles;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles;
 
 /// <summary>
 /// Profile for AgvGraph
@@ -14,8 +14,8 @@ public class AgvGraphProfile : Profile
     /// <inheritdoc />
     public AgvGraphProfile()
     {
-        CreateMap<Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.GraphEdge, GraphEdge>(MemberList.None);
-        CreateMap<Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.GraphNode, GraphNode>();
+        CreateMap<GraphEdge, Requests.Agv.GraphEdge>(MemberList.None);
+        CreateMap<GraphNode, Requests.Agv.GraphNode>();
         CreateMap<AgvGraph, Graph>()
             .ForMember(nameof(Graph.Edges), opt => opt.MapFrom<GraphEdgeValueResolver>())
             // Graph is a record type, therefore we must initialize all properties in the ctor

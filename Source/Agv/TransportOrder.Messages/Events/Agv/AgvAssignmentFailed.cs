@@ -1,18 +1,19 @@
+using JetBrains.Annotations;
 using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
-namespace TransportOrder.Messages.Events.Agv;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 
 /// <summary>
 /// AGV assignment failed, which usually means that there was no AGV available
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public record AgvAssignmentFailed : CorrelatedBy<Guid>
 {
     /// <summary>
     /// Reason why the assignment failed
     /// </summary>
-    [JetBrains.Annotations.PublicAPI]
+    [PublicAPI]
     public enum ErrorCode
     {
         /// <summary>

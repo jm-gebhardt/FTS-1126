@@ -1,17 +1,18 @@
-﻿using Microsoft.Extensions.Logging;
-using MassTransit;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Events;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
+using JetBrains.Annotations;
+using MassTransit;
+using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
 
 /// <summary>
 /// Transform graph information from AGV into MassTransit message.
 /// </summary>
-[JetBrains.Annotations.UsedImplicitly]
+[UsedImplicitly]
 public class AgvGraphConsumer : IConsumer<MqttGraph>
 {
     private readonly ILogger<AgvGraphConsumer> _logger;

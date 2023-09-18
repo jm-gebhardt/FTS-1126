@@ -1,13 +1,13 @@
 ﻿using System.Collections.Immutable;
 using AutoMapper;
-using TransportOrder.Messages.Requests.Map;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Map;
 
-namespace TransportOrder.Messages.Profiles;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles;
 
 /// <summary>
 /// The custom value resolver, maps from Persistence model of Map and the destination Dto Map to the RelatedAgvs property
 /// </summary>
-public class RelatedMapAgvValueResolver : IValueResolver<Domain.Models.Map.Map, Map, object>
+public class RelatedMapAgvValueResolver : IValueResolver<Map, Requests.Map.Map, object>
 {
     /// <summary>
     /// The constant name for the AgvMapRelation mapping
@@ -22,7 +22,7 @@ public class RelatedMapAgvValueResolver : IValueResolver<Domain.Models.Map.Map, 
     /// <param name="destMember"></param>
     /// <param name="context"></param>
     /// <returns></returns>
-    public object Resolve(Domain.Models.Map.Map source, Map destination, object destMember, ResolutionContext context)
+    public object Resolve(Map source, Requests.Map.Map destination, object destMember, ResolutionContext context)
     {
         object agvMapRelations = context.Items[AgvMapRelationsName];
         if (agvMapRelations is ImmutableDictionary<Guid, Guid[]> relations)

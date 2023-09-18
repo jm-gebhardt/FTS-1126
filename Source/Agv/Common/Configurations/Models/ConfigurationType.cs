@@ -1,7 +1,7 @@
-using Gebhardt.StoreWare.Agv.Common.Configurations.Attributes;
-using JetBrains.Annotations;
 using System.Reflection;
 using System.Text.Json;
+using Gebhardt.StoreWare.Agv.Common.Configurations.Attributes;
+using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.Common.Configurations.Models;
 

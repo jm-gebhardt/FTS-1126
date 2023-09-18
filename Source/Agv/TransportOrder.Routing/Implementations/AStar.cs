@@ -1,13 +1,15 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using TransportOrder.Routing.Base;
-using TransportOrder.Routing.Models;
+﻿using System.Numerics;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.TransportOrder.Routing.Base;
+using Gebhardt.StoreWare.Agv.TransportOrder.Routing.Models;
+using JetBrains.Annotations;
 
-namespace TransportOrder.Routing.Implementations;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Routing.Implementations;
 
 /// <summary>
 /// A* algorithm.
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public class AStar : BaseRouteAlgorithm
 {
     /// <summary>
@@ -101,8 +103,8 @@ public class AStar : BaseRouteAlgorithm
     /// <returns>Returns the euclidean distance.</returns>
     private float EuclideanDistance(ANode first, ANode second)
     {
-        var vectorStart = new System.Numerics.Vector3(first.Node.X, first.Node.Y, first.Node.Z);
-        var vectorEnd = new System.Numerics.Vector3(second.Node.X, second.Node.Y, second.Node.Z);
+        var vectorStart = new Vector3(first.Node.X, first.Node.Y, first.Node.Z);
+        var vectorEnd = new Vector3(second.Node.X, second.Node.Y, second.Node.Z);
 
         return (vectorStart - vectorEnd).Length();
     }

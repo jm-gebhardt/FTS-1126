@@ -1,17 +1,18 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
-using System.Linq.Expressions;
-using Microsoft.Extensions.Logging;
-using MassTransit;
-using Gebhardt.StoreWare.Agv.WCSCommunication.States;
-using Gebhardt.StoreWare.Agv.WCSCommunication.Messages;
+﻿using System.Linq.Expressions;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
+using Gebhardt.StoreWare.Agv.WCSCommunication.Messages;
+using Gebhardt.StoreWare.Agv.WCSCommunication.States;
+using JetBrains.Annotations;
+using MassTransit;
+using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services;
 
 /// <summary>
 /// Host order state machine
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public sealed class HostOrderStateMachine : MassTransitStateMachine<HostOrderSaga>
 {
     private readonly ILogger<HostOrderStateMachine> _logger;

@@ -2,7 +2,7 @@ using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using JetBrains.Annotations;
 using MassTransit;
 
-namespace TransportOrder.Messages.Requests.Agv;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
 
 /// <summary>
 /// Defines a result for the GetAgvGraph request

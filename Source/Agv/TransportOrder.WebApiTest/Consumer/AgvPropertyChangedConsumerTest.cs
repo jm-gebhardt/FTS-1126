@@ -1,17 +1,17 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Consumer;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.SagaStateMachines;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Consumer;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Agv;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
-using TransportOrder.Domain.Models.Agv;
-using TransportOrder.Messages.Events.Agv;
-using TransportOrder.Messages.Profiles;
-using TransportOrder.Messages.Requests.Agv;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Consumer;
 
@@ -28,7 +28,7 @@ public class AgvPropertyChangedConsumerTest
         var agv = new AgvSaga(AgvId.ToGuid(), AgvId, nameof(AgvStateMachine.Idle)) {IsOnline = alive};
 
         var mapper = MappingHelper.GetMapper(new AgvProfile());
-        var agvMessageContent = mapper.Map<global::TransportOrder.Messages.MessageContent.Agv>(agv);
+        var agvMessageContent = mapper.Map<Messages.MessageContent.Agv>(agv);
 
         var mockGetAgvsClient = new Mock<IRequestClient<GetAgvs>>();
         var responseMock = new Mock<Response<GotAgvs>>();
@@ -49,6 +49,6 @@ public class AgvPropertyChangedConsumerTest
         (await fixture.ConsumerHarness!.Consumed.Any<AgvPropertyChanged>()).ShouldBeTrue();
 
         fixture.MockHub.Verify(h => h.SendAgvStateAsync(
-            It.Is<global::TransportOrder.Messages.MessageContent.Agv>(o => o.CorrelationId == agv.CorrelationId), false), Times.Once);
+            It.Is<Messages.MessageContent.Agv>(o => o.CorrelationId == agv.CorrelationId), false), Times.Once);
     }
 }

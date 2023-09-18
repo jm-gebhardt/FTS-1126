@@ -1,8 +1,9 @@
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
 using JetBrains.Annotations;
 using MassTransit;
-using TransportOrder.Domain.Exceptions;
-using TransportOrder.Domain.Repositories;
-using TransportOrder.Messages.Requests.Agv;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
 
@@ -11,7 +12,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHan
 /// Gets the agv from agvRegistry and set status of agv from Discovered to Idle
 /// </summary>
 [UsedImplicitly]
-public class RequestAgvGraphCommandHandler : IConsumer<global::TransportOrder.Messages.Commands.Agv.RequestAgvGraph>
+public class RequestAgvGraphCommandHandler : IConsumer<RequestAgvGraph>
 {
     private readonly IAgvRegistry _agvRegistry;
     private readonly IBus _bus;
@@ -33,7 +34,7 @@ public class RequestAgvGraphCommandHandler : IConsumer<global::TransportOrder.Me
     /// <param name="context"></param>
     /// <returns></returns>
     /// <exception cref="AgvNotFoundException"></exception>
-    public async Task Consume(ConsumeContext<global::TransportOrder.Messages.Commands.Agv.RequestAgvGraph> context)
+    public async Task Consume(ConsumeContext<RequestAgvGraph> context)
     {
         var request = context.Message;
         var agv = _agvRegistry.GetAgv(request.CorrelationId);

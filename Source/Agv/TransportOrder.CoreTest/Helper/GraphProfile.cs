@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using TransportOrder.Domain.Models.Graph;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Graph;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 

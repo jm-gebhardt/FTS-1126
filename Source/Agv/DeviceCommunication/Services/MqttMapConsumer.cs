@@ -1,4 +1,6 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
+﻿using System.Globalization;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 using JetBrains.Annotations;
@@ -34,7 +36,7 @@ public class MqttMapConsumer : IConsumer<MqttMap>
             _logger.LogError("Missing serialNumber in MqttMap message: {Status}", context.Message);
             throw new InvalidOperationException($"Cannot handle {typeof(MqttMap)} message, serialNumber must not be null or empty");
         }
-        if (!DateTime.TryParse(context.Message.ModificationDate, null, System.Globalization.DateTimeStyles.RoundtripKind, out var modificationDate))
+        if (!DateTime.TryParse(context.Message.ModificationDate, null, DateTimeStyles.RoundtripKind, out var modificationDate))
         {
             _logger.LogError("Invalid datetime format for modification date: {Status}", context.Message);
             throw new FormatException($"Cannot handle {typeof(MqttMap)} message, modification date need to be in ISO8601 format");
@@ -53,7 +55,7 @@ public class MqttMapConsumer : IConsumer<MqttMap>
             await context.Publish(new AgvMapReceived(
                 context.Message.SerialNumber.ToGuid(),
                 context.Message.SerialNumber,
-                new Common.Messages.AgvManagement.AgvMap(
+                new AgvMap(
                     context.Message.MapId.ToGuid(),
                     context.Message.MapId,
                     modificationDate,

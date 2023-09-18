@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using static Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.AgvData;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
@@ -61,7 +62,7 @@ public record AgvDataDto
     /// <param name="payload">The max. payload of the AGV in [kg]</param>
     /// <param name="sensors">The list of sensors in the agv</param>
     /// <returns></returns>
-    [JetBrains.Annotations.PublicAPI]
+    [PublicAPI]
     public AgvDataDto(
         Guid correlationId,
         string model,

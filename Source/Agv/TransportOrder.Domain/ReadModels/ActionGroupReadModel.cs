@@ -1,7 +1,7 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using JetBrains.Annotations;
 
-namespace TransportOrder.Domain.ReadModels;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
 
 /// <summary>
 /// Represents a read model for agv action groups.

@@ -1,6 +1,7 @@
-using ActionGroup = TransportOrder.Domain.Models.ActionGroup.ActionGroup;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
+using JetBrains.Annotations;
 
-namespace TransportOrder.Domain.Exceptions;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 
 /// <summary>
 /// ActionGroup state is not valid
@@ -8,7 +9,7 @@ namespace TransportOrder.Domain.Exceptions;
 public class ActionGroupStateInvalidException : Exception
 {
     /// <param name="actionGroup">ActionGroup</param>
-    [JetBrains.Annotations.UsedImplicitly]
+    [UsedImplicitly]
     public ActionGroupStateInvalidException(ActionGroup actionGroup) : base($"ActionGroup State for {actionGroup.CorrelationId} is invalid. Action states: {string.Join(", ", actionGroup.Actions.Select(a => a.State))}")
     {
     }

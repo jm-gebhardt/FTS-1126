@@ -1,12 +1,12 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Helper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
-using TransportOrder.Messages.Requests.Agv;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Hubs;
 
@@ -19,9 +19,9 @@ public class AgvHubTest
     public async Task SendAgvStateAsync_SendsAgvDto_To_Discovered()
     {
         HubFixture<AgvPublisher, AgvHub, IAgvClient> fixture = new HubFixture<AgvPublisher, AgvHub, IAgvClient>()
-            .WithMapper(new AgvProfile(), new global::TransportOrder.Messages.Profiles.AgvProfile(), new ActionProfile(), new AgvErrorProfile(), new AgvPositionProfile())
+            .WithMapper(new AgvProfile(), new Messages.Profiles.AgvProfile(), new ActionProfile(), new AgvErrorProfile(), new AgvPositionProfile())
             .Build();
-        var agv = fixture.Mapper.Map<global::TransportOrder.Messages.MessageContent.Agv>(AgvGenerator.GenerateIdleAgv());
+        var agv = fixture.Mapper.Map<Messages.MessageContent.Agv>(AgvGenerator.GenerateIdleAgv());
 
         await fixture.Publisher.SendAgvStateAsync(agv, true);
 
@@ -32,9 +32,9 @@ public class AgvHubTest
     public async Task SendAgvStateAsync_SendsAgvDto_To_AgvChanged()
     {
         HubFixture<AgvPublisher, AgvHub, IAgvClient> fixture = new HubFixture<AgvPublisher, AgvHub, IAgvClient>()
-            .WithMapper(new AgvProfile(), new global::TransportOrder.Messages.Profiles.AgvProfile(), new ActionProfile(), new AgvErrorProfile(), new AgvPositionProfile())
+            .WithMapper(new AgvProfile(), new Messages.Profiles.AgvProfile(), new ActionProfile(), new AgvErrorProfile(), new AgvPositionProfile())
             .Build();
-        var agv = fixture.Mapper.Map<global::TransportOrder.Messages.MessageContent.Agv>(AgvGenerator.GenerateIdleAgv());
+        var agv = fixture.Mapper.Map<Messages.MessageContent.Agv>(AgvGenerator.GenerateIdleAgv());
 
         await fixture.Publisher.SendAgvStateAsync(agv, false);
 

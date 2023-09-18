@@ -1,6 +1,6 @@
 using MassTransit;
 
-namespace TransportOrder.Messages.Events.Agv;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 
 /// <summary>
 /// An event reporting that the last node id of an AGV has changed

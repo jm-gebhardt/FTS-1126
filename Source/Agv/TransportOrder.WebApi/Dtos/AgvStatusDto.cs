@@ -1,4 +1,6 @@
-﻿namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos;
+﻿using JetBrains.Annotations;
+
+namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos;
 
 /// <summary>
 /// AgvStatus model
@@ -10,7 +12,7 @@
 /// <param name="Charging"></param>
 /// <param name="Disturbed"></param>
 /// <param name="LastNodeId"></param>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public record AgvStatusDto(
     string? OrderId,
     bool? Busy,

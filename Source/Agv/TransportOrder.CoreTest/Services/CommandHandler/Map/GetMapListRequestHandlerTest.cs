@@ -1,8 +1,8 @@
 ﻿using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Map;
 using MassTransit;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
-using TransportOrder.Messages.Requests.Map;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.CommandHandler.Map;
 
@@ -17,7 +17,7 @@ public class GetMapListRequestHandlerTest
             .Build();
 
         Response<GotMapList> response = await fixture.GetResponseAsync<GotMapList>(new GetMapList());
-        List<global::TransportOrder.Messages.Requests.Map.Map> maps = response.Message.Maps;
+        List<Messages.Requests.Map.Map> maps = response.Message.Maps;
 
         maps.ShouldNotBeEmpty();
 

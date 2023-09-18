@@ -3,7 +3,6 @@ using JetBrains.Annotations;
 using MassTransit;
 using MassTransit.Mediator;
 using Microsoft.Extensions.DependencyInjection;
-using MediatorTestHarness = Gebhardt.StoreWare.Agv.Common.Testing.TestHarness.MediatorTestHarness;
 
 namespace Gebhardt.StoreWare.Agv.Common.Testing;
 

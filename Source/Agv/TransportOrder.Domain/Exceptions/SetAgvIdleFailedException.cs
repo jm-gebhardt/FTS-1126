@@ -1,4 +1,4 @@
-﻿namespace TransportOrder.Domain.Exceptions;
+﻿namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 
 /// <summary>
 /// Exception thrown when setting AGV to idle failed.

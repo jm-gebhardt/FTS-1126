@@ -1,10 +1,12 @@
 ﻿
+using JetBrains.Annotations;
+
 namespace Gebhardt.StoreWare.Agv.Common.Logging;
 
 /// <summary>
 /// Static class assembling every constant related to logging
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public static class LoggingConstants
 {
     /// <summary>

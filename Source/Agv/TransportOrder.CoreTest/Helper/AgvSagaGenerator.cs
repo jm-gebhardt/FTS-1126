@@ -1,6 +1,6 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
-using TransportOrder.Domain.Models.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 

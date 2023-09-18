@@ -1,6 +1,6 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 
-namespace TransportOrder.Messages.Events.ActionGroup;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.ActionGroup;
 
 /// <summary>
 /// Represents an event that is raised when an agv has no other actions to perform.

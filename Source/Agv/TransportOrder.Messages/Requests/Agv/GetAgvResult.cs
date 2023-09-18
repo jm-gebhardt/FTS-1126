@@ -1,6 +1,6 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 
-namespace TransportOrder.Messages.Requests.Agv;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
 
 /// <summary>
 /// The result of <see cref="GetAgvRequest"/>

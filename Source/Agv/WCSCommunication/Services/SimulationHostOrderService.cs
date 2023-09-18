@@ -1,11 +1,10 @@
-﻿using Microsoft.Extensions.Logging;
-using MassTransit;
-using Gebhardt.StoreWare.Agv.Common.Messages;
-
+﻿using Gebhardt.StoreWare.Agv.Common.Messages;
 using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.WCSCommunication.CmdOptions;
 using Gebhardt.StoreWare.Agv.WCSCommunication.Messages;
+using MassTransit;
+using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services;
 

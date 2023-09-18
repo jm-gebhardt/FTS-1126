@@ -1,9 +1,12 @@
-﻿using Microsoft.Extensions.Logging;
-using MassTransit;
-using Gebhardt.StoreWare.Agv.Common.Extensions;
+﻿using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Events;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.States;
+using JetBrains.Annotations;
+using MassTransit;
+using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
 
@@ -13,7 +16,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
 /// <remarks>
 /// Request station list and graph and merge both to an internal graph passed to the service AgvManagement.
 /// </remarks>
-[JetBrains.Annotations.UsedImplicitly]
+[UsedImplicitly]
 public sealed class AgvGraphBuilderStateMachine : MassTransitStateMachine<AgvGraphBuilderSaga>
 {
     private readonly ILogger<AgvGraphBuilderStateMachine> _logger;
@@ -21,31 +24,31 @@ public sealed class AgvGraphBuilderStateMachine : MassTransitStateMachine<AgvGra
     /// <summary>
     /// Initial request for AGV graph has been received.
     /// </summary>
-    [JetBrains.Annotations.UsedImplicitly]
+    [UsedImplicitly]
     public State RequestAgvGraphReceived { get; private set; } = default!;
 
     /// <summary>
     /// Station list has been received.
     /// </summary>
-    [JetBrains.Annotations.UsedImplicitly]
+    [UsedImplicitly]
     public State StationListReceived { get; private set; } = default!;
 
     /// <summary>
     /// Event fired on <see cref="RequestAgvGraph"/> message.
     /// </summary>
-    [JetBrains.Annotations.UsedImplicitly]
+    [UsedImplicitly]
     public Event<RequestAgvGraph> RequestAgvGraphEvent { get; private set; } = default!;
 
     /// <summary>
     /// Event fired on <see cref="StationListReceived"/> message.
     /// </summary>
-    [JetBrains.Annotations.UsedImplicitly]
+    [UsedImplicitly]
     public Event<InternalStationListReceived> StationListEvent { get; private set; } = default!;
 
     /// <summary>
     /// Event fired on <see cref="InternalGraphReceived"/> message.
     /// </summary>
-    [JetBrains.Annotations.UsedImplicitly]
+    [UsedImplicitly]
     public Event<InternalGraphReceived> GraphEvent { get; private set; } = default!;
 
     /// <summary>
@@ -80,7 +83,7 @@ public sealed class AgvGraphBuilderStateMachine : MassTransitStateMachine<AgvGra
             // Create a new request ID and store in saga instance.
             .Then(c => c.Saga.CurrentMqttRequestId = Guid.NewGuid())
             // Request the station list.
-            .Then(c => c.PublishMqtt(new MqttMessages.MqttRequestStationList(c.Message.AgvId, c.Saga.CurrentMqttRequestId), null));
+            .Then(c => c.PublishMqtt(new MqttRequestStationList(c.Message.AgvId, c.Saga.CurrentMqttRequestId), null));
 
     private EventActivityBinder<AgvGraphBuilderSaga, InternalStationListReceived> StationListHandler() =>
         When(StationListEvent)
@@ -94,7 +97,7 @@ public sealed class AgvGraphBuilderStateMachine : MassTransitStateMachine<AgvGra
                     // Create a new request ID and store in saga instance.
                     .Then(c => c.Saga.CurrentMqttRequestId = Guid.NewGuid())
                     // Request the graph.
-                    .Then(c => c.PublishMqtt(new MqttMessages.MqttRequestGraph(c.Message.StationList.SerialNumber, c.Saga.CurrentMqttRequestId), null)),
+                    .Then(c => c.PublishMqtt(new MqttRequestGraph(c.Message.StationList.SerialNumber, c.Saga.CurrentMqttRequestId), null)),
                 // The response does not correlate to the request
                 e => e.Then(_ => _logger.LogWarning("{MessageType} does not match the request", nameof(InternalStationListReceived))));
 
@@ -109,7 +112,7 @@ public sealed class AgvGraphBuilderStateMachine : MassTransitStateMachine<AgvGra
                     // Build the internal graph and store in the saga instance.
                     .Then(c => c.Saga.MergeGraph())
                     // Respond to the initial request with the graph
-                    .Then(c => c.Publish(new Common.Messages.AgvManagement.Events.AgvGraphReceived(c.Saga.CorrelationId, c.Message.Graph.SerialNumber, c.Saga.AgvGraph!)))
+                    .Then(c => c.Publish(new AgvGraphReceived(c.Saga.CorrelationId, c.Message.Graph.SerialNumber, c.Saga.AgvGraph!)))
                     .Finalize(),
                 // The response does not correlate to the request
                 e => e.Then(_ => _logger.LogWarning("{MessageType} does not match the request", nameof(InternalGraphReceived))))

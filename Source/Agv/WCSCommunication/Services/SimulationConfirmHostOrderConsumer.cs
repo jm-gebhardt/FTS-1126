@@ -1,6 +1,7 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Gebhardt.StoreWare.Agv.WCSCommunication.Messages.Events;
+using JetBrains.Annotations;
 using MassTransit;
-using Gebhardt.StoreWare.Agv.WCSCommunication.Messages.Events;
+using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services;
 
@@ -17,7 +18,7 @@ public class SimulationConfirmHostOrderConsumer :
     /// Create consumer with message handler delegate for simulation.
     /// </summary>
     /// <param name="logger">Mandatory logger facility.</param>
-    [JetBrains.Annotations.PublicAPI]
+    [PublicAPI]
     public SimulationConfirmHostOrderConsumer(ILogger<SimulationConfirmHostOrderConsumer> logger)
     {
         _logger = logger;

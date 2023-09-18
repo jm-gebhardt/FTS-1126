@@ -1,9 +1,9 @@
 ﻿using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Graph;
 using JetBrains.Annotations;
-using TransportOrder.Domain.Models.Graph;
 
-namespace TransportOrder.Messages.Profiles;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles;
 
 /// <summary>
 /// The profile for mapping between <see cref="AgvGraph"/> and <see cref="EfGraph"/>

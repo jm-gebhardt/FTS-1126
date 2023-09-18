@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Gebhardt.StoreWare.Agv.Common.Logging;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.CommonTest;
@@ -15,7 +16,7 @@ public class LoggingInitialTest
     [TestMethod]
     public void TestFactory()
     {
-        var initialLogger = Common.Logging.InitialLogger.Create<LoggingInitialTest>();
+        var initialLogger = InitialLogger.Create<LoggingInitialTest>();
         initialLogger.ShouldNotBeNull();
     }
 }

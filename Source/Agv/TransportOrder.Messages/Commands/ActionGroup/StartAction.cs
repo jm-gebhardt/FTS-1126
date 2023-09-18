@@ -1,6 +1,6 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 
-namespace TransportOrder.Messages.Commands.ActionGroup;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
 
 /// <summary>
 /// Provides a command to start an <see cref="Action"/> for an agv.

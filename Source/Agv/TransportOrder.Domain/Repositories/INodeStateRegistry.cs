@@ -1,6 +1,7 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using JetBrains.Annotations;
 
-namespace TransportOrder.Domain.Repositories;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 
 /// <summary>
 /// Interface for locking nodes 
@@ -36,7 +37,7 @@ public interface INodeStateRegistry
     /// </summary>
     /// <param name="agvCorrelationId"></param>
     /// <returns></returns>
-    [JetBrains.Annotations.UsedImplicitly]
+    [UsedImplicitly]
     public Task<bool> UnReserveNodeAsync(Guid agvCorrelationId);
 
     /// <summary>
@@ -61,7 +62,7 @@ public interface INodeStateRegistry
     /// </summary>
     /// <param name="nodeId"></param>
     /// <returns></returns>
-    [JetBrains.Annotations.UsedImplicitly]
+    [UsedImplicitly]
     public Task<bool> FreeNodeAsync(string nodeId);
 
     /// <summary>

@@ -1,7 +1,9 @@
-namespace TransportOrder.Messages.Requests.Agv;
+using JetBrains.Annotations;
+
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
 
 /// <summary>
 /// Represents the GetAgv request which returns a list of Agvs
 /// </summary>
-[JetBrains.Annotations.UsedImplicitly]
+[UsedImplicitly]
 public record GetAgvs(ICollection<Guid> CorrelationIds);

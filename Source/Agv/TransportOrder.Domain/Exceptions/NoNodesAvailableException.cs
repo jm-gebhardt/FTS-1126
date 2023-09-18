@@ -1,5 +1,5 @@
 
-namespace TransportOrder.Domain.Exceptions;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 
 /// <summary>
 /// There are no nodes available

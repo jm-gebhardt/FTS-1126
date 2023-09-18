@@ -1,13 +1,14 @@
 using Gebhardt.StoreWare.Agv.Common.Contracts;
+using JetBrains.Annotations;
 using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
-namespace TransportOrder.Messages.Events.Agv;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 
 /// <summary>
 /// An event that provides a assigned AGV for an order 
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public record AgvAssignmentSucceeded : CorrelatedBy<Guid>, IAgvId
 {
     /// <inheritdoc/>

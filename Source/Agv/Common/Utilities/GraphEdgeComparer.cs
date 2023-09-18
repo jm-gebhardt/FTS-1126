@@ -1,11 +1,12 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.Common.Utilities;
 
 /// <summary>
 /// Comparer to check for equal edges according to source and destination
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public class GraphEdgeComparer : IEqualityComparer<GraphEdge>
 {
     /// <inheritdoc />

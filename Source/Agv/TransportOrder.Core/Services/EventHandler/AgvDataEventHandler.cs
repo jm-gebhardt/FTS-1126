@@ -1,14 +1,15 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
+using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
-using TransportOrder.Domain.Repositories;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.EventHandler;
 
 /// <summary>
 /// Consumer for <see cref="AgvDataReceived"/> messages
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public class AgvDataEventHandler : IConsumer<AgvDataReceived>
 {
     private readonly ILogger<AgvDataEventHandler> _logger;

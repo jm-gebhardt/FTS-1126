@@ -1,12 +1,13 @@
 ﻿using System.Linq.Expressions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using JetBrains.Annotations;
 
-namespace TransportOrder.Domain.Repositories;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 
 /// <summary>
 /// Interface for the AgvRegistry
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public interface IAgvGraphRegistry
 {
     /// <summary>

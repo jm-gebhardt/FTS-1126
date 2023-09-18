@@ -1,7 +1,7 @@
 using AutoMapper;
-using TransportOrder.Messages.Requests.Map;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Map;
 
-namespace TransportOrder.Messages.Profiles;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles;
 
 /// <summary>
 /// Profile for Map
@@ -13,8 +13,8 @@ public class MapProfile : Profile
     /// </summary>
     public MapProfile()
     {
-        CreateMap<Domain.Models.Map.Map, Map>()
-            .ForCtorParam(nameof(Map.RelatedAgvs), opt => 
+        CreateMap<Map, Requests.Map.Map>()
+            .ForCtorParam(nameof(Requests.Map.Map.RelatedAgvs), opt => 
                 opt.MapFrom((src, ctx) => new RelatedMapAgvValueResolver().Resolve(src, null!, null!, ctx)));
     }
 }

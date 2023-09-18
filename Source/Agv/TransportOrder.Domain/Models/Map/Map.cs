@@ -1,7 +1,7 @@
 ﻿using JetBrains.Annotations;
 using SkiaSharp;
 
-namespace TransportOrder.Domain.Models.Map;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Map;
 
 /// <summary>
 /// class representing the Map table in Database

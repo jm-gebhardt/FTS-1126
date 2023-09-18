@@ -1,4 +1,6 @@
-﻿namespace TransportOrder.Messages.Requests.Agv;
+﻿using JetBrains.Annotations;
+
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
 
 /// <summary>
 /// Defines a result for the GetAgvData request
@@ -47,7 +49,7 @@ public record AgvData
     public long? Payload { get; init; }
 
     /// <summary>The list of sensors in the agv</summary>
-    public Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.AgvData.Sensor[] Sensors { get; init; }
+    public Common.Messages.AgvManagement.AgvData.Sensor[] Sensors { get; init; }
 
     /// <param name="correlationId">The CorrelationId of the agv</param>
     /// <param name="model">The model name of the AGV</param>
@@ -63,7 +65,7 @@ public record AgvData
     /// <param name="payload">The max. payload of the AGV in [kg]</param>
     /// <param name="sensors">The list of sensors in the agv</param>
     /// <returns></returns>
-    [JetBrains.Annotations.PublicAPI]
+    [PublicAPI]
     public AgvData(
         Guid correlationId,
         string model,
@@ -77,7 +79,7 @@ public record AgvData
         double? width,
         double? length,
         long? payload,
-        Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.AgvData.Sensor[] sensors
+        Common.Messages.AgvManagement.AgvData.Sensor[] sensors
     )
     {
         CorrelationId = correlationId;

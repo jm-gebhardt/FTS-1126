@@ -1,8 +1,10 @@
-﻿using Microsoft.Extensions.Logging;
-using MassTransit;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
+using JetBrains.Annotations;
+using MassTransit;
+using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
 
@@ -12,7 +14,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
 /// <remarks>
 /// This is passed to the service AgvManagement to have kept DeviceCommunication as a simple proxy.
 /// </remarks>
-[JetBrains.Annotations.UsedImplicitly]
+[UsedImplicitly]
 public class AgvDataConsumer : IConsumer<MqttAgvData>
 {
     private readonly ILogger<AgvDataConsumer> _logger;
@@ -32,7 +34,7 @@ public class AgvDataConsumer : IConsumer<MqttAgvData>
     /// <exception cref="InvalidOperationException">Message content is invalid and cannot be processed.</exception>
     public async Task Consume(ConsumeContext<MqttAgvData> context)
     {
-        var parser = new MessageParsers.AgvDataParser(context.Message);
+        var parser = new AgvDataParser(context.Message);
         _logger.LogInformation("Incoming AgvData: {AgvData} / {CorrelationId}", context.Message.SerialNumber, context.Message.RequestId);
 
         try

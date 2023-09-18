@@ -1,6 +1,6 @@
-﻿using TransportOrder.Messages.Commands.Agv;
+﻿using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
 
-namespace TransportOrder.Messages.Requests.Agv;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
 
 /// <summary>
 /// Represents the response of the <see cref="SetAgvForceIdle"/>

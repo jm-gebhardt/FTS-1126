@@ -4,14 +4,15 @@ using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.SagaStateMachines;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
+using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
-using TransportOrder.Domain.Models.Agv;
-using TransportOrder.Domain.Models.Settings;
-using TransportOrder.Messages.Events.Agv;
-using TransportOrder.Messages.Requests.Agv;
 using AgvData = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.AgvData;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.SagaStateMachines;
@@ -20,7 +21,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.SagaStateMachi
 public class AgvStateMachineTest
 {
     #region Dummy consumer
-    [JetBrains.Annotations.PublicAPI]
+    [PublicAPI]
     public class AgvPropertyChangedConsumerDummy : IConsumer<AgvPropertyChanged>
     {
         public async Task Consume(ConsumeContext<AgvPropertyChanged> context)
@@ -284,10 +285,10 @@ public class AgvStateMachineTest
         (await fixture.SagaHarness.Exists(correlationId)).ShouldBe(correlationId);
         var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
         // Publishing requests should update corresponding last requested timestamp
-        ((DateTime)saga.AgvDataRequestedLastTime!).ShouldBeGreaterThan(utcStart);
-        ((DateTime)saga.AgvDataRequestedLastTime!).ShouldBeLessThan(DateTime.UtcNow);
-        ((DateTime)saga.AgvGraphRequestedLastTime!).ShouldBeGreaterThan(utcStart);
-        ((DateTime)saga.AgvGraphRequestedLastTime!).ShouldBeLessThan(DateTime.UtcNow);
+        ((DateTime) saga.AgvDataRequestedLastTime!).ShouldBeGreaterThan(utcStart);
+        ((DateTime) saga.AgvDataRequestedLastTime!).ShouldBeLessThan(DateTime.UtcNow);
+        ((DateTime) saga.AgvGraphRequestedLastTime!).ShouldBeGreaterThan(utcStart);
+        ((DateTime) saga.AgvGraphRequestedLastTime!).ShouldBeLessThan(DateTime.UtcNow);
     }
 
     /// <summary>
@@ -712,7 +713,7 @@ public class AgvStateMachineTest
                 x.AddConsumer<AgvPropertyChangedConsumerDummy>();
             },
             inMemoryConfiguration: (_, cfg) => cfg.UseDelayedMessageScheduler(),
-            settings: new AgvSettings { AgvOfflineTimeoutMsWhileIdle = agvOfflineTimeoutMsWhileIdle, AgvOfflineTimeoutMsWhileBusy = agvOfflineTimeoutMsWhileBusy },
+            settings: new AgvSettings {AgvOfflineTimeoutMsWhileIdle = agvOfflineTimeoutMsWhileIdle, AgvOfflineTimeoutMsWhileBusy = agvOfflineTimeoutMsWhileBusy},
             inactivityTimeout: TimeSpan.FromMilliseconds(2 * Math.Max(agvOfflineTimeoutMsWhileIdle, agvOfflineTimeoutMsWhileBusy))
         );
 
@@ -724,7 +725,7 @@ public class AgvStateMachineTest
                 fixture.Machine.Idle.Name,
                 new AgvStatus(correlationId, null, true, true, 10, true, true)
             )
-            { IsOnline = true };
+            {IsOnline = true};
         fixture.Add(agv);
 
         // send status once to activate scheduler
@@ -772,7 +773,7 @@ public class AgvStateMachineTest
                 x.AddConsumer<AgvPropertyChangedConsumerDummy>();
             },
             inMemoryConfiguration: (_, cfg) => cfg.UseDelayedMessageScheduler(),
-            settings: new AgvSettings { AgvOfflineTimeoutMsWhileIdle = agvOfflineTimeoutMsWhileIdle, AgvOfflineTimeoutMsWhileBusy = agvOfflineTimeoutMsWhileBusy },
+            settings: new AgvSettings {AgvOfflineTimeoutMsWhileIdle = agvOfflineTimeoutMsWhileIdle, AgvOfflineTimeoutMsWhileBusy = agvOfflineTimeoutMsWhileBusy},
             inactivityTimeout: TimeSpan.FromMilliseconds(2 * Math.Max(agvOfflineTimeoutMsWhileIdle, agvOfflineTimeoutMsWhileBusy))
         );
 
@@ -784,7 +785,7 @@ public class AgvStateMachineTest
                 fixture.Machine.Idle.Name,
                 new AgvStatus(correlationId, "first", false, true, 60, false, false)
             )
-            { IsOnline = true };
+            {IsOnline = true};
         fixture.Add(agv);
 
         var agvStatus1 = new AgvStatus(correlationId, "first", false, true, 60, false, false);

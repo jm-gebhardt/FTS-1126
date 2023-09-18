@@ -1,4 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.SagaStateMachines;
 
@@ -15,7 +16,7 @@ public interface IAgvSagaCommunicationService
     /// <param name="ignoreLock">If true the IsLocked of the Agv maybe true</param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    [JetBrains.Annotations.UsedImplicitly]
+    [UsedImplicitly]
     Task SetBusyAsync(IAgv agv, bool wakeFromCharging, bool ignoreLock, CancellationToken cancellationToken);
 
     /// <summary>

@@ -1,6 +1,6 @@
 ﻿using JetBrains.Annotations;
 
-namespace TransportOrder.Domain.Models.Agv;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 
 /// <summary>
 /// Agv State

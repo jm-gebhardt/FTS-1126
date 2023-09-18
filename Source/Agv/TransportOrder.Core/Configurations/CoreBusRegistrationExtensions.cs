@@ -5,15 +5,19 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.CommandHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.EventHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.SagaStateMachines;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Map;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.ActionGroup;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Map;
+using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;
 using MassTransit;
-using TransportOrder.Domain.Models.Agv;
-using TransportOrder.Messages.Commands.ActionGroup;
-using TransportOrder.Messages.Commands.Agv;
-using TransportOrder.Messages.Commands.Map;
-using TransportOrder.Messages.Requests.ActionGroup;
-using TransportOrder.Messages.Requests.Agv;
-using TransportOrder.Messages.Requests.Map;
-using TransportOrder.Persistence.Ef.DataAccess;
+using LockAgv = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv.LockAgv;
+using RequestAgvData = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv.RequestAgvData;
+using RequestAgvGraph = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv.RequestAgvGraph;
+using UnlockAgv = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv.UnlockAgv;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations;
 
@@ -86,10 +90,10 @@ public static class CoreBusRegistrationExtensions
 
         // agv
         configurator.AddConsumer<RequestAgvDataCommandHandler>();
-        configurator.AddRequestClient<global::TransportOrder.Messages.Commands.Agv.RequestAgvData>();
+        configurator.AddRequestClient<RequestAgvData>();
 
         configurator.AddConsumer<RequestAgvGraphCommandHandler>();
-        configurator.AddRequestClient<global::TransportOrder.Messages.Commands.Agv.RequestAgvGraph>();
+        configurator.AddRequestClient<RequestAgvGraph>();
 
         configurator.AddConsumer<GetAgvDataRequestHandler>();
         configurator.AddRequestClient<GetAgvDataRequest>();
@@ -105,8 +109,8 @@ public static class CoreBusRegistrationExtensions
         configurator.AddRequestClient<GetAgv>();
 
         configurator.AddConsumer<LockAndUnlockAgvCommandHandler>();
-        configurator.AddRequestClient<global::TransportOrder.Messages.Commands.Agv.LockAgv>();
-        configurator.AddRequestClient<global::TransportOrder.Messages.Commands.Agv.UnlockAgv>();
+        configurator.AddRequestClient<LockAgv>();
+        configurator.AddRequestClient<UnlockAgv>();
 
         configurator.AddConsumer<SetAgvForceIdleCommandHandler>();
         configurator.AddRequestClient<SetAgvForceIdle>();

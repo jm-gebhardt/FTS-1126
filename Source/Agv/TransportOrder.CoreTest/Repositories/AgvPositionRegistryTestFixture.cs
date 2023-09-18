@@ -1,15 +1,16 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Services.Detectors;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Services.Detectors;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
+using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
 using MassTransit;
 using Moq;
-using TransportOrder.Domain.Models.Agv;
-using TransportOrder.Domain.SemaphoreProvider;
-using TransportOrder.Persistence.Ef.Repositories;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Repositories;
 
 internal class AgvPositionRegistryTestFixture
 {
-    private readonly Common.Messages.AgvManagement.AgvPosition _agvPosition = new(true, 1, 2, 3, 0);
+    private readonly AgvPosition _agvPosition = new(true, 1, 2, 3, 0);
 
     public readonly Guid CorrelationId = Guid.NewGuid();
     public readonly string AgvId = "myAgv";

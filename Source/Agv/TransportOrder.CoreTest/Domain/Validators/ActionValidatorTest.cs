@@ -1,9 +1,9 @@
 ﻿using FluentValidation.TestHelper;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Validators;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TransportOrder.Domain.Validators;
-using AgvAction = TransportOrder.Domain.Models.ActionGroup.AgvAction;
+using AgvAction = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.AgvAction;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Domain.Validators;
 

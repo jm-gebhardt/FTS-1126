@@ -1,4 +1,5 @@
 using Gebhardt.StoreWare.Agv.Common.Contracts;
+using JetBrains.Annotations;
 using MassTransit;
 
 namespace Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
@@ -6,7 +7,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 /// <summary>
 /// Agv Action
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public record AgvAction : CorrelatedBy<Guid>, IParentedBy<Guid>, ISaga
 {
     /// <summary>
@@ -73,7 +74,7 @@ public record AgvAction : CorrelatedBy<Guid>, IParentedBy<Guid>, ISaga
     /// <summary>
     /// Just to satisfy Entity Framework
     /// </summary>
-    [JetBrains.Annotations.UsedImplicitly]
+    [UsedImplicitly]
     private AgvAction()
     {
         CorrelationId = Guid.Empty;

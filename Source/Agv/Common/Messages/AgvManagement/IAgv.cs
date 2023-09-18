@@ -1,4 +1,5 @@
 using Gebhardt.StoreWare.Agv.Common.Contracts;
+using JetBrains.Annotations;
 using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
@@ -7,7 +8,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 /// <summary>
 /// IAgv is a read-only interface to provide current agv data
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public interface IAgv : CorrelatedBy<Guid>, IAgvId
 {
     /// <summary>

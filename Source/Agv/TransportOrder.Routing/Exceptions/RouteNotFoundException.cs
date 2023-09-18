@@ -1,6 +1,6 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 
-namespace TransportOrder.Routing.Exceptions;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Routing.Exceptions;
 
 /// <summary>
 /// When there was no route found for the given source/destination nodes

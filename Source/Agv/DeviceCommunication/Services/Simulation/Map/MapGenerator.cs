@@ -1,4 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using JetBrains.Annotations;
 using SkiaSharp;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Map;
@@ -167,6 +168,6 @@ public class MapGenerator
     /// </summary>
     /// <param name="agvMap"></param>
     /// <returns></returns>
-    [JetBrains.Annotations.PublicAPI]
+    [PublicAPI]
     public static SKImage GetPng(AgvMap agvMap) => SKImage.FromEncodedData(Convert.FromBase64String(agvMap.ImageData));
 }

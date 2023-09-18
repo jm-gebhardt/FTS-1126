@@ -1,7 +1,7 @@
 using Gebhardt.StoreWare.Agv.Common.Exceptions;
-using ActionGroup = TransportOrder.Domain.Models.ActionGroup.ActionGroup;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
 
-namespace TransportOrder.Domain.Exceptions;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 
 /// <summary>
 /// ActionGroup was not found
@@ -10,7 +10,7 @@ public class ActionGroupNotFoundException : NotFoundException
 {
     /// <inheritdoc cref="ActionGroupNotFoundException"/>
     /// <param name="actionGroupCorrelationId"></param>
-    public ActionGroupNotFoundException(Guid actionGroupCorrelationId) 
+    public ActionGroupNotFoundException(Guid actionGroupCorrelationId)
         : base(nameof(ActionGroup), "ActionGroupCorrelationId", actionGroupCorrelationId)
     {
     }

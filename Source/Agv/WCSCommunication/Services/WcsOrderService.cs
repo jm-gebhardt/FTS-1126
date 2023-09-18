@@ -1,6 +1,3 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using MassTransit;
 using Gebhardt.StoreWare.Agv.Common.Messages;
 using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Commands;
 using Gebhardt.StoreWare.Agv.Common.Services;
@@ -8,6 +5,10 @@ using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.WCSCommunication.Db;
 using Gebhardt.StoreWare.Agv.WCSCommunication.Db.Models;
 using Gebhardt.StoreWare.Agv.WCSCommunication.Messages;
+using JetBrains.Annotations;
+using MassTransit;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services;
 
@@ -47,7 +48,7 @@ public class WcsOrderHandler : IPollable
     /// Handle new transport orders where RecordType == RecordType.TransportOrder
     /// </summary>
     /// <param name="cancellationToken"></param>
-    [JetBrains.Annotations.PublicAPI]
+    [PublicAPI]
     public async Task HandleNewTransportOrders(CancellationToken cancellationToken = default)
     {
         await using var context = await _contextFactory.CreateDbContextAsync(cancellationToken);
@@ -78,7 +79,7 @@ public class WcsOrderHandler : IPollable
     /// Handle incoming orders to be cancelled with RecordType == RecordType.CancelRequest
     /// </summary>
     /// <param name="cancellationToken"></param>
-    [JetBrains.Annotations.PublicAPI]
+    [PublicAPI]
     public async Task HandleIncomingCancelRequests(CancellationToken cancellationToken = default)
     {
         await using var context = await _contextFactory.CreateDbContextAsync(cancellationToken);

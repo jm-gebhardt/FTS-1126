@@ -1,14 +1,14 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.SagaStateMachines;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Map;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
-using TransportOrder.Domain.Models.Agv;
-using TransportOrder.Domain.Repositories;
-using TransportOrder.Messages.Requests.Map;
-using Map = TransportOrder.Domain.Models.Map.Map;
+using Map = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Map.Map;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers;
 
@@ -20,9 +20,9 @@ public class MapControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
 
     private readonly Mock<IAgvGraphRegistry> _agvGraphRegistry = new();
 
-    private readonly string[] _agvIds = { "AGV001", "AGV002", "AGV003" };
-    private readonly string[] _orders = { "ORDER001", "ORDER002", "" };
-    private readonly string[] _states = { nameof(AgvStateMachine.Idle), nameof(AgvStateMachine.Busy), nameof(AgvStateMachine.Discovered) };
+    private readonly string[] _agvIds = {"AGV001", "AGV002", "AGV003"};
+    private readonly string[] _orders = {"ORDER001", "ORDER002", ""};
+    private readonly string[] _states = {nameof(AgvStateMachine.Idle), nameof(AgvStateMachine.Busy), nameof(AgvStateMachine.Discovered)};
 
     private readonly Guid[] _correlationIds =
     {

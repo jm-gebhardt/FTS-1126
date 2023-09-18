@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
@@ -6,7 +7,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 /// <summary>
 /// AGV Graph
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public record AgvGraph : CorrelatedBy<Guid>
 {
     /// <inheritdoc/>
@@ -71,7 +72,7 @@ public record AgvGraph : CorrelatedBy<Guid>
     /// Values for graph usability.
     /// </summary><remarks>
     /// On multiple reasons the first on is noted in the subsequent order</remarks>
-    [JetBrains.Annotations.PublicAPI]
+    [PublicAPI]
     public enum GraphUsability
     {
         /// <summary>
@@ -124,27 +125,27 @@ public record AgvGraph : CorrelatedBy<Guid>
     public enum NodeType
     {
         /// <summary>General WayPoint</summary>
-        [JetBrains.Annotations.UsedImplicitly]
+        [UsedImplicitly]
         WayPoint,
 
         /// <summary>Charging station</summary>
-        [JetBrains.Annotations.UsedImplicitly]
+        [UsedImplicitly]
         Charge,
 
         /// <summary>Pick station</summary>
-        [JetBrains.Annotations.UsedImplicitly]
+        [UsedImplicitly]
         Pick,
 
         /// <summary>Drop station</summary>
-        [JetBrains.Annotations.UsedImplicitly]
+        [UsedImplicitly]
         Drop,
 
         /// <summary>Pick/Drop station</summary>
-        [JetBrains.Annotations.UsedImplicitly]
+        [UsedImplicitly]
         PickDrop,
 
         /// <summary>Waiting point</summary>
-        [JetBrains.Annotations.UsedImplicitly]
+        [UsedImplicitly]
         Park
     }
 }

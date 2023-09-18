@@ -2,7 +2,7 @@ using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace TransportOrder.Persistence.Ef.DataAccess;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;
 
 /// <summary>
 /// Entity Framework Mapping

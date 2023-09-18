@@ -1,5 +1,8 @@
-﻿using MassTransit;
-
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
+using JetBrains.Annotations;
+using MassTransit;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States;
 
@@ -18,7 +21,7 @@ public class AgvGraphBuilderSaga : SagaStateMachineInstance, CorrelatedBy<Guid>
     /// <summary>
     /// Current state of this state machine instance.
     /// </summary>
-    [JetBrains.Annotations.UsedImplicitly]
+    [UsedImplicitly]
     public State CurrentState { get; set; } = default!;
 
     /// <summary>
@@ -30,17 +33,17 @@ public class AgvGraphBuilderSaga : SagaStateMachineInstance, CorrelatedBy<Guid>
     /// <summary>
     /// Station list.
     /// </summary>
-    public MqttMessages.MqttStationList? MqttStationList { get; set; }
+    public MqttStationList? MqttStationList { get; set; }
 
     /// <summary>
     /// Graph.
     /// </summary>
-    public MqttMessages.MqttGraph? MqttGraph { get; set; }
+    public MqttGraph? MqttGraph { get; set; }
 
     /// <summary>
     /// Merged graph.
     /// </summary>
-    public Common.Messages.AgvManagement.AgvGraph? AgvGraph { get; private set; }
+    public AgvGraph? AgvGraph { get; private set; }
 
 
     /// <summary>
@@ -72,7 +75,7 @@ public class AgvGraphBuilderSaga : SagaStateMachineInstance, CorrelatedBy<Guid>
             throw new InvalidOperationException("Graph is missing.");
         }
 
-        var parser = new MessageParsers.StationListParser(MqttStationList, MqttGraph);
+        var parser = new StationListParser(MqttStationList, MqttGraph);
         AgvGraph = parser.Graph;
     }
 }

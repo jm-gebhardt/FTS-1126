@@ -1,8 +1,8 @@
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
+using Gebhardt.StoreWare.Agv.TransportOrder.Routing.Exceptions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
-using TransportOrder.Routing.Exceptions;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Domain.Services.Routing;
 

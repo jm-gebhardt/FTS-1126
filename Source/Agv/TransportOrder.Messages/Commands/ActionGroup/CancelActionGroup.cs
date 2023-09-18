@@ -1,4 +1,4 @@
-﻿namespace TransportOrder.Messages.Commands.ActionGroup;
+﻿namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
 
 /// <summary>
 /// Provides a command to cancel an action group.

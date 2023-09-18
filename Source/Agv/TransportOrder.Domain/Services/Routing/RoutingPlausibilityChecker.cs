@@ -1,8 +1,8 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using TransportOrder.Domain.Models.Node;
-using TransportOrder.Routing.Base;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Node;
+using Gebhardt.StoreWare.Agv.TransportOrder.Routing.Base;
 
-namespace TransportOrder.Domain.Services.Routing;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Routing;
 
 /// <inheritdoc />
 public class RoutingPlausibilityChecker : IRoutingPlausibilityChecker

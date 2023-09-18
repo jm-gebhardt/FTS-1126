@@ -3,7 +3,7 @@ using MassTransit.EntityFrameworkCoreIntegration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace TransportOrder.Persistence.Ef.DataAccess.Configuration;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess.Configuration;
 
 /// <summary>
 /// <see cref="AgvError" /> Entity Framework Mapping

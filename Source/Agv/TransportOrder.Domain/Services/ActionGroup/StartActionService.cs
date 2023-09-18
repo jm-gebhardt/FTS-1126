@@ -1,11 +1,11 @@
 using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
 using MassTransit;
-using AgvAction = TransportOrder.Domain.Models.ActionGroup.AgvAction;
 using MessageAgvAction = Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.AgvAction;
 
-namespace TransportOrder.Domain.Services.ActionGroup;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
 
 /// <inheritdoc />
 public class StartActionService : IStartActionService

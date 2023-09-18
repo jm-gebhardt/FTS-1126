@@ -1,12 +1,13 @@
+using JetBrains.Annotations;
 using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
-namespace TransportOrder.Messages.Events.Agv;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 
 /// <summary>
 /// Event that is raised when an agv was successfully set to idle.
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public record SetAgvIdleSucceeded : CorrelatedBy<Guid>
 {
     /// <inheritdoc/>

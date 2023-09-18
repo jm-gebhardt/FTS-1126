@@ -1,10 +1,10 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Exceptions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using TransportOrder.Domain.Models.Agv;
-using TransportOrder.Domain.Repositories;
-using TransportOrder.Domain.Services.Routing;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Routing;
 
-namespace TransportOrder.Domain.Services.ActionGroup;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
 
 /// <summary>
 /// Simple logic based on the optimization of shortest route

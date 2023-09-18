@@ -1,6 +1,6 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 
-namespace TransportOrder.Domain.Repositories;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 
 /// <summary>
 /// Abstracted interface for AgvDataRegistry

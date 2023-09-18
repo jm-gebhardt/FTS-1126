@@ -1,12 +1,12 @@
 using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Profiles;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
-using TransportOrder.Domain.Profiles;
-using TransportOrder.Domain.Repositories;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Consumer;
 
@@ -33,10 +33,10 @@ public class ConsumerHubTestFixture<TConsumer, THubContext> : MassTransitConsume
             new MapProfile(),
             new AgvErrorProfile(),
             new ActionProfile(),
-            new global::TransportOrder.Messages.Profiles.AgvProfile(),
-            new global::TransportOrder.Messages.Profiles.AgvGraphProfile(),
-            new global::TransportOrder.Messages.Profiles.AgvErrorProfile(),
-            new global::TransportOrder.Messages.Profiles.MapProfile(),
+            new Messages.Profiles.AgvProfile(),
+            new Messages.Profiles.AgvGraphProfile(),
+            new Messages.Profiles.AgvErrorProfile(),
+            new Messages.Profiles.MapProfile(),
             new ActionGroupProfile()
         );
         return mapper;

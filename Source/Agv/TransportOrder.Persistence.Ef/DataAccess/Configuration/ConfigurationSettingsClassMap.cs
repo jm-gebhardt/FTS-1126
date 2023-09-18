@@ -2,7 +2,7 @@ using Gebhardt.StoreWare.Agv.Common.Configurations.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace TransportOrder.Persistence.Ef.DataAccess.Configuration;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess.Configuration;
 
 /// <summary>
 /// 

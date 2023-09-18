@@ -1,6 +1,6 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 
-namespace TransportOrder.Messages.Commands.Map;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Map;
 
 /// <summary>
 /// Provides a command to save a map for an agv.

@@ -2,11 +2,11 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.ActionGroup;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
-using TransportOrder.Messages.Commands.ActionGroup;
-using TransportOrder.Messages.Events.ActionGroup;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.EventHandler;
 
@@ -54,7 +54,7 @@ public class ActionEventHandler : IConsumer<ActionGroupCreatedForAgv>,
     public async Task Consume(ConsumeContext<QueueActionGroup> context)
     {
         _logger.LogInformation("{MessageType} {CorrelationId} received. The ActionGroup is Manual = {IsManual}", nameof(QueueActionGroup), context.Message.CorrelationId, context.Message.ActionGroup.IsManual);
-        await _actionManager.AddActionGroupAsync(_mapper.Map<global::TransportOrder.Domain.Models.ActionGroup.ActionGroup>(context.Message.ActionGroup), context.CancellationToken);
+        await _actionManager.AddActionGroupAsync(_mapper.Map<Domain.Models.ActionGroup.ActionGroup>(context.Message.ActionGroup), context.CancellationToken);
         await context.RespondAsync(new Success());
     }
 

@@ -1,4 +1,5 @@
-﻿using MassTransit;
+﻿using JetBrains.Annotations;
+using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
 namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
@@ -6,7 +7,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 /// <summary>
 /// AGV Map
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public record AgvMap : CorrelatedBy<Guid>
 {
     /// <inheritdoc/>

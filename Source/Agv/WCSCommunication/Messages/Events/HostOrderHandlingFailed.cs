@@ -1,4 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
+using JetBrains.Annotations;
 using MassTransit;
 
 namespace Gebhardt.StoreWare.Agv.WCSCommunication.Messages.Events;
@@ -6,7 +7,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Messages.Events;
 /// <summary>
 /// An event that reports a failure while handling an order
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public record HostOrderHandlingFailed : CorrelatedBy<Guid>
 {
     /// <inheritdoc/>

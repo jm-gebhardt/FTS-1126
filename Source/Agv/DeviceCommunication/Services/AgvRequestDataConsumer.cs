@@ -1,15 +1,16 @@
-﻿using Microsoft.Extensions.Logging;
-using MassTransit;
-using Gebhardt.StoreWare.Agv.Common.Extensions;
+﻿using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
+using JetBrains.Annotations;
+using MassTransit;
+using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
 
 /// <summary>
 /// Execute processing of a agv data request
 /// </summary>
-[JetBrains.Annotations.UsedImplicitly]
+[UsedImplicitly]
 public class AgvRequestDataConsumer : IConsumer<RequestAgvData>
 {
     private readonly ILogger<AgvRequestDataConsumer> _logger;

@@ -1,7 +1,7 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 
-namespace TransportOrder.Domain.ReadModels;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
 
 /// <summary>
 /// Provides extension methods for testing the action read model.

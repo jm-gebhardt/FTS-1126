@@ -1,9 +1,10 @@
+using JetBrains.Annotations;
 using MassTransit;
 
-namespace TransportOrder.Messages.Events.Agv;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 
 /// <summary>
 /// AcceptAgv was successful
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public record AcceptAgvSucceeded(Guid CorrelationId) : CorrelatedBy<Guid>;

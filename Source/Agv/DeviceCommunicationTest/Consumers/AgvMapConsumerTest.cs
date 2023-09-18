@@ -1,4 +1,5 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
+﻿using System.Globalization;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
@@ -33,7 +34,7 @@ public class AgvMapConsumerTest
     {
         Data = "bGlnaHQgdw==",
         MapId = MapId,
-        ModificationDate = DateTime.UtcNow.ToString("o", System.Globalization.CultureInfo.InvariantCulture),
+        ModificationDate = DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture),
         Resolution = 1,
         XOffset = 1,
         YOffset = 1

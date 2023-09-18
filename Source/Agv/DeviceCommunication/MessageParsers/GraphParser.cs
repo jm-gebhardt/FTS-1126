@@ -1,7 +1,9 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+﻿using System.Numerics;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Helpers;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
+using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers;
 
@@ -58,8 +60,8 @@ public class GraphParser
             throw new InvalidOperationException("Node addressed by an edge is not part of the node listing.");
         }
 
-        var vectorStart = new System.Numerics.Vector3(start.X, start.Y, start.Z ?? 0f);
-        var vectorEnd = new System.Numerics.Vector3(end.X, end.Y, end.Z ?? 0f);
+        var vectorStart = new Vector3(start.X, start.Y, start.Z ?? 0f);
+        var vectorEnd = new Vector3(end.X, end.Y, end.Z ?? 0f);
 
         return (vectorStart - vectorEnd).Length();
     }
@@ -212,7 +214,7 @@ public class GraphParser
     /// Returns the serial number of the AGV.
     /// </summary>
     /// <exception cref="InvalidOperationException">Graph is invalid.</exception>
-    [JetBrains.Annotations.PublicAPI]
+    [PublicAPI]
     public string SerialNumber
     {
         get
@@ -234,7 +236,7 @@ public class GraphParser
     /// Returns true when velocity of all edges is present.
     /// </summary>
     /// <exception cref="InvalidOperationException">Graph is invalid.</exception>
-    [JetBrains.Annotations.PublicAPI]
+    [PublicAPI]
     public bool ConsiderVelocity
     {
         get
@@ -256,7 +258,7 @@ public class GraphParser
     /// Returns the average max. velocity considering all edges.
     /// </summary>
     /// <exception cref="InvalidOperationException">Graph is invalid or velocity information is missing and therefore the average speed is unknown.</exception>
-    [JetBrains.Annotations.PublicAPI]
+    [PublicAPI]
     public float AverageVelocity
     {
         get

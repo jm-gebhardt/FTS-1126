@@ -1,21 +1,22 @@
 ﻿using System.Text.Json.Serialization;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using CommandLine;
 using Gebhardt.StoreWare.Agv.Common;
+using Gebhardt.StoreWare.Agv.Common.Configurations.Extensions;
+using Gebhardt.StoreWare.Agv.Common.Extensions;
+using Gebhardt.StoreWare.Agv.Common.Logging;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.States;
 using MassTransit;
 using MassTransit.Configuration;
 using MassTransit.Serialization;
-using Gebhardt.StoreWare.Agv.Common.Extensions;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
-using Gebhardt.StoreWare.Agv.Common.Configurations.Extensions;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
-var initialLogger = Gebhardt.StoreWare.Agv.Common.Logging.InitialLogger.Create<Program>();
+var initialLogger = InitialLogger.Create<Program>();
 try
 {
     IHostBuilder? hostBuilder = null;

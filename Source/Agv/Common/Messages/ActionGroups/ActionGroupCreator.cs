@@ -1,9 +1,11 @@
-﻿namespace Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+﻿using JetBrains.Annotations;
+
+namespace Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 
 /// <summary>
 /// Defines the creator of an <see cref="ActionGroup"/>.
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public enum ActionGroupCreator
 {
     /// <summary>

@@ -1,5 +1,6 @@
-﻿using MassTransit;
-using Gebhardt.StoreWare.Agv.Common.Extensions;
+﻿using Gebhardt.StoreWare.Agv.Common.Extensions;
+using JetBrains.Annotations;
+using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
@@ -8,7 +9,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 /// Graph representing the paths on which the AGV travels.
 /// <para>See "graph.schema".</para>
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 [EntityName("amq.topic")]   // Specifies the RabbitMq exchange where the message is published
 [RoutingKey("agv.graph")]   // Specifies the topic where subscribers can receive the message
 public record MqttGraph
@@ -72,7 +73,7 @@ public record MqttGraph
 /// <summary>
 /// Node representation
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public record MqttNode
 {
     /// <summary>
@@ -100,7 +101,7 @@ public record MqttNode
 /// <summary>
 /// Edge representation
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public record MqttEdge
 {
     /// <summary>
@@ -137,7 +138,7 @@ public record MqttEdge
 /// <summary>
 /// Node attribute
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public record MqttAttribute
 {
     /// <summary>

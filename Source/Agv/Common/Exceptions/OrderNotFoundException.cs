@@ -1,11 +1,12 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.Common.Exceptions;
 
 /// <summary>
 /// Order not found
 /// </summary>
-[JetBrains.Annotations.UsedImplicitly]
+[UsedImplicitly]
 public class OrderNotFoundException : NotFoundException
 {
     /// <summary>

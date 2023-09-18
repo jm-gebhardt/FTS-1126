@@ -1,9 +1,9 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
-using TransportOrder.Domain.Exceptions;
-using ActionGroup = TransportOrder.Domain.Models.ActionGroup.ActionGroup;
+using ActionGroup = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using AgvActionGenerator = Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper.AgvActionGenerator;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Domain.Models;
@@ -143,12 +143,12 @@ public class ActionGroupTests
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         var now = DateTime.UtcNow;
-        
+
         actionGroup.InvalidateAction(actionGroup.Actions.First().CorrelationId);
 
         actionGroup.State.ShouldBe(ActionGroupState.Invalid);
         actionGroup.CompletedDate.ShouldNotBeNull();
-        ((DateTime)actionGroup.CompletedDate).ShouldBeInRange(now, DateTime.UtcNow);
+        ((DateTime) actionGroup.CompletedDate).ShouldBeInRange(now, DateTime.UtcNow);
     }
 
     [TestMethod]

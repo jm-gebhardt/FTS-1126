@@ -1,12 +1,13 @@
+using JetBrains.Annotations;
 using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
-namespace TransportOrder.Messages.Events.Agv;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 
 /// <summary>
 /// Agv reservation request was rejected
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public record SetAgvBusyRejected : CorrelatedBy<Guid>
 {
     /// <inheritdoc/>

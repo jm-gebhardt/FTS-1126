@@ -1,11 +1,12 @@
+using JetBrains.Annotations;
 using MassTransit;
 
-namespace TransportOrder.Messages.Events.Agv;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 
 /// <summary>
 /// AGV reservation request was successful
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public sealed class SetAgvBusySucceeded : CorrelatedBy<Guid>
 {
     /// <inheritdoc/>

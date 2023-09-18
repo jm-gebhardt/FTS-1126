@@ -1,9 +1,11 @@
+using JetBrains.Annotations;
+
 namespace Gebhardt.StoreWare.Agv.Common.Messages;
 
 /// <summary>
 /// Defines the creator of a host order 
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public enum HostOrderCreator
 {
     /// <summary>

@@ -1,10 +1,12 @@
 ﻿
-namespace TransportOrder.Domain.Models.Graph;
+using JetBrains.Annotations;
+
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Graph;
 
 /// <summary>
 /// AGV Graph. This model is for EF only
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public record EfGraph
 {
     /// <summary>
@@ -52,7 +54,7 @@ public record EfGraph
     /// Values for graph usability.
     /// </summary><remarks>
     /// On multiple reasons the first on is noted in the subsequent order</remarks>
-    [JetBrains.Annotations.PublicAPI]
+    [PublicAPI]
     public enum EfGraphUsability
     {
         /// <summary>

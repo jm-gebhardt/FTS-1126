@@ -1,8 +1,8 @@
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Graph;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using TransportOrder.Domain.Models.Graph;
 
-namespace TransportOrder.Persistence.Ef.DataAccess.Configuration;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess.Configuration;
 
 /// <summary>
 /// <see cref="EfGraph" /> Entity Framework Mapping

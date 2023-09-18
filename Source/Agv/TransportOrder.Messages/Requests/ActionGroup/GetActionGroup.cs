@@ -1,4 +1,4 @@
-namespace TransportOrder.Messages.Requests.ActionGroup;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.ActionGroup;
 
 /// <summary>
 /// Provides a request to get an action group.

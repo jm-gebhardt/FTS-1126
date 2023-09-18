@@ -1,9 +1,7 @@
 using AutoMapper;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Graph;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles.Resolver;
-using TransportOrder.Messages.Requests.Agv;
-using GraphEdge = TransportOrder.Messages.Requests.Agv.GraphEdge;
-using GraphNode = TransportOrder.Messages.Requests.Agv.GraphNode;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles;
 

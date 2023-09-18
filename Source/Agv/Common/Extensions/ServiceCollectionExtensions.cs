@@ -1,6 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using System.Reflection;
+﻿using System.Reflection;
 using Gebhardt.StoreWare.Agv.Common.Helpers;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Gebhardt.StoreWare.Agv.Common.Extensions;
 

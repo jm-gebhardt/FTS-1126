@@ -1,9 +1,9 @@
 using Gebhardt.StoreWare.Agv.Common.Configurations;
 using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
-using TransportOrder.Domain.Models.Settings;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Configurations;
 

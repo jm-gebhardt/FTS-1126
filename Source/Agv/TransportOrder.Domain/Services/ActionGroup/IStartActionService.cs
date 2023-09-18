@@ -1,8 +1,8 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using AgvAction = TransportOrder.Domain.Models.ActionGroup.AgvAction;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
 
-namespace TransportOrder.Domain.Services.ActionGroup;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
 
 /// <summary>
 /// Handles the start of an AgvAction (send to Agv)

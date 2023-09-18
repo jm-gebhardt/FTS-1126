@@ -1,16 +1,17 @@
 ﻿using AutoMapper;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Agv;
+using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
-using TransportOrder.Messages.Events.Agv;
-using TransportOrder.Messages.Requests.Agv;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Consumer;
 
 /// <summary>
 /// Consumes <see cref="AgvPropertyChanged"/> and sends message via <see cref="IAgvPublisher"/>.
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public class AgvPropertyChangedConsumer : IConsumer<AgvPropertyChanged>
 {
     private readonly ILogger<AgvPropertyChangedConsumer> _logger;

@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
 using Microsoft.AspNetCore.SignalR;
-using TransportOrder.Messages.Requests.Agv;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Agv;
 
@@ -21,7 +21,7 @@ public class AgvPublisher : IAgvPublisher
     }
 
     /// <inheritdoc/>
-    public Task SendAgvStateAsync(global::TransportOrder.Messages.MessageContent.Agv agv, bool isInitialState)
+    public Task SendAgvStateAsync(Messages.MessageContent.Agv agv, bool isInitialState)
     {
         var agvDto = _mapper.Map<AgvDto>(agv);
         return isInitialState ? _hubContext.Clients.All.AgvDiscovered(agvDto) : _hubContext.Clients.All.AgvChanged(agvDto);

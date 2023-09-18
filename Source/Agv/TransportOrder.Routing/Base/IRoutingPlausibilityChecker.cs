@@ -1,6 +1,6 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 
-namespace TransportOrder.Routing.Base;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Routing.Base;
 
 /// <summary>
 /// Plausibility checker for a route (node-node)

@@ -1,8 +1,8 @@
 ﻿using FluentValidation;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
-using AgvAction = TransportOrder.Domain.Models.ActionGroup.AgvAction;
+using AgvAction = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.AgvAction;
 
-namespace TransportOrder.Domain.Validators;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Validators;
 
 /// <summary>
 /// Responsible for the validation of an Agv action it it's valid

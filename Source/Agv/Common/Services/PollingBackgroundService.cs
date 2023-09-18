@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -6,7 +7,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Services;
 /// <summary>
 /// A Polling Background Service that calls <see cref="IPollable.Poll" /> and repeats every <see cref="IPollable.PollingInterval"/>
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public class PollingBackgroundService<T> : BackgroundService where T : IPollable
 {
     private readonly ILogger<PollingBackgroundService<T>> _logger;
@@ -14,7 +15,7 @@ public class PollingBackgroundService<T> : BackgroundService where T : IPollable
     /// <summary>
     /// The Pollable called each interval
     /// </summary>
-    [JetBrains.Annotations.PublicAPI]
+    [PublicAPI]
     public T Pollable { get; }
 
     /// <summary>

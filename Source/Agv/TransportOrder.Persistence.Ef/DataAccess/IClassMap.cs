@@ -1,7 +1,7 @@
 using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
 
-namespace TransportOrder.Persistence.Ef.DataAccess;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;
 
 /// <summary>
 /// Map Class to specific type

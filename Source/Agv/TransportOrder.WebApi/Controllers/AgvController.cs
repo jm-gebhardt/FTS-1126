@@ -1,13 +1,17 @@
 ﻿using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
-using Microsoft.AspNetCore.Mvc;
-using MassTransit;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Graph;
-using TransportOrder.Messages.Commands.Agv;
-using TransportOrder.Messages.Events.Agv;
-using TransportOrder.Messages.Requests.Agv;
+using MassTransit;
+using Microsoft.AspNetCore.Mvc;
+using LockAgv = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv.LockAgv;
+using RequestAgvData = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv.RequestAgvData;
+using RequestAgvGraph = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv.RequestAgvGraph;
+using UnlockAgv = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv.UnlockAgv;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers;
 
@@ -24,10 +28,10 @@ public class AgvController : Controller
     private readonly IRequestClient<GetAgvDataRequest> _getAgvDataClient;
     private readonly IRequestClient<GetAgvPositions> _getAgvPositionsClient;
     private readonly IRequestClient<AcceptAgvCommand> _acceptAgvClient;
-    private readonly IRequestClient<global::TransportOrder.Messages.Commands.Agv.UnlockAgv> _unlockAgvClient;
-    private readonly IRequestClient<global::TransportOrder.Messages.Commands.Agv.LockAgv> _lockAgvClient;
-    private readonly IRequestClient<global::TransportOrder.Messages.Commands.Agv.RequestAgvData> _emitRequestDataClient;
-    private readonly IRequestClient<global::TransportOrder.Messages.Commands.Agv.RequestAgvGraph> _emitRequestGraphClient;
+    private readonly IRequestClient<UnlockAgv> _unlockAgvClient;
+    private readonly IRequestClient<LockAgv> _lockAgvClient;
+    private readonly IRequestClient<RequestAgvData> _emitRequestDataClient;
+    private readonly IRequestClient<RequestAgvGraph> _emitRequestGraphClient;
     private readonly IRequestClient<GetActiveAgvErrorsRequest> _getAgvErrorsRequestClient;
     private readonly IRequestClient<GetAgvErrorsRequest> _getAgvErrorHistoryRequestClient;
     private readonly IRequestClient<MoveAgv> _moveAgvClient;
@@ -43,10 +47,10 @@ public class AgvController : Controller
         IRequestClient<GetAgvDataRequest> getAgvDataClient,
         IRequestClient<GetAgvPositions> getAgvPositionsClient,
         IRequestClient<AcceptAgvCommand> acceptAgvClient,
-        IRequestClient<global::TransportOrder.Messages.Commands.Agv.UnlockAgv> unlockAgvClient,
-        IRequestClient<global::TransportOrder.Messages.Commands.Agv.LockAgv> lockAgvClient,
-        IRequestClient<global::TransportOrder.Messages.Commands.Agv.RequestAgvData> emitRequestDataClient,
-        IRequestClient<global::TransportOrder.Messages.Commands.Agv.RequestAgvGraph> emitRequestGraphClient,
+        IRequestClient<UnlockAgv> unlockAgvClient,
+        IRequestClient<LockAgv> lockAgvClient,
+        IRequestClient<RequestAgvData> emitRequestDataClient,
+        IRequestClient<RequestAgvGraph> emitRequestGraphClient,
         IRequestClient<GetActiveAgvErrorsRequest> getAgvErrorsRequestClient,
         IRequestClient<GetAgvErrorsRequest> getAgvErrorHistoryRequestClient,
         IRequestClient<MoveAgv> moveAgvClient,
@@ -180,7 +184,7 @@ public class AgvController : Controller
     [Route("/agvs/{correlationId}/unlock")]
     public async Task<ActionResult> UnlockAgv(Guid correlationId)
     {
-        await _unlockAgvClient.GetResponse<UnlockAgvResult>(new global::TransportOrder.Messages.Commands.Agv.UnlockAgv(correlationId));
+        await _unlockAgvClient.GetResponse<UnlockAgvResult>(new UnlockAgv(correlationId));
         return Ok();
     }
 
@@ -193,7 +197,7 @@ public class AgvController : Controller
     [Route("/agvs/{correlationId}/lock")]
     public async Task<ActionResult> LockAgv(Guid correlationId)
     {
-        await _lockAgvClient.GetResponse<LockAgvResult>(new global::TransportOrder.Messages.Commands.Agv.LockAgv(correlationId));
+        await _lockAgvClient.GetResponse<LockAgvResult>(new LockAgv(correlationId));
         return Ok();
     }
 
@@ -206,7 +210,7 @@ public class AgvController : Controller
     [Route("/agvs/{correlationId}/emitRequestData")]
     public async Task<ActionResult> EmitRequestData(Guid correlationId)
     {
-        await _emitRequestDataClient.GetResponse<GotAgvData>(new global::TransportOrder.Messages.Commands.Agv.RequestAgvData(correlationId));
+        await _emitRequestDataClient.GetResponse<GotAgvData>(new RequestAgvData(correlationId));
         return Ok();
     }
 
@@ -219,7 +223,7 @@ public class AgvController : Controller
     [Route("/agvs/{correlationId}/emitRequestGraph")]
     public async Task<ActionResult> EmitRequestGraph(Guid correlationId)
     {
-        await _emitRequestGraphClient.GetResponse<RequestAgvGraphResult>(new global::TransportOrder.Messages.Commands.Agv.RequestAgvGraph(correlationId));
+        await _emitRequestGraphClient.GetResponse<RequestAgvGraphResult>(new RequestAgvGraph(correlationId));
         return Ok();
     }
 

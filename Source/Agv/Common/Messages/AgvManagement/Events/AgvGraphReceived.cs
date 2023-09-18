@@ -1,4 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Contracts;
+using JetBrains.Annotations;
 using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
@@ -11,7 +12,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 /// information purpose by keeping additional information like coordinates and for
 /// routing algorithms by having information like metric.
 /// </remarks>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public record AgvGraphReceived : CorrelatedBy<Guid>, IAgvId
 {
     /// <inheritdoc/>

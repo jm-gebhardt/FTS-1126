@@ -1,6 +1,6 @@
-﻿using ActionGroup = TransportOrder.Domain.Models.ActionGroup.ActionGroup;
+﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
 
-namespace TransportOrder.Domain.Exceptions;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 
 /// <summary>
 /// Thrown when an ActionGroup is already assigned to an Agv

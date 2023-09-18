@@ -1,15 +1,16 @@
 using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
+using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
-using TransportOrder.Domain.Models.Settings;
-using TransportOrder.Domain.Repositories;
 
-namespace TransportOrder.Domain.Services.ActionGroup;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
 
 /// <summary>
 /// Base Implementation of IChargingService
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public class BaseAgvChargingService : IChargingService
 {
     private readonly ILogger<BaseAgvChargingService> _logger;

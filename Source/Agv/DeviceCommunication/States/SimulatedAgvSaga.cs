@@ -1,6 +1,8 @@
+using System.Numerics;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
+using JetBrains.Annotations;
 using MassTransit;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States;
@@ -8,7 +10,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States;
 /// <summary>
 /// Agv Saga for simulated AGVs
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
 {
     private const int AliveChargeThreshold = 5;
@@ -169,8 +171,8 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
             {
                 double partialProgress = (orderProgress.Value - lastNodeIndex / (double) Action!.Nodes.Length) * Action!.Nodes.Length;
                 var nextNode = AgvGraph!.Nodes.First(x => x.Id == Action!.Nodes[lastNodeIndex + 1]);
-                var vectorLast = new System.Numerics.Vector3(lastNode.X, lastNode.Y, lastNode.Z);
-                var vectorNext = new System.Numerics.Vector3(nextNode.X, nextNode.Y, nextNode.Z);
+                var vectorLast = new Vector3(lastNode.X, lastNode.Y, lastNode.Z);
+                var vectorNext = new Vector3(nextNode.X, nextNode.Y, nextNode.Z);
                 float theta = (float) (Math.Atan2(vectorNext.Y - vectorLast.Y, vectorNext.X - vectorLast.X) + Math.PI / 2);
                 var vectorEdge = vectorNext - vectorLast;
                 vectorEdge *= (float) partialProgress;

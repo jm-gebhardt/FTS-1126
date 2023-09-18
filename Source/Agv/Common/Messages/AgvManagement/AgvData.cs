@@ -1,4 +1,5 @@
-﻿using MassTransit;
+﻿using JetBrains.Annotations;
+using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
 namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
@@ -6,7 +7,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 /// <summary>
 /// AGV Data
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public record AgvData : CorrelatedBy<Guid>
 {
     /// <inheritdoc/>
@@ -109,7 +110,7 @@ public record AgvData : CorrelatedBy<Guid>
     /// <summary>
     /// A sensor object skeleton
     /// </summary>
-    [JetBrains.Annotations.PublicAPI]
+    [PublicAPI]
     public class Sensor
     {
         /// <summary>

@@ -1,11 +1,12 @@
-﻿using MassTransit;
+﻿using JetBrains.Annotations;
+using MassTransit;
 
-namespace TransportOrder.Messages.Requests.Agv;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
 
 /// <summary>
 /// Answers whether the Agv can go to busy state
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public sealed class CanAgvTransitionToBusyResponse : CorrelatedBy<Guid>
 {
     /// <inheritdoc/>

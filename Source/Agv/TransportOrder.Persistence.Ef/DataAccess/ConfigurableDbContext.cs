@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 
-namespace TransportOrder.Persistence.Ef.DataAccess;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;
 
 /// <summary>
 /// Configurable DB Context

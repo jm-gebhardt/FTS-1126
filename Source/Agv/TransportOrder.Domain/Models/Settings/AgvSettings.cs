@@ -1,6 +1,7 @@
 using Gebhardt.StoreWare.Agv.Common.Configurations.Models;
+using JetBrains.Annotations;
 
-namespace TransportOrder.Domain.Models.Settings;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
 
 /// <summary>
 /// The settings for Agv
@@ -24,10 +25,10 @@ public record AgvSettings : SettingsBase<AgvSettings>
     public int BatteryLevelLow { get; init; } = 40;
 
     /// <summary>Good battery level</summary>
-    [JetBrains.Annotations.UsedImplicitly]
+    [UsedImplicitly]
     public int BatteryLevelGood { get; init; } = 80;
 
     /// <summary>Full battery level</summary>
-    [JetBrains.Annotations.UsedImplicitly]
+    [UsedImplicitly]
     public int BatteryLevelFull { get; init; } = 100;
 }

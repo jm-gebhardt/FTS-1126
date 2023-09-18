@@ -1,4 +1,5 @@
-﻿using MassTransit;
+﻿using JetBrains.Annotations;
+using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
 namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
@@ -6,7 +7,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 /// <summary>
 /// Request an AGV to lock
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public record LockAgv : CorrelatedBy<Guid>
 {
     /// <inheritdoc/>

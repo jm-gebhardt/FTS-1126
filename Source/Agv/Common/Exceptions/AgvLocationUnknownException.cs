@@ -1,4 +1,5 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.Common.Exceptions;
 
@@ -9,7 +10,7 @@ public class AgvLocationUnknownException : Exception
 {
     /// <see cref="AgvLocationUnknownException"/>>
     /// <param name="agv">The Agv where the LastNodeId is null</param>
-    [JetBrains.Annotations.UsedImplicitly]
+    [UsedImplicitly]
     public AgvLocationUnknownException(IAgv agv) : base($"Last node of Agv: {agv} is unknown")
     {
         

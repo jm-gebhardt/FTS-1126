@@ -6,6 +6,7 @@ using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Messages;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.States;
+using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 
@@ -14,7 +15,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
 /// <summary>
 /// StateMachine to simulate an AGV
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga>
 {
     #region Records

@@ -1,8 +1,9 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
+using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
-using TransportOrder.Domain.Repositories;
-using TransportOrder.Messages.Events.Agv;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.EventHandler;
 
@@ -10,7 +11,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.EventHandler;
 /// Consumer for <see cref="AgvGraphReceived" />
 /// Consumes AgvGraphReceived event and add/updates the AgvGraph in the registry
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public class AgvGraphReceivedEventHandler : IConsumer<AgvGraphReceived>
 {
     private readonly IAgvGraphRegistry _agvGraphRegistry;

@@ -1,9 +1,9 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Services.Detectors;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
 using MassTransit;
-using TransportOrder.Domain.SemaphoreProvider;
-using AgvPositionStatus = TransportOrder.Domain.Models.Agv.AgvPositionStatus;
 
-namespace TransportOrder.Persistence.Ef.Repositories;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
 
 /// <summary>
 /// Registry of AGV positions (in memory)

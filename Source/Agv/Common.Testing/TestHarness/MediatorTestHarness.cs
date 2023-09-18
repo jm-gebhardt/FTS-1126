@@ -1,8 +1,8 @@
-﻿using JetBrains.Annotations;
+﻿using System.Diagnostics;
+using JetBrains.Annotations;
 using MassTransit.Mediator;
 using MassTransit.Testing;
 using MassTransit.Testing.Implementations;
-using System.Diagnostics;
 
 namespace Gebhardt.StoreWare.Agv.Common.Testing.TestHarness;
 

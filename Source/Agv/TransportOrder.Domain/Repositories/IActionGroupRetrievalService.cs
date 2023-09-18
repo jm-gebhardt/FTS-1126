@@ -1,8 +1,8 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
-using TransportOrder.Domain.ReadModels;
-using ActionGroup = TransportOrder.Domain.Models.ActionGroup.ActionGroup;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
+using ActionGroup = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 
-namespace TransportOrder.Domain.Repositories;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 
 /// <summary>
 /// Provides a read-model repository for Action Group retrieval across tables.

@@ -1,6 +1,7 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
+using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers;
 
@@ -24,14 +25,14 @@ public class AgvDataParser
     /// <summary>
     /// Returns true when the serial number is present otherwise false.
     /// </summary>
-    [JetBrains.Annotations.PublicAPI]
+    [PublicAPI]
     public bool SerialNumberValid => !string.IsNullOrEmpty(_data.SerialNumber);
 
     /// <summary>
     /// Returns the serial number of the AGV.
     /// </summary>
     /// <exception cref="InvalidOperationException">Serial number is missing.</exception>
-    [JetBrains.Annotations.PublicAPI]
+    [PublicAPI]
     public string SerialNumber
     {
         get

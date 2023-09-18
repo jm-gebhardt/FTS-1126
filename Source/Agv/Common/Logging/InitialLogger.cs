@@ -1,5 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
-
+﻿using JetBrains.Annotations;
+using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.StoreWare.Agv.Common.Logging;
 
@@ -7,7 +7,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Logging;
 /// Factory to provide reliable logger instance used for initial logging
 /// instead of sending output directly to console.
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public sealed class InitialLogger
 {
     /// <summary>
@@ -15,7 +15,7 @@ public sealed class InitialLogger
     /// </summary>
     /// <typeparam name="TCategoryName">Name of this type is used for logger category.</typeparam>
     /// <returns>ILogger instance.</returns>
-    [JetBrains.Annotations.PublicAPI]
+    [PublicAPI]
     public static ILogger Create<TCategoryName>()
     {
         using var loggerFactory = LoggerFactory.Create(builder =>

@@ -1,17 +1,18 @@
 ﻿using System.Reflection;
 using Gebhardt.StoreWare.Agv.Common.Extensions;
-using Microsoft.Extensions.Hosting;
+using JetBrains.Annotations;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using static System.String;
 using Prometheus;
+using static System.String;
 
 namespace Gebhardt.StoreWare.Agv.Common;
 
 /// <summary>
 /// Encapsulates startup procedure.
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public static class GebhardtStartup
 {
     /// <summary>
@@ -23,7 +24,7 @@ public static class GebhardtStartup
     /// Create default host and create singleton worker implementation.
     /// </summary>
     /// <param name="args">Command line arguments.</param>
-    [JetBrains.Annotations.PublicAPI]
+    [PublicAPI]
     public static IHostBuilder CreateHostBuilder(string[] args)
     {
         var entryAssembly = Assembly.GetEntryAssembly();

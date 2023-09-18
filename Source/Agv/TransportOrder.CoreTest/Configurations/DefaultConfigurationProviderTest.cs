@@ -2,7 +2,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Configurations;
 
 [TestClass]

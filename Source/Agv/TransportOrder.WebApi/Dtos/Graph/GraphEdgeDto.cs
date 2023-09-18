@@ -1,10 +1,12 @@
 ﻿
+using JetBrains.Annotations;
+
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Graph;
 
 /// <summary>
 /// Model for drawing an edge in the UI
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public record GraphEdgeDto
 {
     /// <summary>

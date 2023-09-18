@@ -1,6 +1,6 @@
 ﻿using MassTransit;
 
-namespace TransportOrder.Messages.Commands.Agv;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
 
 /// <summary>
 /// Represents the EmitRequestData request

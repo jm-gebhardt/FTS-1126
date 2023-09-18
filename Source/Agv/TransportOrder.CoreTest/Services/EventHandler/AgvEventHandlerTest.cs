@@ -2,13 +2,13 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Map;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.ActionGroup;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
-using TransportOrder.Messages.Commands.ActionGroup;
-using TransportOrder.Messages.Commands.Agv;
-using TransportOrder.Messages.Commands.Map;
-using TransportOrder.Messages.Events.ActionGroup;
-using TransportOrder.Messages.Events.Agv;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.EventHandler;
 

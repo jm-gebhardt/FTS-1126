@@ -1,5 +1,6 @@
 ﻿
 using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
+using JetBrains.Annotations;
 using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
@@ -8,7 +9,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Messages.Events;
 /// <summary>
 /// An event that reports a failed cancel of an order
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public record HostOrderCancelFailed : CorrelatedBy<Guid>
 {
     /// <inheritdoc/>

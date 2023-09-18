@@ -1,9 +1,9 @@
+using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
-using TransportOrder.Persistence.Ef.DataAccess.Configuration;
 
-namespace TransportOrder.Persistence.Ef.DataAccess;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;
 
 /// <summary>
 /// TransportOrder DB Context that does not use MassTransit sagas

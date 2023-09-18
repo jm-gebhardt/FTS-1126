@@ -1,11 +1,11 @@
 using System.Collections.Immutable;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Map;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Map;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles.Resolver;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
-using TransportOrder.Messages.Requests.Map;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Profiles;
 

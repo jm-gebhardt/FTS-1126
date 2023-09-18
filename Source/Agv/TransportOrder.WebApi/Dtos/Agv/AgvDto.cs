@@ -1,6 +1,6 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.AgvActions;
+﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.AgvActions;
 using JetBrains.Annotations;
-using TransportOrder.Domain.Models.Agv;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
 

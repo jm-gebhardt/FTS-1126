@@ -1,16 +1,16 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Shouldly;
-using Gebhardt.StoreWare.Agv.Common.Utilities;
-using Gebhardt.StoreWare.Agv.Common.Messages;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
-using Gebhardt.StoreWare.Agv.WCSCommunication.Services;
+using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
+using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.WCSCommunication.Messages;
 using Gebhardt.StoreWare.Agv.WCSCommunication.Messages.Events;
-using Gebhardt.StoreWare.Agv.WCSCommunicationTest.Fixtures;
+using Gebhardt.StoreWare.Agv.WCSCommunication.Services;
 using Gebhardt.StoreWare.Agv.WCSCommunication.States;
-using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
+using Gebhardt.StoreWare.Agv.WCSCommunicationTest.Fixtures;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services;
 

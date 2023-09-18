@@ -1,4 +1,5 @@
-﻿using MassTransit;
+﻿using JetBrains.Annotations;
+using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
 namespace Gebhardt.StoreWare.Agv.WCSCommunication.Messages.Events;
@@ -6,7 +7,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Messages.Events;
 /// <summary>
 /// An event that reports a successful handling of an order
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public record HostOrderHandlingSucceeded : CorrelatedBy<Guid>
 {
     /// <inheritdoc/>

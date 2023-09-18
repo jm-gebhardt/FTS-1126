@@ -1,4 +1,4 @@
-﻿namespace TransportOrder.Messages.Commands.Agv;
+﻿namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
 
 /// <summary>
 /// Provides a command to set an agv to idle by force.

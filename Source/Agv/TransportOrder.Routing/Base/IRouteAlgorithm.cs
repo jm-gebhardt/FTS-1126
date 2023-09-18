@@ -1,7 +1,7 @@
-﻿using JetBrains.Annotations;
-using TransportOrder.Routing.Models;
+﻿using Gebhardt.StoreWare.Agv.TransportOrder.Routing.Models;
+using JetBrains.Annotations;
 
-namespace TransportOrder.Routing.Base;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Routing.Base;
 
 /// <summary>
 /// Marker interface for route finding algorithms used to calculate routes.

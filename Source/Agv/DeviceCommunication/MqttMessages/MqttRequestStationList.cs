@@ -1,6 +1,6 @@
-﻿using MassTransit;
-using Gebhardt.StoreWare.Agv.Common.Extensions;
-
+﻿using Gebhardt.StoreWare.Agv.Common.Extensions;
+using JetBrains.Annotations;
+using MassTransit;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 
@@ -8,7 +8,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 /// Requests the station list from the AGV
 /// <para>
 /// See "request_station_list.schema".</para></summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 [EntityName("amq.topic")]                   // Specifies the RabbitMq exchange where the message is published
 [RoutingKey("agv.requestStationList")]    // Specifies the topic where subscribers can receive the message
 public class MqttRequestStationList

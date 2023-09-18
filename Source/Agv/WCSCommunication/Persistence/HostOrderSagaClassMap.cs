@@ -1,6 +1,7 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages;
 using Gebhardt.StoreWare.Agv.Common.Persistence;
 using Gebhardt.StoreWare.Agv.WCSCommunication.States;
+using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -11,7 +12,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Persistence;
 /// <summary>
 /// <see cref="HostOrderSaga"/> Entity Framework Mapping
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public class HostOrderSagaClassMap : SagaClassMap<HostOrderSaga>
 {
     private const string HostOrderSagaTableName = "HostOrderSaga";

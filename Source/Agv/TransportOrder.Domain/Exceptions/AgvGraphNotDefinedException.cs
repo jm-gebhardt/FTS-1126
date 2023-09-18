@@ -1,7 +1,8 @@
 using Gebhardt.StoreWare.Agv.Common.Exceptions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using JetBrains.Annotations;
 
-namespace TransportOrder.Domain.Exceptions;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 
 /// <summary>
 /// The Graph of the Agv is null
@@ -18,7 +19,7 @@ public class AgvGraphNotDefinedException : NotFoundException
     /// Agv Graph with Agv correlationId was not found
     /// </summary>
     /// <param name="correlationId">The correlation Id of the Agv</param>
-    [JetBrains.Annotations.UsedImplicitly]
+    [UsedImplicitly]
     public AgvGraphNotDefinedException(Guid correlationId) 
         : base(nameof(AgvGraph), nameof(correlationId), correlationId)
     {

@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AssemblyName>Gebhardt.StoreWare.Agv.TransportOrder</AssemblyName>
+    <RootNamespace>Gebhardt.StoreWare.Agv.TransportOrder</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

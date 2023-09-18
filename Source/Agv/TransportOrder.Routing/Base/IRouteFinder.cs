@@ -1,7 +1,7 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using TransportOrder.Routing.Models;
+using Gebhardt.StoreWare.Agv.TransportOrder.Routing.Models;
 
-namespace TransportOrder.Routing.Base;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Routing.Base;
 
 public interface IRouteFinder
 {

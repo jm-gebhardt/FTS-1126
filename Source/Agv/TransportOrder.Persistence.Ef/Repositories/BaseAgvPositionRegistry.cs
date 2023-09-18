@@ -1,10 +1,10 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Services.Detectors;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 using MassTransit;
-using TransportOrder.Domain.Repositories;
-using TransportOrder.Messages.Events.Agv;
-using AgvPositionStatus = TransportOrder.Domain.Models.Agv.AgvPositionStatus;
 
-namespace TransportOrder.Persistence.Ef.Repositories;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
 
 /// <summary>
 /// Handles <see cref="AgvPositionChanged"/> publishing

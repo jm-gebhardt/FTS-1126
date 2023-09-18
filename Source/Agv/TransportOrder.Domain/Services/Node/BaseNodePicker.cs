@@ -1,12 +1,12 @@
 ﻿using System.Linq.Expressions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Routing;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
-using TransportOrder.Domain.Exceptions;
-using TransportOrder.Domain.Repositories;
-using TransportOrder.Domain.Services.Routing;
 
-namespace TransportOrder.Domain.Services.Node;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Node;
 
 /// <summary>
 /// Abstract class to implement when choosing nodes

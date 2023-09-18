@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Serialization;
+using JetBrains.Annotations;
 using MassTransit;
 using MassTransit.Serialization;
 using Microsoft.Extensions.Configuration;
@@ -18,7 +19,7 @@ public static class ServiceCollectionExtensions
     /// <param name="config">Configuration</param>
     /// <param name="busRegistrationConfiguration">xxx</param>
     /// <param name="rabbitMqConfiguration"></param>
-    [JetBrains.Annotations.PublicAPI]
+    [PublicAPI]
     public static void ConfigureServicesMassTransit(this IServiceCollection services,
         IConfiguration config,
         Action<IBusRegistrationConfigurator>? busRegistrationConfiguration = null,

@@ -1,11 +1,12 @@
-﻿using MassTransit;
+﻿using JetBrains.Annotations;
+using MassTransit;
 
 namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 
 /// <summary>
 /// An event reporting that an AGV has stopped charging
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public record AgvStoppedCharging : CorrelatedBy<Guid>
 {
     /// <inheritdoc/>

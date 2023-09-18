@@ -1,4 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
+using JetBrains.Annotations;
 using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
@@ -7,7 +8,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Events;
 /// <summary>
 /// Transformation of <see cref="MqttGraph"/> into MassTransit message.
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public record InternalGraphReceived : CorrelatedBy<Guid>
 {
     /// <inheritdoc/>

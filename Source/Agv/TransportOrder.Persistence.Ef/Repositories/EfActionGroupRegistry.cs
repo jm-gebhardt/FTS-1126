@@ -1,20 +1,21 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
+using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;
+using JetBrains.Annotations;
 using MassTransit.Initializers;
 using Microsoft.EntityFrameworkCore;
-using TransportOrder.Domain.Exceptions;
-using TransportOrder.Domain.Models.ActionGroup;
-using TransportOrder.Domain.Repositories;
-using TransportOrder.Persistence.Ef.DataAccess;
-using ActionGroup = TransportOrder.Domain.Models.ActionGroup.ActionGroup;
-using AgvAction = TransportOrder.Domain.Models.ActionGroup.AgvAction;
+using ActionGroup = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
+using AgvAction = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.AgvAction;
 
-namespace TransportOrder.Persistence.Ef.Repositories;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
 
 /// <summary>
 /// Repository to access ActionGroups
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public class EfActionGroupRegistry : IActionGroupRegistry
 {
     private readonly IDbContextFactory<TransportOrderDbContext> _dbContextFactory;

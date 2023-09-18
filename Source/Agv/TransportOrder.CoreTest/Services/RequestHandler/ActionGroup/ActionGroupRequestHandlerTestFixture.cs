@@ -4,11 +4,11 @@ using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Repositories;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Graph;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
-using TransportOrder.Domain.Models.Graph;
-using TransportOrder.Domain.Repositories;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.RequestHandler.ActionGroup;
 
@@ -20,13 +20,13 @@ public class ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> : M
     private readonly ActionGroupRetrievalServiceTestFixture _actionGroupRetrievalServiceTestFixture = new();
     private readonly ActionGroupRegistryTestFixture _actionGroupRegistryFixture = new();
     private EfGraph? _efGraph;
-    private global::TransportOrder.Domain.Models.ActionGroup.ActionGroup[]? _actionGroups;
+    private TransportOrder.Domain.Models.ActionGroup.ActionGroup[]? _actionGroups;
 
     private static Mapper GetMapper() => MappingHelper.GetMapper(new GraphProfile());
 
     public ActionGroupState[] AllActionGroupStates => Enum.GetValues(typeof(ActionGroupState)).Cast<ActionGroupState>().ToArray();
 
-    public ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> WithActionGroups(params global::TransportOrder.Domain.Models.ActionGroup.ActionGroup[] actionGroups)
+    public ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> WithActionGroups(params TransportOrder.Domain.Models.ActionGroup.ActionGroup[] actionGroups)
     {
         _actionGroups = actionGroups;
 

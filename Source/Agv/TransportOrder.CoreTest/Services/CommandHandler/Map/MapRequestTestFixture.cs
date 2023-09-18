@@ -3,13 +3,13 @@ using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.SagaStateMachines;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
-using TransportOrder.Domain.Models.Agv;
-using TransportOrder.Domain.Repositories;
-using TransportOrder.Messages.Profiles;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.CommandHandler.Map;
 
@@ -103,7 +103,7 @@ public class MapRequestTestFixture<TRequestClient, TConsumer> : MediatorTestFixt
     {
         var mapRegistryMock = new Mock<IMapRegistry>();
 
-        mapRegistryMock.Setup(x => x.GetAllMaps()).Returns(new EnumerableQuery<global::TransportOrder.Domain.Models.Map.Map>(new List<global::TransportOrder.Domain.Models.Map.Map>
+        mapRegistryMock.Setup(x => x.GetAllMaps()).Returns(new EnumerableQuery<TransportOrder.Domain.Models.Map.Map>(new List<TransportOrder.Domain.Models.Map.Map>
         {
             new(_correlationIds[0], "Area51_Floor1_Compartment47", Convert.FromBase64String(Base64String), 0.01, 1, 2, DateTime.UtcNow),
             new(_correlationIds[1], "Area51_Floor1_Compartment48", Convert.FromBase64String(Base64String), 0.02, 2, 3, DateTime.UtcNow),

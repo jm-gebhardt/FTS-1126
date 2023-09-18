@@ -1,4 +1,6 @@
-﻿namespace TransportOrder.Routing.Models;
+﻿using JetBrains.Annotations;
+
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Routing.Models;
 
 /// <summary>
 /// Represents the route costs.
@@ -19,13 +21,13 @@ public class Route : IComparable<Route>
     /// <summary>
     /// A comparable value representing some kind of costs this route will take.
     /// </summary>
-    [JetBrains.Annotations.PublicAPI]
+    [PublicAPI]
     public float Costs { get; set; }
 
     /// <summary>
     /// List of node ids that define the route
     /// </summary>
-    [JetBrains.Annotations.PublicAPI]
+    [PublicAPI]
     public string[] Nodes { get; set; }
 
     /// <summary>

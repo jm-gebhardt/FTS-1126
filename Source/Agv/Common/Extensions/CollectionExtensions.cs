@@ -1,4 +1,6 @@
-﻿namespace Gebhardt.StoreWare.Agv.Common.Extensions;
+﻿using JetBrains.Annotations;
+
+namespace Gebhardt.StoreWare.Agv.Common.Extensions;
 
 /// <summary>
 /// Extensions for collection types.
@@ -11,7 +13,7 @@ public static class CollectionExtensions
     /// <param name="set"></param>
     /// <param name="range"></param>
     /// <returns>Returns true when all elements from range has been added, returns false when there were any duplicates.</returns>
-    [JetBrains.Annotations.PublicAPI]
+    [PublicAPI]
     public static bool AddRange<T>(this HashSet<T> set, IEnumerable<T> range)
     {
         bool allAdded = true;

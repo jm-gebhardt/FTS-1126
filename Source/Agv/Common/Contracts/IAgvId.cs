@@ -1,11 +1,12 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Utilities;
+using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.Common.Contracts;
 
 /// <summary>
 /// Interface for AGV identification for better generalization and simplification of documentation.
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public interface IAgvId
 {
     /// <summary>

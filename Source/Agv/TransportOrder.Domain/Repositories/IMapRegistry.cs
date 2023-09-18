@@ -1,6 +1,7 @@
-﻿using TransportOrder.Domain.Models.Map;
+﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Map;
+using JetBrains.Annotations;
 
-namespace TransportOrder.Domain.Repositories;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 
 /// <summary>
 /// Abstracted interface for MapRegistry
@@ -16,7 +17,7 @@ public interface IMapRegistry
     /// Get a map by its related correlationId from the MapRegistry
     /// </summary>
     /// <param name="correlationId">GUID of the map searched in the registry</param>
-    [JetBrains.Annotations.UsedImplicitly]
+    [UsedImplicitly]
     public byte[]? GetMap(Guid correlationId);
 
     /// <summary>

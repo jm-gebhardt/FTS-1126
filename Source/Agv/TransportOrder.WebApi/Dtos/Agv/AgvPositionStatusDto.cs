@@ -1,4 +1,5 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
 
@@ -8,5 +9,5 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
 /// <param name="CorrelationId">The correlationId of the AGV</param>
 /// <param name="AgvId">Identifier of the AGV</param>
 /// <param name="AgvPosition">AGV position</param>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public record AgvPositionStatusDto(Guid CorrelationId, string AgvId, AgvPosition AgvPosition);

@@ -1,7 +1,8 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using JetBrains.Annotations;
 using MassTransit;
 
-namespace TransportOrder.Messages.Events.Agv;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 
 /// <summary>
 /// An event reporting that the current position of an AGV has changed
@@ -10,5 +11,5 @@ namespace TransportOrder.Messages.Events.Agv;
 /// <param name="PreviousAgvPosition">Previous AGV position</param>
 /// <param name="AgvId">Identifier of the AGV</param>
 /// <param name="CorrelationId">The correlationId of the new agv position</param>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public record AgvPositionChanged(AgvPosition NewAgvPosition, AgvPosition? PreviousAgvPosition, string AgvId, Guid CorrelationId) : CorrelatedBy<Guid>;

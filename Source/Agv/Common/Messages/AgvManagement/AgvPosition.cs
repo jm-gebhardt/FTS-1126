@@ -1,10 +1,13 @@
 ﻿// ReSharper disable ConvertToPrimaryConstructor
+
+using JetBrains.Annotations;
+
 namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 
 /// <summary>
 /// AGV position information
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public record AgvPosition
 {
     /// <summary>

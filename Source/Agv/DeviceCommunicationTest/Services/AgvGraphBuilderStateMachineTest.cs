@@ -1,12 +1,13 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Events;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.States;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services;
@@ -198,6 +199,6 @@ public class AgvGraphBuilderStateMachineTest
         var publishedData = fixture.TestHarness.Published.Select<AgvGraphReceived>().First().Context.Message;
 
         // Check for invalid usability due to duplicate nodes.
-        publishedData.Graph.Usability.ShouldBe(Common.Messages.AgvManagement.AgvGraph.GraphUsability.InvalidStations);
+        publishedData.Graph.Usability.ShouldBe(AgvGraph.GraphUsability.InvalidStations);
     }
 }

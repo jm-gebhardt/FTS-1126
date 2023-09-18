@@ -1,6 +1,6 @@
-using Microsoft.Extensions.DependencyInjection;
 using JetBrains.Annotations;
 using MassTransit;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Gebhardt.StoreWare.Agv.Common.Testing;
 

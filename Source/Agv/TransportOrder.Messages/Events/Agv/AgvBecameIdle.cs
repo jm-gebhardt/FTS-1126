@@ -1,11 +1,12 @@
-﻿using MassTransit;
+﻿using JetBrains.Annotations;
+using MassTransit;
 
-namespace TransportOrder.Messages.Events.Agv;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 
 /// <summary>
 /// Agv became idle
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public record AgvBecameIdle(Guid CorrelationId) : CorrelatedBy<Guid>
 {
     /// <inheritdoc/>

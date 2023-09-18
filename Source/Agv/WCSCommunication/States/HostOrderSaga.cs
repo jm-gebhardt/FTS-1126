@@ -1,7 +1,9 @@
-﻿using MassTransit;
+﻿using System.Text.Json.Serialization;
 using Gebhardt.StoreWare.Agv.Common.Messages;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
+using JetBrains.Annotations;
+using MassTransit;
 
 namespace Gebhardt.StoreWare.Agv.WCSCommunication.States;
 
@@ -23,7 +25,7 @@ public class HostOrderSaga : SagaStateMachineInstance
     /// <summary>
     /// Current state
     /// </summary>
-    [JetBrains.Annotations.UsedImplicitly]
+    [UsedImplicitly]
     public string CurrentState { get; set; }
 
     /// <summary>
@@ -95,7 +97,7 @@ public class HostOrderSaga : SagaStateMachineInstance
     /// <param name="orderId">Redundant OrderId info</param>
     /// <param name="currentState">Order state</param>
     /// <param name="orderDetails">Order details</param>
-    [System.Text.Json.Serialization.JsonConstructor]
+    [JsonConstructor]
     private HostOrderSaga(Guid correlationId, string orderId, string currentState, OrderDetails orderDetails)
     {
         CorrelationId = correlationId;

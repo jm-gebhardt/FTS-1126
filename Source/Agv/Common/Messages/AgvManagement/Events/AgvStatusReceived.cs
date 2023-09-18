@@ -1,4 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Contracts;
+using JetBrains.Annotations;
 using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
@@ -7,7 +8,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 /// <summary>
 /// An event reporting the current status of an AGV.
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public record AgvStatusReceived : CorrelatedBy<Guid>, IAgvId
 {
     /// <inheritdoc/>

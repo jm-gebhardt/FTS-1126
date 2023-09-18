@@ -1,11 +1,12 @@
+using JetBrains.Annotations;
 using MassTransit;
 
-namespace TransportOrder.Messages.Requests.Agv;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
 
 /// <summary>
 /// Represents the GetAgvGraph request which returns AgvGraph
 /// </summary>
-[JetBrains.Annotations.UsedImplicitly]
+[UsedImplicitly]
 public record GetAgvGraph : CorrelatedBy<Guid>
 {
     /// <inheritdoc/>

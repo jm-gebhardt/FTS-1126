@@ -1,6 +1,6 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 
-namespace TransportOrder.Domain.Models.Node;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Node;
 
 /// <summary>
 /// Helper methods for dealing with node types

@@ -1,9 +1,9 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.TransportOrder.Routing.Exceptions;
+using Gebhardt.StoreWare.Agv.TransportOrder.Routing.Models;
 using JetBrains.Annotations;
-using TransportOrder.Routing.Exceptions;
-using TransportOrder.Routing.Models;
 
-namespace TransportOrder.Domain.Services.Routing;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Routing;
 
 /// <summary>
 /// Service for computation of Route for Agv

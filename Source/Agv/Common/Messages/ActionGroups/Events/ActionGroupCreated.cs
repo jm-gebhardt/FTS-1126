@@ -1,4 +1,5 @@
-﻿using MassTransit;
+﻿using JetBrains.Annotations;
+using MassTransit;
 
 namespace Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 
@@ -7,5 +8,5 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 /// </summary>
 /// <param name="ActionGroup">Action group</param>
 /// <param name="CorrelationId">The correlationId of the action group</param>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public record ActionGroupCreated(ActionGroup ActionGroup, Guid CorrelationId) : CorrelatedBy<Guid>, IActionGroupEvent;

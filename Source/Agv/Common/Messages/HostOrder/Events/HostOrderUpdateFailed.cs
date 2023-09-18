@@ -1,4 +1,5 @@
-﻿using MassTransit;
+﻿using JetBrains.Annotations;
+using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
 namespace Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
@@ -6,7 +7,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
 /// <summary>
 /// An event that reports a failed order update
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public record HostOrderUpdateFailed : CorrelatedBy<Guid>
 {
     /// <inheritdoc/>

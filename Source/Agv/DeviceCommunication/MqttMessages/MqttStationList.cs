@@ -1,5 +1,6 @@
-﻿using MassTransit;
-using Gebhardt.StoreWare.Agv.Common.Extensions;
+﻿using Gebhardt.StoreWare.Agv.Common.Extensions;
+using JetBrains.Annotations;
+using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
@@ -8,7 +9,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 /// A list of all stations.
 /// <para>See "station_list.schema".</para>
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 [EntityName("amq.topic")]       // Specifies the RabbitMq exchange where the message is published
 [RoutingKey("agv.stationList")] // Specifies the topic where subscribers can receive the message
 public record MqttStationList
@@ -53,7 +54,7 @@ public record MqttStationList
 /// <summary>
 /// AGV station
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public record Station
 {
     /// <summary>
@@ -100,7 +101,7 @@ public record Position
     /// <summary>
     /// Angle of AGV at that station
     /// </summary>
-    [JetBrains.Annotations.UsedImplicitly]
+    [UsedImplicitly]
     public float Theta { get; }
 
     /// <summary>
@@ -135,30 +136,30 @@ public enum Function
     /// <summary>
     /// Pick and drop station
     /// </summary>
-    [JetBrains.Annotations.PublicAPI]
+    [PublicAPI]
     Both,
 
     /// <summary>
     /// Charging station
     /// </summary>
-    [JetBrains.Annotations.PublicAPI]
+    [PublicAPI]
     Charge,
 
     /// <summary>
     /// Drop only station
     /// </summary>
-    [JetBrains.Annotations.PublicAPI]
+    [PublicAPI]
     Drop,
 
     /// <summary>
     /// Park position
     /// </summary>
-    [JetBrains.Annotations.PublicAPI]
+    [PublicAPI]
     Park,
 
     /// <summary>
     /// Pick only station
     /// </summary>
-    [JetBrains.Annotations.PublicAPI]
+    [PublicAPI]
     Pick
 };
