@@ -21,7 +21,8 @@ using TransportOrder.Domain.Services.Routing;
 using TransportOrder.Domain.Validators;
 using TransportOrder.Persistence.Ef.DataAccess;
 using TransportOrder.Persistence.Ef.Repositories;
-using TransportOrder.Routing;
+using TransportOrder.Routing.Base;
+using TransportOrder.Routing.Implementations;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations;
 
@@ -42,7 +43,6 @@ public static class CoreHostBuilderExtensions
 
         hostBuilder.ConfigureServices((context, services) =>
         {
-
             RegisterConfigurationServices(productionOptions, services, context);
 
             RegisterMapServices(services);
@@ -72,10 +72,7 @@ public static class CoreHostBuilderExtensions
         {
             string? connectionString = context.Configuration.GetConnectionString(TransportOrderDbContext.ConfigSectionName);
 
-            builder.UseSqlServer(connectionString, m =>
-            {
-                m.MigrationsHistoryTable(TransportOrderDbContext.MigrationTableName);
-            });
+            builder.UseSqlServer(connectionString, m => { m.MigrationsHistoryTable(TransportOrderDbContext.MigrationTableName); });
         });
         services.AddDbContextFactory<SagaPersistenceDbContext>(builder =>
         {
@@ -91,6 +88,7 @@ public static class CoreHostBuilderExtensions
         services.AddSingleton<IParkingSemaphoreProvider, ParkingSemaphoreProvider>();
         services.AddTransient<IParkPointService, ParkPointService>();
         services.AddTransient<IRouteService, RouteService>();
+        services.AddSingleton<IRouteFinder, AStarRouteFinder>();
         services.AddTransient<IRoutingPlausibilityChecker, NoCheckPlausibilityChecker>();
         services.AddSingleton<IChangeDetector<AgvPositionStatus>, ChangeDetector<AgvPositionStatus>>();
     }

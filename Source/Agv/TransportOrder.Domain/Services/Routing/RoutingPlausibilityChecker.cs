@@ -1,6 +1,6 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using TransportOrder.Domain.Models.Node;
-using TransportOrder.Routing;
+using TransportOrder.Routing.Base;
 
 namespace TransportOrder.Domain.Services.Routing;
 

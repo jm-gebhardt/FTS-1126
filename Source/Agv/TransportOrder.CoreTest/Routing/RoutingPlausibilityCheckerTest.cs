@@ -2,7 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 using TransportOrder.Domain.Services.Routing;
-using TransportOrder.Routing;
+using TransportOrder.Routing.Base;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Routing;
 

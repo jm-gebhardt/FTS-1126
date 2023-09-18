@@ -4,7 +4,9 @@ using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Domain.Services.ActionGroup
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
-using TransportOrder.Routing;
+using TransportOrder.Routing.Base;
+using TransportOrder.Routing.Implementations;
+using TransportOrder.Routing.Models;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Routing;
 
@@ -123,25 +125,25 @@ public class AStarTest
         _wikiExample = new AgvGraph(Guid.Empty,
             new GraphNode[]
             {
-                new("Saarbrücken") { Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 0f, Z = 0f },
-                new("Kaiserslautern") { Type = AgvGraph.NodeType.PickDrop, X = 42f, Y = 80f, Z = 0f },
-                new("Frankfurt") { Type = AgvGraph.NodeType.PickDrop, X = 104f, Y = 100f, Z = 0f },
-                new("Ludwigshafen") { Type = AgvGraph.NodeType.PickDrop, X = 96f, Y = 60f, Z = 0f },
-                new("Karlsruhe") { Type = AgvGraph.NodeType.PickDrop, X = 104f, Y = -10f, Z = 0f },
-                new("Heilbronn") { Type = AgvGraph.NodeType.PickDrop, X = 150f, Y = 20f, Z = 0f },
-                new("Würzburg") { Type = AgvGraph.NodeType.PickDrop, X = 200f, Y = 92f, Z = 0f }
+                new("Nairobi") { Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 0f, Z = 0f },
+                new("Tokyo") { Type = AgvGraph.NodeType.PickDrop, X = 42f, Y = 80f, Z = 0f },
+                new("Marseille") { Type = AgvGraph.NodeType.PickDrop, X = 104f, Y = 100f, Z = 0f },
+                new("Berlin") { Type = AgvGraph.NodeType.PickDrop, X = 96f, Y = 60f, Z = 0f },
+                new("Denver") { Type = AgvGraph.NodeType.PickDrop, X = 104f, Y = -10f, Z = 0f },
+                new("Helsinki") { Type = AgvGraph.NodeType.PickDrop, X = 150f, Y = 20f, Z = 0f },
+                new("Rio") { Type = AgvGraph.NodeType.PickDrop, X = 200f, Y = 92f, Z = 0f }
             },
             new GraphEdge[]
             {
-                new("Saarbrücken", "Kaiserslautern", 70f),
-                new("Saarbrücken", "Karlsruhe", 145f),
-                new("Karlsruhe", "Saarbrücken", 145f),
-                new("Kaiserslautern", "Frankfurt", 103f),
-                new("Kaiserslautern", "Ludwigshafen", 53f),
-                new("Karlsruhe", "Heilbronn", 84f),
-                new("Frankfurt", "Würzburg", 116f),
-                new("Ludwigshafen", "Würzburg", 183f),
-                new("Heilbronn", "Würzburg", 102f)
+                new("Nairobi", "Tokyo", 70f),
+                new("Nairobi", "Denver", 145f),
+                new("Denver", "Nairobi", 145f),
+                new("Tokyo", "Marseille", 103f),
+                new("Tokyo", "Berlin", 53f),
+                new("Denver", "Helsinki", 84f),
+                new("Marseille", "Rio", 116f),
+                new("Berlin", "Rio", 183f),
+                new("Helsinki", "Rio", 102f)
             },
             mapName.ToGuid(),
             mapName);
@@ -152,12 +154,12 @@ public class AStarTest
     }
 
     /// <summary>
-    /// Test sorting of <see cref="IGraphAlgorithm.Route"/>.
+    /// Test sorting of <see cref="Route"/>.
     /// </summary>
     [TestMethod]
     public void Test_RouteComparable()
     {
-        var routes = new List<IGraphAlgorithm.Route?>
+        var routes = new List<Route?>
         {
             new(9f, Array.Empty<string>()),
             new(1f, Array.Empty<string>()),
@@ -165,7 +167,7 @@ public class AStarTest
             new(5f, Array.Empty<string>())
         };
 
-        List<IGraphAlgorithm.Route?> sorted = routes.OrderByDescending(n => n != null).ThenBy(n => n).ToList();
+        List<Route?> sorted = routes.OrderByDescending(n => n != null).ThenBy(n => n).ToList();
         sorted[0]!.Costs.ShouldBe(routes[1]!.Costs, 0.00001f);
         sorted[1]!.Costs.ShouldBe(routes[3]!.Costs, 0.00001f);
         sorted[2]!.Costs.ShouldBe(routes[0]!.Costs, 0.00001f);
@@ -180,9 +182,9 @@ public class AStarTest
     {
         var aStar = new AStar(_wikiExample, RoutingPlausibilityChecker);
 
-        var route = aStar.CalculateRoute("Saarbrücken", "Würzburg");
+        var route = aStar.CalculateRoute("Nairobi", "Rio");
         route.ShouldNotBeNull();
-        route.Nodes.ShouldBe(new[] { "Saarbrücken", "Kaiserslautern", "Frankfurt", "Würzburg" });
+        route.Nodes.ShouldBe(new[] { "Nairobi", "Tokyo", "Marseille", "Rio" });
         route.Costs.ShouldBe(289f, 0.00001f);
     }
 
@@ -191,9 +193,9 @@ public class AStarTest
     {
         var aStar = new AStar(_wikiExample, RoutingPlausibilityChecker);
 
-        var route = aStar.CalculateRoute("Saarbrücken", "Saarbrücken");
+        var route = aStar.CalculateRoute("Nairobi", "Nairobi");
         route.ShouldNotBeNull();
-        route.Nodes.ShouldBe(new[] { "Saarbrücken" });
+        route.Nodes.ShouldBe(new[] { "Nairobi" });
         route.Costs.ShouldBe(0f, 0.00001f);
     }
 
@@ -202,9 +204,9 @@ public class AStarTest
     {
         var aStar = new AStar(_wikiExample, RoutingPlausibilityChecker);
 
-        var route = aStar.CalculateRoute("Karlsruhe", "Saarbrücken", "Würzburg");
+        var route = aStar.CalculateRoute("Denver", "Nairobi", "Rio");
         route.ShouldNotBeNull();
-        route.Nodes.ShouldBe(new[] { "Karlsruhe", "Saarbrücken", "Kaiserslautern", "Frankfurt", "Würzburg" });
+        route.Nodes.ShouldBe(new[] { "Denver", "Nairobi", "Tokyo", "Marseille", "Rio" });
         route.Costs.ShouldBe(289f + 145f, 0.00001f);
     }
 
@@ -213,11 +215,11 @@ public class AStarTest
     {
         var aStar = new AStar(_wikiExample, RoutingPlausibilityChecker);
 
-        string[] waypoints = new[] { "Karlsruhe", "Saarbrücken", "Saarbrücken", "Würzburg" }; // (Karlsruhe => Saarbrücken) + (Saarbrücken => Würzburg)
+        string[] waypoints = new[] { "Denver", "Nairobi", "Nairobi", "Rio" }; // (Denver => Nairobi) + (Nairobi => Rio)
 
         var route = aStar.CalculateRoute(waypoints);
         route.ShouldNotBeNull();
-        route.Nodes.ShouldBe(new[] { "Karlsruhe", "Saarbrücken", "Kaiserslautern", "Frankfurt", "Würzburg" });
+        route.Nodes.ShouldBe(new[] { "Denver", "Nairobi", "Tokyo", "Marseille", "Rio" });
         route.Costs.ShouldBe(289f + 145f, 0.00001f);
     }
 
@@ -252,7 +254,7 @@ public class AStarTest
     {
         var aStar = new AStar(_grid!, RoutingPlausibilityChecker);
         // ReSharper disable JoinDeclarationAndInitializer
-        IGraphAlgorithm.Route? c1, c2, c3, c4, costs;
+        Route? c1, c2, c3, c4, costs;
         // ReSharper restore JoinDeclarationAndInitializer
 
         c1 = aStar.CalculateRoute("01/01", "11/01");
@@ -344,13 +346,13 @@ public class AStarTest
         agvGraphTextFixtureMock.Setup(method => method.GetAllPossibleRoutesOrdered())
             .Returns(new[]
             {
-                new[] { "Saarbrücken", "Kaiserslautern", "Frankfurt", "Würzburg" },
-                new[] { "Saarbrücken", "Kaiserslautern", "Ludwigshafen", "Würzburg" },
-                new[] { "Saarbrücken", "Karlsruhe", "Heilbronn", "Würzburg" }
+                new[] { "Nairobi", "Tokyo", "Marseille", "Rio" },
+                new[] { "Nairobi", "Tokyo", "Berlin", "Rio" },
+                new[] { "Nairobi", "Denver", "Helsinki", "Rio" }
             });
         var agvGraphTextFixture = agvGraphTextFixtureMock.Object;
 
-        AssertFindsShortestPath("Saarbrücken", "Würzburg", agvGraphTextFixture);
+        AssertFindsShortestPath("Nairobi", "Rio", agvGraphTextFixture);
     }
 
     [TestMethod]
@@ -360,11 +362,11 @@ public class AStarTest
         agvGraphTextFixtureMock.Setup(method => method.GetAllPossibleRoutesOrdered())
             .Returns(new[]
             {
-                new[] { "Saarbrücken", "LoneRoute", "LoneDestination" }
+                new[] { "Nairobi", "Oslo", "LoneDestination" }
             });
         var agvGraphTextFixture = agvGraphTextFixtureMock.Object;
 
-        AssertFindsShortestPath("Saarbrücken", "LoneDestination", agvGraphTextFixture);
+        AssertFindsShortestPath("Nairobi", "LoneDestination", agvGraphTextFixture);
     }
 
     private void AssertFindsShortestPath(string source, string destination, AgvGraphTestFixture agvGraphTextFixture)

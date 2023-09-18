@@ -4,8 +4,7 @@ using Moq;
 using TransportOrder.Domain.Repositories;
 using TransportOrder.Domain.Services.ActionGroup;
 using TransportOrder.Domain.Services.Routing;
-using TransportOrder.Routing;
-
+using TransportOrder.Routing.Models;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Domain.Services.ActionGroup;
 
@@ -38,7 +37,7 @@ public class ChooseAgvActionGroupServiceFixture
         RouteService.Setup(x => x.GetCostsForFirstActionAsync(agv, actionGroup, It.IsAny<CancellationToken>()))
             .ReturnsAsync(routeCosts);
 
-        RouteService.Setup(x => x.GetRouteAsync(agv, It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(new IGraphAlgorithm.Route(1f, Array.Empty<string>()));
+        RouteService.Setup(x => x.GetRouteAsync(agv, It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Route(1f, Array.Empty<string>()));
         return this;
     }
 
@@ -53,7 +52,7 @@ public class ChooseAgvActionGroupServiceFixture
         RouteService.Setup(x => x.GetCostsForFirstActionAsync(agv, actionGroup, It.IsAny<CancellationToken>()))
             .ReturnsAsync(routeCosts);
 
-        RouteService.Setup(x => x.GetRouteAsync(agv, It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(new IGraphAlgorithm.Route(1f, Array.Empty<string>()));
+        RouteService.Setup(x => x.GetRouteAsync(agv, It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Route(1f, Array.Empty<string>()));
         return this;
     }
 

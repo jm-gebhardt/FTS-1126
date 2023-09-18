@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using TransportOrder.Domain.Repositories;
 using TransportOrder.Domain.Services.Routing;
+using TransportOrder.Routing.Implementations;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Domain.Services.Routing;
 
@@ -15,7 +16,7 @@ public class RouteServiceTestFixture
     public RouteServiceTestFixture()
     {
         _agvGraphRegistry = new Mock<IAgvGraphRegistry>();
-        RouteService = new RouteService(_agvGraphRegistry.Object, new Mock<ILogger<RouteService>>().Object);
+        RouteService = new RouteService(_agvGraphRegistry.Object, new AStarRouteFinder(), new Mock<ILogger<RouteService>>().Object);
     }
 
     public RouteServiceTestFixture WithAgv(IAgv agv, AgvGraph agvGraph)

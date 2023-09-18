@@ -1,12 +1,14 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using TransportOrder.Routing.Base;
+using TransportOrder.Routing.Models;
 
-namespace TransportOrder.Routing;
+namespace TransportOrder.Routing.Implementations;
 
 /// <summary>
 /// A* algorithm.
 /// </summary>
 [JetBrains.Annotations.PublicAPI]
-public class AStar : BaseGraphAlgorithm
+public class AStar : BaseRouteAlgorithm
 {
     /// <summary>
     /// Node extended with properties required for A* calculation.
@@ -164,7 +166,7 @@ public class AStar : BaseGraphAlgorithm
     }
 
     /// <inheritdoc/>>
-    protected override IGraphAlgorithm.Route? CalculateRouteInternal(string source, string destination)
+    protected override Route? CalculateRouteInternal(string source, string destination)
     {
         _openList.Clear();
         _closedList.Clear();
@@ -207,29 +209,9 @@ public class AStar : BaseGraphAlgorithm
 
             route.Reverse();
 
-            return new IGraphAlgorithm.Route(end.F, route.ToArray());
+            return new Route(end.F, route.ToArray());
         }
         // No path found.
         return null;
-    }
-
-    /// <summary>
-    /// Returns a simple route from source to destination on the given graph 
-    /// </summary>
-    /// <param name="agvGraph">The graph on witch the route shall be calculated on</param>
-    /// <param name="source">The source/start of the route</param>
-    /// <param name="destination">The destination/end of the route</param>
-    /// <returns>The shortest <see cref="IGraphAlgorithm.Route"/> route between source and destination or null if no route could be found</returns>
-    public static IGraphAlgorithm.Route? CalculateRouteStatic(AgvGraph agvGraph, string source, string destination)
-    {
-        var aStar = new AStar(agvGraph);
-        return aStar.CalculateRoute(source, destination);
-    }
-
-    /// <inheritdoc cref="BaseGraphAlgorithm.CalculateRoute(string[])"/>>
-    public static IGraphAlgorithm.Route? CalculateRouteStatic(AgvGraph agvGraph, string[] waypoints)
-    {
-        var aStar = new AStar(agvGraph);
-        return aStar.CalculateRoute(waypoints);
     }
 }

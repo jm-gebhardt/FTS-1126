@@ -1,7 +1,7 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using JetBrains.Annotations;
-using TransportOrder.Routing;
 using TransportOrder.Routing.Exceptions;
+using TransportOrder.Routing.Models;
 
 namespace TransportOrder.Domain.Services.Routing;
 
@@ -48,7 +48,7 @@ public interface IRouteService
     /// <param name="cancellationToken"></param>
     /// <returns>The found route</returns>
     /// <exception cref="RouteNotFoundException"></exception>
-    Task<IGraphAlgorithm.Route> GetRouteAsync(IAgv agv, string destinationNodeId, CancellationToken cancellationToken = default);
+    Task<Route> GetRouteAsync(IAgv agv, string destinationNodeId, CancellationToken cancellationToken = default);
     /// <summary>
     /// Determine route for Agv from its last node to the destination nodes one after the other
     /// </summary>
@@ -57,7 +57,7 @@ public interface IRouteService
     /// <returns>The found route</returns>
     /// <exception cref="RouteNotFoundException"></exception>
     [PublicAPI]
-    Task<IGraphAlgorithm.Route> GetRouteAsync(IAgv agv, IList<string> destinationNodeIds);
+    Task<Route> GetRouteAsync(IAgv agv, IList<string> destinationNodeIds);
 
     /// <summary>
     /// Returns the node from availableNodes with the lowest cost route from agv last node

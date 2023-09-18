@@ -1,11 +1,12 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using TransportOrder.Routing.Models;
 
-namespace TransportOrder.Routing;
+namespace TransportOrder.Routing.Base;
 
 /// <summary>
 /// This base class implements the basic construct of a graph algorithm
 /// </summary>
-public abstract class BaseGraphAlgorithm : IGraphAlgorithm
+public abstract class BaseRouteAlgorithm : IRouteAlgorithm
 {
     private readonly IRoutingPlausibilityChecker? _routingPlausibilityChecker;
 
@@ -20,7 +21,7 @@ public abstract class BaseGraphAlgorithm : IGraphAlgorithm
     /// </summary>
     /// <param name="agvGraph">The agvGraph to work with</param>
     /// <param name="routingPlausibilityChecker">The checker to use for the check in the base implementation</param>
-    protected BaseGraphAlgorithm(AgvGraph agvGraph, IRoutingPlausibilityChecker? routingPlausibilityChecker = null)
+    protected BaseRouteAlgorithm(AgvGraph agvGraph, IRoutingPlausibilityChecker? routingPlausibilityChecker = null)
     {
         _routingPlausibilityChecker = routingPlausibilityChecker;
         Edges = agvGraph.Edges;
@@ -31,15 +32,9 @@ public abstract class BaseGraphAlgorithm : IGraphAlgorithm
     /// The actual implementation of the algorithm
     /// <inheritdoc cref="CalculateRoute(string,string)"/>
     /// </summary>
-    protected abstract IGraphAlgorithm.Route? CalculateRouteInternal(string source, string destination);
+    protected abstract Route? CalculateRouteInternal(string source, string destination);
 
-    /// <summary>
-    /// Calculate best route from <paramref name="source"/> to <paramref name="destination"/>.
-    /// </summary>
-    /// <param name="source">Node ID of the source.</param>
-    /// <param name="destination">Node ID of the destination.</param>
-    /// <returns>Returns the route as a comparable value or null when no path found.</returns>
-    public IGraphAlgorithm.Route? CalculateRoute(string source, string destination)
+    private Route? CalculateRoute(string source, string destination)
     {
         var start = Nodes.SingleOrDefault(n => n.Id.Equals(source));
         var end = Nodes.SingleOrDefault(n => n.Id.Equals(destination));
@@ -56,7 +51,7 @@ public abstract class BaseGraphAlgorithm : IGraphAlgorithm
 
         if (source == destination) // Already at destination -> 0 cost
         {
-            return new IGraphAlgorithm.Route(0f, new[] { source });
+            return new Route(0f, new[] {source});
         }
 
         return CalculateRouteInternal(source, destination);
@@ -73,51 +68,26 @@ public abstract class BaseGraphAlgorithm : IGraphAlgorithm
         return _routingPlausibilityChecker == null || _routingPlausibilityChecker.IsPlausible(start, end);
     }
 
-    /// <summary>
-    /// Calculate best route from <paramref name="currentNode"/> to <paramref name="destination"/> via <paramref name="source"/>.
-    /// </summary>
-    /// <param name="currentNode">Node ID of the current position.</param>
-    /// <param name="source">Node ID of the source.</param>
-    /// <param name="destination">Node ID of the destination.</param>
-    /// <returns>Returns the route as a comparable value or null when no path found.</returns>
-    /// <exception cref="KeyNotFoundException">Source or destination node not found.</exception>
-    public virtual IGraphAlgorithm.Route? CalculateRoute(string currentNode, string source, string destination)
-    {
-        // Get route to source
-        var routeToSource = CalculateRoute(currentNode, source);
+    /// <inheritdoc cref="IRouteAlgorithm.CalculateRoute(CancellationToken, string[])"/>
+    public Route? CalculateRoute(params string[] waypoints) => CalculateRoute(default, waypoints);
 
-        if (routeToSource == null)
-        {
-            return null;
-        }
-        // Get route from source to destination
-        var route = CalculateRoute(source, destination);
-
-        if (route == null)
-        {
-            return null;
-        }
-
-        // Return combined routes
-        return routeToSource + route;
-    }
-
-    /// <inheritdoc cref="IGraphAlgorithm.CalculateRoute(string[])" />
+    /// <inheritdoc/>
     /// <exception cref="KeyNotFoundException">A waypoint node was not found.</exception>
-    public virtual IGraphAlgorithm.Route? CalculateRoute(string[] waypoints)
+    public Route? CalculateRoute(CancellationToken cancellationToken = default, params string[] waypoints)
     {
         if (waypoints.Length < 2)
         {
             return null;
         }
 
-        var totalRoute = new IGraphAlgorithm.Route(0, Array.Empty<string>());
+        var totalRoute = new Route(0, Array.Empty<string>());
 
         for (int i = 0; i < waypoints.Length - 1; i++)
         {
             string source = waypoints[i];
             string destination = waypoints[i + 1];
 
+            cancellationToken.ThrowIfCancellationRequested();
             var route = CalculateRoute(source, destination);
             if (route == null)
             {

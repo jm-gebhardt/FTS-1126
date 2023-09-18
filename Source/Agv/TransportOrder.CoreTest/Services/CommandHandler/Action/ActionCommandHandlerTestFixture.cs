@@ -12,7 +12,7 @@ using TransportOrder.Domain.Repositories;
 using TransportOrder.Domain.SemaphoreProvider;
 using TransportOrder.Domain.Services.ActionGroup;
 using TransportOrder.Domain.Services.Routing;
-using TransportOrder.Routing;
+using TransportOrder.Routing.Models;
 using ActionGroup = TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using AgvAction = TransportOrder.Domain.Models.ActionGroup.AgvAction;
 
@@ -75,7 +75,7 @@ public class ActionCommandHandlerTestFixture : MassTransitConsumerTestFixture<Ac
 
     public void AddRoute(string[] nodes)
     {
-        _routeService.Setup(x => x.GetRouteAsync(It.IsAny<IAgv>(), It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(new IGraphAlgorithm.Route(1f, nodes));
+        _routeService.Setup(x => x.GetRouteAsync(It.IsAny<IAgv>(), It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Route(1f, nodes));
     }
 
     public void SetBusyThrowsException(bool throwException)
