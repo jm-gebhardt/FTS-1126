@@ -160,7 +160,11 @@ public class MapGenerator
             _graph.RelatedMapName,
             DateTime.UtcNow,
             Convert.ToBase64String(map),
-            resolution, xOffset, yOffset);
+            ImageWidth,
+            imageHeightPx,
+            resolution,
+            xOffset,
+            yOffset);
     }
 
     /// <summary>

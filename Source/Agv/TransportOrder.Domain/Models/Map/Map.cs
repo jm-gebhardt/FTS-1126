@@ -1,93 +1,68 @@
-﻿using JetBrains.Annotations;
-using SkiaSharp;
-
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Map;
+﻿namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Map;
 
 /// <summary>
 /// class representing the Map table in Database
 /// </summary>
-public class Map 
+public record Map
 {
     /// <summary>
     /// The correlation id o the map.
     /// </summary>
-    public Guid CorrelationId { get; set; }
+    public Guid CorrelationId { get; init; }
 
     /// <summary>
     /// MapId
     /// </summary>
-    public string MapId { get; set; }
+    public string MapId { get; init; }
 
-
-    private byte[]? _mapValue;
     /// <summary>
     /// Map in form bytes
     /// </summary>
-    [UsedImplicitly]
-    public byte[]? MapValue { 
-        get => _mapValue; 
-        set
-        { 
-            _mapValue = value;
-            if (_mapValue is { Length: >= 1 })
-            {
-                SetDimensions(_mapValue);
-                return;
-            }
-            Width = 0;
-            Height = 0;
-        }
-    }
+    public byte[]? MapValue { get; init; }
 
     /// <summary>
     /// Timestamp of last modification
     /// </summary>
-    [UsedImplicitly]
-    public DateTime ModificationDate { get; set; }
+    public DateTime ModificationDate { get; init; }
 
     /// <summary>
     /// The resolution of the maps image. Expressed as how many [m] per pixel are represented
     /// </summary>
-    public double Resolution { get; set; }
+    public double Resolution { get; init; }
 
     /// <summary>
     /// The x offset of the map in [m] where the mapped graph coordinate system starts. Origin is the left upper corner.
     /// </summary>
-    public double XOffset { get; set; }
+    public double XOffset { get; init; }
 
     /// <summary>
     /// The y offset of the map in [m] where the mapped graph coordinate system starts. Origin is the left upper corner.
     /// </summary>
-    public double YOffset { get; set; }
+    public double YOffset { get; init; }
 
     /// <summary>
-    /// The width of the map image [pixel].
+    /// The width of the map [px]
     /// </summary>
-    public int Width { get; private set; }
+    public int Width { get; init; }
 
     /// <summary>
-    /// The height of the map image [pixel].
+    /// The height of the map [px]
     /// </summary>
-    public int Height { get; private set; }
+    public int Height { get; init; }
 
     /// <summary>
     /// Initializes a new <see cref="Map"/> instance.
     /// </summary>
-    public Map(Guid correlationId, string mapId, byte[]? mapValue, double resolution, double xOffset, double yOffset, DateTime modificationDate)
+    public Map(Guid correlationId, string mapId, byte[]? mapValue, int width, int height, double resolution, double xOffset, double yOffset, DateTime modificationDate)
     {
         CorrelationId = correlationId;
         MapId = mapId;
         MapValue = mapValue;
+        Width = width;
+        Height = height;
         Resolution = resolution;
         XOffset = xOffset;
         YOffset = yOffset;
         ModificationDate = modificationDate;
-    }
-
-    private void SetDimensions(byte[] mapValue)
-    {
-        var image = SKImage.FromEncodedData(mapValue);
-        Width = image.Width;
-        Height = image.Height;
     }
 }

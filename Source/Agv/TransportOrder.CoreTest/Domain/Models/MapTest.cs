@@ -9,6 +9,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Domain.Models;
 public class MapTest
 {
     private const string Base64String = "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIAQMAAAD+wSzIAAAABlBMVEX///+/v7+jQ3Y5AAAADklEQVQI12P4AIX8EAgALgAD/aNpbtEAAAAASUVORK5CYII=";
+
     [TestMethod]
     public void Create_ValidData_AllPropertiesSet()
     {
@@ -22,6 +23,8 @@ public class MapTest
             correlationId,
             mapId,
             Convert.FromBase64String(Base64String),
+            8,
+            8,
             resolution,
             xOffSet,
             yOffSet,
@@ -35,7 +38,7 @@ public class MapTest
         map.Width.ShouldBe(8);
         map.Resolution.ShouldBe(resolution);
         map.XOffset.ShouldBe(xOffSet);
-        map.YOffset.ShouldBe(yOffSet);  
+        map.YOffset.ShouldBe(yOffSet);
     }
 
     [TestMethod]
@@ -51,6 +54,8 @@ public class MapTest
             correlationId,
             mapId,
             Array.Empty<byte>(),
+            0,
+            0,
             resolution,
             xOffSet,
             yOffSet,
@@ -80,6 +85,8 @@ public class MapTest
             correlationId,
             mapId,
             null,
+            0,
+            0,
             resolution,
             xOffSet,
             yOffSet,

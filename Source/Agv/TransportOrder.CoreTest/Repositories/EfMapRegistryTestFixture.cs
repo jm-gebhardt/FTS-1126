@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Repositories;
+
 public class EfMapRegistryTestFixture
 {
     private const string SmallImage1 = "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIAQMAAAD+wSzIAAAABlBMVEX///+/v7+jQ3Y5AAAADklEQVQI12P4AIX8EAgALgAD/aNpbtEAAAAASUVORK5CYII=";
@@ -17,16 +18,14 @@ public class EfMapRegistryTestFixture
     public EfMapRegistry Registry { get; }
 
     private IDbContextFactory<TransportOrderDbContext> ContextFactory { get; }
+
     private ServiceProvider Provider { get; }
 
     public EfMapRegistryTestFixture()
     {
         var mockLogger = new Mock<ILogger<EfMapRegistry>>();
         var collection = new ServiceCollection()
-            .AddDbContextFactory<TransportOrderDbContext>(options =>
-                {
-                    options.UseInMemoryDatabase(Guid.NewGuid().ToString());
-                }
+            .AddDbContextFactory<TransportOrderDbContext>(options => { options.UseInMemoryDatabase(Guid.NewGuid().ToString()); }
             );
         Provider = collection.BuildServiceProvider(true);
         ContextFactory = Provider.GetService<IDbContextFactory<TransportOrderDbContext>>()!;
@@ -47,6 +46,6 @@ public class EfMapRegistryTestFixture
         const float yOffset = 1;
         var modificationDate = DateTime.UtcNow;
 
-        return new Map(mapId.ToGuid(), mapId, Convert.FromBase64String(SmallImage1), resolution, xOffset, yOffset, modificationDate);
+        return new Map(mapId.ToGuid(), mapId, Convert.FromBase64String(SmallImage1), 8, 8, resolution, xOffset, yOffset, modificationDate);
     }
 }

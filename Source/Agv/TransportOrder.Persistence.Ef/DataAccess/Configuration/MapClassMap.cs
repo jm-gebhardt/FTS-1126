@@ -10,8 +10,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess.Config
 /// </summary>
 public class MapClassMap : ClassMap<Map>
 {
-    private const int CurrentStateMaxLength = 32;
-
     /// <summary>
     /// <see cref="Map" /> entity configurations
     /// </summary>
@@ -20,8 +18,5 @@ public class MapClassMap : ClassMap<Map>
     protected override void Configure(EntityTypeBuilder<Map> entity, ModelBuilder model)
     {
         entity.ConfigureAllProperties();
-
-        // Restrict CurrentState length
-        entity.Property(x => x.MapId).HasMaxLength(CurrentStateMaxLength);
     }
 }

@@ -283,18 +283,24 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         When(RequestAgvMapEvent)
             .Then(c => _logger.LogDebug("{MessageType} {AgvId} / {CorrelationId} / {MapId} received", nameof(RequestAgvMap), c.Message.AgvId, c.Saga.CorrelationId, c.Message.MapId))
             .If(c => c.Saga.AgvMap != null,
-                x => x.Publish(c => new AgvMapReceived(
-                    c.Saga.CorrelationId,
-                    c.Saga.AgvId,
-                    new AgvMap(
-                        c.Message.MapCorrelationId,
-                        c.Message.MapId,
-                        c.Saga.AgvMap!.ModificationDate,
-                        c.Saga.AgvMap!.ImageData,
-                        c.Saga.AgvMap!.Resolution,
-                        c.Saga.AgvMap.XOffset,
-                        c.Saga.AgvMap.YOffset
-                    ))));
+                x => x.Publish(c =>
+                {
+                    var sagaAgvMap = c.Saga.AgvMap!;
+                    return new AgvMapReceived(
+                        c.Saga.CorrelationId,
+                        c.Saga.AgvId,
+                        new AgvMap(
+                            c.Message.MapCorrelationId,
+                            c.Message.MapId,
+                            sagaAgvMap.ModificationDate,
+                            sagaAgvMap.ImageData,
+                            sagaAgvMap.Width,
+                            sagaAgvMap.Height,
+                            sagaAgvMap.Resolution,
+                            sagaAgvMap.XOffset,
+                            sagaAgvMap.YOffset
+                        ));
+                }));
     #endregion
 
     #region Actions
@@ -308,7 +314,6 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         const double secondsPerMillisecond = 0.001;
         context.Saga.UpdateStatus(StatusUpdateIntervalMs * secondsPerMillisecond, _batteryChargeRate, _batteryDischargeRate); // Update status before each send
 
-            
         if (context.Saga.IsOnline) // Only send status if AGV is still alive
         {
             await context.Publish(new AgvStatusReceived(
@@ -317,10 +322,10 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
                 context.Saga.AgvStatus
             ), context.CancellationToken);
         }
-            
+
         // publish started/stopped charging regardless of IsOnline flag, because otherwise you can never reanimate dead Agvs
         // Started charging
-            
+
         if (!prevCharging && context.Saga.AgvStatus.Charging)
         {
             await context.Publish(new AgvStartedCharging(context.Saga.CorrelationId));

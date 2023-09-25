@@ -8,8 +8,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Repositories;
 [TestClass]
 public class EfMapRegistryTest
 {
-
-    
     [TestMethod]
     public void GetAllMaps_ReturnsEmpty_List_WhenRegistryIsEmpty()
     {
@@ -123,6 +121,8 @@ public class EfMapRegistryTest
             "mapId".ToGuid(),
             "mapId",
             Convert.FromBase64String(EfMapRegistryTestFixture.SmallImage2),
+            1,
+            1,
             2,
             2,
             2,

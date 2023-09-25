@@ -2,6 +2,7 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Helpers;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 using JetBrains.Annotations;
 using MassTransit;
@@ -46,25 +47,33 @@ public class MqttMapConsumer : IConsumer<MqttMap>
         {
             _logger.LogError("Incoming Map cannot be forwarded: MapId is NULL. Message: {Message}", context.Message);
         }
-        else if (context.Message.Data == null)
-        {
-            _logger.LogError("Incoming Map cannot be forwarded: PNG string is NULL. Message: {Message}", context.Message);
-        } 
         else
         {
-            await context.Publish(new AgvMapReceived(
-                context.Message.SerialNumber.ToGuid(),
-                context.Message.SerialNumber,
-                new AgvMap(
-                    context.Message.MapId.ToGuid(),
-                    context.Message.MapId,
-                    modificationDate,
-                    context.Message.Data,
-                    context.Message.Resolution,
-                    context.Message.XOffset * -1.0f,
-                    context.Message.YOffset * -1.0f
-                )
-            ));
+            string? messageData = context.Message.Data;
+            if (messageData == null)
+            {
+                _logger.LogError("Incoming Map cannot be forwarded: PNG string is NULL. Message: {Message}", context.Message);
+            }
+            else
+            {
+                var dimensions = MapHelper.GetMapDimensions(Convert.FromBase64String(messageData));
+
+                await context.Publish(new AgvMapReceived(
+                    context.Message.SerialNumber.ToGuid(),
+                    context.Message.SerialNumber,
+                    new AgvMap(
+                        context.Message.MapId.ToGuid(),
+                        context.Message.MapId,
+                        modificationDate,
+                        messageData,
+                        dimensions.Width,
+                        dimensions.Height,
+                        context.Message.Resolution,
+                        context.Message.XOffset * -1.0f,
+                        context.Message.YOffset * -1.0f
+                    )
+                ));
+            }
         }
     }
 }

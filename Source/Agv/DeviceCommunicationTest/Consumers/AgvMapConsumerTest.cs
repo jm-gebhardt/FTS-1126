@@ -32,7 +32,7 @@ public class AgvMapConsumerTest
 
     private readonly MqttMap _mqttMap = new(serialNumber: AgvId, requestId: AgvId)
     {
-        Data = "bGlnaHQgdw==",
+        Data = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
         MapId = MapId,
         ModificationDate = DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture),
         Resolution = 1,

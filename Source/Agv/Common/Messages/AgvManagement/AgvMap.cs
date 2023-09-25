@@ -29,6 +29,16 @@ public record AgvMap : CorrelatedBy<Guid>
     public string ImageData { get; }
 
     /// <summary>
+    /// The Width of the map [px]
+    /// </summary>
+    public int Width { get; }
+
+    /// <summary>
+    /// The Height of the map [px]
+    /// </summary>
+    public int Height { get; }
+
+    /// <summary>
     /// Resolution of the Image in [m/px].
     /// </summary>
     public float Resolution { get; }
@@ -52,6 +62,8 @@ public record AgvMap : CorrelatedBy<Guid>
     /// <param name="mapId">The human readable unique ID if the requested map</param>
     /// <param name="modificationDate">Timestamp of last modification.</param>
     /// <param name="imageData">The base64 encoded image data as string</param>
+    /// <param name="width">The width of the map [px]</param>
+    /// <param name="height">The height of the map [px]</param>
     /// <param name="resolution">Resolution of the Image in [m/px].</param>
     /// <param name="xOffset">Distance from the left bound to the origin of the graph coordinates.</param>
     /// <param name="yOffset">Distance from the top bound to the origin of the graph coordinates.</param>
@@ -59,6 +71,8 @@ public record AgvMap : CorrelatedBy<Guid>
         string mapId,
         DateTime modificationDate,
         string imageData,
+        int width,
+        int height,
         float resolution,
         float xOffset,
         float yOffset)
@@ -67,6 +81,8 @@ public record AgvMap : CorrelatedBy<Guid>
         MapId = mapId;
         ModificationDate = modificationDate;
         ImageData = imageData;
+        Width = width;
+        Height = height;
         Resolution = resolution;
         XOffset = xOffset;
         YOffset = yOffset;
