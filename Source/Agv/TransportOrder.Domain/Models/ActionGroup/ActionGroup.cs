@@ -127,18 +127,6 @@ public class ActionGroup
         }
     }
 
-    /// <summary>
-    /// Validates the action group.
-    /// </summary>
-    public bool Validate()
-    {
-        if (State == ActionGroupState.Invalid)
-        {
-            return true;
-        }
-        return true;
-    }
-
     private void SetDates()
     {
         var now = DateTime.UtcNow;

@@ -59,15 +59,12 @@ try
         services.AddDbContextFactory<WcsSagaDbContext>(builder =>
         {
             string? connectionString = context.Configuration.GetConnectionString(WcsSagaDbContext.ConfigSectionName);
-            builder.UseSqlServer(connectionString, m =>
-            {
-                m.MigrationsHistoryTable(WcsSagaDbContext.MigrationTableName);
-            });
+            builder.UseSqlServer(connectionString, m => { m.MigrationsHistoryTable(WcsSagaDbContext.MigrationTableName); });
         });
         services.AddSingleton<IStateObserver<HostOrderSaga>, HostOrderStateObserver>();
         services.ConfigureServicesMassTransit(context.Configuration, x =>
         {
-            x.AddSagaStateMachine<HostOrderStateMachine, HostOrderSaga>(cfg => cfg.UseMessageRetry(c =>c.Interval(5, TimeSpan.FromSeconds(1))))
+            x.AddSagaStateMachine<HostOrderStateMachine, HostOrderSaga>()
                 .AddPersistence<HostOrderSaga, WcsSagaDbContext>();
         });
     });

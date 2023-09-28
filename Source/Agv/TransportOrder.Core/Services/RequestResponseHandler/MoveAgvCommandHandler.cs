@@ -50,7 +50,8 @@ public class MoveAgvCommandHandler : IConsumer<MoveAgv>
             creator: creator
         );
 
-        await _queueActionGroupRequestClient.GetResponse<Success>(new QueueActionGroup(moveActionGroup));
+        // in this case it's a manual ActionGroup, so we want to escalate it and the original publisher is responsible for a proper exception handling
+        await _queueActionGroupRequestClient.GetResponse<Success>(new QueueActionGroup(moveActionGroup, true));
 
         await context.RespondAsync(new MoveAgvResult(moveActionGroup.CorrelationId));
     }

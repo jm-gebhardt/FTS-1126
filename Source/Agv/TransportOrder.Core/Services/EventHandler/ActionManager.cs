@@ -9,7 +9,6 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Routing;
-using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using ActionGroup = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
@@ -63,10 +62,37 @@ public class ActionManager : IActionManager
         _actionGroupValidationService = actionGroupValidationService;
     }
 
-    private async Task AddActionGroupAsync(ActionGroup actionGroup)
+    private async Task<bool> ValidateAndAddActionGroupAsync(ActionGroup actionGroup, bool throwOnInvalid = true)
     {
+        _logger.LogTrace("Validating ActionGroup with CorrelationId: {ActionGroupId}", actionGroup.CorrelationId);
+        IEnumerable<ValidationFailure> validationFailures = await _actionGroupValidationService.ValidateAsync(actionGroup);
+        bool isValid = !validationFailures.Any();
+
+        if (!isValid)
+        {
+            _logger.LogError("Validation result of ActionGroup with CorrelationId: {ActionGroupId} is not valid! Errors: {Errors}", actionGroup.CorrelationId, validationFailures);
+
+            if (throwOnInvalid)
+            {
+                throw new ValidationException(validationFailures);
+            }
+            actionGroup.InvalidateActionGroup();
+        }
+
+        _logger.LogDebug("Adding ActionGroup with CorrelationId: {ActionGroupId}", actionGroup.CorrelationId);
+
         await _actionGroupRegistry.AddAsync(actionGroup);
         await _bus.Publish(new ActionGroupCreated(_mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup), actionGroup.CorrelationId));
+
+        if (!isValid)
+        {
+            _logger.LogDebug("ActionGroup with CorrelationId: {ActionGroupId} is not valid, publishing ActionGroupInvalid", actionGroup.CorrelationId);
+            List<string> validationFailureReasons = validationFailures.Select(error => error.ErrorMessage).ToList();
+
+            await _bus.Publish(new ActionGroupInvalid(actionGroup.CorrelationId, _mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup), validationFailureReasons));
+        }
+
+        return isValid;
     }
 
     private async Task UpdateActionGroupAsync(AgvAction action, IAgv agv, ActionState state, CancellationToken cancellationToken)
@@ -130,8 +156,7 @@ public class ActionManager : IActionManager
     /// <summary>
     /// Send <see cref="Common.Messages.ActionGroups.Commands.StartActionCommand"/> and set action to start>.
     /// </summary>
-    [PublicAPI]
-    public async Task StartActionAsync(AgvAction action, IAgv assignedAgv, CancellationToken cancellationToken)
+    private async Task StartActionAsync(AgvAction action, IAgv assignedAgv, CancellationToken cancellationToken)
     {
         action.Nodes = (await _routeService.GetRouteAsync(assignedAgv, action.TargetNodeId, cancellationToken)).Nodes;
 
@@ -155,56 +180,31 @@ public class ActionManager : IActionManager
     }
 
     /// <inheritdoc />
-    public async Task AddActionGroupAsync(ActionGroup actionGroup, CancellationToken cancellationToken)
+    public async Task AddActionGroupAsync(ActionGroup actionGroup, bool throwOnInvalid, CancellationToken cancellationToken)
     {
-        _logger.LogTrace("Validating ActionGroup with CorrelationId: {ActionGroupId}", actionGroup.CorrelationId);
-        IEnumerable<ValidationFailure> validationFailures = await _actionGroupValidationService.ValidateAsync(actionGroup);
+        bool isValid = await ValidateAndAddActionGroupAsync(actionGroup, throwOnInvalid);
 
-        if (validationFailures.Any())
+        if (isValid)
         {
-            await HandleValidationFailure(actionGroup, validationFailures, cancellationToken);
-            return;
-        }
-        // this must be locked as well, because we are adding a new ActionGroup (external insert) and must ensure that this is done in serial. In this scenario the AssignAsync is used without lock!
-        await _semaphoreProvider.ExecuteLockedAsync(async () =>
-        {
-            _logger.LogDebug("Adding ActionGroup with CorrelationId: {ActionGroupId}", actionGroup.CorrelationId);
-            await AddActionGroupAsync(actionGroup);
-
-            var agv = await GetReadyAgv(actionGroup, cancellationToken);
-
-            if (agv != null)
+            // this must be locked as well, because we are adding a new ActionGroup (external insert) and must ensure that this is done in serial. In this scenario the AssignAsync is used without lock!
+            await _semaphoreProvider.ExecuteLockedAsync(async () =>
             {
-                var action = actionGroup.Actions.OrderBy(a => a.Sequence).First();
+                var agv = await GetReadyAgv(actionGroup, cancellationToken);
 
-                _logger.LogInformation("Starting new ActionGroup directly for Agv {AgvId} with CorrelationId: {AgvCorrelationId}, ActionType: {ActionType}", agv.AgvId, agv.CorrelationId, Enum.GetName(action.ActionType));
+                if (agv != null)
+                {
+                    var action = actionGroup.Actions.OrderBy(a => a.Sequence).First();
 
-                await StartActionAsync(action, agv, cancellationToken);
-            }
-            else
-            {
-                // no AGV found, will be assigned later
-                _logger.LogDebug("No ready Agv was found directly for the ActionGroup {ActionGroupId}", actionGroup.CorrelationId);
-            }
-        }, cancellationToken);
-    }
+                    _logger.LogInformation("Starting new ActionGroup directly for Agv {AgvId} with CorrelationId: {AgvCorrelationId}, ActionType: {ActionType}", agv.AgvId, agv.CorrelationId, Enum.GetName(action.ActionType));
 
-    private async Task HandleValidationFailure(ActionGroup actionGroup, IEnumerable<ValidationFailure> validationFailures, CancellationToken cancellationToken)
-    {
-        _logger.LogWarning("Validation result of ActionGroup with CorrelationId: {ActionGroupId} is not valid!", actionGroup.CorrelationId);
-
-        if (actionGroup.IsManual)
-        {
-            // in case of a manual action we do not want to add it to our registry and the caller is responsible for a proper exception handling
-            throw new ValidationException(validationFailures);
+                    await StartActionAsync(action, agv, cancellationToken);
+                }
+                else
+                {
+                    // no AGV found, will be assigned later
+                    _logger.LogDebug("No ready Agv was found directly for the ActionGroup {ActionGroupId}", actionGroup.CorrelationId);
+                }
+            }, cancellationToken);
         }
-        actionGroup.InvalidateActionGroup();
-        _logger.LogDebug("Adding invalid ActionGroup with CorrelationId: {ActionGroupId}", actionGroup.CorrelationId);
-        await AddActionGroupAsync(actionGroup, cancellationToken);
-
-        _logger.LogDebug("ActionGroup with CorrelationId: {ActionGroupId} is not valid, publishing ActionGroupInvalid and return", actionGroup.CorrelationId);
-        List<string> validationFailureReasons = validationFailures.Select(error => error.ErrorMessage).ToList();
-
-        await _bus.Publish(new ActionGroupInvalid(actionGroup.CorrelationId, _mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup), validationFailureReasons), cancellationToken);
     }
 }

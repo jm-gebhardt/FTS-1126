@@ -48,7 +48,6 @@ public sealed class HostOrderStateMachine : MassTransitStateMachine<HostOrderSag
     /// </summary>
     public State Cancelled { get; private set; } = default!;
 
-
     /// <summary>
     /// Order failed to process
     /// </summary>
@@ -70,6 +69,7 @@ public sealed class HostOrderStateMachine : MassTransitStateMachine<HostOrderSag
     /// <see cref="ActionGroupInvalid"/> was received
     /// </summary>
     public Event<ActionGroupInvalid> ActionGroupInvalidEvent { get; private set; } = default!;
+
     /// <summary>
     /// <see cref="ActionGroupCreated"/> was received
     /// </summary>
@@ -104,7 +104,6 @@ public sealed class HostOrderStateMachine : MassTransitStateMachine<HostOrderSag
     /// <see cref="ActionGroupCancelFailed"/> was received
     /// </summary>
     public Event<ActionGroupCancelFailed> ActionGroupCancelFailedEvent { get; private set; } = default!;
-
     #endregion
 
     #region Initialization
@@ -128,8 +127,9 @@ public sealed class HostOrderStateMachine : MassTransitStateMachine<HostOrderSag
         Event(() => ActionGroupInvalidEvent, x => x.CorrelateBy(ActionGroupId<ActionGroupInvalid>()));
 
         Initially(SetCreateHostOrderHandler());
+        During(Initial, ActionGroupCreatedEventHandler());
         During(Initial, ActionGroupInvalidEventHandler());
-        During(Initial,ActionGroupCreatedEventHandler());
+        DuringAny(ActionGroupInvalidEventHandler());
         DuringAny(ActionGroupStartedEventHandler());
         DuringAny(SetPickCompletedEventHandler());
         DuringAny(ActionGroupCompletedEventHandler());
@@ -153,7 +153,6 @@ public sealed class HostOrderStateMachine : MassTransitStateMachine<HostOrderSag
     {
         return (saga, context) => saga.CorrelationId == context.Message.ActionGroup.CorrelationId;
     }
-
     #endregion
 
     #region Transitions
@@ -166,7 +165,7 @@ public sealed class HostOrderStateMachine : MassTransitStateMachine<HostOrderSag
             .Then(c =>
                 _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId} received", nameof(CreateHostOrder), c.Message.OrderDetails.OrderId, c.Message.OrderDetails.CorrelationId))
             .TransitionTo(Initial)
-             .ThenAsync(async c => await c.Publish(new QueueActionGroup(c.Saga.GetPickDropActionGroup())));
+            .ThenAsync(async c => await c.Publish(new QueueActionGroup(c.Saga.GetPickDropActionGroup(), false)));
 
     private EventActivityBinder<HostOrderSaga, ActionGroupInvalid> ActionGroupInvalidEventHandler() =>
         When(ActionGroupInvalidEvent)
@@ -193,11 +192,12 @@ public sealed class HostOrderStateMachine : MassTransitStateMachine<HostOrderSag
         When(ActionGroupCompletedEvent)
             .Then(c => _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId} received", nameof(ActionGroupCompleted), c.Saga.OrderId, c.Saga.CorrelationId))
             .TransitionTo(Completed);
+
     private EventActivityBinder<HostOrderSaga, ActionGroupCancelled> ActionGroupCanceledEventHandler() =>
         When(ActionGroupCancelledEvent)
             .Then(c => _logger.LogInformation("{MessageType} for order {OrderId} / {CorrelationId} received", nameof(ActionGroupCancelled), c.Saga.OrderId, c.Saga.CorrelationId))
             .TransitionTo(Cancelled);
-    
+
     private EventActivityBinder<HostOrderSaga, ActionGroupCancelFailed> ActionGroupCancelFailedEventHandler() =>
         When(ActionGroupCancelFailedEvent)
             .Then(c =>
@@ -206,6 +206,7 @@ public sealed class HostOrderStateMachine : MassTransitStateMachine<HostOrderSag
                 c.Saga.CancellationError = c.Message.ErrorCode;
             })
             .TransitionTo(CancelFailed);
+
     private EventActivityBinder<HostOrderSaga, ActionGroupFailed> ActionGroupFailedEventHandler() =>
         When(ActionGroupFailedEvent)
             .Then(c =>
@@ -214,6 +215,5 @@ public sealed class HostOrderStateMachine : MassTransitStateMachine<HostOrderSag
                 c.Saga.HandlingError = c.Message.ErrorCode;
             })
             .TransitionTo(Failed);
-
     #endregion
 }

@@ -53,8 +53,10 @@ public class ActionEventHandler : IConsumer<ActionGroupCreatedForAgv>,
     /// <param name="context"></param>
     public async Task Consume(ConsumeContext<QueueActionGroup> context)
     {
-        _logger.LogInformation("{MessageType} {CorrelationId} received. The ActionGroup is Manual = {IsManual}", nameof(QueueActionGroup), context.Message.CorrelationId, context.Message.ActionGroup.IsManual);
-        await _actionManager.AddActionGroupAsync(_mapper.Map<Domain.Models.ActionGroup.ActionGroup>(context.Message.ActionGroup), context.CancellationToken);
+        var message = context.Message;
+        var actionGroup = message.ActionGroup;
+        _logger.LogInformation("{MessageType} {CorrelationId} received. The ActionGroup is Manual = {IsManual}", nameof(QueueActionGroup), message.CorrelationId, actionGroup.IsManual);
+        await _actionManager.AddActionGroupAsync(_mapper.Map<Domain.Models.ActionGroup.ActionGroup>(actionGroup), message.ThrowOnInvalid, context.CancellationToken);
         await context.RespondAsync(new Success());
     }
 
