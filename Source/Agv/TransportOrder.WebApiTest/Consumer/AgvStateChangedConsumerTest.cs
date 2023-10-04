@@ -51,7 +51,7 @@ public class AgvStateChangedConsumerTest
         mockGetAgvsClient.Verify(m => m.GetResponse<GotAgvs>(It.IsAny<GetAgvs>(), default, default), Times.Once);
 
         bool isInitialState = currentState == nameof(AgvStateMachine.Initial);
-        fixture.MockHub.Verify(h => h.SendAgvStateAsync(
+        fixture.PublisherMock.Verify(h => h.SendAgvStateAsync(
             It.Is<Messages.MessageContent.Agv>(o => o.CorrelationId == agv.CorrelationId), isInitialState), Times.Once);
     }
 }

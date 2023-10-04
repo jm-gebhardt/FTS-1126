@@ -36,14 +36,14 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
     where TRequest : class
     where TRequestHandler : class, IConsumer
 {
-    public string[] AgvIds { get; } = { "AGV001", "AGV002", "AGV003" };
+    public string[] AgvIds { get; } = {"AGV001", "AGV002", "AGV003"};
 
     // ReSharper disable once MemberCanBePrivate.Global
-    public string[] Orders { get; } = { "ORDER001", "ORDER002", "" };
+    public string[] Orders { get; } = {"ORDER001", "ORDER002", ""};
 
-    public string[] States { get; } = { nameof(AgvStateMachine.Idle), nameof(AgvStateMachine.Busy), nameof(AgvStateMachine.Discovered) };
+    public string[] States { get; } = {nameof(AgvStateMachine.Idle), nameof(AgvStateMachine.Busy), nameof(AgvStateMachine.Discovered)};
 
-    public string[] Ips { get; } = { "127.0.0.1", "127.0.0.2", "127.0.0.3" };
+    public string[] Ips { get; } = {"127.0.0.1", "127.0.0.2", "127.0.0.3"};
 
     public Mock<IAgvRegistry> AgvRegistry { get; }
 
@@ -77,15 +77,15 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         QueueActionGroupRequestClient = new Mock<IRequestClient<QueueActionGroup>>();
         AgvDataRegistry = new Mock<IAgvDataRegistry>();
         ActionGroupRetrievalService = new Mock<IActionGroupRetrievalService>();
-        ActionGroupRetrievalService.Setup(r => r.GetCurrentAssignedActionGroupsWithTargetNodeTypeAsync(It.IsAny<IReadOnlyCollection<Guid>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (ActionGroupReadModel?)null));
+        ActionGroupRetrievalService.Setup(r => r.GetAssignedActionGroupsWithNodesAsync(It.IsAny<IReadOnlyCollection<Guid>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (ActionGroupReadModel?) null));
 
         ActionGroupRegistry = new Mock<IActionGroupRegistry>();
-        ActionGroupRegistry.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (Domain.Models.ActionGroup.ActionGroup?)null));
+        ActionGroupRegistry.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (Domain.Models.ActionGroup.ActionGroup?) null));
         AgvErrorRegistry.Setup(x => x.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(new List<AgvError>());
         AgvErrorRegistry.Setup(x => x.GetActiveErrorsAsync(It.IsAny<IList<Guid>>())).ReturnsAsync(new List<AgvError>());
-        ActionGroupRegistry.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (Domain.Models.ActionGroup.ActionGroup?)null));
+        ActionGroupRegistry.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (Domain.Models.ActionGroup.ActionGroup?) null));
     }
-    
+
     [UsedImplicitly]
     public AgvControllerTestFixture<TRequest, TRequestHandler> SetupAgvRegistryWithDefaultData()
     {
@@ -174,6 +174,8 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         IRequestClient<GetAgvs> getAgvsRequestClient = GetRequestClient<GetAgvs>();
         IRequestClient<GetAgvGraph> getAgvGraphRequestClient = GetRequestClient<GetAgvGraph>();
         IRequestClient<GetAgvDataRequest> getAgvDataRequestClient = GetRequestClient<GetAgvDataRequest>();
+        IRequestClient<GetAgvRoute> getAgvRouteRequestClient = GetRequestClient<GetAgvRoute>();
+        IRequestClient<GetAgvRoutes> getAgvRoutesRequestClient = GetRequestClient<GetAgvRoutes>();
         IRequestClient<GetAgvPositions> getAgvPositionsRequestClient = GetRequestClient<GetAgvPositions>();
         IRequestClient<AcceptAgvCommand> acceptAgvRequestClient = GetRequestClient<AcceptAgvCommand>();
         IRequestClient<UnlockAgv> unlockAgvRequestClient = GetRequestClient<UnlockAgv>();
@@ -190,6 +192,8 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             getAgvsRequestClient,
             getAgvGraphRequestClient,
             getAgvDataRequestClient,
+            getAgvRouteRequestClient,
+            getAgvRoutesRequestClient,
             getAgvPositionsRequestClient,
             acceptAgvRequestClient,
             unlockAgvRequestClient,

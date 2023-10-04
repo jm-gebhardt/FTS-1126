@@ -8,6 +8,7 @@ public class ActionGroupValidationService : IActionGroupValidationService
 {
     private readonly IValidator<Models.ActionGroup.ActionGroup> _actionGroupValidator;
 
+    /// <inheritdoc cref="ActionGroupValidationService"/>
     public ActionGroupValidationService(IValidator<Models.ActionGroup.ActionGroup> actionGroupValidator)
     {
         _actionGroupValidator = actionGroupValidator;

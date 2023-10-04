@@ -53,10 +53,10 @@ public class ActionGroupRegistryTest
 
         for (int i = 0; i < totalItems; i++)
         {
-            actionGroups.Add(AgvActionGenerator.SetActionGroupToState(AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: assignedAgv),actionGroupState));
+            actionGroups.Add(AgvActionGenerator.SetActionGroupToState(AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: assignedAgv), actionGroupState));
         }
 
-        IEnumerable<ActionGroupState> otherStatesForTestingExclusion = actionGroupStates.Except(new List<ActionGroupState> { actionGroupState });
+        IEnumerable<ActionGroupState> otherStatesForTestingExclusion = actionGroupStates.Except(new List<ActionGroupState> {actionGroupState});
         actionGroups.AddRange(CreateInitialActionGroups(otherStatesForTestingExclusion));
         return actionGroups;
     }
@@ -100,7 +100,7 @@ public class ActionGroupRegistryTest
             .WithActionGroups(actionGroups)
             .BuildAsync();
 
-        IReadOnlyList<ActionGroup> actionGroupsResult = await fixture.ActionGroupRegistry.GetActionGroupsAsync(new List<ActionGroupState> { actionGroupState }, fromDate: null, toDate: null, maxItems: maxItem);
+        IReadOnlyList<ActionGroup> actionGroupsResult = await fixture.ActionGroupRegistry.GetActionGroupsAsync(new List<ActionGroupState> {actionGroupState}, fromDate: null, toDate: null, maxItems: maxItem);
 
         foreach (var actionGroupInRegistry in actionGroupsResult)
         {
@@ -126,7 +126,7 @@ public class ActionGroupRegistryTest
         var fromDate = DateTime.Today.AddDays(-1);
         var toDate = DateTime.Today.AddDays(1);
 
-        IReadOnlyList<ActionGroup> actionGroupsResult = await fixture.ActionGroupRegistry.GetActionGroupsAsync(new List<ActionGroupState> { ActionGroupState.Created }, fromDate: fromDate, toDate: toDate, maxItems: maxItem);
+        IReadOnlyList<ActionGroup> actionGroupsResult = await fixture.ActionGroupRegistry.GetActionGroupsAsync(new List<ActionGroupState> {ActionGroupState.Created}, fromDate: fromDate, toDate: toDate, maxItems: maxItem);
 
         foreach (var actionGroupInRegistry in actionGroupsResult)
         {
@@ -152,7 +152,7 @@ public class ActionGroupRegistryTest
         var fromDate = DateTime.Today.AddDays(-2);
         var toDate = DateTime.Today.AddDays(-1);
 
-        IReadOnlyList<ActionGroup> actionGroupsResult = await fixture.ActionGroupRegistry.GetActionGroupsAsync(new List<ActionGroupState> { ActionGroupState.Created }, fromDate: fromDate, toDate: toDate, maxItems: maxItem);
+        IReadOnlyList<ActionGroup> actionGroupsResult = await fixture.ActionGroupRegistry.GetActionGroupsAsync(new List<ActionGroupState> {ActionGroupState.Created}, fromDate: fromDate, toDate: toDate, maxItems: maxItem);
         actionGroupsResult.ShouldBeEmpty();
     }
 
@@ -172,14 +172,14 @@ public class ActionGroupRegistryTest
             actionGroupsResult.ShouldContain(x => x.State == actionGroupState);
         }
     }
-    
+
     [TestMethod]
     public async Task GetActionGroupsAsync_WhenGettingManualTriggeredActionGroupOnly_ReturnActionGroupsTriggeredManually()
     {
         List<ActionGroup> actionGroups = CreateInitialActionGroups(10).ToList();
         var moveActionGroupManual = AgvActionGenerator.GenerateMoveActionGroup("Target Node Id", true);
         actionGroups.Add(moveActionGroupManual);
-        
+
         var fixture = await new ActionGroupRegistryTestFixture()
             .WithActionGroups(actionGroups)
             .BuildAsync();
@@ -209,7 +209,7 @@ public class ActionGroupRegistryTest
             .WithActionGroups(actionGroups)
             .BuildAsync();
 
-        int actualActionGroupCount = await fixture.ActionGroupRegistry.GetActionGroupsCountAsync(new[] { state });
+        int actualActionGroupCount = await fixture.ActionGroupRegistry.GetActionGroupsCountAsync(new[] {state});
         actualActionGroupCount.ShouldBe(expectedActionGroupCount);
     }
 
@@ -292,7 +292,7 @@ public class ActionGroupRegistryTest
     {
         const int totalItemsInRegistryWithStateCreated = 10;
         var agvCorrelationId = Guid.NewGuid();
-        
+
         IEnumerable<ActionGroup> actionGroups = CreateInitialActionGroups(totalItemsInRegistryWithStateCreated, assignedAgv: agvCorrelationId);
         var fixture = await new ActionGroupRegistryTestFixture()
             .WithActionGroups(actionGroups)
@@ -308,12 +308,12 @@ public class ActionGroupRegistryTest
 
         notStartedActionGroups.Count.ShouldBe(totalItemsInRegistryWithStateCreated);
     }
-    
+
     [TestMethod]
     public async Task GetInvalidActionGroupAsync_ReturnsNotStartedActionGroup()
     {
-        const int totalItemsInRegistryWithStateInvalid= 5;
-        
+        const int totalItemsInRegistryWithStateInvalid = 5;
+
         IEnumerable<ActionGroup> actionGroups = CreateInitialActionGroups(totalItemsInRegistryWithStateInvalid, ActionGroupState.Invalid);
         var fixture = await new ActionGroupRegistryTestFixture()
             .WithActionGroups(actionGroups)
@@ -338,7 +338,7 @@ public class ActionGroupRegistryTest
         actionGroup.AssignedAgv = agv.CorrelationId;
 
         actionGroup.StartAction(actionGroup.Actions.First().CorrelationId);
-        
+
         var subsequentAction = actionGroup.Actions.ElementAt(1);
 
         var fixture = await new ActionGroupRegistryTestFixture()
@@ -360,7 +360,7 @@ public class ActionGroupRegistryTest
             .WithActionGroup(actionGroup)
             .BuildAsync();
 
-        IReadOnlyDictionary<Guid, ActionGroup?> currentAssignedActionGroupsAsync = await fixture.ActionGroupRegistry.GetCurrentAssignedActionGroupsAsync(new[] { agv.CorrelationId });
+        IReadOnlyDictionary<Guid, ActionGroup?> currentAssignedActionGroupsAsync = await fixture.ActionGroupRegistry.GetCurrentAssignedActionGroupsAsync(new[] {agv.CorrelationId});
         currentAssignedActionGroupsAsync.Count.ShouldBe(1);
         KeyValuePair<Guid, ActionGroup?> currentActionGroup = currentAssignedActionGroupsAsync.First();
         currentActionGroup.Key.ShouldBe(agv.CorrelationId);
@@ -379,9 +379,89 @@ public class ActionGroupRegistryTest
             .WithActionGroup(actionGroup)
             .BuildAsync();
 
-        IReadOnlyDictionary<Guid, ActionGroup?> currentAssignedActionGroup = await fixture.ActionGroupRegistry.GetCurrentAssignedActionGroupsAsync(new[] { agv.CorrelationId });
+        IReadOnlyDictionary<Guid, ActionGroup?> currentAssignedActionGroup = await fixture.ActionGroupRegistry.GetCurrentAssignedActionGroupsAsync(new[] {agv.CorrelationId});
         currentAssignedActionGroup.Count.ShouldBe(1);
         currentAssignedActionGroup.First().Key.ShouldBe(agv.CorrelationId);
         currentAssignedActionGroup.First().Value.ShouldBeNull();
+    }
+
+    [TestMethod]
+    public async Task GetCurrentAssignedActionGroupAsync_WhenRegistryDoesNotHaveActionOfAgv_ReturnNull()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+
+        var fixture = await new ActionGroupRegistryTestFixture()
+            .BuildAsync();
+
+        var fetchedActionGroup = await fixture.ActionGroupRegistry.GetCurrentAssignedActionGroupAsync(agv.CorrelationId);
+        fetchedActionGroup.ShouldBeNull();
+    }
+
+    [TestMethod]
+    public async Task GetCurrentAssignedActionGroupsAsync_WhenRegistryHasActionOfAgv_ReturnActionGroup()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        var agv = AgvGenerator.GenerateIdleAgv();
+        actionGroup.AssignedAgv = agv.CorrelationId;
+
+        var fixture = await new ActionGroupRegistryTestFixture()
+            .WithActionGroup(actionGroup)
+            .BuildAsync();
+
+        IReadOnlyDictionary<Guid, ActionGroup?> currentAssignedActionGroup = await fixture.ActionGroupRegistry.GetCurrentAssignedActionGroupsAsync(new[] {agv.CorrelationId});
+        currentAssignedActionGroup.Count.ShouldBe(1);
+        currentAssignedActionGroup.First().Key.ShouldBe(agv.CorrelationId);
+        var fetchedActionGroup = currentAssignedActionGroup.First().Value;
+        fetchedActionGroup.ShouldNotBeNull();
+        fetchedActionGroup.CorrelationId.ShouldBe(actionGroup.CorrelationId);
+    }
+
+    [TestMethod]
+    public async Task GetCurrentAssignedActionGroupAsync_WhenRegistryHasActionOfAgv_ReturnActionGroup()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        var agv = AgvGenerator.GenerateIdleAgv();
+        actionGroup.AssignedAgv = agv.CorrelationId;
+
+        var fixture = await new ActionGroupRegistryTestFixture()
+            .WithActionGroup(actionGroup)
+            .BuildAsync();
+
+        var fetchedActionGroup = await fixture.ActionGroupRegistry.GetCurrentAssignedActionGroupAsync(agv.CorrelationId);
+        fetchedActionGroup.ShouldNotBeNull();
+        fetchedActionGroup.CorrelationId.ShouldBe(actionGroup.CorrelationId);
+    }
+
+    [TestMethod]
+    public async Task GetCurrentAgvActionAsync_WhenAgvHasCurrentAction_ReturnsCurrentAction()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        var agv = AgvGenerator.GenerateIdleAgv();
+        actionGroup.AssignedAgv = agv.CorrelationId;
+        var currentAction = actionGroup.Actions.First();
+        currentAction.UpdateActionState(ActionState.Started);
+
+        var fixture = await new ActionGroupRegistryTestFixture()
+            .WithActionGroup(actionGroup)
+            .BuildAsync();
+
+        var currentAgvAction = await fixture.ActionGroupRegistry.GetCurrentAgvActionAsync(agv.CorrelationId);
+        currentAgvAction.ShouldNotBeNull();
+        currentAgvAction.CorrelationId.ShouldBe(currentAction.CorrelationId);
+    }
+
+    [TestMethod]
+    public async Task GetCurrentAgvActionAsync_WhenAgvHasNoCurrentAction_ReturnsNull()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        var agv = AgvGenerator.GenerateIdleAgv();
+        actionGroup.AssignedAgv = agv.CorrelationId;
+
+        var fixture = await new ActionGroupRegistryTestFixture()
+            .WithActionGroup(actionGroup)
+            .BuildAsync();
+
+        var currentAgvAction = await fixture.ActionGroupRegistry.GetCurrentAgvActionAsync(agv.CorrelationId);
+        currentAgvAction.ShouldBeNull();
     }
 }

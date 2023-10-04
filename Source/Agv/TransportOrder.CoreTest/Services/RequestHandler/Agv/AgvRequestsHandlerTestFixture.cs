@@ -57,7 +57,7 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
     public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithAgvs(IList<IAgv> agvs, TransportOrder.Domain.Models.ActionGroup.ActionGroup? actionGroup = null)
     {
         AgvRegistry.Setup(s => s.GetAllAgvs()).Returns(agvs.AsQueryable());
-        ActionGroupRegistry.Setup(r => r.GetCurrentAssignedActionGroupsWithTargetNodeTypeAsync(It.IsAny<IReadOnlyCollection<Guid>>()))
+        ActionGroupRegistry.Setup(r => r.GetAssignedActionGroupsWithNodesAsync(It.IsAny<IReadOnlyCollection<Guid>>()))
             .ReturnsAsync(agvs.ToDictionary(a => a.CorrelationId, _ => actionGroup.ConvertFromActionGroupWithFakeNodeType()));
         return this;
     }
@@ -66,7 +66,7 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
     {
         AgvRegistry.Setup(r => r.GetAgv(agv.CorrelationId)).Returns(agv);
         AgvRegistry.Setup(r => r.CheckIfAgvExistsAsync(agv.CorrelationId)).ReturnsAsync(true);
-        ActionGroupRegistry.Setup(r => r.GetActionGroupWithTargetNodeTypesAsync(It.IsAny<Guid>()))
+        ActionGroupRegistry.Setup(r => r.GetActionGroupWithNodesAsync(It.IsAny<Guid>()))
             .ReturnsAsync(actionGroup.ConvertFromActionGroupWithFakeNodeType());
         return this;
     }

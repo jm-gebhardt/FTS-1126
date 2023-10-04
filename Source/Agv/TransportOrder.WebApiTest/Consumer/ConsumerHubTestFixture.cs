@@ -3,6 +3,7 @@ using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Profiles;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Routing;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,14 +15,16 @@ public class ConsumerHubTestFixture<TConsumer, THubContext> : MassTransitConsume
     where TConsumer : class, IConsumer
     where THubContext : class
 {
-    public readonly Mock<THubContext> MockHub = new();
-    public readonly Mock<INodeStateRegistry> MockNodeStateRegistry = new();
-    private readonly Mock<IActionGroupRetrievalService> _mockActionGroupRetrievalService = new();
-        
-    public ConsumerHubTestFixture(params Action<IServiceCollection>[] services) 
+    private readonly Mock<IActionGroupRetrievalService> _actionGroupRetrievalServiceMock = new();
+    private readonly Mock<IActionGroupRegistry> _actionGroupRegistryMock = new();
+    public readonly Mock<THubContext> PublisherMock = new();
+    public readonly Mock<INodeStateRegistry> NodeStateRegistryMock = new();
+
+    public Mock<IAgvRouteRetrievalService> AgvRouteServiceMock { get; } = new();
+
+    public ConsumerHubTestFixture(params Action<IServiceCollection>[] services)
         : base(services: services)
     {
-          
     }
 
     private IMapper GetMapper()
@@ -45,9 +48,11 @@ public class ConsumerHubTestFixture<TConsumer, THubContext> : MassTransitConsume
     protected override void ConfigureServices(IServiceCollection collection)
     {
         collection.AddTransient(_ => GetMapper());
-        collection.AddTransient(_ => MockHub.Object);
-        collection.AddTransient(_ => MockNodeStateRegistry.Object);
-        collection.AddTransient(_ => _mockActionGroupRetrievalService.Object);
+        collection.AddTransient(_ => PublisherMock.Object);
+        collection.AddTransient(_ => NodeStateRegistryMock.Object);
+        collection.AddTransient(_ => _actionGroupRetrievalServiceMock.Object);
+        collection.AddTransient(_ => AgvRouteServiceMock.Object);
+        collection.AddTransient(_ => _actionGroupRegistryMock.Object);
         collection.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
     }
 }

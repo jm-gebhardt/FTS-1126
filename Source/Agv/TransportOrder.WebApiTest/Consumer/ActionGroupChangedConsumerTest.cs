@@ -23,7 +23,7 @@ public class ActionGroupChangedConsumerTest
         (await fixture.TestHarness.Published.Any<ActionGroupChanged>()).ShouldBeTrue();
         (await fixture.ConsumerHarness!.Consumed.Any<ActionGroupChanged>()).ShouldBeTrue();
 
-        fixture.MockHub.Verify(h => h.SendActionGroupChangedAsync(
+        fixture.PublisherMock.Verify(h => h.SendActionGroupChangedAsync(
             It.IsAny<ActionGroupReadModel>()), Times.Once);
     }
 }

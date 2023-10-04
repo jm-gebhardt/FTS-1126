@@ -43,7 +43,7 @@ public class ActionGroupCreatedConsumer : IConsumer<ActionGroupCreated>
     {
         var (actionGroup, correlationId) = context.Message;
         _logger.LogTrace("{MessageType} {CorrelationId} received", nameof(ActionGroupCreated), correlationId);
-        var actionGroupReadModel = await _actionGroupRetrievalService.EnrichActionGroupWithTargetNodeTypesAsync(_mapper.Map<ActionGroup>(actionGroup));
+        var actionGroupReadModel = await _actionGroupRetrievalService.EnrichActionGroupWithNodesAsync(_mapper.Map<ActionGroup>(actionGroup));
         await _actionGroupPublisher.SendActionGroupCreatedAsync(actionGroupReadModel);
     }
 }

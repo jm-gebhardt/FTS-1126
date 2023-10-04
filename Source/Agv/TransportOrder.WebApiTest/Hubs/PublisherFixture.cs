@@ -6,7 +6,7 @@ using Moq;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Hubs;
 
-public class HubFixture<TPublisher, THub, TClient> where TPublisher : class where TClient : class where THub : Hub<TClient>
+public class PublisherFixture<TPublisher, THub, TClient> where TPublisher : class where TClient : class where THub : Hub<TClient>
 {
     private readonly ServiceCollection _serviceCollection = new();
 
@@ -16,7 +16,7 @@ public class HubFixture<TPublisher, THub, TClient> where TPublisher : class wher
 
     public TPublisher Publisher { get; private set; } = null!;
 
-    public HubFixture()
+    public PublisherFixture()
     {
         var mockHubClient = new Mock<TClient>();
         var mockClients = new Mock<IHubClients<TClient>>();
@@ -28,14 +28,14 @@ public class HubFixture<TPublisher, THub, TClient> where TPublisher : class wher
         _serviceCollection.AddSingleton<TPublisher>();
     }
 
-    public HubFixture<TPublisher, THub, TClient> WithMapper(params Profile[] profiles)
+    public PublisherFixture<TPublisher, THub, TClient> WithMapper(params Profile[] profiles)
     {
         Mapper = MappingHelper.GetMapper(profiles);
         _serviceCollection.AddSingleton<IMapper>(Mapper);
         return this;
     }
 
-    public HubFixture<TPublisher, THub, TClient> Build()
+    public PublisherFixture<TPublisher, THub, TClient> Build()
     {
         var serviceProvider = _serviceCollection.BuildServiceProvider(true);
         Publisher = serviceProvider.GetRequiredService<TPublisher>();

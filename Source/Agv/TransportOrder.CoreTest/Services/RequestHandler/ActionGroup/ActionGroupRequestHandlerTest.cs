@@ -18,7 +18,7 @@ public class ActionGroupRequestHandlerTest
     [TestMethod]
     public async Task Consume_GetActionGroup_ValidCorrelationId_RespondsWithActionGroup()
     {
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(actionState: ActionState.Created);
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Created);
         ActionGroupRequestHandlerTestFixture<GetActionGroup, ActionGroupRequestHandler> fixture = await new ActionGroupRequestHandlerTestFixture<GetActionGroup, ActionGroupRequestHandler>()
             .WithActionGroups(actionGroup)
             .AddDefaultGraph()
@@ -37,7 +37,7 @@ public class ActionGroupRequestHandlerTest
     [TestMethod]
     public async Task Consume_GetActionGroup_UnknownCorrelationId_ThrowsActionGroupNotFoundException()
     {
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(actionState: ActionState.Created);
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Created);
         ActionGroupRequestHandlerTestFixture<GetActionGroup, ActionGroupRequestHandler> fixture = await new ActionGroupRequestHandlerTestFixture<GetActionGroup, ActionGroupRequestHandler>()
             .BuildAsync();
 
@@ -59,7 +59,7 @@ public class ActionGroupRequestHandlerTest
     [TestMethod]
     public async Task Consume_GetAgvActionGroupsRequest_SingleActionGroup_ReturnsCreated()
     {
-        TransportOrder.Domain.Models.ActionGroup.ActionGroup[] actionGroups = {AgvActionGenerator.GeneratePickDropActionGroup(actionState: ActionState.Created)};
+        TransportOrder.Domain.Models.ActionGroup.ActionGroup[] actionGroups = {AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Created)};
         ActionGroupRequestHandlerTestFixture<GetActionGroups, ActionGroupRequestHandler> fixture = await new ActionGroupRequestHandlerTestFixture<GetActionGroups, ActionGroupRequestHandler>()
             .WithActionGroups(actionGroups)
             .AddDefaultGraph()

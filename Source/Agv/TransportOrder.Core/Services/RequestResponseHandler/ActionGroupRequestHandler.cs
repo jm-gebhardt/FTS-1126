@@ -36,7 +36,7 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
     public async Task Consume(ConsumeContext<GetActionGroup> context)
     {
         var correlationId = context.Message.CorrelationId;
-        var actionGroup = await _retrievalService.GetActionGroupWithTargetNodeTypesAsync(correlationId);
+        var actionGroup = await _retrievalService.GetActionGroupWithNodesAsync(correlationId);
         if (actionGroup == null)
         {
             throw new ActionGroupNotFoundException(correlationId);
@@ -50,7 +50,7 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
     public async Task Consume(ConsumeContext<GetActionGroups> context)
     {
         var request = context.Message;
-        IReadOnlyCollection<ActionGroupReadModel> actionGroups = await _retrievalService.GetActionGroupsWithTargetNodeTypeAsync(request.States, request.FromDate, request.ToDate, request.Limit);
+        IReadOnlyCollection<ActionGroupReadModel> actionGroups = await _retrievalService.GetActionGroupsWithNodesAsync(request.States, request.FromDate, request.ToDate, request.Limit);
 
         await context.RespondAsync(new GotActionGroups(actionGroups));
     }

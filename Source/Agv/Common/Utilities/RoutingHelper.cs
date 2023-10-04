@@ -50,4 +50,39 @@ public static class RoutingHelper
             return truncated;
         }
     }
+
+    /// <summary>
+    /// Get the index of the given node in the route.
+    /// </summary>
+    /// <param name="route">The full route</param>
+    /// <param name="nodeId">The node id</param>
+    /// <returns></returns>
+    public static uint GetFirstIndexOfNodeId(string[] route, string? nodeId)
+    {
+        int currentIndex = 0;
+
+        if (!string.IsNullOrEmpty(nodeId))
+        {
+            currentIndex = Array.IndexOf(route, route.FirstOrDefault(n => n.Equals(nodeId)));
+        }
+
+        if (currentIndex <= 0)
+        {
+            currentIndex = 0;
+        }
+        return (uint) currentIndex;
+    }
+
+    /// <summary>
+    /// Get the remaining route (starting) from the given node
+    /// </summary>
+    /// <param name="lastNodeId"></param>
+    /// <param name="route"></param>
+    /// <returns></returns>
+    public static string[] GetRemainingRoute(string? lastNodeId, string[] route)
+    {
+        uint currentIndex = GetFirstIndexOfNodeId(route, lastNodeId);
+        string[] remainingRoute = route.Skip((int) currentIndex).ToArray();
+        return remainingRoute;
+    }
 }

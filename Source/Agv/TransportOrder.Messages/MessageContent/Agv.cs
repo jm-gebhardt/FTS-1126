@@ -57,7 +57,7 @@ public record Agv
     /// <summary>
     /// List of Agv errors. Empty List if there is no error.
     /// </summary>
-    public List<AgvError> Errors { get; set; } = new();
+    public List<AgvError> Errors { get; init; } = new();
 
     /// <param name="correlationId">CorrelationId</param>
     /// <param name="agvId">AGV Serial Number</param>

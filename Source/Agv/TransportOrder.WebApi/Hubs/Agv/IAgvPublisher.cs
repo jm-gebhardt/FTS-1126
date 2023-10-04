@@ -1,4 +1,5 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
+﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
+using AgvPositionStatus = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.AgvPositionStatus;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Agv;
 
@@ -10,10 +11,17 @@ public interface IAgvPublisher
     /// <summary>
     /// Publishes the status of an agv to all clients
     /// </summary>
-    public Task SendAgvStateAsync(Messages.MessageContent.Agv agv, bool isInitialState);
+    Task SendAgvStateAsync(Messages.MessageContent.Agv agv, bool isInitialState);
 
     /// <summary>
     /// Publishes the position of an agv to all clients
     /// </summary>
-    public Task SendAgvPositionAsync(AgvPositionStatus agvPosition);
+    Task SendAgvPositionAsync(AgvPositionStatus agvPosition);
+
+    /// <summary>
+    /// Publishes the status of an agv route to all clients
+    /// </summary>
+    /// <param name="agvRouteReadModel"></param>
+    /// <returns></returns>
+    Task SendAgvRouteAsync(AgvRouteReadModel agvRouteReadModel);
 }

@@ -1,4 +1,5 @@
 using AutoMapper;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
 
@@ -14,5 +15,6 @@ public class AgvProfile : Profile
     {
         CreateMap<Messages.MessageContent.Agv, AgvDto>();
         CreateMap<AgvData, AgvDataDto>();
+        CreateMap<AgvRouteReadModel, AgvRouteDto>();
     }
 }

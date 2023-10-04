@@ -1,4 +1,5 @@
 using AutoMapper;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
@@ -15,6 +16,7 @@ public class AgvPositionProfile : Profile
     public AgvPositionProfile()
     {
         CreateMap<AgvPositionStatus, AgvPositionStatusDto>();
+        CreateMap<AgvPosition, AgvPositionDto>();
         CreateMap<AgvPositionReceived, AgvPositionStatus>();
         CreateMap<AgvPositionChanged, AgvPositionStatus>()
             .ForCtorParam(nameof(AgvPositionStatus.AgvPosition), 

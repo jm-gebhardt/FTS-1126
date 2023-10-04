@@ -16,7 +16,7 @@ using UnlockAgv = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv.Un
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers;
 
 /// <summary>
-/// Controller for host order data
+/// Agv controller
 /// </summary>
 [ApiController]
 [ApiExplorerSettings(GroupName = RestApiGroup.GroupName)]
@@ -26,6 +26,8 @@ public class AgvController : Controller
     private readonly IRequestClient<GetAgvs> _getAgvsClient;
     private readonly IRequestClient<GetAgvGraph> _getAgvGraphClient;
     private readonly IRequestClient<GetAgvDataRequest> _getAgvDataClient;
+    private readonly IRequestClient<GetAgvRoute> _getAgvRouteClient;
+    private readonly IRequestClient<GetAgvRoutes> _getAgvRoutesClient;
     private readonly IRequestClient<GetAgvPositions> _getAgvPositionsClient;
     private readonly IRequestClient<AcceptAgvCommand> _acceptAgvClient;
     private readonly IRequestClient<UnlockAgv> _unlockAgvClient;
@@ -45,6 +47,8 @@ public class AgvController : Controller
         IRequestClient<GetAgvs> getAgvsClient,
         IRequestClient<GetAgvGraph> getAgvGraphClient,
         IRequestClient<GetAgvDataRequest> getAgvDataClient,
+        IRequestClient<GetAgvRoute> getAgvRouteClient,
+        IRequestClient<GetAgvRoutes> getAgvRoutesClient,
         IRequestClient<GetAgvPositions> getAgvPositionsClient,
         IRequestClient<AcceptAgvCommand> acceptAgvClient,
         IRequestClient<UnlockAgv> unlockAgvClient,
@@ -60,6 +64,8 @@ public class AgvController : Controller
         _getAgvsClient = getAgvsClient;
         _getAgvGraphClient = getAgvGraphClient;
         _getAgvDataClient = getAgvDataClient;
+        _getAgvRouteClient = getAgvRouteClient;
+        _getAgvRoutesClient = getAgvRoutesClient;
         _getAgvPositionsClient = getAgvPositionsClient;
         _acceptAgvClient = acceptAgvClient;
         _unlockAgvClient = unlockAgvClient;
@@ -131,6 +137,23 @@ public class AgvController : Controller
     }
 
     /// <summary>
+    /// Retrieve current routes of the Agvs. It is null when the agv has completed the last action.
+    /// It will deliver the route of the Agv is existing
+    /// </summary>
+    /// <param name="correlationId"></param>
+    /// <returns></returns>
+    /// <response code="200">AgvRoute</response>
+    /// <response code="204">No Agv or running ActionGroup existing</response>
+    [HttpGet]
+    [Route("/agv/{correlationId}/route")]
+    public async Task<ActionResult<AgvRouteDto?>> GetAgvRoute(Guid correlationId)
+    {
+        Response<GotAgvRoute> response = await _getAgvRouteClient.GetResponse<GotAgvRoute>(new GetAgvRoute(correlationId));
+        var dto = _mapper.Map<AgvRouteDto>(response.Message.AgvRoute);
+        return Ok(dto);
+    }
+
+    /// <summary>
     /// Retrieve list of agv positions
     /// </summary>
     /// <response code="200">Ok</response>
@@ -142,6 +165,21 @@ public class AgvController : Controller
 
         var positionStatus = _mapper.Map<List<AgvPositionStatusDto>>(response.Message.AgvPositions);
         return Ok(positionStatus);
+    }
+
+    /// <summary>
+    /// Retrieve current route of Agv. It is null when the agv has completed the last action.
+    /// It will deliver the route of the Agv is existing
+    /// </summary>
+    /// <param name="correlationIds">Only Agvs contained in this list will be considered</param>
+    /// <returns></returns>
+    [HttpGet]
+    [Route("/agvs/route")]
+    public async Task<ActionResult<Dictionary<Guid, AgvRouteDto?>>> GetAgvRoute([FromQuery] ICollection<Guid> correlationIds)
+    {
+        Response<GotAgvRoutes> response = await _getAgvRoutesClient.GetResponse<GotAgvRoutes>(new GetAgvRoutes(correlationIds));
+        var dto = _mapper.Map<Dictionary<Guid, AgvRouteDto>>(response.Message.AgvRoutesByCorrelationId);
+        return Ok(dto);
     }
 
     /// <summary>

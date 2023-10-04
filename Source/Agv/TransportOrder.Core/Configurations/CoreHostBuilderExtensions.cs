@@ -88,6 +88,7 @@ public static class CoreHostBuilderExtensions
         services.AddSingleton<IParkingSemaphoreProvider, ParkingSemaphoreProvider>();
         services.AddTransient<IParkPointService, ParkPointService>();
         services.AddTransient<IRouteService, RouteService>();
+        services.AddTransient<IAgvRouteRetrievalService, AgvRouteRetrievalRetrievalService>();
         services.AddSingleton<IRouteFinder, AStarRouteFinder>();
         services.AddTransient<IRoutingPlausibilityChecker, NoCheckPlausibilityChecker>();
         services.AddSingleton<IChangeDetector<AgvPositionStatus>, ChangeDetector<AgvPositionStatus>>();

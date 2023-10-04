@@ -48,7 +48,7 @@ public class AgvPropertyChangedConsumerTest
         (await fixture.TestHarness.Published.Any<AgvPropertyChanged>()).ShouldBeTrue();
         (await fixture.ConsumerHarness!.Consumed.Any<AgvPropertyChanged>()).ShouldBeTrue();
 
-        fixture.MockHub.Verify(h => h.SendAgvStateAsync(
+        fixture.PublisherMock.Verify(h => h.SendAgvStateAsync(
             It.Is<Messages.MessageContent.Agv>(o => o.CorrelationId == agv.CorrelationId), false), Times.Once);
     }
 }

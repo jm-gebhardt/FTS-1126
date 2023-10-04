@@ -14,7 +14,7 @@ public class ActionGroupHubTest
     [TestMethod]
     public async Task SendActionGroupCreatedAsync_SendsActionGroupChanged_To_ActionGroupCreated()
     {
-        HubFixture<ActionGroupPublisher, ActionGroupHub, IActionGroupClient> fixture = new HubFixture<ActionGroupPublisher, ActionGroupHub, IActionGroupClient>()
+        PublisherFixture<ActionGroupPublisher, ActionGroupHub, IActionGroupClient> fixture = new PublisherFixture<ActionGroupPublisher, ActionGroupHub, IActionGroupClient>()
             .WithMapper(new ActionProfile())
             .Build();
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup().ConvertFromActionGroupWithFakeNodeType()!;
@@ -27,7 +27,7 @@ public class ActionGroupHubTest
     [TestMethod]
     public async Task SendActionGroupChangedAsync_SendsActionGroupChanged_To_ActionGroupChanged()
     {
-        HubFixture<ActionGroupPublisher, ActionGroupHub, IActionGroupClient> fixture = new HubFixture<ActionGroupPublisher, ActionGroupHub, IActionGroupClient>()
+        PublisherFixture<ActionGroupPublisher, ActionGroupHub, IActionGroupClient> fixture = new PublisherFixture<ActionGroupPublisher, ActionGroupHub, IActionGroupClient>()
             .WithMapper(new ActionProfile())
             .Build();
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup().ConvertFromActionGroupWithFakeNodeType()!;

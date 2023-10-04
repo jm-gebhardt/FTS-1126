@@ -16,22 +16,22 @@ public interface IActionGroupRetrievalService
     /// <param name="fromDate">The UTC from Date, only items with a greater CreatedDate will be considered.</param>
     /// <param name="toDate">The UTC from Date, only items with a less CreatedDate will be considered.</param>
     /// <param name="maxItems">The maximum number of action groups returned.</param>
-    Task<IReadOnlyCollection<ActionGroupReadModel>> GetActionGroupsWithTargetNodeTypeAsync(IReadOnlyCollection<ActionGroupState> states, DateTime? fromDate, DateTime? toDate, int maxItems);
+    Task<IReadOnlyCollection<ActionGroupReadModel>> GetActionGroupsWithNodesAsync(IReadOnlyCollection<ActionGroupState> states, DateTime? fromDate, DateTime? toDate, int maxItems);
 
     /// <summary>
     /// Get currently assigned action groups of provided AGVs.
     /// </summary>
     /// <param name="agvCorrelationIds"></param>
     /// <returns></returns>
-    public Task<IReadOnlyDictionary<Guid, ActionGroupReadModel?>> GetCurrentAssignedActionGroupsWithTargetNodeTypeAsync(IReadOnlyCollection<Guid> agvCorrelationIds);
+    public Task<IReadOnlyDictionary<Guid, ActionGroupReadModel?>> GetAssignedActionGroupsWithNodesAsync(IReadOnlyCollection<Guid> agvCorrelationIds);
 
     /// <summary>
     /// Enrich an action group with the target node types.
     /// </summary>
     /// <param name="actionGroup">The action group to be enriched.</param>
-    public Task<ActionGroupReadModel> EnrichActionGroupWithTargetNodeTypesAsync(ActionGroup actionGroup);
+    public Task<ActionGroupReadModel> EnrichActionGroupWithNodesAsync(ActionGroup actionGroup);
 
     /// Get an action group with node types by correlation id.
     /// <param name="correlationId">The action group correlation id.</param>
-    public Task<ActionGroupReadModel?> GetActionGroupWithTargetNodeTypesAsync(Guid correlationId);
+    public Task<ActionGroupReadModel?> GetActionGroupWithNodesAsync(Guid correlationId);
 }

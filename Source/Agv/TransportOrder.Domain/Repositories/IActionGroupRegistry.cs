@@ -52,10 +52,24 @@ public interface IActionGroupRegistry
     Task<int> GetActionGroupsCountAsync(IEnumerable<ActionGroupState> states, DateTime? fromDate = null, DateTime? toDate = null);
 
     /// <summary>
+    /// Get current AgvAction of provided AGV
+    /// </summary>
+    /// <param name="agvCorrelationId"></param>
+    /// <returns>The current (running) AgvAction of the current ActionGroup</returns>
+    Task<AgvAction?> GetCurrentAgvActionAsync(Guid agvCorrelationId);
+
+    /// <summary>
+    /// Get currently assigned action groups of provided AGV
+    /// </summary>
+    /// <param name="agvCorrelationId"></param>
+    /// <returns>The most recent ActionGroup of the Agv. It may already be completed.</returns>
+    Task<ActionGroup?> GetCurrentAssignedActionGroupAsync(Guid agvCorrelationId);
+
+    /// <summary>
     /// Get currently assigned action groups of provided AGVs
     /// </summary>
     /// <param name="agvCorrelationIds"></param>
-    /// <returns></returns>
+    /// <returns>The most recent ActionGroup for each Agv. They may already be completed.</returns>
     Task<IReadOnlyDictionary<Guid, ActionGroup?>> GetCurrentAssignedActionGroupsAsync(IEnumerable<Guid> agvCorrelationIds);
 
     /// <summary>

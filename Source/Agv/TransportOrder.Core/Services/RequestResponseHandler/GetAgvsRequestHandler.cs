@@ -54,7 +54,7 @@ public class GetAgvsRequestHandler : IConsumer<GetAgvs>,
         List<IAgv> agvs = query.OrderBy(a => a.AgvId).ToList();
         List<Guid> agvCorrelationIds = agvs.Select(a => a.CorrelationId).ToList();
 
-        Task<IReadOnlyDictionary<Guid, ActionGroupReadModel?>> actionGroupsTask = _actionGroupRegistry.GetCurrentAssignedActionGroupsWithTargetNodeTypeAsync(agvCorrelationIds);
+        Task<IReadOnlyDictionary<Guid, ActionGroupReadModel?>> actionGroupsTask = _actionGroupRegistry.GetAssignedActionGroupsWithNodesAsync(agvCorrelationIds);
         Task<IList<AgvError>> errorsTask = _agvErrorRegistry.GetActiveErrorsAsync(agvCorrelationIds);
 
         await Task.WhenAll(actionGroupsTask, errorsTask);
@@ -94,7 +94,7 @@ public class GetAgvsRequestHandler : IConsumer<GetAgvs>,
 
         var agvMessageContent = _mapper.Map<Messages.MessageContent.Agv>(agv);
 
-        var action = await _actionGroupRegistry.GetActionGroupWithTargetNodeTypesAsync(agvCorrelationId);
+        var action = await _actionGroupRegistry.GetActionGroupWithNodesAsync(agvCorrelationId);
         _mapper.Map(action, agvMessageContent);
 
         IList<AgvError> agvErrors = await _agvErrorRegistry.GetActiveErrorsAsync(agvCorrelationId);

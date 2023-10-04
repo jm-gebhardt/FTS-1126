@@ -22,6 +22,7 @@ public class ActionGroupClassMap : ClassMap<ActionGroup>
     {
         entity.HasKey(g => g.CorrelationId);
         entity.Property(g => g.State).HasMaxLength(MaxStateLength);
+        entity.HasIndex(g => g.AssignedAgv);
 
         entity.OwnsMany(g => g.Actions, a =>
         {

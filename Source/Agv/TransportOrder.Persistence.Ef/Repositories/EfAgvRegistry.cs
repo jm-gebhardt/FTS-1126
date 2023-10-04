@@ -91,4 +91,29 @@ public class EfAgvRegistry : IAgvRegistry
         var saga = await AgvSagas.SingleOrDefaultAsync(a => a.CorrelationId == correlationId);
         return saga != default;
     }
+
+    public async Task<string?> GetLastNodeIdAsync(Guid agvCorrelationId)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        string? lastNodeId = await context.Set<AgvSaga>()
+            .AsNoTracking()
+            .Where(s => s.CorrelationId == agvCorrelationId && s.AgvStatus != null)
+            .Select(s => s.AgvStatus!.LastNodeId)
+            .FirstOrDefaultAsync();
+
+        return lastNodeId;
+    }
+
+    public async Task<IReadOnlyDictionary<Guid, string?>> GetLastNodeIdAsync(ICollection<Guid> agvCorrelationIds)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+
+        Dictionary<Guid, string?> lastNodeIdsById = await context.Set<AgvSaga>()
+            .AsNoTracking()
+            .Where(s => agvCorrelationIds.Contains(s.CorrelationId) && s.AgvStatus != null)
+            .Select(s => new { s.CorrelationId, s.AgvStatus!.LastNodeId })
+            .ToDictionaryAsync(x => x.CorrelationId, x => x.LastNodeId);
+
+        return lastNodeIdsById;
+    }
 }

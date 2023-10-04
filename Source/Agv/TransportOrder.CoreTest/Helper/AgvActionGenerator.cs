@@ -37,7 +37,8 @@ public static class AgvActionGenerator
     }
 
     public static ActionGroup GeneratePickDropActionGroup(
-        ActionState actionState = ActionState.Created,
+        ActionState pickActionState = ActionState.Created,
+        ActionState dropActionState = ActionState.Created,
         string? source = null,
         string? destination = null,
         Guid? assignedAgv = null,
@@ -53,12 +54,12 @@ public static class AgvActionGenerator
         {
             Sequence = partial == 3 ? 1 : 0
         };
-        pickAction.UpdateActionState(actionState);
+        pickAction.UpdateActionState(pickActionState);
         var dropAction = new AgvAction(dropActionGuid, ActionType.Drop, destination ?? AgvGraphGenerator.DestinationClose.Id, groupId)
         {
             Sequence = partial == 3 ? 0 : 1
         };
-        dropAction.UpdateActionState(actionState);
+        dropAction.UpdateActionState(dropActionState);
 
         List<AgvAction> actions = partial switch
         {

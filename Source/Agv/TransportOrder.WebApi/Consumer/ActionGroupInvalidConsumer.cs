@@ -39,7 +39,7 @@ public class ActionGroupInvalidConsumer : IConsumer<ActionGroupInvalid>
     {
         _logger.LogDebug("{MessageType} {CorrelationId} received", nameof(ActionGroupInvalid), context.Message.CorrelationId);
 
-        var enrichedActionGroup = await _actionGroupRetrievalService.EnrichActionGroupWithTargetNodeTypesAsync(_mapper.Map<ActionGroup>(context.Message.ActionGroup));
+        var enrichedActionGroup = await _actionGroupRetrievalService.EnrichActionGroupWithNodesAsync(_mapper.Map<ActionGroup>(context.Message.ActionGroup));
         await _actionGroupPublisher.SendActionGroupChangedAsync(enrichedActionGroup);
     }
 }

@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Routing;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Agv;
@@ -14,12 +15,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Consumer;
 /// </summary>
 [PublicAPI]
 public class AgvPositionChangedConsumer :
-    IConsumer<AgvPositionChanged>, 
+    IConsumer<AgvPositionChanged>,
     IConsumer<AgvLastNodeIdChanged>
 {
     private readonly ILogger<AgvPositionChangedConsumer> _logger;
     private readonly IAgvPublisher _agvPublisher;
     private readonly INodeStateRegistry _nodeStateRegistry;
+    private readonly IActionGroupRegistry _actionGroupRegistry;
+    private readonly IActionGroupRetrievalService _actionGroupRetrievalService;
+    private readonly IAgvRouteRetrievalService _agvRouteRetrievalService;
     private readonly IMapper _mapper;
 
     /// <summary>
@@ -28,20 +32,24 @@ public class AgvPositionChangedConsumer :
         ILogger<AgvPositionChangedConsumer> logger,
         IAgvPublisher agvPublisher,
         INodeStateRegistry nodeStateRegistry,
+        IActionGroupRegistry actionGroupRegistry,
+        IActionGroupRetrievalService actionGroupRetrievalService,
+        IAgvRouteRetrievalService agvRouteRetrievalService,
         IMapper mapper)
     {
         _logger = logger;
         _agvPublisher = agvPublisher;
         _nodeStateRegistry = nodeStateRegistry;
+        _actionGroupRegistry = actionGroupRegistry;
+        _actionGroupRetrievalService = actionGroupRetrievalService;
+        _agvRouteRetrievalService = agvRouteRetrievalService;
         _mapper = mapper;
-            
     }
 
     /// <summary>
     /// Send message to all clients
     /// </summary>
     /// <param name="context"></param>
-    /// <returns></returns>
     public async Task Consume(ConsumeContext<AgvPositionChanged> context)
     {
         _logger.LogTrace("{MessageType} {AgvId}/{CorrelationId} received", nameof(AgvPositionChanged), context.Message.AgvId, context.Message.CorrelationId);
@@ -55,18 +63,26 @@ public class AgvPositionChangedConsumer :
     /// UnOccupy previous node and occupy new node
     /// </summary>
     /// <param name="context"></param>
-    /// <returns></returns>
-    /// <exception cref="NotImplementedException"></exception>
     public async Task Consume(ConsumeContext<AgvLastNodeIdChanged> context)
     {
+        var agvCorrelationId = context.Message.CorrelationId;
+        _logger.LogTrace("{MessageType} {AgvId}/{CorrelationId} received", nameof(AgvLastNodeIdChanged), agvCorrelationId, agvCorrelationId);
+
         if (context.Message.OldLastNodeId != null)
         {
-            await _nodeStateRegistry.UnOccupyNodeAsync(context.Message.CorrelationId);
+            await _nodeStateRegistry.UnOccupyNodeAsync(agvCorrelationId);
         }
-            
-        if (context.Message.NewLastNodeId != null && await _nodeStateRegistry.IsNodeReservedAsync(context.Message.NewLastNodeId))
+
+        string? newLastNodeId = context.Message.NewLastNodeId;
+        if (newLastNodeId != null && await _nodeStateRegistry.IsNodeReservedAsync(newLastNodeId))
         {
-            await _nodeStateRegistry.OccupyNodeAsync(context.Message.NewLastNodeId, context.Message.CorrelationId);
+            await _nodeStateRegistry.OccupyNodeAsync(newLastNodeId, agvCorrelationId);
+        }
+
+        var agvRoute = await _agvRouteRetrievalService.GetAgvRouteAsync(agvCorrelationId, newLastNodeId);
+        if (agvRoute != null)
+        {
+            await _agvPublisher.SendAgvRouteAsync(agvRoute);
         }
     }
 }

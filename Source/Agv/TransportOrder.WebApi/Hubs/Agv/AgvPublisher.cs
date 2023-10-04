@@ -1,7 +1,8 @@
 ﻿using AutoMapper;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
 using Microsoft.AspNetCore.SignalR;
+using AgvPositionStatus = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.AgvPositionStatus;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Agv;
 
@@ -23,14 +24,21 @@ public class AgvPublisher : IAgvPublisher
     /// <inheritdoc/>
     public Task SendAgvStateAsync(Messages.MessageContent.Agv agv, bool isInitialState)
     {
-        var agvDto = _mapper.Map<AgvDto>(agv);
-        return isInitialState ? _hubContext.Clients.All.AgvDiscovered(agvDto) : _hubContext.Clients.All.AgvChanged(agvDto);
+        var dto = _mapper.Map<AgvDto>(agv);
+        return isInitialState ? _hubContext.Clients.All.AgvDiscovered(dto) : _hubContext.Clients.All.AgvChanged(dto);
     }
 
     /// <inheritdoc/>
     public Task SendAgvPositionAsync(AgvPositionStatus agvPosition)
     {
-        var agvPositionDto = _mapper.Map<AgvPositionStatusDto>(agvPosition);
-        return _hubContext.Clients.All.AgvPositionChanged(agvPositionDto);
+        var dto = _mapper.Map<AgvPositionStatusDto>(agvPosition);
+        return _hubContext.Clients.All.AgvPositionChanged(dto);
+    }
+
+    /// <inheritdoc/>
+    public Task SendAgvRouteAsync(AgvRouteReadModel agvRouteReadModel)
+    {
+        var dto = _mapper.Map<AgvRouteDto>(agvRouteReadModel);
+        return _hubContext.Clients.All.AgvRouteChanged(dto);
     }
 }

@@ -54,4 +54,18 @@ public interface IAgvRegistry
     /// <param name="correlationId">The correlation id to check.</param>
     /// <returns>If the agv exists.</returns>
     Task<bool> CheckIfAgvExistsAsync(Guid correlationId);
+
+    /// <summary>
+    /// Get the last node id of the agv with the given correlation id.
+    /// </summary>
+    /// <param name="agvCorrelationId">The AgvCorrelationId</param>
+    /// <returns></returns>
+    Task<string?> GetLastNodeIdAsync(Guid agvCorrelationId);
+
+    /// <summary>
+    /// Get the last node id of the agvs with the given correlation ids.
+    /// </summary>
+    /// <param name="agvCorrelationIds">A list of AgvCorrelationIds</param>
+    /// <returns></returns>
+    Task<IReadOnlyDictionary<Guid, string?>> GetLastNodeIdAsync(ICollection<Guid> agvCorrelationIds);
 }

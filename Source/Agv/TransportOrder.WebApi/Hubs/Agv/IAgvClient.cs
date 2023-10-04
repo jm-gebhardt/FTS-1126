@@ -29,4 +29,12 @@ public interface IAgvClient
     /// <param name="position"></param>
     [SignalRMethod("AgvPositionChanged")]
     Task AgvPositionChanged(AgvPositionStatusDto position);
+
+    /// <summary>
+    /// AGV route changed
+    /// </summary>
+    /// <param name="route"></param>
+    /// <returns></returns>
+    [SignalRMethod("AgvRouteChanged")]
+    Task AgvRouteChanged(AgvRouteDto route);
 }

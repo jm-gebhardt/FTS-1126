@@ -4,7 +4,6 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles;
 
-
 /// <summary>
 /// Profile for Agv message content
 /// </summary>
@@ -29,7 +28,7 @@ public class AgvProfile : Profile
             .ForMember(x => x.CorrelationId, opt => opt.Ignore());
 
         CreateMap<IList<AgvError>, MessageContent.Agv>(MemberList.None)
-             .ForMember(nameof(MessageContent.Agv.Errors), opt => opt.MapFrom(s => s));
+            .ForMember(d => d.Errors, opt => opt.MapFrom(s => s));
 
         CreateMap<AgvData, Requests.Agv.AgvData>();
     }

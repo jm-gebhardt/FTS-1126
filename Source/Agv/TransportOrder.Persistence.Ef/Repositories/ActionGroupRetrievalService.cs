@@ -30,7 +30,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyCollection<ActionGroupReadModel>> GetActionGroupsWithTargetNodeTypeAsync(IReadOnlyCollection<ActionGroupState> states, DateTime? fromDate, DateTime? toDate, int maxItems)
+    public async Task<IReadOnlyCollection<ActionGroupReadModel>> GetActionGroupsWithNodesAsync(IReadOnlyCollection<ActionGroupState> states, DateTime? fromDate, DateTime? toDate, int maxItems)
     {
         await using var context = await CreateDbContextAsync();
         IQueryable<ActionGroup> query = context.Set<ActionGroup>().AsQueryable();
@@ -96,7 +96,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyDictionary<Guid, ActionGroupReadModel?>> GetCurrentAssignedActionGroupsWithTargetNodeTypeAsync(IReadOnlyCollection<Guid> agvCorrelationIds)
+    public async Task<IReadOnlyDictionary<Guid, ActionGroupReadModel?>> GetAssignedActionGroupsWithNodesAsync(IReadOnlyCollection<Guid> agvCorrelationIds)
     {
         // Once Agv is assigned to ActionGroup, Status is immediately set to started (and StartedDate), therefore we can use StartedDate to get current assigned ActionGroup
         await using var context = await CreateDbContextAsync();
@@ -141,7 +141,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
     }
 
     /// <inheritdoc />
-    public async Task<ActionGroupReadModel> EnrichActionGroupWithTargetNodeTypesAsync(ActionGroup actionGroup)
+    public async Task<ActionGroupReadModel> EnrichActionGroupWithNodesAsync(ActionGroup actionGroup)
     {
         await using var context = await CreateDbContextAsync();
 
@@ -170,7 +170,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
     }
 
     /// <inheritdoc />
-    public async Task<ActionGroupReadModel?> GetActionGroupWithTargetNodeTypesAsync(Guid correlationId)
+    public async Task<ActionGroupReadModel?> GetActionGroupWithNodesAsync(Guid correlationId)
     {
         await using var context = await CreateDbContextAsync();
 
