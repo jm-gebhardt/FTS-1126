@@ -1,5 +1,4 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using Gebhardt.StoreWare.Agv.Common.Services.Detectors;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
@@ -18,12 +17,13 @@ internal class AgvPositionRegistryTestFixture
     public readonly Mock<IBus> BusMock = new();
     public AgvPositionStatus AgvPositionStatus { get; }
     public AgvPositionRegistry AgvPositionRegistry { get; }
-    public Mock<IChangeDetector<AgvPositionStatus>> ChangeDetectorMock { get; }
+
+    public AgvPositionDictionaryProvider AgvPositionDictionaryProvider { get; }
 
     public AgvPositionRegistryTestFixture()
     {
-        ChangeDetectorMock = new Mock<IChangeDetector<AgvPositionStatus>>();
-        AgvPositionRegistry = new AgvPositionRegistry(BusMock.Object, ChangeDetectorMock.Object, new AgvPositionDictionaryProvider());
+        AgvPositionDictionaryProvider = new AgvPositionDictionaryProvider();
+        AgvPositionRegistry = new AgvPositionRegistry(BusMock.Object, AgvPositionDictionaryProvider);
         AgvPositionStatus = new AgvPositionStatus(CorrelationId, AgvId, _agvPosition);
     }
 

@@ -30,13 +30,13 @@ public class ParkPointService : BaseNodeReservationManager, IParkPointService
     protected override Expression<Func<GraphNode, bool>> NodeFilter => node => node.Type == AgvGraph.NodeType.Park;
 
     /// <inheritdoc />
-    public Task<GraphNode> ReserveParkAsync(IAgv agv)
+    public Task<GraphNode> ReserveParkAsync(Models.Agv.Agv agv)
     {
         return PickAndReserveNodeAsync(agv);
     }
 
     /// <inheritdoc />
-    public Task<bool> IsOnAParkNodeAsync(IAgv agv)
+    public Task<bool> IsOnAParkNodeAsync(Models.Agv.Agv agv)
     {
         return IsAgvOnSuchANode(agv);
     }

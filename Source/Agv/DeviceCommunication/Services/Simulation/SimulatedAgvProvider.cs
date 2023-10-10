@@ -96,9 +96,15 @@ public class SimulatedAgvProvider: BackgroundService
             correlationId,
             agvId,
             "Initial",
-            grid,
-            GenerateData(correlationId),
-            mapGenerator.Generate()
+            true,
+            false,
+            false,
+            true,
+            DateTime.MinValue, 
+            DateTime.MinValue,
+            AgvGraph: grid,
+            AgvData: GenerateData(correlationId),
+            AgvMap: mapGenerator.Generate()
         );
     }
 

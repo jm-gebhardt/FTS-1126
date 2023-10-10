@@ -1,5 +1,4 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
@@ -207,8 +206,9 @@ public class EfActionGroupRegistry : IActionGroupRegistry
         await context.SaveChangesAsync();
     }
 
+
     /// <inheritdoc />
-    public async Task<ActionGroup> UpdateActionAndGroupStateAsync(AgvAction action, IAgv agv, ActionState state)
+    public async Task<ActionGroup> UpdateActionAndGroupStateAsync(AgvAction action, Domain.Models.Agv.Agv agv, ActionState state)
     {
         var actionGroupCorrelationId = action.ParentId;
 

@@ -11,7 +11,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States;
 /// Agv Saga for simulated AGVs
 /// </summary>
 [PublicAPI]
-public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
+public class SimulatedAgvSaga : SagaStateMachineInstance
 {
     private const int AliveChargeThreshold = 5;
 
@@ -32,31 +32,31 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
     /// </summary>
     public Guid CorrelationId { get; set; }
 
-    /// <inheritdoc cref="IAgv" />
+    /// <inheritdoc cref="Agv" />
     public string AgvId { get; }
 
-    /// <inheritdoc cref="IAgv" />
+    /// <inheritdoc cref="Agv" />
     public string CurrentState { get; set; }
 
-    /// <inheritdoc cref="IAgv" />
+    /// <inheritdoc cref="Agv" />
     public bool IsOnline { get; set; } = true;
 
-    /// <inheritdoc />
+    /// <inheritdoc cref="Agv" />
     public bool IsLocked { get; set; }
 
-    /// <inheritdoc />
+    /// <inheritdoc cref="Agv" />
     public bool HasError { get; }
 
-    /// <inheritdoc />
+    /// <inheritdoc cref="Agv" />
     public bool GraphExists { get; set; }
 
-    /// <inheritdoc />
+    /// <inheritdoc cref="Agv" />
     public DateTime TimeOfStateTransition { get; set; } = DateTime.UtcNow;
 
-    /// <inheritdoc />
+    /// <inheritdoc cref="Agv" />
     public DateTime TimeOfLockStateChanged { get; set; } = DateTime.UtcNow;
 
-    /// <inheritdoc cref="IAgv" />
+    /// <inheritdoc cref="Agv" />
     public AgvStatus AgvStatus { get; private set; }
 
     /// <summary>
@@ -64,7 +64,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
     /// </summary>
     public AgvGraph? AgvGraph { get; }
 
-    /// <inheritdoc cref="IAgv" />
+    /// <inheritdoc cref="Agv" />
     public AgvData? AgvData { get; }
 
     /// <summary>

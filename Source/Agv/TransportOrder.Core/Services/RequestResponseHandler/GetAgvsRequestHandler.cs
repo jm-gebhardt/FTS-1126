@@ -1,7 +1,5 @@
 using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
@@ -19,39 +17,38 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHan
 public class GetAgvsRequestHandler : IConsumer<GetAgvs>,
     IConsumer<GetAgv>
 {
-    private readonly IAgvRegistry _agvRegistry;
+    private readonly IAgvRepository _agvRepository;
     private readonly IActionGroupRetrievalService _actionGroupRegistry;
     private readonly IMapper _mapper;
     private readonly IAgvErrorRegistry _agvErrorRegistry;
 
     /// <summary>
-    /// <inheritdoc cref="GetAgvsRequestHandler"/>
+    /// Initializes a new  <see cref="GetAgvsRequestHandler"/> instance.
     /// </summary>
-    /// <param name="agvRegistry"></param>
-    /// <param name="actionGroupRegistry"></param>
-    /// <param name="mapper"></param>
-    /// <param name="agvErrorRegistry"></param>
-    public GetAgvsRequestHandler(IAgvRegistry agvRegistry, IActionGroupRetrievalService actionGroupRegistry, IMapper mapper, IAgvErrorRegistry agvErrorRegistry)
+    public GetAgvsRequestHandler(IAgvRepository agvRepository, IActionGroupRetrievalService actionGroupRegistry, IMapper mapper, IAgvErrorRegistry agvErrorRegistry)
     {
-        _agvRegistry = agvRegistry;
+        _agvRepository = agvRepository;
         _actionGroupRegistry = actionGroupRegistry;
         _mapper = mapper;
         _agvErrorRegistry = agvErrorRegistry;
     }
 
-    /// <inheritdoc cref="GetAgvsRequestHandler"/>
-    /// <param name="context"></param>
-    /// <returns></returns>
+    /// <summary>
+    /// Handles the <see cref="GetAgvs"/> request.
+    /// </summary>
     public async Task Consume(ConsumeContext<GetAgvs> context)
     {
-        IQueryable<IAgv> query = _agvRegistry.GetAllAgvs();
         ICollection<Guid> correlationIds = context.Message.CorrelationIds;
-        if (correlationIds.Any())
+        ICollection<Domain.Models.Agv.Agv> agvs;
+        if (!correlationIds.Any())
         {
-            query = query.Where(a => correlationIds.Contains(a.CorrelationId));
+            agvs = await _agvRepository.GetAllAgvsAsync();
+        }
+        else
+        {
+            agvs = await _agvRepository.SelectExistingAgvsAsync(correlationIds.ToList());
         }
 
-        List<IAgv> agvs = query.OrderBy(a => a.AgvId).ToList();
         List<Guid> agvCorrelationIds = agvs.Select(a => a.CorrelationId).ToList();
 
         Task<IReadOnlyDictionary<Guid, ActionGroupReadModel?>> actionGroupsTask = _actionGroupRegistry.GetAssignedActionGroupsWithNodesAsync(agvCorrelationIds);
@@ -74,8 +71,7 @@ public class GetAgvsRequestHandler : IConsumer<GetAgvs>,
             }
             return agvMessageContent;
         }).ToList();
-        List<bool> areInitialState = agvsMessageContent.Select(a => a.CurrentState == AgvState.Initial).ToList();
-        await context.RespondAsync(new GotAgvs(agvsMessageContent, areInitialState));
+        await context.RespondAsync(new GotAgvs(agvsMessageContent));
     }
 
     /// <summary>
@@ -86,11 +82,7 @@ public class GetAgvsRequestHandler : IConsumer<GetAgvs>,
     {
         var agvCorrelationId = context.Message.CorrelationId;
 
-        var agv = _agvRegistry.GetAgv(agvCorrelationId);
-        if (agv == null)
-        {
-            throw new AgvNotFoundException(agvCorrelationId);
-        }
+        var agv = await _agvRepository.GetAgvAsync(agvCorrelationId);
 
         var agvMessageContent = _mapper.Map<Messages.MessageContent.Agv>(agv);
 

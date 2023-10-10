@@ -8,6 +8,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
+using AgvPositionProfile = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Profiles.AgvPositionProfile;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Consumer;
 
@@ -40,6 +41,7 @@ public class ConsumerHubTestFixture<TConsumer, THubContext> : MassTransitConsume
             new Messages.Profiles.AgvGraphProfile(),
             new Messages.Profiles.AgvErrorProfile(),
             new Messages.Profiles.MapProfile(),
+            new Messages.Profiles.AgvPositionProfile(),
             new ActionGroupProfile()
         );
         return mapper;

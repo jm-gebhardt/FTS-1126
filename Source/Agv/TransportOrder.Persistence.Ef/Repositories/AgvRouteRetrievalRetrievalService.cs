@@ -14,18 +14,18 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
 public class AgvRouteRetrievalRetrievalService : IAgvRouteRetrievalService
 {
     private readonly IDbContextFactory<TransportOrderDbContext> _dbContextFactory;
-    private readonly IAgvRegistry _agvRegistry;
+    private readonly IAgvRepository _agvRepository;
     private readonly ILogger<AgvRouteRetrievalRetrievalService> _logger;
 
     /// <inheritdoc cref="AgvRouteRetrievalRetrievalService"/>
     public AgvRouteRetrievalRetrievalService(
         IDbContextFactory<TransportOrderDbContext> dbContextFactory,
-        IAgvRegistry agvRegistry,
+        IAgvRepository agvRepository,
         ILogger<AgvRouteRetrievalRetrievalService> logger
     )
     {
         _dbContextFactory = dbContextFactory;
-        _agvRegistry = agvRegistry;
+        _agvRepository = agvRepository;
         _logger = logger;
     }
 
@@ -50,7 +50,7 @@ public class AgvRouteRetrievalRetrievalService : IAgvRouteRetrievalService
             .FirstOrDefaultAsync();
 
         // if lastNodeId parameter is not we want to get the current value from the registry
-        Task<string?> lastNodeIdTask = string.IsNullOrEmpty(lastNodeId) ? _agvRegistry.GetLastNodeIdAsync(agvCorrelationId) : Task.FromResult<string?>(lastNodeId);
+        Task<string?> lastNodeIdTask = string.IsNullOrEmpty(lastNodeId) ? _agvRepository.GetLastNodeIdAsync(agvCorrelationId) : Task.FromResult<string?>(lastNodeId);
 
         await Task.WhenAll(actionGroupTask, lastNodeIdTask);
         var actionGroup = actionGroupTask.Result;
@@ -85,7 +85,7 @@ public class AgvRouteRetrievalRetrievalService : IAgvRouteRetrievalService
             .Select(g => g.FirstOrDefault())
             .ToDictionaryAsync(a => (Guid) a!.AssignedAgv!, a => a);
 
-        Task<IReadOnlyDictionary<Guid, string?>> lastNodeIdTask = _agvRegistry.GetLastNodeIdAsync(agvCorrelationIds);
+        Task<IReadOnlyDictionary<Guid, string?>> lastNodeIdTask = _agvRepository.GetLastNodeIdAsync(agvCorrelationIds);
 
         await Task.WhenAll(actionGroupTask, lastNodeIdTask);
         Dictionary<Guid, ActionGroup?> actionGroupById = actionGroupTask.Result;

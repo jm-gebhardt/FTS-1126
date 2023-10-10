@@ -30,9 +30,11 @@ public class AgvGraphReceivedEventHandler : IConsumer<AgvGraphReceived>
     public async Task Consume(ConsumeContext<AgvGraphReceived> context)
     {
         var agvGraph = context.Message.Graph;
-        await context.Publish(new AgvGraphChanged(agvGraph.CorrelationId, agvGraph));
 
         await _agvGraphRegistry.AddOrUpdateAsync(agvGraph);
+
+        await context.Publish(new AgvGraphChanged(agvGraph.CorrelationId, agvGraph));
+
         _logger.LogInformation("Graph {GraphCorrelationId} added or updated in registry", agvGraph.CorrelationId);
     }
 }

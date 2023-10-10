@@ -13,8 +13,8 @@ public class AgvProfile : Profile
     /// <inheritdoc />
     public AgvProfile()
     {
-        CreateMap<Messages.MessageContent.Agv, AgvDto>();
-        CreateMap<AgvData, AgvDataDto>();
+        CreateMap<Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent.Agv, AgvDto>().ReverseMap();
+        CreateMap<AgvData, AgvDataDto>().ReverseMap();
         CreateMap<AgvRouteReadModel, AgvRouteDto>();
     }
 }

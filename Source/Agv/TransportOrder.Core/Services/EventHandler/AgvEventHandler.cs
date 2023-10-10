@@ -1,11 +1,10 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.SagaStateMachines;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Map;
@@ -27,33 +26,35 @@ public class AgvEventHandler :
     IConsumer<AgvCanStartIdleAction>,
     IConsumer<ChargingAgvsCanHandleActionsAgainEvent>,
     IConsumer<AgvBatteryChargeChanged>,
-    IConsumer<AgvMapReceived>
+    IConsumer<AgvMapReceived>,
+    IConsumer<AgvErrorStatusReceived>,
+    IConsumer<AgvStatusReceived>,
+    IConsumer<AgvStartedCharging>,
+    IConsumer<AgvStoppedCharging>,
+    IConsumer<AgvGraphChanged>,
+    IConsumer<AgvWentOffline>, 
+    IConsumer<AgvPreparedForStartingAction>
 {
 
     private readonly ILogger<AgvEventHandler> _logger;
-    private readonly IAgvSagaCommunicationService _agvSagaCommunicationService;
+    private readonly IAgvRepository _agvRepository;
     private readonly IActionGroupRegistry _actionGroupRegistry;
-    private readonly IMaintenanceService _maintenanceService;
-    private readonly IChargingService _chargingService;
     private readonly IActionManagerSemaphoreProvider _semaphoreProvider;
     private readonly ISettingsProvider<AgvSettings> _settingsProvider;
 
     /// <summary>
     /// Initializes a new <see cref="AgvEventHandler"/> instance.
     /// </summary>
-    public AgvEventHandler(IAgvSagaCommunicationService agvSagaCommunicationService,
+    public AgvEventHandler(
+        IAgvRepository agvRepository,
         IActionGroupRegistry actionGroupRegistry,
-        IMaintenanceService maintenanceService,
-        IChargingService chargingService,
         IActionManagerSemaphoreProvider semaphoreProvider,
         ISettingsProvider<AgvSettings> settingsProvider,
         ILogger<AgvEventHandler> logger)
     {
         _logger = logger;
-        _agvSagaCommunicationService = agvSagaCommunicationService;
+        _agvRepository = agvRepository;
         _actionGroupRegistry = actionGroupRegistry;
-        _maintenanceService = maintenanceService;
-        _chargingService = chargingService;
         _semaphoreProvider = semaphoreProvider;
         _settingsProvider = settingsProvider;
     }
@@ -64,17 +65,17 @@ public class AgvEventHandler :
     public async Task Consume(ConsumeContext<AgvNeedsCharging> context)
     {
         var agvCorrelationId = context.Message.CorrelationId;
-        var cancellationToken = context.CancellationToken;
         _logger.LogDebug("{MessageType} for Agv: {AgvCorrelationId} received", nameof(AgvNeedsCharging), agvCorrelationId);
 
-        if (!await _agvSagaCommunicationService.IsAgvReadyForBusyAsync(agvCorrelationId, cancellationToken, ignoreCharging: false, ignoreLocked: true))
+        var agv = await _agvRepository.GetAgvAsync(agvCorrelationId);
+ 
+        if (!agv.IsAvailable( ignoreCharging: false, ignoreLocked: true))
         {
             // Agv might be charging
-            _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} is not ready to be set to busy", agvCorrelationId);
+            _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} is not available.", agvCorrelationId);
             return;
         }
         _logger.LogDebug("Assigning action for Agv with CorrelationId: {AgvCorrelationId} because it is ready", agvCorrelationId);
-        var agv = await _agvSagaCommunicationService.GetAgvAsync(agvCorrelationId, cancellationToken);
         await PublishPendingActions(context, agv);
     }
 
@@ -84,16 +85,16 @@ public class AgvEventHandler :
     public async Task Consume(ConsumeContext<AgvBecameIdle> context)
     {
         var agvCorrelationId = context.Message.CorrelationId;
-        var cancellationToken = context.CancellationToken;
         _logger.LogDebug("{MessageType} for Agv: {AgvCorrelationId} received", nameof(AgvBecameIdle), agvCorrelationId);
-        if (!await _agvSagaCommunicationService.IsAgvReadyForBusyAsync(agvCorrelationId, cancellationToken, ignoreCharging: false, ignoreLocked: true))
+        var agv = await _agvRepository.GetAgvAsync(agvCorrelationId);
+ 
+        if (!agv.IsAvailable( ignoreCharging: false, ignoreLocked: true))
         {
             // Agv might be charging
-            _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} is not ready to be set to busy", agvCorrelationId);
+            _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} is not available.", agvCorrelationId);
             return;
         }
         _logger.LogDebug("Assigning action for Agv with CorrelationId: {AgvCorrelationId} because it is ready", agvCorrelationId);
-        var agv = await _agvSagaCommunicationService.GetAgvAsync(agvCorrelationId, cancellationToken);
         await PublishPendingActions(context, agv);
     }
 
@@ -103,11 +104,10 @@ public class AgvEventHandler :
     public async Task Consume(ConsumeContext<AgvCanStartIdleAction> context)
     {
         var agv = context.Message.Agv;
-        bool isEligibleForCharging = _chargingService.AgvIsEligibleForCharging(agv);
-        _logger.LogDebug("Can start idle action for {CorrelationId} with charging eligibility {isEligibleForCharging}", agv.CorrelationId, isEligibleForCharging);
-        if (isEligibleForCharging)
+        var agvSettings = _settingsProvider.GetSettings();
+        if (agv.CheckIsEligibleForCharging(agvSettings))
         {
-            await context.Publish(new CreateChargingActionGroup(agv));
+            await context.Publish(new CreateChargingActionGroup(agv.CorrelationId));
             return;
         }
 
@@ -123,50 +123,7 @@ public class AgvEventHandler :
         await context.Publish(new TryReactivateChargingAgv());
     }
 
-    private async Task PublishPendingActions(ConsumeContext context, IAgv agv)
-    {
-        await _semaphoreProvider.ExecuteLockedAsync(async () =>
-        {
 
-            if (agv.IsLocked)
-            {
-                _logger.LogDebug("Agv {CorrelationId} is locked; Trying to start manual action", agv.CorrelationId);
-                await context.Publish(new TryStartManualAction(agv));
-                return;
-            }
-
-            bool needsCharging = _chargingService.AgvNeedsCharging(agv);
-            bool isCarryingLoad = await _actionGroupRegistry.HasUnfinishedDropActionsAsync(agv.CorrelationId);
-            bool needsMaintenance = _maintenanceService.MaintenanceRequested(agv);
-
-            bool shouldCharge = !isCarryingLoad && needsCharging;
-            bool shouldDoMaintenance = !isCarryingLoad && needsMaintenance;
-            _logger.LogDebug(
-                "Publishing pending actions for {CorrelationId} with {needsCharging} {isCarryingLoad} {needsMaintenance} {shouldCharge} {shouldDoMaintenance}",
-                agv.CorrelationId,needsCharging,isCarryingLoad, needsMaintenance, shouldCharge, shouldDoMaintenance
-            );
-
-            if (shouldCharge)
-            {
-                await context.Publish(new CreateChargingActionGroup(agv));
-                return;
-            }
-
-            if (shouldDoMaintenance)
-            {
-                await context.Publish(new CreateMaintenanceActionGroup(agv));
-                return;
-            }
-
-            if (isCarryingLoad)
-            {
-                await context.Publish(new TryStartNextActionInActionGroup(agv));
-                return;
-            }
-
-            await context.Publish(new TryStartNewActionGroup(agv));
-        }, context.CancellationToken);
-    }
 
     /// <summary>
     /// Handles the <see cref="AgvBatteryChargeChanged"/> event.
@@ -202,5 +159,117 @@ public class AgvEventHandler :
     {
         var map = context.Message.AgvMap;
         await context.Publish(new SaveMap(map, map.CorrelationId));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="AgvErrorStatusReceived"/> event.
+    /// </summary>
+    public async Task Consume(ConsumeContext<AgvErrorStatusReceived> context)
+    {
+        List<AgvError>? errors = context.Message.Errors;
+        List<AgvError> agvErrors = new();
+        if (errors != null)
+        {
+            agvErrors = errors;
+        }
+
+        await context.Publish(new UpdateErrorStatus(context.Message.CorrelationId, agvErrors));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="AgvStatusReceived"/> event.
+    /// </summary>
+    public async Task Consume(ConsumeContext<AgvStatusReceived> context)
+    {
+        _logger.LogDebug("Received status update for {CorrelationId}", context.Message.CorrelationId);
+        try
+        {
+            await _agvRepository.GetAgvAsync(context.Message.CorrelationId);
+            await context.Publish(new UpdateAgvStatus(context.Message.CorrelationId, context.Message.AgvId, context.Message.AgvStatus));
+        }
+        catch (AgvNotFoundException)
+        {
+            await context.Publish(new CreateAgv(context.Message.CorrelationId, context.Message.AgvId, context.Message.AgvStatus));
+        }
+    }
+
+    /// <summary>
+    /// Handles the <see cref="AgvStartedCharging"/> event.
+    /// </summary>
+    public async Task Consume(ConsumeContext<AgvStartedCharging> context)
+    {
+        await context.Publish(new StartCharging(context.Message.CorrelationId));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="AgvStoppedCharging"/> event.
+    /// </summary>
+    public async Task Consume(ConsumeContext<AgvStoppedCharging> context)
+    {
+        await context.Publish(new StopCharging(context.Message.CorrelationId));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="AgvGraphChanged"/> event.
+    /// </summary>
+    public async Task Consume(ConsumeContext<AgvGraphChanged> context)
+    {
+        _logger.LogInformation("{MessageType} {CorrelationId}", nameof(AgvGraphChanged), context.Message.CorrelationId);
+        await context.Publish(new UpdateGraph(context.Message.CorrelationId, context.Message.AgvGraph));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="AgvPreparedForStartingAction"/> event.
+    /// </summary>
+    public async Task Consume(ConsumeContext<AgvPreparedForStartingAction> context)
+    {
+        await context.Publish(new StartAction(context.Message.Action, context.Message.AssignedAgv));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="AgvWentOffline"/> event.
+    /// </summary>
+    public async Task Consume(ConsumeContext<AgvWentOffline> context)
+    {
+        await context.Publish(new GoOffline(context.Message.CorrelationId, context.GetSchedulingTokenId()!.Value));
+    }
+
+    private async Task PublishPendingActions(ConsumeContext context, Domain.Models.Agv.Agv agv)
+    {
+        await _semaphoreProvider.ExecuteLockedAsync(async () =>
+        {
+
+            if (agv.IsLocked)
+            {
+                await context.Publish(new TryStartManualAction(agv.CorrelationId));
+                return;
+            }
+            var agvSettings = _settingsProvider.GetSettings();
+            bool needsCharging = agv.CheckNeedsCharging(agvSettings);
+            bool isCarryingLoad = await _actionGroupRegistry.HasUnfinishedDropActionsAsync(agv.CorrelationId);
+
+            bool shouldCharge = !isCarryingLoad && needsCharging;
+            bool shouldDoMaintenance = !isCarryingLoad && agv.NeedsMaintenance;
+
+            if (shouldCharge)
+            {
+                await context.Publish(new CreateChargingActionGroup(agv.CorrelationId));
+                return;
+            }
+
+            if (shouldDoMaintenance)
+            {
+                await context.Publish(new CreateMaintenanceActionGroup(agv.CorrelationId));
+                return;
+            }
+
+            if (isCarryingLoad)
+            {
+                await context.Publish(new TryStartNextActionInActionGroup(agv.CorrelationId));
+                return;
+            }
+
+            await context.Publish(new TryStartNewActionGroup(agv.CorrelationId));
+        }, context.CancellationToken);
     }
 }

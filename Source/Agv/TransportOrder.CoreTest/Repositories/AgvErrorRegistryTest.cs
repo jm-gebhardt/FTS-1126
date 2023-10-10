@@ -30,14 +30,14 @@ public class AgvErrorRegistryTest
     }
 
     [TestMethod]
-    public async Task UpdateAgvErrorStatusAsync_WhenSuccessfullyAddedToRegistry_CanGetAgvError()
+    public async Task Consume_AddOrUpdateAgvErrorStatusAsync_WhenSuccessfullyAddedToRegistry_CanGetAgvError()
     {
         const int errorCount = 5;
         var agvCorrelationId = Guid.NewGuid();
         var agvErrorStatus = AgvErrorGenerator.GenerateAgvErrorStatus(errorCount, agvCorrelationId: agvCorrelationId);
         var fixture = new AgvErrorRegistryTestFixture();
 
-        await fixture.AgvErrorRegistry.UpdateAgvErrorStatusAsync(agvErrorStatus.Errors, agvErrorStatus.CorrelationId);
+        await fixture.AgvErrorRegistry.AddOrUpdateAgvErrorStatusAsync(agvErrorStatus.Errors, agvErrorStatus.CorrelationId);
         IList<AgvError> agvErrorsInRegistry = await fixture.AgvErrorRegistry.GetActiveErrorsAsync(agvCorrelationId);
 
         agvErrorsInRegistry.ShouldNotBeNull();
@@ -45,7 +45,7 @@ public class AgvErrorRegistryTest
     }
 
     [TestMethod]
-    public async Task UpdateAgvErrorStatusAsync_WhenErrorTypeNotIncludedInAgvErrorStatus_ResolveAgvError()
+    public async Task Consume_AddOrUpdateAgvErrorStatusAsync_WhenErrorTypeNotIncludedInAgvErrorStatus_ResolveAgvError()
     {
         const int errorCount = 5;
         var agvCorrelationId = Guid.NewGuid();
@@ -60,7 +60,7 @@ public class AgvErrorRegistryTest
         }
 
         agvErrorStatus.Errors = null;
-        await fixture.AgvErrorRegistry.UpdateAgvErrorStatusAsync(agvErrorStatus.Errors, agvErrorStatus.CorrelationId);
+        await fixture.AgvErrorRegistry.AddOrUpdateAgvErrorStatusAsync(agvErrorStatus.Errors, agvErrorStatus.CorrelationId);
 
         agvErrorsInRegistry = await fixture.AgvErrorRegistry.GetActiveErrorsAsync(agvCorrelationId);
         //all errors resolved

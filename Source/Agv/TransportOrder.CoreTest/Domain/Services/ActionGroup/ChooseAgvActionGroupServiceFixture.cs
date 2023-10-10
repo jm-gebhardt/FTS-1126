@@ -1,9 +1,10 @@
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Routing;
+using Gebhardt.StoreWare.Agv.TransportOrder.Routing.Base;
 using Gebhardt.StoreWare.Agv.TransportOrder.Routing.Models;
 using JetBrains.Annotations;
+using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Domain.Services.ActionGroup;
@@ -21,15 +22,17 @@ public class ChooseAgvActionGroupServiceFixture
 
     public ShortestRouteChooser ShortestRouteChooser { get; private set; }
 
-    public ChooseAgvActionGroupServiceFixture()
+    public ChooseAgvActionGroupServiceFixture(bool realRouteService = false)
     {
         AgvActionRegistry.Setup(x => x.GetNotStartedActionGroupsAsync(It.IsAny<Guid>())).ReturnsAsync(NotStartedActionGroups);
         ShortestRouteChooser = new ShortestRouteChooser(
-            RouteService.Object,
-            AgvActionRegistry.Object);
+            realRouteService ? new RouteService(new Mock<IAgvGraphRegistry>().Object, new Mock<IRouteFinder>().Object,new Mock<ILogger<RouteService>>().Object) : RouteService.Object,
+            AgvActionRegistry.Object,
+            new Mock<ILogger<ShortestRouteChooser>>().Object
+            );
     }
 
-    public ChooseAgvActionGroupServiceFixture WithAgvHasRouteToDestination(IAgv agv, TransportOrder.Domain.Models.ActionGroup.ActionGroup actionGroup, float? routeCosts = null)
+    public ChooseAgvActionGroupServiceFixture WithAgvHasRouteToDestination(TransportOrder.Domain.Models.Agv.Agv agv, Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.ActionGroup actionGroup, float? routeCosts = null)
     {
         RouteService.Setup(x => x.GetCostsAsync(agv, It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(routeCosts);
@@ -41,7 +44,7 @@ public class ChooseAgvActionGroupServiceFixture
         return this;
     }
 
-    public ChooseAgvActionGroupServiceFixture WithAgvHasRouteToDestination(IAgv agv, string sourceNodeId, string destinationNodeId, TransportOrder.Domain.Models.ActionGroup.ActionGroup actionGroup, float? routeCosts = null)
+    public ChooseAgvActionGroupServiceFixture WithAgvHasRouteToDestination(TransportOrder.Domain.Models.Agv.Agv agv, string sourceNodeId, string destinationNodeId, Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.ActionGroup actionGroup, float? routeCosts = null)
     {
         RouteService.Setup(x => x.GetCostsAsync(agv, destinationNodeId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(routeCosts);

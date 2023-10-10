@@ -1,5 +1,4 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
@@ -41,6 +40,11 @@ public class ActionGroup
     /// State of the ActionGroup
     /// </summary>
     public ActionGroupState State { get; private set; } = ActionGroupState.Created;
+
+    /// <summary>
+    /// The first action to be executed.
+    /// </summary>
+    public AgvAction? FirstUnstartedAction => Actions.FirstOrDefault(a => a.State == ActionState.Created);
 
     private readonly List<AgvAction> _actions;
     /// <summary>
@@ -151,7 +155,7 @@ public class ActionGroup
     /// </summary>
     /// <param name="agvToAssign">The agv to assign</param>
     /// <exception cref="ActionGroupAlreadyAssignedException">If the action group was already assigned.</exception>
-    public void Assign(IAgv agvToAssign)
+    public void Assign(Agv.Agv agvToAssign)
     {
         if (AssignedAgv == null)
         {

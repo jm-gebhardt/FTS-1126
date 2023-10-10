@@ -14,7 +14,7 @@ public interface IMaintenanceService
     /// <param name="agv"></param>
     /// <returns>True in case it needs maintenance</returns>
     [PublicAPI]
-    public bool MaintenanceRequested(IAgv agv);
+    public bool MaintenanceRequested(Models.Agv.Agv agv);
 
     /// <summary>
     /// Gets Maintenance Node for Agv
@@ -22,5 +22,5 @@ public interface IMaintenanceService
     /// <param name="agv"></param>
     /// <returns></returns>
     [PublicAPI]
-    public Task<GraphNode> GetMaintenanceNode(IAgv agv);
+    public Task<GraphNode> GetMaintenanceNode(Models.Agv.Agv agv);
 }

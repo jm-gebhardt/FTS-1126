@@ -104,9 +104,4 @@ public abstract class BaseStateMachineTestFixture<TStateMachine, TInstance>
         (await TestHarness.Published.Any<TRequest>()).ShouldBeTrue();
         (await SagaHarness.Consumed.Any<TRequest>()).ShouldBeTrue();
     }
-
-    public async Task VerifyMessagePublishedAsync<T>() where T : class
-    {
-        (await TestHarness.Published.Any<T>()).ShouldBeTrue();
-    }
 }

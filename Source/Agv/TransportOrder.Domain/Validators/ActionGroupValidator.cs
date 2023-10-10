@@ -1,6 +1,5 @@
 ﻿using FluentValidation;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Routing;
 using ActionGroup = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
@@ -14,14 +13,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Validators;
 public class ActionGroupValidator : AbstractValidator<ActionGroup>
 {
     private const string PropertyMustNotBeNullOrEmpty = "{PropertyName} must not be null or empty.";
-    private readonly IAgvRegistry _agvRegistry;
+    private readonly IAgvRepository _agvRegistry;
     private readonly IRouteService _routeService;
     private readonly IAgvGraphRegistry _agvGraphRegistry;
-    private IAgv? _agv;
+    private Models.Agv.Agv? _agv;
     private bool _hasRoute;
 
     /// <inheritdoc cref="ActionGroupValidator" />
-    public ActionGroupValidator(IAgvRegistry agvRegistry,
+    public ActionGroupValidator(IAgvRepository agvRegistry,
         IRouteService routeService,
         IValidator<AgvAction> actionValidator,
         IAgvGraphRegistry agvGraphRegistry
@@ -130,7 +129,7 @@ public class ActionGroupValidator : AbstractValidator<ActionGroup>
     {
         if (actionGroup.AssignedAgv != null)
         {
-            _agv = _agvRegistry.GetAgv(actionGroup.AssignedAgv);
+            _agv = await _agvRegistry.GetAgvAsync(actionGroup.AssignedAgv!.Value);
             if (_agv == null)
             {
                 return false;
@@ -141,7 +140,7 @@ public class ActionGroupValidator : AbstractValidator<ActionGroup>
         }
         else
         {
-            List<IAgv> agvs = _agvRegistry.GetAllAgvs().ToList();
+            ICollection<Models.Agv.Agv> agvs = await _agvRegistry.GetAllAgvsAsync();
             _hasRoute = await _routeService.HasAnyAgvRouteAsync(actionGroup, agvs, cancellationToken);
         }
 

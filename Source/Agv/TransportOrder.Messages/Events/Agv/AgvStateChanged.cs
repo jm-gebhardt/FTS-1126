@@ -1,4 +1,4 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 using JetBrains.Annotations;
 using MassTransit;
 
@@ -11,4 +11,4 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 /// <param name="Agv">Agv with the new state</param>
 /// <param name="PreviousState">Previous state of the agv</param>
 [PublicAPI]
-public record AgvStateChanged(Guid CorrelationId, IAgv Agv, string? PreviousState) : CorrelatedBy<Guid>;
+public record AgvStateChanged(Guid CorrelationId, MessageContent.Agv Agv, AgvState? PreviousState) : CorrelatedBy<Guid>;

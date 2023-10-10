@@ -29,7 +29,7 @@ public class ChargingPointManager : BaseNodeReservationManager, IChargingPointMa
     protected override string Description => "Charging";
 
     /// <inheritdoc />
-    public Task<GraphNode> ReserveChargerAsync(IAgv agv)
+    public Task<GraphNode> ReserveChargerAsync(Models.Agv.Agv agv)
     {
         return PickAndReserveNodeAsync(agv);
     }
@@ -38,7 +38,7 @@ public class ChargingPointManager : BaseNodeReservationManager, IChargingPointMa
     protected override Expression<Func<GraphNode, bool>> NodeFilter => node => node.Type == AgvGraph.NodeType.Charge;
 
     /// <inheritdoc />
-    public async Task<GraphNode?> GetBestChargerAsync(IAgv agv)
+    public async Task<GraphNode?> GetBestChargerAsync(Models.Agv.Agv agv)
     {
         try
         {
@@ -57,7 +57,7 @@ public class ChargingPointManager : BaseNodeReservationManager, IChargingPointMa
     }
 
     /// <inheritdoc />
-    public async Task<bool> IsOnAChargingNodeAsync(IAgv agv)
+    public async Task<bool> IsOnAChargingNodeAsync(Models.Agv.Agv agv)
     {
         return await IsAgvOnSuchANode(agv);
     }

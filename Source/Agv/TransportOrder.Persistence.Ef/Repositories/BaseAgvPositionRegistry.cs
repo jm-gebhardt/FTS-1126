@@ -1,5 +1,4 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Services.Detectors;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
+﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 using MassTransit;
@@ -12,17 +11,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
 public abstract class BaseAgvPositionRegistry : IAgvPositionRegistry
 {
     private readonly IBus _bus;
-    private readonly IChangeDetector<AgvPositionStatus> _agvPositionChangeDetector;
 
     /// <summary>
     /// Constructor
     /// </summary>
-    /// <param name="bus">The MassTransit bus</param>
-    /// <param name="agvPositionReceivedChangeDetector">The change detector which tells us whether the AgvPositionReceived has changed in the storage</param>
-    protected BaseAgvPositionRegistry(IBus bus, IChangeDetector<AgvPositionStatus> agvPositionReceivedChangeDetector)
+    protected BaseAgvPositionRegistry(IBus bus)
     {
         _bus = bus;
-        _agvPositionChangeDetector = agvPositionReceivedChangeDetector;
     }
 
     /// <inheritdoc />
@@ -33,7 +28,7 @@ public abstract class BaseAgvPositionRegistry : IAgvPositionRegistry
 
         UpdateInternal(agvPositionStatus);
 
-        if (_agvPositionChangeDetector.HasChanged(previousAgvPosition, agvPositionStatus))
+        if (!Equals(previousAgvPosition, agvPositionStatus))
         {
             var agvPositionChanged = new AgvPositionChanged(agvPositionStatus.AgvPosition, previousAgvPosition?.AgvPosition, agvPositionStatus.AgvId, correlationId);
             await _bus.Publish(agvPositionChanged);

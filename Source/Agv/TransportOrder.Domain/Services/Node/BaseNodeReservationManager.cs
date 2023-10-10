@@ -39,7 +39,7 @@ public abstract class BaseNodeReservationManager : BaseNodePicker
     /// </summary>
     /// <param name="agv"></param>
     /// <returns></returns>
-    protected async Task<GraphNode> PickAndReserveNodeAsync(IAgv agv)
+    protected async Task<GraphNode> PickAndReserveNodeAsync(Models.Agv.Agv agv)
     {
         return await _semaphoreProvider.ExecuteLockedAsync(async () =>
         {

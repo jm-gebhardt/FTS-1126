@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Agv;
@@ -42,11 +43,8 @@ public class AgvStateChangedConsumer : IConsumer<AgvStateChanged>
     {
         _logger.LogTrace("{MessageType} {CorrelationId} received", nameof(ActionGroupChanged), context.Message.CorrelationId);
 
-        Response<GotAgvs> response = await _getAgvsClient.GetResponse<GotAgvs>(new GetAgvs(new[] {context.Message.Agv.CorrelationId}));
-
-        if (response.Message.Agvs.Any())
-        {
-            await _agvPublisher.SendAgvStateAsync(response.Message.Agvs.First(), response.Message.AreInitialState.First());
-        }
+        var agv = context.Message.Agv;
+        bool isInitialState = agv.CurrentState == AgvState.Initial;
+        await _agvPublisher.SendAgvStateAsync(agv, isInitialState);
     }
 }

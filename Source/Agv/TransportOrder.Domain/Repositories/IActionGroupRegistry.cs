@@ -1,5 +1,4 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
 using ActionGroup = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using AgvAction = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.AgvAction;
@@ -112,7 +111,7 @@ public interface IActionGroupRegistry
     /// <param name="action">The action to be started</param>
     /// <param name="agv">The assigned Agv</param>
     /// <param name="state">The new state</param>
-    Task<ActionGroup> UpdateActionAndGroupStateAsync(AgvAction action, IAgv agv, ActionState state);
+    Task<ActionGroup> UpdateActionAndGroupStateAsync(AgvAction action, Models.Agv.Agv agv, ActionState state);
 
     /// <summary>
     /// Determine if there is any drop action which is not completed (Agv loaded)

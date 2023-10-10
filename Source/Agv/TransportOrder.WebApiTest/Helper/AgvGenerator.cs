@@ -1,6 +1,4 @@
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.SagaStateMachines;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 using JetBrains.Annotations;
 
@@ -9,37 +7,68 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Helper;
 public static class AgvGenerator
 {
     [UsedImplicitly]
-    public static IAgv GenerateIdleAgv(int index = 0, string? lastNodeId = null, bool isLocked = false)
+    public static Domain.Models.Agv.Agv GenerateIdleAgv(int index = 0, string? lastNodeId = null, bool isLocked = false)
     {
-        var agv = GenerateAgv(nameof(AgvStateMachine.Idle), index, lastNodeId);
-        agv.IsLocked = isLocked;
+        var agv = GenerateAgv(AgvState.Idle, index, lastNodeId, isLocked: isLocked);
         return agv;
     }
 
     [UsedImplicitly]
-    public static IAgv GenerateIdleAgv(AgvStatus agvStatus, int index = 0)
+    public static Domain.Models.Agv.Agv GenerateIdleAgv(AgvStatus agvStatus, int index = 0)
     {
-        return GenerateAgv(nameof(AgvStateMachine.Idle), index, null, agvStatus);
+        return GenerateAgv(AgvState.Idle, index, null, agvStatus);
     }
 
     [UsedImplicitly]
-    public static IAgv GenerateChargingAgv(int index = 0, string? lastNodeId = null)
+    public static Domain.Models.Agv.Agv GenerateChargingAgv(int index = 0, string? lastNodeId = null)
     {
-        return GenerateAgv(nameof(AgvStateMachine.Charging), index, lastNodeId, charging: true);
+        return GenerateAgv(AgvState.Charging, index, lastNodeId, charging: true);
     }
 
-    private static IAgv GenerateAgv(
-        string state,
+    private static Domain.Models.Agv.Agv GenerateAgv(
+        AgvState state,
         int index,
         string? lastNodeId,
         AgvStatus? agvStatus = null,
-        bool charging = false)
+        bool charging = false,
+        bool isLocked = false
+        )
     {
         string agvId = GetAgvId(index);
         var correlationId = agvId.ToGuid();
         agvStatus ??= new AgvStatus(correlationId, "orderId", true, true, 1, charging, false, lastNodeId);
-        return new AgvSaga(correlationId, agvId, state, agvStatus);
+        var agv = new Domain.Models.Agv.Agv(correlationId, agvId, agvStatus);
+        return SetAgvState(state, isLocked, agv);
     }
 
     private static string GetAgvId(int index) => $"AGV{index:D3}";
+
+    public static Domain.Models.Agv.Agv SetAgvState(AgvState state, bool isLocked, Domain.Models.Agv.Agv agv)
+    {
+        switch (state)
+        {
+            case AgvState.Busy:
+                agv.TransitionToDiscovered(true);
+                agv.TransitionToIdle();
+                agv.TryTransitionToBusy(isLocked);
+                break;
+
+            case AgvState.Discovered:
+                agv.TransitionToDiscovered(true);
+                break;
+
+            case AgvState.Idle:
+                agv.TransitionToDiscovered(true);
+                agv.TransitionToIdle();
+                break;
+
+            case AgvState.Charging:
+                agv.TransitionToDiscovered(true);
+                agv.TransitionToIdle();
+                agv.TransitionToCharging();
+                break;
+        }
+        return agv;
+        
+    }
 }

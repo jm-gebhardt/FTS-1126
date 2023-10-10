@@ -4,16 +4,13 @@ using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.EventHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Profiles;
 using Microsoft.Extensions.DependencyInjection;
-using Moq;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.EventHandler;
 
 public class ActionEventHandlerTestFixture : MassTransitConsumerTestFixture<ActionEventHandler>
 {
-    private readonly Mock<IActionManager> _actionManager = new();
     protected override void ConfigureServices(IServiceCollection collection)
     {
-        collection.AddTransient(_ => _actionManager.Object);
         collection.AddTransient(_ => GetMapper());
     }
 

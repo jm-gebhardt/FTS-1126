@@ -1,5 +1,4 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Services.Detectors;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
+﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
 using MassTransit;
 
@@ -13,7 +12,7 @@ public class AgvPositionRegistry : BaseAgvPositionRegistry
     private readonly IConcurrentDictionaryProvider<Guid, AgvPositionStatus> _positionDictionaryProvider;
 
     /// <inheritdoc/>
-    public AgvPositionRegistry(IBus bus, IChangeDetector<AgvPositionStatus> agvPositionChangeDetector, IConcurrentDictionaryProvider<Guid, AgvPositionStatus> dictionaryProvider) : base(bus, agvPositionChangeDetector)
+    public AgvPositionRegistry(IBus bus, IConcurrentDictionaryProvider<Guid, AgvPositionStatus> dictionaryProvider) : base(bus)
     {
         _positionDictionaryProvider = dictionaryProvider;
     }

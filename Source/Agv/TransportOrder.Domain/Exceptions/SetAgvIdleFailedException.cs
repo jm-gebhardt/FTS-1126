@@ -1,8 +1,11 @@
-﻿namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
+﻿using JetBrains.Annotations;
+
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 
 /// <summary>
 /// Exception thrown when setting AGV to idle failed.
 /// </summary>
+[UsedImplicitly]
 public class SetAgvIdleFailedException : Exception
 {
     /// <summary>

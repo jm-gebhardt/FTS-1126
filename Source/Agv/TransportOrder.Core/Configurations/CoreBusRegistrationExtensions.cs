@@ -1,18 +1,13 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
-using Gebhardt.StoreWare.Agv.Common.Persistence;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.CommandHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.EventHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.SagaStateMachines;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Map;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Map;
-using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;
 using MassTransit;
 using LockAgv = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv.LockAgv;
 using RequestAgvData = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv.RequestAgvData;
@@ -26,6 +21,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations;
 /// </summary>
 public static class CoreBusRegistrationExtensions
 {
+    private const int PartitionCount = 16;
+
     /// <summary>
     /// 
     /// </summary>
@@ -33,45 +30,80 @@ public static class CoreBusRegistrationExtensions
     /// <returns></returns>
     public static IBusRegistrationConfigurator AddCoreConsumer(this IBusRegistrationConfigurator busRegistrationConfigurator)
     {
-        busRegistrationConfigurator.AddSagaStateMachine<AgvStateMachine, AgvSaga>()
-            .AddPersistence<AgvSaga, SagaPersistenceDbContext>();
         busRegistrationConfigurator.AddDelayedMessageScheduler();
 
+        RegisterCoreActionGroupHandlers(busRegistrationConfigurator);
+
+        RegisterCoreGraphHandlers(busRegistrationConfigurator);
+
+        RegisterCoreAgvHandlers(busRegistrationConfigurator);
+
+        return busRegistrationConfigurator;
+    }
+
+    private static void RegisterCoreAgvHandlers(IBusRegistrationConfigurator busRegistrationConfigurator)
+    {
         busRegistrationConfigurator.AddConsumer<AgvDataEventHandler>();
         busRegistrationConfigurator.AddConsumer<AgvPositionReceivedEventHandler>();
+        busRegistrationConfigurator.AddConsumer<AgvCommandHandler>(c =>
+        {
+           
+            var createAgvPartitioner = c.CreatePartitioner(PartitionCount);
+            createAgvPartitioner.PartitionMessageById<CreateAgv, AgvCommandHandler>(c);
+
+            var partitioner = c.CreatePartitioner(PartitionCount);
+            partitioner.PartitionMessageById<UpdateErrorStatus, AgvCommandHandler>(c);
+            partitioner.PartitionMessageById<StartCharging, AgvCommandHandler>(c);
+            partitioner.PartitionMessageById<StopCharging, AgvCommandHandler>(c);
+            partitioner.PartitionMessageById<UpdateAgvStatus, AgvCommandHandler>(c);
+            partitioner.PartitionMessageById<UpdateGraph, AgvCommandHandler>(c);
+            partitioner.PartitionMessageById<GoOffline, AgvCommandHandler>(c);
+            partitioner.PartitionMessageById<UpdateAgvData, AgvCommandHandler>(c);
+            partitioner.PartitionMessageById<AcceptAgvCommand, AgvCommandHandler>(c);
+            partitioner.PartitionMessageById<LockAgv, AgvCommandHandler>(c);
+            partitioner.PartitionMessageById<UnlockAgv, AgvCommandHandler>(c);
+            partitioner.PartitionMessageById<MoveAgv, AgvCommandHandler>(c);
+            partitioner.PartitionMessageById<SetAgvForceIdle, AgvCommandHandler>(c);
+            partitioner.PartitionMessageById<HandleAgvActionStartFailure, AgvCommandHandler>(c);
+            partitioner.PartitionMessageById<HandleActionCompletion, AgvCommandHandler>(c);
+            partitioner.PartitionMessageById<PrepareAgvForStartingAction, AgvCommandHandler>(c);
+        });
+        busRegistrationConfigurator.AddConsumer<AgvEventHandler>();
+
+        busRegistrationConfigurator.AddRequestClient<AcceptAgvCommand>();
+        busRegistrationConfigurator.AddRequestClient<LockAgv>();
+        busRegistrationConfigurator.AddRequestClient<UnlockAgv>();
+        busRegistrationConfigurator.AddRequestClient<MoveAgv>();
+        busRegistrationConfigurator.AddRequestClient<SetAgvForceIdle>();
+
+    }
+
+    private static void RegisterCoreGraphHandlers(IBusRegistrationConfigurator busRegistrationConfigurator)
+    {
         busRegistrationConfigurator.AddConsumer<AgvGraphReceivedEventHandler>();
-        busRegistrationConfigurator.AddConsumer<AgvErrorStatusEventHandler>();
-        busRegistrationConfigurator.AddConsumer<AcceptAgvCommandHandler>();
-        busRegistrationConfigurator.AddConsumer<ActionCommandHandler>();
+
+        busRegistrationConfigurator.AddConsumer<MapCommandHandler>(cfg => { cfg.Message<SaveMap>(x => x.UsePartitioner(PartitionCount, p => p.Message.Map.CorrelationId)); });
+    }
+
+    private static void RegisterCoreActionGroupHandlers(IBusRegistrationConfigurator busRegistrationConfigurator)
+    {
         busRegistrationConfigurator.AddConsumer<ActionEventHandler>();
         busRegistrationConfigurator.AddConsumer<ActionCommandHandler>(c =>
         {
-            var partitioner = c.CreatePartitioner(16);
+            var partitioner = c.CreatePartitioner(PartitionCount);
             c.Message<CreateParkingActionGroup>(x =>
                 x.UsePartitioner(partitioner, p => p.Message.Agv.CorrelationId));
             c.Message<CreateChargingActionGroup>(x =>
-                x.UsePartitioner(partitioner, p => p.Message.Agv.CorrelationId));
+                x.UsePartitioner(partitioner, p => p.Message.AgvCorrelationId));
             c.Message<CreateMaintenanceActionGroup>(x =>
-                x.UsePartitioner(partitioner, p => p.Message.Agv.CorrelationId));
+                x.UsePartitioner(partitioner, p => p.Message.AgvCorrelationId));
             c.Message<TryStartNextActionInActionGroup>(x =>
-                x.UsePartitioner(partitioner, p => p.Message.Agv.CorrelationId));
+                x.UsePartitioner(partitioner, p => p.Message.AgvCorrelationId));
             c.Message<TryStartNewActionGroup>(x =>
-                x.UsePartitioner(partitioner, p => p.Message.Agv.CorrelationId));
+                x.UsePartitioner(partitioner, p => p.Message.AgvCorrelationId));
             c.Message<TryStartManualAction>(x =>
-                x.UsePartitioner(partitioner, p => p.Message.Agv.CorrelationId));
+                x.UsePartitioner(partitioner, p => p.Message.AgvCorrelationId));
         });
-
-        busRegistrationConfigurator.AddConsumer<MapCommandHandler>(cfg =>
-        {
-          cfg.Message<SaveMap>(x => x.UsePartitioner(16, p => p.Message.Map.CorrelationId));
-        });
-        busRegistrationConfigurator.AddConsumer<AgvCommandHandler>();
-        busRegistrationConfigurator.AddConsumer<AgvEventHandler>();
-        
-        busRegistrationConfigurator.AddRequestClient<AcceptAgvCommand>();
-        
-
-        return busRegistrationConfigurator;
     }
 
     /// <summary>
@@ -81,20 +113,49 @@ public static class CoreBusRegistrationExtensions
     /// <param name="configurator"></param>
     public static void AddMediator(this IMediatorRegistrationConfigurator configurator)
     {
-        // maps
-        configurator.AddConsumer<GetMapImageRequestHandler>();
-        configurator.AddRequestClient<GetMapImage>();
+        RegisterMediatorMapHandlers(configurator);
 
-        configurator.AddConsumer<GetMapListRequestHandler>();
-        configurator.AddRequestClient<GetMapList>();
+        RegisterMediatorAgvRequestHandlers(configurator);
 
-        // agv
+        RegisterMediatorAgvCommandHandlers(configurator);
+
+        RegisterMediatorActionGroupHandlers(configurator);
+
+        RegisterMediatorErrorHandlers(configurator);
+    }
+
+    private static void RegisterMediatorErrorHandlers(IMediatorRegistrationConfigurator configurator)
+    {
+        configurator.AddRequestClient<GetActiveAgvErrorsRequest>();
+
+        configurator.AddConsumer<GetAgvErrorsRequestHandler>();
+        configurator.AddRequestClient<GetAgvErrorsRequest>();
+    }
+
+    private static void RegisterMediatorActionGroupHandlers(IMediatorRegistrationConfigurator configurator)
+    {
+        configurator.AddConsumer<ActionGroupRequestHandler>();
+        configurator.AddRequestClient<GetActionGroup>();
+        configurator.AddRequestClient<GetActionGroups>();
+        configurator.AddRequestClient<GetActionGroupCountsByState>();
+    }
+
+    private static void RegisterMediatorAgvCommandHandlers(IMediatorRegistrationConfigurator configurator)
+    {
         configurator.AddConsumer<RequestAgvDataCommandHandler>();
         configurator.AddRequestClient<RequestAgvData>();
 
         configurator.AddConsumer<RequestAgvGraphCommandHandler>();
         configurator.AddRequestClient<RequestAgvGraph>();
 
+  
+
+       
+
+    }
+
+    private static void RegisterMediatorAgvRequestHandlers(IMediatorRegistrationConfigurator configurator)
+    {
         configurator.AddConsumer<GetAgvDataRequestHandler>();
         configurator.AddRequestClient<GetAgvDataRequest>();
 
@@ -111,31 +172,14 @@ public static class CoreBusRegistrationExtensions
         configurator.AddConsumer<GetAgvsRequestHandler>();
         configurator.AddRequestClient<GetAgvs>();
         configurator.AddRequestClient<GetAgv>();
+    }
 
-        configurator.AddConsumer<LockAndUnlockAgvCommandHandler>();
-        configurator.AddRequestClient<LockAgv>();
-        configurator.AddRequestClient<UnlockAgv>();
+    private static void RegisterMediatorMapHandlers(IMediatorRegistrationConfigurator configurator)
+    {
+        configurator.AddConsumer<GetMapImageRequestHandler>();
+        configurator.AddRequestClient<GetMapImage>();
 
-        configurator.AddConsumer<SetAgvForceIdleCommandHandler>();
-        configurator.AddRequestClient<SetAgvForceIdle>();
-
-        configurator.AddConsumer<MoveAgvCommandHandler>();
-        configurator.AddRequestClient<MoveAgv>();
-
-        // actions
-        configurator.AddConsumer<AgvEventHandler>();
-        configurator.AddRequestClient<QueueActionGroup>();
-
-        configurator.AddConsumer<ActionGroupRequestHandler>();
-        configurator.AddRequestClient<GetActionGroup>();
-        configurator.AddRequestClient<GetActionGroups>();
-        configurator.AddRequestClient<GetActionGroupCountsByState>();
-
-
-        // error
-        configurator.AddRequestClient<GetActiveAgvErrorsRequest>();
-
-        configurator.AddConsumer<GetAgvErrorsRequestHandler>();
-        configurator.AddRequestClient<GetAgvErrorsRequest>();
+        configurator.AddConsumer<GetMapListRequestHandler>();
+        configurator.AddRequestClient<GetMapList>();
     }
 }

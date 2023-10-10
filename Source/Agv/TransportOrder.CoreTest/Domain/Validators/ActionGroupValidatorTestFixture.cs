@@ -1,5 +1,4 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
+﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Routing;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Validators;
@@ -13,7 +12,7 @@ public class ActionGroupValidatorTestFixture
 {
     private readonly Mock<IRouteService> _routeService = new();
 
-    private readonly Mock<IAgvRegistry> _agvRegistry = new();
+    private readonly Mock<IAgvRepository> _agvRegistry = new();
 
     private readonly Mock<IAgvGraphRegistry> _agvGraphRegistry = new();
 
@@ -28,21 +27,21 @@ public class ActionGroupValidatorTestFixture
         collection.BuildServiceProvider(true);
     }
 
-    public ActionGroupValidatorTestFixture WithAgv(IAgv agv)
+    public ActionGroupValidatorTestFixture WithAgv(TransportOrder.Domain.Models.Agv.Agv agv)
     {
-        _agvRegistry.Setup(x => x.GetAgv(agv.CorrelationId)).Returns(agv);
-        _agvRegistry.Setup(x => x.GetAllAgvs()).Returns(new List<IAgv> { agv }.AsQueryable());
+        _agvRegistry.Setup(x => x.GetAgvAsync(agv.CorrelationId)).ReturnsAsync(agv);
+        _agvRegistry.Setup(x => x.GetAllAgvsAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
         return this;
     }
 
     // ReSharper disable once UnusedMember.Global
-    public ActionGroupValidatorTestFixture WithAgvs(List<IAgv> agvs)
+    public ActionGroupValidatorTestFixture WithAgvs(List<TransportOrder.Domain.Models.Agv.Agv> agvs)
     {
-        _agvRegistry.Setup(x => x.GetAllAgvs()).Returns(agvs.AsQueryable());
+        _agvRegistry.Setup(x => x.GetAllAgvsAsync()).ReturnsAsync(agvs);
         return this;
     }
 
-    public ActionGroupValidatorTestFixture WithRoute(IAgv agv, ActionGroup actionGroup, float? routeCosts = null)
+    public ActionGroupValidatorTestFixture WithRoute(TransportOrder.Domain.Models.Agv.Agv agv, ActionGroup actionGroup, float? routeCosts = null)
     {
         _routeService.Setup(x => x.GetCostsForFirstActionAsync(agv, actionGroup, It.IsAny<CancellationToken>())).ReturnsAsync(routeCosts);
         return this;
@@ -58,9 +57,9 @@ public class ActionGroupValidatorTestFixture
         return this;
     }
 
-    public ActionGroupValidatorTestFixture WithAgvCanHandleRoute(IAgv agv, ActionGroup actionGroup)
+    public ActionGroupValidatorTestFixture WithAgvCanHandleRoute(TransportOrder.Domain.Models.Agv.Agv agv, ActionGroup actionGroup)
     {
-        _routeService.Setup(x => x.HasAnyAgvRouteAsync(actionGroup, It.Is<IEnumerable<IAgv>>(list => list.Contains(agv)), It.IsAny<CancellationToken>()))
+        _routeService.Setup(x => x.HasAnyAgvRouteAsync(actionGroup, It.Is<IEnumerable<TransportOrder.Domain.Models.Agv.Agv>>(list => list.Contains(agv)), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
         return this;
     }

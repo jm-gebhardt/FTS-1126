@@ -8,7 +8,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 
 public static class AgvActionGenerator
 {
-    public static ActionGroup GenerateChargeActionGroup(string? targetNodeId = null)
+    public static ActionGroup GenerateChargeActionGroup(string? targetNodeId = null, Guid? assignedAgv = null)
     {
         const string orderId = "charge";
         var groupId = Guid.NewGuid();
@@ -18,7 +18,7 @@ public static class AgvActionGenerator
             chargeAction.Nodes = new[] {targetNodeId};
         }
 
-        var actionGroup = new ActionGroup(groupId, orderId, new List<AgvAction> {chargeAction}, ActionGroupCreator.TransportOrder);
+        var actionGroup = new ActionGroup(groupId, orderId, new List<AgvAction> { chargeAction }, ActionGroupCreator.TransportOrder) {AssignedAgv = assignedAgv};
         return actionGroup;
     }
 

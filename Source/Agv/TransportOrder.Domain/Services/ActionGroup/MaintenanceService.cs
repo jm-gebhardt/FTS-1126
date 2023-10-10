@@ -27,7 +27,7 @@ public class MaintenanceService : BaseNodePicker, IMaintenanceService
     protected override string Description => "Maintenance";
 
     /// <inheritdoc />
-    public bool MaintenanceRequested(IAgv agv)
+    public bool MaintenanceRequested(Models.Agv.Agv agv)
     {
         return false;
     }
@@ -35,7 +35,7 @@ public class MaintenanceService : BaseNodePicker, IMaintenanceService
     /// <inheritdoc />
     /// <exception cref="AgvGraphNotDefinedException"></exception>
     /// <exception cref="NodeNotFoundException"></exception>
-    public async Task<GraphNode> GetMaintenanceNode(IAgv agv)
+    public async Task<GraphNode> GetMaintenanceNode(Models.Agv.Agv agv)
     {
         return await PickNode(agv);
     }

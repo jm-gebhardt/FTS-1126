@@ -1,5 +1,5 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
-using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
+using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
@@ -155,7 +155,7 @@ public class ActionGroupTests
     public void AssignAgvToActionGroup_WhenActionGroupAssignedAgvIsNull_SetActionGroupAssignedAgv()
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
-        var agvToAssign = AgvDummyGenerator.GenerateAgv();
+        var agvToAssign = AgvGenerator.GenerateIdleAgv();
         actionGroup.AssignedAgv = null;
 
         actionGroup.Assign(agvToAssign);
@@ -169,7 +169,7 @@ public class ActionGroupTests
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         var actionGroupAssignedAgv = Guid.NewGuid();
-        var agvToAssign = AgvDummyGenerator.GenerateAgv();
+        var agvToAssign = AgvGenerator.GenerateIdleAgv();
         actionGroup.AssignedAgv = actionGroupAssignedAgv;
 
         Should.Throw<ActionGroupAlreadyAssignedException>(() => actionGroup.Assign(agvToAssign));

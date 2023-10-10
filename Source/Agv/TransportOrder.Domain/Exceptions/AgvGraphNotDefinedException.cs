@@ -10,7 +10,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 public class AgvGraphNotDefinedException : NotFoundException
 {
     /// <see cref="AgvGraphNotDefinedException"/>>
-    public AgvGraphNotDefinedException(IAgv agv)
+    public AgvGraphNotDefinedException(Models.Agv.Agv agv)
         : base(nameof(AgvGraph), nameof(agv.CorrelationId), agv.CorrelationId)
     {
     }

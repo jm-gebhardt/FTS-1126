@@ -1,5 +1,4 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 using MassTransit;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
@@ -10,4 +9,4 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 /// <param name="Agv">AGV properties</param>
 /// <param name="CorrelationId">The correlationId of the AGV</param>
 [PublicAPI]
-public record AgvPropertyChanged(IAgv Agv, Guid CorrelationId) : CorrelatedBy<Guid>;
+public record AgvPropertyChanged(MessageContent.Agv Agv, Guid CorrelationId) : CorrelatedBy<Guid>;

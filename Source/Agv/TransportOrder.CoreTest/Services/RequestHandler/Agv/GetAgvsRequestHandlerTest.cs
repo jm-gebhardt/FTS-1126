@@ -1,4 +1,3 @@
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
@@ -7,7 +6,6 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
 using MassTransit;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
 using Shouldly;
 using AgvActionGenerator = Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper.AgvActionGenerator;
 using AgvError = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.AgvError;
@@ -21,6 +19,7 @@ public class GetAgvsRequestHandlerTest
     public async Task GetAgvsRequestHandler_RegistryEmpty_ReturnsEmptyList()
     {
         AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler>()
+            .WithEmptyAgvRepository()
             .Build();
 
         Response<GotAgvs> response = await fixture.GetResponseAsync<GotAgvs>(new GetAgvs(new List<Guid>()));
@@ -30,12 +29,12 @@ public class GetAgvsRequestHandlerTest
     [TestMethod]
     public async Task GetAgvsRequestHandler_RegistryContainsAgv_NoActionGroup_AgvReturned()
     {
-        var agvs = new List<IAgv> {Mock.Of<IAgv>()};
+        var agvs = new List<TransportOrder.Domain.Models.Agv.Agv> {AgvGenerator.GenerateIdleAgv()};
         AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler>()
             .WithAgvs(agvs)
             .Build();
 
-        Response<GotAgvs> response = await fixture.GetResponseAsync<GotAgvs>(new GetAgvs(new List<Guid>()));
+        Response<GotAgvs> response = await fixture.GetResponseAsync<GotAgvs>(new GetAgvs(new List<Guid>{agvs.First().CorrelationId}));
         response.Message.Agvs.ShouldNotBeEmpty();
         response.Message.Agvs.Count.ShouldBe(1);
         var agvDto = response.Message.Agvs.First();
@@ -50,10 +49,10 @@ public class GetAgvsRequestHandlerTest
         var agv = AgvGenerator.GenerateIdleAgv();
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler>()
-            .WithAgvs(new List<IAgv> {agv}, actionGroup)
+            .WithAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> {agv}, actionGroup)
             .Build();
 
-        Response<GotAgvs> response = await fixture.GetResponseAsync<GotAgvs>(new GetAgvs(new List<Guid>()));
+        Response<GotAgvs> response = await fixture.GetResponseAsync<GotAgvs>(new GetAgvs(new List<Guid>{agv.CorrelationId}));
         response.Message.Agvs.ShouldNotBeEmpty();
         response.Message.Agvs.Count.ShouldBe(1);
         var respondAgv = response.Message.Agvs.First();
@@ -74,7 +73,7 @@ public class GetAgvsRequestHandlerTest
         var agv2 = AgvGenerator.GenerateIdleAgv(2);
         var agv3 = AgvGenerator.GenerateIdleAgv(3);
         AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler>()
-            .WithAgvs(new List<IAgv> { agv1, agv2, agv3 })
+            .WithAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv1, agv2, agv3 })
             .Build();
 
         var correlationIds = new List<Guid>() { agv2.CorrelationId };
@@ -90,7 +89,7 @@ public class GetAgvsRequestHandlerTest
         var agv2 = AgvGenerator.GenerateIdleAgv(2);
         var agv3 = AgvGenerator.GenerateIdleAgv(3);
         AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler>()
-            .WithAgvs(new List<IAgv> { agv1, agv3 }) // agv2 is not added
+            .WithAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv1, agv3 }) // agv2 is not added
             .Build();
 
         var correlationIds = new List<Guid>() { agv2.CorrelationId }; // Try to get agv2 -> should return empty result
@@ -105,7 +104,7 @@ public class GetAgvsRequestHandlerTest
         var agv2 = AgvGenerator.GenerateIdleAgv(2);
         var agv3 = AgvGenerator.GenerateIdleAgv(3);
         AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler>()
-            .WithAgvs(new List<IAgv> { agv1, agv2, agv3 })
+            .WithAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv1, agv2, agv3 })
             .Build();
 
         // we want to get all found agvs, even if one of the requested agvs is not found. We do not want to let it throw for the whole request
@@ -126,11 +125,11 @@ public class GetAgvsRequestHandlerTest
         };
 
         AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler>()
-            .WithAgvs(new List<IAgv> { agv })
+            .WithAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv })
             .WithActiveAgvErrors(agv.CorrelationId, expectedAgvErrors)
             .Build();
 
-        Response<GotAgvs> response = await fixture.GetResponseAsync<GotAgvs>(new GetAgvs(new List<Guid>()));
+        Response<GotAgvs> response = await fixture.GetResponseAsync<GotAgvs>(new GetAgvs(new List<Guid>{ agv.CorrelationId}));
         response.Message.Agvs.Count.ShouldBe(1);
         foreach (var agvError in response.Message.Agvs.First().Errors)
         {
@@ -152,10 +151,10 @@ public class GetAgvsRequestHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler>()
-            .WithAgvs(new List<IAgv> { agv })
+            .WithAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv })
             .Build();
 
-        Response<GotAgvs> response = await fixture.GetResponseAsync<GotAgvs>(new GetAgvs(new List<Guid>()));
+        Response<GotAgvs> response = await fixture.GetResponseAsync<GotAgvs>(new GetAgvs(new List<Guid> { agv.CorrelationId}));
         response.Message.Agvs.Count.ShouldBe(1);
         response.Message.Agvs.First().Errors.ShouldBeEmpty();
     }

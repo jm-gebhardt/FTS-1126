@@ -1,8 +1,11 @@
-﻿namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
+﻿using JetBrains.Annotations;
+
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 
 /// <summary>
 /// Exception thrown when setting AGV to busy failed.
 /// </summary>
+[UsedImplicitly]
 public class SetAgvBusyFailedException : Exception
 {
     /// <summary>

@@ -51,7 +51,7 @@ public abstract class BaseNodePicker
     /// </summary>
     /// <param name="agv"></param>
     /// <returns></returns>
-    protected async Task<GraphNode> PickNode(IAgv agv)
+    protected async Task<GraphNode> PickNode(Models.Agv.Agv agv)
     {
         IEnumerable<GraphNode> availableNodes = await GetAvailableNodes(agv);
         var node = await SelectBestNode(availableNodes, agv);
@@ -59,7 +59,7 @@ public abstract class BaseNodePicker
         return node;
     }
 
-    private async Task<IEnumerable<GraphNode>> GetAvailableNodes(IAgv agv)
+    private async Task<IEnumerable<GraphNode>> GetAvailableNodes(Models.Agv.Agv agv)
     {
         IEnumerable<GraphNode> nodes = await _agvGraphRegistry.GetNodesAsync(agv.CorrelationId, NodeFilter);
         IEnumerable<GraphNode> availableNodes = NodeStateRegistry.FilterFreeUnlockedNodes(nodes);
@@ -85,7 +85,7 @@ public abstract class BaseNodePicker
     /// <param name="agv"></param>
     /// <returns>The best node</returns>
     [PublicAPI]    
-    protected virtual Task<GraphNode> SelectBestNode(IEnumerable<GraphNode> availableNodes, IAgv agv)
+    protected virtual Task<GraphNode> SelectBestNode(IEnumerable<GraphNode> availableNodes, Models.Agv.Agv agv)
     {
         _logger.LogDebug("Choosing node with lowest costs");
         return _routeService.GetNodeWithLowestCostsAsync(agv, availableNodes.ToList());
@@ -98,7 +98,7 @@ public abstract class BaseNodePicker
     /// <param name="agv"></param>
     /// <returns></returns>
     [PublicAPI]
-    protected virtual Task<GraphNode> SelectRandomAvailableNode(IEnumerable<GraphNode> availableNodes, IAgv agv)
+    protected virtual Task<GraphNode> SelectRandomAvailableNode(IEnumerable<GraphNode> availableNodes, Models.Agv.Agv agv)
     {
         var rand = Random.Shared;
         // must use ToList, otherwise it can not be interpreted
@@ -112,7 +112,7 @@ public abstract class BaseNodePicker
     /// </summary>
     /// <param name="agv"></param>
     /// <returns>True if the lastNodeId of the Agv is such a node, False if the lastNodeId of the agv is null</returns>
-    protected async Task<bool> IsAgvOnSuchANode(IAgv agv)
+    protected async Task<bool> IsAgvOnSuchANode(Models.Agv.Agv agv)
     {
         string? lastNodeId = agv.AgvStatus?.LastNodeId;
         if (string.IsNullOrEmpty(lastNodeId))

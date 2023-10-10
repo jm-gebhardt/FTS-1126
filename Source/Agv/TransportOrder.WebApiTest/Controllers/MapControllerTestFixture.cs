@@ -1,9 +1,9 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.SagaStateMachines;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Map;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Helper;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,9 +20,9 @@ public class MapControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
 
     private readonly Mock<IAgvGraphRegistry> _agvGraphRegistry = new();
 
-    private readonly string[] _agvIds = {"AGV001", "AGV002", "AGV003"};
-    private readonly string[] _orders = {"ORDER001", "ORDER002", ""};
-    private readonly string[] _states = {nameof(AgvStateMachine.Idle), nameof(AgvStateMachine.Busy), nameof(AgvStateMachine.Discovered)};
+    private readonly string[] _agvIds = { "AGV001", "AGV002", "AGV003" };
+    private readonly string[] _orders = { "ORDER001", "ORDER002", "" };
+    private readonly AgvState[] _states = { AgvState.Idle, AgvState.Busy, AgvState.Discovered };
 
     private readonly Guid[] _correlationIds =
     {
@@ -56,28 +56,31 @@ public class MapControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         return mapRegistryMock;
     }
 
-    private Mock<IAgvRegistry> GetAgvRegistry()
+    private Mock<IAgvRepository> GetAgvRegistry()
     {
-        var registryMock = new Mock<IAgvRegistry>();
+        var registryMock = new Mock<IAgvRepository>();
 
-        var agvs = new List<IAgv>();
+        var agvs = new List<Domain.Models.Agv.Agv>();
 
         for (int i = 0; i < _agvIds.Length; i++)
         {
             string agvId = _agvIds[i];
             string orderId = _orders[i];
-            string state = _states[i];
+            var state = _states[i];
             var correlationId = _correlationIds[i];
-            var agvStatus = new AgvStatus(correlationId, orderId, true, true, 10, true, true);
+            var agvStatus = new Domain.Models.Agv.AgvStatus(correlationId, orderId, true, true, 10, true, true);
 
-            agvs.Add(new AgvSaga(correlationId, agvId, state, agvStatus));
+            var agv = new Domain.Models.Agv.Agv(correlationId, agvId, agvStatus);
+            agv = AgvGenerator.SetAgvState(state, false, agv);
+
+            agvs.Add(agv);
+
         }
 
         registryMock.SetupGet(x => x.Count).Returns(agvs.Count);
-        registryMock.SetupGet(x => x.CountIdle).Returns(agvs.Where(x => x.CurrentState == nameof(AgvStateMachine.Idle)).Count);
-        registryMock.Setup(x => x.GetIdleAgvs()).Returns(new EnumerableQuery<IAgv>(agvs.Where(x => x.CurrentState == nameof(AgvStateMachine.Idle))));
-        registryMock.Setup(x => x.GetAllAgvs()).Returns(new EnumerableQuery<IAgv>(agvs));
-        registryMock.Setup(x => x.GetAgv(It.IsAny<Guid>())).Returns<Guid>(correlationId => agvs.SingleOrDefault(a => a.CorrelationId == correlationId));
+        registryMock.Setup(x => x.GetIdleAgvsAsync()).ReturnsAsync(new List<Domain.Models.Agv.Agv>(agvs.Where(x => x.CurrentAgvState == AgvState.Idle)));
+        registryMock.Setup(x => x.GetAllAgvsAsync()).ReturnsAsync(new List<Domain.Models.Agv.Agv>(agvs));
+        registryMock.Setup(x => x.GetAgvAsync(It.IsAny<Guid>())).Returns<Guid>(correlationId => Task.FromResult(agvs.Single(a => a.CorrelationId == correlationId)));
 
         return registryMock;
     }

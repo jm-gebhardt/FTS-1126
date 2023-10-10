@@ -17,7 +17,7 @@ public interface IRouteService
     /// <param name="destinationNodeId">The destination node Id</param>
     /// <param name="cancellationToken"></param>
     /// <returns>The Cost if a route was found, otherwise null</returns>
-    Task<float?> GetCostsAsync(IAgv agv, string destinationNodeId, CancellationToken cancellationToken = default);
+    Task<float?> GetCostsAsync(Models.Agv.Agv agv, string destinationNodeId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Checks if given AGV has route for given ActionGroup
@@ -29,7 +29,7 @@ public interface IRouteService
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
     [PublicAPI]
-    Task<float?> GetCostsForFirstActionAsync(IAgv agv, Models.ActionGroup.ActionGroup actionGroup, CancellationToken cancellationToken = default);
+    Task<float?> GetCostsForFirstActionAsync(Models.Agv.Agv agv, Models.ActionGroup.ActionGroup actionGroup, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Returns true once it found the first Agv which can handle the whole ActionGroup (based on it's current node)
@@ -38,7 +38,7 @@ public interface IRouteService
     /// <param name="agvs">Agvs to consider</param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    Task<bool> HasAnyAgvRouteAsync(Models.ActionGroup.ActionGroup actionGroup, IEnumerable<IAgv> agvs, CancellationToken cancellationToken = default);
+    Task<bool> HasAnyAgvRouteAsync(Models.ActionGroup.ActionGroup actionGroup, IEnumerable<Models.Agv.Agv> agvs, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Determine route for Agv to go to destination
@@ -48,7 +48,7 @@ public interface IRouteService
     /// <param name="cancellationToken"></param>
     /// <returns>The found route</returns>
     /// <exception cref="RouteNotFoundException"></exception>
-    Task<Route> GetRouteAsync(IAgv agv, string destinationNodeId, CancellationToken cancellationToken = default);
+    Task<Route> GetRouteAsync(Models.Agv.Agv agv, string destinationNodeId, CancellationToken cancellationToken = default);
     /// <summary>
     /// Determine route for Agv from its last node to the destination nodes one after the other
     /// </summary>
@@ -57,7 +57,7 @@ public interface IRouteService
     /// <returns>The found route</returns>
     /// <exception cref="RouteNotFoundException"></exception>
     [PublicAPI]
-    Task<Route> GetRouteAsync(IAgv agv, IList<string> destinationNodeIds);
+    Task<Route> GetRouteAsync(Models.Agv.Agv agv, IList<string> destinationNodeIds);
 
     /// <summary>
     /// Returns the node from availableNodes with the lowest cost route from agv last node
@@ -67,5 +67,5 @@ public interface IRouteService
     /// <returns>The found destination node with lowest cost route</returns>
     /// <exception cref="RouteNotFoundException" />
     [PublicAPI]
-    Task<GraphNode> GetNodeWithLowestCostsAsync(IAgv agv, IList<GraphNode> availableNodes);
+    Task<GraphNode> GetNodeWithLowestCostsAsync(Models.Agv.Agv agv, IList<GraphNode> availableNodes);
 }

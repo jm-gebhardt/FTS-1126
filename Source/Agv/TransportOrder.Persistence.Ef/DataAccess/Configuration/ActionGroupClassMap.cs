@@ -21,6 +21,7 @@ public class ActionGroupClassMap : ClassMap<ActionGroup>
     protected override void Configure(EntityTypeBuilder<ActionGroup> entity, ModelBuilder model)
     {
         entity.HasKey(g => g.CorrelationId);
+        entity.Ignore(e => e.FirstUnstartedAction);
         entity.Property(g => g.State).HasMaxLength(MaxStateLength);
         entity.HasIndex(g => g.AssignedAgv);
 
@@ -35,5 +36,6 @@ public class ActionGroupClassMap : ClassMap<ActionGroup>
         });
 
         entity.Navigation(g => g.Actions).AutoInclude();
+
     }
 }

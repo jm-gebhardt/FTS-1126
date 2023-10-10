@@ -21,7 +21,7 @@ public class MaintenanceServiceTestFixture
     public Mock<IRouteService> RouteService { get; } = new();
     public MaintenanceService MaintenanceService { get; private set; }
     
-    public MaintenanceServiceTestFixture WithAvailableNodes(IAgv agv, List<GraphNode> availableNodes)
+    public MaintenanceServiceTestFixture WithAvailableNodes(TransportOrder.Domain.Models.Agv.Agv agv, List<GraphNode> availableNodes)
     {
         _graphRegistry.Setup(x => x.GetNodesAsync(agv.CorrelationId, It.IsAny<Expression<Func<GraphNode, bool>>>()))
             .ReturnsAsync(new Func<Guid, Expression<Func<GraphNode, bool>>, IEnumerable<GraphNode>>((_, predicate) => availableNodes.AsQueryable().Where(predicate)));
@@ -35,7 +35,7 @@ public class MaintenanceServiceTestFixture
         return this;
     }
 
-    public MaintenanceServiceTestFixture WithLowestCostNode(IAgv agv, IList<GraphNode> availableNodes, GraphNode node)
+    public MaintenanceServiceTestFixture WithLowestCostNode(TransportOrder.Domain.Models.Agv.Agv agv, IList<GraphNode> availableNodes, GraphNode node)
     {
         RouteService.Setup(x => x.GetNodeWithLowestCostsAsync(agv, availableNodes)).ReturnsAsync(node);
         return this;

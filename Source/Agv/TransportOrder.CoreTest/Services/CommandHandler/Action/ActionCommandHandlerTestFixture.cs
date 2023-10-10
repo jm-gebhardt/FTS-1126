@@ -1,10 +1,12 @@
 ﻿using AutoMapper;
+using FluentValidation.Results;
+using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.CommandHandler;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.SagaStateMachines;
+using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Profiles;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
@@ -20,7 +22,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.CommandHandler
 
 public class ActionCommandHandlerTestFixture : MassTransitConsumerTestFixture<ActionCommandHandler>
 {
-    public readonly Mock<IAgvSagaCommunicationService> AgvSagaCommunicationService = new();
     private readonly Mock<IRouteService> _routeService = new();
     private readonly Mock<IActionGroupRegistry> _actionGroupRegistry = new();
     private readonly Mock<IChooseAgvActionGroupService> _chooseAgvActionGroupService = new();
@@ -28,45 +29,57 @@ public class ActionCommandHandlerTestFixture : MassTransitConsumerTestFixture<Ac
     private readonly Mock<IMaintenanceService> _maintenanceService = new();
     private readonly Mock<IChargingPointManager> _chargingPointManager = new();
     private readonly Mock<IParkPointService> _parkPointService = new();
-    private readonly Mock<IChargingService> _chargingService = new();
+    private readonly Mock<IAgvRepository> _agvRepository = new();
+    private readonly Mock<IActionGroupValidationService> _actionGroupValidationService = new();
+    private readonly Mock<ISettingsProvider<AgvSettings>> _settingsProvider = new();
 
     protected override void ConfigureServices(IServiceCollection collection)
     {
-        collection.AddTransient(_ => AgvSagaCommunicationService.Object);
         collection.AddTransient(_ => _actionGroupRegistry.Object);
         collection.AddTransient(_ => _routeService.Object);
         collection.AddTransient(_ => _chooseAgvActionGroupService.Object);
         collection.AddTransient(_ => _maintenanceService.Object);
         collection.AddTransient(_ => _chargingPointManager.Object);
         collection.AddTransient(_ => _parkPointService.Object);
-        collection.AddTransient(_ => _chargingService.Object);
         collection.AddTransient(_ => GetMapper());
         collection.AddTransient<IActionManagerSemaphoreProvider>(_ => _semaphoreProvider);
+        collection.AddTransient(_ => _agvRepository.Object);
+        collection.AddTransient(_ => _actionGroupValidationService.Object);
+        collection.AddTransient(_ => _settingsProvider.Object);
     }
 
     public ActionCommandHandlerTestFixture(TimeSpan? inactivityTimeout = null)
     {
+        _settingsProvider.Setup(s => s.GetSettings()).Returns(new AgvSettings()
+        {
+            BatteryLevelCritical = 10,
+            BatteryLevelGood = 80,
+            BatteryLevelFull = 100,
+            BatteryLevelLow = 20,
+            AgvOfflineTimeoutMsWhileBusy = 10000,
+            AgvOfflineTimeoutMsWhileIdle = 10000
+        });
         Build();
         if (inactivityTimeout != null)
         {
-            TestHarness!.TestInactivityTimeout = (TimeSpan) inactivityTimeout;
+            TestHarness!.TestInactivityTimeout = (TimeSpan)inactivityTimeout;
         }
-        _actionGroupRegistry.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync((ActionGroup?) null);
+        _actionGroupRegistry.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync((ActionGroup?)null);
+        _actionGroupRegistry.Setup(x => x.AddAsync(It.IsAny<ActionGroup>())).Verifiable();
+
     }
 
-    public void AddAgv(IAgv agv)
+    public void AddAgv(TransportOrder.Domain.Models.Agv.Agv agv)
     {
-        AgvSagaCommunicationService.Setup(x =>
-            x.GetAgvAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(agv);
-        AgvSagaCommunicationService.Setup(x => x.SetIdleAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).Verifiable();
+        _agvRepository.AddAgvsToMockRepository(new List<TransportOrder.Domain.Models.Agv.Agv>{agv});
     }
 
     public void AddActionGroup(ActionGroup actionGroup, bool hasUnfinishedAction = true)
     {
         _actionGroupRegistry.Setup(x => x.GetRequiredActionGroupByIdAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup);
-        _actionGroupRegistry.Setup(x => x.UpdateActionAndGroupStateAsync(It.IsAny<AgvAction>(), It.IsAny<IAgv>(), It.IsAny<ActionState>())).ReturnsAsync(actionGroup);
-        _actionGroupRegistry.Setup(x => x.GetSubsequentActionAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup.Actions.First());
-        _actionGroupRegistry.Setup(x => x.GetActionGroupsAsync(It.IsAny<ActionGroupState>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(), It.IsAny<bool?>())).ReturnsAsync(new List<ActionGroup> {actionGroup});
+        _actionGroupRegistry.Setup(x => x.UpdateActionAndGroupStateAsync(It.IsAny<AgvAction>(),It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<ActionState>())).ReturnsAsync(actionGroup);
+        _actionGroupRegistry.Setup(x => x.GetSubsequentActionAsync( It.IsAny<Guid>())).ReturnsAsync(actionGroup.Actions.First());
+        _actionGroupRegistry.Setup(x => x.GetActionGroupsAsync(It.IsAny<ActionGroupState>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(),It.IsAny<bool?>())).ReturnsAsync(new List<ActionGroup>{actionGroup});
         _actionGroupRegistry.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup);
         _actionGroupRegistry.Setup(x => x.HasUnfinishedDropActionsAsync(It.IsAny<Guid>())).ReturnsAsync(hasUnfinishedAction);
         _actionGroupRegistry.Setup(x => x.GetRequiredActionByIdAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup.Actions.First());
@@ -74,29 +87,19 @@ public class ActionCommandHandlerTestFixture : MassTransitConsumerTestFixture<Ac
 
     public void AddRoute(string[] nodes)
     {
-        _routeService.Setup(x => x.GetRouteAsync(It.IsAny<IAgv>(), It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Route(1f, nodes));
+        _routeService.Setup(x => x.GetRouteAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Route(1f, nodes));
     }
 
-    public void SetBusyThrowsException(bool throwException)
+    public void SetupValidationResult(List<ValidationFailure> failures)
     {
-        if (throwException)
-        {
-            AgvSagaCommunicationService.Setup(x =>
-                x.SetBusyAsync(It.IsAny<IAgv>(), It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<CancellationToken>())).Throws<Exception>();
-            return;
-        }
-        AgvSagaCommunicationService.Setup(x =>
-            x.SetBusyAsync(It.IsAny<IAgv>(), It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<CancellationToken>())).Verifiable();
+        _actionGroupValidationService.Setup(x => x.ValidateAsync(It.IsAny<ActionGroup>())).ReturnsAsync(failures);
     }
 
-    public void AgvIsReadyForBusy()
+    public void IsActionGroupSaved(Times howOften)
     {
-        AgvSagaCommunicationService.Setup(x => x.IsAgvReadyForBusyAsync(It.IsAny<Guid>(),
-                It.IsAny<CancellationToken>(),
-                It.IsAny<bool>(),
-                It.IsAny<bool>()))
-            .ReturnsAsync(true);
+       _actionGroupRegistry.Verify(x => x.AddAsync(It.IsAny<ActionGroup>()), howOften);
     }
+
 
     public static IMapper GetMapper()
     {

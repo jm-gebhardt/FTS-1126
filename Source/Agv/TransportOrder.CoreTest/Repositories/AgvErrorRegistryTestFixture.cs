@@ -23,7 +23,7 @@ public class AgvErrorRegistryTestFixture
 
     public AgvErrorRegistryTestFixture WithAgvErrorStatus(AgvErrorStatusReceived agvErrorStatus)
     {
-        _tasks.Add(AgvErrorRegistry.UpdateAgvErrorStatusAsync(agvErrorStatus.Errors, agvErrorStatus.CorrelationId));
+        _tasks.Add(AgvErrorRegistry.AddOrUpdateAgvErrorStatusAsync(agvErrorStatus.Errors, agvErrorStatus.CorrelationId));
         return this;
     }
 

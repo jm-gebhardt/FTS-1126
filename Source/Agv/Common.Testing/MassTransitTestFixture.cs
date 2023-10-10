@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using JetBrains.Annotations;
 using MassTransit;
 using MassTransit.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -8,6 +9,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Testing;
 /// <summary>
 /// Provides a test fixture for mass transit without any consumers.
 /// </summary>
+[UsedImplicitly]
 public class MassTransitTestFixture
 {
     private readonly Action<IServiceCollection>? _services;
@@ -88,6 +90,7 @@ public class MassTransitTestFixture
     /// <summary>
     /// Gets the test harness.
     /// </summary>
+    [UsedImplicitly]
     public ITestHarness TestHarness
     {
         get

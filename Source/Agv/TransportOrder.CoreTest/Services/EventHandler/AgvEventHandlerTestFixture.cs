@@ -1,9 +1,12 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+﻿using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Testing;
+using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.EventHandler;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.SagaStateMachines;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Configurations;
+using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Profiles;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
@@ -12,20 +15,19 @@ using Moq;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.EventHandler;
 
-public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixture<AgvEventHandler>
+public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixtureWithScheduler<AgvEventHandler>
 {
-    private readonly Mock<IAgvSagaCommunicationService> _agvSagaCommunicationService = new();
     private readonly Mock<IActionGroupRegistry> _actionGroupRegistry = new();
     private readonly Mock<IMaintenanceService> _maintenanceService = new();
-    private readonly Mock<IChargingService> _chargingService = new();
     private readonly ActionManagerSemaphoreProvider _semaphoreProvider = new();
+    private readonly Mock<IAgvRepository> _agvRepository = new();
 
     public const int BatteryLevelCritical = 10;
     public const int BatteryLevelLow = 40;
     public const int BatteryLevelGood = 80;
     public const int BatteryLevelFull = 100;
 
-    private static readonly AgvSettings _agvSettings = new()
+    public static readonly AgvSettings AgvSettings = new()
     {
         BatteryLevelCritical = BatteryLevelCritical,
         BatteryLevelFull = BatteryLevelFull,
@@ -37,36 +39,36 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixture<AgvEven
 
     protected override void ConfigureServices(IServiceCollection collection)
     {
-        collection.AddTransient(_ => _agvSagaCommunicationService.Object);
         collection.AddTransient(_ => _actionGroupRegistry.Object);
         collection.AddTransient(_ => _maintenanceService.Object);
-        collection.AddTransient(_ => _chargingService.Object);
         collection.AddTransient<IActionManagerSemaphoreProvider>(_ => _semaphoreProvider);
-        collection.AddAgvSettings(_agvSettings);
+        collection.AddTransient(_ => _agvRepository.Object);
+        collection.AddAgvSettings(AgvSettings);
     }
 
     public AgvEventHandlerTestFixture()
     {
         Build();
+    } 
+    public MassTransitConsumerTestFixtureWithScheduler<AgvEventHandler> WithoutAgv()
+    {
+        _agvRepository.Setup(a => a.GetAgvAsync(It.IsAny<Guid>())).Throws(new AgvNotFoundException(It.IsAny<Guid>()));
+        return this;
     }
 
-    public void AddAgv(IAgv agv)
+
+    public void AddAgv(TransportOrder.Domain.Models.Agv.Agv agv)
     {
-        _agvSagaCommunicationService.Setup(x =>
-            x.GetAgvAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(agv);
+        _agvRepository.AddAgvsToMockRepository( new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
     }
 
-    public void SetAgvEligibleForCharging(bool isEligibleForCharging = false)
+    public void AgvHasUnfinishedDropAction(Guid correlationId)
     {
-        _chargingService.Setup(x => x.AgvIsEligibleForCharging(It.IsAny<IAgv>())).Returns(isEligibleForCharging);
+        _actionGroupRegistry.Setup(r => r.HasUnfinishedDropActionsAsync(It.Is<Guid>(c => c == correlationId))).ReturnsAsync(true);
     }
-
-    public void SetupAgvStates(bool isReadyForBusy=true, bool needsCharging = false, bool isCarryingLoad = false, bool needsMaintenance= false)
+    public static IMapper GetMapper()
     {
-        _agvSagaCommunicationService.Setup(x =>
-            x.IsAgvReadyForBusyAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>(), It.IsAny<bool>(), It.IsAny<bool>())).ReturnsAsync(isReadyForBusy);
-        _chargingService.Setup(x => x.AgvNeedsCharging(It.IsAny<IAgv>())).Returns(needsCharging);
-        _actionGroupRegistry.Setup(x => x.HasUnfinishedDropActionsAsync(It.IsAny<Guid>())).ReturnsAsync(isCarryingLoad);
-        _maintenanceService.Setup(x => x.MaintenanceRequested(It.IsAny<IAgv>())).Returns(needsMaintenance);
+        var mapper = MappingHelper.GetMapper(new AgvStatusProfile());
+        return mapper;
     }
 }

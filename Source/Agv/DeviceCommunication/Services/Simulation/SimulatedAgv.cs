@@ -5,75 +5,33 @@ using JetBrains.Annotations;
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
 
 /// <summary>
-/// Represents an AGV for simulation.
+/// Represents a simulated agv.
 /// </summary>
+/// <param name="CorrelationId">The agv correlation id.</param>
+/// <param name="AgvId">The agv id.</param>
+/// <param name="CurrentState">The current state o the agv.</param>
+/// <param name="IsOnline">Flag indicating if the agv is online.</param>
+/// <param name="IsLocked">Flag indicating if the agv is locked.</param>
+/// <param name="HasError">Flag indicating if the agv has an error.</param>
+/// <param name="GraphExists">Flag indicating if the graph of the agv exists.</param>
+/// <param name="TimeOfStateTransition">The time stamp of the last state transition.</param>
+/// <param name="TimeOfLockStateChanged">The time stamp of the last lock state change.</param>
+/// <param name="AgvStatus">The agv status.</param>
+/// <param name="AgvGraph">The agv graph.</param>
+/// <param name="AgvData">The agv data.</param>
+/// <param name="AgvMap">The agv map.</param>
 [PublicAPI]
-public record SimulatedAgv : IAgv
-{
-    /// <inheritdoc />
-    public Guid CorrelationId { get; }
-
-    /// <inheritdoc />
-    public string AgvId { get; }
-
-    /// <inheritdoc />
-    public string CurrentState { get; }
-
-    /// <inheritdoc />
-    public bool IsOnline { get; }
-
-    /// <inheritdoc />
-    public bool IsLocked { get; set; }
-
-    /// <inheritdoc />
-    public bool HasError { get; }
-
-    /// <inheritdoc />
-    public bool GraphExists { get; set; }
-
-    /// <inheritdoc />
-    public DateTime TimeOfStateTransition { get; set; }
-
-    /// <inheritdoc />
-    public DateTime TimeOfLockStateChanged { get; set; }
-
-    /// <inheritdoc />
-    public AgvStatus? AgvStatus { get; }
-
-    /// <summary>
-    /// We still save the graph in the simulated Agv for convenience
-    /// </summary>
-    public AgvGraph? AgvGraph { get; }
-
-    /// <inheritdoc cref="IAgv" />
-    public AgvData? AgvData { get; }
-
-    /// <summary>
-    /// AGV map
-    /// </summary>
-    public AgvMap? AgvMap { get; }
-
-    /// <summary>
-    /// Build simulated AGV
-    /// </summary>
-    /// <param name="correlationId">Correlation ID of the AGV</param>
-    /// <param name="agvId">AGV ID</param>
-    /// <param name="currentState">Current AGV status</param>
-    /// <param name="agvGraph">AGV graph</param>
-    /// <param name="agvData">AGV data</param>
-    /// <param name="agvMap">AGV map</param>
-    public SimulatedAgv(Guid correlationId,
-        string agvId,
-        string currentState,
-        AgvGraph? agvGraph,
-        AgvData? agvData,
-        AgvMap? agvMap)
-    {
-        CorrelationId = correlationId;
-        AgvId = agvId;
-        CurrentState = currentState;
-        AgvGraph = agvGraph;
-        AgvData = agvData;
-        AgvMap = agvMap;
-    }
-}
+public record SimulatedAgv(Guid CorrelationId,
+    string AgvId,
+    string CurrentState,
+    bool IsOnline,
+    bool IsLocked,
+    bool HasError,
+    bool GraphExists,
+    DateTime TimeOfStateTransition,
+    DateTime TimeOfLockStateChanged,
+    AgvStatus? AgvStatus = null,
+    AgvGraph? AgvGraph = null,
+    AgvData? AgvData = null,
+    AgvMap? AgvMap = null
+);

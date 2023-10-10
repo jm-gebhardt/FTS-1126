@@ -1,12 +1,16 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+﻿using AutoMapper;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
+using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.EventHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Map;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
+using MassTransit;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
@@ -15,16 +19,16 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.EventHandler;
 [TestClass]
 public class AgvEventHandlerTest
 {
+    private readonly IMapper _mapper = AgvEventHandlerTestFixture.GetMapper();
+
     [TestMethod]
     public async Task Consume_AgvNeedsCharging_AgvIsNotCarryingLoadAndNeedsCharging_PublishesCreateChargingActionGroup()
     {
         var fixture = new AgvEventHandlerTestFixture();
 
-        var agv = AgvGenerator.GenerateIdleAgv();
-        agv.IsLocked = false;
+        var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: AgvEventHandlerTestFixture.AgvSettings.BatteryLevelCritical, lastNodeId: "nodeId");
 
         fixture.AddAgv(agv);
-        fixture.SetupAgvStates(isReadyForBusy: true, needsCharging: true, isCarryingLoad: false, needsMaintenance: false);
 
         var agvNeedsCharging = new AgvNeedsCharging(agv.CorrelationId);
         await fixture.TestHarness!.Bus.Publish(agvNeedsCharging);
@@ -34,15 +38,13 @@ public class AgvEventHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_AgvNeedsCharging_AgvIsNotCarryingLoadDoesntNeedsChargingNeedsMaintenance_PublishesCreateMaintenanceActionGroup()
+    public async Task Consume_AgvNeedsCharging_AgvIsNotCarryingLoadDoesNotNeedsChargingNeedsMaintenance_PublishesCreateMaintenanceActionGroup()
     {
         var fixture = new AgvEventHandlerTestFixture();
 
-        var agv = AgvGenerator.GenerateIdleAgv();
-        agv.IsLocked = false;
-
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId:"nodeId");
+        agv.MarkAgvForMaintenance();
         fixture.AddAgv(agv);
-        fixture.SetupAgvStates(isReadyForBusy: true, needsCharging: false, isCarryingLoad: false, needsMaintenance: true);
 
         var agvNeedsCharging = new AgvNeedsCharging(agv.CorrelationId);
         await fixture.TestHarness!.Bus.Publish(agvNeedsCharging);
@@ -56,10 +58,9 @@ public class AgvEventHandlerTest
     {
         var fixture = new AgvEventHandlerTestFixture();
 
-        var agv = AgvGenerator.GenerateIdleAgv();
-        agv.IsLocked = true;
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "nodeId");
+        agv.Lock();
         fixture.AddAgv(agv);
-        fixture.SetupAgvStates(isReadyForBusy: true, needsCharging: false, isCarryingLoad: false, needsMaintenance: false);
         var agvNeedsCharging = new AgvNeedsCharging(agv.CorrelationId);
         await fixture.TestHarness!.Bus.Publish(agvNeedsCharging);
 
@@ -72,10 +73,10 @@ public class AgvEventHandlerTest
     {
         var fixture = new AgvEventHandlerTestFixture();
 
-        var agv = AgvGenerator.GenerateIdleAgv();
-        agv.IsLocked = false;
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "nodeId");
+        
         fixture.AddAgv(agv);
-        fixture.SetupAgvStates(isReadyForBusy: true, needsCharging: false, isCarryingLoad: true, needsMaintenance: false);
+        fixture.AgvHasUnfinishedDropAction(agv.CorrelationId);
         var agvNeedsCharging = new AgvNeedsCharging(agv.CorrelationId);
         await fixture.TestHarness!.Bus.Publish(agvNeedsCharging);
 
@@ -84,15 +85,13 @@ public class AgvEventHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_AgvNeedsCharging_AgvIsNotCarryingLoadDoesntNeedsChargingOrNeedMaintanace_PublishesTryStartNewActionGroup()
+    public async Task Consume_AgvNeedsCharging_AgvIsNotCarryingLoadDoesNotNeedsChargingOrNeedMaintenance_PublishesTryStartNewActionGroup()
     {
         var fixture = new AgvEventHandlerTestFixture();
 
-        var agv = AgvGenerator.GenerateIdleAgv();
-        agv.IsLocked = false;
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId:"nodeId");
 
         fixture.AddAgv(agv);
-        fixture.SetupAgvStates(isReadyForBusy: true, needsCharging: false, isCarryingLoad: false, needsMaintenance: false);
 
         var agvNeedsCharging = new AgvNeedsCharging(agv.CorrelationId);
         await fixture.TestHarness!.Bus.Publish(agvNeedsCharging);
@@ -109,7 +108,6 @@ public class AgvEventHandlerTest
         var agv = AgvGenerator.GenerateIdleAgv();
 
         fixture.AddAgv(agv);
-        fixture.SetupAgvStates(isReadyForBusy: false, needsCharging: false, isCarryingLoad: false, needsMaintenance: true);
 
         var agvNeedsCharging = new AgvNeedsCharging(agv.CorrelationId);
         await fixture.TestHarness!.Bus.Publish(agvNeedsCharging);
@@ -127,11 +125,9 @@ public class AgvEventHandlerTest
     {
         var fixture = new AgvEventHandlerTestFixture();
 
-        var agv = AgvGenerator.GenerateIdleAgv();
-        agv.IsLocked = false;
+        var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: AgvEventHandlerTestFixture.AgvSettings.BatteryLevelCritical, lastNodeId:"nodeId");
 
         fixture.AddAgv(agv);
-        fixture.SetupAgvStates(isReadyForBusy: true, needsCharging: true, isCarryingLoad: false, needsMaintenance: false);
 
         var agvBecameIdle = new AgvBecameIdle(agv.CorrelationId);
         await fixture.TestHarness!.Bus.Publish(agvBecameIdle);
@@ -141,15 +137,13 @@ public class AgvEventHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_AgvBecameIdle_AgvIsNotCarryingLoadDoesntNeedsChargingNeedsMaintanace_PublishesCreateMaintenanceActionGroup()
+    public async Task Consume_AgvBecameIdle_AgvIsNotCarryingLoadDoesNotNeedsChargingNeedsMaintenance_PublishesCreateMaintenanceActionGroup()
     {
         var fixture = new AgvEventHandlerTestFixture();
 
-        var agv = AgvGenerator.GenerateIdleAgv();
-        agv.IsLocked = false;
-
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "nodeId");
+        agv.MarkAgvForMaintenance();
         fixture.AddAgv(agv);
-        fixture.SetupAgvStates(isReadyForBusy: true, needsCharging: false, isCarryingLoad: false, needsMaintenance: true);
 
         var agvBecameIdle = new AgvBecameIdle(agv.CorrelationId);
         await fixture.TestHarness!.Bus.Publish(agvBecameIdle);
@@ -163,10 +157,11 @@ public class AgvEventHandlerTest
     {
         var fixture = new AgvEventHandlerTestFixture();
 
-        var agv = AgvGenerator.GenerateIdleAgv();
-        agv.IsLocked = true;
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "nodeId");
+        agv.Lock();
+
         fixture.AddAgv(agv);
-        fixture.SetupAgvStates(isReadyForBusy: true, needsCharging: false, isCarryingLoad: false, needsMaintenance: false);
+
         var agvNeedsCharging = new AgvNeedsCharging(agv.CorrelationId);
         await fixture.TestHarness!.Bus.Publish(agvNeedsCharging);
 
@@ -179,10 +174,10 @@ public class AgvEventHandlerTest
     {
         var fixture = new AgvEventHandlerTestFixture();
 
-        var agv = AgvGenerator.GenerateIdleAgv();
-        agv.IsLocked = false;
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "nodeId");
         fixture.AddAgv(agv);
-        fixture.SetupAgvStates(isReadyForBusy: true, needsCharging: false, isCarryingLoad: true, needsMaintenance: false);
+        fixture.AgvHasUnfinishedDropAction(agv.CorrelationId);
+
         var agvBecameIdle = new AgvBecameIdle(agv.CorrelationId);
         await fixture.TestHarness!.Bus.Publish(agvBecameIdle);
 
@@ -191,15 +186,13 @@ public class AgvEventHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_AgvBecameIdle_AgvIsNotCarryingLoadDoesntNeedsChargingOrNeedMaintanace_PublishesTryStartNewActionGroup()
+    public async Task Consume_AgvBecameIdle_AgvIsNotCarryingLoadDoesNotNeedsChargingOrNeedMaintenance_PublishesTryStartNewActionGroup()
     {
         var fixture = new AgvEventHandlerTestFixture();
 
-        var agv = AgvGenerator.GenerateIdleAgv();
-        agv.IsLocked = false;
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "nodeId");
 
         fixture.AddAgv(agv);
-        fixture.SetupAgvStates(isReadyForBusy: true, needsCharging: false, isCarryingLoad: false, needsMaintenance: false);
 
         var agvBecameIdle = new AgvBecameIdle(agv.CorrelationId);
         await fixture.TestHarness!.Bus.Publish(agvBecameIdle);
@@ -214,9 +207,8 @@ public class AgvEventHandlerTest
         var fixture = new AgvEventHandlerTestFixture();
 
         var agv = AgvGenerator.GenerateIdleAgv();
-
+        agv.MarkAgvForMaintenance();
         fixture.AddAgv(agv);
-        fixture.SetupAgvStates(isReadyForBusy: false, needsCharging: false, isCarryingLoad: false, needsMaintenance: true);
 
         var agvBecameIdle = new AgvBecameIdle(agv.CorrelationId);
         await fixture.TestHarness!.Bus.Publish(agvBecameIdle);
@@ -242,8 +234,9 @@ public class AgvEventHandlerTest
     public async Task Consume_AgvCanStartIdleAction_AgvIsEligibleForCharging_PublishesCreateChargingActionGroup()
     {
         var fixture = new AgvEventHandlerTestFixture();
-        var agv = AgvGenerator.GenerateIdleAgv();
-        fixture.SetAgvEligibleForCharging(isEligibleForCharging: true);
+        var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: AgvEventHandlerTestFixture.AgvSettings.BatteryLevelCritical, lastNodeId: "nodeId");
+        fixture.AddAgv(agv);
+
         await fixture.TestHarness!.Bus.Publish(new AgvCanStartIdleAction(agv));
         (await fixture.ConsumerHarness!.Consumed.Any<AgvCanStartIdleAction>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<CreateChargingActionGroup>()).ShouldBeTrue();
@@ -254,7 +247,7 @@ public class AgvEventHandlerTest
     {
         var fixture = new AgvEventHandlerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv();
-        fixture.SetAgvEligibleForCharging(isEligibleForCharging: false);
+
         await fixture.TestHarness!.Bus.Publish(new AgvCanStartIdleAction(agv));
         (await fixture.ConsumerHarness!.Consumed.Any<AgvCanStartIdleAction>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<CreateParkingActionGroup>()).ShouldBeTrue();
@@ -315,5 +308,55 @@ public class AgvEventHandlerTest
         (await fixture.ConsumerHarness!.Consumed.Any<AgvMapReceived>()).ShouldBeTrue();
 
         (await fixture.TestHarness!.Published.Any<SaveMap>(f => f.Context.Message == new SaveMap(map, map.CorrelationId))).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task Consume_AgvStatusReceived_NoAgvInRepository_PublishesCreateAgv()
+    {
+        MassTransitConsumerTestFixtureWithScheduler<AgvEventHandler> fixture = new AgvEventHandlerTestFixture().WithoutAgv();
+        string agvId = "AGV001";
+
+        await fixture.TestHarness!.Bus.Publish(new AgvStatusReceived(agvId.ToGuid(), agvId, new AgvStatus(agvId.ToGuid(), null, false, true, 100, false, false, "nodeId")));
+        (await fixture.ConsumerHarness!.Consumed.Any<AgvStatusReceived>()).ShouldBeTrue();
+        (await fixture.TestHarness!.Published.Any<CreateAgv>()).ShouldBeTrue();
+    }
+    
+    [TestMethod]
+    public async Task Consume_AgvStatusReceived_AgvInRepository_PublishesUpdateAgvStatus()
+    {
+        var fixture = new AgvEventHandlerTestFixture();
+        var agv = AgvGenerator.GenerateIdleAgv();
+        fixture.AddAgv(agv);
+        
+        await fixture.TestHarness!.Bus.Publish(new AgvStatusReceived(agv.CorrelationId, agv.AgvId, _mapper.Map<AgvStatus>(agv.AgvStatus!)));
+        (await fixture.ConsumerHarness!.Consumed.Any<AgvStatusReceived>()).ShouldBeTrue();
+        (await fixture.TestHarness!.Published.Any<UpdateAgvStatus>()).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task Consume_ScheduledAgvWentOffline_ValidData_PublishesGoOffline()
+    {
+        var fixture = new AgvEventHandlerTestFixture();
+        var agv = AgvGenerator.GenerateIdleAgv();
+        ScheduledMessage<AgvWentOffline> offlineMessage = await fixture.ScheduleMessage(TimeSpan.FromMilliseconds(0), new AgvWentOffline(agv.CorrelationId, DateTime.UtcNow));
+        agv.SetOnline(offlineMessage.TokenId);
+        fixture.AddAgv(agv);
+        (await fixture.ConsumerHarness!.Consumed.Any<AgvWentOffline>()).ShouldBeTrue();
+        (await fixture.TestHarness!.Published.Any<GoOffline>()).ShouldBeTrue();
+        var goOfflineCommand = fixture.TestHarness!.Published.Select<GoOffline>().First().Context.Message;
+        goOfflineCommand.OfflineTokenId.ShouldBe(offlineMessage.TokenId);
+    }
+
+    [TestMethod]
+    public async Task Consume_AgvPreparedForStartingAction_ValidData_StartAction()
+    {
+        var fixture = new AgvEventHandlerTestFixture();
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv:agv.CorrelationId);
+        await fixture.TestHarness!.Bus.Publish(new AgvPreparedForStartingAction(actionGroup.Actions.First(), agv.CorrelationId));
+
+        (await fixture.ConsumerHarness!.Consumed.Any<AgvPreparedForStartingAction>()).ShouldBeTrue();
+
+        (await fixture.TestHarness!.Published.Any<StartAction>()).ShouldBeTrue();
     }
 }

@@ -1,7 +1,7 @@
 using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles;
 
@@ -13,10 +13,10 @@ public class AgvPositionProfile : Profile
     /// <inheritdoc />
     public AgvPositionProfile()
     {
-        CreateMap<AgvPositionReceived, AgvPositionStatus>();
+        CreateMap<AgvPositionReceived, AgvPositionStatus>().ReverseMap();
         CreateMap<AgvPositionChanged, AgvPositionStatus>()
             .ForCtorParam(nameof(AgvPositionStatus.AgvPosition), 
                 opt => 
-                    opt.MapFrom(src => src.NewAgvPosition));
+                    opt.MapFrom(src => src.NewAgvPosition)).ReverseMap();
     }
 }

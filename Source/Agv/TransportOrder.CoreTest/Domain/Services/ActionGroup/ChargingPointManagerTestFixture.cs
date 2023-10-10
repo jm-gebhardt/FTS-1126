@@ -1,7 +1,6 @@
 using System.Linq.Expressions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
@@ -93,14 +92,14 @@ public class ChargingPointManagerTestFixture
             .ReturnsAsync(new Func<Guid, Expression<Func<GraphNode, bool>>, IEnumerable<GraphNode>>((_, predicate) => graph.Nodes.AsQueryable().Where(predicate)));
     }
           
-    public IAgv GetAgv(Guid correlationId, string agvId, string state, string order, string? lastNodeId = null)
+    public TransportOrder.Domain.Models.Agv.Agv GetAgv(Guid correlationId, string agvId, string order, string? lastNodeId = null)
     {
-        var agvStatus = new AgvStatus(correlationId, order, true, true, 10, false, false, lastNodeId);
+        var agvStatus = new TransportOrder.Domain.Models.Agv.AgvStatus(correlationId, order, true, true, 10, false, false, lastNodeId);
 
-        return new AgvSaga(correlationId, agvId, state, agvStatus) { IsOnline = true };
+        return new TransportOrder.Domain.Models.Agv.Agv(correlationId, agvId, agvStatus);
     }
 
-    public ChargingPointManagerTestFixture WithAvailableNodes(IAgv agv, List<GraphNode> availableNodes)
+    public ChargingPointManagerTestFixture WithAvailableNodes(TransportOrder.Domain.Models.Agv.Agv agv, List<GraphNode> availableNodes)
     {
         _graphRegistry.Setup(x => x.GetNodesAsync(agv.CorrelationId, It.IsAny<Expression<Func<GraphNode, bool>>>()))
             .ReturnsAsync(new Func<Guid, Expression<Func<GraphNode, bool>>, IEnumerable<GraphNode>>((_, predicate) => availableNodes.AsQueryable().Where(predicate)));
@@ -114,7 +113,7 @@ public class ChargingPointManagerTestFixture
         return this;
     }
     
-    public ChargingPointManagerTestFixture WithLowestCostNode(IAgv agv, IList<GraphNode> availableNodes, GraphNode node)
+    public ChargingPointManagerTestFixture WithLowestCostNode(TransportOrder.Domain.Models.Agv.Agv agv, IList<GraphNode> availableNodes, GraphNode node)
     {
         RouteService.Setup(x => x.GetNodeWithLowestCostsAsync(agv, availableNodes)).ReturnsAsync(node);
         return this;

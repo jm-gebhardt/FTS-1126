@@ -1,5 +1,4 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
+﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
@@ -10,10 +9,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Repositories;
 
 public class AgvRouteServiceTestFixture : DbTestFixtureBase<TransportOrderDbContext>
 {
-    private readonly Mock<IAgvRegistry> _agvRegistryMock = new();
+    private readonly Mock<IAgvRepository> _agvRegistryMock = new();
     private readonly Mock<ILogger<AgvRouteRetrievalRetrievalService>> _loggerMock = new();
     private readonly List<ActionGroup> _actionsGroups = new();
-    private readonly List<IAgv> _agvs = new();
+    private readonly List<TransportOrder.Domain.Models.Agv.Agv> _agvs = new();
 
     public AgvRouteRetrievalRetrievalService AgvRouteRetrievalRetrievalService { get; }
 
@@ -45,7 +44,7 @@ public class AgvRouteServiceTestFixture : DbTestFixtureBase<TransportOrderDbCont
             });
     }
 
-    public AgvRouteServiceTestFixture WithAgv(IAgv agv)
+    public AgvRouteServiceTestFixture WithAgv(TransportOrder.Domain.Models.Agv.Agv agv)
     {
         _agvs.Add(agv);
         return this;

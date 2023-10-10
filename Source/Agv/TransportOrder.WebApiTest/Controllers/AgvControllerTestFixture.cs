@@ -1,18 +1,17 @@
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
+using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.EventHandler;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.SagaStateMachines;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.CmdOptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Helper;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.AspNetCore.Http;
@@ -36,16 +35,23 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
     where TRequest : class
     where TRequestHandler : class, IConsumer
 {
+    private readonly ActionManagerSemaphoreProvider _semaphoreProvider = new();
+
+    private readonly Mock<ISettingsProvider<AgvSettings>> _settingsProvider = new();
+
+    private readonly Mock<IMapRegistry> _mapRegistry = new();
+
+    private readonly ProductionOptions _productionOptions = new() { AutoAccept = true };
     public string[] AgvIds { get; } = {"AGV001", "AGV002", "AGV003"};
 
     // ReSharper disable once MemberCanBePrivate.Global
     public string[] Orders { get; } = {"ORDER001", "ORDER002", ""};
 
-    public string[] States { get; } = {nameof(AgvStateMachine.Idle), nameof(AgvStateMachine.Busy), nameof(AgvStateMachine.Discovered)};
+    public AgvState[] States { get; } = { AgvState.Idle, AgvState.Busy, AgvState.Discovered };
 
     public string[] Ips { get; } = {"127.0.0.1", "127.0.0.2", "127.0.0.3"};
 
-    public Mock<IAgvRegistry> AgvRegistry { get; }
+    public Mock<IAgvRepository> AgvRegistry { get; }
 
     private Mock<IAgvDataRegistry> AgvDataRegistry { get; }
 
@@ -57,8 +63,6 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
 
     private Mock<IAgvErrorRegistry> AgvErrorRegistry { get; }
 
-    private Mock<IRequestClient<QueueActionGroup>> QueueActionGroupRequestClient { get; set; }
-
     private readonly GraphNode[] _nodes =
     {
         new("node00") {X = 0f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint},
@@ -67,14 +71,11 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         new("node11") {X = 1f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint}
     };
 
-    public ActionGroup? SentQueueActionGroup { get; private set; }
-
-    public AgvControllerTestFixture()
+   public AgvControllerTestFixture()
     {
         AgvGraphRegistry = new Mock<IAgvGraphRegistry>();
         AgvErrorRegistry = new Mock<IAgvErrorRegistry>();
-        AgvRegistry = new Mock<IAgvRegistry>();
-        QueueActionGroupRequestClient = new Mock<IRequestClient<QueueActionGroup>>();
+        AgvRegistry = new Mock<IAgvRepository>();
         AgvDataRegistry = new Mock<IAgvDataRegistry>();
         ActionGroupRetrievalService = new Mock<IActionGroupRetrievalService>();
         ActionGroupRetrievalService.Setup(r => r.GetAssignedActionGroupsWithNodesAsync(It.IsAny<IReadOnlyCollection<Guid>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (ActionGroupReadModel?) null));
@@ -89,28 +90,26 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
     [UsedImplicitly]
     public AgvControllerTestFixture<TRequest, TRequestHandler> SetupAgvRegistryWithDefaultData()
     {
-        var agvs = new List<IAgv>();
+        var agvs = new List<TransportOrder.Domain.Models.Agv.Agv>();
         var data = new Dictionary<Guid, AgvData>();
 
         for (int i = 0; i < AgvIds.Length; i++)
         {
             string agvId = AgvIds[i];
             string orderId = Orders[i];
-            string state = States[i];
+            var state = States[i];
             string ip = Ips[i];
             var correlationId = GetGuid(agvId);
-            var agvStatus = agvId == "AGV003" ? null : new AgvStatus(correlationId, orderId, true, true, 10, true, true);
+            var agvStatus = agvId == "AGV003" ? null : new Domain.Models.Agv.AgvStatus(correlationId, orderId, true, true, 10, true, true, lastNodeId:"Node");
             var agvData = new AgvData(correlationId, "Karis", "BF1", ip, 1.8, 120.0, 0.6, 0.8, 0.7, 1, 2.5, 1000, Array.Empty<AgvData.Sensor>());
-            agvs.Add(new AgvSaga(correlationId, agvId, state, agvStatus));
+            var agv = new Domain.Models.Agv.Agv(correlationId, agvId, agvStatus);
+            agv = AgvGenerator.SetAgvState(state, false, agv);
+
+            agvs.Add(agv);
             data[correlationId] = agvData;
         }
 
-        AgvRegistry.SetupGet(x => x.Count).Returns(agvs.Count);
-        AgvRegistry.SetupGet(x => x.CountIdle).Returns(agvs.Where(x => x.CurrentState == nameof(AgvStateMachine.Idle)).Count);
-        AgvRegistry.Setup(x => x.GetIdleAgvs()).Returns(new EnumerableQuery<IAgv>(agvs.Where(x => x.CurrentState == nameof(AgvStateMachine.Idle))));
-        AgvRegistry.Setup(x => x.GetAllAgvs()).Returns(new EnumerableQuery<IAgv>(agvs));
-        AgvRegistry.Setup(x => x.GetAgv(It.IsAny<Guid>())).Returns<Guid>(correlationId => { return agvs.FirstOrDefault(agv => agv.CorrelationId == correlationId); });
-        AgvRegistry.Setup(x => x.GetRequiredAgv(It.IsAny<Guid>())).Returns<Guid>(correlationId => { return agvs.FirstOrDefault(agv => agv.CorrelationId == correlationId) ?? throw new AgvNotFoundException(correlationId); });
+        AgvRegistry.AddAgvsToMockRepository(agvs);
 
         AgvDataRegistry.Setup(x => x.Exists(It.IsAny<Guid>())).Returns<Guid>(correlationId => data.ContainsKey(correlationId));
         AgvDataRegistry.Setup(x => x.GetAgvData(It.IsAny<Guid>()))
@@ -125,11 +124,6 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
                 data[agvData.CorrelationId] = agvData;
                 return true;
             });
-
-        QueueActionGroupRequestClient = new Mock<IRequestClient<QueueActionGroup>>();
-        QueueActionGroupRequestClient.Setup(x => x.GetResponse<Success>(It.IsAny<QueueActionGroup>(), default, default))
-            .Callback((QueueActionGroup q, CancellationToken _, RequestTimeout _) => { SentQueueActionGroup = q.ActionGroup; });
-
         return this;
     }
 
@@ -239,9 +233,11 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             sc.AddTransient(_ => new Mock<IAgvPositionRegistry>().Object);
             sc.AddTransient(_ => ActionGroupRegistry.Object);
             sc.AddTransient(_ => AgvGraphRegistry.Object);
-            sc.AddTransient(_ => new Mock<IActionManager>().Object);
             sc.AddTransient(_ => AgvErrorRegistry.Object);
-            sc.AddTransient(_ => QueueActionGroupRequestClient.Object);
+            sc.AddTransient<IActionManagerSemaphoreProvider>(_ => _semaphoreProvider);
+            sc.AddTransient(_ => _settingsProvider.Object);
+            sc.AddTransient(_ => _mapRegistry.Object);
+            sc.AddTransient(_ => _productionOptions);
         });
 
         return this;

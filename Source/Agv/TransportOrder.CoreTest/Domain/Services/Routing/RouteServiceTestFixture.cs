@@ -19,7 +19,7 @@ public class RouteServiceTestFixture
         RouteService = new RouteService(_agvGraphRegistry.Object, new AStarRouteFinder(), new Mock<ILogger<RouteService>>().Object);
     }
 
-    public RouteServiceTestFixture WithAgv(IAgv agv, AgvGraph agvGraph)
+    public RouteServiceTestFixture WithAgv(TransportOrder.Domain.Models.Agv.Agv agv, AgvGraph agvGraph)
     {
         _agvGraphRegistry.Setup(x => x.ExistsAsync(agv.CorrelationId)).ReturnsAsync(true);
         _agvGraphRegistry.Setup(x => x.GetAgvGraphAsync(agv.CorrelationId)).ReturnsAsync(agvGraph);

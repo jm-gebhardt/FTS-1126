@@ -55,8 +55,7 @@ public class AgvPositionRegistryTest
     public async Task UpdatePosition_PublishesAgvPositionChangedOnTheBus_WhenTheChangeDetectorReturnsTrue()
     {
         var fixture = new AgvPositionRegistryTestFixture();
-        fixture.ChangeDetectorMock.Setup(c => c.HasChanged(It.IsAny<AgvPositionStatus>(), It.IsAny<AgvPositionStatus>()))
-            .Returns(true);
+
 
         var agvPositionStatus = fixture.AgvPositionStatus;
         await fixture.AgvPositionRegistry.UpdatePositionAsync(agvPositionStatus);
@@ -68,11 +67,11 @@ public class AgvPositionRegistryTest
     }
 
     [TestMethod]
-    public async Task UpdatePosition_DoesNotPublishAgvPositionChangedOnTheBus_WhenTheChangeDetectorReturnsFalse()
+    public async Task UpdatePosition_NoChanges_DoesNotPublishAgvPositionChangedOnTheBus()
     {
         var fixture = new AgvPositionRegistryTestFixture();
-        fixture.ChangeDetectorMock.Setup(c => c.HasChanged(It.IsAny<AgvPositionStatus>(), It.IsAny<AgvPositionStatus>()))
-            .Returns(false);
+
+        fixture.AgvPositionDictionaryProvider.ConcurrentDict.TryAdd(fixture.AgvPositionStatus.CorrelationId, fixture.AgvPositionStatus);
 
         await fixture.AgvPositionRegistry.UpdatePositionAsync(fixture.AgvPositionStatus);
 

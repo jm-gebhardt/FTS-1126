@@ -1,7 +1,6 @@
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.SagaStateMachines;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -16,29 +15,27 @@ public class AgvEfRegistryTest
 {
     private class EfAgvRegistryTestFixture
     {
-        public EfAgvRegistry Registry { get; }
+        public AgvRepository Registry { get; }
 
-        private IDbContextFactory<SagaPersistenceDbContext> ContextFactory { get; }
+        private IDbContextFactory<TransportOrderDbContext> ContextFactory { get; }
         private ServiceProvider Provider { get; }
 
         public EfAgvRegistryTestFixture()
         {
             var collection = new ServiceCollection()
-                .AddDbContextFactory<SagaPersistenceDbContext>(options =>
+                .AddDbContextFactory<TransportOrderDbContext>(options =>
                     {
                         options.UseInMemoryDatabase(Guid.NewGuid().ToString());
                     }
                 );
             Provider = collection.BuildServiceProvider(true);
-            ContextFactory = Provider.GetService<IDbContextFactory<SagaPersistenceDbContext>>()!;
-            Registry = new EfAgvRegistry(ContextFactory);
+            ContextFactory = Provider.GetService<IDbContextFactory<TransportOrderDbContext>>()!;
+            Registry = new AgvRepository(ContextFactory);
         }
 
-        public void Add(AgvSaga agv)
+        public async Task Add(TransportOrder.Domain.Models.Agv.Agv agv)
         {
-            using var context = ContextFactory.CreateDbContext();
-            context.Set<AgvSaga>().Add(agv);
-            context.SaveChanges();
+            await Registry.AddAgvAsync(agv);
         }
     }
 
@@ -48,87 +45,85 @@ public class AgvEfRegistryTest
         var fixture = new EfAgvRegistryTestFixture();
 
         fixture.Registry.Count.ShouldBe(0);
-        fixture.Registry.CountIdle.ShouldBe(0);
     }
 
     [TestMethod]
-    public void OneIdleAdded_OneIdleAGVAvailable()
+    public async Task OneIdleAdded_OneIdleAGVAvailable()
     {
         var fixture = new EfAgvRegistryTestFixture();
-        var agvSaga = new AgvSaga(Guid.NewGuid(), "agv0", nameof(AgvStateMachine.Idle));
-        fixture.Add(agvSaga);
+        var agv = AgvGenerator.GenerateIdleAgv();
+
+        await fixture.Add(agv);
 
         fixture.Registry.Count.ShouldBe(1);
-        fixture.Registry.CountIdle.ShouldBe(1);
 
-        var readyAgv = fixture.Registry.GetIdleAgvs().First();
-        readyAgv.CorrelationId.ShouldBe(agvSaga.CorrelationId);
-        readyAgv.CurrentState.ShouldBe(agvSaga.CurrentState);
-        readyAgv.AgvId.ShouldBe(agvSaga.AgvId);
-        readyAgv.AgvStatus.ShouldBe(agvSaga.AgvStatus);
+        var readyAgv = (await fixture.Registry.GetIdleAgvsAsync()).First();
+        readyAgv.CorrelationId.ShouldBe(agv.CorrelationId);
+        readyAgv.CurrentAgvState.ShouldBe(agv.CurrentAgvState);
+        readyAgv.AgvId.ShouldBe(agv.AgvId);
+        readyAgv.AgvStatus.ShouldBe(agv.AgvStatus);
         readyAgv.IsOnline.ShouldBeFalse();
     }
 
     [TestMethod]
-    public void TwoAdded_OneIdleAGVAvailable()
+    public async Task TwoAdded_OneIdleAGVAvailable()
     {
         var fixture = new EfAgvRegistryTestFixture();
-        var agvSaga = new AgvSaga(Guid.NewGuid(), "agv0", nameof(AgvStateMachine.Idle));
-        fixture.Add(agvSaga);
-        fixture.Add(new AgvSaga(Guid.NewGuid(), "agv1", nameof(AgvStateMachine.Discovered)));
+
+        var idleAgv = AgvGenerator.GenerateIdleAgv();
+        await fixture.Add(idleAgv);
+        var chargingAgv = AgvGenerator.GenerateChargingAgv(1);
+        await fixture.Add(chargingAgv);
 
         fixture.Registry.Count.ShouldBe(2);
-        fixture.Registry.CountIdle.ShouldBe(1);
 
-        var readyAgv = fixture.Registry.GetIdleAgvs().First();
-        readyAgv.CorrelationId.ShouldBe(agvSaga.CorrelationId);
-        readyAgv.CurrentState.ShouldBe(agvSaga.CurrentState);
-        readyAgv.AgvId.ShouldBe(agvSaga.AgvId);
-        readyAgv.AgvStatus.ShouldBe(agvSaga.AgvStatus);
+        var readyAgv = (await fixture.Registry.GetIdleAgvsAsync()).First();
+        readyAgv.CorrelationId.ShouldBe(idleAgv.CorrelationId);
+        readyAgv.CurrentAgvState.ShouldBe(idleAgv.CurrentAgvState);
+        readyAgv.AgvId.ShouldBe(idleAgv.AgvId);
+        readyAgv.AgvStatus.ShouldBe(idleAgv.AgvStatus);
     }
 
     [TestMethod]
-    public void Verify_IAgvRegistry_Interface_Methods()
+    public async Task Verify_IAgvRegistry_Interface_Methods()
     {
-        string agvId1 = "AGV001";
-        string agvId2 = "AGV002";
-        var correlationId1 = agvId1.ToGuid();
-        var correlationId2 = agvId2.ToGuid();
-
         var fixture = new EfAgvRegistryTestFixture();
-        fixture.Add(new AgvSaga(correlationId1, agvId1, nameof(AgvStateMachine.Idle)));
-        fixture.Add(new AgvSaga(correlationId2, agvId2, nameof(AgvStateMachine.Discovered)));
+
+        var agv1 = AgvGenerator.GenerateIdleAgv();
+        var agv2 = AgvGenerator.GenerateChargingAgv(1);
+
+        await fixture.Add(agv1);
+        await fixture.Add(agv2);
 
         var agvRegistry = fixture.Registry;
 
         fixture.Registry.Count.ShouldBe(2);
-        fixture.Registry.CountIdle.ShouldBe(1);
 
-        IEnumerable<IAgv> allAgvs = agvRegistry.GetAllAgvs();
-        IEnumerable<IAgv> readyAgvs = agvRegistry.GetIdleAgvs();
+        IEnumerable<TransportOrder.Domain.Models.Agv.Agv> allAgvs = await agvRegistry.GetAllAgvsAsync();
+        IEnumerable<TransportOrder.Domain.Models.Agv.Agv> readyAgvs = await agvRegistry.GetIdleAgvsAsync();
 
         // ReSharper disable PossibleMultipleEnumeration
         allAgvs.Count().ShouldBe(2);
         readyAgvs.Count().ShouldBe(1);
 
-        foreach (var actualAgv in agvRegistry.GetAllAgvs())
+        foreach (var actualAgv in await agvRegistry.GetAllAgvsAsync())
         {
-            var foundAgv = agvRegistry.GetAgv(actualAgv.CorrelationId);
+            var foundAgv = await agvRegistry.GetAgvAsync(actualAgv.CorrelationId);
             foundAgv.ShouldNotBeNull();
             foundAgv.AgvId.ShouldBe(actualAgv.AgvId);
         }
 
-        agvRegistry.GetAgv(Guid.Empty).ShouldBeNull();
+        await Should.ThrowAsync<AgvNotFoundException>(agvRegistry.GetAgvAsync(Guid.Empty));
     }
 
     [TestMethod]
     public async Task CheckIfAgvExistsAsync_ExistingAgv_ReturnsTrue()
     {
         var fixture = new EfAgvRegistryTestFixture();
-        var agvSaga = new AgvSaga(Guid.NewGuid(), "agv0", nameof(AgvStateMachine.Idle));
-        fixture.Add(agvSaga);
-        
-        bool agvExists = await fixture.Registry.CheckIfAgvExistsAsync(agvSaga.CorrelationId);
+        var agv = AgvGenerator.GenerateIdleAgv();
+        await fixture.Add(agv);
+
+        bool agvExists = await fixture.Registry.CheckIfAgvExistsAsync(agv.CorrelationId);
         agvExists.ShouldBeTrue();
     }
 

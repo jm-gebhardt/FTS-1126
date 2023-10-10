@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Services.Detectors;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.EventHandler;
@@ -11,6 +10,10 @@ using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
+using AgvErrorProfile = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles.AgvErrorProfile;
+using AgvGraphProfile = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles.AgvGraphProfile;
+using AgvProfile = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles.AgvProfile;
+using MapProfile = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles.MapProfile;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Consumer;
 
@@ -55,7 +58,6 @@ internal class AgvPositionReceivedConsumerMassTransitTestFixture :
             services.AddSingleton(GraphRegistryMock.Object);
         }
 
-        services.AddSingleton<IChangeDetector<AgvPositionStatus>, ChangeDetector<AgvPositionStatus>>();
         services.AddTransient(_ => new Mock<IAgvPublisher>().Object);
         services.AddTransient(_ => GetMapper());
 
@@ -63,17 +65,17 @@ internal class AgvPositionReceivedConsumerMassTransitTestFixture :
     private IMapper GetMapper()
     {
         var mapper = MappingHelper.GetMapper(
+            new WebApi.Profiles.AgvProfile(),
+            new WebApi.Profiles.AgvGraphProfile(),
+            new AgvPositionProfile(),
+            new WebApi.Profiles.MapProfile(),
+            new WebApi.Profiles.AgvErrorProfile(),
+            new ActionProfile(),
             new AgvProfile(),
             new AgvGraphProfile(),
-            new AgvPositionProfile(),
-            new MapProfile(),
             new AgvErrorProfile(),
-            new ActionProfile(),
-            new Messages.Profiles.AgvProfile(),
-            new Messages.Profiles.AgvGraphProfile(),
-            new Messages.Profiles.AgvErrorProfile(),
-            new Messages.Profiles.MapProfile(),
-            new Messages.Profiles.AgvPositionProfile()
+            new MapProfile(),
+            new Domain.Profiles.AgvPositionProfile()
         );
         return mapper;
     }

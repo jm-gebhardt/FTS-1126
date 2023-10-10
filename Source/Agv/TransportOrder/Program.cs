@@ -57,10 +57,6 @@ try
 
         using (var scope = host.Services.CreateScope())
         {
-            // Apply migrations if SagaPersistenceDbContext is available
-            var sagaDb = scope.ServiceProvider.GetRequiredService<SagaPersistenceDbContext>(); 
-            await sagaDb.Database.MigrateAsync();
-
             var transportOrderDb = scope.ServiceProvider.GetRequiredService<TransportOrderDbContext>();
             await transportOrderDb.Database.MigrateAsync();
 

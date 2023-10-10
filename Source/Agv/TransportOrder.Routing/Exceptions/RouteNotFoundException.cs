@@ -26,11 +26,9 @@ public class RouteNotFoundException : Exception
     }
 
     /// <summary>
-    /// If no route was found for the given agv to any of these nodes
+    /// If no route was found for the given agv to any of these nodes.
     /// </summary>
-    /// <param name="agv"></param>
-    /// <param name="destinationNodeIds"></param>
-    public RouteNotFoundException(IAgv agv, IList<GraphNode> destinationNodeIds) : base($"No route found to any of these nodes: {agv}{string.Join(", ", destinationNodeIds.Select(n => n.Id))}")
+    public RouteNotFoundException(Guid agvCorrelationId, IEnumerable<GraphNode> destinationNodeIds) : base($"No route found to any of these nodes: {agvCorrelationId} {string.Join(", ", destinationNodeIds.Select(n => n.Id))}")
     {
     }
 }

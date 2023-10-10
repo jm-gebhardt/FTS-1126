@@ -1,5 +1,4 @@
 using Gebhardt.StoreWare.Agv.Common.Configurations;
-using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -18,7 +17,7 @@ public class DatabaseConfigurationSource<TDbContext> : IConfigurationSource
     public IConfigurationTypeManager ConfigurationTypeManager { get; }
 
     /// <summary>
-    /// The <see cref="SagaPersistenceDbContext"/> to use for retrieving the data
+    /// The <see cref="DbContextFactory"/> to use for retrieving the data
     /// </summary>
     public IDbContextFactory<TDbContext>? DbContextFactory { get; private set; }
 

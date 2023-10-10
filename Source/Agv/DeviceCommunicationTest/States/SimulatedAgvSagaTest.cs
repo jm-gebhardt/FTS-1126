@@ -20,7 +20,14 @@ public class SimulatedAgvSagaTest
         var graph = new GridGraphGenerator(new[] { "S1" }, new[] { "D1" }).Generate(correlationId);
         var data = new AgvData(correlationId, "model", "type", null, 10, 1, 1, 1, 1, 1, 1, 1, Array.Empty<AgvData.Sensor>());
         var map = new MapGenerator(graph);
-        var agv = new SimulatedAgv(correlationId, agvId, "", graph, data, map.Generate());
+        var agv = new SimulatedAgv(correlationId, agvId, "",
+            true,
+            false,
+            false,
+            true,
+            DateTime.MinValue,
+            DateTime.MinValue,
+            AgvGraph: graph, AgvData: data, AgvMap: map.Generate());
         return new SimulatedAgvSaga(agv, 10, 75);
     }
 

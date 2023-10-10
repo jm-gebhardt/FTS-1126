@@ -14,19 +14,16 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHan
 [UsedImplicitly]
 public class GetAgvGraphRequestHandler : IConsumer<GetAgvGraph>
 {
-    private readonly IAgvRegistry _agvRegistry;
+    private readonly IAgvRepository _agvRepository;
     private readonly IMapper _mapper;
     private readonly IAgvGraphRegistry _agvGraphRegistry;
 
     /// <summary>
-    /// <inheritdoc cref="GetAgvGraphRequestHandler"/>
+    /// Initializes a new  <see cref="GetAgvGraphRequestHandler"/> instance.
     /// </summary>
-    /// <param name="agvRegistry"></param>
-    /// <param name="mapper"></param>
-    /// <param name="agvGraphRegistry"></param>
-    public GetAgvGraphRequestHandler(IAgvRegistry agvRegistry, IMapper mapper, IAgvGraphRegistry agvGraphRegistry)
+    public GetAgvGraphRequestHandler(IAgvRepository agvRepository, IMapper mapper, IAgvGraphRegistry agvGraphRegistry)
     {
-        _agvRegistry = agvRegistry;
+        _agvRepository = agvRepository;
         _mapper = mapper;
         _agvGraphRegistry = agvGraphRegistry;
     }
@@ -40,11 +37,11 @@ public class GetAgvGraphRequestHandler : IConsumer<GetAgvGraph>
     /// <exception cref="AgvGraphNotDefinedException"></exception>
     public async Task Consume(ConsumeContext<GetAgvGraph> context)
     {
-        var request = context.Message;
-        var agv = _agvRegistry.GetAgv(request.CorrelationId);
+        var correlationId = context.Message.CorrelationId;
+        var agv = await _agvRepository.GetAgvAsync(correlationId);
         if (agv == null)
         {
-            throw new AgvNotFoundException(request.CorrelationId);
+            throw new AgvNotFoundException(correlationId);
         }
 
         var agvGraph = await _agvGraphRegistry.GetAgvGraphAsync(agv.CorrelationId);

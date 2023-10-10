@@ -96,7 +96,6 @@ public record AgvStatus : CorrelatedBy<Guid>
     /// <remarks>
     /// VDA5050.state.schema.lastNodeId
     /// </remarks>
-    [UsedImplicitly]
     public string? LastNodeId { get; }
 
     /// <summary>

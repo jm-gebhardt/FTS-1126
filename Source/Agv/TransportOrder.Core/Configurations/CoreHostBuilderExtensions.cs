@@ -2,10 +2,7 @@
 using Gebhardt.StoreWare.Agv.Common.Configurations;
 using Gebhardt.StoreWare.Agv.Common.Configurations.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
-using Gebhardt.StoreWare.Agv.Common.Services.Detectors;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.CmdOptions;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.EventHandler;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.SagaStateMachines;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
@@ -18,7 +15,6 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Routing.Base;
 using Gebhardt.StoreWare.Agv.TransportOrder.Routing.Implementations;
-using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -74,11 +70,6 @@ public static class CoreHostBuilderExtensions
 
             builder.UseSqlServer(connectionString, m => { m.MigrationsHistoryTable(TransportOrderDbContext.MigrationTableName); });
         });
-        services.AddDbContextFactory<SagaPersistenceDbContext>(builder =>
-        {
-            string? connectionString = context.Configuration.GetConnectionString(SagaPersistenceDbContext.ConfigSectionName);
-            builder.UseSqlServer(connectionString, m => { m.MigrationsHistoryTable(SagaPersistenceDbContext.MigrationTableName); });
-        });
     }
 
     private static void RegisterMapServices(IServiceCollection services)
@@ -91,29 +82,23 @@ public static class CoreHostBuilderExtensions
         services.AddTransient<IAgvRouteRetrievalService, AgvRouteRetrievalRetrievalService>();
         services.AddSingleton<IRouteFinder, AStarRouteFinder>();
         services.AddTransient<IRoutingPlausibilityChecker, NoCheckPlausibilityChecker>();
-        services.AddSingleton<IChangeDetector<AgvPositionStatus>, ChangeDetector<AgvPositionStatus>>();
     }
 
     private static void RegisterAgvServices(IServiceCollection services)
     {
         // Actions
-        services.AddTransient<IActionManager, ActionManager>();
         services.AddSingleton<IActionManagerSemaphoreProvider, ActionManagerSemaphoreProvider>();
-        services.AddTransient<IStartActionService, StartActionService>();
         services.AddTransient<IChooseAgvActionGroupService, ShortestRouteChooser>();
 
         // Agv behaviour
-        services.AddTransient<IAgvSagaCommunicationService, AgvSagaCommunicationService>();
         services.AddTransient<IMaintenanceService, MaintenanceService>();
-        services.AddTransient<IStateObserver<AgvSaga>, AgvStateObserver>();
-        services.AddTransient<IChargingService, BaseAgvChargingService>();
     }
 
     private static void RegisterRegistryServices(IServiceCollection services)
     {
         services.AddTransient<IActionGroupRetrievalService, ActionGroupRetrievalService>();
         services.AddTransient<IActionGroupRegistry, EfActionGroupRegistry>();
-        services.AddTransient<IAgvRegistry, EfAgvRegistry>();
+        services.AddTransient<IAgvRepository, AgvRepository>();
         services.AddTransient<IAgvDataRegistry, EfAgvDataRegistry>();
 
         services.AddSingleton<IMapRegistrySemaphoreProvider, MapRegistrySemaphoreProvider>();

@@ -17,7 +17,7 @@ public class EfAgvErrorRegistry : IAgvErrorRegistry
     }
 
     /// <inheritdoc />
-    public async Task UpdateAgvErrorStatusAsync(List<AgvError>? errors, Guid agvCorrelationId)
+    public async Task AddOrUpdateAgvErrorStatusAsync(List<AgvError>? errors, Guid agvCorrelationId)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         IQueryable<AgvError> agvErrorsInRegistry = context.Set<AgvError>()

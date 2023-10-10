@@ -61,6 +61,7 @@ public class TransportOrderDbContext: ConfigurableDbContext
             yield return new GraphNodeClassMap();
             yield return new AgvDataClassMap();
             yield return new AgvErrorClassMap();
+            yield return new AgvClassMap();
         }
     }
 }

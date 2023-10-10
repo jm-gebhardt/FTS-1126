@@ -222,7 +222,11 @@ public class AgvController : Controller
     [Route("/agvs/{correlationId}/unlock")]
     public async Task<ActionResult> UnlockAgv(Guid correlationId)
     {
-        await _unlockAgvClient.GetResponse<UnlockAgvResult>(new UnlockAgv(correlationId));
+        Response<UnlockAgvResult, AgvNotFoundResult> response = await _unlockAgvClient.GetResponse<UnlockAgvResult, AgvNotFoundResult>(new UnlockAgv(correlationId));
+        if (response.Message is AgvNotFoundResult)
+        {
+            return NotFound();
+        }
         return Ok();
     }
 
@@ -235,7 +239,11 @@ public class AgvController : Controller
     [Route("/agvs/{correlationId}/lock")]
     public async Task<ActionResult> LockAgv(Guid correlationId)
     {
-        await _lockAgvClient.GetResponse<LockAgvResult>(new LockAgv(correlationId));
+        Response<LockAgvResult, AgvNotFoundResult> response = await _lockAgvClient.GetResponse<LockAgvResult, AgvNotFoundResult>(new LockAgv(correlationId));
+        if (response.Message is AgvNotFoundResult)
+        {
+            return NotFound();
+        }
         return Ok();
     }
 
@@ -304,8 +312,13 @@ public class AgvController : Controller
     [Route("/agvs/{correlationId}/move")]
     public async Task<ActionResult> MoveAgv(Guid correlationId, string destinationNodeId)
     {
-        Response<MoveAgvResult> response = await _moveAgvClient.GetResponse<MoveAgvResult>(new MoveAgv(correlationId, destinationNodeId, ActionGroupCreator.TransportOrderWebApi));
-        return Ok(response.Message.ActionGroupCorrelationId);
+        Response<MoveAgvResult, AgvNotFoundResult> response = await _moveAgvClient.GetResponse<MoveAgvResult, AgvNotFoundResult>(new MoveAgv(correlationId, destinationNodeId, ActionGroupCreator.TransportOrderWebApi));
+   
+        if (response.Message is MoveAgvResult moveAgvResult)
+        {
+            return Ok(moveAgvResult.ActionGroupCorrelationId);
+        }
+        return NotFound();
     }
 
     /// <summary>
@@ -319,7 +332,11 @@ public class AgvController : Controller
     [Route("/agvs/{correlationId}/setForceIdle")]
     public async Task<ActionResult> SetForceIdle(Guid correlationId)
     {
-        await _setForceIdleClient.GetResponse<SetAgvForceIdleResult>(new SetAgvForceIdle(correlationId));
+        Response<SetAgvForceIdleResult, AgvNotFoundResult> response= await _setForceIdleClient.GetResponse<SetAgvForceIdleResult, AgvNotFoundResult>(new SetAgvForceIdle(correlationId));
+        if (response.Message is AgvNotFoundResult)
+        {
+            return NotFound();
+        }
         return Ok();
     }
 }

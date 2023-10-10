@@ -1,8 +1,6 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
-using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
@@ -12,81 +10,60 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Profiles;
 [TestClass]
 public class AgvProfileTest
 {
-    /// <summary>
-    /// Maps the <see cref="AgvSaga"/> to <see cref="Agv"/> message content and should map correctly
-    /// </summary>
+
     [TestMethod]
-    public void Map_ShouldMapAllPropertiesCorrectly_WhereAgvSagaIsMappedToAgv()
-    {
-        const string agvId = "AGV1";
-        var correlationId = agvId.ToGuid();
-
-        var agvSaga = new AgvSaga(correlationId, agvId, "Idle",
-            new AgvStatus(Guid.NewGuid(), "123", true, true, 10, false, false)
-        );
-
-        var mapper = MappingHelper.GetMapper(new AgvProfile());
-        var agv = mapper.Map<IAgv, Messages.MessageContent.Agv>(agvSaga);
-
-        agv.ShouldNotBeNull();
-        agv.CorrelationId.ShouldBe(agvSaga.CorrelationId);
-        agv.AgvId.ShouldBe(agvSaga.AgvId);
-        Enum.TryParse(agvSaga.CurrentState, out AgvState agvState);
-        agv.CurrentState.ShouldBe(agvState);
-    }
-
-  [TestMethod]
     public void Map_ShouldMapAllPropertiesCorrectly_WhereAgvDataDtoIsMappedToAgvData()
     {
         var agvData = new AgvData(Guid.NewGuid(), "Karis", "BF1", "127.0.0.1", 1.8, 120.0, 0.6, 0.8, 0.7, 1, 2.5, 1000, Array.Empty<AgvData.Sensor>());
         var mapper = MappingHelper.GetMapper(new AgvProfile());
-        var  agvDataMessageContent = mapper.Map<Messages.Requests.Agv.AgvData>(agvData);
+        var agvDataMessageContent = mapper.Map<Messages.Requests.Agv.AgvData>(agvData);
 
-         agvDataMessageContent.ShouldNotBeNull();
-         agvDataMessageContent.Acceleration.ShouldBe(agvData.Acceleration);
-         agvDataMessageContent.CorrelationId.ShouldBe(agvData.CorrelationId);
-         agvDataMessageContent.BatteryCapacity.ShouldBe(agvData.BatteryCapacity);
-         agvDataMessageContent.IpV4Address.ShouldBe(agvData.IpV4Address);
-         agvDataMessageContent.Length.ShouldBe(agvData.Length);
-         agvDataMessageContent.MaxVelocityStraight.ShouldBe(agvData.MaxVelocityStraight);
-         agvDataMessageContent.MaxVelocityTurn.ShouldBe(agvData.MaxVelocityTurn);
-         agvDataMessageContent.MaxVelocityTurnOnSpot.ShouldBe(agvData.MaxVelocityTurnOnSpot);
-         agvDataMessageContent.Model.ShouldBe(agvData.Model);
-         agvDataMessageContent.Payload.ShouldBe(agvData.Payload);
-         agvDataMessageContent.Width.ShouldBe(agvData.Width);
-         agvDataMessageContent.Sensors.ShouldBe(agvData.Sensors);
+        agvDataMessageContent.ShouldNotBeNull();
+        agvDataMessageContent.Acceleration.ShouldBe(agvData.Acceleration);
+        agvDataMessageContent.CorrelationId.ShouldBe(agvData.CorrelationId);
+        agvDataMessageContent.BatteryCapacity.ShouldBe(agvData.BatteryCapacity);
+        agvDataMessageContent.IpV4Address.ShouldBe(agvData.IpV4Address);
+        agvDataMessageContent.Length.ShouldBe(agvData.Length);
+        agvDataMessageContent.MaxVelocityStraight.ShouldBe(agvData.MaxVelocityStraight);
+        agvDataMessageContent.MaxVelocityTurn.ShouldBe(agvData.MaxVelocityTurn);
+        agvDataMessageContent.MaxVelocityTurnOnSpot.ShouldBe(agvData.MaxVelocityTurnOnSpot);
+        agvDataMessageContent.Model.ShouldBe(agvData.Model);
+        agvDataMessageContent.Payload.ShouldBe(agvData.Payload);
+        agvDataMessageContent.Width.ShouldBe(agvData.Width);
+        agvDataMessageContent.Sensors.ShouldBe(agvData.Sensors);
     }
 
 
     [TestMethod]
-       public void Map_ShouldMapAllPropertiesCorrectly_WhereAgvDtoIsMappedToAgvWithAgvStatus()
-       {
-           var mapper = MappingHelper.GetMapper(new AgvProfile());
-           var agvStatus = new AgvStatus(Guid.NewGuid(), "OrderId#123", false, true, 98, false, false, "lastNodeId#123");
-           var agv = AgvGenerator.GenerateIdleAgv(agvStatus: agvStatus);
-  
-           var  agvMessageContent = mapper.Map<Messages.MessageContent.Agv>(agv);
-            agvMessageContent.ShouldSatisfyAllConditions(
-               o => o.AgvId.ShouldBe(agv.AgvId),
-               o => o.CorrelationId.ShouldBe(agv.CorrelationId),
-               o => o.CurrentState.ToString().ShouldBe(agv.CurrentState),
-               o => o.TimeOfStateTransition.ShouldBe(agv.TimeOfStateTransition),
-               o => o.TimeOfLockStateChanged.ShouldBe(agv.TimeOfLockStateChanged),
-               o => o.IsOnline.ShouldBe(agv.IsOnline),
-               o => o.IsLocked.ShouldBe(agv.IsLocked),
-               o => o.IsDisturbed.ShouldBe(agv.AgvStatus!.Disturbed),
-               o => o.IsAutomatic.ShouldBe(agv.AgvStatus!.Automatic),
-               o => o.BatteryCharge.ShouldBe(agv.AgvStatus!.BatteryCharge),
-               o => o.IsCharging.ShouldBe(agv.AgvStatus!.Charging)
-           );
-       }
+    public void Map_ShouldMapAllPropertiesCorrectly_WhereAgvDtoIsMappedToAgvWithAgvStatus()
+    {
+        var mapper = MappingHelper.GetMapper(new AgvProfile());
+        var agvStatus = new TransportOrder.Domain.Models.Agv.AgvStatus(Guid.NewGuid(), "OrderId#123", false, true, 98, false, false, "lastNodeId#123");
+        var agv = AgvGenerator.GenerateIdleAgv(agvStatus: agvStatus);
+
+        var agvMessageContent = mapper.Map<Messages.MessageContent.Agv>(agv);
+        agvMessageContent.ShouldSatisfyAllConditions(
+           o => o.AgvId.ShouldBe(agv.AgvId),
+           o => o.CorrelationId.ShouldBe(agv.CorrelationId),
+           o => o.CurrentState.ShouldBe(agv.CurrentAgvState),
+           o => o.TimeOfStateTransition.ShouldBe(agv.TimeOfStateTransition),
+           o => o.TimeOfLockStateChanged.ShouldBe(agv.TimeOfLockStateChanged),
+           o => o.TimeOfLockStateChanged.ShouldBe(agv.TimeOfLockStateChanged),
+           o => o.IsOnline.ShouldBe(agv.IsOnline),
+           o => o.IsLocked.ShouldBe(agv.IsLocked),
+           o => o.IsDisturbed.ShouldBe(agv.AgvStatus!.Disturbed),
+           o => o.IsAutomatic.ShouldBe(agv.AgvStatus!.Automatic),
+           o => o.BatteryCharge.ShouldBe(agv.AgvStatus!.BatteryCharge),
+           o => o.IsCharging.ShouldBe(agv.AgvStatus!.Charging)
+       );
+    }
 
     [TestMethod]
     public void Map_ShouldMapAllPropertiesCorrectly_WhenAgvErrorsListIsMappedToAgv()
     {
         var mapper = MappingHelper.GetMapper(new AgvProfile(), new AgvErrorProfile());
         var agv = AgvGenerator.GenerateIdleAgv();
-        var agvMessageContent = mapper.Map<IAgv, Messages.MessageContent.Agv>(agv);
+        var agvMessageContent = mapper.Map<TransportOrder.Domain.Models.Agv.Agv, Messages.MessageContent.Agv>(agv);
         var expectedAgvErrors = new List<AgvError>
            {
                AgvErrorGenerator.GenerateAgvError(agv.CorrelationId)

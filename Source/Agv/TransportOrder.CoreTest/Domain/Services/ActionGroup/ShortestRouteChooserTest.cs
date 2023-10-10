@@ -1,5 +1,4 @@
 using Gebhardt.StoreWare.Agv.Common.Exceptions;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -15,7 +14,7 @@ public class ShortestRouteChooserTest
     public async Task GetAgvAsync_WhenThereAreNoAgvs_ReturnNull()
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
-        var agvs = new List<IAgv>();
+        var agvs = new List<TransportOrder.Domain.Models.Agv.Agv>();
 
         var fixture = new ChooseAgvActionGroupServiceFixture();
 
@@ -30,7 +29,7 @@ public class ShortestRouteChooserTest
         var agv0 = AgvGenerator.GenerateIdleAgv(index: 0, lastNodeId: AgvGraphGenerator.ParkFar.Id);
         var agv1 = AgvGenerator.GenerateIdleAgv(index: 1, lastNodeId: AgvGraphGenerator.ParkClose.Id);
         var agv2 = AgvGenerator.GenerateIdleAgv(index: 2, lastNodeId: AgvGraphGenerator.ChargingFar.Id);
-        var agvs = new List<IAgv> { agv0, agv1, agv2 };
+        var agvs = new List<TransportOrder.Domain.Models.Agv.Agv> { agv0, agv1, agv2 };
 
         var fixture = new ChooseAgvActionGroupServiceFixture();
 
@@ -45,7 +44,7 @@ public class ShortestRouteChooserTest
         var agv0 = AgvGenerator.GenerateIdleAgv(index: 0, lastNodeId: AgvGraphGenerator.ParkFar.Id);
         var agv1 = AgvGenerator.GenerateIdleAgv(index: 1, lastNodeId: AgvGraphGenerator.ParkClose.Id); // Closest AGV
         var agv2 = AgvGenerator.GenerateIdleAgv(index: 2, lastNodeId: AgvGraphGenerator.ChargingFar.Id);
-        var agvs = new List<IAgv> { agv0, agv1, agv2 };
+        var agvs = new List<TransportOrder.Domain.Models.Agv.Agv> { agv0, agv1, agv2 };
         var fixture = new ChooseAgvActionGroupServiceFixture()
             .WithAgvHasRouteToDestination(agv0, actionGroup, routeCosts: 5f)
             .WithAgvHasRouteToDestination(agv1, actionGroup, routeCosts: 2f)
@@ -62,7 +61,7 @@ public class ShortestRouteChooserTest
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         var agv = AgvGenerator.GenerateIdleAgv(index: 0, lastNodeId: null); // No last node id
 
-        var fixture = new ChooseAgvActionGroupServiceFixture()
+        var fixture = new ChooseAgvActionGroupServiceFixture(realRouteService:true)
             .AddNotStartedActionGroup(actionGroup);
 
         await Should.ThrowAsync<AgvLocationUnknownException>(async () => await fixture.ShortestRouteChooser.GetNotStartedActionGroupAsync(agv));

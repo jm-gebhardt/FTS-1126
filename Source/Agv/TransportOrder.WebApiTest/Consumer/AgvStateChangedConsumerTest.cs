@@ -1,14 +1,13 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.SagaStateMachines;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Consumer;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Helper;
 using MassTransit;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
@@ -21,36 +20,30 @@ public class AgvStateChangedConsumerTest
     private const string AgvId = "agv1";
 
     [TestMethod]
-    [DataRow(nameof(AgvStateMachine.Initial), null)]
-    [DataRow(nameof(AgvStateMachine.Discovered), nameof(AgvStateMachine.Initial))]
-    [DataRow(nameof(AgvStateMachine.Idle), nameof(AgvStateMachine.Discovered))]
-    [DataRow(nameof(AgvStateMachine.Busy), nameof(AgvStateMachine.Idle))]
-    [DataRow(nameof(AgvStateMachine.Idle), nameof(AgvStateMachine.Busy))]
-    public async Task Receiving_AgvStateChanged_SendAgvStateToAllClients(string currentState, string? previousState)
+    [DataRow(AgvState.Initial, null)]
+    [DataRow(AgvState.Discovered, AgvState.Initial)]
+    [DataRow(AgvState.Idle, AgvState.Discovered)]
+    [DataRow(AgvState.Busy, AgvState.Idle)]
+    [DataRow(AgvState.Idle, AgvState.Busy)]
+    public async Task Receiving_AgvStateChanged_SendAgvStateToAllClients(AgvState currentState, AgvState? previousState)
     {
-        var agv = new AgvSaga(AgvId.ToGuid(), AgvId, currentState);
+        var agv = new TransportOrder.Domain.Models.Agv.Agv(AgvId.ToGuid(), AgvId);
+        agv = AgvGenerator.SetAgvState(currentState, false, agv);
 
         var mapper = MappingHelper.GetMapper(new AgvProfile());
-        var agvMessageContent = mapper.Map<Messages.MessageContent.Agv>(agv);
-
-        var mockGetAgvsClient = new Mock<IRequestClient<GetAgvs>>();
+        var agvMessageContent = mapper.Map<Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent.Agv>(agv);
+            
         var responseMock = new Mock<Response<GotAgvs>>();
-        responseMock.SetupGet(m => m.Message).Returns(new GotAgvs(new[] {agvMessageContent}, new List<bool> {currentState == nameof(AgvState.Initial)}));
-        mockGetAgvsClient.Setup(
-                m => m.GetResponse<GotAgvs>(It.IsAny<GetAgvs>(), default, default
-                ))
-            .ReturnsAsync(responseMock.Object);
+        responseMock.SetupGet(m => m.Message).Returns(new GotAgvs(new[] { agvMessageContent }));
 
-        var fixture = new ConsumerHubTestFixture<AgvStateChangedConsumer, IAgvPublisher>(
-            services => { services.AddSingleton(mockGetAgvsClient.Object); });
-        await fixture.TestHarness!.Bus.Publish(new AgvStateChanged(agv.CorrelationId, agv, previousState));
+        var fixture = new ConsumerHubTestFixture<AgvStateChangedConsumer, IAgvPublisher>();
+        await fixture.TestHarness!.Bus.Publish(new AgvStateChanged(agvMessageContent.CorrelationId, agvMessageContent, previousState));
 
         (await fixture.TestHarness.Published.Any<AgvStateChanged>()).ShouldBeTrue();
         (await fixture.ConsumerHarness!.Consumed.Any<AgvStateChanged>()).ShouldBeTrue();
-
-        mockGetAgvsClient.Verify(m => m.GetResponse<GotAgvs>(It.IsAny<GetAgvs>(), default, default), Times.Once);
-
-        bool isInitialState = currentState == nameof(AgvStateMachine.Initial);
+            
+            
+        bool isInitialState = currentState == AgvState.Initial;
         fixture.PublisherMock.Verify(h => h.SendAgvStateAsync(
             It.Is<Messages.MessageContent.Agv>(o => o.CorrelationId == agv.CorrelationId), isInitialState), Times.Once);
     }

@@ -18,9 +18,17 @@ public class AgvProfile : Profile
             .ForMember(nameof(MessageContent.Agv.IsCharging), opt => opt.MapFrom(src => src.Charging))
             .ForMember(nameof(MessageContent.Agv.BadBatteryLevel), opt => opt.MapFrom(src => AgvStatus.BadBatteryLevel))
             .ForMember(nameof(MessageContent.Agv.GoodBatteryLevel), opt => opt.MapFrom(src => AgvStatus.GoodBatteryLevel));
-
-        CreateMap<IAgv, MessageContent.Agv>(MemberList.None)
-            .IncludeMembers(s => s.AgvStatus);
+        
+        CreateMap<Domain.Models.Agv.AgvStatus, MessageContent.Agv>(MemberList.None)
+            .ForMember(nameof(MessageContent.Agv.IsDisturbed), opt => opt.MapFrom(src => src.Disturbed))
+            .ForMember(nameof(MessageContent.Agv.IsAutomatic), opt => opt.MapFrom(src => src.Automatic))
+            .ForMember(nameof(MessageContent.Agv.IsCharging), opt => opt.MapFrom(src => src.Charging))
+            .ForMember(nameof(MessageContent.Agv.BadBatteryLevel), opt => opt.MapFrom(src => Domain.Models.Agv.AgvStatus.BadBatteryLevel))
+            .ForMember(nameof(MessageContent.Agv.GoodBatteryLevel), opt => opt.MapFrom(src => Domain.Models.Agv.AgvStatus.GoodBatteryLevel));
+        
+        CreateMap<Domain.Models.Agv.Agv, MessageContent.Agv>(MemberList.None)
+            .IncludeMembers(s => s.AgvStatus)
+            .ForMember(nameof(MessageContent.Agv.CurrentState), opt => opt.MapFrom(src => src.CurrentAgvState));
 
         CreateMap<ActionGroupReadModel, MessageContent.Agv>(MemberList.None)
             .ForMember(d => d.CurrentActionGroup, opt => opt.MapFrom(s => s))

@@ -13,14 +13,14 @@ public interface IChargingPointManager
     /// </summary>
     /// <param name="agv"></param>
     /// <returns>The best free charger, throws if it could not reserve it</returns>
-    Task<GraphNode> ReserveChargerAsync(IAgv agv);
+    Task<GraphNode> ReserveChargerAsync(Models.Agv.Agv agv);
 
     /// <summary>
     /// Chooses the best free charger based on the agvs graph
     /// </summary>
     /// <param name="agv"></param>
     /// <returns>The best free charger, or null if all occupied</returns>
-    Task<GraphNode?> GetBestChargerAsync(IAgv agv);
+    Task<GraphNode?> GetBestChargerAsync(Models.Agv.Agv agv);
 
     /// <summary>
     /// Reserves the given charger
@@ -36,5 +36,5 @@ public interface IChargingPointManager
     /// <param name="agv"></param>
     /// <returns>True if the lastNodeId of the Agv is a charging point, False if the lastNodeId of the agv is null</returns>
     [UsedImplicitly]
-    Task<bool> IsOnAChargingNodeAsync(IAgv agv);
+    Task<bool> IsOnAChargingNodeAsync(Models.Agv.Agv agv);
 }
