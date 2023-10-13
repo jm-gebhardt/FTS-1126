@@ -38,6 +38,6 @@ public class AgvProfile : Profile
         CreateMap<IList<AgvError>, MessageContent.Agv>(MemberList.None)
             .ForMember(d => d.Errors, opt => opt.MapFrom(s => s));
 
-        CreateMap<AgvData, Requests.Agv.AgvData>();
+        CreateMap<AgvData, Requests.Agv.Queries.AgvData>();
     }
 }

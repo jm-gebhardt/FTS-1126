@@ -15,9 +15,8 @@ public class EfAgvDataRegistry : IAgvDataRegistry
     private IQueryable<AgvData> AgvData => _dbContextFactory.CreateDbContext().Set<AgvData>().AsNoTracking();
 
     /// <summary>
-    /// Constructor of the EF AgvDataRegistry
+    /// Initializes a new <see cref="EfAgvDataRegistry"/> instance.
     /// </summary>
-    /// <param name="dbContextFactory"></param>
     public EfAgvDataRegistry(IDbContextFactory<TransportOrderDbContext> dbContextFactory)
     {
         _dbContextFactory = dbContextFactory;
@@ -51,5 +50,11 @@ public class EfAgvDataRegistry : IAgvDataRegistry
         }
 
         return await  dbContext.SaveChangesAsync() > 0;
+    }
+
+    /// <inheritdoc/>
+    public async Task<ICollection<AgvData>> GetSelectedAgvData(ICollection<Guid> correlationIds)
+    {
+        return await AgvData.Where(a => correlationIds.Contains(a.CorrelationId)).ToListAsync();
     }
 }

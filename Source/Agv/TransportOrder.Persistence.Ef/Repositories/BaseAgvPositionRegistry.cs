@@ -45,5 +45,8 @@ public abstract class BaseAgvPositionRegistry : IAgvPositionRegistry
     public abstract AgvPositionStatus? GetPosition(Guid correlationId);
 
     /// <inheritdoc />
-    public abstract List<AgvPositionStatus> GetAllPositions();
+    public abstract ICollection<AgvPositionStatus> GetAllPositions();
+
+    /// <inheritdoc />
+    public abstract ICollection<AgvPositionStatus> GetSelectedAgvsPositions(ICollection<Guid> correlationIds);
 }

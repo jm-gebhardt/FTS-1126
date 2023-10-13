@@ -1,6 +1,6 @@
 ﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Routing;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
 using JetBrains.Annotations;
 using MassTransit;
 

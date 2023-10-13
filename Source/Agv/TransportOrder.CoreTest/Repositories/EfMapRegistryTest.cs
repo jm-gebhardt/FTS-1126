@@ -44,8 +44,8 @@ public class EfMapRegistryTest
         fixture.Add(map1);
         fixture.Add(map2);
 
-        byte[]? mapValue1 = fixture.Registry.GetMap(map1.CorrelationId);
-        byte[]? mapValue2 = fixture.Registry.GetMap(map1.CorrelationId);
+        byte[]? mapValue1 = fixture.Registry.GetMapImage(map1.CorrelationId);
+        byte[]? mapValue2 = fixture.Registry.GetMapImage(map1.CorrelationId);
 
         map1.MapValue.ShouldBe(mapValue1);
         map2.MapValue.ShouldBe(mapValue2);
@@ -60,7 +60,7 @@ public class EfMapRegistryTest
 
         fixture.Add(map);
 
-        fixture.Registry.GetMap(Guid.NewGuid()).ShouldBeNull();
+        fixture.Registry.GetMapImage(Guid.NewGuid()).ShouldBeNull();
     }
 
     [TestMethod]
@@ -98,7 +98,7 @@ public class EfMapRegistryTest
         bool result = await fixture.Registry.AddOrUpdateAsync(map, new CancellationToken());
         result.ShouldBeTrue();
 
-        byte[]? mapImage = fixture.Registry.GetMap(map.CorrelationId);
+        byte[]? mapImage = fixture.Registry.GetMapImage(map.CorrelationId);
         mapImage.ShouldNotBeNull();
         mapImage.ShouldBe(map.MapValue);
     }
@@ -113,7 +113,7 @@ public class EfMapRegistryTest
         bool result = await fixture.Registry.AddOrUpdateAsync(map, new CancellationToken());
         result.ShouldBeTrue();
 
-        byte[]? mapImage = fixture.Registry.GetMap(map.CorrelationId);
+        byte[]? mapImage = fixture.Registry.GetMapImage(map.CorrelationId);
         mapImage.ShouldNotBeNull();
         mapImage.ShouldBe(map.MapValue);
 
@@ -131,7 +131,7 @@ public class EfMapRegistryTest
 
         result = await fixture.Registry.AddOrUpdateAsync(mapUpdate, new CancellationToken());
         result.ShouldBeTrue();
-        mapImage = fixture.Registry.GetMap(mapUpdate.CorrelationId);
+        mapImage = fixture.Registry.GetMapImage(mapUpdate.CorrelationId);
         mapImage.ShouldNotBeNull();
         mapImage.ShouldBe(mapUpdate.MapValue);
     }

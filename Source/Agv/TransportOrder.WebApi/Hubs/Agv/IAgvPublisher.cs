@@ -1,5 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
-using AgvPositionStatus = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.AgvPositionStatus;
+using AgvPositionStatus = Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent.AgvPositionStatus;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Agv;
 

@@ -27,6 +27,8 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
     // ReSharper disable once MemberCanBePrivate.Global
     public readonly Mock<IAgvErrorRegistry> AgvErrorRegistry = new();
 
+    private readonly Mock<IAgvDataRegistry> _agvDataRegistryMock = new();
+
     public AgvRequestsHandlerTestFixture(IBus? bus=null)
     {
         WithEmptyGraphRegistry();
@@ -39,6 +41,7 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
             s.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
             s.AddTransient(_ => _agvGraphRegistry.Object);
             s.AddTransient(_ => AgvErrorRegistry.Object);
+            s.AddTransient(_ => _agvDataRegistryMock.Object);
             if (bus != null)
             {
                 s.AddTransient(_ => bus);
@@ -52,11 +55,13 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
     public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithEmptyGraphRegistry()
     {
         _agvGraphRegistry.Setup(r => r.GetAgvGraphAsync(It.IsAny<Guid>())).Returns((Guid correlationId) => throw new AgvGraphNotDefinedException(correlationId));
+        _agvGraphRegistry.Setup(r => r.GetSelectedAgvGraphsAsync(It.IsAny<List<Guid>>())).ReturnsAsync(new List<AgvGraph>());
         return this;
     }
 
     public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithEmptyAgvRepository()
     {
+        AgvRegistry.Setup(r => r.SelectExistingAgvsAsync(It.IsAny<List<Guid>>())).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>());
         AgvRegistry.Setup(r => r.GetAllAgvsAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>());
         AgvRegistry.Setup(r => r.GetAgvAsync(It.IsAny<Guid>())).ThrowsAsync(new AgvNotFoundException(It.IsAny<Guid>()));
         AgvRegistry.Setup(r => r.Count).Returns(0);
@@ -68,7 +73,14 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
         AgvRegistry.Setup(r => r.SelectExistingAgvsAsync(It.IsAny<List<Guid>>())).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>());
         return this;
     }
-
+    public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithEmptyAgvErrorRepository()
+    {
+        AgvErrorRegistry.Setup(x => x.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(new List<AgvError>());
+        AgvErrorRegistry.Setup(x => x.GetActiveErrorsAsync(It.IsAny<IList<Guid>>())).ReturnsAsync(new List<AgvError>());
+        AgvErrorRegistry.Setup(x => x.GetErrorsAsync(It.IsAny<Guid>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(new List<AgvError>());
+        AgvErrorRegistry.Setup(x => x.GetErrorsAsync(It.IsAny<IList<Guid>>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(new List<AgvError>());
+        return this;
+    }
     public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithAgvs(List<TransportOrder.Domain.Models.Agv.Agv> agvs, Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.ActionGroup? actionGroup = null)
     {
         AgvRegistry.AddAgvsToMockRepository(agvs);
@@ -89,6 +101,14 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
         AgvRegistry.Setup(r => r.CheckIfAgvExistsAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) => agvs.Any(a => a.CorrelationId == c));
         ActionGroupRegistry.Setup(r => r.GetActionGroupWithNodesAsync(It.IsAny<Guid>()))
             .ReturnsAsync(actionGroup.ConvertFromActionGroupWithFakeNodeType());
+        AgvRegistry.Setup(r => r.SelectExistingAgvsAsync(It.IsAny<List<Guid>>())).ReturnsAsync((List<Guid>ids) => agvs.Where(a => ids.Contains(a.CorrelationId)).ToList());
+        IEnumerable<AgvData> specifications = agvs.Select((a, i) => new AgvData(a.CorrelationId, "Karis", "BF1", "ipv4 address",
+            1.8, 120.0, 0.6, 0.8, 0.7, i,
+            2.5, 1000, Array.Empty<AgvData.Sensor>()));
+
+        _agvDataRegistryMock.Setup(x => x.GetSelectedAgvData(It.IsAny<ICollection<Guid>>())).ReturnsAsync((ICollection<Guid> ids) => specifications.Where(s => ids.Contains(s.CorrelationId)).ToList());
+
+
         return this;
     }
 
@@ -99,9 +119,12 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
         return WithAgvs(new List<TransportOrder.Domain.Models.Agv.Agv>{agv}, actionGroup);
     }
 
-    public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithActiveAgvErrors(Guid agvCorrelationId, IList<AgvError> agvErrors)
+    public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithActiveAgvErrors(Guid agvCorrelationId, List<AgvError> agvErrors)
     {
         AgvErrorRegistry.Setup(x => x.GetActiveErrorsAsync(agvCorrelationId)).ReturnsAsync(agvErrors);
+        AgvErrorRegistry.Setup(x => x.GetActiveErrorsAsync(It.IsAny<IList<Guid>>())).ReturnsAsync(agvErrors);
+        AgvErrorRegistry.Setup(x => x.GetErrorsAsync(It.IsAny<Guid>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(agvErrors.AsReadOnly);
+        AgvErrorRegistry.Setup(x => x.GetErrorsAsync(It.IsAny<IList<Guid>>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(agvErrors.AsReadOnly);
         return this;
     }
 

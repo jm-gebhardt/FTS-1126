@@ -52,10 +52,34 @@ public class EfAgvGraphRegistry : IAgvGraphRegistry
     }
 
     /// <inheritdoc />
+    public async Task<ICollection<Guid>> GetAgvsRelatedToMap(Guid mapId)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        return await  QueryWithChildren(context)
+            .Where(g => g.RelatedMapId == mapId)
+            .Select(g => g.CorrelationId)
+            .Distinct()
+            .ToListAsync();
+    }
+
+    /// <inheritdoc />
     public async Task<List<AgvGraph>> GetAllAgvGraphsAsync()
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         List<EfGraph> efGraphs = await QueryWithChildren(context)
+            .ToListAsync();
+
+        var agvGraphs = _mapper.Map<List<AgvGraph>>(efGraphs);
+
+        return agvGraphs;
+    }
+
+    /// <inheritdoc />
+    public async Task<ICollection<AgvGraph>> GetSelectedAgvGraphsAsync(ICollection<Guid> correlationIds)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        List<EfGraph> efGraphs = await QueryWithChildren(context)
+            .Where(g => correlationIds.Contains(g.CorrelationId))
             .ToListAsync();
 
         var agvGraphs = _mapper.Map<List<AgvGraph>>(efGraphs);
@@ -91,6 +115,25 @@ public class EfAgvGraphRegistry : IAgvGraphRegistry
         var graphNode = _mapper.Map<GraphNode>(node);
 
         return graphNode;
+    }
+
+    /// <inheritdoc />
+    public async Task<AgvGraph> GetGraphForMap(Guid mapCorrelationId)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+
+        // TODO /FIXME: Define which graph is representative for the whole map
+        // This is a tentative wrong implementation (first agv graph related to this map).
+        var efGraph = await QueryWithChildren(context)
+            .FirstOrDefaultAsync(g => g.RelatedMapId == mapCorrelationId);
+
+        if (efGraph == null)
+        {
+            throw new MapNotFoundException();
+        }
+        var agvGraph = _mapper.Map<AgvGraph>(efGraph);
+
+        return agvGraph;
     }
 
     /// <inheritdoc />

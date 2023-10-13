@@ -1,27 +1,27 @@
 using AutoMapper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agvs.Queries;
 using JetBrains.Annotations;
 using MassTransit;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
 
 /// <summary>
-/// Defines a handler for GetAgvData request
-/// Gets agv from registry by correlationId returns AgvData
+/// Provides handlers for agv specification-related requests.
 /// </summary>
 [UsedImplicitly]
-public class GetAgvDataRequestHandler : IConsumer<GetAgvDataRequest>
+public class GetAgvDataRequestHandler :
+    IConsumer<GetAgvData>,
+    IConsumer<GetAgvsData>
 {
     private readonly IAgvDataRegistry _agvDataRegistry;
     private readonly IMapper _mapper;
 
     /// <summary>
-    /// <inheritdoc cref="GetAgvDataRequestHandler"/>
+    /// Initializes a new <see cref="GetAgvDataRequestHandler"/> instance.
     /// </summary>
-    /// <param name="agvDataRegistry"></param>
-    /// <param name="mapper"></param>
     public GetAgvDataRequestHandler(IAgvDataRegistry agvDataRegistry, IMapper mapper)
     {
         _agvDataRegistry = agvDataRegistry;
@@ -29,22 +29,37 @@ public class GetAgvDataRequestHandler : IConsumer<GetAgvDataRequest>
     }
 
     /// <summary>
-    /// <inheritdoc cref="GetAgvDataRequestHandler"/>
+    /// Handles the <see cref="GetAgvData"/> request.
     /// </summary>
-    /// <param name="context"></param>
-    /// <returns></returns>
     /// <exception cref="AgvNotFoundException"></exception>
     /// <exception cref="AgvDataNotFoundException"></exception>
-    public async Task Consume(ConsumeContext<GetAgvDataRequest> context)
+    public async Task Consume(ConsumeContext<GetAgvData> context)
     {
-        var request = context.Message;
-        var agvData = _agvDataRegistry.GetAgvData(request.CorrelationId);
+        var correlationId = context.Message.CorrelationId;
+        var agvData = _agvDataRegistry.GetAgvData(correlationId);
         if (agvData == null)
         {
-            throw new AgvDataNotFoundException(request.CorrelationId);
+            throw new AgvDataNotFoundException(correlationId);
         }
 
         var agvDataMessageContent = _mapper.Map<AgvData>(agvData);
-        await context.RespondAsync(new GetAgvDataResult(agvDataMessageContent));
+        await context.RespondAsync(new GotAgvData(agvDataMessageContent));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="GetAgvsData"/> request.
+    /// </summary>
+    /// <exception cref="AgvsDataBatchQueryException"></exception>
+    public async Task Consume(ConsumeContext<GetAgvsData> context)
+    {
+        ICollection<Guid> selectedAgvs = context.Message.CorrelationIds;
+        ICollection<Common.Messages.AgvManagement.AgvData> fetchedData = await _agvDataRegistry.GetSelectedAgvData(selectedAgvs);
+        if (fetchedData.Count != selectedAgvs.Count)
+        {
+            throw new AgvsDataBatchQueryException(selectedAgvs.Except(fetchedData.Select(p => p.CorrelationId)).ToList());
+
+        }
+        var specifications = _mapper.Map<List<AgvData>>(fetchedData);
+        await context.RespondAsync(new GotAgvsData(specifications));
     }
 }

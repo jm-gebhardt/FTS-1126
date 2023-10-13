@@ -33,7 +33,7 @@ public class GetMapImageRequestHandler : IConsumer<GetMapImage>
     {
         var request = context.Message;
 
-        byte[]? image = _mapRegistry.GetMap(request.CorrelationId);
+        byte[]? image = _mapRegistry.GetMapImage(request.CorrelationId);
         if (image == null || image.Length == 0)
         {
             throw new MapNotFoundException(nameof(request.CorrelationId), request.CorrelationId);

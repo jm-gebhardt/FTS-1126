@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
+using Gebhardt.StoreWare.Agv.Common.Utilities;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Repositories;
 
@@ -209,5 +210,53 @@ public class EfAgvGraphRegistryTest
         await fixture.Registry.RemoveAsync(correlationId);
 
         await Should.ThrowAsync<AgvGraphNotDefinedException>(async () => await fixture.Registry.GetAgvGraphAsync(correlationId));
+    }
+
+    [TestMethod]
+    public async Task GetSelectedAgvGraphsAsync_ValidData_ReturnsSelectedAgvGraphs()
+    {
+        var fixture = new EfAgvGraphRegistryTestFixture();
+        var agvGraphs = new List<AgvGraph>();
+
+        for (int i = 0; i < 10; i++)
+        {
+            var agvGraph = AgvGraphGenerator.CreateDefaultGraph(Guid.NewGuid());
+            agvGraphs.Add(agvGraph);
+            await fixture.Registry.AddOrUpdateAsync(agvGraph);
+        }
+        List<Guid> requestedGraphs = agvGraphs.Take(agvGraphs.Count - 1).Select(a => a.CorrelationId).ToList();
+        ICollection<AgvGraph> agvGraphsInRepository = await fixture.Registry.GetSelectedAgvGraphsAsync(requestedGraphs);
+
+        agvGraphsInRepository.Count.ShouldBe(requestedGraphs.Count);
+        foreach (var agvGraphInRepository in agvGraphsInRepository)
+        {
+            var expectedAgvGraph = agvGraphs.First(x => x.CorrelationId == agvGraphInRepository.CorrelationId);
+            VerifyAgvGraph(agvGraphInRepository, expectedAgvGraph);
+        }
+    }
+
+    [TestMethod]
+    public async Task GetSelectedAgvGraphsAsync_UndefinedGraph_ReturnsSelectedDefinedAgvGraphs()
+    {
+        var fixture = new EfAgvGraphRegistryTestFixture();
+        var agvGraphs = new List<AgvGraph>();
+
+        for (int i = 0; i < 10; i++)
+        {
+            var agvGraph = AgvGraphGenerator.CreateDefaultGraph(Guid.NewGuid());
+            agvGraphs.Add(agvGraph);
+            await fixture.Registry.AddOrUpdateAsync(agvGraph);
+        }
+        List<Guid> requestedGraphs = agvGraphs.Take(agvGraphs.Count - 1).Select(a => a.CorrelationId).ToList();
+        var undefinedGraph = "UNDEFINED".ToGuid();
+        requestedGraphs.Add(undefinedGraph);
+        ICollection<AgvGraph> agvGraphsInRepository = await fixture.Registry.GetSelectedAgvGraphsAsync(requestedGraphs);
+
+        agvGraphsInRepository.Count.ShouldBe(requestedGraphs.Except(new List<Guid>{undefinedGraph}).ToList().Count);
+        foreach (var agvGraphInRepository in agvGraphsInRepository)
+        {
+            var expectedAgvGraph = agvGraphs.First(x => x.CorrelationId == agvGraphInRepository.CorrelationId);
+            VerifyAgvGraph(agvGraphInRepository, expectedAgvGraph);
+        }
     }
 }

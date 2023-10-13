@@ -16,10 +16,23 @@ public interface IAgvGraphRegistry
     Task<AgvGraph> GetAgvGraphAsync(Guid agvCorrelationId);
 
     /// <summary>
+    /// Gets correlation ids of all agvs on a map.
+    /// </summary>
+    /// <param name="mapId">The correlation id of the map.</param>
+    Task<ICollection<Guid>> GetAgvsRelatedToMap(Guid mapId);
+
+    /// <summary>
     /// Gets all AgvGraph from registry.
     /// </summary>
     /// <returns></returns>
     Task<List<AgvGraph>> GetAllAgvGraphsAsync();
+
+    /// <summary>
+    /// Gets the graph of selected agvs.
+    /// </summary>
+    /// <param name="correlationIds">The agv correlation ids,.</param>
+    /// <returns></returns>
+    Task<ICollection<AgvGraph>> GetSelectedAgvGraphsAsync(ICollection<Guid> correlationIds);
 
     /// <summary>
     /// Get nodes of this Agv, but only which are included in the predicate filter
@@ -34,6 +47,13 @@ public interface IAgvGraphRegistry
     /// <param name="id">The Id of the node to get</param>
     /// <param name="agvCorrelationId">The AgvCorrelationId</param>
     Task<GraphNode> GetNodeAsync(string id, Guid agvCorrelationId);
+
+    /// <summary>
+    /// Gets the agv graph representative for the given map.
+    /// </summary>
+    /// <param name="mapCorrelationId">The correlation id of the map.</param>
+    /// <returns></returns>
+    Task<AgvGraph> GetGraphForMap(Guid mapCorrelationId);
 
     /// <summary>
     /// Update the whole graph from <see cref="AgvGraph"/>

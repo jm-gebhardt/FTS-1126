@@ -1,5 +1,5 @@
 using AutoMapper;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Graph;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles.Resolver;
 

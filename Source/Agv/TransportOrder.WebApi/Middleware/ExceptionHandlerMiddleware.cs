@@ -51,6 +51,9 @@ public class ExceptionHandlerMiddleware : IMiddleware
             case ActionGroupStateInvalidException:
                 statusCode = HttpStatusCode.BadRequest;
                 break;
+            case BatchQueryException:
+                statusCode = HttpStatusCode.BadRequest;
+                break;
 
             default:
                 statusCode = HttpStatusCode.InternalServerError;

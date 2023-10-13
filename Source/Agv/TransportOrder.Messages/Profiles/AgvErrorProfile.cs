@@ -11,7 +11,7 @@ public class AgvErrorProfile : Profile
     /// <inheritdoc cref="AgvErrorProfile" />
     public AgvErrorProfile()
     {
-        CreateMap<AgvError, Requests.Agv.AgvError>();
+        CreateMap<AgvError, Requests.Agv.Queries.AgvError>();
 
         CreateMap<Guid, AgvError>(MemberList.None)
             .ForMember(nameof(AgvError.AgvCorrelationId), opt => opt.MapFrom(src => src));

@@ -36,4 +36,9 @@ public class AgvPositionRegistry : BaseAgvPositionRegistry
     {
         return _positionDictionaryProvider.ConcurrentDict.Values.ToList();
     }
+
+    public override ICollection<AgvPositionStatus> GetSelectedAgvsPositions(ICollection<Guid> correlationIds)
+    {
+        return _positionDictionaryProvider.ConcurrentDict.Values.Where(v => correlationIds.Contains(v.CorrelationId)).ToList();
+    }
 }

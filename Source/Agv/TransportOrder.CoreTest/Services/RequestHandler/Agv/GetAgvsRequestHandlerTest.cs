@@ -3,7 +3,8 @@ using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agvs.Queries;
 using MassTransit;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
@@ -83,7 +84,7 @@ public class GetAgvsRequestHandlerTest
     }
 
     [TestMethod]
-    public async Task GetAgvsRequestHandler_RegistryContainsMultipleAgvs_SpecificAgvNotFound()
+    public async Task GetAgvsRequestHandler_RegistryContainsMultipleAgvs_SpecificAgvNotFound_ThrowsException()
     {
         var agv1 = AgvGenerator.GenerateIdleAgv(1);
         var agv2 = AgvGenerator.GenerateIdleAgv(2);
@@ -93,12 +94,11 @@ public class GetAgvsRequestHandlerTest
             .Build();
 
         var correlationIds = new List<Guid>() { agv2.CorrelationId }; // Try to get agv2 -> should return empty result
-        Response<GotAgvs> response = await fixture.GetResponseAsync<GotAgvs>(new GetAgvs(correlationIds));
-        response.Message.Agvs.ShouldBeEmpty();
+        await MediatorShould.ThrowRequestExceptionAsync<AgvsNotFoundException>(async () => await fixture.GetResponseAsync<GotAgvs>(new GetAgvs(correlationIds)));
     }
 
     [TestMethod]
-    public async Task GetAgvsRequestHandler_RegistryContainsMultipleAgvs_ReturnMultipleAgvs()
+    public async Task GetAgvsRequestHandler_RegistryContainsMultipleAgvs_UnknownRequested_ThrowsException()
     {
         var agv1 = AgvGenerator.GenerateIdleAgv(1);
         var agv2 = AgvGenerator.GenerateIdleAgv(2);
@@ -109,10 +109,7 @@ public class GetAgvsRequestHandlerTest
 
         // we want to get all found agvs, even if one of the requested agvs is not found. We do not want to let it throw for the whole request
         var correlationIds = new List<Guid>() { agv1.CorrelationId, agv3.CorrelationId, "INVALID".ToGuid() };
-        Response<GotAgvs> response = await fixture.GetResponseAsync<GotAgvs>(new GetAgvs(correlationIds));
-        response.Message.Agvs.Count.ShouldBe(2);
-        response.Message.Agvs.ShouldContain(a => a.CorrelationId == agv1.CorrelationId);
-        response.Message.Agvs.ShouldContain(a => a.CorrelationId == agv3.CorrelationId);
+        await MediatorShould.ThrowRequestExceptionAsync<AgvsNotFoundException>(async () => await fixture.GetResponseAsync<GotAgvs>(new GetAgvs(correlationIds)));
     }
 
     [TestMethod]

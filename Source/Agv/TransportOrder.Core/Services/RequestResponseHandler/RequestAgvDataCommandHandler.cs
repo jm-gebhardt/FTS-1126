@@ -1,7 +1,7 @@
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Commands;
 using JetBrains.Annotations;
 using MassTransit;
 
@@ -36,6 +36,6 @@ public class RequestAgvDataCommandHandler : IConsumer<RequestAgvData>
 
         var agv = await _agvRepository.GetAgvAsync(agvCorrelationId);
         await _bus.Publish(new Common.Messages.AgvManagement.Commands.RequestAgvData(agv.CorrelationId, agv.AgvId));
-        await context.RespondAsync(new GotAgvData(agv.CorrelationId));
+        await context.RespondAsync(new RequestedAgvData(agv.CorrelationId));
     }
 }

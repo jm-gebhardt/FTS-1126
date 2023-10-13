@@ -17,7 +17,7 @@ public class GetMapImageRequestHandlerTest
         MapRequestTestFixture<GetMapImage, GetMapImageRequestHandler> fixture = new MapRequestTestFixture<GetMapImage, GetMapImageRequestHandler>()
             .AddMapRegistryMock(m =>
             {
-                m.Setup(x => x.GetMap(It.IsAny<Guid>())).Returns(Convert.FromBase64String(MapRequestTestFixture<GetMapImage, GetMapImageRequestHandler>.Base64String));
+                m.Setup(x => x.GetMapImage(It.IsAny<Guid>())).Returns(Convert.FromBase64String(MapRequestTestFixture<GetMapImage, GetMapImageRequestHandler>.Base64String));
             })
             .Build();
 
@@ -42,7 +42,7 @@ public class GetMapImageRequestHandlerTest
         MapRequestTestFixture<GetMapImage, GetMapImageRequestHandler> fixture = new MapRequestTestFixture<GetMapImage, GetMapImageRequestHandler>()
             .AddMapRegistryMock(m =>
             {
-                m.Setup(x => x.GetMap(It.IsAny<Guid>())).Returns(() => null);
+                m.Setup(x => x.GetMapImage(It.IsAny<Guid>())).Returns(() => null);
             })
             .Build();
 

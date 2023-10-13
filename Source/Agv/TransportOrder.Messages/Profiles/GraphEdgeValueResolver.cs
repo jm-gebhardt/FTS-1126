@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
-using GraphEdge = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.GraphEdge;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
+using GraphEdge = Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent.GraphEdge;
 using GraphNode = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.GraphNode;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles;
@@ -30,8 +30,8 @@ public class GraphEdgeValueResolver : IValueResolver<AgvGraph, Graph, object>
             if (nodeDict.TryGetValue(edge.FromNodeId, out var fromNode) &&
                 nodeDict.TryGetValue(edge.ToNodeId, out var toNode))
             {
-                var fromNodeDto = context.Mapper.Map<Requests.Agv.GraphNode>(fromNode);
-                var toNodeDto = context.Mapper.Map<Requests.Agv.GraphNode>(toNode);
+                var fromNodeDto = context.Mapper.Map<MessageContent.GraphNode>(fromNode);
+                var toNodeDto = context.Mapper.Map<MessageContent.GraphNode>(toNode);
                 graphEdges.Add(new GraphEdge(fromNodeDto, toNodeDto));
             }
         }

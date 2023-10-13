@@ -12,7 +12,7 @@ public class GetMapListRequestHandlerTest
     [TestMethod]
     public async Task GetMaps_ShouldReturnListOfMaps_WhereMapRegistryIsContained()
     {
-        MapRequestTestFixture<GetMapList, GetMapListRequestHandler> fixture = new MapRequestTestFixture<GetMapList, GetMapListRequestHandler>()
+        MapRequestTestFixture<GetMapList, GetMapRequestHandler> fixture = new MapRequestTestFixture<GetMapList, GetMapRequestHandler>()
             .UseDefaultServices()
             .Build();
 

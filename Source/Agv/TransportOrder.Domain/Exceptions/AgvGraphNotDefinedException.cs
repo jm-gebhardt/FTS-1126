@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 
 /// <summary>
-/// The Graph of the Agv is null
+/// The Graph of the Agv is null.
 /// </summary>
 public class AgvGraphNotDefinedException : NotFoundException
 {

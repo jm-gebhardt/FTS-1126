@@ -1,16 +1,20 @@
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agvs.Queries;
 using JetBrains.Annotations;
 using MassTransit;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
 
 /// <summary>
-/// Defines a handler for the <see cref="GetAgvPositions"/>
-/// Returns the positions for all agvs in the registry
+/// Provides handlers for agv position requests.
 /// </summary>
 [UsedImplicitly]
-public class GetAgvPositionsRequestHandler : IConsumer<GetAgvPositions>
+public class GetAgvPositionsRequestHandler : 
+    IConsumer<GetAgvPositions>, 
+    IConsumer<GetAgvPosition>
 {
     private readonly IAgvPositionRegistry _agvPositionRegistry;
 
@@ -24,13 +28,33 @@ public class GetAgvPositionsRequestHandler : IConsumer<GetAgvPositions>
     }
 
     /// <summary>
-    /// <inheritdoc cref="GetAgvPositionsRequestHandler"/>
+    /// Handles the <see cref="GetAgvPositions"/> request.
     /// </summary>
-    /// <param name="context"></param>
-    /// <returns></returns>
     public async Task Consume(ConsumeContext<GetAgvPositions> context)
     {
-        List<AgvPositionStatus> agvPositions = _agvPositionRegistry.GetAllPositions().Select(p => new AgvPositionStatus(p.CorrelationId, p.AgvId, p.AgvPosition)).ToList();
+        ICollection<Guid> selectedAgvs = context.Message.CorrelationIds;
+
+        ICollection<Domain.Models.Agv.AgvPositionStatus> fetchedPositions = _agvPositionRegistry.GetSelectedAgvsPositions(selectedAgvs);
+        if (fetchedPositions.Count != selectedAgvs.Count)
+        {
+            throw new AgvsNotFoundException(selectedAgvs.Except(fetchedPositions.Select(p => p.CorrelationId)).ToList());
+
+        }
+        List<AgvPositionStatus>  agvPositions = fetchedPositions.Select(p => new AgvPositionStatus(p.CorrelationId, p.AgvId, p.AgvPosition)).ToList();
         await context.RespondAsync(new GotAgvPositions(agvPositions));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="GetAgvPosition"/> request.
+    /// </summary>
+    public async Task Consume(ConsumeContext<GetAgvPosition> context)
+    {
+        var correlationId = context.Message.CorrelationId;
+        var agvPosition = _agvPositionRegistry.GetPosition(correlationId);
+        if (agvPosition == null)
+        {
+            throw new AgvNotFoundException(correlationId);
+        }
+        await context.RespondAsync(new GotAgvPosition(new AgvPositionStatus(agvPosition.CorrelationId, agvPosition.AgvId, agvPosition.AgvPosition)));
     }
 }

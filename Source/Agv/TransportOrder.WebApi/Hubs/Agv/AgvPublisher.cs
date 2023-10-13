@@ -2,7 +2,7 @@
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
 using Microsoft.AspNetCore.SignalR;
-using AgvPositionStatus = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.AgvPositionStatus;
+using AgvPositionStatus = Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent.AgvPositionStatus;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Agv;
 

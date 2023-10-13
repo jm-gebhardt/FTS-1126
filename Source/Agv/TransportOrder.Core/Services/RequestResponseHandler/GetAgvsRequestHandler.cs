@@ -2,7 +2,8 @@ using AutoMapper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agvs.Queries;
 using JetBrains.Annotations;
 using MassTransit;
 using AgvError = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.AgvError;
@@ -38,18 +39,22 @@ public class GetAgvsRequestHandler : IConsumer<GetAgvs>,
     /// </summary>
     public async Task Consume(ConsumeContext<GetAgvs> context)
     {
-        ICollection<Guid> correlationIds = context.Message.CorrelationIds;
+        ICollection<Guid> selectedAgvs = context.Message.CorrelationIds;
         ICollection<Domain.Models.Agv.Agv> agvs;
-        if (!correlationIds.Any())
+        if (!selectedAgvs.Any())
         {
             agvs = await _agvRepository.GetAllAgvsAsync();
         }
         else
         {
-            agvs = await _agvRepository.SelectExistingAgvsAsync(correlationIds.ToList());
+            agvs = await _agvRepository.SelectExistingAgvsAsync(selectedAgvs.ToList());
         }
 
         List<Guid> agvCorrelationIds = agvs.Select(a => a.CorrelationId).ToList();
+        if (agvCorrelationIds.Count != selectedAgvs.Count && selectedAgvs.Any())
+        {
+            throw new AgvsNotFoundException(selectedAgvs.Except(agvCorrelationIds).ToList());
+        }
 
         Task<IReadOnlyDictionary<Guid, ActionGroupReadModel?>> actionGroupsTask = _actionGroupRegistry.GetAssignedActionGroupsWithNodesAsync(agvCorrelationIds);
         Task<IList<AgvError>> errorsTask = _agvErrorRegistry.GetActiveErrorsAsync(agvCorrelationIds);

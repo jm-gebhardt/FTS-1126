@@ -26,4 +26,11 @@ public interface IAgvDataRegistry
     /// <param name="agvData">AgvData</param>
     /// <returns>True if a change has been made</returns>
     public Task<bool> AddOrUpdateAsync(AgvData agvData);
+
+    /// <summary>
+    /// Gets the data of selected agvs.
+    /// </summary>
+    /// <param name="correlationIds">The correlation id of the selected agvs.</param>
+    /// <returns></returns>
+    public Task<ICollection<AgvData>> GetSelectedAgvData(ICollection<Guid> correlationIds);
 }

@@ -16,7 +16,7 @@ public class AgvProfileTest
     {
         var agvData = new AgvData(Guid.NewGuid(), "Karis", "BF1", "127.0.0.1", 1.8, 120.0, 0.6, 0.8, 0.7, 1, 2.5, 1000, Array.Empty<AgvData.Sensor>());
         var mapper = MappingHelper.GetMapper(new AgvProfile());
-        var agvDataMessageContent = mapper.Map<Messages.Requests.Agv.AgvData>(agvData);
+        var agvDataMessageContent = mapper.Map<Messages.Requests.Agv.Queries.AgvData>(agvData);
 
         agvDataMessageContent.ShouldNotBeNull();
         agvDataMessageContent.Acceleration.ShouldBe(agvData.Acceleration);

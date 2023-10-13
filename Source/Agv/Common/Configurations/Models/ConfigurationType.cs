@@ -82,9 +82,6 @@ public class ConfigurationType
         {
             return propertyValue?.ToString()!;
         }
-        else
-        {
-            return JsonSerializer.Serialize(propertyValue);
-        }
+        return JsonSerializer.Serialize(propertyValue);
     }
 }

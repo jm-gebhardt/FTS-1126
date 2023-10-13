@@ -18,7 +18,13 @@ public interface IMapRegistry
     /// </summary>
     /// <param name="correlationId">GUID of the map searched in the registry</param>
     [UsedImplicitly]
-    public byte[]? GetMap(Guid correlationId);
+    public byte[]? GetMapImage(Guid correlationId);
+
+    /// <summary>
+    /// Get information on a map.
+    /// </summary>
+    /// <param name="correlationId">The correlation id of the map.</param>
+    Task<Map> GetMapAsync(Guid correlationId);
 
     /// <summary>
     /// Checks if map related to its correlationId exists in registry

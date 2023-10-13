@@ -6,7 +6,9 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Map;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.ActionGroup;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Commands;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agvs.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Map;
 using MassTransit;
 using LockAgv = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv.LockAgv;
@@ -126,10 +128,11 @@ public static class CoreBusRegistrationExtensions
 
     private static void RegisterMediatorErrorHandlers(IMediatorRegistrationConfigurator configurator)
     {
-        configurator.AddRequestClient<GetActiveAgvErrorsRequest>();
-
         configurator.AddConsumer<GetAgvErrorsRequestHandler>();
-        configurator.AddRequestClient<GetAgvErrorsRequest>();
+        configurator.AddRequestClient<GetAgvErrors>();
+        configurator.AddRequestClient<GetActiveAgvErrors>();
+        configurator.AddRequestClient<GetActiveErrorsForAgvs>();
+        configurator.AddRequestClient<GetErrorHistoryForAgvs>();
     }
 
     private static void RegisterMediatorActionGroupHandlers(IMediatorRegistrationConfigurator configurator)
@@ -157,17 +160,20 @@ public static class CoreBusRegistrationExtensions
     private static void RegisterMediatorAgvRequestHandlers(IMediatorRegistrationConfigurator configurator)
     {
         configurator.AddConsumer<GetAgvDataRequestHandler>();
-        configurator.AddRequestClient<GetAgvDataRequest>();
+        configurator.AddRequestClient<GetAgvData>();
+        configurator.AddRequestClient<GetAgvsData>();
 
         configurator.AddConsumer<GetAgvRouteRequestHandler>();
         configurator.AddRequestClient<GetAgvRoute>();
         configurator.AddRequestClient<GetAgvRoutes>();
 
-        configurator.AddConsumer<GetAgvGraphRequestHandler>();
+        configurator.AddConsumer<GetGraphRequestHandler>();
         configurator.AddRequestClient<GetAgvGraph>();
+        configurator.AddRequestClient<GetAgvGraphs>();
 
         configurator.AddConsumer<GetAgvPositionsRequestHandler>();
         configurator.AddRequestClient<GetAgvPositions>();
+        configurator.AddRequestClient<GetAgvPosition>();
 
         configurator.AddConsumer<GetAgvsRequestHandler>();
         configurator.AddRequestClient<GetAgvs>();
@@ -179,7 +185,11 @@ public static class CoreBusRegistrationExtensions
         configurator.AddConsumer<GetMapImageRequestHandler>();
         configurator.AddRequestClient<GetMapImage>();
 
-        configurator.AddConsumer<GetMapListRequestHandler>();
+        configurator.AddConsumer<GetMapRequestHandler>();
         configurator.AddRequestClient<GetMapList>();
+        configurator.AddRequestClient<GetMap>();
+
+        configurator.AddRequestClient<GetMapGraph>();
+
     }
 }

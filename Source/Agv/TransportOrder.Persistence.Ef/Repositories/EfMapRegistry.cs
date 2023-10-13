@@ -1,4 +1,5 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Map;
+﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Map;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;
@@ -41,9 +42,20 @@ public class EfMapRegistry : IMapRegistry
     }
 
     /// <inheritdoc/>
-    public byte[]? GetMap(Guid correlationId)
+    public byte[]? GetMapImage(Guid correlationId)
     {
         return Maps.FirstOrDefault(q => q.CorrelationId == correlationId)?.MapValue;
+    }
+
+    /// <inheritdoc/>
+    public async Task<Map> GetMapAsync(Guid correlationId)
+    {
+        var map = await Maps.FirstOrDefaultAsync(q => q.CorrelationId == correlationId);
+        if (map == null)
+        {
+            throw new MapNotFoundException();
+        }
+        return map;
     }
 
     /// <inheritdoc/>
