@@ -174,7 +174,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         IRequestClient<GetAgv> getAgvRequestClient = GetRequestClient<GetAgv>();
         IRequestClient<GetAgvGraph> getAgvGraphRequestClient = GetRequestClient<GetAgvGraph>();
         IRequestClient<GetAgvData> getAgvDataRequestClient = GetRequestClient<GetAgvData>();
-        IRequestClient<GetAgvRoute> getAgvRouteRequestClient = GetRequestClient<GetAgvRoute>();
+        IRequestClient<GetCurrentAgvRoute> getCurrentAgvRouteRequestClient = GetRequestClient<GetCurrentAgvRoute>();
         IRequestClient<GetAgvPosition> getAgvPositionRequestClient = GetRequestClient<GetAgvPosition>();
         IRequestClient<AcceptAgvCommand> acceptAgvRequestClient = GetRequestClient<AcceptAgvCommand>();
         IRequestClient<UnlockAgv> unlockAgvRequestClient = GetRequestClient<UnlockAgv>();
@@ -190,7 +190,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             getAgvRequestClient,
             getAgvGraphRequestClient,
             getAgvDataRequestClient,
-            getAgvRouteRequestClient,
+            getCurrentAgvRouteRequestClient,
             getAgvPositionRequestClient,
             acceptAgvRequestClient,
             unlockAgvRequestClient,

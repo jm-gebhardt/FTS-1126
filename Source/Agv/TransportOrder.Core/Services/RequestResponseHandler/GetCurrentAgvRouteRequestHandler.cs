@@ -10,27 +10,27 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHan
 /// Defines a handler for GetAgvRoute request
 /// </summary>
 [UsedImplicitly]
-public class GetAgvRouteRequestHandler : IConsumer<GetAgvRoute>, IConsumer<GetAgvRoutes>
+public class GetCurrentAgvRouteRequestHandler : IConsumer<GetCurrentAgvRoute>, IConsumer<GetCurrentAgvRoutes>
 {
     private readonly IAgvRouteRetrievalService _agvRouteRetrievalService;
 
-    /// <inheritdoc cref="GetAgvRouteRequestHandler"/>
-    public GetAgvRouteRequestHandler(IAgvRouteRetrievalService agvRouteRetrievalService)
+    /// <inheritdoc cref="GetCurrentAgvRouteRequestHandler"/>
+    public GetCurrentAgvRouteRequestHandler(IAgvRouteRetrievalService agvRouteRetrievalService)
     {
         _agvRouteRetrievalService = agvRouteRetrievalService;
     }
 
-    /// <inheritdoc cref="GetAgvRouteRequestHandler"/>
-    public async Task Consume(ConsumeContext<GetAgvRoute> context)
+    /// <inheritdoc cref="GetCurrentAgvRouteRequestHandler"/>
+    public async Task Consume(ConsumeContext<GetCurrentAgvRoute> context)
     {
         var agvRoute = await _agvRouteRetrievalService.GetAgvRouteAsync(context.Message.CorrelationId);
-        await context.RespondAsync(new GotAgvRoute(agvRoute));
+        await context.RespondAsync(new GotCurrentAgvRoute(agvRoute));
     }
 
-    /// <inheritdoc cref="GetAgvRouteRequestHandler"/>
-    public async Task Consume(ConsumeContext<GetAgvRoutes> context)
+    /// <inheritdoc cref="GetCurrentAgvRouteRequestHandler"/>
+    public async Task Consume(ConsumeContext<GetCurrentAgvRoutes> context)
     {
         IReadOnlyDictionary<Guid, AgvRouteReadModel?> agvRoute = await _agvRouteRetrievalService.GetAgvRouteAsync(context.Message.CorrelationIds);
-        await context.RespondAsync(new GotAgvRoutes(agvRoute));
+        await context.RespondAsync(new GotCurrentAgvRoutes(agvRoute));
     }
 }

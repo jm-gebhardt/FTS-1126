@@ -20,7 +20,9 @@ public class AgvProfile : Profile
         CreateMap<Messages.MessageContent.Agv, AgvDto>().ReverseMap();
         CreateMap<AgvData, AgvDataDto>().ReverseMap();
         CreateMap<Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent.Agv, AgvStateDto>();
-        CreateMap<AgvRouteReadModel, AgvRouteDto>();
+        CreateMap<AgvRouteReadModel, CurrentRouteDto>();
+        CreateMap<AgvRouteReadModel, CurrentAgvRouteDto>()
+            .ForMember(c => c.CurrentRoute, c => c.MapFrom(o => o));
         CreateMap<AgvState, AgvStateType>();
         CreateMap<AgvBatteryChargeChanged, AgvBatteryStatusDto>()
             .ForMember(c => c.BatteryCharge, o => o.MapFrom(s => s.NewBatteryCharge));

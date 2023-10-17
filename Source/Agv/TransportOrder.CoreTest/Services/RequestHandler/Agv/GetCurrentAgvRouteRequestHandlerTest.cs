@@ -9,19 +9,19 @@ using Shouldly;
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.RequestHandler.Agv;
 
 [TestClass]
-public class GetAgvRouteRequestHandlerTest
+public class GetCurrentAgvRouteRequestHandlerTest
 {
     [TestMethod]
     public async Task Consume_GetAgvRouteRequest_ReturnsAgvRoute()
     {
         var agvCorrelationId = Guid.NewGuid();
         string[] agvRouteNodes = NodeGenerator.GenerateRouteNodes();
-        var agvRoute = new AgvRouteReadModel(agvRouteNodes);
-        GetAgvRouteRequestHandlerTestFixture<GetAgvRoute, GetAgvRouteRequestHandler> fixture = new GetAgvRouteRequestHandlerTestFixture<GetAgvRoute, GetAgvRouteRequestHandler>()
+        var agvRoute = new AgvRouteReadModel(agvCorrelationId, agvRouteNodes);
+        GetCurrentAgvRouteRequestHandlerTestFixture<GetCurrentAgvRoute, GetCurrentAgvRouteRequestHandler> fixture = new GetCurrentAgvRouteRequestHandlerTestFixture<GetCurrentAgvRoute, GetCurrentAgvRouteRequestHandler>()
             .WithAgvRoute(agvCorrelationId, agvRoute)
             .Build();
 
-        Response<GotAgvRoute> response = await fixture.GetResponseAsync<GotAgvRoute>(new GetAgvRoute(agvCorrelationId));
+        Response<GotCurrentAgvRoute> response = await fixture.GetResponseAsync<GotCurrentAgvRoute>(new GetCurrentAgvRoute(agvCorrelationId));
 
         response.Message.AgvRoute.ShouldBe(agvRoute);
     }
@@ -30,17 +30,17 @@ public class GetAgvRouteRequestHandlerTest
     public async Task Consume_GetAgvRoutesRequest_ReturnsAgvRoutes()
     {
         var agvCorrelationId = Guid.NewGuid();
-        var agvRoute = new AgvRouteReadModel(NodeGenerator.GenerateRouteNodes());
-        Guid[] agvCorrelationIds = { agvCorrelationId };
+        var agvRoute = new AgvRouteReadModel(agvCorrelationId, NodeGenerator.GenerateRouteNodes());
+        Guid[] agvCorrelationIds = {agvCorrelationId};
         var agvRoutesByAgv = new Dictionary<Guid, AgvRouteReadModel?>
         {
-            { agvCorrelationId, agvRoute }
+            {agvCorrelationId, agvRoute}
         };
-        GetAgvRouteRequestHandlerTestFixture<GetAgvRoutes, GetAgvRouteRequestHandler> fixture = new GetAgvRouteRequestHandlerTestFixture<GetAgvRoutes, GetAgvRouteRequestHandler>()
+        GetCurrentAgvRouteRequestHandlerTestFixture<GetCurrentAgvRoutes, GetCurrentAgvRouteRequestHandler> fixture = new GetCurrentAgvRouteRequestHandlerTestFixture<GetCurrentAgvRoutes, GetCurrentAgvRouteRequestHandler>()
             .WithAgvRoutes(agvCorrelationIds, agvRoutesByAgv)
             .Build();
-       
-        Response<GotAgvRoutes> response = await fixture.GetResponseAsync<GotAgvRoutes>(new GetAgvRoutes(agvCorrelationIds));
+
+        Response<GotCurrentAgvRoutes> response = await fixture.GetResponseAsync<GotCurrentAgvRoutes>(new GetCurrentAgvRoutes(agvCorrelationIds));
 
         response.Message.AgvRoutesByCorrelationId.Count.ShouldBe(agvCorrelationIds.Length);
         response.Message.AgvRoutesByCorrelationId.First().Value.ShouldBe(agvRoute);

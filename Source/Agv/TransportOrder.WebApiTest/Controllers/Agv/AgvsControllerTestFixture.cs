@@ -161,7 +161,7 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
     protected override AgvsController GetController()
     {
         IRequestClient<GetAgvs> getAgvsRequestClient = GetRequestClient<GetAgvs>();
-        IRequestClient<GetAgvRoutes> getAgvRoutesRequestClient = GetRequestClient<GetAgvRoutes>();
+        IRequestClient<GetCurrentAgvRoutes> getCurrentAgvRoutesRequestClient = GetRequestClient<GetCurrentAgvRoutes>();
         IRequestClient<GetAgvPositions> getAgvPositionsRequestClient = GetRequestClient<GetAgvPositions>();
         IRequestClient<GetAgvGraphs> getAgvGraphsRequestClient = GetRequestClient<GetAgvGraphs>();
         IRequestClient<GetAgvsData> getAgvGetAgvDataRequestClient = GetRequestClient<GetAgvsData>();
@@ -170,7 +170,7 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
 
         var controller = new AgvsController(GetMapper(),
             getAgvsRequestClient,
-            getAgvRoutesRequestClient,
+            getCurrentAgvRoutesRequestClient,
             getAgvPositionsRequestClient, 
             getAgvGraphsRequestClient,
             getAgvGetAgvDataRequestClient,

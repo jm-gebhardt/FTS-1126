@@ -62,10 +62,10 @@ public interface IAgvClient
     /// <summary>
     /// AGV route changed
     /// </summary>
-    /// <param name="route"></param>
+    /// <param name="currentRoute"></param>
     /// <returns></returns>
     [SignalRMethod("AgvRouteChanged")]
-    Task AgvRouteChanged(AgvRouteDto route);
+    Task AgvRouteChanged(CurrentAgvRouteDto currentRoute);
 
     /// <summary>
     /// Assigned action group changed

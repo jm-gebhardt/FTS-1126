@@ -10,15 +10,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Repositories;
 public class AgvRouteServiceTestFixture : DbTestFixtureBase<TransportOrderDbContext>
 {
     private readonly Mock<IAgvRepository> _agvRegistryMock = new();
-    private readonly Mock<ILogger<AgvRouteRetrievalRetrievalService>> _loggerMock = new();
+    private readonly Mock<ILogger<AgvRouteRetrievalService>> _loggerMock = new();
     private readonly List<ActionGroup> _actionsGroups = new();
     private readonly List<TransportOrder.Domain.Models.Agv.Agv> _agvs = new();
 
-    public AgvRouteRetrievalRetrievalService AgvRouteRetrievalRetrievalService { get; }
+    public AgvRouteRetrievalService AgvRouteRetrievalService { get; }
 
     public AgvRouteServiceTestFixture()
     {
-        AgvRouteRetrievalRetrievalService = new AgvRouteRetrievalRetrievalService(ContextFactory, _agvRegistryMock.Object, _loggerMock.Object);
+        AgvRouteRetrievalService = new AgvRouteRetrievalService(ContextFactory, _agvRegistryMock.Object, _loggerMock.Object);
     }
 
     private void SetupAgvs()
@@ -32,6 +32,13 @@ public class AgvRouteServiceTestFixture : DbTestFixtureBase<TransportOrderDbCont
             .Returns<ICollection<Guid>>(agvCorrelationIds =>
             {
                 var result = new Dictionary<Guid, string?>();
+
+                if (!agvCorrelationIds.Any())
+                {
+                    // if no agvCorrelationIds are given we want to use all agvs
+                    agvCorrelationIds = _agvs.Select(a => a.CorrelationId).ToList();
+                }
+
                 foreach (var id in agvCorrelationIds)
                 {
                     var matchingAgv = _agvs.FirstOrDefault(agv => agv.CorrelationId == id);
@@ -39,14 +46,18 @@ public class AgvRouteServiceTestFixture : DbTestFixtureBase<TransportOrderDbCont
                     {
                         result[id] = matchingAgv.AgvStatus?.LastNodeId;
                     }
+                    else
+                    {
+                        result[id] = null;
+                    }
                 }
-                return Task.FromResult((IReadOnlyDictionary<Guid, string?>) result);
+                return Task.FromResult((IReadOnlyDictionary<Guid, string?>)result);
             });
     }
 
-    public AgvRouteServiceTestFixture WithAgv(TransportOrder.Domain.Models.Agv.Agv agv)
+    public AgvRouteServiceTestFixture WithAgv(params TransportOrder.Domain.Models.Agv.Agv[] agv)
     {
-        _agvs.Add(agv);
+        _agvs.AddRange(agv);
         return this;
     }
 

@@ -27,7 +27,7 @@ public class AgvController : Controller
     private readonly IRequestClient<GetAgv> _getAgvClient;
     private readonly IRequestClient<GetAgvGraph> _getAgvGraphClient;
     private readonly IRequestClient<GetAgvData> _getAgvDataClient;
-    private readonly IRequestClient<GetAgvRoute> _getAgvRouteClient;
+    private readonly IRequestClient<GetCurrentAgvRoute> _getCurrentAgvRouteClient;
     private readonly IRequestClient<GetAgvPosition> _getAgvPositionClient;
     private readonly IRequestClient<AcceptAgvCommand> _acceptAgvClient;
     private readonly IRequestClient<UnlockAgv> _unlockAgvClient;
@@ -46,7 +46,7 @@ public class AgvController : Controller
     public AgvController(IMapper mapper, IRequestClient<GetAgv> getAgvClient,
         IRequestClient<GetAgvGraph> getAgvGraphClient,
         IRequestClient<GetAgvData> getAgvDataClient,
-        IRequestClient<GetAgvRoute> getAgvRouteClient,
+        IRequestClient<GetCurrentAgvRoute> getCurrentAgvRouteClient,
         IRequestClient<GetAgvPosition> getAgvPositionClient,
         IRequestClient<AcceptAgvCommand> acceptAgvClient,
         IRequestClient<UnlockAgv> unlockAgvClient,
@@ -61,7 +61,7 @@ public class AgvController : Controller
         _getAgvClient = getAgvClient;
         _getAgvGraphClient = getAgvGraphClient;
         _getAgvDataClient = getAgvDataClient;
-        _getAgvRouteClient = getAgvRouteClient;
+        _getCurrentAgvRouteClient = getCurrentAgvRouteClient;
         _getAgvPositionClient = getAgvPositionClient;
         _acceptAgvClient = acceptAgvClient;
         _unlockAgvClient = unlockAgvClient;
@@ -129,10 +129,10 @@ public class AgvController : Controller
     /// <response code="404">Not found</response>
     [HttpGet]
     [Route("/agv/{correlationId:guid}/route")]
-    public async Task<ActionResult<AgvRouteDto?>> GetAgvRoute(Guid correlationId)
+    public async Task<ActionResult<CurrentRouteDto?>> GetAgvRoute(Guid correlationId)
     {
-        Response<GotAgvRoute> response = await _getAgvRouteClient.GetResponse<GotAgvRoute>(new GetAgvRoute(correlationId));
-        var dto = _mapper.Map<AgvRouteDto>(response.Message.AgvRoute);
+        Response<GotCurrentAgvRoute> response = await _getCurrentAgvRouteClient.GetResponse<GotCurrentAgvRoute>(new GetCurrentAgvRoute(correlationId));
+        var dto = _mapper.Map<CurrentRouteDto>(response.Message.AgvRoute);
         return Ok(dto);
     }
 

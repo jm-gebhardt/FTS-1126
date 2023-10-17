@@ -105,10 +105,22 @@ public class AgvRepository : IAgvRepository
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
 
-        Dictionary<Guid, string?> lastNodeIdsById = await Agvs
-            .Where(s => agvCorrelationIds.Contains(s.CorrelationId) && s.AgvStatus != null)
+        IQueryable<Domain.Models.Agv.Agv> queryable = Agvs;
+        if (agvCorrelationIds.Any())
+        {
+            queryable = queryable.Where(s => agvCorrelationIds.Contains(s.CorrelationId));
+        }
+
+        Dictionary<Guid, string?> lastNodeIdsById = await queryable
+            .Where(s => s.AgvStatus != null)
             .Select(s => new { s.CorrelationId, s.AgvStatus!.LastNodeId })
             .ToDictionaryAsync(x => x.CorrelationId, x => x.LastNodeId);
+
+        // for potential Agvs with no status, we want to have a null value
+        foreach (var agvCorrelationId in agvCorrelationIds)
+        {
+            lastNodeIdsById.TryAdd(agvCorrelationId, null);
+        }
 
         return lastNodeIdsById;
     }

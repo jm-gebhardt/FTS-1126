@@ -12,9 +12,9 @@ public class AgvPositionChangedConsumerTestFixture : ConsumerHubTestFixture<AgvP
         return this;
     }
 
-    public AgvPositionChangedConsumerTestFixture WithAgvRoute(Guid agvCorrelationId, string lastNodeId, AgvRouteReadModel? agvRoute)
+    public AgvPositionChangedConsumerTestFixture WithAgvRoute(Guid agvCorrelationId, string lastNodeId, AgvRouteReadModel? currentAgvRoute)
     {
-        AgvRouteServiceMock.Setup(x => x.GetAgvRouteAsync(agvCorrelationId, lastNodeId)).Returns(Task.FromResult(agvRoute));
+        AgvRouteServiceMock.Setup(x => x.GetAgvRouteAsync(agvCorrelationId, lastNodeId)).Returns(Task.FromResult(currentAgvRoute));
         return this;
     }
 }

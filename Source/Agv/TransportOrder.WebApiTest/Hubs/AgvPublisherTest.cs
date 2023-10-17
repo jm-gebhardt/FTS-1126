@@ -49,12 +49,17 @@ public class AgvPublisherTest
         PublisherFixture<AgvPublisher, AgvHub, IAgvClient> fixture = new PublisherFixture<AgvPublisher, AgvHub, IAgvClient>()
             .WithMapper(new AgvProfile(), new ActionProfile(), new AgvErrorProfile(), new AgvPositionProfile())
             .Build();
-        var agvRoute = new AgvRouteReadModel(Array.Empty<string>());
+        var agvCorrelationId = Guid.NewGuid();
+        var agvRoute = new AgvRouteReadModel(agvCorrelationId, Array.Empty<string>());
 
         await fixture.Publisher.SendAgvRouteAsync(agvRoute);
 
-        fixture.HubContextMock.Verify(c => c.Clients.All.AgvRouteChanged(It.IsAny<AgvRouteDto>()), Times.Once);
-        fixture.HubContextMock.Setup(c => c.Clients.All.AgvRouteChanged(It.IsAny<AgvRouteDto>()))
-            .Callback<AgvRouteDto>(a => a.RemainingRoute.ShouldBe(agvRoute.RemainingRoute));
+        fixture.HubContextMock.Verify(c => c.Clients.All.AgvRouteChanged(It.IsAny<CurrentAgvRouteDto>()), Times.Once);
+        fixture.HubContextMock.Setup(c => c.Clients.All.AgvRouteChanged(It.IsAny<CurrentAgvRouteDto>()))
+            .Callback<CurrentAgvRouteDto>(a =>
+            {
+                a.CorrelationId.ShouldBe(agvCorrelationId);
+                a.CurrentRoute.RemainingRoute.ShouldBe(agvRoute.RemainingRoute);
+            });
     }
 }

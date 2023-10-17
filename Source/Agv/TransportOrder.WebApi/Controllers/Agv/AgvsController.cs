@@ -16,7 +16,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers.Agv;
 public class AgvsController : Controller
 {
     private readonly IRequestClient<GetAgvs> _getAgvsClient;
-    private readonly IRequestClient<GetAgvRoutes> _getAgvRoutesClient;
+    private readonly IRequestClient<GetCurrentAgvRoutes> _getCurrentAgvRoutesClient;
     private readonly IRequestClient<GetAgvPositions> _getAgvPositionsClient;
     private readonly IRequestClient<GetAgvGraphs> _getAgvGraphsClient;
     private readonly IRequestClient<GetAgvsData> _getAgvDataClient;
@@ -30,7 +30,7 @@ public class AgvsController : Controller
     /// </summary>
     public AgvsController(IMapper mapper,
         IRequestClient<GetAgvs> getAgvsClient,
-        IRequestClient<GetAgvRoutes> getAgvRoutesClient,
+        IRequestClient<GetCurrentAgvRoutes> getCurrentAgvRoutesClient,
         IRequestClient<GetAgvPositions> getAgvPositionsClient,
         IRequestClient<GetAgvGraphs> getAgvGraphsClient,
         IRequestClient<GetAgvsData> getAgvDataClient,
@@ -38,7 +38,7 @@ public class AgvsController : Controller
         IRequestClient<GetErrorHistoryForAgvs> getErrorHistoryClient)
     {
         _getAgvsClient = getAgvsClient;
-        _getAgvRoutesClient = getAgvRoutesClient;
+        _getCurrentAgvRoutesClient = getCurrentAgvRoutesClient;
         _getAgvPositionsClient = getAgvPositionsClient;
         _mapper = mapper;
         _getAgvGraphsClient = getAgvGraphsClient;
@@ -127,10 +127,10 @@ public class AgvsController : Controller
     /// <returns></returns>
     [HttpPost]
     [Route("/agvs/route")]
-    public async Task<ActionResult<Dictionary<Guid, AgvRouteDto?>>> GetAgvRoute([FromQuery] ICollection<Guid> correlationIds)
+    public async Task<ActionResult<Dictionary<Guid, CurrentRouteDto?>>> GetAgvRoute([FromQuery] ICollection<Guid> correlationIds)
     {
-        Response<GotAgvRoutes> response = await _getAgvRoutesClient.GetResponse<GotAgvRoutes>(new GetAgvRoutes(correlationIds));
-        var dto = _mapper.Map<Dictionary<Guid, AgvRouteDto>>(response.Message.AgvRoutesByCorrelationId);
+        Response<GotCurrentAgvRoutes> response = await _getCurrentAgvRoutesClient.GetResponse<GotCurrentAgvRoutes>(new GetCurrentAgvRoutes(correlationIds));
+        var dto = _mapper.Map<Dictionary<Guid, CurrentRouteDto>>(response.Message.AgvRoutesByCorrelationId);
         return Ok(dto);
     }
 

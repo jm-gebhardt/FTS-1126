@@ -158,9 +158,9 @@ public static class CoreBusRegistrationExtensions
         configurator.AddRequestClient<GetAgvData>();
         configurator.AddRequestClient<GetAgvsData>();
 
-        configurator.AddConsumer<GetAgvRouteRequestHandler>();
-        configurator.AddRequestClient<GetAgvRoute>();
-        configurator.AddRequestClient<GetAgvRoutes>();
+        configurator.AddConsumer<GetCurrentAgvRouteRequestHandler>();
+        configurator.AddRequestClient<GetCurrentAgvRoute>();
+        configurator.AddRequestClient<GetCurrentAgvRoutes>();
 
         configurator.AddConsumer<GetGraphRequestHandler>();
         configurator.AddRequestClient<GetAgvGraph>();

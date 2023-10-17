@@ -9,7 +9,7 @@ using NodeGenerator = Gebhardt.StoreWare.Agv.Common.Testing.Helpers.NodeGenerato
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Domain.Services.Routing;
 
 [TestClass]
-public class AgvRouteServiceTest
+public class AgvRouteRetrievalServiceTest
 {
     [TestMethod]
     public async Task GetAgvRouteAsync_WhenLastNodeIdIsNull_ReturnsAgvRouteBasedOnAgvsLastNodeId()
@@ -25,7 +25,7 @@ public class AgvRouteServiceTest
             .WithActionGroup(actionGroup)
             .BuildAsync();
 
-        var actualRoute = await fixture.AgvRouteRetrievalRetrievalService.GetAgvRouteAsync(agv.CorrelationId);
+        var actualRoute = await fixture.AgvRouteRetrievalService.GetAgvRouteAsync(agv.CorrelationId);
 
         actualRoute.ShouldNotBeNull();
         actualRoute.RemainingRoute.ShouldBe(nodes.Skip(1).ToArray());
@@ -45,7 +45,7 @@ public class AgvRouteServiceTest
             .WithActionGroup(actionGroup)
             .BuildAsync();
 
-        var actualRoute = await fixture.AgvRouteRetrievalRetrievalService.GetAgvRouteAsync(agv.CorrelationId, node);
+        var actualRoute = await fixture.AgvRouteRetrievalService.GetAgvRouteAsync(agv.CorrelationId, node);
 
         actualRoute.ShouldNotBeNull();
         actualRoute.RemainingRoute.ShouldBe(nodes.Skip(2).ToArray());
@@ -57,7 +57,7 @@ public class AgvRouteServiceTest
         var invalidAgvCorrelationId = Guid.NewGuid();
         var fixture = new AgvRouteServiceTestFixture();
 
-        var actualRoute = await fixture.AgvRouteRetrievalRetrievalService.GetAgvRouteAsync(invalidAgvCorrelationId);
+        var actualRoute = await fixture.AgvRouteRetrievalService.GetAgvRouteAsync(invalidAgvCorrelationId);
 
         actualRoute.ShouldBeNull();
     }
@@ -84,7 +84,7 @@ public class AgvRouteServiceTest
             .WithActionGroup(actionGroup2)
             .BuildAsync();
 
-        IReadOnlyDictionary<Guid, AgvRouteReadModel?> actualRoutes = await fixture.AgvRouteRetrievalRetrievalService.GetAgvRouteAsync(new List<Guid> {agv1.CorrelationId, agv2.CorrelationId});
+        IReadOnlyDictionary<Guid, AgvRouteReadModel?> actualRoutes = await fixture.AgvRouteRetrievalService.GetAgvRouteAsync(new List<Guid> { agv1.CorrelationId, agv2.CorrelationId });
 
         actualRoutes.ShouldNotBeNull();
         actualRoutes.Count.ShouldBe(2);
@@ -92,6 +92,20 @@ public class AgvRouteServiceTest
         actualRoutes[agv1.CorrelationId]!.RemainingRoute.ShouldBe(nodes1.Skip(1).ToArray());
         actualRoutes[agv2.CorrelationId].ShouldNotBeNull();
         actualRoutes[agv2.CorrelationId]!.RemainingRoute.ShouldBe(nodes2.Skip(2).ToArray());
+    }
+
+    [TestMethod]
+    public async Task GetAgvRouteAsync_WhenNoAgvCorrelationIdIsSpecific_ReturnsAllAgvRoutes()
+    {
+        int agvCount = 5;
+        var fixture = await new AgvRouteServiceTestFixture()
+            .WithAgv(AgvGenerator.GenerateIdleAgvs(agvCount, lastNodeId: "lastnode").ToArray())
+            .BuildAsync();
+
+        IReadOnlyDictionary<Guid, AgvRouteReadModel?> actualRoutes = await fixture.AgvRouteRetrievalService.GetAgvRouteAsync(new List<Guid>());
+
+        actualRoutes.ShouldNotBeNull();
+        actualRoutes.Count.ShouldBe(agvCount);
     }
 
     [TestMethod]
@@ -109,7 +123,7 @@ public class AgvRouteServiceTest
 
         var nonExistingAgvCorrelationId = Guid.NewGuid();
 
-        IReadOnlyDictionary<Guid, AgvRouteReadModel?> actualRoutes = await fixture.AgvRouteRetrievalRetrievalService.GetAgvRouteAsync(new List<Guid> {agv.CorrelationId, nonExistingAgvCorrelationId});
+        IReadOnlyDictionary<Guid, AgvRouteReadModel?> actualRoutes = await fixture.AgvRouteRetrievalService.GetAgvRouteAsync(new List<Guid> { agv.CorrelationId, nonExistingAgvCorrelationId });
 
         actualRoutes.ShouldNotBeNull();
         actualRoutes.Count.ShouldBe(2);

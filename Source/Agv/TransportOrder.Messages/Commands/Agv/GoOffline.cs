@@ -1,4 +1,4 @@
-﻿using MassTransit;
+using MassTransit;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
 

@@ -48,7 +48,7 @@ public class AgvPublisher : IAgvPublisher
     /// <inheritdoc/>
     public Task SendAgvRouteAsync(AgvRouteReadModel agvRouteReadModel)
     {
-        var dto = _mapper.Map<AgvRouteDto>(agvRouteReadModel);
+        var dto = _mapper.Map<CurrentAgvRouteDto>(agvRouteReadModel);
         return _hubContext.Clients.All.AgvRouteChanged(dto);
     }
 
