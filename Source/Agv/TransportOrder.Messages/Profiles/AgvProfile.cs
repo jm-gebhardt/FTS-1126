@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
+using AgvStatus = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.AgvStatus;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles;
 

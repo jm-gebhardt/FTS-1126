@@ -9,4 +9,4 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
 /// <param name="AgvId">Identifier of the AGV</param>
 /// <param name="AgvPosition">AGV position</param>
 [PublicAPI]
-public record AgvPositionStatusDto(Guid CorrelationId, string AgvId, AgvPositionDto AgvPosition);
+public record AgvPositionStatusDto(Guid CorrelationId, string AgvId, AgvPositionDto AgvPosition) : DatedMessage;

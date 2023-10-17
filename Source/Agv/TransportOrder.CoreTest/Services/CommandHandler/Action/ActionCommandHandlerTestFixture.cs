@@ -12,6 +12,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Routing;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles;
 using Gebhardt.StoreWare.Agv.TransportOrder.Routing.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -72,14 +73,15 @@ public class ActionCommandHandlerTestFixture : MassTransitConsumerTestFixture<Ac
     public void AddAgv(TransportOrder.Domain.Models.Agv.Agv agv)
     {
         _agvRepository.AddAgvsToMockRepository(new List<TransportOrder.Domain.Models.Agv.Agv>{agv});
+        _agvRepository.AddAgvsToMockRepository(new List<TransportOrder.Domain.Models.Agv.Agv> {agv});
     }
 
     public void AddActionGroup(ActionGroup actionGroup, bool hasUnfinishedAction = true)
     {
         _actionGroupRegistry.Setup(x => x.GetRequiredActionGroupByIdAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup);
-        _actionGroupRegistry.Setup(x => x.UpdateActionAndGroupStateAsync(It.IsAny<AgvAction>(),It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<ActionState>())).ReturnsAsync(actionGroup);
-        _actionGroupRegistry.Setup(x => x.GetSubsequentActionAsync( It.IsAny<Guid>())).ReturnsAsync(actionGroup.Actions.First());
-        _actionGroupRegistry.Setup(x => x.GetActionGroupsAsync(It.IsAny<ActionGroupState>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(),It.IsAny<bool?>())).ReturnsAsync(new List<ActionGroup>{actionGroup});
+        _actionGroupRegistry.Setup(x => x.UpdateActionAndGroupStateAsync(It.IsAny<AgvAction>(), It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<ActionState>())).ReturnsAsync(actionGroup);
+        _actionGroupRegistry.Setup(x => x.GetSubsequentActionAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup.Actions.First());
+        _actionGroupRegistry.Setup(x => x.GetActionGroupsAsync(It.IsAny<ActionGroupState>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(), It.IsAny<bool?>())).ReturnsAsync(new List<ActionGroup> {actionGroup});
         _actionGroupRegistry.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup);
         _actionGroupRegistry.Setup(x => x.HasUnfinishedDropActionsAsync(It.IsAny<Guid>())).ReturnsAsync(hasUnfinishedAction);
         _actionGroupRegistry.Setup(x => x.GetRequiredActionByIdAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup.Actions.First());
@@ -103,7 +105,7 @@ public class ActionCommandHandlerTestFixture : MassTransitConsumerTestFixture<Ac
 
     public static IMapper GetMapper()
     {
-        var mapper = MappingHelper.GetMapper(new ActionGroupProfile());
+        var mapper = MappingHelper.GetMapper(new ActionGroupProfile(), new AgvProfile());
         return mapper;
     }
 }

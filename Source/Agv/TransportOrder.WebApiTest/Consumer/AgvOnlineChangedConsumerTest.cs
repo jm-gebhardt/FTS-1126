@@ -14,14 +14,14 @@ using Shouldly;
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Consumer;
 
 [TestClass]
-public class AgvPropertyChangedConsumerTest
+public class AgvOnlineChangedConsumerTest
 {
     private const string AgvId = "agv1";
 
     [TestMethod]
     [DataRow(true)]
     [DataRow(false)]
-    public async Task Receiving_AgvPropertyChanged_SendAgvStateToAllClients(bool alive)
+    public async Task Receiving_AgvOnlineChanged_SendAgvStateToAllClients(bool alive)
     {
         var agv = new Domain.Models.Agv.Agv(AgvId.ToGuid(), AgvId);
         agv.TransitionToDiscovered(true);
@@ -44,17 +44,17 @@ public class AgvPropertyChangedConsumerTest
                 ))
             .ReturnsAsync(responseMock.Object);
 
-        var fixture = new ConsumerHubTestFixture<AgvPropertyChangedConsumer, IAgvPublisher>(services => { services.AddSingleton(mockGetAgvsClient.Object); });
+        var fixture = new ConsumerHubTestFixture<AgvChangedConsumer, IAgvPublisher>(services => { services.AddSingleton(mockGetAgvsClient.Object); });
         await fixture.TestHarness!.Bus.Publish(
-            new AgvPropertyChanged(
-                agvMessageContent,
-                agv.CorrelationId
+            new AgvOnlineChanged(
+                agv.CorrelationId,
+                true
             ));
 
-        (await fixture.TestHarness.Published.Any<AgvPropertyChanged>()).ShouldBeTrue();
-        (await fixture.ConsumerHarness!.Consumed.Any<AgvPropertyChanged>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<AgvOnlineChanged>()).ShouldBeTrue();
+        (await fixture.ConsumerHarness!.Consumed.Any<AgvOnlineChanged>()).ShouldBeTrue();
 
-        fixture.PublisherMock.Verify(h => h.SendAgvStateAsync(
-            It.Is<Messages.MessageContent.Agv>(o => o.CorrelationId == agv.CorrelationId), false), Times.Once);
+        fixture.PublisherMock.Verify(h => h.SendAgvOnlineChangedAsync(
+            agv.CorrelationId, true), Times.Once);
     }
 }

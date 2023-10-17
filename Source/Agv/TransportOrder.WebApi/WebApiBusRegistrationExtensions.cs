@@ -16,9 +16,11 @@ public static class WebApiBusRegistrationExtensions
     public static void AddWebApiConsumer(this IBusRegistrationConfigurator busRegistrationConfigurator)
     {
         busRegistrationConfigurator.AddConsumer<ActionGroupCreatedConsumer>();
+        busRegistrationConfigurator.AddConsumer<ActionGroupStartedConsumer>();
         busRegistrationConfigurator.AddConsumer<ActionGroupChangedConsumer>();
+        busRegistrationConfigurator.AddConsumer<ActionGroupCompletedConsumer>();
         busRegistrationConfigurator.AddConsumer<AgvPositionChangedConsumer>();
-        busRegistrationConfigurator.AddConsumer<AgvPropertyChangedConsumer>();
-        busRegistrationConfigurator.AddConsumer<AgvStateChangedConsumer>();
+        busRegistrationConfigurator.AddConsumer<AgvChangedConsumer>();
+        busRegistrationConfigurator.AddConsumer<AgvBatteryChargeChangedConsumer>();
     }
 }

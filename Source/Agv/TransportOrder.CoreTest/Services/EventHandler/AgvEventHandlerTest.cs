@@ -13,6 +13,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 using MassTransit;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
+using AgvStatus = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.AgvStatus;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.EventHandler;
 
@@ -42,7 +43,7 @@ public class AgvEventHandlerTest
     {
         var fixture = new AgvEventHandlerTestFixture();
 
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId:"nodeId");
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "nodeId");
         agv.MarkAgvForMaintenance();
         fixture.AddAgv(agv);
 
@@ -74,7 +75,7 @@ public class AgvEventHandlerTest
         var fixture = new AgvEventHandlerTestFixture();
 
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "nodeId");
-        
+
         fixture.AddAgv(agv);
         fixture.AgvHasUnfinishedDropAction(agv.CorrelationId);
         var agvNeedsCharging = new AgvNeedsCharging(agv.CorrelationId);
@@ -89,7 +90,7 @@ public class AgvEventHandlerTest
     {
         var fixture = new AgvEventHandlerTestFixture();
 
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId:"nodeId");
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "nodeId");
 
         fixture.AddAgv(agv);
 
@@ -320,14 +321,14 @@ public class AgvEventHandlerTest
         (await fixture.ConsumerHarness!.Consumed.Any<AgvStatusReceived>()).ShouldBeTrue();
         (await fixture.TestHarness!.Published.Any<CreateAgv>()).ShouldBeTrue();
     }
-    
+
     [TestMethod]
     public async Task Consume_AgvStatusReceived_AgvInRepository_PublishesUpdateAgvStatus()
     {
         var fixture = new AgvEventHandlerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv();
         fixture.AddAgv(agv);
-        
+
         await fixture.TestHarness!.Bus.Publish(new AgvStatusReceived(agv.CorrelationId, agv.AgvId, _mapper.Map<AgvStatus>(agv.AgvStatus!)));
         (await fixture.ConsumerHarness!.Consumed.Any<AgvStatusReceived>()).ShouldBeTrue();
         (await fixture.TestHarness!.Published.Any<UpdateAgvStatus>()).ShouldBeTrue();
@@ -352,7 +353,7 @@ public class AgvEventHandlerTest
     {
         var fixture = new AgvEventHandlerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv();
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv:agv.CorrelationId);
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
         await fixture.TestHarness!.Bus.Publish(new AgvPreparedForStartingAction(actionGroup.Actions.First(), agv.CorrelationId));
 
         (await fixture.ConsumerHarness!.Consumed.Any<AgvPreparedForStartingAction>()).ShouldBeTrue();

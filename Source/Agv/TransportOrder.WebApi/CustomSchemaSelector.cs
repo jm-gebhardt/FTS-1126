@@ -1,5 +1,4 @@
-﻿
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi;
+﻿namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi;
 
 /// <summary>
 /// Class for generating type names
@@ -15,11 +14,12 @@ public static class CustomSchemaSelector
     {
         const string suffix = "DTO";
 
-        if (type.Name.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+        string name = type.Name;
+        if (name.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
         {
-            return type.Name.Substring(0, type.Name.Length - suffix.Length); // Remove DTO suffix
+            name = name.Substring(0, name.Length - suffix.Length); // Remove DTO suffix
         }
 
-        return type.Name;
+        return name;
     }
 }

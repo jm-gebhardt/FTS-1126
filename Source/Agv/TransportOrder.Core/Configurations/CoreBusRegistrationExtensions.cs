@@ -150,11 +150,6 @@ public static class CoreBusRegistrationExtensions
 
         configurator.AddConsumer<RequestAgvGraphCommandHandler>();
         configurator.AddRequestClient<RequestAgvGraph>();
-
-  
-
-       
-
     }
 
     private static void RegisterMediatorAgvRequestHandlers(IMediatorRegistrationConfigurator configurator)

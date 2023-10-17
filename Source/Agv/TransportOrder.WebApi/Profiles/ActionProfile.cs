@@ -1,5 +1,6 @@
 using AutoMapper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.AgvActions;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles;
@@ -14,6 +15,7 @@ public class ActionProfile : Profile
     /// </summary>
     public ActionProfile()
     {
+        AddGlobalIgnore(nameof(DatedMessage.MessageCreatedDate));
         CreateMap<ActionGroupReadModel, ActionGroupDto>();
         CreateMap<AgvActionReadModel, AgvActionDto>();
         CreateMap<AgvGroupCountByState, AgvGroupCountByStateDto>();

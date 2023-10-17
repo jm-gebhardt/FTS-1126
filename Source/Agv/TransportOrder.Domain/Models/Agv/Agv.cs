@@ -9,12 +9,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 /// <summary>
 /// Represents the Agv
 /// </summary>
-public class Agv: IAgvId
+public class Agv : IAgvId
 {
+    private AgvState _currentState;
+    private bool _isLocked;
+
     /// <summary>
     /// The correlation id of the agv.
     /// </summary>
-    public Guid CorrelationId { get; private set; }
+    public Guid CorrelationId { get; init; }
 
     /// <inheritdoc />
     public string AgvId { get; set; }
@@ -24,8 +27,6 @@ public class Agv: IAgvId
     /// </summary>
     public AgvStatus? AgvStatus { get; set; }
 
-
-    private AgvState _currentState;
     /// <summary>
     /// The current state of the agv.
     /// </summary>
@@ -40,9 +41,8 @@ public class Agv: IAgvId
             {
                 PreviousAgvState = _currentState;
                 TimeOfStateTransition = DateTime.UtcNow;
+                _currentState = value;
             }
-            _currentState = value;
-
         }
     }
 
@@ -72,8 +72,20 @@ public class Agv: IAgvId
     /// <summary>
     /// is AGV locked?
     /// </summary>
-    public bool IsLocked { get; private set; }
+    public bool IsLocked
+    {
+        get => _isLocked;
+        private set
+        {
+            bool hasChanged = value != _isLocked;
 
+            if (hasChanged)
+            {
+                TimeOfLockStateChanged = DateTime.UtcNow;
+                _isLocked = value;
+            }
+        }
+    }
 
     /// <summary>
     /// is the AGV  currently locked?
@@ -119,7 +131,6 @@ public class Agv: IAgvId
     /// If the graph of this agv exists.
     /// </summary>
     public bool GraphExists { get; set; }
-
 
     /// <summary>
     /// If the data of this agv exists.
@@ -175,11 +186,11 @@ public class Agv: IAgvId
     }
 
     /// <summary>
-    /// Test ctor
+    /// JSON ctor
     /// </summary>
     public Agv()
     {
-        AgvId = "Test";
+        AgvId = null!;
         CurrentAgvState = AgvState.Initial;
     }
 
@@ -222,9 +233,12 @@ public class Agv: IAgvId
     /// <summary>
     /// Charge the agv.
     /// </summary>
-    public void TransitionToCharging()
+    /// <returns>True if the state has changed</returns>
+    public bool TransitionToCharging()
     {
+        var previousState = CurrentAgvState;
         CurrentAgvState = CurrentAgvState.TransitionTo(AgvState.Charging);
+        return previousState != CurrentAgvState;
     }
 
     /// <summary>
@@ -249,9 +263,11 @@ public class Agv: IAgvId
         return AgvStatus.LastNodeId != newLastNodeId;
     }
 
-    private void SetIdle()
+    private bool SetIdle()
     {
+        var previousState = CurrentAgvState;
         CurrentAgvState = AgvState.Idle;
+        return previousState != CurrentAgvState;
     }
 
     /// <summary>
@@ -274,31 +290,35 @@ public class Agv: IAgvId
     /// <summary>
     /// Try to accept the agv, i.e. set it to idle if it is not idling yet, busy, or charging.
     /// </summary>
-    public bool TryAccept()
+    /// <returns>True if the state has changed</returns>
+    public (bool Accepted, bool StateChanged) TryAccept()
     {
-        if (new [] { AgvState.Idle, AgvState.Busy, AgvState.Charging}.Contains(CurrentAgvState))
+        if (new[] {AgvState.Idle, AgvState.Busy, AgvState.Charging}.Contains(CurrentAgvState))
         {
-            return false;
+            return (false, false);
         }
-        SetIdle();
-        TimeOfStateTransition = DateTime.UtcNow;
-        return true;
+        bool stateChanged = SetIdle();
+        return (true, stateChanged);
     }
 
     /// <summary>
     /// Transition to idle state.
     /// </summary>
-    public void TransitionToIdle()
+    /// <returns>True if the state has changed</returns>
+    public bool TransitionToIdle()
     {
+        var previousState = CurrentAgvState;
         CurrentAgvState = CurrentAgvState.TransitionTo(AgvState.Idle);
+        return previousState != CurrentAgvState;
     }
 
     /// <summary>
     /// Force the transition to idle state irrespective of previous state.
     /// </summary>
-    public void ForceIdle()
+    /// <returns>True if the state has changed</returns>
+    public bool ForceIdle()
     {
-       SetIdle();
+        return SetIdle();
     }
 
     /// <summary>
@@ -314,8 +334,7 @@ public class Agv: IAgvId
         }
         CurrentAgvState = CurrentAgvState.TransitionTo(AgvState.Busy);
         return isAvailable;
-
-    } 
+    }
 
     /// <summary>
     /// Checks if the agv is available.
@@ -336,17 +355,16 @@ public class Agv: IAgvId
     public void Lock()
     {
         IsLocked = true;
-        TimeOfLockStateChanged = DateTime.UtcNow;
     }
 
     /// <summary>
-    /// Unlock agv.
+    /// Set IsLocked to false and sets Agv to Idle state
     /// </summary>
+    /// <returns>True if the state has changed</returns>
     public void Unlock()
     {
         SetIdle();
         IsLocked = false;
-        TimeOfLockStateChanged = DateTime.UtcNow;
     }
 
     /// <summary>
@@ -354,11 +372,10 @@ public class Agv: IAgvId
     /// </summary>
     public bool ShouldRequestGraph()
     {
-
         double secondsSinceLastRequest = TimeSpan.MaxValue.TotalSeconds;
         if (AgvGraphRequestedLastTime != null)
         {
-            secondsSinceLastRequest = ((TimeSpan)(DateTime.UtcNow - AgvGraphRequestedLastTime)).TotalSeconds;
+            secondsSinceLastRequest = ((TimeSpan) (DateTime.UtcNow - AgvGraphRequestedLastTime)).TotalSeconds;
         }
 
         bool shouldBeRequested = !GraphExists && secondsSinceLastRequest > DailyRequestUpdateInterval;
@@ -375,11 +392,10 @@ public class Agv: IAgvId
     /// <returns></returns>
     public bool ShouldRequestData()
     {
-
         double secondsSinceLastRequest = TimeSpan.MaxValue.TotalSeconds;
         if (AgvDataRequestedLastTime != null)
         {
-            secondsSinceLastRequest = ((TimeSpan)(DateTime.UtcNow - AgvDataRequestedLastTime)).TotalSeconds;
+            secondsSinceLastRequest = ((TimeSpan) (DateTime.UtcNow - AgvDataRequestedLastTime)).TotalSeconds;
         }
         int timeout = DataExist ? DailyRequestUpdateInterval : AgvRequestTimeout;
 
@@ -431,4 +447,4 @@ public class Agv: IAgvId
             return agv => agv.AgvStatus != null && agv.AgvStatus!.LastNodeId != null && !agv.HasError;
         }
     }
-}   
+}

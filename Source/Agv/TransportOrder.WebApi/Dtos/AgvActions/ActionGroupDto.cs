@@ -7,7 +7,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.AgvActions;
 /// Provides a dto for action groups.
 /// </summary>
 [PublicAPI]
-public record ActionGroupDto
+public record ActionGroupDto : DatedMessage
 {
     private IList<AgvActionDto> _actions = new List<AgvActionDto>();
 

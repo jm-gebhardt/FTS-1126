@@ -9,6 +9,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 [PublicAPI]
 public record AgvBecameIdle(Guid CorrelationId) : CorrelatedBy<Guid>
 {
-    /// <inheritdoc/>
+    /// <summary>
+    /// The CorrelationId of the Agv
+    /// </summary>
     public Guid CorrelationId { get; } = CorrelationId;
 }

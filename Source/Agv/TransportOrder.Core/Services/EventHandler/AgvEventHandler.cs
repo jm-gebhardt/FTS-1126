@@ -123,8 +123,6 @@ public class AgvEventHandler :
         await context.Publish(new TryReactivateChargingAgv());
     }
 
-
-
     /// <summary>
     /// Handles the <see cref="AgvBatteryChargeChanged"/> event.
     /// </summary>

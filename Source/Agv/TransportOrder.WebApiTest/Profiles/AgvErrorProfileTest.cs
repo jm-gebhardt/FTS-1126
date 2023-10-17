@@ -1,5 +1,5 @@
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -16,13 +16,12 @@ public class AgvErrorProfileTest
         var agvCorrelationId = Guid.NewGuid();
         var agvError = AgvErrorGenerator.GenerateAgvError(agvCorrelationId);
 
-        var errorMessageContent = new AgvError(agvError.CorrelationId, agvError.AgvCorrelationId, agvError.ErrorDescription, agvError.ErrorLevel, agvError.ErrorType, agvError.ErrorReferences, agvError.ErrorReceived);
+        var errorMessageContent = new AgvError(agvError.AgvCorrelationId, agvError.ErrorDescription, agvError.ErrorLevel, agvError.ErrorType, agvError.ErrorReferences, agvError.ErrorReceived);
         var mapper = MappingHelper.GetMapper(new AgvErrorProfile());
         var agvErrorDto = mapper.Map<AgvErrorDto>(errorMessageContent);
 
         agvErrorDto.ShouldNotBeNull();
         agvErrorDto.ShouldSatisfyAllConditions(
-            o => o.CorrelationId.ShouldBe(agvError.CorrelationId),
             o => o.AgvCorrelationId.ShouldBe(agvError.AgvCorrelationId),
             o => o.ErrorLevel.ShouldBe(agvError.ErrorLevel),
             o => o.ErrorType.ShouldBe(agvError.ErrorType),

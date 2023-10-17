@@ -99,10 +99,7 @@ public class AgvCommandHandler :
                 if (await _actionGroupRegistry.AgvHasPendingActions(agv.CorrelationId))
                 {
                     _logger.LogDebug("There is a new action for the charging Agv with CorrelationId: {AgvCorrelationId}. So stop charging by setting it to idle, so that it takes the new Action", agv.CorrelationId);
-                    agv.TransitionToIdle();
-                    await _agvRepository.UpdateAgvAsync(agv);
-                    await context.Publish(new AgvBecameIdle(agv.CorrelationId), cancellationToken);
-                    await TryPublishStateChange(context, agv);
+                    await TransitionToIdleAsync(context, agv, cancellationToken);
                     // only do this for the Agv with the best battery level and quit
                     return;
                 }
@@ -120,18 +117,20 @@ public class AgvCommandHandler :
         (var correlationId, List<AgvError> errors) = context.Message;
         var agv = await _agvRepository.GetAgvAsync(correlationId);
 
-        bool agvWasOk = !agv.HasError;
+        bool agvHadError = agv.HasError;
+        bool agvHasError = errors.Any();
+        agv.HasError = agvHasError;
+        bool agvIsInErrorChanged = agvHadError != agvHasError;
 
-        agv.HasError = errors.Any();
         if (!await _agvRepository.UpdateAgvAsync(agv))
         {
             _logger.LogDebug("{Command}: Could not update agv {CorrelationId}", nameof(UpdateErrorStatus), agv.CorrelationId);
             return;
         }
-        if (agvWasOk && agv.HasError)
+        if (agvIsInErrorChanged)
         {
             var agvMessageContent = _mapper.Map<Messages.MessageContent.Agv>(agv);
-            await context.Publish(new AgvPropertyChanged(agvMessageContent, agv.CorrelationId));
+            await context.Publish(new AgvErrorChanged(agv.CorrelationId, agvMessageContent.Errors));
         }
     }
 
@@ -148,14 +147,17 @@ public class AgvCommandHandler :
         bool graphExists = await _agvGraphRegistry.ExistsAsync(correlationId);
         if (!graphExists)
         {
-            await PublishGraphRequest(context, agv);
+            await PublishGraphRequestAsync(context, agv);
         }
 
         agv.TransitionToDiscovered(graphExists);
         agv.AgvDataRequestedLastTime = DateTime.UtcNow;
         await _agvRepository.AddAgvAsync(agv);
-        await PublishDataRequest(context, agv);
-        await TryPublishStateChange(context, agv);
+        await PublishDataRequestAsync(context, agv);
+        await _agvRepository.UpdateAgvAsync(agv);
+
+        var agvMessageContent = _mapper.Map<Messages.MessageContent.Agv>(agv);
+        await context.Publish(new AgvDiscovered(agvMessageContent));
     }
 
     /// <summary>
@@ -166,7 +168,7 @@ public class AgvCommandHandler :
         var correlationId = context.Message.CorrelationId;
         var agv = await _agvRepository.GetAgvAsync(correlationId);
 
-        agv.TransitionToCharging();
+        bool stateChanged = agv.TransitionToCharging();
 
         if (!await _agvRepository.UpdateAgvAsync(agv))
         {
@@ -175,7 +177,10 @@ public class AgvCommandHandler :
         }
         _logger.LogInformation("{AgvId} / {CorrelationId} has started charging (BatteryLevel: {BatteryLevel}%) => Transitioned to {State}",
             agv.AgvId, agv.CorrelationId, agv.AgvStatus!.BatteryCharge, Enum.GetName(agv.CurrentAgvState));
-        await TryPublishStateChange(context, agv);
+        if (stateChanged)
+        {
+            await PublishStateChange(context, agv);
+        }
     }
 
     /// <summary>
@@ -186,17 +191,10 @@ public class AgvCommandHandler :
         var correlationId = context.Message.CorrelationId;
         var agv = await _agvRepository.GetAgvAsync(correlationId);
 
-        agv.TransitionToIdle();
-        if (!await _agvRepository.UpdateAgvAsync(agv))
-        {
-            _logger.LogDebug("{Command}: Could not update agv {CorrelationId}", nameof(StopCharging), agv.CorrelationId);
-            return;
-        }
+        await TransitionToIdleAsync(context, agv, context.CancellationToken);
 
         _logger.LogInformation("{AgvId} / {CorrelationId} reloaded its battery level to {BatteryLevel}% => Transitioned to {State}",
             agv.AgvId, agv.CorrelationId, agv.AgvStatus!.BatteryCharge, Enum.GetName(agv.CurrentAgvState));
-        await context.Publish(new AgvBecameIdle(correlationId));
-        await TryPublishStateChange(context, agv);
     }
 
     /// <summary>
@@ -207,12 +205,10 @@ public class AgvCommandHandler :
         (var correlationId, string _, var agvStatusMessageContent) = context.Message;
         var agvStatus = _mapper.Map<AgvStatus>(agvStatusMessageContent);
         var agv = await _agvRepository.GetAgvAsync(correlationId);
-        const bool newAlive = true;
 
         _logger.LogDebug("Updating AgvStatus for agv {CorrelationId}, {OldStatus} -> {NewStatus}", correlationId, agv.AgvStatus?.ToString(), agvStatus.ToString());
         var oldStatus = agv.AgvStatus;
-        bool stateChanged = !Equals(oldStatus, agvStatus);
-        bool aliveChanged = agv.IsOnline != newAlive;
+        bool wasOnline = agv.IsOnline;
 
         await ResetOfflineWatchDog(context, agv);
 
@@ -220,12 +216,12 @@ public class AgvCommandHandler :
 
         if (agv.ShouldRequestGraph())
         {
-            await PublishGraphRequest(context, agv);
+            await PublishGraphRequestAsync(context, agv);
         }
 
         if (agv.ShouldRequestData())
         {
-            await PublishDataRequest(context, agv);
+            await PublishDataRequestAsync(context, agv);
         }
 
         if (!await _agvRepository.UpdateAgvAsync(agv))
@@ -233,12 +229,10 @@ public class AgvCommandHandler :
             _logger.LogDebug("{Command}: Could not update agv {CorrelationId}", nameof(UpdateAgvStatus), agv.CorrelationId);
             return;
         }
+        bool isOnlineChanged = agv.IsOnline != wasOnline;
+        await PublishAgvStatusUpdateEvents(context, agv, batteryChargeChanged, oldStatus, lastNodeIdChanged, isOnlineChanged, wasOnline);
 
-        await PublishAgvStatusUpdateEvents(context, agv, batteryChargeChanged, oldStatus, lastNodeIdChanged, aliveChanged, stateChanged);
-
-        await TryAutoAccept(context, agv);
-
-        await TryPublishStateChange(context, agv);
+        await TryAutoAccept(context, agv, context.CancellationToken);
     }
 
     private async Task ResetOfflineWatchDog(ConsumeContext context, Domain.Models.Agv.Agv agv)
@@ -256,6 +250,32 @@ public class AgvCommandHandler :
         agv.SetOnline(delayedMessage.TokenId);
     }
 
+    private async Task PublishAgvStatusUpdateEvents(IPublishEndpoint context,
+        Domain.Models.Agv.Agv agv,
+        bool batteryChargeChanged,
+        AgvStatus? oldStatus,
+        bool lastNodeIdChanged,
+        bool isOnlineChanged,
+        bool wasOnline)
+    {
+        if (batteryChargeChanged)
+        {
+            await context.Publish(new AgvBatteryChargeChanged(agv.CorrelationId, oldStatus!.BatteryCharge, agv.AgvStatus!.BatteryCharge));
+        }
+        if (lastNodeIdChanged)
+        {
+            await context.Publish(new AgvLastNodeIdChanged(agv.CorrelationId, oldStatus!.LastNodeId, agv.AgvStatus!.LastNodeId));
+        }
+        if (isOnlineChanged && agv.CurrentAgvState == AgvState.Idle) // Transition to Ready must happen before triggering order assignment
+        {
+            await context.Publish(new AgvBecameIdle(agv.CorrelationId));
+        }
+        if (!wasOnline && agv.IsOnline)
+        {
+            await context.Publish(new AgvOnlineChanged(agv.CorrelationId, true));
+        }
+    }
+
     /// <summary>
     /// Handles the <see cref="HandleActionCompletion"/> command.
     /// </summary>
@@ -265,13 +285,7 @@ public class AgvCommandHandler :
         _logger.LogDebug("Setting Agv with CorrelationId: {AgvCorrelationId} to idle, because action has been completed and type is not charge", correlationId);
 
         var agv = await _agvRepository.GetAgvAsync(correlationId);
-        agv.TransitionToIdle();
-        if (!await _agvRepository.UpdateAgvAsync(agv))
-        {
-            _logger.LogDebug("{Command}: Could not update agv {CorrelationId}", nameof(HandleActionCompletion), agv.CorrelationId);
-        }
-
-        await context.Publish(new AgvBecameIdle(agv.CorrelationId));
+        await TransitionToIdleAsync(context, agv, context.CancellationToken);
     }
 
     /// <summary>
@@ -313,8 +327,7 @@ public class AgvCommandHandler :
                 _logger.LogDebug("{Command}: Could not update agv {CorrelationId}", nameof(GoOffline), agv.CorrelationId);
                 return;
             }
-            var agvMessageContent = _mapper.Map<Messages.MessageContent.Agv>(agv);
-            await context.Publish(new AgvPropertyChanged(agvMessageContent, agv.CorrelationId));
+            await context.Publish(new AgvOnlineChanged(agv.CorrelationId, false));
         }
     }
 
@@ -355,8 +368,7 @@ public class AgvCommandHandler :
         {
             _logger.LogDebug("{Command}: Could not update agv {CorrelationId}", nameof(LockAgv), agv.CorrelationId);
         }
-        var agvMessageContent = _mapper.Map<Messages.MessageContent.Agv>(agv);
-        await context.Publish(new AgvPropertyChanged(agvMessageContent, agv.CorrelationId));
+        await context.Publish(new AgvLockedChanged(agv.CorrelationId, true));
         await context.RespondAsync(new LockAgvResult(agv.CorrelationId));
     }
 
@@ -378,10 +390,11 @@ public class AgvCommandHandler :
         {
             _logger.LogDebug("{Command}: Could not update agv {CorrelationId}", nameof(UnlockAgv), agv.CorrelationId);
         }
-        var agvMessageContent = _mapper.Map<Messages.MessageContent.Agv>(agv);
-        await context.Publish(new AgvPropertyChanged(agvMessageContent, agv.CorrelationId));
-        await context.Publish(new AgvBecameIdle(agvCorrelationId));
-        await TryPublishStateChange(context, agv);
+
+        // publish also when state was already idle, to trigger further assignments
+        _logger.LogInformation("Agv {correlationId} was unlocked.", agvCorrelationId);
+        await context.Publish(new AgvBecameIdle(agv.CorrelationId), context.CancellationToken);
+        await context.Publish(new AgvLockedChanged(agv.CorrelationId, false));
         await context.RespondAsync(new UnlockAgvResult(agv.CorrelationId));
     }
 
@@ -398,7 +411,7 @@ public class AgvCommandHandler :
             return;
         }
 
-        bool accepted = agv.TryAccept();
+        (bool accepted, bool stateChanged) = agv.TryAccept();
         if (!accepted)
         {
             _logger.LogDebug("Could not transition {AgvId} / {CorrelationId} to idle in state {State}", agv.AgvId, agv.CorrelationId, Enum.GetName(agv.CurrentAgvState));
@@ -411,7 +424,10 @@ public class AgvCommandHandler :
         }
         _logger.LogDebug("AGV {AgvId} / {CorrelationId} was set to idle", agv.AgvId, agv.CorrelationId);
         await context.Publish(new AgvBecameIdle(agv.CorrelationId));
-        await TryPublishStateChange(context, agv);
+        if (stateChanged)
+        {
+            await PublishStateChange(context, agv);
+        }
         await context.RespondAsync(new AcceptAgvSucceeded(agv.CorrelationId));
     }
 
@@ -435,7 +451,7 @@ public class AgvCommandHandler :
         var moveActionGroup = new ActionGroup(
             groupCorrelationId,
             $"Manual {ActionType.Move}",
-            new List<AgvAction> { new(Guid.NewGuid(), ActionType.Move, targetNodeId, groupCorrelationId) },
+            new List<AgvAction> {new(Guid.NewGuid(), ActionType.Move, targetNodeId, groupCorrelationId)},
             assignedAgv: agv.CorrelationId,
             isManual: true,
             creator: creator
@@ -458,7 +474,7 @@ public class AgvCommandHandler :
             await context.RespondAsync(new AgvNotFoundResult(correlationId));
             return;
         }
-        agv.ForceIdle();
+        bool stateChanged = agv.ForceIdle();
         if (!await _agvRepository.UpdateAgvAsync(agv))
         {
             _logger.LogDebug("{Command}: Could not update agv {CorrelationId}", nameof(SetAgvForceIdle), agv.CorrelationId);
@@ -466,7 +482,10 @@ public class AgvCommandHandler :
         }
         _logger.LogWarning("AGV {AgvId} / {CorrelationId} was set to idle by force", agv.AgvId, agv.CorrelationId);
         await context.Publish(new AgvBecameIdle(correlationId));
-        await TryPublishStateChange(context, agv);
+        if (stateChanged)
+        {
+            await PublishStateChange(context, agv);
+        }
         await context.RespondAsync(new SetAgvForceIdleResult(correlationId));
     }
 
@@ -477,14 +496,7 @@ public class AgvCommandHandler :
     {
         var correlationId = context.Message.CorrelationId;
         var agv = await _agvRepository.GetAgvAsync(correlationId);
-        agv.TransitionToIdle();
-        if (!await _agvRepository.UpdateAgvAsync(agv))
-        {
-            _logger.LogDebug("{Command}: Could not update agv {CorrelationId}", nameof(HandleAgvActionStartFailure), agv.CorrelationId);
-            return;
-        }
-        await context.Publish(new AgvBecameIdle(agv.CorrelationId));
-        await TryPublishStateChange(context, agv);
+        await TransitionToIdleAsync(context, agv, context.CancellationToken);
     }
 
     /// <summary>
@@ -494,12 +506,20 @@ public class AgvCommandHandler :
     {
         var (action, agvCorrelationId) = context.Message;
         var agv = await _agvRepository.GetAgvAsync(agvCorrelationId);
-        agv.TryTransitionToBusy(true);
+        bool isAvailable = agv.TryTransitionToBusy(ignoreLocked: true);
+
+        if (!isAvailable)
+        {
+            _logger.LogWarning("Agv {CorrelationId} is not available for busy", agv.CorrelationId);
+            return;
+        }
         if (!await _agvRepository.UpdateAgvAsync(agv))
         {
             _logger.LogDebug("{Command}: Could not update agv {CorrelationId}", nameof(PrepareAgvForStartingAction), agv.CorrelationId);
             return;
         }
+
+        await PublishStateChange(context, agv);
 
         await context.Publish(new AgvPreparedForStartingAction(action, agvCorrelationId));
     }
@@ -518,63 +538,55 @@ public class AgvCommandHandler :
         return agv;
     }
 
-    private async Task TryAutoAccept(IPublishEndpoint context, Domain.Models.Agv.Agv agv)
+    private async Task TryAutoAccept(IPublishEndpoint context, Domain.Models.Agv.Agv agv, CancellationToken cancellationToken)
     {
         _logger.LogDebug("AutoAccept {CorrelationId}", agv.CorrelationId);
-        if (_productionOptions.AutoAccept && agv is { GraphExists: true, DataExist: true, CurrentAgvState: AgvState.Discovered })
+        if (_productionOptions.AutoAccept && agv is {GraphExists: true, DataExist: true, CurrentAgvState: AgvState.Discovered})
         {
             var graph = await _agvGraphRegistry.GetAgvGraphAsync(agv.CorrelationId);
             bool mapExists = _mapRegistry.Exists(graph.RelatedMapId);
             _logger.LogDebug("AutoAccept {CorrelationId}, Graph: {GraphExists}, Data: {DataExists}, Map: {MapExists}", agv.CorrelationId, agv.GraphExists, agv.DataExist, mapExists);
             if (mapExists)
             {
-                agv.TransitionToIdle();
-                await _agvRepository.UpdateAgvAsync(agv);
-                await context.Publish(new AgvBecameIdle(agv.CorrelationId));
+                await TransitionToIdleAsync(context, agv, cancellationToken);
             }
         }
     }
 
-    private async Task TryPublishStateChange(IPublishEndpoint context, Domain.Models.Agv.Agv agv)
+    private async Task TransitionToIdleAsync(IPublishEndpoint context, Domain.Models.Agv.Agv agv, CancellationToken cancellationToken)
     {
-        if (agv.StateChanged)
+        bool stateChanged = agv.TransitionToIdle();
+        if (!await _agvRepository.UpdateAgvAsync(agv))
         {
-            await context.Publish(new AgvStateChanged(agv.CorrelationId, _mapper.Map<Messages.MessageContent.Agv>(agv), agv.PreviousAgvState));
+            _logger.LogDebug("{Command}: Could not update agv {CorrelationId}", nameof(HandleActionCompletion), agv.CorrelationId);
+            return;
+        }
+        // publish also when state was already idle, to trigger further assignments
+        await context.Publish(new AgvBecameIdle(agv.CorrelationId), cancellationToken);
+
+        if (stateChanged)
+        {
+            await PublishStateChange(context, agv);
         }
     }
 
-    private async Task PublishGraphRequest(IPublishEndpoint context, Domain.Models.Agv.Agv agv)
+    private async Task PublishStateChange(IPublishEndpoint context, Domain.Models.Agv.Agv agv)
+    {
+        var agvMessageContent = _mapper.Map<Messages.MessageContent.Agv>(agv);
+        await context.Publish(new AgvStateChanged(agv.CorrelationId, agv.CurrentAgvState, agv.PreviousAgvState, agvMessageContent));
+    }
+
+    private async Task PublishGraphRequestAsync(IPublishEndpoint context, Domain.Models.Agv.Agv agv)
     {
         _logger.LogDebug("Requesting graph for agv {CorrelationId}", agv.CorrelationId);
         await context.Publish(new Common.Messages.AgvManagement.Commands.RequestAgvGraph(agv.CorrelationId, agv.AgvId));
         agv.AgvGraphRequestedLastTime = DateTime.UtcNow;
     }
 
-    private async Task PublishDataRequest(IPublishEndpoint context, Domain.Models.Agv.Agv agv)
+    private async Task PublishDataRequestAsync(IPublishEndpoint context, Domain.Models.Agv.Agv agv)
     {
         _logger.LogDebug("Requesting data for agv {CorrelationId}", agv.CorrelationId);
         await context.Publish(new Common.Messages.AgvManagement.Commands.RequestAgvData(agv.CorrelationId, agv.AgvId));
         agv.AgvDataRequestedLastTime = DateTime.UtcNow;
-    }
-
-    private async Task PublishAgvStatusUpdateEvents(IPublishEndpoint context, Domain.Models.Agv.Agv agv, bool batteryChargeChanged, AgvStatus? oldStatus, bool lastNodeIdChanged, bool aliveChanged, bool stateChanged)
-    {
-        if (batteryChargeChanged)
-        {
-            await context.Publish(new AgvBatteryChargeChanged(agv.CorrelationId, oldStatus!.BatteryCharge, agv.AgvStatus!.BatteryCharge));
-        }
-        if (lastNodeIdChanged)
-        {
-            await context.Publish(new AgvLastNodeIdChanged(agv.CorrelationId, oldStatus!.LastNodeId, agv.AgvStatus!.LastNodeId));
-        }
-        if (aliveChanged || stateChanged)
-        {
-            var agvMessageContent = _mapper.Map<Messages.MessageContent.Agv>(agv);
-            await context.Publish(new AgvPropertyChanged(agvMessageContent, agv.CorrelationId));
-        }
-        if (aliveChanged && agv.CurrentAgvState == AgvState.Idle) // Transition to Ready must happen before triggering order assignment
-        {
-            await context.Publish(new AgvBecameIdle(agv.CorrelationId));
-        }
     }
 }

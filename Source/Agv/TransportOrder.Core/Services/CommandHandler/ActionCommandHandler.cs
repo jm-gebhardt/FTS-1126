@@ -15,11 +15,13 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Routing;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.ActionGroup;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using ActionGroup = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using AgvAction = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.AgvAction;
+using MessageActionGroup = Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.ActionGroup;
 using MessageAgvAction = Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.AgvAction;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.CommandHandler;
@@ -288,7 +290,6 @@ public class ActionCommandHandler :
             return;
         }
 
-
         if (agv.IsCharging || await _actionGroupRegistry.IsAgvHeadingToNodeForActionOfType(agv.CorrelationId, AutomaticActionOrderId.AutomaticCharge))
         {
             _logger.LogDebug("No need for a another charge action because the Agv is already charging for agvId: {AgvId}", agv.AgvId);
@@ -307,7 +308,6 @@ public class ActionCommandHandler :
             assignedAgv: agv.CorrelationId,
             creator: ActionGroupCreator.TransportOrder
         );
-
 
         await _actionGroupRegistry.AddAsync(actionGroup);
         await context.Publish(new ActionGroupCreated(_mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup), actionGroup.CorrelationId), cancellationToken);
@@ -498,6 +498,9 @@ public class ActionCommandHandler :
             return;
         }
 
+        // here the state has changed in all cases
+        await PublishStateChange(context, assignedAgv);
+        
         action.Nodes = (await _routeService.GetRouteAsync(assignedAgv, action.TargetNodeId, cancellationToken)).Nodes;
 
         _logger.LogDebug("Starting action with CorrelationId: {ActionCorrelationId} for Agv {AgvCorrelationId}. Setting Agv to busy in next step.", action.CorrelationId, assignedAgv.CorrelationId);
@@ -513,5 +516,11 @@ public class ActionCommandHandler :
         {
            _logger.LogWarning("Node selection failed for action: {Action}", action);
         }
+    }
+
+    private async Task PublishStateChange(IPublishEndpoint context, Domain.Models.Agv.Agv agv)
+    {
+        var agvMessageContent = _mapper.Map<Messages.MessageContent.Agv>(agv);
+        await context.Publish(new AgvStateChanged(agv.CorrelationId, agv.CurrentAgvState, agv.PreviousAgvState, agvMessageContent));
     }
 }

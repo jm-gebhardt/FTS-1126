@@ -5,7 +5,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
 /// <summary>
 /// The current route of the Agv. It is null when the Agv has completed the last action.
 /// </summary>
-public record AgvRouteDto
+public record AgvRouteDto : DatedMessage
 {
     /// <summary>The remaining route in the form of nodes and edges.</summary>
     /// <example>N002-001,N003-001,N003-002,N004-002,D2</example>

@@ -40,7 +40,7 @@ public class AgvsControllerTest
             agvs[index].CorrelationId.ShouldBe(agvId.ToGuid());
             agvs[index].AgvId.ShouldBe(agvId);
 
-            agvs[index].CurrentState.ShouldBe(state);
+            agvs[index].CurrentState.ToString().ShouldBe(state.ToString());
             agvs[index].Errors.ShouldBeEmpty();
         }
     }

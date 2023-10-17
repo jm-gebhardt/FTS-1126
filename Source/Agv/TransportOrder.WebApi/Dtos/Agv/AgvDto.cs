@@ -1,5 +1,4 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.AgvActions;
+﻿using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.AgvActions;
 using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
@@ -8,7 +7,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
 /// AGV model
 /// </summary>
 [PublicAPI]
-public record AgvDto
+public record AgvDto : DatedMessage
 {
     /// <summary>Is agv disturbed. There is at least one error with level "FATAL"</summary>
     public bool IsDisturbed { get; init; }
@@ -23,7 +22,7 @@ public record AgvDto
     public string AgvId { get; init; }
 
     /// <summary>Current State</summary>
-    public AgvState CurrentState { get; init; }
+    public AgvStateType CurrentState { get; init; }
 
     /// <summary>Time of the last state transition</summary>
     public DateTime TimeOfStateTransition { get; init; }
@@ -78,7 +77,7 @@ public record AgvDto
     public AgvDto(
         Guid correlationId,
         string agvId,
-        AgvState currentState,
+        AgvStateType currentState,
         DateTime timeOfStateTransition,
         DateTime timeOfLockStateChanged,
         bool isOnline,

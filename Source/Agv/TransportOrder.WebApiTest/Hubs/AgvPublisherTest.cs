@@ -18,29 +18,16 @@ public class AgvPublisherTest
     private const string AgvId = "AGV001";
 
     [TestMethod]
-    public async Task SendAgvStateAsync_SendsAgvDto_To_Discovered()
+    public async Task SendAgvStateAsync_SendsAgvDto_To_AgvDiscovered()
     {
         PublisherFixture<AgvPublisher, AgvHub, IAgvClient> fixture = new PublisherFixture<AgvPublisher, AgvHub, IAgvClient>()
             .WithMapper(new AgvProfile(), new Messages.Profiles.AgvProfile(), new ActionProfile(), new AgvErrorProfile(), new AgvPositionProfile())
             .Build();
         var agv = fixture.Mapper.Map<Messages.MessageContent.Agv>(AgvGenerator.GenerateIdleAgv());
 
-        await fixture.Publisher.SendAgvStateAsync(agv, true);
+        await fixture.Publisher.SendAgvDiscoveredAsync(agv);
 
         fixture.HubContextMock.Verify(c => c.Clients.All.AgvDiscovered(It.Is<AgvDto>(a => a.CorrelationId == agv.CorrelationId)), Times.Once);
-    }
-
-    [TestMethod]
-    public async Task SendAgvStateAsync_SendsAgvDto_To_AgvChanged()
-    {
-        PublisherFixture<AgvPublisher, AgvHub, IAgvClient> fixture = new PublisherFixture<AgvPublisher, AgvHub, IAgvClient>()
-            .WithMapper(new AgvProfile(), new Messages.Profiles.AgvProfile(), new ActionProfile(), new AgvErrorProfile(), new AgvPositionProfile())
-            .Build();
-        var agv = fixture.Mapper.Map<Messages.MessageContent.Agv>(AgvGenerator.GenerateIdleAgv());
-
-        await fixture.Publisher.SendAgvStateAsync(agv, false);
-
-        fixture.HubContextMock.Verify(c => c.Clients.All.AgvChanged(It.Is<AgvDto>(a => a.CorrelationId == agv.CorrelationId)), Times.Once);
     }
 
     [TestMethod]
