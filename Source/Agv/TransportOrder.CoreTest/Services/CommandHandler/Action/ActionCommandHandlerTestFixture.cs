@@ -2,6 +2,7 @@
 using FluentValidation.Results;
 using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.CommandHandler;
@@ -33,6 +34,7 @@ public class ActionCommandHandlerTestFixture : MassTransitConsumerTestFixture<Ac
     private readonly Mock<IAgvRepository> _agvRepository = new();
     private readonly Mock<IActionGroupValidationService> _actionGroupValidationService = new();
     private readonly Mock<ISettingsProvider<AgvSettings>> _settingsProvider = new();
+    private readonly Mock<IActionGroupRetrievalService> _actionGroupRetrievalService = new();
 
     protected override void ConfigureServices(IServiceCollection collection)
     {
@@ -47,6 +49,7 @@ public class ActionCommandHandlerTestFixture : MassTransitConsumerTestFixture<Ac
         collection.AddTransient(_ => _agvRepository.Object);
         collection.AddTransient(_ => _actionGroupValidationService.Object);
         collection.AddTransient(_ => _settingsProvider.Object);
+        collection.AddTransient(_ => _actionGroupRetrievalService.Object);
     }
 
     public ActionCommandHandlerTestFixture(TimeSpan? inactivityTimeout = null)
@@ -86,6 +89,22 @@ public class ActionCommandHandlerTestFixture : MassTransitConsumerTestFixture<Ac
         _actionGroupRegistry.Setup(x => x.HasUnfinishedDropActionsAsync(It.IsAny<Guid>())).ReturnsAsync(hasUnfinishedAction);
         _actionGroupRegistry.Setup(x => x.GetRequiredActionByIdAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup.Actions.First());
     }
+
+    public void AddActionGroupRetrieval(bool headingTo)
+    {
+        _actionGroupRetrievalService.Setup(x => x.IsAgvHeadingToNodeOfType(It.IsAny<Guid>(), It.IsAny<AgvGraph.NodeType>())).ReturnsAsync(headingTo);
+    }
+
+    public void AddChargingPointManager(GraphNode chargeGraphNode)
+    {
+        _chargingPointManager.Setup(x => x.ReserveChargerAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>())).ReturnsAsync(chargeGraphNode);
+    }
+
+    public void AddParkingPointManager(GraphNode parkGraphNode)
+    {
+        _parkPointService.Setup(x => x.ReserveParkAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>())).ReturnsAsync(parkGraphNode);
+    }
+
 
     public void AddRoute(string[] nodes)
     {

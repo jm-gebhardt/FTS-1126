@@ -1,5 +1,4 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
 using ActionGroup = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using AgvAction = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.AgvAction;
 
@@ -144,11 +143,4 @@ public interface IActionGroupRegistry
     /// </summary>
     /// <param name="agvCorrelationId">The id of the agv.</param>
     Task<bool> AgvHasPendingActions(Guid agvCorrelationId);
-
-    /// <summary>
-    /// Checks if the agv is currently heading to a node for and action of a particular type.
-    /// </summary>
-    /// <param name="agvCorrelationId">The correlation id of the agv.</param>
-    /// <param name="nodeType">The type of the action.</param>
-    Task<bool> IsAgvHeadingToNodeForActionOfType(Guid agvCorrelationId, AutomaticActionOrderId nodeType);
 }

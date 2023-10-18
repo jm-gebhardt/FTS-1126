@@ -5,8 +5,8 @@ using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
@@ -55,6 +55,7 @@ public class ActionCommandHandler :
     private readonly ISettingsProvider<AgvSettings> _settingsProvider;
     private readonly IMapper _mapper;
     private readonly IActionGroupValidationService _actionGroupValidationService;
+    private readonly IActionGroupRetrievalService _actionGroupRetrievalService;
 
     /// <summary>
     /// Initializes a new <see cref="ActionCommandHandler"/> instance.
@@ -67,6 +68,7 @@ public class ActionCommandHandler :
         IActionGroupRegistry actionGroupRegistry,
         IActionGroupValidationService actionGroupValidationService,
         IChooseAgvActionGroupService chooseAgvActionGroupService,
+        IActionGroupRetrievalService actionGroupRetrievalService,
         IActionManagerSemaphoreProvider actionManagerSemaphoreProvider,
         ISettingsProvider<AgvSettings> settingsProvider,
         IMapper mapper,
@@ -82,6 +84,7 @@ public class ActionCommandHandler :
         _chargingPointManager = chargingPointManager;
         _maintenanceService = maintenanceService;
         _actionGroupValidationService = actionGroupValidationService;
+        _actionGroupRetrievalService = actionGroupRetrievalService;
         _settingsProvider = settingsProvider;
         _mapper = mapper;
     }
@@ -234,7 +237,7 @@ public class ActionCommandHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<CreateParkingActionGroup> context)
     {
-        var agvCorrelationId = context.Message.Agv.CorrelationId;
+        var agvCorrelationId = context.Message.CorrelationId;
         var cancellationToken = context.CancellationToken;
         var agv = await _agvRepository.GetAgvAsync(agvCorrelationId);
      
@@ -244,7 +247,7 @@ public class ActionCommandHandler :
             return;
         }
 
-        if (await _parkPointService.IsOnAParkNodeAsync(agv) || await _actionGroupRegistry.IsAgvHeadingToNodeForActionOfType(agv.CorrelationId, AutomaticActionOrderId.AutomaticPark))
+        if (await _parkPointService.IsOnAParkNodeAsync(agv) || await _actionGroupRetrievalService.IsAgvHeadingToNodeOfType(agvCorrelationId, AgvGraph.NodeType.Park))
         {
             _logger.LogDebug("No need for a park action because the Agv is already in park for agvId: {AgvCorrelationId}", agv.CorrelationId);
             return;
@@ -256,7 +259,7 @@ public class ActionCommandHandler :
         var groupCorrelationId = Guid.NewGuid();
         var actionGroup = new ActionGroup(
             groupCorrelationId,
-            nameof(AutomaticActionOrderId.AutomaticPark),
+            string.Empty,
             actions: new List<AgvAction> {new(Guid.NewGuid(), ActionType.Move, parkNode.Id, groupCorrelationId)},
             assignedAgv: agv.CorrelationId,
             creator: ActionGroupCreator.TransportOrder
@@ -290,7 +293,8 @@ public class ActionCommandHandler :
             return;
         }
 
-        if (agv.IsCharging || await _actionGroupRegistry.IsAgvHeadingToNodeForActionOfType(agv.CorrelationId, AutomaticActionOrderId.AutomaticCharge))
+
+        if (agv.IsCharging || await _actionGroupRetrievalService.IsAgvHeadingToNodeOfType(agvCorrelationId, AgvGraph.NodeType.Charge))
         {
             _logger.LogDebug("No need for a another charge action because the Agv is already charging for agvId: {AgvId}", agv.AgvId);
             // This might happen if the AssignAsync action is called several times due to a low SOC value, although the Agv is already charging
@@ -303,7 +307,7 @@ public class ActionCommandHandler :
         var groupCorrelationId = Guid.NewGuid();
         var actionGroup = new ActionGroup(
             groupCorrelationId,
-            nameof(AutomaticActionOrderId.AutomaticCharge),
+            string.Empty,
             actions: new List<AgvAction> {new(Guid.NewGuid(), ActionType.Charge, chargingNode.Id, groupCorrelationId)},
             assignedAgv: agv.CorrelationId,
             creator: ActionGroupCreator.TransportOrder
@@ -334,11 +338,6 @@ public class ActionCommandHandler :
             return;
         }
 
-        if (await _actionGroupRegistry.IsAgvHeadingToNodeForActionOfType(agv.CorrelationId, AutomaticActionOrderId.AutomaticMaintenance))
-        {
-            return;
-        }
-
         _logger.LogInformation("Starting maintenance action for Agv with CorrelationId: {AgvCorrelationId}", agv.CorrelationId);
 
         var maintenanceNode = await _maintenanceService.GetMaintenanceNode(agv);
@@ -346,7 +345,7 @@ public class ActionCommandHandler :
         var groupCorrelationId = Guid.NewGuid();
         var actionGroup = new ActionGroup(
             groupCorrelationId,
-            nameof(AutomaticActionOrderId.AutomaticMaintenance),
+            string.Empty,
             actions: new List<AgvAction> {new(Guid.NewGuid(), ActionType.Move, maintenanceNode.Id, groupCorrelationId)},
             assignedAgv: agv.CorrelationId,
             creator: ActionGroupCreator.TransportOrder

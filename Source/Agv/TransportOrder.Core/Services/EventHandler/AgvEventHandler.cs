@@ -111,7 +111,7 @@ public class AgvEventHandler :
             return;
         }
 
-        await context.Publish(new CreateParkingActionGroup(agv));
+        await context.Publish(new CreateParkingActionGroup(agv.CorrelationId));
     }
 
     /// <summary>

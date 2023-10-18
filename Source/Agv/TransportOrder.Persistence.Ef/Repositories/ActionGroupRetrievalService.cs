@@ -1,4 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Graph;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
@@ -195,5 +196,19 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
             .SingleOrDefaultAsync();
 
         return result;
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> IsAgvHeadingToNodeOfType(Guid agvCorrelationId, AgvGraph.NodeType nodeType)
+    {
+        await using var context = await CreateDbContextAsync();
+
+        IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>();
+        IQueryable<EfNode> graphNodes = context.Set<EfNode>();
+ 
+        return await actionGroups
+            .Where(g => g.AssignedAgv == agvCorrelationId && g.State == ActionGroupState.Started)
+            .AnyAsync(g => g.Actions.Join(graphNodes, a => a.TargetNodeId, 
+                n => n.Id, (a, n) => n.Type).Any(b => b == nodeType));
     }
 }

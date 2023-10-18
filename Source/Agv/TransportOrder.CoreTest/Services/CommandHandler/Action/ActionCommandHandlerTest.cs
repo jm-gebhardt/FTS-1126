@@ -2,6 +2,7 @@ using FluentValidation.Results;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.ActionGroup;
@@ -272,5 +273,136 @@ public class ActionCommandHandlerTest
         await fixture.TestHarness!.Bus.Publish(startAction);
         (await fixture.ConsumerHarness!.Consumed.Any<SelectNodesForAction>()).ShouldBeTrue();
         (await fixture.TestHarness!.Published.Any<NodesSelectedForAction>()).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task Consume_CreateChargingActionGroup_BatteryCritical_PublishedActionGroupCreatedAndActionGroupCreatedForAgv()
+    {
+        var fixture = new ActionCommandHandlerTestFixture();
+        var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: 5);
+        const string chargeNodeName = "Charge-1";
+
+        var chargeActionGroup = AgvActionGenerator.GenerateChargeActionGroup();
+
+        fixture.AddAgv(agv);
+        fixture.AddActionGroup(chargeActionGroup, hasUnfinishedAction: false);
+        fixture.AddActionGroupRetrieval(headingTo: false);
+        fixture.AddChargingPointManager(chargeGraphNode: new GraphNode(chargeNodeName));
+
+        var command = new CreateChargingActionGroup(agv.CorrelationId);
+        await fixture.TestHarness!.Bus.Publish(command);
+        (await fixture.ConsumerHarness!.Consumed.Any<CreateChargingActionGroup>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<ActionGroupCreated>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<ActionGroupCreatedForAgv>()).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task Consume_CreateChargingActionGroup_AgvLocked_DoesNotPublishActionGroupCreatedAndActionGroupCreatedForAgv()
+    {
+        var fixture = new ActionCommandHandlerTestFixture();
+        var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: 5);
+        agv.Lock();
+        
+        const string chargeNodeName = "Charge-1";
+        var chargeActionGroup = AgvActionGenerator.GenerateChargeActionGroup();
+
+        fixture.AddAgv(agv);
+        fixture.AddActionGroup(chargeActionGroup, hasUnfinishedAction: false);
+        fixture.AddActionGroupRetrieval(headingTo: false);
+        fixture.AddChargingPointManager(chargeGraphNode: new GraphNode(chargeNodeName));
+
+        var command = new CreateChargingActionGroup(agv.CorrelationId);
+        await fixture.TestHarness!.Bus.Publish(command);
+        (await fixture.ConsumerHarness!.Consumed.Any<CreateChargingActionGroup>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<ActionGroupCreated>()).ShouldBeFalse();
+        (await fixture.TestHarness.Published.Any<ActionGroupCreatedForAgv>()).ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public async Task Consume_CreateChargingActionGroup_AgvIsCharging_DoesNotPublishActionGroupCreatedAndActionGroupCreatedForAgv()
+    {
+        var fixture = new ActionCommandHandlerTestFixture();
+        var agv = AgvGenerator.GenerateChargingAgv(batteryCharge: 10);
+
+        const string chargeNodeName = "Charge-1";
+        var chargeActionGroup = AgvActionGenerator.GenerateChargeActionGroup();
+
+        fixture.AddAgv(agv);
+        fixture.AddActionGroup(chargeActionGroup, hasUnfinishedAction: false);
+        fixture.AddActionGroupRetrieval(headingTo: false);
+        fixture.AddChargingPointManager(chargeGraphNode: new GraphNode(chargeNodeName));
+
+        var command = new CreateChargingActionGroup(agv.CorrelationId);
+        await fixture.TestHarness!.Bus.Publish(command);
+        (await fixture.ConsumerHarness!.Consumed.Any<CreateChargingActionGroup>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<ActionGroupCreated>()).ShouldBeFalse();
+        (await fixture.TestHarness.Published.Any<ActionGroupCreatedForAgv>()).ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public async Task Consume_CreateParkingActionGroup_ValidAgv_PublishedActionGroupCreatedAndActionGroupCreatedForAgv()
+    {
+        var fixture = new ActionCommandHandlerTestFixture();
+        var agv = AgvGenerator.GenerateIdleAgv();
+        const string parkNodeName = "Park-1";
+
+        var parkActions = new List<TransportOrder.Domain.Models.ActionGroup.AgvAction> { AgvActionGenerator.GenerateParkAction(targetNodeId: parkNodeName) };
+        var parkActionGroup = AgvActionGenerator.GenerateActionGroup(parkActions);
+
+        fixture.AddAgv(agv);
+        fixture.AddActionGroup(parkActionGroup, hasUnfinishedAction: false);
+        fixture.AddActionGroupRetrieval(headingTo: false);
+        fixture.AddParkingPointManager(parkGraphNode: new GraphNode(parkNodeName));
+
+        var command = new CreateParkingActionGroup(agv.CorrelationId);
+        await fixture.TestHarness!.Bus.Publish(command);
+        (await fixture.ConsumerHarness!.Consumed.Any<CreateParkingActionGroup>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<ActionGroupCreated>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<ActionGroupCreatedForAgv>()).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task Consume_CreateParkingActionGroup_BatteryIsLow_DoesNotPublishActionGroupCreatedAndActionGroupCreatedForAgv()
+    {
+        var fixture = new ActionCommandHandlerTestFixture();
+        var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: 20);
+        const string parkNodeName = "Park-1";
+
+        var parkActions = new List<TransportOrder.Domain.Models.ActionGroup.AgvAction> { AgvActionGenerator.GenerateParkAction(targetNodeId: parkNodeName) };
+        var parkActionGroup = AgvActionGenerator.GenerateActionGroup(parkActions);
+
+        fixture.AddAgv(agv);
+        fixture.AddActionGroup(parkActionGroup, hasUnfinishedAction: false);
+        fixture.AddActionGroupRetrieval(headingTo: false);
+        fixture.AddParkingPointManager(parkGraphNode: new GraphNode(parkNodeName));
+
+        var command = new CreateParkingActionGroup(agv.CorrelationId);
+        await fixture.TestHarness!.Bus.Publish(command);
+        (await fixture.ConsumerHarness!.Consumed.Any<CreateParkingActionGroup>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<ActionGroupCreated>()).ShouldBeFalse();
+        (await fixture.TestHarness.Published.Any<ActionGroupCreatedForAgv>()).ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public async Task Consume_CreateParkingActionGroup_AgvLocked_DoesNotPublishActionGroupCreatedAndActionGroupCreatedForAgv()
+    {
+        var fixture = new ActionCommandHandlerTestFixture();
+        var agv = AgvGenerator.GenerateIdleAgv();
+        agv.Lock();
+        const string parkNodeName = "Park-1";
+
+        var parkActions = new List<TransportOrder.Domain.Models.ActionGroup.AgvAction> { AgvActionGenerator.GenerateParkAction(targetNodeId: parkNodeName) };
+        var parkActionGroup = AgvActionGenerator.GenerateActionGroup(parkActions);
+
+        fixture.AddAgv(agv);
+        fixture.AddActionGroup(parkActionGroup, hasUnfinishedAction: false);
+        fixture.AddActionGroupRetrieval(headingTo: false);
+        fixture.AddParkingPointManager(parkGraphNode: new GraphNode(parkNodeName));
+
+        var command = new CreateParkingActionGroup(agv.CorrelationId);
+        await fixture.TestHarness!.Bus.Publish(command);
+        (await fixture.ConsumerHarness!.Consumed.Any<CreateParkingActionGroup>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<ActionGroupCreated>()).ShouldBeFalse();
+        (await fixture.TestHarness.Published.Any<ActionGroupCreatedForAgv>()).ShouldBeFalse();
     }
 }

@@ -1,6 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;
 using JetBrains.Annotations;
@@ -312,20 +311,6 @@ public class EfActionGroupRegistry : IActionGroupRegistry
             (a.AssignedAgv == agvCorrelationId &&
              new[] {ActionGroupState.Started, ActionGroupState.Created}.Contains(a.State)) ||
             (a.AssignedAgv == null && a.State == ActionGroupState.Created)
-        );
-    }
-
-    /// <inheritdoc />
-    public async Task<bool> IsAgvHeadingToNodeForActionOfType(Guid agvCorrelationId, AutomaticActionOrderId actionType)
-    {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-
-        DbSet<ActionGroup> actionGroups = context.Set<ActionGroup>();
-
-        return await actionGroups.AnyAsync(a =>
-            a.AssignedAgv == agvCorrelationId &&
-            new[] {ActionGroupState.Started, ActionGroupState.Created}.Contains(a.State) &&
-            a.OrderId == nameof(actionType)
         );
     }
 }

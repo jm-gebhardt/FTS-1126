@@ -8,7 +8,6 @@ public static class AgvActionGenerator
     [UsedImplicitly]
     public static ActionGroup GenerateChargeActionGroup(string? targetNodeId = null)
     {
-        const string orderId = "charge";
         var groupId = Guid.NewGuid();
         var chargeAction = new AgvAction(Guid.NewGuid(), ActionType.Charge, targetNodeId ?? "Charge-1", groupId);
         if (targetNodeId != null)
@@ -16,7 +15,7 @@ public static class AgvActionGenerator
             chargeAction.Nodes = new[] {targetNodeId};
         }
 
-        var actionGroup = new ActionGroup(groupId, orderId, new List<AgvAction> {chargeAction}, ActionGroupCreator.TransportOrder)
+        var actionGroup = new ActionGroup(groupId, string.Empty, new List<AgvAction> {chargeAction}, ActionGroupCreator.TransportOrder)
         {
             State = ActionGroupState.Created
         };
@@ -42,7 +41,7 @@ public static class AgvActionGenerator
         string? destination = null,
         Guid? assignedAgv = null)
     {
-        const string orderId = "orderId";
+        const string orderId = "orderId-pick-drop";
         var groupId = Guid.NewGuid();
 
         var pickActionGuid = Guid.NewGuid();
@@ -70,7 +69,7 @@ public static class AgvActionGenerator
     [UsedImplicitly]
     public static ActionGroup GenerateMoveActionGroup(string? targetNodeId = null, bool isManual = false)
     {
-        const string orderId = "move";
+        string orderId = "orderId-move";
         var groupId = Guid.NewGuid();
         var moveAction = new AgvAction(Guid.NewGuid(), ActionType.Move, targetNodeId ?? "Move-1", groupId);
         if (targetNodeId != null)

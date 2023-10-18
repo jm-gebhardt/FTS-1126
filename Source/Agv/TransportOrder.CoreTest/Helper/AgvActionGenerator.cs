@@ -10,7 +10,6 @@ public static class AgvActionGenerator
 {
     public static ActionGroup GenerateChargeActionGroup(string? targetNodeId = null, Guid? assignedAgv = null)
     {
-        const string orderId = "charge";
         var groupId = Guid.NewGuid();
         var chargeAction = new AgvAction(Guid.NewGuid(), ActionType.Charge, targetNodeId ?? AgvGraphGenerator.ChargingClose.Id, groupId);
         if (targetNodeId != null)
@@ -18,7 +17,7 @@ public static class AgvActionGenerator
             chargeAction.Nodes = new[] {targetNodeId};
         }
 
-        var actionGroup = new ActionGroup(groupId, orderId, new List<AgvAction> { chargeAction }, ActionGroupCreator.TransportOrder) {AssignedAgv = assignedAgv};
+        var actionGroup = new ActionGroup(groupId, string.Empty, new List<AgvAction> { chargeAction }, ActionGroupCreator.TransportOrder) {AssignedAgv = assignedAgv};
         return actionGroup;
     }
 
@@ -94,7 +93,7 @@ public static class AgvActionGenerator
     }
 
     [UsedImplicitly]
-    public static ActionGroup GenerateActionGroup(IList<AgvAction> actions, ActionGroupState actionGroupState = ActionGroupState.Created, string orderId = "orderId", Guid? correlationId = null)
+    public static ActionGroup GenerateActionGroup(IList<AgvAction> actions, ActionGroupState actionGroupState = ActionGroupState.Created, string orderId = "", Guid? correlationId = null)
     {
         var groupId = correlationId ?? actions.Select(a => a.ParentId).FirstOrDefault(Guid.NewGuid());
 

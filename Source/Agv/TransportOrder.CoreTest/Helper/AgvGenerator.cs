@@ -29,9 +29,9 @@ public static class AgvGenerator
     }
 
     [UsedImplicitly]
-    public static TransportOrder.Domain.Models.Agv.Agv GenerateChargingAgv(int index = 0, string? lastNodeId = null, bool isLocked = false)
+    public static TransportOrder.Domain.Models.Agv.Agv GenerateChargingAgv(int index = 0, string? lastNodeId = null, bool isLocked = false, int batteryCharge = 100)
     {
-        return GenerateAgv(AgvState.Charging, index, lastNodeId, charging: true, isLocked: isLocked);
+        return GenerateAgv(AgvState.Charging, index, lastNodeId, charging: true, isLocked:isLocked, batteryCharge: batteryCharge, orderId: string.Empty);
     }
 
 
@@ -42,12 +42,13 @@ public static class AgvGenerator
         AgvStatus? agvStatus = null,
         bool charging = false,
         bool isLocked = false,
-        int batteryCharge = 100
+        int batteryCharge = 100,
+        string orderId = "orderId"
     )
     {
         string agvId = GetAgvId(index);
         var correlationId = agvId.ToGuid();
-        agvStatus ??= new AgvStatus(correlationId, "orderId", true, true, batteryCharge, charging, false, lastNodeId);
+        agvStatus ??= new AgvStatus(correlationId, orderId, true, true, batteryCharge, charging, false, lastNodeId);
         var agv = new TransportOrder.Domain.Models.Agv.Agv(correlationId, agvId, agvStatus, isLocked);
         return SetAgvState(agvState, isLocked, agv);
     }

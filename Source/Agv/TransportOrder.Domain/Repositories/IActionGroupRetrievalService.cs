@@ -1,4 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
 using ActionGroup = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 
@@ -34,4 +35,12 @@ public interface IActionGroupRetrievalService
     /// Get an action group with node types by correlation id.
     /// <param name="correlationId">The action group correlation id.</param>
     public Task<ActionGroupReadModel?> GetActionGroupWithNodesAsync(Guid correlationId);
+
+    /// <summary>
+    /// Gets a flag if AGV is heading to nodeType (e.g. Park or Charge).
+    /// </summary>
+    /// <param name="agvCorrelationId"></param>
+    /// <param name="nodeType"></param>
+    /// <returns></returns>
+    public Task<bool> IsAgvHeadingToNodeOfType(Guid agvCorrelationId, AgvGraph.NodeType nodeType);
 }
