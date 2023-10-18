@@ -46,7 +46,7 @@ public class ActionEventHandlerTest
 
         (await fixture.ConsumerHarness!.Consumed.Any<StartingActionForAgvFailed>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<HandleAgvActionStartFailure>(f =>
-            f.Context.Message == new HandleAgvActionStartFailure(startingActionForAgvFailed.AgvCorrelationId))).ShouldBeTrue();
+            f.Context.Message == new HandleAgvActionStartFailure(startingActionForAgvFailed.CorrelationId))).ShouldBeTrue();
     }
 
     [TestMethod]
@@ -58,7 +58,7 @@ public class ActionEventHandlerTest
 
         (await fixture.ConsumerHarness!.Consumed.Any<NonChargingActionCompleted>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<HandleActionCompletion>(f =>
-            f.Context.Message == new HandleActionCompletion(nonChargingActionCompleted.AgvCorrelationId))).ShouldBeTrue();
+            f.Context.Message == new HandleActionCompletion(nonChargingActionCompleted.CorrelationId))).ShouldBeTrue();
     }
 
     [TestMethod]

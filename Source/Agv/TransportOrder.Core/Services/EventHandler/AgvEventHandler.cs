@@ -8,7 +8,6 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Map;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 using JetBrains.Annotations;
 using MassTransit;
@@ -24,7 +23,7 @@ public class AgvEventHandler :
     IConsumer<AgvNeedsCharging>,
     IConsumer<AgvBecameIdle>,
     IConsumer<AgvCanStartIdleAction>,
-    IConsumer<ChargingAgvsCanHandleActionsAgainEvent>,
+    IConsumer<ChargingAgvCanHandleActionsAgain>,
     IConsumer<AgvBatteryChargeChanged>,
     IConsumer<AgvMapReceived>,
     IConsumer<AgvErrorStatusReceived>,
@@ -103,7 +102,8 @@ public class AgvEventHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<AgvCanStartIdleAction> context)
     {
-        var agv = context.Message.Agv;
+        var agvCorrelationId = context.Message.CorrelationId;
+        var agv = await _agvRepository.GetAgvAsync(agvCorrelationId);
         var agvSettings = _settingsProvider.GetSettings();
         if (agv.CheckIsEligibleForCharging(agvSettings))
         {
@@ -115,11 +115,11 @@ public class AgvEventHandler :
     }
 
     /// <summary>
-    /// Handles the <see cref="ChargingAgvsCanHandleActionsAgainEvent"/> event.
+    /// Handles the <see cref="ChargingAgvCanHandleActionsAgain"/> event.
     /// </summary>
-    public async Task Consume(ConsumeContext<ChargingAgvsCanHandleActionsAgainEvent> context)
+    public async Task Consume(ConsumeContext<ChargingAgvCanHandleActionsAgain> context)
     {
-        _logger.LogDebug("{MessageType} received", nameof(ChargingAgvsCanHandleActionsAgainEvent));
+        _logger.LogDebug("{MessageType} received", nameof(ChargingAgvCanHandleActionsAgain));
         await context.Publish(new TryReactivateChargingAgv());
     }
 
@@ -129,6 +129,7 @@ public class AgvEventHandler :
     public async Task Consume(ConsumeContext<AgvBatteryChargeChanged> context)
     {
         var agvSettings = _settingsProvider.GetSettings();
+        var agvCorrelationId = context.Message.CorrelationId;
 
         double oldSoc = context.Message.OldBatteryCharge;
         double newSoc = context.Message.NewBatteryCharge;
@@ -140,13 +141,13 @@ public class AgvEventHandler :
         // Check if AGV is charging and no longer low on battery
         if (!wasGood && isGood)
         {
-            await context.Publish(new ChargingAgvsCanHandleActionsAgainEvent());
+            await context.Publish(new ChargingAgvCanHandleActionsAgain(agvCorrelationId));
         }
 
         // Battery needs charging
         if (!isCharging && !isGood)
         {
-            await context.Publish(new AgvNeedsCharging(context.Message.CorrelationId));
+            await context.Publish(new AgvNeedsCharging(agvCorrelationId));
         }
     }
 
@@ -221,7 +222,7 @@ public class AgvEventHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<AgvPreparedForStartingAction> context)
     {
-        await context.Publish(new StartAction(context.Message.Action, context.Message.AssignedAgv));
+        await context.Publish(new StartAction(context.Message.Action, context.Message.CorrelationId));
     }
 
     /// <summary>

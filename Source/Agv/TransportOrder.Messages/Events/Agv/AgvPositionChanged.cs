@@ -5,11 +5,11 @@ using MassTransit;
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 
 /// <summary>
-/// An event reporting that the current position of an AGV has changed
+/// An event reporting that the current position of an agv has changed.
 /// </summary>
-/// <param name="NewAgvPosition">New AGV position</param>
-/// <param name="PreviousAgvPosition">Previous AGV position</param>
-/// <param name="AgvId">Identifier of the AGV</param>
-/// <param name="CorrelationId">The correlationId of the new agv position</param>
-[PublicAPI]
-public record AgvPositionChanged(AgvPosition NewAgvPosition, AgvPosition? PreviousAgvPosition, string AgvId, Guid CorrelationId) : CorrelatedBy<Guid>;
+/// <param name="CorrelationId">The correlationId of the new agv position.</param>
+/// <param name="NewAgvPosition">The new agv position.</param>
+/// <param name="PreviousAgvPosition">The previous agv position.</param>
+/// <param name="AgvId">The identifier of the agv.</param>
+[PublicAPI] 
+public record AgvPositionChanged(Guid CorrelationId, AgvPosition NewAgvPosition, AgvPosition? PreviousAgvPosition, string AgvId) : CorrelatedBy<Guid>;

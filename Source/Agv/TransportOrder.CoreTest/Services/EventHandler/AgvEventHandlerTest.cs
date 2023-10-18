@@ -8,7 +8,6 @@ using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Map;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 using MassTransit;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -223,11 +222,13 @@ public class AgvEventHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_ChargingAgvsCanHandleActionsAgainEvent_ValidData_PublishesTryReactivateChargingAgv()
+    public async Task Consume_ChargingAgvCanHandleActionsAgain_ValidData_PublishesTryReactivateChargingAgv()
     {
         var fixture = new AgvEventHandlerTestFixture();
-        await fixture.TestHarness!.Bus.Publish(new ChargingAgvsCanHandleActionsAgainEvent());
-        (await fixture.ConsumerHarness!.Consumed.Any<ChargingAgvsCanHandleActionsAgainEvent>()).ShouldBeTrue();
+        var agv = AgvGenerator.GenerateIdleAgv();
+
+        await fixture.TestHarness!.Bus.Publish(new ChargingAgvCanHandleActionsAgain(agv.CorrelationId));
+        (await fixture.ConsumerHarness!.Consumed.Any<ChargingAgvCanHandleActionsAgain>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<TryReactivateChargingAgv>()).ShouldBeTrue();
     }
 
@@ -238,7 +239,7 @@ public class AgvEventHandlerTest
         var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: AgvEventHandlerTestFixture.AgvSettings.BatteryLevelCritical, lastNodeId: "nodeId");
         fixture.AddAgv(agv);
 
-        await fixture.TestHarness!.Bus.Publish(new AgvCanStartIdleAction(agv));
+        await fixture.TestHarness!.Bus.Publish(new AgvCanStartIdleAction(agv.CorrelationId));
         (await fixture.ConsumerHarness!.Consumed.Any<AgvCanStartIdleAction>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<CreateChargingActionGroup>()).ShouldBeTrue();
     }
@@ -248,18 +249,22 @@ public class AgvEventHandlerTest
     {
         var fixture = new AgvEventHandlerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv();
+        fixture.AddAgv(agv);
 
-        await fixture.TestHarness!.Bus.Publish(new AgvCanStartIdleAction(agv));
+        await fixture.TestHarness!.Bus.Publish(new AgvCanStartIdleAction(agv.CorrelationId));
         (await fixture.ConsumerHarness!.Consumed.Any<AgvCanStartIdleAction>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<CreateParkingActionGroup>()).ShouldBeTrue();
     }
 
     [TestMethod]
-    public async Task Consume_ChargingAgvsCanHandleActionsAgainEvent_ValidData_TryReactivateChargingAgv()
+    public async Task Consume_ChargingAgvCanHandleActionsAgain_ValidData_TryReactivateChargingAgv()
     {
         var fixture = new AgvEventHandlerTestFixture();
-        await fixture.TestHarness!.Bus.Publish(new ChargingAgvsCanHandleActionsAgainEvent());
-        (await fixture.ConsumerHarness!.Consumed.Any<ChargingAgvsCanHandleActionsAgainEvent>()).ShouldBeTrue();
+        var agv = AgvGenerator.GenerateIdleAgv();
+        fixture.AddAgv(agv);
+
+        await fixture.TestHarness!.Bus.Publish(new ChargingAgvCanHandleActionsAgain(agv.CorrelationId));
+        (await fixture.ConsumerHarness!.Consumed.Any<ChargingAgvCanHandleActionsAgain>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<TryReactivateChargingAgv>()).ShouldBeTrue();
     }
 
@@ -292,7 +297,7 @@ public class AgvEventHandlerTest
         bool consumeCheck = await fixture.ConsumerHarness!.Consumed.Any<AgvBatteryChargeChanged>(s => s.Context.Message.CorrelationId == correlationId);
         consumeCheck.ShouldBeTrue();
 
-        bool publishCheck = await fixture.TestHarness.Published.Any<ChargingAgvsCanHandleActionsAgainEvent>();
+        bool publishCheck = await fixture.TestHarness.Published.Any<ChargingAgvCanHandleActionsAgain>();
         publishCheck.ShouldBeTrue();
     }
 
@@ -354,7 +359,7 @@ public class AgvEventHandlerTest
         var fixture = new AgvEventHandlerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv();
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
-        await fixture.TestHarness!.Bus.Publish(new AgvPreparedForStartingAction(actionGroup.Actions.First(), agv.CorrelationId));
+        await fixture.TestHarness!.Bus.Publish(new AgvPreparedForStartingAction(agv.CorrelationId, actionGroup.Actions.First()));
 
         (await fixture.ConsumerHarness!.Consumed.Any<AgvPreparedForStartingAction>()).ShouldBeTrue();
 

@@ -21,10 +21,10 @@ public class AgvPositionChangedConsumerTest
         var fixture = new AgvPositionChangedConsumerTestFixture();
         await fixture.TestHarness!.Bus.Publish(
             new AgvPositionChanged(
+                AgvId.ToGuid(),
                 new AgvPosition(false, 0, 0, 0, 0),
                 null,
-                AgvId,
-                AgvId.ToGuid()
+                AgvId
             ));
 
         (await fixture.TestHarness.Published.Any<AgvPositionChanged>()).ShouldBeTrue();

@@ -154,7 +154,7 @@ public class ActionCommandHandler :
        if (!actionGroups.Any())
         {
             _logger.LogDebug("There is no next action group available for Agv with CorrelationId {AgvCorrelationId}", agv.CorrelationId);
-            await context.Publish(new AgvCanStartIdleAction(agv), cancellationToken);
+            await context.Publish(new AgvCanStartIdleAction(agv.CorrelationId), cancellationToken);
             return;
         }
 
@@ -163,7 +163,7 @@ public class ActionCommandHandler :
         if (action == null)
         {
             _logger.LogDebug("There is no next action available for Agv with CorrelationId {AgvCorrelationId}", agv.CorrelationId);
-            await context.Publish(new AgvCanStartIdleAction(agv), cancellationToken);
+            await context.Publish(new AgvCanStartIdleAction(agv.CorrelationId), cancellationToken);
             return;
         }
 

@@ -30,7 +30,7 @@ public abstract class BaseAgvPositionRegistry : IAgvPositionRegistry
 
         if (!Equals(previousAgvPosition, agvPositionStatus))
         {
-            var agvPositionChanged = new AgvPositionChanged(agvPositionStatus.AgvPosition, previousAgvPosition?.AgvPosition, agvPositionStatus.AgvId, correlationId);
+            var agvPositionChanged = new AgvPositionChanged(correlationId, agvPositionStatus.AgvPosition, previousAgvPosition?.AgvPosition, agvPositionStatus.AgvId);
             await _bus.Publish(agvPositionChanged);
         }
     }

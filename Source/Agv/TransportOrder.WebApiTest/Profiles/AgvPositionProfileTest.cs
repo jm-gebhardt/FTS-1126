@@ -22,10 +22,10 @@ public class AgvPositionProfileTest
     {
         string agvId = "agv1";
         var agvPositionChanged = new AgvPositionChanged(
+            agvId.ToGuid(),
             new AgvPosition(false, 0, 0, 0, 0),
             null,
-            agvId,
-            agvId.ToGuid()
+            agvId
         );
 
         var mapper = MappingHelper.GetMapper(new AgvPositionProfile());

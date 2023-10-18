@@ -7,16 +7,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 /// <summary>
 /// Agv reservation request was rejected
 /// </summary>
+/// <param name="CorrelationId">The agv correlation id.</param>
 [PublicAPI]
-public record SetAgvIdleRejected : CorrelatedBy<Guid>
-{
-    /// <inheritdoc/>
-    public Guid CorrelationId { get; }
-
-    /// <inheritdoc cref="SetAgvIdleRejected"/>>
-    /// <param name="correlationId"></param>
-    public SetAgvIdleRejected(Guid correlationId)
-    {
-        CorrelationId = correlationId;
-    }
-}
+public record SetAgvIdleRejected(Guid CorrelationId) : CorrelatedBy<Guid>;

@@ -55,7 +55,7 @@ public class ActionEventHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<StartingActionForAgvFailed> context)
     {
-        await context.Publish(new HandleAgvActionStartFailure(context.Message.AgvCorrelationId));
+        await context.Publish(new HandleAgvActionStartFailure(context.Message.CorrelationId));
     }
 
     /// <summary>
@@ -63,7 +63,7 @@ public class ActionEventHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<NonChargingActionCompleted> context)
     {
-        await context.Publish(new HandleActionCompletion(context.Message.AgvCorrelationId));
+        await context.Publish(new HandleActionCompletion(context.Message.CorrelationId));
     }
 
     /// <summary>

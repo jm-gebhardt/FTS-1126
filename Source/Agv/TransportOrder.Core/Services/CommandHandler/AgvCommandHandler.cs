@@ -521,7 +521,7 @@ public class AgvCommandHandler :
 
         await PublishStateChange(context, agv);
 
-        await context.Publish(new AgvPreparedForStartingAction(action, agvCorrelationId));
+        await context.Publish(new AgvPreparedForStartingAction(agvCorrelationId, action));
     }
 
     private async Task<Domain.Models.Agv.Agv?> TryGetAgv(Guid agvCorrelationId)

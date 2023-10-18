@@ -5,18 +5,8 @@ using MassTransit;
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 
 /// <summary>
-/// Agv reservation request was rejected
+/// Agv reservation request was rejected.
 /// </summary>
+/// <param name="CorrelationId">The agv correlation id.</param>
 [PublicAPI]
-public record SetAgvBusyRejected : CorrelatedBy<Guid>
-{
-    /// <inheritdoc/>
-    public Guid CorrelationId { get; }
-
-    /// <inheritdoc cref="SetAgvBusyRejected"/>>
-    /// <param name="correlationId"></param>
-    public SetAgvBusyRejected(Guid correlationId)
-    {
-        CorrelationId = correlationId;
-    }
-}
+public record SetAgvBusyRejected(Guid CorrelationId) : CorrelatedBy<Guid>;

@@ -1,4 +1,5 @@
-﻿using MassTransit;
+﻿using JetBrains.Annotations;
+using MassTransit;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 
@@ -7,5 +8,5 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 /// </summary>
 /// <param name="CorrelationId">The agv correlation id.</param>
 /// <param name="Timestamp">The timestamp.</param>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public record AgvWentOffline(Guid CorrelationId, DateTime Timestamp) : CorrelatedBy<Guid>;
