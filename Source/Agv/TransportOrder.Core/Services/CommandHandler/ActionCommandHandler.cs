@@ -108,7 +108,7 @@ public class ActionCommandHandler :
             bool isFirstActionOrderByHost = action is { Sequence: 0, ActionType: ActionType.Pick };
             if (isFirstActionOrderByHost)
             {
-                await context.Publish(new ActionGroupStarted(actionGroupMessageContent, actionGroup.CorrelationId), cancellationToken);
+                await context.Publish(new ActionGroupStarted(actionGroupMessageContent, actionGroup.CorrelationId, DateTime.UtcNow), cancellationToken);
             }
         }
         catch
@@ -440,7 +440,7 @@ public class ActionCommandHandler :
         await context.Publish(new ActionGroupChanged(actionGroupMessageContent, actionGroup.CorrelationId), cancellationToken);
         if (actionGroup.State == ActionGroupState.Completed)
         {
-            await context.Publish(new ActionGroupCompleted(actionGroupMessageContent, actionGroup.CorrelationId), cancellationToken);
+            await context.Publish(new ActionGroupCompleted(actionGroupMessageContent, actionGroup.CorrelationId, DateTime.UtcNow), cancellationToken);
         }
 
         // charge will switch to charging state and can not be released immediately
@@ -486,7 +486,7 @@ public class ActionCommandHandler :
         var agv = await _agvRepository.GetAgvAsync(actionGroup.AssignedAgv!.Value);
 
         actionGroup = await _actionGroupRegistry.UpdateActionAndGroupStateAsync(actionGroup.FirstUnstartedAction!, agv, ActionState.Canceled);
-        await context.Publish(new ActionGroupCancelled(actionGroupMessageContent, actionGroup.CorrelationId));
+        await context.Publish(new ActionGroupCancelled(actionGroupMessageContent, actionGroup.CorrelationId, DateTime.UtcNow));
     }
 
     private async Task SelectNodesForAgvAction(IPublishEndpoint context, AgvAction action, Domain.Models.Agv.Agv assignedAgv, CancellationToken cancellationToken)

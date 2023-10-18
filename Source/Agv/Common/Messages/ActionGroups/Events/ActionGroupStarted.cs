@@ -7,4 +7,5 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 /// </summary>
 /// <param name="ActionGroup">The action group.</param>
 /// <param name="CorrelationId">The correlationId of the action group.</param>
-public record ActionGroupStarted(ActionGroup ActionGroup, Guid CorrelationId) : CorrelatedBy<Guid>, IActionGroupEvent;
+/// <param name="MessageCreatedDate">The time the action group was started.</param>
+public record ActionGroupStarted(ActionGroup ActionGroup, Guid CorrelationId, DateTime MessageCreatedDate) : CorrelatedBy<Guid>, IActionGroupEvent, IMessageCreatedDate;

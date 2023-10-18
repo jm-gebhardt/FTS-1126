@@ -1,14 +1,20 @@
 ﻿using CommandLine;
 using Gebhardt.StoreWare.Agv.Common;
 using Gebhardt.StoreWare.Agv.Common.Configurations.Extensions;
+using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Logging;
-using Gebhardt.StoreWare.Agv.Common.Persistence;
 using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.WCSCommunication.CmdOptions;
-using Gebhardt.StoreWare.Agv.WCSCommunication.Db;
-using Gebhardt.StoreWare.Agv.WCSCommunication.Persistence;
-using Gebhardt.StoreWare.Agv.WCSCommunication.Services;
-using Gebhardt.StoreWare.Agv.WCSCommunication.States;
+using Gebhardt.StoreWare.Agv.WCSCommunication.Configuration;
+using Gebhardt.StoreWare.Agv.WCSCommunication.Domain.Repositories;
+using Gebhardt.StoreWare.Agv.WCSCommunication.Domain.Services;
+using Gebhardt.StoreWare.Agv.WCSCommunication.Messages.Commands;
+using Gebhardt.StoreWare.Agv.WCSCommunication.Persistence.DataAccess;
+using Gebhardt.StoreWare.Agv.WCSCommunication.Persistence.Repositories;
+using Gebhardt.StoreWare.Agv.WCSCommunication.Services.CommandHandler;
+using Gebhardt.StoreWare.Agv.WCSCommunication.Services.EventHandler;
+using Gebhardt.StoreWare.Agv.WCSCommunication.WcsApi.DbInterface;
+using Gebhardt.StoreWare.Agv.WCSCommunication.WcsApi.SimulationMode;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -34,6 +40,7 @@ try
 
                     services.AddSingleton(_ => simulationOptions);
                     services.AddSingleton<SimulationHostOrderService>();
+                    services.AddTransient<IHostCommunicator, SimulationHostCommunicator>();
                 });
         })
         // Production Mode
@@ -47,26 +54,35 @@ try
                         string? connectionString = context.Configuration.GetConnectionString(WcsHostDbContext.ConfigSectionName);
                         builder.UseSqlServer(connectionString);
                     });
-
                     services.AddHostedService<PollingBackgroundService<WcsOrderHandler>>();
-
                     services.AddSingleton<WcsOrderHandler>();
+                    services.AddTransient<IHostCommunicator, WcsDbCommunicator>();
                 });
         });
 
     hostBuilder?.ConfigureServices((context, services) =>
     {
-        services.AddDbContextFactory<WcsSagaDbContext>(builder =>
+        services.AddDbContext<WcsCommunicationDbContext>(builder =>
         {
-            string? connectionString = context.Configuration.GetConnectionString(WcsSagaDbContext.ConfigSectionName);
-            builder.UseSqlServer(connectionString, m => { m.MigrationsHistoryTable(WcsSagaDbContext.MigrationTableName); });
+            string? connectionString = context.Configuration.GetConnectionString(WcsCommunicationDbContext.ConfigSectionName);
+            builder.UseSqlServer(connectionString, m => { m.MigrationsHistoryTable(WcsCommunicationDbContext.MigrationTableName); });
         });
-        services.AddSingleton<IStateObserver<HostOrderSaga>, HostOrderStateObserver>();
+        services.AddTransient<IHostOrderRepository, HostOrderRepository>();
         services.ConfigureServicesMassTransit(context.Configuration, x =>
         {
-            x.AddSagaStateMachine<HostOrderStateMachine, HostOrderSaga>()
-                .AddPersistence<HostOrderSaga, WcsSagaDbContext>();
-        });
+            x.AddConsumer<ActionGroupEventHandler>();
+            x.AddConsumer<HostOrderCommandHandler>(c =>
+            {
+                var partitioner = c.CreatePartitioner(16);
+                partitioner.PartitionMessageById<CreateHostOrder, HostOrderCommandHandler>(c);
+                partitioner.PartitionMessageById<RemoveInvalidHostOrder, HostOrderCommandHandler>(c);
+                partitioner.PartitionMessageById<FinishHostOrder, HostOrderCommandHandler>(c);
+                partitioner.PartitionMessageById<FinishHostOrderCancellation, HostOrderCommandHandler>(c);
+                partitioner.PartitionMessageById<HandleCancellationFailure, HostOrderCommandHandler>(c);
+                partitioner.PartitionMessageById<HandleHostOrderStart, HostOrderCommandHandler>(c);
+                partitioner.PartitionMessageById<HandleHostOrderFailure, HostOrderCommandHandler>(c);
+            });
+        }, (b, c) => c.UseConsumeFilter(typeof(ActionEventConsumeFilter<>), b));
     });
 
     var host = hostBuilder?.Build();
@@ -81,7 +97,7 @@ try
                 var dbWcs = scope.ServiceProvider.GetService<WcsHostDbContext>();
                 dbWcs?.Database.Migrate();
             }
-            var dbAmc = scope.ServiceProvider.GetService<WcsSagaDbContext>();
+            var dbAmc = scope.ServiceProvider.GetService<WcsCommunicationDbContext>();
             dbAmc?.Database.Migrate();
         }
         host.Run();

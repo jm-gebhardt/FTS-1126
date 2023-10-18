@@ -9,4 +9,5 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 /// <param name="ActionGroup">Action group.</param>
 /// <param name="CorrelationId">The correlationId of the action group.</param>
 /// <param name="ErrorCode">The error code of the failure.</param>
-public record ActionGroupFailed(ActionGroup ActionGroup, Guid CorrelationId, HostOrderHandlingFailedErrorCode ErrorCode) : CorrelatedBy<Guid>, IActionGroupEvent;
+/// <param name="MessageCreatedDate">The time the action group failed.</param>
+public record ActionGroupFailed(ActionGroup ActionGroup, Guid CorrelationId, HostOrderHandlingFailedErrorCode ErrorCode, DateTime MessageCreatedDate) : CorrelatedBy<Guid>, IActionGroupEvent, IMessageCreatedDate;

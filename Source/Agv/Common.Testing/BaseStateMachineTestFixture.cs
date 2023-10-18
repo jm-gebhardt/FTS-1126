@@ -2,7 +2,6 @@ using MassTransit;
 using MassTransit.Saga;
 using MassTransit.Testing;
 using Microsoft.Extensions.DependencyInjection;
-using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.Common.Testing;
 
@@ -20,7 +19,7 @@ public abstract class BaseStateMachineTestFixture<TStateMachine, TInstance>
     /// <summary>
     /// Service Collection
     /// </summary>
-    protected readonly IServiceCollection ServiceCollection;
+    private readonly IServiceCollection _serviceCollection;
     /// <summary>
     /// Service Provider
     /// </summary>
@@ -54,7 +53,7 @@ public abstract class BaseStateMachineTestFixture<TStateMachine, TInstance>
         Action<IBusRegistrationContext, IInMemoryBusFactoryConfigurator>? inMemoryConfiguration = null,
         TimeSpan? inactivityTimeout = null)
     {
-        ServiceCollection = new ServiceCollection()
+        _serviceCollection = new ServiceCollection()
             .AddMassTransitTestHarness(x =>
             {
                 x.AddSagaStateMachine<TStateMachine, TInstance>()
@@ -67,7 +66,7 @@ public abstract class BaseStateMachineTestFixture<TStateMachine, TInstance>
                 });
             });
 
-        services?.Invoke(ServiceCollection);
+        services?.Invoke(_serviceCollection);
         _inactivityTimeout = inactivityTimeout;
     }
 
@@ -76,7 +75,7 @@ public abstract class BaseStateMachineTestFixture<TStateMachine, TInstance>
     /// </summary>
     protected void Build()
     {
-        Provider = ServiceCollection.BuildServiceProvider(true);
+        Provider = _serviceCollection.BuildServiceProvider(true);
         TestHarness = Provider.GetTestHarness();
         if (_inactivityTimeout.HasValue)
         {
@@ -96,12 +95,5 @@ public abstract class BaseStateMachineTestFixture<TStateMachine, TInstance>
     public void Add(TInstance instance)
     {
         SagaDictionary.Add(new SagaInstance<TInstance>(instance));
-    }
-    public async Task SendAndVerifyMessage<TRequest>(TRequest message) where TRequest : class, CorrelatedBy<Guid>
-    {
-        await TestHarness.Bus.Publish(message);
-
-        (await TestHarness.Published.Any<TRequest>()).ShouldBeTrue();
-        (await SagaHarness.Consumed.Any<TRequest>()).ShouldBeTrue();
     }
 }

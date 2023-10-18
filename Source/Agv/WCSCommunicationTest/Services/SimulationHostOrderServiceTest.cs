@@ -1,7 +1,7 @@
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.WCSCommunication.CmdOptions;
-using Gebhardt.StoreWare.Agv.WCSCommunication.Messages;
-using Gebhardt.StoreWare.Agv.WCSCommunication.Services;
+using Gebhardt.StoreWare.Agv.WCSCommunication.Messages.Commands;
+using Gebhardt.StoreWare.Agv.WCSCommunication.WcsApi.SimulationMode;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;

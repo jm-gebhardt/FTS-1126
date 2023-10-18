@@ -1,7 +1,6 @@
-using Gebhardt.StoreWare.Agv.WCSCommunication.Db;
-using Gebhardt.StoreWare.Agv.WCSCommunication.Db.Models;
-using Gebhardt.StoreWare.Agv.WCSCommunication.Messages;
-using Gebhardt.StoreWare.Agv.WCSCommunication.Services;
+using Gebhardt.StoreWare.Agv.WCSCommunication.Messages.Commands;
+using Gebhardt.StoreWare.Agv.WCSCommunication.WcsApi.DbInterface;
+using Gebhardt.StoreWare.Agv.WCSCommunication.WcsApi.DbInterface.Models;
 using Gebhardt.StoreWare.Agv.WCSCommunicationTest.Fixtures;
 using MassTransit.Testing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;

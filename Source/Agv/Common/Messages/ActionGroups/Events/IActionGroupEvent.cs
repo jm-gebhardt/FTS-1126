@@ -1,4 +1,6 @@
-﻿namespace Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
+﻿using JetBrains.Annotations;
+
+namespace Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 
 /// <summary>
 /// Provides an interface to label action group related events.
@@ -8,5 +10,6 @@ public interface IActionGroupEvent
     /// <summary>
     /// The action group
     /// </summary>
+    [UsedImplicitly]
     ActionGroup ActionGroup { get; }
 }

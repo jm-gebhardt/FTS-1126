@@ -1,4 +1,4 @@
-using Gebhardt.StoreWare.Agv.WCSCommunication.Db.Models;
+using Gebhardt.StoreWare.Agv.WCSCommunication.WcsApi.DbInterface.Models;
 
 namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Fixtures;
 

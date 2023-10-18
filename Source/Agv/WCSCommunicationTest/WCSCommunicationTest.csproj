@@ -24,4 +24,4 @@
         <ProjectReference Include="..\Common.Testing\Common.Testing.csproj" />
         <ProjectReference Include="..\WCSCommunication\WCSCommunication.csproj" />
     </ItemGroup>
-</Project>
+ </Project>
