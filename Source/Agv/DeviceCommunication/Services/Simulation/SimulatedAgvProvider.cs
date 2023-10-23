@@ -12,7 +12,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
 /// <summary>
 /// The SimulatedAgvProvider can create simulated AGV orchestrated by <see cref="SimulatedAgvStateMachine"/>
 /// </summary>
-public class SimulatedAgvProvider: BackgroundService
+public class SimulatedAgvProvider : BackgroundService
 {
     private readonly SimulateOptions _simulateOptions;
 
@@ -42,8 +42,8 @@ public class SimulatedAgvProvider: BackgroundService
     /// <param name="logger"></param>
     /// <param name="simulateOptions"></param>
     public SimulatedAgvProvider(
-        SimulateOptions simulateOptions, 
-        IClientFactory clientFactory, 
+        SimulateOptions simulateOptions,
+        IClientFactory clientFactory,
         ILogger<SimulatedAgvProvider> logger)
     {
         _logger = logger;
@@ -84,7 +84,7 @@ public class SimulatedAgvProvider: BackgroundService
     {
         string agvId = $"{AgvPrefix}-{agvIndex}";
         var correlationId = agvId.ToGuid();
-            
+
         var grid = new GridGraphGenerator(
             _sources,
             _destinations,
@@ -100,7 +100,7 @@ public class SimulatedAgvProvider: BackgroundService
             false,
             false,
             true,
-            DateTime.MinValue, 
+            DateTime.MinValue,
             DateTime.MinValue,
             AgvGraph: grid,
             AgvData: GenerateData(correlationId),
@@ -117,7 +117,7 @@ public class SimulatedAgvProvider: BackgroundService
     {
         int serviceNodeCount = _simulateOptions.GridRows * 2;
         var serviceNodes = new AgvGraph.NodeType[serviceNodeCount];
-        for(int idx = 0; idx < serviceNodeCount; idx++)
+        for (int idx = 0; idx < serviceNodeCount; idx++)
         {
             serviceNodes[idx] = idx % 2 == 0 ? AgvGraph.NodeType.Park : AgvGraph.NodeType.Charge;
         }

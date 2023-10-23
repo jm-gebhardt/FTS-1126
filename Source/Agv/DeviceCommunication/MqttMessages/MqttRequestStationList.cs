@@ -9,8 +9,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 /// <para>
 /// See "request_station_list.schema".</para></summary>
 [PublicAPI]
-[EntityName("amq.topic")]                   // Specifies the RabbitMq exchange where the message is published
-[RoutingKey("agv.requestStationList")]    // Specifies the topic where subscribers can receive the message
+[EntityName("amq.topic")] // Specifies the RabbitMq exchange where the message is published
+[RoutingKey("agv.requestStationList")] // Specifies the topic where subscribers can receive the message
 public class MqttRequestStationList
 {
     /// <summary>
@@ -22,7 +22,6 @@ public class MqttRequestStationList
     /// A unique ID for that request.
     /// </summary>
     public Guid RequestId { get; set; }
-
 
     /// <summary>
     /// Build message.

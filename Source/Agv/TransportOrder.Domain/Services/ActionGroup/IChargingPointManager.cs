@@ -29,7 +29,7 @@ public interface IChargingPointManager
     /// <param name="agvCorrelationId"></param>
     /// <returns></returns>
     Task ReserveChargerAsync(GraphNode node, Guid agvCorrelationId);
-    
+
     /// <summary>
     /// Checks if the agv is on a charging node
     /// </summary>

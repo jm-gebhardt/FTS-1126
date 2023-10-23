@@ -15,7 +15,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Repositories;
 [TestClass]
 public class ActionGroupRetrievalServiceTest
 {
-    private static Mapper GetMapper() => MappingHelper.GetMapper(new GraphProfile());
+    private static Mapper GetMapper()
+    {
+        return MappingHelper.GetMapper(new GraphProfile());
+    }
 
     private static async Task AddDefaultAgvGraph(ActionGroupRetrievalServiceTestFixture fixture, Guid? correlationId = null)
     {
@@ -73,7 +76,7 @@ public class ActionGroupRetrievalServiceTest
         await fixture.AddAsync(actionGroup);
         await AddDefaultAgvGraph(fixture, "aGraph".ToGuid());
 
-        List<ActionGroupState> otherStates = Enum.GetValues<ActionGroupState>().Except(new List<ActionGroupState> {actionGroup.State}).ToList();
+        List<ActionGroupState> otherStates = Enum.GetValues<ActionGroupState>().Except(new List<ActionGroupState> { actionGroup.State }).ToList();
 
         IReadOnlyCollection<ActionGroupReadModel> actionGroupReadModel = await fixture.ActionGroupRetrievalService
             .GetActionGroupsWithNodesAsync(otherStates, null, null, 1);
@@ -162,7 +165,7 @@ public class ActionGroupRetrievalServiceTest
         await fixture.AddAsync(actionGroup);
         await AddDefaultAgvGraph(fixture, "aGraph".ToGuid());
 
-        IReadOnlyDictionary<Guid, ActionGroupReadModel?> actionGroupsByAgvCorrelationId = await fixture.ActionGroupRetrievalService.GetAssignedActionGroupsWithNodesAsync(new List<Guid> {agvCorrelationId});
+        IReadOnlyDictionary<Guid, ActionGroupReadModel?> actionGroupsByAgvCorrelationId = await fixture.ActionGroupRetrievalService.GetAssignedActionGroupsWithNodesAsync(new List<Guid> { agvCorrelationId });
 
         var actualActionGroup = actionGroupsByAgvCorrelationId[agvCorrelationId]!;
         actualActionGroup.CorrelationId.ShouldBe(actionGroup.CorrelationId);

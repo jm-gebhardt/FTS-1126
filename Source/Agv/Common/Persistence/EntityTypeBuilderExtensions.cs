@@ -21,7 +21,7 @@ public static class EntityTypeBuilderExtensions
     /// <typeparam name="T"></typeparam>
     /// <returns></returns>
     // ReSharper disable once UnusedMethodReturnValue.Global
-    public static List<PropertyBuilder> ConfigureAllProperties<T>(this EntityTypeBuilder<T> builder, 
+    public static List<PropertyBuilder> ConfigureAllProperties<T>(this EntityTypeBuilder<T> builder,
         Func<PropertyInfo, bool>? filter = null) where T : class
     {
         IEnumerable<PropertyInfo> properties = typeof(T)
@@ -38,7 +38,7 @@ public static class EntityTypeBuilderExtensions
             .Select(x => builder.Property(x.PropertyType, x.Name))
             .ToList();
     }
-        
+
     /// <summary>
     /// Serialize property as json
     /// </summary>

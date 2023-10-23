@@ -24,11 +24,10 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixtureWithSc
     public readonly Mock<IAgvRepository> AgvRepository = new();
     private readonly Mock<ILogger<AgvCommandHandler>> _logger = new();
     private readonly Mock<ISettingsProvider<AgvSettings>> _settingsProvider = new();
-    private readonly Mock<IAgvGraphRegistry> _agvGraphRegistry = new ();
+    private readonly Mock<IAgvGraphRegistry> _agvGraphRegistry = new();
     private readonly Mock<IMapRegistry> _mapRegistry = new();
-    private readonly ProductionOptions _productionOptions = new(){ AutoAccept = true };
+    private readonly ProductionOptions _productionOptions = new() { AutoAccept = true };
     public readonly Mock<IAgvDataRegistry> AgvDataRegistry = new();
-
 
     protected override void ConfigureServices(IServiceCollection collection)
     {
@@ -42,7 +41,6 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixtureWithSc
         collection.AddTransient(_ => _mapRegistry.Object);
         collection.AddTransient(_ => _productionOptions);
         collection.AddTransient(_ => AgvDataRegistry.Object);
-
     }
 
     public AgvCommandHandlerTestFixture(Action<IBusRegistrationConfigurator>? busRegistrationConfigurator = null,
@@ -58,7 +56,6 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixtureWithSc
             AgvOfflineTimeoutMsWhileBusy = 10000,
             AgvOfflineTimeoutMsWhileIdle = 10000
         });
-
     }
 
     public void AddAgvs(List<TransportOrder.Domain.Models.Agv.Agv> agvs)
@@ -69,7 +66,7 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixtureWithSc
             .Verifiable();
     }
 
-    public void SetupAgv(bool hasPendingActions=false, bool graphExists=true)
+    public void SetupAgv(bool hasPendingActions = false, bool graphExists = true)
     {
         _actionGroupRegistry.Setup(x =>
             x.AgvHasPendingActions(It.IsAny<Guid>())).ReturnsAsync(hasPendingActions);
@@ -89,9 +86,9 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixtureWithSc
     /// <typeparam name="TRequest"></typeparam>
     /// <param name="request">The request object</param>
     /// <returns>The response object</returns>
-    public async Task<Response<TResult>> GetResponseAsync<TResult, TRequest>(TRequest request) 
+    public async Task<Response<TResult>> GetResponseAsync<TResult, TRequest>(TRequest request)
         where TResult : class
-        where TRequest: class
+        where TRequest : class
     {
         IRequestClient<TRequest> client = TestHarness!.Bus!.CreateRequestClient<TRequest>();
         Response<TResult> response = await client.GetResponse<TResult>(request);

@@ -1,5 +1,4 @@
-﻿
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 
@@ -24,17 +23,17 @@ public enum ActionState
     /// </summary>
     [PublicAPI]
     Completed,
-        
+
     /// <summary>
     /// Action has been canceled
     /// </summary>
     Canceled,
-    
+
     /// <summary>
     /// Action failed
     /// </summary>
     Failed,
-    
+
     /// <summary>
     /// Action is invalid
     /// </summary>

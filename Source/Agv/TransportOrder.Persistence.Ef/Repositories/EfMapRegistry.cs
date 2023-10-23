@@ -67,7 +67,7 @@ public class EfMapRegistry : IMapRegistry
     /// <inheritdoc/>
     public async Task<bool> AddOrUpdateAsync(Map map, CancellationToken cancellationToken)
     {
-        return await _semaphoreProvider.ExecuteLockedAsync( async () =>
+        return await _semaphoreProvider.ExecuteLockedAsync(async () =>
         {
             if (Exists(map.CorrelationId))
             {

@@ -6,4 +6,3 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
 /// Defines a result for the <see cref="GetAgvPosition"/> request.
 /// </summary>
 public record GotAgvPosition(AgvPositionStatus? AgvPositions);
-

@@ -12,10 +12,12 @@ internal class AgvPositionRegistryTestFixture
     private readonly AgvPosition _agvPosition = new(true, 1, 2, 3, 0);
 
     public readonly Guid CorrelationId = Guid.NewGuid();
-    public readonly string AgvId = "myAgv";
+    public const string AgvId = "myAgv";
 
     public readonly Mock<IBus> BusMock = new();
+
     public AgvPositionStatus AgvPositionStatus { get; }
+
     public AgvPositionRegistry AgvPositionRegistry { get; }
 
     public AgvPositionDictionaryProvider AgvPositionDictionaryProvider { get; }
@@ -26,5 +28,4 @@ internal class AgvPositionRegistryTestFixture
         AgvPositionRegistry = new AgvPositionRegistry(BusMock.Object, AgvPositionDictionaryProvider);
         AgvPositionStatus = new AgvPositionStatus(CorrelationId, AgvId, _agvPosition);
     }
-
 }

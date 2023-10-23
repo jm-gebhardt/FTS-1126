@@ -7,7 +7,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
 /// Production Mode Options
 /// </summary>
 [UsedImplicitly]
-[Verb("production", isDefault: true)]
+[Verb("production", true)]
 public sealed class ProductionOptions
 {
 }

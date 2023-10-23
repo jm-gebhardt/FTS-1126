@@ -114,7 +114,7 @@ public record AgvGraph : CorrelatedBy<Guid>
         /// Auto-generated edges between stations and graph nodes conflicts to edges from graph
         /// </summary>
         StationEdgeMismatch
-    };
+    }
 
     /// <summary>
     /// Node types.

@@ -29,7 +29,7 @@ public class SimulatedAgvProviderTest
         };
 
         var fixture = new StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(
-            services: s =>
+            s =>
             {
                 s.AddSingleton(options);
                 s.AddLogging();
@@ -55,7 +55,7 @@ public class SimulatedAgvProviderTest
         };
 
         var fixture = new StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(
-            services: s =>
+            s =>
             {
                 s.AddSingleton(options);
                 s.AddLogging();
@@ -68,11 +68,11 @@ public class SimulatedAgvProviderTest
                 x.AddDelayedMessageScheduler();
                 x.AddHostedService<SimulatedAgvProvider>();
             });
-            
+
         (await fixture.TestHarness.Published.Any<SimulatedAgvStateMachine.CreateAgv>()).ShouldBeTrue();
-            
+
         (await fixture.SagaHarness.Consumed.Any<SimulatedAgvStateMachine.CreateAgv>()).ShouldBeTrue();
-            
+
         for (int i = 0; i < numberOfAgvs; i++)
         {
             int i1 = i;

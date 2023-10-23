@@ -14,13 +14,13 @@ public class AgvGraphNotDefinedException : NotFoundException
         : base(nameof(AgvGraph), nameof(agv.CorrelationId), agv.CorrelationId)
     {
     }
-    
+
     /// <summary>
     /// Agv Graph with Agv correlationId was not found
     /// </summary>
     /// <param name="correlationId">The correlation Id of the Agv</param>
     [UsedImplicitly]
-    public AgvGraphNotDefinedException(Guid correlationId) 
+    public AgvGraphNotDefinedException(Guid correlationId)
         : base(nameof(AgvGraph), nameof(correlationId), correlationId)
     {
     }

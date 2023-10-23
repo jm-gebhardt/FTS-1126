@@ -204,8 +204,9 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     #endregion
 
     #region State transitions
-    private EventActivityBinder<SimulatedAgvSaga, CreateAgv> SetInitialCreateAgvHandler() =>
-        When(CreateAgvEvent)
+    private EventActivityBinder<SimulatedAgvSaga, CreateAgv> SetInitialCreateAgvHandler()
+    {
+        return When(CreateAgvEvent)
             .Then(c => _logger.LogDebug("{MessageType} {AgvId} / {CorrelationId} received", nameof(CreateAgv), c.Message.Agv.AgvId, c.Saga.CorrelationId))
             .TransitionTo(Idle)
             .ThenAsync(PublishStatusAsync)
@@ -213,9 +214,11 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
             .Schedule(StatusUpdateSchedule, c => new ScheduleStatusUpdate(c.Saga.CorrelationId), _ => TimeSpan.FromMilliseconds(StatusUpdateIntervalMs))
             .Schedule(SignalPositionSchedule, c => new ScheduleSignalPosition(c.Saga.CorrelationId), _ => TimeSpan.FromMilliseconds(SignalPositionIntervalMs))
             .Respond(c => new CreateAgvResponse(c.Saga.CorrelationId));
+    }
 
-    private EventActivityBinder<SimulatedAgvSaga, StartActionCommand> SetStartActionHandler() =>
-        When(StartActionCommandEvent)
+    private EventActivityBinder<SimulatedAgvSaga, StartActionCommand> SetStartActionHandler()
+    {
+        return When(StartActionCommandEvent)
             .Then(c => _logger.LogDebug("{MessageType} {AgvId} / {CorrelationId} received", nameof(StartActionCommand), c.Message.AgvId, c.Saga.CorrelationId))
             .Then(Validate)
             .Then(c =>
@@ -235,6 +238,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
             .Schedule(SignalPositionSchedule,
                 c => new ScheduleSignalPosition(c.Saga.CorrelationId),
                 _ => TimeSpan.FromMilliseconds(SignalPositionIntervalMs));
+    }
 
     private static void SetCurrentAction(BehaviorContext<SimulatedAgvSaga, StartActionCommand> c)
     {
@@ -242,45 +246,58 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         c.Saga.ActionStartDate = DateTime.UtcNow;
     }
 
-    private EventActivityBinder<SimulatedAgvSaga, ScheduleFinishAction> SetFinishActionHandler() =>
-        When(FinishActionSchedule.Received)
+    private EventActivityBinder<SimulatedAgvSaga, ScheduleFinishAction> SetFinishActionHandler()
+    {
+        return When(FinishActionSchedule.Received)
             .Then(c => _logger.LogDebug("{MessageType} {CorrelationId} received", nameof(ScheduleFinishAction), c.Saga.CorrelationId))
             .ThenAsync(FinishActionAsync)
             .TransitionTo(Idle)
             .ThenAsync(PublishStatusAsync)
             .ThenAsync(PublishPositionAsync);
+    }
     #endregion
 
     #region Message handlers
-    private EventActivityBinder<SimulatedAgvSaga, RequestStatusSendSchedulerStart> SetRequestStatusSendHandler() =>
-        When(RequestStatusSendEvent)
+    private EventActivityBinder<SimulatedAgvSaga, RequestStatusSendSchedulerStart> SetRequestStatusSendHandler()
+    {
+        return When(RequestStatusSendEvent)
             .Then(c => { _logger.LogTrace("{MessageType} {CorrelationId} received", nameof(RequestStatusSendSchedulerStart), c.Saga.CorrelationId); })
             .Schedule(StatusUpdateSchedule, c => new ScheduleStatusUpdate(c.Saga.CorrelationId), _ => TimeSpan.FromMilliseconds(StatusUpdateIntervalMs));
+    }
 
-    private EventActivityBinder<SimulatedAgvSaga, ScheduleStatusUpdate> SetSendAgvStatusHandler() =>
-        When(StatusUpdateSchedule.Received)
+    private EventActivityBinder<SimulatedAgvSaga, ScheduleStatusUpdate> SetSendAgvStatusHandler()
+    {
+        return When(StatusUpdateSchedule.Received)
             .Then(c => { _logger.LogTrace("{MessageType} {CorrelationId} received", nameof(ScheduleStatusUpdate), c.Saga.CorrelationId); })
             .ThenAsync(PublishStatusAsync)
             .Schedule(StatusUpdateSchedule, c => new ScheduleStatusUpdate(c.Saga.CorrelationId), _ => TimeSpan.FromMilliseconds(StatusUpdateIntervalMs));
+    }
 
-    private EventActivityBinder<SimulatedAgvSaga, ScheduleSignalPosition> SetSignalPositionHandler() =>
-        When(SignalPositionSchedule.Received)
+    private EventActivityBinder<SimulatedAgvSaga, ScheduleSignalPosition> SetSignalPositionHandler()
+    {
+        return When(SignalPositionSchedule.Received)
             .Then(c => _logger.LogTrace("{MessageType} {CorrelationId} received", nameof(ScheduleSignalPosition), c.Saga.CorrelationId))
             .ThenAsync(PublishPositionAsync)
             .Schedule(SignalPositionSchedule, c => new ScheduleSignalPosition(c.Saga.CorrelationId), _ => TimeSpan.FromMilliseconds(SignalPositionIntervalMs));
+    }
 
-    private EventActivityBinder<SimulatedAgvSaga, RequestAgvData> SetRequestAgvDataHandler() =>
-        When(RequestAgvDataEvent)
+    private EventActivityBinder<SimulatedAgvSaga, RequestAgvData> SetRequestAgvDataHandler()
+    {
+        return When(RequestAgvDataEvent)
             .Then(c => _logger.LogDebug("{MessageType} {AgvId} / {CorrelationId} received", nameof(RequestAgvData), c.Message.AgvId, c.Saga.CorrelationId))
             .ThenAsync(PublishAgvData);
+    }
 
-    private EventActivityBinder<SimulatedAgvSaga, RequestAgvGraph> SetRequestAgvGraphHandler() =>
-        When(RequestAgvGraphEvent)
+    private EventActivityBinder<SimulatedAgvSaga, RequestAgvGraph> SetRequestAgvGraphHandler()
+    {
+        return When(RequestAgvGraphEvent)
             .Then(c => _logger.LogDebug("{MessageType} {AgvId} / {CorrelationId} received", nameof(RequestAgvGraph), c.Message.AgvId, c.Saga.CorrelationId))
             .ThenAsync(PublishAgvGraph);
+    }
 
-    private EventActivityBinder<SimulatedAgvSaga, RequestAgvMap> SetRequestAgvMapHandler() =>
-        When(RequestAgvMapEvent)
+    private EventActivityBinder<SimulatedAgvSaga, RequestAgvMap> SetRequestAgvMapHandler()
+    {
+        return When(RequestAgvMapEvent)
             .Then(c => _logger.LogDebug("{MessageType} {AgvId} / {CorrelationId} / {MapId} received", nameof(RequestAgvMap), c.Message.AgvId, c.Saga.CorrelationId, c.Message.MapId))
             .If(c => c.Saga.AgvMap != null,
                 x => x.Publish(c =>
@@ -301,6 +318,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
                             sagaAgvMap.YOffset
                         ));
                 }));
+    }
     #endregion
 
     #region Actions
@@ -403,7 +421,9 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         context.Saga.ResetAction();
     }
 
-    private EventActivityBinder<SimulatedAgvSaga> UpdateTimeOfStateTransition(EventActivityBinder<SimulatedAgvSaga> eventActivity) =>
-        eventActivity.Then(ctx => ctx.Saga.TimeOfStateTransition = DateTime.UtcNow);
+    private EventActivityBinder<SimulatedAgvSaga> UpdateTimeOfStateTransition(EventActivityBinder<SimulatedAgvSaga> eventActivity)
+    {
+        return eventActivity.Then(ctx => ctx.Saga.TimeOfStateTransition = DateTime.UtcNow);
+    }
     #endregion
 }

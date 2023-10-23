@@ -11,7 +11,7 @@ public interface IActionGroupPublisher
     /// Publishes a newly created ActionGroup
     /// </summary>
     public Task SendActionGroupCreatedAsync(ActionGroupReadModel actionGroup);
-    
+
     /// <summary>
     /// Publishes the change update of ActionGroup
     /// </summary>

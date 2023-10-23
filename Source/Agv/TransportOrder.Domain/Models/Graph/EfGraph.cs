@@ -1,5 +1,4 @@
-﻿
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Graph;
 
@@ -96,5 +95,5 @@ public record EfGraph
         /// Auto-generated edges between stations and graph nodes conflicts to edges from graph
         /// </summary>
         StationEdgeMismatch
-    };
+    }
 }

@@ -20,7 +20,7 @@ public class AgvPositionProfileTest
     [TestMethod]
     public void Map_ShouldMapAllPropertiesCorrectly_WhereAgvPositionChangedIsMappedToAgvPositionStatus()
     {
-        string agvId = "agv1";
+        const string agvId = "agv1";
         var agvPositionChanged = new AgvPositionChanged(
             agvId.ToGuid(),
             new AgvPosition(false, 0, 0, 0, 0),
@@ -49,7 +49,7 @@ public class AgvPositionProfileTest
     [TestMethod]
     public void Map_ShouldMapAllPropertiesCorrectly_WhereAgvPositionReceivedIsMappedToAgvPositionStatus()
     {
-        string agvId = "agv1";
+        const string agvId = "agv1";
         var agvPositionReceived = new AgvPositionReceived(
             agvId.ToGuid(),
             agvId,
@@ -74,7 +74,7 @@ public class AgvPositionProfileTest
     [TestMethod]
     public void Map_ShouldMapAllPropertiesCorrectly_WhereAgvPositionStatusDtoIsMappedToAgvPositionStatus()
     {
-        string agvId = "agv1";
+        const string agvId = "agv1";
 
         var agvPositionStatus = new AgvPositionStatus(
             Guid.NewGuid(),

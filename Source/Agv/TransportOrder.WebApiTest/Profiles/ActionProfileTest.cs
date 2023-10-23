@@ -9,6 +9,7 @@ using Shouldly;
 using ActionGroup = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Profiles;
+
 [TestClass]
 public class ActionProfileTest
 {
@@ -41,8 +42,6 @@ public class ActionProfileTest
         actionDto.StartedDate.ShouldBe(action.StartedDate!);
         actionDto.CompletedDate.ShouldBe(action.CompletedDate);
         actionDto.TargetNodeType.ShouldBe(action.TargetNodeType);
-
-       
     }
 
     [TestMethod]

@@ -48,6 +48,5 @@ public class AgvPositionReceivedEventHandler : IConsumer<AgvPositionReceived>
         var agvPositionStatus = _mapper.Map<AgvPositionStatus>(context.Message);
 
         await _agvPositionRegistry.UpdatePositionAsync(agvPositionStatus);
-
     }
 }

@@ -35,21 +35,12 @@ public static class GebhardtStartup
         }
 
         var host = Host.CreateDefaultBuilder(args)
-            .UseWindowsService(options =>
-            {
-                options.ServiceName = serviceName;
-            })
-            .ConfigureServices(services =>
-            {
-                services.ConfigureEventLogSettings(entryAssembly);
-            })
+            .UseWindowsService(options => { options.ServiceName = serviceName; })
+            .ConfigureServices(services => { services.ConfigureEventLogSettings(entryAssembly); })
             .ConfigureWebHost(host =>
             {
                 host.UseKestrel()
-                    .Configure(app =>
-                    {
-                        app.UseMetricServer();
-                    });
+                    .Configure(app => { app.UseMetricServer(); });
             })
             .ConfigureLogging(conf =>
             {

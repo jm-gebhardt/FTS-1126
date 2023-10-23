@@ -1,10 +1,11 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
-using NodeGenerator = Gebhardt.StoreWare.Agv.Common.Testing.Helpers.NodeGenerator;
+using AgvActionGenerator = Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper.AgvActionGenerator;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Domain.Services.Routing;
 
@@ -17,7 +18,7 @@ public class AgvRouteRetrievalServiceTest
         string[] nodes = NodeGenerator.GenerateRouteNodes();
         string node = nodes[1];
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: node);
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Started, assignedAgv: agv.CorrelationId);
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(ActionState.Started, assignedAgv: agv.CorrelationId);
         var action = actionGroup.Actions.First();
         action.Nodes = nodes;
         var fixture = await new AgvRouteServiceTestFixture()
@@ -97,9 +98,9 @@ public class AgvRouteRetrievalServiceTest
     [TestMethod]
     public async Task GetAgvRouteAsync_WhenNoAgvCorrelationIdIsSpecific_ReturnsAllAgvRoutes()
     {
-        int agvCount = 5;
+        const int agvCount = 5;
         var fixture = await new AgvRouteServiceTestFixture()
-            .WithAgv(AgvGenerator.GenerateIdleAgvs(agvCount, lastNodeId: "lastnode").ToArray())
+            .WithAgv(AgvGenerator.GenerateIdleAgvs(agvCount, "lastNode").ToArray())
             .BuildAsync();
 
         IReadOnlyDictionary<Guid, AgvRouteReadModel?> actualRoutes = await fixture.AgvRouteRetrievalService.GetAgvRouteAsync(new List<Guid>());

@@ -28,8 +28,8 @@ public class ExecuteMqttPublishTest
         var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
 
         var routingKeySpecified = typeof(MqttState).GetCustomAttribute(typeof(RoutingKey)) as RoutingKey;
-        string serialNumber = "AGV01";
-        string orderId = "1234";
+        const string serialNumber = "AGV01";
+        const string orderId = "1234";
 
         using (fixture.TestHarness.Bus.ConnectPublishObserver(publishObserver))
         {

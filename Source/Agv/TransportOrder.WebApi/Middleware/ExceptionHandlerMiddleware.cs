@@ -51,6 +51,7 @@ public class ExceptionHandlerMiddleware : IMiddleware
             case ActionGroupStateInvalidException:
                 statusCode = HttpStatusCode.BadRequest;
                 break;
+
             case BatchQueryException:
                 statusCode = HttpStatusCode.BadRequest;
                 break;
@@ -61,7 +62,7 @@ public class ExceptionHandlerMiddleware : IMiddleware
         }
 
         string result = JsonSerializer.Serialize(problem);
-        context.Response.StatusCode = (int) statusCode;
+        context.Response.StatusCode = (int)statusCode;
         context.Response.ContentType = "application/json";
         return context.Response.WriteAsync(result);
     }

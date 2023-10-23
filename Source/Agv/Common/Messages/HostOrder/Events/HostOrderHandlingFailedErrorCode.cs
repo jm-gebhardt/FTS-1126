@@ -1,10 +1,8 @@
 ﻿namespace Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
 
-
 /// <summary>
 /// Error code that can occur during handling of host orders
 /// </summary>
-
 public enum HostOrderHandlingFailedErrorCode
 {
     /// <summary>

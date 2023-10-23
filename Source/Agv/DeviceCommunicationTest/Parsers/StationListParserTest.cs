@@ -51,7 +51,8 @@ public class StationListParserTest
     [TestMethod]
     public void Parse_WithMissingEdgeAndStation_NoExceptionWhileCheckingValidity()
     {
-        var nodes = new MqttNode[] {
+        var nodes = new MqttNode[]
+        {
             new() { NodeId = 1, X = 0f, Y = 0f, Z = 0f },
             new() { NodeId = 2, X = 9f, Y = 9f, Z = 0f }
         };
@@ -69,7 +70,8 @@ public class StationListParserTest
     [TestMethod]
     public void Parse_WithMissingStation__GraphInvalid()
     {
-        var nodes = new MqttNode[] {
+        var nodes = new MqttNode[]
+        {
             new() { NodeId = 1, X = 0f, Y = 0f, Z = 0f },
             new() { NodeId = 2, X = 9f, Y = 9f, Z = 0f }
         };
@@ -91,7 +93,8 @@ public class StationListParserTest
     [TestMethod]
     public void Parse_WithMinimumContent_GraphValid()
     {
-        var nodes = new MqttNode[] {
+        var nodes = new MqttNode[]
+        {
             new() { NodeId = 1, X = 0f, Y = 0f, Z = 0f },
             new() { NodeId = 2, X = 9f, Y = 9f, Z = 0f }
         };
@@ -99,7 +102,8 @@ public class StationListParserTest
         {
             new() { EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = true, MaxVelocity = 1 }
         };
-        var stations = new Station[] {
+        var stations = new Station[]
+        {
             new(Function.Pick, "P01", new Position(0f, 0f, 0f), "")
         };
         var parser = new StationListParser(
@@ -123,7 +127,8 @@ public class StationListParserTest
     {
         const string mapId = "MAP01";
 
-        var nodes = new MqttNode[] {
+        var nodes = new MqttNode[]
+        {
             new() { NodeId = 1, X = 0f, Y = 0f, Z = 0f },
             new() { NodeId = 2, X = 9f, Y = 9f, Z = 0f }
         };
@@ -131,7 +136,8 @@ public class StationListParserTest
         {
             new() { EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = true, MaxVelocity = 1 }
         };
-        var stations = new Station[] {
+        var stations = new Station[]
+        {
             new(Function.Pick, "P01", new Position(0f, 0f, 0f), "")
         };
         var parser = new StationListParser(
@@ -152,7 +158,8 @@ public class StationListParserTest
     [TestMethod]
     public void Parse_WithSerialNumberMismatch_GraphInvalid()
     {
-        var nodes = new MqttNode[] {
+        var nodes = new MqttNode[]
+        {
             new() { NodeId = 1, X = 0f, Y = 0f, Z = 0f },
             new() { NodeId = 2, X = 9f, Y = 9f, Z = 0f }
         };
@@ -160,7 +167,8 @@ public class StationListParserTest
         {
             new() { EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = true, MaxVelocity = 1 }
         };
-        var stations = new Station[] {
+        var stations = new Station[]
+        {
             new(Function.Pick, "P01", new Position(0f, 0f, 0f), "")
         };
         var parser = new StationListParser(
@@ -195,7 +203,8 @@ public class StationListParserTest
          * 11|       S2 |
          *    ---------- */
 
-        var nodes = new MqttNode[] {
+        var nodes = new MqttNode[]
+        {
             new() { NodeId = 1, X = 0f, Y = 0f, Z = 0f },
             new() { NodeId = 2, X = 9f, Y = 9f, Z = 0f }
         };
@@ -203,7 +212,8 @@ public class StationListParserTest
         {
             new() { EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = true, MaxVelocity = 1 }
         };
-        var stations = new Station[] {
+        var stations = new Station[]
+        {
             new(Function.Both, "S1", new Position(0f, 2f, -2f), ""),
             new(Function.Both, "S2", new Position(0f, 7f, 11f), ""),
             new(Function.Both, "S3", new Position(0f, 6f, -2f), "")

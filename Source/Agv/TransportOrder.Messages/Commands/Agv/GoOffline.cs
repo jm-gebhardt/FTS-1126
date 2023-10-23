@@ -7,4 +7,4 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
 /// </summary>
 /// <param name="CorrelationId">The agv correlation id.</param>
 ///  <param name="OfflineTokenId">The offline token id.</param>
-public record GoOffline(Guid CorrelationId, Guid OfflineTokenId): CorrelatedBy<Guid>;
+public record GoOffline(Guid CorrelationId, Guid OfflineTokenId) : CorrelatedBy<Guid>;

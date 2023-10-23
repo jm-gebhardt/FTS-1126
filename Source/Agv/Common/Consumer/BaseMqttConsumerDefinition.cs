@@ -31,7 +31,8 @@ public class BaseMqttConsumerDefinition<T> : ConsumerDefinition<T> where T : cla
 
         foreach (var message in messages)
         {
-            typeof(BaseMqttConsumerDefinition<T>).GetMethod("CreateBindingByRoutingKey", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static)?.MakeGenericMethod(message).Invoke(this, new object[]{
+            typeof(BaseMqttConsumerDefinition<T>).GetMethod("CreateBindingByRoutingKey", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static)?.MakeGenericMethod(message).Invoke(this, new object[]
+            {
                 endpointConfigurator
             });
         }

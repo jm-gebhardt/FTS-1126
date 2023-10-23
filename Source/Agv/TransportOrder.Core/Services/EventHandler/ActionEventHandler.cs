@@ -36,7 +36,7 @@ public class ActionEventHandler :
     public async Task Consume(ConsumeContext<ActionGroupCreatedForAgv> context)
     {
         var (actionGroup, assignedAgv) = context.Message;
-        
+
         await context.Publish(new SelectNodesForAction(actionGroup.Actions.OrderBy(a => a.Sequence).First(), assignedAgv));
     }
 
@@ -73,6 +73,4 @@ public class ActionEventHandler :
     {
         await context.Publish(new PrepareAgvForStartingAction(context.Message.Action, context.Message.AssignedAgv));
     }
-
-
 }

@@ -9,6 +9,5 @@ public class NotInCorrectStateException : Exception
     /// <param name="message">Exception message</param>
     public NotInCorrectStateException(string message) : base(message)
     {
-
     }
 }

@@ -1,14 +1,14 @@
 ﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.ActionGroup;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers.ActionGroup;
 using MassTransit;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Routing;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers.ActionGroup;
-using Moq;
 using Microsoft.Extensions.DependencyInjection;
+using Moq;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers.ActionGroup;
 
@@ -34,6 +34,7 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
         };
         return controller;
     }
+
     public ActionGroupControllerTestFixture<TRequest, TRequestHandler> Setup()
     {
         AddServices(sc =>
@@ -58,5 +59,4 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
 
         return this;
     }
-
 }

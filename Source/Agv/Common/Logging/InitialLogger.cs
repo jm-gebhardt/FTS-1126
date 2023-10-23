@@ -18,10 +18,7 @@ public sealed class InitialLogger
     [PublicAPI]
     public static ILogger Create<TCategoryName>()
     {
-        using var loggerFactory = LoggerFactory.Create(builder =>
-        {
-            builder.AddConsole();
-        });
+        using var loggerFactory = LoggerFactory.Create(builder => { builder.AddConsole(); });
         return loggerFactory.CreateLogger<TCategoryName>();
     }
 }

@@ -14,7 +14,7 @@ public class NodeNotFoundException : NotFoundException
         : base(description, nameof(agv.CorrelationId), agv.CorrelationId)
     {
     }
-    
+
     /// <see cref="NodeNotFoundException"/>>
     public NodeNotFoundException(Guid agvCorrelationId, string description)
         : base(description, nameof(agvCorrelationId), agvCorrelationId)

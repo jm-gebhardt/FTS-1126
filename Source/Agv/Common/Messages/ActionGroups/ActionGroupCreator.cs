@@ -27,7 +27,6 @@ public enum ActionGroupCreator
     /// The WebApi of the TransportOrder service.
     /// </summary>
     TransportOrderWebApi
-
 }
 
 /// <summary>

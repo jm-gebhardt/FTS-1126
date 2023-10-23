@@ -60,9 +60,9 @@ public class RoutingTests
     }
 
     [TestMethod]
-    [DataRow(new[] {"N002-001", "N003-001", "N003-002", "N004-002", "D2"}, "N003-002", (uint) 2)]
-    [DataRow(new[] {"N002-001", "N003-001", "N003-002", "N004-002", "D2"}, "D2", (uint) 4)]
-    [DataRow(new[] {"N002-001", "N003-001", "N003-002", "N004-002", "D2"}, null, (uint) 0)]
+    [DataRow(new[] { "N002-001", "N003-001", "N003-002", "N004-002", "D2" }, "N003-002", (uint)2)]
+    [DataRow(new[] { "N002-001", "N003-001", "N003-002", "N004-002", "D2" }, "D2", (uint)4)]
+    [DataRow(new[] { "N002-001", "N003-001", "N003-002", "N004-002", "D2" }, null, (uint)0)]
     public void GetIndex_WithValidParameters_ShouldReturnCorrectIndex(string[] route, string lastNodeId, uint expectedIndex)
     {
         uint index = RoutingHelper.GetFirstIndexOfNodeId(route, lastNodeId);
@@ -71,9 +71,9 @@ public class RoutingTests
     }
 
     [TestMethod]
-    [DataRow(new[] {"N002-001", "N003-001", "N003-002", "N004-002", "D2"}, "N003-001", new[] {"N003-001", "N003-002", "N004-002", "D2"})]
-    [DataRow(new[] {"N002-001", "N003-001", "N003-002", "N004-002", "D2"}, "D2", new[] {"D2"})]
-    [DataRow(new[] {"N002-001", "N003-001", "N003-002", "N004-002", "D2"}, null, new[] {"N002-001", "N003-001", "N003-002", "N004-002", "D2"})]
+    [DataRow(new[] { "N002-001", "N003-001", "N003-002", "N004-002", "D2" }, "N003-001", new[] { "N003-001", "N003-002", "N004-002", "D2" })]
+    [DataRow(new[] { "N002-001", "N003-001", "N003-002", "N004-002", "D2" }, "D2", new[] { "D2" })]
+    [DataRow(new[] { "N002-001", "N003-001", "N003-002", "N004-002", "D2" }, null, new[] { "N002-001", "N003-001", "N003-002", "N004-002", "D2" })]
     public void GetRemainingRoute_WithValidParameters_ShouldReturnCorrectRemainingRoute(string[] route, string lastNodeId, string[] expectedRemainingRoute)
     {
         string[] remainingRoute = RoutingHelper.GetRemainingRoute(lastNodeId, route);

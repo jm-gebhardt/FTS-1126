@@ -11,5 +11,5 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 /// <param name="NewAgvPosition">The new agv position.</param>
 /// <param name="PreviousAgvPosition">The previous agv position.</param>
 /// <param name="AgvId">The identifier of the agv.</param>
-[PublicAPI] 
+[PublicAPI]
 public record AgvPositionChanged(Guid CorrelationId, AgvPosition NewAgvPosition, AgvPosition? PreviousAgvPosition, string AgvId) : CorrelatedBy<Guid>;

@@ -11,7 +11,7 @@ public class AgvStatusReceivedNotFoundException : NotFoundException
     /// Agv Status Received not found for Agv with agv correlationId
     /// </summary>
     /// <param name="agvCorrelationId">The Correlation id of Agv</param>
-    public AgvStatusReceivedNotFoundException(Guid agvCorrelationId) 
+    public AgvStatusReceivedNotFoundException(Guid agvCorrelationId)
         : base(nameof(AgvStatusReceived), nameof(agvCorrelationId), agvCorrelationId)
     {
     }

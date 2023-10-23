@@ -7,7 +7,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Node;
 /// <summary>
 /// Extension methods for <see cref="GraphNode"/>
 /// </summary>
-[PublicAPI]    
+[PublicAPI]
 public static class NodeExtensions
 {
     /// <summary>
@@ -16,7 +16,7 @@ public static class NodeExtensions
     /// <param name="nodeA"></param>
     /// <param name="nodeB"></param>
     /// <returns></returns>
-    [PublicAPI]    
+    [PublicAPI]
     public static double DistanceTo(this GraphNode nodeA, GraphNode nodeB)
     {
         var nodeAVector = new Vector2(nodeA.X, nodeA.Y);

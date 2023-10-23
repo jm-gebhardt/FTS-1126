@@ -13,7 +13,7 @@ public class ActionNotFoundException : NotFoundException
     /// <param name="description">Description what action we were looking for</param>
     /// <param name="paramName">identifier name. example: AgvId</param>
     /// <param name="paramValue">identifier value</param>
-    public ActionNotFoundException(string description, string paramName, object paramValue) 
+    public ActionNotFoundException(string description, string paramName, object paramValue)
         : base(description, paramName, paramValue)
     {
     }

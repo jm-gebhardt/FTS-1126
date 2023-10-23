@@ -12,7 +12,7 @@ public interface IApiGroup
     /// Api Info
     /// </summary>
     public OpenApiInfo ApiInfo { get; }
-    
+
     /// <summary>
     /// Name of the API
     /// </summary>
@@ -33,7 +33,7 @@ public interface IApiGroup
 /// <summary>
 /// 
 /// </summary>
-public abstract class ApiGroup: IApiGroup
+public abstract class ApiGroup : IApiGroup
 {
     /// <inheritdoc />
     public OpenApiInfo ApiInfo =>

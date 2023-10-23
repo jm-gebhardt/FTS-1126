@@ -16,6 +16,7 @@ public record AgvDataReceived : CorrelatedBy<Guid>, IAgvId
 
     /// <inheritdoc />
     public string AgvId { get; }
+
     /// <summary>
     /// Agv Graph
     /// </summary>

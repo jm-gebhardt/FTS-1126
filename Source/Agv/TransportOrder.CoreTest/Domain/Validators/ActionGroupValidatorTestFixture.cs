@@ -7,7 +7,6 @@ using Moq;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Domain.Validators;
 
-
 public class ActionGroupValidatorTestFixture
 {
     private readonly Mock<IRouteService> _routeService = new();

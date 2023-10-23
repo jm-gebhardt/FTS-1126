@@ -43,7 +43,10 @@ public class EfAgvErrorRegistry : IAgvErrorRegistry
     }
 
     /// <inheritdoc />
-    public Task<IList<AgvError>> GetActiveErrorsAsync(Guid agvCorrelationId) => GetActiveErrorsAsync(new List<Guid> {agvCorrelationId});
+    public Task<IList<AgvError>> GetActiveErrorsAsync(Guid agvCorrelationId)
+    {
+        return GetActiveErrorsAsync(new List<Guid> { agvCorrelationId });
+    }
 
     /// <inheritdoc />
     public async Task<IList<AgvError>> GetActiveErrorsAsync(IList<Guid> agvCorrelationIds)
@@ -57,7 +60,10 @@ public class EfAgvErrorRegistry : IAgvErrorRegistry
     }
 
     /// <inheritdoc />
-    public Task<IReadOnlyList<AgvError>> GetErrorsAsync(Guid agvCorrelationId, DateTime dateFrom, DateTime dateTo) => GetErrorsAsync(new List<Guid> {agvCorrelationId}, dateFrom, dateTo);
+    public Task<IReadOnlyList<AgvError>> GetErrorsAsync(Guid agvCorrelationId, DateTime dateFrom, DateTime dateTo)
+    {
+        return GetErrorsAsync(new List<Guid> { agvCorrelationId }, dateFrom, dateTo);
+    }
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<AgvError>> GetErrorsAsync(IList<Guid> agvCorrelationIds, DateTime dateFrom, DateTime dateTo)

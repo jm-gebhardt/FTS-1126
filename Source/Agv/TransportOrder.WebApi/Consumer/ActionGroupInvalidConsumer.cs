@@ -23,7 +23,7 @@ public class ActionGroupInvalidConsumer : IConsumer<ActionGroupInvalid>
     /// <summary>
     /// Initializes a new <see cref="ActionGroupInvalidConsumer"/> instance.
     /// </summary>
-    public ActionGroupInvalidConsumer(IActionGroupPublisher actionGroupPublisher, IActionGroupRetrievalService actionGroupRetrievalService, IMapper mapper,ILogger<ActionGroupInvalidConsumer> logger)
+    public ActionGroupInvalidConsumer(IActionGroupPublisher actionGroupPublisher, IActionGroupRetrievalService actionGroupRetrievalService, IMapper mapper, ILogger<ActionGroupInvalidConsumer> logger)
     {
         _actionGroupPublisher = actionGroupPublisher;
         _actionGroupRetrievalService = actionGroupRetrievalService;

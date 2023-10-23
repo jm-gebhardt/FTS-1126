@@ -1,4 +1,3 @@
-
 namespace Gebhardt.StoreWare.Agv.Common.Exceptions;
 
 /// <summary>
@@ -10,6 +9,5 @@ public class AgvLocationUnknownException : Exception
     /// <param name="agvCorrelationId">The CorrelationId of the Agv</param>
     public AgvLocationUnknownException(Guid agvCorrelationId) : base($"Last node of Agv with CorrelationId: {agvCorrelationId} is unknown")
     {
-        
-    }   
+    }
 }

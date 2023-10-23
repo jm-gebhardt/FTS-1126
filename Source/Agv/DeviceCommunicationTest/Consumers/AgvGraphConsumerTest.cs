@@ -14,7 +14,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers;
 public class AgvGraphConsumerTest
 {
     private const string AgvTestIdentifier = "#0815#";
-        
+
     /// <summary>
     /// Test for consuming AGV graph message.
     /// </summary>
@@ -24,7 +24,8 @@ public class AgvGraphConsumerTest
         var fixture = new AgvGraphConsumerTestFixture()
             .UseDefaultServices()
             .Build();
-        var nodes = new MqttNode[] {
+        var nodes = new MqttNode[]
+        {
             new() { NodeId = 1, X = 0f, Y = 0f, Z = 0f },
             new() { NodeId = 2, X = 100f, Y = 100f, Z = 0f }
         };

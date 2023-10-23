@@ -91,7 +91,6 @@ public class XmlDocResolverTest
     #endregion
 
     #region Test Members
-
     // ReSharper disable all
     /// <summary>Interface1</summary>
     private interface Interface1
@@ -130,6 +129,7 @@ public class XmlDocResolverTest
         /// <inheritdoc/>
         public Guid CorrelationId { get; }
     }
+
     // ReSharper ensable all
     #endregion
 

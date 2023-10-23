@@ -25,7 +25,8 @@ public class AgvStationListConsumerTest
     {
         var fixture = new MqttConsumerTestFixture<AgvStationListConsumer>();
 
-        var stations = new Station[] {
+        var stations = new Station[]
+        {
             new(Function.Drop, "D1", new Position(0, 1, 2), "?"),
             new(Function.Charge, "C1", new Position(3, 4, 5), "?")
         };

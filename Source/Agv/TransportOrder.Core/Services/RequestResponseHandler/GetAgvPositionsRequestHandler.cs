@@ -1,6 +1,6 @@
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agvs.Queries;
 using JetBrains.Annotations;
@@ -12,8 +12,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHan
 /// Provides handlers for agv position requests.
 /// </summary>
 [UsedImplicitly]
-public class GetAgvPositionsRequestHandler : 
-    IConsumer<GetAgvPositions>, 
+public class GetAgvPositionsRequestHandler :
+    IConsumer<GetAgvPositions>,
     IConsumer<GetAgvPosition>
 {
     private readonly IAgvPositionRegistry _agvPositionRegistry;
@@ -34,13 +34,12 @@ public class GetAgvPositionsRequestHandler :
     {
         ICollection<Guid> selectedAgvs = context.Message.CorrelationIds;
 
-        ICollection<Domain.Models.Agv.AgvPositionStatus> fetchedPositions = _agvPositionRegistry.GetSelectedAgvsPositions(selectedAgvs);
+        ICollection<AgvPositionStatus> fetchedPositions = _agvPositionRegistry.GetSelectedAgvsPositions(selectedAgvs);
         if (fetchedPositions.Count != selectedAgvs.Count)
         {
             throw new AgvsNotFoundException(selectedAgvs.Except(fetchedPositions.Select(p => p.CorrelationId)).ToList());
-
         }
-        List<AgvPositionStatus>  agvPositions = fetchedPositions.Select(p => new AgvPositionStatus(p.CorrelationId, p.AgvId, p.AgvPosition)).ToList();
+        List<Messages.MessageContent.AgvPositionStatus> agvPositions = fetchedPositions.Select(p => new Messages.MessageContent.AgvPositionStatus(p.CorrelationId, p.AgvId, p.AgvPosition)).ToList();
         await context.RespondAsync(new GotAgvPositions(agvPositions));
     }
 
@@ -55,6 +54,6 @@ public class GetAgvPositionsRequestHandler :
         {
             throw new AgvNotFoundException(correlationId);
         }
-        await context.RespondAsync(new GotAgvPosition(new AgvPositionStatus(agvPosition.CorrelationId, agvPosition.AgvId, agvPosition.AgvPosition)));
+        await context.RespondAsync(new GotAgvPosition(new Messages.MessageContent.AgvPositionStatus(agvPosition.CorrelationId, agvPosition.AgvId, agvPosition.AgvPosition)));
     }
 }

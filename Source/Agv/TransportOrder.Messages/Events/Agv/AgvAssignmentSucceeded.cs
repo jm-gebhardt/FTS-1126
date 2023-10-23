@@ -21,7 +21,7 @@ public record AgvAssignmentSucceeded : CorrelatedBy<Guid>, IAgvId
     /// The AGV correlation id 
     /// </summary>
     public Guid AgvCorrelationId { get; }
-        
+
     /// <summary>
     /// List of node ids that define the route
     /// </summary>

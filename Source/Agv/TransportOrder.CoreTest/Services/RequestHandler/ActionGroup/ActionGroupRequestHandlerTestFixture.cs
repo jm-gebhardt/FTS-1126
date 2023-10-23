@@ -22,7 +22,10 @@ public class ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> : M
     private EfGraph? _efGraph;
     private TransportOrder.Domain.Models.ActionGroup.ActionGroup[]? _actionGroups;
 
-    private static Mapper GetMapper() => MappingHelper.GetMapper(new GraphProfile());
+    private static Mapper GetMapper()
+    {
+        return MappingHelper.GetMapper(new GraphProfile());
+    }
 
     public ActionGroupState[] AllActionGroupStates => Enum.GetValues(typeof(ActionGroupState)).Cast<ActionGroupState>().ToArray();
 
@@ -51,7 +54,7 @@ public class ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> : M
             await _actionGroupRetrievalServiceTestFixture.AddRangeAsync(_actionGroups);
             _actionGroupRegistryFixture.WithActionGroups(_actionGroups);
         }
-        
+
         if (_efGraph != null)
         {
             await _actionGroupRetrievalServiceTestFixture.AddAsync(_efGraph);

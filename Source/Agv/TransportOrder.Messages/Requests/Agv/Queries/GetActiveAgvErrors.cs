@@ -21,7 +21,6 @@ public record GetActiveAgvErrors : CorrelatedBy<Guid>
     [UsedImplicitly]
     public GetActiveAgvErrors()
     {
-        
     }
 
     /// <summary>

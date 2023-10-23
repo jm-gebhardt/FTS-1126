@@ -7,7 +7,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Helper;
 
 public static class AgvRepositoryExtensions
 {
-    public static void AddAgvsToMockRepository(this Mock<IAgvRepository> repoMock, IList<TransportOrder.Domain.Models.Agv.Agv> agvs)
+    public static void AddAgvsToMockRepository(this Mock<IAgvRepository> repoMock, IList<Domain.Models.Agv.Agv> agvs)
     {
         repoMock.Setup(s => s.GetAllAgvsAsync()).ReturnsAsync(agvs.ToList());
 
@@ -21,7 +21,6 @@ public static class AgvRepositoryExtensions
             {
                 throw new AgvNotFoundException(c);
             }
-           
         });
 
         repoMock.Setup(r => r.Count).Returns(agvs.Count);

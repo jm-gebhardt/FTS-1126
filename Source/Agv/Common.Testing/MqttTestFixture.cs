@@ -17,7 +17,7 @@ public class MqttConsumerTestFixture<TConsumer>
     where TConsumer : class, IConsumer
 {
     private readonly List<Action<IServiceCollection>> _serviceActions = new();
-        
+
     /// <summary>
     /// Service provider.
     /// </summary>
@@ -52,23 +52,22 @@ public class MqttConsumerTestFixture<TConsumer>
     /// <param name="busRegistrationConfigurator">IBusRegistrationConfigurator action</param>
     public MqttConsumerTestFixture<TConsumer> Build(Action<IServiceCollection>? services = null, Action<IBusRegistrationConfigurator>? busRegistrationConfigurator = null)
     {
-        var collection = new ServiceCollection().
-            AddMassTransitTestHarness(x =>
+        var collection = new ServiceCollection().AddMassTransitTestHarness(x =>
+        {
+            x.AddMqttConsumer<TConsumer>();
+            x.UsingInMemory((context, cfg) =>
             {
-                x.AddMqttConsumer<TConsumer>();
-                x.UsingInMemory((context, cfg) =>
-                {
-                    cfg.AddSerializer(new SystemTextJsonRawMessageSerializerFactory());
-                    cfg.SerializerContentType = SystemTextJsonMessageSerializer.JsonContentType;
-                    cfg.ConfigureEndpoints(context);
-                });
+                cfg.AddSerializer(new SystemTextJsonRawMessageSerializerFactory());
+                cfg.SerializerContentType = SystemTextJsonMessageSerializer.JsonContentType;
+                cfg.ConfigureEndpoints(context);
             });
+        });
 
         if (services != null)
         {
             _serviceActions.Add(services);
         }
-            
+
         foreach (Action<IServiceCollection> service in _serviceActions)
         {
             service.Invoke(collection);
@@ -118,16 +117,15 @@ public class MqttTestFixture
     /// <param name="busRegistrationConfigurator">IBusRegistrationConfigurator action</param>
     public MqttTestFixture(Action<IServiceCollection>? services = null, Action<IBusRegistrationConfigurator>? busRegistrationConfigurator = null)
     {
-        var collection = new ServiceCollection().
-            AddMassTransitTestHarness(x =>
+        var collection = new ServiceCollection().AddMassTransitTestHarness(x =>
+        {
+            x.UsingInMemory((context, cfg) =>
             {
-                x.UsingInMemory((context, cfg) =>
-                {
-                    cfg.AddSerializer(new SystemTextJsonRawMessageSerializerFactory());
-                    cfg.SerializerContentType = SystemTextJsonMessageSerializer.JsonContentType;
-                    cfg.ConfigureEndpoints(context);
-                });
+                cfg.AddSerializer(new SystemTextJsonRawMessageSerializerFactory());
+                cfg.SerializerContentType = SystemTextJsonMessageSerializer.JsonContentType;
+                cfg.ConfigureEndpoints(context);
             });
+        });
 
         services?.Invoke(collection);
 

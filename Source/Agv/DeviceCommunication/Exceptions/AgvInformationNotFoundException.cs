@@ -12,7 +12,7 @@ public class AgvInformationNotFoundException : NotFoundException
     /// Agv Information was not found for Agv with Agv correlationId
     /// </summary>
     /// <param name="agvCorrelationId">Correlation Id of Agv</param>
-    public AgvInformationNotFoundException(Guid agvCorrelationId) 
+    public AgvInformationNotFoundException(Guid agvCorrelationId)
         : base(nameof(AgvInformation), nameof(agvCorrelationId), agvCorrelationId)
     {
     }

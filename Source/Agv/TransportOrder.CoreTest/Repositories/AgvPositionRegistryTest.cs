@@ -33,7 +33,7 @@ public class AgvPositionRegistryTest
     {
         var fixture = new AgvPositionRegistryTestFixture();
         var newAgvPosition = new AgvPosition(true, 2, 3, 4, 0);
-        var newAgvPositionUpdated = new AgvPositionStatus(fixture.CorrelationId, fixture.AgvId, newAgvPosition);
+        var newAgvPositionUpdated = new AgvPositionStatus(fixture.CorrelationId, AgvPositionRegistryTestFixture.AgvId, newAgvPosition);
         var agvPositionStatus = fixture.AgvPositionStatus;
         var agvPositionRegistry = fixture.AgvPositionRegistry;
 
@@ -55,7 +55,6 @@ public class AgvPositionRegistryTest
     public async Task UpdatePosition_PublishesAgvPositionChangedOnTheBus_WhenTheChangeDetectorReturnsTrue()
     {
         var fixture = new AgvPositionRegistryTestFixture();
-
 
         var agvPositionStatus = fixture.AgvPositionStatus;
         await fixture.AgvPositionRegistry.UpdatePositionAsync(agvPositionStatus);

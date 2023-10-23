@@ -7,7 +7,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;
 /// </summary>
 public abstract class ConfigurableDbContext : DbContext
 {
-        
     /// <summary>
     /// Constructor
     /// </summary>
@@ -35,5 +34,4 @@ public abstract class ConfigurableDbContext : DbContext
             configuration.Configure(modelBuilder);
         }
     }
-        
 }

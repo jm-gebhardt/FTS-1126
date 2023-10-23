@@ -19,17 +19,17 @@ public enum ActionGroupState
     /// Action group has been completed
     /// </summary>
     Completed,
-    
+
     /// <summary>
     /// Action group has been canceled
     /// </summary>
     Canceled,
-    
+
     /// <summary>
     /// Action group failed
     /// </summary>
     Failed,
-    
+
     /// <summary>
     /// Action group is invalid
     /// </summary>

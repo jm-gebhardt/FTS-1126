@@ -39,10 +39,7 @@ public class PollableServiceTestFixture<TPollable> where TPollable : class, IPol
             .AddMassTransitTestHarness(x =>
             {
                 busRegistrationConfigurator?.Invoke(x);
-                x.UsingInMemory((context, cfg) =>
-                {
-                    cfg.ConfigureEndpoints(context);
-                });
+                x.UsingInMemory((context, cfg) => { cfg.ConfigureEndpoints(context); });
             })
             .AddSingleton<TPollable>();
 

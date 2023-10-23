@@ -43,7 +43,7 @@ public class PollingBackgroundServiceTest
         var service = new PollingBackgroundService<PollableTest>(Mock.Of<ILogger<PollingBackgroundService<PollableTest>>>(), new PollableTest());
         var token = new CancellationTokenSource();
 
-        token.CancelAfter(1000);  // Set timeout to avoid dead-lock in while  
+        token.CancelAfter(1000); // Set timeout to avoid dead-lock in while  
         await service.StartAsync(token.Token);
         // wait for service startup
         while (service.Pollable.Counter == 0 && !token.IsCancellationRequested)

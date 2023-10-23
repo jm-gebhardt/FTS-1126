@@ -47,11 +47,12 @@ public class ActionGroup
     public AgvAction? FirstNotStartedAction => Actions.FirstOrDefault(a => a.State == ActionState.Created);
 
     private readonly List<AgvAction> _actions;
+
     /// <summary>
     /// List of actions.
     /// </summary>
     public IReadOnlyCollection<AgvAction> Actions => _actions.AsReadOnly();
-    
+
     /// <summary>
     /// If true, then this ActionGroup was created manually, not by the system
     /// </summary>
@@ -102,7 +103,6 @@ public class ActionGroup
         _actions = new List<AgvAction>();
     }
 
-
     /// <summary>
     /// Updates the state of the ActionGroup based on the state of its Actions
     /// </summary>
@@ -134,7 +134,7 @@ public class ActionGroup
     private void SetDates()
     {
         var now = DateTime.UtcNow;
-        
+
         switch (State)
         {
             case ActionGroupState.Started:
@@ -247,5 +247,4 @@ public class ActionGroup
         }
         return true;
     }
-
 }

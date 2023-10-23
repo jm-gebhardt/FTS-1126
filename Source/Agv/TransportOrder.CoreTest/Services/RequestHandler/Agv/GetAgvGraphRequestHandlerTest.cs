@@ -22,7 +22,7 @@ public class GetAgvGraphRequestHandlerTest
 
         await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await fixture.GetResponseAsync<GotAgvGraph>(new GetAgvGraph(Guid.NewGuid())));
     }
-    
+
     [TestMethod]
     public async Task GetAgvGraphRequest_GraphNotFound_ExceptionThrown()
     {
@@ -43,9 +43,9 @@ public class GetAgvGraphRequestHandlerTest
 
         AgvRequestsHandlerTestFixture<GetAgvGraphs, GetGraphRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvGraphs, GetGraphRequestHandler>()
             .WithEmptyGraphRegistry()
-            .WithAgvs(new List<TransportOrder.Domain.Models.Agv.Agv>{agv})
+            .WithAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv })
             .Build();
-        await MediatorShould.ThrowRequestExceptionAsync<AgvsNotFoundException>(async () => await fixture.GetResponseAsync<GotAgvGraphs>(new GetAgvGraphs(new List<Guid>{"INVALID".ToGuid()})));
+        await MediatorShould.ThrowRequestExceptionAsync<AgvsNotFoundException>(async () => await fixture.GetResponseAsync<GotAgvGraphs>(new GetAgvGraphs(new List<Guid> { "INVALID".ToGuid() })));
     }
 
     [TestMethod]

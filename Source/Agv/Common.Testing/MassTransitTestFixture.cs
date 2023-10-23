@@ -77,7 +77,6 @@ public class MassTransitTestFixture
             _busHarnessConfigurator?.Invoke(harness);
             return harness;
         });
-      
     }
 
     private IServiceCollection? ServiceCollection { get; set; }

@@ -17,11 +17,10 @@ public static class AgvActionReadModelExtension
         if (action == null)
         {
             return null;
-
         }
 
         return new AgvActionReadModel(action.CorrelationId, action.ParentId, action.Sequence, action.State,
-            action.ActionType, action.TargetNodeId, AgvGraph.NodeType.Charge, action.Nodes, 
+            action.ActionType, action.TargetNodeId, AgvGraph.NodeType.Charge, action.Nodes,
             action.CreatedDate, action.StartedDate, action.CompletedDate);
     }
 }

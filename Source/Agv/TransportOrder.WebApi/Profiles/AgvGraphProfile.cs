@@ -18,7 +18,7 @@ public class AgvGraphProfile : Profile
         CreateMap<Graph, GraphDto>()
             .ForMember(nameof(GraphDto.Edges), opt => opt.MapFrom<GraphEdgeValueResolver>())
             // Graph is a record type, therefore we must initialize all properties in the ctor
-            .ForCtorParam(nameof(GraphDto.Edges), opt => 
+            .ForCtorParam(nameof(GraphDto.Edges), opt =>
                 opt.MapFrom((src, ctx) => new GraphEdgeValueResolver().Resolve(src, null!, null!, ctx)));
     }
 }

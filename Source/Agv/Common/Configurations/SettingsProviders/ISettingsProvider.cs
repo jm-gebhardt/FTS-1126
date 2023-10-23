@@ -18,6 +18,6 @@ public interface ISettingsProvider<out TSettings> where TSettings : class, ISett
     /// Returns true if the settings were found
     /// </summary>
     /// <returns></returns>
-    [UsedImplicitly] 
+    [UsedImplicitly]
     bool DoTheSettingsExist();
 }

@@ -102,7 +102,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
         // Once Agv is assigned to ActionGroup, Status is immediately set to started (and StartedDate), therefore we can use StartedDate to get current assigned ActionGroup
         await using var context = await CreateDbContextAsync();
         List<ActionGroup> actionGroups = await context.Set<ActionGroup>()
-            .Where(g => g.AssignedAgv != null && agvCorrelationIds.Contains((Guid) g.AssignedAgv))
+            .Where(g => g.AssignedAgv != null && agvCorrelationIds.Contains((Guid)g.AssignedAgv))
             .OrderByDescending(g => g.StartedDate)
             .ToListAsync();
 
@@ -205,10 +205,10 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
 
         IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>();
         IQueryable<EfNode> graphNodes = context.Set<EfNode>();
- 
+
         return await actionGroups
             .Where(g => g.AssignedAgv == agvCorrelationId && g.State == ActionGroupState.Started)
-            .AnyAsync(g => g.Actions.Join(graphNodes, a => a.TargetNodeId, 
+            .AnyAsync(g => g.Actions.Join(graphNodes, a => a.TargetNodeId,
                 n => n.Id, (a, n) => n.Type).Any(b => b == nodeType));
     }
 }

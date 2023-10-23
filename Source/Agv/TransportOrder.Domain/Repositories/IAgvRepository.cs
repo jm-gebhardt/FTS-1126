@@ -1,9 +1,11 @@
-﻿namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
+﻿using JetBrains.Annotations;
+
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 
 /// <summary>
 /// Interface for accessing the AGV repository.
 /// </summary>
-[JetBrains.Annotations.PublicAPI]
+[PublicAPI]
 public interface IAgvRepository
 {
     /// <summary>
@@ -38,7 +40,6 @@ public interface IAgvRepository
     /// <param name="correlationId">The correlation id to check.</param>
     /// <returns>If the agv exists.</returns>
     Task<bool> CheckIfAgvExistsAsync(Guid correlationId);
-
 
     /// <summary>
     /// Select from the given agv ids the ones that exists.

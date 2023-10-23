@@ -13,7 +13,7 @@ public class DefaultConfigurationProviderTest
         var testFixture = new ConfigurationProviderTestFixture()
             .AddDefaultConfigurationProvider()
             .Build();
-                    
+
         foreach (var configurationType in testFixture.ConfigurationTypes)
         {
             foreach (var configurationTypeProperty in configurationType.Properties)

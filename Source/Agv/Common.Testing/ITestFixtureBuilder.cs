@@ -1,5 +1,4 @@
-﻿
-namespace Gebhardt.StoreWare.Agv.Common.Testing;
+﻿namespace Gebhardt.StoreWare.Agv.Common.Testing;
 
 /// <summary>
 /// Marker interface for test fixture builders. Used to prevent using of configured, but un-built test fixtures

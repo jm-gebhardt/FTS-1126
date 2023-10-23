@@ -73,9 +73,9 @@ public class AgvStateConsumer : IConsumer<MqttState>
         );
 
         var agvStatusReceived = new AgvStatusReceived(
-            correlationId: agvCorrelationId,
-            agvId: serialNumber,
-            agvStatus: agvStatus
+            agvCorrelationId,
+            serialNumber,
+            agvStatus
         );
         await context.Publish(agvStatusReceived, context.CancellationToken);
 
@@ -105,15 +105,15 @@ public class AgvStateConsumer : IConsumer<MqttState>
         if (context.Message.AgvPosition != null)
         {
             await context.Publish(new AgvPositionReceived(
-                correlationId: agvCorrelationId,
-                agvId: serialNumber,
-                agvPosition: new AgvPosition(
-                    positionInitialized: context.Message.AgvPosition.PositionInitialized,
-                    x: context.Message.AgvPosition.X,
-                    y: context.Message.AgvPosition.Y * -1, // Special treatment for Karis AGV. Y Axis is inverted
-                    z: 0f,
-                    theta: Mathematics.ConvertToRadians(90.0f) - context.Message.AgvPosition.Theta, // Special treatment for Karis AGV. 90� in our System (AGV facing right) is 0� in our world
-                    deviationRange: context.Message.AgvPosition.DeviationRange
+                agvCorrelationId,
+                serialNumber,
+                new AgvPosition(
+                    context.Message.AgvPosition.PositionInitialized,
+                    context.Message.AgvPosition.X,
+                    context.Message.AgvPosition.Y * -1, // Special treatment for Karis AGV. Y Axis is inverted
+                    0f,
+                    Mathematics.ConvertToRadians(90.0f) - context.Message.AgvPosition.Theta, // Special treatment for Karis AGV. 90� in our System (AGV facing right) is 0� in our world
+                    context.Message.AgvPosition.DeviationRange
                 )), context.CancellationToken);
         }
     }
@@ -136,9 +136,15 @@ public class AgvStateConsumer : IConsumer<MqttState>
         _agvRegistry.AddOrUpdateAgvStatus(correlationId, agvStatusReceived);
     }
 
-    private string GetSerialNumber(MqttState message) => message.SerialNumber;
+    private string GetSerialNumber(MqttState message)
+    {
+        return message.SerialNumber;
+    }
 
-    private string GetOrderId(MqttState message) => message.OrderId;
+    private string GetOrderId(MqttState message)
+    {
+        return message.OrderId;
+    }
 
     private bool GetBusy(MqttState message)
     {
@@ -219,9 +225,6 @@ public class AgvStateConsumer : IConsumer<MqttState>
         {
             return message.LastNodeId;
         }
-        else
-        {
-            return null;
-        }
+        return null;
     }
 }

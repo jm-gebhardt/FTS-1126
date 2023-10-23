@@ -105,7 +105,7 @@ public record AgvActionDto
     }
 
     /// <summary>
-    /// AutoMapper ctor
+    /// ctor called by AutoMapper.
     /// </summary>
     private AgvActionDto()
     {

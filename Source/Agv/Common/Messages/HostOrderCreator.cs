@@ -12,6 +12,7 @@ public enum HostOrderCreator
     /// A Warehouse Management System created the order (e.g. StoreWare)
     /// </summary>
     Wms,
+
     /// <summary>
     /// A simulation module is creator of the order
     /// </summary>

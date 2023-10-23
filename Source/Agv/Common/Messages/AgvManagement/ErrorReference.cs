@@ -13,6 +13,7 @@ public record ErrorReference
     /// Property for reference key
     /// </summary>
     public string? ReferenceKey { get; set; }
+
     /// <summary>
     /// Property for reference value
     /// </summary>

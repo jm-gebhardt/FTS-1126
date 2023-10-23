@@ -25,6 +25,7 @@ public class HostOrderCommandHandler:
 {
     private readonly IHostOrderRepository _hostOrderRepository;
     private readonly IHostCommunicator _hostCommunicator;
+
     /// <summary>
     /// Initializes a new <see cref="HostOrderCommandHandler"/> instance.
     /// </summary>

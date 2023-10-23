@@ -11,6 +11,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Repositories;
 public class EfNodeStateRegistryTestFixture
 {
     private ServiceProvider Provider { get; }
+
     private IDbContextFactory<TransportOrderDbContext> ContextFactory { get; }
 
     public readonly EfNodeStateRegistry Registry;
@@ -18,18 +19,15 @@ public class EfNodeStateRegistryTestFixture
     public EfNodeStateRegistryTestFixture()
     {
         var mockLogger = new Mock<ILogger<EfNodeStateRegistry>>();
-      
+
         var collection = new ServiceCollection()
-            .AddDbContextFactory<TransportOrderDbContext>(options =>
-                {
-                    options.UseInMemoryDatabase(Guid.NewGuid().ToString());
-                }
+            .AddDbContextFactory<TransportOrderDbContext>(options => { options.UseInMemoryDatabase(Guid.NewGuid().ToString()); }
             );
         Provider = collection.BuildServiceProvider(true);
         ContextFactory = Provider.GetService<IDbContextFactory<TransportOrderDbContext>>()!;
         Registry = new EfNodeStateRegistry(mockLogger.Object, ContextFactory);
     }
-        
+
     public void Add(NodeLock nodeLock)
     {
         using var context = ContextFactory.CreateDbContext();

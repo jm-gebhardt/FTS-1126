@@ -13,7 +13,7 @@ public class OrderNotFoundException : NotFoundException
     /// Order with order correlationId was not found
     /// </summary>
     /// <param name="correlationId">Correlation Id of the order</param>
-    public OrderNotFoundException(Guid correlationId) 
+    public OrderNotFoundException(Guid correlationId)
         : base(nameof(IOrder), nameof(correlationId), correlationId)
     {
     }

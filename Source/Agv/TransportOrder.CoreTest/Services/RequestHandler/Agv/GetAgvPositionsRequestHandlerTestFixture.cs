@@ -1,4 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Testing;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,16 +13,12 @@ public class GetAgvPositionsRequestHandlerTestFixture<TRequestClient, TConsumer>
 {
     private readonly Mock<IAgvPositionRegistry> _agvPositionRegistryMock = new();
 
-
     public GetAgvPositionsRequestHandlerTestFixture()
     {
-        AddServices(s =>
-        {
-            s.AddTransient(_ => _agvPositionRegistryMock.Object);
-        });
+        AddServices(s => { s.AddTransient(_ => _agvPositionRegistryMock.Object); });
     }
 
-    public GetAgvPositionsRequestHandlerTestFixture<TRequestClient, TConsumer> WithAgvPositions(ICollection<TransportOrder.Domain.Models.Agv.AgvPositionStatus> positions)
+    public GetAgvPositionsRequestHandlerTestFixture<TRequestClient, TConsumer> WithAgvPositions(ICollection<AgvPositionStatus> positions)
     {
         _agvPositionRegistryMock.Setup(x => x.GetSelectedAgvsPositions(It.IsAny<ICollection<Guid>>()))
             .Returns((ICollection<Guid> ids) => positions.Where(p => ids.Contains(p.CorrelationId)).ToList());

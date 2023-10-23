@@ -7,14 +7,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.CmdOptions;
 /// Production Mode Options
 /// </summary>
 [UsedImplicitly]
-[Verb("production", isDefault: true)]
+[Verb("production", true)]
 public sealed class ProductionOptions
 {
     /// <summary>
     /// This is required for `dotnet ef migrations` to work.
     /// </summary>
     [UsedImplicitly]
-    [Option("applicationName", HelpText="Ignore property only used by dotnet tools")]
+    [Option("applicationName", HelpText = "Ignore property only used by dotnet tools")]
     public string? ApplicationName { get; init; }
 
     /// <summary>

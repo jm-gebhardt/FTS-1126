@@ -30,7 +30,7 @@ public class MapProfileTest
         var mapper = MappingHelper.GetMapper(new MapProfile());
         var correlationId = Guid.NewGuid();
 
-        var mapMessageContent = new Map(correlationId, "Area51_Floor1_Compartment47", 50.0d,0.01, 1, new[]
+        var mapMessageContent = new Map(correlationId, "Area51_Floor1_Compartment47", 50.0d, 0.01, 1, new[]
         {
             new Guid("3D3D5DA8-1A01-459E-B0DA-EBB875D393F6"),
             new Guid("A781AF33-CB57-4143-8EEF-1590FE9EC2ED")
@@ -39,7 +39,7 @@ public class MapProfileTest
         {
             {
                 correlationId,
-               mapMessageContent.RelatedAgvs
+                mapMessageContent.RelatedAgvs
             }
         }.ToImmutableDictionary(x => x.Key, x => x.Value);
 

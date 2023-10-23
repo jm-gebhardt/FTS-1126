@@ -34,7 +34,7 @@ public class ServiceCollectionExtensionsTests
     {
         string sectionName = new ConfigurationTypeManager().GetSectionName<MassTransitConfiguration>();
         var configuration = new ConfigurationBuilder().AddInMemoryCollection(
-            new Dictionary<string, string?> {{$"{sectionName}:Url", "127.0.0.1"}}
+            new Dictionary<string, string?> { { $"{sectionName}:Url", "127.0.0.1" } }
         ).Build();
         ServiceCollection services = new();
 

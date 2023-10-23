@@ -113,7 +113,7 @@ public class MapGenerator
         float xOffset = -min.X + WallDistance;
         float yOffset = -min.Y + WallDistance;
 
-        int imageHeightPx = (int) Math.Ceiling((max.Y - min.Y + 2 * WallDistance) / resolution);
+        int imageHeightPx = (int)Math.Ceiling((max.Y - min.Y + 2 * WallDistance) / resolution);
         float wallThicknessPx = WallThickness / resolution; // Wall thickness: 24 cm
 
         var imageInfo = new SKImageInfo(ImageWidth, imageHeightPx);
@@ -143,7 +143,7 @@ public class MapGenerator
                     float ratio = wallThicknessPx * 1.5f / bounds.Height;
                     paint.TextSize = ratio * paint.TextSize;
                 }
-                canvas.DrawText(Signature, ImageWidth - 2 * wallThicknessPx, imageHeightPx - (int) (2.0 * wallThicknessPx + 0.5), paint);
+                canvas.DrawText(Signature, ImageWidth - 2 * wallThicknessPx, imageHeightPx - (int)(2.0 * wallThicknessPx + 0.5), paint);
             }
 
             using (var image = surface.Snapshot())
@@ -173,5 +173,8 @@ public class MapGenerator
     /// <param name="agvMap"></param>
     /// <returns></returns>
     [PublicAPI]
-    public static SKImage GetPng(AgvMap agvMap) => SKImage.FromEncodedData(Convert.FromBase64String(agvMap.ImageData));
+    public static SKImage GetPng(AgvMap agvMap)
+    {
+        return SKImage.FromEncodedData(Convert.FromBase64String(agvMap.ImageData));
+    }
 }

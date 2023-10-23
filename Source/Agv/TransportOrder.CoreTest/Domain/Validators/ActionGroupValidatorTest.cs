@@ -34,9 +34,9 @@ public class ActionGroupValidatorTest
     public async Task ValidateAsync_WhenOrderIdIsNullOrEmpty_Fails(string orderId)
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        var actions = new List<AgvAction> { AgvActionGenerator.GenerateParkAction(targetNodeId: "Park1") };
+        var actions = new List<AgvAction> { AgvActionGenerator.GenerateParkAction("Park1") };
         var actionGroup = AgvActionGenerator.GenerateActionGroup(actions, orderId: orderId);
-        
+
         var fixture = new ActionGroupValidatorTestFixture()
             .WithAgv(agv)
             .WithRoute(agv, actionGroup)
@@ -62,7 +62,6 @@ public class ActionGroupValidatorTest
 
         validationResult.ShouldHaveValidationErrorFor(p => p.AssignedAgv).WithErrorMessage("Assigned Agv must exist in the registry.");
     }
-
 
     [TestMethod]
     public async Task ValidateAsync_WhenIsManualIsTrueAndActionsCountIsMoreThanOne_Fails()
@@ -144,7 +143,7 @@ public class ActionGroupValidatorTest
     public async Task ValidateAsync_WhenActionsAreEmpty_Fails()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        var actionGroup = AgvActionGenerator.GenerateActionGroup(new List<AgvAction>(), correlationId:new Guid());
+        var actionGroup = AgvActionGenerator.GenerateActionGroup(new List<AgvAction>(), correlationId: new Guid());
         var fixture = new ActionGroupValidatorTestFixture()
             .WithAgv(agv)
             .WithRoute(agv, actionGroup)
@@ -233,7 +232,7 @@ public class ActionGroupValidatorTest
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var actions = new List<AgvAction> { AgvActionGenerator.GenerateParkAction(parentId: "DifferentActionGroup".ToGuid(), targetNodeId: "Park1") };
-        var actionGroup = AgvActionGenerator.GenerateActionGroup(actions, correlationId:"ActionGroup".ToGuid());
+        var actionGroup = AgvActionGenerator.GenerateActionGroup(actions, correlationId: "ActionGroup".ToGuid());
 
         var fixture = new ActionGroupValidatorTestFixture()
             .WithAgv(agv)
@@ -268,7 +267,7 @@ public class ActionGroupValidatorTest
     public async Task ValidateAsync_WhenDropActionIsPresentButNoPickAction_Fails()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(partial:2);
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(partial: 2);
 
         var fixture = new ActionGroupValidatorTestFixture()
             .WithAgv(agv)
@@ -287,7 +286,7 @@ public class ActionGroupValidatorTest
     public async Task ValidateAsync_WhenPickActionIsPresentButNoDropAction_Fails()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(partial:1);
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(partial: 1);
 
         var fixture = new ActionGroupValidatorTestFixture()
             .WithAgv(agv)
@@ -306,7 +305,7 @@ public class ActionGroupValidatorTest
     public async Task ValidateAsync_WhenPickActionSequenceIsAfterDropAction_Fails()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(partial:3);
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(partial: 3);
 
         var fixture = new ActionGroupValidatorTestFixture()
             .WithAgv(agv)

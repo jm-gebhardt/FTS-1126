@@ -17,9 +17,6 @@ public static class MessageTopologyConfigurationExtension
     [PublicAPI]
     public static void ConfigureMessageTopology<T>(this IRabbitMqBusFactoryConfigurator configurator) where T : class
     {
-        configurator.Publish<T>(topologyConfigurator =>
-        {
-            topologyConfigurator.ExchangeType = ExchangeType.Topic;
-        });
+        configurator.Publish<T>(topologyConfigurator => { topologyConfigurator.ExchangeType = ExchangeType.Topic; });
     }
 }

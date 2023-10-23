@@ -1,8 +1,8 @@
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Routing;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
-using Microsoft.Extensions.DependencyInjection;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Routing;
 using MassTransit;
+using Microsoft.Extensions.DependencyInjection;
 using Moq;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.RequestHandler.Agv;
@@ -12,12 +12,10 @@ public class GetCurrentAgvRouteRequestHandlerTestFixture<TRequestClient, TConsum
     where TConsumer : class, IConsumer
 {
     private readonly Mock<IAgvRouteRetrievalService> _agvRouteService = new();
+
     public GetCurrentAgvRouteRequestHandlerTestFixture()
     {
-        AddServices(s =>
-        {
-            s.AddTransient(_ => _agvRouteService.Object);
-        });
+        AddServices(s => { s.AddTransient(_ => _agvRouteService.Object); });
     }
 
     public GetCurrentAgvRouteRequestHandlerTestFixture<TRequestClient, TConsumer> WithAgvRoute(Guid agvCorrelationId, AgvRouteReadModel agvRouteReadModel, string? lastNodeId = null)
@@ -25,13 +23,13 @@ public class GetCurrentAgvRouteRequestHandlerTestFixture<TRequestClient, TConsum
         _agvRouteService.Setup(x => x.GetAgvRouteAsync(agvCorrelationId, lastNodeId)).ReturnsAsync(agvRouteReadModel);
         return this;
     }
-    
+
     public GetCurrentAgvRouteRequestHandlerTestFixture<TRequestClient, TConsumer> WithAgvRoutes(Guid[] agvCorrelationIds, Dictionary<Guid, AgvRouteReadModel?> agvRoutesByAgv)
     {
         _agvRouteService.Setup(x => x.GetAgvRouteAsync(agvCorrelationIds)).ReturnsAsync(agvRoutesByAgv);
         return this;
     }
-    
+
     public new GetCurrentAgvRouteRequestHandlerTestFixture<TRequestClient, TConsumer> Build()
     {
         base.Build();

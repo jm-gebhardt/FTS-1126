@@ -37,6 +37,5 @@ public class ActionGroupClassMap : ClassMap<ActionGroup>
         });
 
         entity.Navigation(g => g.Actions).AutoInclude();
-
     }
 }

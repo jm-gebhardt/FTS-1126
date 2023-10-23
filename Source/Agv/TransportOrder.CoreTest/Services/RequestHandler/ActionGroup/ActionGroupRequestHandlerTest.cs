@@ -59,7 +59,7 @@ public class ActionGroupRequestHandlerTest
     [TestMethod]
     public async Task Consume_GetAgvActionGroupsRequest_SingleActionGroup_ReturnsCreated()
     {
-        TransportOrder.Domain.Models.ActionGroup.ActionGroup[] actionGroups = {AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Created)};
+        TransportOrder.Domain.Models.ActionGroup.ActionGroup[] actionGroups = { AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Created) };
         ActionGroupRequestHandlerTestFixture<GetActionGroups, ActionGroupRequestHandler> fixture = await new ActionGroupRequestHandlerTestFixture<GetActionGroups, ActionGroupRequestHandler>()
             .WithActionGroups(actionGroups)
             .AddDefaultGraph()
@@ -121,15 +121,15 @@ public class ActionGroupRequestHandlerTest
         {
             switch (actionGroupsByState)
             {
-                case {State: ActionGroupState.Completed}:
+                case { State: ActionGroupState.Completed }:
                     actionGroupsByState.Count.ShouldBe(actionGroupCompletedCount);
                     break;
 
-                case {State: ActionGroupState.Created}:
+                case { State: ActionGroupState.Created }:
                     actionGroupsByState.Count.ShouldBe(actionGroupCreatedCount);
                     break;
 
-                case {State: ActionGroupState.Started}:
+                case { State: ActionGroupState.Started }:
                     actionGroupsByState.Count.ShouldBe(actionGroupStartedCount);
                     break;
             }

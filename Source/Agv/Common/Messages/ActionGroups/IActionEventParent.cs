@@ -1,4 +1,3 @@
-
 using MassTransit;
 
 namespace Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
@@ -8,5 +7,4 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 /// </summary>
 public interface IActionEventParent : CorrelatedBy<Guid>
 {
-        
 }

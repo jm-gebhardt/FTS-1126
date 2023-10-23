@@ -20,7 +20,7 @@ public class ChargingPointManager : BaseNodeReservationManager, IChargingPointMa
     /// <param name="routeService"></param>
     /// <param name="logger"></param>
     /// <param name="semaphoreProvider"></param>
-    public ChargingPointManager(IAgvGraphRegistry graphRegistry, INodeStateRegistry nodeStateRegistry, IRouteService routeService, ILogger<ChargingPointManager> logger, IChargingSemaphoreProvider semaphoreProvider) 
+    public ChargingPointManager(IAgvGraphRegistry graphRegistry, INodeStateRegistry nodeStateRegistry, IRouteService routeService, ILogger<ChargingPointManager> logger, IChargingSemaphoreProvider semaphoreProvider)
         : base(graphRegistry, nodeStateRegistry, routeService, logger, semaphoreProvider)
     {
     }

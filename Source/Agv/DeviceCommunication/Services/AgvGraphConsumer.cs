@@ -18,7 +18,6 @@ public class AgvGraphConsumer : IConsumer<MqttGraph>
     private readonly ILogger<AgvGraphConsumer> _logger;
     private readonly IAgvRegistry _agvRegistry;
 
-
     /// <summary>
     /// Create consumer with message handler delegate.
     /// </summary>
@@ -50,8 +49,8 @@ public class AgvGraphConsumer : IConsumer<MqttGraph>
         }
 
         await context.Publish(new InternalGraphReceived(
-            correlationId: correlationId,
-            graph: reversedYGraph
+            correlationId,
+            reversedYGraph
         ), context.CancellationToken);
 
         var graphParser = new GraphParser(reversedYGraph);

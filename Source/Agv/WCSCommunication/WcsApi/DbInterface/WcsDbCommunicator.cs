@@ -39,7 +39,6 @@ public class WcsDbCommunicator: IHostCommunicator
         dbContext.FromAgv.Add(FromAgv.CreateInstance(order, OrderStatus.Finished, RecordType.TransportOrder));
         
         return await dbContext.SaveChangesAsync() > 0;
-
     }
 
     /// <summary>

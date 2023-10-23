@@ -12,7 +12,6 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 using MassTransit;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
-using AgvStatus = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.AgvStatus;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.EventHandler;
 
@@ -125,7 +124,7 @@ public class AgvEventHandlerTest
     {
         var fixture = new AgvEventHandlerTestFixture();
 
-        var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: AgvEventHandlerTestFixture.AgvSettings.BatteryLevelCritical, lastNodeId:"nodeId");
+        var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: AgvEventHandlerTestFixture.AgvSettings.BatteryLevelCritical, lastNodeId: "nodeId");
 
         fixture.AddAgv(agv);
 
@@ -273,7 +272,7 @@ public class AgvEventHandlerTest
     [DataRow(AgvEventHandlerTestFixture.BatteryLevelLow, AgvEventHandlerTestFixture.BatteryLevelCritical)]
     public async Task Consume_AgvBatteryChargeChanged_publish_AgvNeedsCharging(int oldCharge, int newCharge)
     {
-        string agvId = "AGV001";
+        const string agvId = "AGV001";
         var correlationId = agvId.ToGuid();
 
         var fixture = new AgvEventHandlerTestFixture();
@@ -288,7 +287,7 @@ public class AgvEventHandlerTest
     [DataRow(AgvEventHandlerTestFixture.BatteryLevelLow, AgvEventHandlerTestFixture.BatteryLevelFull)]
     public async Task Consume_AgvBatteryChargeChanged_publish_ChargingAgvsCanHandleActionsAgainEvent(int oldCharge, int newCharge)
     {
-        string agvId = "AGV001";
+        const string agvId = "AGV001";
         var correlationId = agvId.ToGuid();
 
         var fixture = new AgvEventHandlerTestFixture();
@@ -304,7 +303,7 @@ public class AgvEventHandlerTest
     [TestMethod]
     public async Task Consume_AgvMapReceived_ValidData_PublishesSaveMap()
     {
-        string agvId = "AGV001";
+        const string agvId = "AGV001";
         var agvCorrelationId = agvId.ToGuid();
         var map = new AgvMap(new Guid(), "", DateTime.MaxValue, "", 0, 0, 0.5f, 0.5f, 0.5f);
 
@@ -320,7 +319,7 @@ public class AgvEventHandlerTest
     public async Task Consume_AgvStatusReceived_NoAgvInRepository_PublishesCreateAgv()
     {
         MassTransitConsumerTestFixtureWithScheduler<AgvEventHandler> fixture = new AgvEventHandlerTestFixture().WithoutAgv();
-        string agvId = "AGV001";
+        const string agvId = "AGV001";
 
         await fixture.TestHarness!.Bus.Publish(new AgvStatusReceived(agvId.ToGuid(), agvId, new AgvStatus(agvId.ToGuid(), null, false, true, 100, false, false, "nodeId")));
         (await fixture.ConsumerHarness!.Consumed.Any<AgvStatusReceived>()).ShouldBeTrue();

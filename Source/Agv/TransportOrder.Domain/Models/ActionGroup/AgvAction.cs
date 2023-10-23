@@ -83,7 +83,6 @@ public class AgvAction : IParentedBy<Guid>
         ParentId = Guid.Empty;
     }
 
-
     /// <summary>
     /// Updates the state of the Action and its Dates
     /// </summary>
@@ -103,7 +102,7 @@ public class AgvAction : IParentedBy<Guid>
     private void SetDates()
     {
         var now = DateTime.UtcNow;
-        
+
         switch (State)
         {
             case ActionState.Started:

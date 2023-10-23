@@ -45,7 +45,6 @@ public class AgvGraphBuilderSaga : SagaStateMachineInstance, CorrelatedBy<Guid>
     /// </summary>
     public AgvGraph? AgvGraph { get; private set; }
 
-
     /// <summary>
     /// Create new saga instance.
     /// </summary>
@@ -58,7 +57,6 @@ public class AgvGraphBuilderSaga : SagaStateMachineInstance, CorrelatedBy<Guid>
         }
         CorrelationId = correlationId;
     }
-
 
     /// <summary>
     /// Merge graph and station list into an <see cref="Common.Messages.AgvManagement.AgvGraph"/>.

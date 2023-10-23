@@ -16,22 +16,27 @@ public abstract class BaseStateMachineTestFixture<TStateMachine, TInstance>
     /// A registered Saga AgvState Machine 
     /// </summary>
     public TStateMachine Machine = null!;
+
     /// <summary>
     /// Service Collection
     /// </summary>
     private readonly IServiceCollection _serviceCollection;
+
     /// <summary>
     /// Service Provider
     /// </summary>
     public ServiceProvider Provider = null!;
+
     /// <summary>
     /// Saga AgvState Machine test harness
     /// </summary>
     public ISagaStateMachineTestHarness<TStateMachine, TInstance> SagaHarness = null!;
+
     /// <summary>
     /// Test Harness
     /// </summary>
     public ITestHarness TestHarness = null!;
+
     /// <summary>
     /// Saga Dictionary. This can be used to manipulate an OrderSaga directly.
     /// </summary>

@@ -12,7 +12,6 @@ public static class AgvGenerator
         return agv;
     }
 
-
     public static IEnumerable<TransportOrder.Domain.Models.Agv.Agv> GenerateIdleAgvs(int count, string? lastNodeId = null, bool isLocked = false, int batteryCharge = 100)
     {
         int index = 0;
@@ -31,9 +30,8 @@ public static class AgvGenerator
     [UsedImplicitly]
     public static TransportOrder.Domain.Models.Agv.Agv GenerateChargingAgv(int index = 0, string? lastNodeId = null, bool isLocked = false, int batteryCharge = 100)
     {
-        return GenerateAgv(AgvState.Charging, index, lastNodeId, charging: true, isLocked:isLocked, batteryCharge: batteryCharge, orderId: string.Empty);
+        return GenerateAgv(AgvState.Charging, index, lastNodeId, charging: true, isLocked: isLocked, batteryCharge: batteryCharge, orderId: string.Empty);
     }
-
 
     private static TransportOrder.Domain.Models.Agv.Agv GenerateAgv(
         AgvState agvState,
@@ -81,5 +79,8 @@ public static class AgvGenerator
         return agv;
     }
 
-    private static string GetAgvId(int index) => $"AGV{index:D3}";
+    private static string GetAgvId(int index)
+    {
+        return $"AGV{index:D3}";
+    }
 }

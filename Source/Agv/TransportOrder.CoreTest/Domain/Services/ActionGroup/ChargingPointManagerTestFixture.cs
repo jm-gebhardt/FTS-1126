@@ -7,6 +7,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Routing;
 using Microsoft.Extensions.Logging;
 using Moq;
+using AgvStatus = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv.AgvStatus;
 
 // ReSharper disable MemberCanBePrivate.Global
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Domain.Services.ActionGroup;
@@ -25,33 +26,36 @@ public class ChargingPointManagerTestFixture
     private const string MapName = "Map#1";
 
     private readonly Mock<IAgvGraphRegistry> _graphRegistry = new();
+
     public Mock<INodeStateRegistry> NodeStateRegistry { get; } = new();
+
     public Mock<IRouteService> RouteService { get; } = new();
 
-    private readonly GraphNode[] _nodes = {
-        new(_charge){ Type = AgvGraph.NodeType.Charge, X = -2f, Y = -2f, Z = 0f},
-        new(_node01){ Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 0f, Z = 0f},
-        new(_node02){ Type = AgvGraph.NodeType.PickDrop, X = 4f, Y = 0f, Z = 0f},
-        new(_node03){ Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 3f, Z = 0f},
-        new(_node04){ Type = AgvGraph.NodeType.PickDrop, X = 4f, Y = 3f, Z = 0f},
-        new(_node05){ Type = AgvGraph.NodeType.PickDrop, X = 6f, Y = 9f, Z = 0f},
-        new(_node06){ Type = AgvGraph.NodeType.PickDrop, X = 13f, Y = 5f, Z = 0f}
+    private readonly GraphNode[] _nodes =
+    {
+        new(_charge) { Type = AgvGraph.NodeType.Charge, X = -2f, Y = -2f, Z = 0f },
+        new(_node01) { Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 0f, Z = 0f },
+        new(_node02) { Type = AgvGraph.NodeType.PickDrop, X = 4f, Y = 0f, Z = 0f },
+        new(_node03) { Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 3f, Z = 0f },
+        new(_node04) { Type = AgvGraph.NodeType.PickDrop, X = 4f, Y = 3f, Z = 0f },
+        new(_node05) { Type = AgvGraph.NodeType.PickDrop, X = 6f, Y = 9f, Z = 0f },
+        new(_node06) { Type = AgvGraph.NodeType.PickDrop, X = 13f, Y = 5f, Z = 0f }
     };
 
     private readonly GraphEdge[] _edges =
     {
-        new (_charge, _node01, 2f),
-        new (_node01, _charge, 2f),
-        new (_node01, _node02, 4f),
-        new (_node01, _node03, 3f),
-        new (_node01, _node04, 5f),
-        new (_node02, _node01, 4f),
-        new (_node02, _node04, 6f),
-        new (_node03, _node01, 3f),
-        new (_node03, _node04, 4f),
-        new (_node04, _node01, 5f),
-        new (_node04, _node02, 6f),
-        new (_node04, _node03, 4f)
+        new(_charge, _node01, 2f),
+        new(_node01, _charge, 2f),
+        new(_node01, _node02, 4f),
+        new(_node01, _node03, 3f),
+        new(_node01, _node04, 5f),
+        new(_node02, _node01, 4f),
+        new(_node02, _node04, 6f),
+        new(_node03, _node01, 3f),
+        new(_node03, _node04, 4f),
+        new(_node04, _node01, 5f),
+        new(_node04, _node02, 6f),
+        new(_node04, _node03, 4f)
         //no edges for node 5 and 6 on purpose so that there is no route to this stations
     };
 
@@ -91,10 +95,10 @@ public class ChargingPointManagerTestFixture
         _graphRegistry.Setup(x => x.GetNodesAsync(It.IsAny<Guid>(), It.IsAny<Expression<Func<GraphNode, bool>>>()))
             .ReturnsAsync(new Func<Guid, Expression<Func<GraphNode, bool>>, IEnumerable<GraphNode>>((_, predicate) => graph.Nodes.AsQueryable().Where(predicate)));
     }
-          
+
     public TransportOrder.Domain.Models.Agv.Agv GetAgv(Guid correlationId, string agvId, string order, string? lastNodeId = null)
     {
-        var agvStatus = new TransportOrder.Domain.Models.Agv.AgvStatus(correlationId, order, true, true, 10, false, false, lastNodeId);
+        var agvStatus = new AgvStatus(correlationId, order, true, true, 10, false, false, lastNodeId);
 
         return new TransportOrder.Domain.Models.Agv.Agv(correlationId, agvId, agvStatus);
     }
@@ -108,11 +112,11 @@ public class ChargingPointManagerTestFixture
             _graphRegistry.Setup(x => x.GetNodeAsync(availableNode.Id, agv.CorrelationId))
                 .ReturnsAsync(availableNodes.First(n => n.Id == availableNode.Id));
         }
-       
+
         NodeStateRegistry.Setup(x => x.FilterFreeUnlockedNodes(availableNodes)).Returns(availableNodes);
         return this;
     }
-    
+
     public ChargingPointManagerTestFixture WithLowestCostNode(TransportOrder.Domain.Models.Agv.Agv agv, IList<GraphNode> availableNodes, GraphNode node)
     {
         RouteService.Setup(x => x.GetNodeWithLowestCostsAsync(agv, availableNodes)).ReturnsAsync(node);

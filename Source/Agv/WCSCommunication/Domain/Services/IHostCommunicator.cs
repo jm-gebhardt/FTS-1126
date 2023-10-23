@@ -30,5 +30,4 @@ public interface IHostCommunicator
     /// Transmit host order cancellation succeeded to the host
     /// </summary>
     Task<bool> TransmitHostOrderCancellationSucceeded(string orderId);
-
 }

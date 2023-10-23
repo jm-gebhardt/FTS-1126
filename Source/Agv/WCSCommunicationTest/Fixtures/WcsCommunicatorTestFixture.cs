@@ -22,6 +22,7 @@ public class WcsCommunicatorTestFixture
         DbContextFactory = provider.GetService<IDbContextFactory<WcsHostDbContext>>()!;
         EnsureDbCreated();
     }
+
     private void EnsureDbCreated()
     {
         using var context = DbContextFactory.CreateDbContext();

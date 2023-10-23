@@ -11,7 +11,6 @@ public abstract class NotFoundException : Exception
     /// <param name="paramName"><example>"Agv"</example></param>
     protected NotFoundException(string paramName) : base($"{paramName} not found")
     {
-
     }
 
     /// <summary>
@@ -23,6 +22,5 @@ public abstract class NotFoundException : Exception
     protected NotFoundException(string paramName, string paramIdentifierName, object? paramIdentifierValue)
         : base($"{paramName} not found using the {paramIdentifierName}:{paramIdentifierValue}.")
     {
-
     }
 }

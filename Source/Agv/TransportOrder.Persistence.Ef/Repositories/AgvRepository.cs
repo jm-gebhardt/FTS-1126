@@ -22,7 +22,7 @@ public class AgvRepository : IAgvRepository
         _dbContextFactory.CreateDbContext()
             .Set<Domain.Models.Agv.Agv>()
             .AsNoTracking(); // No need to track changes
-   
+
     public int Count => Agvs.Count();
 
     public async Task<ICollection<Domain.Models.Agv.Agv>> GetAllAgvsAsync()
@@ -40,7 +40,6 @@ public class AgvRepository : IAgvRepository
         return await Agvs.Where(x => x.CurrentAgvState == AgvState.Idle).ToListAsync();
     }
 
-
     public async Task<Domain.Models.Agv.Agv> GetAgvAsync(Guid correlationId)
     {
         var agv = await Agvs.Where(a => a.CorrelationId == correlationId).SingleOrDefaultAsync();
@@ -50,7 +49,6 @@ public class AgvRepository : IAgvRepository
         }
         return agv;
     }
-
 
     public async Task<bool> CheckIfAgvExistsAsync(Guid correlationId)
     {

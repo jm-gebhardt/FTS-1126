@@ -38,17 +38,14 @@ public static class RoutingHelper
             // No change at all
             return nodes;
         }
-        else
+        if (sourceIndex < 0 || destinationIndex < 0)
         {
-            if (sourceIndex < 0 || destinationIndex < 0)
-            {
-                throw new ArgumentException("Node not found in route.");
-            }
-
-            string[] truncated = new string[destinationIndex - sourceIndex + 1];
-            Array.Copy(nodes, sourceIndex, truncated, 0, truncated.Length);
-            return truncated;
+            throw new ArgumentException("Node not found in route.");
         }
+
+        string[] truncated = new string[destinationIndex - sourceIndex + 1];
+        Array.Copy(nodes, sourceIndex, truncated, 0, truncated.Length);
+        return truncated;
     }
 
     /// <summary>
@@ -70,7 +67,7 @@ public static class RoutingHelper
         {
             currentIndex = 0;
         }
-        return (uint) currentIndex;
+        return (uint)currentIndex;
     }
 
     /// <summary>
@@ -82,7 +79,7 @@ public static class RoutingHelper
     public static string[] GetRemainingRoute(string? lastNodeId, string[] route)
     {
         uint currentIndex = GetFirstIndexOfNodeId(route, lastNodeId);
-        string[] remainingRoute = route.Skip((int) currentIndex).ToArray();
+        string[] remainingRoute = route.Skip((int)currentIndex).ToArray();
         return remainingRoute;
     }
 }

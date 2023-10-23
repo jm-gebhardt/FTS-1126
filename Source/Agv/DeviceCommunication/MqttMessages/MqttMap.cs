@@ -9,8 +9,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 /// The current map from the AGV
 /// </summary>
 [PublicAPI]
-[EntityName("amq.topic")]   // Specifies the RabbitMq exchange where the message is published
-[RoutingKey("agv.map")]     // Specifies the topic where subscribers can receive the message
+[EntityName("amq.topic")] // Specifies the RabbitMq exchange where the message is published
+[RoutingKey("agv.map")] // Specifies the topic where subscribers can receive the message
 public record MqttMap
 {
     /// <summary>

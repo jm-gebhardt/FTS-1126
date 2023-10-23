@@ -26,13 +26,13 @@ public class ChooseAgvActionGroupServiceFixture
     {
         AgvActionRegistry.Setup(x => x.GetNotStartedActionGroupsAsync(It.IsAny<Guid>())).ReturnsAsync(NotStartedActionGroups);
         ShortestRouteChooser = new ShortestRouteChooser(
-            realRouteService ? new RouteService(new Mock<IAgvGraphRegistry>().Object, new Mock<IRouteFinder>().Object,new Mock<ILogger<RouteService>>().Object) : RouteService.Object,
+            realRouteService ? new RouteService(new Mock<IAgvGraphRegistry>().Object, new Mock<IRouteFinder>().Object, new Mock<ILogger<RouteService>>().Object) : RouteService.Object,
             AgvActionRegistry.Object,
             new Mock<ILogger<ShortestRouteChooser>>().Object
-            );
+        );
     }
 
-    public ChooseAgvActionGroupServiceFixture WithAgvHasRouteToDestination(TransportOrder.Domain.Models.Agv.Agv agv, Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.ActionGroup actionGroup, float? routeCosts = null)
+    public ChooseAgvActionGroupServiceFixture WithAgvHasRouteToDestination(TransportOrder.Domain.Models.Agv.Agv agv, TransportOrder.Domain.Models.ActionGroup.ActionGroup actionGroup, float? routeCosts = null)
     {
         RouteService.Setup(x => x.GetCostsAsync(agv, It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(routeCosts);
@@ -44,7 +44,7 @@ public class ChooseAgvActionGroupServiceFixture
         return this;
     }
 
-    public ChooseAgvActionGroupServiceFixture WithAgvHasRouteToDestination(TransportOrder.Domain.Models.Agv.Agv agv, string sourceNodeId, string destinationNodeId, Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.ActionGroup actionGroup, float? routeCosts = null)
+    public ChooseAgvActionGroupServiceFixture WithAgvHasRouteToDestination(TransportOrder.Domain.Models.Agv.Agv agv, string sourceNodeId, string destinationNodeId, TransportOrder.Domain.Models.ActionGroup.ActionGroup actionGroup, float? routeCosts = null)
     {
         RouteService.Setup(x => x.GetCostsAsync(agv, destinationNodeId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(routeCosts);

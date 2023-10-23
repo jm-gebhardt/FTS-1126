@@ -24,13 +24,15 @@ public class AgvMapConsumerTest
     {
         /// <summary/>
         EmptySerialNumber,
+
         /// <summary/>
         NullMapId,
+
         /// <summary/>
         NullData
     }
 
-    private readonly MqttMap _mqttMap = new(serialNumber: AgvId, requestId: AgvId)
+    private readonly MqttMap _mqttMap = new(AgvId, AgvId)
     {
         Data = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
         MapId = MapId,
@@ -106,7 +108,7 @@ public class AgvMapConsumerTest
         }
 
         var fixture = new MqttConsumerTestFixture<MqttMapConsumer>();
-            
+
         // Act
         await fixture.TestHarness.Bus.Publish(_mqttMap);
 

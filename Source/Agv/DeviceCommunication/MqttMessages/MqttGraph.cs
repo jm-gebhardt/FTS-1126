@@ -10,8 +10,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 /// <para>See "graph.schema".</para>
 /// </summary>
 [PublicAPI]
-[EntityName("amq.topic")]   // Specifies the RabbitMq exchange where the message is published
-[RoutingKey("agv.graph")]   // Specifies the topic where subscribers can receive the message
+[EntityName("amq.topic")] // Specifies the RabbitMq exchange where the message is published
+[RoutingKey("agv.graph")] // Specifies the topic where subscribers can receive the message
 public record MqttGraph
 {
     /// <summary>
@@ -113,6 +113,7 @@ public record MqttEdge
     /// The ID of the node where the edge starts
     /// </summary>
     public int StartId { get; set; }
+
     /// <summary>
     /// The ID of the node where the edge ends
     /// </summary>

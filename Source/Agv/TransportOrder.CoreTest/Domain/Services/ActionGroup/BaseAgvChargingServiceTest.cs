@@ -37,7 +37,6 @@ public class BaseAgvChargingServiceTest
         agv = AgvGenerator.SetAgvState(charging ? AgvState.Charging : AgvState.Idle, false, agv);
         return agv;
     }
-
     #endregion
 
     [TestMethod]

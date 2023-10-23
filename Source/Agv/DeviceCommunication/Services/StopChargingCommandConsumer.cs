@@ -39,7 +39,7 @@ public class StopChargingCommandConsumer : IConsumer<StopChargingCommand>
         {
             throw new AgvStatusReceivedNotFoundException(correlationId);
         }
-        
+
         if (!agvInformation.AgvStatusReceived.AgvStatus.Charging)
         {
             throw new NotInCorrectStateException("Agv cannot stop charging because agv is not in charging state.");

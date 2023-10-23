@@ -73,10 +73,9 @@ public record AgvError
     }
 
     /// <summary>
-    /// Automapper ctor
+    /// ctor called by AutoMapper.
     /// </summary>
     public AgvError()
     {
-
     }
 }

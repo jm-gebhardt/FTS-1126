@@ -18,15 +18,13 @@ public class AgvEfRegistryTest
         public AgvRepository Registry { get; }
 
         private IDbContextFactory<TransportOrderDbContext> ContextFactory { get; }
+
         private ServiceProvider Provider { get; }
 
         public EfAgvRegistryTestFixture()
         {
             var collection = new ServiceCollection()
-                .AddDbContextFactory<TransportOrderDbContext>(options =>
-                    {
-                        options.UseInMemoryDatabase(Guid.NewGuid().ToString());
-                    }
+                .AddDbContextFactory<TransportOrderDbContext>(options => { options.UseInMemoryDatabase(Guid.NewGuid().ToString()); }
                 );
             Provider = collection.BuildServiceProvider(true);
             ContextFactory = Provider.GetService<IDbContextFactory<TransportOrderDbContext>>()!;

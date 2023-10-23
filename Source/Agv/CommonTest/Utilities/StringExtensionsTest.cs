@@ -10,7 +10,7 @@ public class StringExtensionsTest
     [TestMethod]
     public void ToGuid_ShouldReturnParsedGuid_WhenPassingProperGuidString()
     {
-        string guidString = "35A3AE75-3FC7-41C8-98DD-C73E3845C8F5";
+        const string guidString = "35A3AE75-3FC7-41C8-98DD-C73E3845C8F5";
         var expectedGuid = new Guid(guidString);
 
         var guid = guidString.ToGuid();

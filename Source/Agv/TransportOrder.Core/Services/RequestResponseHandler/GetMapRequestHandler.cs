@@ -42,8 +42,8 @@ public class GetMapRequestHandler :
         ImmutableDictionary<Guid, Guid[]> agvMapRelation = (await _agvGraphRegistry.GetAllAgvGraphsAsync())
             .GroupBy(a => a.RelatedMapId)
             .ToImmutableDictionary(x => x.Key, x => x.Select(m => m.CorrelationId).ToArray());
-             
-        var maps = _mapper.Map<List<Map>>(_mapRegistry.GetAllMaps().AsEnumerable(), 
+
+        var maps = _mapper.Map<List<Map>>(_mapRegistry.GetAllMaps().AsEnumerable(),
             opt => opt.Items[RelatedMapAgvValueResolver.AgvMapRelationsName] = agvMapRelation);
 
         await context.RespondAsync(new GotMapList { Maps = maps });

@@ -72,7 +72,7 @@ public static class XmlDocResolver
             foreach (var seeElement in doc.XPathSelectElements("//see[@cref]"))
             {
                 string targetMemberName = seeElement.Attribute("cref")!.Value;
-                string shortMemberName = targetMemberName.Substring(targetMemberName.LastIndexOf('.') + 1);
+                string shortMemberName = targetMemberName[(targetMemberName.LastIndexOf('.') + 1)..];
 
                 if (targetMemberName.StartsWith("M:"))
                 {
@@ -89,9 +89,9 @@ public static class XmlDocResolver
     private static string? TryGetTargetReference(string nameAttribute, List<Assembly> assemblies)
     {
         int lastDotIndex = nameAttribute.LastIndexOf(".", StringComparison.InvariantCulture);
-        string memberName = nameAttribute.Substring(lastDotIndex + 1);
+        string memberName = nameAttribute[(lastDotIndex + 1)..];
         string typeName = nameAttribute.Substring(2, lastDotIndex - 2);
-        string prefix = nameAttribute.Substring(0, 2);
+        string prefix = nameAttribute[..2];
 
         foreach (var assembly in assemblies)
         {
@@ -107,7 +107,6 @@ public static class XmlDocResolver
                 string? parentType = GetMemberBaseType(memberType, memberName);
                 if (parentType != null)
                 {
-
                     return prefix + parentType + "." + memberName;
                 }
             }
@@ -160,7 +159,7 @@ public static class XmlDocResolver
     private static string? GetExternalDoc(string nameAttribute)
     {
         int lastDotIndex = nameAttribute.LastIndexOf(".", StringComparison.InvariantCulture);
-        string memberName = nameAttribute.Substring(lastDotIndex + 1);
+        string memberName = nameAttribute[(lastDotIndex + 1)..];
 
         // Resolving xml docs for external assemblies would require to include the xml docs of all assemblies
         // This seems overkill, so we use a manual lookup-table for commonly used types instead

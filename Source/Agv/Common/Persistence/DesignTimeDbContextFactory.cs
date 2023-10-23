@@ -40,7 +40,6 @@ public abstract class DesignTimeDbContextFactory<TDbContext> : IDesignTimeDbCont
             .AddEnvironmentVariables());
         hostBuilder.ConfigureServices((ctx, services) =>
         {
-   
             services.AddDbContextFactory<TDbContext>(o =>
             {
                 o.UseSqlServer(ctx.Configuration.GetConnectionString(_connectionStringKey),

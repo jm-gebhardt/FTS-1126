@@ -153,7 +153,7 @@ public class WcsHostOrderServiceTest
         var fixture = new EfPollableServiceTestFixture<WcsOrderHandler, WcsHostDbContext>();
         await using (var context = await fixture.DbContextFactory.CreateDbContextAsync())
         {
-            context.ToAgv.Add(ToFromAgvGenerator.GenerateToAgvEntry(orderId, source, destination, recordType: RecordType.OrderCancelRequest, messageStatus: MessageStatus.Pending));
+            context.ToAgv.Add(ToFromAgvGenerator.GenerateToAgvEntry(orderId, source, destination, RecordType.OrderCancelRequest, MessageStatus.Pending));
             await context.SaveChangesAsync();
         }
 

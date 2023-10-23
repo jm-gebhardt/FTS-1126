@@ -52,7 +52,6 @@ public class ActionGroupEventHandlerTest
         fixture.HostOrderRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<Guid>()))
             .ReturnsAsync(hostOrder);
 
-       
         var actionGroupCompleted = new ActionGroupCompleted(actionGroup, actionGroup.CorrelationId, DateTime.UtcNow);
 
         await fixture.TestHarness!.Bus.Publish(actionGroupCompleted);

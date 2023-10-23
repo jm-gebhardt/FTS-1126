@@ -10,6 +10,7 @@ using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
+using AgvStatus = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv.AgvStatus;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.CommandHandler.Map;
 
@@ -24,16 +25,16 @@ public class MapRequestTestFixture<TRequestClient, TConsumer> : MediatorTestFixt
 {
     public const string Base64String = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
 
-    private readonly string[] _agvIds = {"AGV001", "AGV002"};
-    private readonly string[] _orders = {"ORDER001", "ORDER002", ""};
-    private readonly AgvState[] _states = {AgvState.Busy, AgvState.Discovered};
+    private readonly string[] _agvIds = { "AGV001", "AGV002" };
+    private readonly string[] _orders = { "ORDER001", "ORDER002", "" };
+    private readonly AgvState[] _states = { AgvState.Busy, AgvState.Discovered };
 
     private readonly GraphNode[] _nodes =
     {
-        new("node00") {X = 0f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint},
-        new("node10") {X = 1f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint},
-        new("node01") {X = 0f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint},
-        new("node11") {X = 1f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint}
+        new("node00") { X = 0f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
+        new("node10") { X = 1f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
+        new("node01") { X = 0f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
+        new("node11") { X = 1f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint }
     };
 
     private readonly Guid[] _correlationIds =
@@ -125,7 +126,7 @@ public class MapRequestTestFixture<TRequestClient, TConsumer> : MediatorTestFixt
             string order = _orders[i];
             var state = _states[i];
             var correlationId = _correlationIds[i];
-            var agvStatus = new TransportOrder.Domain.Models.Agv.AgvStatus(correlationId, order, true, true, 10, true, true);
+            var agvStatus = new AgvStatus(correlationId, order, true, true, 10, true, true);
 
             var agv = new TransportOrder.Domain.Models.Agv.Agv(correlationId, agvId, agvStatus);
             agv = AgvGenerator.SetAgvState(state, false, agv);

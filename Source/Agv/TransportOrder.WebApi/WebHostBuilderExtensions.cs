@@ -129,7 +129,7 @@ public static class WebHostBuilderExtensions
                 {
                     swaggerDoc.Servers = new List<OpenApiServer>()
                     {
-                        new() {Description = "Server behind Proxy", Url = serverPath}
+                        new() { Description = "Server behind Proxy", Url = serverPath }
                     };
                 }
             });

@@ -19,5 +19,4 @@ public class ConfigurationSetting
     /// The type name of the setting used for the configuration
     /// </summary>
     public string ConfigurationType { get; set; } = null!;
-
 }

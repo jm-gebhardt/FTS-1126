@@ -1,4 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Persistence;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -13,16 +14,19 @@ public class AgvClassMap : ClassMap<Domain.Models.Agv.Agv>
     {
         entity.HasKey(g => g.CorrelationId);
 
-        entity.ConfigureAllProperties(p => p.CanWrite && p.PropertyType != typeof(Domain.Models.Agv.AgvStatus));
+        entity.ConfigureAllProperties(p => p.CanWrite && p.PropertyType != typeof(AgvStatus));
 
         entity.OwnsOne(e => e.AgvStatus, o =>
         {
-            o.ToTable(nameof(Domain.Models.Agv.AgvStatus));
+            o.ToTable(nameof(AgvStatus));
             o.WithOwner().HasForeignKey(s => s.CorrelationId);
             o.HasKey(s => s.CorrelationId);
-            foreach (var propertyInfo in typeof(Domain.Models.Agv.AgvStatus).GetProperties())
+            foreach (var propertyInfo in typeof(AgvStatus).GetProperties())
             {
-                if(propertyInfo.Name == nameof(Domain.Models.Agv.AgvStatus.CorrelationId)){ continue; }
+                if (propertyInfo.Name == nameof(AgvStatus.CorrelationId))
+                {
+                    continue;
+                }
                 o.Property(propertyInfo.PropertyType, propertyInfo.Name);
             }
         });

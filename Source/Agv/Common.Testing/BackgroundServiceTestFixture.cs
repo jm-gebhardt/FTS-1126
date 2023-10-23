@@ -39,10 +39,7 @@ public class BackgroundServiceTestFixture<TBackgroundService> where TBackgroundS
             .AddMassTransitTestHarness(x =>
             {
                 busRegistrationConfigurator?.Invoke(x);
-                x.UsingInMemory((context, cfg) =>
-                {
-                    cfg.ConfigureEndpoints(context);
-                });
+                x.UsingInMemory((context, cfg) => { cfg.ConfigureEndpoints(context); });
             })
             .AddHostedService<TBackgroundService>();
 

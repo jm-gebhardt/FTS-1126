@@ -14,7 +14,7 @@ public interface INodeStateRegistry
     /// <param name="nodeId"></param>
     /// <returns>True if the node could be freed</returns>
     public Task<bool> LockNodeAsync(string nodeId);
-        
+
     /// <summary>
     /// Sets the state of a node to 'unlocked'
     /// </summary>
@@ -30,7 +30,7 @@ public interface INodeStateRegistry
     /// <param name="agvCorrelationId"></param>
     /// <returns></returns>
     public Task<bool> ReserveNodeAsync(string nodeId, Guid agvCorrelationId);
-        
+
     /// <summary>
     /// Free a reserved or occupied node.
     /// If the node is locked, it will not be freed.
@@ -47,7 +47,7 @@ public interface INodeStateRegistry
     /// <param name="agvCorrelationId"></param>
     /// <returns></returns>
     public Task<bool> OccupyNodeAsync(string nodeId, Guid agvCorrelationId);
-        
+
     /// <summary>
     /// Free an occupied node.
     /// If the node is locked, it will not be freed.

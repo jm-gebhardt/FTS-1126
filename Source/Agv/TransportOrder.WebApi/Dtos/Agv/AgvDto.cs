@@ -110,7 +110,7 @@ public record AgvDto : DatedMessage
     }
 
     /// <summary>
-    /// AutoMapper ctor
+    /// ctor called by AutoMapper.
     /// </summary>
     public AgvDto()
     {

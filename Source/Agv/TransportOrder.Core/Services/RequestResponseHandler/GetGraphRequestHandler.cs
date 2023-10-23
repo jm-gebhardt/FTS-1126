@@ -45,7 +45,7 @@ public class GetGraphRequestHandler :
         var agv = await _agvRepository.GetAgvAsync(correlationId);
 
         var agvGraph = await _agvGraphRegistry.GetAgvGraphAsync(agv.CorrelationId);
-            
+
         var graph = _mapper.Map<Graph>(agvGraph);
         await context.RespondAsync(new GotAgvGraph(graph));
     }
@@ -60,7 +60,7 @@ public class GetGraphRequestHandler :
         ICollection<Guid> selectedAgvs = context.Message.CorrelationIds;
 
         ICollection<Domain.Models.Agv.Agv> agvs = await _agvRepository.SelectExistingAgvsAsync(selectedAgvs.ToList());
-        if (agvs.Count!= selectedAgvs.Count)
+        if (agvs.Count != selectedAgvs.Count)
         {
             throw new AgvsNotFoundException(selectedAgvs.Except(agvs.Select(a => a.CorrelationId)).ToList());
         }
@@ -83,6 +83,6 @@ public class GetGraphRequestHandler :
     {
         var correlationId = context.Message.CorrelationId;
         var graph = await _agvGraphRegistry.GetGraphForMap(correlationId);
-        await context.RespondAsync(new GotMapGraph (_mapper.Map<Graph>(graph)));
+        await context.RespondAsync(new GotMapGraph(_mapper.Map<Graph>(graph)));
     }
 }

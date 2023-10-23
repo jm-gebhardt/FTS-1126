@@ -33,7 +33,6 @@ public record AgvAssignmentFailed : CorrelatedBy<Guid>
         AgvRegistryEmpty
     }
 
-
     /// <inheritdoc/>
     public Guid CorrelationId { get; }
 

@@ -14,5 +14,8 @@ public static class GraphHelper
     /// <param name="metric"></param>
     /// <param name="toNodeId"></param>
     /// <returns></returns>
-    public static Guid ToGuid(string fromNodeId, float metric, string toNodeId) => $"{fromNodeId}-{metric}-{toNodeId}".ToGuid();
+    public static Guid ToGuid(string fromNodeId, float metric, string toNodeId)
+    {
+        return $"{fromNodeId}-{metric}-{toNodeId}".ToGuid();
+    }
 }

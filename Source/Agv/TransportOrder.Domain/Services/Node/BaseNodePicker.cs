@@ -84,7 +84,7 @@ public abstract class BaseNodePicker
     /// <param name="availableNodes">The nodes which can be selected, it is ensured that it contains at least one available node</param>
     /// <param name="agv"></param>
     /// <returns>The best node</returns>
-    [PublicAPI]    
+    [PublicAPI]
     protected virtual Task<GraphNode> SelectBestNode(IEnumerable<GraphNode> availableNodes, Models.Agv.Agv agv)
     {
         _logger.LogDebug("Choosing node with lowest costs");

@@ -216,7 +216,7 @@ public class AStarTest
     {
         var aStar = new AStar(_wikiExample, RoutingPlausibilityChecker);
 
-        string[] waypoints = new[] { "Denver", "Nairobi", "Nairobi", "Rio" }; // (Denver => Nairobi) + (Nairobi => Rio)
+        string[] waypoints = { "Denver", "Nairobi", "Nairobi", "Rio" }; // (Denver => Nairobi) + (Nairobi => Rio)
 
         var route = aStar.CalculateRoute(waypoints);
         route.ShouldNotBeNull();
@@ -281,7 +281,7 @@ public class AStarTest
         stopWatch.Start();
         costs = aStar.CalculateRoute("50/01", "33/06");
         stopWatch.Stop();
-        Trace.WriteLine("Grid example duration: " + stopWatch.ElapsedMilliseconds.ToString() + "ms.");
+        Trace.WriteLine("Grid example duration: " + stopWatch.ElapsedMilliseconds + "ms.");
         costs!.Costs.ShouldBe(c1.Costs + c2.Costs + c3.Costs, 0.00001f);
     }
 
@@ -421,7 +421,7 @@ public class AStarTest
 
         var sourceNode = graph.Nodes.First(x => x.Id == "1");
         var destinationNode = graph.Nodes.First(x => x.Id == "8");
-            
+
         var routingPlausibilityChecker = new Mock<IRoutingPlausibilityChecker>();
         routingPlausibilityChecker.Setup(x => x.IsPlausible(sourceNode, destinationNode)).Returns(isEdgePlausible);
         var aStar = new AStar(graph, routingPlausibilityChecker.Object);

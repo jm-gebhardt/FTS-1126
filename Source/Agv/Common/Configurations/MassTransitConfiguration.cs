@@ -16,18 +16,22 @@ public record MassTransitConfiguration : SettingsBase<MassTransitConfiguration>
     /// Host
     /// </summary>
     public string? Host { get; set; } = "rabbitmq";
+
     /// <summary>
     /// User
     /// </summary>
     public string? User { get; set; } = "unset";
+
     /// <summary>
     /// Password
     /// </summary>
     public string? Password { get; set; } = "PutYourPasswordHere";
+
     /// <summary>
     /// Port
     /// </summary>
     public string? Port { get; set; } = "5672";
+
     /// <summary>
     /// Create RabbitMQ URL
     /// </summary>

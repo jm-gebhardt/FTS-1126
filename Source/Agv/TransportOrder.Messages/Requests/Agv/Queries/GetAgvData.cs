@@ -7,7 +7,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
 /// </summary>
 public record GetAgvData : CorrelatedBy<Guid>
 {
-
     /// <inheritdoc/>
     public Guid CorrelationId { get; }
 

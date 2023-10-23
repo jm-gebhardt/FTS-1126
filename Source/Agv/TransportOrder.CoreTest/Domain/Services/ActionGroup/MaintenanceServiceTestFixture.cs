@@ -19,8 +19,9 @@ public class MaintenanceServiceTestFixture
     }
 
     public Mock<IRouteService> RouteService { get; } = new();
+
     public MaintenanceService MaintenanceService { get; private set; }
-    
+
     public MaintenanceServiceTestFixture WithAvailableNodes(TransportOrder.Domain.Models.Agv.Agv agv, List<GraphNode> availableNodes)
     {
         _graphRegistry.Setup(x => x.GetNodesAsync(agv.CorrelationId, It.IsAny<Expression<Func<GraphNode, bool>>>()))
@@ -30,7 +31,7 @@ public class MaintenanceServiceTestFixture
             _graphRegistry.Setup(x => x.GetNodeAsync(availableNode.Id, agv.CorrelationId))
                 .ReturnsAsync(availableNodes.First(n => n.Id == availableNode.Id));
         }
-       
+
         _nodeStateRegistry.Setup(x => x.FilterFreeUnlockedNodes(availableNodes)).Returns(availableNodes);
         return this;
     }

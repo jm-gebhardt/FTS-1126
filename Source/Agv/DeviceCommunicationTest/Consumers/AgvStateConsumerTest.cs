@@ -129,10 +129,10 @@ public class AgvStateConsumerTest
     public async Task ReceiveMqttState_ChargingStateExamination_AgvStoppedCharging_Sent()
     {
         // Arrange
-        string serialNumber = "AGV003";
+        const string serialNumber = "AGV003";
         var fixture = new AgvStateConsumerTestFixture()
             .UseDefaultServices()
-            .WithAgvInformation(AgvInformationGenerator.GetAgvInformation(2, agvCorrelationId: serialNumber.ToGuid()))
+            .WithAgvInformation(AgvInformationGenerator.GetAgvInformation(2, serialNumber.ToGuid()))
             .Build();
 
         const string orderId = "Order123";
@@ -160,7 +160,7 @@ public class AgvStateConsumerTest
     public async Task ReceiveMqttState_ChargingStateExamination_AgvStartedCharging_Sent()
     {
         // Arrange
-        string serialNumber = "AGV002";
+        const string serialNumber = "AGV002";
         var fixture = new AgvStateConsumerTestFixture()
             .UseDefaultServices()
             .WithAgvInformation(AgvInformationGenerator.GetAgvInformation(agvCorrelationId: serialNumber.ToGuid()))
@@ -237,7 +237,7 @@ public class AgvStateConsumerTest
             ErrorLevel = MqttErrorLevel.Fatal,
             ErrorReferences = new List<MqttErrorReference>
             {
-                new() {ReferenceKey = "testKey", ReferenceValue = "testValue"}
+                new() { ReferenceKey = "testKey", ReferenceValue = "testValue" }
             },
             ErrorType = "error type"
         };

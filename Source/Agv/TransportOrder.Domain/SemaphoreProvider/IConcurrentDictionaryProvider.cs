@@ -1,5 +1,4 @@
-﻿
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
 

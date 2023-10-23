@@ -11,12 +11,21 @@ public static class NodeGenerator
         { "D1", new[] { "N002-001", "N002-002", "N001-002", "D1" } }
     };
 
-    public static GraphNode GenerateChargingNode(string nodeId = "CRG1") => new(nodeId) {Type = AgvGraph.NodeType.Charge, X = -2f, Y = -2f, Z = 0f};
+    public static GraphNode GenerateChargingNode(string nodeId = "CRG1")
+    {
+        return new GraphNode(nodeId) { Type = AgvGraph.NodeType.Charge, X = -2f, Y = -2f, Z = 0f };
+    }
 
-    public static GraphNode GenerateParkingNode(string nodeId = "PRK1") => new(nodeId) {Type = AgvGraph.NodeType.Park, X = -21f, Y = -21f, Z = 0f};
+    public static GraphNode GenerateParkingNode(string nodeId = "PRK1")
+    {
+        return new GraphNode(nodeId) { Type = AgvGraph.NodeType.Park, X = -21f, Y = -21f, Z = 0f };
+    }
 
     [UsedImplicitly]
-    public static GraphNode GenerateMaintenanceNode(string nodeId = "MNT1") => new(nodeId) {Type = AgvGraph.NodeType.Park, X = 0f, Y = 0f, Z = 0f};
+    public static GraphNode GenerateMaintenanceNode(string nodeId = "MNT1")
+    {
+        return new GraphNode(nodeId) { Type = AgvGraph.NodeType.Park, X = 0f, Y = 0f, Z = 0f };
+    }
 
     public static string[] GenerateRouteNodes(string destinationNode = "D2")
     {

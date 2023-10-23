@@ -15,7 +15,6 @@ public class AgvStationListConsumer : IConsumer<MqttStationList>
 {
     private readonly ILogger<AgvStationListConsumer> _logger;
 
-
     /// <summary>
     /// Create consumer with message handler delegate.
     /// </summary>
@@ -41,8 +40,8 @@ public class AgvStationListConsumer : IConsumer<MqttStationList>
         }
 
         await context.Publish(new InternalStationListReceived(
-            correlationId: context.Message.SerialNumber.ToGuid(),
-            stationList: context.Message
+            context.Message.SerialNumber.ToGuid(),
+            context.Message
         ), context.CancellationToken);
     }
 }

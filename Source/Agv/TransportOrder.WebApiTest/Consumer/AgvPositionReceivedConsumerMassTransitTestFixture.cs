@@ -10,10 +10,6 @@ using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
-using AgvErrorProfile = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles.AgvErrorProfile;
-using AgvGraphProfile = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles.AgvGraphProfile;
-using AgvProfile = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles.AgvProfile;
-using MapProfile = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles.MapProfile;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Consumer;
 
@@ -21,7 +17,9 @@ internal class AgvPositionReceivedConsumerMassTransitTestFixture :
     MassTransitConsumerTestFixture<AgvPositionReceivedEventHandler>, ITestFixtureBuilder<AgvPositionReceivedConsumerMassTransitTestFixture>
 {
     private bool _useAgvPositionRegistryMock;
+
     public Mock<IAgvPositionRegistry>? AgvPositionRegistryMock { get; private set; }
+
     private Mock<IAgvGraphRegistry>? GraphRegistryMock { get; set; }
 
     public AgvPositionReceivedConsumerMassTransitTestFixture()
@@ -60,21 +58,21 @@ internal class AgvPositionReceivedConsumerMassTransitTestFixture :
 
         services.AddTransient(_ => new Mock<IAgvPublisher>().Object);
         services.AddTransient(_ => GetMapper());
-
     }
+
     private IMapper GetMapper()
     {
         var mapper = MappingHelper.GetMapper(
-            new WebApi.Profiles.AgvProfile(),
-            new WebApi.Profiles.AgvGraphProfile(),
-            new AgvPositionProfile(),
-            new WebApi.Profiles.MapProfile(),
-            new WebApi.Profiles.AgvErrorProfile(),
-            new ActionProfile(),
             new AgvProfile(),
             new AgvGraphProfile(),
-            new AgvErrorProfile(),
+            new AgvPositionProfile(),
             new MapProfile(),
+            new AgvErrorProfile(),
+            new ActionProfile(),
+            new Messages.Profiles.AgvProfile(),
+            new Messages.Profiles.AgvGraphProfile(),
+            new Messages.Profiles.AgvErrorProfile(),
+            new Messages.Profiles.MapProfile(),
             new Domain.Profiles.AgvPositionProfile()
         );
         return mapper;

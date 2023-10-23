@@ -75,18 +75,20 @@ public sealed class AgvGraphBuilderStateMachine : MassTransitStateMachine<AgvGra
     }
 
     #region State transitions
-
-    private EventActivityBinder<AgvGraphBuilderSaga, RequestAgvGraph> RequestAgvGraphHandler() =>
-        When(RequestAgvGraphEvent)
+    private EventActivityBinder<AgvGraphBuilderSaga, RequestAgvGraph> RequestAgvGraphHandler()
+    {
+        return When(RequestAgvGraphEvent)
             .Then(c => _logger.LogInformation("{MessageType} {AgvId} / {CorrelationId} received", nameof(RequestAgvGraph), c.Message.AgvId, c.Message.CorrelationId))
             .TransitionTo(RequestAgvGraphReceived)
             // Create a new request ID and store in saga instance.
             .Then(c => c.Saga.CurrentMqttRequestId = Guid.NewGuid())
             // Request the station list.
             .Then(c => c.PublishMqtt(new MqttRequestStationList(c.Message.AgvId, c.Saga.CurrentMqttRequestId), null));
+    }
 
-    private EventActivityBinder<AgvGraphBuilderSaga, InternalStationListReceived> StationListHandler() =>
-        When(StationListEvent)
+    private EventActivityBinder<AgvGraphBuilderSaga, InternalStationListReceived> StationListHandler()
+    {
+        return When(StationListEvent)
             .Then(c => _logger.LogInformation("{MessageType} {AgvId} / {CorrelationId} received", nameof(InternalStationListReceived), c.Message.StationList.SerialNumber, c.Saga.CorrelationId))
             .IfElse(c => c.Message.StationList.RequestId == c.Saga.CurrentMqttRequestId,
                 // The response (station list) correlates to the request
@@ -100,9 +102,11 @@ public sealed class AgvGraphBuilderStateMachine : MassTransitStateMachine<AgvGra
                     .Then(c => c.PublishMqtt(new MqttRequestGraph(c.Message.StationList.SerialNumber, c.Saga.CurrentMqttRequestId), null)),
                 // The response does not correlate to the request
                 e => e.Then(_ => _logger.LogWarning("{MessageType} does not match the request", nameof(InternalStationListReceived))));
+    }
 
-    private EventActivityBinder<AgvGraphBuilderSaga, InternalGraphReceived> GraphHandler() =>
-        When(GraphEvent)
+    private EventActivityBinder<AgvGraphBuilderSaga, InternalGraphReceived> GraphHandler()
+    {
+        return When(GraphEvent)
             .Then(c => _logger.LogInformation("{MessageType} {AgvId} / {CorrelationId} received", nameof(InternalGraphReceived), c.Message.Graph.SerialNumber, c.Saga.CorrelationId))
             .IfElse(c => c.Message.Graph.RequestId == c.Saga.CurrentMqttRequestId,
                 // The response (station list) correlates to the request
@@ -117,5 +121,6 @@ public sealed class AgvGraphBuilderStateMachine : MassTransitStateMachine<AgvGra
                 // The response does not correlate to the request
                 e => e.Then(_ => _logger.LogWarning("{MessageType} does not match the request", nameof(InternalGraphReceived))))
             .Finalize();
+    }
     #endregion
 }

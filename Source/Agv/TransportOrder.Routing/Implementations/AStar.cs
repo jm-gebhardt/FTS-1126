@@ -74,7 +74,10 @@ public class AStar : BaseRouteAlgorithm
         /// Simple string representation.
         /// </summary>
         /// <returns></returns>
-        public override string ToString() => $"{Node.Id} [{Predecessor}, F({F}) = G({G}) + H({H})]";
+        public override string ToString()
+        {
+            return $"{Node.Id} [{Predecessor}, F({F}) = G({G}) + H({H})]";
+        }
     }
 
     /// <summary>List of nodes currently processing.</summary>
@@ -199,7 +202,7 @@ public class AStar : BaseRouteAlgorithm
 
         if (end.Predecessor != "")
         {
-            var route = new List<string> {end.Node.Id};
+            var route = new List<string> { end.Node.Id };
             current = end;
 
             // Write path found.

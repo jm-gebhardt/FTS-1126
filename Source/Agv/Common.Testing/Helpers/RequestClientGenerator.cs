@@ -15,19 +15,33 @@ public class DummyResponse<TRequest> : Response<TRequest>
     private readonly Guid? _correlationId;
 
     public Guid? MessageId => _correlationId;
+
     public Guid? RequestId => _correlationId;
+
     public Guid? CorrelationId => _correlationId;
+
     public Guid? ConversationId => _correlationId;
+
     public Guid? InitiatorId => _correlationId;
+
     public DateTime? ExpirationTime => DateTime.MaxValue;
+
     public Uri SourceAddress => new("SourceAddress");
+
     public Uri DestinationAddress => new("DestinationAddress");
+
     public Uri ResponseAddress => new("ResponseAddress");
+
     public Uri FaultAddress => new("FaultAddress");
+
     public DateTime? SentTime => DateTime.Now;
+
     public Headers Headers => new Mock<Headers>().Object;
+
     public HostInfo Host => new Mock<HostInfo>().Object;
+
     object Response.Message => _message;
+
     public TRequest Message => _message;
 
     public DummyResponse(TRequest message)

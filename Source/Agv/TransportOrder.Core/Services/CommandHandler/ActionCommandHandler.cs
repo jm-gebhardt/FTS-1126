@@ -294,14 +294,12 @@ public class ActionCommandHandler :
 
         bool shouldCharge = !isCarryingLoad && needsCharging;
        
-       _logger.LogDebug("Evaluating {Name} with {NeedsCharging}, {IsCarryingLoad} for agv {CorrelationId}.", nameof(CreateChargingActionGroup), needsCharging, isCarryingLoad, agv.CorrelationId);
+        _logger.LogDebug("Evaluating {Name} with {NeedsCharging}, {IsCarryingLoad} for agv {CorrelationId}.", nameof(CreateChargingActionGroup), needsCharging, isCarryingLoad, agv.CorrelationId);
 
-       
         if (!agv.CheckIsEligibleForCharging(agvSettings) || !shouldCharge || agv.IsLocked)
         {
             return;
         }
-
 
         if (agv.IsCharging || await _actionGroupRetrievalService.IsAgvHeadingToNodeOfType(agvCorrelationId, AgvGraph.NodeType.Charge))
         {
@@ -426,7 +424,6 @@ public class ActionCommandHandler :
             await SelectNodesForAgvAction(context, action, agv, cancellationToken);
         }
     }
-
 
     /// <summary>
     /// Handles the <see cref="CompleteAction"/> command.

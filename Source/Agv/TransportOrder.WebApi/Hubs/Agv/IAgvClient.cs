@@ -7,7 +7,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Agv;
 /// <summary>
 /// Agv related SignalR methods
 /// </summary>
-[SignalRHub(path: AgvHub.UrlPath, documentNames: new[] {HubApiGroup.GroupName})]
+[SignalRHub(AgvHub.UrlPath, documentNames: new[] { HubApiGroup.GroupName })]
 public interface IAgvClient
 {
     /// <summary>

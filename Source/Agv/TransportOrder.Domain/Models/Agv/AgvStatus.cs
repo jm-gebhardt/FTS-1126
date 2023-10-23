@@ -6,7 +6,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 /// <summary>
 /// AGV Status
 /// </summary>
-public record AgvStatus 
+public record AgvStatus
 {
     /// <summary>
     ///  AGV correlation ID

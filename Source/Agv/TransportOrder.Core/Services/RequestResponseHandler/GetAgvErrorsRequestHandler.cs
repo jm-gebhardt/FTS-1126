@@ -13,7 +13,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHan
 /// Provides handlers for error-related requests.
 /// </summary>
 [UsedImplicitly]
-public class GetAgvErrorsRequestHandler : 
+public class GetAgvErrorsRequestHandler :
     IConsumer<GetAgvErrors>,
     IConsumer<GetActiveAgvErrors>,
     IConsumer<GetErrorHistoryForAgvs>,
@@ -52,7 +52,7 @@ public class GetAgvErrorsRequestHandler :
     {
         var correlationId = context.Message.CorrelationId;
         await _agvRepository.GetAgvAsync(correlationId);
-      
+
         IList<AgvError> agvErrors = await _agvErrorRegistry.GetActiveErrorsAsync(correlationId);
         List<Messages.Requests.Agv.Queries.AgvError> agvErrorsMessageContent = agvErrors.Select(e => _mapper.Map<Messages.Requests.Agv.Queries.AgvError>(e)).ToList();
         await context.RespondAsync(new GotActiveAgvErrors(agvErrorsMessageContent));
@@ -64,7 +64,7 @@ public class GetAgvErrorsRequestHandler :
     /// <exception cref="AgvsNotFoundException"></exception>
     public async Task Consume(ConsumeContext<GetErrorHistoryForAgvs> context)
     {
-       (ICollection<Guid> selectedAgvs, var fromDate, var toDate) = context.Message;
+        (ICollection<Guid> selectedAgvs, var fromDate, var toDate) = context.Message;
         await CheckIfAgvsExist(selectedAgvs);
         IReadOnlyList<AgvError> agvErrorHistory = await _agvErrorRegistry.GetErrorsAsync(selectedAgvs.ToList(), fromDate, toDate);
         Dictionary<Guid, List<AgvError>> errorsByAgv = agvErrorHistory

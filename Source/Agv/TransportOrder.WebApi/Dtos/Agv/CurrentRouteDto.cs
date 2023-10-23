@@ -19,7 +19,7 @@ public record CurrentRouteDto : DatedMessage
     }
 
     /// <summary>
-    /// Deserializer constructor
+    /// ctor called by AutoMapper.
     /// </summary>
     [PublicAPI]
     private CurrentRouteDto()

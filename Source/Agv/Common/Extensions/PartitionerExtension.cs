@@ -16,8 +16,8 @@ public static class PartitionerExtension
     /// <param name="c">The consumer configurator.</param>
     // ReSharper disable once UnusedMethodReturnValue.Global
     public static IPartitioner PartitionMessageById<TMessage, TConsumer>(this IPartitioner partitioner, IConsumerConfigurator<TConsumer> c)
-        where TMessage: class, CorrelatedBy<Guid>
-        where TConsumer: class
+        where TMessage : class, CorrelatedBy<Guid>
+        where TConsumer : class
     {
         c.Message<TMessage>(x => x.UsePartitioner(partitioner, p => p.Message.CorrelationId));
         return partitioner;

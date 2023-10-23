@@ -29,6 +29,7 @@ public record AgvPosition
     /// Current Z-position [m].
     /// </summary>
     public float Z { get; }
+
     /// <summary>
     /// Current angle (rotation) [rad].
     /// </summary>
@@ -55,5 +56,8 @@ public record AgvPosition
     /// <summary>
     /// Simple string representation (e.g. for logging)
     /// </summary>
-    public override string ToString() => $"[X={X}/Y={Y}/Z={Z}]";
+    public override string ToString()
+    {
+        return $"[X={X}/Y={Y}/Z={Z}]";
+    }
 }

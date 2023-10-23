@@ -49,23 +49,24 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixtureWithSche
     public AgvEventHandlerTestFixture()
     {
         Build();
-    } 
+    }
+
     public MassTransitConsumerTestFixtureWithScheduler<AgvEventHandler> WithoutAgv()
     {
         _agvRepository.Setup(a => a.GetAgvAsync(It.IsAny<Guid>())).Throws(new AgvNotFoundException(It.IsAny<Guid>()));
         return this;
     }
 
-
     public void AddAgv(TransportOrder.Domain.Models.Agv.Agv agv)
     {
-        _agvRepository.AddAgvsToMockRepository( new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+        _agvRepository.AddAgvsToMockRepository(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
     }
 
     public void AgvHasUnfinishedDropAction(Guid correlationId)
     {
         _actionGroupRegistry.Setup(r => r.HasUnfinishedDropActionsAsync(It.Is<Guid>(c => c == correlationId))).ReturnsAsync(true);
     }
+
     public static IMapper GetMapper()
     {
         var mapper = MappingHelper.GetMapper(new AgvStatusProfile());

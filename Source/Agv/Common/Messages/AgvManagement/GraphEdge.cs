@@ -46,7 +46,10 @@ public class GraphEdge
     /// Simple string representation.
     /// </summary>
     /// <returns></returns>
-    public override string ToString() => $"{FromNodeId} -- {Metric} --> {ToNodeId}";
+    public override string ToString()
+    {
+        return $"{FromNodeId} -- {Metric} --> {ToNodeId}";
+    }
 
     /// <summary>
     /// Graph Edge Constructor

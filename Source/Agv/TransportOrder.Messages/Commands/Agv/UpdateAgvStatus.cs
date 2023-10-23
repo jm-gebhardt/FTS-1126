@@ -10,4 +10,4 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
 /// <param name="CorrelationId">The correlationId of the agv.</param>
 /// <param name="AgvId">The id of the agv.</param>
 /// <param name="AgvStatus">The agv status.</param>
-public record UpdateAgvStatus(Guid CorrelationId, [UsedImplicitly]string AgvId, AgvStatus AgvStatus):CorrelatedBy<Guid>;
+public record UpdateAgvStatus(Guid CorrelationId, [UsedImplicitly] string AgvId, AgvStatus AgvStatus) : CorrelatedBy<Guid>;

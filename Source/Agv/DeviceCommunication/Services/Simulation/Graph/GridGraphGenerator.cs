@@ -225,7 +225,7 @@ public class GridGraphGenerator : IGraphGenerator
         }
 
         float step = 2.0f * _gridRows / _serviceNodeTypes.Length;
-        int nodeIdx = (int) (step * serviceNodeIndex + 0.5);
+        int nodeIdx = (int)(step * serviceNodeIndex + 0.5);
 
         if (nodeIdx % 2 == 0)
         {
@@ -233,12 +233,9 @@ public class GridGraphGenerator : IGraphGenerator
             side = -1;
             return nodeIdx / 2 * GridWidth;
         }
-        else
-        {
-            // Place to the right
-            side = 1;
-            return nodeIdx / 2 * GridWidth + GridWidth - 1;
-        }
+        // Place to the right
+        side = 1;
+        return nodeIdx / 2 * GridWidth + GridWidth - 1;
     }
 
     /// <summary>

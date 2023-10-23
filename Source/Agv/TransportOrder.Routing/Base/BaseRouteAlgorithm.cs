@@ -51,7 +51,7 @@ public abstract class BaseRouteAlgorithm : IRouteAlgorithm
 
         if (source == destination) // Already at destination -> 0 cost
         {
-            return new Route(0f, new[] {source});
+            return new Route(0f, new[] { source });
         }
 
         return CalculateRouteInternal(source, destination);
@@ -69,7 +69,10 @@ public abstract class BaseRouteAlgorithm : IRouteAlgorithm
     }
 
     /// <inheritdoc cref="IRouteAlgorithm.CalculateRoute(CancellationToken, string[])"/>
-    public Route? CalculateRoute(params string[] waypoints) => CalculateRoute(default, waypoints);
+    public Route? CalculateRoute(params string[] waypoints)
+    {
+        return CalculateRoute(default, waypoints);
+    }
 
     /// <inheritdoc/>
     /// <exception cref="KeyNotFoundException">A waypoint node was not found.</exception>

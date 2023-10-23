@@ -293,7 +293,7 @@ public class Agv : IAgvId
     /// <returns>True if the state has changed</returns>
     public (bool Accepted, bool StateChanged) TryAccept()
     {
-        if (new[] {AgvState.Idle, AgvState.Busy, AgvState.Charging}.Contains(CurrentAgvState))
+        if (new[] { AgvState.Idle, AgvState.Busy, AgvState.Charging }.Contains(CurrentAgvState))
         {
             return (false, false);
         }
@@ -375,7 +375,7 @@ public class Agv : IAgvId
         double secondsSinceLastRequest = TimeSpan.MaxValue.TotalSeconds;
         if (AgvGraphRequestedLastTime != null)
         {
-            secondsSinceLastRequest = ((TimeSpan) (DateTime.UtcNow - AgvGraphRequestedLastTime)).TotalSeconds;
+            secondsSinceLastRequest = ((TimeSpan)(DateTime.UtcNow - AgvGraphRequestedLastTime)).TotalSeconds;
         }
 
         bool shouldBeRequested = !GraphExists && secondsSinceLastRequest > DailyRequestUpdateInterval;
@@ -395,7 +395,7 @@ public class Agv : IAgvId
         double secondsSinceLastRequest = TimeSpan.MaxValue.TotalSeconds;
         if (AgvDataRequestedLastTime != null)
         {
-            secondsSinceLastRequest = ((TimeSpan) (DateTime.UtcNow - AgvDataRequestedLastTime)).TotalSeconds;
+            secondsSinceLastRequest = ((TimeSpan)(DateTime.UtcNow - AgvDataRequestedLastTime)).TotalSeconds;
         }
         int timeout = DataExist ? DailyRequestUpdateInterval : AgvRequestTimeout;
 

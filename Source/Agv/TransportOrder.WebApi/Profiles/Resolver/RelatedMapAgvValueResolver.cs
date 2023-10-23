@@ -16,7 +16,7 @@ public class RelatedMapAgvValueResolver : IValueResolver<Map, MapDto, object>
     /// The constant name for the AgvMapRelation mapping
     /// </summary>
     public const string AgvMapRelationsName = "agvMapRelations";
-        
+
     /// <summary>
     /// The resolve method for mapping the RelatedAgvs coming from the ResolutionContext.Items which has a value of Dictionary 
     /// </summary>

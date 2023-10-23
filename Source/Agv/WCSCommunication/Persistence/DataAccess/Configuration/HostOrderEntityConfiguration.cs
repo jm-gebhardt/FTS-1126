@@ -8,6 +8,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Persistence.DataAccess.Configu
 public class HostOrderEntityConfiguration : IEntityTypeConfiguration<HostOrder>
 {
     private const string HostOrderActions = "HostOrderActions";
+
     /// <inheritdoc />
     public void Configure(EntityTypeBuilder<HostOrder> builder)
     {

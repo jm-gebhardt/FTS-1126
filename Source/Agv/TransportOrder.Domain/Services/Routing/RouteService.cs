@@ -28,9 +28,15 @@ public class RouteService : IRouteService
         _logger = logger;
     }
 
-    private static string GetLastNodeId(Models.Agv.Agv agv) => agv.AgvStatus?.LastNodeId ?? throw new AgvLocationUnknownException(agv.CorrelationId);
+    private static string GetLastNodeId(Models.Agv.Agv agv)
+    {
+        return agv.AgvStatus?.LastNodeId ?? throw new AgvLocationUnknownException(agv.CorrelationId);
+    }
 
-    private async Task<AgvGraph> GetAgvGraph(Models.Agv.Agv agv) => await _agvGraphRegistry.GetAgvGraphAsync(agv.CorrelationId);
+    private async Task<AgvGraph> GetAgvGraph(Models.Agv.Agv agv)
+    {
+        return await _agvGraphRegistry.GetAgvGraphAsync(agv.CorrelationId);
+    }
 
     private async Task<Route?> GetRouteIfExistingAsync(Models.Agv.Agv agv, string destinationNodeId, CancellationToken cancellationToken = default)
     {

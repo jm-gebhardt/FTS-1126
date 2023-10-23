@@ -59,7 +59,10 @@ public class ConfigurationProviderTestFixture
 
     public IConfiguration Configuration => _host.Services.GetRequiredService<IConfiguration>();
 
-    public ISettingsProvider<TSettings> GetSettingsProvider<TSettings>() where TSettings : class, ISettings<TSettings> => _host.Services.GetRequiredService<ISettingsProvider<TSettings>>();
+    public ISettingsProvider<TSettings> GetSettingsProvider<TSettings>() where TSettings : class, ISettings<TSettings>
+    {
+        return _host.Services.GetRequiredService<ISettingsProvider<TSettings>>();
+    }
 
     public IEnumerable<ConfigurationType> ConfigurationTypes => _configurationTypeManager.ConfigurationTypes;
 
@@ -163,7 +166,7 @@ public class ConfigurationProviderTestFixture
 
         if (configuration == null)
         {
-            await dbSet.AddAsync(new ConfigurationSetting {Key = key, Value = value, ConfigurationType = configurationType});
+            await dbSet.AddAsync(new ConfigurationSetting { Key = key, Value = value, ConfigurationType = configurationType });
         }
         else
         {

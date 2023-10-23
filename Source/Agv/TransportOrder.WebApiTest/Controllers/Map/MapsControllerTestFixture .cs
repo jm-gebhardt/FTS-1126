@@ -8,6 +8,7 @@ using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
+using AgvStatus = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv.AgvStatus;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers.Map;
 
@@ -19,8 +20,8 @@ public class MapsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
 
     private readonly Mock<IAgvGraphRegistry> _agvGraphRegistry = new();
 
-    private readonly string[] _agvIds = {"AGV001", "AGV002", "AGV003"};
-    private readonly string[] _orders = {"ORDER001", "ORDER002", ""};
+    private readonly string[] _agvIds = { "AGV001", "AGV002", "AGV003" };
+    private readonly string[] _orders = { "ORDER001", "ORDER002", "" };
     private readonly AgvState[] _states = { AgvState.Idle, AgvState.Busy, AgvState.Discovered };
 
     private readonly Guid[] _correlationIds =
@@ -66,13 +67,12 @@ public class MapsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
             string orderId = _orders[i];
             var state = _states[i];
             var correlationId = _correlationIds[i];
-            var agvStatus = new Domain.Models.Agv.AgvStatus(correlationId, orderId, true, true, 10, true, true);
+            var agvStatus = new AgvStatus(correlationId, orderId, true, true, 10, true, true);
 
             var agv = new Domain.Models.Agv.Agv(correlationId, agvId, agvStatus);
             agv = AgvGenerator.SetAgvState(state, false, agv);
 
             agvs.Add(agv);
-
         }
 
         registryMock.SetupGet(x => x.Count).Returns(agvs.Count);

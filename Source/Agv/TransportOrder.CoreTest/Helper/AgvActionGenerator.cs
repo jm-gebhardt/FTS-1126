@@ -14,10 +14,10 @@ public static class AgvActionGenerator
         var chargeAction = new AgvAction(Guid.NewGuid(), ActionType.Charge, targetNodeId ?? AgvGraphGenerator.ChargingClose.Id, groupId);
         if (targetNodeId != null)
         {
-            chargeAction.Nodes = new[] {targetNodeId};
+            chargeAction.Nodes = new[] { targetNodeId };
         }
 
-        var actionGroup = new ActionGroup(groupId, string.Empty, new List<AgvAction> { chargeAction }, ActionGroupCreator.TransportOrder) {AssignedAgv = assignedAgv};
+        var actionGroup = new ActionGroup(groupId, string.Empty, new List<AgvAction> { chargeAction }, ActionGroupCreator.TransportOrder) { AssignedAgv = assignedAgv };
         return actionGroup;
     }
 
@@ -30,7 +30,7 @@ public static class AgvActionGenerator
         };
         if (targetNodeId != null)
         {
-            parkAction.Nodes = new[] {targetNodeId};
+            parkAction.Nodes = new[] { targetNodeId };
         }
         return parkAction;
     }
@@ -62,10 +62,10 @@ public static class AgvActionGenerator
 
         List<AgvAction> actions = partial switch
         {
-            1 => new List<AgvAction> {pickAction},
-            2 => new List<AgvAction> {dropAction},
-            3 => new List<AgvAction> {dropAction, pickAction},
-            _ => new List<AgvAction> {pickAction, dropAction}
+            1 => new List<AgvAction> { pickAction },
+            2 => new List<AgvAction> { dropAction },
+            3 => new List<AgvAction> { dropAction, pickAction },
+            _ => new List<AgvAction> { pickAction, dropAction }
         };
 
         var actionGroup = new ActionGroup(groupId, orderId, actions, ActionGroupCreator.Wms)
@@ -84,10 +84,10 @@ public static class AgvActionGenerator
         var moveAction = new AgvAction(Guid.NewGuid(), ActionType.Move, targetNodeId ?? AgvGraphGenerator.Waypoint1.Id, groupId);
         if (targetNodeId != null)
         {
-            moveAction.Nodes = new[] {targetNodeId};
+            moveAction.Nodes = new[] { targetNodeId };
         }
 
-        var actionGroup = new ActionGroup(groupId, orderId, new List<AgvAction> {moveAction}, isManual: isManual, creator: ActionGroupCreator.TransportOrderWebApi);
+        var actionGroup = new ActionGroup(groupId, orderId, new List<AgvAction> { moveAction }, isManual: isManual, creator: ActionGroupCreator.TransportOrderWebApi);
 
         return actionGroup;
     }

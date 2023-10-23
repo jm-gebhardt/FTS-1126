@@ -55,7 +55,7 @@ public class EfAgvGraphRegistry : IAgvGraphRegistry
     public async Task<ICollection<Guid>> GetAgvsRelatedToMap(Guid mapId)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        return await  QueryWithChildren(context)
+        return await QueryWithChildren(context)
             .Where(g => g.RelatedMapId == mapId)
             .Select(g => g.CorrelationId)
             .Distinct()

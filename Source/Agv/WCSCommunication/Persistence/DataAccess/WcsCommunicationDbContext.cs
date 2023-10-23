@@ -51,5 +51,4 @@ public sealed class WcsCommunicationDbContext : DbContext
         });
         base.OnConfiguring(optionsBuilder);
     }
-
 }

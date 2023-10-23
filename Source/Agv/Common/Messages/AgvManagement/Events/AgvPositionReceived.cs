@@ -22,7 +22,6 @@ public record AgvPositionReceived : CorrelatedBy<Guid>, IAgvId
     /// </summary>
     public AgvPosition AgvPosition { get; }
 
-
     /// <summary>
     /// Initializes a new instance of <see cref="AgvPositionReceived"/>
     /// </summary>

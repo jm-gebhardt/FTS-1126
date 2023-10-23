@@ -50,7 +50,6 @@ public static class CoreBusRegistrationExtensions
         busRegistrationConfigurator.AddConsumer<AgvPositionReceivedEventHandler>();
         busRegistrationConfigurator.AddConsumer<AgvCommandHandler>(c =>
         {
-           
             var createAgvPartitioner = c.CreatePartitioner(PartitionCount);
             createAgvPartitioner.PartitionMessageById<CreateAgv, AgvCommandHandler>(c);
 
@@ -78,7 +77,6 @@ public static class CoreBusRegistrationExtensions
         busRegistrationConfigurator.AddRequestClient<UnlockAgv>();
         busRegistrationConfigurator.AddRequestClient<MoveAgv>();
         busRegistrationConfigurator.AddRequestClient<SetAgvForceIdle>();
-
     }
 
     private static void RegisterCoreGraphHandlers(IBusRegistrationConfigurator busRegistrationConfigurator)
@@ -186,6 +184,5 @@ public static class CoreBusRegistrationExtensions
         configurator.AddRequestClient<GetMap>();
 
         configurator.AddRequestClient<GetMapGraph>();
-
     }
 }

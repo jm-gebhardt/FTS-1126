@@ -36,7 +36,9 @@ public class EfActionGroupRegistry : IActionGroupRegistry
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<ActionGroup>> GetActionGroupsAsync(ActionGroupState state, DateTime? fromDate = null, DateTime? toDate = null, int maxItems = 0, Guid? assignedAgvCorrelationId = null, bool? isManual = null)
-        => await GetActionGroupsAsync(new List<ActionGroupState> {state}, fromDate, toDate, maxItems, assignedAgvCorrelationId, isManual);
+    {
+        return await GetActionGroupsAsync(new List<ActionGroupState> { state }, fromDate, toDate, maxItems, assignedAgvCorrelationId, isManual);
+    }
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<ActionGroup>> GetActionGroupsAsync(IList<ActionGroupState>? states = null, DateTime? fromDate = null, DateTime? toDate = null, int maxItems = 100, Guid? assignedAgvCorrelationId = null, bool? isManual = null)
@@ -197,7 +199,6 @@ public class EfActionGroupRegistry : IActionGroupRegistry
         await context.SaveChangesAsync();
     }
 
-
     /// <inheritdoc />
     public async Task<ActionGroup> UpdateActionAndGroupStateAsync(AgvAction action, Domain.Models.Agv.Agv? agv, ActionState state)
     {
@@ -322,7 +323,7 @@ public class EfActionGroupRegistry : IActionGroupRegistry
 
         return await actionGroups.AnyAsync(a =>
             (a.AssignedAgv == agvCorrelationId &&
-             new[] {ActionGroupState.Started, ActionGroupState.Created}.Contains(a.State)) ||
+             new[] { ActionGroupState.Started, ActionGroupState.Created }.Contains(a.State)) ||
             (a.AssignedAgv == null && a.State == ActionGroupState.Created)
         );
     }

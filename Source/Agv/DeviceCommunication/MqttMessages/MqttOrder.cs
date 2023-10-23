@@ -70,10 +70,12 @@ public record Coordinates
     /// The theta angle to go to
     /// </summary>
     public double ToTheta { get; set; }
+
     /// <summary>
     /// The x coordinate to go to
     /// </summary>
     public double ToX { get; set; }
+
     /// <summary>
     /// The y coordinate to go to
     /// </summary>
@@ -90,6 +92,7 @@ public record Route
     /// The list of edges to use/travel over for the order
     /// </summary>
     public List<object>? Edges { get; set; }
+
     /// <summary>
     /// The list of nodes to use/travel over for the order
     /// </summary>

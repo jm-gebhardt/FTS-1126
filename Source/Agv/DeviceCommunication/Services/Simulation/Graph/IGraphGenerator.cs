@@ -9,7 +9,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph;
 [PublicAPI]
 public interface IGraphGenerator
 {
-
     /// <summary>
     /// List of source nodes
     /// </summary>

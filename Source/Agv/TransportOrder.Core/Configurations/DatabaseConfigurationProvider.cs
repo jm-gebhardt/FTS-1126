@@ -52,7 +52,7 @@ public class DatabaseConfigurationProvider<TDbContext> : ConfigurationProvider
         try
         {
             using var dbContext = _source.DbContextFactory.CreateDbContext();
-       
+
             Data = new Dictionary<string, string>()!;
 
             List<ConfigurationSetting> configurationSettings = dbContext.Set<ConfigurationSetting>().ToList();

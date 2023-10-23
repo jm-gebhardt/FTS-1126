@@ -25,7 +25,7 @@ public record CurrentAgvRouteDto
     }
 
     /// <summary>
-    /// Deserializer constructor
+    /// ctor called by AutoMapper.
     /// </summary>
     [PublicAPI]
     private CurrentAgvRouteDto()

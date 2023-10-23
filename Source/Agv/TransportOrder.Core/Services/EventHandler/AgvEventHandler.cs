@@ -34,7 +34,6 @@ public class AgvEventHandler :
     IConsumer<AgvWentOffline>, 
     IConsumer<AgvPreparedForStartingAction>
 {
-
     private readonly ILogger<AgvEventHandler> _logger;
     private readonly IAgvRepository _agvRepository;
     private readonly IActionGroupRegistry _actionGroupRegistry;
@@ -237,7 +236,6 @@ public class AgvEventHandler :
     {
         await _semaphoreProvider.ExecuteLockedAsync(async () =>
         {
-
             if (agv.IsLocked)
             {
                 await context.Publish(new TryStartManualAction(agv.CorrelationId));

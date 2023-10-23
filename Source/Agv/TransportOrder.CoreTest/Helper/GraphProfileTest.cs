@@ -10,7 +10,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 [TestClass]
 public class GraphProfileTest
 {
-    private static Mapper GetMapper() => MappingHelper.GetMapper(new GraphProfile());
+    private static Mapper GetMapper()
+    {
+        return MappingHelper.GetMapper(new GraphProfile());
+    }
 
     private static void VerifyAgvGraph(EfGraph efGraph, AgvGraph agvGraph)
     {

@@ -2,7 +2,6 @@
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 
-
 /// <summary>
 /// Agv State
 /// </summary>
@@ -55,6 +54,7 @@ public static class AgvStateExtensions
             case AgvState.Charging when oldState is AgvState.Idle or AgvState.Busy:
             case AgvState.Busy when oldState is AgvState.Idle or AgvState.Charging:
                 break;
+
             default:
                 throw new InvalidStateTransitionException($"Cannot transition from state '{Enum.GetName(oldState)}' to '{Enum.GetName(newState)}'.");
         }

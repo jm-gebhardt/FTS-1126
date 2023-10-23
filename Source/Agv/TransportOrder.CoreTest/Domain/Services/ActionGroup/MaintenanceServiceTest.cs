@@ -13,16 +13,17 @@ public class MaintenanceServiceTest
     [TestMethod]
     public async Task GetMaintenanceNode_WhenThereMoreThanOneAvailableMaintenanceNodes_ReturnsLowestCostNode()
     {
-        var availableNodes = new List<GraphNode>{
+        var availableNodes = new List<GraphNode>
+        {
             NodeGenerator.GenerateParkingNode("Park-1"),
             NodeGenerator.GenerateParkingNode("Park-2")
         };
-    
+
         var agv = AgvGenerator.GenerateIdleAgv();
         var fixture = new MaintenanceServiceTestFixture()
             .WithAvailableNodes(agv, availableNodes)
             .WithLowestCostNode(agv, availableNodes, availableNodes.First());
-    
+
         var maintenanceNode = await fixture.MaintenanceService.GetMaintenanceNode(agv);
         fixture.RouteService.Verify(m => m.GetNodeWithLowestCostsAsync(agv, availableNodes), Times.Once);
         maintenanceNode.ShouldNotBeNull();

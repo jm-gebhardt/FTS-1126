@@ -1,4 +1,5 @@
-﻿
+﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
+
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.ActionGroup;
 
 /// <summary>
@@ -6,4 +7,4 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.ActionGroup;
 /// </summary>
 /// <param name="Action">The action.</param>
 /// <param name="AssignedAgv">The agv.</param>
-public record NodesSelectedForAction(Domain.Models.ActionGroup.AgvAction Action, Guid AssignedAgv);
+public record NodesSelectedForAction(AgvAction Action, Guid AssignedAgv);

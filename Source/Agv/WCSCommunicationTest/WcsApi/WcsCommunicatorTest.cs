@@ -43,7 +43,7 @@ public class WcsCommunicatorTest
         var fixture = new WcsCommunicatorTestFixture();
         await using var context = await fixture.DbContextFactory.CreateDbContextAsync();
 
-        string orderId = "TestOrder123";
+        const string orderId = "TestOrder123";
         Should.Throw<OrderNotFoundException>(async () => await fixture.Communicator.TransmitHostOrderHandlingSucceeded(orderId));
 
         context.FromAgv.Count().ShouldBe(0);
@@ -63,7 +63,7 @@ public class WcsCommunicatorTest
         context.ToAgv.Add(latestOrder);
 
         await context.SaveChangesAsync();
-        string assignedAgv = "AGV1";
+        const string assignedAgv = "AGV1";
 
         (await fixture.Communicator.TransmitHostOrderStarted(latestOrder.OrderId, assignedAgv)).ShouldBeTrue();
 
@@ -137,7 +137,7 @@ public class WcsCommunicatorTest
         var fixture = new WcsCommunicatorTestFixture();
         await using var context = await fixture.DbContextFactory.CreateDbContextAsync();
 
-        string orderId = "TestOrder123";
+        const string orderId = "TestOrder123";
 
         Should.Throw<OrderNotFoundException>(async() => await fixture.Communicator.TransmitHostOrderCancellationSucceeded(orderId));
 
@@ -168,7 +168,6 @@ public class WcsCommunicatorTest
         entry.RecordType.ShouldBe(RecordType.OrderCancelFailed);
         entry.Status.ShouldBe(OrderStatus.Cancelled);
     }
-
 
     [TestMethod]
     public async Task TransmitHostOrderCancellationFailure_OrderIdDoesNotExistInToAgv_ThrowsOrderNotFoundExceptionFromAgvEntryNotWritten()

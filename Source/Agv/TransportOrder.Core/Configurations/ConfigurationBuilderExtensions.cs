@@ -20,7 +20,7 @@ public static class ConfigurationBuilderExtensions
     /// <param name="index">Index position where the configuration source is added using insert</param>
     /// <returns>The <see cref="IConfigurationBuilder"/> object</returns>
     [UsedImplicitly]
-    public static IConfigurationBuilder AddDefaultConfiguration(this IConfigurationBuilder builder, IConfigurationTypeManager configurationTypeManager, int index=0)
+    public static IConfigurationBuilder AddDefaultConfiguration(this IConfigurationBuilder builder, IConfigurationTypeManager configurationTypeManager, int index = 0)
     {
         // DefaultConfigurationProvider should be at index 0 of the provider layer, so that environment variable can overwrite the hardcoded values of a ISettings
         builder.Sources.Insert(index, new DefaultConfigurationSource(ConfigurationTypeManager.Instance));

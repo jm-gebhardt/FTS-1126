@@ -1,4 +1,5 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agvs.Queries;
@@ -6,7 +7,6 @@ using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
-using AgvError = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.AgvError;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers.Agv;
 

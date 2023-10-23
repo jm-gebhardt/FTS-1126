@@ -38,8 +38,8 @@ public class GraphParser
     public GraphParser(MqttGraph graph)
     {
         _graph = graph;
-        _nodes = new(new GraphNodeComparer());
-        _edges = new(new GraphEdgeComparer());
+        _nodes = new HashSet<GraphNode>(new GraphNodeComparer());
+        _edges = new HashSet<GraphEdge>(new GraphEdgeComparer());
     }
 
     /// <summary>
@@ -200,7 +200,7 @@ public class GraphParser
                 _usability = AgvGraph.GraphUsability.InvalidEdges;
             }
 
-            _agvGraph = new(_serialNumber?.ToGuid() ?? Guid.Empty,
+            _agvGraph = new AgvGraph(_serialNumber?.ToGuid() ?? Guid.Empty,
                 _nodes,
                 _edges,
                 _graph.RelatedMapId.ToGuid(),

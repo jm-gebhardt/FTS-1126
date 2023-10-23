@@ -60,7 +60,6 @@ public class AgvsController : Controller
         return Ok(agvs);
     }
 
-
     /// <summary>
     /// Get list of selected agvs.
     /// </summary>
@@ -103,7 +102,6 @@ public class AgvsController : Controller
         var graphs = _mapper.Map<List<GraphDto>>(response.Message.Graphs);
         return Ok(graphs);
     }
-
 
     /// <summary>
     /// Get list of selected agvs' data.
@@ -161,7 +159,7 @@ public class AgvsController : Controller
     [Route("/agvs/errorHistory")]
     public async Task<ActionResult<Dictionary<Guid, IEnumerable<AgvErrorDto>>>> GetErrorHistoryForSelectedAgvs([FromQuery] ICollection<Guid> correlationIds, DateTime? dateFrom, DateTime? dateTo)
     {
-        Response<GotErrorHistoryForAgvs> response = await _getErrorHistoryClient.GetResponse<GotErrorHistoryForAgvs>(new GetErrorHistoryForAgvs(correlationIds, dateFrom?? DateTime.MinValue, dateTo ?? DateTime.MaxValue));
+        Response<GotErrorHistoryForAgvs> response = await _getErrorHistoryClient.GetResponse<GotErrorHistoryForAgvs>(new GetErrorHistoryForAgvs(correlationIds, dateFrom ?? DateTime.MinValue, dateTo ?? DateTime.MaxValue));
         var dto = _mapper.Map<Dictionary<Guid, IEnumerable<AgvErrorDto>>>(response.Message.ErrorsByAgv);
         return Ok(dto);
     }

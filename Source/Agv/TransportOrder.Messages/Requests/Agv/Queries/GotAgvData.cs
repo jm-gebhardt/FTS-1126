@@ -98,7 +98,7 @@ public record AgvData
     }
 
     /// <summary>
-    /// Automapper ctor
+    /// ctor called by AutoMapper.
     /// </summary>
     public AgvData()
     {

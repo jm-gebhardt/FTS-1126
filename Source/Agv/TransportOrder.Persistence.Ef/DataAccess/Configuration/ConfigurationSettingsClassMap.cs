@@ -16,5 +16,4 @@ public class ConfigurationSettingsClassMap : ClassMap<ConfigurationSetting>
         entity.Property(p => p.Value).HasMaxLength(1000).IsRequired();
         entity.Property(p => p.ConfigurationType).HasMaxLength(500).IsRequired();
     }
-        
 }

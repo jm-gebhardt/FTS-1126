@@ -12,7 +12,6 @@ public class MapNotFoundException : NotFoundException
     /// </summary>
     public MapNotFoundException() : base("Map")
     {
-
     }
 
     /// <summary>
@@ -23,6 +22,5 @@ public class MapNotFoundException : NotFoundException
     public MapNotFoundException(string paramIdentifierName, object paramIdentifierValue)
         : base("Map", paramIdentifierName, paramIdentifierValue)
     {
-
     }
 }

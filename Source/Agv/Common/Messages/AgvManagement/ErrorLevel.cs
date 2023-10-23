@@ -11,6 +11,7 @@ public enum ErrorLevel
 {
     /// <summary/>
     Fatal,
+
     /// <summary/>
     Warning
 }

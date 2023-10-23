@@ -57,7 +57,6 @@ public class GetAgvDataRequestHandler :
         if (fetchedData.Count != selectedAgvs.Count)
         {
             throw new AgvsDataBatchQueryException(selectedAgvs.Except(fetchedData.Select(p => p.CorrelationId)).ToList());
-
         }
         var specifications = _mapper.Map<List<AgvData>>(fetchedData);
         await context.RespondAsync(new GotAgvsData(specifications));

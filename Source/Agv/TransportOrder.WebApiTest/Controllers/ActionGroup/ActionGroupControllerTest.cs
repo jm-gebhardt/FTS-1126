@@ -27,7 +27,7 @@ public class ActionGroupControllerTest
 
         var controller = fixture.Controller;
         ActionResult<ActionGroupDto> response = await controller.GetActionGroup(actionGroup.CorrelationId);
-        
+
         var result = response.Result as OkObjectResult;
         result.ShouldNotBeNull();
 
@@ -48,5 +48,4 @@ public class ActionGroupControllerTest
         var controller = fixture.Controller;
         await MediatorShould.ThrowRequestExceptionAsync<ActionGroupNotFoundException>(async () => await controller.GetActionGroup(correlationId));
     }
-
 }

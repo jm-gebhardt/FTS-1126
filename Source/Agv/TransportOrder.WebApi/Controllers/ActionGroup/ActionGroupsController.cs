@@ -11,7 +11,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers.ActionGroup;
 /// Action groups batch requests.
 /// </summary>
 [ApiExplorerSettings(GroupName = RestApiGroup.GroupName)]
-public class ActionGroupsController: Controller
+public class ActionGroupsController : Controller
 {
     private readonly IRequestClient<GetActionGroups> _getAgvActionGroupsRequest;
     private readonly IRequestClient<GetActionGroupCountsByState> _getAgvActionGroupCountsByStateRequest;
@@ -20,7 +20,7 @@ public class ActionGroupsController: Controller
     /// <summary>
     /// Initializes a new <see cref="ActionGroupsController" /> instance.
     /// </summary>
-    public ActionGroupsController(IMapper mapper, IRequestClient<GetActionGroups> getAgvActionGroupsRequest, 
+    public ActionGroupsController(IMapper mapper, IRequestClient<GetActionGroups> getAgvActionGroupsRequest,
         IRequestClient<GetActionGroupCountsByState> getAgvActionGroupCountsByStateRequest)
     {
         _mapper = mapper;
@@ -34,12 +34,12 @@ public class ActionGroupsController: Controller
     /// <response code="200">Ok</response>
     [HttpGet]
     [Route("/actionGroups")]
-    public async Task<ActionResult<IEnumerable<ActionGroupDto>>> GetActionGroups(ActionGroupState[] states, DateTime? fromDate, DateTime? toDate, int limit=1000)
+    public async Task<ActionResult<IEnumerable<ActionGroupDto>>> GetActionGroups(ActionGroupState[] states, DateTime? fromDate, DateTime? toDate, int limit = 1000)
     {
-        Response<GotActionGroups> response = await _getAgvActionGroupsRequest.GetResponse<GotActionGroups>( new GetActionGroups(
-            states, 
-            fromDate ?? DateTime.MinValue, 
-            toDate ?? DateTime.MaxValue, 
+        Response<GotActionGroups> response = await _getAgvActionGroupsRequest.GetResponse<GotActionGroups>(new GetActionGroups(
+            states,
+            fromDate ?? DateTime.MinValue,
+            toDate ?? DateTime.MaxValue,
             limit));
         List<ActionGroupDto> actionGroups = response.Message.ActionGroups.Select(g => _mapper.Map<ActionGroupDto>(g)).ToList();
         return Ok(actionGroups);

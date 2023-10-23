@@ -11,7 +11,7 @@ public record AgvErrorDto
     /// CorrelationId of the AgvError
     /// </summary>
     public Guid CorrelationId { get; init; }
-    
+
     /// <summary>
     /// Agv CorrelationId
     /// </summary>
@@ -68,10 +68,9 @@ public record AgvErrorDto
     }
 
     /// <summary>
-    /// Automapper ctor
+    /// ctor called by AutoMapper.
     /// </summary>
     public AgvErrorDto()
     {
-        
     }
 }

@@ -32,7 +32,7 @@ public static class AgvGenerator
         AgvStatus? agvStatus = null,
         bool charging = false,
         bool isLocked = false
-        )
+    )
     {
         string agvId = GetAgvId(index);
         var correlationId = agvId.ToGuid();
@@ -41,7 +41,10 @@ public static class AgvGenerator
         return SetAgvState(state, isLocked, agv);
     }
 
-    private static string GetAgvId(int index) => $"AGV{index:D3}";
+    private static string GetAgvId(int index)
+    {
+        return $"AGV{index:D3}";
+    }
 
     public static Domain.Models.Agv.Agv SetAgvState(AgvState state, bool isLocked, Domain.Models.Agv.Agv agv)
     {
@@ -69,6 +72,5 @@ public static class AgvGenerator
                 break;
         }
         return agv;
-        
     }
 }

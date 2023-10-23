@@ -27,9 +27,9 @@ public class GetAgvPositionsRequestHandlerTest
 
         List<Messages.MessageContent.AgvPositionStatus>? actualPositions = response.Message.AgvPositions;
         actualPositions.ShouldNotBeNull();
-        actualPositions.Select(p => 
-            new AgvPositionStatus(p.CorrelationId, p.AgvId, new AgvPosition(p.AgvPosition.PositionInitialized, p.AgvPosition.X, p.AgvPosition.Y, p.AgvPosition.Z, p.AgvPosition.Theta, p.AgvPosition.DeviationRange)))
-            .OrderBy(p=>p.CorrelationId).ShouldBe(positions.OrderBy(p => p.CorrelationId));
+        actualPositions.Select(p =>
+                new AgvPositionStatus(p.CorrelationId, p.AgvId, new AgvPosition(p.AgvPosition.PositionInitialized, p.AgvPosition.X, p.AgvPosition.Y, p.AgvPosition.Z, p.AgvPosition.Theta, p.AgvPosition.DeviationRange)))
+            .OrderBy(p => p.CorrelationId).ShouldBe(positions.OrderBy(p => p.CorrelationId));
     }
 
     [TestMethod]
@@ -65,14 +65,14 @@ public class GetAgvPositionsRequestHandlerTest
     {
         var position = new AgvPositionStatus(Guid.NewGuid(), "AgvId", new AgvPosition(true, 1, 1, 1, 1));
         GetAgvPositionsRequestHandlerTestFixture<GetAgvPosition, GetAgvPositionsRequestHandler> fixture = new GetAgvPositionsRequestHandlerTestFixture<GetAgvPosition, GetAgvPositionsRequestHandler>()
-            .WithAgvPositions(new List<AgvPositionStatus> {position})
+            .WithAgvPositions(new List<AgvPositionStatus> { position })
             .Build();
 
         Response<GotAgvPosition> response = await fixture.GetResponseAsync<GotAgvPosition>(new GetAgvPosition(position.CorrelationId));
         var actualPosition = response.Message.AgvPositions;
         actualPosition.ShouldNotBeNull();
         new AgvPositionStatus(actualPosition.CorrelationId, actualPosition.AgvId, new AgvPosition(actualPosition.AgvPosition.PositionInitialized,
-                actualPosition.AgvPosition.X, actualPosition.AgvPosition.Y, actualPosition.AgvPosition.Z, actualPosition.AgvPosition.Theta, actualPosition.AgvPosition.DeviationRange)).ShouldBe(position);
+            actualPosition.AgvPosition.X, actualPosition.AgvPosition.Y, actualPosition.AgvPosition.Z, actualPosition.AgvPosition.Theta, actualPosition.AgvPosition.DeviationRange)).ShouldBe(position);
     }
 
     [TestMethod]
@@ -90,7 +90,7 @@ public class GetAgvPositionsRequestHandlerTest
     public async Task Consume_GetAgvPosition_EmptyRepository_ThrowsAgvNotFoundException()
     {
         GetAgvPositionsRequestHandlerTestFixture<GetAgvPosition, GetAgvPositionsRequestHandler> fixture = new GetAgvPositionsRequestHandlerTestFixture<GetAgvPosition, GetAgvPositionsRequestHandler>()
-            .WithAgvPositions(new List<AgvPositionStatus> ())
+            .WithAgvPositions(new List<AgvPositionStatus>())
             .Build();
 
         await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await fixture.GetResponseAsync<GotAgvPosition>(new GetAgvPosition("ANY".ToGuid())));

@@ -5,7 +5,6 @@ namespace Gebhardt.StoreWare.Agv.Common.Configurations;
 /// </summary>
 public interface ISettings
 {
-
 }
 
 /// <summary>

@@ -248,10 +248,12 @@ public record MqttAgvPosition
     /// Theta component of AGV position
     /// </summary>
     public float Theta { get; set; }
+
     /// <summary>
     /// X component of AGV position
     /// </summary>
     public float X { get; set; }
+
     /// <summary>
     /// Y component of AGV position
     /// </summary>
@@ -370,6 +372,7 @@ public record MqttControlPoint
     /// The x coordinate of the control point
     /// </summary>
     public float X { get; set; }
+
     /// <summary>
     /// The y coordinate of the control point
     /// </summary>
@@ -415,6 +418,7 @@ public record MqttErrorReference
     /// Property for reference key
     /// </summary>
     public string? ReferenceKey { get; set; }
+
     /// <summary>
     /// Property for reference value
     /// </summary>
@@ -459,6 +463,7 @@ public record MqttInfoReference
     /// Property for reference key
     /// </summary>
     public string? ReferenceKey { get; set; }
+
     /// <summary>
     /// Property for reference value
     /// </summary>
@@ -521,14 +526,17 @@ public record MqttBoundingBoxReference
     /// Theta component of bounding box reference
     /// </summary>
     public float? Theta { get; set; }
+
     /// <summary>
     /// X component of bounding box reference
     /// </summary>
     public float X { get; set; }
+
     /// <summary>
     /// Y component of bounding box reference
     /// </summary>
     public float Y { get; set; }
+
     /// <summary>
     /// Z component of bounding box reference
     /// </summary>
@@ -610,14 +618,17 @@ public record MqttNodePosition
     /// The id of the node in the map
     /// </summary>
     public string? MapId { get; set; }
+
     /// <summary>
     /// Orientation of the node in the map
     /// </summary>
     public float Theta { get; set; }
+
     /// <summary>
     /// X coordinate of the node in the map
     /// </summary>
     public float X { get; set; }
+
     /// <summary>
     /// Y coordinate of the node in the map
     /// </summary>
@@ -651,10 +662,12 @@ public record MqttVelocity
     /// The direction of the velocity vector
     /// </summary>
     public float? Omega { get; set; }
+
     /// <summary>
     /// The x value of the velocity vector
     /// </summary>
     public float? Vx { get; set; }
+
     /// <summary>
     /// The y value of the velocity vector
     /// </summary>
@@ -670,15 +683,19 @@ public enum MqttActionStatus
 {
     /// <summary/>
     Failed,
+
     /// <summary/>
     Finished,
+
     /// <summary/>
     Initializing,
+
     /// <summary/>
     Running,
+
     /// <summary/>
     Waiting
-};
+}
 
 /// <summary>
 /// warning: AGV is ready to drive without human intervention
@@ -689,9 +706,10 @@ public enum MqttErrorLevel
 {
     /// <summary/>
     Fatal,
+
     /// <summary/>
     Warning
-};
+}
 
 /// <summary>
 /// Type of information
@@ -701,9 +719,10 @@ public enum MqttInfoLevel
 {
     /// <summary/>
     Debug,
+
     /// <summary/>
     Info
-};
+}
 
 /// <summary>
 /// Current operating mode of the AGV.
@@ -713,14 +732,18 @@ public enum MqttOperatingMode
 {
     /// <summary/>
     Automatic,
+
     /// <summary/>
     Manual,
+
     /// <summary/>
     Semiautomatic,
+
     /// <summary/>
     Service,
+
     /// <summary/>
-    Teachin 
+    Teachin
 }
 
 /// <summary>
@@ -731,10 +754,13 @@ public enum MqttEStop
 {
     /// <summary/>
     AutoAck,
+
     /// <summary/>
     Manual,
+
     /// <summary/>
     None,
+
     /// <summary/>
     Remote
-};
+}

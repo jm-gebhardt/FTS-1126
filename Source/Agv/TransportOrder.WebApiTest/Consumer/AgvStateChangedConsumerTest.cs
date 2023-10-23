@@ -27,11 +27,11 @@ public class AgvStateChangedConsumerTest
     public async Task Receiving_AgvStateChanged_WhenCurrentStateIsNotInitial_SendAgvStateChangedToAllClients(AgvState currentState, AgvState? previousState)
     {
         var agvStatus = new AgvStatus(Guid.NewGuid(), null, false, true, 100.0d, false, false, NodeGenerator.GenerateParkingNode().Id);
-        var agv = new TransportOrder.Domain.Models.Agv.Agv(AgvId.ToGuid(), AgvId, agvStatus: agvStatus);
+        var agv = new Domain.Models.Agv.Agv(AgvId.ToGuid(), AgvId, agvStatus);
         agv = AgvGenerator.SetAgvState(currentState, false, agv);
 
         var mapper = MappingHelper.GetMapper(new AgvProfile());
-        var agvMessageContent = mapper.Map<Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent.Agv>(agv);
+        var agvMessageContent = mapper.Map<Messages.MessageContent.Agv>(agv);
 
         var responseMock = new Mock<Response<GotAgvs>>();
         responseMock.SetupGet(m => m.Message).Returns(new GotAgvs(new[] { agvMessageContent }));
@@ -42,18 +42,18 @@ public class AgvStateChangedConsumerTest
         (await fixture.TestHarness.Published.Any<AgvStateChanged>()).ShouldBeTrue();
         (await fixture.ConsumerHarness!.Consumed.Any<AgvStateChanged>()).ShouldBeTrue();
 
-        fixture.PublisherMock.Verify(h => h.SendAgvStateChangedAsync(It.Is<Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent.Agv>(x => x.CurrentState == currentState)), Times.Once);
+        fixture.PublisherMock.Verify(h => h.SendAgvStateChangedAsync(It.Is<Messages.MessageContent.Agv>(x => x.CurrentState == currentState)), Times.Once);
     }
 
     [TestMethod]
     [DataRow(AgvState.Initial, null)]
     public async Task Receiving_AgvStateChanged_WhenCurrentStateIsInitial_SendAgvDiscoveredToAllClients(AgvState currentState, AgvState? previousState)
     {
-        var agv = new TransportOrder.Domain.Models.Agv.Agv(AgvId.ToGuid(), AgvId);
+        var agv = new Domain.Models.Agv.Agv(AgvId.ToGuid(), AgvId);
         agv = AgvGenerator.SetAgvState(currentState, false, agv);
 
         var mapper = MappingHelper.GetMapper(new AgvProfile());
-        var agvMessageContent = mapper.Map<Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent.Agv>(agv);
+        var agvMessageContent = mapper.Map<Messages.MessageContent.Agv>(agv);
 
         var responseMock = new Mock<Response<GotAgvs>>();
         responseMock.SetupGet(m => m.Message).Returns(new GotAgvs(new[] { agvMessageContent }));

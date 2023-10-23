@@ -31,10 +31,10 @@ public class GetCurrentAgvRouteRequestHandlerTest
     {
         var agvCorrelationId = Guid.NewGuid();
         var agvRoute = new AgvRouteReadModel(agvCorrelationId, NodeGenerator.GenerateRouteNodes());
-        Guid[] agvCorrelationIds = {agvCorrelationId};
+        Guid[] agvCorrelationIds = { agvCorrelationId };
         var agvRoutesByAgv = new Dictionary<Guid, AgvRouteReadModel?>
         {
-            {agvCorrelationId, agvRoute}
+            { agvCorrelationId, agvRoute }
         };
         GetCurrentAgvRouteRequestHandlerTestFixture<GetCurrentAgvRoutes, GetCurrentAgvRouteRequestHandler> fixture = new GetCurrentAgvRouteRequestHandlerTestFixture<GetCurrentAgvRoutes, GetCurrentAgvRouteRequestHandler>()
             .WithAgvRoutes(agvCorrelationIds, agvRoutesByAgv)

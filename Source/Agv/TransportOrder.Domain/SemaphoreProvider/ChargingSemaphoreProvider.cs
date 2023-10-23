@@ -6,5 +6,5 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
 public class ChargingSemaphoreProvider : BaseSemaphoreProvider, IChargingSemaphoreProvider
 {
     /// <inheritdoc/>
-    protected override SemaphoreSlim Semaphore { get; } = new (1, 1);
+    protected override SemaphoreSlim Semaphore { get; } = new(1, 1);
 }

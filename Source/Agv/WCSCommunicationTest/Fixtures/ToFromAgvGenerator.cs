@@ -18,7 +18,7 @@ public static class ToFromAgvGenerator
     /// <param name="leNo"></param>
     /// <returns></returns>
     public static ToAgv GenerateToAgvEntry(
-        string? orderId = null, 
+        string? orderId = null,
         string? source = null,
         string? destination = null,
         RecordType? recordType = null,
@@ -26,10 +26,11 @@ public static class ToFromAgvGenerator
         string? leNo = null
     )
     {
-        return new ToAgv {
+        return new ToAgv
+        {
             OrderId = orderId ?? Guid.NewGuid().ToString(),
-            Source = source?? Guid.NewGuid().ToString(),
-            Destination = destination?? Guid.NewGuid().ToString(),
+            Source = source ?? Guid.NewGuid().ToString(),
+            Destination = destination ?? Guid.NewGuid().ToString(),
             RecordType = recordType ?? RecordType.TransportOrder,
             MessageStatus = messageStatus ?? MessageStatus.Pending,
             LeNo = leNo ?? Guid.NewGuid().ToString()

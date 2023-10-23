@@ -55,7 +55,7 @@ public class AgvControllerTest
             .UseDefaultServices()
             .Build();
 
-        string agvId = "INVALID";
+        const string agvId = "INVALID";
         var correlationId = agvId.ToGuid();
 
         var controller = fixture.Controller;
@@ -161,7 +161,7 @@ public class AgvControllerTest
         var response1 = new AcceptAgvSucceeded(correlationId);
         var response2 = new AcceptAgvRejected(correlationId);
         var response3 = new AgvNotFoundResult(correlationId);
-        var responseToUse = RequestClientGenerator<AcceptAgv>.ResponseToUse.First;
+        const RequestClientGenerator<AcceptAgv>.ResponseToUse responseToUse = RequestClientGenerator<AcceptAgv>.ResponseToUse.First;
         IRequestClient<AcceptAgv> requestClient = RequestClientGenerator<AcceptAgv>.CreateDummyRequestClient(response1, response2, response3, responseToUse);
 
         fixture.AddService(sc => sc.AddTransient(_ => requestClient))
@@ -181,7 +181,7 @@ public class AgvControllerTest
         var response1 = new AcceptAgvSucceeded(correlationId);
         var response2 = new AcceptAgvRejected(correlationId);
         var response3 = new AgvNotFoundResult(correlationId);
-        var responseToUse = RequestClientGenerator<AcceptAgv>.ResponseToUse.Second;
+        const RequestClientGenerator<AcceptAgv>.ResponseToUse responseToUse = RequestClientGenerator<AcceptAgv>.ResponseToUse.Second;
         IRequestClient<AcceptAgv> requestClient = RequestClientGenerator<AcceptAgv>.CreateDummyRequestClient(response1, response2, response3, responseToUse);
 
         fixture.AddService(sc => sc.AddTransient(_ => requestClient))
@@ -201,7 +201,7 @@ public class AgvControllerTest
         var response1 = new AcceptAgvSucceeded(correlationId);
         var response2 = new AcceptAgvRejected(correlationId);
         var response3 = new AgvNotFoundResult(correlationId);
-        var responseToUse = RequestClientGenerator<AcceptAgv>.ResponseToUse.Third;
+        const RequestClientGenerator<AcceptAgv>.ResponseToUse responseToUse = RequestClientGenerator<AcceptAgv>.ResponseToUse.Third;
         IRequestClient<AcceptAgv> requestClient = RequestClientGenerator<AcceptAgv>.CreateDummyRequestClient(response1, response2, response3, responseToUse);
 
         fixture.AddService(sc => sc.AddTransient(_ => requestClient))

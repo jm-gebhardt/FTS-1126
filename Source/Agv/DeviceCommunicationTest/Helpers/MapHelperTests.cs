@@ -13,7 +13,7 @@ public class MapHelperTests
     {
         Should.Throw<MapCreationException>(() => MapHelper.GetMapDimensions(Array.Empty<byte>()));
     }
-    
+
     [TestMethod]
     public void GetMapDimensions_NoMapByteValue_ThrowsMapCreationException()
     {

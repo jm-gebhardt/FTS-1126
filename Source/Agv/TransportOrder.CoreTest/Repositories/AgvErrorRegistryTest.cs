@@ -34,7 +34,7 @@ public class AgvErrorRegistryTest
     {
         const int errorCount = 5;
         var agvCorrelationId = Guid.NewGuid();
-        var agvErrorStatus = AgvErrorGenerator.GenerateAgvErrorStatus(errorCount, agvCorrelationId: agvCorrelationId);
+        var agvErrorStatus = AgvErrorGenerator.GenerateAgvErrorStatus(errorCount, agvCorrelationId);
         var fixture = new AgvErrorRegistryTestFixture();
 
         await fixture.AgvErrorRegistry.AddOrUpdateAgvErrorStatusAsync(agvErrorStatus.Errors, agvErrorStatus.CorrelationId);
@@ -49,7 +49,7 @@ public class AgvErrorRegistryTest
     {
         const int errorCount = 5;
         var agvCorrelationId = Guid.NewGuid();
-        var agvErrorStatus = AgvErrorGenerator.GenerateAgvErrorStatus(errorCount, agvCorrelationId: agvCorrelationId);
+        var agvErrorStatus = AgvErrorGenerator.GenerateAgvErrorStatus(errorCount, agvCorrelationId);
         var fixture = await new AgvErrorRegistryTestFixture()
             .WithAgvErrorStatus(agvErrorStatus)
             .BuildAsync();
@@ -82,7 +82,7 @@ public class AgvErrorRegistryTest
     {
         const int errorCount = 5;
         var agvCorrelationId = Guid.NewGuid();
-        var agvErrorStatus = AgvErrorGenerator.GenerateAgvErrorStatus(errorCount, agvCorrelationId: agvCorrelationId);
+        var agvErrorStatus = AgvErrorGenerator.GenerateAgvErrorStatus(errorCount, agvCorrelationId);
         var fixture = await new AgvErrorRegistryTestFixture()
             .WithAgvErrorStatus(agvErrorStatus)
             .BuildAsync();
@@ -109,7 +109,7 @@ public class AgvErrorRegistryTest
     {
         const int errorCount = 5;
         var agvCorrelationId = Guid.NewGuid();
-        var agvErrorStatus = AgvErrorGenerator.GenerateAgvErrorStatus(errorCount, agvCorrelationId: agvCorrelationId);
+        var agvErrorStatus = AgvErrorGenerator.GenerateAgvErrorStatus(errorCount, agvCorrelationId);
         var fixture = await new AgvErrorRegistryTestFixture()
             .WithAgvErrorStatus(agvErrorStatus)
             .BuildAsync();
@@ -117,6 +117,6 @@ public class AgvErrorRegistryTest
         IReadOnlyList<AgvError> actualAgvErrors = await fixture.AgvErrorRegistry.GetErrorsAsync(agvCorrelationId, DateTime.MinValue, DateTime.MaxValue);
 
         actualAgvErrors.ShouldNotBeEmpty();
-        VerifyAgvErrorsInRegistry((IList<AgvError>?) actualAgvErrors, agvErrorStatus);
+        VerifyAgvErrorsInRegistry((IList<AgvError>?)actualAgvErrors, agvErrorStatus);
     }
 }

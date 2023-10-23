@@ -65,7 +65,6 @@ public class HostOrderCommandHandlerTest
         await fixture.TestHarness!.Bus.Publish(new FinishHostOrder(hostOrder.CorrelationId, DateTime.UtcNow));
         (await fixture.ConsumerHarness!.Consumed.Any<FinishHostOrder>()).ShouldBeTrue();
         fixture.HostCommunicatorMock.Verify(x => x.TransmitHostOrderHandlingSucceeded(It.IsAny<string>()), Times.Once);
-
     }
 
     [TestMethod]
@@ -182,7 +181,6 @@ public class HostOrderCommandHandlerTest
         (await fixture.ConsumerHarness!.Consumed.Any<HandleHostOrderFailure>()).ShouldBeTrue();
 
         fixture.HostCommunicatorMock.Verify(x => x.TransmitHostOrderHandlingFailure(It.IsAny<string>(), It.IsAny<string>()), Times.Once);
-       
     }
 
     [TestMethod]
@@ -199,6 +197,5 @@ public class HostOrderCommandHandlerTest
         (await fixture.ConsumerHarness!.Consumed.Any<HandleHostOrderFailure>()).ShouldBeTrue();
 
         fixture.HostCommunicatorMock.Verify(x => x.TransmitHostOrderHandlingFailure(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
-
     }
 }

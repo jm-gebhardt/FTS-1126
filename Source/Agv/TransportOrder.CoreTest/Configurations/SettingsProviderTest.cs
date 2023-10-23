@@ -8,7 +8,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Configurations;
 [TestClass]
 public class SettingsProviderTest
 {
-        
     [TestMethod]
     public void GetSettings_WhenUsingDefaultConfigurationProvider_ReturnDefaultSettings()
     {
@@ -27,7 +26,7 @@ public class SettingsProviderTest
         actualSettings.IntValue.ShouldBe(expectedSettings.IntValue);
         TestSettings.EnumValue.ShouldBe(TestSettings.EnumValue);
     }
-        
+
     [TestMethod]
     public void GetSettings_DefaultAndEmptyDatabaseRegistered_ReturnDefaultSettings()
     {
@@ -48,7 +47,7 @@ public class SettingsProviderTest
         actualSettings.IntValue.ShouldBe(expectedSettings.IntValue);
         TestSettings.EnumValue.ShouldBe(TestSettings.EnumValue);
     }
-        
+
     [TestMethod]
     public async Task GetSettings_DefaultAndDatabaseRegistered_DatabaseSettingOverrides()
     {
@@ -70,7 +69,7 @@ public class SettingsProviderTest
         TestSettings.EnumValue.ShouldBe(TestSettings.EnumValue);
 
         await testFixture.UpdateConfigurationSettingAsync($"{nameof(TestSettings)}:{nameof(TestSettings.BoolValue)}", false.ToString(), nameof(TestSettings));
-       
+
         var updatedSettings = settingsProvider.GetSettings();
 
         updatedSettings.ShouldNotBeNull();

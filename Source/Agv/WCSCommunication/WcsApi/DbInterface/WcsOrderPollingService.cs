@@ -82,12 +82,12 @@ public class WcsOrderHandler : IPollable
     public async Task HandleIncomingCancelRequests(CancellationToken cancellationToken = default)
     {
         await using var context = await _contextFactory.CreateDbContextAsync(cancellationToken);
-            
+
         foreach (var order in context.CancelRequests)
         {
             if (!order.IsValid)
             {
-                _logger.LogError("Found invalid order in ToAgv with OrderId = {OrderId} / {CorrelationId}", 
+                _logger.LogError("Found invalid order in ToAgv with OrderId = {OrderId} / {CorrelationId}",
                     order.Id, order.OrderId.ToGuid());
                 order.MessageStatus = MessageStatus.Failed; // Mark Message as FailedDate
             }
@@ -95,7 +95,7 @@ public class WcsOrderHandler : IPollable
             {
                 await _bus.Publish(new CancelHostOrder(order.OrderId.ToGuid(), order.OrderId), cancellationToken);
 
-                _logger.LogInformation("Cancel request for order {OrderId} / {CorrelationId} has been sent", 
+                _logger.LogInformation("Cancel request for order {OrderId} / {CorrelationId} has been sent",
                     order.OrderId, order.OrderId.ToGuid());
 
                 context.FromAgv.Add(FromAgv.CreateInstance(order, OrderStatus.Cancelled, RecordType.OrderCancelRequest));

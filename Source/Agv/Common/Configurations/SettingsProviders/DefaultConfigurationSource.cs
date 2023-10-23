@@ -6,7 +6,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
 /// <summary>
 /// Config Entity Configuration Source
 /// </summary>
-public class DefaultConfigurationSource : IConfigurationSource 
+public class DefaultConfigurationSource : IConfigurationSource
 {
     private readonly IConfigurationTypeManager _configurationTypeManager;
 

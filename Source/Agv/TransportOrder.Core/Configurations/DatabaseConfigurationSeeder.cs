@@ -47,7 +47,7 @@ public class DatabaseConfigurationSeeder<TDbContext>
                         var setting = settings.FirstOrDefault(s => s.Key == key);
                         if (setting == null)
                         {
-                            await dbSet.AddAsync(new()
+                            await dbSet.AddAsync(new ConfigurationSetting
                             {
                                 Key = key,
                                 Value = configurationTypeProperty.Value,

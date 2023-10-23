@@ -28,10 +28,10 @@ public interface IAgvPositionRegistry
     /// <returns>Returns a list position for all AGVs</returns>
     ICollection<AgvPositionStatus> GetAllPositions();
 
-   /// <summary>
-   /// Get positions of selected agvs.
-   /// </summary>
-   /// <param name="correlationIds">The correlation ids of the selected agvs.</param>
-   /// <returns></returns>
+    /// <summary>
+    /// Get positions of selected agvs.
+    /// </summary>
+    /// <param name="correlationIds">The correlation ids of the selected agvs.</param>
+    /// <returns></returns>
     ICollection<AgvPositionStatus> GetSelectedAgvsPositions(ICollection<Guid> correlationIds);
 }

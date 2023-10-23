@@ -23,16 +23,16 @@ public class AgvGraphProfileTest
     {
         var edges = new List<GraphNode>
         {
-            new()  { Id = "S1", Type = AgvGraph.NodeType.Pick, X = 0f, Y = -2f, Z = 0f },
-            new()  { Id = "D1", Type = AgvGraph.NodeType.Drop, X = 4f, Y = 6f, Z = 0f },
+            new() { Id = "S1", Type = AgvGraph.NodeType.Pick, X = 0f, Y = -2f, Z = 0f },
+            new() { Id = "D1", Type = AgvGraph.NodeType.Drop, X = 4f, Y = 6f, Z = 0f },
             new() { Id = "S2", Type = AgvGraph.NodeType.Pick, X = 7f, Y = 4f, Z = 0f },
-            new()  { Id = "D2", Type = AgvGraph.NodeType.Drop, X = -3f, Y = 0f, Z = 0f }
+            new() { Id = "D2", Type = AgvGraph.NodeType.Drop, X = -3f, Y = 0f, Z = 0f }
         };
         var agvGraph = new Graph(edges,
             new List<GraphEdge>
             {
-                new(edges.Single( e=> e.Id == "S1"), edges.Single( e=> e.Id == "D1")),
-                new(edges.Single( e=> e.Id == "S2"), edges.Single( e=> e.Id == "D2")) 
+                new(edges.Single(e => e.Id == "S1"), edges.Single(e => e.Id == "D1")),
+                new(edges.Single(e => e.Id == "S2"), edges.Single(e => e.Id == "D2"))
             }, Guid.NewGuid());
 
         var mapper = MappingHelper.GetMapper(new AgvGraphProfile());
@@ -48,12 +48,12 @@ public class AgvGraphProfileTest
 
         graph.CorrelationId.ShouldBe(agvGraph.CorrelationId);
 
-        graph.Nodes.ShouldAllBe(x => agvGraph.Nodes.Any(n => 
-                                                             n.Id == x.Id &&
-                                                             n.Type.ToString() == x.Type.ToString() &&
-                                                             Math.Abs(n.X - x.X) < FloatComparisonThreshold &&
-                                                             Math.Abs(n.Y - x.Y) < FloatComparisonThreshold &&
-                                                             Math.Abs(n.Z - x.Z) < FloatComparisonThreshold));
+        graph.Nodes.ShouldAllBe(x => agvGraph.Nodes.Any(n =>
+            n.Id == x.Id &&
+            n.Type.ToString() == x.Type.ToString() &&
+            Math.Abs(n.X - x.X) < FloatComparisonThreshold &&
+            Math.Abs(n.Y - x.Y) < FloatComparisonThreshold &&
+            Math.Abs(n.Z - x.Z) < FloatComparisonThreshold));
         graph.Edges.ShouldAllBe(x => agvGraph.Edges.Any(e => e.From.Id == x.From.Id && e.To.Id == x.To.Id));
     }
 }

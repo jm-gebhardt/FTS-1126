@@ -10,7 +10,7 @@ public static class AgvRepositoryExtensions
     public static void AddAgvsToMockRepository(this Mock<IAgvRepository> repoMock, List<TransportOrder.Domain.Models.Agv.Agv> agvs)
     {
         repoMock.Setup(s => s.GetAllAgvsAsync()).ReturnsAsync(agvs);
-  
+
         repoMock.Setup(r => r.GetAgvAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) =>
         {
             try
@@ -21,7 +21,6 @@ public static class AgvRepositoryExtensions
             {
                 throw new AgvNotFoundException(c);
             }
-           
         });
 
         repoMock.Setup(r => r.Count).Returns(agvs.Count);

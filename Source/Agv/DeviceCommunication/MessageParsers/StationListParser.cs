@@ -118,8 +118,8 @@ public class StationListParser
                         float metric = graphParser.ConsiderVelocity ? nearbyDistance / graphParser.AverageVelocity : nearbyDistance;
                         string graphNodeId = graphNode.Id;
                         string nodeNearbyId = nodeNearby.Id;
-                        additionalEdges.Add(new(graphNodeId, nodeNearbyId, metric, GraphHelper.ToGuid(graphNodeId, metric, nodeNearbyId)));
-                        additionalEdges.Add(new(nodeNearbyId, graphNodeId, metric, GraphHelper.ToGuid(nodeNearbyId, metric, graphNodeId)));
+                        additionalEdges.Add(new GraphEdge(graphNodeId, nodeNearbyId, metric, GraphHelper.ToGuid(graphNodeId, metric, nodeNearbyId)));
+                        additionalEdges.Add(new GraphEdge(nodeNearbyId, graphNodeId, metric, GraphHelper.ToGuid(nodeNearbyId, metric, graphNodeId)));
                     }
                     allAdded &= added;
                 }
@@ -168,7 +168,7 @@ public class StationListParser
     /// Converts station <see cref="Function"/> to <see cref="AgvGraph.NodeType"/>
     /// </summary>
     /// <param name="function"></param>
-    /// <returns>The Mqqt.StationList.Station.function converted/mapped to AgvGraph.NodeType</returns>
+    /// <returns>The Mqtt.StationList.Station.function converted/mapped to AgvGraph.NodeType</returns>
     private AgvGraph.NodeType ParseNodeType(Function function)
     {
         switch (function)

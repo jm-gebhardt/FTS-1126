@@ -22,8 +22,8 @@ public class MapController : Controller
     /// <summary>
     /// Initializes a new <see cref="MapController"/> instance.
     /// </summary>
-    public MapController(IMapper mapper, 
-        IRequestClient<GetMapImage> getMapImageClient, 
+    public MapController(IMapper mapper,
+        IRequestClient<GetMapImage> getMapImageClient,
         IRequestClient<GetMap> getMapClient,
         IRequestClient<GetMapGraph> getMapGraphClient)
     {

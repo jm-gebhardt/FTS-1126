@@ -30,7 +30,6 @@ public interface IAgvRegistry
     /// <param name="agvGraph"></param>
     public void AddOrUpdateAgvGraph(Guid correlationId, AgvGraph agvGraph);
 
-
     /// <summary>
     /// Update the registry record's AgvStatusReceived
     /// </summary>

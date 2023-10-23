@@ -19,7 +19,7 @@ public class EfNodeStateRegistryTest
         nodeLock.IsLocked.ShouldBeTrue();
         nodeLock.AgvCorrelationId.ShouldBeNull();
     }
-        
+
     [TestMethod]
     public async Task When_LockNodeAsync_NodeExists_LockSuccessful_AllOtherParameterUnchanged()
     {
@@ -27,7 +27,7 @@ public class EfNodeStateRegistryTest
         const string nodeId = "TestNode";
         var initialNodeLock = new NodeLock(nodeId, NodeLockState.Free, false, Guid.NewGuid(), DateTime.UtcNow);
         fixture.Add(initialNodeLock);
-            
+
         (await fixture.Registry.LockNodeAsync(nodeId)).ShouldBeTrue();
 
         var nodeLock = fixture.Get(nodeId);
@@ -38,7 +38,7 @@ public class EfNodeStateRegistryTest
         nodeLock.AgvCorrelationId.ShouldBe(initialNodeLock.AgvCorrelationId);
         nodeLock.ModifiedDate.ShouldNotBe(initialNodeLock.ModifiedDate);
     }
-        
+
     [TestMethod]
     public async Task When_LockNodeAsync_NodeAlreadyLocked_LockFailed()
     {
@@ -46,7 +46,7 @@ public class EfNodeStateRegistryTest
         const string nodeId = "TestNode";
         var initialNodeLock = new NodeLock(nodeId, NodeLockState.Free, true, Guid.NewGuid(), DateTime.UtcNow);
         fixture.Add(initialNodeLock);
-            
+
         (await fixture.Registry.UnlockNodeAsync(nodeId)).ShouldBeTrue();
 
         var nodeLock = fixture.Get(nodeId);
@@ -57,7 +57,7 @@ public class EfNodeStateRegistryTest
         nodeLock.AgvCorrelationId.ShouldBe(initialNodeLock.AgvCorrelationId);
         nodeLock.ModifiedDate.ShouldNotBe(initialNodeLock.ModifiedDate);
     }
-        
+
     [TestMethod]
     public async Task When_UnLockNodeAsync_NodeLocked_UnlockSuccessful()
     {
@@ -65,7 +65,7 @@ public class EfNodeStateRegistryTest
         const string nodeId = "TestNode";
         var initialNodeLock = new NodeLock(nodeId, NodeLockState.Free, true, Guid.NewGuid(), DateTime.UtcNow);
         fixture.Add(initialNodeLock);
-            
+
         (await fixture.Registry.UnlockNodeAsync(nodeId)).ShouldBeTrue();
 
         var nodeLock = fixture.Get(nodeId);
@@ -74,9 +74,8 @@ public class EfNodeStateRegistryTest
         nodeLock.NodeState.ShouldBe(initialNodeLock.NodeState);
         nodeLock.AgvCorrelationId.ShouldBe(initialNodeLock.AgvCorrelationId);
         nodeLock.ModifiedDate.ShouldNotBe(initialNodeLock.ModifiedDate);
-            
     }
-        
+
     [TestMethod]
     public async Task When_UnLockNodeAsync_RegistryEmpty_UnLockFailed()
     {
@@ -87,7 +86,7 @@ public class EfNodeStateRegistryTest
         var nodeLock = fixture.Get(nodeId);
         nodeLock.ShouldBeNull();
     }
-        
+
     [TestMethod]
     public async Task When_UnLockNodeAsync_NodeAlreadyUnLocked_LockFailed()
     {
@@ -95,14 +94,14 @@ public class EfNodeStateRegistryTest
         const string nodeId = "TestNode";
         var initialNodeLock = new NodeLock(nodeId, NodeLockState.Free, false, Guid.NewGuid(), DateTime.UtcNow);
         fixture.Add(initialNodeLock);
-            
+
         (await fixture.Registry.UnlockNodeAsync(nodeId)).ShouldBeFalse();
 
         var nodeLock = fixture.Get(nodeId);
         nodeLock.ShouldNotBeNull();
         nodeLock.ShouldBe(initialNodeLock);
     }
-        
+
     [TestMethod]
     public async Task When_ReserveNodeAsync_RegistryEmpty_Successful()
     {
@@ -117,17 +116,17 @@ public class EfNodeStateRegistryTest
         nodeLock.NodeState.ShouldBe(NodeLockState.Reserved);
         nodeLock.AgvCorrelationId.ShouldBe(agvCorrelationId);
     }
-        
+
     [TestMethod]
     public async Task When_ReserveNodeAsync_NodeExists_Successful()
     {
         var fixture = new EfNodeStateRegistryTestFixture();
         const string nodeId = "TestNode";
         var agvCorrelationId = Guid.NewGuid();
-            
+
         var initialNodeLock = new NodeLock(nodeId, NodeLockState.Free, false, Guid.NewGuid(), DateTime.UtcNow);
         fixture.Add(initialNodeLock);
-            
+
         (await fixture.Registry.ReserveNodeAsync(nodeId, agvCorrelationId)).ShouldBeTrue();
 
         var nodeLock = fixture.Get(nodeId);
@@ -137,51 +136,51 @@ public class EfNodeStateRegistryTest
         nodeLock.AgvCorrelationId.ShouldBe(agvCorrelationId);
         nodeLock.ModifiedDate.ShouldNotBe(initialNodeLock.ModifiedDate);
     }
-        
+
     [TestMethod]
     public async Task When_ReserveNodeAsync_NodeOccupied_Failed()
     {
         var fixture = new EfNodeStateRegistryTestFixture();
         const string nodeId = "TestNode";
         var agvCorrelationId = Guid.NewGuid();
-            
+
         var initialNodeLock = new NodeLock(nodeId, NodeLockState.Occupied, false, Guid.NewGuid(), DateTime.UtcNow);
         fixture.Add(initialNodeLock);
-            
+
         (await fixture.Registry.ReserveNodeAsync(nodeId, agvCorrelationId)).ShouldBeFalse();
 
         var nodeLock = fixture.Get(nodeId);
         nodeLock.ShouldNotBeNull();
         nodeLock.ShouldBe(initialNodeLock);
     }
-        
+
     [TestMethod]
     public async Task When_ReserveNodeAsync_NodeLocked_Failed()
     {
         var fixture = new EfNodeStateRegistryTestFixture();
         const string nodeId = "TestNode";
         var agvCorrelationId = Guid.NewGuid();
-            
+
         var initialNodeLock = new NodeLock(nodeId, NodeLockState.Free, true, null, DateTime.UtcNow);
         fixture.Add(initialNodeLock);
-            
+
         (await fixture.Registry.ReserveNodeAsync(nodeId, agvCorrelationId)).ShouldBeFalse();
 
         var nodeLock = fixture.Get(nodeId);
         nodeLock.ShouldNotBeNull();
         nodeLock.ShouldBe(initialNodeLock);
     }
-        
+
     [TestMethod]
     public async Task When_UnReserveNodeAsync_NodeExists_Successful()
     {
         var fixture = new EfNodeStateRegistryTestFixture();
         const string nodeId = "TestNode";
         var agvCorrelationId = Guid.NewGuid();
-            
+
         var initialNodeLock = new NodeLock(nodeId, NodeLockState.Reserved, false, agvCorrelationId, DateTime.UtcNow);
         fixture.Add(initialNodeLock);
-            
+
         (await fixture.Registry.UnReserveNodeAsync(agvCorrelationId)).ShouldBeTrue();
 
         var nodeLock = fixture.Get(nodeId);
@@ -191,7 +190,7 @@ public class EfNodeStateRegistryTest
         nodeLock.AgvCorrelationId.ShouldBeNull();
         nodeLock.ModifiedDate.ShouldNotBe(initialNodeLock.ModifiedDate);
     }
-        
+
     [DataRow(NodeLockState.Free)]
     [DataRow(NodeLockState.Occupied)]
     [TestMethod]
@@ -200,17 +199,17 @@ public class EfNodeStateRegistryTest
         var fixture = new EfNodeStateRegistryTestFixture();
         const string nodeId = "TestNode";
         var agvCorrelationId = Guid.NewGuid();
-            
+
         var initialNodeLock = new NodeLock(nodeId, state, false, Guid.NewGuid(), DateTime.UtcNow);
         fixture.Add(initialNodeLock);
-            
+
         (await fixture.Registry.UnReserveNodeAsync(agvCorrelationId)).ShouldBeFalse();
 
         var nodeLock = fixture.Get(nodeId);
         nodeLock.ShouldNotBeNull();
         nodeLock.ShouldBe(initialNodeLock);
     }
-        
+
     [TestMethod]
     public async Task When_OccupyNodeAsync_RegistryEmpty_Successful()
     {
@@ -225,17 +224,17 @@ public class EfNodeStateRegistryTest
         nodeLock.NodeState.ShouldBe(NodeLockState.Occupied);
         nodeLock.AgvCorrelationId.ShouldBe(agvCorrelationId);
     }
-        
+
     [TestMethod]
     public async Task When_OccupyNodeAsync_NodeExistsFree_Successful()
     {
         var fixture = new EfNodeStateRegistryTestFixture();
         const string nodeId = "TestNode";
         var agvCorrelationId = Guid.NewGuid();
-            
+
         var initialNodeLock = new NodeLock(nodeId, NodeLockState.Free, false, Guid.NewGuid(), DateTime.UtcNow);
         fixture.Add(initialNodeLock);
-            
+
         (await fixture.Registry.OccupyNodeAsync(nodeId, agvCorrelationId)).ShouldBeTrue();
 
         var nodeLock = fixture.Get(nodeId);
@@ -245,17 +244,17 @@ public class EfNodeStateRegistryTest
         nodeLock.AgvCorrelationId.ShouldBe(agvCorrelationId);
         nodeLock.ModifiedDate.ShouldNotBe(initialNodeLock.ModifiedDate);
     }
-        
+
     [TestMethod]
     public async Task When_OccupyNodeAsync_NodeExistsReserved_Successful()
     {
         var fixture = new EfNodeStateRegistryTestFixture();
         const string nodeId = "TestNode";
         var agvCorrelationId = Guid.NewGuid();
-            
+
         var initialNodeLock = new NodeLock(nodeId, NodeLockState.Reserved, false, Guid.NewGuid(), DateTime.UtcNow);
         fixture.Add(initialNodeLock);
-            
+
         (await fixture.Registry.OccupyNodeAsync(nodeId, agvCorrelationId)).ShouldBeTrue();
 
         var nodeLock = fixture.Get(nodeId);
@@ -265,7 +264,7 @@ public class EfNodeStateRegistryTest
         nodeLock.AgvCorrelationId.ShouldBe(agvCorrelationId);
         nodeLock.ModifiedDate.ShouldNotBe(initialNodeLock.ModifiedDate);
     }
-        
+
     [DataRow(NodeLockState.Free)]
     [DataRow(NodeLockState.Reserved)]
     [TestMethod]
@@ -274,15 +273,14 @@ public class EfNodeStateRegistryTest
         var fixture = new EfNodeStateRegistryTestFixture();
         const string nodeId = "TestNode";
         var agvCorrelationId = Guid.NewGuid();
-            
+
         var initialNodeLock = new NodeLock(nodeId, state, false, Guid.NewGuid(), DateTime.UtcNow);
         fixture.Add(initialNodeLock);
-            
+
         (await fixture.Registry.UnOccupyNodeAsync(agvCorrelationId)).ShouldBeFalse();
 
         var nodeLock = fixture.Get(nodeId);
         nodeLock.ShouldNotBeNull();
         nodeLock.ShouldBe(initialNodeLock);
     }
-
 }

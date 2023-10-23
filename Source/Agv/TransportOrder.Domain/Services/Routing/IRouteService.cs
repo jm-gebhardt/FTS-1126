@@ -49,6 +49,7 @@ public interface IRouteService
     /// <returns>The found route</returns>
     /// <exception cref="RouteNotFoundException"></exception>
     Task<Route> GetRouteAsync(Models.Agv.Agv agv, string destinationNodeId, CancellationToken cancellationToken = default);
+
     /// <summary>
     /// Determine route for Agv from its last node to the destination nodes one after the other
     /// </summary>

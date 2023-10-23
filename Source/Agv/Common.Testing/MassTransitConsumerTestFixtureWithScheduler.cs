@@ -44,7 +44,10 @@ public class MassTransitConsumerTestFixtureWithScheduler<TConsumer> where TConsu
     }
 
     /// <inheritdoc cref="Build(System.Action{Microsoft.Extensions.DependencyInjection.IServiceCollection}[])"/>
-    protected MassTransitConsumerTestFixtureWithScheduler<TConsumer> Build(params Action<IServiceCollection>[] services) => Build(null, null, services);
+    protected MassTransitConsumerTestFixtureWithScheduler<TConsumer> Build(params Action<IServiceCollection>[] services)
+    {
+        return Build(null, null, services);
+    }
 
     /// <summary>
     /// Builds the service provider based on the service collection, in order to be able to register services lazy
@@ -112,7 +115,6 @@ public class MassTransitConsumerTestFixtureWithScheduler<TConsumer> where TConsu
     /// <param name="collection"></param>
     protected virtual void ConfigureServices(IServiceCollection collection)
     {
-
     }
 }
 
@@ -131,7 +133,6 @@ public class MassTransitConsumerTestFixtureWithScheduler
     /// Started TestHarness
     /// </summary>
     public readonly ITestHarness TestHarness;
-
 
     /// <summary>
     /// Consumer Test Fixture to be used for Consumer Unit/Integration tests

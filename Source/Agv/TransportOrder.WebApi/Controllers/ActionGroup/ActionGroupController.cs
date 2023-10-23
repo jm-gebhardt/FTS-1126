@@ -10,7 +10,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers.ActionGroup;
 /// Single action group requests.
 /// </summary>
 [ApiExplorerSettings(GroupName = RestApiGroup.GroupName)]
-public class ActionGroupController: Controller
+public class ActionGroupController : Controller
 {
     private readonly IRequestClient<GetActionGroup> _getActionGroupRequestClient;
     private readonly IMapper _mapper;
@@ -18,7 +18,7 @@ public class ActionGroupController: Controller
     /// <summary>
     /// Initializes a new <see cref="ActionGroupController" /> instance.
     /// </summary>
-    public ActionGroupController(IMapper mapper,  IRequestClient<GetActionGroup> getActionGroupRequestClient)
+    public ActionGroupController(IMapper mapper, IRequestClient<GetActionGroup> getActionGroupRequestClient)
     {
         _mapper = mapper;
         _getActionGroupRequestClient = getActionGroupRequestClient;

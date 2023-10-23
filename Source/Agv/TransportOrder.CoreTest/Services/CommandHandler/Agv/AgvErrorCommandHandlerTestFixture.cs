@@ -11,7 +11,6 @@ public class AgvErrorCommandHandlerTestFixture : MassTransitConsumerTestFixture<
 {
     private readonly Mock<IAgvErrorRegistry> _agvErrorRegistry = new();
 
-
     protected override void ConfigureServices(IServiceCollection collection)
     {
         collection.AddTransient(_ => _agvErrorRegistry.Object);

@@ -72,6 +72,5 @@ public record AgvError : CorrelatedBy<Guid>
     [UsedImplicitly]
     private AgvError()
     {
-        
     }
 }

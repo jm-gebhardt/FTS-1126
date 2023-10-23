@@ -13,19 +13,23 @@ public enum OrderStatus
     /// <summary>
     /// New order, expected type 
     /// </summary>
-    Initial, 
+    Initial,
+
     /// <summary>
     /// Order has been consumed but not executed
     /// </summary>
     Pending,
+
     /// <summary>
     /// Order execution has started
     /// </summary>
-    InProgress, 
+    InProgress,
+
     /// <summary>
     /// Order completed
     /// </summary>
     Finished,
+
     /// <summary>
     /// Order cancelled
     /// </summary>
@@ -42,10 +46,12 @@ public enum MessageStatus
     /// DB entry has not been read
     /// </summary>
     Pending,
+
     /// <summary>
     /// DB entry has been read
     /// </summary>
-    Finished, 
+    Finished,
+
     /// <summary>
     /// DB entry could not be consumed
     /// </summary>
@@ -64,22 +70,27 @@ public enum RecordType
     /// </summary>
     [Obsolete("Initialize is not longer handled by WCS", true)]
     Initialize,
+
     /// <summary>
     /// New order
     /// </summary>
     TransportOrder,
+
     /// <summary>
     /// Update existing order
     /// </summary>
     TransportOrderUpdate,
+
     /// <summary>
     /// Cancel existing order
     /// </summary>
     OrderCancelRequest,
+
     /// <summary>
     /// Acknowledge order cancellation
     /// </summary>
     OrderCancelAcknowledge,
+
     /// <summary>
     /// Order cancellation has failed
     /// </summary>
@@ -96,11 +107,13 @@ public enum OrderType
     /// This order is a transport order
     /// </summary>
     Transport,
+
     /// <summary>
     /// Deprecated
     /// </summary>
     [Obsolete("ClearLam is not longer handled by WCS", true)]
-    ClearLam, 
+    ClearLam,
+
     /// <summary>
     /// Deprecated
     /// </summary>

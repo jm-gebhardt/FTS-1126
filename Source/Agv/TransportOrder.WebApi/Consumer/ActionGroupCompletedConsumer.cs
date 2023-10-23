@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Consumer;
 
 /// <summary>
-/// Consumes <see cref="ActionGroupCreated"/> and sends message via <see cref="IAgvPublisher"/>
+/// Consumes <see cref="ActionGroupCompleted"/> and sends message via <see cref="IAgvPublisher"/>
 /// </summary>
 [PublicAPI]
 public class ActionGroupCompletedConsumer : IConsumer<ActionGroupCompleted>
@@ -38,6 +38,6 @@ public class ActionGroupCompletedConsumer : IConsumer<ActionGroupCompleted>
     {
         var (actionGroup, correlationId, _) = context.Message;
         _logger.LogTrace("{MessageType} {CorrelationId} received", nameof(ActionGroupStarted), correlationId);
-        return _agvPublisher.SendAssignedActionGroupChangedAsync((Guid) actionGroup.AssignedAgv!, null);
+        return _agvPublisher.SendAssignedActionGroupChangedAsync((Guid)actionGroup.AssignedAgv!, null);
     }
 }

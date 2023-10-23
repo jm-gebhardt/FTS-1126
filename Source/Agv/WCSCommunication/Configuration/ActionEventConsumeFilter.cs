@@ -25,7 +25,6 @@ public class ActionEventConsumeFilter<T> : IFilter<ConsumeContext<T>>
         {
             await next.Send(context);
         }
-      
     }
 
     /// <inheritdoc />

@@ -71,7 +71,7 @@ public record ActionGroupDto : DatedMessage
     public bool IsManual { get; set; }
 
     /// <summary>
-    /// AutoMapper ctor
+    /// ctor called by AutoMapper.
     /// </summary>
     public ActionGroupDto()
     {

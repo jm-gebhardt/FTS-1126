@@ -23,7 +23,7 @@ public record AgvBatteryStatusDto : DatedMessage
     }
 
     /// <summary>
-    /// AutoMapper ctor
+    /// ctor called by AutoMapper.
     /// </summary>
     private AgvBatteryStatusDto()
     {

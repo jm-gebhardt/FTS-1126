@@ -6,6 +6,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
 /// <inheritdoc />
 public class AgvPositionDictionaryProvider : IConcurrentDictionaryProvider<Guid, AgvPositionStatus>
 {
-   /// <inheritdoc />
+    /// <inheritdoc />
     public ConcurrentDictionary<Guid, AgvPositionStatus> ConcurrentDict { get; } = new();
 }

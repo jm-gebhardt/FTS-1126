@@ -8,14 +8,12 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agvs.Queries;
 using MassTransit;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
-using AgvError = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries.AgvError;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.RequestHandler.Agv;
 
 [TestClass]
 public class GetAgvErrorsRequestHandlerTest
 {
-   
     [TestMethod]
     public async Task Consume_GetActiveAgvErrors_NoActiveErrorsForAgv_ReturnsEmptyAgvErrors()
     {
@@ -34,9 +32,9 @@ public class GetAgvErrorsRequestHandlerTest
     public async Task Consume_GetActiveAgvErrors_ValidData_ReturnsAgvErrors()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        var agvError = AgvErrorGenerator.GenerateAgvError(agvCorrelationId: agv.CorrelationId);
-        AgvRequestsHandlerTestFixture<GetActiveAgvErrors, GetAgvErrorsRequestHandler> fixture =  new AgvRequestsHandlerTestFixture<GetActiveAgvErrors, GetAgvErrorsRequestHandler>()
-            .WithActiveAgvErrors(agv.CorrelationId, new List<Common.Messages.AgvManagement.AgvError>{ agvError })
+        var agvError = AgvErrorGenerator.GenerateAgvError(agv.CorrelationId);
+        AgvRequestsHandlerTestFixture<GetActiveAgvErrors, GetAgvErrorsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetActiveAgvErrors, GetAgvErrorsRequestHandler>()
+            .WithActiveAgvErrors(agv.CorrelationId, new List<Common.Messages.AgvManagement.AgvError> { agvError })
             .WithAgv(agv)
             .Build();
 
@@ -52,7 +50,7 @@ public class GetAgvErrorsRequestHandlerTest
     public async Task Consume_GetActiveAgvErrors_UnknownCorrelationId_ThrowsException()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        var agvError = AgvErrorGenerator.GenerateAgvError(agvCorrelationId: agv.CorrelationId);
+        var agvError = AgvErrorGenerator.GenerateAgvError(agv.CorrelationId);
         AgvRequestsHandlerTestFixture<GetActiveAgvErrors, GetAgvErrorsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetActiveAgvErrors, GetAgvErrorsRequestHandler>()
             .WithActiveAgvErrors(agv.CorrelationId, new List<Common.Messages.AgvManagement.AgvError> { agvError })
             .WithAgv(agv)
@@ -64,7 +62,7 @@ public class GetAgvErrorsRequestHandlerTest
     public async Task Consume_GetAgvErrors_EmptyAgvErrors_ReturnsEmptyAgvErrorHistory()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        AgvRequestsHandlerTestFixture<GetAgvErrors, GetAgvErrorsRequestHandler> fixture =  new AgvRequestsHandlerTestFixture<GetAgvErrors, GetAgvErrorsRequestHandler>()
+        AgvRequestsHandlerTestFixture<GetAgvErrors, GetAgvErrorsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvErrors, GetAgvErrorsRequestHandler>()
             .WithEmptyAgvErrorRepository()
             .WithAgv(agv)
             .Build();
@@ -79,7 +77,7 @@ public class GetAgvErrorsRequestHandlerTest
     public async Task Consume_GetAgvErrors_WithTimeFilter_ReturnsAgvErrorHistory()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        List<Common.Messages.AgvManagement.AgvError> errors = Enumerable.Range(0, 2).Select(_ => AgvErrorGenerator.GenerateAgvError(agvCorrelationId: agv.CorrelationId)).ToList();
+        List<Common.Messages.AgvManagement.AgvError> errors = Enumerable.Range(0, 2).Select(_ => AgvErrorGenerator.GenerateAgvError(agv.CorrelationId)).ToList();
         AgvRequestsHandlerTestFixture<GetAgvErrors, GetAgvErrorsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvErrors, GetAgvErrorsRequestHandler>()
             .WithActiveAgvErrors(agv.CorrelationId, errors)
             .WithAgv(agv)
@@ -95,12 +93,12 @@ public class GetAgvErrorsRequestHandlerTest
     public async Task Consume_GetAgvErrors_UnknownCorrelationId_ThrowsException()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        var agvError = AgvErrorGenerator.GenerateAgvError(agvCorrelationId: agv.CorrelationId);
+        var agvError = AgvErrorGenerator.GenerateAgvError(agv.CorrelationId);
         AgvRequestsHandlerTestFixture<GetAgvErrors, GetAgvErrorsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvErrors, GetAgvErrorsRequestHandler>()
             .WithActiveAgvErrors(agv.CorrelationId, new List<Common.Messages.AgvManagement.AgvError> { agvError })
             .WithAgv(agv)
             .Build();
-        await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await fixture.GetResponseAsync<GotAgvErrors>(new GetAgvErrors("INVALID".ToGuid(),DateTime.Today.AddDays(-1), DateTime.UtcNow)));
+        await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await fixture.GetResponseAsync<GotAgvErrors>(new GetAgvErrors("INVALID".ToGuid(), DateTime.Today.AddDays(-1), DateTime.UtcNow)));
     }
 
     [TestMethod]
@@ -108,7 +106,7 @@ public class GetAgvErrorsRequestHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var agvs = new List<TransportOrder.Domain.Models.Agv.Agv> { agv };
-        var agvError = AgvErrorGenerator.GenerateAgvError(agvCorrelationId: agv.CorrelationId);
+        var agvError = AgvErrorGenerator.GenerateAgvError(agv.CorrelationId);
         var errors = new List<Common.Messages.AgvManagement.AgvError> { agvError };
         AgvRequestsHandlerTestFixture<GetActiveErrorsForAgvs, GetAgvErrorsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetActiveErrorsForAgvs, GetAgvErrorsRequestHandler>()
             .WithActiveAgvErrors(agv.CorrelationId, errors)
@@ -126,12 +124,11 @@ public class GetAgvErrorsRequestHandlerTest
         actualErrorsForAgv.Single().ErrorType.ShouldBe(agvError.ErrorType);
     }
 
-
     [TestMethod]
     public async Task Consume_GetActiveErrorsForAgvs_AgvsNotFound_ThrowsAgvsNotFoundException()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        var agvError = AgvErrorGenerator.GenerateAgvError(agvCorrelationId: agv.CorrelationId);
+        var agvError = AgvErrorGenerator.GenerateAgvError(agv.CorrelationId);
         AgvRequestsHandlerTestFixture<GetActiveErrorsForAgvs, GetAgvErrorsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetActiveErrorsForAgvs, GetAgvErrorsRequestHandler>()
             .WithActiveAgvErrors(agv.CorrelationId, new List<Common.Messages.AgvManagement.AgvError> { agvError })
             .WithAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv })
@@ -144,7 +141,7 @@ public class GetAgvErrorsRequestHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var agvs = new List<TransportOrder.Domain.Models.Agv.Agv> { agv };
-        var agvError = AgvErrorGenerator.GenerateAgvError(agvCorrelationId: agv.CorrelationId);
+        var agvError = AgvErrorGenerator.GenerateAgvError(agv.CorrelationId);
         var errors = new List<Common.Messages.AgvManagement.AgvError> { agvError };
         AgvRequestsHandlerTestFixture<GetErrorHistoryForAgvs, GetAgvErrorsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetErrorHistoryForAgvs, GetAgvErrorsRequestHandler>()
             .WithActiveAgvErrors(agv.CorrelationId, errors)
@@ -166,7 +163,7 @@ public class GetAgvErrorsRequestHandlerTest
     public async Task Consume_GetErrorHistoryForAgvs_AgvsNotFound_ThrowsAgvsNotFoundException()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        var agvError = AgvErrorGenerator.GenerateAgvError(agvCorrelationId: agv.CorrelationId);
+        var agvError = AgvErrorGenerator.GenerateAgvError(agv.CorrelationId);
         AgvRequestsHandlerTestFixture<GetErrorHistoryForAgvs, GetAgvErrorsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetErrorHistoryForAgvs, GetAgvErrorsRequestHandler>()
             .WithActiveAgvErrors(agv.CorrelationId, new List<Common.Messages.AgvManagement.AgvError> { agvError })
             .WithAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv })

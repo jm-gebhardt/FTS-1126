@@ -7,4 +7,4 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
 /// of an action group assigned to an agv.
 /// </summary>
 /// <param name="CorrelationId">The correlation id of the agv.</param>
-public record HandleAgvActionStartFailure(Guid CorrelationId): CorrelatedBy<Guid>;
+public record HandleAgvActionStartFailure(Guid CorrelationId) : CorrelatedBy<Guid>;

@@ -22,7 +22,7 @@ public class ChargingPointManagerTest
             n => n.Z.ShouldBe(expectedNode.Z),
             n => n.Theta.ShouldBe(expectedNode.Theta));
     }
-    
+
     [TestMethod]
     public async Task GetBestCharger_WhenFreeChargerNodesExists_ReturnFirstFreeChargerNode()
     {
@@ -32,7 +32,8 @@ public class ChargingPointManagerTest
         var agvGraph = fixture.GetAgvGraph(true, correlationId);
         var agv = fixture.GetAgv(correlationId, agvId, "Idle", "");
         var chargingNode = NodeGenerator.GenerateChargingNode();
-        var availableNodes = new List<GraphNode>{
+        var availableNodes = new List<GraphNode>
+        {
             chargingNode
         };
 
@@ -73,7 +74,8 @@ public class ChargingPointManagerTest
         var agvGraph = fixture.GetAgvGraph(true, correlationId);
         var agv = fixture.GetAgv(correlationId, agvId, "Idle", "");
         var chargingNode = NodeGenerator.GenerateChargingNode();
-        var availableNodes = new List<GraphNode>{
+        var availableNodes = new List<GraphNode>
+        {
             chargingNode
         };
 
@@ -115,12 +117,13 @@ public class ChargingPointManagerTest
     {
         const string agvId = "AGV001";
         var correlationId = agvId.ToGuid();
-        
+
         var fixture = new ChargingPointManagerTestFixture();
         var agvGraph = fixture.GetAgvGraph(true, correlationId);
         var agv = fixture.GetAgv(correlationId, agvId, "Idle", "");
         var chargingNode = NodeGenerator.GenerateChargingNode();
-        var availableNodes = new List<GraphNode>{
+        var availableNodes = new List<GraphNode>
+        {
             chargingNode
         };
 
@@ -151,11 +154,12 @@ public class ChargingPointManagerTest
 
         await Should.ThrowAsync<Exception>(async () => await fixture.CreateChargingPointManager().ReserveChargerAsync(agv));
     }
-    
+
     [TestMethod]
     public async Task GetBestChargerAsync_WhenMoreThanOneAvailableChargerNodes_ReturnsNearestAvailableNode()
     {
-        var availableNodes = new List<GraphNode>{
+        var availableNodes = new List<GraphNode>
+        {
             NodeGenerator.GenerateChargingNode("Charge-1"),
             NodeGenerator.GenerateChargingNode("Charge-2")
         };
@@ -175,7 +179,8 @@ public class ChargingPointManagerTest
     [TestMethod]
     public async Task ReserveChargerAsync_WhenMoreThanOneAvailableChargerNodes_ReserveNearestAvailableNode()
     {
-        var availableNodes = new List<GraphNode>{
+        var availableNodes = new List<GraphNode>
+        {
             NodeGenerator.GenerateChargingNode("Charge-1"),
             NodeGenerator.GenerateChargingNode("Charge-2")
         };
@@ -184,7 +189,7 @@ public class ChargingPointManagerTest
         var fixture = new ChargingPointManagerTestFixture()
             .WithAvailableNodes(agv, availableNodes)
             .WithLowestCostNode(agv, availableNodes, availableNodes.Last());
-        
+
         fixture.SetupNodeLocker(true, true, true);
 
         var reservedCharger = await fixture.CreateChargingPointManager().ReserveChargerAsync(agv);

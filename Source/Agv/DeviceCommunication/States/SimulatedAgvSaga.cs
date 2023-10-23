@@ -159,7 +159,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
                 return _position;
             }
 
-            int lastNodeIndex = (int) (Action!.Nodes.Length * orderProgress.Value);
+            int lastNodeIndex = (int)(Action!.Nodes.Length * orderProgress.Value);
             if (lastNodeIndex >= Action!.Nodes.Length)
             {
                 // This happens when accessing position when or after order has finished
@@ -169,13 +169,13 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
             var lastNode = AgvGraph!.Nodes.First(x => x.Id == Action!.Nodes[lastNodeIndex]);
             if (lastNodeIndex < Action!.Nodes.Length - 1)
             {
-                double partialProgress = (orderProgress.Value - lastNodeIndex / (double) Action!.Nodes.Length) * Action!.Nodes.Length;
+                double partialProgress = (orderProgress.Value - lastNodeIndex / (double)Action!.Nodes.Length) * Action!.Nodes.Length;
                 var nextNode = AgvGraph!.Nodes.First(x => x.Id == Action!.Nodes[lastNodeIndex + 1]);
                 var vectorLast = new Vector3(lastNode.X, lastNode.Y, lastNode.Z);
                 var vectorNext = new Vector3(nextNode.X, nextNode.Y, nextNode.Z);
-                float theta = (float) (Math.Atan2(vectorNext.Y - vectorLast.Y, vectorNext.X - vectorLast.X) + Math.PI / 2);
+                float theta = (float)(Math.Atan2(vectorNext.Y - vectorLast.Y, vectorNext.X - vectorLast.X) + Math.PI / 2);
                 var vectorEdge = vectorNext - vectorLast;
-                vectorEdge *= (float) partialProgress;
+                vectorEdge *= (float)partialProgress;
                 vectorEdge = vectorLast + vectorEdge;
 
                 _position = new AgvPosition(true, vectorEdge.X, vectorEdge.Y, vectorEdge.Z, theta, 0f);
@@ -253,19 +253,22 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
         AgvData = agvData;
         AgvMap = agvMap;
 
-        AgvStatus = new(
+        AgvStatus = new AgvStatus(
             CorrelationId,
             GetOrderId(),
-            busy: false,
-            automatic: true,
+            false,
+            true,
             initialBatteryCharge,
-            charging: false,
-            disturbed: false,
+            false,
+            false,
             LastNodeId
         );
     }
 
-    private string? GetOrderId() => Action?.CorrelationId.ToString();
+    private string? GetOrderId()
+    {
+        return Action?.CorrelationId.ToString();
+    }
 
     /// <summary>
     /// SimulatedAgvSaga constructor used by state machine
@@ -284,14 +287,14 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
         NodeTravelTime = nodeTravelTime;
         SimulatedBatteryCharge = initialBatteryCharge;
 
-        AgvStatus = new(
+        AgvStatus = new AgvStatus(
             CorrelationId,
             GetOrderId(),
-            busy: false,
-            automatic: true,
-            (int) SimulatedBatteryCharge,
-            charging: false,
-            disturbed: false,
+            false,
+            true,
+            (int)SimulatedBatteryCharge,
+            false,
+            false,
             LastNodeId
         );
     }
@@ -334,7 +337,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
         SimulatedBatteryCharge = Math.Clamp(SimulatedBatteryCharge + chargeDiff, 0, 100);
         IsOnline = SimulatedBatteryCharge > AliveChargeThreshold;
 
-        AgvStatus = new(
+        AgvStatus = new AgvStatus(
             AgvStatus.CorrelationId,
             GetOrderId(),
             busy,

@@ -2,6 +2,7 @@
 using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.CmdOptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
@@ -16,8 +17,10 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Commands;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
-using AgvError = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.AgvError;
+using AgvStatus = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv.AgvStatus;
 using LockAgv = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv.LockAgv;
+using RequestAgvData = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands.RequestAgvData;
+using RequestAgvGraph = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands.RequestAgvGraph;
 using UnlockAgv = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv.UnlockAgv;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.CommandHandler;
@@ -451,7 +454,7 @@ public class AgvCommandHandler :
         var moveActionGroup = new ActionGroup(
             groupCorrelationId,
             $"Manual {ActionType.Move}",
-            new List<AgvAction> {new(Guid.NewGuid(), ActionType.Move, targetNodeId, groupCorrelationId)},
+            new List<AgvAction> { new(Guid.NewGuid(), ActionType.Move, targetNodeId, groupCorrelationId) },
             assignedAgv: agv.CorrelationId,
             isManual: true,
             creator: creator
@@ -506,7 +509,7 @@ public class AgvCommandHandler :
     {
         var (action, agvCorrelationId) = context.Message;
         var agv = await _agvRepository.GetAgvAsync(agvCorrelationId);
-        bool isAvailable = agv.TryTransitionToBusy(ignoreLocked: true);
+        bool isAvailable = agv.TryTransitionToBusy(true);
 
         if (!isAvailable)
         {
@@ -541,7 +544,7 @@ public class AgvCommandHandler :
     private async Task TryAutoAccept(IPublishEndpoint context, Domain.Models.Agv.Agv agv, CancellationToken cancellationToken)
     {
         _logger.LogDebug("AutoAccept {CorrelationId}", agv.CorrelationId);
-        if (_productionOptions.AutoAccept && agv is {GraphExists: true, DataExist: true, CurrentAgvState: AgvState.Discovered})
+        if (_productionOptions.AutoAccept && agv is { GraphExists: true, DataExist: true, CurrentAgvState: AgvState.Discovered })
         {
             var graph = await _agvGraphRegistry.GetAgvGraphAsync(agv.CorrelationId);
             bool mapExists = _mapRegistry.Exists(graph.RelatedMapId);
@@ -579,14 +582,14 @@ public class AgvCommandHandler :
     private async Task PublishGraphRequestAsync(IPublishEndpoint context, Domain.Models.Agv.Agv agv)
     {
         _logger.LogDebug("Requesting graph for agv {CorrelationId}", agv.CorrelationId);
-        await context.Publish(new Common.Messages.AgvManagement.Commands.RequestAgvGraph(agv.CorrelationId, agv.AgvId));
+        await context.Publish(new RequestAgvGraph(agv.CorrelationId, agv.AgvId));
         agv.AgvGraphRequestedLastTime = DateTime.UtcNow;
     }
 
     private async Task PublishDataRequestAsync(IPublishEndpoint context, Domain.Models.Agv.Agv agv)
     {
         _logger.LogDebug("Requesting data for agv {CorrelationId}", agv.CorrelationId);
-        await context.Publish(new Common.Messages.AgvManagement.Commands.RequestAgvData(agv.CorrelationId, agv.AgvId));
+        await context.Publish(new RequestAgvData(agv.CorrelationId, agv.AgvId));
         agv.AgvDataRequestedLastTime = DateTime.UtcNow;
     }
 }

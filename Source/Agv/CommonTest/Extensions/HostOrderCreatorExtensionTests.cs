@@ -9,7 +9,6 @@ namespace Gebhardt.StoreWare.Agv.CommonTest.Extensions;
 public class HostOrderCreatorExtensionTests
 {
     [TestMethod]
-
     public void ConvertToActionGroupCreator_FromCreatorDefinedInHostOrderCreated_ReturnsActionGroupCreator()
     {
         foreach (HostOrderCreator ordinal in Enum.GetValues(typeof(HostOrderCreator)))

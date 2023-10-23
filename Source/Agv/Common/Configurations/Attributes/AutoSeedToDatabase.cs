@@ -9,7 +9,7 @@ public class AutoSeedToDatabase : Attribute
     /// <summary>
     /// Should it be automatically seeded to the default database?
     /// </summary>
-    public bool AutoSeedToDatabaseValue {get; }
+    public bool AutoSeedToDatabaseValue { get; }
 
     /// <summary>
     /// Ctor

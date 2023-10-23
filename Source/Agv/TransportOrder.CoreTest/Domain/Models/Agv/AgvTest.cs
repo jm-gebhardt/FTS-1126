@@ -45,7 +45,7 @@ public class AgvTest
     {
         var previousStatus = new AgvStatus(Guid.NewGuid(), null, false, false, 100.0d, false, false);
         var agv = new TransportOrder.Domain.Models.Agv.Agv(previousStatus.CorrelationId, "agvId", previousStatus);
-        double noticeableBatteryChange = TransportOrder.Domain.Models.Agv.Agv.BatteryChargeChangedThreshold * 1.01d;
+        const double noticeableBatteryChange = TransportOrder.Domain.Models.Agv.Agv.BatteryChargeChangedThreshold * 1.01d;
         var newStatus = new AgvStatus(agv.CorrelationId, null, false, false, agv.AgvStatus!.BatteryCharge - noticeableBatteryChange, false, false);
 
         (bool batteryChargeChanged, bool lastNodeIdChanged) = agv.UpdateAgvStatus(newStatus);
@@ -60,7 +60,7 @@ public class AgvTest
     {
         var previousStatus = new AgvStatus(Guid.NewGuid(), null, false, false, 100.0d, false, false);
         var agv = new TransportOrder.Domain.Models.Agv.Agv(previousStatus.CorrelationId, "agvId", previousStatus);
-        double insignificantBatteryChange = TransportOrder.Domain.Models.Agv.Agv.BatteryChargeChangedThreshold*0.99d;
+        const double insignificantBatteryChange = TransportOrder.Domain.Models.Agv.Agv.BatteryChargeChangedThreshold * 0.99d;
         var newStatus = new AgvStatus(agv.CorrelationId, "orderId", true, false, agv.AgvStatus!.BatteryCharge - insignificantBatteryChange, true, true);
 
         (bool batteryChargeChanged, bool lastNodeIdChanged) = agv.UpdateAgvStatus(newStatus);
@@ -78,9 +78,9 @@ public class AgvTest
     [TestMethod]
     public void UpdateAgvStatus_LastNodeIdChanged_StatusUpdated()
     {
-        var previousStatus = new AgvStatus(Guid.NewGuid(), null, false, false, 100.0d, false, false, lastNodeId:null);
+        var previousStatus = new AgvStatus(Guid.NewGuid(), null, false, false, 100.0d, false, false, lastNodeId: null);
         var agv = new TransportOrder.Domain.Models.Agv.Agv(previousStatus.CorrelationId, "agvId", previousStatus);
-        var newStatus = new AgvStatus(agv.CorrelationId, null, false, false, agv.AgvStatus!.BatteryCharge, false, false, lastNodeId: "node");
+        var newStatus = new AgvStatus(agv.CorrelationId, null, false, false, agv.AgvStatus!.BatteryCharge, false, false, "node");
 
         (bool batteryChargeChanged, bool lastNodeIdChanged) = agv.UpdateAgvStatus(newStatus);
 
@@ -92,7 +92,7 @@ public class AgvTest
     [TestMethod]
     public void IsAvailable_IsReadyIdleAndUnlocked_IsAvailable()
     {
-        var agv = AgvGenerator.GenerateIdleAgv(isLocked: false, lastNodeId:"node");
+        var agv = AgvGenerator.GenerateIdleAgv(isLocked: false, lastNodeId: "node");
         agv.IsAvailable(ignoreLocked: false, ignoreCharging: false).ShouldBeTrue();
     }
 
@@ -101,7 +101,7 @@ public class AgvTest
     [TestMethod]
     public void IsAvailable_IsReadIdleAndLocked_IsAvailableIfLockedIsIgnored(bool ignoreLocked, bool expectedIsAvailable)
     {
-        var agv = AgvGenerator.GenerateIdleAgv(isLocked:true, lastNodeId: "node");
+        var agv = AgvGenerator.GenerateIdleAgv(isLocked: true, lastNodeId: "node");
         agv.IsAvailable(ignoreLocked: ignoreLocked, ignoreCharging: false).ShouldBe(expectedIsAvailable);
     }
 
@@ -111,7 +111,7 @@ public class AgvTest
     public void IsAvailable_IsReadChargingAndUnLocked_IsAvailableIfChargingIsIgnored(bool ignoreCharging, bool expectedIsAvailable)
     {
         var agv = AgvGenerator.GenerateChargingAgv(isLocked: false, lastNodeId: "node");
-        agv.IsAvailable(ignoreCharging: ignoreCharging).ShouldBe(expectedIsAvailable);
+        agv.IsAvailable(ignoreCharging).ShouldBe(expectedIsAvailable);
     }
 
     [DataRow(true, true)]

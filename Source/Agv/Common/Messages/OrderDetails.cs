@@ -43,7 +43,6 @@ public record OrderDetails : CorrelatedBy<Guid>
     /// </summary>
     public DateTime CreationDate { get; }
 
-
     /// <summary>
     /// Initializes a new instance of <see cref="OrderDetails"/> with a specific creation date
     /// </summary>

@@ -12,30 +12,37 @@ public enum OrderEventType
     /// Transport order started
     /// </summary>
     Started,
+
     /// <summary>
     /// Pick for transport order completed
     /// </summary>
     Picked,
+
     /// <summary>
     /// Transport order completed
     /// </summary>
     Completed,
+
     /// <summary>
     /// Transport order cancelled
     /// </summary>
     Cancelled,
+
     /// <summary>
     /// Cancellation for transport order failed
     /// </summary>
     CancelFailed,
+
     /// <summary>
     /// Transport order updated
     /// </summary>
     Updated,
+
     /// <summary>
     /// Transport order update failed
     /// </summary>
     UpdateFailed,
+
     /// <summary>
     /// Transport order Failed
     /// </summary>

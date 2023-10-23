@@ -23,7 +23,7 @@ public class CommandConsumerTestFixture<TCommand, TCommandConsumer> : MediatorTe
         AddServices(sc => sc.AddSingleton(_ => AgvRegistry));
         return this;
     }
-        
+
     // ReSharper disable once UnusedMember.Global
     protected CommandConsumerTestFixture<TCommand, TCommandConsumer> AddAgvRegistry(IAgvRegistry agvRegistry)
     {

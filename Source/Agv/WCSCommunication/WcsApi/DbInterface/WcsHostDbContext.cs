@@ -19,10 +19,10 @@ public class WcsHostDbContext : DbContext
     /// <summary>
     /// Get all Orders with <see cref="MessageStatus.Pending" />
     /// </summary>
-    private IQueryable<ToAgv> PendingOrders => 
+    private IQueryable<ToAgv> PendingOrders =>
         from b in ToAgv
         where
-            b.MessageStatus == MessageStatus.Pending 
+            b.MessageStatus == MessageStatus.Pending
         orderby b.TimeStamp
         select b;
 
@@ -51,22 +51,25 @@ public class WcsHostDbContext : DbContext
     /// </summary>
     /// <param name="orderId"></param>
     /// <returns></returns>
-    public ToAgv? LatestOrderStatus(string orderId) => 
-        ToAgv.Where(b => 
+    public ToAgv? LatestOrderStatus(string orderId)
+    {
+        return ToAgv.Where(b =>
             b.OrderId == orderId
         ).OrderByDescending(b => b.TimeStamp).FirstOrDefault();
+    }
 
     /// <summary>
     ///  FromAgv DataSet
     /// </summary>
     [PublicAPI]
     public DbSet<FromAgv> FromAgv { get; set; } = null!;
+
     /// <summary>
     /// ToAgv DataSet
     /// </summary>
     [PublicAPI]
-    public DbSet<ToAgv> ToAgv { get; set; }  = null!;
-        
+    public DbSet<ToAgv> ToAgv { get; set; } = null!;
+
     /// <summary>
     /// WCSDbContext constructor with options
     /// </summary>

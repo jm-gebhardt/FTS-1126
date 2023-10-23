@@ -15,13 +15,19 @@ public abstract class ControllerTestFixture<TRequest, TRequestHandler, TControll
     where TRequestHandler : class, IConsumer
     where TController : Controller
 {
-    private IRequestClient<TRequest> GetRequestClient() => Mediator!.CreateRequestClient<TRequest>();
+    private IRequestClient<TRequest> GetRequestClient()
+    {
+        return Mediator!.CreateRequestClient<TRequest>();
+    }
 
     public TController Controller { get; private set; } = null!;
 
     protected abstract TController GetController();
 
-    protected IRequestClient<TClient> GetRequestClient<TClient>() where TClient : class => typeof(TRequest) == typeof(TClient) ? (IRequestClient<TClient>) GetRequestClient() : null!;
+    protected IRequestClient<TClient> GetRequestClient<TClient>() where TClient : class
+    {
+        return typeof(TRequest) == typeof(TClient) ? (IRequestClient<TClient>)GetRequestClient() : null!;
+    }
 
     protected IMapper GetMapper()
     {

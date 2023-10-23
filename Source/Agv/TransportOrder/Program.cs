@@ -49,7 +49,6 @@ try
                     app.UseMetricServer();
                     app.UseTransportOrderWebApi();
                     app.UseDeveloperExceptionPage();
-
                 });
         });
 
@@ -70,11 +69,8 @@ try
         host.Run();
         return 0;
     }
-    else
-    {
-        initialLogger.LogWarning("Invalid command line argument(s)");
-        return 1;
-    }
+    initialLogger.LogWarning("Invalid command line argument(s)");
+    return 1;
 }
 catch (Exception ex)
 {

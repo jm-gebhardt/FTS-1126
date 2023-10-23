@@ -8,19 +8,18 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;
 /// <summary>
 /// TransportOrder DB Context that does not use MassTransit sagas
 /// </summary>
-public class TransportOrderDbContext: ConfigurableDbContext
+public class TransportOrderDbContext : ConfigurableDbContext
 {
-        
     /// <summary>
     /// Configuration section where the ConnectionString for AGV Master Control is located
     /// </summary>
     public const string ConfigSectionName = "AMC";
-        
+
     /// <summary>
     /// Name of the migration table
     /// </summary>
     public const string MigrationTableName = $"__{nameof(TransportOrderDbContext)}Migration";
-        
+
     /// <summary>
     /// Constructor
     /// </summary>
@@ -28,7 +27,7 @@ public class TransportOrderDbContext: ConfigurableDbContext
     public TransportOrderDbContext(DbContextOptions<TransportOrderDbContext> options) : base(options)
     {
     }
-        
+
     /// <summary>
     /// Configure the DbContext
     /// The default EF Logging is very chatty and prints each CommandExecution using LogLevel.Information.

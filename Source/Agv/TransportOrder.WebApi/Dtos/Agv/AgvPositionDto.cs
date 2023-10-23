@@ -43,7 +43,7 @@ public record AgvPositionDto
     }
 
     /// <summary>
-    /// Deserializer constructor
+    /// ctor called by AutoMapper.
     /// </summary>
     [PublicAPI]
     private AgvPositionDto()

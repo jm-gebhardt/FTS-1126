@@ -4,13 +4,13 @@ using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
+using AgvStatus = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv.AgvStatus;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Profiles;
 
 [TestClass]
 public class AgvProfileTest
 {
-
     [TestMethod]
     public void Map_ShouldMapAllPropertiesCorrectly_WhereAgvDataDtoIsMappedToAgvData()
     {
@@ -33,29 +33,28 @@ public class AgvProfileTest
         agvDataMessageContent.Sensors.ShouldBe(agvData.Sensors);
     }
 
-
     [TestMethod]
     public void Map_ShouldMapAllPropertiesCorrectly_WhereAgvDtoIsMappedToAgvWithAgvStatus()
     {
         var mapper = MappingHelper.GetMapper(new AgvProfile());
-        var agvStatus = new TransportOrder.Domain.Models.Agv.AgvStatus(Guid.NewGuid(), "OrderId#123", false, true, 98, false, false, "lastNodeId#123");
-        var agv = AgvGenerator.GenerateIdleAgv(agvStatus: agvStatus);
+        var agvStatus = new AgvStatus(Guid.NewGuid(), "OrderId#123", false, true, 98, false, false, "lastNodeId#123");
+        var agv = AgvGenerator.GenerateIdleAgv(agvStatus);
 
         var agvMessageContent = mapper.Map<Messages.MessageContent.Agv>(agv);
         agvMessageContent.ShouldSatisfyAllConditions(
-           o => o.AgvId.ShouldBe(agv.AgvId),
-           o => o.CorrelationId.ShouldBe(agv.CorrelationId),
-           o => o.CurrentState.ShouldBe(agv.CurrentAgvState),
-           o => o.TimeOfStateTransition.ShouldBe(agv.TimeOfStateTransition),
-           o => o.TimeOfLockStateChanged.ShouldBe(agv.TimeOfLockStateChanged),
-           o => o.TimeOfLockStateChanged.ShouldBe(agv.TimeOfLockStateChanged),
-           o => o.IsOnline.ShouldBe(agv.IsOnline),
-           o => o.IsLocked.ShouldBe(agv.IsLocked),
-           o => o.IsDisturbed.ShouldBe(agv.AgvStatus!.Disturbed),
-           o => o.IsAutomatic.ShouldBe(agv.AgvStatus!.Automatic),
-           o => o.BatteryCharge.ShouldBe(agv.AgvStatus!.BatteryCharge),
-           o => o.IsCharging.ShouldBe(agv.AgvStatus!.Charging)
-       );
+            o => o.AgvId.ShouldBe(agv.AgvId),
+            o => o.CorrelationId.ShouldBe(agv.CorrelationId),
+            o => o.CurrentState.ShouldBe(agv.CurrentAgvState),
+            o => o.TimeOfStateTransition.ShouldBe(agv.TimeOfStateTransition),
+            o => o.TimeOfLockStateChanged.ShouldBe(agv.TimeOfLockStateChanged),
+            o => o.TimeOfLockStateChanged.ShouldBe(agv.TimeOfLockStateChanged),
+            o => o.IsOnline.ShouldBe(agv.IsOnline),
+            o => o.IsLocked.ShouldBe(agv.IsLocked),
+            o => o.IsDisturbed.ShouldBe(agv.AgvStatus!.Disturbed),
+            o => o.IsAutomatic.ShouldBe(agv.AgvStatus!.Automatic),
+            o => o.BatteryCharge.ShouldBe(agv.AgvStatus!.BatteryCharge),
+            o => o.IsCharging.ShouldBe(agv.AgvStatus!.Charging)
+        );
     }
 
     [TestMethod]
@@ -65,16 +64,16 @@ public class AgvProfileTest
         var agv = AgvGenerator.GenerateIdleAgv();
         var agvMessageContent = mapper.Map<TransportOrder.Domain.Models.Agv.Agv, Messages.MessageContent.Agv>(agv);
         var expectedAgvErrors = new List<AgvError>
-           {
-               AgvErrorGenerator.GenerateAgvError(agv.CorrelationId)
-           };
+        {
+            AgvErrorGenerator.GenerateAgvError(agv.CorrelationId)
+        };
 
         mapper.Map(expectedAgvErrors, agvMessageContent);
 
         foreach (var agvMessageContentError in agvMessageContent.Errors)
         {
             agvMessageContentError.AgvCorrelationId.ShouldBe(agvMessageContentError.AgvCorrelationId);
-            var expectedAgvError = expectedAgvErrors.Find(e => e.ErrorType ==  agvMessageContentError.ErrorType);
+            var expectedAgvError = expectedAgvErrors.Find(e => e.ErrorType == agvMessageContentError.ErrorType);
             expectedAgvError.ShouldNotBeNull();
             agvMessageContentError.ErrorDescription.ShouldBe(expectedAgvError.ErrorDescription);
             agvMessageContentError.ErrorLevel.ShouldBe(expectedAgvError.ErrorLevel);

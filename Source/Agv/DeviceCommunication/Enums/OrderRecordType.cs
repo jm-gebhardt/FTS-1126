@@ -12,10 +12,12 @@ public enum OrderRecordType
     /// Normal/new order
     /// </summary>
     Order,
+
     /// <summary>
     /// Update an order
     /// </summary>
     OrderUpdate,
+
     /// <summary>
     /// Cancel an order
     /// </summary>

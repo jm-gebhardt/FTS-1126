@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
+using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;
@@ -9,7 +10,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
-using Gebhardt.StoreWare.Agv.Common.Utilities;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Repositories;
 
@@ -252,7 +252,7 @@ public class EfAgvGraphRegistryTest
         requestedGraphs.Add(undefinedGraph);
         ICollection<AgvGraph> agvGraphsInRepository = await fixture.Registry.GetSelectedAgvGraphsAsync(requestedGraphs);
 
-        agvGraphsInRepository.Count.ShouldBe(requestedGraphs.Except(new List<Guid>{undefinedGraph}).ToList().Count);
+        agvGraphsInRepository.Count.ShouldBe(requestedGraphs.Except(new List<Guid> { undefinedGraph }).ToList().Count);
         foreach (var agvGraphInRepository in agvGraphsInRepository)
         {
             var expectedAgvGraph = agvGraphs.First(x => x.CorrelationId == agvGraphInRepository.CorrelationId);

@@ -48,8 +48,8 @@ public class ShortestRouteChooser : IChooseAgvActionGroupService
             }
             catch (AgvLocationUnknownException exception)
             {
-                _logger.LogError(exception, message: "{message}", exception.Message);
-            } 
+                _logger.LogError(exception, "{message}", exception.Message);
+            }
         }
 
         return bestAgv;

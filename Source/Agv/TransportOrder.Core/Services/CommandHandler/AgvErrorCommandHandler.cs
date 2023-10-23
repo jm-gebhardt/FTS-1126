@@ -10,7 +10,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.CommandHandler;
 /// Provides handlers for agv error related commands.
 /// </summary>
 [UsedImplicitly]
-public class AgvErrorCommandHandler: IConsumer<UpdateErrorStatus>
+public class AgvErrorCommandHandler : IConsumer<UpdateErrorStatus>
 {
     private readonly IAgvErrorRegistry _agvErrorRegistry;
 

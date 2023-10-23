@@ -49,7 +49,7 @@ public class EfAgvDataRegistry : IAgvDataRegistry
             dbSet.Add(agvData);
         }
 
-        return await  dbContext.SaveChangesAsync() > 0;
+        return await dbContext.SaveChangesAsync() > 0;
     }
 
     /// <inheritdoc/>

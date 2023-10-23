@@ -4,7 +4,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Repositories;
 
-public class AgvDataRepositoryTestFixture: DbTestFixtureBase<TransportOrderDbContext>
+public class AgvDataRepositoryTestFixture : DbTestFixtureBase<TransportOrderDbContext>
 {
     public readonly IAgvDataRegistry Repository;
 

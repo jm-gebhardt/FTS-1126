@@ -16,12 +16,11 @@ public class StateMachineTestFixture<TStateMachine, TInstance> : BaseStateMachin
 {
     /// <inheritdoc />
     public StateMachineTestFixture(
-        Action<IServiceCollection>? services = null, 
+        Action<IServiceCollection>? services = null,
         Action<IBusRegistrationConfigurator>? busRegistrationConfigurator = null,
         Action<IBusRegistrationContext, IInMemoryBusFactoryConfigurator>? inMemoryConfiguration = null,
-        TimeSpan? inactivityTimeout = null): base(services, busRegistrationConfigurator, inMemoryConfiguration, inactivityTimeout)
+        TimeSpan? inactivityTimeout = null) : base(services, busRegistrationConfigurator, inMemoryConfiguration, inactivityTimeout)
     {
         Build();
     }
-        
 }

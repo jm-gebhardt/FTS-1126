@@ -11,10 +11,15 @@ public sealed class TextLogger : ILogger
 {
     private readonly TextLoggerConfiguration _currentConfig;
     private readonly string _name;
+
     private string FolderPath => _currentConfig.LogFolderPath;
+
     private int PadRight => _currentConfig.PadRight;
+
     private int EventIdPaddingRight => _currentConfig.EventIdPaddingRight;
+
     private int EventId => _currentConfig.EventId;
+
     private IDictionary<LogLevel, int> LogLevels => _currentConfig.LogLevels;
 
     /// <summary>
@@ -34,14 +39,20 @@ public sealed class TextLogger : ILogger
     /// <typeparam name="TState"></typeparam>
     /// <param name="state"></param>
     /// <returns></returns>
-    public IDisposable BeginScope<TState>(TState state) where TState : notnull => default!;
+    public IDisposable BeginScope<TState>(TState state) where TState : notnull
+    {
+        return default!;
+    }
 
     /// <summary>
     /// Checks if Log level exists in dictionary keys
     /// </summary>
     /// <param name="logLevel"></param>
     /// <returns></returns>
-    public bool IsEnabled(LogLevel logLevel) => LogLevels.ContainsKey(logLevel);
+    public bool IsEnabled(LogLevel logLevel)
+    {
+        return LogLevels.ContainsKey(logLevel);
+    }
 
     /// <summary>
     /// Implements the log creation

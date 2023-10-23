@@ -106,7 +106,10 @@ public class ActionGroupValidator : AbstractValidator<ActionGroup>
     /// Checks if the assigned Agv exists in the registry 
     /// </summary>
     /// <returns></returns>
-    private bool AgvExists() => _agv != null;
+    private bool AgvExists()
+    {
+        return _agv != null;
+    }
 
     /// <summary>
     /// Checks whether the order of actions within the group are ascending
@@ -167,6 +170,8 @@ public class ActionGroupValidator : AbstractValidator<ActionGroup>
         return stack == 0;
     }
 
-
-    private Task<bool> TargetNodeExists(string nodeId) => _agvGraphRegistry.NodeExistsAsync(nodeId);
+    private Task<bool> TargetNodeExists(string nodeId)
+    {
+        return _agvGraphRegistry.NodeExistsAsync(nodeId);
+    }
 }

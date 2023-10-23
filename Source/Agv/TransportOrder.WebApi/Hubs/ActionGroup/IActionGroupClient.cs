@@ -6,7 +6,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.ActionGroup;
 /// <summary>
 /// ActionGroup related SignalR methods
 /// </summary>
-[SignalRHub(path: ActionGroupHub.UrlPath, documentNames: new[] {HubApiGroup.GroupName})]
+[SignalRHub(ActionGroupHub.UrlPath, documentNames: new[] { HubApiGroup.GroupName })]
 public interface IActionGroupClient
 {
     /// <summary>

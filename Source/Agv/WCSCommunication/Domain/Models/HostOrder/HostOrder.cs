@@ -27,7 +27,6 @@ public class HostOrder
     /// </summary>
     public IReadOnlyCollection<Action> Actions => _actions;
 
-
     /// <summary>
     /// The time when the order was started.
     /// </summary>

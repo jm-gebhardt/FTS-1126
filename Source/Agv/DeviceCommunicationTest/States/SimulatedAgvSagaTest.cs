@@ -34,9 +34,9 @@ public class SimulatedAgvSagaTest
     [TestMethod]
     public void Charging()
     {
-        double chargeInit = 50;
-        double chargeDiff = 0.1;
-        double timeDiff = 60;
+        const double chargeInit = 50;
+        const double chargeDiff = 0.1;
+        const double timeDiff = 60;
 
         var saga = CreateSimulatedAgvSaga();
         saga.SimulatedBatteryCharge = chargeInit;
@@ -51,9 +51,9 @@ public class SimulatedAgvSagaTest
     [TestMethod]
     public void Discharging()
     {
-        double chargeInit = 50;
-        double chargeDiff = 0.1;
-        double timeDiff = 60;
+        const double chargeInit = 50;
+        const double chargeDiff = 0.1;
+        const double timeDiff = 60;
 
         var saga = CreateSimulatedAgvSaga();
         saga.SimulatedBatteryCharge = chargeInit;
@@ -68,9 +68,9 @@ public class SimulatedAgvSagaTest
     [TestMethod]
     public void Not_alive_when_below_charge_threshold()
     {
-        double chargeInit = 10;
-        double chargeDiff = 0.1;
-        double timeDiff = 60;
+        const double chargeInit = 10;
+        const double chargeDiff = 0.1;
+        const double timeDiff = 60;
 
         var saga = CreateSimulatedAgvSaga();
         saga.SimulatedBatteryCharge = chargeInit;

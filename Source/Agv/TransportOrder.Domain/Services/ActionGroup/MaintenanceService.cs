@@ -18,7 +18,7 @@ public class MaintenanceService : BaseNodePicker, IMaintenanceService
     /// <param name="nodeStateRegistry"></param>
     /// <param name="routeService"></param>
     /// <param name="logger"></param>
-    public MaintenanceService(IAgvGraphRegistry agvGraphRegistry, INodeStateRegistry nodeStateRegistry, IRouteService routeService, ILogger<MaintenanceService> logger) 
+    public MaintenanceService(IAgvGraphRegistry agvGraphRegistry, INodeStateRegistry nodeStateRegistry, IRouteService routeService, ILogger<MaintenanceService> logger)
         : base(agvGraphRegistry, nodeStateRegistry, routeService, logger)
     {
     }

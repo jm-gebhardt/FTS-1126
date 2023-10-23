@@ -26,7 +26,10 @@ public sealed class TextLoggerProvider : ILoggerProvider
     /// </summary>
     /// <param name="categoryName"></param>
     /// <returns></returns>
-    public ILogger CreateLogger(string categoryName) => _loggers.GetOrAdd(categoryName, name => new TextLogger(name, _textLoggerSettingsProvider));
+    public ILogger CreateLogger(string categoryName)
+    {
+        return _loggers.GetOrAdd(categoryName, name => new TextLogger(name, _textLoggerSettingsProvider));
+    }
 
     /// <summary>
     /// Freeing up resources after using Log

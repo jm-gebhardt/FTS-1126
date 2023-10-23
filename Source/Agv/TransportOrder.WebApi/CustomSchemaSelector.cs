@@ -17,7 +17,7 @@ public static class CustomSchemaSelector
         string name = type.Name;
         if (name.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
         {
-            name = name.Substring(0, name.Length - suffix.Length); // Remove DTO suffix
+            name = name[..^suffix.Length]; // Remove DTO suffix
         }
 
         return name;

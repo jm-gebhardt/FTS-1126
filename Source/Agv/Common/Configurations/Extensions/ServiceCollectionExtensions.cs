@@ -39,7 +39,6 @@ public static class ServiceCollectionExtensions
 
         services.AddMassTransit(x =>
         {
-
             x.UsingRabbitMq((context, cfg) =>
             {
                 rabbitMqConfiguration?.Invoke(context, cfg);

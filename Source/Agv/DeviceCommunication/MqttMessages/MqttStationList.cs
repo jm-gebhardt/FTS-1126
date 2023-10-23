@@ -10,7 +10,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 /// <para>See "station_list.schema".</para>
 /// </summary>
 [PublicAPI]
-[EntityName("amq.topic")]       // Specifies the RabbitMq exchange where the message is published
+[EntityName("amq.topic")] // Specifies the RabbitMq exchange where the message is published
 [RoutingKey("agv.stationList")] // Specifies the topic where subscribers can receive the message
 public record MqttStationList
 {
@@ -162,4 +162,4 @@ public enum Function
     /// </summary>
     [PublicAPI]
     Pick
-};
+}
