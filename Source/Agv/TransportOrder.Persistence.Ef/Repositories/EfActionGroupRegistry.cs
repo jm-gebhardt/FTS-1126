@@ -145,16 +145,8 @@ public class EfActionGroupRegistry : IActionGroupRegistry
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
-        var actionGroup = await queryable
-            .FindAsync(correlationId);
-
-        if (actionGroup != null)
-        {
-            await context.Entry(actionGroup)
-                .Collection(g => g.Actions)
-                .LoadAsync();
-        }
-
+        var actionGroup = await queryable.AsNoTracking()
+            .SingleOrDefaultAsync(a => a.CorrelationId == correlationId);
         return actionGroup;
     }
 
@@ -207,7 +199,7 @@ public class EfActionGroupRegistry : IActionGroupRegistry
 
 
     /// <inheritdoc />
-    public async Task<ActionGroup> UpdateActionAndGroupStateAsync(AgvAction action, Domain.Models.Agv.Agv agv, ActionState state)
+    public async Task<ActionGroup> UpdateActionAndGroupStateAsync(AgvAction action, Domain.Models.Agv.Agv? agv, ActionState state)
     {
         var actionGroupCorrelationId = action.ParentId;
 
@@ -225,8 +217,11 @@ public class EfActionGroupRegistry : IActionGroupRegistry
 
         var actionToUpdate = actionGroup.Actions.Single(a => a.CorrelationId == action.CorrelationId);
         context.Entry(actionToUpdate).CurrentValues.SetValues(action);
-
-        actionGroup.Assign(agv);
+        if (agv != null)
+        {
+            actionGroup.Assign(agv);
+        }
+       
         actionGroup.UpdateActionGroupState();
 
         await context.SaveChangesAsync();
@@ -241,13 +236,29 @@ public class EfActionGroupRegistry : IActionGroupRegistry
         DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
         bool hasUnfinishedDropActions = await queryable.Where(actionGroup =>
                 actionGroup.AssignedAgv == agvCorrelationId &&
-                actionGroup.State != ActionGroupState.Completed &&
+                actionGroup.State == ActionGroupState.Started &&
                 actionGroup.Actions.Any(a => a.State != ActionState.Completed && a.ActionType == ActionType.Drop)
             )
             .AsNoTracking()
             .AnyAsync();
 
         return hasUnfinishedDropActions;
+    }
+
+    /// <inheritdoc/>
+    public async Task<bool> HasNotStartedActionsAsync(Guid agvCorrelationId)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
+        bool hasNotStartedActions = await queryable.Where(actionGroup =>
+                actionGroup.AssignedAgv == agvCorrelationId &&
+                actionGroup.State != ActionGroupState.Completed &&
+                actionGroup.Actions.Any(a => a.State != ActionState.Completed && a.State != ActionState.Started)
+            )
+            .AsNoTracking()
+            .AnyAsync();
+
+        return hasNotStartedActions;
     }
 
     /// <inheritdoc/>
@@ -287,7 +298,9 @@ public class EfActionGroupRegistry : IActionGroupRegistry
         DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
         var startedGroup = await queryable
             .Where(actionGroup => actionGroup.AssignedAgv == agvCorrelationId &&
-                                  actionGroup.State == ActionGroupState.Started)
+                                  actionGroup.State == ActionGroupState.Started && 
+                                  actionGroup.Actions.Any(a => a.State == ActionState.Completed))
+            .OrderBy(a => a.StartedDate)
             .AsNoTracking()
             .FirstOrDefaultAsync();
 

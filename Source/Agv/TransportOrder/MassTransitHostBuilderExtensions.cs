@@ -31,8 +31,11 @@ public static class MassTransitHostBuilderExtensions
                             .AddWebApiConsumer();
 
                         x.AddMediator(c => c.AddMediator());
+                    }, rabbitMqConfiguration: (_, cfg) =>
+                    {
+                        cfg.UseDelayedMessageScheduler();
                     }
-                    , rabbitMqConfiguration: (_, cfg) => { cfg.UseDelayedMessageScheduler(); });
+                   );
             }
             catch (InvalidOperationException e)
             {

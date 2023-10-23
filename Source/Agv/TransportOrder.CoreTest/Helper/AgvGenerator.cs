@@ -48,7 +48,7 @@ public static class AgvGenerator
     {
         string agvId = GetAgvId(index);
         var correlationId = agvId.ToGuid();
-        agvStatus ??= new AgvStatus(correlationId, orderId, true, true, batteryCharge, charging, false, lastNodeId);
+        agvStatus ??= new AgvStatus(correlationId, orderId, agvState != AgvState.Idle, true, batteryCharge, charging, false, lastNodeId);
         var agv = new TransportOrder.Domain.Models.Agv.Agv(correlationId, agvId, agvStatus, isLocked);
         return SetAgvState(agvState, isLocked, agv);
     }

@@ -42,6 +42,7 @@ try
                         {
                             cfg.UseDelayedMessageScheduler();
                         });
+                    services.AddOptions<MassTransitHostOptions>().Configure(options => { options.WaitUntilStarted = true; });
                 });
         })
         .WithParsed<ProductionOptions>(productionOptions =>

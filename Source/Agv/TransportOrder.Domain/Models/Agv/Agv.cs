@@ -345,7 +345,7 @@ public class Agv : IAgvId
     {
         bool unlocked = !IsLocked || ignoreLocked;
         bool chargingButIgnore = CurrentAgvState == AgvState.Charging && ignoreCharging;
-        bool idle = CurrentAgvState == AgvState.Idle;
+        bool idle = CurrentAgvState == AgvState.Idle && !AgvStatus!.Busy;
         return IsReady && (idle || chargingButIgnore) && unlocked;
     }
 

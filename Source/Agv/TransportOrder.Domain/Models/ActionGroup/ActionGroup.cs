@@ -44,7 +44,7 @@ public class ActionGroup
     /// <summary>
     /// The first action to be executed.
     /// </summary>
-    public AgvAction? FirstUnstartedAction => Actions.FirstOrDefault(a => a.State == ActionState.Created);
+    public AgvAction? FirstNotStartedAction => Actions.FirstOrDefault(a => a.State == ActionState.Created);
 
     private readonly List<AgvAction> _actions;
     /// <summary>

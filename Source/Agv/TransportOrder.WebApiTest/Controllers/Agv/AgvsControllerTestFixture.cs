@@ -91,7 +91,7 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
             var state = States[i];
             string ip = Ips[i];
             var correlationId = GetGuid(agvId);
-            var agvStatus = agvId == "AGV003" ? null : new Domain.Models.Agv.AgvStatus(correlationId, orderId, true, true, 10, true, true, lastNodeId: "Node");
+            var agvStatus = agvId == "AGV003" ? null : new Domain.Models.Agv.AgvStatus(correlationId, orderId, false, true, 10, true, true, lastNodeId: "Node");
             var agvData = new AgvData(correlationId, "Karis", "BF1", ip, 1.8, 120.0, 0.6, 0.8, 0.7, 1, 2.5, 1000, Array.Empty<AgvData.Sensor>());
             var agv = new Domain.Models.Agv.Agv(correlationId, agvId, agvStatus);
             agv = AgvGenerator.SetAgvState(state, false, agv);

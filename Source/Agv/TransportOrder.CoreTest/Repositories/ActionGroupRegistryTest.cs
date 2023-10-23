@@ -288,6 +288,33 @@ public class ActionGroupRegistryTest
     }
 
     [TestMethod]
+    public async Task UpdateActionAndGroupStateAsync_WhenNoAgvProvided_Updates_ActionGroupState_ActionState_And_DoesNotAssignAgv()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        var actionToUpdateState = actionGroup.Actions.First();
+        var fixture = await new ActionGroupRegistryTestFixture()
+            .WithActionGroup(actionGroup)
+            .BuildAsync();
+
+        var actionGroupInRegistry = await fixture.ActionGroupRegistry.GetActionGroupAsync(actionGroup.CorrelationId);
+        actionGroupInRegistry.ShouldNotBeNull();
+        actionGroupInRegistry.State.ShouldBe(actionGroup.State);
+        actionGroupInRegistry.Actions.First(a => a.CorrelationId == actionToUpdateState.CorrelationId).State.ShouldBe(actionToUpdateState.State);
+        actionGroupInRegistry.AssignedAgv.ShouldBeNull();
+
+        var updatedActionGroup = await fixture.ActionGroupRegistry.UpdateActionAndGroupStateAsync(actionToUpdateState, null, ActionState.Started);
+
+        actionGroupInRegistry = await fixture.ActionGroupRegistry.GetActionGroupAsync(actionGroup.CorrelationId);
+        actionGroupInRegistry.ShouldNotBeNull();
+        actionGroupInRegistry.Actions.ShouldNotBeEmpty();
+        actionGroupInRegistry.Actions.First(a => a.CorrelationId == actionToUpdateState.CorrelationId).State.ShouldBe(ActionState.Started);
+        actionGroupInRegistry.State.ShouldBe(ActionGroupState.Started);
+        actionGroupInRegistry.AssignedAgv.ShouldBeNull();
+
+        actionGroupInRegistry.ShouldBeEquivalentTo(updatedActionGroup);
+    }
+
+    [TestMethod]
     public async Task GetNotStartedActionGroupAsync_ReturnsNotStartedActionGroup()
     {
         const int totalItemsInRegistryWithStateCreated = 10;
@@ -338,6 +365,7 @@ public class ActionGroupRegistryTest
         actionGroup.AssignedAgv = agv.CorrelationId;
 
         actionGroup.StartAction(actionGroup.Actions.First().CorrelationId);
+        actionGroup.CompleteAction(actionGroup.Actions.First().CorrelationId);
 
         var subsequentAction = actionGroup.Actions.ElementAt(1);
 
@@ -347,6 +375,22 @@ public class ActionGroupRegistryTest
 
         var subsequentActionInRegistry = await fixture.ActionGroupRegistry.GetSubsequentActionAsync(agv.CorrelationId);
         VerifyAgvAction(subsequentActionInRegistry, subsequentAction);
+    }
+
+    [TestMethod]
+    public async Task GetSubsequentActionAsync_NoCompletedAction_DoesNotReturnSubsequentAction()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        var agv = AgvGenerator.GenerateIdleAgv();
+        actionGroup.AssignedAgv = agv.CorrelationId;
+
+        actionGroup.StartAction(actionGroup.Actions.First().CorrelationId);
+
+        var fixture = await new ActionGroupRegistryTestFixture()
+            .WithActionGroup(actionGroup)
+            .BuildAsync();
+
+       await Should.ThrowAsync<ActionNotFoundException>( fixture.ActionGroupRegistry.GetSubsequentActionAsync(agv.CorrelationId));
     }
 
     [TestMethod]

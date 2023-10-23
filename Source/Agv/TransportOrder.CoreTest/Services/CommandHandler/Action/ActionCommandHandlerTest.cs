@@ -20,7 +20,7 @@ public class ActionCommandHandlerTest
     {
         var fixture = new ActionCommandHandlerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "NodeId");
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
         fixture.AddAgv(agv);
         fixture.AddRoute(nodes:new[]{"Node1", "Node2"});
         fixture.AddActionGroup(actionGroup);
@@ -38,8 +38,8 @@ public class ActionCommandHandlerTest
     {
         var fixture = new ActionCommandHandlerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "NodeId");
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
-        fixture.AddAgv(agv);
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
+         fixture.AddAgv(agv);
         fixture.AddRoute(nodes: new[] { "Node1", "Node2" });
         fixture.AddActionGroup(actionGroup);
         var pickAction = actionGroup.Actions.First();
@@ -50,6 +50,25 @@ public class ActionCommandHandlerTest
         (await fixture.TestHarness!.Published.Any<StartActionCommand>()).ShouldBeTrue();
         (await fixture.TestHarness!.Published.Any<ActionGroupChanged>()).ShouldBeTrue();
         (await fixture.TestHarness!.Published.Any<ActionGroupStarted>()).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task Consume_StartAction_NoAssignedAgv_Publishes_StartingActionForAgvFailed()
+    {
+        var fixture = new ActionCommandHandlerTestFixture();
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "NodeId");
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv:null);
+        fixture.AddAgv(agv);
+        fixture.AddRoute(nodes: new[] { "Node1", "Node2" });
+        fixture.AddActionGroup(actionGroup);
+
+        var startAction = new StartAction(actionGroup.Actions.First(), agv.CorrelationId);
+
+        await fixture.TestHarness!.Bus.Publish(startAction);
+        (await fixture.ConsumerHarness!.Consumed.Any<StartAction>()).ShouldBeTrue();
+        (await fixture.TestHarness!.Published.Any<StartActionCommand>()).ShouldBeFalse();
+        (await fixture.TestHarness!.Published.Any<ActionGroupChanged>()).ShouldBeFalse();
+        (await fixture.TestHarness!.Published.Any<StartingActionForAgvFailed>()).ShouldBeTrue();
     }
 
     [TestMethod]
@@ -93,7 +112,7 @@ public class ActionCommandHandlerTest
         var actionGroup = AgvActionGenerator.GenerateMoveActionGroup();
         fixture.AddAgv(agv);
         fixture.AddRoute(nodes: new[] { "Node1", "Node2" });
-        fixture.AddActionGroup(actionGroup, hasUnfinishedAction: true);
+        fixture.AddActionGroup(actionGroup, hasUnfinishedAction: true, hasNotStartedAction:true);
 
         var command = new TryStartNextActionInActionGroup(agv.CorrelationId);
         await fixture.TestHarness!.Bus.Publish(command);
@@ -109,7 +128,7 @@ public class ActionCommandHandlerTest
         var actionGroup = AgvActionGenerator.GenerateMoveActionGroup();
         fixture.AddAgv(agv);
         fixture.AddRoute(nodes: new[] { "Node1", "Node2" });
-        fixture.AddActionGroup(actionGroup, hasUnfinishedAction:false);
+        fixture.AddActionGroup(actionGroup, hasUnfinishedAction:false, hasNotStartedAction: false);
 
         var command = new TryStartNextActionInActionGroup(agv.CorrelationId);
         await fixture.TestHarness!.Bus.Publish(command);
@@ -263,7 +282,7 @@ public class ActionCommandHandlerTest
         var fixture = new ActionCommandHandlerTestFixture();
         var mapper = ActionCommandHandlerTestFixture.GetMapper();
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "NodeId");
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv:agv.CorrelationId);
         fixture.AddAgv(agv);
         fixture.AddRoute(nodes: new[] { "Node1", "Node2" });
         fixture.AddActionGroup(actionGroup);

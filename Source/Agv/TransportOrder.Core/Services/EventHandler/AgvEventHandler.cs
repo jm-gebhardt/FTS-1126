@@ -68,13 +68,13 @@ public class AgvEventHandler :
 
         var agv = await _agvRepository.GetAgvAsync(agvCorrelationId);
  
-        if (!agv.IsAvailable( ignoreCharging: false, ignoreLocked: true))
+        if (!agv.IsAvailable( ignoreCharging: true, ignoreLocked: true))
         {
             // Agv might be charging
-            _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} is not available.", agvCorrelationId);
+            _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} is not available (charging ignored).", agvCorrelationId);
             return;
         }
-        _logger.LogDebug("Assigning action for Agv with CorrelationId: {AgvCorrelationId} because it is ready", agvCorrelationId);
+        _logger.LogDebug("Assigning action for agv with CorrelationId: {AgvCorrelationId} because it is ready (and needs charging).", agvCorrelationId);
         await PublishPendingActions(context, agv);
     }
 
@@ -93,7 +93,7 @@ public class AgvEventHandler :
             _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} is not available.", agvCorrelationId);
             return;
         }
-        _logger.LogDebug("Assigning action for Agv with CorrelationId: {AgvCorrelationId} because it is ready", agvCorrelationId);
+        _logger.LogDebug("Assigning action for agv with CorrelationId: {AgvCorrelationId} because it is ready (became idle).", agvCorrelationId);
         await PublishPendingActions(context, agv);
     }
 
@@ -252,6 +252,7 @@ public class AgvEventHandler :
 
             if (shouldCharge)
             {
+                _logger.LogInformation("Create charging group for agv {CorrelationId}.", agv.CorrelationId);
                 await context.Publish(new CreateChargingActionGroup(agv.CorrelationId));
                 return;
             }
@@ -264,10 +265,12 @@ public class AgvEventHandler :
 
             if (isCarryingLoad)
             {
+                _logger.LogDebug("Starting next action for agv: {AgvCorrelationId}.",  agv.CorrelationId);
                 await context.Publish(new TryStartNextActionInActionGroup(agv.CorrelationId));
                 return;
             }
-
+           
+            _logger.LogDebug("Starting new action for agv: {AgvCorrelationId}.",  agv.CorrelationId);
             await context.Publish(new TryStartNewActionGroup(agv.CorrelationId));
         }, context.CancellationToken);
     }

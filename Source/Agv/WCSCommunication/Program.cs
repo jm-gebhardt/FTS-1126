@@ -41,6 +41,7 @@ try
                     services.AddSingleton(_ => simulationOptions);
                     services.AddSingleton<SimulationHostOrderService>();
                     services.AddTransient<IHostCommunicator, SimulationHostCommunicator>();
+                    services.AddOptions<MassTransitHostOptions>().Configure(options => { options.WaitUntilStarted = true; });
                 });
         })
         // Production Mode
@@ -82,7 +83,10 @@ try
                 partitioner.PartitionMessageById<HandleHostOrderStart, HostOrderCommandHandler>(c);
                 partitioner.PartitionMessageById<HandleHostOrderFailure, HostOrderCommandHandler>(c);
             });
-        }, (b, c) => c.UseConsumeFilter(typeof(ActionEventConsumeFilter<>), b));
+        }, (ctx, cfg) =>
+        {
+            cfg.UseConsumeFilter(typeof(ActionEventConsumeFilter<>), ctx);
+        });
     });
 
     var host = hostBuilder?.Build();

@@ -110,7 +110,7 @@ public interface IActionGroupRegistry
     /// <param name="action">The action to be started</param>
     /// <param name="agv">The assigned Agv</param>
     /// <param name="state">The new state</param>
-    Task<ActionGroup> UpdateActionAndGroupStateAsync(AgvAction action, Models.Agv.Agv agv, ActionState state);
+    Task<ActionGroup> UpdateActionAndGroupStateAsync(AgvAction action, Models.Agv.Agv? agv, ActionState state);
 
     /// <summary>
     /// Determine if there is any drop action which is not completed (Agv loaded)
@@ -118,6 +118,13 @@ public interface IActionGroupRegistry
     /// <param name="agvCorrelationId">The AgvCorrelationId of the agv to check</param>
     /// <returns>True if there is any not completed drop action for the given Agv</returns>
     Task<bool> HasUnfinishedDropActionsAsync(Guid agvCorrelationId);
+
+    /// <summary>
+    /// Determine if there is any subsequent action which has not started.
+    /// </summary>
+    /// <param name="agvCorrelationId">The AgvCorrelationId of the agv to check</param>
+    /// <returns>True if there is any not started action in the group</returns>
+    Task<bool> HasNotStartedActionsAsync(Guid agvCorrelationId);
 
     /// <summary>
     /// Get ActionGroups where no action was started yet

@@ -7,6 +7,7 @@ using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
@@ -97,22 +98,30 @@ public class ActionCommandHandler :
         var (action, agvCorrelationId) = context.Message;
         var cancellationToken = context.CancellationToken;
         var assignedAgv = await _agvRepository.GetAgvAsync(agvCorrelationId);
+        ActionGroup? actionGroup;
+
         try
         {
-            await context.Publish(new StartActionCommand(assignedAgv.CorrelationId, assignedAgv.AgvId, _mapper.Map<MessageAgvAction>(action)), cancellationToken);
-            _logger.LogDebug("Action with CorrelationId: {ActionCorrelationId} for Agv {AgvCorrelationId} has been started. Updating ActionGroup.State to Started in next step.", action.CorrelationId, assignedAgv.CorrelationId);
-            var actionGroup = await _actionGroupRegistry.UpdateActionAndGroupStateAsync(action, assignedAgv, ActionState.Started);
+            actionGroup = await _actionGroupRegistry.UpdateActionAndGroupStateAsync(action,assignedAgv, ActionState.Started);
+            if (actionGroup.AssignedAgv == null)
+            {
+                throw new AgvNotFoundException(null);
+            }
             var actionGroupMessageContent = _mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup);
+            await context.Publish(new StartActionCommand(assignedAgv.CorrelationId, assignedAgv.AgvId, _mapper.Map<MessageAgvAction>(action)), cancellationToken);
             await context.Publish(new ActionGroupChanged(actionGroupMessageContent, actionGroup.CorrelationId), cancellationToken);
 
+            _logger.LogDebug("Action with CorrelationId: {ActionCorrelationId} for Agv {AgvCorrelationId} has been started.", action.CorrelationId, assignedAgv.CorrelationId);
             bool isFirstActionOrderByHost = action is { Sequence: 0, ActionType: ActionType.Pick };
             if (isFirstActionOrderByHost)
             {
                 await context.Publish(new ActionGroupStarted(actionGroupMessageContent, actionGroup.CorrelationId, DateTime.UtcNow), cancellationToken);
             }
         }
-        catch
+        catch(AgvNotFoundException)
         {
+           actionGroup = await _actionGroupRegistry.UpdateActionAndGroupStateAsync(action,action.Sequence == 0?assignedAgv: null, ActionState.Failed);
+            _logger.LogError("Could not start action {Action} of group {ActionGroup}, no assigned agv.", action.CorrelationId, actionGroup.CorrelationId);
             await context.Publish(new StartingActionForAgvFailed(assignedAgv.CorrelationId), cancellationToken);
         }
     }
@@ -130,14 +139,14 @@ public class ActionCommandHandler :
     
         var actionGroup = await _actionGroupRegistry.GetActionGroupAsync(actionMessageContent.ParentId);
 
-        var action = actionGroup?.FirstUnstartedAction;
+        var action = actionGroup?.FirstNotStartedAction;
 
         if (action == null)
         {
-            _logger.LogError("Could not find un-started action for {ActionGroupId}, {CorrelationId}", actionMessageContent.ParentId, assignedAgvId);
+            _logger.LogError("Could not find un-started action for {ActionGroupId}, {CorrelationId}.", actionMessageContent.ParentId, assignedAgvId);
             return;
         }
-        _logger.LogDebug("Trying to start action {ActionId} with type {ActionType} for agv {CorrelationId}", action.CorrelationId, Enum.GetName(action.ActionType), assignedAgvId);
+        _logger.LogDebug("Trying to start action {ActionId} with type {ActionType} for agv {CorrelationId}.", action.CorrelationId, Enum.GetName(action.ActionType), assignedAgvId);
 
         await SelectNodesForAgvAction(context, action, assignedAgv, cancellationToken);
     }
@@ -156,16 +165,16 @@ public class ActionCommandHandler :
 
        if (!actionGroups.Any())
         {
-            _logger.LogDebug("There is no next action group available for Agv with CorrelationId {AgvCorrelationId}", agv.CorrelationId);
+            _logger.LogDebug("There is no next action group available for agv with CorrelationId {AgvCorrelationId}.", agv.CorrelationId);
             await context.Publish(new AgvCanStartIdleAction(agv.CorrelationId), cancellationToken);
             return;
         }
 
-        var action = actionGroups[0].FirstUnstartedAction;
+        var action = actionGroups[0].FirstNotStartedAction;
 
         if (action == null)
         {
-            _logger.LogDebug("There is no next action available for Agv with CorrelationId {AgvCorrelationId}", agv.CorrelationId);
+            _logger.LogDebug("There is no next action available for agv with CorrelationId {AgvCorrelationId}.", agv.CorrelationId);
             await context.Publish(new AgvCanStartIdleAction(agv.CorrelationId), cancellationToken);
             return;
         }
@@ -182,14 +191,14 @@ public class ActionCommandHandler :
         var cancellationToken = context.CancellationToken;
         var agv = await _agvRepository.GetAgvAsync(agvCorrelationId);
 
-        if (!await _actionGroupRegistry.HasUnfinishedDropActionsAsync(agvCorrelationId) || agv.IsLocked)
+        if (!await _actionGroupRegistry.HasNotStartedActionsAsync(agvCorrelationId) || agv.IsLocked)
         {
             return;
         }
-        _logger.LogInformation("Starting succeeding action for Agv with CorrelationId: {AgvCorrelationId}", agv.CorrelationId);
         try
         {
             var action = await _actionGroupRegistry.GetSubsequentActionAsync(agv.CorrelationId);
+            _logger.LogDebug("Starting succeeding action {Action} of group {ActionGroup} for agv with CorrelationId: {AgvCorrelationId}.", action.CorrelationId, action.ParentId, agv.CorrelationId);
             await SelectNodesForAgvAction(context, action, agv, cancellationToken);
         }
         catch
@@ -223,11 +232,11 @@ public class ActionCommandHandler :
             var actionGroup = await _chooseAgvActionGroupService.GetNotStartedActionGroupAsync(agv, cancellationToken);
             if (actionGroup == null)
             {
-                _logger.LogDebug("There is no next action available for Agv with CorrelationId {AgvCorrelationId}", agv.CorrelationId);
+                _logger.LogDebug("There is no next action available for agv with CorrelationId {AgvCorrelationId}.", agv.CorrelationId);
                 return;
             }
             var action = actionGroup.Actions.First();
-            _logger.LogDebug("Trying to start action {ActionId} with type {ActionType}", action.CorrelationId, Enum.GetName(action.ActionType));
+            _logger.LogDebug("Trying to start action {ActionId} with type {ActionType}.", action.CorrelationId, Enum.GetName(action.ActionType));
             await SelectNodesForAgvAction(context, action, agv, context.CancellationToken);
         }, context.CancellationToken);
     }
@@ -249,10 +258,10 @@ public class ActionCommandHandler :
 
         if (await _parkPointService.IsOnAParkNodeAsync(agv) || await _actionGroupRetrievalService.IsAgvHeadingToNodeOfType(agvCorrelationId, AgvGraph.NodeType.Park))
         {
-            _logger.LogDebug("No need for a park action because the Agv is already in park for agvId: {AgvCorrelationId}", agv.CorrelationId);
+            _logger.LogDebug("No need for a park action because the agv is already in park for agvId: {AgvCorrelationId}.", agv.CorrelationId);
             return;
         }
-        _logger.LogInformation("Starting park action for Agv with CorrelationId: {AgvCorrelationId}", agv.CorrelationId);
+        _logger.LogInformation("Starting park action for agv with CorrelationId: {AgvCorrelationId}.", agv.CorrelationId);
 
         var parkNode = await _parkPointService.ReserveParkAsync(agv);
 
@@ -285,7 +294,7 @@ public class ActionCommandHandler :
 
         bool shouldCharge = !isCarryingLoad && needsCharging;
        
-       _logger.LogDebug("Evaluating {Name} with {NeedsCharging}, {IsCarryingLoad} for agv {CorrelationId}", nameof(CreateChargingActionGroup), needsCharging, isCarryingLoad, agv.CorrelationId);
+       _logger.LogDebug("Evaluating {Name} with {NeedsCharging}, {IsCarryingLoad} for agv {CorrelationId}.", nameof(CreateChargingActionGroup), needsCharging, isCarryingLoad, agv.CorrelationId);
 
        
         if (!agv.CheckIsEligibleForCharging(agvSettings) || !shouldCharge || agv.IsLocked)
@@ -296,11 +305,11 @@ public class ActionCommandHandler :
 
         if (agv.IsCharging || await _actionGroupRetrievalService.IsAgvHeadingToNodeOfType(agvCorrelationId, AgvGraph.NodeType.Charge))
         {
-            _logger.LogDebug("No need for a another charge action because the Agv is already charging for agvId: {AgvId}", agv.AgvId);
+            _logger.LogDebug("No need for another charge action because the agv is already charging for agvId: {AgvId}.", agv.AgvId);
             // This might happen if the AssignAsync action is called several times due to a low SOC value, although the Agv is already charging
             return;
         }
-        _logger.LogInformation("Starting charge action for Agv with CorrelationId: {AgvCorrelationId}", agv.CorrelationId);
+        _logger.LogInformation("Starting charge action for agv with CorrelationId: {AgvCorrelationId}.", agv.CorrelationId);
 
         var chargingNode = await _chargingPointManager.ReserveChargerAsync(agv);
 
@@ -338,7 +347,7 @@ public class ActionCommandHandler :
             return;
         }
 
-        _logger.LogInformation("Starting maintenance action for Agv with CorrelationId: {AgvCorrelationId}", agv.CorrelationId);
+        _logger.LogInformation("Starting maintenance action for agv with CorrelationId: {AgvCorrelationId}.", agv.CorrelationId);
 
         var maintenanceNode = await _maintenanceService.GetMaintenanceNode(agv);
 
@@ -364,7 +373,7 @@ public class ActionCommandHandler :
         (var actionGroup, bool throwOnInvalid) = context.Message;
         var cancellationToken = context.CancellationToken;
      
-        _logger.LogTrace("Validating ActionGroup with CorrelationId: {ActionGroupId}", actionGroup.CorrelationId);
+        _logger.LogTrace("Validating ActionGroup with CorrelationId: {ActionGroupId}.", actionGroup.CorrelationId);
 
         var domainActionGroup = _mapper.Map<ActionGroup>(context.Message.ActionGroup);
         IEnumerable<ValidationFailure> validationFailures = await _actionGroupValidationService.ValidateAsync(domainActionGroup);
@@ -380,7 +389,7 @@ public class ActionCommandHandler :
             domainActionGroup.InvalidateActionGroup();
         }
 
-        _logger.LogDebug("Adding ActionGroup with CorrelationId: {ActionGroupId}", actionGroup.CorrelationId);
+        _logger.LogDebug("Adding ActionGroup with CorrelationId: {ActionGroupId}.", actionGroup.CorrelationId);
         await _actionGroupRegistry.AddAsync(domainActionGroup);
         var actionGroupMessageContent = _mapper.Map<Common.Messages.ActionGroups.ActionGroup>(domainActionGroup);
         await context.Publish(new ActionGroupCreated(actionGroupMessageContent, actionGroup.CorrelationId), cancellationToken);
@@ -388,7 +397,7 @@ public class ActionCommandHandler :
         if (!isValid)
         {
             List<string> validationFailureReasons = validationFailures.Select(error => error.ErrorMessage).ToList();
-            _logger.LogDebug("ActionGroup with CorrelationId: {ActionGroupId} is not valid, publishing ActionGroupInvalid", actionGroup.CorrelationId);
+            _logger.LogDebug("ActionGroup with CorrelationId: {ActionGroupId} is not valid, publishing ActionGroupInvalid.", actionGroup.CorrelationId);
             await context.Publish(new ActionGroupInvalid(actionGroup.CorrelationId, actionGroupMessageContent, validationFailureReasons), cancellationToken);
             return;
         }
@@ -396,7 +405,7 @@ public class ActionCommandHandler :
         if (actionGroup.AssignedAgv != null)
         {
             var assignedAgv = await _agvRepository.GetAgvAsync(actionGroup.AssignedAgv!.Value);
-            await SelectNodesForAgvAction(context, domainActionGroup.FirstUnstartedAction!, assignedAgv, cancellationToken);
+            await SelectNodesForAgvAction(context, domainActionGroup.FirstNotStartedAction!, assignedAgv, cancellationToken);
             await context.RespondAsync(new Success());
             return;
         }
@@ -412,7 +421,9 @@ public class ActionCommandHandler :
         }, cancellationToken);
         if (agv != null)
         {
-            await SelectNodesForAgvAction(context, domainActionGroup.Actions.First(), agv, cancellationToken);
+            var action = domainActionGroup.FirstNotStartedAction;
+            await _actionGroupRegistry.UpdateActionAndGroupStateAsync(action!, agv, action!.State);
+            await SelectNodesForAgvAction(context, action, agv, cancellationToken);
         }
     }
 
@@ -425,17 +436,17 @@ public class ActionCommandHandler :
         var correlationId = context.Message.ActionCorrelationId;
         var cancellationToken = context.CancellationToken;
 
-        _logger.LogDebug("Completing action with CorrelationId: {ActionCorrelationId}", correlationId);
+        _logger.LogDebug("Completing action with CorrelationId: {ActionCorrelationId}.", correlationId);
         var action = await _actionGroupRegistry.GetRequiredActionByIdAsync(correlationId);
 
         var actionGroup = await _actionGroupRegistry.GetRequiredActionGroupByIdAsync(action.ParentId);
         if (actionGroup.AssignedAgv == null)
         {
-            _logger.LogError("Failed to complete action {Action}, assigned agv is null.", action.CorrelationId);
+            _logger.LogError("Failed to complete action {Action} for group {ActionGroup}, assigned agv is null.", action.CorrelationId, actionGroup.CorrelationId);
         }
         var agv = await _agvRepository.GetAgvAsync(actionGroup.AssignedAgv!.Value);
    
-        actionGroup = await _actionGroupRegistry.UpdateActionAndGroupStateAsync(action, agv, ActionState.Completed);
+        actionGroup = await _actionGroupRegistry.UpdateActionAndGroupStateAsync(action, null, ActionState.Completed);
         var actionGroupMessageContent = _mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup);
         await context.Publish(new ActionGroupChanged(actionGroupMessageContent, actionGroup.CorrelationId), cancellationToken);
         if (actionGroup.State == ActionGroupState.Completed)
@@ -483,9 +494,8 @@ public class ActionCommandHandler :
                 await context.Publish(new ActionGroupCancelFailed(actionGroupMessageContent, actionGroup.CorrelationId, HostOrderCancelFailedErrorCode.OrderAlreadyCancelled));
                 return;
         }
-        var agv = await _agvRepository.GetAgvAsync(actionGroup.AssignedAgv!.Value);
-
-        actionGroup = await _actionGroupRegistry.UpdateActionAndGroupStateAsync(actionGroup.FirstUnstartedAction!, agv, ActionState.Canceled);
+       
+        actionGroup = await _actionGroupRegistry.UpdateActionAndGroupStateAsync(actionGroup.FirstNotStartedAction!, null, ActionState.Canceled);
         await context.Publish(new ActionGroupCancelled(actionGroupMessageContent, actionGroup.CorrelationId, DateTime.UtcNow));
     }
 
@@ -493,7 +503,7 @@ public class ActionCommandHandler :
     {
         if (!assignedAgv.TryTransitionToBusy(ignoreLocked: true))
         {
-            _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} is not ready to be set to busy", assignedAgv.CorrelationId);
+            _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} is not ready to be set to busy.", assignedAgv.CorrelationId);
             return;
         }
 
@@ -505,7 +515,7 @@ public class ActionCommandHandler :
         _logger.LogDebug("Starting action with CorrelationId: {ActionCorrelationId} for Agv {AgvCorrelationId}. Setting Agv to busy in next step.", action.CorrelationId, assignedAgv.CorrelationId);
         try
         {
-            if (action.Nodes == null || !action.Nodes.Any())
+            if ((action.Nodes == null || !action.Nodes.Any()) && assignedAgv.AgvStatus!.LastNodeId != action.TargetNodeId)
             {
                 throw new ArgumentNullException(nameof(action.Nodes));
             }
@@ -513,7 +523,7 @@ public class ActionCommandHandler :
         }
         catch
         {
-           _logger.LogWarning("Node selection failed for action: {Action}", action);
+           _logger.LogWarning("Node selection failed for action: {Action}.", action);
         }
     }
 

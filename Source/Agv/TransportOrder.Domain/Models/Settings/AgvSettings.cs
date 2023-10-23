@@ -19,7 +19,7 @@ public record AgvSettings : SettingsBase<AgvSettings>
     public int AgvOfflineTimeoutMsWhileBusy { get; init; } = 20000;
 
     /// <summary>Critical battery level</summary>
-    public int BatteryLevelCritical { get; init; } = 10;
+    public int BatteryLevelCritical { get; init; } = 15;
 
     /// <summary>Low battery level</summary>
     public int BatteryLevelLow { get; init; } = 40;

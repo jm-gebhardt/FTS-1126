@@ -79,13 +79,14 @@ public class ActionCommandHandlerTestFixture : MassTransitConsumerTestFixture<Ac
         _agvRepository.AddAgvsToMockRepository(new List<TransportOrder.Domain.Models.Agv.Agv> {agv});
     }
 
-    public void AddActionGroup(ActionGroup actionGroup, bool hasUnfinishedAction = true)
+    public void AddActionGroup(ActionGroup actionGroup, bool hasUnfinishedAction = true,  bool hasNotStartedAction = true)
     {
         _actionGroupRegistry.Setup(x => x.GetRequiredActionGroupByIdAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup);
         _actionGroupRegistry.Setup(x => x.UpdateActionAndGroupStateAsync(It.IsAny<AgvAction>(), It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<ActionState>())).ReturnsAsync(actionGroup);
         _actionGroupRegistry.Setup(x => x.GetSubsequentActionAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup.Actions.First());
         _actionGroupRegistry.Setup(x => x.GetActionGroupsAsync(It.IsAny<ActionGroupState>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(), It.IsAny<bool?>())).ReturnsAsync(new List<ActionGroup> {actionGroup});
         _actionGroupRegistry.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup);
+        _actionGroupRegistry.Setup(x => x.HasNotStartedActionsAsync(It.IsAny<Guid>())).ReturnsAsync(hasNotStartedAction);
         _actionGroupRegistry.Setup(x => x.HasUnfinishedDropActionsAsync(It.IsAny<Guid>())).ReturnsAsync(hasUnfinishedAction);
         _actionGroupRegistry.Setup(x => x.GetRequiredActionByIdAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup.Actions.First());
     }
