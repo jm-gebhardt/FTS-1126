@@ -1,5 +1,6 @@
 using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.AgvActions;
 using MassTransit;
@@ -34,13 +35,13 @@ public class ActionGroupsController : Controller
     /// <response code="200">Ok</response>
     [HttpGet]
     [Route("/actionGroups")]
-    public async Task<ActionResult<IEnumerable<ActionGroupDto>>> GetActionGroups(ActionGroupState[] states, DateTime? fromDate, DateTime? toDate, int limit = 1000)
+    public async Task<ActionResult<IEnumerable<ActionGroupDto>>> GetActionGroups(ActionGroupState[] states, DateTime? fromDate, DateTime? toDate, int limit = 1000, SortBy sortBy=SortBy.CreatedDate, SortDirection sortDirection=SortDirection.Desc )
     {
         Response<GotActionGroups> response = await _getAgvActionGroupsRequest.GetResponse<GotActionGroups>(new GetActionGroups(
             states,
             fromDate ?? DateTime.MinValue,
             toDate ?? DateTime.MaxValue,
-            limit));
+            limit, sortBy, sortDirection == SortDirection.Desc));
         List<ActionGroupDto> actionGroups = response.Message.ActionGroups.Select(g => _mapper.Map<ActionGroupDto>(g)).ToList();
         return Ok(actionGroups);
     }

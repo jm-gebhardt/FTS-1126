@@ -1,5 +1,6 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
 using ActionGroup = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 
@@ -17,7 +18,9 @@ public interface IActionGroupRetrievalService
     /// <param name="fromDate">The UTC from Date, only items with a greater CreatedDate will be considered.</param>
     /// <param name="toDate">The UTC from Date, only items with a less CreatedDate will be considered.</param>
     /// <param name="maxItems">The maximum number of action groups returned.</param>
-    Task<IReadOnlyCollection<ActionGroupReadModel>> GetActionGroupsWithNodesAsync(IReadOnlyCollection<ActionGroupState> states, DateTime? fromDate, DateTime? toDate, int maxItems);
+    /// <param name="sortBy">The sorting parameter.</param>
+    /// <param name="sortDescending">If true, sorts in descending order.</param>
+    Task<IReadOnlyCollection<ActionGroupReadModel>> GetActionGroupsWithNodesAsync(IReadOnlyCollection<ActionGroupState> states, DateTime? fromDate, DateTime? toDate, int maxItems, SortBy sortBy = SortBy.CreatedDate, bool sortDescending = true);
 
     /// <summary>
     /// Get currently assigned action groups of provided AGVs.

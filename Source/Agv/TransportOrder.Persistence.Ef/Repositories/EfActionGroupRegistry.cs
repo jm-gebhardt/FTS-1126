@@ -1,5 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+﻿using Gebhardt.StoreWare.Agv.Common.Extensions;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;
 using JetBrains.Annotations;
@@ -41,11 +43,10 @@ public class EfActionGroupRegistry : IActionGroupRegistry
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<ActionGroup>> GetActionGroupsAsync(IList<ActionGroupState>? states = null, DateTime? fromDate = null, DateTime? toDate = null, int maxItems = 100, Guid? assignedAgvCorrelationId = null, bool? isManual = null)
+    public async Task<IReadOnlyList<ActionGroup>> GetActionGroupsAsync(IList<ActionGroupState>? states = null, DateTime? fromDate = null, DateTime? toDate = null, int maxItems = 100, Guid? assignedAgvCorrelationId = null, bool? isManual = null, SortBy sortBy = SortBy.CreatedDate, bool sortDescending = true)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>()
-            .OrderByDescending(g => g.CreatedDate);
+        IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>();
 
         if (states?.Any() ?? false)
         {
@@ -72,9 +73,9 @@ public class EfActionGroupRegistry : IActionGroupRegistry
             actionGroups = actionGroups.Where(g => g.CreatedDate <= toDate);
         }
 
+        actionGroups = actionGroups.OrderByProperty(sortBy.ToString(), isDescending: sortDescending).ThenByDescending(g => g.IsManual);
+
         List<ActionGroup> actionGroupsAsync = await actionGroups
-            .OrderBy(g => g.CreatedDate)
-            .ThenByDescending(g => g.IsManual)
             .AsNoTracking()
             .Take(maxItems)
             .ToListAsync();

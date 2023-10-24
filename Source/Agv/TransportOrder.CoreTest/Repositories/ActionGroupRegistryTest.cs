@@ -1,6 +1,7 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 using ActionGroup = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
@@ -195,6 +196,96 @@ public class ActionGroupRegistryTest
         }
 
         VerifyActionGroup(actionGroupsResult.Single(), moveActionGroupManual);
+    }
+
+    [TestMethod]
+    public async Task GetActionGroupsAsync_SortByCreatedDateAscending_ReturnsSortedActionGroups()
+    {
+        var earlierCreatedGroup = AgvActionGenerator.GeneratePickDropActionGroup(createdDate: DateTime.UtcNow.AddDays(-1));
+        var laterCreatedGroup = AgvActionGenerator.GeneratePickDropActionGroup(createdDate: DateTime.UtcNow.AddDays(1));
+        
+        var fixture = await new ActionGroupRegistryTestFixture()
+            .WithActionGroups(new List<ActionGroup> { earlierCreatedGroup, laterCreatedGroup })
+            .BuildAsync();
+
+        IReadOnlyList<ActionGroup> actionGroupsResult = await fixture.ActionGroupRegistry.GetActionGroupsAsync(sortBy:SortBy.CreatedDate, sortDescending: false);
+        actionGroupsResult.First().ShouldBeEquivalentTo(earlierCreatedGroup);
+        actionGroupsResult.Last().ShouldBeEquivalentTo(laterCreatedGroup);
+    }
+
+    [TestMethod]
+    public async Task GetActionGroupsAsync_SortByCreatedDateDescending_ReturnsSortedActionGroups()
+    {
+        var earlierCreatedGroup = AgvActionGenerator.GeneratePickDropActionGroup(createdDate: DateTime.UtcNow.AddDays(-1));
+        var laterCreatedGroup = AgvActionGenerator.GeneratePickDropActionGroup(createdDate: DateTime.UtcNow.AddDays(1));
+
+        var fixture = await new ActionGroupRegistryTestFixture()
+            .WithActionGroups(new List<ActionGroup> { earlierCreatedGroup, laterCreatedGroup })
+            .BuildAsync();
+
+        IReadOnlyList<ActionGroup> actionGroupsResult = await fixture.ActionGroupRegistry.GetActionGroupsAsync(sortBy: SortBy.CreatedDate, sortDescending: true);
+        actionGroupsResult.First().ShouldBeEquivalentTo(laterCreatedGroup);
+        actionGroupsResult.Last().ShouldBeEquivalentTo(earlierCreatedGroup);
+    }
+
+    [TestMethod]
+    public async Task GetActionGroupsAsync_SortByCompletedDateAscending_ReturnsSortedActionGroups()
+    {
+        var earlierCompletedGroup = AgvActionGenerator.GeneratePickDropActionGroup(completedDate: DateTime.UtcNow.AddDays(-1));
+        var laterCompletedGroup = AgvActionGenerator.GeneratePickDropActionGroup(completedDate: DateTime.UtcNow.AddDays(1));
+
+        var fixture = await new ActionGroupRegistryTestFixture()
+            .WithActionGroups(new List<ActionGroup> { earlierCompletedGroup, laterCompletedGroup })
+            .BuildAsync();
+
+        IReadOnlyList<ActionGroup> actionGroupsResult = await fixture.ActionGroupRegistry.GetActionGroupsAsync(sortBy: SortBy.CompletedDate, sortDescending: false);
+        actionGroupsResult.First().ShouldBeEquivalentTo(earlierCompletedGroup);
+        actionGroupsResult.Last().ShouldBeEquivalentTo(laterCompletedGroup);
+    }
+
+    [TestMethod]
+    public async Task GetActionGroupsAsync_SortByCompletedDateDescending_ReturnsSortedActionGroups()
+    {
+        var earlierCompletedGroup = AgvActionGenerator.GeneratePickDropActionGroup(completedDate: DateTime.UtcNow.AddDays(-1));
+        var laterCompletedGroup = AgvActionGenerator.GeneratePickDropActionGroup(completedDate: DateTime.UtcNow.AddDays(1));
+
+        var fixture = await new ActionGroupRegistryTestFixture()
+            .WithActionGroups(new List<ActionGroup> { earlierCompletedGroup, laterCompletedGroup })
+            .BuildAsync();
+
+        IReadOnlyList<ActionGroup> actionGroupsResult = await fixture.ActionGroupRegistry.GetActionGroupsAsync(sortBy: SortBy.CompletedDate, sortDescending: true);
+        actionGroupsResult.First().ShouldBeEquivalentTo(laterCompletedGroup);
+        actionGroupsResult.Last().ShouldBeEquivalentTo(earlierCompletedGroup);
+    }
+
+    [TestMethod]
+    public async Task GetActionGroupsAsync_SortByStartedDateAscending_ReturnsSortedActionGroups()
+    {
+        var earlierStartedGroup = AgvActionGenerator.GeneratePickDropActionGroup(startedDate: DateTime.UtcNow.AddDays(-1));
+        var laterStartedGroup = AgvActionGenerator.GeneratePickDropActionGroup(startedDate: DateTime.UtcNow.AddDays(1));
+
+        var fixture = await new ActionGroupRegistryTestFixture()
+            .WithActionGroups(new List<ActionGroup> { earlierStartedGroup, laterStartedGroup })
+            .BuildAsync();
+
+        IReadOnlyList<ActionGroup> actionGroupsResult = await fixture.ActionGroupRegistry.GetActionGroupsAsync(sortBy: SortBy.StartedDate, sortDescending: false);
+        actionGroupsResult.First().ShouldBeEquivalentTo(earlierStartedGroup);
+        actionGroupsResult.Last().ShouldBeEquivalentTo(laterStartedGroup);
+    }
+
+    [TestMethod]
+    public async Task GetActionGroupsAsync_SortByStartedDateDescending_ReturnsSortedActionGroups()
+    {
+        var earlierStartedGroup = AgvActionGenerator.GeneratePickDropActionGroup(startedDate: DateTime.UtcNow.AddDays(-1));
+        var laterStartedGroup = AgvActionGenerator.GeneratePickDropActionGroup(startedDate: DateTime.UtcNow.AddDays(1));
+
+        var fixture = await new ActionGroupRegistryTestFixture()
+            .WithActionGroups(new List<ActionGroup> { earlierStartedGroup, laterStartedGroup })
+            .BuildAsync();
+
+        IReadOnlyList<ActionGroup> actionGroupsResult = await fixture.ActionGroupRegistry.GetActionGroupsAsync(sortBy: SortBy.StartedDate, sortDescending: true);
+        actionGroupsResult.First().ShouldBeEquivalentTo(laterStartedGroup);
+        actionGroupsResult.Last().ShouldBeEquivalentTo(earlierStartedGroup);
     }
 
     [TestMethod]

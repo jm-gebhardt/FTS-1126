@@ -1,5 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+﻿using Gebhardt.StoreWare.Agv.Common.Extensions;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Graph;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
@@ -31,7 +33,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyCollection<ActionGroupReadModel>> GetActionGroupsWithNodesAsync(IReadOnlyCollection<ActionGroupState> states, DateTime? fromDate, DateTime? toDate, int maxItems)
+    public async Task<IReadOnlyCollection<ActionGroupReadModel>> GetActionGroupsWithNodesAsync(IReadOnlyCollection<ActionGroupState> states, DateTime? fromDate, DateTime? toDate, int maxItems, SortBy sortBy = SortBy.CreatedDate,bool sortDescending = true)
     {
         await using var context = await CreateDbContextAsync();
         IQueryable<ActionGroup> query = context.Set<ActionGroup>().AsQueryable();
@@ -51,9 +53,9 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
             query = query.Where(g => g.CreatedDate <= toDate);
         }
 
+        query = query.OrderByProperty(sortBy.ToString(), isDescending: sortDescending).ThenByDescending(g => g.IsManual);
+
         List<ActionGroup> actionGroups = await query
-            .OrderByDescending(g => g.CreatedDate)
-            .ThenByDescending(g => g.IsManual)
             .Take(maxItems)
             .ToListAsync();
 

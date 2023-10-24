@@ -8,7 +8,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
 /// </summary>
 public class ActionGroup
 {
-    /// Parenting ID
+    /// <summary>
+    /// The parenting id.
+    /// </summary>
     public Guid CorrelationId { get; init; }
 
     /// <summary>
@@ -17,27 +19,27 @@ public class ActionGroup
     public string OrderId { get; init; }
 
     /// <summary>
-    /// Assigned AGV that will execute the ActionGroup
+    /// The id of the assigned agv that will execute the ActionGroup.
     /// </summary>
     public Guid? AssignedAgv { get; set; }
 
     /// <summary>
-    /// Date the action was created (UTC)
+    /// The creation date of the action (UTC).
     /// </summary>
     public DateTime CreatedDate { get; init; } = DateTime.UtcNow;
 
     /// <summary>
-    /// Date the action has been started (UTC)
+    /// The date the action has been started (UTC).
     /// </summary>
     public DateTime? StartedDate { get; set; }
 
     /// <summary>
-    /// Date the action has been completed (UTC)
+    /// The date the action has been completed (UTC).
     /// </summary>
     public DateTime? CompletedDate { get; set; }
 
     /// <summary>
-    /// State of the ActionGroup
+    /// The state of the ActionGroup.
     /// </summary>
     public ActionGroupState State { get; private set; } = ActionGroupState.Created;
 
@@ -54,7 +56,7 @@ public class ActionGroup
     public IReadOnlyCollection<AgvAction> Actions => _actions.AsReadOnly();
 
     /// <summary>
-    /// If true, then this ActionGroup was created manually, not by the system
+    /// If true, then this ActionGroup was created manually, not by the system.
     /// </summary>
     public bool IsManual { get; set; }
 
@@ -66,13 +68,13 @@ public class ActionGroup
     /// <summary>
     ///  Initializes a new <see cref="ActionGroup"/> instance.
     /// </summary>
-    /// <param name="correlationId">The CorrelationId of the <see cref="ActionGroup"/></param>
-    /// <param name="actions">The child Actions of the <see cref="ActionGroup"/></param>
-    /// <param name="orderId">The OrderID</param>
-    /// <param name="assignedAgv">The assigned Agv of this <see cref="ActionGroup"/></param>
-    /// <param name="creator">The creator of this <see cref="ActionGroup"/></param>
-    /// <param name="createdDate">The date of the creation of this <see cref="ActionGroup"/></param>
-    /// <param name="isManual">If true, then this <see cref="ActionGroup"/> was created manually, not by the system</param>
+    /// <param name="correlationId">The correlation id of the <see cref="ActionGroup"/>.</param>
+    /// <param name="actions">The child actions of the <see cref="ActionGroup"/>.</param>
+    /// <param name="orderId">The order id.</param>
+    /// <param name="assignedAgv">The assigned agv of this <see cref="ActionGroup"/>.</param>
+    /// <param name="creator">The creator of this <see cref="ActionGroup"/>.</param>
+    /// <param name="createdDate">The date of the creation of this <see cref="ActionGroup"/>.</param>
+    /// <param name="isManual">If true, then this <see cref="ActionGroup"/> was created manually, not by the system.</param>
     public ActionGroup(Guid correlationId, string orderId, IEnumerable<AgvAction> actions, ActionGroupCreator creator, DateTime? createdDate = default, Guid? assignedAgv = null, bool isManual = false) : this(correlationId, orderId)
     {
         AssignedAgv = assignedAgv;
@@ -85,8 +87,8 @@ public class ActionGroup
     /// <summary>
     /// Initializes a new <see cref="ActionGroup"/> instance.
     /// </summary>
-    /// <param name="correlationId">The CorrelationId of the ActionGroup</param>
-    /// <param name="orderId">The OrderID</param>
+    /// <param name="correlationId">The correlation id of the ActionGroup.</param>
+    /// <param name="orderId">The order id.</param>
     public ActionGroup(Guid correlationId, string orderId)
     {
         CorrelationId = correlationId;
@@ -104,7 +106,7 @@ public class ActionGroup
     }
 
     /// <summary>
-    /// Updates the state of the ActionGroup based on the state of its Actions
+    /// Updates the state of the ActionGroup based on the state of its actions.
     /// </summary>
     public void UpdateActionGroupState()
     {
@@ -134,7 +136,6 @@ public class ActionGroup
     private void SetDates()
     {
         var now = DateTime.UtcNow;
-
         switch (State)
         {
             case ActionGroupState.Started:
@@ -153,7 +154,7 @@ public class ActionGroup
     /// <summary>
     /// Sets the AssignedAgv of ActionGroup if not already assigned.
     /// </summary>
-    /// <param name="agvToAssign">The agv to assign</param>
+    /// <param name="agvToAssign">The agv to assign.</param>
     /// <exception cref="ActionGroupAlreadyAssignedException">If the action group was already assigned.</exception>
     public void Assign(Agv.Agv agvToAssign)
     {

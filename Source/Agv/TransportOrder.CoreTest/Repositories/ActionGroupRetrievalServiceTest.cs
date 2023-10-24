@@ -4,6 +4,7 @@ using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Graph;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -29,7 +30,7 @@ public class ActionGroupRetrievalServiceTest
     }
 
     [TestMethod]
-    public async Task GetActionGroupsWithTargetNodeTypeAsync_ValidData_GetsActionGroupReadModelEnrichedWithNodeTypes()
+    public async Task GetActionGroupsWithNodesAsync_ValidData_GetsActionGroupReadModelEnrichedWithNodeTypes()
     {
         await using var fixture = new ActionGroupRetrievalServiceTestFixture();
 
@@ -48,7 +49,7 @@ public class ActionGroupRetrievalServiceTest
     }
 
     [TestMethod]
-    public async Task GetActionGroupsWithTargetNodeTypeAsync_MultipleAgvGraphsUsingIdenticalNodes_GetsActionGroupReadModelEnrichedWithNodeTypes()
+    public async Task GetActionGroupsWithNodesAsync_MultipleAgvGraphsUsingIdenticalNodes_GetsActionGroupReadModelEnrichedWithNodeTypes()
     {
         await using var fixture = new ActionGroupRetrievalServiceTestFixture();
 
@@ -68,7 +69,7 @@ public class ActionGroupRetrievalServiceTest
     }
 
     [TestMethod]
-    public async Task GetActionGroupsWithTargetNodeTypeAsync_FilterByState_NoActionGroupInFilteredState_ReturnsEmptyList()
+    public async Task GetActionGroupsWithNodesAsync_FilterByState_NoActionGroupInFilteredState_ReturnsEmptyList()
     {
         await using var fixture = new ActionGroupRetrievalServiceTestFixture();
 
@@ -84,7 +85,7 @@ public class ActionGroupRetrievalServiceTest
     }
 
     [TestMethod]
-    public async Task GetActionGroupsWithTargetNodeTypeAsync_FilterByFromDate_NoActionGroupCreatedAfterFromDate_ReturnsEmptyList()
+    public async Task GetActionGroupsWithNodesAsync_FilterByFromDate_NoActionGroupCreatedAfterFromDate_ReturnsEmptyList()
     {
         await using var fixture = new ActionGroupRetrievalServiceTestFixture();
 
@@ -100,7 +101,7 @@ public class ActionGroupRetrievalServiceTest
     }
 
     [TestMethod]
-    public async Task GetActionGroupsWithTargetNodeTypeAsync_FilterByToDate_NoActionGroupCreatedBeforeToDate_ReturnsEmptyList()
+    public async Task GetActionGroupsWithNodesAsync_FilterByToDate_NoActionGroupCreatedBeforeToDate_ReturnsEmptyList()
     {
         await using var fixture = new ActionGroupRetrievalServiceTestFixture();
 
@@ -116,7 +117,7 @@ public class ActionGroupRetrievalServiceTest
     }
 
     [TestMethod]
-    public async Task GetActionGroupsWithTargetNodeTypeAsync_LimitReturnValueCount_ReturnsNumberOfActionGroupsGivenByLimit()
+    public async Task GetActionGroupsWithNodesAsync_LimitReturnValueCount_ReturnsNumberOfActionGroupsGivenByLimit()
     {
         await using var fixture = new ActionGroupRetrievalServiceTestFixture();
 
@@ -132,7 +133,7 @@ public class ActionGroupRetrievalServiceTest
     }
 
     [TestMethod]
-    public async Task GetActionGroupsWithTargetNodeTypeAsync_MultipleActionGroups_ReturnsOrderedActionGroups()
+    public async Task GetActionGroupsWithNodesAsync_MultipleActionGroupsDefaultSortedByAndSortingDirection_ReturnsSortedActionGroups()
     {
         await using var fixture = new ActionGroupRetrievalServiceTestFixture();
 
@@ -156,7 +157,139 @@ public class ActionGroupRetrievalServiceTest
     }
 
     [TestMethod]
-    public async Task GetCurrentAssignedActionGroupsWithTargetNodeTypeAsync_ValidData_ReturnsActionGroupsByAgvCorrelationId()
+    public async Task GetActionGroupsWithNodesAsync_SortedByCreatedDateAscending_ReturnsSortedActionGroups()
+    {
+        await using var fixture = new ActionGroupRetrievalServiceTestFixture();
+
+        var actionGroupCreatedFirst = AgvActionGenerator.GeneratePickDropActionGroup(createdDate: DateTime.UtcNow.AddDays(-1));
+        var actionGroupCreatedSecond = AgvActionGenerator.GeneratePickDropActionGroup(createdDate: DateTime.UtcNow.AddDays(1));
+
+        await fixture.AddRangeAsync(actionGroupCreatedFirst, actionGroupCreatedSecond);
+        await AddDefaultAgvGraph(fixture, "aGraph".ToGuid());
+
+        IReadOnlyCollection<ActionGroupReadModel> actionGroupReadModel = await fixture.ActionGroupRetrievalService
+            .GetActionGroupsWithNodesAsync(new List<ActionGroupState>(), null, null, 3, sortBy:SortBy.CreatedDate, sortDescending: false);
+
+        var orderedActionGroupCorrelationIds = new List<Guid>
+        {
+            actionGroupCreatedFirst.CorrelationId,
+            actionGroupCreatedSecond.CorrelationId
+        };
+        actionGroupReadModel.Select(a => a.CorrelationId).ToList().ShouldBe(orderedActionGroupCorrelationIds);
+    }
+
+    [TestMethod]
+    public async Task GetActionGroupsWithNodesAsync_SortedByCreatedDateDescending_ReturnsSortedActionGroups()
+    {
+        await using var fixture = new ActionGroupRetrievalServiceTestFixture();
+
+        var actionGroupCreatedFirst = AgvActionGenerator.GeneratePickDropActionGroup(createdDate: DateTime.UtcNow.AddDays(-1));
+        var actionGroupCreatedSecond = AgvActionGenerator.GeneratePickDropActionGroup(createdDate: DateTime.UtcNow.AddDays(1));
+
+        await fixture.AddRangeAsync(actionGroupCreatedFirst, actionGroupCreatedSecond);
+        await AddDefaultAgvGraph(fixture, "aGraph".ToGuid());
+
+        IReadOnlyCollection<ActionGroupReadModel> actionGroupReadModel = await fixture.ActionGroupRetrievalService
+            .GetActionGroupsWithNodesAsync(new List<ActionGroupState>(), null, null, 3, sortBy: SortBy.CreatedDate, sortDescending: true);
+
+        var orderedActionGroupCorrelationIds = new List<Guid>
+        {
+            actionGroupCreatedSecond.CorrelationId,
+            actionGroupCreatedFirst.CorrelationId
+        };
+        actionGroupReadModel.Select(a => a.CorrelationId).ToList().ShouldBe(orderedActionGroupCorrelationIds);
+    }
+
+    [TestMethod]
+    public async Task GetActionGroupsWithNodesAsync_SortedByCompletedDateAscending_ReturnsSortedActionGroups()
+    {
+        await using var fixture = new ActionGroupRetrievalServiceTestFixture();
+
+        var actionGroupCompletedFirst = AgvActionGenerator.GeneratePickDropActionGroup(completedDate: DateTime.UtcNow.AddDays(-1));
+        var actionGroupCompletedSecond = AgvActionGenerator.GeneratePickDropActionGroup(completedDate: DateTime.UtcNow.AddDays(1));
+
+        await fixture.AddRangeAsync(actionGroupCompletedFirst, actionGroupCompletedSecond);
+        await AddDefaultAgvGraph(fixture, "aGraph".ToGuid());
+
+        IReadOnlyCollection<ActionGroupReadModel> actionGroupReadModel = await fixture.ActionGroupRetrievalService
+            .GetActionGroupsWithNodesAsync(new List<ActionGroupState>(), null, null, 3, sortBy: SortBy.CreatedDate, sortDescending: false);
+
+        var orderedActionGroupCorrelationIds = new List<Guid>
+        {
+            actionGroupCompletedFirst.CorrelationId,
+            actionGroupCompletedSecond.CorrelationId
+        };
+        actionGroupReadModel.Select(a => a.CorrelationId).ToList().ShouldBe(orderedActionGroupCorrelationIds);
+    }
+
+    [TestMethod]
+    public async Task GetActionGroupsWithNodesAsync_SortedByCompletedDateDescending_ReturnsSortedActionGroups()
+    {
+        await using var fixture = new ActionGroupRetrievalServiceTestFixture();
+
+        var actionGroupCompletedFirst = AgvActionGenerator.GeneratePickDropActionGroup(completedDate: DateTime.UtcNow.AddDays(-1));
+        var actionGroupCompletedSecond = AgvActionGenerator.GeneratePickDropActionGroup(completedDate: DateTime.UtcNow.AddDays(1));
+
+        await fixture.AddRangeAsync(actionGroupCompletedFirst, actionGroupCompletedSecond);
+        await AddDefaultAgvGraph(fixture, "aGraph".ToGuid());
+
+        IReadOnlyCollection<ActionGroupReadModel> actionGroupReadModel = await fixture.ActionGroupRetrievalService
+            .GetActionGroupsWithNodesAsync(new List<ActionGroupState>(), null, null, 3, sortBy: SortBy.CreatedDate, sortDescending: true);
+
+        var orderedActionGroupCorrelationIds = new List<Guid>
+        {
+            actionGroupCompletedSecond.CorrelationId,
+            actionGroupCompletedFirst.CorrelationId
+        };
+        actionGroupReadModel.Select(a => a.CorrelationId).ToList().ShouldBe(orderedActionGroupCorrelationIds);
+    }
+
+    [TestMethod]
+    public async Task GetActionGroupsWithNodesAsync_SortedByStartedDateAscending_ReturnsSortedActionGroups()
+    {
+        await using var fixture = new ActionGroupRetrievalServiceTestFixture();
+
+        var actionGroupStartedFirst = AgvActionGenerator.GeneratePickDropActionGroup(startedDate: DateTime.UtcNow.AddDays(-1));
+        var actionGroupStartedSecond = AgvActionGenerator.GeneratePickDropActionGroup(startedDate: DateTime.UtcNow.AddDays(1));
+
+        await fixture.AddRangeAsync(actionGroupStartedFirst, actionGroupStartedSecond);
+        await AddDefaultAgvGraph(fixture, "aGraph".ToGuid());
+
+        IReadOnlyCollection<ActionGroupReadModel> actionGroupReadModel = await fixture.ActionGroupRetrievalService
+            .GetActionGroupsWithNodesAsync(new List<ActionGroupState>(), null, null, 3, sortBy: SortBy.CreatedDate, sortDescending: false);
+
+        var orderedActionGroupCorrelationIds = new List<Guid>
+        {
+            actionGroupStartedFirst.CorrelationId,
+            actionGroupStartedSecond.CorrelationId
+        };
+        actionGroupReadModel.Select(a => a.CorrelationId).ToList().ShouldBe(orderedActionGroupCorrelationIds);
+    }
+
+    [TestMethod]
+    public async Task GetActionGroupsWithNodesAsync_SortedByStartedDateDescending_ReturnsSortedActionGroups()
+    {
+        await using var fixture = new ActionGroupRetrievalServiceTestFixture();
+
+        var actionGroupStartedFirst = AgvActionGenerator.GeneratePickDropActionGroup(startedDate: DateTime.UtcNow.AddDays(-1));
+        var actionGroupStartedSecond = AgvActionGenerator.GeneratePickDropActionGroup(startedDate: DateTime.UtcNow.AddDays(1));
+
+        await fixture.AddRangeAsync(actionGroupStartedFirst, actionGroupStartedSecond);
+        await AddDefaultAgvGraph(fixture, "aGraph".ToGuid());
+
+        IReadOnlyCollection<ActionGroupReadModel> actionGroupReadModel = await fixture.ActionGroupRetrievalService
+            .GetActionGroupsWithNodesAsync(new List<ActionGroupState>(), null, null, 3, sortBy: SortBy.CreatedDate, sortDescending: true);
+
+        var orderedActionGroupCorrelationIds = new List<Guid>
+        {
+            actionGroupStartedSecond.CorrelationId,
+            actionGroupStartedFirst.CorrelationId
+        };
+        actionGroupReadModel.Select(a => a.CorrelationId).ToList().ShouldBe(orderedActionGroupCorrelationIds);
+    }
+
+    [TestMethod]
+    public async Task GetAssignedActionGroupsWithNodesAsync_ValidData_ReturnsActionGroupsByAgvCorrelationId()
     {
         await using var fixture = new ActionGroupRetrievalServiceTestFixture();
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
@@ -176,7 +309,7 @@ public class ActionGroupRetrievalServiceTest
     }
 
     [TestMethod]
-    public async Task EnrichActionGroupWithTargetNodeTypesAsync_ValidData_EnrichesActionGroupWithNodeType()
+    public async Task EnrichActionGroupWithNodesAsync_ValidData_EnrichesActionGroupWithNodeType()
     {
         await using var fixture = new ActionGroupRetrievalServiceTestFixture();
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
@@ -191,7 +324,7 @@ public class ActionGroupRetrievalServiceTest
     }
 
     [TestMethod]
-    public async Task GetActionGroupWithTargetNodeTypesAsync_ValidData_ReturnsActionGroupWithTargetNodeTypes()
+    public async Task GetActionGroupWithNodesAsync_ValidData_ReturnsActionGroupWithTargetNodeTypes()
     {
         await using var fixture = new ActionGroupRetrievalServiceTestFixture();
 
@@ -210,7 +343,7 @@ public class ActionGroupRetrievalServiceTest
     }
 
     [TestMethod]
-    public async Task GetActionGroupWithTargetNodeTypesAsync_UnknownActionGroup_ReturnsNull()
+    public async Task GetActionGroupWithNodesAsync_UnknownActionGroup_ReturnsNull()
     {
         await using var fixture = new ActionGroupRetrievalServiceTestFixture();
 

@@ -7,6 +7,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 using ActionGroup = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
+using SortDirection = Shouldly.SortDirection;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Profiles;
 

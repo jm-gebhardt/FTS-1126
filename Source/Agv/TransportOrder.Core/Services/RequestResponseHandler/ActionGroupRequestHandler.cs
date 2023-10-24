@@ -50,7 +50,7 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
     public async Task Consume(ConsumeContext<GetActionGroups> context)
     {
         var request = context.Message;
-        IReadOnlyCollection<ActionGroupReadModel> actionGroups = await _retrievalService.GetActionGroupsWithNodesAsync(request.States, request.FromDate, request.ToDate, request.Limit);
+        IReadOnlyCollection<ActionGroupReadModel> actionGroups = await _retrievalService.GetActionGroupsWithNodesAsync(request.States, request.FromDate, request.ToDate, request.Limit, request.SortBy, request.SortDescending);
 
         await context.RespondAsync(new GotActionGroups(actionGroups));
     }

@@ -34,14 +34,17 @@ public static class AgvActionGenerator
         }
         return parkAction;
     }
-
+    
     public static ActionGroup GeneratePickDropActionGroup(
         ActionState pickActionState = ActionState.Created,
         ActionState dropActionState = ActionState.Created,
         string? source = null,
         string? destination = null,
         Guid? assignedAgv = null,
-        int partial = 0
+        int partial = 0,
+        DateTime createdDate = default, 
+        DateTime? completedDate = null, 
+        DateTime? startedDate = null
     )
     {
         const string orderId = "orderId";
@@ -73,7 +76,18 @@ public static class AgvActionGenerator
             AssignedAgv = assignedAgv
         };
         actionGroup.UpdateActionGroupState();
-
+        if (createdDate != default)
+        {
+            actionGroup.GetType().GetProperty(nameof(ActionGroup.CreatedDate))!.SetValue(actionGroup, createdDate);
+        }
+        if (startedDate != null)
+        {
+            actionGroup.GetType().GetProperty(nameof(ActionGroup.StartedDate))!.SetValue(actionGroup, startedDate);
+        }
+        if (completedDate != null)
+        {
+            actionGroup.GetType().GetProperty(nameof(ActionGroup.CompletedDate))!.SetValue(actionGroup, completedDate);
+        }
         return actionGroup;
     }
 
