@@ -4,7 +4,6 @@ using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.EventHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Configurations;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Profiles;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
@@ -49,12 +48,6 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixtureWithSche
     public AgvEventHandlerTestFixture()
     {
         Build();
-    }
-
-    public MassTransitConsumerTestFixtureWithScheduler<AgvEventHandler> WithoutAgv()
-    {
-        _agvRepository.Setup(a => a.GetAgvAsync(It.IsAny<Guid>())).Throws(new AgvNotFoundException(It.IsAny<Guid>()));
-        return this;
     }
 
     public void AddAgv(TransportOrder.Domain.Models.Agv.Agv agv)

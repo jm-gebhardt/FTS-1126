@@ -148,6 +148,16 @@ public class ActionCommandHandler :
         }
         _logger.LogDebug("Trying to start action {ActionId} with type {ActionType} for agv {CorrelationId}.", action.CorrelationId, Enum.GetName(action.ActionType), assignedAgvId);
 
+        if (actionMessageContent.CorrelationId != action.CorrelationId)
+        {
+            _logger.LogWarning("Action in message for which nodes are to be selected {ActionInMessage} is not the first not started action {NotStartedAction}.", actionMessageContent.CorrelationId, action.CorrelationId);
+        }
+
+        if (assignedAgv.CorrelationId != actionGroup!.AssignedAgv!)
+        {
+            _logger.LogWarning("Agv in message for which nodes are to be selected {AgvInMessage} is not the agv assigned to the group {AgvAssignedToGroup}.", assignedAgvId, actionGroup.AssignedAgv!);
+        }
+
         await SelectNodesForAgvAction(context, action, assignedAgv, cancellationToken);
     }
 
@@ -224,6 +234,7 @@ public class ActionCommandHandler :
 
         if (!canStartNewAction)
         {
+            _logger.LogWarning("Can not start new action group for agv {Agv} (is locked {IsLocked}/ isCarryingLoad {IsCarryingLoad}/ needsCharging {NeedsCharging}).", agv.CorrelationId, agv.IsLocked, isCarryingLoad, needsCharging);
             return;
         }
 
@@ -233,6 +244,7 @@ public class ActionCommandHandler :
             if (actionGroup == null)
             {
                 _logger.LogDebug("There is no next action available for agv with CorrelationId {AgvCorrelationId}.", agv.CorrelationId);
+                await context.Publish(new AgvCanStartIdleAction(agv.CorrelationId), cancellationToken);
                 return;
             }
             var action = actionGroup.Actions.First();
@@ -386,6 +398,31 @@ public class ActionCommandHandler :
             }
             domainActionGroup.InvalidateActionGroup();
         }
+        Domain.Models.Agv.Agv? agv = null;
+
+        if (isValid)
+        {
+            if (actionGroup.AssignedAgv != null)
+            {
+                var assignedAgv = await _agvRepository.GetAgvAsync(actionGroup.AssignedAgv!.Value);
+                await SelectNodesForAgvAction(context, domainActionGroup.FirstNotStartedAction!, assignedAgv, cancellationToken);
+                await context.RespondAsync(new Success());
+                return;
+            }
+
+            var agvSettings = _settingsProvider.GetSettings();
+            await _actionManagerSemaphoreProvider.ExecuteLockedAsync(async () =>
+            {
+                ICollection<Domain.Models.Agv.Agv> allReadyAgvs = await _agvRepository.GetReadyAgvsAsync();
+                ICollection<Domain.Models.Agv.Agv> readyAgvs = allReadyAgvs.Where(a => !(a.CurrentAgvState == AgvState.Charging &&
+                                                                                         a.AgvStatus!.BatteryCharge < agvSettings.BatteryLevelGood)).ToList();
+                agv = await _chooseAgvActionGroupService.GetAgvAsync(domainActionGroup, readyAgvs.ToList(), cancellationToken);
+            }, cancellationToken);
+            if (agv != null)
+            {
+                domainActionGroup.Assign(agv);
+            }
+        }
 
         _logger.LogDebug("Adding ActionGroup with CorrelationId: {ActionGroupId}.", actionGroup.CorrelationId);
         await _actionGroupRegistry.AddAsync(domainActionGroup);
@@ -399,29 +436,11 @@ public class ActionCommandHandler :
             await context.Publish(new ActionGroupInvalid(actionGroup.CorrelationId, actionGroupMessageContent, validationFailureReasons), cancellationToken);
             return;
         }
-
-        if (actionGroup.AssignedAgv != null)
-        {
-            var assignedAgv = await _agvRepository.GetAgvAsync(actionGroup.AssignedAgv!.Value);
-            await SelectNodesForAgvAction(context, domainActionGroup.FirstNotStartedAction!, assignedAgv, cancellationToken);
-            await context.RespondAsync(new Success());
-            return;
-        }
-
-        var agvSettings = _settingsProvider.GetSettings();
-        Domain.Models.Agv.Agv? agv = null;
-        await _actionManagerSemaphoreProvider.ExecuteLockedAsync(async () =>
-        {
-            ICollection<Domain.Models.Agv.Agv> allReadyAgvs = await _agvRepository.GetReadyAgvsAsync();
-            ICollection<Domain.Models.Agv.Agv> readyAgvs = allReadyAgvs.Where(a => !(a.CurrentAgvState == AgvState.Charging &&
-                                                                                     a.AgvStatus!.BatteryCharge < agvSettings.BatteryLevelGood)).ToList();
-            agv = await _chooseAgvActionGroupService.GetAgvAsync(domainActionGroup, readyAgvs.ToList(), cancellationToken);
-        }, cancellationToken);
+     
         if (agv != null)
         {
             var action = domainActionGroup.FirstNotStartedAction;
-            await _actionGroupRegistry.UpdateActionAndGroupStateAsync(action!, agv, action!.State);
-            await SelectNodesForAgvAction(context, action, agv, cancellationToken);
+            await SelectNodesForAgvAction(context, action!, agv, cancellationToken);
         }
     }
 

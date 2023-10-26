@@ -64,6 +64,7 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixtureWithSc
         AgvRepository.Setup(r => r.UpdateAgvAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>()))
             .ReturnsAsync((TransportOrder.Domain.Models.Agv.Agv a) => agvs.Any(agv => agv.CorrelationId == a.CorrelationId))
             .Verifiable();
+        AgvRepository.Setup(r => r.AddAgvAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>())).Verifiable();
     }
 
     public void SetupAgv(bool hasPendingActions = false, bool graphExists = true)

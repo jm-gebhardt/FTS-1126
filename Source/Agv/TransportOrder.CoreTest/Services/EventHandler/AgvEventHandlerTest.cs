@@ -1,9 +1,7 @@
 ﻿using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
-using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.EventHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
@@ -37,22 +35,6 @@ public class AgvEventHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_AgvNeedsCharging_AgvIsNotCarryingLoadDoesNotNeedsChargingNeedsMaintenance_PublishesCreateMaintenanceActionGroup()
-    {
-        var fixture = new AgvEventHandlerTestFixture();
-
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "nodeId");
-        agv.MarkAgvForMaintenance();
-        fixture.AddAgv(agv);
-
-        var agvNeedsCharging = new AgvNeedsCharging(agv.CorrelationId);
-        await fixture.TestHarness!.Bus.Publish(agvNeedsCharging);
-
-        (await fixture.ConsumerHarness!.Consumed.Any<AgvNeedsCharging>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<CreateMaintenanceActionGroup>()).ShouldBeTrue();
-    }
-
-    [TestMethod]
     public async Task Consume_AgvNeedsCharging_AgvIsLocked_PublishesTryStartManualAction()
     {
         var fixture = new AgvEventHandlerTestFixture();
@@ -65,38 +47,6 @@ public class AgvEventHandlerTest
 
         (await fixture.ConsumerHarness!.Consumed.Any<AgvNeedsCharging>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<TryStartManualAction>()).ShouldBeTrue();
-    }
-
-    [TestMethod]
-    public async Task Consume_AgvNeedsCharging_AgvCarryingLoad_PublishesTryStartNextActionInActionGroup()
-    {
-        var fixture = new AgvEventHandlerTestFixture();
-
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "nodeId");
-
-        fixture.AddAgv(agv);
-        fixture.AgvHasUnfinishedDropAction(agv.CorrelationId);
-        var agvNeedsCharging = new AgvNeedsCharging(agv.CorrelationId);
-        await fixture.TestHarness!.Bus.Publish(agvNeedsCharging);
-
-        (await fixture.ConsumerHarness!.Consumed.Any<AgvNeedsCharging>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<TryStartNextActionInActionGroup>()).ShouldBeTrue();
-    }
-
-    [TestMethod]
-    public async Task Consume_AgvNeedsCharging_AgvIsNotCarryingLoadDoesNotNeedsChargingOrNeedMaintenance_PublishesTryStartNewActionGroup()
-    {
-        var fixture = new AgvEventHandlerTestFixture();
-
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "nodeId");
-
-        fixture.AddAgv(agv);
-
-        var agvNeedsCharging = new AgvNeedsCharging(agv.CorrelationId);
-        await fixture.TestHarness!.Bus.Publish(agvNeedsCharging);
-
-        (await fixture.ConsumerHarness!.Consumed.Any<AgvNeedsCharging>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<TryStartNewActionGroup>()).ShouldBeTrue();
     }
 
     [TestMethod]
@@ -313,17 +263,6 @@ public class AgvEventHandlerTest
         (await fixture.ConsumerHarness!.Consumed.Any<AgvMapReceived>()).ShouldBeTrue();
 
         (await fixture.TestHarness!.Published.Any<SaveMap>(f => f.Context.Message == new SaveMap(map, map.CorrelationId))).ShouldBeTrue();
-    }
-
-    [TestMethod]
-    public async Task Consume_AgvStatusReceived_NoAgvInRepository_PublishesCreateAgv()
-    {
-        MassTransitConsumerTestFixtureWithScheduler<AgvEventHandler> fixture = new AgvEventHandlerTestFixture().WithoutAgv();
-        const string agvId = "AGV001";
-
-        await fixture.TestHarness!.Bus.Publish(new AgvStatusReceived(agvId.ToGuid(), agvId, new AgvStatus(agvId.ToGuid(), null, false, true, 100, false, false, "nodeId")));
-        (await fixture.ConsumerHarness!.Consumed.Any<AgvStatusReceived>()).ShouldBeTrue();
-        (await fixture.TestHarness!.Published.Any<CreateAgv>()).ShouldBeTrue();
     }
 
     [TestMethod]

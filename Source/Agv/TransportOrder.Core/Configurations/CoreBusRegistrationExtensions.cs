@@ -50,9 +50,6 @@ public static class CoreBusRegistrationExtensions
         busRegistrationConfigurator.AddConsumer<AgvPositionReceivedEventHandler>();
         busRegistrationConfigurator.AddConsumer<AgvCommandHandler>(c =>
         {
-            var createAgvPartitioner = c.CreatePartitioner(PartitionCount);
-            createAgvPartitioner.PartitionMessageById<CreateAgv, AgvCommandHandler>(c);
-
             var partitioner = c.CreatePartitioner(PartitionCount);
             partitioner.PartitionMessageById<UpdateErrorStatus, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<StartCharging, AgvCommandHandler>(c);

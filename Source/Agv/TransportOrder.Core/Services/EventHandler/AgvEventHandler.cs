@@ -1,7 +1,6 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
@@ -73,8 +72,26 @@ public class AgvEventHandler :
             _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} is not available (charging ignored).", agvCorrelationId);
             return;
         }
-        _logger.LogDebug("Assigning action for agv with CorrelationId: {AgvCorrelationId} because it is ready (and needs charging).", agvCorrelationId);
-        await PublishPendingActions(context, agv);
+        _logger.LogDebug("Try assigning charging action for agv with CorrelationId: {AgvCorrelationId} because it is ready (and needs charging).", agvCorrelationId);
+        await _semaphoreProvider.ExecuteLockedAsync(async () =>
+        {
+            if (agv.IsLocked)
+            {
+                await context.Publish(new TryStartManualAction(agv.CorrelationId));
+                return;
+            }
+            var agvSettings = _settingsProvider.GetSettings();
+            bool needsCharging = agv.CheckNeedsCharging(agvSettings);
+            bool isCarryingLoad = await _actionGroupRegistry.HasUnfinishedDropActionsAsync(agv.CorrelationId);
+
+            bool shouldCharge = !isCarryingLoad && needsCharging;
+
+            if (shouldCharge)
+            {
+                _logger.LogInformation("Create charging group for agv {CorrelationId}.", agv.CorrelationId);
+                await context.Publish(new CreateChargingActionGroup(agv.CorrelationId));
+            }
+        }, context.CancellationToken);
     }
 
     /// <summary>
@@ -179,16 +196,7 @@ public class AgvEventHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<AgvStatusReceived> context)
     {
-        _logger.LogDebug("Received status update for {CorrelationId}", context.Message.CorrelationId);
-        try
-        {
-            await _agvRepository.GetAgvAsync(context.Message.CorrelationId);
-            await context.Publish(new UpdateAgvStatus(context.Message.CorrelationId, context.Message.AgvId, context.Message.AgvStatus));
-        }
-        catch (AgvNotFoundException)
-        {
-            await context.Publish(new CreateAgv(context.Message.CorrelationId, context.Message.AgvId, context.Message.AgvStatus));
-        }
+       await context.Publish(new UpdateAgvStatus(context.Message.CorrelationId, context.Message.AgvId, context.Message.AgvStatus));
     }
 
     /// <summary>

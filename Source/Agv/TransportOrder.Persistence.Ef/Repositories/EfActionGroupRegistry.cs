@@ -219,7 +219,7 @@ public class EfActionGroupRegistry : IActionGroupRegistry
 
         var actionToUpdate = actionGroup.Actions.Single(a => a.CorrelationId == action.CorrelationId);
         context.Entry(actionToUpdate).CurrentValues.SetValues(action);
-        if (agv != null)
+        if (agv != null && actionGroup.AssignedAgv == null)
         {
             actionGroup.Assign(agv);
         }
