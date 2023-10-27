@@ -15,6 +15,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Routing;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles;
 using Gebhardt.StoreWare.Agv.TransportOrder.Routing.Models;
+using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using ActionGroup = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
@@ -50,6 +51,28 @@ public class ActionCommandHandlerTestFixture : MassTransitConsumerTestFixture<Ac
         collection.AddTransient(_ => _actionGroupValidationService.Object);
         collection.AddTransient(_ => _settingsProvider.Object);
         collection.AddTransient(_ => _actionGroupRetrievalService.Object);
+    }
+
+    public ActionCommandHandlerTestFixture(TimeSpan? inactivityTimeout = null,Action<IBusRegistrationConfigurator> ? busRegistrationConfigurator = null,
+        Action<IBusRegistrationContext, IInMemoryBusFactoryConfigurator>? inMemoryConfiguration = null,
+        params Action<IServiceCollection>[] services) : base(busRegistrationConfigurator, inMemoryConfiguration, services)
+    {
+        _settingsProvider.Setup(s => s.GetSettings()).Returns(new AgvSettings()
+        {
+            BatteryLevelCritical = 10,
+            BatteryLevelGood = 80,
+            BatteryLevelFull = 100,
+            BatteryLevelLow = 20,
+            AgvOfflineTimeoutMsWhileBusy = 10000,
+            AgvOfflineTimeoutMsWhileIdle = 10000
+        });
+        Build();
+        if (inactivityTimeout != null)
+        {
+            TestHarness!.TestInactivityTimeout = (TimeSpan)inactivityTimeout;
+        }
+        _actionGroupRegistry.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync((ActionGroup?)null);
+        _actionGroupRegistry.Setup(x => x.AddAsync(It.IsAny<ActionGroup>())).Verifiable();
     }
 
     public ActionCommandHandlerTestFixture(TimeSpan? inactivityTimeout = null)
@@ -124,5 +147,14 @@ public class ActionCommandHandlerTestFixture : MassTransitConsumerTestFixture<Ac
     {
         var mapper = MappingHelper.GetMapper(new ActionGroupProfile(), new AgvProfile());
         return mapper;
+    }
+
+    public async Task<Response<TResult>> GetResponseAsync<TResult, TRequest>(TRequest request)
+        where TResult : class
+        where TRequest : class
+    {
+        IRequestClient<TRequest> client = TestHarness!.Bus!.CreateRequestClient<TRequest>();
+        Response<TResult> response = await client.GetResponse<TResult>(request);
+        return response;
     }
 }

@@ -79,7 +79,7 @@ public class AgvController : Controller
     /// Get agv.
     /// </summary>
     /// <response code="200">Ok</response>
-    /// <response code="404">AGV with given correlationId doesn't exist</response>
+    /// <response code="404">AGV with given correlationId not found.</response>
     [HttpGet]
     [Route("/agv/{correlationId}")]
     public async Task<ActionResult<AgvDto>> GetAgv(Guid correlationId)
@@ -94,7 +94,7 @@ public class AgvController : Controller
     /// </summary>
     /// <response code="200">Ok</response>
     /// <response code="204">No content</response>
-    /// <response code="404">Not found</response>
+    /// <response code="404">AGV with given correlationId not found</response>
     [HttpGet]
     [Route("/agv/{correlationId}/graph")]
     public async Task<ActionResult<GraphDto>> GetAgvGraph(Guid correlationId)
@@ -109,7 +109,7 @@ public class AgvController : Controller
     /// </summary>
     /// <response code="200">Ok</response>
     /// <response code="204">No Content</response>
-    /// <response code="404">Not found</response>
+    /// <response code="404">AGV with given correlationId not found.</response>
     [HttpGet]
     [Route("/agv/{correlationId:guid}/data")]
     public async Task<ActionResult<AgvDataDto>> GetAgvData(Guid correlationId)
@@ -126,7 +126,7 @@ public class AgvController : Controller
     /// <returns></returns>
     /// <response code="200">AgvRoute</response>
     /// <response code="204">No Agv or running ActionGroup existing</response>
-    /// <response code="404">Not found</response>
+    /// <response code="404">AGV with given correlationId not found.</response>
     [HttpGet]
     [Route("/agv/{correlationId:guid}/route")]
     public async Task<ActionResult<CurrentRouteDto?>> GetAgvRoute(Guid correlationId)
@@ -140,7 +140,7 @@ public class AgvController : Controller
     /// Get agv position.
     /// </summary>
     /// <response code="200">Ok</response>
-    /// <response code="404">Not found</response>
+    /// <response code="404">AGV with given correlationId not found.</response>
     [HttpGet]
     [Route("/agv/{correlationId:guid}/position")]
     public async Task<ActionResult<AgvPositionStatusDto>> GetAgvPosition(Guid correlationId)
@@ -184,7 +184,7 @@ public class AgvController : Controller
     /// Accept discovered AGV to allow it to be assigned to transport orders.
     /// </summary>
     /// <response code="200">Ok: AGV status was successfully set to Idle</response>
-    /// <response code="404">Not Found: AGV with the given correlationId does not exist</response>
+    /// <response code="404">AGV with given correlationId not found.</response>
     /// <response code="409">Conflict: AGV is not in state 'Discovered'</response>
     [HttpPatch]
     [Route("/agv/{correlationId:guid}/accept")]
@@ -215,7 +215,7 @@ public class AgvController : Controller
     /// Unlock AGV to allow it to be assigned to transport orders.
     /// </summary>
     /// <response code="200">Ok: AGV was successfully unlocked</response>
-    /// <response code="404">Not Found: AGV with the given correlationId does not exist</response>
+    /// <response code="404">AGV with given correlationId not found.</response>
     [HttpPatch]
     [Route("/agv/{correlationId:guid}/unlock")]
     public async Task<ActionResult> UnlockAgv(Guid correlationId)
@@ -249,7 +249,7 @@ public class AgvController : Controller
     /// Emit RequestAgvData message.
     /// </summary>
     /// <response code="200">Ok: Telegram was successfully emitted</response>
-    /// <response code="404">Not Found: AGV with the given correlationId does not exist</response>
+    /// <response code="404">AGV with given correlationId not found.</response>
     [HttpPatch]
     [Route("/agv/{correlationId:guid}/emitRequestData")]
     public async Task<ActionResult> EmitRequestData(Guid correlationId)
@@ -262,7 +262,7 @@ public class AgvController : Controller
     /// Emit RequestAgvGraph message.
     /// </summary>
     /// <response code="200">Ok: Telegram was successfully emitted</response>
-    /// <response code="404">Not Found: AGV with the given correlationId does not exist</response>
+    /// <response code="404">AGV with given correlationId not found.</response>
     [HttpPatch]
     [Route("/agv/{correlationId:guid}/emitRequestGraph")]
     public async Task<ActionResult> EmitRequestGraph(Guid correlationId)
@@ -275,7 +275,7 @@ public class AgvController : Controller
     /// Move Agv manually to a specific node. 
     /// </summary>
     /// <response code="200">Ok: The ActionGroup for the move was created and is going to be processed</response>
-    /// <response code="404">Not Found: Agv with the given correlationId does not exist</response>
+    /// <response code="404">AGV with given correlationId not found.</response>
     /// <returns>The CorrelationId of the created ActionGroup</returns>
     [HttpPatch]
     [Route("/agv/{correlationId:guid}/move")]
@@ -295,7 +295,7 @@ public class AgvController : Controller
     /// </summary>
     /// <param name="correlationId">The correlation id of the agv.</param>
     /// <response code="200">Ok: The agv was set to idle.</response>
-    /// <response code="404">Not Found: An agv with the given correlationId does not exist</response>
+    /// <response code="404">AGV with given correlationId not found.</response>
     /// <returns>The correlation id of the agv.</returns>
     [HttpPatch]
     [Route("/agv/{correlationId:guid}/setForceIdle")]

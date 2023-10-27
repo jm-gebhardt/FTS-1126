@@ -3,9 +3,11 @@ using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.ActionGroup;
+using MassTransit;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
@@ -186,6 +188,20 @@ public class ActionCommandHandlerTest
     }
 
     [TestMethod]
+    public async Task Consume_CancelActionGroup_ValidData_RespondsActionGroupCancelled()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv.CorrelationId);
+        var fixture = new ActionCommandHandlerTestFixture(busRegistrationConfigurator: b => b.AddRequestClient<CancelActionGroup>());
+        fixture.AddAgv(agv);
+        fixture.AddActionGroup(actionGroup);
+
+        Response<ActionGroupCancelled> response = await fixture.GetResponseAsync<ActionGroupCancelled, CancelActionGroup>(new CancelActionGroup(actionGroup.CorrelationId));
+        response.Message.CorrelationId.ShouldBe(actionGroup.CorrelationId);
+        (await fixture.TestHarness!.Published.Any<ActionGroupCancelled>()).ShouldBeTrue();
+    }
+
+    [TestMethod]
     public async Task Consume_CancelActionGroup_UnknownActionGroup_PublishesActionGroupCancelFailed()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
@@ -198,6 +214,20 @@ public class ActionCommandHandlerTest
         (await fixture.ConsumerHarness!.Consumed.Any<CancelActionGroup>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<ActionGroupCancelled>()).ShouldBeFalse();
         (await fixture.TestHarness.Published.Any<ActionGroupCancelFailed>()).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task Consume_CancelActionGroup_UnknownActionGroup_RespondsActionGroupCancelFailed()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var actionGroup = AgvActionGenerator.GenerateChargeActionGroup();
+        var fixture = new ActionCommandHandlerTestFixture();
+        fixture.AddAgv(agv);
+
+        Response<ActionGroupCancelFailed> response = await fixture.GetResponseAsync<ActionGroupCancelFailed, CancelActionGroup>(new CancelActionGroup(actionGroup.CorrelationId));
+        response.Message.CorrelationId.ShouldBe(actionGroup.CorrelationId);
+        response.Message.ErrorCode.ShouldBe(HostOrderCancelFailedErrorCode.OrderDoesNotExist);
+        (await fixture.TestHarness!.Published.Any<ActionGroupCancelFailed>()).ShouldBeTrue();
     }
 
     [TestMethod]
@@ -218,6 +248,27 @@ public class ActionCommandHandlerTest
         await fixture.TestHarness!.Bus.Publish(command);
         (await fixture.ConsumerHarness!.Consumed.Any<CancelActionGroup>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<ActionGroupCancelled>()).ShouldBeFalse();
+        (await fixture.TestHarness.Published.Any<ActionGroupCancelFailed>()).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    [DataRow(nameof(ActionGroupState.Started), HostOrderCancelFailedErrorCode.OrderAlreadyStarted)]
+    [DataRow(nameof(ActionGroupState.Completed), HostOrderCancelFailedErrorCode.OrderAlreadyFinished)]
+    [DataRow(nameof(ActionGroupState.Failed), HostOrderCancelFailedErrorCode.OrderAlreadyFailed)]
+    [DataRow(nameof(ActionGroupState.Canceled), HostOrderCancelFailedErrorCode.OrderAlreadyCancelled)]
+    public async Task Consume_CancelActionGroup_InvalidState_RespondsActionGroupCancelFailed(string invalidState, HostOrderCancelFailedErrorCode error)
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var actionGroup = AgvActionGenerator.GenerateChargeActionGroup();
+        actionGroup.GetType().GetProperty(nameof(actionGroup.State))!.SetValue(actionGroup, Enum.Parse<ActionGroupState>(invalidState));
+        var fixture = new ActionCommandHandlerTestFixture();
+        fixture.AddAgv(agv);
+        fixture.AddActionGroup(actionGroup);
+
+      Response<ActionGroupCancelFailed> response = await fixture.GetResponseAsync<ActionGroupCancelFailed, CancelActionGroup>(new CancelActionGroup(actionGroup.CorrelationId));
+        response.Message.CorrelationId.ShouldBe(actionGroup.CorrelationId);
+        response.Message.ErrorCode.ShouldBe(error);
+        (await fixture.TestHarness!.Published.Any<ActionGroupCancelled>()).ShouldBeFalse();
         (await fixture.TestHarness.Published.Any<ActionGroupCancelFailed>()).ShouldBeTrue();
     }
 

@@ -2,6 +2,7 @@
 using FluentValidation;
 using FluentValidation.Results;
 using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
+using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
@@ -487,7 +488,8 @@ public class ActionCommandHandler :
 
         if (actionGroup == null)
         {
-            await context.Publish(new ActionGroupCancelFailed(null!, actionGroupId, HostOrderCancelFailedErrorCode.OrderDoesNotExist));
+            await context.PublishAndRespond(new ActionGroupCancelFailed(null!, actionGroupId, HostOrderCancelFailedErrorCode.OrderDoesNotExist));
+          
             return;
         }
         var actionGroupMessageContent = _mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup);
@@ -495,24 +497,24 @@ public class ActionCommandHandler :
         switch (actionGroup.State)
         {
             case ActionGroupState.Started:
-                await context.Publish(new ActionGroupCancelFailed(actionGroupMessageContent, actionGroup.CorrelationId, HostOrderCancelFailedErrorCode.OrderAlreadyStarted));
+                await context.PublishAndRespond(new ActionGroupCancelFailed(actionGroupMessageContent, actionGroup.CorrelationId, HostOrderCancelFailedErrorCode.OrderAlreadyStarted));
                 return;
 
             case ActionGroupState.Completed:
-                await context.Publish(new ActionGroupCancelFailed(actionGroupMessageContent, actionGroup.CorrelationId, HostOrderCancelFailedErrorCode.OrderAlreadyFinished));
+                await context.PublishAndRespond(new ActionGroupCancelFailed(actionGroupMessageContent, actionGroup.CorrelationId, HostOrderCancelFailedErrorCode.OrderAlreadyFinished));
                 return;
 
             case ActionGroupState.Failed:
-                await context.Publish(new ActionGroupCancelFailed(actionGroupMessageContent, actionGroup.CorrelationId, HostOrderCancelFailedErrorCode.OrderAlreadyFailed));
+                await context.PublishAndRespond(new ActionGroupCancelFailed(actionGroupMessageContent, actionGroup.CorrelationId, HostOrderCancelFailedErrorCode.OrderAlreadyFailed));
                 return;
 
             case ActionGroupState.Canceled:
-                await context.Publish(new ActionGroupCancelFailed(actionGroupMessageContent, actionGroup.CorrelationId, HostOrderCancelFailedErrorCode.OrderAlreadyCancelled));
+                await context.PublishAndRespond(new ActionGroupCancelFailed(actionGroupMessageContent, actionGroup.CorrelationId, HostOrderCancelFailedErrorCode.OrderAlreadyCancelled));
                 return;
         }
        
         actionGroup = await _actionGroupRegistry.UpdateActionAndGroupStateAsync(actionGroup.FirstNotStartedAction!, null, ActionState.Canceled);
-        await context.Publish(new ActionGroupCancelled(actionGroupMessageContent, actionGroup.CorrelationId, DateTime.UtcNow));
+        await context.PublishAndRespond(new ActionGroupCancelled(actionGroupMessageContent, actionGroup.CorrelationId, DateTime.UtcNow));
     }
 
     private async Task SelectNodesForAgvAction(IPublishEndpoint context, AgvAction action, Domain.Models.Agv.Agv assignedAgv, CancellationToken cancellationToken)

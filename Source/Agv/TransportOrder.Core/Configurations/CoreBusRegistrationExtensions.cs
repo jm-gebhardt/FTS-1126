@@ -102,6 +102,7 @@ public static class CoreBusRegistrationExtensions
             c.Message<TryStartManualAction>(x =>
                 x.UsePartitioner(partitioner, p => p.Message.AgvCorrelationId));
         });
+        busRegistrationConfigurator.AddRequestClient<CancelActionGroup>();
     }
 
     /// <summary>

@@ -53,7 +53,7 @@ public class MapController : Controller
     /// </summary>
     /// <param name="correlationId">The map correlation id.</param>
     /// <response code="200">Ok</response>
-    /// <response code="404">Map with given correlationId doesn't exist</response>
+    /// <response code="404">Map with given correlationId not found.</response>
     [HttpGet]
     [Route("/map/{correlationId:guid}")]
     public async Task<ActionResult<MapDto>> GetMap(Guid correlationId)
@@ -68,7 +68,7 @@ public class MapController : Controller
     /// </summary>
     /// <param name="correlationId">The map correlation id.</param>
     /// <response code="200">Ok</response>
-    /// <response code="404">Map with given correlationId doesn't exist</response>
+    /// <response code="404">Map with given correlationId not found.</response>
     [HttpGet]
     [Route("/map/{correlationId:guid}/graph")]
     public async Task<ActionResult<GraphDto>> GetMapGraph(Guid correlationId)

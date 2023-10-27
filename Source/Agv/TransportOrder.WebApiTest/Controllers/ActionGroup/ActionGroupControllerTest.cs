@@ -1,9 +1,12 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.CommandHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.AgvActions;
 using Microsoft.AspNetCore.Mvc;
@@ -47,5 +50,109 @@ public class ActionGroupControllerTest
 
         var controller = fixture.Controller;
         await MediatorShould.ThrowRequestExceptionAsync<ActionGroupNotFoundException>(async () => await controller.GetActionGroup(correlationId));
+    }
+
+    [TestMethod]
+    public async Task CancelActionGroup_ValidData_ReturnsOk()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler> fixture = new ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler>()
+            .Setup()
+            .AddActionGroup(actionGroup)
+            .Build();
+
+        var controller = fixture.Controller;
+
+        var response = await controller.CancelActionGroup(actionGroup.CorrelationId);
+        var result = response as OkResult;
+        result.ShouldNotBeNull();
+    }
+
+    [TestMethod]
+    public async Task CancelActionGroup_UnknownActionGroup_ReturnsNotFound()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler> fixture = new ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler>()
+            .Setup()
+            .AddActionGroup(actionGroup)
+            .Build();
+
+        var controller = fixture.Controller;
+
+        var response = await controller.CancelActionGroup(Guid.NewGuid());
+        var result = response as NotFoundResult;
+        result.ShouldNotBeNull();
+    }
+
+    [TestMethod]
+    public async Task CancelActionGroup_ActionGroupStarted_ReturnsBadRequest()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(ActionGroupState.Started);
+
+        ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler> fixture = new ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler>()
+            .Setup()
+            .AddActionGroup(actionGroup)
+            .Build();
+
+        var controller = fixture.Controller;
+
+        var response = await controller.CancelActionGroup(actionGroup.CorrelationId);
+        var result = response as BadRequestObjectResult;
+        result.ShouldNotBeNull();
+        result.Value.ShouldBe(HostOrderCancelFailedErrorCode.OrderAlreadyStarted);
+    }
+
+    [TestMethod]
+    public async Task CancelActionGroup_ActionGroupCompleted_ReturnsBadRequest()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(ActionGroupState.Completed);
+
+        ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler> fixture = new ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler>()
+            .Setup()
+            .AddActionGroup(actionGroup)
+            .Build();
+
+        var controller = fixture.Controller;
+
+        var response = await controller.CancelActionGroup(actionGroup.CorrelationId);
+        var result = response as BadRequestObjectResult;
+        result.ShouldNotBeNull();
+        result.Value.ShouldBe(HostOrderCancelFailedErrorCode.OrderAlreadyFinished);
+    }
+
+    [TestMethod]
+    public async Task CancelActionGroup_ActionGroupFailed_ReturnsBadRequest()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(ActionGroupState.Failed);
+
+        ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler> fixture = new ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler>()
+            .Setup()
+            .AddActionGroup(actionGroup)
+            .Build();
+
+        var controller = fixture.Controller;
+
+        var response = await controller.CancelActionGroup(actionGroup.CorrelationId);
+        var result = response as BadRequestObjectResult;
+        result.ShouldNotBeNull();
+        result.Value.ShouldBe(HostOrderCancelFailedErrorCode.OrderAlreadyFailed);
+    }
+
+    [TestMethod]
+    public async Task CancelActionGroup_ActionGroupCancelled_ReturnsBadRequest()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(ActionGroupState.Canceled);
+
+        ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler> fixture = new ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler>()
+            .Setup()
+            .AddActionGroup(actionGroup)
+            .Build();
+
+        var controller = fixture.Controller;
+
+        var response = await controller.CancelActionGroup(actionGroup.CorrelationId);
+        var result = response as BadRequestObjectResult;
+        result.ShouldNotBeNull();
+        result.Value.ShouldBe(HostOrderCancelFailedErrorCode.OrderAlreadyCancelled);
     }
 }

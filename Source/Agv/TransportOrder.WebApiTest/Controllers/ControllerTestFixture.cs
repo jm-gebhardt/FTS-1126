@@ -1,12 +1,14 @@
 using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Profiles;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles;
 using MassTransit;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Routing;
+using AgvPositionProfile = Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles.AgvPositionProfile;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers;
 
@@ -41,7 +43,8 @@ public abstract class ControllerTestFixture<TRequest, TRequestHandler, TControll
             new Messages.Profiles.AgvProfile(),
             new Messages.Profiles.AgvGraphProfile(),
             new Messages.Profiles.AgvErrorProfile(),
-            new Messages.Profiles.MapProfile()
+            new Messages.Profiles.MapProfile(), 
+            new ActionGroupProfile()
         );
         return mapper;
     }
