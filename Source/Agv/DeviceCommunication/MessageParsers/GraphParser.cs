@@ -88,7 +88,7 @@ public class GraphParser
         string fromNodeId = swap ? fromNode.Id : toNode.Id;
         string toNodeId = swap ? toNode.Id : fromNode.Id;
         var id = GraphHelper.ToGuid(fromNodeId, metric, toNodeId);
-        bool added = _edges.Add(new GraphEdge(fromNodeId, toNodeId, metric, id));
+        bool added = _edges.Add(GraphEdge.CreateDirect(fromNodeId, toNodeId, metric, id));
         if (added && _considerVelocity)
         {
             _overallDistance += distance;

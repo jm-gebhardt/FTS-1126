@@ -94,52 +94,52 @@ public static class AgvGraphGenerator
     public static GraphEdge[] Edges { get; } =
     {
         // Src1 <-> Way1
-        new(Src1, Way1, 1f),
-        new(Way1, Src1, 1f),
+        GraphEdge.CreateDirect(Src1, Way1, 1f),
+        GraphEdge.CreateDirect(Way1, Src1, 1f),
 
         // Src2 <-> Way2
-        new(Src2, Way2, 3f),
-        new(Way2, Src2, 3f),
+        GraphEdge.CreateDirect(Src2, Way2, 3f),
+        GraphEdge.CreateDirect(Way2, Src2, 3f),
 
         // Dst1 <-> Way3
-        new(Dst1, Way3, 1f),
-        new(Way3, Dst1, 1f),
+        GraphEdge.CreateDirect(Dst1, Way3, 1f),
+        GraphEdge.CreateDirect(Way3, Dst1, 1f),
 
         // Dst2 <-> Way4
-        new(Dst2, Way4, 3f),
-        new(Way4, Dst2, 3f),
+        GraphEdge.CreateDirect(Dst2, Way4, 3f),
+        GraphEdge.CreateDirect(Way4, Dst2, 3f),
 
         // Prk1 <-> Way1
-        new(Prk1, Way1, 1f),
-        new(Way1, Prk1, 1f),
+        GraphEdge.CreateDirect(Prk1, Way1, 1f),
+        GraphEdge.CreateDirect(Way1, Prk1, 1f),
 
         // Prk2 <-> Way2
-        new(Prk2, Way2, 3f),
-        new(Way2, Prk2, 3f),
+        GraphEdge.CreateDirect(Prk2, Way2, 3f),
+        GraphEdge.CreateDirect(Way2, Prk2, 3f),
 
         // Crg1 <-> Way3
-        new(Crg1, Way3, 1f),
-        new(Way3, Crg1, 1f),
+        GraphEdge.CreateDirect(Crg1, Way3, 1f),
+        GraphEdge.CreateDirect(Way3, Crg1, 1f),
 
         // Crg2 <-> Way4
-        new(Crg2, Way4, 3f),
-        new(Way4, Crg2, 3f),
+        GraphEdge.CreateDirect(Crg2, Way4, 3f),
+        GraphEdge.CreateDirect(Way4, Crg2, 3f),
 
         // Way1 <-> Way2
-        new(Way1, Way2, 1f),
-        new(Way2, Way1, 1f),
+        GraphEdge.CreateDirect(Way1, Way2, 1f),
+        GraphEdge.CreateDirect(Way2, Way1, 1f),
 
         // Way2 <-> Way4
-        new(Way2, Way4, 1f),
-        new(Way4, Way2, 1f),
+        GraphEdge.CreateDirect(Way2, Way4, 1f),
+        GraphEdge.CreateDirect(Way4, Way2, 1f),
 
         // Way4 <-> Way3
-        new(Way4, Way3, 1f),
-        new(Way3, Way4, 1f),
+        GraphEdge.CreateDirect(Way4, Way3, 1f),
+        GraphEdge.CreateDirect(Way3, Way4, 1f),
 
         // Way3 <-> Way1
-        new(Way3, Way1, 1f),
-        new(Way1, Way3, 1f)
+        GraphEdge.CreateDirect(Way3, Way1, 1f),
+        GraphEdge.CreateDirect(Way1, Way3, 1f)
     };
 
     /// <summary>

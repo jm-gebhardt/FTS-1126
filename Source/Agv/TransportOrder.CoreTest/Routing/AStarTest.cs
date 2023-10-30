@@ -41,23 +41,23 @@ public class AStarTest
                 new("9") { Type = AgvGraph.NodeType.PickDrop, X = 8f, Y = 2f, Z = 0f },
                 new("10") { Type = AgvGraph.NodeType.PickDrop, X = 8f, Y = 5f, Z = 0f }
             },
-            new GraphEdge[]
+            new []
             {
-                new("1", "2", 1f),
-                new("1", "4", 4f),
-                new("4", "1", 4f),
-                new("2", "5", 3f),
-                new("3", "5", 5f),
-                new("3", "4", 3f),
-                new("4", "3", 3f),
-                new("3", "6", 2f),
-                new("6", "3", 2f),
-                new("5", "8", 7f),
-                new("8", "5", 7f),
-                new("8", "7", 1f),
-                new("7", "8", 1f),
-                new("9", "8", 1f),
-                new("7", "10", 6f)
+                GraphEdge.CreateDirect("1", "2", 1f),
+                GraphEdge.CreateDirect("1", "4", 4f),
+                GraphEdge.CreateDirect("4", "1", 4f),
+                GraphEdge.CreateDirect("2", "5", 3f),
+                GraphEdge.CreateDirect("3", "5", 5f),
+                GraphEdge.CreateDirect("3", "4", 3f),
+                GraphEdge.CreateDirect("4", "3", 3f),
+                GraphEdge.CreateDirect("3", "6", 2f),
+                GraphEdge.CreateDirect("6", "3", 2f),
+                GraphEdge.CreateDirect("5", "8", 7f),
+                GraphEdge.CreateDirect("8", "5", 7f),
+                GraphEdge.CreateDirect("8", "7", 1f),
+                GraphEdge.CreateDirect("7", "8", 1f),
+                GraphEdge.CreateDirect("9", "8", 1f),
+                GraphEdge.CreateDirect("7", "10", 6f)
             },
             mapName.ToGuid(),
             mapName);
@@ -107,14 +107,14 @@ public class AStarTest
                     var prev = nodes.SingleOrDefault(n => n.Id == $"{x - 1:D2}/{y:D2}");
                     if (prev != null)
                     {
-                        edges.Add(new GraphEdge(prev.Id, next.Id, 1f));
-                        edges.Add(new GraphEdge(next.Id, prev.Id, 1f));
+                        edges.Add(GraphEdge.CreateDirect(prev.Id, next.Id, 1f));
+                        edges.Add(GraphEdge.CreateDirect(next.Id, prev.Id, 1f));
                     }
                     prev = nodes.SingleOrDefault(n => n.Id == $"{x:D2}/{y - 1:D2}");
                     if (prev != null)
                     {
-                        edges.Add(new GraphEdge(prev.Id, next.Id, 1f) { Metric = 1f });
-                        edges.Add(new GraphEdge(next.Id, prev.Id, 1f) { Metric = 1f });
+                        edges.Add(GraphEdge.CreateDirect(prev.Id, next.Id, 1f));
+                        edges.Add(GraphEdge.CreateDirect(next.Id, prev.Id, 1f));
                     }
                 }
                 ++x;
@@ -134,17 +134,17 @@ public class AStarTest
                 new("Helsinki") { Type = AgvGraph.NodeType.PickDrop, X = 150f, Y = 20f, Z = 0f },
                 new("Rio") { Type = AgvGraph.NodeType.PickDrop, X = 200f, Y = 92f, Z = 0f }
             },
-            new GraphEdge[]
+            new []
             {
-                new("Nairobi", "Tokyo", 70f),
-                new("Nairobi", "Denver", 145f),
-                new("Denver", "Nairobi", 145f),
-                new("Tokyo", "Marseille", 103f),
-                new("Tokyo", "Berlin", 53f),
-                new("Denver", "Helsinki", 84f),
-                new("Marseille", "Rio", 116f),
-                new("Berlin", "Rio", 183f),
-                new("Helsinki", "Rio", 102f)
+                GraphEdge.CreateDirect("Nairobi", "Tokyo", 70f),
+                GraphEdge.CreateDirect("Nairobi", "Denver", 145f),
+                GraphEdge.CreateDirect("Denver", "Nairobi", 145f),
+                GraphEdge.CreateDirect("Tokyo", "Marseille", 103f),
+                GraphEdge.CreateDirect("Tokyo", "Berlin", 53f),
+                GraphEdge.CreateDirect("Denver", "Helsinki", 84f),
+                GraphEdge.CreateDirect("Marseille", "Rio", 116f),
+                GraphEdge.CreateDirect("Berlin", "Rio", 183f),
+                GraphEdge.CreateDirect("Helsinki", "Rio", 102f)
             },
             mapName.ToGuid(),
             mapName);
@@ -321,8 +321,8 @@ public class AStarTest
             },
             new[]
             {
-                new GraphEdge("1", "2", 1f),
-                new GraphEdge("2", "1", 4f)
+                GraphEdge.CreateDirect("1", "2", 1f),
+                GraphEdge.CreateDirect("2", "1", 4f)
             },
             mapName.ToGuid(),
             mapName);
@@ -398,23 +398,23 @@ public class AStarTest
                 new("9") { Type = AgvGraph.NodeType.PickDrop, X = 8f, Y = 2f, Z = 0f },
                 new("10") { Type = AgvGraph.NodeType.PickDrop, X = 8f, Y = 5f, Z = 0f }
             },
-            new GraphEdge[]
+            new []
             {
-                new("1", "2", 1f),
-                new("1", "4", 4f),
-                new("4", "1", 4f),
-                new("2", "5", 3f),
-                new("3", "5", 5f),
-                new("3", "4", 3f),
-                new("4", "3", 3f),
-                new("3", "6", 2f),
-                new("6", "3", 2f),
-                new("5", "8", 7f),
-                new("8", "5", 7f),
-                new("8", "7", 1f),
-                new("7", "8", 1f),
-                new("9", "8", 1f),
-                new("7", "10", 6f)
+                GraphEdge.CreateDirect("1", "2", 1f),
+                GraphEdge.CreateDirect("1", "4", 4f),
+                GraphEdge.CreateDirect("4", "1", 4f),
+                GraphEdge.CreateDirect("2", "5", 3f),
+                GraphEdge.CreateDirect("3", "5", 5f),
+                GraphEdge.CreateDirect("3", "4", 3f),
+                GraphEdge.CreateDirect("4", "3", 3f),
+                GraphEdge.CreateDirect("3", "6", 2f),
+                GraphEdge.CreateDirect("6", "3", 2f),
+                GraphEdge.CreateDirect("5", "8", 7f),
+                GraphEdge.CreateDirect("8", "5", 7f),
+                GraphEdge.CreateDirect("8", "7", 1f),
+                GraphEdge.CreateDirect("7", "8", 1f),
+                GraphEdge.CreateDirect("9", "8", 1f),
+                GraphEdge.CreateDirect("7", "10", 6f)
             },
             "Test".ToGuid(),
             "Test");

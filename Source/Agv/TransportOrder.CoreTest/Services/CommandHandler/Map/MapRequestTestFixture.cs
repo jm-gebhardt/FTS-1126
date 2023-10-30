@@ -46,10 +46,10 @@ public class MapRequestTestFixture<TRequestClient, TConsumer> : MediatorTestFixt
 
     private readonly GraphEdge[] _edges =
     {
-        new("node00", "node01", 1f),
-        new("node01", "node11", 1f),
-        new("node11", "node10", 1f),
-        new("node10", "node00", 1f)
+        GraphEdge.CreateDirect("node00", "node01", 1f),
+        GraphEdge.CreateDirect("node01", "node11", 1f),
+        GraphEdge.CreateDirect("node11", "node10", 1f),
+        GraphEdge.CreateDirect("node10", "node00", 1f)
     };
 
     /// <summary>

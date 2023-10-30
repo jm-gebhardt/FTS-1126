@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Graph;
 
@@ -34,6 +35,16 @@ public class EfEdge
     public float Metric { get; init; }
 
     /// <summary>
+    /// The variant of this edge.
+    /// </summary>
+    public EdgeType Variant { get; init; }
+
+    /// <summary>
+    /// Parameters for the variant type of this edge.
+    /// </summary>
+    public ICollection<EdgeCoefficient> VariantParameters { get; init; }
+
+    /// <summary>
     /// Ctor
     /// </summary>
     [UsedImplicitly]
@@ -41,5 +52,7 @@ public class EfEdge
     {
         FromNodeId = null!;
         ToNodeId = null!;
+        Variant = EdgeType.Direct;
+        VariantParameters = new List<EdgeCoefficient>();
     }
 }

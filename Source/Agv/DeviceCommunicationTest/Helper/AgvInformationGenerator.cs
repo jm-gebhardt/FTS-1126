@@ -49,21 +49,21 @@ public static class AgvInformationGenerator
 
     private static GraphEdge[] GetEdges()
     {
-        return new GraphEdge[]
+        return new []
         {
-            new(_charge, _node01, 2f),
-            new(_node01, _charge, 2f),
-            new(_node01, _node02, 4f),
-            new(_node01, _node03, 3f),
-            new(_node01, _node04, 5f),
-            new(_node02, _node01, 4f),
-            new(_node02, _node04, 6f),
-            new(_node03, _node01, 3f),
-            new(_node03, _node04, 4f),
-            new(_node04, _node01, 5f),
-            new(_node04, _node02, 6f),
-            new(_node04, _node03, 4f),
-            new(_charge2, _node04, 4f)
+            GraphEdge.CreateDirect(_charge, _node01, 2f),
+            GraphEdge.CreateDirect(_node01, _charge, 2f),
+            GraphEdge.CreateDirect(_node01, _node02, 4f),
+            GraphEdge.CreateDirect(_node01, _node03, 3f),
+            GraphEdge.CreateDirect(_node01, _node04, 5f),
+            GraphEdge.CreateDirect(_node02, _node01, 4f),
+            GraphEdge.CreateDirect(_node02, _node04, 6f),
+            GraphEdge.CreateDirect(_node03, _node01, 3f),
+            GraphEdge.CreateDirect(_node03, _node04, 4f),
+            GraphEdge.CreateDirect(_node04, _node01, 5f),
+            GraphEdge.CreateDirect(_node04, _node02, 6f),
+            GraphEdge.CreateDirect(_node04, _node03, 4f),
+            GraphEdge.CreateDirect(_charge2, _node04, 4f)
         };
     }
 

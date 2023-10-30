@@ -1,4 +1,6 @@
-﻿using JetBrains.Annotations;
+﻿
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Graph;
 
@@ -17,4 +19,14 @@ public record GraphEdgeDto
     /// Node where the edge ends.
     /// </summary>
     public GraphNodeDto To { get; init; } = null!;
+
+    /// <summary>
+    /// Variant of this edge.
+    /// </summary>
+    public EdgeType Variant { get; init; } = EdgeType.Direct;
+
+    /// <summary>
+    /// Parameters required for the edge variant.
+    /// </summary>
+    public ICollection<EdgeCoefficient> VariantParameters { get; init; } = null!;
 }

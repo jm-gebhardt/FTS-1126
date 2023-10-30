@@ -32,10 +32,10 @@ public class MapGeneratorTest
                 new("S2") { Type = AgvGraph.NodeType.Pick, X = 7f, Y = 4f, Z = 0f },
                 new("D2") { Type = AgvGraph.NodeType.Drop, X = -3f, Y = 0f, Z = 0f }
             },
-            new GraphEdge[]
+            new []
             {
-                new("S1", "D1", 8.944f), // Just take the distance
-                new("S2", "D2", 10.77f) // as metric.
+                GraphEdge.CreateDirect("S1", "D1", 8.944f), // Just take the distance
+                GraphEdge.CreateDirect("S2", "D2", 10.77f) // as metric.
             },
             mapName.ToGuid(),
             mapName);
@@ -72,7 +72,7 @@ public class MapGeneratorTest
             },
             new[]
             {
-                new GraphEdge("S1", "D1", 14f)
+                GraphEdge.CreateDirect("S1", "D1", 14f)
             },
             mapName.ToGuid(),
             mapName);

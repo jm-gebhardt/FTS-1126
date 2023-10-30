@@ -53,9 +53,9 @@ public class UtilitiesTest
     public void EdgeIdComparer()
     {
         var comparer = new GraphEdgeComparer();
-        var edge1 = new GraphEdge("1", "2", 1f);
-        var edge2 = new GraphEdge("2", "1", 1f);
-        var edge3 = new GraphEdge("1", "2", 2f);
+        var edge1 = GraphEdge.CreateSlanted("1", "2", 1f, 90, 15d);
+        var edge2 = GraphEdge.CreateDirect("2", "1", 1f);
+        var edge3 = GraphEdge.CreateSlanted("1", "2", 2f, 90d, 15d);
 
         comparer.Equals(edge1, edge2).ShouldBeFalse();
         comparer.GetHashCode(edge1).ShouldNotBe(comparer.GetHashCode(edge2));

@@ -25,18 +25,18 @@ public abstract class AgvGraphTestFixture
                 new("Oslo") { Type = AgvGraph.NodeType.PickDrop, X = -50f, Y = -50f, Z = 0f },
                 new("LoneDestination") { Type = AgvGraph.NodeType.PickDrop, X = -100f, Y = -100f, Z = 0f }
             },
-            new GraphEdge[]
+            new []
             {
-                new("Nairobi", "Tokyo", 70f),
-                new("Nairobi", "Denver", 145f),
-                new("Tokyo", "Marseille", 103f),
-                new("Tokyo", "Berlin", 53f),
-                new("Denver", "Helsinki", 84f),
-                new("Marseille", "Rio", 116f),
-                new("Berlin", "Rio", 183f),
-                new("Helsinki", "Rio", 102f),
-                new("Nairobi", "Oslo", 50f),
-                new("Oslo", "LoneDestination", 60f)
+                GraphEdge.CreateDirect("Nairobi", "Tokyo", 70f),
+                GraphEdge.CreateDirect("Nairobi", "Denver", 145f),
+                GraphEdge.CreateDirect("Tokyo", "Marseille", 103f),
+                GraphEdge.CreateDirect("Tokyo", "Berlin", 53f),
+                GraphEdge.CreateDirect("Denver", "Helsinki", 84f),
+                GraphEdge.CreateDirect("Marseille", "Rio", 116f),
+                GraphEdge.CreateDirect("Berlin", "Rio", 183f),
+                GraphEdge.CreateDirect("Helsinki", "Rio", 102f),
+                GraphEdge.CreateDirect("Nairobi", "Oslo", 50f),
+                GraphEdge.CreateDirect("Oslo", "LoneDestination", 60f)
             },
             mapName.ToGuid(),
             mapName);

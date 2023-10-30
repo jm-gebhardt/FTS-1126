@@ -1,3 +1,4 @@
+using Gebhardt.StoreWare.Agv.Common.Persistence;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Graph;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -26,5 +27,9 @@ public class GraphEdgeClassMap : ClassMap<EfEdge>
             .WithMany()
             .HasForeignKey(nameof(EfEdge.GraphCorrelationId), nameof(EfEdge.ToNodeId))
             .OnDelete(DeleteBehavior.ClientCascade);
+
+        entity.Property(e => e.VariantParameters).HasJsonConversion();
+
+        entity.Property(e => e.Variant);
     }
 }
