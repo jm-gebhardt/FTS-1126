@@ -1,5 +1,6 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Configurations.Extensions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Filters;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi;
 using MassTransit;
 using Microsoft.Extensions.Hosting;
@@ -31,11 +32,12 @@ public static class MassTransitHostBuilderExtensions
                             .AddWebApiConsumer();
 
                         x.AddMediator(c => c.AddMediator());
-                    }, rabbitMqConfiguration: (_, cfg) =>
+                    }, rabbitMqConfiguration: (ctx, cfg) =>
                     {
                         cfg.UseDelayedMessageScheduler();
-                    }
-                   );
+                        cfg.UseConsumeFilter<ActionGroupTracingConsumeFilters>(ctx);
+                        cfg.UseConsumeFilter<AgvTracingConsumeFilters>(ctx);
+                    });
             }
             catch (InvalidOperationException e)
             {

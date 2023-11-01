@@ -5,7 +5,6 @@ using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Enums;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
-using MassTransit;
 using MassTransit.Testing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;

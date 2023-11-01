@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Serialization;
+using Gebhardt.StoreWare.Agv.Common.Messages.Filters;
 using JetBrains.Annotations;
 using MassTransit;
 using MassTransit.Serialization;
@@ -42,6 +43,8 @@ public static class ServiceCollectionExtensions
             x.UsingRabbitMq((context, cfg) =>
             {
                 rabbitMqConfiguration?.Invoke(context, cfg);
+                cfg.UseConsumeFilter<AgvTracingConsumeFilters>(context);
+                cfg.UseConsumeFilter<ActionGroupTracingConsumeFilters>(context);
                 cfg.ConfigureEndpoints(context);
                 cfg.Host(massTransitConfig.Url);
                 cfg.UsePrometheusMetrics();

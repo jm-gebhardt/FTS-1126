@@ -5,7 +5,7 @@ using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
 
 /// <summary>
-/// Registry of AGV's important states, such as status, agv action and agv graph, to retrieve or modify last agvStatus and agvMap of Agv
+/// Registry of agvs important states, such as status, agv action and agv graph, to retrieve or modify last agvStatus and agvMap of Agv
 /// </summary>
 public interface IAgvRegistry
 {

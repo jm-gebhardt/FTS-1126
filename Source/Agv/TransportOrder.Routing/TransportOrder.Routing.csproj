@@ -9,6 +9,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="MassTransit" Version="8.1.1" />
+    <PackageReference Include="MassTransit.EntityFrameworkCore" Version="8.1.1" />
+    <PackageReference Include="MassTransit.Prometheus" Version="8.1.1" />
+    <PackageReference Include="MassTransit.RabbitMQ" Version="8.1.1" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Common\Common.csproj" />
   </ItemGroup>
 

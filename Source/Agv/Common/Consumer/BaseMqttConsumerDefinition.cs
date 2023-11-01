@@ -19,8 +19,9 @@ public class BaseMqttConsumerDefinition<T> : ConsumerDefinition<T> where T : cla
     /// </summary>
     /// <param name="endpointConfigurator"></param>
     /// <param name="consumerConfigurator"></param>
-    protected override void ConfigureConsumer(IReceiveEndpointConfigurator endpointConfigurator,
-        IConsumerConfigurator<T> consumerConfigurator)
+    /// <param name="context"></param>
+    protected override void ConfigureConsumer(IReceiveEndpointConfigurator endpointConfigurator, IConsumerConfigurator<T> consumerConfigurator,
+        IRegistrationContext context)
     {
         endpointConfigurator.ConfigureConsumeTopology = endpointConfigurator is IInMemoryEndpointConfiguration;
 

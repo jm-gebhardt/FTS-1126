@@ -22,7 +22,7 @@ public abstract class DesignTimeDbContextFactory<TDbContext> : IDesignTimeDbCont
     /// <summary>
     /// Constructs <see cref="DesignTimeDbContextFactory{TDbContext}" /> instances.
     /// </summary>
-    /// <param name="connectionStringKey">The key to obtain the connection string from the environment or appsetting.</param>
+    /// <param name="connectionStringKey">The key to obtain the connection string from the environment or appsettings.</param>
     /// <param name="migrationTableName">The migration table name</param>
     protected DesignTimeDbContextFactory(string connectionStringKey, string migrationTableName)
     {
