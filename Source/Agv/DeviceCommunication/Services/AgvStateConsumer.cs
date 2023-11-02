@@ -2,6 +2,7 @@ using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Exceptions;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 using JetBrains.Annotations;
 using MassTransit;
@@ -53,7 +54,7 @@ public class AgvStateConsumer : IConsumer<MqttState>
         if (string.IsNullOrEmpty(serialNumber))
         {
             _logger.LogError("Missing serialNumber in {MessageType} message: {Status}", nameof(MqttState), context.Message);
-            throw new InvalidOperationException($"Cannot handle {typeof(MqttState)} message, serialNumber must not be null or empty");
+            throw new SerialNumberNotSetException(nameof(MqttState));
         }
         _logger.LogDebug("{MessageType} from {AgvId} received", nameof(MqttState), serialNumber);
         return serialNumber;

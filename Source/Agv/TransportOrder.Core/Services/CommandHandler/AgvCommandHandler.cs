@@ -197,6 +197,7 @@ public class AgvCommandHandler :
         await ResetOfflineWatchDog(context, agv);
 
         (bool batteryChargeChanged, bool lastNodeIdChanged) = agv.UpdateAgvStatus(agvStatus);
+        _logger.LogTrace("LastNodeIdChanged: {LastNodeIdChanged}, BatteryChargeChanged: {BatteryChargeChanged}", lastNodeIdChanged, batteryChargeChanged);
 
         if (agv.ShouldRequestGraph())
         {

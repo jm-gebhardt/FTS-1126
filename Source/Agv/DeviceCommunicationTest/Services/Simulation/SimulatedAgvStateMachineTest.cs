@@ -273,8 +273,8 @@ public class SimulatedAgvStateMachineTest
         // ... wait for being consumed ...
         (await fixture.SagaHarness.Consumed.Any<StartActionCommand>()).ShouldBeTrue();
         // ... wait for action started is being sent (by state machine) ...
-        (await fixture.TestHarness.Published.Any<ActionStartedEvent>()).ShouldBeTrue();
-        var actionStarted = fixture.TestHarness.Published.Select<ActionStartedEvent>().First().Context.Message;
+        (await fixture.TestHarness.Published.Any<ActionStarted>()).ShouldBeTrue();
+        var actionStarted = fixture.TestHarness.Published.Select<ActionStarted>().First().Context.Message;
         actionStarted.CorrelationId.ShouldBe(actionId);
 
         agvSaga.AgvStatus.Busy.ShouldBeTrue();
@@ -305,8 +305,8 @@ public class SimulatedAgvStateMachineTest
         } while (!matches && DateTime.UtcNow < startedTime + timeout);
         matches.ShouldBeTrue();
 
-        (await fixture.TestHarness.Published.Any<ActionCompletedEvent>()).ShouldBeTrue();
-        var actionCompleted = fixture.TestHarness.Published.Select<ActionCompletedEvent>().First().Context.Message;
+        (await fixture.TestHarness.Published.Any<ActionCompleted>()).ShouldBeTrue();
+        var actionCompleted = fixture.TestHarness.Published.Select<ActionCompleted>().First().Context.Message;
         actionCompleted.CorrelationId.ShouldBe(actionId);
 
         // There should be at least 2 positions sent (one or two per edge and we have two edges)

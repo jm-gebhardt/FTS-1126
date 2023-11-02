@@ -82,7 +82,6 @@ public class StartChargingCommandConsumer : IConsumer<StartChargingCommand>
             Guid.Empty);
 
         await context.Publish(new StartActionCommand(agvCorrelationId, agvId, chargeAction));
-        await context.Publish(new ActionStartedEvent(chargeAction.CorrelationId));
         await context.RespondAsync(new Success());
     }
 }

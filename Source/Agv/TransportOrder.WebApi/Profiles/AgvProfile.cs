@@ -20,8 +20,8 @@ public class AgvProfile : Profile
         CreateMap<Messages.MessageContent.Agv, AgvDto>().ReverseMap();
         CreateMap<AgvData, AgvDataDto>().ReverseMap();
         CreateMap<Messages.MessageContent.Agv, AgvStateDto>();
-        CreateMap<AgvRouteReadModel, CurrentRouteDto>();
-        CreateMap<AgvRouteReadModel, CurrentAgvRouteDto>()
+        CreateMap<CurrentAgvRouteReadModel, CurrentRouteDto>();
+        CreateMap<CurrentAgvRouteReadModel, CurrentAgvRouteDto>()
             .ForMember(c => c.CurrentRoute, c => c.MapFrom(o => o));
         CreateMap<AgvState, AgvStateType>();
         CreateMap<AgvBatteryChargeChanged, AgvBatteryStatusDto>()

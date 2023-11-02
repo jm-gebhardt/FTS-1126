@@ -30,7 +30,7 @@ public class GetCurrentAgvRouteRequestHandler : IConsumer<GetCurrentAgvRoute>, I
     /// <inheritdoc cref="GetCurrentAgvRouteRequestHandler"/>
     public async Task Consume(ConsumeContext<GetCurrentAgvRoutes> context)
     {
-        IReadOnlyDictionary<Guid, AgvRouteReadModel?> agvRoute = await _agvRouteRetrievalService.GetAgvRouteAsync(context.Message.CorrelationIds);
+        IReadOnlyDictionary<Guid, CurrentAgvRouteReadModel?> agvRoute = await _agvRouteRetrievalService.GetAgvRouteAsync(context.Message.CorrelationIds);
         await context.RespondAsync(new GotCurrentAgvRoutes(agvRoute));
     }
 }

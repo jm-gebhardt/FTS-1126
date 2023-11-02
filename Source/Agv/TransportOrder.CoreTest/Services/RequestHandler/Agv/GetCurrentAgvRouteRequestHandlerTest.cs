@@ -16,7 +16,7 @@ public class GetCurrentAgvRouteRequestHandlerTest
     {
         var agvCorrelationId = Guid.NewGuid();
         string[] agvRouteNodes = NodeGenerator.GenerateRouteNodes();
-        var agvRoute = new AgvRouteReadModel(agvCorrelationId, agvRouteNodes);
+        var agvRoute = new CurrentAgvRouteReadModel(agvCorrelationId, agvRouteNodes);
         GetCurrentAgvRouteRequestHandlerTestFixture<GetCurrentAgvRoute, GetCurrentAgvRouteRequestHandler> fixture = new GetCurrentAgvRouteRequestHandlerTestFixture<GetCurrentAgvRoute, GetCurrentAgvRouteRequestHandler>()
             .WithAgvRoute(agvCorrelationId, agvRoute)
             .Build();
@@ -30,9 +30,9 @@ public class GetCurrentAgvRouteRequestHandlerTest
     public async Task Consume_GetAgvRoutesRequest_ReturnsAgvRoutes()
     {
         var agvCorrelationId = Guid.NewGuid();
-        var agvRoute = new AgvRouteReadModel(agvCorrelationId, NodeGenerator.GenerateRouteNodes());
+        var agvRoute = new CurrentAgvRouteReadModel(agvCorrelationId, NodeGenerator.GenerateRouteNodes());
         Guid[] agvCorrelationIds = { agvCorrelationId };
-        var agvRoutesByAgv = new Dictionary<Guid, AgvRouteReadModel?>
+        var agvRoutesByAgv = new Dictionary<Guid, CurrentAgvRouteReadModel?>
         {
             { agvCorrelationId, agvRoute }
         };

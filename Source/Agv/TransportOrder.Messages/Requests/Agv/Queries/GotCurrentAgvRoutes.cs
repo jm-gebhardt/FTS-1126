@@ -6,4 +6,4 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
 /// Response to get the AgvRoute for multiple Agvs
 /// </summary>
 /// <param name="AgvRoutesByCorrelationId"></param>
-public record GotCurrentAgvRoutes(IReadOnlyDictionary<Guid, AgvRouteReadModel?> AgvRoutesByCorrelationId);
+public record GotCurrentAgvRoutes(IReadOnlyDictionary<Guid, CurrentAgvRouteReadModel?> AgvRoutesByCorrelationId);

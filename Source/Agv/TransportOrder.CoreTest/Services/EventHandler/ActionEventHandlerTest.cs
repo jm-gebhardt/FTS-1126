@@ -29,10 +29,10 @@ public class ActionEventHandlerTest
     public async Task Consume_ActionCompletedEvent_ValidData_PublishesCompleteAction()
     {
         var fixture = new ActionEventHandlerTestFixture();
-        var actionCompletedEvent = new ActionCompletedEvent(Guid.NewGuid());
+        var actionCompletedEvent = new ActionCompleted(Guid.NewGuid());
         await fixture.TestHarness!.Bus.Publish(actionCompletedEvent);
 
-        (await fixture.ConsumerHarness!.Consumed.Any<ActionCompletedEvent>()).ShouldBeTrue();
+        (await fixture.ConsumerHarness!.Consumed.Any<ActionCompleted>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<CompleteAction>(f =>
             f.Context.Message == new CompleteAction(actionCompletedEvent.CorrelationId))).ShouldBeTrue();
     }

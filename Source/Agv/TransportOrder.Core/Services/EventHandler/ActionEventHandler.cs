@@ -14,7 +14,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.EventHandler;
 [UsedImplicitly]
 public class ActionEventHandler :
     IConsumer<ActionGroupCreatedForAgv>,
-    IConsumer<ActionCompletedEvent>,
+    IConsumer<ActionCompleted>,
     IConsumer<StartingActionForAgvFailed>,
     IConsumer<NonChargingActionCompleted>,
     IConsumer<NodesSelectedForAction>
@@ -41,12 +41,12 @@ public class ActionEventHandler :
     }
 
     /// <summary>
-    /// Handle <see cref="ActionCompletedEvent"/> from DeviceCommunication
+    /// Handle <see cref="ActionCompleted"/> from DeviceCommunication
     /// </summary>
-    public async Task Consume(ConsumeContext<ActionCompletedEvent> context)
+    public async Task Consume(ConsumeContext<ActionCompleted> context)
     {
         var actionCorrelationId = context.Message.CorrelationId;
-        _logger.LogDebug("{MessageType} for actionId: {ActionCorrelationId} received", nameof(ActionCompletedEvent), actionCorrelationId);
+        _logger.LogDebug("{MessageType} for actionId: {ActionCorrelationId} received", nameof(ActionCompleted), actionCorrelationId);
         await context.Publish(new CompleteAction(actionCorrelationId));
     }
 

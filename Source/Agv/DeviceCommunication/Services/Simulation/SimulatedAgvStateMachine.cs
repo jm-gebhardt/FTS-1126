@@ -230,7 +230,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
                     c.Message.Action.ActionType, c.Message.Action.TargetNodeId, c.Message.Action.ParentId, c.Saga.ActionFinishDate);
             })
             .TransitionTo(BusyMoving)
-            .Publish(c => new ActionStartedEvent(c.Saga.Action!.CorrelationId))
+            .Publish(c => new ActionStarted(c.Saga.Action!.CorrelationId, c.Saga.CorrelationId))
             .ThenAsync(PublishStatusAsync)
             .Schedule(FinishActionSchedule,
                 c => new ScheduleFinishAction(c.Saga.CorrelationId),
@@ -415,7 +415,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
             _logger.LogInformation("AGV {AgvId} / {CorrelationId} finished action {ActionType} for {OrderId}",
                 context.Saga.AgvId, context.Saga.CorrelationId, action.ActionType, action.ParentId);
 
-            await context.Publish(new ActionCompletedEvent(action.CorrelationId));
+            await context.Publish(new ActionCompleted(action.CorrelationId));
         }
 
         context.Saga.ResetAction();

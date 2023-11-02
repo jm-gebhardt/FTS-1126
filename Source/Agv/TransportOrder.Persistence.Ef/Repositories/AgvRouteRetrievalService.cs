@@ -38,7 +38,7 @@ public class AgvRouteRetrievalService : IAgvRouteRetrievalService
     }
 
     /// <inheritdoc />
-    public async Task<AgvRouteReadModel?> GetAgvRouteAsync(Guid agvCorrelationId, string? lastNodeId = null)
+    public async Task<CurrentAgvRouteReadModel?> GetAgvRouteAsync(Guid agvCorrelationId, string? lastNodeId = null)
     {
         await using var context = await CreateDbContextAsync();
         DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
@@ -65,14 +65,14 @@ public class AgvRouteRetrievalService : IAgvRouteRetrievalService
 
         string[] remainingRoute = RoutingHelper.GetRemainingRoute(lastNodeId, currentAction.Nodes);
 
-        var agvRoute = new AgvRouteReadModel(agvCorrelationId, remainingRoute);
+        var agvRoute = new CurrentAgvRouteReadModel(agvCorrelationId, remainingRoute);
         _logger.LogTrace("{AgvCorrelationId} last node Id is: {LastNodeId} and the current route{Route}", agvCorrelationId, lastNodeId, string.Join(" -> ", agvRoute.RemainingRoute));
 
         return agvRoute;
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyDictionary<Guid, AgvRouteReadModel?>> GetAgvRouteAsync(ICollection<Guid> agvCorrelationIds)
+    public async Task<IReadOnlyDictionary<Guid, CurrentAgvRouteReadModel?>> GetAgvRouteAsync(ICollection<Guid> agvCorrelationIds)
     {
         await using var context = await CreateDbContextAsync();
         IQueryable<ActionGroup> queryable = context.Set<ActionGroup>()
@@ -95,7 +95,7 @@ public class AgvRouteRetrievalService : IAgvRouteRetrievalService
         Dictionary<Guid, ActionGroup?> actionGroupById = actionGroupTask.Result;
         IReadOnlyDictionary<Guid, string?> lastNodeIdById = lastNodeIdTask.Result;
 
-        var agvRoutesById = new Dictionary<Guid, AgvRouteReadModel?>();
+        var agvRoutesById = new Dictionary<Guid, CurrentAgvRouteReadModel?>();
 
         foreach (KeyValuePair<Guid, string?> lastNodeIdByAgv in lastNodeIdById)
         {
@@ -120,7 +120,7 @@ public class AgvRouteRetrievalService : IAgvRouteRetrievalService
 
             string[] remainingRoute = RoutingHelper.GetRemainingRoute(lastNodeId, currentAction.Nodes);
 
-            var agvRoute = new AgvRouteReadModel(agvCorrelationId, remainingRoute);
+            var agvRoute = new CurrentAgvRouteReadModel(agvCorrelationId, remainingRoute);
             _logger.LogTrace("{AgvCorrelationId} last node Id is: {LastNodeId} and the current route{Route}", agvCorrelationId, lastNodeId, string.Join(" -> ", agvRoute.RemainingRoute));
 
             agvRoutesById[agvCorrelationId] = agvRoute;

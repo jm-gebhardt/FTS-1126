@@ -52,7 +52,7 @@ public class AgvPositionChangedConsumer :
     /// <param name="context"></param>
     public async Task Consume(ConsumeContext<AgvPositionChanged> context)
     {
-        _logger.LogTrace("{MessageType} {AgvId}/{CorrelationId} received", nameof(AgvPositionChanged), context.Message.AgvId, context.Message.CorrelationId);
+        _logger.LogTrace("{MessageType} {AgvId}/{CorrelationId} received. Value: {AgvPositionStatus}", nameof(AgvPositionChanged), context.Message.AgvId, context.Message.CorrelationId, context.Message);
 
         var agvPositionStatus = _mapper.Map<AgvPositionStatus>(context.Message);
         await _agvPublisher.SendAgvPositionAsync(agvPositionStatus);
@@ -82,7 +82,9 @@ public class AgvPositionChangedConsumer :
         var agvRoute = await _agvRouteRetrievalService.GetAgvRouteAsync(agvCorrelationId, newLastNodeId);
         if (agvRoute != null)
         {
-            await _agvPublisher.SendAgvRouteAsync(agvRoute);
+            _logger.LogTrace("Publishing AgvRoute {AgvRoute}", string.Join(",", agvRoute.RemainingRoute));
+
+            await _agvPublisher.SendAgvRouteChangedAsync(agvRoute);
         }
     }
 }

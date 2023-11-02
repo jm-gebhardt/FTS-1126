@@ -29,7 +29,7 @@ public class OrderEventConsumerTest
     {
         var message = new MqttOrderEvent(_actionGuid + " " + OrderId, SerialNumber, OrderEventType.Started);
         var published = await ConsumeMessage(message);
-        await AssertPublishedEvent<ActionStartedEvent>(published);
+        await AssertPublishedEvent<ActionStarted>(published);
     }
 
     /// <summary>
@@ -41,7 +41,7 @@ public class OrderEventConsumerTest
         var message = new MqttOrderEvent(_actionGuid + " " + OrderId, SerialNumber, OrderEventType.Completed);
         var published = await ConsumeMessage(message);
 
-        await AssertPublishedEvent<ActionCompletedEvent>(published);
+        await AssertPublishedEvent<ActionCompleted>(published);
     }
 
     /// <summary>
@@ -53,7 +53,7 @@ public class OrderEventConsumerTest
         var message = new MqttOrderEvent(_actionGuid + " " + OrderId, SerialNumber, OrderEventType.Cancelled);
         var published = await ConsumeMessage(message);
 
-        await AssertPublishedEvent<ActionCancelledEvent>(published);
+        await AssertPublishedEvent<ActionCancelled>(published);
     }
 
     /// <summary>
@@ -65,7 +65,7 @@ public class OrderEventConsumerTest
         var message = new MqttOrderEvent(_actionGuid + " " + OrderId, SerialNumber, OrderEventType.CancelFailed);
         var published = await ConsumeMessage(message);
 
-        await AssertPublishedEvent<ActionCancelFailedEvent>(published);
+        await AssertPublishedEvent<ActionCancelFailed>(published);
     }
 
     /// <summary>
@@ -77,7 +77,7 @@ public class OrderEventConsumerTest
         var message = new MqttOrderEvent(_actionGuid + " " + OrderId, SerialNumber, OrderEventType.Failed);
         var published = await ConsumeMessage(message);
 
-        await AssertPublishedEvent<ActionFailedEvent>(published);
+        await AssertPublishedEvent<ActionFailed>(published);
     }
 
     private async Task<IPublishedMessageList> ConsumeMessage(MqttOrderEvent message)

@@ -61,9 +61,9 @@ public interface IAgvPublisher
     /// <summary>
     /// Publishes the status of an agv route to all clients
     /// </summary>
-    /// <param name="agvRouteReadModel"></param>
+    /// <param name="currentAgvRouteReadModel"></param>
     /// <returns></returns>
-    Task SendAgvRouteAsync(AgvRouteReadModel agvRouteReadModel);
+    Task SendAgvRouteChangedAsync(CurrentAgvRouteReadModel currentAgvRouteReadModel);
 
     /// <summary>
     /// Publishes the currently assigned action group of an agv to all clients

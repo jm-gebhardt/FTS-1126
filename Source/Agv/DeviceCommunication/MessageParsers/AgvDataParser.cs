@@ -1,5 +1,6 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Exceptions;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 using JetBrains.Annotations;
 
@@ -39,7 +40,7 @@ public class AgvDataParser
         {
             if (!SerialNumberValid)
             {
-                throw new InvalidOperationException($"Cannot handle {typeof(MqttGraph)} message, serialNumber must not be null or empty.");
+                throw new SerialNumberNotSetException(nameof(MqttGraph));
             }
             return _data.SerialNumber;
         }

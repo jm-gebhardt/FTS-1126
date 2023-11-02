@@ -6,28 +6,28 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 /// Signals that an action has been started
 /// </summary>
 [PublicAPI]
-public record ActionStartedEvent(Guid CorrelationId) : IActionEventParent;
+public record ActionStarted(Guid CorrelationId, Guid AgvCorrelationId) : IActionEventParent;
 
 /// <summary>
 /// Signals that an action has been completed
 /// </summary>
 [PublicAPI]
-public record ActionCompletedEvent(Guid CorrelationId) : IActionEventParent;
+public record ActionCompleted(Guid CorrelationId) : IActionEventParent;
 
 /// <summary>
 /// Signals that an action has failed
 /// </summary>
 [PublicAPI]
-public record ActionFailedEvent(Guid CorrelationId) : IActionEventParent;
+public record ActionFailed(Guid CorrelationId) : IActionEventParent;
 
 /// <summary>
 /// Signals that an action has been cancelled
 /// </summary>
 [PublicAPI]
-public record ActionCancelledEvent(Guid CorrelationId) : IActionEventParent;
+public record ActionCancelled(Guid CorrelationId) : IActionEventParent;
 
 /// <summary>
 /// Signals that an action cancellation has failed 
 /// </summary>
 [PublicAPI]
-public record ActionCancelFailedEvent(Guid CorrelationId) : IActionEventParent;
+public record ActionCancelFailed(Guid CorrelationId) : IActionEventParent;

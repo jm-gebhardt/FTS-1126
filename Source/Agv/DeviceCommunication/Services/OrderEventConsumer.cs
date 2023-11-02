@@ -1,6 +1,7 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Enums;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Exceptions;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 using JetBrains.Annotations;
 using MassTransit;
@@ -33,27 +34,28 @@ public class OrderEventConsumer : IConsumer<MqttOrderEvent>
         _logger.LogInformation("Received {MessageType}.{OrderEventType} for {OrderId}", nameof(MqttOrderEvent), message.OrderEventType, message.OrderId);
 
         var actionId = message.OrderId.ToGuid();
+        var agvCorrelationId = (message.SerialNumber ?? throw new SerialNumberNotSetException(nameof(MqttOrderEvent))).ToGuid();
 
         switch (message.OrderEventType)
         {
             case OrderEventType.Started:
-                await context.Publish(new ActionStartedEvent(actionId));
+                await context.Publish(new ActionStarted(actionId, agvCorrelationId));
                 break;
 
             case OrderEventType.Completed:
-                await context.Publish(new ActionCompletedEvent(actionId));
+                await context.Publish(new ActionCompleted(actionId));
                 break;
 
             case OrderEventType.Cancelled:
-                await context.Publish(new ActionCancelledEvent(actionId));
+                await context.Publish(new ActionCancelled(actionId));
                 break;
 
             case OrderEventType.CancelFailed:
-                await context.Publish(new ActionCancelFailedEvent(actionId));
+                await context.Publish(new ActionCancelFailed(actionId));
                 break;
 
             case OrderEventType.Failed:
-                await context.Publish(new ActionFailedEvent(actionId));
+                await context.Publish(new ActionFailed(actionId));
                 break;
 
             default:

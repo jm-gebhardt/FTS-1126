@@ -50,9 +50,9 @@ public class AgvPublisherTest
             .WithMapper(new AgvProfile(), new ActionProfile(), new AgvErrorProfile(), new AgvPositionProfile())
             .Build();
         var agvCorrelationId = Guid.NewGuid();
-        var agvRoute = new AgvRouteReadModel(agvCorrelationId, Array.Empty<string>());
+        var agvRoute = new CurrentAgvRouteReadModel(agvCorrelationId, Array.Empty<string>());
 
-        await fixture.Publisher.SendAgvRouteAsync(agvRoute);
+        await fixture.Publisher.SendAgvRouteChangedAsync(agvRoute);
 
         fixture.HubContextMock.Verify(c => c.Clients.All.AgvRouteChanged(It.IsAny<CurrentAgvRouteDto>()), Times.Once);
         fixture.HubContextMock.Setup(c => c.Clients.All.AgvRouteChanged(It.IsAny<CurrentAgvRouteDto>()))

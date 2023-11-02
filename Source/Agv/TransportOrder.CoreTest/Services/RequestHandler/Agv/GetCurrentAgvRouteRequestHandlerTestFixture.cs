@@ -18,13 +18,13 @@ public class GetCurrentAgvRouteRequestHandlerTestFixture<TRequestClient, TConsum
         AddServices(s => { s.AddTransient(_ => _agvRouteService.Object); });
     }
 
-    public GetCurrentAgvRouteRequestHandlerTestFixture<TRequestClient, TConsumer> WithAgvRoute(Guid agvCorrelationId, AgvRouteReadModel agvRouteReadModel, string? lastNodeId = null)
+    public GetCurrentAgvRouteRequestHandlerTestFixture<TRequestClient, TConsumer> WithAgvRoute(Guid agvCorrelationId, CurrentAgvRouteReadModel currentAgvRouteReadModel, string? lastNodeId = null)
     {
-        _agvRouteService.Setup(x => x.GetAgvRouteAsync(agvCorrelationId, lastNodeId)).ReturnsAsync(agvRouteReadModel);
+        _agvRouteService.Setup(x => x.GetAgvRouteAsync(agvCorrelationId, lastNodeId)).ReturnsAsync(currentAgvRouteReadModel);
         return this;
     }
 
-    public GetCurrentAgvRouteRequestHandlerTestFixture<TRequestClient, TConsumer> WithAgvRoutes(Guid[] agvCorrelationIds, Dictionary<Guid, AgvRouteReadModel?> agvRoutesByAgv)
+    public GetCurrentAgvRouteRequestHandlerTestFixture<TRequestClient, TConsumer> WithAgvRoutes(Guid[] agvCorrelationIds, Dictionary<Guid, CurrentAgvRouteReadModel?> agvRoutesByAgv)
     {
         _agvRouteService.Setup(x => x.GetAgvRouteAsync(agvCorrelationIds)).ReturnsAsync(agvRoutesByAgv);
         return this;
