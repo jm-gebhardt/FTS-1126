@@ -8,6 +8,12 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation;
 [TestClass]
 public class GridGeneratorTest
 {
+    private const float East = (float)Math.PI / 2f;
+
+    private const float West = 3f * (float)Math.PI / 2f;
+    private const float South = (float)Math.PI;
+    private const float North = 0f;
+
     [TestMethod]
     [DataRow(0, 0, 0)]
     [DataRow(0, 0, 1)]
@@ -56,10 +62,12 @@ public class GridGeneratorTest
         foreach (string s in sources)
         {
             graph.Nodes.Any(n => n.Id == s).ShouldBeTrue();
+            graph.Nodes.First(n => n.Id == s).Theta.ShouldBe(North);
         }
         foreach (string d in destinations)
         {
             graph.Nodes.Any(n => n.Id == d).ShouldBeTrue();
+            graph.Nodes.First(n => n.Id == d).Theta.ShouldBe(South);
         }
     }
 
@@ -71,13 +79,15 @@ public class GridGeneratorTest
     {
         string[] sources = GenerateNodeIds("S", 2);
         string[] destinations = GenerateNodeIds("D", 2);
-        var generator = new GridGraphGenerator(sources, destinations, 1,
-            new[] { AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park }
-        );
+        var serviceNodeTypes = new[] { AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park };
+        var generator = new GridGraphGenerator(sources, destinations, 1,serviceNodeTypes);
         var graph = generator.Generate(Guid.NewGuid());
 
         graph.Nodes.Count(n => n.Type is AgvGraph.NodeType.Charge).ShouldBe(1);
         graph.Nodes.Count(n => n.Type is AgvGraph.NodeType.Park).ShouldBe(1);
+        
+        graph.Nodes.First(n => n.Type == serviceNodeTypes.First()).Theta.ShouldBe(West);
+        graph.Nodes.First(n => n.Type == serviceNodeTypes.Last()).Theta.ShouldBe(East);
     }
 
     /// <summary>

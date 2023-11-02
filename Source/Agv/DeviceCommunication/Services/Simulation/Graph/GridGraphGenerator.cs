@@ -20,7 +20,17 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph;
 /// 
 /// </summary>
 public class GridGraphGenerator : IGraphGenerator
-{
+{   
+    /// Station angles are defined as:
+    ///         0
+    /// 3/2 pi -|- pi/2
+    ///         pi
+    private const float East = (float)Math.PI / 2f;
+
+    private const float West = 3f * (float)Math.PI / 2f;
+    private const float South = (float)Math.PI;
+    private const float North = 0f;
+
     /// <summary>
     /// GridGraphGenerator Constructor
     /// </summary>
@@ -151,7 +161,8 @@ public class GridGraphGenerator : IGraphGenerator
             {
                 Type = AgvGraph.NodeType.Pick,
                 X = gridNode.X,
-                Y = gridNode.Y - OriginYOffset / 2
+                Y = gridNode.Y - OriginYOffset / 2,
+                Theta = North
             };
             _otherNodes.Add(sourceNode);
             AddEdge(sourceNode, gridNode);
@@ -171,7 +182,8 @@ public class GridGraphGenerator : IGraphGenerator
             {
                 Type = AgvGraph.NodeType.Drop,
                 X = gridNode.X,
-                Y = gridNode.Y + OriginYOffset / 2
+                Y = gridNode.Y + OriginYOffset / 2,
+                Theta = South
             };
             _otherNodes.Add(destinationNode);
             AddEdge(destinationNode, gridNode);
@@ -207,7 +219,8 @@ public class GridGraphGenerator : IGraphGenerator
         {
             Type = nodeType,
             X = gridNode.X + OriginXOffset / 2 * side,
-            Y = gridNode.Y
+            Y = gridNode.Y,
+            Theta = side == -1? West: East
         };
         _otherNodes.Add(serviceNode);
         AddEdge(serviceNode, gridNode);
