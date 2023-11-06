@@ -11,19 +11,19 @@ public class EdgeCoefficient : IEquatable<EdgeCoefficient>
     /// Scalar value.
     /// </summary>
     [UsedImplicitly]
-    public double? Scalar { get; }
+    public double? Scalar { get; init; }
 
     /// <summary>
     /// X coordinate.
     /// </summary>
     [UsedImplicitly]
-    public double? X { get; }
+    public double? X { get; init; }
 
     /// <summary>
     /// Y coordinate.
     /// </summary>
     [UsedImplicitly]
-    public double? Y { get; }
+    public double? Y { get; init; }
 
     /// <summary>
     /// Initializes a point <see cref="EdgeCoefficient"/> instance.

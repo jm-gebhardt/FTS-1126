@@ -145,7 +145,7 @@ public interface IActionGroupRegistry
 
     /// <summary>
     /// Return the subsequent action for the agv that is not started yet.
-    /// Generally it is the drop action after the completion of the preceeding pick action.
+    /// Generally it is the drop action after the completion of the preceding pick action.
     /// </summary>
     /// <param name="agvCorrelationId">The correlation id.</param>
     /// <returns>Returns subsequent action</returns>

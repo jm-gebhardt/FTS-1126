@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Graph;
+using GraphNode = Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent.GraphNode;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles.Resolver;
 
@@ -30,8 +31,8 @@ public class GraphEdgeValueResolver : IValueResolver<Graph, GraphDto, object>
             {
                 var fromNodeDto = context.Mapper.Map<GraphNodeDto>(fromNode);
                 var toNodeDto = context.Mapper.Map<GraphNodeDto>(toNode);
-                double edgeLength = edge.Length; 
-                graphEdges.Add(new GraphEdgeDto { From = fromNodeDto, To = toNodeDto, Length = edgeLength});
+                graphEdges.Add(new GraphEdgeDto { From = fromNodeDto, To = toNodeDto, 
+                    Variant = edge.Variant, VariantParameters = edge.VariantParameters, Length = edge.Length });
             }
         }
 
