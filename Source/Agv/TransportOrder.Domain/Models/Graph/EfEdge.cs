@@ -30,6 +30,11 @@ public class EfEdge
     public Guid GraphCorrelationId { get; init; }
 
     /// <summary>
+    /// Length of this edge in [m].
+    /// </summary>
+    public double Length { get; init; } = 1.0;
+    
+    /// <summary>
     /// Distance/costs to travel this edge (unitless quantifier).
     /// </summary>
     public float Metric { get; init; }

@@ -38,6 +38,16 @@ public class GraphEdge
     }
 
     /// <summary>
+    /// Length of this edge in [m].
+    /// </summary>
+    public double Length
+    {
+        get;
+        [UsedImplicitly]
+        init;
+    } = 1.0;
+
+    /// <summary>
     /// Distance/costs to travel this edge (unitless quantifier).
     /// </summary>
     public float Metric { get; }

@@ -30,7 +30,8 @@ public class GraphEdgeValueResolver : IValueResolver<Graph, GraphDto, object>
             {
                 var fromNodeDto = context.Mapper.Map<GraphNodeDto>(fromNode);
                 var toNodeDto = context.Mapper.Map<GraphNodeDto>(toNode);
-                graphEdges.Add(new GraphEdgeDto { From = fromNodeDto, To = toNodeDto });
+                double edgeLength = edge.Length; 
+                graphEdges.Add(new GraphEdgeDto { From = fromNodeDto, To = toNodeDto, Length = edgeLength});
             }
         }
 

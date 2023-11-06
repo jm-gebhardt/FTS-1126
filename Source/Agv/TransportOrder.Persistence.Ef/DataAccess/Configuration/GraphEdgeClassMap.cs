@@ -28,8 +28,8 @@ public class GraphEdgeClassMap : ClassMap<EfEdge>
             .HasForeignKey(nameof(EfEdge.GraphCorrelationId), nameof(EfEdge.ToNodeId))
             .OnDelete(DeleteBehavior.ClientCascade);
 
-        entity.Property(e => e.VariantParameters).HasJsonConversion();
+        entity.ConfigureAllProperties();
 
-        entity.Property(e => e.Variant);
+        entity.Property(e => e.VariantParameters).HasJsonConversion();
     }
 }

@@ -21,6 +21,11 @@ public record GraphEdgeDto
     public GraphNodeDto To { get; init; } = null!;
 
     /// <summary>
+    /// Length of the edge in [m].
+    /// </summary>
+    public double Length { get; init; } = 1.0;
+
+    /// <summary>
     /// Variant of this edge.
     /// </summary>
     public EdgeType Variant { get; init; } = EdgeType.Direct;

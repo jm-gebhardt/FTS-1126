@@ -196,7 +196,8 @@ public class AgvRegistryTest
                 actualEdge.ShouldSatisfyAllConditions(
                     p => p.FromNodeId.ShouldBe(expectedEdge.FromNodeId),
                     p => p.Metric.ShouldBe(expectedEdge.Metric),
-                    p => p.ToNodeId.ShouldBe(expectedEdge.ToNodeId));
+                    p => p.ToNodeId.ShouldBe(expectedEdge.ToNodeId),
+                    p => p.Length.ShouldBe(expectedEdge.Length));
             }
 
             for (int i = 0; i < actualAgvInformation.AgvGraph.Nodes.Count; i++)

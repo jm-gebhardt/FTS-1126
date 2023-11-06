@@ -31,8 +31,8 @@ public class AgvGraphProfileTest
         var agvGraph = new Graph(edges,
             new List<GraphEdge>
             {
-                new(edges.Single(e => e.Id == "S1"), edges.Single(e => e.Id == "D1")),
-                new(edges.Single(e => e.Id == "S2"), edges.Single(e => e.Id == "D2"))
+                new(edges.Single(e => e.Id == "S1"), edges.Single(e => e.Id == "D1"), 8.9443),
+                new(edges.Single(e => e.Id == "S2"), edges.Single(e => e.Id == "D2"), 8.9443)
             }, Guid.NewGuid());
 
         var mapper = MappingHelper.GetMapper(new AgvGraphProfile());
@@ -54,6 +54,9 @@ public class AgvGraphProfileTest
             Math.Abs(n.X - x.X) < FloatComparisonThreshold &&
             Math.Abs(n.Y - x.Y) < FloatComparisonThreshold &&
             Math.Abs(n.Z - x.Z) < FloatComparisonThreshold));
-        graph.Edges.ShouldAllBe(x => agvGraph.Edges.Any(e => e.From.Id == x.From.Id && e.To.Id == x.To.Id));
+
+        graph.Edges.ShouldAllBe(x => agvGraph.Edges.Any(e => e.From.Id == x.From.Id &&
+                                                             e.To.Id == x.To.Id &&
+                                                             Math.Abs(e.Length - x.Length) < FloatComparisonThreshold));
     }
 }

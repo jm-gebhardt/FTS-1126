@@ -32,7 +32,7 @@ public class GraphEdgeValueResolver : IValueResolver<AgvGraph, Graph, object>
             {
                 var fromNodeDto = context.Mapper.Map<MessageContent.GraphNode>(fromNode);
                 var toNodeDto = context.Mapper.Map<MessageContent.GraphNode>(toNode);
-                graphEdges.Add(new GraphEdge(fromNodeDto, toNodeDto));
+                graphEdges.Add(new GraphEdge(fromNodeDto, toNodeDto, edge.Length));
             }
         }
 

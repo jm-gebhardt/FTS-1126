@@ -103,7 +103,8 @@ public class AgvControllerTest
         {
             graph.Edges[i].ShouldSatisfyAllConditions(
                 e => e.From.Id.ShouldBe(agvGraph.Edges.ElementAt(i).FromNodeId),
-                e => e.To.Id.ShouldBe(agvGraph.Edges.ElementAt(i).ToNodeId));
+                e => e.To.Id.ShouldBe(agvGraph.Edges.ElementAt(i).ToNodeId),
+                e => e.Length.ShouldBe(agvGraph.Edges.ElementAt(i).Length));
         }
     }
 
