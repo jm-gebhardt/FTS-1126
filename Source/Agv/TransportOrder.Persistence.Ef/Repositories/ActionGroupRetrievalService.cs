@@ -33,7 +33,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyCollection<ActionGroupReadModel>> GetActionGroupsWithNodesAsync(IReadOnlyCollection<ActionGroupState> states, DateTime? fromDate, DateTime? toDate, int maxItems, SortBy sortBy = SortBy.CreatedDate,bool sortDescending = true)
+    public async Task<IReadOnlyCollection<ActionGroupReadModel>> GetActionGroupsWithNodesAsync(IReadOnlyCollection<ActionGroupState> states, DateTime? fromDate, DateTime? toDate, int maxItems, ICollection<Guid>? assignedAgvIds = null, SortBy sortBy = SortBy.CreatedDate, bool sortDescending = true)
     {
         await using var context = await CreateDbContextAsync();
         IQueryable<ActionGroup> query = context.Set<ActionGroup>().AsQueryable();
@@ -51,6 +51,11 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
         if (toDate != null && toDate != DateTime.MaxValue)
         {
             query = query.Where(g => g.CreatedDate <= toDate);
+        }
+
+        if (assignedAgvIds != null)
+        {
+            query = query.Where(g => g.AssignedAgv != null && assignedAgvIds.Contains((Guid) g.AssignedAgv));
         }
 
         query = query.OrderByProperty(sortBy.ToString(), isDescending: sortDescending).ThenByDescending(g => g.IsManual);
@@ -104,7 +109,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
         // Once Agv is assigned to ActionGroup, Status is immediately set to started (and StartedDate), therefore we can use StartedDate to get current assigned ActionGroup
         await using var context = await CreateDbContextAsync();
         List<ActionGroup> actionGroups = await context.Set<ActionGroup>()
-            .Where(g => g.AssignedAgv != null && agvCorrelationIds.Contains((Guid)g.AssignedAgv))
+            .Where(g => g.AssignedAgv != null && agvCorrelationIds.Contains((Guid) g.AssignedAgv))
             .OrderByDescending(g => g.StartedDate)
             .ToListAsync();
 

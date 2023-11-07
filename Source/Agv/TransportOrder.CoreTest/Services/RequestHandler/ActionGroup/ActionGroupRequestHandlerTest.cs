@@ -52,24 +52,50 @@ public class ActionGroupRequestHandlerTest
             .WithActionGroups(Array.Empty<TransportOrder.Domain.Models.ActionGroup.ActionGroup>())
             .BuildAsync();
         Response<GotActionGroups> response = await fixture.GetResponseAsync<GotActionGroups>(
-            new GetActionGroups(fixture.AllActionGroupStates, DateTime.MinValue, DateTime.MaxValue, 100));
+            new GetActionGroups(fixture.AllActionGroupStates, DateTime.MinValue, DateTime.MaxValue, null, 100));
         response.Message.ActionGroups.ShouldBeEmpty();
     }
 
     [TestMethod]
     public async Task Consume_GetAgvActionGroupsRequest_SingleActionGroup_ReturnsCreated()
     {
-        TransportOrder.Domain.Models.ActionGroup.ActionGroup[] actionGroups = { AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Created) };
+        TransportOrder.Domain.Models.ActionGroup.ActionGroup[] actionGroups = {AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Created)};
         ActionGroupRequestHandlerTestFixture<GetActionGroups, ActionGroupRequestHandler> fixture = await new ActionGroupRequestHandlerTestFixture<GetActionGroups, ActionGroupRequestHandler>()
             .WithActionGroups(actionGroups)
             .AddDefaultGraph()
             .BuildAsync();
 
         Response<GotActionGroups> response = await fixture.GetResponseAsync<GotActionGroups>(
-            new GetActionGroups(fixture.AllActionGroupStates, DateTime.MinValue, DateTime.MaxValue, 100));
+            new GetActionGroups(fixture.AllActionGroupStates, DateTime.MinValue, DateTime.MaxValue, null, 100));
         IReadOnlyCollection<ActionGroupReadModel> actionGroupReadModels = response.Message.ActionGroups;
         actionGroupReadModels.ShouldNotBeEmpty();
         actionGroups.ShouldAllBe(g => g.Actions.Any());
+    }
+
+    [TestMethod]
+    public async Task Consume_GetAgvActionGroupsRequest_MultipleActionGroups_ReturnsOnlyAssignedOnes()
+    {
+        var agvCorrelationId = Guid.NewGuid();
+        TransportOrder.Domain.Models.ActionGroup.ActionGroup[] actionGroups =
+        {
+            AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Created),
+            AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Canceled),
+            AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Created, assignedAgv: agvCorrelationId),
+            AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Started, assignedAgv: agvCorrelationId),
+            AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Failed),
+            AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Invalid)
+        };
+        ActionGroupRequestHandlerTestFixture<GetActionGroups, ActionGroupRequestHandler> fixture = await new ActionGroupRequestHandlerTestFixture<GetActionGroups, ActionGroupRequestHandler>()
+            .WithActionGroups(actionGroups)
+            .AddDefaultGraph()
+            .BuildAsync();
+
+        Response<GotActionGroups> response = await fixture.GetResponseAsync<GotActionGroups>(
+            new GetActionGroups(fixture.AllActionGroupStates, DateTime.MinValue, DateTime.MaxValue, new List<Guid>() {agvCorrelationId}, 100));
+        IReadOnlyCollection<ActionGroupReadModel> actionGroupReadModels = response.Message.ActionGroups;
+        actionGroupReadModels.Count.ShouldBe(2);
+        actionGroupReadModels.ShouldContain(a=>a.State == ActionGroupState.Created);
+        actionGroupReadModels.ShouldContain(a=>a.State == ActionGroupState.Started);
     }
 
     private static IEnumerable<TransportOrder.Domain.Models.ActionGroup.ActionGroup> CreateInitialActionGroups(int totalActionGroup, ActionGroupState actionGroupState)
@@ -121,15 +147,15 @@ public class ActionGroupRequestHandlerTest
         {
             switch (actionGroupsByState)
             {
-                case { State: ActionGroupState.Completed }:
+                case {State: ActionGroupState.Completed}:
                     actionGroupsByState.Count.ShouldBe(actionGroupCompletedCount);
                     break;
 
-                case { State: ActionGroupState.Created }:
+                case {State: ActionGroupState.Created}:
                     actionGroupsByState.Count.ShouldBe(actionGroupCreatedCount);
                     break;
 
-                case { State: ActionGroupState.Started }:
+                case {State: ActionGroupState.Started}:
                     actionGroupsByState.Count.ShouldBe(actionGroupStartedCount);
                     break;
             }

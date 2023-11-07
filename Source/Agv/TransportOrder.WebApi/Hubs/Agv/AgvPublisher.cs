@@ -55,7 +55,7 @@ public class AgvPublisher : IAgvPublisher
     /// <inheritdoc/>
     public Task SendAssignedActionGroupChangedAsync(Guid correlationId, Common.Messages.ActionGroups.ActionGroup? assignedActionGroup)
     {
-        var dto = new AssignedActionGroupDto(correlationId, assignedActionGroup?.CorrelationId);
+        var dto = new AssignedActionGroupDto(correlationId, _mapper.Map<ActionGroupDto>(assignedActionGroup));
         return _hubContext.Clients.All.AssignedActionGroupChanged(dto);
     }
 

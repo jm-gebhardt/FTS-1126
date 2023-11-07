@@ -25,6 +25,6 @@ public class ActionGroupStartedConsumerTest
 
         fixture.PublisherMock.Verify(h => h.SendAssignedActionGroupChangedAsync(
             (Guid) actionGroup.AssignedAgv!,
-            It.IsAny<ActionGroup>()), Times.Once);
+            It.Is<ActionGroup>(a => a.AssignedAgv == actionGroup.AssignedAgv)), Times.Once);
     }
 }

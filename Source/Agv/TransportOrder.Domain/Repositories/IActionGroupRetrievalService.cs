@@ -18,9 +18,10 @@ public interface IActionGroupRetrievalService
     /// <param name="fromDate">The UTC from Date, only items with a greater CreatedDate will be considered.</param>
     /// <param name="toDate">The UTC from Date, only items with a less CreatedDate will be considered.</param>
     /// <param name="maxItems">The maximum number of action groups returned.</param>
+    /// <param name="assignedAgvIds">If set, only action groups which are assigned to one of these agvs will be returned.</param>
     /// <param name="sortBy">The sorting parameter.</param>
     /// <param name="sortDescending">If true, sorts in descending order.</param>
-    Task<IReadOnlyCollection<ActionGroupReadModel>> GetActionGroupsWithNodesAsync(IReadOnlyCollection<ActionGroupState> states, DateTime? fromDate, DateTime? toDate, int maxItems, SortBy sortBy = SortBy.CreatedDate, bool sortDescending = true);
+    Task<IReadOnlyCollection<ActionGroupReadModel>> GetActionGroupsWithNodesAsync(IReadOnlyCollection<ActionGroupState> states, DateTime? fromDate, DateTime? toDate, int maxItems, ICollection<Guid>? assignedAgvIds = null, SortBy sortBy = SortBy.CreatedDate, bool sortDescending = true);
 
     /// <summary>
     /// Get currently assigned action groups of provided AGVs.

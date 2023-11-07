@@ -35,13 +35,16 @@ public class ActionGroupsController : Controller
     /// <response code="200">Ok</response>
     [HttpGet]
     [Route("/actionGroups")]
-    public async Task<ActionResult<IEnumerable<ActionGroupDto>>> GetActionGroups(ActionGroupState[] states, DateTime? fromDate, DateTime? toDate, int limit = 1000, SortBy sortBy=SortBy.CreatedDate, SortDirection sortDirection=SortDirection.Desc )
+    public async Task<ActionResult<IEnumerable<ActionGroupDto>>> GetActionGroups(ActionGroupState[] states, DateTime? fromDate, DateTime? toDate, Guid? assignedAgv, int limit = 1000, SortBy sortBy = SortBy.CreatedDate, SortDirection sortDirection = SortDirection.Desc)
     {
         Response<GotActionGroups> response = await _getAgvActionGroupsRequest.GetResponse<GotActionGroups>(new GetActionGroups(
             states,
             fromDate ?? DateTime.MinValue,
             toDate ?? DateTime.MaxValue,
-            limit, sortBy, sortDirection == SortDirection.Desc));
+            assignedAgv != null ? new List<Guid> {(Guid) assignedAgv} : null,
+            limit,
+            sortBy,
+            sortDirection == SortDirection.Desc));
         List<ActionGroupDto> actionGroups = response.Message.ActionGroups.Select(g => _mapper.Map<ActionGroupDto>(g)).ToList();
         return Ok(actionGroups);
     }
