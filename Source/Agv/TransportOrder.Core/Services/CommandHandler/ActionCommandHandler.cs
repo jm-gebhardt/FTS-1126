@@ -23,7 +23,6 @@ using MassTransit;
 using Microsoft.Extensions.Logging;
 using ActionGroup = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using AgvAction = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.AgvAction;
-using MessageActionGroup = Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.ActionGroup;
 using MessageAgvAction = Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.AgvAction;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.CommandHandler;
@@ -43,7 +42,8 @@ public class ActionCommandHandler :
     IConsumer<CompleteAction>,
     IConsumer<QueueActionGroup>,
     IConsumer<CancelActionGroup>,
-    IConsumer<SelectNodesForAction>
+    IConsumer<SelectNodesForAction>,
+    IConsumer<AbortActionGroup>
 {
     private readonly ILogger<ActionCommandHandler> _logger;
     private readonly IRouteService _routeService;
@@ -408,17 +408,18 @@ public class ActionCommandHandler :
                 var assignedAgv = await _agvRepository.GetAgvAsync(actionGroup.AssignedAgv!.Value);
                 await SelectNodesForAgvAction(context, domainActionGroup.FirstNotStartedAction!, assignedAgv, cancellationToken);
                 await context.RespondAsync(new Success());
-                return;
             }
-
-            var agvSettings = _settingsProvider.GetSettings();
-            await _actionManagerSemaphoreProvider.ExecuteLockedAsync(async () =>
+            else
             {
-                ICollection<Domain.Models.Agv.Agv> allReadyAgvs = await _agvRepository.GetReadyAgvsAsync();
-                ICollection<Domain.Models.Agv.Agv> readyAgvs = allReadyAgvs.Where(a => !(a.CurrentAgvState == AgvState.Charging &&
-                                                                                         a.AgvStatus!.BatteryCharge < agvSettings.BatteryLevelGood)).ToList();
-                agv = await _chooseAgvActionGroupService.GetAgvAsync(domainActionGroup, readyAgvs.ToList(), cancellationToken);
-            }, cancellationToken);
+                var agvSettings = _settingsProvider.GetSettings();
+                await _actionManagerSemaphoreProvider.ExecuteLockedAsync(async () =>
+                {
+                    ICollection<Domain.Models.Agv.Agv> allReadyAgvs = await _agvRepository.GetReadyAgvsAsync();
+                    ICollection<Domain.Models.Agv.Agv> readyAgvs = allReadyAgvs.Where(a => !(a.CurrentAgvState == AgvState.Charging &&
+                                                                                             a.AgvStatus!.BatteryCharge < agvSettings.BatteryLevelGood)).ToList();
+                    agv = await _chooseAgvActionGroupService.GetAgvAsync(domainActionGroup, readyAgvs.ToList(), cancellationToken);
+                }, cancellationToken);
+            }
             if (agv != null)
             {
                 domainActionGroup.Assign(agv);
@@ -479,6 +480,44 @@ public class ActionCommandHandler :
     }
 
     /// <summary>
+    /// Handles the <see cref="AbortActionGroup"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<AbortActionGroup> context)
+    {
+        var correlationId = context.Message.CorrelationId;
+
+        var  actionGroup = await _actionGroupRegistry.GetRequiredActionGroupByIdAsync(correlationId);
+
+        if (actionGroup.AssignedAgv == null)
+        {
+            _logger.LogError("Could not abort action group {ActionGroup}, it is not assigned to an agv.", actionGroup.CorrelationId);
+            await context.RespondAsync(new AbortActionGroupFailed("Action group abortion failed, no assigned agv."));
+            return;
+        }
+        var action = actionGroup.Actions.FirstOrDefault(a => a.StartedDate != null && a.State != ActionState.Completed);
+        if (action == null)
+        {
+            _logger.LogError("Could not abort action group {ActionGroup}, no started actions.", actionGroup.CorrelationId);
+            await context.RespondAsync(new AbortActionGroupFailed("Action group abortion failed, no started actions."));
+            return;
+        }
+        var agv = await _agvRepository.GetAgvAsync((Guid)actionGroup.AssignedAgv!);
+        actionGroup = await _actionGroupRegistry.UpdateActionAndGroupStateAsync(action, agv, ActionState.Aborted);
+
+        await context.Publish(new ActionAborted(agv.CorrelationId,  _mapper.Map<MessageAgvAction>(action)));
+        var actionGroupMessageContent = _mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup);
+        await context.Publish(new ActionGroupChanged(actionGroupMessageContent, actionGroup.CorrelationId));
+        await context.RespondAsync(new Success());
+
+        var actionGroupWithNodes = await _actionGroupRetrievalService.EnrichActionGroupWithNodesAsync(actionGroup);
+        if (actionGroupWithNodes.Actions.Any(a => new[] { AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park }.Contains(a.TargetNodeType)))
+        {
+            string serviceNode = actionGroupWithNodes.Actions.First(a => new[] { AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park }.Contains(a.TargetNodeType)).TargetNodeId;
+            await context.Publish(new AutomaticActionWithdrawn(serviceNode));
+        }
+    }
+
+    /// <summary>
     /// Handles the <see cref="CancelActionGroup"/> command.
     /// </summary>
     public async Task Consume(ConsumeContext<CancelActionGroup> context)
@@ -511,10 +550,20 @@ public class ActionCommandHandler :
             case ActionGroupState.Canceled:
                 await context.PublishAndRespond(new ActionGroupCancelFailed(actionGroupMessageContent, actionGroup.CorrelationId, HostOrderCancelFailedErrorCode.OrderAlreadyCancelled));
                 return;
+            
+            case ActionGroupState.Aborted:
+                await context.Publish(new ActionGroupCancelFailed(actionGroupMessageContent, actionGroup.CorrelationId, HostOrderCancelFailedErrorCode.OrderAlreadyCancelled));
+                return;
         }
        
         actionGroup = await _actionGroupRegistry.UpdateActionAndGroupStateAsync(actionGroup.FirstNotStartedAction!, null, ActionState.Canceled);
         await context.PublishAndRespond(new ActionGroupCancelled(actionGroupMessageContent, actionGroup.CorrelationId, DateTime.UtcNow));
+        var actionGroupWithNodes = await _actionGroupRetrievalService.EnrichActionGroupWithNodesAsync(actionGroup);
+        if (actionGroupWithNodes.Actions.Any(a => new[] { AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park }.Contains(a.TargetNodeType)))
+        {
+            string serviceNode = actionGroupWithNodes.Actions.First(a => new[] { AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park }.Contains(a.TargetNodeType)).TargetNodeId;
+            await context.Publish(new AutomaticActionWithdrawn(serviceNode));
+        }
     }
 
     private async Task SelectNodesForAgvAction(IPublishEndpoint context, AgvAction action, Domain.Models.Agv.Agv assignedAgv, CancellationToken cancellationToken)

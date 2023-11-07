@@ -8,7 +8,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 
 public static class AgvActionGenerator
 {
-    public static ActionGroup GenerateChargeActionGroup(string? targetNodeId = null, Guid? assignedAgv = null)
+    public static ActionGroup GenerateChargeActionGroup(string? targetNodeId = null, Guid? assignedAgv = null, 
+        ActionState actionState = ActionState.Created)
     {
         var groupId = Guid.NewGuid();
         var chargeAction = new AgvAction(Guid.NewGuid(), ActionType.Charge, targetNodeId ?? AgvGraphGenerator.ChargingClose.Id, groupId);
@@ -16,13 +17,14 @@ public static class AgvActionGenerator
         {
             chargeAction.Nodes = new[] { targetNodeId };
         }
+        chargeAction.UpdateActionState(actionState);
 
         var actionGroup = new ActionGroup(groupId, string.Empty, new List<AgvAction> { chargeAction }, ActionGroupCreator.TransportOrder) { AssignedAgv = assignedAgv };
         return actionGroup;
     }
 
     [UsedImplicitly]
-    public static AgvAction GenerateParkAction(string? targetNodeId = null, Guid? parentId = null, int sequence = 0)
+    public static AgvAction GenerateParkAction(string? targetNodeId = null, Guid? parentId = null, int sequence = 0, ActionState actionState = ActionState.Created)
     {
         var parkAction = new AgvAction(Guid.NewGuid(), ActionType.Move, targetNodeId ?? AgvGraphGenerator.ParkClose.Id, parentId ?? Guid.NewGuid())
         {
@@ -32,6 +34,7 @@ public static class AgvActionGenerator
         {
             parkAction.Nodes = new[] { targetNodeId };
         }
+        parkAction.UpdateActionState(actionState);
         return parkAction;
     }
     
@@ -149,6 +152,10 @@ public static class AgvActionGenerator
 
             case ActionGroupState.Invalid:
                 actionGroup.InvalidateAction(actionId);
+                break;
+
+            case ActionGroupState.Aborted:
+                actionGroup.AbortAction(actionId);
                 break;
         }
         return actionGroup;

@@ -328,4 +328,13 @@ public class EfActionGroupRegistry : IActionGroupRegistry
             (a.AssignedAgv == null && a.State == ActionGroupState.Created)
         );
     }
+
+    /// <inheritdoc />
+    public async Task<Guid?> GetAgvAssignedToAction(Guid actionCorrelationId)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+
+        DbSet<ActionGroup> actionGroups = context.Set<ActionGroup>();
+        return (await actionGroups.SingleAsync(ag => ag.Actions.Any(a => a.CorrelationId == actionCorrelationId))).AssignedAgv;
+    }
 }

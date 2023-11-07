@@ -1,6 +1,8 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Node;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.ActionGroup;
 using JetBrains.Annotations;
 using MassTransit;
@@ -17,17 +19,22 @@ public class ActionEventHandler :
     IConsumer<ActionCompleted>,
     IConsumer<StartingActionForAgvFailed>,
     IConsumer<NonChargingActionCompleted>,
-    IConsumer<NodesSelectedForAction>
+    IConsumer<NodesSelectedForAction>,
+    IConsumer<ActionAbortionCompleted>,
+    IConsumer<ActionCancelled>,
+    IConsumer<AutomaticActionWithdrawn>
 {
     private readonly ILogger<ActionEventHandler> _logger;
+    private readonly IActionGroupRegistry _actionGroupRegistry;
 
     /// <summary>
     /// Initializes a new <see cref="ActionEventHandler"/> instance.
     /// </summary>
     public ActionEventHandler(
-        ILogger<ActionEventHandler> logger)
+        ILogger<ActionEventHandler> logger, IActionGroupRegistry actionGroupRegistry)
     {
         _logger = logger;
+        _actionGroupRegistry = actionGroupRegistry;
     }
 
     /// <summary>
@@ -72,5 +79,43 @@ public class ActionEventHandler :
     public async Task Consume(ConsumeContext<NodesSelectedForAction> context)
     {
         await context.Publish(new PrepareAgvForStartingAction(context.Message.Action, context.Message.AssignedAgv));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="ActionAbortionCompleted"/> event.
+    /// </summary>
+    public async Task Consume(ConsumeContext<ActionAbortionCompleted> context)
+    {
+        var actionCorrelationId = context.Message.CorrelationId;
+        Guid? assignedAgv = await _actionGroupRegistry.GetAgvAssignedToAction(actionCorrelationId);
+        if (assignedAgv == null)
+        {
+            _logger.LogError("Could not complete action abortion for action {Action}, no assigned agv", actionCorrelationId);
+            return;
+        }
+        await context.Publish(new HandleActionCompletion(assignedAgv.Value));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="ActionCancelled"/> event.
+    /// </summary>
+    public async Task Consume(ConsumeContext<ActionCancelled> context)
+    {
+        var actionCorrelationId = context.Message.CorrelationId;
+        Guid? assignedAgv = await _actionGroupRegistry.GetAgvAssignedToAction(actionCorrelationId);
+        if (assignedAgv == null)
+        {
+            _logger.LogError("Could not complete action abortion for action {Action}, no assigned agv", actionCorrelationId);
+            return;
+        }
+        await context.Publish(new HandleActionCompletion(assignedAgv.Value));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="AutomaticActionWithdrawn"/> event.
+    /// </summary>
+    public async Task Consume(ConsumeContext<AutomaticActionWithdrawn> context)
+    {
+        await context.Publish(new FreeNode(context.Message.TargetNodeId));
     }
 }

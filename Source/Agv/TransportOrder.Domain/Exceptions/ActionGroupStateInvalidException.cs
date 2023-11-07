@@ -13,4 +13,9 @@ public class ActionGroupStateInvalidException : Exception
     public ActionGroupStateInvalidException(ActionGroup actionGroup) : base($"ActionGroup State for {actionGroup.CorrelationId} is invalid. Action states: {string.Join(", ", actionGroup.Actions.Select(a => a.State))}")
     {
     }
+
+    /// <inheritdoc cref="ActionGroupStateInvalidException"/>>
+    public ActionGroupStateInvalidException(ActionGroup actionGroup, string message) : base($"ActionGroup State {actionGroup.State} is invalid. {message} ")
+    {
+    }
 }

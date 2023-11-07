@@ -81,7 +81,7 @@ public class AgvController : Controller
     /// <response code="200">Ok</response>
     /// <response code="404">AGV with given correlationId not found.</response>
     [HttpGet]
-    [Route("/agv/{correlationId}")]
+    [Route("/agv/{correlationId:guid}")]
     public async Task<ActionResult<AgvDto>> GetAgv(Guid correlationId)
     {
         Response<GotAgv> response = await _getAgvClient.GetResponse<GotAgv>(new GetAgv(correlationId));
@@ -96,7 +96,7 @@ public class AgvController : Controller
     /// <response code="204">No content</response>
     /// <response code="404">AGV with given correlationId not found</response>
     [HttpGet]
-    [Route("/agv/{correlationId}/graph")]
+    [Route("/agv/{correlationId:guid}/graph")]
     public async Task<ActionResult<GraphDto>> GetAgvGraph(Guid correlationId)
     {
         Response<GotAgvGraph> response = await _getAgvGraphClient.GetResponse<GotAgvGraph>(new GetAgvGraph(correlationId));

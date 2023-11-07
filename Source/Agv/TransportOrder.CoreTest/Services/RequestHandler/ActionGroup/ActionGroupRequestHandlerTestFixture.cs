@@ -46,7 +46,7 @@ public class ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> : M
         return this;
     }
 
-    public async Task<ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer>> BuildAsync()
+    public async Task<ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer>> BuildAsync(IBus? bus = null)
     {
         if (_actionGroups != null)
         {
@@ -63,6 +63,15 @@ public class ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> : M
         AddServices(s => s.AddTransient<IActionGroupRetrievalService>(_ => _actionGroupRetrievalServiceTestFixture.ActionGroupRetrievalService));
         AddServices(s => s.AddTransient<IActionGroupRegistry>(_ => _actionGroupRegistryFixture.ActionGroupRegistry));
         AddServices(s => s.AddTransient<IMapper>(_ => Mock.Of<IMapper>()));
+        if (bus != null)
+        {
+            AddServices(s =>s.AddTransient(_ => bus));
+        }
+        else
+        {
+            var busMock = new Mock<IBus>();
+            AddServices(s => s.AddTransient(_ => busMock.Object));
+        }
         base.Build();
 
         return this;

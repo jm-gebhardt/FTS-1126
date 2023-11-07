@@ -2,8 +2,11 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
+using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
+using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.CommandHandler.Action;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.ActionGroup;
 using MassTransit;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -160,5 +163,81 @@ public class ActionGroupRequestHandlerTest
                     break;
             }
         }
+    }
+
+    [TestMethod]
+    public async Task Consume_TriggerActionGroupAbortion_UnknownActionGroup_ThrowsActionGroupNotFoundException()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Created);
+        ActionGroupRequestHandlerTestFixture<TriggerActionGroupAbortion, ActionGroupRequestHandler> fixture = await new ActionGroupRequestHandlerTestFixture<TriggerActionGroupAbortion, ActionGroupRequestHandler>()
+            .BuildAsync();
+
+        await MediatorShould.ThrowRequestExceptionAsync<ActionGroupNotFoundException>(async () => await fixture.GetResponseAsync<ActionGroupAbortionTriggered>(
+            new TriggerActionGroupAbortion(actionGroup.CorrelationId)));
+    }
+
+    [TestMethod]
+    public async Task Consume_TriggerActionGroupAbortion_ValidData_ActionGroupAbortionTriggered()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId,  pickActionState: ActionState.Started);
+        var actionCommandHandlerTestFixture = new ActionCommandHandlerTestFixture();
+        actionCommandHandlerTestFixture.AddAgv(agv);
+        actionCommandHandlerTestFixture.AddActionGroup(actionGroup);
+        ActionGroupRequestHandlerTestFixture<TriggerActionGroupAbortion, ActionGroupRequestHandler> fixture = 
+            await new ActionGroupRequestHandlerTestFixture<TriggerActionGroupAbortion, ActionGroupRequestHandler>()
+            .WithActionGroups(actionGroup)
+            .BuildAsync(actionCommandHandlerTestFixture.TestHarness!.Bus);
+        Response<ActionGroupAbortionTriggered> response = await fixture.GetResponseAsync<ActionGroupAbortionTriggered>(new TriggerActionGroupAbortion(actionGroup.CorrelationId));
+        response.Message.CorrelationId.ShouldBe(actionGroup.CorrelationId);
+        (await actionCommandHandlerTestFixture.TestHarness!.Published.Any<AbortActionGroup>()).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task Consume_TriggerActionGroupAbortion_ActionGroupInWrongState_ThrowsActionGroupStateInvalidException()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Created);
+        ActionGroupRequestHandlerTestFixture<TriggerActionGroupAbortion, ActionGroupRequestHandler> fixture = await new ActionGroupRequestHandlerTestFixture<TriggerActionGroupAbortion, ActionGroupRequestHandler>()
+            .WithActionGroups(actionGroup)
+            .BuildAsync();
+
+        await MediatorShould.ThrowRequestExceptionAsync<ActionGroupStateInvalidException>(async () => await fixture.GetResponseAsync<ActionGroupAbortionTriggered>(
+            new TriggerActionGroupAbortion(actionGroup.CorrelationId)));
+    }
+
+    [TestMethod]
+    public async Task Consume_TriggerActionGroupAbortion_NoAssignedAgv_ThrowsActionGroupStateInvalidException()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv:null, pickActionState: ActionState.Started);
+        var actionCommandHandlerTestFixture = new ActionCommandHandlerTestFixture();
+        actionCommandHandlerTestFixture.AddActionGroup(actionGroup);
+        ActionGroupRequestHandlerTestFixture<TriggerActionGroupAbortion, ActionGroupRequestHandler> fixture =
+            await new ActionGroupRequestHandlerTestFixture<TriggerActionGroupAbortion, ActionGroupRequestHandler>()
+                .WithActionGroups(actionGroup)
+                .BuildAsync(actionCommandHandlerTestFixture.TestHarness!.Bus);
+        await MediatorShould.ThrowRequestExceptionAsync<ActionGroupStateInvalidException>(async () => await fixture.GetResponseAsync<ActionGroupAbortionTriggered>(
+            new TriggerActionGroupAbortion(actionGroup.CorrelationId)));
+    }
+
+    [TestMethod]
+    public async Task Consume_TriggerActionGroupAbortion_ActionsCompletedInTheMeantime_ThrowsActionGroupStateInvalidException()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var actionGroupWithStartedAction = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId, pickActionState: ActionState.Started);
+        var actionGroupWithCompletedActions = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId, 
+            pickActionState: ActionState.Completed, dropActionState: ActionState.Completed);
+        // just reset correlation id of a new action group to avoid implementing a full deep copy
+        actionGroupWithCompletedActions.GetType().GetProperty(nameof(actionGroupWithCompletedActions.CorrelationId))!.SetValue(actionGroupWithCompletedActions, actionGroupWithStartedAction.CorrelationId);
+        
+        var actionCommandHandlerTestFixture = new ActionCommandHandlerTestFixture();
+        actionCommandHandlerTestFixture.AddAgv(agv);
+        actionCommandHandlerTestFixture.AddActionGroup(actionGroupWithCompletedActions);
+        ActionGroupRequestHandlerTestFixture<TriggerActionGroupAbortion, ActionGroupRequestHandler> fixture =
+            await new ActionGroupRequestHandlerTestFixture<TriggerActionGroupAbortion, ActionGroupRequestHandler>()
+                .WithActionGroups(actionGroupWithStartedAction)
+                .BuildAsync(actionCommandHandlerTestFixture.TestHarness!.Bus);
+        
+        await MediatorShould.ThrowRequestExceptionAsync<ActionGroupStateInvalidException>(async () => await fixture.GetResponseAsync<ActionGroupAbortionTriggered>(
+            new TriggerActionGroupAbortion(actionGroupWithStartedAction.CorrelationId)));
     }
 }

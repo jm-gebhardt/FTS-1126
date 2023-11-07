@@ -3,6 +3,7 @@ using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Node;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.ActionGroup;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
@@ -71,5 +72,54 @@ public class ActionEventHandlerTest
 
         (await fixture.ConsumerHarness!.Consumed.Any<NodesSelectedForAction>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<PrepareAgvForStartingAction>()).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task Consume_ActionAbortionCompleted_ValidData_PublishesHandleActionCompletion()
+    {
+        var fixture = new ActionEventHandlerTestFixture();
+        fixture.AddAssignedAgv(Guid.NewGuid());
+        await fixture.TestHarness!.Bus.Publish(new ActionAbortionCompleted(Guid.NewGuid()));
+        (await fixture.ConsumerHarness!.Consumed.Any<ActionAbortionCompleted>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<HandleActionCompletion>()).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task Consume_ActionAbortionCompleted_NoAssignedAgv_DoesNotPublishHandleActionCompletion()
+    {
+        var fixture = new ActionEventHandlerTestFixture();
+        fixture.AddAssignedAgv(null);
+        await fixture.TestHarness!.Bus.Publish(new ActionAbortionCompleted(Guid.NewGuid()));
+        (await fixture.ConsumerHarness!.Consumed.Any<ActionAbortionCompleted>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<HandleActionCompletion>()).ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public async Task Consume_ActionCancelled_NoAssignedAgv_DoesNotPublishHandleActionCompletion()
+    {
+        var fixture = new ActionEventHandlerTestFixture();
+        fixture.AddAssignedAgv(null);
+        await fixture.TestHarness!.Bus.Publish(new ActionCancelled(Guid.NewGuid()));
+        (await fixture.ConsumerHarness!.Consumed.Any<ActionCancelled>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<HandleActionCompletion>()).ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public async Task Consume_ActionCancelled_ValidData_PublishesHandleActionCompletion()
+    {
+        var fixture = new ActionEventHandlerTestFixture();
+        fixture.AddAssignedAgv(Guid.NewGuid());
+        await fixture.TestHarness!.Bus.Publish(new ActionCancelled(Guid.NewGuid()));
+        (await fixture.ConsumerHarness!.Consumed.Any<ActionCancelled>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<HandleActionCompletion>()).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task Consume_AutomaticActionWithdrawn_ValidData_FreeNode()
+    {
+        var fixture = new ActionEventHandlerTestFixture();
+        await fixture.TestHarness!.Bus.Publish(new AutomaticActionWithdrawn("Charge-0"));
+        (await fixture.ConsumerHarness!.Consumed.Any<AutomaticActionWithdrawn>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<FreeNode>()).ShouldBeTrue();
     }
 }

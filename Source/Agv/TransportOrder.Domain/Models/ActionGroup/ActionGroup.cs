@@ -124,6 +124,7 @@ public class ActionGroup
             _ when _actions.Any(a => a.State == ActionState.Invalid) => ActionGroupState.Invalid,
             _ when _actions.Any(a => a.State == ActionState.Failed) => ActionGroupState.Failed,
             _ when _actions.Any(a => a.State == ActionState.Canceled) => ActionGroupState.Canceled,
+            _ when _actions.Any(a => a.State == ActionState.Aborted) => ActionGroupState.Aborted,
             _ => ActionGroupState.Started
         };
 
@@ -184,6 +185,15 @@ public class ActionGroup
     public void InvalidateAction(Guid actionId)
     {
         UpdateActionState(actionId, ActionState.Invalid);
+    }
+
+    /// <summary>
+    /// Aborts the specified action.
+    /// </summary>
+    /// <param name="actionId">The id of the action.</param>
+    public void AbortAction(Guid actionId)
+    {
+        UpdateActionState(actionId, ActionState.Aborted);
     }
 
     /// <summary>

@@ -103,6 +103,11 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
     public string? LastNodeId => CurrentNode?.Id;
 
     /// <summary>
+    /// True when the last action has been aborted
+    /// </summary>
+    public bool LastActionAborted;
+
+    /// <summary>
     /// Next node AGV will arrive at.
     /// On destination arrival this is the same as <see cref="LastNodeId"/>.
     /// </summary>
@@ -137,25 +142,26 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
 
             if (!orderProgress.HasValue) // Use first node as initial position
             {
-                if (_position == null)
+                if (_position != null)
                 {
-                    // Init position to random station node
-                    List<GraphNode> stations = AgvGraph.Nodes.Where(n =>
-                    {
-                        switch (n.Type)
-                        {
-                            case AgvGraph.NodeType.Pick: return true;
-                            case AgvGraph.NodeType.Drop: return true;
-                            case AgvGraph.NodeType.PickDrop: return true;
-                            default: return false;
-                        }
-                    }).ToList();
-
-                    var rnd = new Random();
-                    var node = stations[rnd.Next(0, stations.Count)];
-                    _position = new AgvPosition(true, node.X, node.Y, node.Z, 0f, 0f);
-                    CurrentNode = node;
+                    return _position;
                 }
+                // Init position to random station node
+                List<GraphNode> stations = AgvGraph.Nodes.Where(n =>
+                {
+                    return n.Type switch
+                    {
+                        AgvGraph.NodeType.Pick => true,
+                        AgvGraph.NodeType.Drop => true,
+                        AgvGraph.NodeType.PickDrop => true,
+                        _ => false
+                    };
+                }).ToList();
+
+                var rnd = new Random();
+                var node = stations[rnd.Next(0, stations.Count)];
+                _position = new AgvPosition(true, node.X, node.Y, node.Z, 0f, 0f);
+                CurrentNode = node;
                 return _position;
             }
 
@@ -306,6 +312,16 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
     {
         ActionStartDate = null;
         // Do not reset Action to provide information such as last node
+    }
+
+    /// <summary>
+    /// Abort action
+    /// </summary>
+    public void AbortAction()
+    {
+        ActionStartDate = null;
+        // Do not reset Action to provide information such as last node
+        LastActionAborted = true;
     }
 
     /// <summary>

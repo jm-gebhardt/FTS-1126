@@ -290,8 +290,8 @@ public class ActionGroupRegistryTest
 
     [TestMethod]
     [DataRow(ActionGroupState.Completed, 12)]
-    [DataRow(ActionGroupState.Started, 12)]
-    [DataRow(ActionGroupState.Created, 12)]
+    [DataRow(ActionGroupState.Started, 18)]
+    [DataRow(ActionGroupState.Created, 18)]
     [DataRow(ActionGroupState.Completed, 0)]
     public async Task GetActionGroupsCountAsync_WhenThereIsActionGroupForGivenState_ReturnCountOfActionGroups(ActionGroupState state, int expectedActionGroupCount)
     {

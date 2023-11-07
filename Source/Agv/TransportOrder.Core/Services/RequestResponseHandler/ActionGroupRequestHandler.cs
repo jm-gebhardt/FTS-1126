@@ -1,7 +1,10 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.ActionGroup;
 using JetBrains.Annotations;
 using MassTransit;
@@ -14,20 +17,24 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHan
 [PublicAPI]
 public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
     IConsumer<GetActionGroups>,
-    IConsumer<GetActionGroupCountsByState>
+    IConsumer<GetActionGroupCountsByState>,
+    IConsumer<TriggerActionGroupAbortion>
 {
     private readonly IActionGroupRetrievalService _retrievalService;
     private readonly IActionGroupRegistry _actionGroupRegistry;
+    private readonly IBus _bus;
 
     /// <summary>
     ///  Initializes a new <see cref="ActionGroupRequestHandler"/> instance.
     /// </summary>
     /// <param name="retrievalService">The action group read model retrieval service.</param>
     /// <param name="actionGroupRegistry">The action group repository.</param>
-    public ActionGroupRequestHandler(IActionGroupRetrievalService retrievalService, IActionGroupRegistry actionGroupRegistry)
+    /// <param name="bus">The message bus.</param>
+    public ActionGroupRequestHandler(IActionGroupRetrievalService retrievalService, IActionGroupRegistry actionGroupRegistry, IBus bus)
     {
         _retrievalService = retrievalService;
         _actionGroupRegistry = actionGroupRegistry;
+        _bus = bus;
     }
 
     /// <summary>
@@ -65,5 +72,26 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
                 .ContinueWith(actionGroupCount => new AgvGroupCountByState(state, actionGroupCount.Result))));
 
         await context.RespondAsync(new GotActionGroupCountsByState(actionGroupStateCounts));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="TriggerActionGroupAbortion"/> request.
+    /// </summary>
+    public async Task Consume(ConsumeContext<TriggerActionGroupAbortion> context)
+    {
+        var correlationId = context.Message.CorrelationId;
+        var actionGroup = await _actionGroupRegistry.GetRequiredActionGroupByIdAsync(correlationId);
+
+        if (actionGroup.State != ActionGroupState.Started)
+        {
+            throw new ActionGroupStateInvalidException(actionGroup, "Cannot abort action that are not in state 'Started'.");
+        }
+        IRequestClient<AbortActionGroup>? requestClient = context.CreateRequestClient<AbortActionGroup>(_bus);
+        Response<Success, AbortActionGroupFailed> response = await requestClient.GetResponse<Success, AbortActionGroupFailed>( new AbortActionGroup(correlationId));
+        if (response.Message is AbortActionGroupFailed failed)
+        {
+            throw new ActionGroupStateInvalidException(actionGroup, failed.Reason);
+        }
+        await context.RespondAsync(new ActionGroupAbortionTriggered(correlationId));
     }
 }

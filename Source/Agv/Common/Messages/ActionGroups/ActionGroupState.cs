@@ -31,7 +31,12 @@ public enum ActionGroupState
     Failed,
 
     /// <summary>
-    /// Action group is invalid
+    /// Action group is invalid.
     /// </summary>
-    Invalid
+    Invalid,
+
+    /// <summary>
+    /// Action group has been aborted.
+    /// </summary>
+    Aborted
 }

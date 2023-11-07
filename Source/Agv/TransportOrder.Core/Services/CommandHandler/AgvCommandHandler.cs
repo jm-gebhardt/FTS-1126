@@ -2,6 +2,7 @@
 using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.CmdOptions;
@@ -57,6 +58,7 @@ public class AgvCommandHandler :
     private readonly IMapRegistry _mapRegistry;
     private readonly ProductionOptions _productionOptions;
     private readonly IAgvDataRegistry _agvDataRegistry;
+    private readonly IRequestClient<QueueActionGroup> _queueActionGroupRequestClient;
 
     /// <summary>
     /// Initializes a new <see cref="AgvCommandHandler"/> instance.
@@ -67,6 +69,7 @@ public class AgvCommandHandler :
         IActionGroupRegistry actionGroupRegistry,
         IAgvDataRegistry agvDataRegistry,
         IAgvGraphRegistry agvGraphRegistry,
+        IRequestClient<QueueActionGroup> queueActionGroupRequestClient,
         IMapRegistry mapRegistry,
         IMapper mapper,
         ProductionOptions productionOptions,
@@ -79,6 +82,7 @@ public class AgvCommandHandler :
         _settingsProvider = settingsProvider;
         _mapper = mapper;
         _agvGraphRegistry = agvGraphRegistry;
+        _queueActionGroupRequestClient = queueActionGroupRequestClient;
         _mapRegistry = mapRegistry;
         _productionOptions = productionOptions;
         _agvDataRegistry = agvDataRegistry;
@@ -439,8 +443,8 @@ public class AgvCommandHandler :
             isManual: true,
             creator: creator
         );
-
-        await context.Publish(new QueueActionGroup(moveActionGroup, true));
+        
+        await _queueActionGroupRequestClient.GetResponse<Success>(new QueueActionGroup(moveActionGroup, true));
         await context.RespondAsync(new MoveAgvResult(moveActionGroup.CorrelationId));
     }
 

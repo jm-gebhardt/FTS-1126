@@ -12,6 +12,9 @@
       <None Remove="WebApi\**" />
     </ItemGroup>
     <ItemGroup>
+      <None Remove="Services\RequestHandler\ActionGroup\ActionGroupRequestHandlerTest.cs~RF5d9e9d.TMP" />
+    </ItemGroup>
+    <ItemGroup>
         <PackageReference Include="AutoMapper" Version="12.0.1" />
         <PackageReference Include="JetBrains.Annotations" Version="2022.3.1" />
         <PackageReference Include="MassTransit" Version="8.1.1" />

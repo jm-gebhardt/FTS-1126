@@ -32,11 +32,10 @@ public interface INodeStateRegistry
     public Task<bool> ReserveNodeAsync(string nodeId, Guid agvCorrelationId);
 
     /// <summary>
-    /// Free a reserved or occupied node.
-    /// If the node is locked, it will not be freed.
+    /// Un-reserve a node.
+    /// If the node is locked, it will not be un-reserved.
     /// </summary>
     /// <param name="agvCorrelationId"></param>
-    /// <returns></returns>
     [UsedImplicitly]
     public Task<bool> UnReserveNodeAsync(Guid agvCorrelationId);
 

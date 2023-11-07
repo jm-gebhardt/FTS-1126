@@ -156,4 +156,10 @@ public interface IActionGroupRegistry
     /// </summary>
     /// <param name="agvCorrelationId">The correlation id.</param>
     Task<bool> AgvHasPendingActions(Guid agvCorrelationId);
+
+    /// <summary>
+    /// Gets the agv assigned to the group of the given action.
+    /// </summary>
+    /// <param name="actionCorrelationId">CorrelationId of the action.</param>
+    Task<Guid?> GetAgvAssignedToAction(Guid actionCorrelationId);
 }

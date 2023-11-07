@@ -340,8 +340,10 @@ public class SimulatedAgvStateMachineTest
         var correlationId = agvId.ToGuid();
 
         // ReSharper disable once UseObjectOrCollectionInitializer
-        var agvSaga = new SimulatedAgvSaga(correlationId, agvId, 500, InitialBatteryCharge, currentState: nameof(SimulatedAgvStateMachine.Idle));
-        agvSaga.SimulatedBatteryCharge = 100; // Set charge to 100 for alive and 0 for not alive
+        var agvSaga = new SimulatedAgvSaga(correlationId, agvId, 500, InitialBatteryCharge, currentState: nameof(SimulatedAgvStateMachine.Idle))
+        {
+            SimulatedBatteryCharge = 100 // Set charge to 100 for alive and 0 for not alive
+        };
         fixture.Add(agvSaga);
 
         // Trigger status update scheduler
@@ -381,8 +383,10 @@ public class SimulatedAgvStateMachineTest
         var correlationId = agvId.ToGuid();
 
         // ReSharper disable once UseObjectOrCollectionInitializer
-        var agvSaga = new SimulatedAgvSaga(correlationId, agvId, 500, InitialBatteryCharge, currentState: nameof(SimulatedAgvStateMachine.Idle));
-        agvSaga.SimulatedBatteryCharge = 0; // Set charge to 100 for alive and 0 for not alive
+        var agvSaga = new SimulatedAgvSaga(correlationId, agvId, 500, InitialBatteryCharge, currentState: nameof(SimulatedAgvStateMachine.Idle))
+        {
+            SimulatedBatteryCharge = 0 // Set charge to 100 for alive and 0 for not alive
+        };
         fixture.Add(agvSaga);
 
         // Trigger status update scheduler
@@ -400,5 +404,70 @@ public class SimulatedAgvStateMachineTest
 
         //Check if AgvStatusIsReceived was sent. Only true if agv is alive.
         (await fixture.TestHarness.Published.Any<AgvStatusReceived>(c => c.Context.Message.CorrelationId == correlationId, token.Token)).ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public async Task Consume_ActionAborted_InStatusBusyMoving_TransitionsToIdlePublishesActionAbortedEvent()
+    {
+        var options = new SimulateOptions()
+        {
+            Agvs = 1,
+            Sources = new[] { "S1" },
+            Destinations = new[] { "D1" }
+        };
+        var fixture = new StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(
+            services => services.AddSingleton(options),
+            inactivityTimeout: TimeSpan.FromSeconds(6)
+        );
+        const string agvId = "Agv#1";
+        var correlationId = agvId.ToGuid();
+        var graph = new GridGraphGenerator(new[] { "S1" }, new[] { "D1" }).Generate(correlationId);
+        var map = new MapGenerator(graph).Generate();
+        var action = new AgvAction(Guid.NewGuid(), ActionType.Drop, "D1", Guid.NewGuid());
+        var agvSaga = new SimulatedAgvSaga(correlationId, agvId, 5000, InitialBatteryCharge, currentState: nameof(SimulatedAgvStateMachine.BusyMoving), agvGraph: graph, agvMap: map)
+        {
+            Action = action
+        };
+        fixture.Add(agvSaga);
+        await fixture.TestHarness.Bus.Publish(new ActionAborted(correlationId, action));
+        (await fixture.SagaHarness.Consumed.Any<ActionAborted>(c => c.Context.Message.CorrelationId == correlationId)).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<ActionAbortionCompleted>()).ShouldBeTrue();
+        agvSaga.ActionStartDate.ShouldBeNull();
+        agvSaga.CurrentState.ShouldBe(nameof(SimulatedAgvStateMachine.Idle));
+        agvSaga.LastActionAborted.ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task Consume_ScheduleFinishAction_AfterActionWasAborted_ResetLastActionAborted()
+    {
+        var options = new SimulateOptions()
+        {
+            Agvs = 1,
+            Sources = new[] { "S1" },
+            Destinations = new[] { "D1" }
+        };
+        var fixture = new StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(
+            services => services.AddSingleton(options),
+            inactivityTimeout: TimeSpan.FromSeconds(6)
+        );
+        const string agvId = "Agv#1";
+        var correlationId = agvId.ToGuid();
+        var graph = new GridGraphGenerator(new[] { "S1" }, new[] { "D1" }).Generate(correlationId);
+        var map = new MapGenerator(graph).Generate();
+        var action = new AgvAction(Guid.NewGuid(), ActionType.Drop, "D1", Guid.NewGuid());
+        var agvSaga = new SimulatedAgvSaga(correlationId, agvId, 5000, InitialBatteryCharge, currentState: nameof(SimulatedAgvStateMachine.BusyMoving), agvGraph: graph, agvMap: map)
+        {
+            Action = action
+        };
+        fixture.Add(agvSaga);
+        await fixture.TestHarness.Bus.Publish(new ActionAborted(correlationId, action));
+        (await fixture.SagaHarness.Consumed.Any<ActionAborted>(c => c.Context.Message.CorrelationId == correlationId)).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<ActionAbortionCompleted>()).ShouldBeTrue();
+        agvSaga.ActionStartDate.ShouldBeNull();
+        agvSaga.CurrentState.ShouldBe(nameof(SimulatedAgvStateMachine.Idle));
+        agvSaga.LastActionAborted.ShouldBeTrue();
+
+        await fixture.TestHarness.Bus.Publish(new SimulatedAgvStateMachine.ScheduleFinishAction(correlationId));
+        (await fixture.SagaHarness.Consumed.Any<SimulatedAgvStateMachine.ScheduleFinishAction>()).ShouldBeTrue();
     }
 }

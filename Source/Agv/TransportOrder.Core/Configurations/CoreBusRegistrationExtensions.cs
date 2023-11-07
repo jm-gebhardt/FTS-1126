@@ -1,4 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Extensions;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.CommandHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.EventHandler;
@@ -80,6 +81,8 @@ public static class CoreBusRegistrationExtensions
     {
         busRegistrationConfigurator.AddConsumer<AgvGraphReceivedEventHandler>();
 
+        busRegistrationConfigurator.AddConsumer<NodeCommandHandler>();
+
         busRegistrationConfigurator.AddConsumer<MapCommandHandler>(cfg => { cfg.Message<SaveMap>(x => x.UsePartitioner(PartitionCount, p => p.Message.Map.CorrelationId)); });
     }
 
@@ -138,6 +141,9 @@ public static class CoreBusRegistrationExtensions
         configurator.AddRequestClient<GetActionGroup>();
         configurator.AddRequestClient<GetActionGroups>();
         configurator.AddRequestClient<GetActionGroupCountsByState>();
+        configurator.AddRequestClient<TriggerActionGroupAbortion>();
+        configurator.AddConsumer<ActionCommandHandler>();
+        configurator.AddRequestClient<QueueActionGroup>();
     }
 
     private static void RegisterMediatorAgvCommandHandlers(IMediatorRegistrationConfigurator configurator)

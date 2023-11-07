@@ -31,3 +31,9 @@ public record ActionCancelled(Guid CorrelationId) : IActionEventParent;
 /// </summary>
 [PublicAPI]
 public record ActionCancelFailed(Guid CorrelationId) : IActionEventParent;
+
+/// <summary>
+/// Signals that an action has been aborted.
+/// </summary>
+[PublicAPI]
+public record ActionAbortionCompleted(Guid CorrelationId) : IActionEventParent;

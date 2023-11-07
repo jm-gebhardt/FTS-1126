@@ -91,9 +91,14 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     public Event<RequestAgvMap> RequestAgvMapEvent { get; private set; } = default!;
 
     /// <summary>
-    /// RequestStatusSend was received
+    /// RequestStatusSend was received.
     /// </summary>
     public Event<RequestStatusSendSchedulerStart> RequestStatusSendEvent { get; private set; } = default!;
+
+    /// <summary>
+    /// <see cref="ActionAborted"/> was received.
+    /// </summary>
+    public Event<ActionAborted> AgvActionAbortedEvent { get; private set; } = default!;
     #endregion
 
     #region Schedules
@@ -154,7 +159,8 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         Initially(SetInitialCreateAgvHandler());
 
         During(Idle, SetStartActionHandler());
-        During(BusyMoving, SetFinishActionHandler());
+        During(BusyMoving, Idle, SetFinishActionHandler());
+        During(BusyMoving, ActionAbortedHandler());
 
         DuringAny(SetSendAgvStatusHandler());
         DuringAny(SetRequestAgvGraphHandler());
@@ -240,8 +246,19 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
                 _ => TimeSpan.FromMilliseconds(SignalPositionIntervalMs));
     }
 
+    private EventActivityBinder<SimulatedAgvSaga, ActionAborted> ActionAbortedHandler()
+    {
+        return When(AgvActionAbortedEvent)
+            .Then(c => _logger.LogDebug("Handling action {Action} abortion for agv  /{AgvCorrelationId}", c.Message.Action.CorrelationId,  c.Message.CorrelationId))
+            .ThenAsync(HandleActionAbortionAsync)
+            .TransitionTo(Idle)
+            .ThenAsync(PublishStatusAsync)
+            .ThenAsync(PublishPositionAsync);
+    }
+
     private static void SetCurrentAction(BehaviorContext<SimulatedAgvSaga, StartActionCommand> c)
     {
+        c.Saga.LastActionAborted = false;
         c.Saga.Action = c.Message.Action;
         c.Saga.ActionStartDate = DateTime.UtcNow;
     }
@@ -250,10 +267,12 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     {
         return When(FinishActionSchedule.Received)
             .Then(c => _logger.LogDebug("{MessageType} {CorrelationId} received", nameof(ScheduleFinishAction), c.Saga.CorrelationId))
-            .ThenAsync(FinishActionAsync)
-            .TransitionTo(Idle)
-            .ThenAsync(PublishStatusAsync)
-            .ThenAsync(PublishPositionAsync);
+            .IfElse(c => c.Saga.LastActionAborted,
+            e => e.Then(c => c.Saga.LastActionAborted = false),
+            e => e.ThenAsync(FinishActionAsync)
+                .TransitionTo(Idle)
+                .ThenAsync(PublishStatusAsync)
+                .ThenAsync(PublishPositionAsync));
     }
     #endregion
 
@@ -419,6 +438,25 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         }
 
         context.Saga.ResetAction();
+    }
+
+    private async Task HandleActionAbortionAsync(BehaviorContext<SimulatedAgvSaga, ActionAborted> context)
+    {
+        var action = context.Saga.Action;
+
+        if (action == null)
+        {
+            _logger.LogError("Could not abort action, AgvAction object missing");
+        }
+        else
+        {
+            _logger.LogInformation("Agv {AgvId} / {CorrelationId} aborted action {ActionType} for {OrderId}",
+                context.Saga.AgvId, context.Saga.CorrelationId, action.ActionType, action.ParentId);
+
+            await context.Publish(new ActionAbortionCompleted(action.CorrelationId));
+        }
+
+        context.Saga.AbortAction();
     }
 
     private EventActivityBinder<SimulatedAgvSaga> UpdateTimeOfStateTransition(EventActivityBinder<SimulatedAgvSaga> eventActivity)

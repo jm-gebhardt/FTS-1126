@@ -1,5 +1,4 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.CommandHandler;
@@ -351,8 +350,6 @@ public class AgvControllerTest
         var result = actionResult as OkObjectResult;
         result.ShouldNotBeNull();
         result.Value.ShouldBeOfType<Guid>();
-
-        (await fixture.TestHarness!.Published.Any<QueueActionGroup>()).ShouldBeTrue();
     }
 
     [TestMethod]

@@ -16,16 +16,18 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers.ActionGroup;
 public class ActionGroupController : Controller
 {
     private readonly IRequestClient<GetActionGroup> _getActionGroupRequestClient;
+    private readonly IRequestClient<TriggerActionGroupAbortion> _abortionRequestClient;
     private readonly IRequestClient<CancelActionGroup> _cancelActionGroupRequestClient;
     private readonly IMapper _mapper;
 
     /// <summary>
     /// Initializes a new <see cref="ActionGroupController" /> instance.
     /// </summary>
-    public ActionGroupController(IMapper mapper, IRequestClient<GetActionGroup> getActionGroupRequestClient, IRequestClient<CancelActionGroup> cancelActionGroupRequestClient)
+    public ActionGroupController(IMapper mapper, IRequestClient<GetActionGroup> getActionGroupRequestClient, IRequestClient<CancelActionGroup> cancelActionGroupRequestClient, IRequestClient<TriggerActionGroupAbortion> abortionRequestClient)
     {
         _mapper = mapper;
         _getActionGroupRequestClient = getActionGroupRequestClient;
+        _abortionRequestClient = abortionRequestClient;
         _cancelActionGroupRequestClient = cancelActionGroupRequestClient;
     }
 
@@ -41,6 +43,20 @@ public class ActionGroupController : Controller
         Response<GotAgvActionGroup> response = await _getActionGroupRequestClient.GetResponse<GotAgvActionGroup>(new GetActionGroup(correlationId));
         var actionGroup = _mapper.Map<ActionGroupDto>(response.Message.AgvActionGroup);
         return Ok(actionGroup!);
+    }
+
+    /// <summary>
+    /// Abort an action group.
+    /// </summary>
+    /// <response code="200">Ok</response>
+    /// <response code="404">Action group with given correlationId not found.</response>
+    /// <response code="400">Action group abortion failed because of the current group state (details in error message).</response>
+    [HttpPatch]
+    [Route("/actionGroup/{correlationId:guid}/abort")]
+    public async Task<ActionResult> AbortActionGroup(Guid correlationId)
+    {
+        await _abortionRequestClient.GetResponse<ActionGroupAbortionTriggered>(new TriggerActionGroupAbortion(correlationId));
+        return Ok();
     }
 
     /// <summary>

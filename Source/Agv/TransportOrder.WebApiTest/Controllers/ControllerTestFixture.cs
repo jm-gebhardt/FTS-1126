@@ -43,7 +43,7 @@ public abstract class ControllerTestFixture<TRequest, TRequestHandler, TControll
             new Messages.Profiles.AgvProfile(),
             new Messages.Profiles.AgvGraphProfile(),
             new Messages.Profiles.AgvErrorProfile(),
-            new Messages.Profiles.MapProfile(), 
+            new Messages.Profiles.MapProfile(),
             new ActionGroupProfile()
         );
         return mapper;

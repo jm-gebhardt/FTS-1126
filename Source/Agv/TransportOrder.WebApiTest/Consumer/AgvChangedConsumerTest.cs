@@ -1,5 +1,6 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agvs.Queries;
@@ -14,7 +15,7 @@ using Shouldly;
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Consumer;
 
 [TestClass]
-public class AgvOnlineChangedConsumerTest
+public class AgvChangedConsumerTest
 {
     private const string AgvId = "agv1";
 
@@ -51,10 +52,21 @@ public class AgvOnlineChangedConsumerTest
                 true
             ));
 
-        (await fixture.TestHarness.Published.Any<AgvOnlineChanged>()).ShouldBeTrue();
         (await fixture.ConsumerHarness!.Consumed.Any<AgvOnlineChanged>()).ShouldBeTrue();
 
         fixture.PublisherMock.Verify(h => h.SendAgvOnlineChangedAsync(
             agv.CorrelationId, true), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task Consume_AgvBecameIdle_ValidData_SentAgvRouteChanged()
+    {
+        var agvCorrelationId = Guid.NewGuid();
+        var fixture = new ConsumerHubTestFixture<AgvChangedConsumer, IAgvPublisher>();
+
+       await fixture.TestHarness!.Bus.Publish(new AgvBecameIdle(agvCorrelationId));
+       (await fixture.ConsumerHarness!.Consumed.Any<AgvBecameIdle>()).ShouldBeTrue();
+       fixture.PublisherMock.Verify(h => h.SendAgvRouteChangedAsync(new CurrentAgvRouteReadModel(agvCorrelationId, Array.Empty<string>())),
+           Times.Once);
     }
 }

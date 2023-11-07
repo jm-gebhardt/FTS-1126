@@ -35,7 +35,12 @@ public enum ActionState
     Failed,
 
     /// <summary>
-    /// Action is invalid
+    /// Action is invalid.
     /// </summary>
-    Invalid
+    Invalid,
+
+    /// <summary>
+    /// Action aborted.
+    /// </summary>
+    Aborted
 }

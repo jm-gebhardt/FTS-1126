@@ -1,5 +1,6 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
@@ -41,9 +42,10 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
     protected override ActionGroupController GetController()
     {
         IRequestClient<GetActionGroup> getActionGroupRequestClient = GetRequestClient<GetActionGroup>();
+        IRequestClient<TriggerActionGroupAbortion> abortionRequestClient = GetRequestClient<TriggerActionGroupAbortion>();
         IRequestClient<CancelActionGroup> cancelActionGroupRequestClient = GetRequestClient<CancelActionGroup>();
         var controller = new ActionGroupController(GetMapper(), 
-            getActionGroupRequestClient, cancelActionGroupRequestClient)
+            getActionGroupRequestClient, cancelActionGroupRequestClient, abortionRequestClient)
         {
             ControllerContext = new ControllerContext(
                 new ActionContext(
@@ -54,7 +56,7 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
         return controller;
     }
 
-    public ActionGroupControllerTestFixture<TRequest, TRequestHandler> Setup()
+    public ActionGroupControllerTestFixture<TRequest, TRequestHandler> Setup(IBus? bus = null)
     {
         AddServices(sc =>
         {
@@ -70,12 +72,27 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
             sc.AddTransient(_ => _agvRepository.Object);
             sc.AddTransient(_ => _actionGroupValidationService.Object);
             sc.AddTransient(_ => _settingsProvider.Object);
+            if (bus != null)
+            {
+               sc.AddTransient(_ => bus);
+            }
+            else
+            {
+                var busMock = new Mock<IBus>();
+               sc.AddTransient(_ => busMock.Object);
+            }
         });
 
         _retrievalServiceMock.Setup(x => x.GetActionGroupWithNodesAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) => _actionGroupReadModels.FirstOrDefault(a => a.CorrelationId == c));
+        _actionGroupRegistryMock.Setup(x => x.GetRequiredActionGroupByIdAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) =>
+        {
+            var ag = _actionGroups.FirstOrDefault(a => a.CorrelationId == c);
+            return ag ?? throw new ActionGroupNotFoundException(c);
+        });
         _actionGroupRegistryMock.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) => _actionGroups.FirstOrDefault(a => a.CorrelationId == c));
         _actionGroupRegistryMock.Setup(x => x.UpdateActionAndGroupStateAsync(It.IsAny<Domain.Models.ActionGroup.AgvAction>(), It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<ActionState>()))!.ReturnsAsync(
             (Domain.Models.ActionGroup.AgvAction action, Domain.Models.Agv.Agv _, ActionState _) => _actionGroups.FirstOrDefault(a => a.CorrelationId == action.ParentId));
+        _retrievalServiceMock.Setup(x => x.EnrichActionGroupWithNodesAsync(It.IsAny<Domain.Models.ActionGroup.ActionGroup>())).ReturnsAsync((Domain.Models.ActionGroup.ActionGroup ag) => ag.ConvertFromActionGroupWithFakeNodeType()!);
         return this;
     }
 
