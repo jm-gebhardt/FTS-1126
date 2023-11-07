@@ -40,18 +40,21 @@ public class PollingBackgroundService<T> : BackgroundService where T : IPollable
             _logger.LogTrace("Polling {Service}", Pollable);
             try
             {
-                await Pollable.Poll(cancellationToken);
+                try
+                {
+                    await Pollable.Poll(cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error occurred polling {Pollable}", Pollable);
+                }
+
                 await Task.Delay(Pollable.PollingInterval, cancellationToken);
             }
             catch (TaskCanceledException)
             {
                 // Task.Delay exited via token cancellation
-                break;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred polling {Pollable}", Pollable);
-                break;
+                // just go to next iteration 
             }
         }
     }

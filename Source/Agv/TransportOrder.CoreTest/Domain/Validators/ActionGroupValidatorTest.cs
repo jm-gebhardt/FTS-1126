@@ -1,9 +1,11 @@
 ﻿using FluentValidation.TestHelper;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
+using ActionGroup = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
+using AgvAction = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.AgvAction;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Domain.Validators;
 
@@ -34,7 +36,7 @@ public class ActionGroupValidatorTest
     public async Task ValidateAsync_WhenOrderIdIsNullOrEmpty_Fails(string orderId)
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        var actions = new List<AgvAction> { AgvActionGenerator.GenerateParkAction("Park1") };
+        var actions = new List<AgvAction> {AgvActionGenerator.GenerateParkAction("Park1")};
         var actionGroup = AgvActionGenerator.GenerateActionGroup(actions, orderId: orderId);
 
         var fixture = new ActionGroupValidatorTestFixture()
@@ -160,7 +162,7 @@ public class ActionGroupValidatorTest
     public async Task ValidateAsync_WhenCorrelationIdIsEmpty_Fails()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        var actions = new List<AgvAction> { AgvActionGenerator.GenerateParkAction(parentId: null, targetNodeId: "Park1") };
+        var actions = new List<AgvAction> {AgvActionGenerator.GenerateParkAction(parentId: null, targetNodeId: "Park1")};
         var actionGroup = AgvActionGenerator.GenerateActionGroup(actions, correlationId: Guid.Empty);
         var fixture = new ActionGroupValidatorTestFixture()
             .WithAgv(agv)
@@ -231,7 +233,7 @@ public class ActionGroupValidatorTest
     public async Task ValidateAsync_WhenAnyParentIdNotMatchCorrelationId_Fails()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        var actions = new List<AgvAction> { AgvActionGenerator.GenerateParkAction(parentId: "DifferentActionGroup".ToGuid(), targetNodeId: "Park1") };
+        var actions = new List<AgvAction> {AgvActionGenerator.GenerateParkAction(parentId: "DifferentActionGroup".ToGuid(), targetNodeId: "Park1")};
         var actionGroup = AgvActionGenerator.GenerateActionGroup(actions, correlationId: "ActionGroup".ToGuid());
 
         var fixture = new ActionGroupValidatorTestFixture()
@@ -337,5 +339,104 @@ public class ActionGroupValidatorTest
         TestValidationResult<ActionGroup> validationResult = await fixture.ActionGroupValidator.TestValidateAsync(actionGroup);
 
         validationResult.ShouldHaveValidationErrorFor("Actions[0].State").WithErrorMessage("State must be in the Created state.");
+    }
+
+    [TestMethod]
+    public async Task ValidateAsync_WhenSequenceIsNotSet_Fails()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var orderId = Guid.NewGuid();
+        var testActions = new List<AgvAction>
+        {
+            new(Guid.NewGuid(), ActionType.Pick, "S1", orderId),
+            new(Guid.NewGuid(), ActionType.Drop, "S2", orderId)
+        };
+
+        var actionGroup = new ActionGroup(
+            orderId,
+            orderId.ToString(),
+            testActions,
+            ActionGroupCreator.Simulation,
+            DateTime.UtcNow);
+        var fixture = new ActionGroupValidatorTestFixture()
+            .WithAgv(agv)
+            .WithRoute(agv, actionGroup)
+            .WithAgvCanHandleRoute(agv, actionGroup)
+            .WithNodesExisting(actionGroup)
+            .Build();
+
+        TestValidationResult<ActionGroup> validationResult = await fixture.ActionGroupValidator.TestValidateAsync(actionGroup);
+
+        validationResult.ShouldHaveValidationErrorFor(a => a).WithErrorMessage("Action sequence Ids must be set.");
+    }
+
+    [TestMethod]
+    public async Task ValidateAsync_WhenSequenceIdsAreNotUnique_Fails()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var orderId = Guid.NewGuid();
+        var testActions = new List<AgvAction>
+        {
+            new(Guid.NewGuid(), ActionType.Pick, "S1", orderId)
+            {
+                Sequence = 2
+            },
+            new(Guid.NewGuid(), ActionType.Drop, "S2", orderId)
+            {
+                Sequence = 2
+            }
+        };
+
+        var actionGroup = new ActionGroup(
+            orderId,
+            orderId.ToString(),
+            testActions,
+            ActionGroupCreator.Simulation,
+            DateTime.UtcNow);
+        var fixture = new ActionGroupValidatorTestFixture()
+            .WithAgv(agv)
+            .WithRoute(agv, actionGroup)
+            .WithAgvCanHandleRoute(agv, actionGroup)
+            .WithNodesExisting(actionGroup)
+            .Build();
+
+        TestValidationResult<ActionGroup> validationResult = await fixture.ActionGroupValidator.TestValidateAsync(actionGroup);
+
+        validationResult.ShouldHaveValidationErrorFor(a => a).WithErrorMessage("Action sequence Ids must be unique.");
+    }
+
+    [TestMethod]
+    public async Task ValidateAsync_WhenSequenceHasGaps_Fails()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var orderId = Guid.NewGuid();
+        var testActions = new List<AgvAction>
+        {
+            new(Guid.NewGuid(), ActionType.Pick, "S1", orderId)
+            {
+                Sequence = 0
+            },
+            new(Guid.NewGuid(), ActionType.Drop, "S2", orderId)
+            {
+                Sequence = 2
+            }
+        };
+
+        var actionGroup = new ActionGroup(
+            orderId,
+            orderId.ToString(),
+            testActions,
+            ActionGroupCreator.Simulation,
+            DateTime.UtcNow);
+        var fixture = new ActionGroupValidatorTestFixture()
+            .WithAgv(agv)
+            .WithRoute(agv, actionGroup)
+            .WithAgvCanHandleRoute(agv, actionGroup)
+            .WithNodesExisting(actionGroup)
+            .Build();
+
+        TestValidationResult<ActionGroup> validationResult = await fixture.ActionGroupValidator.TestValidateAsync(actionGroup);
+
+        validationResult.ShouldHaveValidationErrorFor(a => a).WithErrorMessage("Action sequence must not have gaps.");
     }
 }

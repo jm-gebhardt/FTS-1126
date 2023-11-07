@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <AssemblyName>Gebhardt.StoreWare.Agv.SmartLinkCommunication</AssemblyName>
+        <OutputType>Exe</OutputType>
+    </PropertyGroup>
+    <Import Project="..\SharedProjectSettings.csproj"/>
+    <ItemGroup>
+        <PackageReference Include="JetBrains.Annotations" Version="2022.3.1"/>
+        <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="7.0.2"/>
+        <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="7.0.0"/>
+        <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="7.0.0"/>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0"/>
+        <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="7.0.0"/>
+        <PackageReference Include="RestSharp" Version="110.2.0"/>
+        <PackageReference Include="System.Linq" Version="4.3.0"/>
+        <PackageReference Include="YamlDotNet" Version="13.7.1"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="CommandLineParser" Version="2.9.1"/>
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\Common\Common.csproj"/>
+    </ItemGroup>
+    <ItemGroup>
+        <None Remove=".env"/>
+        <None Remove=".env.template"/>
+        <None Remove="docker-compose.yml"/>
+    </ItemGroup>
+</Project>

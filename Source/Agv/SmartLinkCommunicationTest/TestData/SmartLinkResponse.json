@@ -1,0 +1,58 @@
+{
+  "S1_Pin2": {
+    "direction": "input_output",
+    "id": "S1_Pin2",
+    "result": "ok",
+    "state": false
+  },
+  "S1_Pin4": {
+    "direction": "input_output",
+    "id": "S1_Pin4",
+    "result": "ok",
+    "state": false
+  },
+  "S2_Relais_Pin1_2": {
+    "direction": "output",
+    "id": "S2_Relais_Pin1_2"
+  },
+  "S2_Relais_Pin3_4": {
+    "direction": "output",
+    "id": "S2_Relais_Pin3_4"
+  },
+  "S3_Pin1": {
+    "direction": "input_output",
+    "id": "S3_Pin1",
+    "result": "ok",
+    "state": false
+  },
+  "S3_Pin3": {
+    "direction": "input_output",
+    "id": "S3_Pin3",
+    "result": "ok",
+    "state": false
+  },
+  "S3_Pin4": {
+    "direction": "input_output",
+    "id": "S3_Pin4",
+    "result": "ok",
+    "state": false
+  },
+  "S3_Pin5": {
+    "direction": "input_output",
+    "id": "S3_Pin5",
+    "result": "ok",
+    "state": false
+  },
+  "S3_Pin6": {
+    "direction": "input_output",
+    "id": "S3_Pin6",
+    "result": "ok",
+    "state": false
+  },
+  "S3_Pin8": {
+    "direction": "input_output",
+    "id": "S3_Pin8",
+    "result": "ok",
+    "state": false
+  }
+}

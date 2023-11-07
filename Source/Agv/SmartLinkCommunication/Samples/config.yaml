@@ -1,0 +1,22 @@
+﻿Modules:
+    - SmartLinkUrl: "http://10.10.120.1/v1"
+      IoActionConfigs:
+          - Id: "S1_Pin4"
+            After: "00:00:05"
+            State: true
+            ActionType: "PublishQueueActionGroup"
+            Parameters:
+                - Type: "Pick"
+                  NodeId: "S1"
+                - Type: "Move"
+                  NodeId: "N002-000"
+                - Type: "Move"
+                  NodeId: "N003-002"
+                - Type: "Move"
+                  NodeId: "N002-000"
+                - Type: "Move"
+                  NodeId: "N003-002"
+                - Type: "Move"
+                  NodeId: "N002-000"
+                - Type: "Drop"
+                  NodeId: "D2"

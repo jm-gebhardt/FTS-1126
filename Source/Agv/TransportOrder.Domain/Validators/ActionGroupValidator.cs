@@ -50,6 +50,9 @@ public class ActionGroupValidator : AbstractValidator<ActionGroup>
         RuleFor(p => p)
             .Cascade(CascadeMode.Continue)
             .Must(p => p.Actions.All(a => a.ParentId == p.CorrelationId)).WithMessage("ParentId of each Action must match CorrelationId of ActionGroup.")
+            .Must(ActionSequenceIdsMustBeSet).WithMessage("Action sequence Ids must be set.")
+            .Must(ActionSequenceIdsMustBeUnique).WithMessage("Action sequence Ids must be unique.")
+            .Must(ActionSequenceIdsMustNotHaveAGap).WithMessage("Action sequence must not have gaps.")
             .Must(ActionSequenceOrderedAscending).WithMessage("Actions within the group must be ordered by sequence.")
             .MustAsync(async (actionGroup, cancellationToken) => await CanHandleRouteAsync(actionGroup, cancellationToken)).WithMessage("There must be at least one Agv that knows the complete route of all actions within the given ActionGroup.")
             .DependentRules(() =>
@@ -109,6 +112,26 @@ public class ActionGroupValidator : AbstractValidator<ActionGroup>
     private bool AgvExists()
     {
         return _agv != null;
+    }
+
+    private static bool ActionSequenceIdsMustBeSet(ActionGroup actionGroup)
+    {
+        bool sequenceSet = actionGroup.Actions.Count <= 1 || actionGroup.Actions.Count(a => a.Sequence == 0) == 1;
+        return sequenceSet;
+    }
+
+    private static bool ActionSequenceIdsMustBeUnique(ActionGroup actionGroup)
+    {
+        IEnumerable<int> duplicates = actionGroup.Actions.GroupBy(a => a.Sequence).Where(g => g.Count() > 1).Select(g => g.Key);
+        bool isSequenceUnique = !duplicates.Any();
+        return isSequenceUnique;
+    }
+
+    private static bool ActionSequenceIdsMustNotHaveAGap(ActionGroup actionGroup)
+    {
+        List<int> sequenceIds = actionGroup.Actions.Select(a => a.Sequence).OrderBy(s => s).ToList();
+        bool isSequenceOrdered = sequenceIds.SequenceEqual(Enumerable.Range(0, sequenceIds.Count));
+        return isSequenceOrdered;
     }
 
     /// <summary>

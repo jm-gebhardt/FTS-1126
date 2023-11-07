@@ -34,6 +34,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TransportOrder.Routing", "T
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TransportOrder.Persistence.Ef", "TransportOrder.Persistence.Ef\TransportOrder.Persistence.Ef.csproj", "{8EB979C7-C7F7-48AB-8BD1-835DCD2D931B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmartLinkCommunication", "SmartLinkCommunication\SmartLinkCommunication.csproj", "{C59BB5BA-F60A-4D4B-9590-81524B4CEEB5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmartLinkCommunicationTest", "SmartLinkCommunicationTest\SmartLinkCommunicationTest.csproj", "{B2635165-E892-4A30-8FC3-9221628AC303}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -104,6 +108,14 @@ Global
 		{8EB979C7-C7F7-48AB-8BD1-835DCD2D931B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8EB979C7-C7F7-48AB-8BD1-835DCD2D931B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8EB979C7-C7F7-48AB-8BD1-835DCD2D931B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C59BB5BA-F60A-4D4B-9590-81524B4CEEB5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C59BB5BA-F60A-4D4B-9590-81524B4CEEB5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C59BB5BA-F60A-4D4B-9590-81524B4CEEB5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C59BB5BA-F60A-4D4B-9590-81524B4CEEB5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B2635165-E892-4A30-8FC3-9221628AC303}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B2635165-E892-4A30-8FC3-9221628AC303}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B2635165-E892-4A30-8FC3-9221628AC303}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B2635165-E892-4A30-8FC3-9221628AC303}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

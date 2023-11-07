@@ -1,0 +1,33 @@
+﻿using Gebhardt.StoreWare.Agv.SmartLinkCommunication.Exceptions;
+using Gebhardt.StoreWare.Agv.SmartLinkCommunication.Models;
+
+namespace Gebhardt.StoreWare.Agv.SmartLinkCommunication.Services;
+
+/// <inheritdoc />
+public class IoStateTrackerService : IIoStateTrackerService
+{
+    private readonly IModuleConfigProvider _moduleConfigProvider;
+    private static readonly Dictionary<ModuleConfig, Dictionary<IoActionConfig, IoStateTracker>> _dictionaryByModuleConfig = new();
+
+    /// <inheritdoc />
+    public Dictionary<IoActionConfig, IoStateTracker> IoStateTrackers
+    {
+        get
+        {
+            if (_dictionaryByModuleConfig.TryGetValue(_moduleConfigProvider.ModuleConfig, out Dictionary<IoActionConfig, IoStateTracker>? dictionary))
+            {
+                return dictionary;
+            }
+
+            throw new ModuleConfigScopeNotSetException();
+        }
+    }
+
+    /// <inheritdoc cref="IoStateTrackerService"/>
+    /// <param name="moduleConfigProvider"></param>
+    public IoStateTrackerService(IModuleConfigProvider moduleConfigProvider)
+    {
+        _moduleConfigProvider = moduleConfigProvider;
+        _dictionaryByModuleConfig.TryAdd(moduleConfigProvider.ModuleConfig, new Dictionary<IoActionConfig, IoStateTracker>());
+    }
+}

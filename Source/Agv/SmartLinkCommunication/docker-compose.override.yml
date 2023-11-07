@@ -1,0 +1,10 @@
+﻿version: '3.8'
+
+services:
+  smartlinkcommunication:
+    image: smartlinkcommunication
+    build:
+      context: ../
+      args:
+        - PROJECT=SmartLinkCommunication
+        - DOTNET_VERSION=6.0
