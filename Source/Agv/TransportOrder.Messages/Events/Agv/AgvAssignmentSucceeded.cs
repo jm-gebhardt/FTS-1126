@@ -12,20 +12,20 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 public record AgvAssignmentSucceeded : CorrelatedBy<Guid>, IAgvId
 {
     /// <inheritdoc/>
-    public Guid CorrelationId { get; }
+    public Guid CorrelationId { get; set; }
 
     /// <inheritdoc />
-    public string AgvId { get; }
+    public string AgvId { get; set; }
 
     /// <summary>
     /// The AGV correlation id 
     /// </summary>
-    public Guid AgvCorrelationId { get; }
+    public Guid AgvCorrelationId { get; set; }
 
     /// <summary>
     /// List of node ids that define the route
     /// </summary>
-    public string[] Nodes { get; }
+    public string[] Nodes { get; set; }
 
     /// <summary>
     /// Initializes a new instance of <see cref="AgvAssignmentSucceeded"/>

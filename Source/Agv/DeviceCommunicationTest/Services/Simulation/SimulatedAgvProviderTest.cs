@@ -2,6 +2,7 @@ using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.States;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
@@ -25,7 +26,8 @@ public class SimulatedAgvProviderTest
             Agvs = 1,
             Sources = new[] { "S1" },
             Destinations = new[] { "D1" },
-            GridRows = 3
+            GridRows = 3,
+            GridGraph = true
         };
 
         var fixture = new StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(
@@ -33,6 +35,7 @@ public class SimulatedAgvProviderTest
             {
                 s.AddSingleton(options);
                 s.AddLogging();
+                s.AddTransient<IGraphGenerator, GridGraphGenerator>(_ => new GridGraphGenerator(options));
                 s.AddHostedService<SimulatedAgvProvider>();
             },
             inactivityTimeout: TimeSpan.FromSeconds(6));
@@ -51,7 +54,8 @@ public class SimulatedAgvProviderTest
             Agvs = numberOfAgvs,
             Sources = new[] { "S1" },
             Destinations = new[] { "D1" },
-            GridRows = 3
+            GridRows = 3,
+            GridGraph = true
         };
 
         var fixture = new StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(
@@ -59,17 +63,18 @@ public class SimulatedAgvProviderTest
             {
                 s.AddSingleton(options);
                 s.AddLogging();
+                s.AddTransient<IGraphGenerator, GridGraphGenerator>(_ => new GridGraphGenerator(options));
                 s.AddHostedService<SimulatedAgvProvider>();
             },
+            inactivityTimeout: TimeSpan.FromSeconds(6),
             inMemoryConfiguration: (_, cfg) => { cfg.UseDelayedMessageScheduler(); },
             busRegistrationConfigurator:
             x =>
             {
                 x.AddDelayedMessageScheduler();
-                x.AddHostedService<SimulatedAgvProvider>();
             });
 
-        (await fixture.TestHarness.Published.Any<SimulatedAgvStateMachine.CreateAgv>()).ShouldBeTrue();
+        (fixture.Provider.GetRequiredService<IHostedService>() as SimulatedAgvProvider).ShouldNotBeNull();
 
         (await fixture.SagaHarness.Consumed.Any<SimulatedAgvStateMachine.CreateAgv>()).ShouldBeTrue();
 

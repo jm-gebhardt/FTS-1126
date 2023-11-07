@@ -1,0 +1,205 @@
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Utilities;
+
+namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph;
+
+/// <summary>
+///     Provides a fixed graph including all supported
+///     curve types.
+/// </summary>
+public class FixedGraphGenerator : IGraphGenerator
+{
+    // Node names
+    private const string Park1 = "Park-1";
+    private const string Park2 = "Park-2";
+    private const string Park3 = "Park-3";
+    private const string Park4 = "Park-4";
+    private const string Park5 = "Park-5";
+    private const string Park6 = "Park-6";
+    private const string Charge0 = "Charger-0";
+    private const string Charge1 = "Charger-1";
+    private const string Charge2 = "Charger-2";
+    private const string Charge3 = "Charger-3";
+    private const string Way0009 = "WP-0009";
+    private const string Way0010 = "WP-0010";
+    private const string Way0011 = "WP-0011";
+    private const string Way0012 = "WP-0012";
+    private const string Way0013 = "WP-0013";
+    private const string Way0014 = "WP-0014";
+    private const string Way0015 = "WP-0015";
+    private const string Way0016 = "WP-0016";
+    private const string Way0017 = "WP-0017";
+    private const string Way0018 = "WP-0018";
+    private const string Way0022 = "WP-0022";
+    private const string Way0023 = "WP-0023";
+    private const string Way0024 = "WP-0024";
+    private const string Way0028 = "WP-0028";
+    private const string Way0029 = "WP-0029";
+    private const string Way0030 = "WP-0030";
+    private const string Way0032 = "WP-0032";
+    private const string Way0123 = "WP-0123";
+    private const string DPaint = "D-Paint";
+    private const string DPress = "D-Press";
+    private const string DSaw = "D-Saw";
+    private const string PDrill = "P-Drill";
+    private const string PGrinder = "P-Grinder";
+    private const string PMilling = "P-Milling";
+    private const string Pdqa = "PD-QA";
+
+    /// <summary>
+    ///     Maximum edge velocity.
+    /// </summary>
+    private const float MaxEdgeVelocity = 2.5f;
+
+    /// Station angles are defined as:
+    /// 0
+    /// 3pi/2 -|- pi/2
+    /// pi
+    private const float East = (float)Math.PI / 2f;
+
+    private const float West = 3f * (float)Math.PI / 2f;
+    private const float South = (float)Math.PI;
+
+    /// <inheritdoc cref="FixedGraphGenerator" />
+    public FixedGraphGenerator()
+    {
+        Sources = new[] { Pdqa, PGrinder, PDrill, PMilling };
+        Destinations = new[] { DPaint, DPress, DSaw, Pdqa };
+    }
+
+    /// <inheritdoc cref="IGraphGenerator" />
+    public string[] Sources { get; }
+
+    /// <inheritdoc cref="IGraphGenerator" />
+    public string[] Destinations { get; }
+
+    /// <inheritdoc cref="IGraphGenerator" />
+    public AgvGraph Generate(Guid correlationId)
+    {
+        const string mapName = "Fixed#1";
+        var nodes = new GraphNode[]
+        {
+            new(Park1) { Type = AgvGraph.NodeType.Park, X = 19.375f, Y = 43.125f, Z = 0f, Theta = West },
+            new(Park2) { Type = AgvGraph.NodeType.Park, X = 33.125f, Y = 43.125f, Z = 0f, Theta = East },
+            new(Park3) { Type = AgvGraph.NodeType.Park, X = 19.375f, Y = 34.375f, Z = 0f, Theta = West },
+            new(Park4) { Type = AgvGraph.NodeType.Park, X = 31.875f, Y = 34.375f, Z = 0f, Theta = East },
+            new(Park5) { Type = AgvGraph.NodeType.Park, X = 19.375f, Y = 29.375f, Z = 0f, Theta = West },
+            new(Park6) { Type = AgvGraph.NodeType.Park, X = 31.875f, Y = 29.375f, Z = 0f, Theta = East },
+
+            new(Charge0) { Type = AgvGraph.NodeType.Charge, X = 46.875f, Y = 44.375f, Z = 0f, Theta = South },
+            new(Charge1) { Type = AgvGraph.NodeType.Charge, X = 46.875f, Y = 39.375f, Z = 0f, Theta = East },
+            new(Charge2) { Type = AgvGraph.NodeType.Charge, X = 46.875f, Y = 31.875f, Z = 0f, Theta = East },
+            new(Charge3) { Type = AgvGraph.NodeType.Charge, X = 46.875f, Y = 24.375f, Z = 0f, Theta = East },
+
+            new(DPaint) { Type = AgvGraph.NodeType.Drop, X = 93.295f, Y = 59.375f, Z = 0f, Theta = East },
+            new(DPress) { Type = AgvGraph.NodeType.Drop, X = 93.295f, Y = 68.125f, Z = 0f, Theta = East },
+            new(DSaw) { Type = AgvGraph.NodeType.Drop, X = 93.17f, Y = 44.375f, Z = 0f, Theta = East },
+
+            new(PDrill) { Type = AgvGraph.NodeType.Pick, X = 14.375f, Y = 68.125f, Z = 0f, Theta = West },
+            new(PGrinder) { Type = AgvGraph.NodeType.Pick, X = 14.375f, Y = 50.625f, Z = 0f, Theta = West },
+            new(PMilling) { Type = AgvGraph.NodeType.Pick, X = 14.375f, Y = 59.375f, Z = 0f, Theta = West },
+
+            new(Pdqa) { Type = AgvGraph.NodeType.PickDrop, X = 92.965f, Y = 26.7425f, Z = 0f, Theta = 73.4f * (float)Math.PI / 180f },
+
+            new(Way0009) { Type = AgvGraph.NodeType.WayPoint, X = 39.375f, Y = 68.125f, Z = 0f, Theta = 0 },
+            new(Way0010) { Type = AgvGraph.NodeType.WayPoint, X = 64.375f, Y = 68.125f, Z = 0f, Theta = 0 },
+            new(Way0011) { Type = AgvGraph.NodeType.WayPoint, X = 88.325f, Y = 68.125f, Z = 0f, Theta = 0 },
+            new(Way0012) { Type = AgvGraph.NodeType.WayPoint, X = 21.875f, Y = 68.125f, Z = 0f, Theta = 0 },
+            new(Way0013) { Type = AgvGraph.NodeType.WayPoint, X = 21.875f, Y = 59.375f, Z = 0f, Theta = 0 },
+            new(Way0014) { Type = AgvGraph.NodeType.WayPoint, X = 33.125f, Y = 59.375f, Z = 0f, Theta = 0 },
+            new(Way0015) { Type = AgvGraph.NodeType.WayPoint, X = 76.875f, Y = 59.375f, Z = 0f, Theta = 0 },
+            new(Way0016) { Type = AgvGraph.NodeType.WayPoint, X = 88.325f, Y = 59.375f, Z = 0f, Theta = 0 },
+            new(Way0017) { Type = AgvGraph.NodeType.WayPoint, X = 88.2f, Y = 44.375f, Z = 0f, Theta = 0 },
+            new(Way0018) { Type = AgvGraph.NodeType.WayPoint, X = 46.875f, Y = 49.375f, Z = 0f, Theta = 0 },
+            new(Way0022) { Type = AgvGraph.NodeType.WayPoint, X = 40.625f, Y = 39.375f, Z = 0f, Theta = 0 },
+            new(Way0023) { Type = AgvGraph.NodeType.WayPoint, X = 40.625f, Y = 31.875f, Z = 0f, Theta = 0 },
+            new(Way0024) { Type = AgvGraph.NodeType.WayPoint, X = 40.625f, Y = 24.375f, Z = 0f, Theta = 0 },
+            new(Way0028) { Type = AgvGraph.NodeType.WayPoint, X = 25.625f, Y = 34.375f, Z = 0f, Theta = 0 },
+            new(Way0029) { Type = AgvGraph.NodeType.WayPoint, X = 25.625f, Y = 43.125f, Z = 0f, Theta = 0 },
+            new(Way0030) { Type = AgvGraph.NodeType.WayPoint, X = 25.625f, Y = 29.375f, Z = 0f, Theta = 0 },
+            new(Way0032) { Type = AgvGraph.NodeType.WayPoint, X = 21.875f, Y = 50.625f, Z = 0f, Theta = 0 },
+            new(Way0123) { Type = AgvGraph.NodeType.WayPoint, X = 88.325f, Y = 28.125f, Z = 0f, Theta = 0 }
+        };
+
+        // metric = length/maxEdgeVelocity
+        // control points and edge coefficients relative to source
+        GraphEdge[] edges =
+        {
+            GraphEdge.CreateDirect(Way0029, Park1, 58.215f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(Park1, Way0029, 58.215f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(Way0028, Park3, 63.06f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(Park3, Way0028, 63.06f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(Way0029, Park2, 58.215f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(Park2, Way0029, 58.215f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(Way0028, Park4, 63.06f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(Park4, Way0028, 63.06f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(Way0030, Park5, 68.886f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(Park5, Way0030, 68.886f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(Way0030, Park6, 68.885f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(Park6, Way0030, 68.885f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(Way0009, Way0010, 13.75f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(Way0010, Way0011, 11.25f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(Way0010, Way0015, 10f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(Way0011, Way0016, 10f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(Way0012, Way0009, 16.25f / MaxEdgeVelocity),
+            GraphEdge.CreateBezier1(Way0013, Way0009, 19.08f / MaxEdgeVelocity, 0.875d, 7.875d),
+            GraphEdge.CreateDirect(Way0013, Way0012, 10f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(Way0014, Way0013, 16.25f / MaxEdgeVelocity),
+            GraphEdge.CreatePolypath(Way0014, Way0029, 40.875f / MaxEdgeVelocity, new List<EdgeCoefficient> { new(-2.875d, -9.375d) }),
+            GraphEdge.CreateBezier1(Way0014, Way0032, 37.125f / MaxEdgeVelocity, -1.75d, -8.25d),
+            GraphEdge.CreateDirect(Way0015, Way0014, 13.75f / MaxEdgeVelocity),
+
+            GraphEdge.CreatePolypath(Way0015, Way0017, 15.91f / MaxEdgeVelocity, new List<EdgeCoefficient>
+            {
+                new(0d, -7.5d), new(11.325, -7.5d)
+            }),
+            GraphEdge.CreateBezier1(Way0015, Way0018, 10f / MaxEdgeVelocity, -29.25d, -0.75d),
+            GraphEdge.CreateDirect(Way0016, Way0015, 11.25f / MaxEdgeVelocity),
+            GraphEdge.CreateBezier2(Way0017, Way0018, 11.32f / MaxEdgeVelocity, -15.825d, -4.375, -26.825d, 8.25d),
+            GraphEdge.CreateDirect(Way0123, Way0017, 41.27f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(Way0017, Way0123, 41.27f / MaxEdgeVelocity),
+            GraphEdge.CreateSlanted(Way0018, Way0014, 17f / MaxEdgeVelocity, East, 3.375),
+            GraphEdge.CreateBezier1(Way0018, Way0022, 10f / MaxEdgeVelocity, -6.25d, -0.975d),
+            GraphEdge.CreateDirect(Way0022, Way0023, 7.6f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(Way0023, Way0024, 5f / MaxEdgeVelocity),
+            GraphEdge.CreatePolypath(Way0024, Way0030, 25.77f / MaxEdgeVelocity, new List<EdgeCoefficient> { new(-9.375d, 0.75d) }),
+            GraphEdge.CreateDirect(Way0028, Park3, 63.06f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(Way0028, Park4, 63.06f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(Way0028, Way0029, 5f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(Way0029, Park1, 58.215f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(Way0029, Park2, 58.215f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(Way0029, Way0032, 3.95f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(Way0030, Park5, 68.89f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(Way0030, Park6, 68.89f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(Way0030, Way0028, 6.375f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(Way0032, Way0013, 28.86f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(Way0123, Way0017, 41.27f / MaxEdgeVelocity),
+
+            GraphEdge.CreateDirect(Way0018, Charge0, 30f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(Charge0, Way0018, 30f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(Way0022, Charge1, 30f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(Charge1, Way0022, 30f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(Way0023, Charge2, 30f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(Charge2, Way0023, 30f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(Way0024, Charge3, 30f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(Charge3, Way0024, 30f / MaxEdgeVelocity),
+
+            GraphEdge.CreateDirect(Way0012, PDrill, 30f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(PDrill, Way0012, 30f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(Way0013, PMilling, 30f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(PMilling, Way0013, 30f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(Way0032, PGrinder, 30f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(PGrinder, Way0032, 30f / MaxEdgeVelocity),
+
+            GraphEdge.CreateDirect(Way0011, DPress, 30f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(DPress, Way0011, 30f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(Way0017, DSaw, 30f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(DSaw, Way0017, 30f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(Way0016, DPaint, 30f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(DPaint, Way0016, 30f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(Way0123, Pdqa, 30f / MaxEdgeVelocity),
+            GraphEdge.CreateDirect(Pdqa, Way0123, 30f / MaxEdgeVelocity)
+        };
+        return new AgvGraph(correlationId, nodes, edges, mapName.ToGuid(), mapName);
+    }
+}

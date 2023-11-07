@@ -1,5 +1,6 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Helpers;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph;
@@ -30,6 +31,17 @@ public class GridGraphGenerator : IGraphGenerator
     private const float West = 3f * (float)Math.PI / 2f;
     private const float South = (float)Math.PI;
     private const float North = 0f;
+
+    /// <summary>
+    /// Initializes a new <see cref="GridGraphGenerator"/> instance based on simulation options.
+    /// </summary>
+    public GridGraphGenerator(SimulateOptions simulateOptions)
+    {
+        Sources = simulateOptions.Sources != null ? simulateOptions.Sources.ToArray() : Array.Empty<string>();
+        Destinations = simulateOptions.Destinations != null ? simulateOptions.Destinations.ToArray() : Array.Empty<string>();
+        _gridRows = simulateOptions.GridRows;
+        _serviceNodeTypes = CreateServiceNodes();
+    }
 
     /// <summary>
     /// GridGraphGenerator Constructor
@@ -266,5 +278,21 @@ public class GridGraphGenerator : IGraphGenerator
         {
             _edges.Add(GraphEdge.CreateDirect(toNodeId, fromNodeId, EdgeMetric, GraphHelper.ToGuid(toNodeId, EdgeMetric, fromNodeId)));
         }
+    }
+
+    /// <summary>
+    /// Create a service node for each side of the grid
+    /// Park on left, charge on right
+    /// </summary>
+    /// <returns></returns>
+    private AgvGraph.NodeType[] CreateServiceNodes()
+    {
+        int serviceNodeCount = _gridRows * 2;
+        var serviceNodes = new AgvGraph.NodeType[serviceNodeCount];
+        for (int idx = 0; idx < serviceNodeCount; idx++)
+        {
+            serviceNodes[idx] = idx % 2 == 0 ? AgvGraph.NodeType.Park : AgvGraph.NodeType.Charge;
+        }
+        return serviceNodes;
     }
 }

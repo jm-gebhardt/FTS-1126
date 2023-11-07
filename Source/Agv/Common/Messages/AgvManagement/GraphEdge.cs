@@ -55,12 +55,12 @@ public class GraphEdge
     /// <summary>
     /// The <see cref="EdgeType"/> of this edge.
     /// </summary>
-    public EdgeType Variant { get; }
+    public EdgeType Variant { get; [UsedImplicitly]set; }
 
     /// <summary>
     /// The parameters for this edge type.
     /// </summary>
-    public ICollection<EdgeCoefficient> VariantParameters { get; }
+    public ICollection<EdgeCoefficient> VariantParameters { get; [UsedImplicitly] set; }
 
     /// <summary>
     /// Simple string representation.

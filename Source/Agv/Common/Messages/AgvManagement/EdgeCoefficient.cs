@@ -46,6 +46,13 @@ public class EdgeCoefficient : IEquatable<EdgeCoefficient>
     }
 
     /// <summary>
+    /// Json constructor.
+    /// </summary>
+    public EdgeCoefficient()
+    {
+    }
+
+    /// <summary>
     /// Checks if this <see cref="EdgeCoefficient"/> is a scalar.
     /// </summary>
     [UsedImplicitly]

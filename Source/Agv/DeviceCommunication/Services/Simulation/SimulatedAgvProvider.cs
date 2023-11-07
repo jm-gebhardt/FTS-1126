@@ -16,9 +16,6 @@ public class SimulatedAgvProvider : BackgroundService
 {
     private readonly SimulateOptions _simulateOptions;
 
-    private readonly string[] _sources;
-    private readonly string[] _destinations;
-
     private const string AgvPrefix = "SimAgv";
     private const string Model = "R2-D2";
     private const string Type = "Simulated AGV";
@@ -34,23 +31,25 @@ public class SimulatedAgvProvider : BackgroundService
 
     private readonly ILogger<SimulatedAgvProvider> _logger;
     private readonly IClientFactory _clientFactory;
+    private readonly IGraphGenerator _graphGenerator;
 
     /// <summary>
     /// SimulatedAgvProvider Constructor
     /// </summary>
     /// <param name="clientFactory"></param>
+    /// <param name="graphGenerator"></param>
     /// <param name="logger"></param>
     /// <param name="simulateOptions"></param>
     public SimulatedAgvProvider(
         SimulateOptions simulateOptions,
         IClientFactory clientFactory,
+        IGraphGenerator graphGenerator,
         ILogger<SimulatedAgvProvider> logger)
     {
         _logger = logger;
+        _graphGenerator = graphGenerator;
         _clientFactory = clientFactory;
         _simulateOptions = simulateOptions;
-        _sources = simulateOptions.Sources != null ? simulateOptions.Sources.ToArray() : Array.Empty<string>();
-        _destinations = simulateOptions.Destinations != null ? simulateOptions.Destinations.ToArray() : Array.Empty<string>();
     }
 
     /// <summary>
@@ -62,6 +61,7 @@ public class SimulatedAgvProvider : BackgroundService
         for (int agvIndex = 0; agvIndex < _simulateOptions.Agvs; agvIndex++)
         {
             var agv = GenerateAgv(agvIndex);
+         
             Response<SimulatedAgvStateMachine.CreateAgvResponse> response = await client.GetResponse<SimulatedAgvStateMachine.CreateAgvResponse>(new SimulatedAgvStateMachine.CreateAgv(
                 agv.CorrelationId,
                 agv,
@@ -84,13 +84,7 @@ public class SimulatedAgvProvider : BackgroundService
     {
         string agvId = $"{AgvPrefix}-{agvIndex}";
         var correlationId = agvId.ToGuid();
-
-        var grid = new GridGraphGenerator(
-            _sources,
-            _destinations,
-            _simulateOptions.GridRows,
-            CreateServiceNodes()
-        ).Generate(correlationId);
+        var grid = _graphGenerator.Generate(correlationId);
         var mapGenerator = new MapGenerator(grid);
         return new SimulatedAgv(
             correlationId,
@@ -106,22 +100,6 @@ public class SimulatedAgvProvider : BackgroundService
             AgvData: GenerateData(correlationId),
             AgvMap: mapGenerator.Generate()
         );
-    }
-
-    /// <summary>
-    /// Create a service node for each side of the grid
-    /// Park on left, charge on right
-    /// </summary>
-    /// <returns></returns>
-    private AgvGraph.NodeType[] CreateServiceNodes()
-    {
-        int serviceNodeCount = _simulateOptions.GridRows * 2;
-        var serviceNodes = new AgvGraph.NodeType[serviceNodeCount];
-        for (int idx = 0; idx < serviceNodeCount; idx++)
-        {
-            serviceNodes[idx] = idx % 2 == 0 ? AgvGraph.NodeType.Park : AgvGraph.NodeType.Charge;
-        }
-        return serviceNodes;
     }
 
     private AgvData GenerateData(Guid correlationId)

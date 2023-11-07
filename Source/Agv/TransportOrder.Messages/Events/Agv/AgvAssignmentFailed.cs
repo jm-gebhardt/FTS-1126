@@ -34,12 +34,12 @@ public record AgvAssignmentFailed : CorrelatedBy<Guid>
     }
 
     /// <inheritdoc/>
-    public Guid CorrelationId { get; }
+    public Guid CorrelationId { get; set; }
 
     /// <summary>
     /// The error code that holds information why assignment failed
     /// </summary>
-    public ErrorCode Error { get; }
+    public ErrorCode Error { get; set; }
 
     /// <summary>
     /// AgvAssignmentFailed Constructor

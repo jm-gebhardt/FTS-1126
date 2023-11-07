@@ -5,9 +5,11 @@ using Gebhardt.StoreWare.Agv.Common.Configurations.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Logging;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Exceptions;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.States;
 using MassTransit;
 using MassTransit.Configuration;
@@ -20,10 +22,14 @@ var initialLogger = InitialLogger.Create<Program>();
 try
 {
     IHostBuilder? hostBuilder = null;
-
-    Parser.Default.ParseArguments<SimulateOptions, ProductionOptions>(args)
+    var parser = new Parser(cfg => cfg.CaseInsensitiveEnumValues = true);
+    parser.ParseArguments<SimulateOptions, ProductionOptions>(args)
         .WithParsed<SimulateOptions>(simulationOptions =>
         {
+            if (!simulationOptions.GridGraph && !simulationOptions.FixedGraph)
+            {
+                throw new GraphGeneratorConfigurationException($"No graph generator selected (GridGraph: {simulationOptions.GridGraph}/ FixedGraph {simulationOptions.FixedGraph})");
+            }
             // Enable serialization/deserialization of enum values as string.
             SystemTextJsonMessageSerializer.Options.Converters.Add(new JsonStringEnumConverter());
 
@@ -31,6 +37,13 @@ try
                 .ConfigureServices((context, services) =>
                 {
                     services.AddScoped(_ => simulationOptions);
+                    if (simulationOptions.FixedGraph)
+                    {
+                        services.AddTransient<IGraphGenerator, FixedGraphGenerator>();
+                    }else if (simulationOptions.GridGraph)
+                    {
+                        services.AddTransient<IGraphGenerator, GridGraphGenerator >();
+                    }
                     services.AddHostedService<SimulatedAgvProvider>();
                     services.ConfigureServicesMassTransit(context.Configuration,
                         x =>

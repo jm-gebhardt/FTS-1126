@@ -24,7 +24,7 @@ public class AgvAction : IParentedBy<Guid>
     /// <summary>
     /// The current state of the action
     /// </summary>
-    public ActionState State { get; private set; } = ActionState.Created;
+    public ActionState State { get; set; } = ActionState.Created;
 
     /// <summary>
     /// The type of the action, e.g. Pick or Drop

@@ -10,6 +10,9 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
 [Verb("simulate", HelpText = "Run in simulation mode")]
 public sealed class SimulateOptions
 {
+    private const string GridGraphSet = "GridGraph";
+    private const string FixedGraphSet = "FixedGraph";
+   
     /// <summary>
     /// Number of AGVs
     /// </summary>
@@ -18,41 +21,6 @@ public sealed class SimulateOptions
     [Option('c', "agvs", HelpText = "Number of simulated AGVs", Default = 1)]
     // ReSharper disable once IdentifierTypo
     public int Agvs { get; init; }
-
-    /// <summary>
-    /// List of simulation sources
-    /// </summary>
-    [UsedImplicitly]
-    [Option('s', "sources", HelpText = "List of simulation sources", Required = true, Min = 1, Separator = ',')]
-    public IEnumerable<string>? Sources { get; init; }
-
-    /// <summary>
-    /// List of simulation destinations
-    /// </summary>  
-    [UsedImplicitly]
-    [Option('d', "destinations", HelpText = "List of simulation destinations", Required = true, Min = 1, Separator = ',')]
-    public IEnumerable<string>? Destinations { get; init; }
-
-    /// <summary>
-    /// Number of grid rows [3..[
-    /// </summary>
-    [UsedImplicitly]
-    // ReSharper disable once StringLiteralTypo
-    [Option('r', "gridrows", HelpText = "Number of grid rows of simulated map [3..[", Default = 3)]
-    public int GridRows
-    {
-        get => _gridRows;
-        init
-        {
-            if (value < 3)
-            {
-                throw new ArgumentOutOfRangeException(nameof(value), "Number of grid rows need to be greater or equal to 3.");
-            }
-            _gridRows = value;
-        }
-    }
-
-    private readonly int _gridRows;
 
     /// <summary>
     /// Node travel time of the agv in [ms]
@@ -85,4 +53,56 @@ public sealed class SimulateOptions
     // ReSharper disable once StringLiteralTypo
     [Option("initialbatterycharge", HelpText = "Initial battery charge of AGV in [%]", Default = 75)]
     public int InitialBatteryCharge { get; init; }
+
+    /// <summary>
+    /// Flag to use the grid graph generator in simulation mode
+    /// </summary>
+    [UsedImplicitly]
+    // ReSharper disable once StringLiteralTypo
+    [Option('f', "fixedgraph", HelpText = "Use the fixed graph generator", SetName = FixedGraphSet, Default = false)]
+    public bool FixedGraph { get; init; }
+
+    /// <summary>
+    /// Flag to use the grid graph generator in simulation mode
+    /// </summary>
+    [UsedImplicitly]
+    // ReSharper disable once StringLiteralTypo
+    [Option('g',"gridgraph", HelpText = "Use the grid graph generator", SetName = GridGraphSet, Default=false)]
+    public bool GridGraph { get; init; }
+
+    /// <summary>
+    /// List of simulation sources
+    /// </summary>
+    [UsedImplicitly]
+    [Option('s', "sources", HelpText = "List of simulation sources", Required = false, Min = 1, Separator = ',', SetName = GridGraphSet)]
+    public IEnumerable<string>? Sources { get; init; }
+
+    /// <summary>
+    /// List of simulation destinations
+    /// </summary>  
+    [UsedImplicitly]
+    [Option('d', "destinations", HelpText = "List of simulation destinations", Required = false, Min = 1, Separator = ',', SetName = GridGraphSet)]
+    public IEnumerable<string>? Destinations { get; init; }
+
+    /// <summary>
+    /// Number of grid rows [3..[
+    /// </summary>
+    [UsedImplicitly]
+    // ReSharper disable once StringLiteralTypo
+    [Option('r', "gridrows", HelpText = "Number of grid rows of simulated map [3..[", Default = 3, SetName = GridGraphSet)]
+    public int GridRows
+    {
+        get => _gridRows;
+        init
+        {
+            if (value < 3)
+            {
+                throw new ArgumentOutOfRangeException(nameof(value), "Number of grid rows need to be greater or equal to 3.");
+            }
+            _gridRows = value;
+        }
+    }
+
+    private readonly int _gridRows;
 }
+

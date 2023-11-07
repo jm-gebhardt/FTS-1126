@@ -77,12 +77,22 @@ http://localhost/transportorder/swagger/
 
 ## Run Simulation
 Ensure that `RABBITMQ__HOST` is set
+The simulation mode offers two types of graph generators, `--gridgraph` and `--fixedgraph`.
+In a simulation run with the `--gridgraph` graph generator the graph uses only direct
+edges and generates a graph based on the `--sources, --destinations and --gridrows` options:
+
 ```
 dotnet run --project WCSCommunication simulate --interval=10000 --sources=S1,S2 --destinations='D1,D2,D3
 dotnet run --project TransportOrder production --autoAccept
-dotnet run --project DeviceCommunication simulate --sources=S1,S2 --destinations=D1,D2,D3 --agvs=3 --nodetraveltime=5000 --gridrows=4
+dotnet run --project DeviceCommunication simulate --sources=S1,S2 --destinations=D1,D2,D3 --agvs=3 --nodetraveltime=5000 --gridrows=4 --gridgraph
 ```
+A simulation run with the `-fixedgraph` graph generator uses a pre-defined fixed graph that includes all supported edge types:
 
+```
+dotnet run --project WCSCommunication simulate --interval=10000  --sources=P-Drill,P-Grinder,P-Milling --destinations=D-Paint,D-Press,D-Saw
+dotnet run --project TransportOrder production --autoAccept
+dotnet run --project DeviceCommunication simulate  --agvs=3 --nodetraveltime=5000 --fixedgraph
+```
 ## Run UnitTests
 ```
 dotnet test Source/Agv/CompileAgv.sln

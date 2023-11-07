@@ -11,67 +11,67 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 public record AgvData : CorrelatedBy<Guid>
 {
     /// <inheritdoc/>
-    public Guid CorrelationId { get; }
+    public Guid CorrelationId { get; set; }
 
     /// <summary>
     /// The model name of the AGV
     /// </summary>
-    public string Model { get; }
+    public string Model { get; set; }
 
     /// <summary>
     /// The type of the AGV
     /// </summary>
-    public string Type { get; }
+    public string Type { get; set; }
 
     /// <summary>
     /// The IP Address of the AGV
     /// </summary>
-    public string? IpV4Address { get; }
+    public string? IpV4Address { get; set; }
 
     /// <summary>
     /// The maximum velocity of the AGV in straight direction [m/s]
     /// </summary>
-    public double MaxVelocityStraight { get; }
+    public double MaxVelocityStraight { get; set; }
 
     /// <summary>
     /// The capacity of the AGVs battery in [Ah]
     /// </summary>
-    public double BatteryCapacity { get; }
+    public double BatteryCapacity { get; set; }
 
     /// <summary>
     /// The length of the AGV in [m]
     /// </summary>
-    public double? Length { get; }
+    public double? Length { get; set; }
 
     /// <summary>
     /// The width of the AGV in [m]
     /// </summary>
-    public double? Width { get; }
+    public double? Width { get; set; }
 
     /// <summary>
     /// The maximum velocity of the AGV while turning on spot [m/s^2]
     /// </summary>
-    public double? Acceleration { get; }
+    public double? Acceleration { get; set; }
 
     /// <summary>
     /// The maximum velocity of the AGV in while turning [m/s]
     /// </summary>
-    public double? MaxVelocityTurn { get; }
+    public double? MaxVelocityTurn { get; set; }
 
     /// <summary>
     /// The maximum velocity of the AGV while turning on spot [rad/s]
     /// </summary>
-    public double? MaxVelocityTurnOnSpot { get; }
+    public double? MaxVelocityTurnOnSpot { get; set; }
 
     /// <summary>
     /// The max. payload of the AGV in [kg]
     /// </summary>
-    public long? Payload { get; }
+    public long? Payload { get; set; }
 
     /// <summary>
     /// The list of sensors in the agv
     /// </summary>
-    public Sensor[] Sensors { get; }
+    public Sensor[] Sensors { get; set; }
 
     /// <summary>
     /// Initializes a new instance of <see cref="AgvData"/>
