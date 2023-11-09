@@ -97,7 +97,7 @@ public class WcsDbCommunicator: IHostCommunicator
             throw new OrderNotFoundException(orderId);
         }
         dbContext.FromAgv.Add(
-            FromAgv.CreateInstance(order, OrderStatus.Cancelled, RecordType.OrderCancelFailed, error: error));
+            FromAgv.CreateInstance(order, OrderStatus.Canceled, RecordType.OrderCancelFailed, error: error));
         return await dbContext.SaveChangesAsync() > 0;
     }
 
@@ -114,7 +114,7 @@ public class WcsDbCommunicator: IHostCommunicator
         }
 
         dbContext.FromAgv.Add(
-            FromAgv.CreateInstance(order, OrderStatus.Cancelled, RecordType.OrderCancelAcknowledge));
+            FromAgv.CreateInstance(order, OrderStatus.Canceled, RecordType.OrderCancelAcknowledge));
         return await dbContext.SaveChangesAsync() > 0;
     }
 }

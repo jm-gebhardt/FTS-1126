@@ -96,7 +96,7 @@ public class HostOrderCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_FinishHostOrderCancellation_AlreadyCancelled_NoTransmitHostOrderCancellationSucceeded()
+    public async Task Consume_FinishHostOrderCancellation_AlreadyCanceled_NoTransmitHostOrderCancellationSucceeded()
     {
         using var fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>();
         var now = DateTime.UtcNow;

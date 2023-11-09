@@ -211,7 +211,7 @@ public class ActionGroupValidatorTest
     }
 
     [TestMethod]
-    public async Task ValidateAsync_WhenCancelled_ThrowsOperationCancelledException()
+    public async Task ValidateAsync_WhenCanceled_ThrowsOperationCanceledException()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();

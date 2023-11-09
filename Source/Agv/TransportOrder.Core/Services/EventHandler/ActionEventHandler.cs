@@ -21,7 +21,7 @@ public class ActionEventHandler :
     IConsumer<NonChargingActionCompleted>,
     IConsumer<NodesSelectedForAction>,
     IConsumer<ActionAbortionCompleted>,
-    IConsumer<ActionCancelled>,
+    IConsumer<ActionCanceled>,
     IConsumer<AutomaticActionWithdrawn>
 {
     private readonly ILogger<ActionEventHandler> _logger;
@@ -101,9 +101,9 @@ public class ActionEventHandler :
     }
 
     /// <summary>
-    /// Handles the <see cref="ActionCancelled"/> event.
+    /// Handles the <see cref="ActionCanceled"/> event.
     /// </summary>
-    public async Task Consume(ConsumeContext<ActionCancelled> context)
+    public async Task Consume(ConsumeContext<ActionCanceled> context)
     {
         var actionCorrelationId = context.Message.CorrelationId;
         Guid? assignedAgv = await _actionGroupRegistry.GetAgvAssignedToAction(actionCorrelationId);

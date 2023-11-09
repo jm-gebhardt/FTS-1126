@@ -28,7 +28,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Migrations.WcsCommunicationDb
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime?>("CancelledDate")
+                    b.Property<DateTime?>("CanceledDate")
                         .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("FailedDate")

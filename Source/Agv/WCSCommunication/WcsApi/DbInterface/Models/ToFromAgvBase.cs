@@ -31,9 +31,9 @@ public enum OrderStatus
     Finished,
 
     /// <summary>
-    /// Order cancelled
+    /// Order canceled
     /// </summary>
-    Cancelled
+    Canceled
 }
 
 /// <summary>

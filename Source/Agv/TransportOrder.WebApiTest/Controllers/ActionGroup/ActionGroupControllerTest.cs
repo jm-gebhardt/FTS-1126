@@ -152,7 +152,7 @@ public class ActionGroupControllerTest
     }
 
     [TestMethod]
-    public async Task CancelActionGroup_ActionGroupCancelled_ReturnsBadRequest()
+    public async Task CancelActionGroup_ActionGroupCanceled_ReturnsBadRequest()
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(ActionGroupState.Canceled);
 
@@ -166,7 +166,7 @@ public class ActionGroupControllerTest
         var response = await controller.CancelActionGroup(actionGroup.CorrelationId);
         var result = response as BadRequestObjectResult;
         result.ShouldNotBeNull();
-        result.Value.ShouldBe(HostOrderCancelFailedErrorCode.OrderAlreadyCancelled);
+        result.Value.ShouldBe(HostOrderCancelFailedErrorCode.OrderAlreadyCanceled);
     }
 
     [TestMethod]

@@ -13,7 +13,7 @@ public class ActionGroupEventHandler:
     IConsumer<ActionGroupInvalid>,
     IConsumer<ActionGroupStarted>,
     IConsumer<ActionGroupCompleted>,
-    IConsumer<ActionGroupCancelled>,
+    IConsumer<ActionGroupCanceled>,
     IConsumer<ActionGroupCancelFailed>,
     IConsumer<ActionGroupFailed>
 {
@@ -44,9 +44,9 @@ public class ActionGroupEventHandler:
     }
 
     /// <summary>
-    /// Handles the <see cref="ActionGroupCancelled"/> event.
+    /// Handles the <see cref="ActionGroupCanceled"/> event.
     /// </summary>
-    public async Task Consume(ConsumeContext<ActionGroupCancelled> context)
+    public async Task Consume(ConsumeContext<ActionGroupCanceled> context)
     {
         var (_, correlationId, timestamp) = context.Message;
         await context.Publish(new FinishHostOrderCancellation(correlationId, timestamp));

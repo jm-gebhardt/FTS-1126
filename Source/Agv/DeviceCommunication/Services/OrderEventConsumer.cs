@@ -46,8 +46,8 @@ public class OrderEventConsumer : IConsumer<MqttOrderEvent>
                 await context.Publish(new ActionCompleted(actionId));
                 break;
 
-            case OrderEventType.Cancelled:
-                await context.Publish(new ActionCancelled(actionId));
+            case OrderEventType.Canceled:
+                await context.Publish(new ActionCanceled(actionId));
                 break;
 
             case OrderEventType.CancelFailed:

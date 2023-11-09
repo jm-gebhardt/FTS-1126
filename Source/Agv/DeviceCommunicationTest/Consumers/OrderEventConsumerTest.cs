@@ -45,15 +45,15 @@ public class OrderEventConsumerTest
     }
 
     /// <summary>
-    /// Test for consuming OrderEvent message with the event type 'Cancelled'
+    /// Test for consuming OrderEvent message with the event type 'Canceled'
     /// </summary>
     [TestMethod]
-    public async Task ConsumeEventCancelled()
+    public async Task ConsumeEventCanceled()
     {
-        var message = new MqttOrderEvent(_actionGuid + " " + OrderId, SerialNumber, OrderEventType.Cancelled);
+        var message = new MqttOrderEvent(_actionGuid + " " + OrderId, SerialNumber, OrderEventType.Canceled);
         var published = await ConsumeMessage(message);
 
-        await AssertPublishedEvent<ActionCancelled>(published);
+        await AssertPublishedEvent<ActionCanceled>(published);
     }
 
     /// <summary>

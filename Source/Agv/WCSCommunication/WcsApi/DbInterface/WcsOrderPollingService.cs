@@ -75,7 +75,7 @@ public class WcsOrderHandler : IPollable
     }
 
     /// <summary>
-    /// Handle incoming orders to be cancelled with RecordType == RecordType.CancelRequest
+    /// Handle incoming orders to be canceled with RecordType == RecordType.CancelRequest
     /// </summary>
     /// <param name="cancellationToken"></param>
     [PublicAPI]
@@ -98,7 +98,7 @@ public class WcsOrderHandler : IPollable
                 _logger.LogInformation("Cancel request for order {OrderId} / {CorrelationId} has been sent",
                     order.OrderId, order.OrderId.ToGuid());
 
-                context.FromAgv.Add(FromAgv.CreateInstance(order, OrderStatus.Cancelled, RecordType.OrderCancelRequest));
+                context.FromAgv.Add(FromAgv.CreateInstance(order, OrderStatus.Canceled, RecordType.OrderCancelRequest));
                 order.MessageStatus = MessageStatus.Finished;
             }
         }

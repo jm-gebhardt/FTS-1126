@@ -21,7 +21,7 @@ public interface IMediatorTestHarness
     TimeSpan TestInactivityTimeout { get; set; }
 
     /// <summary>
-    /// CancellationToken that is cancelled when the test inactivity timeout has elapsed with no mediator activity.
+    /// CancellationToken that is canceled when the test inactivity timeout has elapsed with no mediator activity.
     /// </summary>
     CancellationToken InactivityToken { get; }
 

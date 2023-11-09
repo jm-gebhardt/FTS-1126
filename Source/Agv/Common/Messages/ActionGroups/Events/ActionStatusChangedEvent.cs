@@ -21,10 +21,10 @@ public record ActionCompleted(Guid CorrelationId) : IActionEventParent;
 public record ActionFailed(Guid CorrelationId) : IActionEventParent;
 
 /// <summary>
-/// Signals that an action has been cancelled
+/// Signals that an action has been canceled
 /// </summary>
 [PublicAPI]
-public record ActionCancelled(Guid CorrelationId) : IActionEventParent;
+public record ActionCanceled(Guid CorrelationId) : IActionEventParent;
 
 /// <summary>
 /// Signals that an action cancellation has failed 

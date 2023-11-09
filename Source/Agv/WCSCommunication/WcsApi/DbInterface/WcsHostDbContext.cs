@@ -36,7 +36,7 @@ public class WcsHostDbContext : DbContext
         select b;
 
     /// <summary>
-    /// Get all Orders supposed to be cancelled
+    /// Get all Orders supposed to be canceled
     /// </summary>
     public IQueryable<ToAgv> CancelRequests =>
         from b in ToAgv

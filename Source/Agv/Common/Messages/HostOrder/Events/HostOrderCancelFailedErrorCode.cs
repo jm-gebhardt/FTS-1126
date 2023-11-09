@@ -26,7 +26,7 @@ public enum HostOrderCancelFailedErrorCode
     OrderAlreadyFailed,
 
     /// <summary>
-    /// Order already cancelled
+    /// Order already canceled
     /// </summary>
-    OrderAlreadyCancelled
+    OrderAlreadyCanceled
 }

@@ -69,10 +69,10 @@ public class ActionGroupController : Controller
     [Route("/actionGroup/{correlationId:guid}/cancel")]
     public async Task<ActionResult> CancelActionGroup(Guid correlationId)
     {
-        Response<ActionGroupCancelled, ActionGroupCancelFailed> response = await _cancelActionGroupRequestClient.GetResponse<ActionGroupCancelled, ActionGroupCancelFailed>(new CancelActionGroup(correlationId));
+        Response<ActionGroupCanceled, ActionGroupCancelFailed> response = await _cancelActionGroupRequestClient.GetResponse<ActionGroupCanceled, ActionGroupCancelFailed>(new CancelActionGroup(correlationId));
         return response.Message switch
         {
-            ActionGroupCancelled => Ok(),
+            ActionGroupCanceled => Ok(),
             ActionGroupCancelFailed { ErrorCode: HostOrderCancelFailedErrorCode.OrderDoesNotExist } => NotFound(),
             _ => BadRequest(((ActionGroupCancelFailed)response.Message).ErrorCode)
         };

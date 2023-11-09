@@ -128,7 +128,7 @@ public class WcsCommunicatorTest
         entry.Destination.ShouldBe(latestOrder.Destination);
         entry.LeNo.ShouldBe(latestOrder.LeNo);
         entry.RecordType.ShouldBe(RecordType.OrderCancelAcknowledge);
-        entry.Status.ShouldBe(OrderStatus.Cancelled);
+        entry.Status.ShouldBe(OrderStatus.Canceled);
     }
 
     [TestMethod]
@@ -157,7 +157,7 @@ public class WcsCommunicatorTest
 
         await context.SaveChangesAsync();
 
-        (await fixture.Communicator.TransmitHostOrderCancellationFailure(latestOrder.OrderId, HostOrderCancelFailedErrorCode.OrderAlreadyCancelled.ToString())).ShouldBeTrue();
+        (await fixture.Communicator.TransmitHostOrderCancellationFailure(latestOrder.OrderId, HostOrderCancelFailedErrorCode.OrderAlreadyCanceled.ToString())).ShouldBeTrue();
 
         context.FromAgv.Count().ShouldBe(1);
         var entry = context.FromAgv.First();
@@ -166,7 +166,7 @@ public class WcsCommunicatorTest
         entry.Destination.ShouldBe(latestOrder.Destination);
         entry.LeNo.ShouldBe(latestOrder.LeNo);
         entry.RecordType.ShouldBe(RecordType.OrderCancelFailed);
-        entry.Status.ShouldBe(OrderStatus.Cancelled);
+        entry.Status.ShouldBe(OrderStatus.Canceled);
     }
 
     [TestMethod]
@@ -176,7 +176,7 @@ public class WcsCommunicatorTest
 
         await using var context = await fixture.DbContextFactory.CreateDbContextAsync();
 
-        Should.Throw<OrderNotFoundException>(async() => await fixture.Communicator.TransmitHostOrderCancellationFailure("unknownOrder", HostOrderCancelFailedErrorCode.OrderAlreadyCancelled.ToString()));
+        Should.Throw<OrderNotFoundException>(async() => await fixture.Communicator.TransmitHostOrderCancellationFailure("unknownOrder", HostOrderCancelFailedErrorCode.OrderAlreadyCanceled.ToString()));
 
         context.FromAgv.Count().ShouldBe(0);
     }

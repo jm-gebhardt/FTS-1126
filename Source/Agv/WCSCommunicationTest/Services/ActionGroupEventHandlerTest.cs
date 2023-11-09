@@ -62,7 +62,7 @@ public class ActionGroupEventHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_ActionGroupCancelled_ValidData_FinishHostOrderCancellation()
+    public async Task Consume_ActionGroupCanceled_ValidData_FinishHostOrderCancellation()
     {
         var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid());
@@ -70,13 +70,13 @@ public class ActionGroupEventHandlerTest
         fixture.HostOrderRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<Guid>()))
             .ReturnsAsync(hostOrder);
 
-        var actionGroupCancelled = new ActionGroupCancelled(actionGroup, actionGroup.CorrelationId, DateTime.UtcNow);
+        var actionGroupCanceled = new ActionGroupCanceled(actionGroup, actionGroup.CorrelationId, DateTime.UtcNow);
 
-        await fixture.TestHarness!.Bus.Publish(actionGroupCancelled);
+        await fixture.TestHarness!.Bus.Publish(actionGroupCanceled);
 
-        (await fixture.ConsumerHarness!.Consumed.Any<ActionGroupCancelled>()).ShouldBeTrue();
+        (await fixture.ConsumerHarness!.Consumed.Any<ActionGroupCanceled>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<FinishHostOrderCancellation>(f =>
-            f.Context.Message == new FinishHostOrderCancellation(actionGroup.CorrelationId, actionGroupCancelled.MessageCreatedDate))).ShouldBeTrue();
+            f.Context.Message == new FinishHostOrderCancellation(actionGroup.CorrelationId, actionGroupCanceled.MessageCreatedDate))).ShouldBeTrue();
     }
 
     [TestMethod]

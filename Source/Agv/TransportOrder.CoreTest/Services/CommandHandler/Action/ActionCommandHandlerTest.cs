@@ -172,7 +172,7 @@ public class ActionCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_CancelActionGroup_ValidData_PublishesActionGroupCancelled()
+    public async Task Consume_CancelActionGroup_ValidData_PublishesActionGroupCanceled()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv:agv.CorrelationId);
@@ -184,13 +184,13 @@ public class ActionCommandHandlerTest
         var command = new CancelActionGroup(actionGroup.CorrelationId);
         await fixture.TestHarness!.Bus.Publish(command);
         (await fixture.ConsumerHarness!.Consumed.Any<CancelActionGroup>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<ActionGroupCancelled>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<ActionGroupCanceled>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<ActionGroupCancelFailed>()).ShouldBeFalse();
         (await fixture.TestHarness.Published.Any<AutomaticActionWithdrawn>()).ShouldBeTrue();
     }
 
     [TestMethod]
-    public async Task Consume_CancelActionGroup_ValidData_RespondsActionGroupCancelled()
+    public async Task Consume_CancelActionGroup_ValidData_RespondsActionGroupCanceled()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv.CorrelationId);
@@ -199,9 +199,9 @@ public class ActionCommandHandlerTest
         fixture.AddActionGroup(actionGroup);
         fixture.AddActionGroupTargetNodeType(actionGroup, AgvGraph.NodeType.Charge);
 
-        Response<ActionGroupCancelled> response = await fixture.GetResponseAsync<ActionGroupCancelled, CancelActionGroup>(new CancelActionGroup(actionGroup.CorrelationId));
+        Response<ActionGroupCanceled> response = await fixture.GetResponseAsync<ActionGroupCanceled, CancelActionGroup>(new CancelActionGroup(actionGroup.CorrelationId));
         response.Message.CorrelationId.ShouldBe(actionGroup.CorrelationId);
-        (await fixture.TestHarness!.Published.Any<ActionGroupCancelled>()).ShouldBeTrue();
+        (await fixture.TestHarness!.Published.Any<ActionGroupCanceled>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<AutomaticActionWithdrawn>()).ShouldBeTrue();
     }
 
@@ -216,7 +216,7 @@ public class ActionCommandHandlerTest
         var command = new CancelActionGroup(actionGroup.CorrelationId);
         await fixture.TestHarness!.Bus.Publish(command);
         (await fixture.ConsumerHarness!.Consumed.Any<CancelActionGroup>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<ActionGroupCancelled>()).ShouldBeFalse();
+        (await fixture.TestHarness.Published.Any<ActionGroupCanceled>()).ShouldBeFalse();
         (await fixture.TestHarness.Published.Any<ActionGroupCancelFailed>()).ShouldBeTrue();
     }
 
@@ -251,7 +251,7 @@ public class ActionCommandHandlerTest
         var command = new CancelActionGroup(actionGroup.CorrelationId);
         await fixture.TestHarness!.Bus.Publish(command);
         (await fixture.ConsumerHarness!.Consumed.Any<CancelActionGroup>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<ActionGroupCancelled>()).ShouldBeFalse();
+        (await fixture.TestHarness.Published.Any<ActionGroupCanceled>()).ShouldBeFalse();
         (await fixture.TestHarness.Published.Any<ActionGroupCancelFailed>()).ShouldBeTrue();
     }
 
@@ -259,7 +259,7 @@ public class ActionCommandHandlerTest
     [DataRow(nameof(ActionGroupState.Started), HostOrderCancelFailedErrorCode.OrderAlreadyStarted)]
     [DataRow(nameof(ActionGroupState.Completed), HostOrderCancelFailedErrorCode.OrderAlreadyFinished)]
     [DataRow(nameof(ActionGroupState.Failed), HostOrderCancelFailedErrorCode.OrderAlreadyFailed)]
-    [DataRow(nameof(ActionGroupState.Canceled), HostOrderCancelFailedErrorCode.OrderAlreadyCancelled)]
+    [DataRow(nameof(ActionGroupState.Canceled), HostOrderCancelFailedErrorCode.OrderAlreadyCanceled)]
     public async Task Consume_CancelActionGroup_InvalidState_RespondsActionGroupCancelFailed(string invalidState, HostOrderCancelFailedErrorCode error)
     {
         var agv = AgvGenerator.GenerateIdleAgv();
@@ -272,7 +272,7 @@ public class ActionCommandHandlerTest
       Response<ActionGroupCancelFailed> response = await fixture.GetResponseAsync<ActionGroupCancelFailed, CancelActionGroup>(new CancelActionGroup(actionGroup.CorrelationId));
         response.Message.CorrelationId.ShouldBe(actionGroup.CorrelationId);
         response.Message.ErrorCode.ShouldBe(error);
-        (await fixture.TestHarness!.Published.Any<ActionGroupCancelled>()).ShouldBeFalse();
+        (await fixture.TestHarness!.Published.Any<ActionGroupCanceled>()).ShouldBeFalse();
         (await fixture.TestHarness.Published.Any<ActionGroupCancelFailed>()).ShouldBeTrue();
     }
     

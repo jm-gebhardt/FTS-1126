@@ -24,9 +24,9 @@ public enum OrderEventType
     Completed,
 
     /// <summary>
-    /// Transport order cancelled
+    /// Transport order canceled
     /// </summary>
-    Cancelled,
+    Canceled,
 
     /// <summary>
     /// Cancellation for transport order failed

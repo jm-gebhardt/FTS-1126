@@ -33,9 +33,9 @@ public class HostOrder
     public DateTime? StartedDate { get; private set; }
 
     /// <summary>
-    /// The time when the order was cancelled.
+    /// The time when the order was canceled.
     /// </summary>
-    public DateTime? CancelledDate { get; private set; }
+    public DateTime? CanceledDate { get; private set; }
 
     /// <summary>
     /// The time when the order was finished.
@@ -80,9 +80,9 @@ public class HostOrder
     /// </summary>
     public void Start(DateTime timestamp)
     {
-        if (timestamp < StartedDate || timestamp < FinishedDate || timestamp < CancelledDate)
+        if (timestamp < StartedDate || timestamp < FinishedDate || timestamp < CanceledDate)
         {
-            throw new HostOrderInformationOutdatedException($"Order start information from {timestamp} outdated, already started {StartedDate} / finished {FinishedDate}/ cancelled {CancelledDate}.");
+            throw new HostOrderInformationOutdatedException($"Order start information from {timestamp} outdated, already started {StartedDate} / finished {FinishedDate}/ canceled {CanceledDate}.");
         }
         StartedDate = timestamp;
     }
@@ -92,11 +92,11 @@ public class HostOrder
     /// </summary>
     public void Cancel(DateTime timestamp)
     {
-        if (timestamp < StartedDate || timestamp < FinishedDate || timestamp < CancelledDate)
+        if (timestamp < StartedDate || timestamp < FinishedDate || timestamp < CanceledDate)
         {
-            throw new HostOrderInformationOutdatedException($"Order cancellation information from {timestamp} outdated, already started {StartedDate} / finished {FinishedDate}/ cancelled {CancelledDate}.");
+            throw new HostOrderInformationOutdatedException($"Order cancellation information from {timestamp} outdated, already started {StartedDate} / finished {FinishedDate}/ canceled {CanceledDate}.");
         }
-        CancelledDate = timestamp;
+        CanceledDate = timestamp;
     }
 
     /// <summary>
@@ -104,9 +104,9 @@ public class HostOrder
     /// </summary>
     public void Finish(DateTime timestamp)
     {
-        if (timestamp < StartedDate || timestamp < FinishedDate || timestamp < CancelledDate)
+        if (timestamp < StartedDate || timestamp < FinishedDate || timestamp < CanceledDate)
         {
-            throw new HostOrderInformationOutdatedException($"Order completion information from {timestamp} outdated, already started {StartedDate} / finished {FinishedDate}/ cancelled {CancelledDate}.");
+            throw new HostOrderInformationOutdatedException($"Order completion information from {timestamp} outdated, already started {StartedDate} / finished {FinishedDate}/ canceled {CanceledDate}.");
         }
         FinishedDate = timestamp;
     }
@@ -116,9 +116,9 @@ public class HostOrder
     /// </summary>
     public void HandleFailure(DateTime timestamp)
     {
-        if (timestamp < FinishedDate || timestamp < CancelledDate || timestamp < FailedDate)
+        if (timestamp < FinishedDate || timestamp < CanceledDate || timestamp < FailedDate)
         {
-            throw new HostOrderInformationOutdatedException($"Order completion information from {timestamp} outdated, already finished {FinishedDate}/ cancelled {CancelledDate} / failed {FailedDate}.");
+            throw new HostOrderInformationOutdatedException($"Order completion information from {timestamp} outdated, already finished {FinishedDate}/ canceled {CanceledDate} / failed {FailedDate}.");
         }
         FailedDate = timestamp;
     }

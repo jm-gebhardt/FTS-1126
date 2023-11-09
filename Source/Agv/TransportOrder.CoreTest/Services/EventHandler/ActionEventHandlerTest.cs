@@ -112,22 +112,22 @@ public class ActionEventHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_ActionCancelled_NoAssignedAgv_DoesNotPublishHandleActionCompletion()
+    public async Task Consume_ActionCanceled_NoAssignedAgv_DoesNotPublishHandleActionCompletion()
     {
         var fixture = new ActionEventHandlerTestFixture();
         fixture.AddAssignedAgv(null);
-        await fixture.TestHarness!.Bus.Publish(new ActionCancelled(Guid.NewGuid()));
-        (await fixture.ConsumerHarness!.Consumed.Any<ActionCancelled>()).ShouldBeTrue();
+        await fixture.TestHarness!.Bus.Publish(new ActionCanceled(Guid.NewGuid()));
+        (await fixture.ConsumerHarness!.Consumed.Any<ActionCanceled>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<HandleActionCompletion>()).ShouldBeFalse();
     }
 
     [TestMethod]
-    public async Task Consume_ActionCancelled_ValidData_PublishesHandleActionCompletion()
+    public async Task Consume_ActionCanceled_ValidData_PublishesHandleActionCompletion()
     {
         var fixture = new ActionEventHandlerTestFixture();
         fixture.AddAssignedAgv(Guid.NewGuid());
-        await fixture.TestHarness!.Bus.Publish(new ActionCancelled(Guid.NewGuid()));
-        (await fixture.ConsumerHarness!.Consumed.Any<ActionCancelled>()).ShouldBeTrue();
+        await fixture.TestHarness!.Bus.Publish(new ActionCanceled(Guid.NewGuid()));
+        (await fixture.ConsumerHarness!.Consumed.Any<ActionCanceled>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<HandleActionCompletion>()).ShouldBeTrue();
     }
 
