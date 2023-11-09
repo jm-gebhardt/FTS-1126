@@ -100,6 +100,14 @@ public class ActionCommandHandler :
         var cancellationToken = context.CancellationToken;
         var assignedAgv = await _agvRepository.GetAgvAsync(agvCorrelationId);
         ActionGroup? actionGroup;
+       
+        IReadOnlyList<ActionGroup> startedActionGroups = await _actionGroupRegistry.GetActionGroupsAsync(new List<ActionGroupState>{ActionGroupState.Started}, assignedAgvCorrelationId: assignedAgv.CorrelationId);
+        if (startedActionGroups.Any(a => a.CorrelationId != action.ParentId))
+        {
+            _logger.LogError("Could not start action {Action} of group {ActionGroup}, there are other started action groups for this agv.", action.CorrelationId, action.ParentId);
+            await context.Publish(new StartingActionForAgvFailed(assignedAgv.CorrelationId), cancellationToken);
+            return;
+        }
 
         try
         {
@@ -328,7 +336,17 @@ public class ActionCommandHandler :
         var actionGroup = new ActionGroup(
             groupCorrelationId,
             string.Empty,
-            actions: new List<AgvAction> {new(Guid.NewGuid(), ActionType.Charge, chargingNode.Id, groupCorrelationId)},
+            actions: new List<AgvAction> 
+            { 
+                new(Guid.NewGuid(), ActionType.Move, chargingNode.Id, groupCorrelationId)
+                {
+                    Sequence = 0
+                },
+                new(Guid.NewGuid(), ActionType.Charge, chargingNode.Id, groupCorrelationId)
+                {
+                    Sequence = 1
+                }
+            },
             assignedAgv: agv.CorrelationId,
             creator: ActionGroupCreator.TransportOrder
         );
@@ -576,8 +594,9 @@ public class ActionCommandHandler :
 
         // here the state has changed in all cases
         await PublishStateChange(context, assignedAgv);
-        
-        action.Nodes = (await _routeService.GetRouteAsync(assignedAgv, action.TargetNodeId, cancellationToken)).Nodes;
+
+        action.Nodes = action.ActionType == ActionType.Charge ? new[] { action.TargetNodeId } : 
+            (await _routeService.GetRouteAsync(assignedAgv, action.TargetNodeId, cancellationToken)).Nodes;
 
         _logger.LogDebug("Starting action with CorrelationId: {ActionCorrelationId} for Agv {AgvCorrelationId}. Setting Agv to busy in next step.", action.CorrelationId, assignedAgv.CorrelationId);
         try

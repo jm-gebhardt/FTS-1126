@@ -13,32 +13,32 @@ public record AgvPosition
     /// <summary>
     /// Returns true, when the position is known and valid.
     /// </summary>
-    public bool PositionInitialized { get; }
+    public bool PositionInitialized { get; init; }
 
     /// <summary>
     /// Current X-position [m].
     /// </summary>
-    public float X { get; }
+    public float X { get; init; }
 
     /// <summary>
     /// Current Y-position [m].
     /// </summary>
-    public float Y { get; }
+    public float Y { get; init; }
 
     /// <summary>
     /// Current Z-position [m].
     /// </summary>
-    public float Z { get; }
+    public float Z { get; init; }
 
     /// <summary>
     /// Current angle (rotation) [rad].
     /// </summary>
-    public float Theta { get; }
+    public float Theta { get; init; }
 
     /// <summary>
     /// Deviation from the responded position [m].
     /// </summary>
-    public float? DeviationRange { get; }
+    public float? DeviationRange { get; init; }
 
     /// <summary>
     /// Initializes a new instance of <see cref="AgvPosition"/>

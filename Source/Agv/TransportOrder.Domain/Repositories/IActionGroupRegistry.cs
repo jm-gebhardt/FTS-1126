@@ -130,6 +130,13 @@ public interface IActionGroupRegistry
     /// </summary>
     /// <param name="agvCorrelationId">The correlation id of the agv .</param>
     /// <returns>True if there is any not started action in the action group.</returns>
+    Task<bool> HasUnfinishedActionGroupAsync(Guid agvCorrelationId);
+
+    /// <summary>
+    /// Determine if there is any subsequent action which has not started.
+    /// </summary>
+    /// <param name="agvCorrelationId">The correlation id of the agv .</param>
+    /// <returns>True if there is any not started action in the action group.</returns>
     Task<bool> HasNotStartedActionsAsync(Guid agvCorrelationId);
 
     /// <summary>
@@ -139,13 +146,14 @@ public interface IActionGroupRegistry
     Task<IReadOnlyList<ActionGroup>> GetNotStartedActionGroupsAsync(Guid agvCorrelationId);
 
     /// <summary>
-/// Get list of ActionGroup with invalid actions.
+    /// Get list of ActionGroup with invalid actions.
     /// </summary>
     Task<IReadOnlyList<ActionGroup>> GetInvalidActionGroupsAsync();
 
     /// <summary>
     /// Return the subsequent action for the agv that is not started yet.
-    /// Generally it is the drop action after the completion of the preceding pick action.
+    /// Generally it is the drop action after the completion of the preceding pick action
+    /// or the charge action after the completion of the preceding move action.
     /// </summary>
     /// <param name="agvCorrelationId">The correlation id.</param>
     /// <returns>Returns subsequent action</returns>

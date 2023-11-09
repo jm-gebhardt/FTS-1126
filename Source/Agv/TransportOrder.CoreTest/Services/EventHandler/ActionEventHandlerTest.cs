@@ -14,12 +14,29 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.EventHandler;
 public class ActionEventHandlerTest
 {
     [TestMethod]
-    public async Task Consume_ActionGroupCreatedForAgv_ValidData_PublishesSelectNodesForAction()
+    public async Task Consume_ActionGroupCreatedForAgv_PickDropActionGroup_PublishesSelectNodesForAction()
     {
         var fixture = new ActionEventHandlerTestFixture();
         var mapper = ActionEventHandlerTestFixture.GetMapper();
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "NodeId");
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
-        var actionGroupCreatedForAgv = new ActionGroupCreatedForAgv(mapper.Map<ActionGroup>(actionGroup), Guid.NewGuid());
+        fixture.AddActionGroup(actionGroup);
+        var actionGroupCreatedForAgv = new ActionGroupCreatedForAgv(mapper.Map<ActionGroup>(actionGroup), agv.CorrelationId);
+        await fixture.TestHarness!.Bus.Publish(actionGroupCreatedForAgv);
+
+        (await fixture.ConsumerHarness!.Consumed.Any<ActionGroupCreatedForAgv>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<SelectNodesForAction>()).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task Consume_ActionGroupCreatedForAgv_ChargeActionGroup_PublishesSelectNodesForAction()
+    {
+        var fixture = new ActionEventHandlerTestFixture();
+        var mapper = ActionEventHandlerTestFixture.GetMapper();
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "NodeId");
+        var actionGroup = AgvActionGenerator.GenerateChargeActionGroup();
+        fixture.AddActionGroup(actionGroup);
+        var actionGroupCreatedForAgv = new ActionGroupCreatedForAgv(mapper.Map<ActionGroup>(actionGroup), agv.CorrelationId);
         await fixture.TestHarness!.Bus.Publish(actionGroupCreatedForAgv);
 
         (await fixture.ConsumerHarness!.Consumed.Any<ActionGroupCreatedForAgv>()).ShouldBeTrue();

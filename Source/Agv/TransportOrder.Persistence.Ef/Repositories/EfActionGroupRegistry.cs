@@ -263,6 +263,21 @@ public class EfActionGroupRegistry : IActionGroupRegistry
         return hasNotStartedActions;
     }
 
+    public async Task<bool> HasUnfinishedActionGroupAsync(Guid agvCorrelationId)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
+        bool hasNotStartedActions = await queryable.Where(actionGroup =>
+                actionGroup.AssignedAgv == agvCorrelationId &&
+                actionGroup.State == ActionGroupState.Started &&
+                actionGroup.Actions.Any(a => a.State != ActionState.Completed && a.State != ActionState.Started)
+            )
+            .AsNoTracking()
+            .AnyAsync();
+
+        return hasNotStartedActions;
+    }
+
     /// <inheritdoc/>
     public async Task<IReadOnlyList<ActionGroup>> GetNotStartedActionGroupsAsync(Guid agvCorrelationId)
     {

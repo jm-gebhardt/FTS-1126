@@ -50,19 +50,30 @@ public class StartActionCommandConsumer :
             throw new AssignedAgvNotFoundException(assignedAgv, agvId, action);
         }
 
-        if (actionType == ActionType.Pick)
+        switch (actionType)
         {
-            orderType = OrderType.Pick;
-            sourceToSend = action.TargetNodeId;
-        }
-        else if (actionType == ActionType.Drop)
-        {
-            orderType = OrderType.Drop;
-            destinationToSend = action.TargetNodeId;
-        }
-        else
-        {
-            throw new InvalidOperationException($"Can't handle {actionType} yet");
+            case ActionType.Pick:
+                orderType = OrderType.Pick;
+                sourceToSend = action.TargetNodeId;
+                break;
+
+            case ActionType.Drop:
+                orderType = OrderType.Drop;
+                destinationToSend = action.TargetNodeId;
+                break;
+
+            case ActionType.Move:
+                orderType = OrderType.Move;
+                destinationToSend = action.TargetNodeId;
+                break;
+
+            case ActionType.Charge:
+                orderType = OrderType.Charge;
+                destinationToSend = action.TargetNodeId;
+                break;
+
+            default:
+                throw new InvalidOperationException($"Can't handle {actionType} yet");
         }
 
         // We are using the ActionCorrelationId as "orderId"

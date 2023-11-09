@@ -1,4 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
@@ -11,6 +12,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
+using ActionGroup = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.EventHandler;
 
@@ -66,7 +68,7 @@ public class AgvEventHandler :
 
         var agv = await _agvRepository.GetAgvAsync(agvCorrelationId);
  
-        if (!agv.IsAvailable( ignoreCharging: true, ignoreLocked: true))
+        if (!agv.IsAvailable( ignoreCharging: false, ignoreLocked: true))
         {
             // Agv might be charging
             _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} is not available (charging ignored).", agvCorrelationId);
@@ -83,8 +85,14 @@ public class AgvEventHandler :
             var agvSettings = _settingsProvider.GetSettings();
             bool needsCharging = agv.CheckNeedsCharging(agvSettings);
             bool isCarryingLoad = await _actionGroupRegistry.HasUnfinishedDropActionsAsync(agv.CorrelationId);
+            IReadOnlyList<ActionGroup> actionGroups = await _actionGroupRegistry.GetActionGroupsAsync(new [] {ActionGroupState.Started, ActionGroupState.Created}, assignedAgvCorrelationId: agvCorrelationId);
 
-            bool shouldCharge = !isCarryingLoad && needsCharging;
+            bool noChargingAction = true;
+            if (actionGroups.Any())
+            {
+                noChargingAction = !actionGroups.Any(a => a.Actions.Any(ac => ac.ActionType == ActionType.Charge));
+            } 
+            bool shouldCharge = !isCarryingLoad && needsCharging && noChargingAction;
 
             if (shouldCharge)
             {
@@ -249,19 +257,10 @@ public class AgvEventHandler :
                 await context.Publish(new TryStartManualAction(agv.CorrelationId));
                 return;
             }
-            var agvSettings = _settingsProvider.GetSettings();
-            bool needsCharging = agv.CheckNeedsCharging(agvSettings);
             bool isCarryingLoad = await _actionGroupRegistry.HasUnfinishedDropActionsAsync(agv.CorrelationId);
+            bool hasUnfinishedActionGroup = await _actionGroupRegistry.HasUnfinishedActionGroupAsync(agv.CorrelationId);
 
-            bool shouldCharge = !isCarryingLoad && needsCharging;
             bool shouldDoMaintenance = !isCarryingLoad && agv.NeedsMaintenance;
-
-            if (shouldCharge)
-            {
-                _logger.LogInformation("Create charging group for agv {CorrelationId}.", agv.CorrelationId);
-                await context.Publish(new CreateChargingActionGroup(agv.CorrelationId));
-                return;
-            }
 
             if (shouldDoMaintenance)
             {
@@ -269,7 +268,7 @@ public class AgvEventHandler :
                 return;
             }
 
-            if (isCarryingLoad)
+            if (hasUnfinishedActionGroup)
             {
                 _logger.LogDebug("Starting next action for agv: {AgvCorrelationId}.",  agv.CorrelationId);
                 await context.Publish(new TryStartNextActionInActionGroup(agv.CorrelationId));

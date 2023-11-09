@@ -11,49 +11,49 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 public record AgvMap : CorrelatedBy<Guid>
 {
     /// <inheritdoc/>
-    public Guid CorrelationId { get; set; }
+    public Guid CorrelationId { get; init; }
 
     /// <summary>
     /// The human readable unique ID if the requested map
     /// </summary>
-    public string MapId { get; set; }
+    public string MapId { get; init; }
 
     /// <summary>
     /// Timestamp of last modification
     /// </summary>
-    public DateTime ModificationDate { get; set; }
+    public DateTime ModificationDate { get; init; }
 
     /// <summary>
     /// The Base64 encoded image data as string
     /// </summary>
-    public string ImageData { get; set; }
+    public string ImageData { get; init; }
 
     /// <summary>
     /// The Width of the map [px]
     /// </summary>
-    public int Width { get; set; }
+    public int Width { get; init; }
 
     /// <summary>
     /// The Height of the map [px]
     /// </summary>
-    public int Height { get; set; }
+    public int Height { get; init; }
 
     /// <summary>
     /// Resolution of the Image in [m/px].
     /// </summary>
-    public float Resolution { get; set; }
+    public float Resolution { get; init; }
 
     /// <summary>
     /// Distance from the left bound to the origin of the graph coordinates.
     /// When the origin is left from the left bound this value is negative.
     /// </summary>
-    public float XOffset { get; set; }
+    public float XOffset { get; init; }
 
     /// <summary>
     /// Distance from the top bound to the origin of the graph coordinates.
     /// When the origin is upper to the top bound this value is negative.
     /// </summary>
-    public float YOffset { get; set; }
+    public float YOffset { get; init; }
 
     /// <summary>
     /// Constructor

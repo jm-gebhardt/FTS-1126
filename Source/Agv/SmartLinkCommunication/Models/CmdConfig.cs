@@ -19,7 +19,7 @@ public class CmdConfig
     public string? Pin { get; init; }
 
     /// <summary/>
-    [Option('n', "nodes", HelpText = "The nodes for the pick and drop action as comma seperated list, e.g: P1,D2", Required = false)]
+    [Option('n', "nodes", HelpText = "The nodes for the pick and drop action as comma separated list, e.g: P1,D2", Required = false)]
     [UsedImplicitly]
     public string? PickDropNode { get; init; }
 

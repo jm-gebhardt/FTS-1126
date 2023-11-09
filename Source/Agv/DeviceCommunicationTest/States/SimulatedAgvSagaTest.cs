@@ -1,3 +1,4 @@
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
@@ -40,8 +41,8 @@ public class SimulatedAgvSagaTest
 
         var saga = CreateSimulatedAgvSaga();
         saga.SimulatedBatteryCharge = chargeInit;
-        saga.CurrentNode = new GraphNode("node01") { Type = NodeType.Charge };
-
+        saga.CurrentNode = new GraphNode("Charge-1") { Type = NodeType.Charge };
+        saga.Action = new AgvAction(Guid.NewGuid(), ActionType.Charge, "Charge-1", saga.CorrelationId);
         saga.UpdateStatus(timeDiff, chargeDiff, chargeDiff);
 
         saga.SimulatedBatteryCharge.ShouldBe(chargeInit + chargeDiff * timeDiff);
@@ -57,7 +58,8 @@ public class SimulatedAgvSagaTest
 
         var saga = CreateSimulatedAgvSaga();
         saga.SimulatedBatteryCharge = chargeInit;
-        saga.CurrentNode = new GraphNode("node01") { Type = NodeType.Pick };
+        saga.CurrentNode = new GraphNode("Charge-1") { Type = NodeType.Pick };
+        saga.Action = new AgvAction(Guid.NewGuid(), ActionType.Charge, "Charge-1", saga.CorrelationId);
 
         saga.UpdateStatus(timeDiff, chargeDiff, chargeDiff);
 
@@ -78,6 +80,7 @@ public class SimulatedAgvSagaTest
         saga.IsOnline.ShouldBeTrue();
 
         saga.CurrentNode = new GraphNode("node01") { Type = NodeType.Pick };
+        saga.Action = new AgvAction(Guid.NewGuid(), ActionType.Charge, "Charge-1", saga.CorrelationId);
         saga.UpdateStatus(timeDiff, chargeDiff, chargeDiff);
 
         saga.IsOnline.ShouldBeFalse();

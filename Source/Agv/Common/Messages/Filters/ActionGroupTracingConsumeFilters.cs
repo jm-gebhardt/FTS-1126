@@ -14,7 +14,6 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Filters;
 public class ActionGroupTracingConsumeFilters: BaseTracingFilter,
     IFilter<ConsumeContext<QueueActionGroup>>,
     IFilter<ConsumeContext<StartActionCommand>>,
-    IFilter<ConsumeContext<StartChargingCommand>>,
     IFilter<ConsumeContext<ActionGroupCompleted>>,
     IFilter<ConsumeContext<ActionGroupStarted>>,
     IFilter<ConsumeContext<ActionGroupFailed>>
@@ -38,13 +37,6 @@ public class ActionGroupTracingConsumeFilters: BaseTracingFilter,
         await next.Send(context);
     }
         
-    /// <inheritdoc cref="IFilter{TContext}"/>>
-    public async Task Send(ConsumeContext<StartChargingCommand> context, IPipe<ConsumeContext<StartChargingCommand>> next)
-    {
-        LogDebug(context);
-        await next.Send(context);
-    }
-
     /// <inheritdoc cref="IFilter{TContext}"/>>
     public async Task Send(ConsumeContext<ActionGroupCompleted> context, IPipe<ConsumeContext<ActionGroupCompleted>> next)
     {

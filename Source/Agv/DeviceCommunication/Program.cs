@@ -79,8 +79,6 @@ try
                             configurator.AddConsumer<StartActionCommandConsumer>();
                             configurator.AddConsumer<RequestAgvMapConsumer>();
                             configurator.AddConsumer<AgvRequestDataConsumer>();
-                            configurator.AddConsumer<StartChargingCommandConsumer>();
-                            configurator.AddConsumer<StopChargingCommandConsumer>();
                             configurator.AddConsumer<ActionEventConsumer>();
                         },
 

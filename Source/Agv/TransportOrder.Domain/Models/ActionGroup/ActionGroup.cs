@@ -41,12 +41,12 @@ public class ActionGroup
     /// <summary>
     /// The state of the ActionGroup.
     /// </summary>
-    public ActionGroupState State { get; private set; } = ActionGroupState.Created;
+    public ActionGroupState State { get; set; } = ActionGroupState.Created;
 
     /// <summary>
     /// The first action to be executed.
     /// </summary>
-    public AgvAction? FirstNotStartedAction => Actions.FirstOrDefault(a => a.State == ActionState.Created);
+    public AgvAction? FirstNotStartedAction => Actions.OrderBy(a => a.Sequence).FirstOrDefault(a => a.State == ActionState.Created);
 
     private readonly List<AgvAction> _actions;
 

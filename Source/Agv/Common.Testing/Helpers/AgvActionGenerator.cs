@@ -6,18 +6,29 @@ namespace Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 public static class AgvActionGenerator
 {
     [UsedImplicitly]
-    public static ActionGroup GenerateChargeActionGroup(string? targetNodeId = null)
+    public static ActionGroup GenerateChargeActionGroup(
+        ActionGroupState actionGroupState = ActionGroupState.Created, ActionState actionState = ActionState.Created, string ? targetNodeId = null,
+        Guid? assignedAgv = null)
     {
         var groupId = Guid.NewGuid();
-        var chargeAction = new AgvAction(Guid.NewGuid(), ActionType.Charge, targetNodeId ?? "Charge-1", groupId);
-        if (targetNodeId != null)
-        {
-            chargeAction.Nodes = new[] { targetNodeId };
-        }
 
-        var actionGroup = new ActionGroup(groupId, string.Empty, new List<AgvAction> { chargeAction }, ActionGroupCreator.TransportOrder)
+        var moveActionGuid = Guid.NewGuid();
+        var chargeActionGuid = Guid.NewGuid();
+        var moveAction = new AgvAction(moveActionGuid, ActionType.Move, targetNodeId ?? "Charge-1", groupId)
         {
-            State = ActionGroupState.Created
+            Sequence = 0,
+            State = actionState
+        };
+        var chargeAction = new AgvAction(chargeActionGuid, ActionType.Charge, targetNodeId ?? "Charge-1", groupId)
+        {
+            Sequence = 1,
+            State = actionState
+        };
+
+        var actionGroup = new ActionGroup(groupId, string.Empty, new List<AgvAction> { moveAction, chargeAction }, ActionGroupCreator.TransportOrder)
+        {
+            State = actionGroupState,
+            AssignedAgv = assignedAgv
         };
 
         return actionGroup;

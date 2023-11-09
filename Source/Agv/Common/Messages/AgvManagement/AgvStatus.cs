@@ -14,7 +14,7 @@ public record AgvStatus : CorrelatedBy<Guid>
     ///  AGV correlation ID
     /// </summary>
     [UsedImplicitly]
-    public Guid CorrelationId { get; set; }
+    public Guid CorrelationId { get; init; }
 
     /// <summary>
     /// Current or previous order ID (Internally we are using the ActionCorrelationId).
@@ -24,7 +24,7 @@ public record AgvStatus : CorrelatedBy<Guid>
     /// The order ID is kept until a new order is received.
     /// </remarks>
     [UsedImplicitly]
-    public string? OrderId { get; set; }
+    public string? OrderId { get; init; }
 
     /// <summary>
     /// AGV is busy (not idle).
@@ -34,7 +34,7 @@ public record AgvStatus : CorrelatedBy<Guid>
     /// There is at least one action pending (neither finished no failed).
     /// </remarks>
     [UsedImplicitly]
-    public bool Busy { get; set; }
+    public bool Busy { get; init;}
 
     /// <summary>
     /// AGV is in automatic mode.
@@ -44,7 +44,7 @@ public record AgvStatus : CorrelatedBy<Guid>
     /// Only mode "AUTOMATIC" is regarded.
     /// </remarks>
     [UsedImplicitly]
-    public bool Automatic { get; set; }
+    public bool Automatic { get; init; }
 
     /// <summary>
     /// Battery charge.
@@ -55,7 +55,7 @@ public record AgvStatus : CorrelatedBy<Guid>
     /// <para>Less than or equal <see cref="BadBatteryLevel"/>% is regarded as "battery low", charging required.</para>
     /// </remarks>
     [UsedImplicitly]
-    public double BatteryCharge { get; set; }
+    public double BatteryCharge { get; init; }
 
     /// <summary>
     /// AGV is charging.
@@ -65,7 +65,7 @@ public record AgvStatus : CorrelatedBy<Guid>
     /// Charging in progress.
     /// </remarks>
     [UsedImplicitly]
-    public bool Charging { get; set; }
+    public bool Charging { get; init; }
 
     /// <summary>
     /// AGV is disturbed.
@@ -75,7 +75,7 @@ public record AgvStatus : CorrelatedBy<Guid>
     /// There is at least one error with level "FATAL".
     /// </remarks>
     [UsedImplicitly]
-    public bool Disturbed { get; set; }
+    public bool Disturbed { get; init; }
 
     /// <summary>
     /// Lower battery level in [%] for signaling "battery bad" (defined by VDA5050).
@@ -97,7 +97,7 @@ public record AgvStatus : CorrelatedBy<Guid>
     /// VDA5050.state.schema.lastNodeId
     /// </remarks>
     [UsedImplicitly]
-    public string? LastNodeId { get; set; }
+    public string? LastNodeId { get; init; }
 
     /// <summary>
     /// Constructor of AgvStatus

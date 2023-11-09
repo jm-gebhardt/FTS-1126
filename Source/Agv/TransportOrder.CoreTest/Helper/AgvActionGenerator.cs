@@ -8,18 +8,27 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 
 public static class AgvActionGenerator
 {
-    public static ActionGroup GenerateChargeActionGroup(string? targetNodeId = null, Guid? assignedAgv = null, 
+    public static ActionGroup GenerateChargeActionGroup(string? targetNodeId = null, Guid? assignedAgv = null,
         ActionState actionState = ActionState.Created)
     {
         var groupId = Guid.NewGuid();
-        var chargeAction = new AgvAction(Guid.NewGuid(), ActionType.Charge, targetNodeId ?? AgvGraphGenerator.ChargingClose.Id, groupId);
+        var moveAction = new AgvAction(Guid.NewGuid(), ActionType.Move, targetNodeId ?? AgvGraphGenerator.ChargingClose.Id, groupId)
+        {
+            Sequence = 0
+        };
+        moveAction.UpdateActionState(actionState);
+
+        var chargeAction = new AgvAction(Guid.NewGuid(), ActionType.Charge, targetNodeId ?? AgvGraphGenerator.ChargingClose.Id, groupId)
+        {
+            Sequence = 1
+        };
+        chargeAction.UpdateActionState(actionState);
+
         if (targetNodeId != null)
         {
             chargeAction.Nodes = new[] { targetNodeId };
         }
-        chargeAction.UpdateActionState(actionState);
-
-        var actionGroup = new ActionGroup(groupId, string.Empty, new List<AgvAction> { chargeAction }, ActionGroupCreator.TransportOrder) { AssignedAgv = assignedAgv };
+        var actionGroup = new ActionGroup(groupId, string.Empty, new List<AgvAction> { moveAction, chargeAction }, ActionGroupCreator.TransportOrder) { AssignedAgv = assignedAgv };
         return actionGroup;
     }
 

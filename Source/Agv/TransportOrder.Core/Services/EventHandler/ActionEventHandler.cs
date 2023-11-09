@@ -42,9 +42,13 @@ public class ActionEventHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<ActionGroupCreatedForAgv> context)
     {
-        var (actionGroup, assignedAgv) = context.Message;
+        var (actionGroupInMessage, assignedAgv) = context.Message;
+        var actionGroup = await _actionGroupRegistry.GetActionGroupAsync(actionGroupInMessage.CorrelationId);
 
-        await context.Publish(new SelectNodesForAction(actionGroup.Actions.OrderBy(a => a.Sequence).First(), assignedAgv));
+        var firstNotStartedAction = actionGroup!.FirstNotStartedAction;
+        var action = actionGroupInMessage.Actions.First(a => a.CorrelationId == firstNotStartedAction!.CorrelationId);
+        _logger.LogInformation("Received action group created for agv {Agv}, action group {Group}, starting action {Action} next.", assignedAgv, action.ActionType, actionGroup.CorrelationId);
+        await context.Publish(new SelectNodesForAction(action, assignedAgv));
     }
 
     /// <summary>

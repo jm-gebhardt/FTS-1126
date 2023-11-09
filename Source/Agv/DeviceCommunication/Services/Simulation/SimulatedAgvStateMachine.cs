@@ -1,3 +1,4 @@
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
@@ -363,13 +364,15 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         // publish started/stopped charging regardless of IsOnline flag, because otherwise you can never reanimate dead Agvs
         // Started charging
 
-        if (!prevCharging && context.Saga.AgvStatus.Charging)
+        if (!prevCharging && context.Saga.AgvStatus.Charging && context.Saga.Action!.ActionType == ActionType.Charge)
         {
+            _logger.LogInformation("StartCharging prevCharging=false, charging=true");
             await context.Publish(new AgvStartedCharging(context.Saga.CorrelationId));
         }
         // Stopped charging
         else if (prevCharging && !context.Saga.AgvStatus.Charging)
         {
+            _logger.LogInformation("StopCharging prevCharging=true, charging=false");
             await context.Publish(new AgvStoppedCharging(context.Saga.CorrelationId));
         }
     }

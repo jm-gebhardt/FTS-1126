@@ -1,11 +1,13 @@
 using Gebhardt.StoreWare.Agv.Common.Exceptions;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
+using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Exceptions;
 
 /// <summary>
 /// Agv Information was not found
 /// </summary>
+[PublicAPI]
 public class AgvInformationNotFoundException : NotFoundException
 {
     /// <summary>

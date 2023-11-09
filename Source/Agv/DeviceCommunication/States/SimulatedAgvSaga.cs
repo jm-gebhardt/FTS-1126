@@ -330,9 +330,9 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
     public void UpdateStatus(double timeDiffMs, double batteryChargeRate, double batteryDischargeRate)
     {
         bool charging = false;
-        if (CurrentNode != null) // AGV is charging if it is at a charging station
+        if (CurrentNode != null && Action != null) // AGV is charging if it is at a charging station
         {
-            charging = CurrentNode.Type == AgvGraph.NodeType.Charge && AgvStatus.BatteryCharge < 100;
+            charging = CurrentNode.Type == AgvGraph.NodeType.Charge && AgvStatus.BatteryCharge < 100 &&  Action.ActionType == ActionType.Charge;
         }
 
         double chargeDiff;

@@ -58,6 +58,7 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixtureWithSche
     public void AgvHasUnfinishedDropAction(Guid correlationId)
     {
         _actionGroupRegistry.Setup(r => r.HasUnfinishedDropActionsAsync(It.Is<Guid>(c => c == correlationId))).ReturnsAsync(true);
+        _actionGroupRegistry.Setup(r => r.HasUnfinishedActionGroupAsync(It.Is<Guid>(c => c == correlationId))).ReturnsAsync(true);
     }
 
     public static IMapper GetMapper()

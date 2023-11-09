@@ -13,6 +13,7 @@ public class MqttErrorProfile : Profile
     public MqttErrorProfile()
     {
         CreateMap<MqttError, AgvError>()
+            .ForMember(nameof(AgvError.CorrelationId), opt => opt.Ignore())
             .ForMember(nameof(AgvError.AgvCorrelationId), opt => opt.Ignore())
             .ForMember(nameof(AgvError.ErrorReceived), opt => opt.Ignore())
             .ForMember(nameof(AgvError.ErrorResolved), opt => opt.Ignore());
