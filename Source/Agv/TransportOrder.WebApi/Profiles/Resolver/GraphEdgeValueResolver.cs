@@ -6,18 +6,12 @@ using GraphNode = Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent.
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles.Resolver;
 
 /// <summary>
-/// The custom value resolver, maps from AgvGraph and and the destination Graph to the Edges property
+/// The custom value resolver.
+/// Maps from AgvGraph to the GraphEdgeDtos.
 /// </summary>
 public class GraphEdgeValueResolver : IValueResolver<Graph, GraphDto, object>
 {
-    /// <summary>
-    /// The resolve method
-    /// </summary>
-    /// <param name="source"></param>
-    /// <param name="destination"></param>
-    /// <param name="destMember"></param>
-    /// <param name="context"></param>
-    /// <returns></returns>
+    /// <inheritdoc />
     public object Resolve(Graph source, GraphDto destination, object destMember, ResolutionContext context)
     {
         var graphEdges = new List<GraphEdgeDto>();
@@ -29,9 +23,7 @@ public class GraphEdgeValueResolver : IValueResolver<Graph, GraphDto, object>
             if (nodeDict.TryGetValue(edge.From.Id, out var fromNode) &&
                 nodeDict.TryGetValue(edge.To.Id, out var toNode))
             {
-                var fromNodeDto = context.Mapper.Map<GraphNodeDto>(fromNode);
-                var toNodeDto = context.Mapper.Map<GraphNodeDto>(toNode);
-                graphEdges.Add(new GraphEdgeDto { From = fromNodeDto, To = toNodeDto, 
+                graphEdges.Add(new GraphEdgeDto { FromNodeId = fromNode.Id, ToNodeId = toNode.Id, 
                     Variant = edge.Variant, VariantParameters = edge.VariantParameters, Length = edge.Length });
             }
         }

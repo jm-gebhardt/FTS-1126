@@ -5,20 +5,20 @@ using JetBrains.Annotations;
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Graph;
 
 /// <summary>
-/// Model for drawing an edge in the UI
+/// Model for drawing an edge in the UI.
 /// </summary>
 [PublicAPI]
 public record GraphEdgeDto
 {
     /// <summary>
-    /// Node where the edge starts.
+    /// Id of the node where the edge starts.
     /// </summary>
-    public GraphNodeDto From { get; init; } = null!;
+    public string FromNodeId { get; init; } = null!;
 
     /// <summary>
-    /// Node where the edge ends.
+    /// Id of the node where the edge ends.
     /// </summary>
-    public GraphNodeDto To { get; init; } = null!;
+    public string ToNodeId { get; init; } = null!;
 
     /// <summary>
     /// Length of the edge in [m].
