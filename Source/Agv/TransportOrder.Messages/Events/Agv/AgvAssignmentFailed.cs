@@ -29,8 +29,8 @@ public record AgvAssignmentFailed : CorrelatedBy<Guid>
         /// <summary>
         /// There was no AGV discovered or online when assigning the given order
         /// </summary>
-        /// <remarks>No entry found in AgvRegistry</remarks>
-        AgvRegistryEmpty
+        /// <remarks>No entry found in AgvRepository</remarks>
+        AgvRepositoryEmpty
     }
 
     /// <inheritdoc/>

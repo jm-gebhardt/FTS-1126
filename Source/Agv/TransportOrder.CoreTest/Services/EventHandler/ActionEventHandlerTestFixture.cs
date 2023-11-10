@@ -12,18 +12,18 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.EventHandler;
 
 public class ActionEventHandlerTestFixture : MassTransitConsumerTestFixtureWithScheduler<ActionEventHandler>
 {
-    private readonly Mock<IActionGroupRegistry> _actionGroupRegistry = new();
+    private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
 
     protected override void ConfigureServices(IServiceCollection collection)
     {
         collection.AddTransient(_ => GetMapper());
-        collection.AddTransient(_ => _actionGroupRegistry.Object);
+        collection.AddTransient(_ => _actionGroupRepository.Object);
     }
 
     public ActionEventHandlerTestFixture()
     {
         Build();
-        _actionGroupRegistry.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync((ActionGroup?)null);
+        _actionGroupRepository.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync((ActionGroup?)null);
     }
 
     public static IMapper GetMapper()
@@ -33,11 +33,11 @@ public class ActionEventHandlerTestFixture : MassTransitConsumerTestFixtureWithS
    
     public void AddAssignedAgv(Guid? correlationId)
     {
-        _actionGroupRegistry.Setup(x => x.GetAgvAssignedToAction(It.IsAny<Guid>())).ReturnsAsync(correlationId);
+        _actionGroupRepository.Setup(x => x.GetAgvAssignedToAction(It.IsAny<Guid>())).ReturnsAsync(correlationId);
     }
     
     public void AddActionGroup(ActionGroup actionGroup)
     {
-        _actionGroupRegistry.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup);
+        _actionGroupRepository.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup);
     }
 }

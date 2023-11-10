@@ -29,7 +29,7 @@ public class GetAgvGraphRequestHandlerTest
         var agv = AgvGenerator.GenerateIdleAgv();
 
         AgvRequestsHandlerTestFixture<GetAgvGraph, GetGraphRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvGraph, GetGraphRequestHandler>()
-            .WithEmptyGraphRegistry()
+            .WithEmptyGraphRepository()
             .WithAgv(agv)
             .Build();
 
@@ -42,7 +42,7 @@ public class GetAgvGraphRequestHandlerTest
         var agv = AgvGenerator.GenerateIdleAgv();
 
         AgvRequestsHandlerTestFixture<GetAgvGraphs, GetGraphRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvGraphs, GetGraphRequestHandler>()
-            .WithEmptyGraphRegistry()
+            .WithEmptyGraphRepository()
             .WithAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv })
             .Build();
         await MediatorShould.ThrowRequestExceptionAsync<AgvsNotFoundException>(async () => await fixture.GetResponseAsync<GotAgvGraphs>(new GetAgvGraphs(new List<Guid> { "INVALID".ToGuid() })));
@@ -54,7 +54,7 @@ public class GetAgvGraphRequestHandlerTest
         var agv = AgvGenerator.GenerateIdleAgv();
 
         AgvRequestsHandlerTestFixture<GetAgvGraphs, GetGraphRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvGraphs, GetGraphRequestHandler>()
-            .WithEmptyGraphRegistry()
+            .WithEmptyGraphRepository()
             .WithAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv })
             .Build();
         await MediatorShould.ThrowRequestExceptionAsync<AgvGraphsNotDefinedException>(async () => await fixture.GetResponseAsync<GotAgvGraphs>(new GetAgvGraphs(new List<Guid> { agv.CorrelationId })));

@@ -17,7 +17,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.RequestHandler
 public class GetAgvsRequestHandlerTest
 {
     [TestMethod]
-    public async Task GetAgvsRequestHandler_RegistryEmpty_ReturnsEmptyList()
+    public async Task GetAgvsRequestHandler_RepositoryEmpty_ReturnsEmptyList()
     {
         AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler>()
             .WithEmptyAgvRepository()
@@ -28,7 +28,7 @@ public class GetAgvsRequestHandlerTest
     }
 
     [TestMethod]
-    public async Task GetAgvsRequestHandler_RegistryContainsAgv_NoActionGroup_AgvReturned()
+    public async Task GetAgvsRequestHandler_RepositoryContainsAgv_NoActionGroup_AgvReturned()
     {
         var agvs = new List<TransportOrder.Domain.Models.Agv.Agv> { AgvGenerator.GenerateIdleAgv() };
         AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler>()
@@ -45,7 +45,7 @@ public class GetAgvsRequestHandlerTest
     }
 
     [TestMethod]
-    public async Task GetAgvsRequestHandler_RegistryContainsAgv_HasCurrentAction_AgvReturned()
+    public async Task GetAgvsRequestHandler_RepositoryContainsAgv_HasCurrentAction_AgvReturned()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
@@ -68,7 +68,7 @@ public class GetAgvsRequestHandlerTest
     }
 
     [TestMethod]
-    public async Task GetAgvsRequestHandler_RegistryContainsMultipleAgvs_ReturnSpecificAgv()
+    public async Task GetAgvsRequestHandler_RepositoryContainsMultipleAgvs_ReturnSpecificAgv()
     {
         var agv1 = AgvGenerator.GenerateIdleAgv(1);
         var agv2 = AgvGenerator.GenerateIdleAgv(2);
@@ -84,7 +84,7 @@ public class GetAgvsRequestHandlerTest
     }
 
     [TestMethod]
-    public async Task GetAgvsRequestHandler_RegistryContainsMultipleAgvs_SpecificAgvNotFound_ThrowsException()
+    public async Task GetAgvsRequestHandler_RepositoryContainsMultipleAgvs_SpecificAgvNotFound_ThrowsException()
     {
         var agv1 = AgvGenerator.GenerateIdleAgv(1);
         var agv2 = AgvGenerator.GenerateIdleAgv(2);
@@ -98,7 +98,7 @@ public class GetAgvsRequestHandlerTest
     }
 
     [TestMethod]
-    public async Task GetAgvsRequestHandler_RegistryContainsMultipleAgvs_UnknownRequested_ThrowsException()
+    public async Task GetAgvsRequestHandler_RepositoryContainsMultipleAgvs_UnknownRequested_ThrowsException()
     {
         var agv1 = AgvGenerator.GenerateIdleAgv(1);
         var agv2 = AgvGenerator.GenerateIdleAgv(2);
@@ -157,7 +157,7 @@ public class GetAgvsRequestHandlerTest
     }
 
     [TestMethod]
-    public async Task GetAgvRequestHandler_RegistryContainsAgv_HasCurrentAction_AgvReturned()
+    public async Task GetAgvRequestHandler_RepositoryContainsAgv_HasCurrentAction_AgvReturned()
     {
         var idleAgv = AgvGenerator.GenerateIdleAgv();
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();

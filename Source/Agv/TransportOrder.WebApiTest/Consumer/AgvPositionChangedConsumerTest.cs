@@ -47,7 +47,7 @@ public class AgvPositionChangedConsumerTest
         (await fixture.TestHarness.Published.Any<AgvLastNodeIdChanged>()).ShouldBeTrue();
         (await fixture.ConsumerHarness!.Consumed.Any<AgvLastNodeIdChanged>()).ShouldBeTrue();
 
-        fixture.NodeStateRegistryMock.Verify(r => r.UnOccupyNodeAsync(AgvId.ToGuid()), Times.Once);
+        fixture.NodeStateRepositoryMock.Verify(r => r.UnOccupyNodeAsync(AgvId.ToGuid()), Times.Once);
     }
 
     [DataRow(null, null)]
@@ -64,7 +64,7 @@ public class AgvPositionChangedConsumerTest
         (await fixture.TestHarness.Published.Any<AgvLastNodeIdChanged>()).ShouldBeTrue();
         (await fixture.ConsumerHarness!.Consumed.Any<AgvLastNodeIdChanged>()).ShouldBeTrue();
 
-        fixture.NodeStateRegistryMock.Verify(r => r.UnOccupyNodeAsync(AgvId.ToGuid()), Times.Never);
+        fixture.NodeStateRepositoryMock.Verify(r => r.UnOccupyNodeAsync(AgvId.ToGuid()), Times.Never);
     }
 
     [DataRow(null, "newLastNodeId")]
@@ -83,7 +83,7 @@ public class AgvPositionChangedConsumerTest
         (await fixture.TestHarness.Published.Any<AgvLastNodeIdChanged>()).ShouldBeTrue();
         (await fixture.ConsumerHarness!.Consumed.Any<AgvLastNodeIdChanged>()).ShouldBeTrue();
 
-        fixture.NodeStateRegistryMock.Verify(r => r.OccupyNodeAsync(newLastNodeId, AgvId.ToGuid()), Times.Once);
+        fixture.NodeStateRepositoryMock.Verify(r => r.OccupyNodeAsync(newLastNodeId, AgvId.ToGuid()), Times.Once);
     }
 
     [DataRow(null, "newLastNodeId")]
@@ -102,7 +102,7 @@ public class AgvPositionChangedConsumerTest
         (await fixture.TestHarness.Published.Any<AgvLastNodeIdChanged>()).ShouldBeTrue();
         (await fixture.ConsumerHarness!.Consumed.Any<AgvLastNodeIdChanged>()).ShouldBeTrue();
 
-        fixture.NodeStateRegistryMock.Verify(r => r.OccupyNodeAsync(newLastNodeId, AgvId.ToGuid()), Times.Never);
+        fixture.NodeStateRepositoryMock.Verify(r => r.OccupyNodeAsync(newLastNodeId, AgvId.ToGuid()), Times.Never);
     }
 
     [DataRow(null, "newLastNodeId")]

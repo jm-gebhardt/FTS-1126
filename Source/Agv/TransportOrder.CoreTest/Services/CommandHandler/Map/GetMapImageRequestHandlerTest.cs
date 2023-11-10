@@ -15,7 +15,7 @@ public class GetMapImageRequestHandlerTest
     public async Task GetMap_ShouldReturnByteArrayOfImage_WhenMapIsFound()
     {
         MapRequestTestFixture<GetMapImage, GetMapImageRequestHandler> fixture = new MapRequestTestFixture<GetMapImage, GetMapImageRequestHandler>()
-            .AddMapRegistryMock(m => { m.Setup(x => x.GetMapImage(It.IsAny<Guid>())).Returns(Convert.FromBase64String(MapRequestTestFixture<GetMapImage, GetMapImageRequestHandler>.Base64String)); })
+            .AddMapRepositoryMock(m => { m.Setup(x => x.GetMapImage(It.IsAny<Guid>())).Returns(Convert.FromBase64String(MapRequestTestFixture<GetMapImage, GetMapImageRequestHandler>.Base64String)); })
             .Build();
 
         Response<GotMapImage> response = await fixture.GetResponseAsync<GotMapImage>(new GetMapImage(new Guid("7FE9372B-4219-4D09-8885-966EE125A350")));
@@ -36,7 +36,7 @@ public class GetMapImageRequestHandlerTest
     public async Task GetMap_ShouldThrowMapNotFoundException_WhenMapIsNotFound()
     {
         MapRequestTestFixture<GetMapImage, GetMapImageRequestHandler> fixture = new MapRequestTestFixture<GetMapImage, GetMapImageRequestHandler>()
-            .AddMapRegistryMock(m => { m.Setup(x => x.GetMapImage(It.IsAny<Guid>())).Returns(() => null); })
+            .AddMapRepositoryMock(m => { m.Setup(x => x.GetMapImage(It.IsAny<Guid>())).Returns(() => null); })
             .Build();
 
         var requestException = await Should.ThrowAsync<RequestException>(fixture.GetResponseAsync<GotMapImage>(new GetMapImage(new Guid("7FE9372B-4219-4D09-8885-966EE125A351"))));

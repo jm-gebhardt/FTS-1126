@@ -10,7 +10,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.CommandHandler
 public class GetMapListRequestHandlerTest
 {
     [TestMethod]
-    public async Task GetMaps_ShouldReturnListOfMaps_WhereMapRegistryIsContained()
+    public async Task GetMaps_ShouldReturnListOfMaps_WhereMapRepositoryIsContained()
     {
         MapRequestTestFixture<GetMapList, GetMapRequestHandler> fixture = new MapRequestTestFixture<GetMapList, GetMapRequestHandler>()
             .UseDefaultServices()

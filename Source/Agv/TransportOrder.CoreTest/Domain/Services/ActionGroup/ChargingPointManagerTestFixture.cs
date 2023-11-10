@@ -25,9 +25,9 @@ public class ChargingPointManagerTestFixture
     private static readonly string _node06 = _destinations[2];
     private const string MapName = "Map#1";
 
-    private readonly Mock<IAgvGraphRegistry> _graphRegistry = new();
+    private readonly Mock<IAgvGraphRepository> _graphRepository = new();
 
-    public Mock<INodeStateRegistry> NodeStateRegistry { get; } = new();
+    public Mock<INodeStateRepository> NodeStateRepository { get; } = new();
 
     public Mock<IRouteService> RouteService { get; } = new();
 
@@ -76,23 +76,23 @@ public class ChargingPointManagerTestFixture
 
     public IChargingPointManager CreateChargingPointManager()
     {
-        return new ChargingPointManager(_graphRegistry.Object, NodeStateRegistry.Object, RouteService.Object, new Mock<ILogger<ChargingPointManager>>().Object, new ChargingSemaphoreProvider());
+        return new ChargingPointManager(_graphRepository.Object, NodeStateRepository.Object, RouteService.Object, new Mock<ILogger<ChargingPointManager>>().Object, new ChargingSemaphoreProvider());
     }
 
     public void SetupNodeLocker(bool reserveSuccess, bool lockSuccess, bool unlockSuccess, Func<IQueryable<GraphNode>, IQueryable<GraphNode>>? filterFreeUnlockedNodesFunction = null)
     {
-        NodeStateRegistry.Setup(s => s.ReserveNodeAsync(It.IsAny<string>(), It.IsAny<Guid>())).Returns(Task.FromResult(reserveSuccess));
-        NodeStateRegistry.Setup(s => s.LockNodeAsync(It.IsAny<string>())).Returns(Task.FromResult(lockSuccess));
-        NodeStateRegistry.Setup(s => s.UnlockNodeAsync(It.IsAny<string>())).Returns(Task.FromResult(unlockSuccess));
+        NodeStateRepository.Setup(s => s.ReserveNodeAsync(It.IsAny<string>(), It.IsAny<Guid>())).Returns(Task.FromResult(reserveSuccess));
+        NodeStateRepository.Setup(s => s.LockNodeAsync(It.IsAny<string>())).Returns(Task.FromResult(lockSuccess));
+        NodeStateRepository.Setup(s => s.UnlockNodeAsync(It.IsAny<string>())).Returns(Task.FromResult(unlockSuccess));
 
         filterFreeUnlockedNodesFunction ??= nodes => nodes;
-        NodeStateRegistry.Setup(s => s.FilterFreeUnlockedNodes(It.IsAny<IQueryable<GraphNode>>())).Returns(filterFreeUnlockedNodesFunction);
+        NodeStateRepository.Setup(s => s.FilterFreeUnlockedNodes(It.IsAny<IQueryable<GraphNode>>())).Returns(filterFreeUnlockedNodesFunction);
     }
 
-    public void SetupGraphRegistry(AgvGraph graph)
+    public void SetupGraphRepository(AgvGraph graph)
     {
-        _graphRegistry.Setup(x => x.GetAgvGraphAsync(It.IsAny<Guid>())).ReturnsAsync(graph);
-        _graphRegistry.Setup(x => x.GetNodesAsync(It.IsAny<Guid>(), It.IsAny<Expression<Func<GraphNode, bool>>>()))
+        _graphRepository.Setup(x => x.GetAgvGraphAsync(It.IsAny<Guid>())).ReturnsAsync(graph);
+        _graphRepository.Setup(x => x.GetNodesAsync(It.IsAny<Guid>(), It.IsAny<Expression<Func<GraphNode, bool>>>()))
             .ReturnsAsync(new Func<Guid, Expression<Func<GraphNode, bool>>, IEnumerable<GraphNode>>((_, predicate) => graph.Nodes.AsQueryable().Where(predicate)));
     }
 
@@ -105,15 +105,15 @@ public class ChargingPointManagerTestFixture
 
     public ChargingPointManagerTestFixture WithAvailableNodes(TransportOrder.Domain.Models.Agv.Agv agv, List<GraphNode> availableNodes)
     {
-        _graphRegistry.Setup(x => x.GetNodesAsync(agv.CorrelationId, It.IsAny<Expression<Func<GraphNode, bool>>>()))
+        _graphRepository.Setup(x => x.GetNodesAsync(agv.CorrelationId, It.IsAny<Expression<Func<GraphNode, bool>>>()))
             .ReturnsAsync(new Func<Guid, Expression<Func<GraphNode, bool>>, IEnumerable<GraphNode>>((_, predicate) => availableNodes.AsQueryable().Where(predicate)));
         foreach (var availableNode in availableNodes)
         {
-            _graphRegistry.Setup(x => x.GetNodeAsync(availableNode.Id, agv.CorrelationId))
+            _graphRepository.Setup(x => x.GetNodeAsync(availableNode.Id, agv.CorrelationId))
                 .ReturnsAsync(availableNodes.First(n => n.Id == availableNode.Id));
         }
 
-        NodeStateRegistry.Setup(x => x.FilterFreeUnlockedNodes(availableNodes)).Returns(availableNodes);
+        NodeStateRepository.Setup(x => x.FilterFreeUnlockedNodes(availableNodes)).Returns(availableNodes);
         return this;
     }
 

@@ -3,7 +3,7 @@
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 
 /// <summary>
-/// Represents errors that occur when the map is not found in the e.g. registry
+/// Represents errors that occur when the map is not found in the e.g. repository
 /// </summary>
 public class MapNotFoundException : NotFoundException
 {

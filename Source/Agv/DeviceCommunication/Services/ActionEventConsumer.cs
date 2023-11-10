@@ -18,13 +18,13 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
 public class ActionEventConsumer : IConsumer<ActionAborted>
 {
     private readonly ILogger<ActionEventConsumer> _logger;
-    private readonly IAgvRegistry _agvRegistry;
+    private readonly IAgvRepository _agvRepository;
 
     /// <inheritdoc cref="ActionEventConsumer"/>>
-    public ActionEventConsumer(ILogger<ActionEventConsumer> logger, IAgvRegistry agvRegistry)
+    public ActionEventConsumer(ILogger<ActionEventConsumer> logger, IAgvRepository agvRepository)
     {
         _logger = logger;
-        _agvRegistry = agvRegistry;
+        _agvRepository = agvRepository;
     }
 
     /// <summary>
@@ -34,7 +34,7 @@ public class ActionEventConsumer : IConsumer<ActionAborted>
     {
         var (assignedAgv, action) = context.Message;
 
-        var agvInformation = _agvRegistry.GetAgvInformation(assignedAgv);
+        var agvInformation = _agvRepository.GetAgvInformation(assignedAgv);
         if (agvInformation == null || agvInformation.AgvStatusReceived!.AgvId.IsNullOrEmpty())
         {
             throw new AssignedAgvNotFoundException(assignedAgv, agvInformation!.AgvStatusReceived!.AgvId, action);

@@ -16,20 +16,20 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
 public class AgvStateConsumer : IConsumer<MqttState>
 {
     private readonly ILogger<AgvStateConsumer> _logger;
-    private readonly IAgvRegistry _agvRegistry;
+    private readonly IAgvRepository _agvRepository;
     private readonly IMapper _mapper;
 
     /// <summary>
     /// Create consumer for agv status message (<see cref="MqttState"/>)
     /// </summary>
     /// <param name="logger">Mandatory logger facility.</param>
-    /// <param name="agvRegistry"></param>
+    /// <param name="agvRepository"></param>
     /// <param name="mapper"></param>
     [PublicAPI]
-    public AgvStateConsumer(ILogger<AgvStateConsumer> logger, IAgvRegistry agvRegistry, IMapper mapper)
+    public AgvStateConsumer(ILogger<AgvStateConsumer> logger, IAgvRepository agvRepository, IMapper mapper)
     {
         _logger = logger;
-        _agvRegistry = agvRegistry;
+        _agvRepository = agvRepository;
         _mapper = mapper;
     }
 
@@ -80,12 +80,12 @@ public class AgvStateConsumer : IConsumer<MqttState>
         );
         await context.Publish(agvStatusReceived, context.CancellationToken);
 
-        var agvInformation = _agvRegistry.GetAgvInformation(agvStatusReceived.CorrelationId);
-        var agvStatusReceivedFromRegistry = agvInformation?.AgvStatusReceived;
+        var agvInformation = _agvRepository.GetAgvInformation(agvStatusReceived.CorrelationId);
+        var agvStatusReceivedFromRepository = agvInformation?.AgvStatusReceived;
 
-        if (agvStatusReceivedFromRegistry != null)
+        if (agvStatusReceivedFromRepository != null)
         {
-            bool oldCharging = agvStatusReceivedFromRegistry.AgvStatus.Charging;
+            bool oldCharging = agvStatusReceivedFromRepository.AgvStatus.Charging;
             bool newCharging = GetCharging(message);
 
             if (!oldCharging && newCharging)
@@ -98,7 +98,7 @@ public class AgvStateConsumer : IConsumer<MqttState>
             }
         }
 
-        FeedAgvRegistry(agvCorrelationId, agvStatusReceived);
+        FeedAgvRepository(agvCorrelationId, agvStatusReceived);
     }
 
     private static async Task SendAgvPositionAsync(ConsumeContext<MqttState> context, Guid agvCorrelationId, string serialNumber)
@@ -132,9 +132,9 @@ public class AgvStateConsumer : IConsumer<MqttState>
         await context.Publish(agvErrorStatusReceived, context.CancellationToken);
     }
 
-    private void FeedAgvRegistry(Guid correlationId, AgvStatusReceived agvStatusReceived)
+    private void FeedAgvRepository(Guid correlationId, AgvStatusReceived agvStatusReceived)
     {
-        _agvRegistry.AddOrUpdateAgvStatus(correlationId, agvStatusReceived);
+        _agvRepository.AddOrUpdateAgvStatus(correlationId, agvStatusReceived);
     }
 
     private string GetSerialNumber(MqttState message)

@@ -18,18 +18,18 @@ public abstract class BaseNodeReservationManager : BaseNodePicker
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="agvGraphRegistry"></param>
-    /// <param name="nodeStateRegistry"></param>
+    /// <param name="agvGraphRepository"></param>
+    /// <param name="nodeStateRepository"></param>
     /// <param name="routeService"></param>
     /// <param name="logger"></param>
     /// <param name="semaphoreProvider"></param>
     protected BaseNodeReservationManager(
-        IAgvGraphRegistry agvGraphRegistry,
-        INodeStateRegistry nodeStateRegistry,
+        IAgvGraphRepository agvGraphRepository,
+        INodeStateRepository nodeStateRepository,
         IRouteService routeService,
         ILogger<BaseNodeReservationManager> logger,
         ISemaphoreProvider semaphoreProvider
-    ) : base(agvGraphRegistry, nodeStateRegistry, routeService, logger)
+    ) : base(agvGraphRepository, nodeStateRepository, routeService, logger)
     {
         _semaphoreProvider = semaphoreProvider;
     }
@@ -50,17 +50,17 @@ public abstract class BaseNodeReservationManager : BaseNodePicker
         }, new CancellationToken());
     }
 
-    ///  <inheritdoc cref="INodeStateRegistry.ReserveNodeAsync"/>
+    ///  <inheritdoc cref="INodeStateRepository.ReserveNodeAsync"/>
     [UsedImplicitly]
     protected Task<bool> TryReserveNodeAsync(string nodeId)
     {
-        return NodeStateRegistry.LockNodeAsync(nodeId);
+        return NodeStateRepository.LockNodeAsync(nodeId);
     }
 
-    ///  <inheritdoc cref="INodeStateRegistry.ReserveNodeAsync"/>
+    ///  <inheritdoc cref="INodeStateRepository.ReserveNodeAsync"/>
     protected async Task ReserveNodeAsync(string nodeId, Guid agvCorrelationId)
     {
-        if (!await NodeStateRegistry.ReserveNodeAsync(nodeId, agvCorrelationId))
+        if (!await NodeStateRepository.ReserveNodeAsync(nodeId, agvCorrelationId))
         {
             throw new ReserveNodeFailedException(nodeId);
         }

@@ -18,15 +18,15 @@ public class StartActionCommandConsumer :
     IConsumer<StartActionCommand>
 {
     private readonly ILogger<StartActionCommandConsumer> _logger;
-    private readonly IAgvRegistry _agvRegistry;
+    private readonly IAgvRepository _agvRepository;
 
     /// <summary>
     /// Create dummy consumer with message handler delegate
     /// </summary>
-    public StartActionCommandConsumer(ILogger<StartActionCommandConsumer> logger, IAgvRegistry agvRegistry)
+    public StartActionCommandConsumer(ILogger<StartActionCommandConsumer> logger, IAgvRepository agvRepository)
     {
         _logger = logger;
-        _agvRegistry = agvRegistry;
+        _agvRepository = agvRepository;
     }
 
     /// <summary>
@@ -91,13 +91,13 @@ public class StartActionCommandConsumer :
             }
         }, context.CancellationToken);
 
-        FeedAgvRegistry(assignedAgv, action);
+        FeedAgvRepository(assignedAgv, action);
         _logger.LogInformation("Sent transport order: {OrderId} for AGV:{AssignedAgv}/{AgvId} at target: {TargetNodeId}",
             action.CorrelationId, assignedAgv, agvId, targetNodeId);
     }
 
-    private void FeedAgvRegistry(Guid correlationId, AgvAction agvAction)
+    private void FeedAgvRepository(Guid correlationId, AgvAction agvAction)
     {
-        _agvRegistry.AddOrUpdateAgvAction(correlationId, agvAction);
+        _agvRepository.AddOrUpdateAgvAction(correlationId, agvAction);
     }
 }

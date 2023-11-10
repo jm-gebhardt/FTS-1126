@@ -16,15 +16,15 @@ public class GetAgvPositionsRequestHandler :
     IConsumer<GetAgvPositions>,
     IConsumer<GetAgvPosition>
 {
-    private readonly IAgvPositionRegistry _agvPositionRegistry;
+    private readonly IAgvPositionRepository _agvPositionRepository;
 
     /// <summary>
     /// <inheritdoc cref="GetAgvPositionsRequestHandler"/>
     /// </summary>
-    /// <param name="agvPositionRegistry"></param>
-    public GetAgvPositionsRequestHandler(IAgvPositionRegistry agvPositionRegistry)
+    /// <param name="agvPositionRepository"></param>
+    public GetAgvPositionsRequestHandler(IAgvPositionRepository agvPositionRepository)
     {
-        _agvPositionRegistry = agvPositionRegistry;
+        _agvPositionRepository = agvPositionRepository;
     }
 
     /// <summary>
@@ -34,7 +34,7 @@ public class GetAgvPositionsRequestHandler :
     {
         ICollection<Guid> selectedAgvs = context.Message.CorrelationIds;
 
-        ICollection<AgvPositionStatus> fetchedPositions = _agvPositionRegistry.GetSelectedAgvsPositions(selectedAgvs);
+        ICollection<AgvPositionStatus> fetchedPositions = _agvPositionRepository.GetSelectedAgvsPositions(selectedAgvs);
         if (fetchedPositions.Count != selectedAgvs.Count)
         {
             throw new AgvsNotFoundException(selectedAgvs.Except(fetchedPositions.Select(p => p.CorrelationId)).ToList());
@@ -49,7 +49,7 @@ public class GetAgvPositionsRequestHandler :
     public async Task Consume(ConsumeContext<GetAgvPosition> context)
     {
         var correlationId = context.Message.CorrelationId;
-        var agvPosition = _agvPositionRegistry.GetPosition(correlationId);
+        var agvPosition = _agvPositionRepository.GetPosition(correlationId);
         if (agvPosition == null)
         {
             throw new AgvNotFoundException(correlationId);

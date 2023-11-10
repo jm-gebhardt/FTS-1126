@@ -16,80 +16,80 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
     where TRequestClient : class
     where TConsumer : class, IConsumer
 {
-    private readonly Mock<IAgvGraphRegistry> _agvGraphRegistry = new();
+    private readonly Mock<IAgvGraphRepository> _agvGraphRepository = new();
 
     // ReSharper disable once MemberCanBePrivate.Global
-    public readonly Mock<IAgvRepository> AgvRegistry = new();
+    public readonly Mock<IAgvRepository> AgvRepository = new();
 
     // ReSharper disable once MemberCanBePrivate.Global
-    public readonly Mock<IActionGroupRetrievalService> ActionGroupRegistry = new();
+    public readonly Mock<IActionGroupRetrievalService> ActionGroupRepository = new();
 
     // ReSharper disable once MemberCanBePrivate.Global
-    public readonly Mock<IAgvErrorRegistry> AgvErrorRegistry = new();
+    public readonly Mock<IAgvErrorRepository> AgvErrorRepository = new();
 
-    private readonly Mock<IAgvDataRegistry> _agvDataRegistryMock = new();
+    private readonly Mock<IAgvDataRepository> _agvDataRepositoryMock = new();
 
     public AgvRequestsHandlerTestFixture(IBus? bus = null)
     {
-        WithEmptyGraphRegistry();
+        WithEmptyGraphRepository();
         AddServices(s =>
         {
-            s.AddTransient(_ => AgvRegistry.Object);
-            s.AddTransient(_ => ActionGroupRegistry.Object);
-            s.AddTransient(_ => Mock.Of<IAgvDataRegistry>());
+            s.AddTransient(_ => AgvRepository.Object);
+            s.AddTransient(_ => ActionGroupRepository.Object);
+            s.AddTransient(_ => Mock.Of<IAgvDataRepository>());
             s.AddTransient(_ => MappingHelper.GetMapper(new AgvProfile()));
             s.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-            s.AddTransient(_ => _agvGraphRegistry.Object);
-            s.AddTransient(_ => AgvErrorRegistry.Object);
-            s.AddTransient(_ => _agvDataRegistryMock.Object);
+            s.AddTransient(_ => _agvGraphRepository.Object);
+            s.AddTransient(_ => AgvErrorRepository.Object);
+            s.AddTransient(_ => _agvDataRepositoryMock.Object);
             if (bus != null)
             {
                 s.AddTransient(_ => bus);
             }
         });
 
-        AgvErrorRegistry.Setup(x => x.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(new List<AgvError>());
-        AgvErrorRegistry.Setup(x => x.GetActiveErrorsAsync(It.IsAny<IList<Guid>>())).ReturnsAsync(new List<AgvError>());
+        AgvErrorRepository.Setup(x => x.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(new List<AgvError>());
+        AgvErrorRepository.Setup(x => x.GetActiveErrorsAsync(It.IsAny<IList<Guid>>())).ReturnsAsync(new List<AgvError>());
     }
 
-    public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithEmptyGraphRegistry()
+    public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithEmptyGraphRepository()
     {
-        _agvGraphRegistry.Setup(r => r.GetAgvGraphAsync(It.IsAny<Guid>())).Returns((Guid correlationId) => throw new AgvGraphNotDefinedException(correlationId));
-        _agvGraphRegistry.Setup(r => r.GetSelectedAgvGraphsAsync(It.IsAny<List<Guid>>())).ReturnsAsync(new List<AgvGraph>());
+        _agvGraphRepository.Setup(r => r.GetAgvGraphAsync(It.IsAny<Guid>())).Returns((Guid correlationId) => throw new AgvGraphNotDefinedException(correlationId));
+        _agvGraphRepository.Setup(r => r.GetSelectedAgvGraphsAsync(It.IsAny<List<Guid>>())).ReturnsAsync(new List<AgvGraph>());
         return this;
     }
 
     public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithEmptyAgvRepository()
     {
-        AgvRegistry.Setup(r => r.SelectExistingAgvsAsync(It.IsAny<List<Guid>>())).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>());
-        AgvRegistry.Setup(r => r.GetAllAgvsAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>());
-        AgvRegistry.Setup(r => r.GetAgvAsync(It.IsAny<Guid>())).ThrowsAsync(new AgvNotFoundException(It.IsAny<Guid>()));
-        AgvRegistry.Setup(r => r.Count).Returns(0);
-        AgvRegistry.Setup(r => r.CheckIfAgvExistsAsync(It.IsAny<Guid>())).ReturnsAsync(false);
-        AgvRegistry.Setup(r => r.GetAllAgvsWithGraphAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>());
-        AgvRegistry.Setup(r => r.GetChargingAgvsWithGoodBatteryLevelAsync(It.IsAny<int>())).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>());
-        AgvRegistry.Setup(r => r.GetIdleAgvsAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>());
-        AgvRegistry.Setup(r => r.GetReadyAgvsAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>());
-        AgvRegistry.Setup(r => r.SelectExistingAgvsAsync(It.IsAny<List<Guid>>())).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>());
+        AgvRepository.Setup(r => r.SelectExistingAgvsAsync(It.IsAny<List<Guid>>())).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>());
+        AgvRepository.Setup(r => r.GetAllAgvsAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>());
+        AgvRepository.Setup(r => r.GetAgvAsync(It.IsAny<Guid>())).ThrowsAsync(new AgvNotFoundException(It.IsAny<Guid>()));
+        AgvRepository.Setup(r => r.Count).Returns(0);
+        AgvRepository.Setup(r => r.CheckIfAgvExistsAsync(It.IsAny<Guid>())).ReturnsAsync(false);
+        AgvRepository.Setup(r => r.GetAllAgvsWithGraphAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>());
+        AgvRepository.Setup(r => r.GetChargingAgvsWithGoodBatteryLevelAsync(It.IsAny<int>())).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>());
+        AgvRepository.Setup(r => r.GetIdleAgvsAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>());
+        AgvRepository.Setup(r => r.GetReadyAgvsAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>());
+        AgvRepository.Setup(r => r.SelectExistingAgvsAsync(It.IsAny<List<Guid>>())).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>());
         return this;
     }
 
     public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithEmptyAgvErrorRepository()
     {
-        AgvErrorRegistry.Setup(x => x.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(new List<AgvError>());
-        AgvErrorRegistry.Setup(x => x.GetActiveErrorsAsync(It.IsAny<IList<Guid>>())).ReturnsAsync(new List<AgvError>());
-        AgvErrorRegistry.Setup(x => x.GetErrorsAsync(It.IsAny<Guid>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(new List<AgvError>());
-        AgvErrorRegistry.Setup(x => x.GetErrorsAsync(It.IsAny<IList<Guid>>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(new List<AgvError>());
+        AgvErrorRepository.Setup(x => x.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(new List<AgvError>());
+        AgvErrorRepository.Setup(x => x.GetActiveErrorsAsync(It.IsAny<IList<Guid>>())).ReturnsAsync(new List<AgvError>());
+        AgvErrorRepository.Setup(x => x.GetErrorsAsync(It.IsAny<Guid>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(new List<AgvError>());
+        AgvErrorRepository.Setup(x => x.GetErrorsAsync(It.IsAny<IList<Guid>>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(new List<AgvError>());
         return this;
     }
 
     public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithAgvs(List<TransportOrder.Domain.Models.Agv.Agv> agvs, TransportOrder.Domain.Models.ActionGroup.ActionGroup? actionGroup = null)
     {
-        AgvRegistry.AddAgvsToMockRepository(agvs);
-        ActionGroupRegistry.Setup(r => r.GetAssignedActionGroupsWithNodesAsync(It.IsAny<IReadOnlyCollection<Guid>>()))
+        AgvRepository.AddAgvsToMockRepository(agvs);
+        ActionGroupRepository.Setup(r => r.GetAssignedActionGroupsWithNodesAsync(It.IsAny<IReadOnlyCollection<Guid>>()))
             .ReturnsAsync(agvs.ToDictionary(a => a.CorrelationId, _ => actionGroup.ConvertFromActionGroupWithFakeNodeType()));
-        ActionGroupRegistry.Setup(r => r.GetActionGroupWithNodesAsync(It.IsAny<Guid>()));
-        AgvRegistry.Setup(r => r.GetAgvAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) =>
+        ActionGroupRepository.Setup(r => r.GetActionGroupWithNodesAsync(It.IsAny<Guid>()));
+        AgvRepository.Setup(r => r.GetAgvAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) =>
         {
             try
             {
@@ -100,32 +100,32 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
                 throw new AgvNotFoundException(c);
             }
         });
-        AgvRegistry.Setup(r => r.CheckIfAgvExistsAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) => agvs.Any(a => a.CorrelationId == c));
-        ActionGroupRegistry.Setup(r => r.GetActionGroupWithNodesAsync(It.IsAny<Guid>()))
+        AgvRepository.Setup(r => r.CheckIfAgvExistsAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) => agvs.Any(a => a.CorrelationId == c));
+        ActionGroupRepository.Setup(r => r.GetActionGroupWithNodesAsync(It.IsAny<Guid>()))
             .ReturnsAsync(actionGroup.ConvertFromActionGroupWithFakeNodeType());
-        AgvRegistry.Setup(r => r.SelectExistingAgvsAsync(It.IsAny<List<Guid>>())).ReturnsAsync((List<Guid> ids) => agvs.Where(a => ids.Contains(a.CorrelationId)).ToList());
+        AgvRepository.Setup(r => r.SelectExistingAgvsAsync(It.IsAny<List<Guid>>())).ReturnsAsync((List<Guid> ids) => agvs.Where(a => ids.Contains(a.CorrelationId)).ToList());
         IEnumerable<AgvData> specifications = agvs.Select((a, i) => new AgvData(a.CorrelationId, "Karis", "BF1", "ipv4 address",
             1.8, 120.0, 0.6, 0.8, 0.7, i,
             2.5, 1000, Array.Empty<AgvData.Sensor>()));
 
-        _agvDataRegistryMock.Setup(x => x.GetSelectedAgvData(It.IsAny<ICollection<Guid>>())).ReturnsAsync((ICollection<Guid> ids) => specifications.Where(s => ids.Contains(s.CorrelationId)).ToList());
+        _agvDataRepositoryMock.Setup(x => x.GetSelectedAgvData(It.IsAny<ICollection<Guid>>())).ReturnsAsync((ICollection<Guid> ids) => specifications.Where(s => ids.Contains(s.CorrelationId)).ToList());
 
         return this;
     }
 
     public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithAgv(TransportOrder.Domain.Models.Agv.Agv agv, TransportOrder.Domain.Models.ActionGroup.ActionGroup? actionGroup = null)
     {
-        ActionGroupRegistry.Setup(r => r.GetActionGroupWithNodesAsync(It.IsAny<Guid>()))
+        ActionGroupRepository.Setup(r => r.GetActionGroupWithNodesAsync(It.IsAny<Guid>()))
             .ReturnsAsync(actionGroup.ConvertFromActionGroupWithFakeNodeType());
         return WithAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv }, actionGroup);
     }
 
     public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithActiveAgvErrors(Guid agvCorrelationId, List<AgvError> agvErrors)
     {
-        AgvErrorRegistry.Setup(x => x.GetActiveErrorsAsync(agvCorrelationId)).ReturnsAsync(agvErrors);
-        AgvErrorRegistry.Setup(x => x.GetActiveErrorsAsync(It.IsAny<IList<Guid>>())).ReturnsAsync(agvErrors);
-        AgvErrorRegistry.Setup(x => x.GetErrorsAsync(It.IsAny<Guid>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(agvErrors.AsReadOnly);
-        AgvErrorRegistry.Setup(x => x.GetErrorsAsync(It.IsAny<IList<Guid>>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(agvErrors.AsReadOnly);
+        AgvErrorRepository.Setup(x => x.GetActiveErrorsAsync(agvCorrelationId)).ReturnsAsync(agvErrors);
+        AgvErrorRepository.Setup(x => x.GetActiveErrorsAsync(It.IsAny<IList<Guid>>())).ReturnsAsync(agvErrors);
+        AgvErrorRepository.Setup(x => x.GetErrorsAsync(It.IsAny<Guid>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(agvErrors.AsReadOnly);
+        AgvErrorRepository.Setup(x => x.GetErrorsAsync(It.IsAny<IList<Guid>>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(agvErrors.AsReadOnly);
         return this;
     }
 

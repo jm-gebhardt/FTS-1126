@@ -37,7 +37,7 @@ public class ChargingPointManagerTest
             chargingNode
         };
 
-        fixture.SetupGraphRegistry(agvGraph);
+        fixture.SetupGraphRepository(agvGraph);
         fixture.SetupNodeLocker(true, true, true);
         fixture.WithAvailableNodes(agv, availableNodes)
             .WithLowestCostNode(agv, availableNodes, chargingNode);
@@ -58,7 +58,7 @@ public class ChargingPointManagerTest
         var agvGraph = fixture.GetAgvGraph(false, correlationId);
         var agv = fixture.GetAgv(correlationId, agvId, "Idle", "");
 
-        fixture.SetupGraphRegistry(agvGraph);
+        fixture.SetupGraphRepository(agvGraph);
         fixture.SetupNodeLocker(true, true, true);
 
         var bestCharger = await fixture.CreateChargingPointManager().GetBestChargerAsync(agv);
@@ -79,7 +79,7 @@ public class ChargingPointManagerTest
             chargingNode
         };
 
-        fixture.SetupGraphRegistry(agvGraph);
+        fixture.SetupGraphRepository(agvGraph);
         fixture.SetupNodeLocker(true, true, true);
         fixture.WithAvailableNodes(agv, availableNodes)
             .WithLowestCostNode(agv, availableNodes, chargingNode);
@@ -90,7 +90,7 @@ public class ChargingPointManagerTest
         bestCharger.Type.ShouldBe(AgvGraph.NodeType.Charge);
 
         await baseChargingPointManager.ReserveChargerAsync(bestCharger, correlationId);
-        fixture.NodeStateRegistry.Verify(x => x.ReserveNodeAsync(bestCharger.Id, correlationId), Times.Once);
+        fixture.NodeStateRepository.Verify(x => x.ReserveNodeAsync(bestCharger.Id, correlationId), Times.Once);
         fixture.RouteService.Verify(m => m.GetNodeWithLowestCostsAsync(agv, availableNodes), Times.Once);
         VerifyGraphNode(bestCharger, chargingNode);
     }
@@ -106,7 +106,7 @@ public class ChargingPointManagerTest
         notChargerNode.ShouldNotBeNull();
         notChargerNode.Type.ShouldNotBe(AgvGraph.NodeType.Charge);
 
-        fixture.SetupGraphRegistry(agvGraph);
+        fixture.SetupGraphRepository(agvGraph);
         fixture.SetupNodeLocker(true, true, true);
 
         await fixture.CreateChargingPointManager().ReserveChargerAsync(notChargerNode, correlationId);
@@ -127,14 +127,14 @@ public class ChargingPointManagerTest
             chargingNode
         };
 
-        fixture.SetupGraphRegistry(agvGraph);
+        fixture.SetupGraphRepository(agvGraph);
         fixture.SetupNodeLocker(true, true, true);
         fixture.WithAvailableNodes(agv, availableNodes)
             .WithLowestCostNode(agv, availableNodes, chargingNode);
 
         var agvNodeResult = await fixture.CreateChargingPointManager().ReserveChargerAsync(agv);
         agvNodeResult.ShouldNotBeNull();
-        fixture.NodeStateRegistry.Verify(r => r.ReserveNodeAsync(agvNodeResult.Id, correlationId), Times.Once);
+        fixture.NodeStateRepository.Verify(r => r.ReserveNodeAsync(agvNodeResult.Id, correlationId), Times.Once);
         fixture.RouteService.Verify(m => m.GetNodeWithLowestCostsAsync(agv, availableNodes), Times.Once);
         agvNodeResult.Type.ShouldBe(AgvGraph.NodeType.Charge);
         VerifyGraphNode(agvNodeResult, chargingNode);
@@ -149,7 +149,7 @@ public class ChargingPointManagerTest
         var agvGraph = fixture.GetAgvGraph(false, correlationId);
         var agv = fixture.GetAgv(correlationId, agvId, "Idle", "");
 
-        fixture.SetupGraphRegistry(agvGraph);
+        fixture.SetupGraphRepository(agvGraph);
         fixture.SetupNodeLocker(true, true, true);
 
         await Should.ThrowAsync<Exception>(async () => await fixture.CreateChargingPointManager().ReserveChargerAsync(agv));

@@ -8,7 +8,7 @@ public class AgvPositionChangedConsumerTestFixture : ConsumerHubTestFixture<AgvP
 {
     public AgvPositionChangedConsumerTestFixture WithNodeReserved(string nodeId, bool reserve = true)
     {
-        NodeStateRegistryMock.Setup(x => x.IsNodeReservedAsync(nodeId)).Returns(Task.FromResult(reserve));
+        NodeStateRepositoryMock.Setup(x => x.IsNodeReservedAsync(nodeId)).Returns(Task.FromResult(reserve));
         return this;
     }
 

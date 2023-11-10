@@ -13,15 +13,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.CommandHandler;
 [UsedImplicitly]
 public class MapCommandHandler : IConsumer<SaveMap>
 {
-    private readonly IMapRegistry _mapRegistry;
+    private readonly IMapRepository _mapRepository;
     private readonly ILogger<MapCommandHandler> _logger;
 
     /// <summary>
     /// Initializes a new <see cref="MapCommandHandler"/>.
     /// </summary>
-    public MapCommandHandler(IMapRegistry mapRegistry, ILogger<MapCommandHandler> logger)
+    public MapCommandHandler(IMapRepository mapRepository, ILogger<MapCommandHandler> logger)
     {
-        _mapRegistry = mapRegistry;
+        _mapRepository = mapRepository;
         _logger = logger;
     }
 
@@ -47,25 +47,25 @@ public class MapCommandHandler : IConsumer<SaveMap>
             agvMap.ModificationDate
         );
 
-        bool mapExists = _mapRegistry.Exists(mapId);
-        bool successFullyAdded = await _mapRegistry.AddOrUpdateAsync(map, cancellationToken);
+        bool mapExists = _mapRepository.Exists(mapId);
+        bool successFullyAdded = await _mapRepository.AddOrUpdateAsync(map, cancellationToken);
 
         switch (mapExists)
         {
             case true when successFullyAdded:
-                _logger.LogInformation("Map {MapId}/{MapCorrelationId} inserted into Registry", agvMap.MapId, agvMap.CorrelationId);
+                _logger.LogInformation("Map {MapId}/{MapCorrelationId} inserted into repository.", agvMap.MapId, agvMap.CorrelationId);
                 return;
 
             case true when !successFullyAdded:
-                _logger.LogWarning("Failed to insert Map {MapId}/{MapCorrelationId} into Registry", agvMap.MapId, agvMap.CorrelationId);
+                _logger.LogWarning("Failed to insert Map {MapId}/{MapCorrelationId} into repository.", agvMap.MapId, agvMap.CorrelationId);
                 return;
 
             case false when successFullyAdded:
-                _logger.LogInformation("Map {MapId}/{MapCorrelationId} has been updated in Registry", agvMap.MapId, agvMap.CorrelationId);
+                _logger.LogInformation("Map {MapId}/{MapCorrelationId} has been updated in repository.", agvMap.MapId, agvMap.CorrelationId);
                 return;
 
             default:
-                _logger.LogWarning("Failed to update Map {MapId}/{MapCorrelationId} in Registry", agvMap.MapId, agvMap.CorrelationId);
+                _logger.LogWarning("Failed to update Map {MapId}/{MapCorrelationId} in repository.", agvMap.MapId, agvMap.CorrelationId);
                 break;
         }
     }

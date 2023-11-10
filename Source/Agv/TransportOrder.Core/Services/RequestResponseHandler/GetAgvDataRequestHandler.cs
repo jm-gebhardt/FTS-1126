@@ -16,15 +16,15 @@ public class GetAgvDataRequestHandler :
     IConsumer<GetAgvData>,
     IConsumer<GetAgvsData>
 {
-    private readonly IAgvDataRegistry _agvDataRegistry;
+    private readonly IAgvDataRepository _agvDataRepository;
     private readonly IMapper _mapper;
 
     /// <summary>
     /// Initializes a new <see cref="GetAgvDataRequestHandler"/> instance.
     /// </summary>
-    public GetAgvDataRequestHandler(IAgvDataRegistry agvDataRegistry, IMapper mapper)
+    public GetAgvDataRequestHandler(IAgvDataRepository agvDataRepository, IMapper mapper)
     {
-        _agvDataRegistry = agvDataRegistry;
+        _agvDataRepository = agvDataRepository;
         _mapper = mapper;
     }
 
@@ -36,7 +36,7 @@ public class GetAgvDataRequestHandler :
     public async Task Consume(ConsumeContext<GetAgvData> context)
     {
         var correlationId = context.Message.CorrelationId;
-        var agvData = _agvDataRegistry.GetAgvData(correlationId);
+        var agvData = _agvDataRepository.GetAgvData(correlationId);
         if (agvData == null)
         {
             throw new AgvDataNotFoundException(correlationId);
@@ -53,7 +53,7 @@ public class GetAgvDataRequestHandler :
     public async Task Consume(ConsumeContext<GetAgvsData> context)
     {
         ICollection<Guid> selectedAgvs = context.Message.CorrelationIds;
-        ICollection<Common.Messages.AgvManagement.AgvData> fetchedData = await _agvDataRegistry.GetSelectedAgvData(selectedAgvs);
+        ICollection<Common.Messages.AgvManagement.AgvData> fetchedData = await _agvDataRepository.GetSelectedAgvData(selectedAgvs);
         if (fetchedData.Count != selectedAgvs.Count)
         {
             throw new AgvsDataBatchQueryException(selectedAgvs.Except(fetchedData.Select(p => p.CorrelationId)).ToList());

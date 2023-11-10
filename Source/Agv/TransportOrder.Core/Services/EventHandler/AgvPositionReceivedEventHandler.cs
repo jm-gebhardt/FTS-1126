@@ -9,13 +9,13 @@ using Microsoft.Extensions.Logging;
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.EventHandler;
 
 /// <summary>
-/// Consumes <see cref="AgvPositionReceived"/> and populates <see cref="IAgvPositionRegistry"/>.
+/// Consumes <see cref="AgvPositionReceived"/> and populates <see cref="IAgvPositionRepository"/>.
 /// </summary>
 [PublicAPI]
 public class AgvPositionReceivedEventHandler : IConsumer<AgvPositionReceived>
 {
     private readonly ILogger<AgvPositionReceivedEventHandler> _logger;
-    private readonly IAgvPositionRegistry _agvPositionRegistry;
+    private readonly IAgvPositionRepository _agvPositionRepository;
     private readonly IMapper _mapper;
 
     /// <summary>
@@ -23,16 +23,16 @@ public class AgvPositionReceivedEventHandler : IConsumer<AgvPositionReceived>
     /// </summary>
     public AgvPositionReceivedEventHandler(
         ILogger<AgvPositionReceivedEventHandler> logger,
-        IAgvPositionRegistry agvPositionRegistry,
+        IAgvPositionRepository agvPositionRepository,
         IMapper mapper)
     {
         _logger = logger;
-        _agvPositionRegistry = agvPositionRegistry;
+        _agvPositionRepository = agvPositionRepository;
         _mapper = mapper;
     }
 
     /// <summary>
-    /// Update AGV position registry on receiving <see cref="AgvPositionReceived"/>.
+    /// Update AGV position repository on receiving <see cref="AgvPositionReceived"/>.
     /// </summary>
     /// <param name="context"></param>
     /// <returns></returns>
@@ -47,6 +47,6 @@ public class AgvPositionReceivedEventHandler : IConsumer<AgvPositionReceived>
 
         var agvPositionStatus = _mapper.Map<AgvPositionStatus>(context.Message);
 
-        await _agvPositionRegistry.UpdatePositionAsync(agvPositionStatus);
+        await _agvPositionRepository.UpdatePositionAsync(agvPositionStatus);
     }
 }

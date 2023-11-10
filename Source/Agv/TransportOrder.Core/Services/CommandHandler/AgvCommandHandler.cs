@@ -50,14 +50,14 @@ public class AgvCommandHandler :
 {
     private readonly ILogger<AgvCommandHandler> _logger;
     private readonly IActionManagerSemaphoreProvider _actionManagerSemaphoreProvider;
-    private readonly IActionGroupRegistry _actionGroupRegistry;
+    private readonly IActionGroupRepository _actionGroupRepository;
     private readonly IAgvRepository _agvRepository;
     private readonly ISettingsProvider<AgvSettings> _settingsProvider;
     private readonly IMapper _mapper;
-    private readonly IAgvGraphRegistry _agvGraphRegistry;
-    private readonly IMapRegistry _mapRegistry;
+    private readonly IAgvGraphRepository _agvGraphRepository;
+    private readonly IMapRepository _mapRepository;
     private readonly ProductionOptions _productionOptions;
-    private readonly IAgvDataRegistry _agvDataRegistry;
+    private readonly IAgvDataRepository _agvDataRepository;
     private readonly IRequestClient<QueueActionGroup> _queueActionGroupRequestClient;
 
     /// <summary>
@@ -66,26 +66,26 @@ public class AgvCommandHandler :
     public AgvCommandHandler(IActionManagerSemaphoreProvider actionManagerSemaphoreProvider,
         IAgvRepository agvRepository,
         ISettingsProvider<AgvSettings> settingsProvider,
-        IActionGroupRegistry actionGroupRegistry,
-        IAgvDataRegistry agvDataRegistry,
-        IAgvGraphRegistry agvGraphRegistry,
+        IActionGroupRepository actionGroupRepository,
+        IAgvDataRepository agvDataRepository,
+        IAgvGraphRepository agvGraphRepository,
         IRequestClient<QueueActionGroup> queueActionGroupRequestClient,
-        IMapRegistry mapRegistry,
+        IMapRepository mapRepository,
         IMapper mapper,
         ProductionOptions productionOptions,
         ILogger<AgvCommandHandler> logger)
     {
         _logger = logger;
         _actionManagerSemaphoreProvider = actionManagerSemaphoreProvider;
-        _actionGroupRegistry = actionGroupRegistry;
+        _actionGroupRepository = actionGroupRepository;
         _agvRepository = agvRepository;
         _settingsProvider = settingsProvider;
         _mapper = mapper;
-        _agvGraphRegistry = agvGraphRegistry;
+        _agvGraphRepository = agvGraphRepository;
         _queueActionGroupRequestClient = queueActionGroupRequestClient;
-        _mapRegistry = mapRegistry;
+        _mapRepository = mapRepository;
         _productionOptions = productionOptions;
-        _agvDataRegistry = agvDataRegistry;
+        _agvDataRepository = agvDataRepository;
     }
 
     /// <summary>
@@ -102,7 +102,7 @@ public class AgvCommandHandler :
             // preliminary logic: just go through all potential available Agvs and try to start a new action
             foreach (var agv in goodAgvs.OrderByDescending(a => a.AgvStatus!.BatteryCharge))
             {
-                if (await _actionGroupRegistry.AgvHasPendingActions(agv.CorrelationId))
+                if (await _actionGroupRepository.AgvHasPendingActions(agv.CorrelationId))
                 {
                     _logger.LogDebug("There is a new action for the charging Agv with CorrelationId: {AgvCorrelationId}. So stop charging by setting it to idle, so that it takes the new Action", agv.CorrelationId);
                     await TransitionToIdleAsync(context, agv, cancellationToken);
@@ -291,7 +291,7 @@ public class AgvCommandHandler :
             _logger.LogDebug("{Command}: Could not update agv {CorrelationId}", nameof(UpdateGraph), agv.CorrelationId);
             return;
         }
-        if (!_mapRegistry.Exists(agvGraph.RelatedMapId))
+        if (!_mapRepository.Exists(agvGraph.RelatedMapId))
         {
             await context.Publish(new RequestAgvMap(correlationId, agv.AgvId, agvGraph.RelatedMapId, agvGraph.RelatedMapName));
         }
@@ -325,7 +325,7 @@ public class AgvCommandHandler :
     {
         var (correlationId, agvData) = context.Message;
         var agv = await _agvRepository.GetAgvAsync(correlationId);
-        if (!await _agvDataRegistry.AddOrUpdateAsync(agvData))
+        if (!await _agvDataRepository.AddOrUpdateAsync(agvData))
         {
             _logger.LogWarning("Failed to store AgvData for {AgvId} / {CorrelationId}", agv.AgvId, correlationId);
             return;
@@ -530,8 +530,8 @@ public class AgvCommandHandler :
         _logger.LogDebug("AutoAccept {CorrelationId}", agv.CorrelationId);
         if (_productionOptions.AutoAccept && agv is { GraphExists: true, DataExist: true, CurrentAgvState: AgvState.Discovered })
         {
-            var graph = await _agvGraphRegistry.GetAgvGraphAsync(agv.CorrelationId);
-            bool mapExists = _mapRegistry.Exists(graph.RelatedMapId);
+            var graph = await _agvGraphRepository.GetAgvGraphAsync(agv.CorrelationId);
+            bool mapExists = _mapRepository.Exists(graph.RelatedMapId);
             _logger.LogDebug("AutoAccept {CorrelationId}, Graph: {GraphExists}, Data: {DataExists}, Map: {MapExists}", agv.CorrelationId, agv.GraphExists, agv.DataExist, mapExists);
             if (mapExists)
             {
@@ -591,7 +591,7 @@ public class AgvCommandHandler :
         _logger.LogDebug("Creating agv {CorrelationId}, {AgvId}", correlationId, agvId);
 
         var agv = new Domain.Models.Agv.Agv(correlationId, agvId, _mapper.Map<AgvStatus>(agvStatus));
-        bool graphExists = await _agvGraphRegistry.ExistsAsync(correlationId);
+        bool graphExists = await _agvGraphRepository.ExistsAsync(correlationId);
         if (!graphExists)
         {
             await PublishGraphRequestAsync(context, agv);

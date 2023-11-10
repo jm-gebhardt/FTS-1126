@@ -15,7 +15,7 @@ public class MapControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
     public const string Base64String = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
 
     [UsedImplicitly]
-    private readonly Mock<IAgvGraphRegistry> _agvGraphRegistry = new();
+    private readonly Mock<IAgvGraphRepository> _agvGraphRepository = new();
 
     private readonly Guid[] _correlationIds =
     {
@@ -35,19 +35,19 @@ public class MapControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         return controller;
     }
 
-    private Mock<IMapRegistry> GetMapRegistry()
+    private Mock<IMapRepository> GetMapRepository()
     {
-        var mapRegistryMock = new Mock<IMapRegistry>();
+        var mapRepositoryMock = new Mock<IMapRepository>();
 
-        mapRegistryMock.Setup(x => x.GetAllMaps()).Returns(new EnumerableQuery<Domain.Models.Map.Map>(new List<Domain.Models.Map.Map>
+        mapRepositoryMock.Setup(x => x.GetAllMaps()).Returns(new EnumerableQuery<Domain.Models.Map.Map>(new List<Domain.Models.Map.Map>
         {
             new(_correlationIds[0], "Area51_Floor1_Compartment47", Convert.FromBase64String(Base64String), 1, 1, 0.01, 1, 2, DateTime.UtcNow),
             new(_correlationIds[1], "Area51_Floor1_Compartment48", Convert.FromBase64String(Base64String), 1, 1, 0.02, 2, 3, DateTime.UtcNow),
             new(_correlationIds[2], "Area51_Floor1_Compartment49", Convert.FromBase64String(Base64String), 1, 1, 0.03, 2, 1, DateTime.UtcNow)
         }));
-        mapRegistryMock.Setup(x => x.GetMapImage(It.IsAny<Guid>())).Returns(Convert.FromBase64String(Base64String));
+        mapRepositoryMock.Setup(x => x.GetMapImage(It.IsAny<Guid>())).Returns(Convert.FromBase64String(Base64String));
 
-        return mapRegistryMock;
+        return mapRepositoryMock;
     }
 
     /// <summary>
@@ -63,27 +63,27 @@ public class MapControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
     }
 
     /// <summary>
-    /// Adds the <see cref="IMapRegistry"/> mock object
+    /// Adds the <see cref="IMapRepository"/> mock object
     /// </summary>
     /// <returns></returns>
     [UsedImplicitly]
-    public MapControllerTestFixture<TRequest, TRequestHandler> AddMapRegistryMock(Action<Mock<IMapRegistry>> mapRegistryAction)
+    public MapControllerTestFixture<TRequest, TRequestHandler> AddMapRepositoryMock(Action<Mock<IMapRepository>> mapRepositoryAction)
     {
-        var mapRegistryMock = new Mock<IMapRegistry>();
-        mapRegistryAction.Invoke(mapRegistryMock);
+        var mapRepositoryMock = new Mock<IMapRepository>();
+        mapRepositoryAction.Invoke(mapRepositoryMock);
 
-        AddServices(sc => sc.AddTransient(_ => mapRegistryMock.Object));
+        AddServices(sc => sc.AddTransient(_ => mapRepositoryMock.Object));
 
         return this;
     }
 
     /// <summary>
-    /// Adds the <see cref="IMapRegistry"/> mock object
+    /// Adds the <see cref="IMapRepository"/> mock object
     /// </summary>
     /// <returns></returns>
-    public MapControllerTestFixture<TRequest, TRequestHandler> AddMapRegistryMock()
+    public MapControllerTestFixture<TRequest, TRequestHandler> AddMapRepositoryMock()
     {
-        AddServices(sc => sc.AddTransient(_ => GetMapRegistry().Object));
+        AddServices(sc => sc.AddTransient(_ => GetMapRepository().Object));
 
         return this;
     }

@@ -20,8 +20,8 @@ public class AgvPositionChangedConsumer :
 {
     private readonly ILogger<AgvPositionChangedConsumer> _logger;
     private readonly IAgvPublisher _agvPublisher;
-    private readonly INodeStateRegistry _nodeStateRegistry;
-    private readonly IActionGroupRegistry _actionGroupRegistry;
+    private readonly INodeStateRepository _nodeStateRepository;
+    private readonly IActionGroupRepository _actionGroupRepository;
     private readonly IActionGroupRetrievalService _actionGroupRetrievalService;
     private readonly IAgvRouteRetrievalService _agvRouteRetrievalService;
     private readonly IMapper _mapper;
@@ -31,16 +31,16 @@ public class AgvPositionChangedConsumer :
     public AgvPositionChangedConsumer(
         ILogger<AgvPositionChangedConsumer> logger,
         IAgvPublisher agvPublisher,
-        INodeStateRegistry nodeStateRegistry,
-        IActionGroupRegistry actionGroupRegistry,
+        INodeStateRepository nodeStateRepository,
+        IActionGroupRepository actionGroupRepository,
         IActionGroupRetrievalService actionGroupRetrievalService,
         IAgvRouteRetrievalService agvRouteRetrievalService,
         IMapper mapper)
     {
         _logger = logger;
         _agvPublisher = agvPublisher;
-        _nodeStateRegistry = nodeStateRegistry;
-        _actionGroupRegistry = actionGroupRegistry;
+        _nodeStateRepository = nodeStateRepository;
+        _actionGroupRepository = actionGroupRepository;
         _actionGroupRetrievalService = actionGroupRetrievalService;
         _agvRouteRetrievalService = agvRouteRetrievalService;
         _mapper = mapper;
@@ -70,13 +70,13 @@ public class AgvPositionChangedConsumer :
 
         if (context.Message.OldLastNodeId != null)
         {
-            await _nodeStateRegistry.UnOccupyNodeAsync(agvCorrelationId);
+            await _nodeStateRepository.UnOccupyNodeAsync(agvCorrelationId);
         }
 
         string? newLastNodeId = context.Message.NewLastNodeId;
-        if (newLastNodeId != null && await _nodeStateRegistry.IsNodeReservedAsync(newLastNodeId))
+        if (newLastNodeId != null && await _nodeStateRepository.IsNodeReservedAsync(newLastNodeId))
         {
-            await _nodeStateRegistry.OccupyNodeAsync(newLastNodeId, agvCorrelationId);
+            await _nodeStateRepository.OccupyNodeAsync(newLastNodeId, agvCorrelationId);
         }
 
         var agvRoute = await _agvRouteRetrievalService.GetAgvRouteAsync(agvCorrelationId, newLastNodeId);

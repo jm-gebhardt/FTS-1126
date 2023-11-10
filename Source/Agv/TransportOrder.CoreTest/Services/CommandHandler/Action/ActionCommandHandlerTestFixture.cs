@@ -28,7 +28,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.CommandHandler
 public class ActionCommandHandlerTestFixture : MassTransitConsumerTestFixture<ActionCommandHandler>
 {
     private readonly Mock<IRouteService> _routeService = new();
-    private readonly Mock<IActionGroupRegistry> _actionGroupRegistry = new();
+    private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
     private readonly Mock<IChooseAgvActionGroupService> _chooseAgvActionGroupService = new();
     private readonly ActionManagerSemaphoreProvider _semaphoreProvider = new();
     private readonly Mock<IMaintenanceService> _maintenanceService = new();
@@ -41,7 +41,7 @@ public class ActionCommandHandlerTestFixture : MassTransitConsumerTestFixture<Ac
 
     protected override void ConfigureServices(IServiceCollection collection)
     {
-        collection.AddTransient(_ => _actionGroupRegistry.Object);
+        collection.AddTransient(_ => _actionGroupRepository.Object);
         collection.AddTransient(_ => _routeService.Object);
         collection.AddTransient(_ => _chooseAgvActionGroupService.Object);
         collection.AddTransient(_ => _maintenanceService.Object);
@@ -73,8 +73,8 @@ public class ActionCommandHandlerTestFixture : MassTransitConsumerTestFixture<Ac
         {
             TestHarness!.TestInactivityTimeout = (TimeSpan)inactivityTimeout;
         }
-        _actionGroupRegistry.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync((ActionGroup?)null);
-        _actionGroupRegistry.Setup(x => x.AddAsync(It.IsAny<ActionGroup>())).Verifiable();
+        _actionGroupRepository.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync((ActionGroup?)null);
+        _actionGroupRepository.Setup(x => x.AddAsync(It.IsAny<ActionGroup>())).Verifiable();
     }
 
     public ActionCommandHandlerTestFixture(TimeSpan? inactivityTimeout = null)
@@ -93,8 +93,8 @@ public class ActionCommandHandlerTestFixture : MassTransitConsumerTestFixture<Ac
         {
             TestHarness!.TestInactivityTimeout = (TimeSpan)inactivityTimeout;
         }
-        _actionGroupRegistry.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync((ActionGroup?)null);
-        _actionGroupRegistry.Setup(x => x.AddAsync(It.IsAny<ActionGroup>())).Verifiable();
+        _actionGroupRepository.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync((ActionGroup?)null);
+        _actionGroupRepository.Setup(x => x.AddAsync(It.IsAny<ActionGroup>())).Verifiable();
     }
 
     public void AddAgv(TransportOrder.Domain.Models.Agv.Agv agv)
@@ -105,15 +105,15 @@ public class ActionCommandHandlerTestFixture : MassTransitConsumerTestFixture<Ac
 
     public void AddActionGroup(ActionGroup actionGroup, bool hasUnfinishedAction = true,  bool hasNotStartedAction = true)
     {
-        _actionGroupRegistry.Setup(x => x.GetRequiredActionGroupByIdAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup);
-        _actionGroupRegistry.Setup(x => x.UpdateActionAndGroupStateAsync(It.IsAny<AgvAction>(), It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<ActionState>())).ReturnsAsync(actionGroup);
-        _actionGroupRegistry.Setup(x => x.GetSubsequentActionAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup.Actions.First());
-        _actionGroupRegistry.Setup(x => x.GetActionGroupsAsync(It.IsAny<ActionGroupState>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(), It.IsAny<bool?>())).ReturnsAsync(new List<ActionGroup> { actionGroup });
-        _actionGroupRegistry.Setup(x => x.GetActionGroupsAsync(It.IsAny<List<ActionGroupState>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(), It.IsAny<bool?>(), It.IsAny<SortBy>(), It.IsAny<bool>())).ReturnsAsync(new List<ActionGroup> { actionGroup });
-        _actionGroupRegistry.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup);
-        _actionGroupRegistry.Setup(x => x.HasNotStartedActionsAsync(It.IsAny<Guid>())).ReturnsAsync(hasNotStartedAction);
-        _actionGroupRegistry.Setup(x => x.HasUnfinishedDropActionsAsync(It.IsAny<Guid>())).ReturnsAsync(hasUnfinishedAction);
-        _actionGroupRegistry.Setup(x => x.GetRequiredActionByIdAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup.Actions.First());
+        _actionGroupRepository.Setup(x => x.GetRequiredActionGroupByIdAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup);
+        _actionGroupRepository.Setup(x => x.UpdateActionAndGroupStateAsync(It.IsAny<AgvAction>(), It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<ActionState>())).ReturnsAsync(actionGroup);
+        _actionGroupRepository.Setup(x => x.GetSubsequentActionAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup.Actions.First());
+        _actionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<ActionGroupState>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(), It.IsAny<bool?>())).ReturnsAsync(new List<ActionGroup> { actionGroup });
+        _actionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<List<ActionGroupState>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(), It.IsAny<bool?>(), It.IsAny<SortBy>(), It.IsAny<bool>())).ReturnsAsync(new List<ActionGroup> { actionGroup });
+        _actionGroupRepository.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup);
+        _actionGroupRepository.Setup(x => x.HasNotStartedActionsAsync(It.IsAny<Guid>())).ReturnsAsync(hasNotStartedAction);
+        _actionGroupRepository.Setup(x => x.HasUnfinishedDropActionsAsync(It.IsAny<Guid>())).ReturnsAsync(hasUnfinishedAction);
+        _actionGroupRepository.Setup(x => x.GetRequiredActionByIdAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup.Actions.First());
     }
 
     public void AddActionGroupRetrieval(bool headingTo)
@@ -148,7 +148,7 @@ public class ActionCommandHandlerTestFixture : MassTransitConsumerTestFixture<Ac
 
     public void IsActionGroupSaved(Times howOften)
     {
-        _actionGroupRegistry.Verify(x => x.AddAsync(It.IsAny<ActionGroup>()), howOften);
+        _actionGroupRepository.Verify(x => x.AddAsync(It.IsAny<ActionGroup>()), howOften);
     }
 
     public static IMapper GetMapper()

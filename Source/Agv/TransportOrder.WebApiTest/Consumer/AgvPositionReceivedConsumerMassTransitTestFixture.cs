@@ -16,20 +16,20 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Consumer;
 internal class AgvPositionReceivedConsumerMassTransitTestFixture :
     MassTransitConsumerTestFixture<AgvPositionReceivedEventHandler>, ITestFixtureBuilder<AgvPositionReceivedConsumerMassTransitTestFixture>
 {
-    private bool _useAgvPositionRegistryMock;
+    private bool _useAgvPositionRepositoryMock;
 
-    public Mock<IAgvPositionRegistry>? AgvPositionRegistryMock { get; private set; }
+    public Mock<IAgvPositionRepository>? AgvPositionRepositoryMock { get; private set; }
 
-    private Mock<IAgvGraphRegistry>? GraphRegistryMock { get; set; }
+    private Mock<IAgvGraphRepository>? GraphRepositoryMock { get; set; }
 
     public AgvPositionReceivedConsumerMassTransitTestFixture()
     {
         base.Build();
     }
 
-    public ITestFixtureBuilder<AgvPositionReceivedConsumerMassTransitTestFixture> UseAgvPositionRegistryMock()
+    public ITestFixtureBuilder<AgvPositionReceivedConsumerMassTransitTestFixture> UseAgvPositionRepositoryMock()
     {
-        _useAgvPositionRegistryMock = true;
+        _useAgvPositionRepositoryMock = true;
         return this;
     }
 
@@ -41,19 +41,19 @@ internal class AgvPositionReceivedConsumerMassTransitTestFixture :
 
     protected override void ConfigureServices(IServiceCollection services)
     {
-        GraphRegistryMock = new Mock<IAgvGraphRegistry>();
+        GraphRepositoryMock = new Mock<IAgvGraphRepository>();
         services.AddSingleton<IConcurrentDictionaryProvider<Guid, AgvPositionStatus>, AgvPositionDictionaryProvider>();
-        if (_useAgvPositionRegistryMock)
+        if (_useAgvPositionRepositoryMock)
         {
-            AgvPositionRegistryMock = new Mock<IAgvPositionRegistry>();
+            AgvPositionRepositoryMock = new Mock<IAgvPositionRepository>();
 
-            services.AddSingleton(AgvPositionRegistryMock.Object);
-            services.AddSingleton(GraphRegistryMock.Object);
+            services.AddSingleton(AgvPositionRepositoryMock.Object);
+            services.AddSingleton(GraphRepositoryMock.Object);
         }
         else
         {
-            services.AddSingleton<IAgvPositionRegistry, AgvPositionRegistry>();
-            services.AddSingleton(GraphRegistryMock.Object);
+            services.AddSingleton<IAgvPositionRepository, AgvPositionRepository>();
+            services.AddSingleton(GraphRepositoryMock.Object);
         }
 
         services.AddTransient(_ => new Mock<IAgvPublisher>().Object);

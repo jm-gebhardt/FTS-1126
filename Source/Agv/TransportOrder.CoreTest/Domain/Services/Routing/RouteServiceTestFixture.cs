@@ -9,20 +9,20 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Domain.Services.Routing
 
 public class RouteServiceTestFixture
 {
-    private readonly Mock<IAgvGraphRegistry> _agvGraphRegistry;
+    private readonly Mock<IAgvGraphRepository> _agvGraphRepository;
 
     public RouteService RouteService { get; }
 
     public RouteServiceTestFixture()
     {
-        _agvGraphRegistry = new Mock<IAgvGraphRegistry>();
-        RouteService = new RouteService(_agvGraphRegistry.Object, new AStarRouteFinder(), new Mock<ILogger<RouteService>>().Object);
+        _agvGraphRepository = new Mock<IAgvGraphRepository>();
+        RouteService = new RouteService(_agvGraphRepository.Object, new AStarRouteFinder(), new Mock<ILogger<RouteService>>().Object);
     }
 
     public RouteServiceTestFixture WithAgv(TransportOrder.Domain.Models.Agv.Agv agv, AgvGraph agvGraph)
     {
-        _agvGraphRegistry.Setup(x => x.ExistsAsync(agv.CorrelationId)).ReturnsAsync(true);
-        _agvGraphRegistry.Setup(x => x.GetAgvGraphAsync(agv.CorrelationId)).ReturnsAsync(agvGraph);
+        _agvGraphRepository.Setup(x => x.ExistsAsync(agv.CorrelationId)).ReturnsAsync(true);
+        _agvGraphRepository.Setup(x => x.GetAgvGraphAsync(agv.CorrelationId)).ReturnsAsync(agvGraph);
 
         return this;
     }

@@ -9,16 +9,16 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.CommandHandler
 
 public class AgvErrorCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvErrorCommandHandler>
 {
-    private readonly Mock<IAgvErrorRegistry> _agvErrorRegistry = new();
+    private readonly Mock<IAgvErrorRepository> _agvErrorRepository = new();
 
     protected override void ConfigureServices(IServiceCollection collection)
     {
-        collection.AddTransient(_ => _agvErrorRegistry.Object);
-        _agvErrorRegistry.Setup(x => x.AddOrUpdateAgvErrorStatusAsync(It.IsAny<List<AgvError>>(), It.IsAny<Guid>())).Verifiable();
+        collection.AddTransient(_ => _agvErrorRepository.Object);
+        _agvErrorRepository.Setup(x => x.AddOrUpdateAgvErrorStatusAsync(It.IsAny<List<AgvError>>(), It.IsAny<Guid>())).Verifiable();
     }
 
     public void ErrorShouldBeSaved(Times howManyTimes)
     {
-        _agvErrorRegistry.Verify(x => x.AddOrUpdateAgvErrorStatusAsync(It.IsAny<List<AgvError>>(), It.IsAny<Guid>()), howManyTimes);
+        _agvErrorRepository.Verify(x => x.AddOrUpdateAgvErrorStatusAsync(It.IsAny<List<AgvError>>(), It.IsAny<Guid>()), howManyTimes);
     }
 }

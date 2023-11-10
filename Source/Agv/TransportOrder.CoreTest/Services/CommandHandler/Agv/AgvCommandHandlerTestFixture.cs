@@ -20,27 +20,27 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.CommandHandler
 public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixtureWithScheduler<AgvCommandHandler>
 {
     private readonly ActionManagerSemaphoreProvider _semaphoreProvider = new();
-    private readonly Mock<IActionGroupRegistry> _actionGroupRegistry = new();
+    private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
     public readonly Mock<IAgvRepository> AgvRepository = new();
     private readonly Mock<ILogger<AgvCommandHandler>> _logger = new();
     private readonly Mock<ISettingsProvider<AgvSettings>> _settingsProvider = new();
-    private readonly Mock<IAgvGraphRegistry> _agvGraphRegistry = new();
-    private readonly Mock<IMapRegistry> _mapRegistry = new();
+    private readonly Mock<IAgvGraphRepository> _agvGraphRepository = new();
+    private readonly Mock<IMapRepository> _mapRepository = new();
     private readonly ProductionOptions _productionOptions = new() { AutoAccept = true };
-    public readonly Mock<IAgvDataRegistry> AgvDataRegistry = new();
+    public readonly Mock<IAgvDataRepository> AgvDataRepository = new();
 
     protected override void ConfigureServices(IServiceCollection collection)
     {
         collection.AddTransient<IActionManagerSemaphoreProvider>(_ => _semaphoreProvider);
-        collection.AddTransient(_ => _actionGroupRegistry.Object);
+        collection.AddTransient(_ => _actionGroupRepository.Object);
         collection.AddTransient(_ => AgvRepository.Object);
         collection.AddTransient(_ => _logger.Object);
         collection.AddTransient(_ => _settingsProvider.Object);
         collection.AddTransient(_ => GetMapper());
-        collection.AddTransient(_ => _agvGraphRegistry.Object);
-        collection.AddTransient(_ => _mapRegistry.Object);
+        collection.AddTransient(_ => _agvGraphRepository.Object);
+        collection.AddTransient(_ => _mapRepository.Object);
         collection.AddTransient(_ => _productionOptions);
-        collection.AddTransient(_ => AgvDataRegistry.Object);
+        collection.AddTransient(_ => AgvDataRepository.Object);
     }
 
     public AgvCommandHandlerTestFixture(Action<IBusRegistrationConfigurator>? busRegistrationConfigurator = null,
@@ -69,9 +69,9 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixtureWithSc
 
     public void SetupAgv(bool hasPendingActions = false, bool graphExists = true)
     {
-        _actionGroupRegistry.Setup(x =>
+        _actionGroupRepository.Setup(x =>
             x.AgvHasPendingActions(It.IsAny<Guid>())).ReturnsAsync(hasPendingActions);
-        _agvGraphRegistry.Setup(x => x.ExistsAsync(It.IsAny<Guid>())).ReturnsAsync(graphExists);
+        _agvGraphRepository.Setup(x => x.ExistsAsync(It.IsAny<Guid>())).ReturnsAsync(graphExists);
     }
 
     public static IMapper GetMapper()

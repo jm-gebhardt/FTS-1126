@@ -9,20 +9,20 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.EventHandler;
 
 /// <summary>
 /// Consumer for <see cref="AgvGraphReceived" />
-/// Consumes AgvGraphReceived event and add/updates the AgvGraph in the registry
+/// Consumes AgvGraphReceived event and add/updates the AgvGraph in the repository
 /// </summary>
 [PublicAPI]
 public class AgvGraphReceivedEventHandler : IConsumer<AgvGraphReceived>
 {
-    private readonly IAgvGraphRegistry _agvGraphRegistry;
+    private readonly IAgvGraphRepository _agvGraphRepository;
     private readonly ILogger<AgvGraphReceivedEventHandler> _logger;
 
     /// <inheritdoc cref="AgvGraphReceivedEventHandler" />
-    /// <param name="agvGraphRegistry"></param>
+    /// <param name="agvGraphRepository"></param>
     /// <param name="logger"></param>
-    public AgvGraphReceivedEventHandler(IAgvGraphRegistry agvGraphRegistry, ILogger<AgvGraphReceivedEventHandler> logger)
+    public AgvGraphReceivedEventHandler(IAgvGraphRepository agvGraphRepository, ILogger<AgvGraphReceivedEventHandler> logger)
     {
-        _agvGraphRegistry = agvGraphRegistry;
+        _agvGraphRepository = agvGraphRepository;
         _logger = logger;
     }
 
@@ -31,10 +31,10 @@ public class AgvGraphReceivedEventHandler : IConsumer<AgvGraphReceived>
     {
         var agvGraph = context.Message.Graph;
 
-        await _agvGraphRegistry.AddOrUpdateAsync(agvGraph);
+        await _agvGraphRepository.AddOrUpdateAsync(agvGraph);
 
         await context.Publish(new AgvGraphChanged(agvGraph.CorrelationId, agvGraph));
 
-        _logger.LogInformation("Graph {GraphCorrelationId} added or updated in registry", agvGraph.CorrelationId);
+        _logger.LogInformation("Graph {GraphCorrelationId} added or updated in repository", agvGraph.CorrelationId);
     }
 }

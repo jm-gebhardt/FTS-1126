@@ -11,19 +11,19 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
 public class ShortestRouteChooser : IChooseAgvActionGroupService
 {
     private readonly IRouteService _routeService;
-    private readonly IActionGroupRegistry _actionGroupRegistry;
+    private readonly IActionGroupRepository _actionGroupRepository;
     private readonly ILogger<ShortestRouteChooser> _logger;
 
     /// <inheritdoc cref="ShortestRouteChooser"/>>
     public ShortestRouteChooser(
         IRouteService routeService,
-        IActionGroupRegistry actionGroupRegistry,
+        IActionGroupRepository actionGroupRepository,
         ILogger<ShortestRouteChooser> logger
     )
     {
         _routeService = routeService;
         _logger = logger;
-        _actionGroupRegistry = actionGroupRegistry;
+        _actionGroupRepository = actionGroupRepository;
     }
 
     /// <summary>
@@ -66,7 +66,7 @@ public class ShortestRouteChooser : IChooseAgvActionGroupService
     /// <exception cref="AgvLocationUnknownException"></exception>
     public async Task<Models.ActionGroup.ActionGroup?> GetNotStartedActionGroupAsync(Models.Agv.Agv agv, CancellationToken cancellationToken = default)
     {
-        IReadOnlyList<Models.ActionGroup.ActionGroup> notStartedActionGroups = await _actionGroupRegistry.GetNotStartedActionGroupsAsync(agv.CorrelationId);
+        IReadOnlyList<Models.ActionGroup.ActionGroup> notStartedActionGroups = await _actionGroupRepository.GetNotStartedActionGroupsAsync(agv.CorrelationId);
 
         var manualActionGroup = notStartedActionGroups.FirstOrDefault(g => g.IsManual);
 

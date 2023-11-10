@@ -17,7 +17,7 @@ public class AgvsControllerTest
     public async Task GetAgvs_ValidData_ReturnsAgvDtos()
     {
         AgvsControllerTestFixture<GetAgvs, GetAgvsRequestHandler> fixture = new AgvsControllerTestFixture<GetAgvs, GetAgvsRequestHandler>()
-            .SetupAgvRegistryWithDefaultData()
+            .SetupAgvRepositoryWithDefaultData()
             .UseDefaultServices()
             .Build();
 

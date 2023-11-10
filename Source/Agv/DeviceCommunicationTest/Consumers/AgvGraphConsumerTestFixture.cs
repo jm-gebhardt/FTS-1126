@@ -8,11 +8,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers;
 
 public class AgvGraphConsumerTestFixture : MqttConsumerTestFixture<AgvGraphConsumer>
 {
-    private IAgvRegistry AgvRegistry { get; } = new AgvRegistryTestFixture().AgvRegistry;
+    private IAgvRepository AgvRepository { get; } = new AgvRepositoryTestFixture().AgvRepository;
 
     public AgvGraphConsumerTestFixture UseDefaultServices()
     {
-        AddServices(sc => sc.AddSingleton(_ => AgvRegistry));
+        AddServices(sc => sc.AddSingleton(_ => AgvRepository));
         return this;
     }
 

@@ -52,7 +52,7 @@ public class ActionGroupValidatorTest
     }
 
     [TestMethod]
-    public async Task ValidateAsync_WhenAssignedAgvDoesNotExistInRegistry_Fails()
+    public async Task ValidateAsync_WhenAssignedAgvDoesNotExistInRepository_Fails()
     {
         var actionGroup = AgvActionGenerator.GenerateChargeActionGroup();
         var agv = AgvGenerator.GenerateIdleAgv();
@@ -62,7 +62,7 @@ public class ActionGroupValidatorTest
 
         TestValidationResult<ActionGroup> validationResult = await fixture.ActionGroupValidator.TestValidateAsync(actionGroup);
 
-        validationResult.ShouldHaveValidationErrorFor(p => p.AssignedAgv).WithErrorMessage("Assigned Agv must exist in the registry.");
+        validationResult.ShouldHaveValidationErrorFor(p => p.AssignedAgv).WithErrorMessage("Assigned Agv must exist in the repository.");
     }
 
     [TestMethod]
@@ -138,7 +138,7 @@ public class ActionGroupValidatorTest
 
         TestValidationResult<ActionGroup> validationResult = await fixture.ActionGroupValidator.TestValidateAsync(actionGroup);
 
-        validationResult.ShouldHaveValidationErrorFor(x => x.AssignedAgv).WithErrorMessage("Assigned Agv must exist in the registry.");
+        validationResult.ShouldHaveValidationErrorFor(x => x.AssignedAgv).WithErrorMessage("Assigned Agv must exist in the repository.");
     }
 
     [TestMethod]

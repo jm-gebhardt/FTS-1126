@@ -22,16 +22,16 @@ public class GetGraphRequestHandler :
 {
     private readonly IAgvRepository _agvRepository;
     private readonly IMapper _mapper;
-    private readonly IAgvGraphRegistry _agvGraphRegistry;
+    private readonly IAgvGraphRepository _agvGraphRepository;
 
     /// <summary>
     /// Initializes a new  <see cref="GetGraphRequestHandler"/> instance.
     /// </summary>
-    public GetGraphRequestHandler(IAgvRepository agvRepository, IMapper mapper, IAgvGraphRegistry agvGraphRegistry)
+    public GetGraphRequestHandler(IAgvRepository agvRepository, IMapper mapper, IAgvGraphRepository agvGraphRepository)
     {
         _agvRepository = agvRepository;
         _mapper = mapper;
-        _agvGraphRegistry = agvGraphRegistry;
+        _agvGraphRepository = agvGraphRepository;
     }
 
     /// <summary>
@@ -44,7 +44,7 @@ public class GetGraphRequestHandler :
         var correlationId = context.Message.CorrelationId;
         var agv = await _agvRepository.GetAgvAsync(correlationId);
 
-        var agvGraph = await _agvGraphRegistry.GetAgvGraphAsync(agv.CorrelationId);
+        var agvGraph = await _agvGraphRepository.GetAgvGraphAsync(agv.CorrelationId);
 
         var graph = _mapper.Map<Graph>(agvGraph);
         await context.RespondAsync(new GotAgvGraph(graph));
@@ -65,7 +65,7 @@ public class GetGraphRequestHandler :
             throw new AgvsNotFoundException(selectedAgvs.Except(agvs.Select(a => a.CorrelationId)).ToList());
         }
 
-        ICollection<AgvGraph> agvGraphs = await _agvGraphRegistry.GetSelectedAgvGraphsAsync(selectedAgvs);
+        ICollection<AgvGraph> agvGraphs = await _agvGraphRepository.GetSelectedAgvGraphsAsync(selectedAgvs);
         List<Guid> undefinedGraphs = selectedAgvs.Except(agvGraphs.Select(g => g.CorrelationId)).ToList();
         if (undefinedGraphs.Any())
         {
@@ -82,7 +82,7 @@ public class GetGraphRequestHandler :
     public async Task Consume(ConsumeContext<GetMapGraph> context)
     {
         var correlationId = context.Message.CorrelationId;
-        var graph = await _agvGraphRegistry.GetGraphForMap(correlationId);
+        var graph = await _agvGraphRepository.GetGraphForMap(correlationId);
         await context.RespondAsync(new GotMapGraph(_mapper.Map<Graph>(graph)));
     }
 }

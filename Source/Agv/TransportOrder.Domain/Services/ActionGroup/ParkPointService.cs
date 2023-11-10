@@ -14,12 +14,12 @@ public class ParkPointService : BaseNodeReservationManager, IParkPointService
     /// <summary>
     /// Constructor for base charging point manager
     /// </summary>
-    /// <param name="agvGraphRegistry">The graph registry</param>
-    /// <param name="nodeStateRegistry"></param>
+    /// <param name="agvGraphRepository">The graph repository</param>
+    /// <param name="nodeStateRepository"></param>
     /// <param name="routeService"></param>
     /// <param name="logger"></param>
     /// <param name="semaphoreProvider"></param>
-    public ParkPointService(IAgvGraphRegistry agvGraphRegistry, INodeStateRegistry nodeStateRegistry, IRouteService routeService, ILogger<ParkPointService> logger, IParkingSemaphoreProvider semaphoreProvider) : base(agvGraphRegistry, nodeStateRegistry, routeService, logger, semaphoreProvider)
+    public ParkPointService(IAgvGraphRepository agvGraphRepository, INodeStateRepository nodeStateRepository, IRouteService routeService, ILogger<ParkPointService> logger, IParkingSemaphoreProvider semaphoreProvider) : base(agvGraphRepository, nodeStateRepository, routeService, logger, semaphoreProvider)
     {
     }
 

@@ -49,7 +49,7 @@ public class AgvRouteRetrievalService : IAgvRouteRetrievalService
             .OrderByDescending(g => g.StartedDate)
             .FirstOrDefaultAsync();
 
-        // if lastNodeId parameter is not we want to get the current value from the registry
+        // if lastNodeId parameter is not we want to get the current value from the repository
         Task<string?> lastNodeIdTask = string.IsNullOrEmpty(lastNodeId) ? _agvRepository.GetLastNodeIdAsync(agvCorrelationId) : Task.FromResult<string?>(lastNodeId);
 
         await Task.WhenAll(actionGroupTask, lastNodeIdTask);

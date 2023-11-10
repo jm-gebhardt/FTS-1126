@@ -25,16 +25,16 @@ public class ActionEventHandler :
     IConsumer<AutomaticActionWithdrawn>
 {
     private readonly ILogger<ActionEventHandler> _logger;
-    private readonly IActionGroupRegistry _actionGroupRegistry;
+    private readonly IActionGroupRepository _actionGroupRepository;
 
     /// <summary>
     /// Initializes a new <see cref="ActionEventHandler"/> instance.
     /// </summary>
     public ActionEventHandler(
-        ILogger<ActionEventHandler> logger, IActionGroupRegistry actionGroupRegistry)
+        ILogger<ActionEventHandler> logger, IActionGroupRepository actionGroupRepository)
     {
         _logger = logger;
-        _actionGroupRegistry = actionGroupRegistry;
+        _actionGroupRepository = actionGroupRepository;
     }
 
     /// <summary>
@@ -43,7 +43,7 @@ public class ActionEventHandler :
     public async Task Consume(ConsumeContext<ActionGroupCreatedForAgv> context)
     {
         var (actionGroupInMessage, assignedAgv) = context.Message;
-        var actionGroup = await _actionGroupRegistry.GetActionGroupAsync(actionGroupInMessage.CorrelationId);
+        var actionGroup = await _actionGroupRepository.GetActionGroupAsync(actionGroupInMessage.CorrelationId);
 
         var firstNotStartedAction = actionGroup!.FirstNotStartedAction;
         var action = actionGroupInMessage.Actions.First(a => a.CorrelationId == firstNotStartedAction!.CorrelationId);
@@ -91,7 +91,7 @@ public class ActionEventHandler :
     public async Task Consume(ConsumeContext<ActionAbortionCompleted> context)
     {
         var actionCorrelationId = context.Message.CorrelationId;
-        Guid? assignedAgv = await _actionGroupRegistry.GetAgvAssignedToAction(actionCorrelationId);
+        Guid? assignedAgv = await _actionGroupRepository.GetAgvAssignedToAction(actionCorrelationId);
         if (assignedAgv == null)
         {
             _logger.LogError("Could not complete action abortion for action {Action}, no assigned agv", actionCorrelationId);
@@ -106,7 +106,7 @@ public class ActionEventHandler :
     public async Task Consume(ConsumeContext<ActionCanceled> context)
     {
         var actionCorrelationId = context.Message.CorrelationId;
-        Guid? assignedAgv = await _actionGroupRegistry.GetAgvAssignedToAction(actionCorrelationId);
+        Guid? assignedAgv = await _actionGroupRepository.GetAgvAssignedToAction(actionCorrelationId);
         if (assignedAgv == null)
         {
             _logger.LogError("Could not complete action abortion for action {Action}, no assigned agv", actionCorrelationId);

@@ -14,12 +14,12 @@ public class MaintenanceService : BaseNodePicker, IMaintenanceService
     /// <summary>
     /// Ctor
     /// </summary>
-    /// <param name="agvGraphRegistry">The graph registry</param>
-    /// <param name="nodeStateRegistry"></param>
+    /// <param name="agvGraphRepository">The graph repository</param>
+    /// <param name="nodeStateRepository"></param>
     /// <param name="routeService"></param>
     /// <param name="logger"></param>
-    public MaintenanceService(IAgvGraphRegistry agvGraphRegistry, INodeStateRegistry nodeStateRegistry, IRouteService routeService, ILogger<MaintenanceService> logger)
-        : base(agvGraphRegistry, nodeStateRegistry, routeService, logger)
+    public MaintenanceService(IAgvGraphRepository agvGraphRepository, INodeStateRepository nodeStateRepository, IRouteService routeService, ILogger<MaintenanceService> logger)
+        : base(agvGraphRepository, nodeStateRepository, routeService, logger)
     {
     }
 

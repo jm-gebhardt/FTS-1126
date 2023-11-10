@@ -1,7 +1,7 @@
 ﻿namespace Gebhardt.StoreWare.Agv.Common.Exceptions;
 
 /// <summary>
-/// Represents errors that occur when something is not found, e.g. an object in the e.g. registry
+/// Represents errors that occur when something is not found, e.g. an object in the e.g. repository
 /// </summary>
 public abstract class NotFoundException : Exception
 {

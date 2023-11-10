@@ -37,7 +37,7 @@ public class AgvEventHandler :
 {
     private readonly ILogger<AgvEventHandler> _logger;
     private readonly IAgvRepository _agvRepository;
-    private readonly IActionGroupRegistry _actionGroupRegistry;
+    private readonly IActionGroupRepository _actionGroupRepository;
     private readonly IActionManagerSemaphoreProvider _semaphoreProvider;
     private readonly ISettingsProvider<AgvSettings> _settingsProvider;
 
@@ -46,14 +46,14 @@ public class AgvEventHandler :
     /// </summary>
     public AgvEventHandler(
         IAgvRepository agvRepository,
-        IActionGroupRegistry actionGroupRegistry,
+        IActionGroupRepository actionGroupRepository,
         IActionManagerSemaphoreProvider semaphoreProvider,
         ISettingsProvider<AgvSettings> settingsProvider,
         ILogger<AgvEventHandler> logger)
     {
         _logger = logger;
         _agvRepository = agvRepository;
-        _actionGroupRegistry = actionGroupRegistry;
+        _actionGroupRepository = actionGroupRepository;
         _semaphoreProvider = semaphoreProvider;
         _settingsProvider = settingsProvider;
     }
@@ -84,8 +84,8 @@ public class AgvEventHandler :
             }
             var agvSettings = _settingsProvider.GetSettings();
             bool needsCharging = agv.CheckNeedsCharging(agvSettings);
-            bool isCarryingLoad = await _actionGroupRegistry.HasUnfinishedDropActionsAsync(agv.CorrelationId);
-            IReadOnlyList<ActionGroup> actionGroups = await _actionGroupRegistry.GetActionGroupsAsync(new [] {ActionGroupState.Started, ActionGroupState.Created}, assignedAgvCorrelationId: agvCorrelationId);
+            bool isCarryingLoad = await _actionGroupRepository.HasUnfinishedDropActionsAsync(agv.CorrelationId);
+            IReadOnlyList<ActionGroup> actionGroups = await _actionGroupRepository.GetActionGroupsAsync(new [] {ActionGroupState.Started, ActionGroupState.Created}, assignedAgvCorrelationId: agvCorrelationId);
 
             bool noChargingAction = true;
             if (actionGroups.Any())
@@ -257,8 +257,8 @@ public class AgvEventHandler :
                 await context.Publish(new TryStartManualAction(agv.CorrelationId));
                 return;
             }
-            bool isCarryingLoad = await _actionGroupRegistry.HasUnfinishedDropActionsAsync(agv.CorrelationId);
-            bool hasUnfinishedActionGroup = await _actionGroupRegistry.HasUnfinishedActionGroupAsync(agv.CorrelationId);
+            bool isCarryingLoad = await _actionGroupRepository.HasUnfinishedDropActionsAsync(agv.CorrelationId);
+            bool hasUnfinishedActionGroup = await _actionGroupRepository.HasUnfinishedActionGroupAsync(agv.CorrelationId);
 
             bool shouldDoMaintenance = !isCarryingLoad && agv.NeedsMaintenance;
 

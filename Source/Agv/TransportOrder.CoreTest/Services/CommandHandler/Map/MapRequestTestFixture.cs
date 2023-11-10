@@ -72,10 +72,10 @@ public class MapRequestTestFixture<TRequestClient, TConsumer> : MediatorTestFixt
     {
         AddServices(sc =>
         {
-            sc.AddTransient(_ => GetMapRegistry().Object);
-            sc.AddTransient(_ => GetAgvRegistry().Object);
+            sc.AddTransient(_ => GetMapRepository().Object);
+            sc.AddTransient(_ => GetAgvRepository().Object);
             sc.AddTransient(_ => GetMapper());
-            sc.AddTransient(_ => GetAgvGraphRegistry().Object);
+            sc.AddTransient(_ => GetAgvGraphRepository().Object);
         });
         return this;
     }
@@ -84,12 +84,12 @@ public class MapRequestTestFixture<TRequestClient, TConsumer> : MediatorTestFixt
     /// Uses the default services
     /// </summary>
     /// <returns></returns>
-    public MapRequestTestFixture<TRequestClient, TConsumer> AddMapRegistryMock(Action<Mock<IMapRegistry>> mapRegistryAction)
+    public MapRequestTestFixture<TRequestClient, TConsumer> AddMapRepositoryMock(Action<Mock<IMapRepository>> mapRepositoryAction)
     {
-        var mapRegistryMock = new Mock<IMapRegistry>();
-        mapRegistryAction.Invoke(mapRegistryMock);
+        var mapRepositoryMock = new Mock<IMapRepository>();
+        mapRepositoryAction.Invoke(mapRepositoryMock);
 
-        AddServices(sc => sc.AddTransient(_ => mapRegistryMock.Object));
+        AddServices(sc => sc.AddTransient(_ => mapRepositoryMock.Object));
 
         return this;
     }
@@ -100,23 +100,23 @@ public class MapRequestTestFixture<TRequestClient, TConsumer> : MediatorTestFixt
         return this;
     }
 
-    private Mock<IMapRegistry> GetMapRegistry()
+    private Mock<IMapRepository> GetMapRepository()
     {
-        var mapRegistryMock = new Mock<IMapRegistry>();
+        var mapRepositoryMock = new Mock<IMapRepository>();
 
-        mapRegistryMock.Setup(x => x.GetAllMaps()).Returns(new EnumerableQuery<TransportOrder.Domain.Models.Map.Map>(new List<TransportOrder.Domain.Models.Map.Map>
+        mapRepositoryMock.Setup(x => x.GetAllMaps()).Returns(new EnumerableQuery<TransportOrder.Domain.Models.Map.Map>(new List<TransportOrder.Domain.Models.Map.Map>
         {
             new(_correlationIds[0], "Area51_Floor1_Compartment47", Convert.FromBase64String(Base64String), 1, 1, 0.01, 1, 2, DateTime.UtcNow),
             new(_correlationIds[1], "Area51_Floor1_Compartment48", Convert.FromBase64String(Base64String), 1, 1, 0.02, 2, 3, DateTime.UtcNow),
             new(_correlationIds[2], "Area51_Floor1_Compartment49", Convert.FromBase64String(Base64String), 1, 1, 0.03, 2, 1, DateTime.UtcNow)
         }));
 
-        return mapRegistryMock;
+        return mapRepositoryMock;
     }
 
-    private Mock<IAgvRepository> GetAgvRegistry()
+    private Mock<IAgvRepository> GetAgvRepository()
     {
-        var registryMock = new Mock<IAgvRepository>();
+        var repositoryMock = new Mock<IAgvRepository>();
 
         var agvs = new List<TransportOrder.Domain.Models.Agv.Agv>();
 
@@ -134,17 +134,17 @@ public class MapRequestTestFixture<TRequestClient, TConsumer> : MediatorTestFixt
             agvs.Add(agv);
         }
 
-        registryMock.SetupGet(x => x.Count).Returns(agvs.Count);
-        registryMock.Setup(x => x.GetIdleAgvsAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>(agvs.Where(x => x.CurrentAgvState == AgvState.Idle)));
-        registryMock.Setup(x => x.GetAllAgvsAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>(agvs));
-        registryMock.Setup(x => x.GetAgvAsync(It.IsAny<Guid>())).Returns<Guid>(correlationId => Task.FromResult(agvs.Single(a => a.CorrelationId == correlationId)));
+        repositoryMock.SetupGet(x => x.Count).Returns(agvs.Count);
+        repositoryMock.Setup(x => x.GetIdleAgvsAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>(agvs.Where(x => x.CurrentAgvState == AgvState.Idle)));
+        repositoryMock.Setup(x => x.GetAllAgvsAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>(agvs));
+        repositoryMock.Setup(x => x.GetAgvAsync(It.IsAny<Guid>())).Returns<Guid>(correlationId => Task.FromResult(agvs.Single(a => a.CorrelationId == correlationId)));
 
-        return registryMock;
+        return repositoryMock;
     }
 
-    private Mock<IAgvGraphRegistry> GetAgvGraphRegistry()
+    private Mock<IAgvGraphRepository> GetAgvGraphRepository()
     {
-        var registryMock = new Mock<IAgvGraphRegistry>();
+        var repositoryMock = new Mock<IAgvGraphRepository>();
         const string mapName = "Map#1";
 
         var agvGraphs = new List<AgvGraph>();
@@ -155,8 +155,8 @@ public class MapRequestTestFixture<TRequestClient, TConsumer> : MediatorTestFixt
             agvGraphs.Add(new AgvGraph(correlationId, _nodes, _edges, _correlationIds[2], mapName));
         }
 
-        registryMock.Setup(x => x.GetAllAgvGraphsAsync()).ReturnsAsync(agvGraphs);
-        return registryMock;
+        repositoryMock.Setup(x => x.GetAllAgvGraphsAsync()).ReturnsAsync(agvGraphs);
+        return repositoryMock;
     }
 
     private IMapper GetMapper()

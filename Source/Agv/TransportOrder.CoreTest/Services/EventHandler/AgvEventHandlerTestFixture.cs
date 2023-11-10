@@ -16,7 +16,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.EventHandler;
 
 public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixtureWithScheduler<AgvEventHandler>
 {
-    private readonly Mock<IActionGroupRegistry> _actionGroupRegistry = new();
+    private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
     private readonly Mock<IMaintenanceService> _maintenanceService = new();
     private readonly ActionManagerSemaphoreProvider _semaphoreProvider = new();
     private readonly Mock<IAgvRepository> _agvRepository = new();
@@ -38,7 +38,7 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixtureWithSche
 
     protected override void ConfigureServices(IServiceCollection collection)
     {
-        collection.AddTransient(_ => _actionGroupRegistry.Object);
+        collection.AddTransient(_ => _actionGroupRepository.Object);
         collection.AddTransient(_ => _maintenanceService.Object);
         collection.AddTransient<IActionManagerSemaphoreProvider>(_ => _semaphoreProvider);
         collection.AddTransient(_ => _agvRepository.Object);
@@ -57,8 +57,8 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixtureWithSche
 
     public void AgvHasUnfinishedDropAction(Guid correlationId)
     {
-        _actionGroupRegistry.Setup(r => r.HasUnfinishedDropActionsAsync(It.Is<Guid>(c => c == correlationId))).ReturnsAsync(true);
-        _actionGroupRegistry.Setup(r => r.HasUnfinishedActionGroupAsync(It.Is<Guid>(c => c == correlationId))).ReturnsAsync(true);
+        _actionGroupRepository.Setup(r => r.HasUnfinishedDropActionsAsync(It.Is<Guid>(c => c == correlationId))).ReturnsAsync(true);
+        _actionGroupRepository.Setup(r => r.HasUnfinishedActionGroupAsync(It.Is<Guid>(c => c == correlationId))).ReturnsAsync(true);
     }
 
     public static IMapper GetMapper()

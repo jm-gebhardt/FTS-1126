@@ -187,11 +187,11 @@ public class AgvStateConsumerTest
     }
 
     [TestMethod]
-    public async Task ReceiveMqttState_ChargingStateExamination_RegistryEmpty()
+    public async Task ReceiveMqttState_ChargingStateExamination_RepositoryEmpty()
     {
         // Arrange
         var fixture = new AgvStateConsumerTestFixture()
-            .EmptyRegistry()
+            .EmptyRepository()
             .UseDefaultServices()
             .Build();
 
@@ -218,7 +218,7 @@ public class AgvStateConsumerTest
         (await fixture.TestHarness.Published.Any<AgvStartedCharging>()).ShouldBeFalse();
         (await fixture.TestHarness.Published.Any<AgvStoppedCharging>()).ShouldBeFalse();
 
-        var agv = fixture.AgvRegistry.GetAgvInformation(AgvTestIdentifier02.ToGuid());
+        var agv = fixture.AgvRepository.GetAgvInformation(AgvTestIdentifier02.ToGuid());
         agv.ShouldNotBeNull();
     }
 

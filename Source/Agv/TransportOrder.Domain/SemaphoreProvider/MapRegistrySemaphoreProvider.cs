@@ -2,8 +2,8 @@
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
 
-/// <inheritdoc cref="IMapRegistrySemaphoreProvider" />
-public class MapRegistrySemaphoreProvider : BaseSemaphoreProvider, IMapRegistrySemaphoreProvider
+/// <inheritdoc cref="IMapRepositorySemaphoreProvider" />
+public class MapRepositorySemaphoreProvider : BaseSemaphoreProvider, IMapRepositorySemaphoreProvider
 {
     /// <inheritdoc />
     protected override SemaphoreSlim Semaphore { get; } = new(1, 1);

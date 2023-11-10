@@ -64,7 +64,7 @@ try
                 .ConfigureServices((context, services) =>
                 {
                     services.AddScoped(_ => productionOptions);
-                    services.AddSingleton<IAgvRegistry, AgvRegistry>();
+                    services.AddSingleton<IAgvRepository, AgvRepository>();
                     services.ConfigureServicesMassTransit(context.Configuration,
                         busRegistrationConfiguration: configurator =>
                         {
@@ -104,7 +104,7 @@ try
     {
         hostBuilder.ConfigureServices((_, services) =>
         {
-            services.AddSingleton<IAgvRegistry, AgvRegistry>();
+            services.AddSingleton<IAgvRepository, AgvRepository>();
 
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
         });

@@ -18,7 +18,7 @@ public class MapsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
 {
     private const string Base64String = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
 
-    private readonly Mock<IAgvGraphRegistry> _agvGraphRegistry = new();
+    private readonly Mock<IAgvGraphRepository> _agvGraphRepository = new();
 
     private readonly string[] _agvIds = { "AGV001", "AGV002", "AGV003" };
     private readonly string[] _orders = { "ORDER001", "ORDER002", "" };
@@ -40,24 +40,24 @@ public class MapsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
         return controller;
     }
 
-    private Mock<IMapRegistry> GetMapRegistry()
+    private Mock<IMapRepository> GetMapRepository()
     {
-        var mapRegistryMock = new Mock<IMapRegistry>();
+        var mapRepositoryMock = new Mock<IMapRepository>();
 
-        mapRegistryMock.Setup(x => x.GetAllMaps()).Returns(new EnumerableQuery<Domain.Models.Map.Map>(new List<Domain.Models.Map.Map>
+        mapRepositoryMock.Setup(x => x.GetAllMaps()).Returns(new EnumerableQuery<Domain.Models.Map.Map>(new List<Domain.Models.Map.Map>
         {
             new(_correlationIds[0], "Area51_Floor1_Compartment47", Convert.FromBase64String(Base64String), 1, 1, 0.01, 1, 2, DateTime.UtcNow),
             new(_correlationIds[1], "Area51_Floor1_Compartment48", Convert.FromBase64String(Base64String), 1, 1, 0.02, 2, 3, DateTime.UtcNow),
             new(_correlationIds[2], "Area51_Floor1_Compartment49", Convert.FromBase64String(Base64String), 1, 1, 0.03, 2, 1, DateTime.UtcNow)
         }));
-        mapRegistryMock.Setup(x => x.GetMapImage(It.IsAny<Guid>())).Returns(Convert.FromBase64String(Base64String));
+        mapRepositoryMock.Setup(x => x.GetMapImage(It.IsAny<Guid>())).Returns(Convert.FromBase64String(Base64String));
 
-        return mapRegistryMock;
+        return mapRepositoryMock;
     }
 
-    private Mock<IAgvRepository> GetAgvRegistry()
+    private Mock<IAgvRepository> GetAgvRepository()
     {
-        var registryMock = new Mock<IAgvRepository>();
+        var repositoryMock = new Mock<IAgvRepository>();
 
         var agvs = new List<Domain.Models.Agv.Agv>();
 
@@ -75,12 +75,12 @@ public class MapsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
             agvs.Add(agv);
         }
 
-        registryMock.SetupGet(x => x.Count).Returns(agvs.Count);
-        registryMock.Setup(x => x.GetIdleAgvsAsync()).ReturnsAsync(new List<Domain.Models.Agv.Agv>(agvs.Where(x => x.CurrentAgvState == AgvState.Idle)));
-        registryMock.Setup(x => x.GetAllAgvsAsync()).ReturnsAsync(new List<Domain.Models.Agv.Agv>(agvs));
-        registryMock.Setup(x => x.GetAgvAsync(It.IsAny<Guid>())).Returns<Guid>(correlationId => Task.FromResult(agvs.Single(a => a.CorrelationId == correlationId)));
+        repositoryMock.SetupGet(x => x.Count).Returns(agvs.Count);
+        repositoryMock.Setup(x => x.GetIdleAgvsAsync()).ReturnsAsync(new List<Domain.Models.Agv.Agv>(agvs.Where(x => x.CurrentAgvState == AgvState.Idle)));
+        repositoryMock.Setup(x => x.GetAllAgvsAsync()).ReturnsAsync(new List<Domain.Models.Agv.Agv>(agvs));
+        repositoryMock.Setup(x => x.GetAgvAsync(It.IsAny<Guid>())).Returns<Guid>(correlationId => Task.FromResult(agvs.Single(a => a.CorrelationId == correlationId)));
 
-        return registryMock;
+        return repositoryMock;
     }
 
     /// <summary>
@@ -103,31 +103,31 @@ public class MapsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
     {
         AddServices(sc =>
         {
-            sc.AddTransient(_ => GetMapRegistry().Object);
-            sc.AddTransient(_ => GetAgvRegistry().Object);
+            sc.AddTransient(_ => GetMapRepository().Object);
+            sc.AddTransient(_ => GetAgvRepository().Object);
             sc.AddTransient(_ => GetMapper());
-            sc.AddTransient(_ => _agvGraphRegistry.Object);
+            sc.AddTransient(_ => _agvGraphRepository.Object);
         });
         return this;
     }
 
     public MapsControllerTestFixture<TRequest, TRequestHandler> WithAgvGraphs(List<AgvGraph> agvGraphs)
     {
-        _agvGraphRegistry.Setup(x => x.GetAllAgvGraphsAsync()).ReturnsAsync(agvGraphs);
+        _agvGraphRepository.Setup(x => x.GetAllAgvGraphsAsync()).ReturnsAsync(agvGraphs);
         return this;
     }
 
     /// <summary>
-    /// Adds the <see cref="IMapRegistry"/> mock object
+    /// Adds the <see cref="IMapRepository"/> mock object
     /// </summary>
     /// <returns></returns>
     [UsedImplicitly]
-    public MapsControllerTestFixture<TRequest, TRequestHandler> AddMapRegistryMock(Action<Mock<IMapRegistry>> mapRegistryAction)
+    public MapsControllerTestFixture<TRequest, TRequestHandler> AddMapRepositoryMock(Action<Mock<IMapRepository>> mapRepositoryAction)
     {
-        var mapRegistryMock = new Mock<IMapRegistry>();
-        mapRegistryAction.Invoke(mapRegistryMock);
+        var mapRepositoryMock = new Mock<IMapRepository>();
+        mapRepositoryAction.Invoke(mapRepositoryMock);
 
-        AddServices(sc => sc.AddTransient(_ => mapRegistryMock.Object));
+        AddServices(sc => sc.AddTransient(_ => mapRepositoryMock.Object));
 
         return this;
     }

@@ -20,10 +20,10 @@ public class ActionEventHandlerTest
     {
         var agvInformation = AgvInformationGenerator.GetAgvInformation();
         var agvCorrelationId = agvInformation.AgvStatusReceived!.AgvStatus.CorrelationId;
-        var agvRegistryFixture = new AgvRegistryTestFixture()
+        var agvRepositoryTestFixture = new AgvRepositoryTestFixture()
             .WithAgvInformation(agvInformation);
         MqttConsumerTestFixture<ActionEventConsumer> fixture = new MqttConsumerTestFixture<ActionEventConsumer>(
-                services: s => s.AddTransient(_ => agvRegistryFixture.AgvRegistry))
+                services: s => s.AddTransient(_ => agvRepositoryTestFixture.AgvRepository))
             .Build();
         var actionCorrelationId = Guid.NewGuid();
         const string orderId = "1234";
@@ -47,7 +47,7 @@ public class ActionEventHandlerTest
     public async Task Consume_ActionAborted_EmptyAgvId_DoesNotPublishMqttOrder()
     {
         MqttConsumerTestFixture<ActionEventConsumer> fixture = new MqttConsumerTestFixture<ActionEventConsumer>(
-                services: s => s.AddTransient(_ => new AgvRegistryTestFixture().AgvRegistry))
+                services: s => s.AddTransient(_ => new AgvRepositoryTestFixture().AgvRepository))
             .Build();
 
         var actionCorrelationId = Guid.NewGuid();

@@ -6,10 +6,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Repositories;
 
 public class AgvDataRepositoryTestFixture : DbTestFixtureBase<TransportOrderDbContext>
 {
-    public readonly IAgvDataRegistry Repository;
+    public readonly IAgvDataRepository Repository;
 
     public AgvDataRepositoryTestFixture()
     {
-        Repository = new EfAgvDataRegistry(ContextFactory);
+        Repository = new EfAgvDataRepository(ContextFactory);
     }
 }

@@ -20,10 +20,10 @@ public class AgvPositionReceivedConsumerTest
     private const string AgvTestIdentifier02 = "#0815#";
 
     /// <summary>
-    /// Test creation of registry and try to access AGV that doesn't exits.
+    /// Test creation of repository and try to access AGV that doesn't exits.
     /// </summary>
     [TestMethod]
-    public async Task PublishPosition_RegistryCreated_AccessWrongAgv_NotFound()
+    public async Task PublishPosition_RepositoryCreated_AccessWrongAgv_NotFound()
     {
         var fixture = new AgvPositionReceivedConsumerMassTransitTestFixture();
 
@@ -37,18 +37,18 @@ public class AgvPositionReceivedConsumerTest
         (await fixture.TestHarness.Published.Any<AgvPositionReceived>()).ShouldBeTrue();
         (await fixture.ConsumerHarness!.Consumed.Any<AgvPositionReceived>()).ShouldBeTrue();
 
-        var registry = fixture.Provider!.GetRequiredService<IAgvPositionRegistry>();
-        registry.ShouldNotBeNull();
+        var repository = fixture.Provider!.GetRequiredService<IAgvPositionRepository>();
+        repository.ShouldNotBeNull();
 
-        var position = registry.GetPosition(Guid.Empty);
+        var position = repository.GetPosition(Guid.Empty);
         position.ShouldBeNull();
     }
 
     /// <summary>
-    /// Test access AGV position received by the registry
+    /// Test access AGV position received by the repository
     /// </summary>
     [TestMethod]
-    public async Task PublishTwoPosition_RegistryCreated_AccessOneAgv_Found()
+    public async Task PublishTwoPosition_RepositoryCreated_AccessOneAgv_Found()
     {
         const bool init1 = true;
         const float x1 = 1f;
@@ -80,10 +80,10 @@ public class AgvPositionReceivedConsumerTest
         (await fixture.TestHarness.Published.Any<AgvPositionReceived>()).ShouldBeTrue();
         fixture.ConsumerHarness!.Consumed.Select<AgvPositionReceived>().Count().ShouldBe(2);
 
-        var registry = fixture.Provider!.GetRequiredService<IAgvPositionRegistry>();
-        registry.ShouldNotBeNull();
+        var repository = fixture.Provider!.GetRequiredService<IAgvPositionRepository>();
+        repository.ShouldNotBeNull();
 
-        var position = registry.GetPosition(AgvTestIdentifier01.ToGuid());
+        var position = repository.GetPosition(AgvTestIdentifier01.ToGuid());
         position.ShouldNotBeNull();
         position.AgvPosition.PositionInitialized.ShouldBe(init1);
         position.AgvPosition.X.ShouldBe(x1, 0.00001);
@@ -92,7 +92,7 @@ public class AgvPositionReceivedConsumerTest
         position.AgvPosition.Theta.ShouldBe(theta1, 0.00001);
         position.AgvPosition.DeviationRange!.Value.ShouldBe(deviation1, 0.00001);
 
-        position = registry.GetPosition(AgvTestIdentifier02.ToGuid());
+        position = repository.GetPosition(AgvTestIdentifier02.ToGuid());
         position.ShouldNotBeNull();
         position.AgvPosition.X.ShouldBe(x2, 0.00001);
         position.AgvPosition.Y.ShouldBe(y2, 0.00001);
@@ -108,10 +108,10 @@ public class AgvPositionReceivedConsumerTest
     public async Task AgvPositionReceived_Consumed()
     {
         var fixture = new AgvPositionReceivedConsumerMassTransitTestFixture()
-            .UseAgvPositionRegistryMock()
+            .UseAgvPositionRepositoryMock()
             .Build();
 
-        Mock<IAgvPositionRegistry> agvPositionRegistryMock = fixture.AgvPositionRegistryMock!;
+        Mock<IAgvPositionRepository> agvPositionRepositoryMock = fixture.AgvPositionRepositoryMock!;
 
         await fixture.TestHarness!.Bus.Publish(
             new AgvPositionReceived(
@@ -123,7 +123,7 @@ public class AgvPositionReceivedConsumerTest
         (await fixture.TestHarness.Published.Any<AgvPositionReceived>()).ShouldBeTrue();
         (await fixture.ConsumerHarness!.Consumed.Any<AgvPositionReceived>()).ShouldBeTrue();
 
-        agvPositionRegistryMock.Verify(h => h.UpdatePositionAsync(
+        agvPositionRepositoryMock.Verify(h => h.UpdatePositionAsync(
             It.Is<AgvPositionStatus>(o => o.AgvId == AgvTestIdentifier01 && o.CorrelationId == AgvTestIdentifier01.ToGuid())), Times.Once);
     }
 }

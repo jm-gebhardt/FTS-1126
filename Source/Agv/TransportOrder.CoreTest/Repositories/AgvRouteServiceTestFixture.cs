@@ -9,7 +9,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Repositories;
 
 public class AgvRouteServiceTestFixture : DbTestFixtureBase<TransportOrderDbContext>
 {
-    private readonly Mock<IAgvRepository> _agvRegistryMock = new();
+    private readonly Mock<IAgvRepository> _agvRepositoryMock = new();
     private readonly Mock<ILogger<AgvRouteRetrievalService>> _loggerMock = new();
     private readonly List<ActionGroup> _actionsGroups = new();
     private readonly List<TransportOrder.Domain.Models.Agv.Agv> _agvs = new();
@@ -18,17 +18,17 @@ public class AgvRouteServiceTestFixture : DbTestFixtureBase<TransportOrderDbCont
 
     public AgvRouteServiceTestFixture()
     {
-        AgvRouteRetrievalService = new AgvRouteRetrievalService(ContextFactory, _agvRegistryMock.Object, _loggerMock.Object);
+        AgvRouteRetrievalService = new AgvRouteRetrievalService(ContextFactory, _agvRepositoryMock.Object, _loggerMock.Object);
     }
 
     private void SetupAgvs()
     {
         foreach (var agv in _agvs)
         {
-            _agvRegistryMock.Setup(x => x.GetLastNodeIdAsync(agv.CorrelationId)).ReturnsAsync(agv.AgvStatus!.LastNodeId);
+            _agvRepositoryMock.Setup(x => x.GetLastNodeIdAsync(agv.CorrelationId)).ReturnsAsync(agv.AgvStatus!.LastNodeId);
         }
 
-        _agvRegistryMock.Setup(x => x.GetLastNodeIdAsync(It.IsAny<ICollection<Guid>>()))
+        _agvRepositoryMock.Setup(x => x.GetLastNodeIdAsync(It.IsAny<ICollection<Guid>>()))
             .Returns<ICollection<Guid>>(agvCorrelationIds =>
             {
                 var result = new Dictionary<Guid, string?>();

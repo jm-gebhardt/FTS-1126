@@ -45,7 +45,7 @@ public static class CoreHostBuilderExtensions
 
             RegisterAgvServices(services);
 
-            RegisterRegistryServices(services);
+            RegisterRepositoryServices(services);
 
             RegisterValidators(services);
 
@@ -94,23 +94,23 @@ public static class CoreHostBuilderExtensions
         services.AddTransient<IMaintenanceService, MaintenanceService>();
     }
 
-    private static void RegisterRegistryServices(IServiceCollection services)
+    private static void RegisterRepositoryServices(IServiceCollection services)
     {
         services.AddTransient<IActionGroupRetrievalService, ActionGroupRetrievalService>();
-        services.AddTransient<IActionGroupRegistry, EfActionGroupRegistry>();
+        services.AddTransient<IActionGroupRepository, EfActionGroupRepository>();
         services.AddTransient<IAgvRepository, AgvRepository>();
-        services.AddTransient<IAgvDataRegistry, EfAgvDataRegistry>();
+        services.AddTransient<IAgvDataRepository, EfAgvDataRepository>();
 
-        services.AddSingleton<IMapRegistrySemaphoreProvider, MapRegistrySemaphoreProvider>();
-        services.AddTransient<IMapRegistry, EfMapRegistry>();
-        services.AddTransient<IAgvGraphRegistry, EfAgvGraphRegistry>();
+        services.AddSingleton<IMapRepositorySemaphoreProvider, MapRepositorySemaphoreProvider>();
+        services.AddTransient<IMapRepository, EfMapRepository>();
+        services.AddTransient<IAgvGraphRepository, EfAgvGraphRepository>();
 
         services.AddSingleton<INodeStateDbSemaphoreProvider, NodeStateDbSemaphoreProvider>();
-        services.AddTransient<INodeStateRegistry, EfNodeStateRegistry>();
+        services.AddTransient<INodeStateRepository, EfNodeStateRepository>();
 
         services.AddSingleton<IConcurrentDictionaryProvider<Guid, AgvPositionStatus>, AgvPositionDictionaryProvider>();
-        services.AddTransient<IAgvPositionRegistry, AgvPositionRegistry>();
-        services.AddTransient<IAgvErrorRegistry, EfAgvErrorRegistry>();
+        services.AddTransient<IAgvPositionRepository, AgvPositionRepository>();
+        services.AddTransient<IAgvErrorRepository, EfAgvErrorRepository>();
     }
 
     private static void RegisterValidators(IServiceCollection services)

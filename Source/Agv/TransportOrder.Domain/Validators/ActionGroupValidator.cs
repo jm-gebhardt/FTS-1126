@@ -13,22 +13,22 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Validators;
 public class ActionGroupValidator : AbstractValidator<ActionGroup>
 {
     private const string PropertyMustNotBeNullOrEmpty = "{PropertyName} must not be null or empty.";
-    private readonly IAgvRepository _agvRegistry;
+    private readonly IAgvRepository _agvRepository;
     private readonly IRouteService _routeService;
-    private readonly IAgvGraphRegistry _agvGraphRegistry;
+    private readonly IAgvGraphRepository _agvGraphRepository;
     private Models.Agv.Agv? _agv;
     private bool _hasRoute;
 
     /// <inheritdoc cref="ActionGroupValidator" />
-    public ActionGroupValidator(IAgvRepository agvRegistry,
+    public ActionGroupValidator(IAgvRepository agvRepository,
         IRouteService routeService,
         IValidator<AgvAction> actionValidator,
-        IAgvGraphRegistry agvGraphRegistry
+        IAgvGraphRepository agvGraphRepository
     )
     {
-        _agvRegistry = agvRegistry;
+        _agvRepository = agvRepository;
         _routeService = routeService;
-        _agvGraphRegistry = agvGraphRegistry;
+        _agvGraphRepository = agvGraphRepository;
         _hasRoute = false;
 
         RuleFor(p => p.OrderId)
@@ -64,7 +64,7 @@ public class ActionGroupValidator : AbstractValidator<ActionGroup>
                     {
                         action.RuleFor(a => a.TargetNodeId)
                             .MustAsync(async (nodeId, _) => await TargetNodeExists(nodeId))
-                            .WithMessage("{PropertyName} ({PropertyValue}) must exist in the registry.");
+                            .WithMessage("{PropertyName} ({PropertyValue}) must exist in the repository.");
                     });
                 });
             });
@@ -94,7 +94,7 @@ public class ActionGroupValidator : AbstractValidator<ActionGroup>
 
             RuleFor(x => x.AssignedAgv)
                 .Must(_ => AgvExists())
-                .WithMessage("{PropertyName} must exist in the registry.");
+                .WithMessage("{PropertyName} must exist in the repository.");
         });
 
         When(p => p.Actions.Any(a => a.ActionType is ActionType.Pick or ActionType.Drop), () =>
@@ -106,7 +106,7 @@ public class ActionGroupValidator : AbstractValidator<ActionGroup>
     }
 
     /// <summary>
-    /// Checks if the assigned Agv exists in the registry 
+    /// Checks if the assigned Agv exists in the repository 
     /// </summary>
     /// <returns></returns>
     private bool AgvExists()
@@ -155,7 +155,7 @@ public class ActionGroupValidator : AbstractValidator<ActionGroup>
     {
         if (actionGroup.AssignedAgv != null)
         {
-            _agv = await _agvRegistry.GetAgvAsync(actionGroup.AssignedAgv!.Value);
+            _agv = await _agvRepository.GetAgvAsync(actionGroup.AssignedAgv!.Value);
             if (_agv == null)
             {
                 return false;
@@ -166,7 +166,7 @@ public class ActionGroupValidator : AbstractValidator<ActionGroup>
         }
         else
         {
-            ICollection<Models.Agv.Agv> agvs = await _agvRegistry.GetAllAgvsAsync();
+            ICollection<Models.Agv.Agv> agvs = await _agvRepository.GetAllAgvsAsync();
             _hasRoute = await _routeService.HasAnyAgvRouteAsync(actionGroup, agvs, cancellationToken);
         }
 
@@ -195,6 +195,6 @@ public class ActionGroupValidator : AbstractValidator<ActionGroup>
 
     private Task<bool> TargetNodeExists(string nodeId)
     {
-        return _agvGraphRegistry.NodeExistsAsync(nodeId);
+        return _agvGraphRepository.NodeExistsAsync(nodeId);
     }
 }

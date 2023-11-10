@@ -16,7 +16,7 @@ public class MapControllerTest
         Guid correlationId = new("7FE9372B-4219-4D09-8885-966EE125A350");
 
         MapControllerTestFixture<GetMapImage, GetMapImageRequestHandler> fixture = new MapControllerTestFixture<GetMapImage, GetMapImageRequestHandler>()
-            .AddMapRegistryMock()
+            .AddMapRepositoryMock()
             .Build();
 
         var mapController = fixture.Controller;

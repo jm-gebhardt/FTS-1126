@@ -15,13 +15,13 @@ public class ChargingPointManager : BaseNodeReservationManager, IChargingPointMa
     /// <summary>
     /// Constructor for base charging point manager
     /// </summary>
-    /// <param name="graphRegistry">The graph registry</param>
-    /// <param name="nodeStateRegistry"></param>
+    /// <param name="graphRepository">The graph repository</param>
+    /// <param name="nodeStateRepository"></param>
     /// <param name="routeService"></param>
     /// <param name="logger"></param>
     /// <param name="semaphoreProvider"></param>
-    public ChargingPointManager(IAgvGraphRegistry graphRegistry, INodeStateRegistry nodeStateRegistry, IRouteService routeService, ILogger<ChargingPointManager> logger, IChargingSemaphoreProvider semaphoreProvider)
-        : base(graphRegistry, nodeStateRegistry, routeService, logger, semaphoreProvider)
+    public ChargingPointManager(IAgvGraphRepository graphRepository, INodeStateRepository nodeStateRepository, IRouteService routeService, ILogger<ChargingPointManager> logger, IChargingSemaphoreProvider semaphoreProvider)
+        : base(graphRepository, nodeStateRepository, routeService, logger, semaphoreProvider)
     {
     }
 

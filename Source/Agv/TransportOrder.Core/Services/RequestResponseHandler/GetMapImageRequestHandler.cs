@@ -12,28 +12,28 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHan
 [UsedImplicitly]
 public class GetMapImageRequestHandler : IConsumer<GetMapImage>
 {
-    private readonly IMapRegistry _mapRegistry;
+    private readonly IMapRepository _mapRepository;
 
     /// <summary>
     /// <inheritdoc cref="GetMapImageRequestHandler"/>
     /// </summary>
-    /// <param name="mapRegistry"></param>
-    public GetMapImageRequestHandler(IMapRegistry mapRegistry)
+    /// <param name="mapRepository"></param>
+    public GetMapImageRequestHandler(IMapRepository mapRepository)
     {
-        _mapRegistry = mapRegistry;
+        _mapRepository = mapRepository;
     }
 
     /// <summary>
-    /// Handles a GetMapImage request
+    /// Handles a GetMapImage request.
     /// </summary>
     /// <param name="context"></param>
-    /// <returns>A map from the MapRegistry</returns>
+    /// <returns>A map from the MapRepository.</returns>
     /// <exception cref="MapNotFoundException">Map is null or empty</exception>
     public async Task Consume(ConsumeContext<GetMapImage> context)
     {
         var request = context.Message;
 
-        byte[]? image = _mapRegistry.GetMapImage(request.CorrelationId);
+        byte[]? image = _mapRepository.GetMapImage(request.CorrelationId);
         if (image == null || image.Length == 0)
         {
             throw new MapNotFoundException(nameof(request.CorrelationId), request.CorrelationId);

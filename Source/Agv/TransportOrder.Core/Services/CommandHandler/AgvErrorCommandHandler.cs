@@ -12,15 +12,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.CommandHandler;
 [UsedImplicitly]
 public class AgvErrorCommandHandler : IConsumer<UpdateErrorStatus>
 {
-    private readonly IAgvErrorRegistry _agvErrorRegistry;
+    private readonly IAgvErrorRepository _agvErrorRepository;
 
     /// <summary>
     /// Initializes a new <see cref="AgvErrorCommandHandler"/> instance.
     /// </summary>
-    /// <param name="agvErrorRegistry"></param>
-    public AgvErrorCommandHandler(IAgvErrorRegistry agvErrorRegistry)
+    /// <param name="agvErrorRepository"></param>
+    public AgvErrorCommandHandler(IAgvErrorRepository agvErrorRepository)
     {
-        _agvErrorRegistry = agvErrorRegistry;
+        _agvErrorRepository = agvErrorRepository;
     }
 
     /// <summary>
@@ -29,6 +29,6 @@ public class AgvErrorCommandHandler : IConsumer<UpdateErrorStatus>
     public async Task Consume(ConsumeContext<UpdateErrorStatus> context)
     {
         (var correlationId, List<AgvError>? errors) = context.Message;
-        await _agvErrorRegistry.AddOrUpdateAgvErrorStatusAsync(errors, correlationId);
+        await _agvErrorRepository.AddOrUpdateAgvErrorStatusAsync(errors, correlationId);
     }
 }

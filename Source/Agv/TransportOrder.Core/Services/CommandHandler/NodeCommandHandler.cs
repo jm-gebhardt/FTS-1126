@@ -12,13 +12,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.CommandHandler;
 [UsedImplicitly]
 public class NodeCommandHandler: IConsumer<FreeNode>
 {
-    private readonly INodeStateRegistry _nodeStateRegistry;
+    private readonly INodeStateRepository _nodeStateRepository;
     private readonly ILogger<NodeCommandHandler> _logger;
 
     /// <inheritdoc cref="NodeCommandHandler"/>>
-    public NodeCommandHandler(INodeStateRegistry nodeStateRegistry, ILogger<NodeCommandHandler> logger)
+    public NodeCommandHandler(INodeStateRepository nodeStateRepository, ILogger<NodeCommandHandler> logger)
     {
-        _nodeStateRegistry = nodeStateRegistry;
+        _nodeStateRepository = nodeStateRepository;
         _logger = logger;
     }
 
@@ -28,7 +28,7 @@ public class NodeCommandHandler: IConsumer<FreeNode>
     public async Task Consume(ConsumeContext<FreeNode> context)
     {
         string nodeId = context.Message.NodeId;
-        if (!await _nodeStateRegistry.FreeNodeAsync(nodeId))
+        if (!await _nodeStateRepository.FreeNodeAsync(nodeId))
         {
           _logger.LogWarning("Could not free node {NodeId}, node is locked.", nodeId);
         }

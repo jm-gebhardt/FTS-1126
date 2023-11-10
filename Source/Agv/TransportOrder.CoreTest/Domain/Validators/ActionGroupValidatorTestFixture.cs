@@ -11,9 +11,9 @@ public class ActionGroupValidatorTestFixture
 {
     private readonly Mock<IRouteService> _routeService = new();
 
-    private readonly Mock<IAgvRepository> _agvRegistry = new();
+    private readonly Mock<IAgvRepository> _agvRepository = new();
 
-    private readonly Mock<IAgvGraphRegistry> _agvGraphRegistry = new();
+    private readonly Mock<IAgvGraphRepository> _agvGraphRepository = new();
 
     public ActionGroupValidator ActionGroupValidator { get; private set; } = null!;
 
@@ -21,22 +21,22 @@ public class ActionGroupValidatorTestFixture
     {
         var collection = new ServiceCollection()
             .AddTransient(_ => _routeService.Object)
-            .AddTransient(_ => _agvRegistry.Object);
+            .AddTransient(_ => _agvRepository.Object);
 
         collection.BuildServiceProvider(true);
     }
 
     public ActionGroupValidatorTestFixture WithAgv(TransportOrder.Domain.Models.Agv.Agv agv)
     {
-        _agvRegistry.Setup(x => x.GetAgvAsync(agv.CorrelationId)).ReturnsAsync(agv);
-        _agvRegistry.Setup(x => x.GetAllAgvsAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+        _agvRepository.Setup(x => x.GetAgvAsync(agv.CorrelationId)).ReturnsAsync(agv);
+        _agvRepository.Setup(x => x.GetAllAgvsAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
         return this;
     }
 
     // ReSharper disable once UnusedMember.Global
     public ActionGroupValidatorTestFixture WithAgvs(List<TransportOrder.Domain.Models.Agv.Agv> agvs)
     {
-        _agvRegistry.Setup(x => x.GetAllAgvsAsync()).ReturnsAsync(agvs);
+        _agvRepository.Setup(x => x.GetAllAgvsAsync()).ReturnsAsync(agvs);
         return this;
     }
 
@@ -50,7 +50,7 @@ public class ActionGroupValidatorTestFixture
     {
         foreach (var action in actionGroup.Actions)
         {
-            _agvGraphRegistry.Setup(x => x.NodeExistsAsync(action.TargetNodeId)).ReturnsAsync(doesNodeExist);
+            _agvGraphRepository.Setup(x => x.NodeExistsAsync(action.TargetNodeId)).ReturnsAsync(doesNodeExist);
         }
 
         return this;
@@ -65,7 +65,7 @@ public class ActionGroupValidatorTestFixture
 
     public ActionGroupValidatorTestFixture Build()
     {
-        ActionGroupValidator = new ActionGroupValidator(_agvRegistry.Object, _routeService.Object, new AgvActionValidator(), _agvGraphRegistry.Object);
+        ActionGroupValidator = new ActionGroupValidator(_agvRepository.Object, _routeService.Object, new AgvActionValidator(), _agvGraphRepository.Object);
 
         return this;
     }

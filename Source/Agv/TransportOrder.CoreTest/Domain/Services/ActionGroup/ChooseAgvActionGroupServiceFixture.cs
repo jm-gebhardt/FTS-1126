@@ -18,16 +18,16 @@ public class ChooseAgvActionGroupServiceFixture
     public Mock<IRouteService> RouteService { get; } = new();
 
     [UsedImplicitly]
-    public Mock<IActionGroupRegistry> AgvActionRegistry { get; } = new();
+    public Mock<IActionGroupRepository> AgvActionRepository { get; } = new();
 
     public ShortestRouteChooser ShortestRouteChooser { get; private set; }
 
     public ChooseAgvActionGroupServiceFixture(bool realRouteService = false)
     {
-        AgvActionRegistry.Setup(x => x.GetNotStartedActionGroupsAsync(It.IsAny<Guid>())).ReturnsAsync(NotStartedActionGroups);
+        AgvActionRepository.Setup(x => x.GetNotStartedActionGroupsAsync(It.IsAny<Guid>())).ReturnsAsync(NotStartedActionGroups);
         ShortestRouteChooser = new ShortestRouteChooser(
-            realRouteService ? new RouteService(new Mock<IAgvGraphRegistry>().Object, new Mock<IRouteFinder>().Object, new Mock<ILogger<RouteService>>().Object) : RouteService.Object,
-            AgvActionRegistry.Object,
+            realRouteService ? new RouteService(new Mock<IAgvGraphRepository>().Object, new Mock<IRouteFinder>().Object, new Mock<ILogger<RouteService>>().Object) : RouteService.Object,
+            AgvActionRepository.Object,
             new Mock<ILogger<ShortestRouteChooser>>().Object
         );
     }

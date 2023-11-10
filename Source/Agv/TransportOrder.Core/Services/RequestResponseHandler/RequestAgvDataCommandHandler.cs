@@ -9,7 +9,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHan
 
 /// <summary>
 /// Defines a handler for the EmitRequestDataRequest
-/// Gets agv from agvRegistry for specific correlationId, emits RequestData telegram when receiving patch request.
+/// Gets agv from agvRepository for specific correlationId, emits RequestData telegram when receiving patch request.
 /// </summary>
 [UsedImplicitly]
 public class RequestAgvDataCommandHandler : IConsumer<RequestAgvData>

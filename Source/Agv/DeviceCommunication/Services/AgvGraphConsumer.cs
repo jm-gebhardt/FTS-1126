@@ -16,17 +16,17 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
 public class AgvGraphConsumer : IConsumer<MqttGraph>
 {
     private readonly ILogger<AgvGraphConsumer> _logger;
-    private readonly IAgvRegistry _agvRegistry;
+    private readonly IAgvRepository _agvRepository;
 
     /// <summary>
     /// Create consumer with message handler delegate.
     /// </summary>
     /// <param name="logger">Mandatory logger facility.</param>
-    /// <param name="agvRegistry"></param>
-    public AgvGraphConsumer(ILogger<AgvGraphConsumer> logger, IAgvRegistry agvRegistry)
+    /// <param name="agvRepository"></param>
+    public AgvGraphConsumer(ILogger<AgvGraphConsumer> logger, IAgvRepository agvRepository)
     {
         _logger = logger;
-        _agvRegistry = agvRegistry;
+        _agvRepository = agvRepository;
     }
 
     /// <summary>
@@ -55,11 +55,11 @@ public class AgvGraphConsumer : IConsumer<MqttGraph>
 
         var graphParser = new GraphParser(reversedYGraph);
         var agvGraph = graphParser.Graph;
-        FeedAgvRegistry(correlationId, agvGraph);
+        FeedAgvRepository(correlationId, agvGraph);
     }
 
-    private void FeedAgvRegistry(Guid correlationId, AgvGraph agvGraph)
+    private void FeedAgvRepository(Guid correlationId, AgvGraph agvGraph)
     {
-        _agvRegistry.AddOrUpdateAgvGraph(correlationId, agvGraph);
+        _agvRepository.AddOrUpdateAgvGraph(correlationId, agvGraph);
     }
 }

@@ -12,26 +12,26 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHan
 
 /// <summary>
 /// Defines a handler for the GetAgv <see cref="GetAgvs"/>
-/// Gets all Agv from AgvRegistry sorted by AgvId ascending, returns IEnumerable of Agv
+/// Gets all Agv from AgvRepository sorted by AgvId ascending, returns IEnumerable of Agv
 /// </summary>
 [UsedImplicitly]
 public class GetAgvsRequestHandler : IConsumer<GetAgvs>,
     IConsumer<GetAgv>
 {
     private readonly IAgvRepository _agvRepository;
-    private readonly IActionGroupRetrievalService _actionGroupRegistry;
+    private readonly IActionGroupRetrievalService _actionGroupRepository;
     private readonly IMapper _mapper;
-    private readonly IAgvErrorRegistry _agvErrorRegistry;
+    private readonly IAgvErrorRepository _agvErrorRepository;
 
     /// <summary>
     /// Initializes a new  <see cref="GetAgvsRequestHandler"/> instance.
     /// </summary>
-    public GetAgvsRequestHandler(IAgvRepository agvRepository, IActionGroupRetrievalService actionGroupRegistry, IMapper mapper, IAgvErrorRegistry agvErrorRegistry)
+    public GetAgvsRequestHandler(IAgvRepository agvRepository, IActionGroupRetrievalService actionGroupRepository, IMapper mapper, IAgvErrorRepository agvErrorRepository)
     {
         _agvRepository = agvRepository;
-        _actionGroupRegistry = actionGroupRegistry;
+        _actionGroupRepository = actionGroupRepository;
         _mapper = mapper;
-        _agvErrorRegistry = agvErrorRegistry;
+        _agvErrorRepository = agvErrorRepository;
     }
 
     /// <summary>
@@ -56,8 +56,8 @@ public class GetAgvsRequestHandler : IConsumer<GetAgvs>,
             throw new AgvsNotFoundException(selectedAgvs.Except(agvCorrelationIds).ToList());
         }
 
-        Task<IReadOnlyDictionary<Guid, ActionGroupReadModel?>> actionGroupsTask = _actionGroupRegistry.GetAssignedActionGroupsWithNodesAsync(agvCorrelationIds);
-        Task<IList<AgvError>> errorsTask = _agvErrorRegistry.GetActiveErrorsAsync(agvCorrelationIds);
+        Task<IReadOnlyDictionary<Guid, ActionGroupReadModel?>> actionGroupsTask = _actionGroupRepository.GetAssignedActionGroupsWithNodesAsync(agvCorrelationIds);
+        Task<IList<AgvError>> errorsTask = _agvErrorRepository.GetActiveErrorsAsync(agvCorrelationIds);
 
         await Task.WhenAll(actionGroupsTask, errorsTask);
 
@@ -91,10 +91,10 @@ public class GetAgvsRequestHandler : IConsumer<GetAgvs>,
 
         var agvMessageContent = _mapper.Map<Messages.MessageContent.Agv>(agv);
 
-        var action = await _actionGroupRegistry.GetActionGroupWithNodesAsync(agvCorrelationId);
+        var action = await _actionGroupRepository.GetActionGroupWithNodesAsync(agvCorrelationId);
         _mapper.Map(action, agvMessageContent);
 
-        IList<AgvError> agvErrors = await _agvErrorRegistry.GetActiveErrorsAsync(agvCorrelationId);
+        IList<AgvError> agvErrors = await _agvErrorRepository.GetActiveErrorsAsync(agvCorrelationId);
         _mapper.Map(agvErrors, agvMessageContent);
         await context.RespondAsync(new GotAgv(agvMessageContent));
     }

@@ -11,18 +11,18 @@ public class GetAgvPositionsRequestHandlerTestFixture<TRequestClient, TConsumer>
     where TRequestClient : class
     where TConsumer : class, IConsumer
 {
-    private readonly Mock<IAgvPositionRegistry> _agvPositionRegistryMock = new();
+    private readonly Mock<IAgvPositionRepository> _agvPositionRepositoryMock = new();
 
     public GetAgvPositionsRequestHandlerTestFixture()
     {
-        AddServices(s => { s.AddTransient(_ => _agvPositionRegistryMock.Object); });
+        AddServices(s => { s.AddTransient(_ => _agvPositionRepositoryMock.Object); });
     }
 
     public GetAgvPositionsRequestHandlerTestFixture<TRequestClient, TConsumer> WithAgvPositions(ICollection<AgvPositionStatus> positions)
     {
-        _agvPositionRegistryMock.Setup(x => x.GetSelectedAgvsPositions(It.IsAny<ICollection<Guid>>()))
+        _agvPositionRepositoryMock.Setup(x => x.GetSelectedAgvsPositions(It.IsAny<ICollection<Guid>>()))
             .Returns((ICollection<Guid> ids) => positions.Where(p => ids.Contains(p.CorrelationId)).ToList());
-        _agvPositionRegistryMock.Setup(x => x.GetPosition(It.IsAny<Guid>()))
+        _agvPositionRepositoryMock.Setup(x => x.GetPosition(It.IsAny<Guid>()))
             .Returns((Guid id) => positions.SingleOrDefault(p => p.CorrelationId == id));
         return this;
     }

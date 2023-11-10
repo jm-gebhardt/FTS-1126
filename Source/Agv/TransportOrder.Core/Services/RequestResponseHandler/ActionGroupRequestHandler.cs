@@ -21,19 +21,19 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
     IConsumer<TriggerActionGroupAbortion>
 {
     private readonly IActionGroupRetrievalService _retrievalService;
-    private readonly IActionGroupRegistry _actionGroupRegistry;
+    private readonly IActionGroupRepository _actionGroupRepository;
     private readonly IBus _bus;
 
     /// <summary>
     ///  Initializes a new <see cref="ActionGroupRequestHandler"/> instance.
     /// </summary>
     /// <param name="retrievalService">The action group read model retrieval service.</param>
-    /// <param name="actionGroupRegistry">The action group repository.</param>
+    /// <param name="actionGroupRepository">The action group repository.</param>
     /// <param name="bus">The message bus.</param>
-    public ActionGroupRequestHandler(IActionGroupRetrievalService retrievalService, IActionGroupRegistry actionGroupRegistry, IBus bus)
+    public ActionGroupRequestHandler(IActionGroupRetrievalService retrievalService, IActionGroupRepository actionGroupRepository, IBus bus)
     {
         _retrievalService = retrievalService;
-        _actionGroupRegistry = actionGroupRegistry;
+        _actionGroupRepository = actionGroupRepository;
         _bus = bus;
     }
 
@@ -68,7 +68,7 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
     public async Task Consume(ConsumeContext<GetActionGroupCountsByState> context)
     {
         AgvGroupCountByState[] actionGroupStateCounts = await Task.WhenAll(Enum.GetValues<ActionGroupState>().Select(state =>
-            _actionGroupRegistry.GetActionGroupsCountAsync(new[] {state})
+            _actionGroupRepository.GetActionGroupsCountAsync(new[] {state})
                 .ContinueWith(actionGroupCount => new AgvGroupCountByState(state, actionGroupCount.Result))));
 
         await context.RespondAsync(new GotActionGroupCountsByState(actionGroupStateCounts));
@@ -80,7 +80,7 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
     public async Task Consume(ConsumeContext<TriggerActionGroupAbortion> context)
     {
         var correlationId = context.Message.CorrelationId;
-        var actionGroup = await _actionGroupRegistry.GetRequiredActionGroupByIdAsync(correlationId);
+        var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByIdAsync(correlationId);
 
         if (actionGroup.State != ActionGroupState.Started)
         {

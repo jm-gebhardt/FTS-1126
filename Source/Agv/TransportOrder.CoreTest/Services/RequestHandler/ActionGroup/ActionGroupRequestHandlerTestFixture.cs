@@ -18,7 +18,7 @@ public class ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> : M
     where TConsumer : class, IConsumer
 {
     private readonly ActionGroupRetrievalServiceTestFixture _actionGroupRetrievalServiceTestFixture = new();
-    private readonly ActionGroupRegistryTestFixture _actionGroupRegistryFixture = new();
+    private readonly ActionGroupRepositoryTestFixture _actionGroupRepositoryFixture = new();
     private EfGraph? _efGraph;
     private TransportOrder.Domain.Models.ActionGroup.ActionGroup[]? _actionGroups;
 
@@ -52,16 +52,16 @@ public class ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> : M
         {
             // ReSharper disable once CoVariantArrayConversion
             await _actionGroupRetrievalServiceTestFixture.AddRangeAsync(_actionGroups);
-            _actionGroupRegistryFixture.WithActionGroups(_actionGroups);
+            _actionGroupRepositoryFixture.WithActionGroups(_actionGroups);
         }
 
         if (_efGraph != null)
         {
             await _actionGroupRetrievalServiceTestFixture.AddAsync(_efGraph);
         }
-        await _actionGroupRegistryFixture.BuildAsync();
+        await _actionGroupRepositoryFixture.BuildAsync();
         AddServices(s => s.AddTransient<IActionGroupRetrievalService>(_ => _actionGroupRetrievalServiceTestFixture.ActionGroupRetrievalService));
-        AddServices(s => s.AddTransient<IActionGroupRegistry>(_ => _actionGroupRegistryFixture.ActionGroupRegistry));
+        AddServices(s => s.AddTransient<IActionGroupRepository>(_ => _actionGroupRepositoryFixture.ActionGroupRepository));
         AddServices(s => s.AddTransient<IMapper>(_ => Mock.Of<IMapper>()));
         if (bus != null)
         {

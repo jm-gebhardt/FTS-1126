@@ -25,7 +25,7 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
     where TRequestHandler : class, IConsumer
 {
     private readonly Mock<IActionGroupRetrievalService> _retrievalServiceMock = new();
-    private readonly Mock<IActionGroupRegistry> _actionGroupRegistryMock = new();
+    private readonly Mock<IActionGroupRepository> _actionGroupRepositoryMock = new();
     private readonly Mock<IRouteService> _routeService = new();
     private readonly Mock<IChooseAgvActionGroupService> _chooseAgvActionGroupService = new();
     private readonly ActionManagerSemaphoreProvider _semaphoreProvider = new();
@@ -61,7 +61,7 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
         AddServices(sc =>
         {
             sc.AddTransient(_ => _retrievalServiceMock.Object);
-            sc.AddTransient(_ => _actionGroupRegistryMock.Object);
+            sc.AddTransient(_ => _actionGroupRepositoryMock.Object);
             sc.AddTransient(_ => _routeService.Object);
             sc.AddTransient(_ => _chooseAgvActionGroupService.Object);
             sc.AddTransient(_ => _maintenanceService.Object);
@@ -84,13 +84,13 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
         });
 
         _retrievalServiceMock.Setup(x => x.GetActionGroupWithNodesAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) => _actionGroupReadModels.FirstOrDefault(a => a.CorrelationId == c));
-        _actionGroupRegistryMock.Setup(x => x.GetRequiredActionGroupByIdAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) =>
+        _actionGroupRepositoryMock.Setup(x => x.GetRequiredActionGroupByIdAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) =>
         {
             var ag = _actionGroups.FirstOrDefault(a => a.CorrelationId == c);
             return ag ?? throw new ActionGroupNotFoundException(c);
         });
-        _actionGroupRegistryMock.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) => _actionGroups.FirstOrDefault(a => a.CorrelationId == c));
-        _actionGroupRegistryMock.Setup(x => x.UpdateActionAndGroupStateAsync(It.IsAny<Domain.Models.ActionGroup.AgvAction>(), It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<ActionState>()))!.ReturnsAsync(
+        _actionGroupRepositoryMock.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) => _actionGroups.FirstOrDefault(a => a.CorrelationId == c));
+        _actionGroupRepositoryMock.Setup(x => x.UpdateActionAndGroupStateAsync(It.IsAny<Domain.Models.ActionGroup.AgvAction>(), It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<ActionState>()))!.ReturnsAsync(
             (Domain.Models.ActionGroup.AgvAction action, Domain.Models.Agv.Agv _, ActionState _) => _actionGroups.FirstOrDefault(a => a.CorrelationId == action.ParentId));
         _retrievalServiceMock.Setup(x => x.EnrichActionGroupWithNodesAsync(It.IsAny<Domain.Models.ActionGroup.ActionGroup>())).ReturnsAsync((Domain.Models.ActionGroup.ActionGroup ag) => ag.ConvertFromActionGroupWithFakeNodeType()!);
         return this;

@@ -49,7 +49,7 @@ public class ActionGroupRequestHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_GetAgvActionGroupsRequest_EmptyActionGroupRegistry_ReturnsEmptyList()
+    public async Task Consume_GetAgvActionGroupsRequest_EmptyActionGroupRepository_ReturnsEmptyList()
     {
         ActionGroupRequestHandlerTestFixture<GetActionGroups, ActionGroupRequestHandler> fixture = await new ActionGroupRequestHandlerTestFixture<GetActionGroups, ActionGroupRequestHandler>()
             .WithActionGroups(Array.Empty<TransportOrder.Domain.Models.ActionGroup.ActionGroup>())
@@ -113,7 +113,7 @@ public class ActionGroupRequestHandlerTest
     }
 
     [TestMethod]
-    public async Task GetAgvActionGroupsRequestHandler_EmptyActionGroupRegistry_ReturnsEmptyActionGroupsCountByState()
+    public async Task GetAgvActionGroupsRequestHandler_EmptyActionGroupRepository_ReturnsEmptyActionGroupsCountByState()
     {
         ActionGroupRequestHandlerTestFixture<GetActionGroupCountsByState, ActionGroupRequestHandler> fixture = await new ActionGroupRequestHandlerTestFixture<GetActionGroupCountsByState, ActionGroupRequestHandler>()
             .WithActionGroups(Array.Empty<TransportOrder.Domain.Models.ActionGroup.ActionGroup>())

@@ -16,6 +16,6 @@ public class NodeCommandHandlerTest
         await fixture.TestHarness!.Bus.Publish(new FreeNode("Charge-0"));
 
         (await fixture.ConsumerHarness!.Consumed.Any<FreeNode>()).ShouldBeTrue();
-        fixture.NodeStateRegistry.Verify(x => x.FreeNodeAsync(It.IsAny<string>()), Times.Once);
+        fixture.NodeStateRepository.Verify(x => x.FreeNodeAsync(It.IsAny<string>()), Times.Once);
     }
 }

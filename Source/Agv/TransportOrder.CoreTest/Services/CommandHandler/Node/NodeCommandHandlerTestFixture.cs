@@ -8,11 +8,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.CommandHandler
 
 public class NodeCommandHandlerTestFixture: MassTransitConsumerTestFixture<NodeCommandHandler>
 {
-    public readonly Mock<INodeStateRegistry> NodeStateRegistry = new();
+    public readonly Mock<INodeStateRepository> NodeStateRepository = new();
 
     protected override void ConfigureServices(IServiceCollection collection)
     {
-        collection.AddTransient(_ => NodeStateRegistry.Object);
-        NodeStateRegistry.Setup(x => x.FreeNodeAsync(It.IsAny<string>())).Verifiable();
+        collection.AddTransient(_ => NodeStateRepository.Object);
+        NodeStateRepository.Setup(x => x.FreeNodeAsync(It.IsAny<string>())).Verifiable();
     }
 }

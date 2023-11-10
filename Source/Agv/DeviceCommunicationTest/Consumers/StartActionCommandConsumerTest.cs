@@ -33,7 +33,7 @@ public class StartActionCommandConsumerTest
     public async Task Test_Send_TransportOrder_To_AGV_Via_MQTT()
     {
         MqttConsumerTestFixture<StartActionCommandConsumer> fixture = new MqttConsumerTestFixture<StartActionCommandConsumer>()
-            .AddServices(s => s.AddSingleton(Mock.Of<IAgvRegistry>()))
+            .AddServices(s => s.AddSingleton(Mock.Of<IAgvRepository>()))
             .Build();
 
         // Create a publish observer
@@ -93,7 +93,7 @@ public class StartActionCommandConsumerTest
     [TestMethod]
     public async Task Test_StartAction_EmptyAssignedAgv_ThrowsException()
     {
-        var fixture = new MassTransitConsumerTestFixture<StartActionCommandConsumer>(s => { s.AddTransient<IAgvRegistry>(_ => Mock.Of<IAgvRegistry>()); });
+        var fixture = new MassTransitConsumerTestFixture<StartActionCommandConsumer>(s => { s.AddTransient<IAgvRepository>(_ => Mock.Of<IAgvRepository>()); });
         var action = new AgvAction(Guid.Empty, ActionType.Pick, string.Empty, Guid.Empty);
         await fixture.TestHarness!.Bus.Publish(new StartActionCommand(Guid.Empty, "", action));
         (await fixture.TestHarness.Consumed.Any<StartActionCommand>()).ShouldBeTrue();
@@ -112,7 +112,7 @@ public class StartActionCommandConsumerTest
     public async Task StartActionCommand_MoveAction_To_AGV_Via_MQTT()
     {
         MqttConsumerTestFixture<StartActionCommandConsumer> fixture = new MqttConsumerTestFixture<StartActionCommandConsumer>()
-            .AddServices(s => s.AddSingleton(Mock.Of<IAgvRegistry>()))
+            .AddServices(s => s.AddSingleton(Mock.Of<IAgvRepository>()))
             .Build();
 
         // Create a publish observer
@@ -177,7 +177,7 @@ public class StartActionCommandConsumerTest
     public async Task StartActionCommand_ChargeAction_To_AGV_Via_MQTT()
     {
         MqttConsumerTestFixture<StartActionCommandConsumer> fixture = new MqttConsumerTestFixture<StartActionCommandConsumer>()
-            .AddServices(s => s.AddSingleton(Mock.Of<IAgvRegistry>()))
+            .AddServices(s => s.AddSingleton(Mock.Of<IAgvRepository>()))
             .Build();
 
         // Create a publish observer
