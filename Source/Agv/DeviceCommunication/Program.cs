@@ -4,6 +4,7 @@ using Gebhardt.StoreWare.Agv.Common;
 using Gebhardt.StoreWare.Agv.Common.Configurations.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Logging;
+using Gebhardt.StoreWare.Agv.Common.Time;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Exceptions;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
@@ -40,9 +41,10 @@ try
                     if (simulationOptions.FixedGraph)
                     {
                         services.AddTransient<IGraphGenerator, FixedGraphGenerator>();
-                    }else if (simulationOptions.GridGraph)
+                    }
+                    else if (simulationOptions.GridGraph)
                     {
-                        services.AddTransient<IGraphGenerator, GridGraphGenerator >();
+                        services.AddTransient<IGraphGenerator, GridGraphGenerator>();
                     }
                     services.AddHostedService<SimulatedAgvProvider>();
                     services.ConfigureServicesMassTransit(context.Configuration,
@@ -51,10 +53,7 @@ try
                             x.AddDelayedMessageScheduler();
                             x.AddSagaStateMachine<SimulatedAgvStateMachine, SimulatedAgvSaga>()
                                 .InMemoryRepository();
-                        }, rabbitMqConfiguration: (_, cfg) =>
-                        {
-                            cfg.UseDelayedMessageScheduler();
-                        });
+                        }, rabbitMqConfiguration: (_, cfg) => { cfg.UseDelayedMessageScheduler(); });
                     services.AddOptions<MassTransitHostOptions>().Configure(options => { options.WaitUntilStarted = true; });
                 });
         })
@@ -64,7 +63,6 @@ try
                 .ConfigureServices((context, services) =>
                 {
                     services.AddScoped(_ => productionOptions);
-                    services.AddSingleton<IAgvRepository, AgvRepository>();
                     services.ConfigureServicesMassTransit(context.Configuration,
                         busRegistrationConfiguration: configurator =>
                         {
@@ -105,6 +103,7 @@ try
         hostBuilder.ConfigureServices((_, services) =>
         {
             services.AddSingleton<IAgvRepository, AgvRepository>();
+            services.AddSingleton<ITimeProvider, DateTimeNowUtcProvider>();
 
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
         });

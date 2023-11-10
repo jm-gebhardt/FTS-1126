@@ -14,6 +14,8 @@ public class AgvPositionProfile : Profile
     /// <inheritdoc />
     public AgvPositionProfile()
     {
-        CreateMap<AgvPositionReceived, AgvPositionStatus>().ReverseMap();
+        CreateMap<AgvPositionReceived, AgvPositionStatus>()
+            .ForMember(c => c.CreatedDate, c => c.Ignore())
+            .ReverseMap();
     }
 }

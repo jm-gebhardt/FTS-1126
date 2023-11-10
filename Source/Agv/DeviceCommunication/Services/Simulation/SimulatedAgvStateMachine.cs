@@ -4,6 +4,7 @@ using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
+using Gebhardt.StoreWare.Agv.Common.Time;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Messages;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.States;
@@ -50,7 +51,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     /// Internal message to schedule signaling of position
     /// </summary>
     /// <param name="CorrelationId"></param>
-    public record ScheduleSignalPosition(Guid CorrelationId) : CorrelatedBy<Guid>;
+    public record SchedulePositionUpdate(Guid CorrelationId) : CorrelatedBy<Guid>;
     #endregion
 
     #region States
@@ -116,7 +117,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     /// <summary>
     /// Trigger for scheduled signalling of position.
     /// </summary>
-    public Schedule<SimulatedAgvSaga, ScheduleSignalPosition> SignalPositionSchedule { get; private set; } = default!;
+    public Schedule<SimulatedAgvSaga, SchedulePositionUpdate> SignalPositionSchedule { get; private set; } = default!;
     #endregion
 
     /// <summary>
@@ -131,6 +132,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
 
     private readonly ILogger<SimulatedAgvStateMachine> _logger;
     private readonly SimulateOptions _simulateOptions;
+    private readonly ITimeProvider _timeProvider;
     private readonly double _batteryDischargeRate; // Rate at which the battery charge decreases during simulation in [%/s]
     private readonly double _batteryChargeRate; // Rate at which the battery charge increases during charge in [%/s]
     private readonly int _initialBatteryCharge;
@@ -140,10 +142,12 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     /// </summary>
     /// <param name="logger"></param>
     /// <param name="simulateOptions"></param>
-    public SimulatedAgvStateMachine(ILogger<SimulatedAgvStateMachine> logger, SimulateOptions simulateOptions)
+    /// <param name="timeProvider"></param>
+    public SimulatedAgvStateMachine(ILogger<SimulatedAgvStateMachine> logger, SimulateOptions simulateOptions, ITimeProvider timeProvider)
     {
         _logger = logger;
         _simulateOptions = simulateOptions;
+        _timeProvider = timeProvider;
         _batteryDischargeRate = _simulateOptions.BatteryDischargeRate;
         _batteryChargeRate = _simulateOptions.BatteryChargeRate;
         _initialBatteryCharge = _simulateOptions.InitialBatteryCharge;
@@ -205,7 +209,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     private void SetSagaFactory()
     {
         Event(() => CreateAgvEvent, e =>
-            e.SetSagaFactory(context => new SimulatedAgvSaga(context.Message.Agv, context.Message.NodeTravelTime, _initialBatteryCharge))
+            e.SetSagaFactory(context => new SimulatedAgvSaga(context.Message.Agv, context.Message.NodeTravelTime, _initialBatteryCharge, _timeProvider))
         );
     }
     #endregion
@@ -219,7 +223,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
             .ThenAsync(PublishStatusAsync)
             .ThenAsync(PublishPositionAsync)
             .Schedule(StatusUpdateSchedule, c => new ScheduleStatusUpdate(c.Saga.CorrelationId), _ => TimeSpan.FromMilliseconds(StatusUpdateIntervalMs))
-            .Schedule(SignalPositionSchedule, c => new ScheduleSignalPosition(c.Saga.CorrelationId), _ => TimeSpan.FromMilliseconds(SignalPositionIntervalMs))
+            .Schedule(SignalPositionSchedule, c => new SchedulePositionUpdate(c.Saga.CorrelationId), _ => TimeSpan.FromMilliseconds(SignalPositionIntervalMs))
             .Respond(c => new CreateAgvResponse(c.Saga.CorrelationId));
     }
 
@@ -243,17 +247,16 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
                 c => new ScheduleFinishAction(c.Saga.CorrelationId),
                 c => c.Saga.ActionDuration!.Value)
             .Schedule(SignalPositionSchedule,
-                c => new ScheduleSignalPosition(c.Saga.CorrelationId),
+                c => new SchedulePositionUpdate(c.Saga.CorrelationId),
                 _ => TimeSpan.FromMilliseconds(SignalPositionIntervalMs));
     }
 
     private EventActivityBinder<SimulatedAgvSaga, ActionAborted> ActionAbortedHandler()
     {
         return When(AgvActionAbortedEvent)
-            .Then(c => _logger.LogDebug("Handling action {Action} abortion for agv  /{AgvCorrelationId}", c.Message.Action.CorrelationId,  c.Message.CorrelationId))
+            .Then(c => _logger.LogDebug("Handling action {Action} abortion for agv  /{AgvCorrelationId}", c.Message.Action.CorrelationId, c.Message.CorrelationId))
             .ThenAsync(HandleActionAbortionAsync)
             .TransitionTo(Idle)
-            .ThenAsync(PublishStatusAsync)
             .ThenAsync(PublishPositionAsync);
     }
 
@@ -269,11 +272,12 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         return When(FinishActionSchedule.Received)
             .Then(c => _logger.LogDebug("{MessageType} {CorrelationId} received", nameof(ScheduleFinishAction), c.Saga.CorrelationId))
             .IfElse(c => c.Saga.LastActionAborted,
-            e => e.Then(c => c.Saga.LastActionAborted = false),
-            e => e.ThenAsync(FinishActionAsync)
-                .TransitionTo(Idle)
-                .ThenAsync(PublishStatusAsync)
-                .ThenAsync(PublishPositionAsync));
+                e => e.Then(c => c.Saga.LastActionAborted = false),
+                e => e.ThenAsync(FinishActionAsync)
+                    .TransitionTo(Idle)
+                    .ThenAsync(PublishStatusAsync)
+                    .Then(c => _logger.LogDebug("{MessageType} {CorrelationId} received", nameof(ScheduleFinishAction), c.Saga.CorrelationId))
+                    .ThenAsync(PublishPositionAsync));
     }
     #endregion
 
@@ -293,12 +297,12 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
             .Schedule(StatusUpdateSchedule, c => new ScheduleStatusUpdate(c.Saga.CorrelationId), _ => TimeSpan.FromMilliseconds(StatusUpdateIntervalMs));
     }
 
-    private EventActivityBinder<SimulatedAgvSaga, ScheduleSignalPosition> SetSignalPositionHandler()
+    private EventActivityBinder<SimulatedAgvSaga, SchedulePositionUpdate> SetSignalPositionHandler()
     {
         return When(SignalPositionSchedule.Received)
-            .Then(c => _logger.LogTrace("{MessageType} {CorrelationId} received", nameof(ScheduleSignalPosition), c.Saga.CorrelationId))
+            .Then(c => _logger.LogTrace("{MessageType} {CorrelationId} received", nameof(SchedulePositionUpdate), c.Saga.CorrelationId))
             .ThenAsync(PublishPositionAsync)
-            .Schedule(SignalPositionSchedule, c => new ScheduleSignalPosition(c.Saga.CorrelationId), _ => TimeSpan.FromMilliseconds(SignalPositionIntervalMs));
+            .Schedule(SignalPositionSchedule, c => new SchedulePositionUpdate(c.Saga.CorrelationId), _ => TimeSpan.FromMilliseconds(SignalPositionIntervalMs));
     }
 
     private EventActivityBinder<SimulatedAgvSaga, RequestAgvData> SetRequestAgvDataHandler()
@@ -379,18 +383,27 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
 
     private async Task PublishPositionAsync(BehaviorContext<SimulatedAgvSaga> context)
     {
-        var position = context.Saga.Position;
+        var saga = context.Saga;
+        string? previousNode = saga.LastNodeId;
+        saga.UpdatePosition();
+        var position = saga.Position;
         if (position != null)
         {
             _logger.LogTrace("Position event from AGV {AgvId} / {CorrelationId}: {Position}",
-                context.Saga.AgvId, context.Saga.CorrelationId,
+                saga.AgvId, saga.CorrelationId,
                 position);
 
             await context.Publish(new AgvPositionReceived(
-                context.Saga.CorrelationId,
-                context.Saga.AgvId,
+                saga.CorrelationId,
+                saga.AgvId,
                 position
             ), context.CancellationToken);
+
+            if (previousNode != saga.LastNodeId)
+            {
+                // if node changed, publish status as well to avoid any delays
+                await PublishStatusAsync(context);
+            }
         }
     }
 
@@ -440,6 +453,8 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
             await context.Publish(new ActionCompleted(action.CorrelationId));
         }
 
+        // update position last time before the ActionStart time is gone
+        context.Saga.UpdatePosition();
         context.Saga.ResetAction();
     }
 

@@ -44,20 +44,20 @@ public static class AgvGraphGenerator
     /// </summary>
     public static GraphNode[] Nodes { get; } =
     {
-        new(Src1) { Type = AgvGraph.NodeType.Pick, X = 2f, Y = 2f, Z = 0f }, // 0
-        new(Src2) { Type = AgvGraph.NodeType.Pick, X = 3f, Y = 1f, Z = 0f }, // 1
-        new(Src3) { Type = AgvGraph.NodeType.Pick, X = 5f, Y = 1f, Z = 0f }, // 2 
-        new(Dst1) { Type = AgvGraph.NodeType.Drop, X = 2f, Y = 5f, Z = 0f }, // 3 
-        new(Dst2) { Type = AgvGraph.NodeType.Drop, X = 3f, Y = 6f, Z = 0f }, // 4
-        new(Dst3) { Type = AgvGraph.NodeType.Drop, X = 5f, Y = 6f, Z = 0f }, // 5 
-        new(Prk1) { Type = AgvGraph.NodeType.Park, X = 1f, Y = 3f, Z = 0f }, // 6 
-        new(Prk2) { Type = AgvGraph.NodeType.Park, X = 5f, Y = 3f, Z = 0f }, // 7 
-        new(Crg1) { Type = AgvGraph.NodeType.Charge, X = 1f, Y = 4f, Z = 0f }, // 8 
-        new(Crg2) { Type = AgvGraph.NodeType.Charge, X = 5f, Y = 4f, Z = 0f }, // 9 
-        new(Way1) { Type = AgvGraph.NodeType.WayPoint, X = 2f, Y = 3f, Z = 0f }, // 10
-        new(Way2) { Type = AgvGraph.NodeType.WayPoint, X = 3f, Y = 3f, Z = 0f }, // 11
-        new(Way3) { Type = AgvGraph.NodeType.WayPoint, X = 2f, Y = 4f, Z = 0f }, // 12
-        new(Way4) { Type = AgvGraph.NodeType.WayPoint, X = 3f, Y = 4f, Z = 0f } // 13
+        new(Src1) {Type = AgvGraph.NodeType.Pick, X = 2f, Y = 2f, Z = 0f}, // 0
+        new(Src2) {Type = AgvGraph.NodeType.Pick, X = 3f, Y = 1f, Z = 0f}, // 1
+        new(Src3) {Type = AgvGraph.NodeType.Pick, X = 5f, Y = 1f, Z = 0f}, // 2 
+        new(Dst1) {Type = AgvGraph.NodeType.Drop, X = 2f, Y = 5f, Z = 0f}, // 3 
+        new(Dst2) {Type = AgvGraph.NodeType.Drop, X = 3f, Y = 6f, Z = 0f}, // 4
+        new(Dst3) {Type = AgvGraph.NodeType.Drop, X = 5f, Y = 6f, Z = 0f}, // 5 
+        new(Prk1) {Type = AgvGraph.NodeType.Park, X = 1f, Y = 3f, Z = 0f}, // 6 
+        new(Prk2) {Type = AgvGraph.NodeType.Park, X = 5f, Y = 3f, Z = 0f}, // 7 
+        new(Crg1) {Type = AgvGraph.NodeType.Charge, X = 1f, Y = 4f, Z = 0f}, // 8 
+        new(Crg2) {Type = AgvGraph.NodeType.Charge, X = 5f, Y = 4f, Z = 0f}, // 9 
+        new(Way1) {Type = AgvGraph.NodeType.WayPoint, X = 2f, Y = 3f, Z = 0f}, // 10
+        new(Way2) {Type = AgvGraph.NodeType.WayPoint, X = 3f, Y = 3f, Z = 0f}, // 11
+        new(Way3) {Type = AgvGraph.NodeType.WayPoint, X = 2f, Y = 4f, Z = 0f}, // 12
+        new(Way4) {Type = AgvGraph.NodeType.WayPoint, X = 3f, Y = 4f, Z = 0f} // 13
     };
 
     public static GraphNode SourceClose { get; } = Nodes[0];
@@ -145,10 +145,10 @@ public static class AgvGraphGenerator
     /// <summary>
     /// Generates a default agv graph
     /// </summary>
-    public static AgvGraph CreateDefaultGraph(Guid? correlationId = null)
+    public static AgvGraph CreateDefaultGraph(Guid? correlationId = null, ICollection<GraphNode>? nodes = null)
     {
         const string mapName = "Map#1";
-        return new AgvGraph(correlationId ?? Guid.NewGuid(), Nodes, Edges, mapName.ToGuid(), "Map#1");
+        return new AgvGraph(correlationId ?? Guid.NewGuid(), nodes ?? Nodes, Edges, mapName.ToGuid(), "Map#1");
     }
 
     public static AgvGraph CreateDefaultGraph(GraphNode[] nodes)

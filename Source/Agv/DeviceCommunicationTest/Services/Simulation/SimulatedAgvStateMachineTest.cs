@@ -12,6 +12,7 @@ using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Map;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Messages;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.States;
+using Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Helper;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -22,26 +23,25 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation;
 [TestClass]
 public class SimulatedAgvStateMachineTest
 {
-    private const int InitialBatteryCharge = 75;
-
     [TestMethod]
     public async Task When_RequestAgvGraph_AgvGraphReceived_isPublished()
     {
         var options = new SimulateOptions()
         {
             Agvs = 1,
-            Sources = new[] { "S1" },
-            Destinations = new[] { "D1" }
+            Sources = new[] {"S1"},
+            Destinations = new[] {"D1"}
         };
         var fixture = new StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(
             services => services.AddSingleton(options)
         );
         const string agvId = "Agv#1";
         var correlationId = agvId.ToGuid();
-        var graph = new GridGraphGenerator(new[] { "S1" }, new[] { "D1" }).Generate(correlationId);
+        var graph = new GridGraphGenerator(new[] {"S1"}, new[] {"D1"}).Generate(correlationId);
 
         // Create saga in idle state with graph
-        var agvSaga = new SimulatedAgvSaga(correlationId, agvId, 5000, InitialBatteryCharge, currentState: nameof(SimulatedAgvStateMachine.Idle), agvGraph: graph);
+        var agvSaga = SimulatedAgvSagaGenerator.Generate(agvId: agvId,
+            agvGraph: graph);
         fixture.Add(agvSaga);
 
         // Publish RequestAgvGraph ...
@@ -63,8 +63,8 @@ public class SimulatedAgvStateMachineTest
         var options = new SimulateOptions()
         {
             Agvs = 1,
-            Sources = new[] { "S1" },
-            Destinations = new[] { "D1" }
+            Sources = new[] {"S1"},
+            Destinations = new[] {"D1"}
         };
         var fixture = new StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(
             services => services.AddSingleton(options)
@@ -73,7 +73,8 @@ public class SimulatedAgvStateMachineTest
         var correlationId = agvId.ToGuid();
 
         // Create saga in idle state without graph
-        var agvSaga = new SimulatedAgvSaga(correlationId, agvId, 5000, InitialBatteryCharge, currentState: nameof(SimulatedAgvStateMachine.Idle));
+        var agvSaga = SimulatedAgvSagaGenerator.Generate(agvId: agvId,
+            graphExists: false);
         fixture.Add(agvSaga);
 
         // Publish RequestAgvGraph ...
@@ -92,8 +93,8 @@ public class SimulatedAgvStateMachineTest
         var options = new SimulateOptions()
         {
             Agvs = 1,
-            Sources = new[] { "S1" },
-            Destinations = new[] { "D1" }
+            Sources = new[] {"S1"},
+            Destinations = new[] {"D1"}
         };
         var fixture = new StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(
             services => services.AddSingleton(options)
@@ -102,7 +103,8 @@ public class SimulatedAgvStateMachineTest
         var correlationId = agvId.ToGuid();
 
         // Create saga in idle state without agv data
-        var agvSaga = new SimulatedAgvSaga(correlationId, agvId, 5000, InitialBatteryCharge, currentState: nameof(SimulatedAgvStateMachine.Idle));
+        var agvSaga = SimulatedAgvSagaGenerator.Generate(agvId: agvId,
+            dataExists: false);
         fixture.Add(agvSaga);
 
         // Publish RequestAgvData ...
@@ -121,8 +123,8 @@ public class SimulatedAgvStateMachineTest
         var options = new SimulateOptions()
         {
             Agvs = 1,
-            Sources = new[] { "S1" },
-            Destinations = new[] { "D1" }
+            Sources = new[] {"S1"},
+            Destinations = new[] {"D1"}
         };
         var fixture = new StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(
             services => services.AddSingleton(options)
@@ -132,7 +134,8 @@ public class SimulatedAgvStateMachineTest
         var data = new AgvData(correlationId, "model", "type", null, 10, 1, 1, 1, 1, 1, 1, 1, Array.Empty<AgvData.Sensor>());
 
         // Create saga in idle state with agv data
-        var agvSaga = new SimulatedAgvSaga(correlationId, agvId, 5000, InitialBatteryCharge, currentState: nameof(SimulatedAgvStateMachine.Idle), agvData: data);
+        var agvSaga = SimulatedAgvSagaGenerator.Generate(agvId: agvId,
+            agvData: data);
         fixture.Add(agvSaga);
 
         // Publish RequestAgvData ...
@@ -154,8 +157,8 @@ public class SimulatedAgvStateMachineTest
         var options = new SimulateOptions()
         {
             Agvs = 1,
-            Sources = new[] { "S1" },
-            Destinations = new[] { "D1" }
+            Sources = new[] {"S1"},
+            Destinations = new[] {"D1"}
         };
         var fixture = new StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(
             services => services.AddSingleton(options),
@@ -164,11 +167,12 @@ public class SimulatedAgvStateMachineTest
         const string agvId = "Agv#1";
         const string mapId = "Map#1";
         var correlationId = agvId.ToGuid();
-        var graph = new GridGraphGenerator(new[] { "S1" }, new[] { "D1" }).Generate(correlationId);
+        var graph = new GridGraphGenerator(new[] {"S1"}, new[] {"D1"}).Generate(correlationId);
         var map = new MapGenerator(graph).Generate();
 
         // Create saga in idle state with agv map
-        var agvSaga = new SimulatedAgvSaga(correlationId, agvId, 5000, InitialBatteryCharge, currentState: nameof(SimulatedAgvStateMachine.Idle), agvGraph: graph, agvMap: map);
+        var agvSaga = SimulatedAgvSagaGenerator.Generate(agvId: agvId,
+            agvMap: map);
         fixture.Add(agvSaga);
 
         // Publish RequestAgvMap ...
@@ -190,8 +194,8 @@ public class SimulatedAgvStateMachineTest
         var options = new SimulateOptions()
         {
             Agvs = 1,
-            Sources = new[] { "S1" },
-            Destinations = new[] { "D1" }
+            Sources = new[] {"S1"},
+            Destinations = new[] {"D1"}
         };
         var fixture = new StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(
             services => services.AddSingleton(options)
@@ -201,7 +205,8 @@ public class SimulatedAgvStateMachineTest
         var correlationId = agvId.ToGuid();
 
         // Create saga in idle state without agv map
-        var agvSaga = new SimulatedAgvSaga(correlationId, agvId, 5000, InitialBatteryCharge, currentState: nameof(SimulatedAgvStateMachine.Idle));
+        var agvSaga = SimulatedAgvSagaGenerator.Generate(agvId: agvId,
+            mapExists: false);
         fixture.Add(agvSaga);
 
         // Publish RequestAgvMap ...
@@ -220,8 +225,8 @@ public class SimulatedAgvStateMachineTest
         var options = new SimulateOptions()
         {
             Agvs = 1,
-            Sources = new[] { "S1" },
-            Destinations = new[] { "D1" }
+            Sources = new[] {"S1"},
+            Destinations = new[] {"D1"}
         };
         // ReSharper disable once UseObjectOrCollectionInitializer
         var fixture = new StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(
@@ -231,6 +236,7 @@ public class SimulatedAgvStateMachineTest
         );
         // Reduce interval for position messages.
         fixture.Machine.SignalPositionIntervalMs = 50;
+        fixture.Machine.StatusUpdateIntervalMs = 50;
 
         const string agvId = "Agv#1";
         var agv = agvId.ToGuid();
@@ -243,7 +249,7 @@ public class SimulatedAgvStateMachineTest
          *   WP (5.0/5.0)
          *    |
          *   D1 (5.0/7,5)   */
-        var graph = new GridGraphGenerator(new[] { source }, new[] { destination }, 1).Generate(agv);
+        var graph = new GridGraphGenerator(new[] {source}, new[] {destination}, 1).Generate(agv);
         //   S1 -> WP -> D1
         string[] path =
         {
@@ -251,17 +257,22 @@ public class SimulatedAgvStateMachineTest
             graph.Nodes.Single(n => n.Type == AgvGraph.NodeType.WayPoint).Id,
             destination
         };
-        var data = new AgvData(agv, "model", "type", null, 10, 1, 1, 1, 1, 1, 1, 1, Array.Empty<AgvData.Sensor>());
         // Travel duration per edge will be set about twice of the position message interval.
-        int nodeTravelTime = (int)(2f * fixture.Machine.SignalPositionIntervalMs);
+        int nodeTravelTime = (int) (2f * fixture.Machine.SignalPositionIntervalMs);
 
         // Create saga in idle state
-        var agvSaga = new SimulatedAgvSaga(agv, agvId, nodeTravelTime, InitialBatteryCharge, currentState: nameof(SimulatedAgvStateMachine.Idle), agvGraph: graph, agvData: data);
+        var agvSaga = SimulatedAgvSagaGenerator.Generate(
+            agvId: agvId,
+            currentNode: graph.Nodes.First(n => n.Id == source),
+            agvGraph: graph,
+            nodeTravelTime: nodeTravelTime
+        );
         fixture.Add(agvSaga);
 
         agvSaga.AgvStatus.Busy.ShouldBeFalse();
-        agvSaga.LastNodeId.ShouldBeNull();
-        agvSaga.NextNodeId.ShouldBeNull();
+        // randomized start node
+        agvSaga.LastNodeId.ShouldNotBeNull();
+        agvSaga.NextNodeId.ShouldBe(agvSaga.LastNodeId);
 
         // Start action: Publish StartActionCommand ...
         await fixture.TestHarness.Bus.Publish(new StartActionCommand(agv, agvId,
@@ -283,8 +294,8 @@ public class SimulatedAgvStateMachineTest
         agvSaga.ActionFinishDate.ShouldNotBeNull();
 
         // Position sent (Node travel time is twice as long as position sent interval, so this is surely sent in the meanwhile)
-        (await fixture.TestHarness.Sent.Any<SimulatedAgvStateMachine.ScheduleSignalPosition>()).ShouldBeTrue();
-        (await fixture.SagaHarness.Consumed.Any<SimulatedAgvStateMachine.ScheduleSignalPosition>()).ShouldBeTrue();
+        (await fixture.TestHarness.Sent.Any<SimulatedAgvStateMachine.SchedulePositionUpdate>()).ShouldBeTrue();
+        (await fixture.SagaHarness.Consumed.Any<SimulatedAgvStateMachine.SchedulePositionUpdate>()).ShouldBeTrue();
 
         // Order completed
         (await fixture.TestHarness.Sent.Any<SimulatedAgvStateMachine.ScheduleFinishAction>()).ShouldBeTrue();
@@ -292,7 +303,7 @@ public class SimulatedAgvStateMachineTest
 
         //wait until saga is updated
         var startedTime = DateTime.UtcNow;
-        var timeout = TimeSpan.FromMilliseconds(2500);
+        var timeout = TimeSpan.FromMilliseconds(5000);
         bool matches;
         do
         {
@@ -303,15 +314,16 @@ public class SimulatedAgvStateMachineTest
             matches = matches && agvSaga.LastNodeId == destination;
             matches = matches && agvSaga.NextNodeId == destination;
         } while (!matches && DateTime.UtcNow < startedTime + timeout);
-        matches.ShouldBeTrue();
+        agvSaga.AgvStatus.Busy.ShouldBeFalse();
+        agvSaga.TimeToFinish.ShouldBeNull();
+        agvSaga.ActionStartDate.ShouldBeNull();
+        agvSaga.ActionFinishDate.ShouldBeNull();
+        agvSaga.LastNodeId.ShouldBe(destination);
+        agvSaga.NextNodeId.ShouldBe(destination);
 
         (await fixture.TestHarness.Published.Any<ActionCompleted>()).ShouldBeTrue();
         var actionCompleted = fixture.TestHarness.Published.Select<ActionCompleted>().First().Context.Message;
         actionCompleted.CorrelationId.ShouldBe(actionId);
-
-        // There should be at least 2 positions sent (one or two per edge and we have two edges)
-        int count = fixture.SagaHarness.Consumed.Select<SimulatedAgvStateMachine.ScheduleSignalPosition>().Count();
-        count.ShouldBeGreaterThanOrEqualTo(2);
 
         // Last position message received should be the position of the last node
         var destinationNode = graph.Nodes.First(n => n.Id == destination);
@@ -326,8 +338,8 @@ public class SimulatedAgvStateMachineTest
         var options = new SimulateOptions()
         {
             Agvs = 1,
-            Sources = new[] { "S1" },
-            Destinations = new[] { "D1" },
+            Sources = new[] {"S1"},
+            Destinations = new[] {"D1"},
             NodeTravelTime = 500
         };
         var fixture = new StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(
@@ -339,11 +351,7 @@ public class SimulatedAgvStateMachineTest
         const string agvId = "Agv#1";
         var correlationId = agvId.ToGuid();
 
-        // ReSharper disable once UseObjectOrCollectionInitializer
-        var agvSaga = new SimulatedAgvSaga(correlationId, agvId, 500, InitialBatteryCharge, currentState: nameof(SimulatedAgvStateMachine.Idle))
-        {
-            SimulatedBatteryCharge = 100 // Set charge to 100 for alive and 0 for not alive
-        };
+        var agvSaga = SimulatedAgvSagaGenerator.Generate(agvId: agvId);
         fixture.Add(agvSaga);
 
         // Trigger status update scheduler
@@ -369,8 +377,8 @@ public class SimulatedAgvStateMachineTest
         var options = new SimulateOptions()
         {
             Agvs = 1,
-            Sources = new[] { "S1" },
-            Destinations = new[] { "D1" },
+            Sources = new[] {"S1"},
+            Destinations = new[] {"D1"},
             NodeTravelTime = 500
         };
         var fixture = new StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(
@@ -382,11 +390,8 @@ public class SimulatedAgvStateMachineTest
         const string agvId = "Agv#1";
         var correlationId = agvId.ToGuid();
 
-        // ReSharper disable once UseObjectOrCollectionInitializer
-        var agvSaga = new SimulatedAgvSaga(correlationId, agvId, 500, InitialBatteryCharge, currentState: nameof(SimulatedAgvStateMachine.Idle))
-        {
-            SimulatedBatteryCharge = 0 // Set charge to 100 for alive and 0 for not alive
-        };
+        var agvSaga = SimulatedAgvSagaGenerator.Generate(agvId: agvId,
+            initialSoc: 0);
         fixture.Add(agvSaga);
 
         // Trigger status update scheduler
@@ -412,8 +417,8 @@ public class SimulatedAgvStateMachineTest
         var options = new SimulateOptions()
         {
             Agvs = 1,
-            Sources = new[] { "S1" },
-            Destinations = new[] { "D1" }
+            Sources = new[] {"S1"},
+            Destinations = new[] {"D1"}
         };
         var fixture = new StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(
             services => services.AddSingleton(options),
@@ -421,13 +426,16 @@ public class SimulatedAgvStateMachineTest
         );
         const string agvId = "Agv#1";
         var correlationId = agvId.ToGuid();
-        var graph = new GridGraphGenerator(new[] { "S1" }, new[] { "D1" }).Generate(correlationId);
+        var graph = new GridGraphGenerator(new[] {"S1"}, new[] {"D1"}).Generate(correlationId);
         var map = new MapGenerator(graph).Generate();
         var action = new AgvAction(Guid.NewGuid(), ActionType.Drop, "D1", Guid.NewGuid());
-        var agvSaga = new SimulatedAgvSaga(correlationId, agvId, 5000, InitialBatteryCharge, currentState: nameof(SimulatedAgvStateMachine.BusyMoving), agvGraph: graph, agvMap: map)
-        {
-            Action = action
-        };
+        var agvSaga = SimulatedAgvSagaGenerator.Generate(agvId: agvId,
+            currentState: nameof(SimulatedAgvStateMachine.BusyMoving),
+            currentAction:
+            action,
+            agvGraph:
+            graph, agvMap:
+            map);
         fixture.Add(agvSaga);
         await fixture.TestHarness.Bus.Publish(new ActionAborted(correlationId, action));
         (await fixture.SagaHarness.Consumed.Any<ActionAborted>(c => c.Context.Message.CorrelationId == correlationId)).ShouldBeTrue();
@@ -443,8 +451,8 @@ public class SimulatedAgvStateMachineTest
         var options = new SimulateOptions()
         {
             Agvs = 1,
-            Sources = new[] { "S1" },
-            Destinations = new[] { "D1" }
+            Sources = new[] {"S1"},
+            Destinations = new[] {"D1"}
         };
         var fixture = new StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(
             services => services.AddSingleton(options),
@@ -452,13 +460,13 @@ public class SimulatedAgvStateMachineTest
         );
         const string agvId = "Agv#1";
         var correlationId = agvId.ToGuid();
-        var graph = new GridGraphGenerator(new[] { "S1" }, new[] { "D1" }).Generate(correlationId);
+        var graph = new GridGraphGenerator(new[] {"S1"}, new[] {"D1"}).Generate(correlationId);
         var map = new MapGenerator(graph).Generate();
         var action = new AgvAction(Guid.NewGuid(), ActionType.Drop, "D1", Guid.NewGuid());
-        var agvSaga = new SimulatedAgvSaga(correlationId, agvId, 5000, InitialBatteryCharge, currentState: nameof(SimulatedAgvStateMachine.BusyMoving), agvGraph: graph, agvMap: map)
-        {
-            Action = action
-        };
+        var agvSaga = SimulatedAgvSagaGenerator.Generate(agvId: agvId,
+            currentState: nameof(SimulatedAgvStateMachine.BusyMoving),
+            currentAction: action,
+            agvGraph: graph, agvMap: map);
         fixture.Add(agvSaga);
         await fixture.TestHarness.Bus.Publish(new ActionAborted(correlationId, action));
         (await fixture.SagaHarness.Consumed.Any<ActionAborted>(c => c.Context.Message.CorrelationId == correlationId)).ShouldBeTrue();

@@ -1,5 +1,4 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
+﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
 using MassTransit;
@@ -9,23 +8,20 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Repositories;
 
 internal class AgvPositionRepositoryTestFixture
 {
-    private readonly AgvPosition _agvPosition = new(true, 1, 2, 3, 0);
-
-    public readonly Guid CorrelationId = Guid.NewGuid();
-    public const string AgvId = "myAgv";
-
     public readonly Mock<IBus> BusMock = new();
-
-    public AgvPositionStatus AgvPositionStatus { get; }
 
     public AgvPositionRepository AgvPositionRepository { get; }
 
-    public AgvPositionDictionaryProvider AgvPositionDictionaryProvider { get; }
+    public AgvPositionDictionaryProvider AgvPositionDictionaryProvider { get; } = new();
 
     public AgvPositionRepositoryTestFixture()
     {
-        AgvPositionDictionaryProvider = new AgvPositionDictionaryProvider();
         AgvPositionRepository = new AgvPositionRepository(BusMock.Object, AgvPositionDictionaryProvider);
-        AgvPositionStatus = new AgvPositionStatus(CorrelationId, AgvId, _agvPosition);
+    }
+
+    public AgvPositionRepositoryTestFixture WithAgvPositionStatus(AgvPositionStatus agvPositionStatus)
+    {
+        AgvPositionDictionaryProvider.ConcurrentDict.AddOrUpdate(agvPositionStatus.CorrelationId, agvPositionStatus, (_, _) => agvPositionStatus);
+        return this;
     }
 }

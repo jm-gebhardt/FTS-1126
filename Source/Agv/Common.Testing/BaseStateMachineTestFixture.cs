@@ -42,7 +42,7 @@ public abstract class BaseStateMachineTestFixture<TStateMachine, TInstance>
     /// </summary>
     // ReSharper disable once MemberCanBePrivate.Global
     public IndexedSagaDictionary<TInstance> SagaDictionary = null!;
-    
+
     private readonly TimeSpan? _inactivityTimeout;
 
     /// <summary>
@@ -75,6 +75,11 @@ public abstract class BaseStateMachineTestFixture<TStateMachine, TInstance>
         _inactivityTimeout = inactivityTimeout;
     }
 
+    protected void AddServices(Action<IServiceCollection> services)
+    {
+        services.Invoke(_serviceCollection);
+    }
+
     /// <summary>
     /// This must be called from child to build the test fixture
     /// </summary>
@@ -91,7 +96,7 @@ public abstract class BaseStateMachineTestFixture<TStateMachine, TInstance>
         Machine = SagaHarness.StateMachine;
         SagaDictionary = Provider.GetRequiredService<IndexedSagaDictionary<TInstance>>();
     }
-    
+
     /// <summary>
     /// Add TInstance to saga dictionary
     /// This can be used to add a Saga with a predefined state

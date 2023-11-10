@@ -21,7 +21,7 @@ public class ActionStartedConsumerTest
         var fixture = new ConsumerHubTestFixture<ActionStartedConsumer, IAgvPublisher>();
         Mock<IAgvRouteRetrievalService> agvRouteRetrievalService = fixture.AgvRouteServiceMock;
         agvRouteRetrievalService.Setup(m => m.GetAgvRouteAsync(agvCorrelationId, It.IsAny<string?>())).ReturnsAsync(agvRoute);
-        var action = AgvActionGenerator.GenerateParkAction();
+        var action = AgvActionGenerator.GenerateMoveAction();
 
         await fixture.TestHarness!.Bus.Publish(new ActionStarted(action.CorrelationId, agvCorrelationId));
 

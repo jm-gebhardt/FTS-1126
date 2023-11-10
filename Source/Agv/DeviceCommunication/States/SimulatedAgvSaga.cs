@@ -1,6 +1,7 @@
 using System.Numerics;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Time;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
 using JetBrains.Annotations;
 using MassTransit;
@@ -13,9 +14,10 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States;
 [PublicAPI]
 public class SimulatedAgvSaga : SagaStateMachineInstance
 {
+    private readonly ITimeProvider _timeProvider;
     private const int AliveChargeThreshold = 5;
 
-    private AgvPosition? _position;
+    private readonly AgvGraph? _agvGraph;
 
     /// <summary>
     /// Value for simulating change in battery charge
@@ -60,9 +62,47 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
     public AgvStatus AgvStatus { get; private set; }
 
     /// <summary>
-    /// We still save the graph in the simulated Agv for convenience
+    /// We still save the graph in the simulated agv for convenience.
     /// </summary>
-    public AgvGraph? AgvGraph { get; }
+    public AgvGraph? AgvGraph
+    {
+        get => _agvGraph;
+        init
+        {
+            _agvGraph = value;
+
+            if (AgvGraph == null || Position != null)
+            {
+                return;
+            }
+
+            if (CurrentNode == null)
+            {
+                SetRandomPosition(AgvGraph.Nodes);
+            }
+            else
+            {
+                UpdatePosition();
+            }
+        }
+    }
+
+    private void SetRandomPosition(IEnumerable<GraphNode> nodes)
+    {
+        List<GraphNode> graphNodes = nodes.ToList();
+        List<GraphNode> stations = graphNodes.Where(n => n.Type switch
+        {
+            AgvGraph.NodeType.Pick => true,
+            AgvGraph.NodeType.Drop => true,
+            AgvGraph.NodeType.PickDrop => true,
+            _ => false
+        }).ToList();
+
+        // we have no stations, so we just pick a random node
+        var node = !stations.Any() ? graphNodes.ElementAt(Random.Shared.Next(0, graphNodes.Count)) : stations[Random.Shared.Next(0, stations.Count)];
+        Position = new AgvPosition(true, node.X, node.Y, node.Z, 0f, 0f);
+        CurrentNode = node;
+    }
 
     /// <inheritdoc cref="Agv" />
     public AgvData? AgvData { get; }
@@ -105,7 +145,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
     /// <summary>
     /// True when the last action has been aborted
     /// </summary>
-    public bool LastActionAborted;
+    public bool LastActionAborted { get; set; }
 
     /// <summary>
     /// Next node AGV will arrive at.
@@ -127,75 +167,19 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
     /// <summary>
     /// Return the current position based on the time passed traveling.
     /// </summary>
-    public AgvPosition? Position
+    public AgvPosition? Position { get; private set; }
+
+    private static AgvPosition AddNoise(AgvPosition agvPosition)
     {
-        get
-        {
-            if (AgvGraph == null)
-            {
-                _position = null;
-                CurrentNode = null;
-                return _position;
-            }
-
-            double? orderProgress = ActionProgress; // Access time dependent value just once
-
-            if (!orderProgress.HasValue) // Use first node as initial position
-            {
-                if (_position != null)
-                {
-                    return _position;
-                }
-                // Init position to random station node
-                List<GraphNode> stations = AgvGraph.Nodes.Where(n =>
-                {
-                    return n.Type switch
-                    {
-                        AgvGraph.NodeType.Pick => true,
-                        AgvGraph.NodeType.Drop => true,
-                        AgvGraph.NodeType.PickDrop => true,
-                        _ => false
-                    };
-                }).ToList();
-
-                var rnd = new Random();
-                var node = stations[rnd.Next(0, stations.Count)];
-                _position = new AgvPosition(true, node.X, node.Y, node.Z, 0f, 0f);
-                CurrentNode = node;
-                return _position;
-            }
-
-            int lastNodeIndex = (int)(Action!.Nodes.Length * orderProgress.Value);
-            if (lastNodeIndex >= Action!.Nodes.Length)
-            {
-                // This happens when accessing position when or after order has finished
-                lastNodeIndex = Action!.Nodes.Length - 1;
-            }
-
-            var lastNode = AgvGraph!.Nodes.First(x => x.Id == Action!.Nodes[lastNodeIndex]);
-            if (lastNodeIndex < Action!.Nodes.Length - 1)
-            {
-                double partialProgress = (orderProgress.Value - lastNodeIndex / (double)Action!.Nodes.Length) * Action!.Nodes.Length;
-                var nextNode = AgvGraph!.Nodes.First(x => x.Id == Action!.Nodes[lastNodeIndex + 1]);
-                var vectorLast = new Vector3(lastNode.X, lastNode.Y, lastNode.Z);
-                var vectorNext = new Vector3(nextNode.X, nextNode.Y, nextNode.Z);
-                float theta = (float)(Math.Atan2(vectorNext.Y - vectorLast.Y, vectorNext.X - vectorLast.X) + Math.PI / 2);
-                var vectorEdge = vectorNext - vectorLast;
-                vectorEdge *= (float)partialProgress;
-                vectorEdge = vectorLast + vectorEdge;
-
-                _position = new AgvPosition(true, vectorEdge.X, vectorEdge.Y, vectorEdge.Z, theta, 0f);
-            }
-            else
-            {
-                _position = new AgvPosition(true, lastNode.X, lastNode.Y, lastNode.Z, 0f, 0f);
-            }
-
-            CurrentNode = lastNode;
-
-            return _position;
-        }
+        return new AgvPosition(agvPosition.PositionInitialized,
+            agvPosition.X + GetRandomNoise(0.005),
+            agvPosition.Y + GetRandomNoise(0.005),
+            agvPosition.Z + GetRandomNoise(0.001),
+            agvPosition.Theta,
+            agvPosition.DeviationRange);
     }
+
+    private static float GetRandomNoise(double maxValue) => (float) (Random.Shared.NextDouble() * maxValue);
 
     /// <summary>
     /// Time the action processing started (set to null when finished)
@@ -214,10 +198,10 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
     public DateTime? ActionFinishDate => ActionStartDate != null ? ActionStartDate + ActionDuration : null;
 
     /// <summary>
-    /// Remaining time until the order is finished.
-    /// This values is calculated based on the current time and OrderFinishDate
+    /// Remaining time until the action is finished.
+    /// This values is calculated based on the current time and ActionFinishDate
     /// </summary>
-    public TimeSpan? TimeToFinish => ActionFinishDate != null ? ActionFinishDate - DateTime.UtcNow : null;
+    public TimeSpan? TimeToFinish => ActionFinishDate != null ? ActionFinishDate - _timeProvider.Now() : null;
 
     /// <summary>
     /// Action progress as percentage [0..1]
@@ -231,30 +215,36 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
     /// <param name="agvId"></param>
     /// <param name="nodeTravelTime"></param>
     /// <param name="initialBatteryCharge"></param>
+    /// <param name="timeProvider"></param>
     /// <param name="nodes"></param>
     /// <param name="currentState"></param>
     /// <param name="agvGraph"></param>
     /// <param name="agvData"></param>
     /// <param name="agvMap"></param>
+    /// <param name="currentNode"></param>
     public SimulatedAgvSaga(
         Guid correlationId,
         string agvId,
         int nodeTravelTime,
         int initialBatteryCharge,
+        ITimeProvider timeProvider,
         string[]? nodes = null,
         string? currentState = null,
         AgvGraph? agvGraph = null,
         AgvData? agvData = null,
-        AgvMap? agvMap = null)
+        AgvMap? agvMap = null,
+        GraphNode? currentNode = null)
     {
         if (correlationId == Guid.Empty)
         {
             throw new InvalidOperationException($"{GetType()} requires correlation ID.");
         }
+        _timeProvider = timeProvider;
         CorrelationId = correlationId;
         AgvId = agvId;
         NodeTravelTime = nodeTravelTime;
         CurrentState = currentState ?? "";
+        CurrentNode = currentNode;
         AgvGraph = agvGraph;
         AgvData = agvData;
         AgvMap = agvMap;
@@ -271,21 +261,20 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
         );
     }
 
-    private string? GetOrderId()
-    {
-        return Action?.CorrelationId.ToString();
-    }
-
     /// <summary>
     /// SimulatedAgvSaga constructor used by state machine
     /// </summary>
     /// <param name="agv"></param>
     /// <param name="nodeTravelTime"></param>
     /// <param name="initialBatteryCharge"></param>
-    public SimulatedAgvSaga(SimulatedAgv agv, int nodeTravelTime, int initialBatteryCharge)
+    /// <param name="timeProvider"></param>
+    /// <param name="currentNode"></param>
+    public SimulatedAgvSaga(SimulatedAgv agv, int nodeTravelTime, int initialBatteryCharge, ITimeProvider timeProvider, GraphNode? currentNode = null)
     {
+        _timeProvider = timeProvider;
         CorrelationId = agv.CorrelationId;
         AgvId = agv.AgvId;
+        CurrentNode = currentNode;
         AgvGraph = agv.AgvGraph;
         AgvData = agv.AgvData;
         CurrentState = agv.CurrentState;
@@ -298,12 +287,14 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
             GetOrderId(),
             false,
             true,
-            (int)SimulatedBatteryCharge,
+            (int) SimulatedBatteryCharge,
             false,
             false,
             LastNodeId
         );
     }
+
+    private string? GetOrderId() => Action?.CorrelationId.ToString();
 
     /// <summary>
     /// Reset action
@@ -312,6 +303,63 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
     {
         ActionStartDate = null;
         // Do not reset Action to provide information such as last node
+    }
+
+    /// <summary>
+    /// Updates the AgvPosition and CurrentNode of the AGV based on the time passed traveling.
+    /// </summary>
+    public void UpdatePosition()
+    {
+        if (AgvGraph == null || ActionProgress == null || Action == null)
+        {
+            return;
+        }
+        // Access time dependent value just once
+        double progress = (double) ActionProgress;
+
+        string[] actionNodes = Action.Nodes;
+        int currentNodeIndex = (int) (actionNodes.Length * progress);
+        if (currentNodeIndex >= actionNodes.Length)
+        {
+            // This happens when accessing position when or after order has finished
+            currentNodeIndex = actionNodes.Length - 1;
+        }
+
+        var currentNode = AgvGraph.Nodes.First(n => n.Id == actionNodes[currentNodeIndex]);
+        CurrentNode = currentNode;
+        var currentVector = new Vector3(currentNode.X, currentNode.Y, currentNode.Z);
+
+        float x = currentNode.X;
+        float y = currentNode.Y;
+        float z = currentNode.Z;
+        float theta;
+        if (currentNodeIndex < actionNodes.Length - 1)
+        {
+            double partialProgress = (progress - currentNodeIndex / (double) actionNodes.Length) * actionNodes.Length;
+            var nextNode = AgvGraph.Nodes.First(n => n.Id == actionNodes[currentNodeIndex + 1]);
+            var nextVector = new Vector3(nextNode.X, nextNode.Y, nextNode.Z);
+            theta = GetTheta(currentVector, nextVector);
+            var currentToNextVector = nextVector - currentVector;
+            currentToNextVector *= (float) partialProgress;
+            currentToNextVector = currentVector + currentToNextVector;
+            x = currentToNextVector.X;
+            y = currentToNextVector.Y;
+            z = currentToNextVector.Z;
+        }
+        else
+        {
+            // we are on the last node, so look back
+            var previousNode = AgvGraph.Nodes.First(n => n.Id == actionNodes[currentNodeIndex - 1]);
+            var previousVector = new Vector3(previousNode.X, previousNode.Y, previousNode.Z);
+            theta = GetTheta(previousVector, currentVector);
+        }
+
+        Position = AddNoise(new AgvPosition(true, x, y, z, theta, 0f));
+    }
+
+    private static float GetTheta(Vector3 fromVector, Vector3 toVector)
+    {
+        return (float) (Math.Atan2(toVector.Y - fromVector.Y, toVector.X - fromVector.X) + Math.PI / 2);
     }
 
     /// <summary>
@@ -332,7 +380,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
         bool charging = false;
         if (CurrentNode != null && Action != null) // AGV is charging if it is at a charging station
         {
-            charging = CurrentNode.Type == AgvGraph.NodeType.Charge && AgvStatus.BatteryCharge < 100 &&  Action.ActionType == ActionType.Charge;
+            charging = CurrentNode.Type == AgvGraph.NodeType.Charge && AgvStatus.BatteryCharge < 100 && Action.ActionType == ActionType.Charge;
         }
 
         double chargeDiff;
@@ -352,6 +400,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
 
         SimulatedBatteryCharge = Math.Clamp(SimulatedBatteryCharge + chargeDiff, 0, 100);
         IsOnline = SimulatedBatteryCharge > AliveChargeThreshold;
+        UpdatePosition();
 
         AgvStatus = new AgvStatus(
             AgvStatus.CorrelationId,
