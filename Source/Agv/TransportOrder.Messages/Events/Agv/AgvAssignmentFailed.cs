@@ -34,7 +34,7 @@ public record AgvAssignmentFailed : CorrelatedBy<Guid>
     }
 
     /// <inheritdoc/>
-    public Guid CorrelationId { get; set; }
+    public Guid CorrelationId { get; set;}
 
     /// <summary>
     /// The error code that holds information why assignment failed

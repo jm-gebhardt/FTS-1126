@@ -85,7 +85,7 @@ public class AgvRepository : IAgvRepository
 
     public async Task<ICollection<Domain.Models.Agv.Agv>> GetReadyAgvsAsync()
     {
-        return await Agvs.Where(Domain.Models.Agv.Agv.IsReadyStatic).Where(a => a.GraphExists && !a.IsLocked && a.CurrentAgvState == AgvState.Idle).ToListAsync();
+        return await Agvs.Where(Domain.Models.Agv.Agv.IsReadyStatic).Where(a => a.GraphExists && !a.IsLocked && a.CurrentAgvState == AgvState.Idle && !a.AgvStatus!.Busy).ToListAsync();
     }
 
     public async Task<string?> GetLastNodeIdAsync(Guid agvCorrelationId)

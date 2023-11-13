@@ -257,9 +257,9 @@ public class AgvEventHandler :
                 await context.Publish(new TryStartManualAction(agv.CorrelationId));
                 return;
             }
+
             bool isCarryingLoad = await _actionGroupRepository.HasUnfinishedDropActionsAsync(agv.CorrelationId);
             bool hasUnfinishedActionGroup = await _actionGroupRepository.HasUnfinishedActionGroupAsync(agv.CorrelationId);
-
             bool shouldDoMaintenance = !isCarryingLoad && agv.NeedsMaintenance;
 
             if (shouldDoMaintenance)
@@ -274,8 +274,8 @@ public class AgvEventHandler :
                 await context.Publish(new TryStartNextActionInActionGroup(agv.CorrelationId));
                 return;
             }
-           
-            _logger.LogDebug("Starting new action for agv: {AgvCorrelationId}.",  agv.CorrelationId);
+
+            _logger.LogDebug("Starting new action for agv: {AgvCorrelationId}.", agv.CorrelationId);
             await context.Publish(new TryStartNewActionGroup(agv.CorrelationId));
         }, context.CancellationToken);
     }

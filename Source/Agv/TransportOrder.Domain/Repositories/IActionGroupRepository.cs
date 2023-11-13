@@ -100,7 +100,7 @@ public interface IActionGroupRepository
     /// </summary>
     /// <param name="correlationId">The correlation id.</param>
     /// <returns>Returns the AgvAction identified by key.</returns>
-/// <exception cref="ActionNotFoundException">If the action is not found.</exception>
+    /// <exception cref="ActionNotFoundException">If the action is not found.</exception>
     Task<AgvAction> GetRequiredActionByIdAsync(Guid correlationId);
 
     /// <summary>

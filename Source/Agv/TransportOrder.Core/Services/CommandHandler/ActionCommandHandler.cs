@@ -99,7 +99,13 @@ public class ActionCommandHandler :
         var (action, agvCorrelationId) = context.Message;
         var cancellationToken = context.CancellationToken;
         var assignedAgv = await _agvRepository.GetAgvAsync(agvCorrelationId);
-        ActionGroup? actionGroup;
+        var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByIdAsync(action.ParentId);
+
+        if (actionGroup.FirstNotStartedAction!.CorrelationId != action.CorrelationId)
+        {
+            _logger.LogWarning("Preventing start of action {Action} of group {Group}, because action another should start first.", action.CorrelationId, actionGroup.CorrelationId);
+            return;
+        }
        
         IReadOnlyList<ActionGroup> startedActionGroups = await _actionGroupRepository.GetActionGroupsAsync(new List<ActionGroupState>{ActionGroupState.Started}, assignedAgvCorrelationId: assignedAgv.CorrelationId);
         if (startedActionGroups.Any(a => a.CorrelationId != action.ParentId))
@@ -121,8 +127,7 @@ public class ActionCommandHandler :
             await context.Publish(new ActionGroupChanged(actionGroupMessageContent, actionGroup.CorrelationId), cancellationToken);
 
             _logger.LogDebug("Action with CorrelationId: {ActionCorrelationId} for Agv {AgvCorrelationId} has been started.", action.CorrelationId, assignedAgv.CorrelationId);
-            bool isFirstActionOrderByHost = action is { Sequence: 0, ActionType: ActionType.Pick };
-            if (isFirstActionOrderByHost)
+            if (action.IsFirstTransportOrder)
             {
                 await context.Publish(new ActionGroupStarted(actionGroupMessageContent, actionGroup.CorrelationId, DateTime.UtcNow), cancellationToken);
             }
@@ -141,9 +146,7 @@ public class ActionCommandHandler :
     public async Task Consume(ConsumeContext<SelectNodesForAction> context)
     {
         var (actionMessageContent, assignedAgvId) = context.Message;
-
         var cancellationToken = context.CancellationToken;
-
         var assignedAgv = await _agvRepository.GetAgvAsync(assignedAgvId);
     
         var actionGroup = await _actionGroupRepository.GetActionGroupAsync(actionMessageContent.ParentId);
@@ -256,7 +259,7 @@ public class ActionCommandHandler :
                 await context.Publish(new AgvCanStartIdleAction(agv.CorrelationId), cancellationToken);
                 return;
             }
-            var action = actionGroup.Actions.First();
+            var action = actionGroup.FirstNotStartedAction!;
             _logger.LogDebug("Trying to start action {ActionId} with type {ActionType}.", action.CorrelationId, Enum.GetName(action.ActionType));
             await SelectNodesForAgvAction(context, action, agv, context.CancellationToken);
         }, context.CancellationToken);
@@ -312,9 +315,16 @@ public class ActionCommandHandler :
         var agvSettings = _settingsProvider.GetSettings();
         bool needsCharging = agv.CheckNeedsCharging(agvSettings);
         bool isCarryingLoad = await _actionGroupRepository.HasUnfinishedDropActionsAsync(agv.CorrelationId);
+        bool hasUnfinishedActionGroup = await _actionGroupRepository.HasUnfinishedActionGroupAsync(agv.CorrelationId);
+        IReadOnlyList<ActionGroup> actionGroups = await _actionGroupRepository.GetActionGroupsAsync(new[] { ActionGroupState.Started, ActionGroupState.Created }, assignedAgvCorrelationId: agvCorrelationId);
 
-        bool shouldCharge = !isCarryingLoad && needsCharging;
-       
+        bool noChargingAction = true;
+        if (actionGroups.Any())
+        {
+            noChargingAction = !actionGroups.Any(a => a.Actions.Any(ac => ac.ActionType == ActionType.Charge));
+        }
+        bool shouldCharge = !isCarryingLoad && needsCharging && noChargingAction && !hasUnfinishedActionGroup;
+
         _logger.LogDebug("Evaluating {Name} with {NeedsCharging}, {IsCarryingLoad} for agv {CorrelationId}.", nameof(CreateChargingActionGroup), needsCharging, isCarryingLoad, agv.CorrelationId);
 
         if (!agv.CheckIsEligibleForCharging(agvSettings) || !shouldCharge || agv.IsLocked)
@@ -423,8 +433,6 @@ public class ActionCommandHandler :
         {
             if (actionGroup.AssignedAgv != null)
             {
-                var assignedAgv = await _agvRepository.GetAgvAsync(actionGroup.AssignedAgv!.Value);
-                await SelectNodesForAgvAction(context, domainActionGroup.FirstNotStartedAction!, assignedAgv, cancellationToken);
                 await context.RespondAsync(new Success());
             }
             else

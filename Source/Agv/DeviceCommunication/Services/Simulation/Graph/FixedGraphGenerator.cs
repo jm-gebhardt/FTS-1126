@@ -55,10 +55,10 @@ public class FixedGraphGenerator : IGraphGenerator
     /// 0
     /// 3pi/2 -|- pi/2
     /// pi
+    private const float North = 0f;
+    
     private const float East = (float)Math.PI / 2f;
-
     private const float West = 3f * (float)Math.PI / 2f;
-    private const float South = (float)Math.PI;
 
     /// <inheritdoc cref="FixedGraphGenerator" />
     public FixedGraphGenerator()
@@ -86,7 +86,7 @@ public class FixedGraphGenerator : IGraphGenerator
             new(Park5) { Type = AgvGraph.NodeType.Park, X = 19.375f, Y = 29.375f, Z = 0f, Theta = West },
             new(Park6) { Type = AgvGraph.NodeType.Park, X = 31.875f, Y = 29.375f, Z = 0f, Theta = East },
 
-            new(Charge0) { Type = AgvGraph.NodeType.Charge, X = 46.875f, Y = 44.375f, Z = 0f, Theta = South },
+            new(Charge0) { Type = AgvGraph.NodeType.Charge, X = 46.875f, Y = 44.375f, Z = 0f, Theta = North },
             new(Charge1) { Type = AgvGraph.NodeType.Charge, X = 46.875f, Y = 39.375f, Z = 0f, Theta = East },
             new(Charge2) { Type = AgvGraph.NodeType.Charge, X = 46.875f, Y = 31.875f, Z = 0f, Theta = East },
             new(Charge3) { Type = AgvGraph.NodeType.Charge, X = 46.875f, Y = 24.375f, Z = 0f, Theta = East },

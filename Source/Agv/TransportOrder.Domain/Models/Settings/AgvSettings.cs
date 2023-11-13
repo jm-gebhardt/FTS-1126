@@ -26,7 +26,7 @@ public record AgvSettings : SettingsBase<AgvSettings>
 
     /// <summary>Good battery level</summary>
     [UsedImplicitly]
-    public int BatteryLevelGood { get; init; } = 80;
+    public int BatteryLevelGood { get; init; } = 60;
 
     /// <summary>Full battery level</summary>
     [UsedImplicitly]

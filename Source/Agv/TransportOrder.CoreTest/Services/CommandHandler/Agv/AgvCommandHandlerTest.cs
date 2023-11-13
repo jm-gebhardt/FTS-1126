@@ -3,6 +3,7 @@ using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
@@ -25,21 +26,23 @@ public class AgvCommandHandlerTest
     private readonly IMapper _mapper = AgvCommandHandlerTestFixture.GetMapper();
 
     [TestMethod]
-    public async Task Consume_TryReactivateChargingAgv_ValidData_SetsAgvIdle()
+    public async Task Consume_TryReactivateChargingAgv_ValidData_PublishesAbortActionGroup()
     {
         var fixture = new AgvCommandHandlerTestFixture();
         var agv = AgvGenerator.GenerateChargingAgv();
+
+        var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv.CorrelationId);
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+        fixture.AddAction(actionGroup.Actions.Last());
         fixture.SetupAgv(true);
 
         await fixture.TestHarness!.Bus.Publish(new TryReactivateChargingAgv());
         (await fixture.ConsumerHarness!.Consumed.Any<TryReactivateChargingAgv>()).ShouldBeTrue();
-        fixture.AgvRepository.Verify(r =>
-            r.UpdateAgvAsync(It.Is<TransportOrder.Domain.Models.Agv.Agv>(a => agv.CorrelationId == a.CorrelationId && a.CurrentAgvState == AgvState.Idle)), Times.Once);
+        (await fixture.TestHarness!.Published.Any<AbortActionGroup>()).ShouldBeTrue();
     }
 
     [TestMethod]
-    public async Task Consume_TryReactivateChargingAgv_NoPendingAction_AgvNotSetIdle()
+    public async Task Consume_TryReactivateChargingAgv_NoPendingAction_AbortActionGroupNotPublished()
     {
         var fixture = new AgvCommandHandlerTestFixture();
         var agv = AgvGenerator.GenerateChargingAgv();
@@ -49,19 +52,17 @@ public class AgvCommandHandlerTest
 
         await fixture.TestHarness!.Bus.Publish(new TryReactivateChargingAgv());
         (await fixture.ConsumerHarness!.Consumed.Any<TryReactivateChargingAgv>()).ShouldBeTrue();
-        fixture.AgvRepository.Verify(r =>
-            r.UpdateAgvAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>()), Times.Never());
+        (await fixture.TestHarness!.Published.Any<AbortActionGroup>()).ShouldBeFalse();
     }
 
     [TestMethod]
-    public async Task Consume_TryReactivateChargingAgv_NoChargingAgvs_AgvNotSetIdle()
+    public async Task Consume_TryReactivateChargingAgv_NoChargingAgvs_AbortActionGroupNotPublished()
     {
         var fixture = new AgvCommandHandlerTestFixture();
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv>());
         await fixture.TestHarness!.Bus.Publish(new TryReactivateChargingAgv());
         (await fixture.ConsumerHarness!.Consumed.Any<TryReactivateChargingAgv>()).ShouldBeTrue();
-        fixture.AgvRepository.Verify(r =>
-            r.UpdateAgvAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>()), Times.Never());
+        (await fixture.TestHarness!.Published.Any<AbortActionGroup>()).ShouldBeFalse();
     }
 
     [TestMethod]

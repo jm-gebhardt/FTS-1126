@@ -1,5 +1,8 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.Filters;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
+using Gebhardt.StoreWare.Agv.Common.Messages.Filters;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.ActionGroup;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
@@ -17,7 +20,11 @@ public class ActionGroupTracingConsumeFilters: BaseTracingFilter,
     IFilter<ConsumeContext<TryStartNextActionInActionGroup>>,
     IFilter<ConsumeContext<StartAction>>,
     IFilter<ConsumeContext<CompleteAction>>,
-    IFilter<ConsumeContext<CreateChargingActionGroup>>
+    IFilter<ConsumeContext<CreateChargingActionGroup>>,
+    IFilter<ConsumeContext<QueueActionGroup>>,
+    IFilter<ConsumeContext<NodesSelectedForAction>>,
+    IFilter<ConsumeContext<ActionCompleted>>,
+    IFilter<ConsumeContext<NonChargingActionCompleted>>
 {
     /// <inheritdoc cref="ActionGroupTracingConsumeFilters"/>>
     public ActionGroupTracingConsumeFilters(ILogger<ActionGroupTracingConsumeFilters> logger) : base (logger)
@@ -61,6 +68,34 @@ public class ActionGroupTracingConsumeFilters: BaseTracingFilter,
 
     /// <inheritdoc cref="IFilter{TContext}"/>>
     public async Task Send(ConsumeContext<CreateChargingActionGroup> context, IPipe<ConsumeContext<CreateChargingActionGroup>> next)
+    {
+        LogDebug(context);
+        await next.Send(context);
+    }
+
+    /// <inheritdoc cref="IFilter{TContext}"/>>
+    public async Task Send(ConsumeContext<QueueActionGroup> context, IPipe<ConsumeContext<QueueActionGroup>> next)
+    {
+        LogDebug(context);
+        await next.Send(context);
+    }
+
+    /// <inheritdoc cref="IFilter{TContext}"/>>
+    public async Task Send(ConsumeContext<NodesSelectedForAction> context, IPipe<ConsumeContext<NodesSelectedForAction>> next)
+    {
+        LogDebug(context);
+        await next.Send(context);
+    }
+
+    /// <inheritdoc cref="IFilter{TContext}"/>>
+    public async Task Send(ConsumeContext<ActionCompleted> context, IPipe<ConsumeContext<ActionCompleted>> next)
+    {
+        LogDebug(context);
+        await next.Send(context);
+    }
+
+    /// <inheritdoc cref="IFilter{TContext}"/>>
+    public async Task Send(ConsumeContext<NonChargingActionCompleted> context, IPipe<ConsumeContext<NonChargingActionCompleted>> next)
     {
         LogDebug(context);
         await next.Send(context);

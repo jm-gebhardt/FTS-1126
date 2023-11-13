@@ -5,6 +5,7 @@ using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.CmdOptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.CommandHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Profiles;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
@@ -72,6 +73,11 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixtureWithSc
         _actionGroupRepository.Setup(x =>
             x.AgvHasPendingActions(It.IsAny<Guid>())).ReturnsAsync(hasPendingActions);
         _agvGraphRepository.Setup(x => x.ExistsAsync(It.IsAny<Guid>())).ReturnsAsync(graphExists);
+    }
+
+    public void AddAction(AgvAction action)
+    {
+        _actionGroupRepository.Setup(x => x.GetCurrentAgvActionAsync(It.IsAny<Guid>())).ReturnsAsync(action);
     }
 
     public static IMapper GetMapper()

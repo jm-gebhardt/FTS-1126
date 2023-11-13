@@ -1,4 +1,5 @@
 using AutoMapper;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.AgvActions;
@@ -19,6 +20,8 @@ public class ActionProfile : Profile
         CreateMap<ActionGroupReadModel, ActionGroupDto>();
         CreateMap<AgvActionReadModel, AgvActionDto>();
         CreateMap<AgvGroupCountByState, AgvGroupCountByStateDto>();
+        CreateMap<ActionGroup, ActionGroupDto>();
+        CreateMap<AgvAction, AgvActionDto>().ForMember(m => m.TargetNodeType, opt => opt.Ignore());
         CreateMap<DateTime, DateTime>().ConvertUsing(new CustomDateTimeConverter());
         CreateMap<DateTime?, DateTime?>().ConvertUsing(new CustomDateTimeConverter());
     }

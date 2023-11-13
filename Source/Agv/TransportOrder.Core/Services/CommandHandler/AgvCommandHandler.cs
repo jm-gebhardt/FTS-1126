@@ -11,6 +11,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
@@ -104,8 +105,9 @@ public class AgvCommandHandler :
             {
                 if (await _actionGroupRepository.AgvHasPendingActions(agv.CorrelationId))
                 {
-                    _logger.LogDebug("There is a new action for the charging Agv with CorrelationId: {AgvCorrelationId}. So stop charging by setting it to idle, so that it takes the new Action", agv.CorrelationId);
-                    await TransitionToIdleAsync(context, agv, cancellationToken);
+                    var action = await _actionGroupRepository.GetCurrentAgvActionAsync(agv.CorrelationId);
+                    _logger.LogDebug("There is a new action for the charging Agv with CorrelationId: {AgvCorrelationId}. Abort charging action group: {ActionGroup}", agv.CorrelationId, action!.ParentId);
+                    await context.Publish(new AbortActionGroup(action.ParentId), cancellationToken);
                     // only do this for the Agv with the best battery level and quit
                     return;
                 }

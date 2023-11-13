@@ -454,7 +454,7 @@ public class ActionCommandHandlerTest
         var chargeActionGroup = AgvActionGenerator.GenerateChargeActionGroup();
 
         fixture.AddAgv(agv);
-        fixture.AddActionGroup(chargeActionGroup, hasUnfinishedAction: false);
+        fixture.AddActionGroup(chargeActionGroup, hasUnfinishedAction: false, existsPriorToTest:false);
         fixture.AddActionGroupRetrieval(headingTo: false);
         fixture.AddChargingPointManager(chargeGraphNode: new GraphNode(chargeNodeName));
 

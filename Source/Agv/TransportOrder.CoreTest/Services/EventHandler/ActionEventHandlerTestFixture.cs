@@ -16,6 +16,7 @@ public class ActionEventHandlerTestFixture : MassTransitConsumerTestFixtureWithS
 
     protected override void ConfigureServices(IServiceCollection collection)
     {
+        collection.AddTransient(_ => _actionGroupRepository.Object);
         collection.AddTransient(_ => GetMapper());
         collection.AddTransient(_ => _actionGroupRepository.Object);
     }
@@ -30,7 +31,7 @@ public class ActionEventHandlerTestFixture : MassTransitConsumerTestFixtureWithS
     {
         return MappingHelper.GetMapper(new ActionGroupProfile());
     }
-   
+
     public void AddAssignedAgv(Guid? correlationId)
     {
         _actionGroupRepository.Setup(x => x.GetAgvAssignedToAction(It.IsAny<Guid>())).ReturnsAsync(correlationId);

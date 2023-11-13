@@ -78,7 +78,8 @@ public class AgvEventHandlerTest
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "nodeId");
         fixture.AddAgv(agv);
         fixture.AgvHasUnfinishedDropAction(agv.CorrelationId);
-        
+        fixture.AddChargeAction(existsPriorToTest: false);
+
         var agvBecameIdle = new AgvBecameIdle(agv.CorrelationId);
         await fixture.TestHarness!.Bus.Publish(agvBecameIdle);
 
@@ -94,6 +95,7 @@ public class AgvEventHandlerTest
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "nodeId");
 
         fixture.AddAgv(agv);
+        fixture.AddChargeAction(existsPriorToTest:false);
 
         var agvBecameIdle = new AgvBecameIdle(agv.CorrelationId);
         await fixture.TestHarness!.Bus.Publish(agvBecameIdle);

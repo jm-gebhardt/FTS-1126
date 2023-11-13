@@ -57,6 +57,11 @@ public class AgvAction : IParentedBy<Guid>
     public DateTime? CompletedDate { get; set; }
 
     /// <summary>
+    /// Action is the first transport order of a group.
+    /// </summary>
+    public bool IsFirstTransportOrder => Sequence == 0 && ActionType == ActionType.Pick;
+
+    /// <summary>
     /// Constructor
     /// </summary>
     /// <param name="correlationId">Unique correlation ID of this action (see order action repository)</param>
