@@ -25,16 +25,16 @@ public class MapRequestTestFixture<TRequestClient, TConsumer> : MediatorTestFixt
 {
     public const string Base64String = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
 
-    private readonly string[] _agvIds = { "AGV001", "AGV002" };
-    private readonly string[] _orders = { "ORDER001", "ORDER002", "" };
-    private readonly AgvState[] _states = { AgvState.Busy, AgvState.Discovered };
+    private readonly string[] _agvIds = {"AGV001", "AGV002"};
+    private readonly string[] _orders = {"ORDER001", "ORDER002", ""};
+    private readonly AgvState[] _states = {AgvState.Busy, AgvState.Discovered};
 
     private readonly GraphNode[] _nodes =
     {
-        new("node00") { X = 0f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
-        new("node10") { X = 1f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
-        new("node01") { X = 0f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
-        new("node11") { X = 1f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint }
+        new("node00") {X = 0f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint},
+        new("node10") {X = 1f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint},
+        new("node01") {X = 0f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint},
+        new("node11") {X = 1f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint}
     };
 
     private readonly Guid[] _correlationIds =
@@ -46,10 +46,10 @@ public class MapRequestTestFixture<TRequestClient, TConsumer> : MediatorTestFixt
 
     private readonly GraphEdge[] _edges =
     {
-        GraphEdge.CreateDirect("node00", "node01", 1f),
-        GraphEdge.CreateDirect("node01", "node11", 1f),
-        GraphEdge.CreateDirect("node11", "node10", 1f),
-        GraphEdge.CreateDirect("node10", "node00", 1f)
+        GraphEdge.CreateDirect("node00", "node01"),
+        GraphEdge.CreateDirect("node01", "node11"),
+        GraphEdge.CreateDirect("node11", "node10"),
+        GraphEdge.CreateDirect("node10", "node00")
     };
 
     /// <summary>

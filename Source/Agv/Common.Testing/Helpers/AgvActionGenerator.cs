@@ -13,6 +13,11 @@ public static class AgvActionGenerator
             startNodeId
         };
 
+        if (startNodeId == targetNodeId)
+        {
+            return nodes.ToArray();
+        }
+
         int nodesToBeAdded = numberOfNodes - 2;
         if (nodesToBeAdded > 0)
         {

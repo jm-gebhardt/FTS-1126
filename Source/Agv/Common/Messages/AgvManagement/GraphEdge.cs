@@ -55,12 +55,22 @@ public class GraphEdge
     /// <summary>
     /// The <see cref="EdgeType"/> of this edge.
     /// </summary>
-    public EdgeType Variant { get; [UsedImplicitly]set; }
+    public EdgeType Variant
+    {
+        get;
+        [UsedImplicitly]
+        set;
+    }
 
     /// <summary>
     /// The parameters for this edge type.
     /// </summary>
-    public ICollection<EdgeCoefficient> VariantParameters { get; [UsedImplicitly] set; }
+    public ICollection<EdgeCoefficient> VariantParameters
+    {
+        get;
+        [UsedImplicitly]
+        set;
+    }
 
     /// <summary>
     /// Simple string representation.
@@ -127,7 +137,7 @@ public class GraphEdge
     /// <param name="metric">Metric for path finding.</param>
     /// <param name="id">Optional id.</param>
     /// <returns></returns>
-    public static GraphEdge CreateDirect(string fromNodeId, string toNodeId, float metric, Guid? id = null)
+    public static GraphEdge CreateDirect(string fromNodeId, string toNodeId, float metric = 1f, Guid? id = null)
     {
         return new GraphEdge(fromNodeId, toNodeId, metric, id ?? Guid.NewGuid());
     }
@@ -144,7 +154,7 @@ public class GraphEdge
     [UsedImplicitly]
     public static GraphEdge CreateBezier1(string fromNodeId, string toNodeId, float metric, double x, double y, Guid? id = null)
     {
-        return new GraphEdge(fromNodeId, toNodeId, metric, id ?? Guid.NewGuid(), EdgeType.Bezier1, new List<EdgeCoefficient> { new(x, y) });
+        return new GraphEdge(fromNodeId, toNodeId, metric, id ?? Guid.NewGuid(), EdgeType.Bezier1, new List<EdgeCoefficient> {new(x, y)});
     }
 
     /// <summary>
@@ -161,7 +171,7 @@ public class GraphEdge
     [UsedImplicitly]
     public static GraphEdge CreateBezier2(string fromNodeId, string toNodeId, float metric, double x1, double y1, double x2, double y2, Guid? id = null)
     {
-        return new GraphEdge(fromNodeId, toNodeId, metric, id ?? Guid.NewGuid(), EdgeType.Bezier2, new List<EdgeCoefficient> { new(x1, y1), new(x2, y2) });
+        return new GraphEdge(fromNodeId, toNodeId, metric, id ?? Guid.NewGuid(), EdgeType.Bezier2, new List<EdgeCoefficient> {new(x1, y1), new(x2, y2)});
     }
 
     /// <summary>
@@ -175,7 +185,7 @@ public class GraphEdge
     /// <param name="id">Optional id.</param>
     public static GraphEdge CreateSlanted(string fromNodeId, string toNodeId, float metric, double exitAngle, double exitDistance, Guid? id = null)
     {
-        return new GraphEdge(fromNodeId, toNodeId, metric, id ?? Guid.NewGuid(), EdgeType.Slanted, new List<EdgeCoefficient> { new(exitAngle), new(exitDistance) });
+        return new GraphEdge(fromNodeId, toNodeId, metric, id ?? Guid.NewGuid(), EdgeType.Slanted, new List<EdgeCoefficient> {new(exitAngle), new(exitDistance)});
     }
 
     /// <summary>

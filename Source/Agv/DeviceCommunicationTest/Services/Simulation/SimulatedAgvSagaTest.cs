@@ -114,14 +114,14 @@ public class SimulatedAgvSagaTest
 
         fixture.SimulateToPercentage(50);
         fixture.Saga.UpdatePosition();
-        fixture.Saga.Position!.X.ShouldBe(18.5f, 0.01);
-        fixture.Saga.Position!.Y.ShouldBe(63.5f, 0.01);
+        fixture.Saga.Position!.X.ShouldBe(18.485f, 0.01);
+        fixture.Saga.Position!.Y.ShouldBe(63.476f, 0.01);
         fixture.Saga.Position!.Theta.ShouldBe(2.63f, 0.01);
 
         fixture.SimulateToPercentage(99);
         fixture.Saga.UpdatePosition();
-        fixture.Saga.Position!.X.ShouldBe(33.69f, 0.01);
-        fixture.Saga.Position!.Y.ShouldBe(90.45f, 0.01);
+        fixture.Saga.Position!.X.ShouldBe(33.66f, 0.01);
+        fixture.Saga.Position!.Y.ShouldBe(90.40f, 0.01);
         fixture.Saga.Position!.Theta.ShouldBe(2.63f, 0.01);
     }
 
@@ -144,6 +144,52 @@ public class SimulatedAgvSagaTest
         fixture.SimulateToPercentage(100);
         fixture.Saga.UpdatePosition();
         fixture.Saga.Position!.X.ShouldBe(10f, 0.01);
+        fixture.Saga.Position!.Y.ShouldBe(0f, 0.01);
+        fixture.Saga.Position!.Theta.ShouldBe((float) Math.PI / 2, 0.01);
+    }
+
+    [TestMethod]
+    public void UpdatePosition_CurrentNode_InitializesOnCurrentNode()
+    {
+        var node1 = NodeGenerator.GenerateNode(x: 0, y: 0, nodeId: "W1");
+        var node2 = NodeGenerator.GenerateNode(x: -10, y: 0, nodeId: "W2");
+
+        var edge = GraphEdge.CreateDirect(node1.Id, node2.Id);
+        var graph = AgvGraphGenerator.Generate(new List<GraphNode> {node1, node2}, new List<GraphEdge> {edge});
+
+        var fixture = new SimulatedAgvSagaTestFixture()
+            .WithGraph(graph)
+            .WithPosition(node1)
+            .WithNumberOfEdges(0)
+            .WithActionStartNodeId(node1.Id)
+            .WithActionTargetNodeId(node1.Id)
+            .Build();
+
+        fixture.Saga.Position!.X.ShouldBe(0f, 0.01);
+        fixture.Saga.Position!.Y.ShouldBe(0f, 0.01);
+        fixture.Saga.Position!.Theta.ShouldBe((float) 3 / 2 * (float) Math.PI, 0.01);
+    }
+
+    [TestMethod]
+    public void UpdatePosition_AlreadyOnTheTargetNode_UsesPreviousTheta()
+    {
+        var node1 = NodeGenerator.GenerateNode(x: 0, y: 0, nodeId: "W1");
+        var node2 = NodeGenerator.GenerateNode(x: 10, y: 0, nodeId: "W2");
+
+        var edge = GraphEdge.CreateDirect(node1.Id, node2.Id);
+        var graph = AgvGraphGenerator.Generate(new List<GraphNode> {node1, node2}, new List<GraphEdge> {edge});
+
+        var fixture = new SimulatedAgvSagaTestFixture()
+            .WithGraph(graph)
+            .WithPosition(node1)
+            .WithNumberOfEdges(0)
+            .WithActionStartNodeId(node1.Id)
+            .WithActionTargetNodeId(node1.Id)
+            .Build();
+
+        fixture.SimulateToPercentage(50);
+        fixture.Saga.UpdatePosition();
+        fixture.Saga.Position!.X.ShouldBe(0f, 0.01);
         fixture.Saga.Position!.Y.ShouldBe(0f, 0.01);
         fixture.Saga.Position!.Theta.ShouldBe((float) Math.PI / 2, 0.01);
     }

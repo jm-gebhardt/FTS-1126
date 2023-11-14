@@ -94,52 +94,52 @@ public static class AgvGraphGenerator
     public static GraphEdge[] Edges { get; } =
     {
         // Src1 <-> Way1
-        GraphEdge.CreateDirect(Src1, Way1, 1f),
-        GraphEdge.CreateDirect(Way1, Src1, 1f),
+        GraphEdge.CreateDirect(Src1, Way1),
+        GraphEdge.CreateDirect(Way1, Src1),
 
         // Src2 <-> Way2
         GraphEdge.CreateDirect(Src2, Way2, 3f),
         GraphEdge.CreateDirect(Way2, Src2, 3f),
 
         // Dst1 <-> Way3
-        GraphEdge.CreateDirect(Dst1, Way3, 1f),
-        GraphEdge.CreateDirect(Way3, Dst1, 1f),
+        GraphEdge.CreateDirect(Dst1, Way3),
+        GraphEdge.CreateDirect(Way3, Dst1),
 
         // Dst2 <-> Way4
         GraphEdge.CreateDirect(Dst2, Way4, 3f),
         GraphEdge.CreateDirect(Way4, Dst2, 3f),
 
         // Prk1 <-> Way1
-        GraphEdge.CreateDirect(Prk1, Way1, 1f),
-        GraphEdge.CreateDirect(Way1, Prk1, 1f),
+        GraphEdge.CreateDirect(Prk1, Way1),
+        GraphEdge.CreateDirect(Way1, Prk1),
 
         // Prk2 <-> Way2
         GraphEdge.CreateDirect(Prk2, Way2, 3f),
         GraphEdge.CreateDirect(Way2, Prk2, 3f),
 
         // Crg1 <-> Way3
-        GraphEdge.CreateDirect(Crg1, Way3, 1f),
-        GraphEdge.CreateDirect(Way3, Crg1, 1f),
+        GraphEdge.CreateDirect(Crg1, Way3),
+        GraphEdge.CreateDirect(Way3, Crg1),
 
         // Crg2 <-> Way4
         GraphEdge.CreateDirect(Crg2, Way4, 3f),
         GraphEdge.CreateDirect(Way4, Crg2, 3f),
 
         // Way1 <-> Way2
-        GraphEdge.CreateDirect(Way1, Way2, 1f),
-        GraphEdge.CreateDirect(Way2, Way1, 1f),
+        GraphEdge.CreateDirect(Way1, Way2),
+        GraphEdge.CreateDirect(Way2, Way1),
 
         // Way2 <-> Way4
-        GraphEdge.CreateDirect(Way2, Way4, 1f),
-        GraphEdge.CreateDirect(Way4, Way2, 1f),
+        GraphEdge.CreateDirect(Way2, Way4),
+        GraphEdge.CreateDirect(Way4, Way2),
 
         // Way4 <-> Way3
-        GraphEdge.CreateDirect(Way4, Way3, 1f),
-        GraphEdge.CreateDirect(Way3, Way4, 1f),
+        GraphEdge.CreateDirect(Way4, Way3),
+        GraphEdge.CreateDirect(Way3, Way4),
 
         // Way3 <-> Way1
-        GraphEdge.CreateDirect(Way3, Way1, 1f),
-        GraphEdge.CreateDirect(Way1, Way3, 1f)
+        GraphEdge.CreateDirect(Way3, Way1),
+        GraphEdge.CreateDirect(Way1, Way3)
     };
 
     /// <summary>
@@ -148,12 +148,17 @@ public static class AgvGraphGenerator
     public static AgvGraph CreateDefaultGraph(Guid? correlationId = null, ICollection<GraphNode>? nodes = null)
     {
         const string mapName = "Map#1";
-        return new AgvGraph(correlationId ?? Guid.NewGuid(), nodes ?? Nodes, Edges, mapName.ToGuid(), "Map#1");
+        return new AgvGraph(correlationId ?? Guid.NewGuid(), nodes ?? Nodes, Edges, mapName.ToGuid(), mapName);
     }
 
     public static AgvGraph CreateDefaultGraph(GraphNode[] nodes)
     {
         const string mapName = "Map#1";
-        return new AgvGraph(Guid.NewGuid(), nodes, Edges, mapName.ToGuid(), "Map#1");
+        return new AgvGraph(Guid.NewGuid(), nodes, Edges, mapName.ToGuid(), mapName);
+    }
+
+    public static AgvGraph Generate(List<GraphNode> nodes, List<GraphEdge> edges)
+    {
+        return new AgvGraph(Guid.NewGuid(), nodes, edges, Guid.NewGuid(), "Map#1");
     }
 }

@@ -54,7 +54,7 @@ public class UtilitiesTest
     {
         var comparer = new GraphEdgeComparer();
         var edge1 = GraphEdge.CreateSlanted("1", "2", 1f, 90, 15d);
-        var edge2 = GraphEdge.CreateDirect("2", "1", 1f);
+        var edge2 = GraphEdge.CreateDirect("2", "1");
         var edge3 = GraphEdge.CreateSlanted("1", "2", 2f, 90d, 15d);
 
         comparer.Equals(edge1, edge2).ShouldBeFalse();

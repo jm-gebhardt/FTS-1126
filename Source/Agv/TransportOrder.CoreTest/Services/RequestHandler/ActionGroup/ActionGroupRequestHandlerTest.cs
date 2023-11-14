@@ -184,6 +184,7 @@ public class ActionGroupRequestHandlerTest
         var actionCommandHandlerTestFixture = new ActionCommandHandlerTestFixture();
         actionCommandHandlerTestFixture.AddAgv(agv);
         actionCommandHandlerTestFixture.AddActionGroup(actionGroup);
+        actionCommandHandlerTestFixture.AddActionGroupTargetNodeType(actionGroup, AgvGraph.NodeType.Park);
         ActionGroupRequestHandlerTestFixture<TriggerActionGroupAbortion, ActionGroupRequestHandler> fixture = 
             await new ActionGroupRequestHandlerTestFixture<TriggerActionGroupAbortion, ActionGroupRequestHandler>()
             .WithActionGroups(actionGroup)

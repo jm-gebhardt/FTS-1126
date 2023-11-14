@@ -19,12 +19,19 @@ public class SimulatedAgvSagaTestFixture
     private string _startNodeId = AgvGraphGenerator.SourceClose.Id;
     private string _targetNodeId = AgvGraphGenerator.DestinationClose.Id;
     private GraphNode? _currentNode;
+    private AgvGraph? _graph;
 
     public int NumberOfEdges { get; private set; } = 1;
 
     public SimulatedAgvSaga Saga { get; private set; } = null!;
 
     public AgvAction Action { get; private set; } = null!;
+
+    public SimulatedAgvSagaTestFixture WithGraph(AgvGraph graph)
+    {
+        _graph = graph;
+        return this;
+    }
 
     public SimulatedAgvSagaTestFixture WithPosition(GraphNode node)
     {
@@ -58,16 +65,16 @@ public class SimulatedAgvSagaTestFixture
 
     public SimulatedAgvSagaTestFixture Build()
     {
-        var graph = AgvGraphGenerator.CreateDefaultGraph(nodes: _nodes);
+        _graph ??= AgvGraphGenerator.CreateDefaultGraph(nodes: _nodes);
 
         Action = AgvActionGenerator.GenerateMoveAction(
             startNodeId: _startNodeId,
             targetNodeId: _targetNodeId,
             numberOfNodes: NumberOfNodes,
-            availableNodes: (_nodes ?? graph.Nodes.Where(n => n.Type == AgvGraph.NodeType.WayPoint)).ToList());
+            availableNodes: (_nodes ?? _graph.Nodes.Where(n => n.Type == AgvGraph.NodeType.WayPoint)).ToList());
 
         Saga = SimulatedAgvSagaGenerator.Generate(
-            agvGraph: graph,
+            agvGraph: _graph,
             currentAction: Action,
             nodeTravelTime: NodeTravelTime,
             currentNode: _currentNode,

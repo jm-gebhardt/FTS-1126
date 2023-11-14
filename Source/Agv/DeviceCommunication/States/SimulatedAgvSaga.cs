@@ -1,4 +1,5 @@
 using System.Numerics;
+using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Time;
@@ -16,6 +17,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
 {
     private readonly ITimeProvider _timeProvider;
     private const int AliveChargeThreshold = 5;
+    private const float InitialTheta = 0f;
 
     private readonly AgvGraph? _agvGraph;
 
@@ -78,17 +80,23 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
 
             if (CurrentNode == null)
             {
-                SetRandomPosition(AgvGraph.Nodes);
+                SetRandomPosition();
             }
             else
             {
-                UpdatePosition();
+                SetPosition(CurrentNode);
             }
         }
     }
 
-    private void SetRandomPosition(IEnumerable<GraphNode> nodes)
+    private void SetRandomPosition()
     {
+        ICollection<GraphNode>? nodes = AgvGraph?.Nodes;
+        if (nodes == null)
+        {
+            return;
+        }
+
         List<GraphNode> graphNodes = nodes.ToList();
         List<GraphNode> stations = graphNodes.Where(n => n.Type switch
         {
@@ -100,8 +108,31 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
 
         // we have no stations, so we just pick a random node
         var node = !stations.Any() ? graphNodes.ElementAt(Random.Shared.Next(0, graphNodes.Count)) : stations[Random.Shared.Next(0, stations.Count)];
-        Position = new AgvPosition(true, node.X, node.Y, node.Z, 0f, 0f);
+        SetPosition(node);
+    }
+
+    private void SetPosition(GraphNode node)
+    {
+        Position = new AgvPosition(true, node.X, node.Y, node.Z, GetProbableTheta(node), 0f);
         CurrentNode = node;
+    }
+
+    private float GetProbableTheta(GraphNode graphNode)
+    {
+        var neighbour = AgvGraph?.Edges.FirstOrDefault(e => e.ToNodeId == graphNode.Id || e.FromNodeId == graphNode.Id);
+        if (neighbour == null)
+        {
+            return InitialTheta;
+        }
+        var otherNode = neighbour.FromNodeId == graphNode.Id ? AgvGraph!.Nodes.FirstOrDefault(n => n.Id == neighbour.ToNodeId) : AgvGraph!.Nodes.FirstOrDefault(n => n.Id == neighbour.FromNodeId);
+
+        if (otherNode == null)
+        {
+            return InitialTheta;
+        }
+
+        float theta = GetTheta(graphNode, otherNode);
+        return theta;
     }
 
     /// <inheritdoc cref="Agv" />
@@ -189,7 +220,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
     /// <summary>
     /// Time the action takes to complete
     /// </summary>
-    public TimeSpan? ActionDuration => TimeSpan.FromMilliseconds((Action!.Nodes.Length - 1) * NodeTravelTime);
+    public TimeSpan? ActionDuration => TimeSpan.FromMilliseconds((Action!.Nodes.Length - 1 + 0.001) * NodeTravelTime);
 
     /// <summary>
     /// Time the order will be finished
@@ -316,6 +347,11 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
         }
         // Access time dependent value just once
         double progress = (double) ActionProgress;
+        if (double.IsNaN(progress))
+        {
+            // in case we are at the target of the action already progress will be become NaN
+            progress = 1;
+        }
 
         string[] actionNodes = Action.Nodes;
         int currentNodeIndex = (int) (actionNodes.Length * progress);
@@ -327,17 +363,17 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
 
         var currentNode = AgvGraph.Nodes.First(n => n.Id == actionNodes[currentNodeIndex]);
         CurrentNode = currentNode;
-        var currentVector = new Vector3(currentNode.X, currentNode.Y, currentNode.Z);
+        var currentVector = currentNode.AsVector3();
 
         float x = currentNode.X;
         float y = currentNode.Y;
         float z = currentNode.Z;
-        float theta;
+        float theta = Position?.Theta ?? GetProbableTheta(currentNode);
         if (currentNodeIndex < actionNodes.Length - 1)
         {
             double partialProgress = (progress - currentNodeIndex / (double) actionNodes.Length) * actionNodes.Length;
             var nextNode = AgvGraph.Nodes.First(n => n.Id == actionNodes[currentNodeIndex + 1]);
-            var nextVector = new Vector3(nextNode.X, nextNode.Y, nextNode.Z);
+            var nextVector = nextNode.AsVector3();
             theta = GetTheta(currentVector, nextVector);
             var currentToNextVector = nextVector - currentVector;
             currentToNextVector *= (float) partialProgress;
@@ -348,19 +384,23 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
         }
         else
         {
-            // we are on the last node, so look back
-            var previousNode = AgvGraph.Nodes.First(n => n.Id == actionNodes[currentNodeIndex - 1]);
-            var previousVector = new Vector3(previousNode.X, previousNode.Y, previousNode.Z);
-            theta = GetTheta(previousVector, currentVector);
+            // we are on the last node
+            if (currentNodeIndex > 0)
+            {
+                // so look back
+                var previousNode = AgvGraph.Nodes.First(n => n.Id == actionNodes[currentNodeIndex - 1]);
+                var previousVector = previousNode.AsVector3();
+                theta = GetTheta(previousVector, currentVector);
+            }
+            // otherwise we are already at the target node
         }
 
         Position = AddNoise(new AgvPosition(true, x, y, z, theta, 0f));
     }
 
-    private static float GetTheta(Vector3 fromVector, Vector3 toVector)
-    {
-        return (float) (Math.Atan2(toVector.Y - fromVector.Y, toVector.X - fromVector.X) + Math.PI / 2);
-    }
+    private static float GetTheta(GraphNode fromNode, GraphNode toNode) => GetTheta(fromNode.AsVector3(), toNode.AsVector3());
+
+    private static float GetTheta(Vector3 fromVector, Vector3 toVector) => (float) (Math.Atan2(toVector.Y - fromVector.Y, toVector.X - fromVector.X) + Math.PI / 2);
 
     /// <summary>
     /// Abort action
