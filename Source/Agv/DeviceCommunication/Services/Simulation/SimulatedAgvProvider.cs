@@ -1,6 +1,6 @@
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Data;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Map;
 using MassTransit;
@@ -17,21 +17,11 @@ public class SimulatedAgvProvider : BackgroundService
     private readonly SimulateOptions _simulateOptions;
 
     private const string AgvPrefix = "SimAgv";
-    private const string Model = "R2-D2";
-    private const string Type = "Simulated AGV";
-    private const double Width = 1;
-    private const double Length = 1;
-    private const double BatteryCapacity = 100;
-    private const double Acceleration = 1;
-    private const double MaxVelocityStraight = 1;
-    private const double MaxVelocityTurn = 1;
-    private const double MaxVelocityTurnOnSpot = 1;
-    private const long Payload = 50;
-    private static readonly AgvData.Sensor[] _sensors = Array.Empty<AgvData.Sensor>();
-
+    
     private readonly ILogger<SimulatedAgvProvider> _logger;
     private readonly IClientFactory _clientFactory;
     private readonly IGraphGenerator _graphGenerator;
+    private readonly IAgvDataGenerator _agvDataGenerator;
 
     /// <summary>
     /// SimulatedAgvProvider Constructor
@@ -50,6 +40,7 @@ public class SimulatedAgvProvider : BackgroundService
         _graphGenerator = graphGenerator;
         _clientFactory = clientFactory;
         _simulateOptions = simulateOptions;
+        _agvDataGenerator = new KarisAgvDataGenerator();
     }
 
     /// <summary>
@@ -86,6 +77,7 @@ public class SimulatedAgvProvider : BackgroundService
         var correlationId = agvId.ToGuid();
         var grid = _graphGenerator.Generate(correlationId);
         var mapGenerator = new MapGenerator(grid);
+        
         return new SimulatedAgv(
             correlationId,
             agvId,
@@ -97,30 +89,11 @@ public class SimulatedAgvProvider : BackgroundService
             DateTime.MinValue,
             DateTime.MinValue,
             AgvGraph: grid,
-            AgvData: GenerateData(correlationId),
+            AgvData: _agvDataGenerator.Generate(agvIndex, correlationId),
             AgvMap: mapGenerator.Generate()
         );
     }
-
-    private AgvData GenerateData(Guid correlationId)
-    {
-        return new AgvData(
-            correlationId,
-            Model,
-            Type,
-            null,
-            BatteryCapacity,
-            Acceleration,
-            MaxVelocityStraight,
-            MaxVelocityTurn,
-            MaxVelocityTurnOnSpot,
-            Width,
-            Length,
-            Payload,
-            _sensors
-        );
-    }
-
+    
     /// <summary>
     /// Creates Simulated Agvs and exits
     /// </summary>
