@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using System.Collections.ObjectModel;
+using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
@@ -20,6 +21,7 @@ using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using AgvStatus = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv.AgvStatus;
+using Cargo = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv.Cargo;
 using LockAgv = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv.LockAgv;
 using RequestAgvData = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands.RequestAgvData;
 using RequestAgvGraph = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands.RequestAgvGraph;
@@ -47,7 +49,8 @@ public class AgvCommandHandler :
     IConsumer<SetAgvForceIdle>,
     IConsumer<HandleAgvActionStartFailure>,
     IConsumer<HandleActionCompletion>,
-    IConsumer<PrepareAgvForStartingAction>
+    IConsumer<PrepareAgvForStartingAction>,
+    IConsumer<UpdateCargo>
 {
     private readonly ILogger<AgvCommandHandler> _logger;
     private readonly IActionManagerSemaphoreProvider _actionManagerSemaphoreProvider;
@@ -56,6 +59,7 @@ public class AgvCommandHandler :
     private readonly ISettingsProvider<AgvSettings> _settingsProvider;
     private readonly IMapper _mapper;
     private readonly IAgvGraphRepository _agvGraphRepository;
+    private readonly ICargoRepository _cargoRepository;
     private readonly IMapRepository _mapRepository;
     private readonly ProductionOptions _productionOptions;
     private readonly IAgvDataRepository _agvDataRepository;
@@ -71,6 +75,7 @@ public class AgvCommandHandler :
         IAgvDataRepository agvDataRepository,
         IAgvGraphRepository agvGraphRepository,
         IRequestClient<QueueActionGroup> queueActionGroupRequestClient,
+        ICargoRepository cargoRepository,
         IMapRepository mapRepository,
         IMapper mapper,
         ProductionOptions productionOptions,
@@ -83,6 +88,7 @@ public class AgvCommandHandler :
         _settingsProvider = settingsProvider;
         _mapper = mapper;
         _agvGraphRepository = agvGraphRepository;
+        _cargoRepository = cargoRepository;
         _queueActionGroupRequestClient = queueActionGroupRequestClient;
         _mapRepository = mapRepository;
         _productionOptions = productionOptions;
@@ -103,16 +109,23 @@ public class AgvCommandHandler :
             // preliminary logic: just go through all potential available Agvs and try to start a new action
             foreach (var agv in goodAgvs.OrderByDescending(a => a.AgvStatus!.BatteryCharge))
             {
-                if (await _actionGroupRepository.AgvHasPendingActions(agv.CorrelationId))
+                if (!await _actionGroupRepository.AgvHasPendingActions(agv.CorrelationId))
                 {
-                    var action = await _actionGroupRepository.GetCurrentAgvActionAsync(agv.CorrelationId);
-                    _logger.LogDebug("There is a new action for the charging Agv with CorrelationId: {AgvCorrelationId}. Abort charging action group: {ActionGroup}", agv.CorrelationId, action!.ParentId);
-                    await context.Publish(new AbortActionGroup(action.ParentId), cancellationToken);
-                    // only do this for the Agv with the best battery level and quit
-                    return;
+                    _logger.LogDebug("No action needed for charging Agv with CorrelationId: {AgvCorrelationId}", agv.CorrelationId);
+                    continue;
                 }
 
-                _logger.LogDebug("No action needed for charging Agv with CorrelationId: {AgvCorrelationId}", agv.CorrelationId);
+                var action = await _actionGroupRepository.GetCurrentAgvActionAsync(agv.CorrelationId);
+                if (action == null)
+                {
+                    _logger.LogDebug("Agv is not charging at all with CorrelationId: {AgvCorrelationId}. So no need to abort it in order to get it to work again.", agv.CorrelationId);
+                    continue;
+                }
+
+                _logger.LogDebug("There is a new action for the charging Agv with CorrelationId: {AgvCorrelationId}. Abort charging action group: {ActionGroup}", agv.CorrelationId, action.ParentId);
+                await context.Publish(new AbortActionGroup(action.ParentId), cancellationToken);
+                // only do this for the Agv with the best battery level and quit
+                return;
             }
         }, cancellationToken);
     }
@@ -255,7 +268,7 @@ public class AgvCommandHandler :
         {
             await context.Publish(new AgvLastNodeIdChanged(agv.CorrelationId, oldStatus!.LastNodeId, agv.AgvStatus!.LastNodeId));
         }
-        if (agv.CurrentAgvState == AgvState.Idle && !agv.AgvStatus!.Busy && oldStatus!.Busy) 
+        if (agv.CurrentAgvState == AgvState.Idle && !agv.AgvStatus!.Busy && oldStatus!.Busy)
         {
             await context.Publish(new AgvBecameIdle(agv.CorrelationId));
         }
@@ -440,12 +453,12 @@ public class AgvCommandHandler :
         var moveActionGroup = new ActionGroup(
             groupCorrelationId,
             $"Manual {ActionType.Move}",
-            new List<AgvAction> { new(Guid.NewGuid(), ActionType.Move, targetNodeId, groupCorrelationId) },
+            new List<AgvAction> {new(Guid.NewGuid(), ActionType.Move, targetNodeId, groupCorrelationId)},
             assignedAgv: agv.CorrelationId,
             isManual: true,
             creator: creator
         );
-        
+
         await _queueActionGroupRequestClient.GetResponse<Success>(new QueueActionGroup(moveActionGroup, true));
         await context.RespondAsync(new MoveAgvResult(moveActionGroup.CorrelationId));
     }
@@ -527,10 +540,26 @@ public class AgvCommandHandler :
         return agv;
     }
 
+    /// <summary>
+    /// Updates Cargos and publishes <see cref="CargoChanged" /> if there are changes
+    /// </summary>
+    /// <param name="context"></param>
+    public async Task Consume(ConsumeContext<UpdateCargo> context)
+    {
+        var agvCorrelationId = context.Message.CorrelationId;
+        IReadOnlyCollection<Common.Messages.AgvManagement.Cargo> receivedCargos = context.Message.Cargos;
+
+        var cargos = _mapper.Map<Collection<Cargo>>(receivedCargos);
+        if (await _cargoRepository.SetCargoAsync(agvCorrelationId, cargos))
+        {
+            await context.Publish(new CargoChanged(agvCorrelationId, receivedCargos));
+        }
+    }
+
     private async Task TryAutoAccept(IPublishEndpoint context, Domain.Models.Agv.Agv agv, CancellationToken cancellationToken)
     {
         _logger.LogDebug("AutoAccept {CorrelationId}", agv.CorrelationId);
-        if (_productionOptions.AutoAccept && agv is { GraphExists: true, DataExist: true, CurrentAgvState: AgvState.Discovered })
+        if (_productionOptions.AutoAccept && agv is {GraphExists: true, DataExist: true, CurrentAgvState: AgvState.Discovered})
         {
             var graph = await _agvGraphRepository.GetAgvGraphAsync(agv.CorrelationId);
             bool mapExists = _mapRepository.Exists(graph.RelatedMapId);
@@ -556,7 +585,7 @@ public class AgvCommandHandler :
             // publish also when state was already idle, to trigger further assignments
             await context.Publish(new AgvBecameIdle(agv.CorrelationId), cancellationToken);
         }
-        
+
         if (stateChanged)
         {
             await PublishStateChange(context, agv);

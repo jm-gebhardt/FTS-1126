@@ -11,7 +11,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Agv;
 public interface IAgvPublisher
 {
     /// <summary>
-    /// Publishes the status of an agv to all clients
+    /// Publishes the status of an Agv to all clients
     /// </summary>
     Task SendAgvStateChangedAsync(Messages.MessageContent.Agv agv);
 
@@ -23,12 +23,12 @@ public interface IAgvPublisher
     Task SendAgvDiscoveredAsync(Messages.MessageContent.Agv agv);
 
     /// <summary>
-    /// Publishes the position of an agv to all clients
+    /// Publishes the position of an Agv to all clients
     /// </summary>
     Task SendAgvPositionAsync(AgvPositionStatus agvPosition);
 
     /// <summary>
-    /// Publishes the agv locked changed event to all clients
+    /// Publishes the Agv locked changed event to all clients
     /// </summary>
     /// <param name="correlationId">The CorrelationId of the Agv</param>
     /// <param name="isLocked"></param>
@@ -36,7 +36,7 @@ public interface IAgvPublisher
     Task SendAgvLockedChangedAsync(Guid correlationId, bool isLocked);
 
     /// <summary>
-    /// Publishes the agv online changed event to all clients
+    /// Publishes the Agv online changed event to all clients
     /// </summary>
     /// <param name="correlationId">The CorrelationId of the Agv</param>
     /// <param name="isOnline"></param>
@@ -44,7 +44,7 @@ public interface IAgvPublisher
     Task SendAgvOnlineChangedAsync(Guid correlationId, bool isOnline);
 
     /// <summary>
-    /// Publishes the agv error changed event to all clients
+    /// Publishes the Agv error changed event to all clients
     /// </summary>
     /// <param name="correlationId">The CorrelationId of the Agv</param>
     /// <param name="errors"></param>
@@ -52,21 +52,21 @@ public interface IAgvPublisher
     Task SendAgvErrorChangedAsync(Guid correlationId, List<AgvError> errors);
 
     /// <summary>
-    /// Publishes the agv removed event to all clients
+    /// Publishes the Agv removed event to all clients
     /// </summary>
     /// <param name="correlationId">The CorrelationId of the Agv</param>
     /// <returns></returns>
     Task SendAgvRemovedAsync(Guid correlationId);
 
     /// <summary>
-    /// Publishes the status of an agv route to all clients
+    /// Publishes the status of an Agv route to all clients
     /// </summary>
     /// <param name="currentAgvRouteReadModel"></param>
     /// <returns></returns>
     Task SendAgvRouteChangedAsync(CurrentAgvRouteReadModel currentAgvRouteReadModel);
 
     /// <summary>
-    /// Publishes the currently assigned action group of an agv to all clients
+    /// Publishes the currently assigned action group of an Agv to all clients
     /// </summary>
     /// <param name="correlationId">The CorrelationId of the Agv</param>
     /// <param name="assignedActionGroup">Can be an ActionGroup or null (if the last ActionGroup has completed)</param>
@@ -74,9 +74,16 @@ public interface IAgvPublisher
     Task SendAssignedActionGroupChangedAsync(Guid correlationId, Common.Messages.ActionGroups.ActionGroup? assignedActionGroup);
 
     /// <summary>
-    /// Publishes the battery status of an agv to all clients
+    /// Publishes the battery status of an Agv to all clients
     /// </summary>
     /// <param name="batteryChargeChanged"></param>
     /// <returns></returns>
     Task SendAgvBatteryStatus(AgvBatteryChargeChanged batteryChargeChanged);
+
+    /// <summary>
+    /// Publishes the cargo of an Agv to all clients
+    /// </summary>
+    /// <param name="cargos"></param>
+    /// <returns></returns>
+    Task SendCargoChangeAsync(IReadOnlyCollection<Cargo> cargos);
 }

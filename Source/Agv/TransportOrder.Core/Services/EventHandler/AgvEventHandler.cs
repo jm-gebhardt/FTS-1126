@@ -33,7 +33,8 @@ public class AgvEventHandler :
     IConsumer<AgvStoppedCharging>,
     IConsumer<AgvGraphChanged>,
     IConsumer<AgvWentOffline>, 
-    IConsumer<AgvPreparedForStartingAction>
+    IConsumer<AgvPreparedForStartingAction>,
+    IConsumer<AgvLoadStatusReceived>
 {
     private readonly ILogger<AgvEventHandler> _logger;
     private readonly IAgvRepository _agvRepository;
@@ -278,5 +279,14 @@ public class AgvEventHandler :
             _logger.LogDebug("Starting new action for agv: {AgvCorrelationId}.", agv.CorrelationId);
             await context.Publish(new TryStartNewActionGroup(agv.CorrelationId));
         }, context.CancellationToken);
+    }
+
+    /// <summary>
+    /// Handles the <see cref="AgvLoadStatusReceived"/> event.
+    /// </summary>
+    /// <param name="context"></param>
+    public async Task Consume(ConsumeContext<AgvLoadStatusReceived> context)
+    {
+        await context.Publish(new UpdateCargo(context.Message.CorrelationId, context.Message.Cargos));
     }
 }

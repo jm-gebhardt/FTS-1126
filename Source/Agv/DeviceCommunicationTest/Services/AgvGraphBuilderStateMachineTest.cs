@@ -25,7 +25,8 @@ public class AgvGraphBuilderStateMachineTest
     {
         var correlationId = AgvTestIdentifier01.ToGuid();
 
-        var fixture = new StateMachineTestFixture<AgvGraphBuilderStateMachine, AgvGraphBuilderSaga>();
+        StateMachineTestFixture<AgvGraphBuilderStateMachine, AgvGraphBuilderSaga> fixture = new StateMachineTestFixture<AgvGraphBuilderStateMachine, AgvGraphBuilderSaga>()
+            .Build();
 
         await fixture.TestHarness.Bus.Publish(new RequestAgvGraph(correlationId, AgvTestIdentifier01));
         (await fixture.SagaHarness.Consumed.Any<RequestAgvGraph>()).ShouldBeTrue();
@@ -43,7 +44,8 @@ public class AgvGraphBuilderStateMachineTest
     {
         var correlationId = Guid.Empty;
 
-        var fixture = new StateMachineTestFixture<AgvGraphBuilderStateMachine, AgvGraphBuilderSaga>();
+        StateMachineTestFixture<AgvGraphBuilderStateMachine, AgvGraphBuilderSaga> fixture = new StateMachineTestFixture<AgvGraphBuilderStateMachine, AgvGraphBuilderSaga>()
+            .Build();
 
         await fixture.TestHarness.Bus.Publish(new RequestAgvGraph(correlationId, AgvTestIdentifier01));
         (await fixture.SagaHarness.Consumed.Any<RequestAgvGraph>()).ShouldBeFalse();
@@ -59,7 +61,8 @@ public class AgvGraphBuilderStateMachineTest
     {
         var correlationId = AgvTestIdentifier01.ToGuid();
 
-        var fixture = new StateMachineTestFixture<AgvGraphBuilderStateMachine, AgvGraphBuilderSaga>();
+        StateMachineTestFixture<AgvGraphBuilderStateMachine, AgvGraphBuilderSaga> fixture = new StateMachineTestFixture<AgvGraphBuilderStateMachine, AgvGraphBuilderSaga>()
+            .Build();
 
         // Publish RequestAgvGraph ...
         await fixture.TestHarness.Bus.Publish(new RequestAgvGraph(correlationId, AgvTestIdentifier01));
@@ -108,12 +111,12 @@ public class AgvGraphBuilderStateMachineTest
         var graph = new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow,
             new MqttNode[]
             {
-                new() { NodeId = 1, X = 0f, Y = 0f, Z = 0f },
-                new() { NodeId = 2, X = 9f, Y = 9f, Z = 0f }
+                new() {NodeId = 1, X = 0f, Y = 0f, Z = 0f},
+                new() {NodeId = 2, X = 9f, Y = 9f, Z = 0f}
             },
             new MqttEdge[]
             {
-                new() { EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = true, MaxVelocity = 1 }
+                new() {EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = true, MaxVelocity = 1}
             },
             string.Empty,
             requestIdGraph);
@@ -143,7 +146,8 @@ public class AgvGraphBuilderStateMachineTest
     {
         var correlationId = AgvTestIdentifier01.ToGuid();
 
-        var fixture = new StateMachineTestFixture<AgvGraphBuilderStateMachine, AgvGraphBuilderSaga>();
+        StateMachineTestFixture<AgvGraphBuilderStateMachine, AgvGraphBuilderSaga> fixture = new StateMachineTestFixture<AgvGraphBuilderStateMachine, AgvGraphBuilderSaga>()
+            .Build();
 
         // Publish RequestAgvGraph ...
         await fixture.TestHarness.Bus.Publish(new RequestAgvGraph(correlationId, AgvTestIdentifier01));
@@ -181,12 +185,12 @@ public class AgvGraphBuilderStateMachineTest
         var graph = new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow,
             new MqttNode[]
             {
-                new() { NodeId = 1, X = 0f, Y = 0f, Z = 0f },
-                new() { NodeId = 2, X = 9f, Y = 9f, Z = 0f }
+                new() {NodeId = 1, X = 0f, Y = 0f, Z = 0f},
+                new() {NodeId = 2, X = 9f, Y = 9f, Z = 0f}
             },
             new MqttEdge[]
             {
-                new() { EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = true, MaxVelocity = 1 }
+                new() {EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = true, MaxVelocity = 1}
             },
             string.Empty,
             requestIdGraph);

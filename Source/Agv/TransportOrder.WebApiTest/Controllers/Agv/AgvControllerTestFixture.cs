@@ -42,16 +42,16 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
 
     private readonly Mock<IMapRepository> _mapRepository = new();
 
-    private readonly ProductionOptions _productionOptions = new() { AutoAccept = true };
+    private readonly ProductionOptions _productionOptions = new() {AutoAccept = true};
 
-    public string[] AgvIds { get; } = { "AGV001", "AGV002", "AGV003" };
+    public string[] AgvIds { get; } = {"AGV001", "AGV002", "AGV003"};
 
     // ReSharper disable once MemberCanBePrivate.Global
-    public string[] Orders { get; } = { "ORDER001", "ORDER002", "" };
+    public string[] Orders { get; } = {"ORDER001", "ORDER002", ""};
 
-    private AgvState[] States { get; } = { AgvState.Idle, AgvState.Busy, AgvState.Discovered };
+    private AgvState[] States { get; } = {AgvState.Idle, AgvState.Busy, AgvState.Discovered};
 
-    public string[] Ips { get; } = { "127.0.0.1", "127.0.0.2", "127.0.0.3" };
+    public string[] Ips { get; } = {"127.0.0.1", "127.0.0.2", "127.0.0.3"};
 
     public Mock<IAgvRepository> AgvRepository { get; }
 
@@ -67,12 +67,14 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
 
     private Mock<IRequestClient<QueueActionGroup>> QueueActionGroupRequestClient { get; }
 
+    private Mock<ICargoRepository> CargoRepository { get; }
+
     private readonly GraphNode[] _nodes =
     {
-        new("node00") { X = 0f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
-        new("node10") { X = 1f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
-        new("node01") { X = 0f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
-        new("node11") { X = 1f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint }
+        new("node00") {X = 0f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint},
+        new("node10") {X = 1f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint},
+        new("node01") {X = 0f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint},
+        new("node11") {X = 1f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint}
     };
 
     public AgvControllerTestFixture()
@@ -83,13 +85,14 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         QueueActionGroupRequestClient = new Mock<IRequestClient<QueueActionGroup>>();
         AgvDataRepository = new Mock<IAgvDataRepository>();
         ActionGroupRetrievalService = new Mock<IActionGroupRetrievalService>();
-        ActionGroupRetrievalService.Setup(r => r.GetAssignedActionGroupsWithNodesAsync(It.IsAny<IReadOnlyCollection<Guid>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (ActionGroupReadModel?)null));
+        ActionGroupRetrievalService.Setup(r => r.GetAssignedActionGroupsWithNodesAsync(It.IsAny<IReadOnlyCollection<Guid>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (ActionGroupReadModel?) null));
 
         ActionGroupRepository = new Mock<IActionGroupRepository>();
-        ActionGroupRepository.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (Domain.Models.ActionGroup.ActionGroup?)null));
+        ActionGroupRepository.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (Domain.Models.ActionGroup.ActionGroup?) null));
         AgvErrorRepository.Setup(x => x.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(new List<AgvError>());
         AgvErrorRepository.Setup(x => x.GetActiveErrorsAsync(It.IsAny<IList<Guid>>())).ReturnsAsync(new List<AgvError>());
-        ActionGroupRepository.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (Domain.Models.ActionGroup.ActionGroup?)null));
+        ActionGroupRepository.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (Domain.Models.ActionGroup.ActionGroup?) null));
+        CargoRepository = new Mock<ICargoRepository>();
     }
 
     [UsedImplicitly]
@@ -133,10 +136,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         return this;
     }
 
-    private static Guid GetGuid(string agvId)
-    {
-        return agvId.ToGuid();
-    }
+    private static Guid GetGuid(string agvId) => agvId.ToGuid();
 
     private Mock<IAgvPositionRepository> GetAgvPositionRepository()
     {
@@ -187,6 +187,8 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         IRequestClient<GetAgvErrors> getAgvErrorHistoryRequestClient = GetRequestClient<GetAgvErrors>();
         IRequestClient<MoveAgv> moveAgvRequestClient = GetRequestClient<MoveAgv>();
         IRequestClient<SetAgvForceIdle> setAgvForceIdleClient = GetRequestClient<SetAgvForceIdle>();
+        IRequestClient<IsAgvLoadedRequest> isAgvLoadedClient = GetRequestClient<IsAgvLoadedRequest>();
+        IRequestClient<GetCargosOfAgv> getCargosOfAgvClient = GetRequestClient<GetCargosOfAgv>();
 
         var controller = new AgvController(GetMapper(),
             getAgvRequestClient,
@@ -202,7 +204,9 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             getAgvErrorsRequestClient,
             getAgvErrorHistoryRequestClient,
             moveAgvRequestClient,
-            setAgvForceIdleClient)
+            setAgvForceIdleClient,
+            isAgvLoadedClient,
+            getCargosOfAgvClient)
         {
             ControllerContext = new ControllerContext(
                 new ActionContext(
@@ -239,6 +243,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             sc.AddTransient(_ => ActionGroupRepository.Object);
             sc.AddTransient(_ => AgvGraphRepository.Object);
             sc.AddTransient(_ => AgvErrorRepository.Object);
+            sc.AddTransient(_ => CargoRepository.Object);
             sc.AddTransient(_ => QueueActionGroupRequestClient.Object);
             sc.AddTransient<IActionManagerSemaphoreProvider>(_ => _semaphoreProvider);
             sc.AddTransient(_ => _settingsProvider.Object);

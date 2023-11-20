@@ -55,6 +55,29 @@ public class AgvRepository : IAgvRepository
         return await Agvs.AnyAsync(a => a.CorrelationId == correlationId);
     }
 
+    private async Task<ICollection<Guid>> CheckIfAgvExistAsync(IEnumerable<Guid> correlationIds)
+    {
+        return await Agvs.Where(a => correlationIds.Contains(a.CorrelationId)).Select(a => a.CorrelationId).ToListAsync();
+    }
+
+    public async Task ThrowIfAgvNotExistsAsync(Guid correlationId)
+    {
+        if (!await CheckIfAgvExistsAsync(correlationId))
+        {
+            throw new AgvNotFoundException(correlationId);
+        }
+    }
+
+    public async Task ThrowIfAgvsNotExistAsync(ICollection<Guid> correlationIds)
+    {
+        ICollection<Guid> existingAgvs = await CheckIfAgvExistAsync(correlationIds);
+        List<Guid> notExistingAgvs = correlationIds.Except(existingAgvs).ToList();
+        if (notExistingAgvs.Any())
+        {
+            throw new AgvsNotFoundException(notExistingAgvs);
+        }
+    }
+
     public async Task<ICollection<Domain.Models.Agv.Agv>> SelectExistingAgvsAsync(List<Guid> agvCorrelationIds)
     {
         return await Agvs.Where(a => !agvCorrelationIds.Any() || agvCorrelationIds.Contains(a.CorrelationId)).OrderBy(a => a.AgvId).ToListAsync();
@@ -111,7 +134,7 @@ public class AgvRepository : IAgvRepository
 
         Dictionary<Guid, string?> lastNodeIdsById = await queryable
             .Where(s => s.AgvStatus != null)
-            .Select(s => new { s.CorrelationId, s.AgvStatus!.LastNodeId })
+            .Select(s => new {s.CorrelationId, s.AgvStatus!.LastNodeId})
             .ToDictionaryAsync(x => x.CorrelationId, x => x.LastNodeId);
 
         // for potential Agvs with no status, we want to have a null value

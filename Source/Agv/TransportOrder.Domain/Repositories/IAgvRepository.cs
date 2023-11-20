@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
+using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 
@@ -40,6 +41,20 @@ public interface IAgvRepository
     /// <param name="correlationId">The correlation id to check.</param>
     /// <returns>If the agv exists.</returns>
     Task<bool> CheckIfAgvExistsAsync(Guid correlationId);
+
+    /// <summary>
+    /// Throws an <see cref="AgvNotFoundException"/> if the agv with the given correlation id does not exist.
+    /// </summary>
+    /// <param name="correlationId">The CorrelationId of the Agv.</param>
+    /// <returns></returns>
+    Task ThrowIfAgvNotExistsAsync(Guid correlationId);
+
+    /// <summary>
+    /// Throws an <see cref="AgvNotFoundException"/> for all of the non existing agvs.
+    /// </summary>
+    /// <param name="correlationIds">The CorrelationIds of the Agv to check.</param>
+    /// <returns></returns>
+    Task ThrowIfAgvsNotExistAsync(ICollection<Guid> correlationIds);
 
     /// <summary>
     /// Select from the given agv ids the ones that exists.

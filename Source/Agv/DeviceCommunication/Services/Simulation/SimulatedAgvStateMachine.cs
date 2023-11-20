@@ -4,6 +4,7 @@ using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
+using Gebhardt.StoreWare.Agv.Common.Models;
 using Gebhardt.StoreWare.Agv.Common.Time;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Messages;
@@ -447,8 +448,18 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         }
         else
         {
+            var agvCorrelationId = context.Saga.CorrelationId;
             _logger.LogInformation("AGV {AgvId} / {CorrelationId} finished action {ActionType} for {OrderId}",
-                context.Saga.AgvId, context.Saga.CorrelationId, action.ActionType, action.ParentId);
+                context.Saga.AgvId, agvCorrelationId, action.ActionType, action.ParentId);
+
+            var cargos = new List<Cargo>();
+            if (action.ActionType == ActionType.Pick)
+            {
+                // we just picked up a cargo
+                var cargo = new Cargo(Guid.NewGuid(), agvCorrelationId, "Cargo 1", "default", new Point3D(0, 0, 0, 0), new Cuboid(100f, 200f, 50f), "top", 21);
+                cargos.Add(cargo);
+            }
+            await context.Publish(new AgvLoadStatusReceived(agvCorrelationId, cargos));
 
             await context.Publish(new ActionCompleted(action.CorrelationId));
         }

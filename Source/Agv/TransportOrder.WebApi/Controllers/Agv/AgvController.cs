@@ -38,6 +38,8 @@ public class AgvController : Controller
     private readonly IRequestClient<GetAgvErrors> _getAgvErrorHistoryRequestClient;
     private readonly IRequestClient<MoveAgv> _moveAgvClient;
     private readonly IRequestClient<SetAgvForceIdle> _setForceIdleClient;
+    private readonly IRequestClient<IsAgvLoadedRequest> _isAgvLoadedClient;
+    private readonly IRequestClient<GetCargosOfAgv> _getCargosOfAgvClient;
     private readonly IMapper _mapper;
 
     /// <summary>
@@ -56,7 +58,10 @@ public class AgvController : Controller
         IRequestClient<GetActiveAgvErrors> getAgvErrorsRequestClient,
         IRequestClient<GetAgvErrors> getAgvErrorHistoryRequestClient,
         IRequestClient<MoveAgv> moveAgvClient,
-        IRequestClient<SetAgvForceIdle> setForceIdleClient)
+        IRequestClient<SetAgvForceIdle> setForceIdleClient,
+        IRequestClient<IsAgvLoadedRequest> isAgvLoadedClient,
+        IRequestClient<GetCargosOfAgv> getCargosOfAgvClient
+    )
     {
         _getAgvClient = getAgvClient;
         _getAgvGraphClient = getAgvGraphClient;
@@ -72,6 +77,8 @@ public class AgvController : Controller
         _getAgvErrorHistoryRequestClient = getAgvErrorHistoryRequestClient;
         _moveAgvClient = moveAgvClient;
         _setForceIdleClient = setForceIdleClient;
+        _isAgvLoadedClient = isAgvLoadedClient;
+        _getCargosOfAgvClient = getCargosOfAgvClient;
         _mapper = mapper;
     }
 
@@ -293,7 +300,7 @@ public class AgvController : Controller
     /// <summary>
     /// Set an agv to idle by force.
     /// </summary>
-    /// <param name="correlationId">The correlation id of the agv.</param>
+    /// <param name="correlationId">The correlation id of the Agv.</param>
     /// <response code="200">Ok: The agv was set to idle.</response>
     /// <response code="404">AGV with given correlationId not found.</response>
     /// <returns>The correlation id of the agv.</returns>
@@ -307,5 +314,34 @@ public class AgvController : Controller
             return NotFound();
         }
         return Ok();
+    }
+
+    /// <summary>
+    /// Get isLoaded state for given Agv
+    /// </summary>
+    /// <param name="correlationId">The correlation id of the Agv.</param>
+    /// <response code="404">AGV with given correlationId not found.</response>
+    /// <returns></returns>
+    [HttpGet]
+    [Route("/agv/{correlationId:guid}/isLoaded")]
+    public async Task<ActionResult<bool>> IsLoaded(Guid correlationId)
+    {
+        Response<IsAgvLoadedResult> response = await _isAgvLoadedClient.GetResponse<IsAgvLoadedResult>(new IsAgvLoadedRequest(correlationId));
+        return Ok(response.Message.IsAgvLoaded);
+    }
+
+    /// <summary>
+    /// Retrieve currently loaded Cargos for given Agv
+    /// </summary>
+    /// <param name="correlationId">The correlation id of the Agv.</param>
+    /// <response code="404">AGV with given correlationId not found.</response>
+    /// <returns></returns>
+    [HttpGet]
+    [Route("/agv/{correlationId:guid}/cargos")]
+    public async Task<ActionResult<ICollection<CargoDto>>> GetCargosOfAgv(Guid correlationId)
+    {
+        Response<GotCargosOfAgv> response = await _getCargosOfAgvClient.GetResponse<GotCargosOfAgv>(new GetCargosOfAgv(correlationId));
+        var dto = _mapper.Map<ICollection<CargoDto>>(response.Message.Cargos);
+        return Ok(dto);
     }
 }

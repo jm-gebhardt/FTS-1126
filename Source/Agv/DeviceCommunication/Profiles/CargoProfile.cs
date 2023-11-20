@@ -1,0 +1,32 @@
+using AutoMapper;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Models;
+using Gebhardt.StoreWare.Agv.Common.Utilities;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
+using JetBrains.Annotations;
+
+namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Profiles;
+
+/// <summary>
+/// Profile for MqttLoad
+/// </summary>
+[UsedImplicitly]
+public class CargoProfile : Profile
+{
+    /// <inheritdoc cref="CargoProfile" />
+    public CargoProfile()
+    {
+        CreateMap<MqttLoad, Cargo>()
+            .ForMember(c => c.CorrelationId, c => c.MapFrom(l => l.LoadId!.ToGuid()))
+            // AgvCorrelationId is mapped in the next mapping (below)
+            .ForMember(c => c.AgvCorrelationId, c => c.Ignore())
+            .ForMember(c => c.Dimension, c => c.MapFrom(l => l.LoadDimensions))
+            .ForMember(c => c.CenterPointPosition, c => c.MapFrom(l => l.BoundingBoxReference));
+        // for AgvCorrelationId
+        CreateMap<Guid, Cargo>(MemberList.None)
+            .ForMember(c => c.AgvCorrelationId, opt => opt.MapFrom(src => src));
+
+        CreateMap<MqttLoadDimensions, Cuboid>();
+        CreateMap<MqttBoundingBoxReference, Point3D>();
+    }
+}

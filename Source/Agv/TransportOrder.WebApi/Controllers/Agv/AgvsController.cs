@@ -22,6 +22,7 @@ public class AgvsController : Controller
     private readonly IRequestClient<GetAgvsData> _getAgvDataClient;
     private readonly IRequestClient<GetActiveErrorsForAgvs> _getActiveErrorsClient;
     private readonly IRequestClient<GetErrorHistoryForAgvs> _getErrorHistoryClient;
+    private readonly IRequestClient<GetCargosOfAgvs> _getCargosOfAgvsClient;
 
     private readonly IMapper _mapper;
 
@@ -35,7 +36,9 @@ public class AgvsController : Controller
         IRequestClient<GetAgvGraphs> getAgvGraphsClient,
         IRequestClient<GetAgvsData> getAgvDataClient,
         IRequestClient<GetActiveErrorsForAgvs> getActiveErrorsClient,
-        IRequestClient<GetErrorHistoryForAgvs> getErrorHistoryClient)
+        IRequestClient<GetErrorHistoryForAgvs> getErrorHistoryClient,
+        IRequestClient<GetCargosOfAgvs> getCargosOfAgvsClient
+    )
     {
         _getAgvsClient = getAgvsClient;
         _getCurrentAgvRoutesClient = getCurrentAgvRoutesClient;
@@ -45,6 +48,7 @@ public class AgvsController : Controller
         _getAgvDataClient = getAgvDataClient;
         _getActiveErrorsClient = getActiveErrorsClient;
         _getErrorHistoryClient = getErrorHistoryClient;
+        _getCargosOfAgvsClient = getCargosOfAgvsClient;
     }
 
     /// <summary>
@@ -161,6 +165,21 @@ public class AgvsController : Controller
     {
         Response<GotErrorHistoryForAgvs> response = await _getErrorHistoryClient.GetResponse<GotErrorHistoryForAgvs>(new GetErrorHistoryForAgvs(correlationIds, dateFrom ?? DateTime.MinValue, dateTo ?? DateTime.MaxValue));
         var dto = _mapper.Map<Dictionary<Guid, IEnumerable<AgvErrorDto>>>(response.Message.ErrorsByAgv);
+        return Ok(dto);
+    }
+
+    /// <summary>
+    /// Retrieve currently loaded Cargos for given Agvs
+    /// </summary>
+    /// <param name="correlationIds">Only Agvs contained in this list will be considered</param>
+    /// <response code="400">One or more of given correlation ids is unknown.</response>
+    /// <returns></returns>
+    [HttpPost]
+    [Route("/agvs/cargos")]
+    public async Task<ActionResult<IReadOnlyDictionary<Guid, ICollection<CargoDto>>>> GetCargosOfAgvs([FromQuery] ICollection<Guid> correlationIds)
+    {
+        Response<GotCargosOfAgvs> response = await _getCargosOfAgvsClient.GetResponse<GotCargosOfAgvs>(new GetCargosOfAgvs(correlationIds));
+        var dto = _mapper.Map<IReadOnlyDictionary<Guid, ICollection<CargoDto>>>(response.Message.CargosByAgvCorrelationId);
         return Ok(dto);
     }
 }

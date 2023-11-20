@@ -174,8 +174,13 @@ public static class CoreBusRegistrationExtensions
         configurator.AddRequestClient<GetAgvPosition>();
 
         configurator.AddConsumer<GetAgvsRequestHandler>();
+        configurator.AddRequestClient<IsAgvLoadedRequest>();
         configurator.AddRequestClient<GetAgvs>();
         configurator.AddRequestClient<GetAgv>();
+
+        configurator.AddConsumer<CargoRequestHandler>();
+        configurator.AddRequestClient<GetCargosOfAgv>();
+        configurator.AddRequestClient<GetCargosOfAgvs>();
     }
 
     private static void RegisterMediatorMapHandlers(IMediatorRegistrationConfigurator configurator)

@@ -15,6 +15,7 @@ using Shouldly;
 using AgvActionGenerator = Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper.AgvActionGenerator;
 using AgvData = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.AgvData;
 using AgvStatus = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.AgvStatus;
+using Cargo = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Cargo;
 using RequestAgvData = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands.RequestAgvData;
 using RequestAgvGraph = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands.RequestAgvGraph;
 
@@ -441,5 +442,22 @@ public class AgvCommandHandlerTest
         (await fixture.TestHarness.Published.Any<AgvLastNodeIdChanged>()).ShouldBeFalse();
         (await fixture.TestHarness.Published.Any<AgvBecameIdle>()).ShouldBeFalse();
         (await fixture.TestHarness.Published.Any<AgvOnlineChanged>()).ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public async Task Consume_UpdateCargo_CargoChanged_PublishesCargoChanged()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        ICollection<Cargo> cargos = CargoGenerator.GenerateCargos(agv.CorrelationId);
+        var domainCargos = _mapper.Map<IReadOnlyCollection<TransportOrder.Domain.Models.Agv.Cargo>>(cargos);
+
+        var fixture = new AgvCommandHandlerTestFixture()
+            .WithSetCargoReturnValue(agv.CorrelationId, domainCargos, true);
+        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> {agv});
+
+        var updateCargo = new UpdateCargo(agv.CorrelationId, cargos.ToList().AsReadOnly());
+        await fixture.TestHarness!.Bus.Publish(updateCargo);
+        (await fixture.ConsumerHarness!.Consumed.Any<UpdateCargo>()).ShouldBeTrue();
+        (await fixture.TestHarness!.Published.Any<CargoChanged>()).ShouldBeTrue();
     }
 }

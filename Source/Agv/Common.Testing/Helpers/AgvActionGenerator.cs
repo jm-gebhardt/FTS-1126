@@ -6,7 +6,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 
 public static class AgvActionGenerator
 {
-    private static string[] GetNodes(string startNodeId, string targetNodeId, int numberOfNodes, IList<GraphNode>? availableNodes = null)
+    private static string[] GetNodes(string startNodeId, string targetNodeId, int numberOfNodes, IEnumerable<GraphNode>? availableNodes = null)
     {
         var nodes = new List<string>
         {
@@ -21,14 +21,15 @@ public static class AgvActionGenerator
         int nodesToBeAdded = numberOfNodes - 2;
         if (nodesToBeAdded > 0)
         {
-            if (availableNodes == null)
+            List<GraphNode>? graphNodes = availableNodes?.ToList();
+            if (graphNodes == null)
             {
                 throw new ArgumentException("availableNodeIds must be provided if numberOfNodes > 2");
             }
             for (int i = 0; i < nodesToBeAdded; i++)
             {
                 // take element based on index, if it exceeds start from beginning
-                nodes.Add(availableNodes.ElementAt(i % availableNodes.Count).Id);
+                nodes.Add(graphNodes.ElementAt(i % graphNodes.Count).Id);
             }
         }
         nodes.Add(targetNodeId);
@@ -80,9 +81,33 @@ public static class AgvActionGenerator
         return action;
     }
 
-    public static AgvAction GenerateMoveAction(string startNodeId = "N1", IList<GraphNode>? availableNodes = null, int numberOfNodes = 2, string targetNodeId = "Move-1", Guid? parentId = null)
+    /// <summary>
+    /// Generates a move action with the given parameters.
+    /// </summary>
+    /// <param name="startNodeId"></param>
+    /// <param name="availableNodes"></param>
+    /// <param name="numberOfNodes">Creates this number of nodes in total in the action. The nodes in between are taken from the availableNodes parameter</param>
+    /// <param name="targetNodeId"></param>
+    /// <param name="parentId"></param>
+    /// <returns></returns>
+    public static AgvAction GenerateMoveAction(string startNodeId = "N1", IEnumerable<GraphNode>? availableNodes = null, int numberOfNodes = 2, string targetNodeId = "Move-1", Guid? parentId = null)
     {
-        var action = new AgvAction(Guid.NewGuid(), ActionType.Move, targetNodeId, parentId ?? Guid.NewGuid())
+        return GenerateAction(startNodeId, ActionType.Move, availableNodes, numberOfNodes, targetNodeId, parentId);
+    }
+
+    /// <summary>
+    /// Generates a action with the given parameters.
+    /// </summary>
+    /// <param name="startNodeId"></param>
+    /// <param name="actionType"></param>
+    /// <param name="availableNodes"></param>
+    /// <param name="numberOfNodes">Creates this number of nodes in total in the action. The nodes in between are taken from the availableNodes parameter</param>
+    /// <param name="targetNodeId"></param>
+    /// <param name="parentId"></param>
+    /// <returns></returns>
+    public static AgvAction GenerateAction(string startNodeId = "N1", ActionType actionType = ActionType.Move, IEnumerable<GraphNode>? availableNodes = null, int numberOfNodes = 2, string targetNodeId = "Move-1", Guid? parentId = null)
+    {
+        var action = new AgvAction(Guid.NewGuid(), actionType, targetNodeId, parentId ?? Guid.NewGuid())
         {
             Nodes = GetNodes(startNodeId, targetNodeId, numberOfNodes, availableNodes)
         };

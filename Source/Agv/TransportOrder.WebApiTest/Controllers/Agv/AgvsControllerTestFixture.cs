@@ -167,6 +167,7 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
         IRequestClient<GetAgvsData> getAgvGetAgvDataRequestClient = GetRequestClient<GetAgvsData>();
         IRequestClient<GetActiveErrorsForAgvs> getActiveErrorsRequestClient = GetRequestClient<GetActiveErrorsForAgvs>();
         IRequestClient<GetErrorHistoryForAgvs> getErrorHistoryRequestClient = GetRequestClient<GetErrorHistoryForAgvs>();
+        IRequestClient<GetCargosOfAgvs> getCargosOfAgvsRequestClient = GetRequestClient<GetCargosOfAgvs>();
 
         var controller = new AgvsController(GetMapper(),
             getAgvsRequestClient,
@@ -175,7 +176,8 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
             getAgvGraphsRequestClient,
             getAgvGetAgvDataRequestClient,
             getActiveErrorsRequestClient,
-            getErrorHistoryRequestClient)
+            getErrorHistoryRequestClient,
+            getCargosOfAgvsRequestClient)
         {
             ControllerContext = new ControllerContext(
                 new ActionContext(

@@ -17,22 +17,22 @@ public static class EntityTypeBuilderExtensions
     /// Source <see href="https://stackoverflow.com/a/48278685" />
     /// </summary>
     /// <param name="builder"></param>
-    /// <param name="filter"></param>
+    /// <param name="onlyInclude">If set, only true returning items will be configured</param>
+    /// <param name="except">If set the provided property names wont be configured</param>
     /// <typeparam name="T"></typeparam>
     /// <returns></returns>
     // ReSharper disable once UnusedMethodReturnValue.Global
     public static List<PropertyBuilder> ConfigureAllProperties<T>(this EntityTypeBuilder<T> builder,
-        Func<PropertyInfo, bool>? filter = null) where T : class
+        Func<PropertyInfo, bool>? onlyInclude = null, IEnumerable<string>? except = null) where T : class
     {
         IEnumerable<PropertyInfo> properties = typeof(T)
             .GetProperties()
             .AsEnumerable();
 
-        if (filter != null)
-        {
-            properties = properties
-                .Where(filter);
-        }
+        properties = properties
+            .Where(x => (onlyInclude == null || onlyInclude(x)) &&
+                        (except == null || !except.Contains(x.Name))
+            );
 
         return properties
             .Select(x => builder.Property(x.PropertyType, x.Name))

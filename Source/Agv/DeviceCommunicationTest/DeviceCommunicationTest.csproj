@@ -28,4 +28,7 @@
         <ProjectReference Include="..\Common.Testing\Common.Testing.csproj" />
         <ProjectReference Include="..\DeviceCommunication\DeviceCommunication.csproj" />
     </ItemGroup>
+    <ItemGroup>
+      <Folder Include="Helpers\" />
+    </ItemGroup>
 </Project>

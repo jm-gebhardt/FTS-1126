@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
+using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
@@ -10,6 +11,8 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 using MassTransit;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
+using AgvActionGenerator = Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper.AgvActionGenerator;
+using AgvStatus = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.AgvStatus;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.EventHandler;
 
@@ -256,5 +259,21 @@ public class AgvEventHandlerTest
         (await fixture.ConsumerHarness!.Consumed.Any<AgvPreparedForStartingAction>()).ShouldBeTrue();
 
         (await fixture.TestHarness!.Published.Any<StartAction>()).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task Consume_AgvLoadStatusReceived_UpdateAgvLoadStatus()
+    {
+        var fixture = new AgvEventHandlerTestFixture();
+        var agvCorrelationId = Guid.NewGuid();
+        ICollection<Cargo> cargos = CargoGenerator.GenerateCargos(agvCorrelationId);
+        var agvLoadStatusReceived = new AgvLoadStatusReceived(agvCorrelationId, cargos.ToList().AsReadOnly());
+        await fixture.TestHarness!.Bus.Publish(agvLoadStatusReceived);
+        (await fixture.ConsumerHarness!.Consumed.Any<AgvLoadStatusReceived>()).ShouldBeTrue();
+
+        (await fixture.TestHarness!.Published.Any<UpdateCargo>()).ShouldBeTrue();
+        var updateLoadStatus = fixture.TestHarness!.Published.Select<UpdateCargo>().First().Context.Message;
+        updateLoadStatus.CorrelationId.ShouldBe(agvCorrelationId);
+        updateLoadStatus.Cargos.ShouldBeEquivalentTo(cargos);
     }
 }

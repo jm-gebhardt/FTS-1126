@@ -44,6 +44,24 @@
     "vy": 128.25,
     "omega": -95.25
   },
-  "loads": [],
+  "loads": [
+	  {
+		"BoundingBoxReference": {
+			"Theta": 0.785,
+			"X": 1.0,
+			"Y": 2.0,
+			"Z": 3.0
+		},
+		"LoadDimensions": {
+			"Height": 2.5,
+			"Length": 5.0,
+			"Width": 3.0
+		},
+		"LoadId": "L12345",
+		"LoadPosition": "FrontLeft",
+		"LoadType": "Pallet",
+		"Weight": 150.5
+	  }
+  ],
   "information": []
 }

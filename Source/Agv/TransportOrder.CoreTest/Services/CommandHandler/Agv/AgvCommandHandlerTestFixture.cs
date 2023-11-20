@@ -5,6 +5,7 @@ using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.CmdOptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.CommandHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Profiles;
@@ -27,7 +28,8 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixtureWithSc
     private readonly Mock<ISettingsProvider<AgvSettings>> _settingsProvider = new();
     private readonly Mock<IAgvGraphRepository> _agvGraphRepository = new();
     private readonly Mock<IMapRepository> _mapRepository = new();
-    private readonly ProductionOptions _productionOptions = new() { AutoAccept = true };
+    private readonly ProductionOptions _productionOptions = new() {AutoAccept = true};
+    private readonly Mock<ICargoRepository> _cargoRepository = new();
     public readonly Mock<IAgvDataRepository> AgvDataRepository = new();
 
     protected override void ConfigureServices(IServiceCollection collection)
@@ -42,13 +44,14 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixtureWithSc
         collection.AddTransient(_ => _mapRepository.Object);
         collection.AddTransient(_ => _productionOptions);
         collection.AddTransient(_ => AgvDataRepository.Object);
+        collection.AddTransient(_ => _cargoRepository.Object);
     }
 
     public AgvCommandHandlerTestFixture(Action<IBusRegistrationConfigurator>? busRegistrationConfigurator = null,
         Action<IBusRegistrationContext, IInMemoryBusFactoryConfigurator>? inMemoryConfiguration = null,
         params Action<IServiceCollection>[] services) : base(busRegistrationConfigurator, inMemoryConfiguration, services)
     {
-        _settingsProvider.Setup(s => s.GetSettings()).Returns(new AgvSettings()
+        _settingsProvider.Setup(s => s.GetSettings()).Returns(new AgvSettings
         {
             BatteryLevelCritical = 10,
             BatteryLevelGood = 80,
@@ -80,9 +83,15 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixtureWithSc
         _actionGroupRepository.Setup(x => x.GetCurrentAgvActionAsync(It.IsAny<Guid>())).ReturnsAsync(action);
     }
 
+    public AgvCommandHandlerTestFixture WithSetCargoReturnValue(Guid agvCorrelationId, IReadOnlyCollection<Cargo> cargos, bool returnValue)
+    {
+        _cargoRepository.Setup(x => x.SetCargoAsync(agvCorrelationId, cargos)).ReturnsAsync(returnValue);
+        return this;
+    }
+
     public static IMapper GetMapper()
     {
-        var mapper = MappingHelper.GetMapper(new AgvStatusProfile(), new AgvProfile());
+        var mapper = MappingHelper.GetMapper(new AgvStatusProfile(), new AgvProfile(), new CargoProfile());
         return mapper;
     }
 

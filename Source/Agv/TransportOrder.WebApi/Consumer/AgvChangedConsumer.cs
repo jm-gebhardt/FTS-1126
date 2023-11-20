@@ -17,7 +17,8 @@ public class AgvChangedConsumer : IConsumer<AgvStateChanged>,
     IConsumer<AgvLockedChanged>,
     IConsumer<AgvOnlineChanged>,
     IConsumer<AgvDiscovered>,
-    IConsumer<AgvBecameIdle>
+    IConsumer<AgvBecameIdle>,
+    IConsumer<CargoChanged>
 {
     private readonly ILogger<AgvChangedConsumer> _logger;
     private readonly IAgvPublisher _agvPublisher;
@@ -102,5 +103,15 @@ public class AgvChangedConsumer : IConsumer<AgvStateChanged>,
     {
         await _agvPublisher.SendAgvRouteChangedAsync(new CurrentAgvRouteReadModel(context.Message.CorrelationId,
             Array.Empty<string>()));
+    }
+
+    /// <summary>
+    /// Send Cargo changed message to all clients
+    /// </summary>
+    /// <param name="context"></param>
+    public async Task Consume(ConsumeContext<CargoChanged> context)
+    {
+        _logger.LogTrace("{MessageType} {CorrelationId} received", nameof(CargoChanged), context.Message.CorrelationId);
+        await _agvPublisher.SendCargoChangeAsync(context.Message.Cargos);
     }
 }

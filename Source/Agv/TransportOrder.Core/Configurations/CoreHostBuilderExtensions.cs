@@ -111,6 +111,7 @@ public static class CoreHostBuilderExtensions
         services.AddSingleton<IConcurrentDictionaryProvider<Guid, AgvPositionStatus>, AgvPositionDictionaryProvider>();
         services.AddTransient<IAgvPositionRepository, AgvPositionRepository>();
         services.AddTransient<IAgvErrorRepository, EfAgvErrorRepository>();
+        services.AddTransient<ICargoRepository, CargoRepository>();
     }
 
     private static void RegisterValidators(IServiceCollection services)

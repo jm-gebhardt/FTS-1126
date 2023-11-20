@@ -26,6 +26,11 @@ public class StateMachineTestFixture<TStateMachine, TInstance> : BaseStateMachin
         TimeSpan? inactivityTimeout = null) : base(services, busRegistrationConfigurator, inMemoryConfiguration, inactivityTimeout)
     {
         AddServices(s => s.AddSingleton<ITimeProvider>(_ => TimeProvider));
-        Build();
+    }
+
+    public new StateMachineTestFixture<TStateMachine, TInstance> Build()
+    {
+        base.Build();
+        return this;
     }
 }

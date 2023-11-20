@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
@@ -45,6 +46,7 @@ public class AgvStateConsumer : IConsumer<MqttState>
         await SendAgvStatusAsync(context, agvCorrelationId, message, serialNumber);
         await SendAgvPositionAsync(context, agvCorrelationId, serialNumber);
         await SendAgvErrorStatusAsync(context, agvCorrelationId, message);
+        await SendAgvLoadStatusAsync(context, agvCorrelationId, message);
     }
 
     private string GetSerialNumber(ConsumeContext<MqttState> context, MqttState message)
@@ -58,6 +60,11 @@ public class AgvStateConsumer : IConsumer<MqttState>
         }
         _logger.LogDebug("{MessageType} from {AgvId} received", nameof(MqttState), serialNumber);
         return serialNumber;
+    }
+
+    private async Task SendAgvLoadStatusAsync(ConsumeContext<MqttState> context, Guid agvCorrelationId, MqttState message)
+    {
+        await context.Publish(new AgvLoadStatusReceived(agvCorrelationId, GetCargos(message)));
     }
 
     private async Task SendAgvStatusAsync(ConsumeContext<MqttState> context, Guid agvCorrelationId, MqttState message, string serialNumber)
@@ -137,15 +144,9 @@ public class AgvStateConsumer : IConsumer<MqttState>
         _agvRepository.AddOrUpdateAgvStatus(correlationId, agvStatusReceived);
     }
 
-    private string GetSerialNumber(MqttState message)
-    {
-        return message.SerialNumber;
-    }
+    private string GetSerialNumber(MqttState message) => message.SerialNumber;
 
-    private string GetOrderId(MqttState message)
-    {
-        return message.OrderId;
-    }
+    private string GetOrderId(MqttState message) => message.OrderId;
 
     private bool GetBusy(MqttState message)
     {
@@ -222,10 +223,23 @@ public class AgvStateConsumer : IConsumer<MqttState>
 
     private string? GetLastNodeId(MqttState message)
     {
-        if (!string.IsNullOrEmpty(message.LastNodeId))
+        return !string.IsNullOrEmpty(message.LastNodeId) ? message.LastNodeId : null;
+    }
+
+    private Collection<Cargo> GetCargos(MqttState message)
+    {
+        List<MqttLoad>? loads = message.Loads;
+        if (loads == null)
         {
-            return message.LastNodeId;
+            return new Collection<Cargo>();
         }
-        return null;
+
+        if (loads.Any(l => string.IsNullOrEmpty(l.LoadId)))
+        {
+            throw new ArgumentNullException(nameof(MqttLoad.LoadId), "LoadId must be set! This was the assumption at the time of implementation.");
+        }
+
+        var cargos = _mapper.Map<Collection<Cargo>>(loads);
+        return cargos;
     }
 }

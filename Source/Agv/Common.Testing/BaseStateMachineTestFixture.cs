@@ -2,6 +2,7 @@ using MassTransit;
 using MassTransit.Saga;
 using MassTransit.Testing;
 using Microsoft.Extensions.DependencyInjection;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.Common.Testing;
 
@@ -15,7 +16,7 @@ public abstract class BaseStateMachineTestFixture<TStateMachine, TInstance>
     /// <summary>
     /// A registered Saga AgvState Machine 
     /// </summary>
-    public TStateMachine Machine = null!;
+    protected TStateMachine Machine = null!;
 
     /// <summary>
     /// Service Collection
@@ -102,8 +103,27 @@ public abstract class BaseStateMachineTestFixture<TStateMachine, TInstance>
     /// This can be used to add a Saga with a predefined state
     /// </summary>
     /// <param name="instance">Saga Instance</param>
-    public void Add(TInstance instance)
+    protected void Add(TInstance instance)
     {
         SagaDictionary.Add(new SagaInstance<TInstance>(instance));
+    }
+
+    /// <summary>
+    /// Does a TestHarness.Bus.Publish and then a SagaHarness.Consumed to actually consume the message
+    /// </summary>
+    /// <param name="message"></param>
+    /// <param name="filter"></param>
+    /// <typeparam name="T"></typeparam>
+    public async Task PublishMessageAsync<T>(T message, FilterDelegate<IReceivedMessage<T>>? filter = null) where T : class
+    {
+        await TestHarness.Bus.Publish(message);
+        (await (filter != null ? SagaHarness.Consumed.Any(filter) : SagaHarness.Consumed.Any<T>())).ShouldBeTrue();
+    }
+
+    public async Task<T> GetFirstPublishedMessageAsync<T>() where T : class
+    {
+        (await TestHarness.Published.Any<T>()).ShouldBeTrue();
+        var message = TestHarness.Published.Select<T>().First().Context.Message;
+        return message;
     }
 }

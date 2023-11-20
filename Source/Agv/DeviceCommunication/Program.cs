@@ -112,7 +112,7 @@ try
         host.Run();
         return 0;
     }
-    initialLogger.LogWarning("Invalid command line argument(s)");
+    initialLogger.LogError("Invalid command line argument(s)");
     return 1;
 }
 catch (Exception ex)

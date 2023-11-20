@@ -94,4 +94,11 @@ public class AgvPublisher : IAgvPublisher
         var dto = new AgvRemovedDto(correlationId);
         return _hubContext.Clients.All.AgvRemoved(dto);
     }
+    
+    /// <inheritdoc/>
+    public Task SendCargoChangeAsync(IReadOnlyCollection<Cargo> cargos)
+    {
+        var dto = _mapper.Map<ICollection<CargoDto>>(cargos);
+        return _hubContext.Clients.All.AgvCargoChanged(dto);
+    }
 }

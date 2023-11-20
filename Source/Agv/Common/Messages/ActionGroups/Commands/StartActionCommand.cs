@@ -7,7 +7,9 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
 /// </summary>
 public record StartActionCommand : CorrelatedBy<Guid>
 {
-    /// <inheritdoc />
+    /// <summary>
+    /// The Agv CorrelationId
+    /// </summary>
     public Guid CorrelationId { get; }
 
     /// <summary>

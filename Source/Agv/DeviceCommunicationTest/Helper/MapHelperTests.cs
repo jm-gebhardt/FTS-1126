@@ -3,7 +3,7 @@ using Gebhardt.StoreWare.Agv.DeviceCommunication.Helpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Helpers;
+namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Helper;
 
 [TestClass]
 public class MapHelperTests
