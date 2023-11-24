@@ -23,6 +23,9 @@ public class SimulatedAgvProvider : BackgroundService
     private readonly IGraphGenerator _graphGenerator;
     private readonly IAgvDataGenerator _agvDataGenerator;
 
+    private readonly RequestTimeout _requestTimeOut = RequestTimeout.After(m: 1);
+    private const int ExecutionDelayMs = 1000;
+
     /// <summary>
     /// SimulatedAgvProvider Constructor
     /// </summary>
@@ -46,9 +49,9 @@ public class SimulatedAgvProvider : BackgroundService
     /// <summary>
     /// Create the AGVs by requesting <see cref="SimulatedAgvStateMachine.CreateAgvResponse"/> which triggers <see cref="SimulatedAgvStateMachine.CreateAgv"/>
     /// </summary>
-    private async Task Create()
+    private async Task<bool> Create()
     {
-        IRequestClient<SimulatedAgvStateMachine.CreateAgv> client = _clientFactory.CreateRequestClient<SimulatedAgvStateMachine.CreateAgv>();
+        IRequestClient<SimulatedAgvStateMachine.CreateAgv> client = _clientFactory.CreateRequestClient<SimulatedAgvStateMachine.CreateAgv>(_requestTimeOut);
         for (int agvIndex = 0; agvIndex < _simulateOptions.Agvs; agvIndex++)
         {
             var agv = GenerateAgv(agvIndex);
@@ -57,7 +60,7 @@ public class SimulatedAgvProvider : BackgroundService
                 agv.CorrelationId,
                 agv,
                 _simulateOptions.NodeTravelTime
-            ));
+            ), timeout:_requestTimeOut);
 
             if (response.Message.CorrelationId == agv.CorrelationId)
             {
@@ -69,6 +72,7 @@ public class SimulatedAgvProvider : BackgroundService
             }
         }
         _logger?.LogInformation("Create AGV finished");
+        return true;
     }
 
     private SimulatedAgv GenerateAgv(int agvIndex)
@@ -101,6 +105,18 @@ public class SimulatedAgvProvider : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _logger.LogInformation("SimulatedAgvProvider started");
-        await Create();
+        bool agvsCreated = false;
+        while (!agvsCreated && !stoppingToken.IsCancellationRequested)
+        {
+            try
+            {
+                agvsCreated = await Create();
+            }
+            catch (RequestTimeoutException)
+            {
+                _logger.LogWarning("Creating agvs failed, trying again in next cycle.");
+                await Task.Delay(ExecutionDelayMs, stoppingToken).WaitAsync(stoppingToken);
+            }
+        }
     }
 }
