@@ -7,6 +7,7 @@ using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.ActionGroup;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Map;
 using MassTransit;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
@@ -463,6 +464,7 @@ public class ActionCommandHandlerTest
         (await fixture.ConsumerHarness!.Consumed.Any<CreateChargingActionGroup>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<ActionGroupCreated>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<ActionGroupCreatedForAgv>()).ShouldBeTrue();
+        (await fixture.TestHarness!.Published.Any<NodeStateChanged>()).ShouldBeTrue();
     }
 
     [TestMethod]
@@ -485,6 +487,7 @@ public class ActionCommandHandlerTest
         (await fixture.ConsumerHarness!.Consumed.Any<CreateChargingActionGroup>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<ActionGroupCreated>()).ShouldBeFalse();
         (await fixture.TestHarness.Published.Any<ActionGroupCreatedForAgv>()).ShouldBeFalse();
+        (await fixture.TestHarness!.Published.Any<NodeStateChanged>()).ShouldBeFalse();
     }
 
     [TestMethod]
@@ -506,6 +509,7 @@ public class ActionCommandHandlerTest
         (await fixture.ConsumerHarness!.Consumed.Any<CreateChargingActionGroup>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<ActionGroupCreated>()).ShouldBeFalse();
         (await fixture.TestHarness.Published.Any<ActionGroupCreatedForAgv>()).ShouldBeFalse();
+        (await fixture.TestHarness!.Published.Any<NodeStateChanged>()).ShouldBeFalse();
     }
 
     [TestMethod]
@@ -528,6 +532,7 @@ public class ActionCommandHandlerTest
         (await fixture.ConsumerHarness!.Consumed.Any<CreateParkingActionGroup>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<ActionGroupCreated>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<ActionGroupCreatedForAgv>()).ShouldBeTrue();
+        (await fixture.TestHarness!.Published.Any<NodeStateChanged>()).ShouldBeTrue();
     }
 
     [TestMethod]
@@ -550,6 +555,7 @@ public class ActionCommandHandlerTest
         (await fixture.ConsumerHarness!.Consumed.Any<CreateParkingActionGroup>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<ActionGroupCreated>()).ShouldBeFalse();
         (await fixture.TestHarness.Published.Any<ActionGroupCreatedForAgv>()).ShouldBeFalse();
+        (await fixture.TestHarness!.Published.Any<NodeStateChanged>()).ShouldBeFalse();
     }
 
     [TestMethod]
@@ -573,5 +579,6 @@ public class ActionCommandHandlerTest
         (await fixture.ConsumerHarness!.Consumed.Any<CreateParkingActionGroup>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<ActionGroupCreated>()).ShouldBeFalse();
         (await fixture.TestHarness.Published.Any<ActionGroupCreatedForAgv>()).ShouldBeFalse();
+        (await fixture.TestHarness!.Published.Any<NodeStateChanged>()).ShouldBeFalse();
     }
 }

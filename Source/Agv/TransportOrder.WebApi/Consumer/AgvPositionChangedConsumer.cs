@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Node;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Routing;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Map;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Agv;
 using JetBrains.Annotations;
@@ -65,18 +67,22 @@ public class AgvPositionChangedConsumer :
     /// <param name="context"></param>
     public async Task Consume(ConsumeContext<AgvLastNodeIdChanged> context)
     {
-        var agvCorrelationId = context.Message.CorrelationId;
+        (var agvCorrelationId, string? oldLastNodeId, string? newLastNodeId) = context.Message;
         _logger.LogTrace("{MessageType} {AgvId}/{CorrelationId} received", nameof(AgvLastNodeIdChanged), agvCorrelationId, agvCorrelationId);
 
-        if (context.Message.OldLastNodeId != null)
+        if (oldLastNodeId != null)
         {
-            await _nodeStateRepository.UnOccupyNodeAsync(agvCorrelationId);
+            bool nodeWasOccupied = await _nodeStateRepository.UnOccupyNodeAsync(agvCorrelationId);
+            if(nodeWasOccupied)
+            {
+                await PublishNodeStateChange(context, oldLastNodeId);
+            }
         }
 
-        string? newLastNodeId = context.Message.NewLastNodeId;
         if (newLastNodeId != null && await _nodeStateRepository.IsNodeReservedAsync(newLastNodeId))
         {
             await _nodeStateRepository.OccupyNodeAsync(newLastNodeId, agvCorrelationId);
+            await PublishNodeStateChange(context, newLastNodeId);
         }
 
         var agvRoute = await _agvRouteRetrievalService.GetAgvRouteAsync(agvCorrelationId, newLastNodeId);
@@ -86,5 +92,16 @@ public class AgvPositionChangedConsumer :
 
             await _agvPublisher.SendAgvRouteChangedAsync(agvRoute);
         }
+    }
+
+    private async Task PublishNodeStateChange(IPublishEndpoint context, string nodeId)
+    {
+        var nodeState = await _nodeStateRepository.GetNodeStateAsync(nodeId);
+        if (nodeState != null)
+        {
+            await context.Publish(new NodeStateChanged(nodeState));
+            return;
+        }
+        await context.Publish(new NodeStateChanged(new NodeLock(nodeId, NodeLockState.Free, false, null, DateTime.UtcNow)));
     }
 }

@@ -166,6 +166,15 @@ public class EfNodeStateRepository : INodeStateRepository
         return nodes.Where(n => blockedNodes.All(n2 => n2.NodeId != n.Id));
     }
 
+    /// <inheritdoc />
+    public async Task<NodeLock?> GetNodeStateAsync(string nodeId)
+    {
+        await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext
+            .Set<NodeLock>()
+            .SingleOrDefaultAsync(nl => nl.NodeId == nodeId);
+    }
+
     private bool IsLocked(string nodeId)
     {
         using var dbContext = _dbContextFactory.CreateDbContext();

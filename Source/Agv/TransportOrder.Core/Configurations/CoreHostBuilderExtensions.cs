@@ -104,6 +104,7 @@ public static class CoreHostBuilderExtensions
         services.AddSingleton<IMapRepositorySemaphoreProvider, MapRepositorySemaphoreProvider>();
         services.AddTransient<IMapRepository, EfMapRepository>();
         services.AddTransient<IAgvGraphRepository, EfAgvGraphRepository>();
+        services.AddTransient<INodeRepository, EfNodeRepository>();
 
         services.AddSingleton<INodeStateDbSemaphoreProvider, NodeStateDbSemaphoreProvider>();
         services.AddTransient<INodeStateRepository, EfNodeStateRepository>();

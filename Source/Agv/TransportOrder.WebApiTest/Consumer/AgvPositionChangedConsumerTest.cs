@@ -3,6 +3,7 @@ using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Map;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
@@ -38,7 +39,9 @@ public class AgvPositionChangedConsumerTest
     [TestMethod]
     public async Task Receiving_AgvLastNodeIdChanged_UnOccupyCalled(string oldLastNodeId, string newLastNodeId)
     {
-        var fixture = new AgvPositionChangedConsumerTestFixture();
+        var fixture = new AgvPositionChangedConsumerTestFixture()
+            .WithOutNodeState()
+            .WithNodeOccupied();
         await fixture.TestHarness!.Bus.Publish(
             new AgvLastNodeIdChanged(
                 AgvId.ToGuid(),
@@ -46,7 +49,7 @@ public class AgvPositionChangedConsumerTest
                 newLastNodeId));
         (await fixture.TestHarness.Published.Any<AgvLastNodeIdChanged>()).ShouldBeTrue();
         (await fixture.ConsumerHarness!.Consumed.Any<AgvLastNodeIdChanged>()).ShouldBeTrue();
-
+        (await fixture.TestHarness.Published.Any<NodeStateChanged>()).ShouldBeTrue();
         fixture.NodeStateRepositoryMock.Verify(r => r.UnOccupyNodeAsync(AgvId.ToGuid()), Times.Once);
     }
 
@@ -55,7 +58,8 @@ public class AgvPositionChangedConsumerTest
     [TestMethod]
     public async Task Receiving_AgvLastNodeIdChanged_UnOccupyNotCalled(string oldLastNodeId, string newLastNodeId)
     {
-        var fixture = new AgvPositionChangedConsumerTestFixture();
+        var fixture = new AgvPositionChangedConsumerTestFixture()
+            .WithOutNodeState();
         await fixture.TestHarness!.Bus.Publish(
             new AgvLastNodeIdChanged(
                 AgvId.ToGuid(),
@@ -63,7 +67,7 @@ public class AgvPositionChangedConsumerTest
                 newLastNodeId));
         (await fixture.TestHarness.Published.Any<AgvLastNodeIdChanged>()).ShouldBeTrue();
         (await fixture.ConsumerHarness!.Consumed.Any<AgvLastNodeIdChanged>()).ShouldBeTrue();
-
+        (await fixture.TestHarness.Published.Any<NodeStateChanged>()).ShouldBeFalse();
         fixture.NodeStateRepositoryMock.Verify(r => r.UnOccupyNodeAsync(AgvId.ToGuid()), Times.Never);
     }
 
@@ -82,14 +86,14 @@ public class AgvPositionChangedConsumerTest
                 newLastNodeId));
         (await fixture.TestHarness.Published.Any<AgvLastNodeIdChanged>()).ShouldBeTrue();
         (await fixture.ConsumerHarness!.Consumed.Any<AgvLastNodeIdChanged>()).ShouldBeTrue();
-
+        (await fixture.TestHarness.Published.Any<NodeStateChanged>()).ShouldBeTrue();
         fixture.NodeStateRepositoryMock.Verify(r => r.OccupyNodeAsync(newLastNodeId, AgvId.ToGuid()), Times.Once);
     }
 
     [DataRow(null, "newLastNodeId")]
     [DataRow("oldLastNodeId", "newLastNodeId")]
     [TestMethod]
-    public async Task Receiving_AgvLastNodeIdChanged_NodeNotReserved_OccupyNodeAsyncNotCalled(string oldLastNodeId, string newLastNodeId)
+    public async Task Receiving_AgvLastNodeIdChanged_NodeNotReserved_OccupyNodeAsyncNotCalled(string? oldLastNodeId, string newLastNodeId)
     {
         var fixture = new AgvPositionChangedConsumerTestFixture()
             .WithNodeReserved(newLastNodeId, false);
@@ -101,7 +105,8 @@ public class AgvPositionChangedConsumerTest
                 newLastNodeId));
         (await fixture.TestHarness.Published.Any<AgvLastNodeIdChanged>()).ShouldBeTrue();
         (await fixture.ConsumerHarness!.Consumed.Any<AgvLastNodeIdChanged>()).ShouldBeTrue();
-
+  
+        (await fixture.TestHarness.Published.Any<NodeStateChanged>()).ShouldBeFalse();
         fixture.NodeStateRepositoryMock.Verify(r => r.OccupyNodeAsync(newLastNodeId, AgvId.ToGuid()), Times.Never);
     }
 

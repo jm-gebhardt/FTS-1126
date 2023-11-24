@@ -17,6 +17,7 @@ public class MapController : Controller
     private readonly IRequestClient<GetMapImage> _getMapImageClient;
     private readonly IRequestClient<GetMap> _getMapClient;
     private readonly IRequestClient<GetMapGraph> _getMapGraphClient;
+    private readonly IRequestClient<GetMapNodeStates> _getMapNodeStatesClient;
     private readonly IMapper _mapper;
 
     /// <summary>
@@ -25,11 +26,13 @@ public class MapController : Controller
     public MapController(IMapper mapper,
         IRequestClient<GetMapImage> getMapImageClient,
         IRequestClient<GetMap> getMapClient,
-        IRequestClient<GetMapGraph> getMapGraphClient)
+        IRequestClient<GetMapGraph> getMapGraphClient,
+        IRequestClient<GetMapNodeStates> getMapNodeStatesClient)
     {
         _getMapImageClient = getMapImageClient;
         _getMapClient = getMapClient;
         _getMapGraphClient = getMapGraphClient;
+        _getMapNodeStatesClient = getMapNodeStatesClient;
         _mapper = mapper;
     }
 
@@ -76,5 +79,20 @@ public class MapController : Controller
         Response<GotMapGraph> response = await _getMapGraphClient.GetResponse<GotMapGraph>(new GetMapGraph(correlationId));
         var graph = _mapper.Map<GraphDto>(response.Message.Graph);
         return Ok(graph);
+    }
+
+    /// <summary>
+    /// Get all node states for a given map.
+    /// </summary>
+    /// <param name="correlationId">The map correlation id.</param>
+    /// <response code="200">Ok</response>
+    /// <response code="404">Map with given correlationId not found.</response>
+    [HttpGet]
+    [Route("/map/{correlationId:guid}/nodeStates")]
+    public async Task<ActionResult<ICollection<NodeStateDto>>> GetNodeStatesForMap(Guid correlationId)
+    {
+        Response<GotMapNodeStates> response = await _getMapNodeStatesClient.GetResponse<GotMapNodeStates>(new GetMapNodeStates(correlationId));
+        var nodeStates = _mapper.Map<List<NodeStateDto>>(response.Message.NodeLocks);
+        return Ok(nodeStates);
     }
 }

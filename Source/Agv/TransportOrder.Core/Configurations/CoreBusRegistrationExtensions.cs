@@ -188,6 +188,9 @@ public static class CoreBusRegistrationExtensions
         configurator.AddConsumer<GetMapImageRequestHandler>();
         configurator.AddRequestClient<GetMapImage>();
 
+        configurator.AddConsumer<NodeStateRequestHandler>();
+        configurator.AddRequestClient<GetMapNodeStates>();
+
         configurator.AddConsumer<GetMapRequestHandler>();
         configurator.AddRequestClient<GetMapList>();
         configurator.AddRequestClient<GetMap>();

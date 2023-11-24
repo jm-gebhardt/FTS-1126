@@ -1,5 +1,6 @@
 ﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Node;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Map;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
@@ -32,5 +33,13 @@ public class NodeCommandHandler: IConsumer<FreeNode>
         {
           _logger.LogWarning("Could not free node {NodeId}, node is locked.", nodeId);
         }
+
+        var nodeState = await _nodeStateRepository.GetNodeStateAsync(nodeId);
+        if (nodeState == null)
+        {
+            _logger.LogWarning("Could not retrieve node state for node {NodeId}", nodeId);
+            return;
+        }
+        await context.Publish(new NodeStateChanged(nodeState));
     }
 }

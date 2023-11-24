@@ -18,6 +18,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Routing;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Map;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
@@ -58,6 +59,7 @@ public class ActionCommandHandler :
     private readonly IMapper _mapper;
     private readonly IActionGroupValidationService _actionGroupValidationService;
     private readonly IActionGroupRetrievalService _actionGroupRetrievalService;
+    private readonly INodeStateRepository _nodeStateRepository;
 
     /// <summary>
     /// Initializes a new <see cref="ActionCommandHandler"/> instance.
@@ -72,6 +74,7 @@ public class ActionCommandHandler :
         IChooseAgvActionGroupService chooseAgvActionGroupService,
         IActionGroupRetrievalService actionGroupRetrievalService,
         IActionManagerSemaphoreProvider actionManagerSemaphoreProvider,
+        INodeStateRepository nodeStateRepository,
         ISettingsProvider<AgvSettings> settingsProvider,
         IMapper mapper,
         ILogger<ActionCommandHandler> logger)
@@ -87,6 +90,7 @@ public class ActionCommandHandler :
         _maintenanceService = maintenanceService;
         _actionGroupValidationService = actionGroupValidationService;
         _actionGroupRetrievalService = actionGroupRetrievalService;
+        _nodeStateRepository = nodeStateRepository;
         _settingsProvider = settingsProvider;
         _mapper = mapper;
     }
@@ -288,6 +292,7 @@ public class ActionCommandHandler :
         _logger.LogInformation("Starting park action for agv with CorrelationId: {AgvCorrelationId}.", agv.CorrelationId);
 
         var parkNode = await _parkPointService.ReserveParkAsync(agv);
+        await PublishNodeStateChange(context, parkNode.Id);
 
         var groupCorrelationId = Guid.NewGuid();
         var actionGroup = new ActionGroup(
@@ -341,6 +346,7 @@ public class ActionCommandHandler :
         _logger.LogInformation("Starting charge action for agv with CorrelationId: {AgvCorrelationId}.", agv.CorrelationId);
 
         var chargingNode = await _chargingPointManager.ReserveChargerAsync(agv);
+        await PublishNodeStateChange(context, chargingNode.Id);
 
         var groupCorrelationId = Guid.NewGuid();
         var actionGroup = new ActionGroup(
@@ -625,5 +631,16 @@ public class ActionCommandHandler :
     {
         var agvMessageContent = _mapper.Map<Messages.MessageContent.Agv>(agv);
         await context.Publish(new AgvStateChanged(agv.CorrelationId, agv.CurrentAgvState, agv.PreviousAgvState, agvMessageContent));
+    }
+
+    private async Task PublishNodeStateChange(IPublishEndpoint context, string nodeId)
+    {
+        var nodeState = await _nodeStateRepository.GetNodeStateAsync(nodeId);
+        if (nodeState == null)
+        {
+            _logger.LogError("Could not retrieve node state for node {NodeId}", nodeId);
+            return;
+        }
+        await context.Publish(new NodeStateChanged(nodeState));
     }
 }

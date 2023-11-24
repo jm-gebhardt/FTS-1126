@@ -1,4 +1,6 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
+﻿using AutoMapper;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Node;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Map;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers.Map;
 using JetBrains.Annotations;
@@ -24,14 +26,17 @@ public class MapControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         new("465A85A6-6A02-4068-A7AA-E3B4B9821019")
     };
 
+    public IMapper Mapper = null!;
+
     protected override MapController GetController()
     {
         IRequestClient<GetMapImage> getMapImageRequestClient = GetRequestClient<GetMapImage>();
         IRequestClient<GetMap> getMapRequestClient = GetRequestClient<GetMap>();
         IRequestClient<GetMapGraph> getMapGraphClient = GetRequestClient<GetMapGraph>();
+        IRequestClient<GetMapNodeStates> getMapNodeStatesClient = GetRequestClient<GetMapNodeStates>();
 
-        var controller = new MapController(GetMapper(), getMapImageRequestClient, getMapRequestClient, getMapGraphClient);
-
+        var controller = new MapController(GetMapper(), getMapImageRequestClient, getMapRequestClient, getMapGraphClient, getMapNodeStatesClient);
+        Mapper = GetMapper();
         return controller;
     }
 
@@ -91,6 +96,14 @@ public class MapControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
     public new MapControllerTestFixture<TRequest, TRequestHandler> Build()
     {
         base.Build();
+        return this;
+    }
+
+    public MapControllerTestFixture<TRequest, TRequestHandler> AddNodeStates(ICollection<NodeLock> nodeStates)
+    {
+        var nodeRepositoryMock = new Mock<INodeRepository>();
+        nodeRepositoryMock.Setup(x => x.GetNodeStatesForMapAsync(It.IsAny<Guid>())).ReturnsAsync(nodeStates);
+        AddService(s => s.AddTransient(_ => nodeRepositoryMock.Object));
         return this;
     }
 }

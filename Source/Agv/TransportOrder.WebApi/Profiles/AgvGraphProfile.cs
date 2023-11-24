@@ -6,7 +6,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles.Resolver;
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles;
 
 /// <summary>
-/// Profile for AgvGraph
+/// Profile for AgvGraph related dtos.
 /// </summary>
 public class AgvGraphProfile : Profile
 {

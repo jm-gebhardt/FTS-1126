@@ -22,6 +22,4 @@
     <ProjectReference Include="..\Common\Common.csproj" />
     <ProjectReference Include="..\TransportOrder.Domain\TransportOrder.Domain.csproj" />
   </ItemGroup>
-
-
 </Project>

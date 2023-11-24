@@ -1,4 +1,5 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Node;
 using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
@@ -75,4 +76,11 @@ public interface INodeStateRepository
     /// </summary>
     /// <returns></returns>
     public IEnumerable<GraphNode> FilterFreeUnlockedNodes(IEnumerable<GraphNode> nodes);
+
+    /// <summary>
+    /// Get state of node.
+    /// </summary>
+    /// <param name="nodeId">The node id.</param>
+    /// <returns></returns>
+    Task<NodeLock?> GetNodeStateAsync(string nodeId);
 }

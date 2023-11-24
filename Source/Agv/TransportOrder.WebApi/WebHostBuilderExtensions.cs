@@ -8,6 +8,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Map;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Middleware;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.SchemaFilter;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Swagger;
@@ -38,6 +39,7 @@ public static class WebHostBuilderExtensions
 
             services.AddTransient<IActionGroupPublisher, ActionGroupPublisher>();
             services.AddTransient<IAgvPublisher, AgvPublisher>();
+            services.AddTransient<IMapPublisher, MapPublisher>();
 
             services.AddScoped<ExceptionHandlerMiddleware>();
             services.AddMvc();
@@ -118,6 +120,7 @@ public static class WebHostBuilderExtensions
             endpoints.MapControllers();
             endpoints.MapHub<AgvHub>(AgvHub.UrlPath);
             endpoints.MapHub<ActionGroupHub>(ActionGroupHub.UrlPath);
+            endpoints.MapHub<MapHub>(MapHub.UrlPath);
         });
 
         app.UseSwagger(c =>

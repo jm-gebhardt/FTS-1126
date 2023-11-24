@@ -24,5 +24,7 @@ public static class WebApiBusRegistrationExtensions
         busRegistrationConfigurator.AddConsumer<AgvPositionChangedConsumer>();
         busRegistrationConfigurator.AddConsumer<AgvChangedConsumer>();
         busRegistrationConfigurator.AddConsumer<AgvBatteryChargeChangedConsumer>();
+
+        busRegistrationConfigurator.AddConsumer<NodeStateChangedConsumer>();
     }
 }

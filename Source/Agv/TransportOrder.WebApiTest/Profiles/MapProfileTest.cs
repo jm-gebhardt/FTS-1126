@@ -1,6 +1,8 @@
 using System.Collections.Immutable;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Node;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Map;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Graph;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Map;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles.Resolver;
@@ -53,5 +55,19 @@ public class MapProfileTest
         dtoMap.XOffset.ShouldBe(mapMessageContent.XOffset);
         dtoMap.YOffset.ShouldBe(mapMessageContent.YOffset);
         dtoMap.RelatedAgvs.ShouldAllBe(p => agvMapRelation.Any(kvp => kvp.Key.Equals(dtoMap.CorrelationId) && kvp.Value.Contains(p)));
+    }
+
+    [TestMethod]
+    public void Map_NodeLockToNodeStateDto_MapsAllPropertiesCorrectly()
+    {
+        var mapper = MappingHelper.GetMapper(new MapProfile());
+        var nodeLock = new NodeLock("NodeId", NodeLockState.Occupied, true, Guid.NewGuid(), DateTime.UtcNow);
+
+        var nodeStateDto = mapper.Map<NodeStateDto>(nodeLock);
+        nodeStateDto.ShouldNotBeNull();
+        nodeStateDto.AgvCorrelationId.ShouldBe(nodeLock.AgvCorrelationId);
+        nodeStateDto.IsLocked.ShouldBe(nodeLock.IsLocked);
+        nodeStateDto.NodeId.ShouldBe(nodeLock.NodeId);
+        nodeStateDto.NodeState.ShouldBe(nodeLock.NodeState);
     }
 }

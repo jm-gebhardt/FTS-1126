@@ -1,6 +1,8 @@
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Node;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Consumer;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Agv;
+using Moq;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Consumer;
 
@@ -9,6 +11,19 @@ public class AgvPositionChangedConsumerTestFixture : ConsumerHubTestFixture<AgvP
     public AgvPositionChangedConsumerTestFixture WithNodeReserved(string nodeId, bool reserve = true)
     {
         NodeStateRepositoryMock.Setup(x => x.IsNodeReservedAsync(nodeId)).Returns(Task.FromResult(reserve));
+        NodeStateRepositoryMock.Setup(x => x.GetNodeStateAsync(nodeId)).ReturnsAsync(new NodeLock(nodeId, NodeLockState.Reserved, false, Guid.NewGuid(), DateTime.UtcNow));
+        return this;
+    }
+
+    public AgvPositionChangedConsumerTestFixture WithNodeOccupied()
+    {
+        NodeStateRepositoryMock.Setup(x => x.UnOccupyNodeAsync(It.IsAny<Guid>())).ReturnsAsync(true);
+        return this;
+    }
+
+    public AgvPositionChangedConsumerTestFixture WithOutNodeState()
+    {
+        NodeStateRepositoryMock.Setup(x => x.GetNodeStateAsync(It.IsAny<string>())).Returns(Task.FromResult<NodeLock?>(null));
         return this;
     }
 
