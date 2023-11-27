@@ -49,6 +49,7 @@ public class ExceptionHandlerMiddleware : IMiddleware
 
             case NotInCorrectStateException:
             case ActionGroupStateInvalidException:
+            case BadRequestException:
                 statusCode = HttpStatusCode.BadRequest;
                 break;
 
@@ -62,7 +63,7 @@ public class ExceptionHandlerMiddleware : IMiddleware
         }
 
         string result = JsonSerializer.Serialize(problem);
-        context.Response.StatusCode = (int)statusCode;
+        context.Response.StatusCode = (int) statusCode;
         context.Response.ContentType = "application/json";
         return context.Response.WriteAsync(result);
     }

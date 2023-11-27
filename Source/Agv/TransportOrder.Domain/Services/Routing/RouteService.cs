@@ -38,9 +38,9 @@ public class RouteService : IRouteService
         return await _agvGraphRepository.GetAgvGraphAsync(agv.CorrelationId);
     }
 
-    private async Task<Route?> GetRouteIfExistingAsync(Models.Agv.Agv agv, string destinationNodeId, CancellationToken cancellationToken = default)
+    private async Task<Route?> GetRouteIfExistingAsync(Models.Agv.Agv agv, string destinationNodeId, string? startNodeId = null, bool throwIfNodeUnknown = false, CancellationToken cancellationToken = default)
     {
-        string lastNodeId = GetLastNodeId(agv);
+        startNodeId ??= GetLastNodeId(agv);
 
         cancellationToken.ThrowIfCancellationRequested();
         if (!await _agvGraphRepository.ExistsAsync(agv.CorrelationId))
@@ -53,7 +53,19 @@ public class RouteService : IRouteService
         var agvGraph = await GetAgvGraph(agv);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var route = await _routeFinder.TryGetRouteAsync(agvGraph, cancellationToken, lastNodeId, destinationNodeId);
+        if (throwIfNodeUnknown)
+        {
+            if (agvGraph.Nodes.All(n => n.Id != destinationNodeId))
+            {
+                throw new NodeNotFoundException(agv, destinationNodeId);
+            }
+            if (agvGraph.Nodes.All(n => n.Id != startNodeId))
+            {
+                throw new NodeNotFoundException(agv, startNodeId);
+            }
+        }
+
+        var route = await _routeFinder.TryGetRouteAsync(agvGraph, cancellationToken, startNodeId, destinationNodeId);
         return route;
     }
 
@@ -78,7 +90,7 @@ public class RouteService : IRouteService
     /// <exception cref="AgvGraphNotDefinedException"></exception>
     public async Task<float?> GetCostsAsync(Models.Agv.Agv agv, string destinationNodeId, CancellationToken cancellationToken = default)
     {
-        var route = await GetRouteIfExistingAsync(agv, destinationNodeId, cancellationToken);
+        var route = await GetRouteIfExistingAsync(agv, destinationNodeId, null, true, cancellationToken);
         return route?.Costs;
     }
 
@@ -137,9 +149,10 @@ public class RouteService : IRouteService
     /// <exception cref="AgvLocationUnknownException"></exception>
     /// <exception cref="AgvGraphNotDefinedException"></exception>
     /// <exception cref="RouteNotFoundException"></exception>
-    public async Task<Route> GetRouteAsync(Models.Agv.Agv agv, string destinationNodeId, CancellationToken cancellationToken = default)
+    /// <exception cref="NodeNotFoundException"></exception>
+    public async Task<Route> GetRouteAsync(Models.Agv.Agv agv, string destinationNodeId, string? startNodeId = null, CancellationToken cancellationToken = default)
     {
-        var route = await GetRouteIfExistingAsync(agv, destinationNodeId, cancellationToken);
+        var route = await GetRouteIfExistingAsync(agv, destinationNodeId, startNodeId, true, cancellationToken);
 
         if (route == null)
         {

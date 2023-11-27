@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Node;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Map;
@@ -14,13 +15,20 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Profiles;
 [TestClass]
 public class MapProfileTest
 {
+    private IMapper _mapper = null!;
+
+    [TestInitialize]
+    public void TestInitialize()
+    {
+        _mapper = MappingHelper.GetMapper(new MapProfile());
+    }
+
     /// <summary>
     /// </summary>
     [TestMethod]
     public void AssertConfigurationIsValid_DoesNotThrowException_WhenMappingProfileIsDefined()
     {
-        var mapper = MappingHelper.GetMapper();
-        mapper.ConfigurationProvider.AssertConfigurationIsValid();
+        _mapper.ConfigurationProvider.AssertConfigurationIsValid();
     }
 
     /// <summary>
@@ -29,7 +37,6 @@ public class MapProfileTest
     [TestMethod]
     public void Map_ShouldMapAllPropertiesCorrectly_WhereMapMessageContentIsMappedToDtoMap()
     {
-        var mapper = MappingHelper.GetMapper(new MapProfile());
         var correlationId = Guid.NewGuid();
 
         var mapMessageContent = new Map(correlationId, "Area51_Floor1_Compartment47", 50.0d, 0.01, 1, new[]
@@ -45,7 +52,7 @@ public class MapProfileTest
             }
         }.ToImmutableDictionary(x => x.Key, x => x.Value);
 
-        var dtoMap = mapper.Map<MapDto>(mapMessageContent, opt => opt.Items[RelatedMapAgvValueResolver.AgvMapRelationsName] = agvMapRelation);
+        var dtoMap = _mapper.Map<MapDto>(mapMessageContent, opt => opt.Items[RelatedMapAgvValueResolver.AgvMapRelationsName] = agvMapRelation);
 
         dtoMap.ShouldNotBeNull();
         dtoMap.CorrelationId.ShouldBe(mapMessageContent.CorrelationId);

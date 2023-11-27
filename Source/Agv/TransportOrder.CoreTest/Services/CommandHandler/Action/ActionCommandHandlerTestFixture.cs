@@ -58,7 +58,7 @@ public class ActionCommandHandlerTestFixture : MassTransitConsumerTestFixture<Ac
         collection.AddTransient(_ => _nodeStateRepositoryMock.Object);
     }
 
-    public ActionCommandHandlerTestFixture(TimeSpan? inactivityTimeout = null,Action<IBusRegistrationConfigurator> ? busRegistrationConfigurator = null,
+    public ActionCommandHandlerTestFixture(TimeSpan? inactivityTimeout = null, Action<IBusRegistrationConfigurator>? busRegistrationConfigurator = null,
         Action<IBusRegistrationContext, IInMemoryBusFactoryConfigurator>? inMemoryConfiguration = null,
         params Action<IServiceCollection>[] services) : base(busRegistrationConfigurator, inMemoryConfiguration, services)
     {
@@ -74,9 +74,9 @@ public class ActionCommandHandlerTestFixture : MassTransitConsumerTestFixture<Ac
         Build();
         if (inactivityTimeout != null)
         {
-            TestHarness!.TestInactivityTimeout = (TimeSpan)inactivityTimeout;
+            TestHarness!.TestInactivityTimeout = (TimeSpan) inactivityTimeout;
         }
-        _actionGroupRepository.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync((ActionGroup?)null);
+        _actionGroupRepository.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync((ActionGroup?) null);
         _actionGroupRepository.Setup(x => x.AddAsync(It.IsAny<ActionGroup>())).Verifiable();
     }
 
@@ -94,31 +94,31 @@ public class ActionCommandHandlerTestFixture : MassTransitConsumerTestFixture<Ac
         Build();
         if (inactivityTimeout != null)
         {
-            TestHarness!.TestInactivityTimeout = (TimeSpan)inactivityTimeout;
+            TestHarness!.TestInactivityTimeout = (TimeSpan) inactivityTimeout;
         }
-        _actionGroupRepository.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync((ActionGroup?)null);
+        _actionGroupRepository.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync((ActionGroup?) null);
         _actionGroupRepository.Setup(x => x.AddAsync(It.IsAny<ActionGroup>())).Verifiable();
     }
 
     public void AddAgv(TransportOrder.Domain.Models.Agv.Agv agv)
     {
-        _agvRepository.AddAgvsToMockRepository(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
-        _agvRepository.AddAgvsToMockRepository(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+        _agvRepository.AddAgvsToMockRepository(new List<TransportOrder.Domain.Models.Agv.Agv> {agv});
+        _agvRepository.AddAgvsToMockRepository(new List<TransportOrder.Domain.Models.Agv.Agv> {agv});
     }
 
-    public void AddActionGroup(ActionGroup actionGroup, bool hasUnfinishedAction = true,  bool hasNotStartedAction = true, bool existsPriorToTest = true)
+    public void AddActionGroup(ActionGroup actionGroup, bool hasUnfinishedAction = true, bool hasNotStartedAction = true, bool existsPriorToTest = true)
     {
         _actionGroupRepository.Setup(x => x.GetRequiredActionGroupByIdAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup);
         _actionGroupRepository.Setup(x => x.UpdateActionAndGroupStateAsync(It.IsAny<AgvAction>(), It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<ActionState>())).ReturnsAsync(actionGroup);
         _actionGroupRepository.Setup(x => x.GetSubsequentActionAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup.Actions.First());
-        _actionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<ActionGroupState>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(), It.IsAny<bool?>())).ReturnsAsync(new List<ActionGroup> { actionGroup });
+        _actionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<ActionGroupState>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(), It.IsAny<bool?>())).ReturnsAsync(new List<ActionGroup> {actionGroup});
         if (existsPriorToTest)
         {
-            _actionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<IList<ActionGroupState>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(), It.IsAny<bool?>(), It.IsAny<SortBy>(), It.IsAny<bool>())).ReturnsAsync(new List<ActionGroup> { actionGroup });
+            _actionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<IList<ActionGroupState>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(), It.IsAny<bool?>(), It.IsAny<SortBy>(), It.IsAny<bool>())).ReturnsAsync(new List<ActionGroup> {actionGroup});
         }
         else
         {
-           _actionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<IList<ActionGroupState>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(), It.IsAny<bool?>(), It.IsAny<SortBy>(), It.IsAny<bool>())).ReturnsAsync(new List<ActionGroup>());
+            _actionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<IList<ActionGroupState>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(), It.IsAny<bool?>(), It.IsAny<SortBy>(), It.IsAny<bool>())).ReturnsAsync(new List<ActionGroup>());
         }
         _actionGroupRepository.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup);
         _actionGroupRepository.Setup(x => x.HasNotStartedActionsAsync(It.IsAny<Guid>())).ReturnsAsync(hasNotStartedAction);
@@ -150,7 +150,7 @@ public class ActionCommandHandlerTestFixture : MassTransitConsumerTestFixture<Ac
 
     public void AddRoute(string[] nodes)
     {
-        _routeService.Setup(x => x.GetRouteAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Route(1f, nodes));
+        _routeService.Setup(x => x.GetRouteAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<string>(), null, It.IsAny<CancellationToken>())).ReturnsAsync(new Route(1f, nodes));
     }
 
     public void SetupValidationResult(List<ValidationFailure> failures)

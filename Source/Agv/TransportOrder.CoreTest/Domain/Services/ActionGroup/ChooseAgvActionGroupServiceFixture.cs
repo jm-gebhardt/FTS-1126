@@ -40,7 +40,7 @@ public class ChooseAgvActionGroupServiceFixture
         RouteService.Setup(x => x.GetCostsForFirstActionAsync(agv, actionGroup, It.IsAny<CancellationToken>()))
             .ReturnsAsync(routeCosts);
 
-        RouteService.Setup(x => x.GetRouteAsync(agv, It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Route(1f, Array.Empty<string>()));
+        RouteService.Setup(x => x.GetRouteAsync(agv, It.IsAny<string>(), null, It.IsAny<CancellationToken>())).ReturnsAsync(new Route(1f, Array.Empty<string>()));
         return this;
     }
 
@@ -55,7 +55,7 @@ public class ChooseAgvActionGroupServiceFixture
         RouteService.Setup(x => x.GetCostsForFirstActionAsync(agv, actionGroup, It.IsAny<CancellationToken>()))
             .ReturnsAsync(routeCosts);
 
-        RouteService.Setup(x => x.GetRouteAsync(agv, It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Route(1f, Array.Empty<string>()));
+        RouteService.Setup(x => x.GetRouteAsync(agv, It.IsAny<string>(), null, It.IsAny<CancellationToken>())).ReturnsAsync(new Route(1f, Array.Empty<string>()));
         return this;
     }
 

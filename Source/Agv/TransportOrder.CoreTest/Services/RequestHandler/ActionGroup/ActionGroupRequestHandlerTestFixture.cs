@@ -12,7 +12,6 @@ using Moq;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.RequestHandler.ActionGroup;
 
-// ReSharper disable ConvertConstructorToMemberInitializers
 public class ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> : MediatorTestFixture<TRequestClient, TConsumer>
     where TRequestClient : class
     where TConsumer : class, IConsumer
@@ -50,8 +49,7 @@ public class ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> : M
     {
         if (_actionGroups != null)
         {
-            // ReSharper disable once CoVariantArrayConversion
-            await _actionGroupRetrievalServiceTestFixture.AddRangeAsync(_actionGroups);
+            await _actionGroupRetrievalServiceTestFixture.AddRangeAsync(_actionGroups.ToList());
             _actionGroupRepositoryFixture.WithActionGroups(_actionGroups);
         }
 

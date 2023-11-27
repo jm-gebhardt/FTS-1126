@@ -43,12 +43,13 @@ public interface IRouteService
     /// <summary>
     /// Determine route for Agv to go to destination
     /// </summary>
-    /// <param name="agv">The agv to calculate the route for</param>
-    /// <param name="destinationNodeId">The destination node Id</param>
+    /// <param name="agv">The agv to calculate the route for.</param>
+    /// <param name="destinationNodeId">The destination node Id.</param>
+    /// <param name="startNodeId">The start node Id from which the route should be calculated. If null the last node Id of the agv will be used.</param>
     /// <param name="cancellationToken"></param>
     /// <returns>The found route</returns>
     /// <exception cref="RouteNotFoundException"></exception>
-    Task<Route> GetRouteAsync(Models.Agv.Agv agv, string destinationNodeId, CancellationToken cancellationToken = default);
+    Task<Route> GetRouteAsync(Models.Agv.Agv agv, string destinationNodeId, string? startNodeId = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Determine route for Agv from its last node to the destination nodes one after the other

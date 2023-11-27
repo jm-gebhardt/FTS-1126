@@ -11,7 +11,7 @@ public class NodeNotFoundException : NotFoundException
     /// <see cref="NodeNotFoundException"/>>
     [PublicAPI]
     public NodeNotFoundException(Models.Agv.Agv agv, string description)
-        : base(description, nameof(agv.CorrelationId), agv.CorrelationId)
+        : base(description, "Agv CorrelationId", agv.CorrelationId)
     {
     }
 

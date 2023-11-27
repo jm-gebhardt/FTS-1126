@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using System.ComponentModel.DataAnnotations;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
@@ -6,8 +7,10 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Commands;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Routing;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Graph;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Routing;
 using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 using LockAgv = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv.LockAgv;
@@ -28,6 +31,7 @@ public class AgvController : Controller
     private readonly IRequestClient<GetAgvGraph> _getAgvGraphClient;
     private readonly IRequestClient<GetAgvData> _getAgvDataClient;
     private readonly IRequestClient<GetCurrentAgvRoute> _getCurrentAgvRouteClient;
+    private readonly IRequestClient<GetRoute> _getRouteClient;
     private readonly IRequestClient<GetAgvPosition> _getAgvPositionClient;
     private readonly IRequestClient<AcceptAgvCommand> _acceptAgvClient;
     private readonly IRequestClient<UnlockAgv> _unlockAgvClient;
@@ -49,6 +53,7 @@ public class AgvController : Controller
         IRequestClient<GetAgvGraph> getAgvGraphClient,
         IRequestClient<GetAgvData> getAgvDataClient,
         IRequestClient<GetCurrentAgvRoute> getCurrentAgvRouteClient,
+        IRequestClient<GetRoute> getRouteClient,
         IRequestClient<GetAgvPosition> getAgvPositionClient,
         IRequestClient<AcceptAgvCommand> acceptAgvClient,
         IRequestClient<UnlockAgv> unlockAgvClient,
@@ -67,6 +72,7 @@ public class AgvController : Controller
         _getAgvGraphClient = getAgvGraphClient;
         _getAgvDataClient = getAgvDataClient;
         _getCurrentAgvRouteClient = getCurrentAgvRouteClient;
+        _getRouteClient = getRouteClient;
         _getAgvPositionClient = getAgvPositionClient;
         _acceptAgvClient = acceptAgvClient;
         _unlockAgvClient = unlockAgvClient;
@@ -127,19 +133,39 @@ public class AgvController : Controller
     }
 
     /// <summary>
-    /// Get remaining agv route.
+    /// Get current route of Agv.
     /// </summary>
-    /// <param name="correlationId">The agv correlation id.</param>
+    /// <param name="correlationId">The agv correlation Id.</param>
     /// <returns></returns>
     /// <response code="200">AgvRoute</response>
-    /// <response code="204">No Agv or running ActionGroup existing</response>
+    /// <response code="204">No running ActionGroup and therefore current route does not exist.</response>
     /// <response code="404">AGV with given correlationId not found.</response>
     [HttpGet]
-    [Route("/agv/{correlationId:guid}/route")]
+    [Route("/agv/{correlationId:guid}/currentRoute")]
     public async Task<ActionResult<CurrentRouteDto?>> GetAgvRoute(Guid correlationId)
     {
         Response<GotCurrentAgvRoute> response = await _getCurrentAgvRouteClient.GetResponse<GotCurrentAgvRoute>(new GetCurrentAgvRoute(correlationId));
         var dto = _mapper.Map<CurrentRouteDto>(response.Message.AgvRoute);
+        return Ok(dto);
+    }
+
+    /// <summary>
+    /// Get route for an Agv.
+    /// </summary>
+    /// <param name="correlationId">The agv correlation Id.</param>
+    /// <param name="startNodeId">The start node Id from which the route should be calculated. If null the last node Id of the Agv will be used.</param>
+    /// <param name="destinationNodeId">The destination node Id to which the route should be calculated, starting from the Agv's current node.</param>
+    /// <returns></returns>
+    /// <response code="200">Route</response>
+    /// <response code="204">No Route found.</response>
+    /// <response code="400">Start/Destination node node found.</response>
+    /// <response code="404">AGV with given correlationId not found.</response>
+    [HttpGet]
+    [Route("/agv/{correlationId:guid}/route")]
+    public async Task<ActionResult<RouteDto>> GetAgvRoute(Guid correlationId, [Required] string destinationNodeId, string? startNodeId = null)
+    {
+        Response<GotRoute> response = await _getRouteClient.GetResponse<GotRoute>(new GetRoute(correlationId, destinationNodeId, startNodeId));
+        var dto = _mapper.Map<RouteDto>(response.Message.Route);
         return Ok(dto);
     }
 

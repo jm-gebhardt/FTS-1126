@@ -1,11 +1,12 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+﻿using Gebhardt.StoreWare.Agv.Common.Exceptions;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Routing.Exceptions;
 
 /// <summary>
 /// When there was no route found for the given source/destination nodes
 /// </summary>
-public class RouteNotFoundException : Exception
+public class RouteNotFoundException : NotFoundException
 {
     /// <summary>
     /// Ctor

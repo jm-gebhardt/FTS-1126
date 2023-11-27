@@ -12,6 +12,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Commands;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Routing;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Helper;
 using JetBrains.Annotations;
@@ -177,6 +178,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         IRequestClient<GetAgvGraph> getAgvGraphRequestClient = GetRequestClient<GetAgvGraph>();
         IRequestClient<GetAgvData> getAgvDataRequestClient = GetRequestClient<GetAgvData>();
         IRequestClient<GetCurrentAgvRoute> getCurrentAgvRouteRequestClient = GetRequestClient<GetCurrentAgvRoute>();
+        IRequestClient<GetRoute> getRouteRequestClient = GetRequestClient<GetRoute>();
         IRequestClient<GetAgvPosition> getAgvPositionRequestClient = GetRequestClient<GetAgvPosition>();
         IRequestClient<AcceptAgvCommand> acceptAgvRequestClient = GetRequestClient<AcceptAgvCommand>();
         IRequestClient<UnlockAgv> unlockAgvRequestClient = GetRequestClient<UnlockAgv>();
@@ -195,6 +197,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             getAgvGraphRequestClient,
             getAgvDataRequestClient,
             getCurrentAgvRouteRequestClient,
+            getRouteRequestClient,
             getAgvPositionRequestClient,
             acceptAgvRequestClient,
             unlockAgvRequestClient,
