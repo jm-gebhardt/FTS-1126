@@ -388,4 +388,34 @@ public class SimulatedAgvStateMachineTest
 
         await fixture.PublishMessageAsync(new SimulatedAgvStateMachine.ScheduleFinishAction(correlationId));
     }
+    
+    [TestMethod]
+    public async Task Consume_SimulateAgvError_PublishesAgvErrorStatusReceived()
+    {
+        var agvSaga = SimulatedAgvSagaGenerator.Generate();
+        var correlationId = agvSaga.CorrelationId;
+        var agvError = AgvErrorGenerator.GenerateAgvError(correlationId);
+        var fixture = new SimulatedAgvStateMachineTestFixture()
+            .WithAgv(agvSaga)
+            .Build();
+
+        await fixture.PublishMessageAsync(new SimulateAgvError(correlationId, new List<AgvError>{ agvError }), c => c.Context.Message.CorrelationId == correlationId);
+
+        (await fixture.SagaHarness.Consumed.Any<SimulateAgvError>()).ShouldBeTrue();
+
+        (await fixture.TestHarness.Published.Any<AgvErrorStatusReceived>()).ShouldBeTrue();
+
+        var message = fixture.TestHarness.Published.Select<AgvErrorStatusReceived>().First().Context.Message;
+        message.CorrelationId.ShouldBe(correlationId);
+        message.Errors.ShouldNotBeNull();
+        message.Errors.Count.ShouldBe(1);
+        message.Errors.First().ShouldSatisfyAllConditions(
+            e => e.ErrorDescription.ShouldBe(agvError.ErrorDescription),
+            e => e.ErrorLevel.ToString().ShouldBe(agvError.ErrorLevel.ToString()),
+            e => e.ErrorType.ShouldBe(agvError.ErrorType),
+            e => e.ErrorReferences.ShouldNotBeNull(),
+            e => e.ErrorReferences!.First().ShouldSatisfyAllConditions(
+                r => r.ReferenceKey.ShouldBe(agvError.ErrorReferences!.First().ReferenceKey),
+                r => r.ReferenceValue.ShouldBe(agvError.ErrorReferences!.First().ReferenceValue)));
+    }
 }

@@ -71,7 +71,6 @@ public class AgvsControllerTest
             agvs[index].Errors.ShouldNotBeEmpty();
             foreach (var agvDtoError in agvs[index].Errors)
             {
-                agvDtoError.AgvCorrelationId.ShouldBe(agvDtoError.AgvCorrelationId);
                 var expectedAgvError = expectedAgvErrors.Find(e => e.ErrorType == agvDtoError.ErrorType);
                 expectedAgvError.ShouldNotBeNull();
                 agvDtoError.ErrorDescription.ShouldBe(expectedAgvError.ErrorDescription);

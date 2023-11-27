@@ -102,6 +102,11 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     /// <see cref="ActionAborted"/> was received.
     /// </summary>
     public Event<ActionAborted> AgvActionAbortedEvent { get; private set; } = default!;
+
+    /// <summary>
+    /// SimulateAgvError was received
+    /// </summary>
+    public Event<SimulateAgvError> SimulateAgvErrorEvent { get; private set; } = default!;
     #endregion
 
     #region Schedules
@@ -174,6 +179,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         DuringAny(SetRequestAgvMapHandler());
         DuringAny(SetSignalPositionHandler());
         DuringAny(SetRequestStatusSendHandler());
+        DuringAny(SimulateAgvErrorHandler());
 
         WhenEnterAny(UpdateTimeOfStateTransition);
 
@@ -344,6 +350,14 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
                         ));
                 }));
     }
+
+    private EventActivityBinder<SimulatedAgvSaga, SimulateAgvError> SimulateAgvErrorHandler()
+    {
+        return When(SimulateAgvErrorEvent)
+            .Then(c => _logger.LogInformation("{MessageType} / {CorrelationId} received", nameof(SimulateAgvError), c.Saga.CorrelationId))
+            .Then(c => { c.Saga.Errors = c.Message.AgvErrors; })
+            .ThenAsync(PublishAgvError);
+    }
     #endregion
 
     #region Actions
@@ -486,6 +500,12 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         }
 
         context.Saga.AbortAction();
+    }
+
+    private async Task PublishAgvError<T>(BehaviorContext<SimulatedAgvSaga, T> context) where T : class
+    {
+        _logger.LogDebug("Publish {Message} for Agv with Correlation Id: {AgvCorrelationId}", nameof(AgvErrorStatusReceived), context.Saga.CorrelationId);
+        await context.Publish(new AgvErrorStatusReceived(context.Saga.CorrelationId, context.Saga.Errors), context.CancellationToken);
     }
 
     private EventActivityBinder<SimulatedAgvSaga> UpdateTimeOfStateTransition(EventActivityBinder<SimulatedAgvSaga> eventActivity)

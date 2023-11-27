@@ -63,7 +63,10 @@ public record AgvError : CorrelatedBy<Guid>
         ErrorLevel = errorLevel;
         ErrorType = errorType;
         ErrorReferences = errorReferences;
-        ErrorReceived = errorReceived;
+        if (errorReceived != default)
+        {
+            ErrorReceived = errorReceived;
+        }
     }
 
     /// <summary>

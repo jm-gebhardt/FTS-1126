@@ -119,12 +119,12 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
 
     private float GetProbableTheta(GraphNode graphNode)
     {
-        var neighbour = AgvGraph?.Edges.FirstOrDefault(e => e.ToNodeId == graphNode.Id || e.FromNodeId == graphNode.Id);
-        if (neighbour == null)
+        var neighbor = AgvGraph?.Edges.FirstOrDefault(e => e.ToNodeId == graphNode.Id || e.FromNodeId == graphNode.Id);
+        if (neighbor == null)
         {
             return InitialTheta;
         }
-        var otherNode = neighbour.FromNodeId == graphNode.Id ? AgvGraph!.Nodes.FirstOrDefault(n => n.Id == neighbour.ToNodeId) : AgvGraph!.Nodes.FirstOrDefault(n => n.Id == neighbour.FromNodeId);
+        var otherNode = neighbor.FromNodeId == graphNode.Id ? AgvGraph!.Nodes.FirstOrDefault(n => n.Id == neighbor.ToNodeId) : AgvGraph!.Nodes.FirstOrDefault(n => n.Id == neighbor.FromNodeId);
 
         if (otherNode == null)
         {
@@ -240,6 +240,11 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
     public double? ActionProgress => TimeToFinish != null && ActionDuration != null ? Math.Clamp(1 - TimeToFinish.Value.TotalSeconds / ActionDuration.Value.TotalSeconds, 0, 1) : null;
 
     /// <summary>
+    /// Simulated Agv errors
+    /// </summary>
+    public List<AgvError> Errors { get; set; } = new();
+
+    /// <summary>
     /// SimulatedAgvSaga constructor used for testing
     /// </summary>
     /// <param name="correlationId"></param>
@@ -253,6 +258,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
     /// <param name="agvData"></param>
     /// <param name="agvMap"></param>
     /// <param name="currentNode"></param>
+    /// <param name="errors"></param>
     public SimulatedAgvSaga(
         Guid correlationId,
         string agvId,
@@ -264,7 +270,9 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
         AgvGraph? agvGraph = null,
         AgvData? agvData = null,
         AgvMap? agvMap = null,
-        GraphNode? currentNode = null)
+        GraphNode? currentNode = null,
+        List<AgvError>? errors = null
+    )
     {
         if (correlationId == Guid.Empty)
         {
@@ -279,6 +287,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
         AgvGraph = agvGraph;
         AgvData = agvData;
         AgvMap = agvMap;
+        Errors = errors ?? new List<AgvError>();
 
         AgvStatus = new AgvStatus(
             CorrelationId,

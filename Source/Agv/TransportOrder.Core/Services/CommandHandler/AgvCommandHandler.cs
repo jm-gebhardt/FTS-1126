@@ -138,20 +138,11 @@ public class AgvCommandHandler :
         (var correlationId, List<AgvError> errors) = context.Message;
         var agv = await _agvRepository.GetAgvAsync(correlationId);
 
-        bool agvHadError = agv.HasError;
         bool agvHasError = errors.Any();
-        agv.HasError = agvHasError;
-        bool agvIsInErrorChanged = agvHadError != agvHasError;
-
-        if (!await _agvRepository.UpdateAgvAsync(agv))
+        if (agvHasError != agv.HasError)
         {
-            _logger.LogDebug("{Command}: Could not update agv {CorrelationId}", nameof(UpdateErrorStatus), agv.CorrelationId);
-            return;
-        }
-        if (agvIsInErrorChanged)
-        {
-            var agvMessageContent = _mapper.Map<Messages.MessageContent.Agv>(agv);
-            await context.Publish(new AgvErrorChanged(agv.CorrelationId, agvMessageContent.Errors));
+            agv.HasError = agvHasError;
+            await _agvRepository.UpdateAgvAsync(agv);
         }
     }
 

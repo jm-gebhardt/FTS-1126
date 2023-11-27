@@ -15,6 +15,7 @@ public class AgvErrorProfile : Profile
     {
         AddGlobalIgnore(nameof(DatedMessage.MessageCreatedDate));
         CreateMap<AgvError, AgvErrorDto>();
+        CreateMap<Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries.AgvError, AgvErrorDto>();
         CreateMap<List<AgvError>, AgvErrorStatusDto>()
             .ForMember(c => c.Errors, c => c.MapFrom(s => s))
             .ForMember(c => c.CorrelationId, c => c.Ignore());

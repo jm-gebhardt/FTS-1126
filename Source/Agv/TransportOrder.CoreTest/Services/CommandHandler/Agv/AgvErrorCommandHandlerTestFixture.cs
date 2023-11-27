@@ -9,16 +9,18 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.CommandHandler
 
 public class AgvErrorCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvErrorCommandHandler>
 {
-    private readonly Mock<IAgvErrorRepository> _agvErrorRepository = new();
+    private bool _addOrUpdateAgvErrorStatusReturnValue;
+    public readonly Mock<IAgvErrorRepository> AgvErrorRepository = new();
 
     protected override void ConfigureServices(IServiceCollection collection)
     {
-        collection.AddTransient(_ => _agvErrorRepository.Object);
-        _agvErrorRepository.Setup(x => x.AddOrUpdateAgvErrorStatusAsync(It.IsAny<List<AgvError>>(), It.IsAny<Guid>())).Verifiable();
+        collection.AddTransient(_ => AgvErrorRepository.Object);
+        AgvErrorRepository.Setup(x => x.AddOrUpdateAgvErrorStatusAsync(It.IsAny<List<AgvError>>(), It.IsAny<Guid>())).ReturnsAsync(() => _addOrUpdateAgvErrorStatusReturnValue);
     }
 
-    public void ErrorShouldBeSaved(Times howManyTimes)
+    public AgvErrorCommandHandlerTestFixture WithAddOrUpdateAgvErrorStatusReturnValue(bool returnValue)
     {
-        _agvErrorRepository.Verify(x => x.AddOrUpdateAgvErrorStatusAsync(It.IsAny<List<AgvError>>(), It.IsAny<Guid>()), howManyTimes);
+        _addOrUpdateAgvErrorStatusReturnValue = returnValue;
+        return this;
     }
 }

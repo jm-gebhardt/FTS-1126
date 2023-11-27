@@ -53,6 +53,7 @@ try
                             x.AddDelayedMessageScheduler();
                             x.AddSagaStateMachine<SimulatedAgvStateMachine, SimulatedAgvSaga>()
                                 .InMemoryRepository();
+                            x.AddMqttConsumer<SimulateAgvErrorConsumer>();
                         }, rabbitMqConfiguration: (_, cfg) => { cfg.UseDelayedMessageScheduler(); });
                     services.AddOptions<MassTransitHostOptions>().Configure(options => { options.WaitUntilStarted = true; });
                 });

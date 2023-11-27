@@ -22,7 +22,6 @@ public class AgvErrorProfileTest
 
         agvErrorDto.ShouldNotBeNull();
         agvErrorDto.ShouldSatisfyAllConditions(
-            o => o.AgvCorrelationId.ShouldBe(agvError.AgvCorrelationId),
             o => o.ErrorLevel.ShouldBe(agvError.ErrorLevel),
             o => o.ErrorType.ShouldBe(agvError.ErrorType),
             o => o.ErrorReceived.ShouldBe(agvError.ErrorReceived),

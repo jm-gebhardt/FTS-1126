@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
@@ -64,29 +63,6 @@ public class AgvCommandHandlerTest
         await fixture.TestHarness!.Bus.Publish(new TryReactivateChargingAgv());
         (await fixture.ConsumerHarness!.Consumed.Any<TryReactivateChargingAgv>()).ShouldBeTrue();
         (await fixture.TestHarness!.Published.Any<AbortActionGroup>()).ShouldBeFalse();
-    }
-
-    [TestMethod]
-    public async Task Consume_UpdateErrorStatus_AgvWithoutErrors_AgvErrorChangedPublished()
-    {
-        var fixture = new AgvCommandHandlerTestFixture();
-        var agv = AgvGenerator.GenerateIdleAgv();
-        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
-        await fixture.TestHarness!.Bus.Publish(new UpdateErrorStatus(agv.CorrelationId, new List<AgvError> { new(agv.CorrelationId, "description", ErrorLevel.Warning, null, null, DateTime.UtcNow) }));
-        (await fixture.ConsumerHarness!.Consumed.Any<UpdateErrorStatus>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<AgvErrorChanged>()).ShouldBeTrue();
-    }
-
-    [TestMethod]
-    public async Task Consume_UpdateErrorStatus_AgvWithErrors_AgvErrorChangedPublishedBecauseThereIsNowNoError()
-    {
-        var fixture = new AgvCommandHandlerTestFixture();
-        var agv = AgvGenerator.GenerateIdleAgv();
-        agv.HasError = true;
-        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
-        await fixture.TestHarness!.Bus.Publish(new UpdateErrorStatus(agv.CorrelationId, new List<AgvError>()));
-        (await fixture.ConsumerHarness!.Consumed.Any<UpdateErrorStatus>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<AgvErrorChanged>()).ShouldBeTrue();
     }
 
     [TestMethod]

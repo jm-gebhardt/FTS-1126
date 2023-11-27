@@ -76,6 +76,9 @@ public static class CoreBusRegistrationExtensions
         busRegistrationConfigurator.AddRequestClient<UnlockAgv>();
         busRegistrationConfigurator.AddRequestClient<MoveAgv>();
         busRegistrationConfigurator.AddRequestClient<SetAgvForceIdle>();
+
+        busRegistrationConfigurator.AddConsumer<AgvErrorCommandHandler>();
+        busRegistrationConfigurator.AddRequestClient<UpdateErrorStatus>();
     }
 
     private static void RegisterCoreGraphHandlers(IBusRegistrationConfigurator busRegistrationConfigurator)

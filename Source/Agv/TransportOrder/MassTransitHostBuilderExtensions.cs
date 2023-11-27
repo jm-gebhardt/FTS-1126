@@ -42,8 +42,7 @@ public static class MassTransitHostBuilderExtensions
             catch (InvalidOperationException e)
             {
                 initialLogger.LogError(e, "MassTransit could not be started");
-                // ReSharper disable PossibleIntendedRethrow
-                throw e;
+                throw;
             }
         });
 

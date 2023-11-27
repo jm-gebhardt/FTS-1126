@@ -17,7 +17,7 @@ public class EfAgvErrorRepository : IAgvErrorRepository
     }
 
     /// <inheritdoc />
-    public async Task AddOrUpdateAgvErrorStatusAsync(List<AgvError>? errors, Guid agvCorrelationId)
+    public async Task<bool> AddOrUpdateAgvErrorStatusAsync(List<AgvError>? errors, Guid agvCorrelationId)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         IQueryable<AgvError> agvErrorsInRepository = context.Set<AgvError>()
@@ -31,7 +31,8 @@ public class EfAgvErrorRepository : IAgvErrorRepository
             List<AgvError> newErrors = errors.Where(e => !agvErrorsInRepository.Select(t => t.ErrorType).Contains(e.ErrorType)).ToList();
             await context.AddRangeAsync(newErrors);
         }
-        await context.SaveChangesAsync();
+        bool changed = await context.SaveChangesAsync() != 0;
+        return changed;
     }
 
     private static void ResolveErrors(IList<AgvError> resolvedErrors)
@@ -45,7 +46,7 @@ public class EfAgvErrorRepository : IAgvErrorRepository
     /// <inheritdoc />
     public Task<IList<AgvError>> GetActiveErrorsAsync(Guid agvCorrelationId)
     {
-        return GetActiveErrorsAsync(new List<Guid> { agvCorrelationId });
+        return GetActiveErrorsAsync(new List<Guid> {agvCorrelationId});
     }
 
     /// <inheritdoc />
@@ -62,7 +63,7 @@ public class EfAgvErrorRepository : IAgvErrorRepository
     /// <inheritdoc />
     public Task<IReadOnlyList<AgvError>> GetErrorsAsync(Guid agvCorrelationId, DateTime dateFrom, DateTime dateTo)
     {
-        return GetErrorsAsync(new List<Guid> { agvCorrelationId }, dateFrom, dateTo);
+        return GetErrorsAsync(new List<Guid> {agvCorrelationId}, dateFrom, dateTo);
     }
 
     /// <inheritdoc />

@@ -13,11 +13,6 @@ public record AgvErrorDto
     public Guid CorrelationId { get; init; }
 
     /// <summary>
-    /// Agv CorrelationId
-    /// </summary>
-    public Guid AgvCorrelationId { get; init; }
-
-    /// <summary>
     /// Verbose description of error.
     /// </summary>
     public string? ErrorDescription { get; init; }
@@ -50,16 +45,14 @@ public record AgvErrorDto
 
     /// <inheritdoc cref="AgvErrorDto" />
     /// <param name="correlationId"></param>
-    /// <param name="agvCorrelationId"></param>
     /// <param name="errorDescription"></param>
     /// <param name="errorLevel"></param>
     /// <param name="errorType"></param>
     /// <param name="errorReferences"></param>
     /// <param name="errorReceived"></param>
-    public AgvErrorDto(Guid correlationId, Guid agvCorrelationId, string? errorDescription, ErrorLevel errorLevel, string? errorType, List<ErrorReference>? errorReferences, DateTime errorReceived)
+    public AgvErrorDto(Guid correlationId, string? errorDescription, ErrorLevel errorLevel, string? errorType, List<ErrorReference>? errorReferences, DateTime errorReceived)
     {
         CorrelationId = correlationId;
-        AgvCorrelationId = agvCorrelationId;
         ErrorDescription = errorDescription;
         ErrorLevel = errorLevel;
         ErrorType = errorType;

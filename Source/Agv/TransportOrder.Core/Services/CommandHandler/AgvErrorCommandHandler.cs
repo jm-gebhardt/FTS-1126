@@ -1,6 +1,7 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 using JetBrains.Annotations;
 using MassTransit;
 
@@ -29,6 +30,11 @@ public class AgvErrorCommandHandler : IConsumer<UpdateErrorStatus>
     public async Task Consume(ConsumeContext<UpdateErrorStatus> context)
     {
         (var correlationId, List<AgvError>? errors) = context.Message;
-        await _agvErrorRepository.AddOrUpdateAgvErrorStatusAsync(errors, correlationId);
+        bool errorChanged = await _agvErrorRepository.AddOrUpdateAgvErrorStatusAsync(errors, correlationId);
+
+        if (errorChanged)
+        {
+            await context.Publish(new AgvErrorChanged(context.Message.CorrelationId, errors));
+        }
     }
 }

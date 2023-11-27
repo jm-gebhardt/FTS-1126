@@ -14,8 +14,8 @@ public interface IAgvErrorRepository
     /// </summary>
     /// <param name="errors"></param>
     /// <param name="agvCorrelationId"></param>
-    /// <returns></returns>
-    public Task AddOrUpdateAgvErrorStatusAsync(List<AgvError>? errors, Guid agvCorrelationId);
+    /// <returns>True if the errors have changed.</returns>
+    public Task<bool> AddOrUpdateAgvErrorStatusAsync(List<AgvError>? errors, Guid agvCorrelationId);
 
     /// <summary>
     /// Gets all active errors for given Agv excluding the resolved errors

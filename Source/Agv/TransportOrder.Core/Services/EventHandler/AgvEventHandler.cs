@@ -20,7 +20,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.EventHandler;
 /// Provides handlers for agv related events.
 /// </summary>
 [UsedImplicitly]
-public class AgvEventHandler : 
+public class AgvEventHandler :
     IConsumer<AgvNeedsCharging>,
     IConsumer<AgvBecameIdle>,
     IConsumer<AgvCanStartIdleAction>,
@@ -32,7 +32,7 @@ public class AgvEventHandler :
     IConsumer<AgvStartedCharging>,
     IConsumer<AgvStoppedCharging>,
     IConsumer<AgvGraphChanged>,
-    IConsumer<AgvWentOffline>, 
+    IConsumer<AgvWentOffline>,
     IConsumer<AgvPreparedForStartingAction>,
     IConsumer<AgvLoadStatusReceived>
 {
@@ -68,8 +68,8 @@ public class AgvEventHandler :
         _logger.LogDebug("{MessageType} for Agv: {AgvCorrelationId} received", nameof(AgvNeedsCharging), agvCorrelationId);
 
         var agv = await _agvRepository.GetAgvAsync(agvCorrelationId);
- 
-        if (!agv.IsAvailable( ignoreCharging: false, ignoreLocked: true))
+
+        if (!agv.IsAvailable(ignoreCharging: false, ignoreLocked: true))
         {
             // Agv might be charging
             _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} is not available (charging ignored).", agvCorrelationId);
@@ -86,13 +86,13 @@ public class AgvEventHandler :
             var agvSettings = _settingsProvider.GetSettings();
             bool needsCharging = agv.CheckNeedsCharging(agvSettings);
             bool isCarryingLoad = await _actionGroupRepository.HasUnfinishedDropActionsAsync(agv.CorrelationId);
-            IReadOnlyList<ActionGroup> actionGroups = await _actionGroupRepository.GetActionGroupsAsync(new [] {ActionGroupState.Started, ActionGroupState.Created}, assignedAgvCorrelationId: agvCorrelationId);
+            IReadOnlyList<ActionGroup> actionGroups = await _actionGroupRepository.GetActionGroupsAsync(new[] {ActionGroupState.Started, ActionGroupState.Created}, assignedAgvCorrelationId: agvCorrelationId);
 
             bool noChargingAction = true;
             if (actionGroups.Any())
             {
                 noChargingAction = !actionGroups.Any(a => a.Actions.Any(ac => ac.ActionType == ActionType.Charge));
-            } 
+            }
             bool shouldCharge = !isCarryingLoad && needsCharging && noChargingAction;
 
             if (shouldCharge)
@@ -111,8 +111,8 @@ public class AgvEventHandler :
         var agvCorrelationId = context.Message.CorrelationId;
         _logger.LogDebug("{MessageType} for Agv: {AgvCorrelationId} received", nameof(AgvBecameIdle), agvCorrelationId);
         var agv = await _agvRepository.GetAgvAsync(agvCorrelationId);
- 
-        if (!agv.IsAvailable( ignoreCharging: false, ignoreLocked: true))
+
+        if (!agv.IsAvailable(ignoreCharging: false, ignoreLocked: true))
         {
             // Agv might be charging
             _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} is not available.", agvCorrelationId);
@@ -190,12 +190,7 @@ public class AgvEventHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<AgvErrorStatusReceived> context)
     {
-        List<AgvError>? errors = context.Message.Errors;
-        List<AgvError> agvErrors = new();
-        if (errors != null)
-        {
-            agvErrors = errors;
-        }
+        List<AgvError> agvErrors = context.Message.Errors ?? new List<AgvError>();
 
         await context.Publish(new UpdateErrorStatus(context.Message.CorrelationId, agvErrors));
     }
@@ -205,7 +200,7 @@ public class AgvEventHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<AgvStatusReceived> context)
     {
-       await context.Publish(new UpdateAgvStatus(context.Message.CorrelationId, context.Message.AgvId, context.Message.AgvStatus));
+        await context.Publish(new UpdateAgvStatus(context.Message.CorrelationId, context.Message.AgvId, context.Message.AgvStatus));
     }
 
     /// <summary>
@@ -271,7 +266,7 @@ public class AgvEventHandler :
 
             if (hasUnfinishedActionGroup)
             {
-                _logger.LogDebug("Starting next action for agv: {AgvCorrelationId}.",  agv.CorrelationId);
+                _logger.LogDebug("Starting next action for agv: {AgvCorrelationId}.", agv.CorrelationId);
                 await context.Publish(new TryStartNextActionInActionGroup(agv.CorrelationId));
                 return;
             }
