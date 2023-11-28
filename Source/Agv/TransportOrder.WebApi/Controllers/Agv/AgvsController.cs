@@ -123,12 +123,12 @@ public class AgvsController : Controller
     }
 
     /// <summary>
-    /// Get list of selected agvs' remaining routes.
+    /// Get list of selected agvs' current routes.
     /// </summary>
     /// <param name="correlationIds">Only Agvs contained in this list will be considered</param>
     /// <returns></returns>
     [HttpPost]
-    [Route("/agvs/route")]
+    [Route("/agvs/currentRoute")]
     public async Task<ActionResult<Dictionary<Guid, CurrentRouteDto?>>> GetAgvRoute([FromQuery] ICollection<Guid> correlationIds)
     {
         Response<GotCurrentAgvRoutes> response = await _getCurrentAgvRoutesClient.GetResponse<GotCurrentAgvRoutes>(new GetCurrentAgvRoutes(correlationIds));

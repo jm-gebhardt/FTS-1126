@@ -3,6 +3,7 @@ using JetBrains.Annotations;
 using MassTransit;
 using MassTransit.Mediator;
 using Microsoft.Extensions.DependencyInjection;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.Common.Testing;
 
@@ -22,12 +23,12 @@ public class MediatorTestFixture<TRequest, TConsumer>
     /// <summary>
     /// Service provider
     /// </summary>
-    public ServiceProvider? Provider;
+    public ServiceProvider Provider = null!;
 
     /// <summary>
     /// Started TestHarness
     /// </summary>
-    public IMediatorTestHarness? TestHarness;
+    public IMediatorTestHarness TestHarness = null!;
 
     /// <summary>
     /// Mediator
@@ -102,5 +103,12 @@ public class MediatorTestFixture<TRequest, TConsumer>
         Response<TResult> response = await client.GetResponse<TResult>(request);
 
         return response;
+    }
+
+    public async Task<T> GetFirstPublishedMessageAsync<T>() where T : class
+    {
+        (await TestHarness.Published.Any<T>()).ShouldBeTrue();
+        var message = TestHarness.Published.Select<T>().First().Context.Message;
+        return message;
     }
 }

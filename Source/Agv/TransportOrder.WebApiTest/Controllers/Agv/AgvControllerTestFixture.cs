@@ -29,6 +29,7 @@ using AgvStatus = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv.AgvSta
 using LockAgv = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv.LockAgv;
 using RequestAgvData = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv.RequestAgvData;
 using RequestAgvGraph = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv.RequestAgvGraph;
+using ResetAgvErrors = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Commands.ResetAgvErrors;
 using UnlockAgv = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv.UnlockAgv;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers.Agv;
@@ -191,6 +192,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         IRequestClient<SetAgvForceIdle> setAgvForceIdleClient = GetRequestClient<SetAgvForceIdle>();
         IRequestClient<IsAgvLoadedRequest> isAgvLoadedClient = GetRequestClient<IsAgvLoadedRequest>();
         IRequestClient<GetCargosOfAgv> getCargosOfAgvClient = GetRequestClient<GetCargosOfAgv>();
+        IRequestClient<ResetAgvErrors> resetAgvErrorsClient = GetRequestClient<ResetAgvErrors>();
 
         var controller = new AgvController(GetMapper(),
             getAgvRequestClient,
@@ -209,7 +211,8 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             moveAgvRequestClient,
             setAgvForceIdleClient,
             isAgvLoadedClient,
-            getCargosOfAgvClient)
+            getCargosOfAgvClient,
+            resetAgvErrorsClient)
         {
             ControllerContext = new ControllerContext(
                 new ActionContext(

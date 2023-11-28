@@ -57,6 +57,10 @@ public class ExceptionHandlerMiddleware : IMiddleware
                 statusCode = HttpStatusCode.BadRequest;
                 break;
 
+            case ResetAgvErrorFailedException:
+                statusCode = HttpStatusCode.InternalServerError;
+                break;
+
             default:
                 statusCode = HttpStatusCode.InternalServerError;
                 break;

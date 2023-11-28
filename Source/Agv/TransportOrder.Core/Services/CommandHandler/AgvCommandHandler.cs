@@ -444,7 +444,7 @@ public class AgvCommandHandler :
         var moveActionGroup = new ActionGroup(
             groupCorrelationId,
             $"Manual {ActionType.Move}",
-            new List<AgvAction> {new(Guid.NewGuid(), ActionType.Move, targetNodeId, groupCorrelationId)},
+            new List<AgvAction> { new(Guid.NewGuid(), ActionType.Move, targetNodeId, groupCorrelationId) },
             assignedAgv: agv.CorrelationId,
             isManual: true,
             creator: creator
@@ -550,7 +550,7 @@ public class AgvCommandHandler :
     private async Task TryAutoAccept(IPublishEndpoint context, Domain.Models.Agv.Agv agv, CancellationToken cancellationToken)
     {
         _logger.LogDebug("AutoAccept {CorrelationId}", agv.CorrelationId);
-        if (_productionOptions.AutoAccept && agv is {GraphExists: true, DataExist: true, CurrentAgvState: AgvState.Discovered})
+        if (_productionOptions.AutoAccept && agv is { GraphExists: true, DataExist: true, CurrentAgvState: AgvState.Discovered })
         {
             var graph = await _agvGraphRepository.GetAgvGraphAsync(agv.CorrelationId);
             bool mapExists = _mapRepository.Exists(graph.RelatedMapId);

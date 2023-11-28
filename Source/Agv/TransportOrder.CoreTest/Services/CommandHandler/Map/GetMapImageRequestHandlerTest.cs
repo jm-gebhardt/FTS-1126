@@ -23,7 +23,7 @@ public class GetMapImageRequestHandlerTest
 
         byteArrayOfImage.ShouldNotBeEmpty();
 
-        var harness = fixture.TestHarness!;
+        var harness = fixture.TestHarness;
 
         (await harness.Consumed.Any<GetMapImage>()).ShouldBeTrue();
         (await harness.Consumed.Any<GotMapImage>()).ShouldBeTrue();

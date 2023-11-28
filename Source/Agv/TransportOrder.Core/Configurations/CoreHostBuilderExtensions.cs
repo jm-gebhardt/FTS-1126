@@ -2,6 +2,7 @@
 using Gebhardt.StoreWare.Agv.Common.Configurations;
 using Gebhardt.StoreWare.Agv.Common.Configurations.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
+using Gebhardt.StoreWare.Agv.Common.MassTransit;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.CmdOptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
@@ -48,6 +49,8 @@ public static class CoreHostBuilderExtensions
             RegisterRepositoryServices(services);
 
             RegisterValidators(services);
+            
+            RegisterMiscellaneousServices(services);
 
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
         });
@@ -120,5 +123,11 @@ public static class CoreHostBuilderExtensions
         services.AddTransient<IActionGroupValidationService, ActionGroupValidationService>();
         services.AddTransient<IValidator<ActionGroup>, ActionGroupValidator>();
         services.AddTransient<IValidator<AgvAction>, AgvActionValidator>();
+    }
+
+    private static void RegisterMiscellaneousServices(IServiceCollection services)
+    {
+        services.AddTransient(typeof(IMessageReceiver<>), typeof(MessageReceiver<>));
+        services.AddTransient(typeof(IMessageAwaiter<>), typeof(MessageAwaiter<>));
     }
 }

@@ -18,6 +18,7 @@ using LockAgv = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv.Lock
 using RequestAgvData = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv.RequestAgvData;
 using RequestAgvGraph = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv.RequestAgvGraph;
 using UnlockAgv = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv.UnlockAgv;
+using ResetAgvErrors = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Commands.ResetAgvErrors;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations;
 
@@ -76,6 +77,9 @@ public static class CoreBusRegistrationExtensions
         busRegistrationConfigurator.AddRequestClient<UnlockAgv>();
         busRegistrationConfigurator.AddRequestClient<MoveAgv>();
         busRegistrationConfigurator.AddRequestClient<SetAgvForceIdle>();
+
+        busRegistrationConfigurator.AddConsumer<ResetAgvErrorsRequestHandler>();
+        busRegistrationConfigurator.AddRequestClient<ResetAgvErrors>();
 
         busRegistrationConfigurator.AddConsumer<AgvErrorCommandHandler>();
         busRegistrationConfigurator.AddRequestClient<UpdateErrorStatus>();

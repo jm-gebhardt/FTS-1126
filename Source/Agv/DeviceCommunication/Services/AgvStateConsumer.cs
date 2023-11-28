@@ -35,7 +35,7 @@ public class AgvStateConsumer : IConsumer<MqttState>
     }
 
     /// <summary>
-    /// Translate to AGV status message to AgvStatusReceived message
+    /// Translate agv status message to AgvStatusReceived message.
     /// </summary>
     public async Task Consume(ConsumeContext<MqttState> context)
     {
@@ -128,7 +128,14 @@ public class AgvStateConsumer : IConsumer<MqttState>
 
     private async Task SendAgvErrorStatusAsync(ConsumeContext<MqttState> context, Guid agvCorrelationId, MqttState message)
     {
-        var agvErrorStatusReceived = new AgvErrorStatusReceived(agvCorrelationId, message.Errors?.Select(e =>
+        List<MqttError>? errors = message.Errors;
+
+        if (errors?.Any(l => string.IsNullOrEmpty(l.ErrorType)) ?? false)
+        {
+            throw new ArgumentNullException(nameof(MqttError.ErrorType), "ErrorType must be set! This was the assumption at the time of implementation.");
+        }
+
+        var agvErrorStatusReceived = new AgvErrorStatusReceived(agvCorrelationId, errors?.Select(e =>
         {
             var agvError = _mapper.Map<AgvError>(e);
             // overwrite AgvCorrelationId in a 2. step, as we are mapping from two sources to one destination, which isn't supported by AutoMapper

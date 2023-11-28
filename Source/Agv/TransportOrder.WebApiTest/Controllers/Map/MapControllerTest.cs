@@ -30,7 +30,7 @@ public class MapControllerTest
         resultValue.ShouldNotBeEmpty();
         resultValue.ShouldBeEquivalentTo(imageByteArray);
 
-        var harness = fixture.TestHarness!;
+        var harness = fixture.TestHarness;
 
         (await harness.Consumed.Any<GetMapImage>()).ShouldBeTrue();
         (await harness.Consumed.Any<GotMapImage>()).ShouldBeTrue();
@@ -55,7 +55,7 @@ public class MapControllerTest
         actualNodeStates.Select(a => new {a.AgvCorrelationId, a.IsLocked, a.NodeId, a.NodeState })
             .ShouldBe(fixture.Mapper.Map<ICollection<NodeStateDto>>(nodeStates).Select(a => new { a.AgvCorrelationId, a.IsLocked, a.NodeId, a.NodeState }));
           
-        (await fixture.TestHarness!.Published.Any<GetMapNodeStates>()).ShouldBeTrue();
-        (await fixture.TestHarness!.Consumed.Any<GotMapNodeStates>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<GetMapNodeStates>()).ShouldBeTrue();
+        (await fixture.TestHarness.Consumed.Any<GotMapNodeStates>()).ShouldBeTrue();
     }
 }

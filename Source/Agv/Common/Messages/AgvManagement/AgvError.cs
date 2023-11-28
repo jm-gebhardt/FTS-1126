@@ -4,48 +4,48 @@ using MassTransit;
 namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 
 /// <summary>
-/// Error of an Agv
+/// Error of an agv.
 /// </summary>
 public record AgvError : CorrelatedBy<Guid>
 {
     /// <summary>
-    /// CorrelationId of the AgvError
+    /// The correlation id of the agv error.
     /// </summary>
     public Guid CorrelationId { get; init; } = Guid.NewGuid();
-
+    
     /// <summary>
-    /// AgvCorrelationId
+    /// The correlation id of the agv.
     /// </summary>
     public Guid AgvCorrelationId { get; init; }
 
     /// <summary>
-    /// Verbose description of error
+    /// The error description.
     /// </summary>
     public string? ErrorDescription { get; init; }
 
     /// <summary>
     /// warning: AGV is ready to drive without human intervention
-    /// fatal: AGV is not in running condition
+    /// fatal: Agv is not in running condition
     /// </summary>
     public ErrorLevel ErrorLevel { get; init; }
 
     /// <summary>
-    /// Type of error
+    /// The type of error.
     /// </summary>
-    public string? ErrorType { get; init; }
+    public string ErrorType { get; init; }
 
     /// <summary>
-    ///  List of above mentioned ErrorReferences
+    ///  List of error references.
     /// </summary>
     public List<ErrorReference>? ErrorReferences { get; init; }
 
     /// <summary>
-    /// Date of error received
+    /// Date when error was received.
     /// </summary>
     public DateTime ErrorReceived { get; init; } = DateTime.UtcNow;
 
     /// <summary>
-    /// Date or error resolved
+    /// Date when error was resolved.
     /// </summary>
     public DateTime? ErrorResolved { get; set; }
 
@@ -56,7 +56,7 @@ public record AgvError : CorrelatedBy<Guid>
     /// <param name="errorType"></param>
     /// <param name="errorReferences"></param>
     /// <param name="errorReceived"></param>
-    public AgvError(Guid agvCorrelationId, string? errorDescription, ErrorLevel errorLevel, string? errorType, List<ErrorReference>? errorReferences, DateTime errorReceived)
+    public AgvError(Guid agvCorrelationId, string? errorDescription, ErrorLevel errorLevel, string errorType, List<ErrorReference>? errorReferences, DateTime errorReceived)
     {
         AgvCorrelationId = agvCorrelationId;
         ErrorDescription = errorDescription;
@@ -75,5 +75,6 @@ public record AgvError : CorrelatedBy<Guid>
     [UsedImplicitly]
     private AgvError()
     {
+        ErrorType = null!;
     }
 }

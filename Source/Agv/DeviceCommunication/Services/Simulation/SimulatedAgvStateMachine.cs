@@ -16,14 +16,14 @@ using Microsoft.Extensions.Logging;
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
 
 /// <summary>
-/// StateMachine to simulate an AGV
+/// StateMachine to simulate an agv.
 /// </summary>
 [PublicAPI]
 public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga>
 {
     #region Records
     /// <summary>
-    /// Internal message (request) to create an AGV instance
+    /// Internal message (request) to create an agv instance
     /// </summary>
     /// <param name="CorrelationId"></param>
     /// <param name="Agv"></param>
@@ -31,7 +31,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     public record CreateAgv(Guid CorrelationId, SimulatedAgv Agv, int NodeTravelTime) : CorrelatedBy<Guid>;
 
     /// <summary>
-    /// Response to the CreateAgv request 
+    /// Response to the CreateAgv request.
     /// </summary>
     /// <param name="CorrelationId"></param>
     public record CreateAgvResponse(Guid CorrelationId);
@@ -107,6 +107,11 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     /// SimulateAgvError was received
     /// </summary>
     public Event<SimulateAgvError> SimulateAgvErrorEvent { get; private set; } = default!;
+
+    /// <summary>
+    /// ResetAgvErrors was received
+    /// </summary>
+    public Event<ResetAgvErrors> ResetAgvErrorsEvent { get; private set; } = default!;
     #endregion
 
     #region Schedules
@@ -180,6 +185,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         DuringAny(SetSignalPositionHandler());
         DuringAny(SetRequestStatusSendHandler());
         DuringAny(SimulateAgvErrorHandler());
+        DuringAny(ResetAgvErrorsHandler());
 
         WhenEnterAny(UpdateTimeOfStateTransition);
 
@@ -355,7 +361,26 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     {
         return When(SimulateAgvErrorEvent)
             .Then(c => _logger.LogInformation("{MessageType} / {CorrelationId} received", nameof(SimulateAgvError), c.Saga.CorrelationId))
-            .Then(c => { c.Saga.Errors = c.Message.AgvErrors; })
+            .Then(c =>
+            {
+                c.Saga.Errors.RemoveAll(error => c.Message.AgvErrors.All(e => e.ErrorType != error.ErrorType));
+                c.Saga.Errors.AddRange(c.Message.AgvErrors.Where(e => c.Saga.Errors.All(e2 => e2.ErrorType != e.ErrorType)));
+            })
+            .ThenAsync(PublishAgvError);
+    }
+
+    private EventActivityBinder<SimulatedAgvSaga, ResetAgvErrors> ResetAgvErrorsHandler()
+    {
+        return When(ResetAgvErrorsEvent)
+            .Then(c => _logger.LogDebug("{MessageType} / {CorrelationId} received", nameof(ResetAgvErrors), c.Saga.CorrelationId))
+            .Then(c =>
+            {
+                _logger.LogTrace("Existing errorIds: {ErrorIds}. To be reset: {ErrorIdsToReset}", c.Saga.Errors.Select(e => e.CorrelationId).ToList(), c.Message.ErrorIds);
+
+                // reset all errors if no errorIds are given
+                bool resetAllErrors = !c.Message.ErrorIds.Any();
+                c.Saga.Errors = resetAllErrors ? new List<AgvError>() : c.Saga.Errors.Where(error => !c.Message.ErrorIds.Contains(error.CorrelationId)).ToList();
+            })
             .ThenAsync(PublishAgvError);
     }
     #endregion

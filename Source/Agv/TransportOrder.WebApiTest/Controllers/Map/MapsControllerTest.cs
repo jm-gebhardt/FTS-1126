@@ -33,7 +33,7 @@ public class MapsControllerTest
 
         resultValue.ShouldNotBeEmpty();
 
-        var harness = fixture.TestHarness!;
+        var harness = fixture.TestHarness;
 
         (await harness.Consumed.Any<GetMapList>()).ShouldBeTrue();
         (await harness.Consumed.Any<GotMapList>()).ShouldBeTrue();
