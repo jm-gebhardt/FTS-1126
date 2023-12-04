@@ -18,6 +18,7 @@ public class MapController : Controller
     private readonly IRequestClient<GetMap> _getMapClient;
     private readonly IRequestClient<GetMapGraph> _getMapGraphClient;
     private readonly IRequestClient<GetMapNodeStates> _getMapNodeStatesClient;
+    private readonly IRequestClient<GetStations> _getStationsClient;
     private readonly IMapper _mapper;
 
     /// <summary>
@@ -27,12 +28,14 @@ public class MapController : Controller
         IRequestClient<GetMapImage> getMapImageClient,
         IRequestClient<GetMap> getMapClient,
         IRequestClient<GetMapGraph> getMapGraphClient,
-        IRequestClient<GetMapNodeStates> getMapNodeStatesClient)
+        IRequestClient<GetMapNodeStates> getMapNodeStatesClient,
+        IRequestClient<GetStations> getStationsClient)
     {
         _getMapImageClient = getMapImageClient;
         _getMapClient = getMapClient;
         _getMapGraphClient = getMapGraphClient;
         _getMapNodeStatesClient = getMapNodeStatesClient;
+        _getStationsClient = getStationsClient;
         _mapper = mapper;
     }
 
@@ -94,5 +97,19 @@ public class MapController : Controller
         Response<GotMapNodeStates> response = await _getMapNodeStatesClient.GetResponse<GotMapNodeStates>(new GetMapNodeStates(correlationId));
         var nodeStates = _mapper.Map<List<NodeStateDto>>(response.Message.NodeLocks);
         return Ok(nodeStates);
+    }
+
+    /// <summary>
+    /// Get all stations for a given map.
+    /// </summary>
+    /// <param name="correlationId">The correlation id of the map.</param>
+    /// <returns></returns>
+    [HttpGet]
+    [Route("/map/{correlationId:guid}/stations")]
+    public async Task<ActionResult<ICollection<StationDto>>> GetStationsForMap(Guid correlationId)
+    {
+        Response<GotStations> response = await _getStationsClient.GetResponse<GotStations>(new GetStations(correlationId));
+        var stationsDto = _mapper.Map<List<StationDto>>(response.Message.Stations);
+        return Ok(stationsDto);
     }
 }

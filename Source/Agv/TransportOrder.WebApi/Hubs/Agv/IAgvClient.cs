@@ -80,7 +80,7 @@ public interface IAgvClient
     /// <param name="batteryStatus"></param>
     /// <returns></returns>
     [SignalRMethod("BatteryStatusChanged")]
-    Task SendBatteryStatus(AgvBatteryStatusDto batteryStatus);
+    Task BatteryStatusChanged(AgvBatteryStatusDto batteryStatus);
     
     /// <summary>
     /// Cargo of Agv(s) changed
@@ -88,5 +88,5 @@ public interface IAgvClient
     /// <param name="cargos"></param>
     /// <returns></returns>
     [SignalRMethod("CargoChanged")]
-    Task AgvCargoChanged(ICollection<CargoDto> cargos);
+    Task CargoChanged(ICollection<CargoDto> cargos);
 }

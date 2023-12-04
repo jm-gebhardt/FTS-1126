@@ -63,7 +63,7 @@ public class AgvPublisher : IAgvPublisher
     public Task SendAgvBatteryStatus(AgvBatteryChargeChanged batteryChargeChanged)
     {
         var dto = _mapper.Map<AgvBatteryStatusDto>(batteryChargeChanged);
-        return _hubContext.Clients.All.SendBatteryStatus(dto);
+        return _hubContext.Clients.All.BatteryStatusChanged(dto);
     }
 
     /// <inheritdoc/>
@@ -99,6 +99,6 @@ public class AgvPublisher : IAgvPublisher
     public Task SendCargoChangeAsync(IReadOnlyCollection<Cargo> cargos)
     {
         var dto = _mapper.Map<ICollection<CargoDto>>(cargos);
-        return _hubContext.Clients.All.AgvCargoChanged(dto);
+        return _hubContext.Clients.All.CargoChanged(dto);
     }
 }

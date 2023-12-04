@@ -212,5 +212,8 @@ public static class CoreBusRegistrationExtensions
         configurator.AddRequestClient<GetMap>();
 
         configurator.AddRequestClient<GetMapGraph>();
+        
+        configurator.AddConsumer<GetStationsRequestHandler>();
+        configurator.AddRequestClient<GetStations>();
     }
 }
