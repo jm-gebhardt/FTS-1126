@@ -25,7 +25,8 @@ public class AgvDataConsumerTest
     {
         var fixture = new MqttConsumerTestFixture<AgvDataConsumer>();
 
-        var message = new MqttAgvData("", "", "", "", 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, Array.Empty<Sensor>());
+        var message = new MqttAgvData("4711", "", "", null, 0.0, 0.0, null, null, null,
+            0.0, null, null, Array.Empty<Sensor>());
 
         await fixture.TestHarness.Bus.PublishMqtt(message, null);
 
@@ -61,14 +62,14 @@ public class AgvDataConsumerTest
         publishedData.Data.Sensors.Length.ShouldBe(4);
         publishedData.Data.Model.ShouldBe("Karis");
         publishedData.Data.Type.ShouldNotBeNull();
-        publishedData.Data.MaxVelocityTurnOnSpot.ShouldNotBeNull();
-        publishedData.Data.MaxVelocityStraight.ShouldNotBe(0f);
-        publishedData.Data.MaxVelocityTurn.ShouldNotBeNull();
-        publishedData.Data.Width.ShouldNotBeNull();
-        publishedData.Data.Length.ShouldNotBeNull();
-        publishedData.Data.Payload.ShouldNotBeNull();
-        publishedData.Data.Acceleration.ShouldNotBeNull();
-        publishedData.Data.IpV4Address.ShouldNotBeNull();
-        publishedData.Data.BatteryCapacity.ShouldNotBe(0f);
+        publishedData.Data.MaxVelocityTurnOnSpot.ShouldBe(2.5);
+        publishedData.Data.MaxVelocityStraight.ShouldBe(1.8);
+        publishedData.Data.MaxVelocityTurn.ShouldBe(0.9);
+        publishedData.Data.Width.ShouldBe(0.8);
+        publishedData.Data.Length.ShouldBe(0.6);
+        publishedData.Data.Payload.ShouldBe(1000);
+        publishedData.Data.Acceleration.ShouldBe(0.7);
+        publishedData.Data.IpV4Address.ShouldBe("127.0.0.1");
+        publishedData.Data.BatteryCapacity.ShouldBe(120.0);
     }
 }

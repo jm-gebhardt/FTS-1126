@@ -35,8 +35,8 @@ public class GetStationsRequestHandler : IConsumer<GetStations>
         var mapCorrelationId = context.Message.CorrelationId;
         ICollection<Guid> agvCorrelationIds = await _agvGraphRepository.GetAgvsRelatedToMap(mapCorrelationId);
         ICollection<AgvData> agvsData = await _agvDataRepository.GetSelectedAgvData(agvCorrelationIds);
-        double maxWidth = agvsData.Max(a => a.Width) ?? 0;
-        double maxLength = agvsData.Max(a => a.Length) ?? 0;
+        double maxWidth = agvsData.Max(a => a.Width);
+        double maxLength = agvsData.Max(a => a.Length);
         const double padding = 0.2;
         
         ICollection<AgvGraph> agvGraphs = await _agvGraphRepository.GetSelectedAgvGraphsAsync(agvCorrelationIds);

@@ -41,7 +41,7 @@ public static class SimulatedAgvSagaGenerator
         }
         else
         {
-            agvData ??= new AgvData(correlationId, "model", "type", null, 10, 1, 1, 1, 1, 1, 1, 1, Array.Empty<AgvData.Sensor>());
+            agvData ??= new AgvData(correlationId, "model", "type", string.Empty, 10.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 42, Array.Empty<AgvData.Sensor>());
         }
 
         if (!mapExists)

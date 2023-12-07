@@ -26,7 +26,7 @@ public record AgvData : CorrelatedBy<Guid>
     /// <summary>
     /// The IP Address of the AGV
     /// </summary>
-    public string? IpV4Address { get; init; }
+    public string IpV4Address { get; init; }
 
     /// <summary>
     /// The maximum velocity of the AGV in straight direction [m/s]
@@ -41,32 +41,32 @@ public record AgvData : CorrelatedBy<Guid>
     /// <summary>
     /// The length of the AGV in [m]
     /// </summary>
-    public double? Length { get; init; }
+    public double Length { get; init; }
 
     /// <summary>
     /// The width of the AGV in [m]
     /// </summary>
-    public double? Width { get; init; }
+    public double Width { get; init; }
 
     /// <summary>
     /// The maximum velocity of the AGV while turning on spot [m/s^2]
     /// </summary>
-    public double? Acceleration { get; init; }
+    public double Acceleration { get; init; }
 
     /// <summary>
     /// The maximum velocity of the AGV in while turning [m/s]
     /// </summary>
-    public double? MaxVelocityTurn { get; init; }
+    public double MaxVelocityTurn { get; init; }
 
     /// <summary>
     /// The maximum velocity of the AGV while turning on spot [rad/s]
     /// </summary>
-    public double? MaxVelocityTurnOnSpot { get; init; }
+    public double MaxVelocityTurnOnSpot { get; init; }
 
     /// <summary>
     /// The max. payload of the AGV in [kg]
     /// </summary>
-    public long? Payload { get; init; }
+    public long Payload { get; init; }
 
     /// <summary>
     /// The list of sensors in the agv
@@ -80,15 +80,15 @@ public record AgvData : CorrelatedBy<Guid>
         Guid correlationId,
         string model,
         string type,
-        string? ipV4Address,
+        string ipV4Address,
         double batteryCapacity,
-        double? acceleration,
+        double acceleration,
         double maxVelocityStraight,
-        double? maxVelocityTurn,
-        double? maxVelocityTurnOnSpot,
-        double? width,
-        double? length,
-        long? payload,
+        double maxVelocityTurn,
+        double maxVelocityTurnOnSpot,
+        double width,
+        double length,
+        long payload,
         Sensor[] sensors
     )
     {

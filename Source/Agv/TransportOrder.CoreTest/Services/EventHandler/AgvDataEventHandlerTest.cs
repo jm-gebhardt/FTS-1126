@@ -15,7 +15,7 @@ public class AgvDataEventHandlerTest
     public async Task Consume_AgvDataReceived_ValidData_PublishesUpdateAgvData()
     {
         var fixture = new MassTransitConsumerTestFixture<AgvDataEventHandler>();
-        var agvData = new AgvData(Guid.NewGuid(), "model", "type", null, 100d, null, 10d, 10.0d, null, null, null, null, Array.Empty<AgvData.Sensor>());
+        var agvData = new AgvData(Guid.NewGuid(), "model", "type", string.Empty, 100d, 1.0, 10d, 10d, 1.0, 1.0, 1.0, 42, Array.Empty<AgvData.Sensor>());
 
         await fixture.TestHarness!.Bus.Publish(new AgvDataReceived(agvData.CorrelationId, "agvId", agvData));
         (await fixture.ConsumerHarness!.Consumed.Any<AgvDataReceived>()).ShouldBeTrue();

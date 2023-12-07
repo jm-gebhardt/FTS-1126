@@ -82,17 +82,17 @@ public class AgvDataParser
     public AgvData AgvData =>
         new(
             SerialNumber.ToGuid(),
-            _data.Model,
-            _data.Type,
-            _data.IpV4Address,
+            _data.Model ?? throw new ArgumentNullException(nameof(MqttAgvData.Model)),
+            _data.Type ?? throw new ArgumentNullException(nameof(MqttAgvData.Type)),
+            _data.IpV4Address ?? throw new ArgumentNullException(nameof(MqttAgvData.IpV4Address)),
             _data.BatteryCapacity,
-            _data.Acceleration,
+            _data.Acceleration ?? throw new ArgumentNullException(nameof(MqttAgvData.Acceleration)),
             _data.MaxVelocityStraight,
-            _data.MaxVelocityTurn,
-            _data.MaxVelocityTurnOnSpot,
-            _data.Width,
-            _data.Length,
-            _data.Payload,
+            _data.MaxVelocityTurn ?? throw new ArgumentNullException(nameof(MqttAgvData.MaxVelocityTurn)),
+            _data.MaxVelocityTurnOnSpot ?? throw new ArgumentNullException(nameof(MqttAgvData.MaxVelocityTurnOnSpot)),
+            _data.Width ?? throw new ArgumentNullException(nameof(MqttAgvData.Width)),
+            _data.Length ?? throw new ArgumentNullException(nameof(MqttAgvData.Length)),
+            _data.Payload ?? throw new ArgumentNullException(nameof(MqttAgvData.Payload)),
             Sensors.ToArray()
         );
 }
