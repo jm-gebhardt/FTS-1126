@@ -7,7 +7,7 @@ using JetBrains.Annotations;
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 
 /// <summary>
-/// Represents the Agv
+/// Represents the agv.
 /// </summary>
 public class Agv : IAgvId
 {
@@ -23,7 +23,7 @@ public class Agv : IAgvId
     public string AgvId { get; set; }
 
     /// <summary>
-    /// Last received AgvStatus
+    /// Last received agv status.
     /// </summary>
     public AgvStatus? AgvStatus { get; set; }
 
@@ -47,30 +47,30 @@ public class Agv : IAgvId
     }
 
     /// <summary>
-    ///Gets the previous state of the agv.
+    /// Gets the previous state of the agv.
     /// </summary>
     public AgvState PreviousAgvState { get; private set; } = AgvState.Initial;
 
     /// <summary>
-    /// UTC timestamp when AGV data was requested
+    /// UTC timestamp when the agv data was requested.
     /// </summary>
     /// <remarks>Nullable declaration required to make data model mappable according to EF Core</remarks>
     public DateTime? AgvDataRequestedLastTime { get; set; }
 
     /// <summary>
-    /// UTC timestamp when AGV graph was requested
+    /// UTC timestamp when the agv graph was requested.
     /// </summary>
     /// <remarks>Nullable declaration required to make data model mappable according to EF Core</remarks>
     public DateTime? AgvGraphRequestedLastTime { get; set; }
 
     /// <summary>
-    /// Returns true when there is a life sign of the AGV in regular time intervals,
-    /// returns false when there is no life sign for a certain time.
+    /// Returns true when there is a sign of life of the agv in regular time intervals,
+    /// returns false when there is no sign of life of the agv for a certain time.
     /// </summary>
     public bool IsOnline { get; private set; }
 
     /// <summary>
-    /// is AGV locked?
+    /// Is the agv locked?
     /// </summary>
     public bool IsLocked
     {
@@ -88,9 +88,9 @@ public class Agv : IAgvId
     }
 
     /// <summary>
-    /// is the AGV  currently locked?
+    /// Is the agv currently charging?
     /// </summary>
-    public bool IsCharging => CurrentAgvState == AgvState.Charging;
+    public bool IsCharging => AgvStatus?.Charging ?? false;
 
     /// <summary>
     /// Does the agv need maintenance?
@@ -98,17 +98,18 @@ public class Agv : IAgvId
     public bool NeedsMaintenance { get; private set; }
 
     /// <summary>
-    /// Returns True if Agv is in error (has any error) and not ready to drive
+    /// Returns true if the agv has any error and or is not ready to drive.
     /// </summary>
     public bool HasError { get; set; }
 
     /// <summary>
-    /// Gets if the state of the agv changed.
+    /// Returns true if the state of the agv has changed.
     /// </summary>
     public bool StateChanged => CurrentAgvState != PreviousAgvState && (TimeOfStateTransition - DateTime.UtcNow).Seconds < 2;
 
     /// <summary>
-    /// Agv is ready.
+    /// The agv is ready.
+    /// An agv is ready when lastNodeId for AgvStatus is set and agv has no errors assigned.
     /// </summary>
     public bool IsReady => IsReadyStatic.Compile().Invoke(this);
 
@@ -118,27 +119,27 @@ public class Agv : IAgvId
     public Guid? AgvOfflineTokenId { get; set; }
 
     /// <summary>
-    /// returns the time of the last state transition
+    /// Gets the time of the last state transition.
     /// </summary>
     public DateTime TimeOfStateTransition { get; set; }
 
     /// <summary>
-    /// returns the time of the last lock state change
+    /// Gets the time of the last lock state change.
     /// </summary>
     public DateTime TimeOfLockStateChanged { get; set; }
 
     /// <summary>
-    /// If the graph of this agv exists.
+    /// Returns true if the graph of this agv exists.
     /// </summary>
     public bool GraphExists { get; set; }
 
     /// <summary>
-    /// If the data of this agv exists.
+    /// Returns true if the data of this agv exists.
     /// </summary>
     public bool DataExist { get; set; }
 
     /// <summary>
-    /// Time that has to pass before resending a request telegram in case AgvGraph or AgvData are still null
+    /// Time that has to pass before resending a request telegram in case AgvGraph or AgvData are still null.
     /// </summary>
     /// <remarks>Interval indicated in seconds</remarks>
     private const int AgvRequestTimeout = 30;
@@ -175,7 +176,7 @@ public class Agv : IAgvId
     }
 
     /// <summary>
-    /// EfCore ctor
+    /// EfCore ctor.
     /// </summary>
     [UsedImplicitly]
     public Agv(string agvId)
@@ -186,7 +187,7 @@ public class Agv : IAgvId
     }
 
     /// <summary>
-    /// JSON ctor
+    /// Agv ctor used for serialization.
     /// </summary>
     public Agv()
     {
@@ -195,10 +196,10 @@ public class Agv : IAgvId
     }
 
     /// <summary>
-    /// Check if the Agv is eligible for charging.
+    /// Check if the agv is eligible for charging.
     /// </summary>
     /// <param name="settings">The global agv settings.</param>
-    public bool CheckIsEligibleForCharging(AgvSettings settings)
+    public bool CheckShouldCharge(AgvSettings settings)
     {
         if (AgvStatus == null)
         {
@@ -208,10 +209,10 @@ public class Agv : IAgvId
     }
 
     /// <summary>
-    /// Check if the Agv needs charging.
+    /// Check if the agv needs charging.
     /// </summary>
     /// <param name="settings">The global agv settings.</param>
-    public bool CheckNeedsCharging(AgvSettings settings)
+    public bool CheckMustCharge(AgvSettings settings)
     {
         if (AgvStatus == null)
         {
@@ -233,7 +234,7 @@ public class Agv : IAgvId
     /// <summary>
     /// Charge the agv.
     /// </summary>
-    /// <returns>True if the state has changed</returns>
+    /// <returns>True if the state has changed.</returns>
     public bool TransitionToCharging()
     {
         var previousState = CurrentAgvState;
@@ -350,7 +351,7 @@ public class Agv : IAgvId
     }
 
     /// <summary>
-    /// Lock agv.
+    /// Lock the agv.
     /// </summary>
     public void Lock()
     {
@@ -358,7 +359,7 @@ public class Agv : IAgvId
     }
 
     /// <summary>
-    /// Set IsLocked to false and sets Agv to Idle state
+    /// Set IsLocked to false and sets agv to idle state.
     /// </summary>
     /// <returns>True if the state has changed</returns>
     public void Unlock()

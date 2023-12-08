@@ -23,6 +23,7 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixtureWithSche
     private readonly Mock<IMaintenanceService> _maintenanceService = new();
     private readonly ActionManagerSemaphoreProvider _semaphoreProvider = new();
     private readonly Mock<IAgvRepository> _agvRepository = new();
+    private readonly Mock<IChooseAgvActionGroupService> _chooseAgvActionGroupService = new();
 
     public const int BatteryLevelCritical = 10;
     public const int BatteryLevelLow = 40;
@@ -45,6 +46,7 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixtureWithSche
         collection.AddTransient(_ => _maintenanceService.Object);
         collection.AddTransient<IActionManagerSemaphoreProvider>(_ => _semaphoreProvider);
         collection.AddTransient(_ => _agvRepository.Object);
+        collection.AddTransient(_ => _chooseAgvActionGroupService.Object);
         collection.AddAgvSettings(AgvSettings);
     }
 

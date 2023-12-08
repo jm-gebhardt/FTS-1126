@@ -38,7 +38,7 @@ public class ActionCommandHandler :
     IConsumer<TryStartNextActionInActionGroup>,
     IConsumer<TryStartNewActionGroup>,
     IConsumer<CreateParkingActionGroup>,
-    IConsumer<CreateChargingActionGroup>,
+    IConsumer<StartChargingActionGroup>,
     IConsumer<CreateMaintenanceActionGroup>,
     IConsumer<CompleteAction>,
     IConsumer<QueueActionGroup>,
@@ -243,15 +243,15 @@ public class ActionCommandHandler :
         var agv = await _agvRepository.GetAgvAsync(agvCorrelationId);
 
         var agvSettings = _settingsProvider.GetSettings();
-        bool needsCharging = agv.CheckNeedsCharging(agvSettings);
-        bool isCarryingLoad = await _actionGroupRepository.HasUnfinishedDropActionsAsync(agv.CorrelationId);
+        bool needsCharging = agv.CheckMustCharge(agvSettings);
+        bool hasUnfinishedDropAction = await _actionGroupRepository.HasUnfinishedDropActionsAsync(agv.CorrelationId);
 
-        bool canStartNewAction = !needsCharging && !agv.NeedsMaintenance && !isCarryingLoad && !agv.IsLocked;
+        bool canStartNewAction = !needsCharging && !agv.NeedsMaintenance && !hasUnfinishedDropAction && !agv.IsLocked;
 
         if (!canStartNewAction)
         {
-            _logger.LogWarning("Can not start new action group for agv {Agv} (is locked {IsLocked}/ isCarryingLoad {IsCarryingLoad}/ needsCharging {NeedsCharging}).", agv.CorrelationId, agv.IsLocked, isCarryingLoad, needsCharging);
-            return;
+            _logger.LogWarning("Can not start new action group for agv {Agv} (is locked: {IsLocked}/ has unfinished drop action: {HasUnfinishedDropAction}/ needs charging: {NeedsCharging}).", agv.CorrelationId, agv.IsLocked, hasUnfinishedDropAction, needsCharging);
+             return;
         }
 
         await _actionManagerSemaphoreProvider.ExecuteLockedAsync(async () =>
@@ -279,7 +279,7 @@ public class ActionCommandHandler :
         var agv = await _agvRepository.GetAgvAsync(agvCorrelationId);
 
         var agvSettings = _settingsProvider.GetSettings();
-        if (agv.CheckIsEligibleForCharging(agvSettings) || agv.IsLocked)
+        if (agv.CheckShouldCharge(agvSettings)|| agv.IsLocked)
         {
             return;
         }
@@ -309,66 +309,65 @@ public class ActionCommandHandler :
     }
 
     /// <summary>
-    /// Handles the <see cref="CreateChargingActionGroup"/> command.
+    /// Handles the <see cref="StartChargingActionGroup"/> command.
     /// </summary>
-    public async Task Consume(ConsumeContext<CreateChargingActionGroup> context)
+    public async Task Consume(ConsumeContext<StartChargingActionGroup> context)
     {
         var agvCorrelationId = context.Message.AgvCorrelationId;
         var cancellationToken = context.CancellationToken;
         var agv = await _agvRepository.GetAgvAsync(agvCorrelationId);
 
-        var agvSettings = _settingsProvider.GetSettings();
-        bool needsCharging = agv.CheckNeedsCharging(agvSettings);
-        bool isCarryingLoad = await _actionGroupRepository.HasUnfinishedDropActionsAsync(agv.CorrelationId);
         bool hasUnfinishedActionGroup = await _actionGroupRepository.HasUnfinishedActionGroupAsync(agv.CorrelationId);
-        IReadOnlyList<ActionGroup> actionGroups = await _actionGroupRepository.GetActionGroupsAsync(new[] {ActionGroupState.Started, ActionGroupState.Created}, assignedAgvCorrelationId: agvCorrelationId);
-
-        bool noChargingAction = true;
-        if (actionGroups.Any())
-        {
-            noChargingAction = !actionGroups.Any(a => a.Actions.Any(ac => ac.ActionType == ActionType.Charge));
-        }
-        bool shouldCharge = !isCarryingLoad && needsCharging && noChargingAction && !hasUnfinishedActionGroup;
-
-        _logger.LogDebug("Evaluating {Name} with {NeedsCharging}, {IsCarryingLoad} for agv {CorrelationId}.", nameof(CreateChargingActionGroup), needsCharging, isCarryingLoad, agv.CorrelationId);
-
-        if (!agv.CheckIsEligibleForCharging(agvSettings) || !shouldCharge || agv.IsLocked)
+        IReadOnlyList<ActionGroup> actionGroups = await _actionGroupRepository.GetActionGroupsAsync(new[] { ActionGroupState.Created }, assignedAgvCorrelationId: agvCorrelationId);
+        
+        _logger.LogDebug("Evaluating {Name}, has unfinished drop action: {HasUnfinishedDropAction} for agv {CorrelationId}.", nameof(StartChargingActionGroup), hasUnfinishedActionGroup, agv.CorrelationId);
+        
+        if (agv.IsLocked || hasUnfinishedActionGroup)
         {
             return;
         }
-
+        
         if (agv.IsCharging || await _actionGroupRetrievalService.IsAgvHeadingToNodeOfType(agvCorrelationId, AgvGraph.NodeType.Charge))
         {
             _logger.LogDebug("No need for another charge action because the agv is already charging for agvId: {AgvId}.", agv.AgvId);
-            // This might happen if the AssignAsync action is called several times due to a low SOC value, although the Agv is already charging
+            // This might happen if the AssignAsync action is called several times due to a low SOC value, although the agv is already charging
             return;
         }
+        
+        // Yes, we want to charge
         _logger.LogInformation("Starting charge action for agv with CorrelationId: {AgvCorrelationId}.", agv.CorrelationId);
+        
+        // Lets see if there is a pending charge action group
+        var actionGroup = actionGroups.FirstOrDefault(a => a.Actions.Any(ac => ac.ActionType == ActionType.Charge));
+    
+        if (actionGroup == null)
+        {
+            var chargingNode = await _chargingPointManager.ReserveChargerAsync(agv);
+            await PublishNodeStateChange(context, chargingNode.Id);
 
-        var chargingNode = await _chargingPointManager.ReserveChargerAsync(agv);
-        await PublishNodeStateChange(context, chargingNode.Id);
-
-        var groupCorrelationId = Guid.NewGuid();
-        var actionGroup = new ActionGroup(
-            groupCorrelationId,
-            string.Empty,
-            actions: new List<AgvAction>
-            {
-                new(Guid.NewGuid(), ActionType.Move, chargingNode.Id, groupCorrelationId)
+            var groupCorrelationId = Guid.NewGuid();
+            actionGroup = new ActionGroup(
+                groupCorrelationId,
+                string.Empty,
+                actions: new List<AgvAction>
                 {
-                    Sequence = 0
+                    new(Guid.NewGuid(), ActionType.Move, chargingNode.Id, groupCorrelationId)
+                    {
+                        Sequence = 0
+                    },
+                    new(Guid.NewGuid(), ActionType.Charge, chargingNode.Id, groupCorrelationId)
+                    {
+                        Sequence = 1
+                    }
                 },
-                new(Guid.NewGuid(), ActionType.Charge, chargingNode.Id, groupCorrelationId)
-                {
-                    Sequence = 1
-                }
-            },
-            assignedAgv: agv.CorrelationId,
-            creator: ActionGroupCreator.TransportOrder
-        );
+                assignedAgv: agv.CorrelationId,
+                creator: ActionGroupCreator.TransportOrder
+            );
 
-        await _actionGroupRepository.AddAsync(actionGroup);
-        await context.Publish(new ActionGroupCreated(_mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup), actionGroup.CorrelationId), cancellationToken);
+            await _actionGroupRepository.AddAsync(actionGroup);
+            await context.Publish(new ActionGroupCreated(_mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup), actionGroup.CorrelationId), cancellationToken);
+        }
+        
         await context.Publish(new ActionGroupCreatedForAgv(_mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup), agv.CorrelationId), cancellationToken);
     }
 
@@ -382,11 +381,11 @@ public class ActionCommandHandler :
         var agv = await _agvRepository.GetAgvAsync(agvCorrelationId);
 
         var agvSettings = _settingsProvider.GetSettings();
-        bool needsCharging = agv.CheckNeedsCharging(agvSettings);
-        bool isCarryingLoad = await _actionGroupRepository.HasUnfinishedDropActionsAsync(agv.CorrelationId);
+        bool needsCharging = agv.CheckMustCharge(agvSettings);
+        bool hasUnfinishedDropAction = await _actionGroupRepository.HasUnfinishedDropActionsAsync(agv.CorrelationId);
 
-        bool shouldCharge = !isCarryingLoad && needsCharging;
-        bool shouldDoMaintenance = !isCarryingLoad && agv.NeedsMaintenance;
+        bool shouldCharge = !hasUnfinishedDropAction && needsCharging;
+        bool shouldDoMaintenance = !hasUnfinishedDropAction && agv.NeedsMaintenance;
         if (shouldCharge || !shouldDoMaintenance || agv.IsLocked)
         {
             return;
@@ -503,12 +502,8 @@ public class ActionCommandHandler :
         {
             await context.Publish(new ActionGroupCompleted(actionGroupMessageContent, actionGroup.CorrelationId, DateTime.UtcNow), cancellationToken);
         }
-
-        // charge will switch to charging state and can not be released immediately
-        if (action.ActionType != ActionType.Charge)
-        {
-            await context.Publish(new NonChargingActionCompleted(agv.CorrelationId), cancellationToken);
-        }
+        
+        await context.Publish(new NonChargingActionCompleted(agv.CorrelationId), cancellationToken);
     }
 
     /// <summary>

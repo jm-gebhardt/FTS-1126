@@ -52,7 +52,7 @@ public class AgvEventHandlerTest
         (await fixture.TestHarness.Published.Any<CreateMaintenanceActionGroup>()).ShouldBeFalse();
         (await fixture.TestHarness.Published.Any<TryStartNextActionInActionGroup>()).ShouldBeFalse();
         (await fixture.TestHarness.Published.Any<TryStartManualAction>()).ShouldBeFalse();
-        (await fixture.TestHarness.Published.Any<CreateChargingActionGroup>()).ShouldBeFalse();
+        (await fixture.TestHarness.Published.Any<StartChargingActionGroup>()).ShouldBeFalse();
         (await fixture.TestHarness.Published.Any<TryStartNewActionGroup>()).ShouldBeFalse();
     }
 
@@ -123,7 +123,7 @@ public class AgvEventHandlerTest
         (await fixture.TestHarness.Published.Any<CreateMaintenanceActionGroup>()).ShouldBeFalse();
         (await fixture.TestHarness.Published.Any<TryStartNextActionInActionGroup>()).ShouldBeFalse();
         (await fixture.TestHarness.Published.Any<TryStartManualAction>()).ShouldBeFalse();
-        (await fixture.TestHarness.Published.Any<CreateChargingActionGroup>()).ShouldBeFalse();
+        (await fixture.TestHarness.Published.Any<StartChargingActionGroup>()).ShouldBeFalse();
         (await fixture.TestHarness.Published.Any<TryStartNewActionGroup>()).ShouldBeFalse();
     }
 
@@ -139,7 +139,7 @@ public class AgvEventHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_AgvCanStartIdleAction_AgvIsEligibleForCharging_PublishesCreateChargingActionGroup()
+    public async Task Consume_AgvCanStartIdleAction_AgvShouldCharge_PublishesStartChargingActionGroup()
     {
         var fixture = new AgvEventHandlerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: AgvEventHandlerTestFixture.AgvSettings.BatteryLevelCritical, lastNodeId: "nodeId");
@@ -147,11 +147,11 @@ public class AgvEventHandlerTest
 
         await fixture.TestHarness!.Bus.Publish(new AgvCanStartIdleAction(agv.CorrelationId));
         (await fixture.ConsumerHarness!.Consumed.Any<AgvCanStartIdleAction>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<CreateChargingActionGroup>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<StartChargingActionGroup>()).ShouldBeTrue();
     }
 
     [TestMethod]
-    public async Task Consume_AgvCanStartIdleAction_AgvIsNotEligibleForCharging_PublishesCreateParkingActionGroup()
+    public async Task Consume_AgvCanStartIdleAction_AgvWithBatteryLevelGood_PublishesCreateParkingActionGroup()
     {
         var fixture = new AgvEventHandlerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv();

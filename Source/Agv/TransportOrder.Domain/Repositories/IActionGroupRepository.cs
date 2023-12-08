@@ -30,7 +30,7 @@ public interface IActionGroupRepository
     /// <param name="sortBy">The sorting parameter.</param>
     /// <param name="sortDescending">If true, sorts in descending order.</param>
     /// <returns></returns>
-    Task<IReadOnlyList<ActionGroup>> GetActionGroupsAsync(IList<ActionGroupState>? states = null, DateTime? fromDate = null, DateTime? toDate = null, int maxItems = 0, Guid? assignedAgvCorrelationId = null, bool? isManual = null, SortBy sortBy = SortBy.CreatedDate, bool sortDescending = true);
+    Task<IReadOnlyList<ActionGroup>> GetActionGroupsAsync(IList<ActionGroupState>? states = null, DateTime? fromDate = null, DateTime? toDate = null, int maxItems = 100, Guid? assignedAgvCorrelationId = null, bool? isManual = null, SortBy sortBy = SortBy.CreatedDate, bool sortDescending = true);
 
     /// <summary>
     /// Get a list of ActionGroup.

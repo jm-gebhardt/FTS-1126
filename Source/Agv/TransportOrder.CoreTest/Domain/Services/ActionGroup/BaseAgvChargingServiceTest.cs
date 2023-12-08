@@ -47,7 +47,7 @@ public class BaseAgvChargingServiceTest
     public void Test_AgvNeedsCharging(int batteryCharge, bool needsCharging)
     {
         var agv = CreateAgv("AGV001", batteryCharge, false);
-        agv.CheckNeedsCharging(_agvSettings).ShouldBe(needsCharging);
+        agv.CheckMustCharge(_agvSettings).ShouldBe(needsCharging);
     }
 
     [TestMethod]
@@ -58,6 +58,6 @@ public class BaseAgvChargingServiceTest
     public void Test_AgvIsEligibleForCharging(int batteryCharge, bool needsCharging)
     {
         var agv = CreateAgv("AGV001", batteryCharge, false);
-        agv.CheckIsEligibleForCharging(_agvSettings).ShouldBe(needsCharging);
+        agv.CheckShouldCharge(_agvSettings).ShouldBe(needsCharging);
     }
 }

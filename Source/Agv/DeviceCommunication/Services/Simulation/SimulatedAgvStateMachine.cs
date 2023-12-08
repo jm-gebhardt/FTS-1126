@@ -222,7 +222,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     private void SetSagaFactory()
     {
         Event(() => CreateAgvEvent, e =>
-            e.SetSagaFactory(context => new SimulatedAgvSaga(context.Message.Agv, context.Message.NodeTravelTime, _initialBatteryCharge, _timeProvider))
+            e.SetSagaFactory(context => new SimulatedAgvSaga(context.Message.Agv, context.Message.NodeTravelTime, _initialBatteryCharge, _batteryChargeRate, _timeProvider))
         );
     }
     #endregion
@@ -391,8 +391,6 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         _logger.LogTrace("Status event from AGV {AgvId} / {CorrelationId}",
             context.Saga.AgvId, context.Saga.CorrelationId);
 
-        bool prevCharging = context.Saga.AgvStatus.Charging;
-
         const double secondsPerMillisecond = 0.001;
         context.Saga.UpdateStatus(StatusUpdateIntervalMs * secondsPerMillisecond, _batteryChargeRate, _batteryDischargeRate); // Update status before each send
 
@@ -403,21 +401,6 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
                 context.Saga.AgvId,
                 context.Saga.AgvStatus
             ), context.CancellationToken);
-        }
-
-        // publish started/stopped charging regardless of IsOnline flag, because otherwise you can never reanimate dead Agvs
-        // Started charging
-
-        if (!prevCharging && context.Saga.AgvStatus.Charging && context.Saga.Action!.ActionType == ActionType.Charge)
-        {
-            _logger.LogInformation("StartCharging prevCharging=false, charging=true");
-            await context.Publish(new AgvStartedCharging(context.Saga.CorrelationId));
-        }
-        // Stopped charging
-        else if (prevCharging && !context.Saga.AgvStatus.Charging)
-        {
-            _logger.LogInformation("StopCharging prevCharging=true, charging=false");
-            await context.Publish(new AgvStoppedCharging(context.Saga.CorrelationId));
         }
     }
 

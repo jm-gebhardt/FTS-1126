@@ -446,7 +446,7 @@ public class ActionCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_CreateChargingActionGroup_BatteryCritical_PublishedActionGroupCreatedAndActionGroupCreatedForAgv()
+    public async Task Consume_StartChargingActionGroup_BatteryCritical_PublishedActionGroupCreatedAndActionGroupCreatedForAgv()
     {
         var fixture = new ActionCommandHandlerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: 5);
@@ -459,16 +459,16 @@ public class ActionCommandHandlerTest
         fixture.AddActionGroupRetrieval(headingTo: false);
         fixture.AddChargingPointManager(chargeGraphNode: new GraphNode(chargeNodeName));
 
-        var command = new CreateChargingActionGroup(agv.CorrelationId);
+        var command = new StartChargingActionGroup(agv.CorrelationId);
         await fixture.TestHarness!.Bus.Publish(command);
-        (await fixture.ConsumerHarness!.Consumed.Any<CreateChargingActionGroup>()).ShouldBeTrue();
+        (await fixture.ConsumerHarness!.Consumed.Any<StartChargingActionGroup>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<ActionGroupCreated>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<ActionGroupCreatedForAgv>()).ShouldBeTrue();
         (await fixture.TestHarness!.Published.Any<NodeStateChanged>()).ShouldBeTrue();
     }
 
     [TestMethod]
-    public async Task Consume_CreateChargingActionGroup_AgvLocked_DoesNotPublishActionGroupCreatedAndActionGroupCreatedForAgv()
+    public async Task Consume_StartChargingActionGroup_AgvLocked_DoesNotPublishActionGroupCreatedAndActionGroupCreatedForAgv()
     {
         var fixture = new ActionCommandHandlerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: 5);
@@ -482,16 +482,16 @@ public class ActionCommandHandlerTest
         fixture.AddActionGroupRetrieval(headingTo: false);
         fixture.AddChargingPointManager(chargeGraphNode: new GraphNode(chargeNodeName));
 
-        var command = new CreateChargingActionGroup(agv.CorrelationId);
+        var command = new StartChargingActionGroup(agv.CorrelationId);
         await fixture.TestHarness!.Bus.Publish(command);
-        (await fixture.ConsumerHarness!.Consumed.Any<CreateChargingActionGroup>()).ShouldBeTrue();
+        (await fixture.ConsumerHarness!.Consumed.Any<StartChargingActionGroup>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<ActionGroupCreated>()).ShouldBeFalse();
         (await fixture.TestHarness.Published.Any<ActionGroupCreatedForAgv>()).ShouldBeFalse();
         (await fixture.TestHarness!.Published.Any<NodeStateChanged>()).ShouldBeFalse();
     }
 
     [TestMethod]
-    public async Task Consume_CreateChargingActionGroup_AgvIsCharging_DoesNotPublishActionGroupCreatedAndActionGroupCreatedForAgv()
+    public async Task Consume_StartChargingActionGroup_AgvIsCharging_DoesNotPublishActionGroupCreatedAndActionGroupCreatedForAgv()
     {
         var fixture = new ActionCommandHandlerTestFixture();
         var agv = AgvGenerator.GenerateChargingAgv(batteryCharge: 10);
@@ -504,9 +504,9 @@ public class ActionCommandHandlerTest
         fixture.AddActionGroupRetrieval(headingTo: false);
         fixture.AddChargingPointManager(chargeGraphNode: new GraphNode(chargeNodeName));
 
-        var command = new CreateChargingActionGroup(agv.CorrelationId);
+        var command = new StartChargingActionGroup(agv.CorrelationId);
         await fixture.TestHarness!.Bus.Publish(command);
-        (await fixture.ConsumerHarness!.Consumed.Any<CreateChargingActionGroup>()).ShouldBeTrue();
+        (await fixture.ConsumerHarness!.Consumed.Any<StartChargingActionGroup>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<ActionGroupCreated>()).ShouldBeFalse();
         (await fixture.TestHarness.Published.Any<ActionGroupCreatedForAgv>()).ShouldBeFalse();
         (await fixture.TestHarness!.Published.Any<NodeStateChanged>()).ShouldBeFalse();

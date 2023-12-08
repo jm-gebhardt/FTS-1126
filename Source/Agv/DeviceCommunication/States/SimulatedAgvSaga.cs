@@ -25,6 +25,11 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
     /// Value for simulating change in battery charge
     /// </summary>
     public double SimulatedBatteryCharge { get; set; }
+    
+    /// <summary>
+    /// Value for simulating change in battery charge [%/s]
+    /// </summary>
+    public double BatteryChargeRate { get; set; }
 
     /// <summary>
     /// Current node of this AGV
@@ -62,7 +67,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
 
     /// <inheritdoc cref="Agv" />
     public AgvStatus AgvStatus { get; private set; }
-
+    
     /// <summary>
     /// We still save the graph in the simulated agv for convenience.
     /// </summary>
@@ -220,7 +225,26 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
     /// <summary>
     /// Time the action takes to complete
     /// </summary>
-    public TimeSpan? ActionDuration => TimeSpan.FromMilliseconds((Action!.Nodes.Length - 1 + 0.001) * NodeTravelTime);
+    public TimeSpan? ActionDuration
+    {
+        get
+        {
+            if (Action == null)
+            {
+                return null;
+            }
+            if (Action.ActionType == ActionType.Charge)
+            {
+                double chargeDiff = 100 - SimulatedBatteryCharge;
+                if (chargeDiff <= 0)
+                {
+                    return TimeSpan.Zero;
+                }
+                return TimeSpan.FromSeconds(chargeDiff / BatteryChargeRate);
+            }
+            return TimeSpan.FromMilliseconds((Action!.Nodes.Length - 1 + 0.001) * NodeTravelTime);
+        }
+    }
 
     /// <summary>
     /// Time the order will be finished
@@ -251,6 +275,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
     /// <param name="agvId"></param>
     /// <param name="nodeTravelTime"></param>
     /// <param name="initialBatteryCharge"></param>
+    /// <param name="batteryChargeRate"></param>
     /// <param name="timeProvider"></param>
     /// <param name="nodes"></param>
     /// <param name="currentState"></param>
@@ -264,6 +289,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
         string agvId,
         int nodeTravelTime,
         int initialBatteryCharge,
+        double batteryChargeRate,
         ITimeProvider timeProvider,
         string[]? nodes = null,
         string? currentState = null,
@@ -278,6 +304,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
         {
             throw new InvalidOperationException($"{GetType()} requires correlation ID.");
         }
+        BatteryChargeRate = batteryChargeRate;
         _timeProvider = timeProvider;
         CorrelationId = correlationId;
         AgvId = agvId;
@@ -307,9 +334,10 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
     /// <param name="agv"></param>
     /// <param name="nodeTravelTime"></param>
     /// <param name="initialBatteryCharge"></param>
+    /// <param name="batteryChargeRate"></param>
     /// <param name="timeProvider"></param>
     /// <param name="currentNode"></param>
-    public SimulatedAgvSaga(SimulatedAgv agv, int nodeTravelTime, int initialBatteryCharge, ITimeProvider timeProvider, GraphNode? currentNode = null)
+    public SimulatedAgvSaga(SimulatedAgv agv, int nodeTravelTime, int initialBatteryCharge, double batteryChargeRate, ITimeProvider timeProvider, GraphNode? currentNode = null)
     {
         _timeProvider = timeProvider;
         CorrelationId = agv.CorrelationId;
@@ -321,6 +349,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
         AgvMap = agv.AgvMap;
         NodeTravelTime = nodeTravelTime;
         SimulatedBatteryCharge = initialBatteryCharge;
+        BatteryChargeRate = batteryChargeRate;
 
         AgvStatus = new AgvStatus(
             CorrelationId,
@@ -429,7 +458,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
         bool charging = false;
         if (CurrentNode != null && Action != null) // AGV is charging if it is at a charging station
         {
-            charging = CurrentNode.Type == AgvGraph.NodeType.Charge && AgvStatus.BatteryCharge < 100 && Action.ActionType == ActionType.Charge;
+            charging = ActionStartDate != null && CurrentNode.Type == AgvGraph.NodeType.Charge && AgvStatus.BatteryCharge < 100 && Action.ActionType == ActionType.Charge;
         }
 
         double chargeDiff;

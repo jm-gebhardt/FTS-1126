@@ -18,7 +18,7 @@ public class SimulatedAgvSagaTest
         var saga = SimulatedAgvSagaGenerator.Generate(currentNode: NodeGenerator.GenerateChargingNode(),
             currentAction: AgvActionGenerator.GenerateChargeAction(),
             initialSoc: initialSoc);
-
+        saga.ActionStartDate = DateTime.UtcNow;
         saga.UpdateStatus(timeDiff, chargeDiff, chargeDiff);
 
         saga.SimulatedBatteryCharge.ShouldBe(initialSoc + chargeDiff * timeDiff);

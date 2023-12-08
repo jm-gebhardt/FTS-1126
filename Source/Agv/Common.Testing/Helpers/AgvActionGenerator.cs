@@ -67,13 +67,12 @@ public static class AgvActionGenerator
     }
 
     [UsedImplicitly]
-    public static AgvAction GenerateChargeAction(string startNodeId = "N1", string targetNodeId = "C1", Guid? parentId = null)
+    public static AgvAction GenerateChargeAction(string startNodeId = "CRG1", string targetNodeId = "CRG1", Guid? parentId = null)
     {
         var action = new AgvAction(Guid.NewGuid(), ActionType.Charge, targetNodeId, parentId ?? Guid.NewGuid())
         {
             Nodes = new[]
             {
-                startNodeId,
                 targetNodeId
             }
         };
