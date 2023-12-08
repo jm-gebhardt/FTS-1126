@@ -122,7 +122,7 @@ public class FixedGraphGenerator : IGraphGenerator
         };
 
         // metric = length/maxEdgeVelocity
-        // control points and edge coefficients relative to source
+        // control points and edge coefficients are absolute values
         GraphEdge[] edges =
         {
             GraphEdge.CreateDirect(Way0029, Park1, 58.215f / MaxEdgeVelocity),
@@ -142,27 +142,27 @@ public class FixedGraphGenerator : IGraphGenerator
             GraphEdge.CreateDirect(Way0010, Way0015, 10f / MaxEdgeVelocity),
             GraphEdge.CreateDirect(Way0011, Way0016, 10f / MaxEdgeVelocity),
             GraphEdge.CreateDirect(Way0012, Way0009, 16.25f / MaxEdgeVelocity),
-            GraphEdge.CreateBezier1(Way0013, Way0009, 19.08f / MaxEdgeVelocity, 0.875d, 7.875d),
+            GraphEdge.CreateBezier1(Way0013, Way0009, 19.08f / MaxEdgeVelocity, 22.75d, 67.25d),
             GraphEdge.CreateDirect(Way0013, Way0012, 10f / MaxEdgeVelocity),
             GraphEdge.CreateDirect(Way0014, Way0013, 16.25f / MaxEdgeVelocity),
-            GraphEdge.CreatePolypath(Way0014, Way0029, 40.875f / MaxEdgeVelocity, new List<EdgeCoefficient> { new(-2.875d, -9.375d) }),
-            GraphEdge.CreateBezier1(Way0014, Way0032, 37.125f / MaxEdgeVelocity, -1.75d, -8.25d),
+            GraphEdge.CreatePolypath(Way0014, Way0029, 40.875f / MaxEdgeVelocity, new List<EdgeCoefficient> { new(32.25d, 50d) }),
+            GraphEdge.CreateBezier1(Way0014, Way0032, 37.125f / MaxEdgeVelocity, 31.375d, 51.125d),
             GraphEdge.CreateDirect(Way0015, Way0014, 13.75f / MaxEdgeVelocity),
 
             GraphEdge.CreatePolypath(Way0015, Way0017, 15.91f / MaxEdgeVelocity, new List<EdgeCoefficient>
             {
-                new(0d, -7.5d), new(11.325, -7.5d)
+                new(76.875d, 51.875d), new(88.2d, 51.875d)
             }),
-            GraphEdge.CreateBezier1(Way0015, Way0018, 10f / MaxEdgeVelocity, -29.25d, -0.75d),
+            GraphEdge.CreateBezier1(Way0015, Way0018, 10f / MaxEdgeVelocity, 47.625d, 58.625d),
             GraphEdge.CreateDirect(Way0016, Way0015, 11.25f / MaxEdgeVelocity),
-            GraphEdge.CreateBezier2(Way0017, Way0018, 11.32f / MaxEdgeVelocity, -15.825d, -4.375, -26.825d, 8.25d),
+            GraphEdge.CreateBezier2(Way0017, Way0018, 11.32f / MaxEdgeVelocity, 72.375d, 40d, 61.375d, 52.625d),
             GraphEdge.CreateDirect(Way0123, Way0017, 41.27f / MaxEdgeVelocity),
             GraphEdge.CreateDirect(Way0017, Way0123, 41.27f / MaxEdgeVelocity),
             GraphEdge.CreateSlanted(Way0018, Way0014, 17f / MaxEdgeVelocity, East, 3.375),
-            GraphEdge.CreateBezier1(Way0018, Way0022, 10f / MaxEdgeVelocity, -6.25d, -0.975d),
+            GraphEdge.CreateBezier1(Way0018, Way0022, 10f / MaxEdgeVelocity, 40.625d, 48.4d),
             GraphEdge.CreateDirect(Way0022, Way0023, 7.6f / MaxEdgeVelocity),
             GraphEdge.CreateDirect(Way0023, Way0024, 5f / MaxEdgeVelocity),
-            GraphEdge.CreatePolypath(Way0024, Way0030, 25.77f / MaxEdgeVelocity, new List<EdgeCoefficient> { new(-9.375d, 0.75d) }),
+            GraphEdge.CreatePolypath(Way0024, Way0030, 25.77f / MaxEdgeVelocity, new List<EdgeCoefficient> { new(31.25d, 25.125d) }),
             GraphEdge.CreateDirect(Way0028, Park3, 63.06f / MaxEdgeVelocity),
             GraphEdge.CreateDirect(Way0028, Park4, 63.06f / MaxEdgeVelocity),
             GraphEdge.CreateDirect(Way0028, Way0029, 5f / MaxEdgeVelocity),
