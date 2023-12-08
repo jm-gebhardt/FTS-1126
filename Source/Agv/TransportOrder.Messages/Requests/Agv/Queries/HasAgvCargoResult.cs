@@ -3,8 +3,8 @@ using JetBrains.Annotations;
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
 
 /// <summary>
-/// Response to get the IsAgvLoaded
+/// Response to get the hasAgvCargo
 /// </summary>
-/// <param name="IsAgvLoaded"></param>
+/// <param name="HasAgvCargo"></param>
 [PublicAPI]
-public record IsAgvLoadedResult(bool IsAgvLoaded);
+public record HasAgvCargoResult(bool HasAgvCargo);

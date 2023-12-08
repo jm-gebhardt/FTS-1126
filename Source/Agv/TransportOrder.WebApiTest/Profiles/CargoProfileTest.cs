@@ -16,6 +16,7 @@ public class CargoProfileTest
         var agvCorrelationId = Guid.NewGuid();
         ICollection<Cargo> cargos = CargoGenerator.GenerateCargos(agvCorrelationId);
         var mapper = MappingHelper.GetMapper(new CargoProfile());
+ 
         var cargoDtos = mapper.Map<List<CargoDto>>(cargos);
 
         foreach (var dtoCargo in cargoDtos)
@@ -23,11 +24,11 @@ public class CargoProfileTest
             var cargo = cargos.Single(q => q.CorrelationId == dtoCargo.CorrelationId);
             dtoCargo.ShouldSatisfyAllConditions(
                 q => q.CorrelationId.ShouldBe(cargo.CorrelationId),
-                q => q.LoadId.ShouldBe(cargo.LoadId),
-                q => q.LoadType.ShouldBe(cargo.LoadType),
+                q => q.CargoId.ShouldBe(cargo.LoadId),
+                q => q.CargoType.ShouldBe(cargo.LoadType),
                 q => q.CenterPointPosition.ShouldBe(cargo.CenterPointPosition),
                 q => q.Dimension.ShouldBe(cargo.Dimension),
-                q => q.LoadPosition.ShouldBe(cargo.LoadPosition),
+                q => q.CargoPosition.ShouldBe(cargo.LoadPosition),
                 q => q.Weight.ShouldBe(cargo.Weight)
             );
         }

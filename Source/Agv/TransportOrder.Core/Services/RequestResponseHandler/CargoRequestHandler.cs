@@ -8,10 +8,10 @@ using MassTransit;
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
 
 /// <summary>
-/// Defines a handler for IsAgvLoaded and GetCargo requests
+/// Defines a handler for hasAgvCargo and GetCargo requests
 /// </summary>
 [UsedImplicitly]
-public class CargoRequestHandler : IConsumer<IsAgvLoadedRequest>, IConsumer<GetCargosOfAgv>, IConsumer<GetCargosOfAgvs>
+public class CargoRequestHandler : IConsumer<HasAgvCargoRequest>, IConsumer<GetCargosOfAgv>, IConsumer<GetCargosOfAgvs>
 {
     private readonly ICargoRepository _cargoRepository;
     private readonly IAgvRepository _agvRepository;
@@ -26,7 +26,7 @@ public class CargoRequestHandler : IConsumer<IsAgvLoadedRequest>, IConsumer<GetC
     }
 
     /// <inheritdoc/>
-    public async Task Consume(ConsumeContext<IsAgvLoadedRequest> context)
+    public async Task Consume(ConsumeContext<HasAgvCargoRequest> context)
     {
         var agvCorrelationId = context.Message.CorrelationId;
         bool isAgvLoaded = await _cargoRepository.IsAgvLoadedAsync(agvCorrelationId);
@@ -34,7 +34,7 @@ public class CargoRequestHandler : IConsumer<IsAgvLoadedRequest>, IConsumer<GetC
         {
             await _agvRepository.ThrowIfAgvNotExistsAsync(agvCorrelationId);
         }
-        await context.RespondAsync(new IsAgvLoadedResult(isAgvLoaded));
+        await context.RespondAsync(new HasAgvCargoResult(isAgvLoaded));
     }
 
     /// <inheritdoc/>

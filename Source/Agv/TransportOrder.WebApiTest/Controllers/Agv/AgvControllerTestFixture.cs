@@ -190,7 +190,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         IRequestClient<GetAgvErrors> getAgvErrorHistoryRequestClient = GetRequestClient<GetAgvErrors>();
         IRequestClient<MoveAgv> moveAgvRequestClient = GetRequestClient<MoveAgv>();
         IRequestClient<SetAgvForceIdle> setAgvForceIdleClient = GetRequestClient<SetAgvForceIdle>();
-        IRequestClient<IsAgvLoadedRequest> isAgvLoadedClient = GetRequestClient<IsAgvLoadedRequest>();
+        IRequestClient<HasAgvCargoRequest> isAgvLoadedClient = GetRequestClient<HasAgvCargoRequest>();
         IRequestClient<GetCargosOfAgv> getCargosOfAgvClient = GetRequestClient<GetCargosOfAgv>();
         IRequestClient<ResetAgvErrors> resetAgvErrorsClient = GetRequestClient<ResetAgvErrors>();
 

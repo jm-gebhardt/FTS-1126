@@ -3,7 +3,7 @@ using MassTransit;
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
 
 /// <summary>
-/// Request to get the IsLoaded state for the specified AgvCorrelationIds
+/// Request to get the HasCargo state for the specified AgvCorrelationId.
 /// </summary>
 /// <param name="CorrelationId"></param>
-public record IsAgvLoadedRequest(Guid CorrelationId) : CorrelatedBy<Guid>;
+public record HasAgvCargoRequest(Guid CorrelationId) : CorrelatedBy<Guid>;

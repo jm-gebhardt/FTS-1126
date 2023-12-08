@@ -44,7 +44,7 @@ public class AgvController : Controller
     private readonly IRequestClient<GetAgvErrors> _getAgvErrorHistoryRequestClient;
     private readonly IRequestClient<MoveAgv> _moveAgvClient;
     private readonly IRequestClient<SetAgvForceIdle> _setForceIdleClient;
-    private readonly IRequestClient<IsAgvLoadedRequest> _isAgvLoadedClient;
+    private readonly IRequestClient<HasAgvCargoRequest> _hasAgvCargoClient;
     private readonly IRequestClient<GetCargosOfAgv> _getCargosOfAgvClient;
     private readonly IRequestClient<ResetAgvErrors> _resetAgvErrorsClient;
     private readonly IMapper _mapper;
@@ -67,7 +67,7 @@ public class AgvController : Controller
         IRequestClient<GetAgvErrors> getAgvErrorHistoryRequestClient,
         IRequestClient<MoveAgv> moveAgvClient,
         IRequestClient<SetAgvForceIdle> setForceIdleClient,
-        IRequestClient<IsAgvLoadedRequest> isAgvLoadedClient,
+        IRequestClient<HasAgvCargoRequest> hasAgvCargoClient,
         IRequestClient<GetCargosOfAgv> getCargosOfAgvClient,
         IRequestClient<ResetAgvErrors> resetAgvErrorsClient
     )
@@ -87,7 +87,7 @@ public class AgvController : Controller
         _getAgvErrorHistoryRequestClient = getAgvErrorHistoryRequestClient;
         _moveAgvClient = moveAgvClient;
         _setForceIdleClient = setForceIdleClient;
-        _isAgvLoadedClient = isAgvLoadedClient;
+        _hasAgvCargoClient = hasAgvCargoClient;
         _getCargosOfAgvClient = getCargosOfAgvClient;
         _mapper = mapper;
         _resetAgvErrorsClient = resetAgvErrorsClient;
@@ -365,17 +365,17 @@ public class AgvController : Controller
     }
 
     /// <summary>
-    /// Get isLoaded state for given agv.
+    /// Get hasCargo state for given agv.
     /// </summary>
     /// <param name="correlationId">The correlation id of the agv.</param>
     /// <response code="404">Agv with given correlationId not found.</response>
     /// <returns></returns>
     [HttpGet]
-    [Route("/agv/{correlationId:guid}/isLoaded")]
-    public async Task<ActionResult<bool>> IsLoaded(Guid correlationId)
+    [Route("/agv/{correlationId:guid}/hasCargo")]
+    public async Task<ActionResult<bool>> HasCargo(Guid correlationId)
     {
-        Response<IsAgvLoadedResult> response = await _isAgvLoadedClient.GetResponse<IsAgvLoadedResult>(new IsAgvLoadedRequest(correlationId));
-        return Ok(response.Message.IsAgvLoaded);
+        Response<HasAgvCargoResult> response = await _hasAgvCargoClient.GetResponse<HasAgvCargoResult>(new HasAgvCargoRequest(correlationId));
+        return Ok(response.Message.HasAgvCargo);
     }
 
     /// <summary>

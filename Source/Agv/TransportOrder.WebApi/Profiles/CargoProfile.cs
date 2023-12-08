@@ -14,6 +14,10 @@ public class CargoProfile : Profile
     /// <inheritdoc />
     public CargoProfile()
     {
-        CreateMap<Cargo, CargoDto>();
+        CreateMap<Cargo, CargoDto>()
+            .ForCtorParam("cargoId", opt => opt.MapFrom(src => src.LoadId))
+            .ForCtorParam("cargoType", opt => opt.MapFrom(src => src.LoadType))
+            .ForCtorParam("cargoPosition", opt => opt.MapFrom(src => src.LoadPosition)
+        );
     }
 }
