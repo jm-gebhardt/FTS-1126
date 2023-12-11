@@ -1,6 +1,7 @@
 ﻿using System.Numerics;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Exceptions;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Helpers;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 using JetBrains.Annotations;
@@ -88,7 +89,8 @@ public class GraphParser
         string fromNodeId = swap ? fromNode.Id : toNode.Id;
         string toNodeId = swap ? toNode.Id : fromNode.Id;
         var id = GraphHelper.ToGuid(fromNodeId, metric, toNodeId);
-        bool added = _edges.Add(GraphEdge.CreateDirect(fromNodeId, toNodeId, metric, id));
+        var edge = GetGraphEdgeForCurveType(mqttEdge, metric, swap, fromNodeId, toNodeId, id);
+        bool added = _edges.Add(edge);
         if (added && _considerVelocity)
         {
             _overallDistance += distance;
@@ -97,6 +99,48 @@ public class GraphParser
         }
 
         return added;
+    }
+
+    private static GraphEdge GetGraphEdgeForCurveType(MqttEdge mqttEdge, float metric, bool swap, string fromNodeId, string toNodeId, Guid id)
+    {
+        ICollection<MqttControlPoint>? controlPoints = swap ? mqttEdge.ControlPoints?.Reverse().ToList() : mqttEdge.ControlPoints;
+        bool parsed = Enum.TryParse<EdgeType>(mqttEdge.EdgeType, true, out var edgeType);
+        if (!parsed)
+        {
+            edgeType = EdgeType.Direct;
+        }
+        switch (edgeType)
+        {
+            case EdgeType.Direct:
+                return GraphEdge.CreateDirect(fromNodeId, toNodeId, metric, id);
+
+            case EdgeType.Bezier1:
+                if (controlPoints?.Count != 1)
+                {
+                    throw new MqttGraphParsingException($"Wrong number of control points for {nameof(EdgeType.Bezier1)} curve");
+                }
+                return GraphEdge.CreateBezier1(fromNodeId, toNodeId, metric, controlPoints.First().X, controlPoints.First().Y, id);
+
+            case EdgeType.Bezier2:
+                if (controlPoints?.Count != 2)
+                {
+                    throw new MqttGraphParsingException($"Wrong number of control points for {nameof(EdgeType.Bezier2)} curve");
+                }
+                return GraphEdge.CreateBezier2(fromNodeId, toNodeId, metric, controlPoints.First().X, controlPoints.First().Y, controlPoints.Last().X, controlPoints.Last().Y, id);
+
+            case EdgeType.Polypath:
+                if (controlPoints == null || controlPoints.Count < 1)
+                {
+                    throw new MqttGraphParsingException($"Wrong number of control points for {nameof(EdgeType.Polypath)} curve");
+                }
+                return GraphEdge.CreatePolypath(fromNodeId, toNodeId, metric, controlPoints.Select(c => new EdgeCoefficient(c.X, c.Y)).ToList(), id);
+
+            case EdgeType.Slanted:
+                return GraphEdge.CreateSlanted(fromNodeId, toNodeId, metric, mqttEdge.ExitAngle, mqttEdge.ExitDistance, id);
+
+            default:
+                return GraphEdge.CreateDirect(fromNodeId, toNodeId, metric, id);
+        }
     }
 
     private (GraphNode fromNode, GraphNode toNode) GetFromToNodes(MqttEdge mqttEdge)

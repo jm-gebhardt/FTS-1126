@@ -90,6 +90,7 @@ public class AgvDataParser
             _data.MaxVelocityStraight,
             _data.MaxVelocityTurn ?? throw new ArgumentNullException(nameof(MqttAgvData.MaxVelocityTurn)),
             _data.MaxVelocityTurnOnSpot ?? throw new ArgumentNullException(nameof(MqttAgvData.MaxVelocityTurnOnSpot)),
+            _data.TurnOnSpotThreshold,
             _data.Width ?? throw new ArgumentNullException(nameof(MqttAgvData.Width)),
             _data.Length ?? throw new ArgumentNullException(nameof(MqttAgvData.Length)),
             _data.Payload ?? throw new ArgumentNullException(nameof(MqttAgvData.Payload)),

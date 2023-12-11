@@ -134,6 +134,26 @@ public record MqttEdge
     /// The list of attributes attached to the edge
     /// </summary>
     public MqttAttribute[]? Attributes { get; set; }
+
+    /// <summary>
+    /// Edge type.
+    /// </summary>
+    public string EdgeType { get; set; } = string.Empty;
+
+    /// <summary>
+    /// List of JSON controlPoint objects defining the control points of the edge.
+    /// </summary>
+    public ICollection<MqttControlPoint>? ControlPoints { get; set; }
+
+    /// <summary>
+    /// Exit angle of edges of type "Slanted" [rad].
+    /// </summary>
+    public float ExitAngle { get; set; }
+
+    /// <summary>
+    /// Exit distance for edges of type "Slanted".
+    /// </summary>
+    public float ExitDistance { get; set; }
 }
 
 /// <summary>

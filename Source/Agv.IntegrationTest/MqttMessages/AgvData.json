@@ -11,11 +11,10 @@
   "Payload": 35,
   "MaxVelocityTurn": 0.01,
   "MaxVelocityTurnOnSpot": 0.02,
+  "TurnOnSpotThreshold": 1.57,
   "Acceleration": 0.34,
   "Sensors": [
-    {
-      "SensorIdentifier": "Gyro",
-      "SensorIdentifier": "Temp"
-    }
+    { "SensorIdentifier": "Gyro" },
+    { "SensorIdentifier": "Temp"}
   ]
 }

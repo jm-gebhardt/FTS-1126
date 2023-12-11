@@ -14,7 +14,7 @@ public class AgvProfileTest
     [TestMethod]
     public void Map_ShouldMapAllPropertiesCorrectly_WhereAgvDataDtoIsMappedToAgvData()
     {
-        var agvData = new AgvData(Guid.NewGuid(), "Karis", "BF1", "127.0.0.1", 1.8, 120.0, 0.6, 0.8, 0.7, 1, 2.5, 1000, Array.Empty<AgvData.Sensor>());
+        var agvData = new AgvData(Guid.NewGuid(), "Karis", "BF1", "127.0.0.1", 1.8, 120.0, 0.6, 0.8, 0.7, null, 1, 2.5, 1000, Array.Empty<AgvData.Sensor>());
         var mapper = MappingHelper.GetMapper(new AgvProfile());
         var agvDataMessageContent = mapper.Map<Messages.Requests.Agv.Queries.AgvData>(agvData);
 

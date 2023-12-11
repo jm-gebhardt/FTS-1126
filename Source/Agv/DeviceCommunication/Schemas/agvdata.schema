@@ -69,6 +69,10 @@
             "type": "number",
             "description": "The maximum velocity of the AGV while turning on spot [rad/s]"
         },
+        "TurnOnSpotThreshold": {
+            "type": "number",
+            "description": "Threshold angle by which the AGV will stop and turn on spot [rad]"
+        },
         "Acceleration": {
             "type": "number",
             "description": "The maximum velocity of the AGV while turning on spot [m/s^2]"

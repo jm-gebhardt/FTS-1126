@@ -96,62 +96,98 @@
         {
           "type": "object",
           "description": "Edge representation",
-          "properties": {
-            "EdgeId": {
-              "type": "integer",
-              "description": "The unique ID of the edge"
-            },
-            "StartId": {
-              "type": "integer",
-              "description": "The ID of the node where the edge starts"
-            },
-            "EndId": {
-              "type": "integer",
-              "description": "The ID of the node where the edge ends"
-            },
-            "Bidirectional": {
-              "type": "boolean",
-              "description": "true/false. The edge can be traveled in both directions. If false, only from start to end is allowed.",
-              "examples": [
-                true,
-                false
-              ]
-            },
-            "MaxVelocity": {
-              "type": "integer",
-              "description": "The maximum allowed velocity on that edge"
-            },
-            "Attributes": {
-              "type": "array",
-              "description": "The list of attributes attached to the edge",
-              "items": [
-                {
-                  "type": "object",
-                  "description": "Node attribute",
-                  "properties": {
-                    "Key": {
-                      "type": "string",
-                      "description": "The key (name) of the attribute"
-                    },
-                    "Value": {
-                      "type": "string",
-                      "description": "The value of the attribute"
-                    }
-                  },
-                  "required": [
-                    "Key",
-                    "Value"
-                  ]
+            "properties": {
+                "EdgeId": {
+                    "type": "integer",
+                    "description": "The unique ID of the edge"
+                },
+                "StartId": {
+                    "type": "integer",
+                    "description": "The ID of the node where the edge starts"
+                },
+                "EndId": {
+                    "type": "integer",
+                    "description": "The ID of the node where the edge ends"
+                },
+                "Bidirectional": {
+                    "type": "boolean",
+                    "description": "true/false. The edge can be traveled in both directions. If false, only from start to end is allowed.",
+                    "examples": [
+                        true,
+                        false
+                    ]
+                },
+                "MaxVelocity": {
+                    "type": "integer",
+                    "description": "The maximum allowed velocity on that edge"
+                },
+                "EdgyType": {
+                    "type": "string",
+                    "description": "The edge type (Bezier1/Bezier2/Direct/Slanted/Polypath)"
+                },
+                "ControlPoints": {
+                    "type": "array",
+                    "description": "The list of control points (absolute locations)",
+                    "items": [
+                        {
+                            "type": "object",
+                            "required": [
+                                "x",
+                                "y"
+                            ],
+                            "properties": {
+                                "x": {
+                                    "type": "number"
+                                },
+                                "y": {
+                                    "type": "number"
+                                }
+                            }
+                        }
+
+                    ]
+                },
+                "ExitAngle": {
+                    "type": "number",
+                    "description": "The exit angle of a curve of type 'Slanted'"
+                },
+                "ExitDistance": {
+                    "type": "number",
+                    "description": "The exit distance of a curve of type 'Slanted'"
+                },
+                "Attributes": {
+                    "type": "array",
+                    "description": "The list of attributes attached to the edge",
+                    "items": [
+                        {
+                            "type": "object",
+                            "description": "Node attribute",
+                            "properties": {
+                                "Key": {
+                                    "type": "string",
+                                    "description": "The key (name) of the attribute"
+                                },
+                                "Value": {
+                                    "type": "string",
+                                    "description": "The value of the attribute"
+                                }
+                            },
+                            "required": [
+                                "Key",
+                                "Value"
+                            ]
+                        }
+                    ]
                 }
-              ]
-            }
-          },
+            },
           "required": [
             "EdgeId",
             "StartId",
             "EndId",
             "Bidirectional",
-            "MaxVelocity"
+            "MaxVelocity",
+            "EdgeType",
+            "ControlPoints"
           ]
         }
       ]

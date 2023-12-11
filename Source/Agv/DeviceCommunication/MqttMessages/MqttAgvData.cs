@@ -74,6 +74,11 @@ public record MqttAgvData
     public double? MaxVelocityTurnOnSpot { get; set; }
 
     /// <summary>
+    /// The threshold angle by which the agv will stop and turn on spot [rad]. 
+    /// </summary>
+    public double? TurnOnSpotThreshold { get; set; }
+
+    /// <summary>
     /// The maximum acceleration of the AGV [m/s^2]
     /// </summary>
     public double? Acceleration { get; set; }
@@ -98,6 +103,7 @@ public record MqttAgvData
         double? acceleration,
         double? maxVelocityTurn,
         double? maxVelocityTurnOnSpot,
+        double? turnOnSpotThreshold,
         long? payload,
         Sensor[] sensors)
     {
@@ -112,6 +118,7 @@ public record MqttAgvData
         Acceleration = acceleration;
         MaxVelocityTurn = maxVelocityTurn;
         MaxVelocityTurnOnSpot = maxVelocityTurnOnSpot;
+        TurnOnSpotThreshold = turnOnSpotThreshold;
         Payload = payload;
         Sensors = sensors;
     }

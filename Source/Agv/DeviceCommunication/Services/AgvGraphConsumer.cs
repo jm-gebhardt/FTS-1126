@@ -48,14 +48,14 @@ public class AgvGraphConsumer : IConsumer<MqttGraph>
             }
         }
 
+        var graphParser = new GraphParser(reversedYGraph);
+        var agvGraph = graphParser.Graph;
+        FeedAgvRepository(correlationId, agvGraph);
+
         await context.Publish(new InternalGraphReceived(
             correlationId,
             reversedYGraph
         ), context.CancellationToken);
-
-        var graphParser = new GraphParser(reversedYGraph);
-        var agvGraph = graphParser.Graph;
-        FeedAgvRepository(correlationId, agvGraph);
     }
 
     private void FeedAgvRepository(Guid correlationId, AgvGraph agvGraph)

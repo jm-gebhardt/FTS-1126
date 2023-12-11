@@ -26,7 +26,7 @@ public class AgvDataConsumerTest
         var fixture = new MqttConsumerTestFixture<AgvDataConsumer>();
 
         var message = new MqttAgvData("4711", "", "", null, 0.0, 0.0, null, null, null,
-            0.0, null, null, Array.Empty<Sensor>());
+            0.0, null, null, null, Array.Empty<Sensor>());
 
         await fixture.TestHarness.Bus.PublishMqtt(message, null);
 
@@ -47,8 +47,7 @@ public class AgvDataConsumerTest
             new() { SensorIdentifier = "Back02" },
             new() { SensorIdentifier = "Front02" }
         };
-        var message = new MqttAgvData(AgvTestIdentifier, "Karis", "BF1", "127.0.0.1", 1.8, 120.0, 0.6, 0.8, 0.7, 0.9, 2.5, 1000, sensors);
-
+        var message = new MqttAgvData(AgvTestIdentifier, "Karis", "BF1", "127.0.0.1", 1.8, 120.0, 0.6, 0.8, 0.7, 0.9, 2.5, 1.5, 1000, sensors);
         await fixture.TestHarness.Bus.PublishMqtt(message, null);
         (await fixture.TestHarness.Published.Any<MqttAgvData>()).ShouldBeTrue();
 
@@ -71,5 +70,6 @@ public class AgvDataConsumerTest
         publishedData.Data.Acceleration.ShouldBe(0.7);
         publishedData.Data.IpV4Address.ShouldBe("127.0.0.1");
         publishedData.Data.BatteryCapacity.ShouldBe(120.0);
+        publishedData.Data.TurnOnSpotThreshold.ShouldNotBeNull();
     }
 }

@@ -15,6 +15,7 @@ public static class AgvDataGenerator
             0.6, 
             0.8, 
             0.7, 
+            null,
             width, 
             length, 
             1000, 

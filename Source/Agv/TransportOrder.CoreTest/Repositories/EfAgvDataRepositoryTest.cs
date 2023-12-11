@@ -15,7 +15,7 @@ public class EfAgvDataRepositoryTest
 
         List<AgvData> specifications = Enumerable.Range(0, 4).Select(i =>
             new AgvData(Guid.NewGuid(), "Karis", "BF1", "ipv4 address",
-                1.8, 120.0, 0.6, 0.8, 0.7, i,
+                1.8, 120.0, 0.6, 0.8, 0.7, null, i,
                 2.5, 1000, Array.Empty<AgvData.Sensor>())).ToList();
         await fixture.AddRangeAsync(specifications);
 
@@ -36,7 +36,7 @@ public class EfAgvDataRepositoryTest
 
         List<AgvData> knownData = Enumerable.Range(0, 4).Select(i =>
             new AgvData(Guid.NewGuid(), "Karis", "BF1", "ipv4 address",
-                1.8, 120.0, 0.6, 0.8, 0.7, i,
+                1.8, 120.0, 0.6, 0.8, 0.7, null, i,
                 2.5, 1000, Array.Empty<AgvData.Sensor>())).ToList();
         await fixture.AddRangeAsync(knownData);
 
