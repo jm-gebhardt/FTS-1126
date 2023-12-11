@@ -30,7 +30,7 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixtureWithSche
     public const int BatteryLevelGood = 80;
     public const int BatteryLevelFull = 100;
 
-    public static readonly AgvSettings AgvSettings = new()
+    private static readonly AgvSettings _agvSettings = new()
     {
         BatteryLevelCritical = BatteryLevelCritical,
         BatteryLevelFull = BatteryLevelFull,
@@ -47,7 +47,7 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixtureWithSche
         collection.AddTransient<IActionManagerSemaphoreProvider>(_ => _semaphoreProvider);
         collection.AddTransient(_ => _agvRepository.Object);
         collection.AddTransient(_ => _chooseAgvActionGroupService.Object);
-        collection.AddAgvSettings(AgvSettings);
+        collection.AddAgvSettings(_agvSettings);
     }
 
     public AgvEventHandlerTestFixture()

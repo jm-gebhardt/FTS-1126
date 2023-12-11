@@ -431,14 +431,6 @@ public class Agv : IAgvId
     }
 
     /// <summary>
-    /// Marks this agv for maintenance at the next check.
-    /// </summary>
-    public void MarkAgvForMaintenance()
-    {
-        NeedsMaintenance = true;
-    }
-
-    /// <summary>
     /// Static expression to wrap <see cref="IsReady"/> for LINQ to SQL conversion.
     /// </summary>
     public static Expression<Func<Agv, bool>> IsReadyStatic

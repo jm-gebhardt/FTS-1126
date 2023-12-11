@@ -37,7 +37,7 @@ public class ActionGroupCompletedConsumer : IConsumer<ActionGroupCompleted>
     public Task Consume(ConsumeContext<ActionGroupCompleted> context)
     {
         var (actionGroup, correlationId, _) = context.Message;
-        _logger.LogTrace("{MessageType} {CorrelationId} received", nameof(ActionGroupStarted), correlationId);
+        _logger.LogTrace("{MessageType} {CorrelationId} received", nameof(ActionGroupCompleted), correlationId);
         return _agvPublisher.SendAssignedActionGroupChangedAsync((Guid)actionGroup.AssignedAgv!, null);
     }
 }

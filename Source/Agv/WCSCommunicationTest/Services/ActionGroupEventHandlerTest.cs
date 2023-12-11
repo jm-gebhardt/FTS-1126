@@ -44,6 +44,34 @@ public class ActionGroupEventHandlerTest
     }
 
     [TestMethod]
+    public async Task Consume_ActionGroupStarted_CreatorIsTransportOrderWebApi_NoHandleHostOrderStart()
+    {
+        var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
+        var actionGroup = AgvActionGenerator.GenerateMoveActionGroup();
+
+        var actionGroupStarted = new ActionGroupStarted(actionGroup, actionGroup.CorrelationId, DateTime.UtcNow);
+
+        await fixture.TestHarness!.Bus.Publish(actionGroupStarted);
+
+        (await fixture.ConsumerHarness!.Consumed.Any<ActionGroupStarted>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<HandleHostOrderStart>()).ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public async Task Consume_ActionGroupStarted_CreatorIsTransportOrder_NoHandleHostOrderStart()
+    {
+        var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
+        var actionGroup = AgvActionGenerator.GenerateChargeActionGroup();
+
+        var actionGroupStarted = new ActionGroupStarted(actionGroup, actionGroup.CorrelationId, DateTime.UtcNow);
+
+        await fixture.TestHarness!.Bus.Publish(actionGroupStarted);
+
+        (await fixture.ConsumerHarness!.Consumed.Any<ActionGroupStarted>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<HandleHostOrderStart>()).ShouldBeFalse();
+    }
+
+    [TestMethod]
     public async Task Consume_ActionGroupCompleted_ValidData_FinishHostOrder()
     {
         var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
@@ -59,6 +87,34 @@ public class ActionGroupEventHandlerTest
         (await fixture.ConsumerHarness!.Consumed.Any<ActionGroupCompleted>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<FinishHostOrder>(f =>
             f.Context.Message == new FinishHostOrder(actionGroup.CorrelationId, actionGroupCompleted.MessageCreatedDate))).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task Consume_ActionGroupCompleted_CreatorIsTransportOrderWebApi_NoFinishHostOrder()
+    {
+        var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
+        var actionGroup = AgvActionGenerator.GenerateMoveActionGroup();
+
+        var actionGroupCompleted = new ActionGroupCompleted(actionGroup, actionGroup.CorrelationId, DateTime.UtcNow);
+
+        await fixture.TestHarness!.Bus.Publish(actionGroupCompleted);
+
+        (await fixture.ConsumerHarness!.Consumed.Any<ActionGroupCompleted>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<FinishHostOrder>()).ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public async Task Consume_ActionGroupCompleted_CreatorIsTransportOrder_NoFinishHostOrder()
+    {
+        var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
+        var actionGroup = AgvActionGenerator.GenerateChargeActionGroup();
+
+        var actionGroupCompleted = new ActionGroupCompleted(actionGroup, actionGroup.CorrelationId, DateTime.UtcNow);
+
+        await fixture.TestHarness!.Bus.Publish(actionGroupCompleted);
+
+        (await fixture.ConsumerHarness!.Consumed.Any<ActionGroupCompleted>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<FinishHostOrder>()).ShouldBeFalse();
     }
 
     [TestMethod]
@@ -80,6 +136,34 @@ public class ActionGroupEventHandlerTest
     }
 
     [TestMethod]
+    public async Task Consume_ActionGroupCanceled_CreatorIsTransportOrderWebApi_NoFinishHostOrderCancellation()
+    {
+        var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
+        var actionGroup = AgvActionGenerator.GenerateMoveActionGroup();
+
+        var actionGroupCanceled = new ActionGroupCanceled(actionGroup, actionGroup.CorrelationId, DateTime.UtcNow);
+
+        await fixture.TestHarness!.Bus.Publish(actionGroupCanceled);
+
+        (await fixture.ConsumerHarness!.Consumed.Any<ActionGroupCanceled>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<FinishHostOrderCancellation>()).ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public async Task Consume_ActionGroupCanceled_CreatorIsTransportOrder_NoFinishHostOrderCancellation()
+    {
+        var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
+        var actionGroup = AgvActionGenerator.GenerateChargeActionGroup();
+
+        var actionGroupCanceled = new ActionGroupCanceled(actionGroup, actionGroup.CorrelationId, DateTime.UtcNow);
+
+        await fixture.TestHarness!.Bus.Publish(actionGroupCanceled);
+
+        (await fixture.ConsumerHarness!.Consumed.Any<ActionGroupCanceled>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<FinishHostOrderCancellation>()).ShouldBeFalse();
+    }
+
+    [TestMethod]
     public async Task Consume_ActionGroupCancelFailed_ValidData_HandleCancellationFailure()
     {
         var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
@@ -98,6 +182,34 @@ public class ActionGroupEventHandlerTest
     }
 
     [TestMethod]
+    public async Task Consume_ActionGroupCancelFailed_CreatorIsTransportOrderWebApi_NoHandleCancellationFailure()
+    {
+        var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
+        var actionGroup = AgvActionGenerator.GenerateMoveActionGroup();
+
+        var actionGroupCancelFailed = new ActionGroupCancelFailed(actionGroup, actionGroup.CorrelationId, HostOrderCancelFailedErrorCode.OrderDoesNotExist);
+
+        await fixture.TestHarness!.Bus.Publish(actionGroupCancelFailed);
+
+        (await fixture.ConsumerHarness!.Consumed.Any<ActionGroupCancelFailed>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<HandleCancellationFailure>()).ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public async Task Consume_ActionGroupCancelFailed_CreatorIsTransportOrder_NoHandleCancellationFailure()
+    {
+        var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
+        var actionGroup = AgvActionGenerator.GenerateChargeActionGroup();
+
+        var actionGroupCancelFailed = new ActionGroupCancelFailed(actionGroup, actionGroup.CorrelationId, HostOrderCancelFailedErrorCode.OrderDoesNotExist);
+
+        await fixture.TestHarness!.Bus.Publish(actionGroupCancelFailed);
+
+        (await fixture.ConsumerHarness!.Consumed.Any<ActionGroupCancelFailed>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<HandleHostOrderFailure>()).ShouldBeFalse();
+    }
+
+    [TestMethod]
     public async Task Consume_ActionGroupFailed_ValidData_HandleHostOrderFailure()
     {
         var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
@@ -113,5 +225,33 @@ public class ActionGroupEventHandlerTest
         (await fixture.ConsumerHarness!.Consumed.Any<ActionGroupFailed>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<HandleHostOrderFailure>(f =>
             f.Context.Message == new HandleHostOrderFailure(actionGroup.CorrelationId, actionGroupFailed.ErrorCode, actionGroupFailed.MessageCreatedDate))).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task Consume_ActionGroupFailed_CreatorIsTransportOrderWebApi_NoHandleHostOrderFailure()
+    {
+        var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
+        var actionGroup = AgvActionGenerator.GenerateMoveActionGroup();
+
+        var actionGroupFailed = new ActionGroupFailed(actionGroup, actionGroup.CorrelationId, HostOrderHandlingFailedErrorCode.FailedByTransportLayer, DateTime.UtcNow);
+
+        await fixture.TestHarness!.Bus.Publish(actionGroupFailed);
+
+        (await fixture.ConsumerHarness!.Consumed.Any<ActionGroupFailed>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<HandleHostOrderFailure>()).ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public async Task Consume_ActionGroupFailed_CreatorIsTransportOrder_NoHandleHostOrderFailure()
+    {
+        var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
+        var actionGroup = AgvActionGenerator.GenerateChargeActionGroup();
+
+        var actionGroupFailed = new ActionGroupFailed(actionGroup, actionGroup.CorrelationId, HostOrderHandlingFailedErrorCode.FailedByTransportLayer, DateTime.UtcNow);
+
+        await fixture.TestHarness!.Bus.Publish(actionGroupFailed);
+
+        (await fixture.ConsumerHarness!.Consumed.Any<ActionGroupFailed>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<HandleHostOrderFailure>()).ShouldBeFalse();
     }
 }

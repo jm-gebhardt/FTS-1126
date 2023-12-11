@@ -57,9 +57,9 @@ public class AgvAction : IParentedBy<Guid>
     public DateTime? CompletedDate { get; set; }
 
     /// <summary>
-    /// Action is the first transport order of a group.
+    /// Action is the first action of a group.
     /// </summary>
-    public bool IsFirstTransportOrder => Sequence == 0 && ActionType == ActionType.Pick;
+    public bool IsFirstAction => Sequence == 0;
 
     /// <summary>
     /// Constructor

@@ -1,4 +1,5 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 using Gebhardt.StoreWare.Agv.WCSCommunication.Messages.Commands;
 using JetBrains.Annotations;
 using MassTransit;
@@ -31,7 +32,10 @@ public class ActionGroupEventHandler:
     public async Task Consume(ConsumeContext<ActionGroupStarted> context)
     {
         var (actionGroup, _, timestamp) = context.Message;
-        await context.Publish(new HandleHostOrderStart(actionGroup.CorrelationId, actionGroup.AssignedAgv!.Value.ToString(), timestamp));
+        if (actionGroup.Creator is ActionGroupCreator.Wms or ActionGroupCreator.Simulation)
+        {
+            await context.Publish(new HandleHostOrderStart(actionGroup.CorrelationId, actionGroup.AssignedAgv!.Value.ToString(), timestamp));
+        }
     }
 
     /// <summary>
@@ -39,8 +43,11 @@ public class ActionGroupEventHandler:
     /// </summary>
     public async Task Consume(ConsumeContext<ActionGroupCompleted> context)
     {
-        var (_, correlationId, timestamp) = context.Message;
-        await context.Publish(new FinishHostOrder(correlationId, timestamp));
+        var (actionGroup, correlationId, timestamp) = context.Message;
+        if (actionGroup.Creator is ActionGroupCreator.Wms or ActionGroupCreator.Simulation)
+        {
+            await context.Publish(new FinishHostOrder(correlationId, timestamp));
+        }
     }
 
     /// <summary>
@@ -48,8 +55,11 @@ public class ActionGroupEventHandler:
     /// </summary>
     public async Task Consume(ConsumeContext<ActionGroupCanceled> context)
     {
-        var (_, correlationId, timestamp) = context.Message;
-        await context.Publish(new FinishHostOrderCancellation(correlationId, timestamp));
+        var (actionGroup, correlationId, timestamp) = context.Message;
+        if (actionGroup.Creator is ActionGroupCreator.Wms or ActionGroupCreator.Simulation)
+        {
+            await context.Publish(new FinishHostOrderCancellation(correlationId, timestamp));
+        }
     }
 
     /// <summary>
@@ -57,8 +67,11 @@ public class ActionGroupEventHandler:
     /// </summary>
     public async Task Consume(ConsumeContext<ActionGroupCancelFailed> context)
     {
-        var ( _,  correlationId,  errorCode) = context.Message;
-        await context.Publish(new HandleCancellationFailure(correlationId, errorCode));
+        var (actionGroup,  correlationId,  errorCode) = context.Message;
+        if (actionGroup.Creator is ActionGroupCreator.Wms or ActionGroupCreator.Simulation)
+        {
+            await context.Publish(new HandleCancellationFailure(correlationId, errorCode));
+        }
     }
 
     /// <summary>
@@ -66,7 +79,10 @@ public class ActionGroupEventHandler:
     /// </summary>
     public async Task Consume(ConsumeContext<ActionGroupFailed> context)
     {
-        var (_, correlationId, errorCode, timestamp) = context.Message;
-        await context.Publish(new HandleHostOrderFailure(correlationId, errorCode, timestamp));
+        var (actionGroup, correlationId, errorCode, timestamp) = context.Message;
+        if (actionGroup.Creator is ActionGroupCreator.Wms or ActionGroupCreator.Simulation)
+        {
+            await context.Publish(new HandleHostOrderFailure(correlationId, errorCode, timestamp));
+        }
     }
 }

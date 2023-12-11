@@ -17,6 +17,7 @@ public class AgvTracingConsumeFilters: BaseTracingFilter,
     IFilter<ConsumeContext<HandleActionCompletion>>,
     IFilter<ConsumeContext<AgvPreparedForStartingAction>>,
     IFilter<ConsumeContext<AgvBecameIdle>>,
+    IFilter<ConsumeContext<AgvNeedsCharging>>,
     IFilter<ConsumeContext<AgvLastNodeIdChanged>>
 {
     /// <inheritdoc cref="AgvTracingConsumeFilters"/>>
@@ -39,6 +40,12 @@ public class AgvTracingConsumeFilters: BaseTracingFilter,
     }
 
     public async Task Send(ConsumeContext<AgvPreparedForStartingAction> context, IPipe<ConsumeContext<AgvPreparedForStartingAction>> next)
+    {
+        LogDebug(context);
+        await next.Send(context);
+    }
+    
+    public async Task Send(ConsumeContext<AgvNeedsCharging> context, IPipe<ConsumeContext<AgvNeedsCharging>> next)
     {
         LogDebug(context);
         await next.Send(context);

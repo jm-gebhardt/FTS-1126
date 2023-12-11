@@ -56,25 +56,6 @@ public class ActionCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_StartAction_NoAssignedAgv_Publishes_StartingActionForAgvFailed()
-    {
-        var fixture = new ActionCommandHandlerTestFixture();
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "NodeId");
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv:null);
-        fixture.AddAgv(agv);
-        fixture.AddRoute(nodes: new[] { "Node1", "Node2" });
-        fixture.AddActionGroup(actionGroup);
-
-        var startAction = new StartAction(actionGroup.Actions.First(), agv.CorrelationId);
-
-        await fixture.TestHarness!.Bus.Publish(startAction);
-        (await fixture.ConsumerHarness!.Consumed.Any<StartAction>()).ShouldBeTrue();
-        (await fixture.TestHarness!.Published.Any<StartActionCommand>()).ShouldBeFalse();
-        (await fixture.TestHarness!.Published.Any<ActionGroupChanged>()).ShouldBeFalse();
-        (await fixture.TestHarness!.Published.Any<StartingActionForAgvFailed>()).ShouldBeTrue();
-    }
-
-    [TestMethod]
     public async Task Consume_TryStartManualAction_ValidData_PublishesNodesSelectedForAction()
     {
         var fixture = new ActionCommandHandlerTestFixture();

@@ -32,7 +32,6 @@ public class ActionCommandHandlerTestFixture : MassTransitConsumerTestFixture<Ac
     private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
     private readonly Mock<IChooseAgvActionGroupService> _chooseAgvActionGroupService = new();
     private readonly ActionManagerSemaphoreProvider _semaphoreProvider = new();
-    private readonly Mock<IMaintenanceService> _maintenanceService = new();
     private readonly Mock<IChargingPointManager> _chargingPointManager = new();
     private readonly Mock<IParkPointService> _parkPointService = new();
     private readonly Mock<IAgvRepository> _agvRepository = new();
@@ -46,7 +45,6 @@ public class ActionCommandHandlerTestFixture : MassTransitConsumerTestFixture<Ac
         collection.AddTransient(_ => _actionGroupRepository.Object);
         collection.AddTransient(_ => _routeService.Object);
         collection.AddTransient(_ => _chooseAgvActionGroupService.Object);
-        collection.AddTransient(_ => _maintenanceService.Object);
         collection.AddTransient(_ => _chargingPointManager.Object);
         collection.AddTransient(_ => _parkPointService.Object);
         collection.AddTransient(_ => GetMapper());
