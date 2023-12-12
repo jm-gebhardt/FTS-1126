@@ -1,8 +1,10 @@
 ﻿using System.Numerics;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Routing.Base;
 using Gebhardt.StoreWare.Agv.TransportOrder.Routing.Models;
 using JetBrains.Annotations;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Routing.Implementations;
 
@@ -37,9 +39,27 @@ public class AStar : BaseRouteAlgorithm
         public void Reset()
         {
             Predecessor = "";
-            G = 0f;
-            H = 0f;
+            G = 0;
+            H = 0;
+            EntryVector = null;
+            EntryVelocity = 0;
+            DecelerationCost = 0;
         }
+
+        /// <summary>
+        /// The entry vector into the node.
+        /// </summary>
+        public Vector2? EntryVector { get; set; }
+
+        /// <summary>
+        /// The velocity [m/s] that the agv enters the node with.
+        /// </summary>
+        public double EntryVelocity { get; set; }
+
+        /// <summary>
+        /// The cost to decelerate [s] on the edge that enters this node.
+        /// </summary>
+        public double DecelerationCost { get; set; }
 
         /// <summary>
         /// Predecessor node ID of the calculated path.
@@ -47,19 +67,19 @@ public class AStar : BaseRouteAlgorithm
         public string Predecessor { get; set; } = "";
 
         /// <summary>
-        /// Distance (metric/costs) from start to this node.
+        /// Time from start to this node.
         /// </summary>
-        public float G { get; set; }
+        public double G { get; set; }
 
         /// <summary>
-        /// Remaining (estimated) distance (metric/costs) to the destination.
+        /// Remaining (estimated) time [s] to the destination at maximum velocity.
         /// </summary>
-        public float H { get; set; }
+        public double H { get; set; }
 
         /// <summary>
         /// (Estimation of) Costs(metric) from start to destination.
         /// </summary>
-        public float F => G + H;
+        public double F => G + H;
 
         /// <summary>
         /// Clone <see cref="Node"/>.
@@ -68,6 +88,9 @@ public class AStar : BaseRouteAlgorithm
         public ANode(GraphNode node)
         {
             Node = node;
+            DecelerationCost = 0;
+            EntryVelocity = 0;
+            EntryVector = null;
         }
 
         /// <summary>
@@ -76,7 +99,21 @@ public class AStar : BaseRouteAlgorithm
         /// <returns></returns>
         public override string ToString()
         {
-            return $"{Node.Id} [{Predecessor}, F({F}) = G({G}) + H({H})]";
+            return $"{Node.Id} [{Predecessor}, {EntryVector}, F({F}) = G({G}) + H({H})]";
+        }
+
+        public Vector2 AsVector2()
+        {
+            return new Vector2(Node.X, Node.Y);
+        }
+
+        /// <summary>
+        /// Calculates the distance [m] from this <see cref="ANode"/> to the target node.
+        /// </summary>
+        /// <param name="target">The target <see cref="ANode"/></param>
+        public double DistanceTo(ANode target)
+        {
+            return Mathematics.EuclideanDistance(Node, target.Node);
         }
     }
 
@@ -88,28 +125,18 @@ public class AStar : BaseRouteAlgorithm
 
     private readonly Dictionary<string, ANode> _nodes;
 
+    private AgvData? _agvData;
+
     /// <summary>
     /// A* implementation.
     /// </summary>
     /// <param name="agvGraph"></param>
+    /// <param name="agvData"></param>
     /// <param name="routingPlausibilityChecker">The checker to use for the check in the base implementation</param>
-    public AStar(AgvGraph agvGraph, IRoutingPlausibilityChecker? routingPlausibilityChecker = null) : base(agvGraph, routingPlausibilityChecker)
+    public AStar(AgvGraph agvGraph, AgvData? agvData = null, IRoutingPlausibilityChecker? routingPlausibilityChecker = null) : base(agvGraph, routingPlausibilityChecker)
     {
         _nodes = agvGraph.Nodes.ToDictionary(n => n.Id, n => new ANode(n));
-    }
-
-    /// <summary>
-    /// Calculate distance between two nodes.
-    /// </summary>
-    /// <param name="first">One ot the nodes.</param>
-    /// <param name="second">The other node.</param>
-    /// <returns>Returns the euclidean distance.</returns>
-    private float EuclideanDistance(ANode first, ANode second)
-    {
-        var vectorStart = new Vector3(first.Node.X, first.Node.Y, first.Node.Z);
-        var vectorEnd = new Vector3(second.Node.X, second.Node.Y, second.Node.Z);
-
-        return (vectorStart - vectorEnd).Length();
+        _agvData = agvData;
     }
 
     /// <summary>
@@ -150,7 +177,9 @@ public class AStar : BaseRouteAlgorithm
                 continue;
             }
 
-            float g = current.G + edge.Metric;
+            double time = CalculateCosts(current, edge, out double finalVelocity, out double decelerationCost);
+
+            double g = current.G + time;
             var successor = _nodes[edge.ToNodeId];
 
             if (_openList.ContainsKey(successor.Node.Id) && g >= successor.G)
@@ -159,15 +188,134 @@ public class AStar : BaseRouteAlgorithm
             }
 
             successor.Predecessor = current.Node.Id;
+            successor.EntryVector = CalculateExitVector(edge);
+            successor.DecelerationCost = decelerationCost;
+            successor.EntryVelocity = finalVelocity;
             successor.G = g;
+
             if (successor.H == 0f && successor != destination)
             {
-                // Estimate distance to final destination.
-                successor.H = EuclideanDistance(successor, destination);
+                // Estimated time to final destination at maximum velocity.
+                successor.H = successor.DistanceTo(destination) / (_agvData?.MaxVelocityStraight ?? MaxVelocityStraightFallback);
             }
 
             _openList.TryAdd(successor.Node.Id, successor);
         }
+    }
+
+    /// <summary>
+    /// Calculates the cost [s] of moving on an edge.
+    /// </summary>
+    /// <param name="current">The current <see cref="ANode"/> that we want to move from.</param>
+    /// <param name="edge">The current edge that we want to move on.</param>
+    /// <param name="finalVelocity">The velocity [m/s] at the end of the edge.</param>
+    /// <param name="decelerationCost">The additional cost [s] that has to be factored if we would have to brake on this edge.</param>
+    private double CalculateCosts(ANode current, GraphEdge edge, out double finalVelocity, out double decelerationCost)
+    {
+        double agvAcceleration = _agvData?.Acceleration ?? AccelerationFallback;
+        
+        double time = 0;
+        
+        time += CalculateTurnCost(current, edge, out double actualEntryVelocity);
+
+        double maxVelocity = _agvData?.MaxVelocityStraight ?? MaxVelocityStraightFallback;
+
+        time += edge.Variant switch
+        {
+            EdgeType.Direct => CalculateTimeAndExitParametersForDistance(edge.Length, actualEntryVelocity, maxVelocity, agvAcceleration, out finalVelocity, out decelerationCost),
+            _ => CalculateTimeAndExitParametersForDistance(edge.Length, actualEntryVelocity, maxVelocity, agvAcceleration, out finalVelocity, out decelerationCost)
+        };
+
+        return time;
+    }
+
+    /// <summary>
+    /// Calculates if the Agv has to perform a spot turn and how much that spot turn costs (0 if no spot turn necessary).
+    /// </summary>
+    /// <param name="current">The current <see cref="ANode"/> that we want to move from.</param>
+    /// <param name="edge">The edge that we want to move on.</param>
+    /// <param name="actualEntryVelocity">The actual velocity that the Agv has at the start of the edge. (0 if we have to do a spot turn.)</param>
+    private double CalculateTurnCost(ANode current, GraphEdge edge, out double actualEntryVelocity)
+    {
+        double maxAgvVelocityTurnOnSpot = _agvData?.MaxVelocityTurnOnSpot ?? MaxVelocityTurnOnSpotFallback;
+        double maxNonSpotTurnAngle = _agvData?.TurnOnSpotThreshold ?? MaxNonSpotTurnAngleFallback;
+        double time = 0;
+        double angle = 0;
+
+        if (current.EntryVector != null)
+        {
+            angle = Mathematics.AngleBetween((Vector2)current.EntryVector, CalculateEntryVector(edge));
+        }
+
+        bool isFirstNode = current.Predecessor.IsNullOrEmpty();
+
+        bool needsSpotTurn = angle > maxNonSpotTurnAngle || isFirstNode;
+
+        actualEntryVelocity = needsSpotTurn ? 0d : current.EntryVelocity;
+
+        if (!needsSpotTurn)
+        {
+            return time;
+        }
+
+        // Perform the spot turn.
+        time += angle / maxAgvVelocityTurnOnSpot;
+
+        if (!isFirstNode)
+        {
+            // We needed to decelerate on the previous edge too
+            time += current.DecelerationCost;
+        }
+        return time;
+    }
+
+    private static double CalculateTimeAndExitParametersForDistance(double distance, double actualEntryVelocity, double maxVelocity, double acceleration, out double finalVelocity, out double decelerationCost)
+    {
+        PhysicsHelper.CalculateAccelerateMaxVelocityDecelerateSections(acceleration, distance, maxVelocity, actualEntryVelocity, out double accelerateSection, out double maxVelocitySection, out double decelerateSection);
+
+        double time = PhysicsHelper.CalculateTimeToAccelerateAndMoveAtMaxVelocity(acceleration, distance, maxVelocity, actualEntryVelocity, out finalVelocity);
+
+        double accelerationTimeOnEdgeWithBraking = PhysicsHelper.CalculateTimeToAccelerateAndMoveAtMaxVelocity(acceleration, accelerateSection + maxVelocitySection, maxVelocity, actualEntryVelocity);
+
+        // Calculated from the time to reach the maximum velocity possible on the edge (could be that we have to decelerate before reaching max) + deceleration time - the time it takes without decelerating
+        decelerationCost = accelerationTimeOnEdgeWithBraking
+                           + PhysicsHelper.TimeToAccelerateFromStanding(acceleration, decelerateSection)
+                           - time;
+        return time;
+    }
+
+    /// <summary>
+    /// Calculates the exit vector out of the ToNode.
+    /// Note: for direct and slanted these are identical to <see cref="CalculateEntryVector"/>.
+    /// </summary>
+    /// <param name="edge">The edge.</param>
+    private Vector2 CalculateExitVector(GraphEdge edge)
+    {
+        var fromNodeVector = _nodes[edge.FromNodeId].AsVector2();
+        var toNodeVector = _nodes[edge.ToNodeId].AsVector2();
+        return edge.Variant switch
+        {
+            EdgeType.Direct => toNodeVector - fromNodeVector,
+            // Fallback is Direct
+            _ => toNodeVector - fromNodeVector
+        };
+    }
+
+    /// <summary>
+    /// Calculates the entry vector into the FromNode.
+    /// Note: for direct and slanted these are identical to <see cref="CalculateExitVector"/>.
+    /// </summary>
+    /// <param name="edge">The edge.</param>
+    private Vector2 CalculateEntryVector(GraphEdge edge)
+    {
+        var fromNodeVector = _nodes[edge.FromNodeId].AsVector2();
+        var toNodeVector = _nodes[edge.ToNodeId].AsVector2();
+        return edge.Variant switch
+        {
+            EdgeType.Direct => toNodeVector - fromNodeVector,
+            // Fallback is Direct
+            _ => toNodeVector - fromNodeVector
+        };
     }
 
     /// <inheritdoc/>>
@@ -180,8 +328,8 @@ public class AStar : BaseRouteAlgorithm
         var start = _nodes[source];
         var end = _nodes[destination];
 
-        // Estimate distance to final destination.
-        start.H = EuclideanDistance(start, end);
+        // Estimate time to final destination at maximum velocity.
+        start.H = start.DistanceTo(end) / (_agvData?.MaxVelocityStraight ?? MaxVelocityStraightFallback);
 
         ANode? current;
         _openList.Add(start.Node.Id, start);
@@ -200,23 +348,23 @@ public class AStar : BaseRouteAlgorithm
             ExpandNode(current, end);
         } while (_openList.Count != 0);
 
-        if (end.Predecessor != "")
+        if (end.Predecessor.IsNullOrEmpty())
         {
-            var route = new List<string> { end.Node.Id };
-            current = end;
-
-            // Write path found.
-            while (current.Node.Id != source)
-            {
-                current = _nodes[current.Predecessor];
-                route.Add(current.Node.Id);
-            }
-
-            route.Reverse();
-
-            return new Route(end.F, route.ToArray());
+            // No path found.
+            return null;
         }
-        // No path found.
-        return null;
+        var route = new List<string> { end.Node.Id };
+        current = end;
+
+        // Write path found.
+        while (current.Node.Id != source)
+        {
+            current = _nodes[current.Predecessor];
+            route.Add(current.Node.Id);
+        }
+
+        route.Reverse();
+
+        return new Route(end.F, route.ToArray());
     }
 }

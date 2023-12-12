@@ -1,8 +1,10 @@
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Routing.Exceptions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Domain.Services.Routing;
@@ -69,7 +71,7 @@ public class RouteServiceTest
         var fixture = new RouteServiceTestFixture()
             .WithAgv(agv, agvGraph);
 
-        var actualRoute = await fixture.RouteService.GetNodeWithLowestCostsAsync(agv, AgvGraphGenerator.Nodes);
+        var actualRoute = await fixture.RouteService.GetNodeWithLowestCostsAsync(agv, AgvGraphGenerator.Nodes, It.IsAny<AgvData>());
 
         actualRoute.Id.ShouldBe(AgvGraphGenerator.Waypoint1.Id);
     }
@@ -83,6 +85,6 @@ public class RouteServiceTest
         var fixture = new RouteServiceTestFixture()
             .WithAgv(agv, agvGraph);
 
-        await Should.ThrowAsync<RouteNotFoundException>(async () => await fixture.RouteService.GetNodeWithLowestCostsAsync(agv, AgvGraphGenerator.Nodes));
+        await Should.ThrowAsync<RouteNotFoundException>(async () => await fixture.RouteService.GetNodeWithLowestCostsAsync(agv, AgvGraphGenerator.Nodes, It.IsAny<AgvData>()));
     }
 }

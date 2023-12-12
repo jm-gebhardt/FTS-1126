@@ -105,8 +105,7 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
             .ReturnsAsync(actionGroup.ConvertFromActionGroupWithFakeNodeType());
         AgvRepository.Setup(r => r.SelectExistingAgvsAsync(It.IsAny<List<Guid>>())).ReturnsAsync((List<Guid> ids) => agvs.Where(a => ids.Contains(a.CorrelationId)).ToList());
         IEnumerable<AgvData> specifications = agvs.Select((a, i) => new AgvData(a.CorrelationId, "Karis", "BF1", "ipv4 address",
-            1.8, 120.0, 0.6, 0.8, 0.7, null, i,
-            2.5, 1000, Array.Empty<AgvData.Sensor>()));
+            1.8, 120.0, 0.6, 0.8, 0.7, 0.08726646, i, 2.5, 1000, Array.Empty<AgvData.Sensor>()));
 
         _agvDataRepositoryMock.Setup(x => x.GetSelectedAgvData(It.IsAny<ICollection<Guid>>())).ReturnsAsync((ICollection<Guid> ids) => specifications.Where(s => ids.Contains(s.CorrelationId)).ToList());
 

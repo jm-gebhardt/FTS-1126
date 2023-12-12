@@ -20,8 +20,9 @@ public class ChargingPointManager : BaseNodeReservationManager, IChargingPointMa
     /// <param name="routeService"></param>
     /// <param name="logger"></param>
     /// <param name="semaphoreProvider"></param>
-    public ChargingPointManager(IAgvGraphRepository graphRepository, INodeStateRepository nodeStateRepository, IRouteService routeService, ILogger<ChargingPointManager> logger, IChargingSemaphoreProvider semaphoreProvider)
-        : base(graphRepository, nodeStateRepository, routeService, logger, semaphoreProvider)
+    /// <param name="agvDataRepository"></param>
+    public ChargingPointManager(IAgvGraphRepository graphRepository, INodeStateRepository nodeStateRepository, IRouteService routeService, ILogger<ChargingPointManager> logger, IChargingSemaphoreProvider semaphoreProvider, IAgvDataRepository agvDataRepository)
+        : base(graphRepository, nodeStateRepository, routeService, logger, semaphoreProvider, agvDataRepository)
     {
     }
 
@@ -42,7 +43,8 @@ public class ChargingPointManager : BaseNodeReservationManager, IChargingPointMa
     {
         try
         {
-            return await PickNode(agv);
+            var agvData = AgvDataRepository.GetAgvData(agv.CorrelationId);
+            return await PickNode(agv, agvData);
         }
         catch (NoNodesAvailableException)
         {

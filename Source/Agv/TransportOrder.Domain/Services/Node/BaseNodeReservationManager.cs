@@ -23,13 +23,15 @@ public abstract class BaseNodeReservationManager : BaseNodePicker
     /// <param name="routeService"></param>
     /// <param name="logger"></param>
     /// <param name="semaphoreProvider"></param>
+    /// <param name="agvDataRepository"></param>
     protected BaseNodeReservationManager(
         IAgvGraphRepository agvGraphRepository,
         INodeStateRepository nodeStateRepository,
         IRouteService routeService,
         ILogger<BaseNodeReservationManager> logger,
-        ISemaphoreProvider semaphoreProvider
-    ) : base(agvGraphRepository, nodeStateRepository, routeService, logger)
+        ISemaphoreProvider semaphoreProvider,
+        IAgvDataRepository agvDataRepository
+    ) : base(agvGraphRepository, nodeStateRepository, routeService, logger, agvDataRepository)
     {
         _semaphoreProvider = semaphoreProvider;
     }
@@ -43,7 +45,8 @@ public abstract class BaseNodeReservationManager : BaseNodePicker
     {
         return await _semaphoreProvider.ExecuteLockedAsync(async () =>
         {
-            var node = await PickNode(agv);
+            var agvData = AgvDataRepository.GetAgvData(agv.CorrelationId);
+            var node = await PickNode(agv, agvData);
 
             await ReserveNodeAsync(node.Id, agv.CorrelationId);
             return node;

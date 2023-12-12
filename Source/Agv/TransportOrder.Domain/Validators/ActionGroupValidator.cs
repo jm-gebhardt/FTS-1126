@@ -146,7 +146,7 @@ public class ActionGroupValidator : AbstractValidator<ActionGroup>
     }
 
     /// <summary>
-    /// Checks if Agv or at least one Agv that knows the complete route of all actions within the given ActionGroup
+    /// Checks if Agv or at least one Agv that knows the complete route of all actions within the given ActionGroup.
     /// </summary>
     /// <param name="actionGroup"></param>
     /// <param name="cancellationToken"></param>
@@ -161,7 +161,7 @@ public class ActionGroupValidator : AbstractValidator<ActionGroup>
                 return false;
             }
 
-            float? costs = await _routeService.GetCostsForFirstActionAsync(_agv, actionGroup, cancellationToken);
+            double? costs = await _routeService.GetCostsForFirstActionAsync(_agv, actionGroup, null, cancellationToken);
             _hasRoute = costs != null;
         }
         else

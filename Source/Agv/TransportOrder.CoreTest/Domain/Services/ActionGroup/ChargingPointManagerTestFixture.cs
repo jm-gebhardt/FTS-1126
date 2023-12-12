@@ -27,6 +27,8 @@ public class ChargingPointManagerTestFixture
 
     private readonly Mock<IAgvGraphRepository> _graphRepository = new();
 
+    private readonly Mock<IAgvDataRepository> _agvDataRepository = new();
+
     public Mock<INodeStateRepository> NodeStateRepository { get; } = new();
 
     public Mock<IRouteService> RouteService { get; } = new();
@@ -76,7 +78,7 @@ public class ChargingPointManagerTestFixture
 
     public IChargingPointManager CreateChargingPointManager()
     {
-        return new ChargingPointManager(_graphRepository.Object, NodeStateRepository.Object, RouteService.Object, new Mock<ILogger<ChargingPointManager>>().Object, new ChargingSemaphoreProvider());
+        return new ChargingPointManager(_graphRepository.Object, NodeStateRepository.Object, RouteService.Object, new Mock<ILogger<ChargingPointManager>>().Object, new ChargingSemaphoreProvider(), _agvDataRepository.Object);
     }
 
     public void SetupNodeLocker(bool reserveSuccess, bool lockSuccess, bool unlockSuccess, Func<IQueryable<GraphNode>, IQueryable<GraphNode>>? filterFreeUnlockedNodesFunction = null)
@@ -119,7 +121,7 @@ public class ChargingPointManagerTestFixture
 
     public ChargingPointManagerTestFixture WithLowestCostNode(TransportOrder.Domain.Models.Agv.Agv agv, IList<GraphNode> availableNodes, GraphNode node)
     {
-        RouteService.Setup(x => x.GetNodeWithLowestCostsAsync(agv, availableNodes)).ReturnsAsync(node);
+        RouteService.Setup(x => x.GetNodeWithLowestCostsAsync(agv, availableNodes, It.IsAny<AgvData>())).ReturnsAsync(node);
         return this;
     }
 }

@@ -1,4 +1,5 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Testing;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
@@ -14,6 +15,7 @@ public class RouteRequestHandlerTestFixture<TRequestClient> : MediatorTestFixtur
 {
     private readonly Mock<IAgvRepository> _agvRepositoryMock = new();
     private readonly Mock<IRouteService> _routeServiceMock = new();
+    private readonly Mock<IAgvDataRepository> _agvDataRepositoryMock = new();
     private readonly List<TransportOrder.Domain.Models.Agv.Agv> _agvs = new();
 
     public RouteRequestHandlerTestFixture<TRequestClient> WithAgv(TransportOrder.Domain.Models.Agv.Agv agv)
@@ -25,7 +27,7 @@ public class RouteRequestHandlerTestFixture<TRequestClient> : MediatorTestFixtur
 
     public RouteRequestHandlerTestFixture<TRequestClient> WithRoute(TransportOrder.Domain.Models.Agv.Agv agv, string destinationNodeId, string[] nodes)
     {
-        _routeServiceMock.Setup(s => s.GetRouteAsync(agv, destinationNodeId, null, CancellationToken.None)).ReturnsAsync(new Route(0f, nodes));
+        _routeServiceMock.Setup(s => s.GetRouteAsync(agv, destinationNodeId, null, It.IsAny<AgvData>(), CancellationToken.None)).ReturnsAsync(new Route(0f, nodes));
         return this;
     }
 
@@ -34,6 +36,7 @@ public class RouteRequestHandlerTestFixture<TRequestClient> : MediatorTestFixtur
         _agvRepositoryMock.AddAgvsToMockRepository(_agvs);
 
         AddServices(s => s.AddTransient<IAgvRepository>(_ => _agvRepositoryMock.Object));
+        AddServices(s => s.AddTransient<IAgvDataRepository>(_ => _agvDataRepositoryMock.Object));
         AddServices(s => s.AddTransient<IRouteService>(_ => _routeServiceMock.Object));
         base.Build();
 

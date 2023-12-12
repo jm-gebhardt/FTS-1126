@@ -12,7 +12,7 @@ public class Route : IComparable<Route>
     /// </summary>
     /// <param name="costs"></param>
     /// <param name="nodes"></param>
-    public Route(float costs, string[] nodes)
+    public Route(double costs, string[] nodes)
     {
         Costs = costs;
         Nodes = nodes;
@@ -22,7 +22,7 @@ public class Route : IComparable<Route>
     /// A comparable value representing some kind of costs this route will take.
     /// </summary>
     [PublicAPI]
-    public float Costs { get; set; }
+    public double Costs { get; set; }
 
     /// <summary>
     /// List of node ids that define the route

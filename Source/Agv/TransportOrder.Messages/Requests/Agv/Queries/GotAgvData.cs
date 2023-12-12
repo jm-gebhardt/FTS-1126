@@ -48,6 +48,11 @@ public record AgvData
     /// <summary>The max. payload of the AGV in [kg]</summary>
     public long? Payload { get; init; }
 
+    /// <summary>
+    /// The maximum angle the agv can turn without having to perform a spot turn [rad].
+    /// </summary>
+    public double TurnOnSpotThreshold { get; init; }
+
     /// <summary>The list of sensors in the agv</summary>
     public Common.Messages.AgvManagement.AgvData.Sensor[] Sensors { get; init; }
 
@@ -60,14 +65,14 @@ public record AgvData
     /// <param name="maxVelocityStraight">The maximum velocity of the AGV in straight direction [m/s]</param>
     /// <param name="maxVelocityTurn">The maximum velocity of the AGV in while turning [m/s]</param>
     /// <param name="maxVelocityTurnOnSpot">The maximum velocity of the AGV while turning on spot [rad/s]</param>
+    /// <param name="turnOnSpotThreshold">The max. angle that the agv can turn before having to perform a spot turn in [rad].</param>
     /// <param name="width">The width of the AGV in [m]</param>
     /// <param name="length">The length of the AGV in [m]</param>
     /// <param name="payload">The max. payload of the AGV in [kg]</param>
     /// <param name="sensors">The list of sensors in the agv</param>
     /// <returns></returns>
     [PublicAPI]
-    public AgvData(
-        Guid correlationId,
+    public AgvData(Guid correlationId,
         string model,
         string type,
         string? ipV4Address,
@@ -76,11 +81,11 @@ public record AgvData
         double maxVelocityStraight,
         double? maxVelocityTurn,
         double? maxVelocityTurnOnSpot,
+        double turnOnSpotThreshold,
         double? width,
         double? length,
         long? payload,
-        Common.Messages.AgvManagement.AgvData.Sensor[] sensors
-    )
+        Common.Messages.AgvManagement.AgvData.Sensor[] sensors)
     {
         CorrelationId = correlationId;
         Model = model;
@@ -95,6 +100,7 @@ public record AgvData
         Length = length;
         Payload = payload;
         Sensors = sensors;
+        TurnOnSpotThreshold = turnOnSpotThreshold;
     }
 
     /// <summary>

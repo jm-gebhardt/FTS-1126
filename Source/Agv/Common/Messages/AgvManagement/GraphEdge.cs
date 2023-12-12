@@ -46,12 +46,7 @@ public class GraphEdge
         [UsedImplicitly]
         init;
     } = 1.0;
-
-    /// <summary>
-    /// Distance/costs to travel this edge (unitless quantifier).
-    /// </summary>
-    public float Metric { get; }
-
+    
     /// <summary>
     /// The <see cref="EdgeType"/> of this edge.
     /// </summary>
@@ -78,40 +73,23 @@ public class GraphEdge
     /// <returns></returns>
     public override string ToString()
     {
-        return $"{FromNodeId} -- {Metric} --> {ToNodeId}";
+        return $"{FromNodeId} -- {Length} --> {ToNodeId}";
     }
 
     /// <summary>
     /// Graph Edge Constructor.
     /// </summary>
-    /// <param name="fromNodeId"></param>
-    /// <param name="toNodeId"></param>
-    /// <param name="metric"></param>
-    /// <param name="variant"></param>
-    /// <param name="variantParameters"></param>
-    private GraphEdge(string fromNodeId, string toNodeId, float metric, EdgeType variant = EdgeType.Direct, ICollection<EdgeCoefficient>? variantParameters = null)
+    /// <param name="fromNodeId">Id of the start node of the edge.</param>
+    /// <param name="toNodeId">Id of the end node of the edge.</param>
+    /// <param name="length">The Length of the edge in [m]</param>
+    /// <param name="id">The id of the edge.</param>
+    /// <param name="variant">The <see cref="EdgeType"/> of the edge.</param>
+    /// <param name="variantParameters">The parameters belonging to the <see cref="EdgeType"/></param>
+    private GraphEdge(string fromNodeId, string toNodeId, float length, Guid id, EdgeType variant = EdgeType.Direct, ICollection<EdgeCoefficient>? variantParameters = null)
     {
         FromNodeId = fromNodeId;
         ToNodeId = toNodeId;
-        Metric = metric;
-        Variant = variant;
-        VariantParameters = variantParameters ?? new List<EdgeCoefficient>();
-    }
-
-    /// <summary>
-    /// Graph Edge Constructor.
-    /// </summary>
-    /// <param name="fromNodeId"></param>
-    /// <param name="toNodeId"></param>
-    /// <param name="metric"></param>
-    /// <param name="id"></param>
-    /// <param name="variant"></param>
-    /// <param name="variantParameters"></param>
-    private GraphEdge(string fromNodeId, string toNodeId, float metric, Guid id, EdgeType variant = EdgeType.Direct, ICollection<EdgeCoefficient>? variantParameters = null)
-    {
-        FromNodeId = fromNodeId;
-        ToNodeId = toNodeId;
-        Metric = metric;
+        Length = length;
         Id = id;
         Variant = variant;
         VariantParameters = variantParameters ?? new List<EdgeCoefficient>();
@@ -134,12 +112,12 @@ public class GraphEdge
     /// </summary>
     /// <param name="fromNodeId">The start point of the edge.</param>
     /// <param name="toNodeId">The end point of the edge.</param>
-    /// <param name="metric">Metric for path finding.</param>
+    /// <param name="length">Length of the edge in [m].</param>
     /// <param name="id">Optional id.</param>
     /// <returns></returns>
-    public static GraphEdge CreateDirect(string fromNodeId, string toNodeId, float metric = 1f, Guid? id = null)
+    public static GraphEdge CreateDirect(string fromNodeId, string toNodeId, float length = 1f, Guid? id = null)
     {
-        return new GraphEdge(fromNodeId, toNodeId, metric, id ?? Guid.NewGuid());
+        return new GraphEdge(fromNodeId, toNodeId, length, id ?? Guid.NewGuid());
     }
 
     /// <summary>
@@ -147,14 +125,14 @@ public class GraphEdge
     /// </summary>
     /// <param name="fromNodeId">The start point of the edge.</param>
     /// <param name="toNodeId">The end point of the edge.</param>
-    /// <param name="metric">Metric for path finding.</param>
+    /// <param name="length">Length of the edge in [m].</param>
     /// <param name="x">The x coordinate of the bezier curve control polygon point.</param>
     /// <param name="y">The y coordinate of the bezier curve control polygon point.</param>
     /// <param name="id">Optional id.</param>
     [UsedImplicitly]
-    public static GraphEdge CreateBezier1(string fromNodeId, string toNodeId, float metric, double x, double y, Guid? id = null)
+    public static GraphEdge CreateBezier1(string fromNodeId, string toNodeId, float length, double x, double y, Guid? id = null)
     {
-        return new GraphEdge(fromNodeId, toNodeId, metric, id ?? Guid.NewGuid(), EdgeType.Bezier1, new List<EdgeCoefficient> {new(x, y)});
+        return new GraphEdge(fromNodeId, toNodeId, length, id ?? Guid.NewGuid(), EdgeType.Bezier1, new List<EdgeCoefficient> {new(x, y)});
     }
 
     /// <summary>
@@ -162,16 +140,16 @@ public class GraphEdge
     /// </summary>
     /// <param name="fromNodeId">The start point of the edge.</param>
     /// <param name="toNodeId">The end point of the edge.</param>
-    /// <param name="metric">Metric for path finding.</param>
+    /// <param name="length">Length of the edge in [m].</param>
     /// <param name="x1">The x coordinate of the first bezier curve control polygon point.</param>
     /// <param name="y1">The y coordinate of the first bezier curve control polygon point.</param>
     /// <param name="x2">The x coordinate of the second bezier curve control polygon point.</param>
     /// <param name="y2">The y coordinate of the second bezier curve control polygon point.</param>
     /// <param name="id">Optional id.</param>
     [UsedImplicitly]
-    public static GraphEdge CreateBezier2(string fromNodeId, string toNodeId, float metric, double x1, double y1, double x2, double y2, Guid? id = null)
+    public static GraphEdge CreateBezier2(string fromNodeId, string toNodeId, float length, double x1, double y1, double x2, double y2, Guid? id = null)
     {
-        return new GraphEdge(fromNodeId, toNodeId, metric, id ?? Guid.NewGuid(), EdgeType.Bezier2, new List<EdgeCoefficient> {new(x1, y1), new(x2, y2)});
+        return new GraphEdge(fromNodeId, toNodeId, length, id ?? Guid.NewGuid(), EdgeType.Bezier2, new List<EdgeCoefficient> {new(x1, y1), new(x2, y2)});
     }
 
     /// <summary>
@@ -179,13 +157,13 @@ public class GraphEdge
     /// </summary>
     /// <param name="fromNodeId">The start point of the edge.</param>
     /// <param name="toNodeId">The end point of the edge.</param>
-    /// <param name="metric">Metric for path finding.</param>
+    /// <param name="length">Length of the edge in [m].</param>
     /// <param name="exitAngle">The angle that the node is exited on.</param>
     /// <param name="exitDistance">The distance to travel before entering the slant.</param>
     /// <param name="id">Optional id.</param>
-    public static GraphEdge CreateSlanted(string fromNodeId, string toNodeId, float metric, double exitAngle, double exitDistance, Guid? id = null)
+    public static GraphEdge CreateSlanted(string fromNodeId, string toNodeId, float length, double exitAngle, double exitDistance, Guid? id = null)
     {
-        return new GraphEdge(fromNodeId, toNodeId, metric, id ?? Guid.NewGuid(), EdgeType.Slanted, new List<EdgeCoefficient> {new(exitAngle), new(exitDistance)});
+        return new GraphEdge(fromNodeId, toNodeId, length, id ?? Guid.NewGuid(), EdgeType.Slanted, new List<EdgeCoefficient> {new(exitAngle), new(exitDistance)});
     }
 
     /// <summary>
@@ -193,12 +171,12 @@ public class GraphEdge
     /// </summary>
     /// <param name="fromNodeId">The start point of the edge.</param>
     /// <param name="toNodeId">The end point of the edge.</param>
-    /// <param name="metric">Metric for path finding.</param>
+    /// <param name="length">Length of the edge in [m].</param>
     /// <param name="pathPoints">The points of the polypath (max 10).</param>
     /// <param name="id">Optional id.</param>
     /// <exception cref="ArgumentException">If the path is longer than ten points or one of the coefficients is not a point.</exception>
     [UsedImplicitly]
-    public static GraphEdge CreatePolypath(string fromNodeId, string toNodeId, float metric, ICollection<EdgeCoefficient> pathPoints, Guid? id = null)
+    public static GraphEdge CreatePolypath(string fromNodeId, string toNodeId, float length, ICollection<EdgeCoefficient> pathPoints, Guid? id = null)
     {
         if (pathPoints.Any(ec => !ec.IsPoint))
         {
@@ -208,6 +186,6 @@ public class GraphEdge
         {
             throw new ArgumentException($"Polypath definition has too many coefficients: {pathPoints.Count} > 10");
         }
-        return new GraphEdge(fromNodeId, toNodeId, metric, id ?? Guid.NewGuid(), EdgeType.Polypath, pathPoints);
+        return new GraphEdge(fromNodeId, toNodeId, length, id ?? Guid.NewGuid(), EdgeType.Polypath, pathPoints);
     }
 }

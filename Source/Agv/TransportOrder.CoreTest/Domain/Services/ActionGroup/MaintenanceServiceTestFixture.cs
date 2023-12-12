@@ -15,7 +15,7 @@ public class MaintenanceServiceTestFixture
 
     public MaintenanceServiceTestFixture()
     {
-        MaintenanceService = new MaintenanceService(_graphRepository.Object, _nodeStateRepository.Object, RouteService.Object, new Mock<ILogger<MaintenanceService>>().Object);
+        MaintenanceService = new MaintenanceService(_graphRepository.Object, _nodeStateRepository.Object, RouteService.Object, new Mock<ILogger<MaintenanceService>>().Object, new Mock<IAgvDataRepository>().Object);
     }
 
     public Mock<IRouteService> RouteService { get; } = new();
@@ -38,7 +38,7 @@ public class MaintenanceServiceTestFixture
 
     public MaintenanceServiceTestFixture WithLowestCostNode(TransportOrder.Domain.Models.Agv.Agv agv, IList<GraphNode> availableNodes, GraphNode node)
     {
-        RouteService.Setup(x => x.GetNodeWithLowestCostsAsync(agv, availableNodes)).ReturnsAsync(node);
+        RouteService.Setup(x => x.GetNodeWithLowestCostsAsync(agv, availableNodes, It.IsAny<AgvData>())).ReturnsAsync(node);
         return this;
     }
 }

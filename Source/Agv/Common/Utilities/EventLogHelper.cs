@@ -3,7 +3,7 @@ using System.Runtime.Versioning;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.EventLog;
 
-namespace Gebhardt.StoreWare.Agv.Common.Helpers;
+namespace Gebhardt.StoreWare.Agv.Common.Utilities;
 
 /// <summary>
 /// Helper class for handling EventLog (Windows)

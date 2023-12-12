@@ -33,11 +33,6 @@ public class EfEdge
     /// Length of this edge in [m].
     /// </summary>
     public double Length { get; init; } = 1.0;
-    
-    /// <summary>
-    /// Distance/costs to travel this edge (unitless quantifier).
-    /// </summary>
-    public float Metric { get; init; }
 
     /// <summary>
     /// The variant of this edge.

@@ -119,7 +119,7 @@ public class AgvCommandHandlerTest
         var agv = AgvGenerator.GenerateIdleAgv();
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
         fixture.AgvDataRepository.Setup(x => x.AddOrUpdateAsync(It.IsAny<AgvData>())).ReturnsAsync(true);
-        var agvData = new AgvData(agv.CorrelationId, "model", "type", string.Empty, 100d, 1.0, 10.0, 10.0, 1.0, null, 1.0, 1.0, 42, Array.Empty<AgvData.Sensor>());
+        var agvData = new AgvData(agv.CorrelationId, "model", "type", string.Empty, 100d, 1.0, 10.0, 10.0, 1.0, 10d, 1.0, 1.0, 42, Array.Empty<AgvData.Sensor>());
         await fixture.TestHarness!.Bus.Publish(new UpdateAgvData(agv.CorrelationId, agvData));
         (await fixture.ConsumerHarness!.Consumed.Any<UpdateAgvData>()).ShouldBeTrue();
         agv.DataExist.ShouldBeTrue();

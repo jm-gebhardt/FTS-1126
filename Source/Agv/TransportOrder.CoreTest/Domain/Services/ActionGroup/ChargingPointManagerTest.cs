@@ -45,7 +45,7 @@ public class ChargingPointManagerTest
         var bestCharger = await fixture.CreateChargingPointManager().GetBestChargerAsync(agv);
         bestCharger.ShouldNotBeNull();
         bestCharger.Type.ShouldBe(AgvGraph.NodeType.Charge);
-        fixture.RouteService.Verify(m => m.GetNodeWithLowestCostsAsync(agv, availableNodes), Times.Once);
+        fixture.RouteService.Verify(m => m.GetNodeWithLowestCostsAsync(agv, availableNodes, It.IsAny<AgvData>()), Times.Once);
         VerifyGraphNode(bestCharger, chargingNode);
     }
 
@@ -91,7 +91,7 @@ public class ChargingPointManagerTest
 
         await baseChargingPointManager.ReserveChargerAsync(bestCharger, correlationId);
         fixture.NodeStateRepository.Verify(x => x.ReserveNodeAsync(bestCharger.Id, correlationId), Times.Once);
-        fixture.RouteService.Verify(m => m.GetNodeWithLowestCostsAsync(agv, availableNodes), Times.Once);
+        fixture.RouteService.Verify(m => m.GetNodeWithLowestCostsAsync(agv, availableNodes, It.IsAny<AgvData>()), Times.Once);
         VerifyGraphNode(bestCharger, chargingNode);
     }
 
@@ -135,7 +135,7 @@ public class ChargingPointManagerTest
         var agvNodeResult = await fixture.CreateChargingPointManager().ReserveChargerAsync(agv);
         agvNodeResult.ShouldNotBeNull();
         fixture.NodeStateRepository.Verify(r => r.ReserveNodeAsync(agvNodeResult.Id, correlationId), Times.Once);
-        fixture.RouteService.Verify(m => m.GetNodeWithLowestCostsAsync(agv, availableNodes), Times.Once);
+        fixture.RouteService.Verify(m => m.GetNodeWithLowestCostsAsync(agv, availableNodes, It.IsAny<AgvData>()), Times.Once);
         agvNodeResult.Type.ShouldBe(AgvGraph.NodeType.Charge);
         VerifyGraphNode(agvNodeResult, chargingNode);
     }
@@ -170,7 +170,7 @@ public class ChargingPointManagerTest
             .WithLowestCostNode(agv, availableNodes, availableNodes.Last());
 
         var bestCharger = await fixture.CreateChargingPointManager().GetBestChargerAsync(agv);
-        fixture.RouteService.Verify(m => m.GetNodeWithLowestCostsAsync(agv, availableNodes), Times.Once);
+        fixture.RouteService.Verify(m => m.GetNodeWithLowestCostsAsync(agv, availableNodes, It.IsAny<AgvData>()), Times.Once);
         bestCharger.ShouldNotBeNull();
         bestCharger.Id.ShouldBe("Charge-2");
         bestCharger.Type.ShouldBe(AgvGraph.NodeType.Charge);
@@ -193,7 +193,7 @@ public class ChargingPointManagerTest
         fixture.SetupNodeLocker(true, true, true);
 
         var reservedCharger = await fixture.CreateChargingPointManager().ReserveChargerAsync(agv);
-        fixture.RouteService.Verify(m => m.GetNodeWithLowestCostsAsync(agv, availableNodes), Times.Once);
+        fixture.RouteService.Verify(m => m.GetNodeWithLowestCostsAsync(agv, availableNodes, It.IsAny<AgvData>()), Times.Once);
         reservedCharger.ShouldNotBeNull();
         reservedCharger.Id.ShouldBe("Charge-2");
         reservedCharger.Type.ShouldBe(AgvGraph.NodeType.Charge);

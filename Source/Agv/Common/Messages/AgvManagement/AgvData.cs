@@ -66,13 +66,13 @@ public record AgvData : CorrelatedBy<Guid>
     /// <summary>
     /// The threshold angle at which the agv must stop at the end of an edge in order to align itself with the angle for the next edge [rad]. 
     /// </summary>
-    public double? TurnOnSpotThreshold { get; init; }
+    public double TurnOnSpotThreshold { get; init; }
 
     /// <summary>
     /// The max. payload of the AGV in [kg]
     /// </summary>
     public long Payload { get; init; }
-
+    
     /// <summary>
     /// The list of sensors in the agv
     /// </summary>
@@ -81,8 +81,7 @@ public record AgvData : CorrelatedBy<Guid>
     /// <summary>
     /// Initializes a new instance of <see cref="AgvData"/>
     /// </summary>
-    public AgvData(
-        Guid correlationId,
+    public AgvData(Guid correlationId,
         string model,
         string type,
         string ipV4Address,
@@ -91,7 +90,7 @@ public record AgvData : CorrelatedBy<Guid>
         double maxVelocityStraight,
         double maxVelocityTurn,
         double maxVelocityTurnOnSpot,
-        double? turnOnSpotThreshold,
+        double turnOnSpotThreshold,
         double width,
         double length,
         long payload,
@@ -112,6 +111,7 @@ public record AgvData : CorrelatedBy<Guid>
         Length = length;
         Payload = payload;
         Sensors = sensors;
+        TurnOnSpotThreshold = turnOnSpotThreshold;
     }
 
     /// <summary>

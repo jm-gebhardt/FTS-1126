@@ -22,6 +22,8 @@ public class AStarTest
     private readonly AgvGraph _wikiExample;
     private readonly Mock<IRoutingPlausibilityChecker> _routingPlausibilityCheckerMock;
 
+    private readonly AgvData _agvData = new (Guid.Empty, "test", "test", "0.0.0.0", 100, 1, 1, 0.5, Math.PI, (float)Mathematics.ConvertToRadians(5), 1, 1, 1, Array.Empty<AgvData.Sensor>());
+
     private IRoutingPlausibilityChecker RoutingPlausibilityChecker => _routingPlausibilityCheckerMock.Object;
 
     public AStarTest()
@@ -181,18 +183,18 @@ public class AStarTest
     [TestMethod]
     public void Test_AStar_WikipediaExample()
     {
-        var aStar = new AStar(_wikiExample, RoutingPlausibilityChecker);
+        var aStar = new AStar(_wikiExample, _agvData, RoutingPlausibilityChecker);
 
         var route = aStar.CalculateRoute("Nairobi", "Rio");
         route.ShouldNotBeNull();
         route.Nodes.ShouldBe(new[] {"Nairobi", "Tokyo", "Marseille", "Rio"});
-        route.Costs.ShouldBe(289f, 0.00001f);
+        route.Costs.ShouldBe(291.8725786, 0.00001f);
     }
 
     [TestMethod]
     public void Test_AStar_WikipediaExample_SameSourceDestination()
     {
-        var aStar = new AStar(_wikiExample, RoutingPlausibilityChecker);
+        var aStar = new AStar(_wikiExample, null, RoutingPlausibilityChecker);
 
         var route = aStar.CalculateRoute("Nairobi", "Nairobi");
         route.ShouldNotBeNull();
@@ -203,25 +205,25 @@ public class AStarTest
     [TestMethod]
     public void Test_AStar_WikipediaExample_WithCurrentNode()
     {
-        var aStar = new AStar(_wikiExample, RoutingPlausibilityChecker);
+        var aStar = new AStar(_wikiExample, _agvData, RoutingPlausibilityChecker);
 
         var route = aStar.CalculateRoute("Denver", "Nairobi", "Rio");
         route.ShouldNotBeNull();
         route.Nodes.ShouldBe(new[] {"Denver", "Nairobi", "Tokyo", "Marseille", "Rio"});
-        route.Costs.ShouldBe(289f + 145f, 0.00001f);
+        route.Costs.ShouldBe(289 + 145 + 3.3725786, 0.00001f);
     }
 
     [TestMethod]
     public void Test_AStar_WikipediaExample_MultipleWaypoints()
     {
-        var aStar = new AStar(_wikiExample, RoutingPlausibilityChecker);
+        var aStar = new AStar(_wikiExample, _agvData, RoutingPlausibilityChecker);
 
         string[] waypoints = {"Denver", "Nairobi", "Nairobi", "Rio"}; // (Denver => Nairobi) + (Nairobi => Rio)
 
         var route = aStar.CalculateRoute(waypoints);
         route.ShouldNotBeNull();
         route.Nodes.ShouldBe(new[] {"Denver", "Nairobi", "Tokyo", "Marseille", "Rio"});
-        route.Costs.ShouldBe(289f + 145f, 0.00001f);
+        route.Costs.ShouldBe(289 + 145 + 3.3725786, 0.00001f);
     }
 
     /// <summary>
@@ -230,18 +232,18 @@ public class AStarTest
     [TestMethod]
     public void Test_AStarBidirectional_UseGraphSeveralTimes()
     {
-        var aStar = new AStar(_graph!, RoutingPlausibilityChecker);
+        var aStar = new AStar(_graph!, _agvData, RoutingPlausibilityChecker);
 
         var route = aStar.CalculateRoute("1", "10");
         route.ShouldNotBeNull();
-        route.Costs.ShouldBe(18f, 0.00001f);
+        route.Costs.ShouldBe(18f + 6.416286f, 0.00001f);
 
         route = aStar.CalculateRoute("10", "1");
         route.ShouldBeNull();
 
         route = aStar.CalculateRoute("9", "5");
         route.ShouldNotBeNull();
-        route.Costs.ShouldBe(8f, 0.00001f);
+        route.Costs.ShouldBe(8 + 2.03522328, 0.00001f);
 
         route = aStar.CalculateRoute("4", "9");
         route.ShouldBeNull();
@@ -253,36 +255,36 @@ public class AStarTest
     [TestMethod]
     public void Test_AStar_GridExample()
     {
-        var aStar = new AStar(_grid!, RoutingPlausibilityChecker);
+        var aStar = new AStar(_grid!, _agvData, RoutingPlausibilityChecker);
         // ReSharper disable JoinDeclarationAndInitializer
         Route? c1, c2, c3, c4, costs;
         // ReSharper restore JoinDeclarationAndInitializer
 
         c1 = aStar.CalculateRoute("01/01", "11/01");
-        c1!.Costs.ShouldBe(10f, 0.00001f);
+        c1!.Costs.ShouldBe(10.5f, 0.00001f);
         c2 = aStar.CalculateRoute("11/01", "11/02");
-        c2!.Costs.ShouldBe(1f, 0.00001f);
+        c2!.Costs.ShouldBe(1.5f, 0.00001f);
         c3 = aStar.CalculateRoute("11/02", "50/02");
-        c3!.Costs.ShouldBe(39f, 0.00001f);
+        c3!.Costs.ShouldBe(39.5f, 0.00001f);
         c4 = aStar.CalculateRoute("50/02", "50/01");
-        c4!.Costs.ShouldBe(1f, 0.00001f);
+        c4!.Costs.ShouldBe(1.5f, 0.00001f);
 
         costs = aStar.CalculateRoute("01/01", "50/01");
-        costs!.Costs.ShouldBe(c1.Costs + c2.Costs + c3.Costs + c4.Costs, 0.00001f);
+        costs!.Costs.ShouldBe(c1.Costs + c2.Costs + c3.Costs + c4.Costs + 3, 0.00001f);
 
         c1 = aStar.CalculateRoute("50/01", "13/17");
-        c1!.Costs.ShouldBe(57f, 0.00001f);
+        c1!.Costs.ShouldBe(60.5f, 0.00001f);
         c2 = aStar.CalculateRoute("13/17", "33/17");
-        c2!.Costs.ShouldBe(10f * 13f, 0.00001f);
+        c2!.Costs.ShouldBe(10f * 13f + 29f, 0.00001f);
         c3 = aStar.CalculateRoute("33/17", "33/06");
-        c3!.Costs.ShouldBe(11f, 0.00001f);
+        c3!.Costs.ShouldBe(11.5f, 0.00001f);
 
         var stopWatch = new Stopwatch();
         stopWatch.Start();
         costs = aStar.CalculateRoute("50/01", "33/06");
         stopWatch.Stop();
         Trace.WriteLine("Grid example duration: " + stopWatch.ElapsedMilliseconds + "ms.");
-        costs!.Costs.ShouldBe(c1.Costs + c2.Costs + c3.Costs, 0.00001f);
+        costs!.Costs.ShouldBe(c1.Costs + c2.Costs + c3.Costs + 0.5, 0.00001f);
     }
 
     /// <summary>
@@ -294,7 +296,7 @@ public class AStarTest
     [DataRow("YY/YY", "XX/XX")]
     public void Test_AStarGrid_NonExistentSourceOrDestination_NoPath(string source, string destination)
     {
-        var aStar = new AStar(_grid!, RoutingPlausibilityChecker);
+        var aStar = new AStar(_grid!, null, RoutingPlausibilityChecker);
         aStar.CalculateRoute(source, destination).ShouldBeNull();
     }
 
@@ -304,7 +306,7 @@ public class AStarTest
     [TestMethod]
     public void Test_AStarGrid_UnreachableNode_NoPath()
     {
-        var aStar = new AStar(_grid!, RoutingPlausibilityChecker);
+        var aStar = new AStar(_grid!, null, RoutingPlausibilityChecker);
         var route = aStar.CalculateRoute("01/01", "47/23");
         route.ShouldBeNull();
     }
@@ -330,12 +332,12 @@ public class AStarTest
         var routingPlausibilityCheckerMock = new Mock<IRoutingPlausibilityChecker>();
         routingPlausibilityCheckerMock.Setup(r => r.IsPlausible(It.IsAny<GraphNode>(), It.IsAny<GraphNode>())).Returns(true);
 
-        var aStar = new AStar(graph, routingPlausibilityCheckerMock.Object);
+        var aStar = new AStar(graph, null, routingPlausibilityCheckerMock.Object);
         var route = aStar.CalculateRoute("1", "2");
         route.ShouldNotBeNull();
 
         routingPlausibilityCheckerMock.Setup(r => r.IsPlausible(It.IsAny<GraphNode>(), It.IsAny<GraphNode>())).Returns(false);
-        aStar = new AStar(graph, routingPlausibilityCheckerMock.Object);
+        aStar = new AStar(graph, null, routingPlausibilityCheckerMock.Object);
         route = aStar.CalculateRoute("1", "2");
         route.ShouldBeNull();
     }
@@ -372,7 +374,7 @@ public class AStarTest
 
     private void AssertFindsShortestPath(string source, string destination, AgvGraphTestFixture agvGraphTextFixture)
     {
-        var aStar = new AStar(agvGraphTextFixture.Graph, RoutingPlausibilityChecker);
+        var aStar = new AStar(agvGraphTextFixture.Graph, null, RoutingPlausibilityChecker);
         var route = aStar.CalculateRoute(source, destination);
 
         route.ShouldNotBeNull();
@@ -424,7 +426,7 @@ public class AStarTest
 
         var routingPlausibilityChecker = new Mock<IRoutingPlausibilityChecker>();
         routingPlausibilityChecker.Setup(x => x.IsPlausible(sourceNode, destinationNode)).Returns(isEdgePlausible);
-        var aStar = new AStar(graph, routingPlausibilityChecker.Object);
+        var aStar = new AStar(graph, null, routingPlausibilityChecker.Object);
         var route = aStar.CalculateRoute(sourceNode.Id, destinationNode.Id);
         bool hasRoute = route != null;
         hasRoute.ShouldBe(isEdgePlausible);

@@ -99,7 +99,7 @@ public class FixedGraphGenerator : IGraphGenerator
             new(PGrinder) { Type = AgvGraph.NodeType.Pick, X = 14.375f, Y = 50.625f, Z = 0f, Theta = West },
             new(PMilling) { Type = AgvGraph.NodeType.Pick, X = 14.375f, Y = 59.375f, Z = 0f, Theta = West },
 
-            new(Pdqa) { Type = AgvGraph.NodeType.PickDrop, X = 92.965f, Y = 26.7425f, Z = 0f, Theta = 73.4f * (float)Math.PI / 180f },
+            new(Pdqa) { Type = AgvGraph.NodeType.PickDrop, X = 92.965f, Y = 26.7425f, Z = 0f, Theta = (float)Mathematics.ConvertToRadians(73.4) },
 
             new(Way0009) { Type = AgvGraph.NodeType.WayPoint, X = 39.375f, Y = 68.125f, Z = 0f, Theta = 0 },
             new(Way0010) { Type = AgvGraph.NodeType.WayPoint, X = 64.375f, Y = 68.125f, Z = 0f, Theta = 0 },

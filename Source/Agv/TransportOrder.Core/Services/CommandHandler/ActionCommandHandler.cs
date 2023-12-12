@@ -48,6 +48,7 @@ public class ActionCommandHandler :
     private readonly IRouteService _routeService;
     private readonly IAgvRepository _agvRepository;
     private readonly IActionGroupRepository _actionGroupRepository;
+    private readonly IAgvDataRepository _agvDataRepository;
     private readonly IChooseAgvActionGroupService _chooseAgvActionGroupService;
     private readonly IActionManagerSemaphoreProvider _actionManagerSemaphoreProvider;
     private readonly IChargingPointManager _chargingPointManager;
@@ -67,6 +68,7 @@ public class ActionCommandHandler :
         IRouteService routeService,
         IAgvRepository agvRepository,
         IActionGroupRepository actionGroupRepository,
+        IAgvDataRepository agvDataRepository,
         IActionGroupValidationService actionGroupValidationService,
         IChooseAgvActionGroupService chooseAgvActionGroupService,
         IActionGroupRetrievalService actionGroupRetrievalService,
@@ -80,6 +82,7 @@ public class ActionCommandHandler :
         _routeService = routeService;
         _agvRepository = agvRepository;
         _actionGroupRepository = actionGroupRepository;
+        _agvDataRepository = agvDataRepository;
         _chooseAgvActionGroupService = chooseAgvActionGroupService;
         _actionManagerSemaphoreProvider = actionManagerSemaphoreProvider;
         _parkPointService = parkPointService;
@@ -243,7 +246,8 @@ public class ActionCommandHandler :
 
         await _actionManagerSemaphoreProvider.ExecuteLockedAsync(async () =>
         {
-            var actionGroup = await _chooseAgvActionGroupService.GetNotStartedActionGroupAsync(agv, cancellationToken);
+            var agvData = _agvDataRepository.GetAgvData(agv.CorrelationId);
+            var actionGroup = await _chooseAgvActionGroupService.GetNotStartedActionGroupAsync(agv, agvData, cancellationToken);
             if (actionGroup == null)
             {
                 _logger.LogDebug("There is no next action available for agv with CorrelationId {AgvCorrelationId}.", agv.CorrelationId);
@@ -397,7 +401,8 @@ public class ActionCommandHandler :
                     ICollection<Domain.Models.Agv.Agv> allReadyAgvs = await _agvRepository.GetReadyAgvsAsync();
                     ICollection<Domain.Models.Agv.Agv> readyAgvs = allReadyAgvs.Where(a => !(a.CurrentAgvState == AgvState.Charging &&
                                                                                              a.AgvStatus!.BatteryCharge < agvSettings.BatteryLevelGood)).ToList();
-                    agv = await _chooseAgvActionGroupService.GetAgvAsync(domainActionGroup, readyAgvs.ToList(), cancellationToken);
+                    ICollection<AgvData> agvData = await _agvDataRepository.GetSelectedAgvData(readyAgvs.Select(a => a.CorrelationId).ToList());
+                    agv = await _chooseAgvActionGroupService.GetAgvAsync(domainActionGroup, readyAgvs.ToList(), agvData.ToList(), cancellationToken);
                 }, cancellationToken);
             }
             if (agv != null)
@@ -555,7 +560,7 @@ public class ActionCommandHandler :
 
         action.Nodes = action.ActionType == ActionType.Charge ?
             new[] {action.TargetNodeId} :
-            (await _routeService.GetRouteAsync(assignedAgv, action.TargetNodeId, null, cancellationToken)).Nodes;
+            (await _routeService.GetRouteAsync(assignedAgv, action.TargetNodeId, null, _agvDataRepository.GetAgvData(assignedAgv.CorrelationId), cancellationToken)).Nodes;
 
         _logger.LogDebug("Starting action with CorrelationId: {ActionCorrelationId} for Agv {AgvCorrelationId}. Setting Agv to busy in next step.", action.CorrelationId, assignedAgv.CorrelationId);
         try

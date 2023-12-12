@@ -1,4 +1,5 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Utilities;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Data;
 
@@ -20,7 +21,7 @@ public record KarisType1 : AgvData
         4,
         3,
         1.5,
-        5*Math.PI/180,
+        Mathematics.ConvertToRadians(5),
         0.562,
         0.687,
         40,
@@ -48,7 +49,7 @@ public record KarisType2 : AgvData
         3,
         2,
         1,
-        5*Math.PI/180,
+        Mathematics.ConvertToRadians(5),
         0.687,
         1.087,
         50,
@@ -80,7 +81,7 @@ public record KarisType3 : AgvData
         2,
         1,
         0.5,
-        5*Math.PI/180,
+        Mathematics.ConvertToRadians(5),
         0.892,
         1.292,
         60,

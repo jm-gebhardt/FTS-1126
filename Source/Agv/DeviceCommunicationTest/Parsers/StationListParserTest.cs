@@ -232,17 +232,17 @@ public class StationListParserTest
 
         // Distance S1->1 is 2 (metric[t] = SQRT(2^2+2^2)/1 = 2,82843
         float metric = (float)Math.Sqrt(8);
-        agvGraph.Edges.First(x => x.FromNodeId == "S1").Metric.ShouldBe(metric, 0.00001);
-        agvGraph.Edges.First(x => x.ToNodeId == "S1").Metric.ShouldBe(metric, 0.00001);
+        agvGraph.Edges.First(x => x.FromNodeId == "S1").Length.ShouldBe(metric, 0.00001);
+        agvGraph.Edges.First(x => x.ToNodeId == "S1").Length.ShouldBe(metric, 0.00001);
 
         // Distance S2->2 is 2 (metric[t] = SQRT(2^2+2^2)/1 = 2,82843
         metric = (float)Math.Sqrt(8);
-        agvGraph.Edges.First(x => x.FromNodeId == "S2").Metric.ShouldBe(metric, 0.00001);
-        agvGraph.Edges.First(x => x.ToNodeId == "S2").Metric.ShouldBe(metric, 0.00001);
+        agvGraph.Edges.First(x => x.FromNodeId == "S2").Length.ShouldBe(metric, 0.00001);
+        agvGraph.Edges.First(x => x.ToNodeId == "S2").Length.ShouldBe(metric, 0.00001);
 
         // Distance S3->1 is 2 (metric[t] = SQRT(6^2+2^2)/1 = 6,32456
         metric = (float)Math.Sqrt(40);
-        agvGraph.Edges.First(x => x.FromNodeId == "S3").Metric.ShouldBe(metric, 0.00001);
-        agvGraph.Edges.First(x => x.ToNodeId == "S3").Metric.ShouldBe(metric, 0.00001);
+        agvGraph.Edges.First(x => x.FromNodeId == "S3").Length.ShouldBe(metric, 0.00001);
+        agvGraph.Edges.First(x => x.ToNodeId == "S3").Length.ShouldBe(metric, 0.00001);
     }
 }

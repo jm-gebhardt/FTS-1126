@@ -120,7 +120,7 @@ public class AgvStateConsumerTest
         publishedPos.CorrelationId.ShouldBe(AgvTestIdentifier02.ToGuid());
         publishedPos.AgvId.ShouldBe(AgvTestIdentifier02);
         publishedPos.AgvPosition.PositionInitialized.ShouldBe(positionInitialized);
-        publishedPos.AgvPosition.Theta.ShouldBe(Mathematics.ConvertToRadians(90) - theta);
+        publishedPos.AgvPosition.Theta.ShouldBe((float)Mathematics.ConvertToRadians(90) - theta);
         publishedPos.AgvPosition.X.ShouldBe(x);
         (publishedPos.AgvPosition.Y * -1).ShouldBe(y);
     }

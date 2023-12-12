@@ -70,6 +70,6 @@ public class AgvDataConsumerTest
         publishedData.Data.Acceleration.ShouldBe(0.7);
         publishedData.Data.IpV4Address.ShouldBe("127.0.0.1");
         publishedData.Data.BatteryCapacity.ShouldBe(120.0);
-        publishedData.Data.TurnOnSpotThreshold.ShouldNotBeNull();
+        publishedData.Data.TurnOnSpotThreshold.ShouldBe(1.5);
     }
 }

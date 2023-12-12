@@ -195,7 +195,6 @@ public class AgvRepositoryTest
                 var expectedEdge = expectedAgvInformation.AgvGraph.Edges.ElementAt(i);
                 actualEdge.ShouldSatisfyAllConditions(
                     p => p.FromNodeId.ShouldBe(expectedEdge.FromNodeId),
-                    p => p.Metric.ShouldBe(expectedEdge.Metric),
                     p => p.ToNodeId.ShouldBe(expectedEdge.ToNodeId),
                     p => p.Length.ShouldBe(expectedEdge.Length));
             }

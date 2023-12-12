@@ -1,4 +1,5 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Utilities;
 
 namespace Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 
@@ -14,8 +15,8 @@ public static class AgvDataGenerator
             120.0, 
             0.6, 
             0.8, 
-            0.7, 
-            null,
+            0.7,
+            Mathematics.ConvertToRadians(5),
             width, 
             length, 
             1000, 

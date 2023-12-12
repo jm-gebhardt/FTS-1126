@@ -1,3 +1,4 @@
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Routing;
@@ -34,28 +35,28 @@ public class ChooseAgvActionGroupServiceFixture
 
     public ChooseAgvActionGroupServiceFixture WithAgvHasRouteToDestination(TransportOrder.Domain.Models.Agv.Agv agv, TransportOrder.Domain.Models.ActionGroup.ActionGroup actionGroup, float? routeCosts = null)
     {
-        RouteService.Setup(x => x.GetCostsAsync(agv, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        RouteService.Setup(x => x.GetCostsAsync(agv, It.IsAny<string>(), It.IsAny<AgvData>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(routeCosts);
 
-        RouteService.Setup(x => x.GetCostsForFirstActionAsync(agv, actionGroup, It.IsAny<CancellationToken>()))
+        RouteService.Setup(x => x.GetCostsForFirstActionAsync(agv, actionGroup, It.IsAny<AgvData>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(routeCosts);
 
-        RouteService.Setup(x => x.GetRouteAsync(agv, It.IsAny<string>(), null, It.IsAny<CancellationToken>())).ReturnsAsync(new Route(1f, Array.Empty<string>()));
+        RouteService.Setup(x => x.GetRouteAsync(agv, It.IsAny<string>(), null, It.IsAny<AgvData>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Route(1f, Array.Empty<string>()));
         return this;
     }
 
     public ChooseAgvActionGroupServiceFixture WithAgvHasRouteToDestination(TransportOrder.Domain.Models.Agv.Agv agv, string sourceNodeId, string destinationNodeId, TransportOrder.Domain.Models.ActionGroup.ActionGroup actionGroup, float? routeCosts = null)
     {
-        RouteService.Setup(x => x.GetCostsAsync(agv, destinationNodeId, It.IsAny<CancellationToken>()))
+        RouteService.Setup(x => x.GetCostsAsync(agv, destinationNodeId, It.IsAny<AgvData>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(routeCosts);
 
-        RouteService.Setup(x => x.GetCostsAsync(agv, sourceNodeId, It.IsAny<CancellationToken>()))
+        RouteService.Setup(x => x.GetCostsAsync(agv, sourceNodeId, It.IsAny<AgvData>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(routeCosts);
 
-        RouteService.Setup(x => x.GetCostsForFirstActionAsync(agv, actionGroup, It.IsAny<CancellationToken>()))
+        RouteService.Setup(x => x.GetCostsForFirstActionAsync(agv, actionGroup, It.IsAny<AgvData>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(routeCosts);
 
-        RouteService.Setup(x => x.GetRouteAsync(agv, It.IsAny<string>(), null, It.IsAny<CancellationToken>())).ReturnsAsync(new Route(1f, Array.Empty<string>()));
+        RouteService.Setup(x => x.GetRouteAsync(agv, It.IsAny<string>(), null, It.IsAny<AgvData>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Route(1f, Array.Empty<string>()));
         return this;
     }
 

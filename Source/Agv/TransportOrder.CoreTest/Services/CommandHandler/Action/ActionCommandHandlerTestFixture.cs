@@ -39,6 +39,7 @@ public class ActionCommandHandlerTestFixture : MassTransitConsumerTestFixture<Ac
     private readonly Mock<ISettingsProvider<AgvSettings>> _settingsProvider = new();
     private readonly Mock<IActionGroupRetrievalService> _actionGroupRetrievalService = new();
     private readonly Mock<INodeStateRepository> _nodeStateRepositoryMock = new();
+    private readonly Mock<IAgvDataRepository> _agvDataRepository = new();
 
     protected override void ConfigureServices(IServiceCollection collection)
     {
@@ -54,6 +55,7 @@ public class ActionCommandHandlerTestFixture : MassTransitConsumerTestFixture<Ac
         collection.AddTransient(_ => _settingsProvider.Object);
         collection.AddTransient(_ => _actionGroupRetrievalService.Object);
         collection.AddTransient(_ => _nodeStateRepositoryMock.Object);
+        collection.AddTransient(_ => _agvDataRepository.Object);
     }
 
     public ActionCommandHandlerTestFixture(TimeSpan? inactivityTimeout = null, Action<IBusRegistrationConfigurator>? busRegistrationConfigurator = null,
@@ -148,7 +150,7 @@ public class ActionCommandHandlerTestFixture : MassTransitConsumerTestFixture<Ac
 
     public void AddRoute(string[] nodes)
     {
-        _routeService.Setup(x => x.GetRouteAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<string>(), null, It.IsAny<CancellationToken>())).ReturnsAsync(new Route(1f, nodes));
+        _routeService.Setup(x => x.GetRouteAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<string>(), null, It.IsAny<AgvData>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Route(1f, nodes));
     }
 
     public void SetupValidationResult(List<ValidationFailure> failures)

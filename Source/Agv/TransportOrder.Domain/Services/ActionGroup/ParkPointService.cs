@@ -19,7 +19,8 @@ public class ParkPointService : BaseNodeReservationManager, IParkPointService
     /// <param name="routeService"></param>
     /// <param name="logger"></param>
     /// <param name="semaphoreProvider"></param>
-    public ParkPointService(IAgvGraphRepository agvGraphRepository, INodeStateRepository nodeStateRepository, IRouteService routeService, ILogger<ParkPointService> logger, IParkingSemaphoreProvider semaphoreProvider) : base(agvGraphRepository, nodeStateRepository, routeService, logger, semaphoreProvider)
+    /// <param name="agvDataRepository"></param>
+    public ParkPointService(IAgvGraphRepository agvGraphRepository, INodeStateRepository nodeStateRepository, IRouteService routeService, ILogger<ParkPointService> logger, IParkingSemaphoreProvider semaphoreProvider, IAgvDataRepository agvDataRepository) : base(agvGraphRepository, nodeStateRepository, routeService, logger, semaphoreProvider, agvDataRepository)
     {
     }
 

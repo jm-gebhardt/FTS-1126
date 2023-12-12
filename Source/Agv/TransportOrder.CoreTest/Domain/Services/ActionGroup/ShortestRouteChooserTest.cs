@@ -1,4 +1,5 @@
 using Gebhardt.StoreWare.Agv.Common.Exceptions;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -18,7 +19,7 @@ public class ShortestRouteChooserTest
 
         var fixture = new ChooseAgvActionGroupServiceFixture();
 
-        var chooseNextAgv = await fixture.ShortestRouteChooser.GetAgvAsync(actionGroup, agvs);
+        var chooseNextAgv = await fixture.ShortestRouteChooser.GetAgvAsync(actionGroup, agvs, new List<AgvData>());
         chooseNextAgv.ShouldBeNull();
     }
 
@@ -33,7 +34,7 @@ public class ShortestRouteChooserTest
 
         var fixture = new ChooseAgvActionGroupServiceFixture();
 
-        var chooseNextAgv = await fixture.ShortestRouteChooser.GetAgvAsync(actionGroup, agvs);
+        var chooseNextAgv = await fixture.ShortestRouteChooser.GetAgvAsync(actionGroup, agvs, new List<AgvData>());
         chooseNextAgv.ShouldBeNull();
     }
 
@@ -50,7 +51,7 @@ public class ShortestRouteChooserTest
             .WithAgvHasRouteToDestination(agv1, actionGroup, 2f)
             .WithAgvHasRouteToDestination(agv2, actionGroup, 3f);
 
-        var chooseNextAgv = await fixture.ShortestRouteChooser.GetAgvAsync(actionGroup, agvs);
+        var chooseNextAgv = await fixture.ShortestRouteChooser.GetAgvAsync(actionGroup, agvs, new List<AgvData>());
 
         chooseNextAgv.ShouldBe(agv1);
     }
@@ -64,7 +65,7 @@ public class ShortestRouteChooserTest
         var fixture = new ChooseAgvActionGroupServiceFixture(true)
             .AddNotStartedActionGroup(actionGroup);
 
-        await Should.ThrowAsync<AgvLocationUnknownException>(async () => await fixture.ShortestRouteChooser.GetNotStartedActionGroupAsync(agv));
+        await Should.ThrowAsync<AgvLocationUnknownException>(async () => await fixture.ShortestRouteChooser.GetNotStartedActionGroupAsync(agv, null));
     }
 
     [TestMethod]
@@ -76,7 +77,7 @@ public class ShortestRouteChooserTest
         var fixture = new ChooseAgvActionGroupServiceFixture()
             .AddNotStartedActionGroup(actionGroup);
 
-        var agvAction = await fixture.ShortestRouteChooser.GetNotStartedActionGroupAsync(agv);
+        var agvAction = await fixture.ShortestRouteChooser.GetNotStartedActionGroupAsync(agv, null);
         agvAction.ShouldBeNull();
     }
 
@@ -96,7 +97,7 @@ public class ShortestRouteChooserTest
             .WithAgvHasRouteToDestination(agv, actionGroup2.Actions.First().TargetNodeId, actionGroup2.Actions.Last().TargetNodeId, actionGroup2, 1f)
             .WithAgvHasRouteToDestination(agv, actionGroup3.Actions.First().TargetNodeId, actionGroup3.Actions.Last().TargetNodeId, actionGroup3, 20f);
 
-        var chosenActionGroup = await fixture.ShortestRouteChooser.GetNotStartedActionGroupAsync(agv);
+        var chosenActionGroup = await fixture.ShortestRouteChooser.GetNotStartedActionGroupAsync(agv, null);
         chosenActionGroup.ShouldNotBeNull();
         chosenActionGroup.Actions.First().ShouldBe(actionGroup2.Actions.First());
     }
@@ -121,7 +122,7 @@ public class ShortestRouteChooserTest
             .WithAgvHasRouteToDestination(agv, agvLastNodeId, moveActionGroup.Actions.First().TargetNodeId, moveActionGroup, 10f)
             .WithAgvHasRouteToDestination(agv, actionGroup3.Actions.First().TargetNodeId, actionGroup3.Actions.Last().TargetNodeId, actionGroup3, routeCosts: null);
 
-        var chosenActionGroup = await fixture.ShortestRouteChooser.GetNotStartedActionGroupAsync(agv);
+        var chosenActionGroup = await fixture.ShortestRouteChooser.GetNotStartedActionGroupAsync(agv, null);
         chosenActionGroup.ShouldNotBeNull();
         chosenActionGroup.Actions.First().ShouldBe(moveActionGroup.Actions.First());
     }
@@ -139,7 +140,7 @@ public class ShortestRouteChooserTest
             .AddNotStartedActionGroup(actionGroup)
             .WithAgvHasRouteToDestination(agv, actionGroup, 1f);
 
-        var chosenActionGroup = await fixture.ShortestRouteChooser.GetNotStartedActionGroupAsync(agv);
+        var chosenActionGroup = await fixture.ShortestRouteChooser.GetNotStartedActionGroupAsync(agv, null);
         chosenActionGroup.ShouldNotBeNull();
         chosenActionGroup.Actions.First().ShouldBe(actionGroup.Actions.First());
     }

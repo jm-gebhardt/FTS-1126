@@ -18,14 +18,17 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHan
 public class RouteRequestHandler : IConsumer<GetRoute>
 {
     private readonly IAgvRepository _agvRepository;
+    private readonly IAgvDataRepository _agvDataRepository;
     private readonly IRouteService _routeService;
 
     /// <inheritdoc cref="RouteRequestHandler"/>
     /// <param name="agvRepository">The agv repository.</param>
+    /// <param name="agvDataRepository">The agv data repository.</param>
     /// <param name="routeService">The route service.</param>
-    public RouteRequestHandler(IAgvRepository agvRepository, IRouteService routeService)
+    public RouteRequestHandler(IAgvRepository agvRepository, IAgvDataRepository agvDataRepository, IRouteService routeService)
     {
         _agvRepository = agvRepository;
+        _agvDataRepository = agvDataRepository;
         _routeService = routeService;
     }
 
@@ -36,10 +39,11 @@ public class RouteRequestHandler : IConsumer<GetRoute>
     {
         var getRoute = context.Message;
         var agv = await _agvRepository.GetAgvAsync(getRoute.CorrelationId);
+        var agvData = _agvDataRepository.GetAgvData(agv.CorrelationId);
         Route? route;
         try
         {
-            string[] nodes = (await _routeService.GetRouteAsync(agv, getRoute.DestinationNodeId, getRoute.StartNodeId)).Nodes;
+            string[] nodes = (await _routeService.GetRouteAsync(agv, getRoute.DestinationNodeId, getRoute.StartNodeId, agvData)).Nodes;
             route = new Route(agv.CorrelationId, nodes);
         }
         catch (RouteNotFoundException)

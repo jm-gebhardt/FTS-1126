@@ -33,7 +33,6 @@ public class GraphProfileTest
             e => e.Id.ShouldBe(graphEdge.Id),
             e => e.FromNodeId.ShouldBe(graphEdge.FromNodeId),
             e => e.ToNodeId.ShouldBe(graphEdge.ToNodeId),
-            e => e.Metric.ShouldBe(graphEdge.Metric),
             e => e.Length.ShouldBe(graphEdge.Length));
     }
 

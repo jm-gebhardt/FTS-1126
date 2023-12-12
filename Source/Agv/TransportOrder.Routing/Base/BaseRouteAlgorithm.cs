@@ -8,6 +8,11 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Routing.Base;
 /// </summary>
 public abstract class BaseRouteAlgorithm : IRouteAlgorithm
 {
+    protected const double MaxNonSpotTurnAngleFallback = 5 * Math.PI / 180d;
+    protected const double MaxVelocityStraightFallback = 1;
+    protected const double MaxVelocityTurnOnSpotFallback = Math.PI;
+    protected const double AccelerationFallback = 1;
+    
     private readonly IRoutingPlausibilityChecker? _routingPlausibilityChecker;
 
     /// <summary>List of edges coming from the AGV graph.</summary>

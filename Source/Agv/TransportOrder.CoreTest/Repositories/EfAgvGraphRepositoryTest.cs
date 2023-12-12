@@ -62,7 +62,6 @@ public class EfAgvGraphRepositoryTest
             e => e.Id.ShouldBe(expectedEdge.Id),
             e => e.FromNodeId.ShouldBe(expectedEdge.FromNodeId),
             e => e.ToNodeId.ShouldBe(expectedEdge.ToNodeId),
-            e => e.Metric.ShouldBe(expectedEdge.Metric),
             e => e.Length.ShouldBe(expectedEdge.Length));
     }
 

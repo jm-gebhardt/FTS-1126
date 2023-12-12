@@ -23,6 +23,11 @@ public abstract class BaseNodePicker
     /// </summary>
     protected readonly INodeStateRepository NodeStateRepository;
 
+    /// <summary>
+    /// <see cref="AgvData"/> repository.
+    /// </summary>
+    protected readonly IAgvDataRepository AgvDataRepository;
+
     private readonly IRouteService _routeService;
     private readonly ILogger<BaseNodePicker> _logger;
 
@@ -33,12 +38,14 @@ public abstract class BaseNodePicker
     /// <param name="nodeStateRepository"></param>
     /// <param name="routeService"></param>
     /// <param name="logger"></param>
-    protected BaseNodePicker(IAgvGraphRepository agvGraphRepository, INodeStateRepository nodeStateRepository, IRouteService routeService, ILogger<BaseNodePicker> logger)
+    /// <param name="agvDataRepository">The <see cref="AgvData"/> repository.</param>
+    protected BaseNodePicker(IAgvGraphRepository agvGraphRepository, INodeStateRepository nodeStateRepository, IRouteService routeService, ILogger<BaseNodePicker> logger, IAgvDataRepository agvDataRepository)
     {
         _agvGraphRepository = agvGraphRepository;
         NodeStateRepository = nodeStateRepository;
         _routeService = routeService;
         _logger = logger;
+        AgvDataRepository = agvDataRepository;
     }
 
     /// <summary>
@@ -50,11 +57,12 @@ public abstract class BaseNodePicker
     /// The external method to get the actual node which has been selected by the logic 
     /// </summary>
     /// <param name="agv"></param>
+    /// <param name="agvData"></param>
     /// <returns></returns>
-    protected async Task<GraphNode> PickNode(Models.Agv.Agv agv)
+    protected async Task<GraphNode> PickNode(Models.Agv.Agv agv, AgvData? agvData)
     {
         IEnumerable<GraphNode> availableNodes = await GetAvailableNodes(agv);
-        var node = await SelectBestNode(availableNodes, agv);
+        var node = await SelectBestNode(availableNodes, agv, agvData);
 
         return node;
     }
@@ -82,13 +90,14 @@ public abstract class BaseNodePicker
     /// Logic for selection of best node. This method can be overriden, but it's base implementation does a lowest cost route selection
     /// </summary>
     /// <param name="availableNodes">The nodes which can be selected, it is ensured that it contains at least one available node</param>
-    /// <param name="agv"></param>
+    /// <param name="agv">The agv</param>
+    /// <param name="agvData">The agv data</param>
     /// <returns>The best node</returns>
     [PublicAPI]
-    protected virtual Task<GraphNode> SelectBestNode(IEnumerable<GraphNode> availableNodes, Models.Agv.Agv agv)
+    protected virtual Task<GraphNode> SelectBestNode(IEnumerable<GraphNode> availableNodes, Models.Agv.Agv agv, AgvData? agvData)
     {
         _logger.LogDebug("Choosing node with lowest costs");
-        return _routeService.GetNodeWithLowestCostsAsync(agv, availableNodes.ToList());
+        return _routeService.GetNodeWithLowestCostsAsync(agv, availableNodes.ToList(), agvData);
     }
 
     /// <summary>

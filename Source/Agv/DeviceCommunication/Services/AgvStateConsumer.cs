@@ -120,7 +120,7 @@ public class AgvStateConsumer : IConsumer<MqttState>
                     context.Message.AgvPosition.X,
                     context.Message.AgvPosition.Y * -1, // Special treatment for Karis AGV. Y Axis is inverted
                     0f,
-                    Mathematics.ConvertToRadians(90.0f) - context.Message.AgvPosition.Theta, // Special treatment for Karis AGV. 90� in our System (AGV facing right) is 0� in our world
+                    (float)Mathematics.ConvertToRadians(90.0f) - context.Message.AgvPosition.Theta, // Special treatment for Karis AGV. 90� in our System (AGV facing right) is 0� in our world
                     context.Message.AgvPosition.DeviationRange
                 )), context.CancellationToken);
         }

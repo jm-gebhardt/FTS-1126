@@ -18,8 +18,9 @@ public class MaintenanceService : BaseNodePicker, IMaintenanceService
     /// <param name="nodeStateRepository"></param>
     /// <param name="routeService"></param>
     /// <param name="logger"></param>
-    public MaintenanceService(IAgvGraphRepository agvGraphRepository, INodeStateRepository nodeStateRepository, IRouteService routeService, ILogger<MaintenanceService> logger)
-        : base(agvGraphRepository, nodeStateRepository, routeService, logger)
+    /// <param name="agvDataRepository"></param>
+    public MaintenanceService(IAgvGraphRepository agvGraphRepository, INodeStateRepository nodeStateRepository, IRouteService routeService, ILogger<MaintenanceService> logger, IAgvDataRepository agvDataRepository)
+        : base(agvGraphRepository, nodeStateRepository, routeService, logger, agvDataRepository)
     {
     }
 
@@ -37,7 +38,8 @@ public class MaintenanceService : BaseNodePicker, IMaintenanceService
     /// <exception cref="NodeNotFoundException"></exception>
     public async Task<GraphNode> GetMaintenanceNode(Models.Agv.Agv agv)
     {
-        return await PickNode(agv);
+        var agvData = AgvDataRepository.GetAgvData(agv.CorrelationId);
+        return await PickNode(agv, agvData);
     }
 
     /// <inheritdoc />
