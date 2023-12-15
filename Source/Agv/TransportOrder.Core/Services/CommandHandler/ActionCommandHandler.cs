@@ -257,6 +257,8 @@ public class ActionCommandHandler :
             var action = actionGroup.FirstNotStartedAction!;
             _logger.LogDebug("Trying to start action {ActionId} with type {ActionType}.", action.CorrelationId, Enum.GetName(action.ActionType));
             await SelectNodesForAgvAction(context, action, agv, context.CancellationToken);
+            actionGroup.Assign(agv);
+            await _actionGroupRepository.UpdateAsync(actionGroup);
         }, context.CancellationToken);
     }
 
@@ -438,18 +440,13 @@ public class ActionCommandHandler :
     {
         var correlationId = context.Message.ActionCorrelationId;
         var cancellationToken = context.CancellationToken;
-
         _logger.LogDebug("Completing action with CorrelationId: {ActionCorrelationId}.", correlationId);
-        var action = await _actionGroupRepository.GetRequiredActionByIdAsync(correlationId);
 
-        var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByIdAsync(action.ParentId);
-        if (actionGroup.AssignedAgv == null)
-        {
-            _logger.LogError("Failed to complete action {Action} for group {ActionGroup}, assigned agv is null.", action.CorrelationId, actionGroup.CorrelationId);
-        }
-        var agv = await _agvRepository.GetAgvAsync(actionGroup.AssignedAgv!.Value);
+        var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByActionIdAsync(correlationId);
+        var agvCorrelationId = actionGroup.AssignedAgv!.Value;
+        actionGroup.CompleteAction(correlationId);
+        await _actionGroupRepository.UpdateAsync(actionGroup);
 
-        actionGroup = await _actionGroupRepository.UpdateActionAndGroupStateAsync(action, null, ActionState.Completed);
         var actionGroupMessageContent = _mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup);
         await context.Publish(new ActionGroupChanged(actionGroupMessageContent, actionGroup.CorrelationId), cancellationToken);
         if (actionGroup.State == ActionGroupState.Completed)
@@ -457,7 +454,7 @@ public class ActionCommandHandler :
             await context.Publish(new ActionGroupCompleted(actionGroupMessageContent, actionGroup.CorrelationId, DateTime.UtcNow), cancellationToken);
         }
         
-        await context.Publish(new NonChargingActionCompleted(agv.CorrelationId), cancellationToken);
+        await context.Publish(new NonChargingActionCompleted(agvCorrelationId), cancellationToken);
     }
 
     /// <summary>

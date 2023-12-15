@@ -89,6 +89,13 @@ public interface IActionGroupRepository
     Task<ActionGroup> GetRequiredActionGroupByIdAsync(Guid correlationId);
 
     /// <summary>
+    /// Get the action group that contains the given action.
+    /// </summary>
+    /// <param name="correlationId">The action correlation id.</param>
+    /// <exception cref="ActionGroupNotFoundException">If the action group is not found.</exception>
+    Task<ActionGroup> GetRequiredActionGroupByActionIdAsync(Guid correlationId);
+
+    /// <summary>
     /// Get the AgvAction.
     /// </summary>
     /// <param name="correlationId">The action correlation id.</param>
@@ -170,4 +177,11 @@ public interface IActionGroupRepository
     /// </summary>
     /// <param name="actionCorrelationId">CorrelationId of the action.</param>
     Task<Guid?> GetAgvAssignedToAction(Guid actionCorrelationId);
+
+    /// <summary>
+    /// Update an action group.
+    /// </summary>
+    /// <param name="actionGroup"></param>
+    /// <returns></returns>
+    Task UpdateAsync(ActionGroup actionGroup);
 }

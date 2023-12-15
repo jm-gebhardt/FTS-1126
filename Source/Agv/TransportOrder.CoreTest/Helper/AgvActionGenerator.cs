@@ -103,7 +103,7 @@ public static class AgvActionGenerator
         return actionGroup;
     }
 
-    public static ActionGroup GenerateMoveActionGroup(string? targetNodeId = null, bool isManual = false)
+    public static ActionGroup GenerateMoveActionGroup(string? targetNodeId = null, bool isManual = false, Guid? assignedAgv= null)
     {
         const string orderId = "move";
         var groupId = Guid.NewGuid();
@@ -113,7 +113,7 @@ public static class AgvActionGenerator
             moveAction.Nodes = new[] { targetNodeId };
         }
 
-        var actionGroup = new ActionGroup(groupId, orderId, new List<AgvAction> { moveAction }, isManual: isManual, creator: ActionGroupCreator.TransportOrderWebApi);
+        var actionGroup = new ActionGroup(groupId, orderId, new List<AgvAction> { moveAction }, isManual: isManual, creator: ActionGroupCreator.TransportOrderWebApi, assignedAgv: assignedAgv);
 
         return actionGroup;
     }

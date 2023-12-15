@@ -42,7 +42,8 @@ public class AgvRepository : IAgvRepository
 
     public async Task<Domain.Models.Agv.Agv> GetAgvAsync(Guid correlationId)
     {
-        var agv = await Agvs.Where(a => a.CorrelationId == correlationId).SingleOrDefaultAsync();
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        var agv = await context.Set<Domain.Models.Agv.Agv>().Where(a => a.CorrelationId == correlationId).SingleOrDefaultAsync();
         if (agv == null)
         {
             throw new AgvNotFoundException(correlationId);

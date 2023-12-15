@@ -122,4 +122,12 @@ public class AgvAction : IParentedBy<Guid>
                 break;
         }
     }
+
+    /// <summary>
+    /// Simple string representation for logging.
+    /// </summary>
+    public override string ToString()
+    {
+        return $"Nodes: {string.Join(",",Nodes)} TargetNode: {TargetNodeId} CorrelationId: {CorrelationId}, ParentId: {ParentId}";
+    }
 }

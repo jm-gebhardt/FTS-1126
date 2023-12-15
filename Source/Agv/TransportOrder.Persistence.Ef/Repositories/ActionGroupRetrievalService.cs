@@ -106,12 +106,11 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyDictionary<Guid, ActionGroupReadModel?>> GetAssignedActionGroupsWithNodesAsync(IReadOnlyCollection<Guid> agvCorrelationIds)
+    public async Task<IReadOnlyDictionary<Guid, ActionGroupReadModel?>> GetCurrentActionGroupsWithNodesAsync(IReadOnlyCollection<Guid> agvCorrelationIds)
     {
-        // Once Agv is assigned to ActionGroup, Status is immediately set to started (and StartedDate), therefore we can use StartedDate to get current assigned ActionGroup
         await using var context = await CreateDbContextAsync();
         List<ActionGroup> actionGroups = await context.Set<ActionGroup>()
-            .Where(g => g.AssignedAgv != null && agvCorrelationIds.Contains((Guid) g.AssignedAgv))
+            .Where(g => g.AssignedAgv != null && agvCorrelationIds.Contains((Guid) g.AssignedAgv) && g.State == ActionGroupState.Started)
             .OrderByDescending(g => g.StartedDate)
             .ToListAsync();
 
@@ -220,6 +219,38 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
         }
 
         List<string> targetNodeIds = actionGroups.Where(g => g.CorrelationId == correlationId).SelectMany(g => g.Actions).Select(a => a.TargetNodeId).Distinct().ToList();
+
+        List<EfNode> graphNodes = await context.Set<EfNode>()
+            .Where(n => targetNodeIds.Contains(n.Id))
+            .ToListAsync();
+
+        List<string> unknownTargetNodeIds = graphNodes.Count == 0 ? targetNodeIds : targetNodeIds.Except(graphNodes.Select(n => n.Id)).ToList();
+
+        return new ActionGroupReadModel(actionGroup.CorrelationId,
+            actionGroup.OrderId,
+            actionGroup.AssignedAgv,
+            actionGroup.CreatedDate,
+            actionGroup.StartedDate,
+            actionGroup.CompletedDate,
+            actionGroup.State,
+            actionGroup.Creator,
+            GetAgvActionReadModel(actionGroup, graphNodes, unknownTargetNodeIds),
+            actionGroup.IsManual);
+    }
+
+    /// <inheritdoc />
+    public async Task<ActionGroupReadModel?> GetCurrentAgvActionGroupWithNodesAsync(Guid agvCorrelationId)
+    {
+        await using var context = await CreateDbContextAsync();
+
+        IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>();
+        var actionGroup = actionGroups.FirstOrDefault(g => g.AssignedAgv == agvCorrelationId && g.State == ActionGroupState.Started);
+        if (actionGroup == null)
+        {
+            return null;
+        }
+
+        List<string> targetNodeIds = actionGroups.Where(g => g.AssignedAgv == agvCorrelationId).SelectMany(g => g.Actions).Select(a => a.TargetNodeId).Distinct().ToList();
 
         List<EfNode> graphNodes = await context.Set<EfNode>()
             .Where(n => targetNodeIds.Contains(n.Id))

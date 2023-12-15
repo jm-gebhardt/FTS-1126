@@ -324,16 +324,17 @@ public class ActionGroupRetrievalServiceTest
     }
 
     [TestMethod]
-    public async Task GetAssignedActionGroupsWithNodesAsync_ValidData_ReturnsActionGroupsByAgvCorrelationId()
+    public async Task GetCurrentActionGroupsWithNodesAsync_ValidData_ReturnsActionGroupsByAgvCorrelationId()
     {
         await using var fixture = new ActionGroupRetrievalServiceTestFixture();
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        actionGroup.StartAction(actionGroup.Actions.First().CorrelationId);
         var agvCorrelationId = Guid.NewGuid();
         actionGroup.AssignedAgv = agvCorrelationId;
         await fixture.AddAsync(actionGroup);
         await AddDefaultAgvGraph(fixture, "aGraph".ToGuid());
 
-        IReadOnlyDictionary<Guid, ActionGroupReadModel?> actionGroupsByAgvCorrelationId = await fixture.ActionGroupRetrievalService.GetAssignedActionGroupsWithNodesAsync(new List<Guid> { agvCorrelationId });
+        IReadOnlyDictionary<Guid, ActionGroupReadModel?> actionGroupsByAgvCorrelationId = await fixture.ActionGroupRetrievalService.GetCurrentActionGroupsWithNodesAsync(new List<Guid> { agvCorrelationId });
 
         var actualActionGroup = actionGroupsByAgvCorrelationId[agvCorrelationId]!;
         actualActionGroup.CorrelationId.ShouldBe(actionGroup.CorrelationId);
@@ -344,17 +345,17 @@ public class ActionGroupRetrievalServiceTest
     }
 
     [TestMethod]
-    public async Task GetAssignedActionGroupsWithNodesAsync_UnknownTargetId_ReturnsActionGroupsByAgvCorrelationId()
+    public async Task GetCurrentActionGroupsWithNodesAsync_UnknownTargetId_ReturnsActionGroupsByAgvCorrelationId()
     {
         await using var fixture = new ActionGroupRetrievalServiceTestFixture();
         var actionGroup = AgvActionGenerator.GenerateMoveActionGroup("UnknownTargetNodeId");
-        actionGroup.InvalidateActionGroup();
+        actionGroup.StartAction(actionGroup.Actions.First().CorrelationId);
         var agvCorrelationId = Guid.NewGuid();
         actionGroup.AssignedAgv = agvCorrelationId;
         await fixture.AddAsync(actionGroup);
         await AddDefaultAgvGraph(fixture, "aGraph".ToGuid());
 
-        IReadOnlyDictionary<Guid, ActionGroupReadModel?> actionGroupsByAgvCorrelationId = await fixture.ActionGroupRetrievalService.GetAssignedActionGroupsWithNodesAsync(new List<Guid> { agvCorrelationId });
+        IReadOnlyDictionary<Guid, ActionGroupReadModel?> actionGroupsByAgvCorrelationId = await fixture.ActionGroupRetrievalService.GetCurrentActionGroupsWithNodesAsync(new List<Guid> { agvCorrelationId });
 
         var actualActionGroup = actionGroupsByAgvCorrelationId[agvCorrelationId]!;
         actualActionGroup.CorrelationId.ShouldBe(actionGroup.CorrelationId);
@@ -428,5 +429,73 @@ public class ActionGroupRetrievalServiceTest
             .GetActionGroupWithNodesAsync(actionGroup.CorrelationId);
 
         actualActionGroup.ShouldBeNull();
+    }
+
+    [TestMethod]
+    public async Task GetCurrentAgvActionGroupWithNodesAsync_GroupCorrelationIdUnknownTargetNodeId_ReturnsActionGroupWithTargetNodeTypes()
+    {
+        await using var fixture = new ActionGroupRetrievalServiceTestFixture();
+        var agv = Guid.NewGuid();
+        var actionGroup = AgvActionGenerator.GenerateMoveActionGroup("UnknownTargetNodeId", assignedAgv:agv);
+        actionGroup.StartAction(actionGroup.Actions.First().CorrelationId);
+        await fixture.AddAsync(actionGroup);
+        await AddDefaultAgvGraph(fixture, "aGraph".ToGuid());
+
+        var actualActionGroup = await fixture.ActionGroupRetrievalService
+            .GetCurrentAgvActionGroupWithNodesAsync(agv);
+
+        actualActionGroup.ShouldNotBeNull();
+        actualActionGroup.CorrelationId.ShouldBe(actionGroup.CorrelationId);
+        actualActionGroup.Actions.Count.ShouldBe(actionGroup.Actions.Count);
+        actualActionGroup.Actions.First().TargetNodeType.ShouldBe(AgvGraph.NodeType.WayPoint);
+    }
+
+    [TestMethod]
+    public async Task GetCurrentAgvActionGroupWithNodesAsync_NoActionGroup_ReturnsNull()
+    {
+        await using var fixture = new ActionGroupRetrievalServiceTestFixture();
+
+        await AddDefaultAgvGraph(fixture, "aGraph".ToGuid());
+
+        var actualActionGroup = await fixture.ActionGroupRetrievalService
+            .GetCurrentAgvActionGroupWithNodesAsync(Guid.NewGuid());
+
+        actualActionGroup.ShouldBeNull();
+    }
+
+    [TestMethod]
+    public async Task GetCurrentAgvActionGroupWithNodesAsync_NoActionGroupInStateStarted_ReturnsNull()
+    {
+        await using var fixture = new ActionGroupRetrievalServiceTestFixture();
+        var agv = Guid.NewGuid();
+        var actionGroup = AgvActionGenerator.GenerateMoveActionGroup("UnknownTargetNodeId", assignedAgv: agv);
+        actionGroup.CompleteAction(actionGroup.Actions.First().CorrelationId);
+        await fixture.AddAsync(actionGroup);
+        await AddDefaultAgvGraph(fixture, "aGraph".ToGuid());
+
+        var actualActionGroup = await fixture.ActionGroupRetrievalService
+            .GetCurrentAgvActionGroupWithNodesAsync(agv);
+
+        actualActionGroup.ShouldBeNull();
+    }
+
+    [TestMethod]
+    public async Task GetCurrentAgvActionGroupWithNodesAsync_ValidData_ReturnsActionGroupWithTargetNodeTypes()
+    {
+        await using var fixture = new ActionGroupRetrievalServiceTestFixture();
+        var agv = Guid.NewGuid();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv);
+        actionGroup.StartAction(actionGroup.Actions.First().CorrelationId);
+        await fixture.AddAsync(actionGroup);
+        await AddDefaultAgvGraph(fixture, "aGraph".ToGuid());
+
+        var actualActionGroup = await fixture.ActionGroupRetrievalService
+            .GetCurrentAgvActionGroupWithNodesAsync(agv);
+
+        actualActionGroup.ShouldNotBeNull();
+        actualActionGroup.CorrelationId.ShouldBe(actionGroup.CorrelationId);
+        actualActionGroup.Actions.Count.ShouldBe(actionGroup.Actions.Count);
+        actualActionGroup.Actions.First().TargetNodeType.ShouldBe(AgvGraph.NodeType.Pick);
+        actualActionGroup.Actions.Last().TargetNodeType.ShouldBe(AgvGraph.NodeType.Drop);
     }
 }

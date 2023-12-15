@@ -41,6 +41,16 @@ public class ActionCommandHandlerTestFixture : MassTransitConsumerTestFixture<Ac
     private readonly Mock<INodeStateRepository> _nodeStateRepositoryMock = new();
     private readonly Mock<IAgvDataRepository> _agvDataRepository = new();
 
+    public readonly AgvSettings Settings = new()
+    {
+        BatteryLevelCritical = 10,
+        BatteryLevelGood = 80,
+        BatteryLevelFull = 100,
+        BatteryLevelLow = 20,
+        AgvOfflineTimeoutMsWhileBusy = 10000,
+        AgvOfflineTimeoutMsWhileIdle = 10000
+    };
+
     protected override void ConfigureServices(IServiceCollection collection)
     {
         collection.AddTransient(_ => _actionGroupRepository.Object);
@@ -62,15 +72,7 @@ public class ActionCommandHandlerTestFixture : MassTransitConsumerTestFixture<Ac
         Action<IBusRegistrationContext, IInMemoryBusFactoryConfigurator>? inMemoryConfiguration = null,
         params Action<IServiceCollection>[] services) : base(busRegistrationConfigurator, inMemoryConfiguration, services)
     {
-        _settingsProvider.Setup(s => s.GetSettings()).Returns(new AgvSettings()
-        {
-            BatteryLevelCritical = 10,
-            BatteryLevelGood = 80,
-            BatteryLevelFull = 100,
-            BatteryLevelLow = 20,
-            AgvOfflineTimeoutMsWhileBusy = 10000,
-            AgvOfflineTimeoutMsWhileIdle = 10000
-        });
+        _settingsProvider.Setup(s => s.GetSettings()).Returns(Settings);
         Build();
         if (inactivityTimeout != null)
         {
@@ -108,6 +110,8 @@ public class ActionCommandHandlerTestFixture : MassTransitConsumerTestFixture<Ac
 
     public void AddActionGroup(ActionGroup actionGroup, bool hasUnfinishedAction = true, bool hasNotStartedAction = true, bool existsPriorToTest = true)
     {
+        _actionGroupRepository.Setup(x => x.UpdateAsync(It.IsAny<ActionGroup>())).Verifiable();
+        _actionGroupRepository.Setup(x => x.GetRequiredActionGroupByActionIdAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup);
         _actionGroupRepository.Setup(x => x.GetRequiredActionGroupByIdAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup);
         _actionGroupRepository.Setup(x => x.UpdateActionAndGroupStateAsync(It.IsAny<AgvAction>(), It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<ActionState>())).ReturnsAsync(actionGroup);
         _actionGroupRepository.Setup(x => x.GetSubsequentActionAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup.Actions.First());
@@ -115,10 +119,12 @@ public class ActionCommandHandlerTestFixture : MassTransitConsumerTestFixture<Ac
         if (existsPriorToTest)
         {
             _actionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<IList<ActionGroupState>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(), It.IsAny<bool?>(), It.IsAny<SortBy>(), It.IsAny<bool>())).ReturnsAsync(new List<ActionGroup> {actionGroup});
+            _chooseAgvActionGroupService.Setup(x => x.GetNotStartedActionGroupAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<AgvData>(), It.IsAny<CancellationToken>())).ReturnsAsync(actionGroup);
         }
         else
         {
             _actionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<IList<ActionGroupState>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(), It.IsAny<bool?>(), It.IsAny<SortBy>(), It.IsAny<bool>())).ReturnsAsync(new List<ActionGroup>());
+            _chooseAgvActionGroupService.Setup(x => x.GetNotStartedActionGroupAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<AgvData>(), It.IsAny<CancellationToken>())).ReturnsAsync(null as ActionGroup);
         }
         _actionGroupRepository.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup);
         _actionGroupRepository.Setup(x => x.HasNotStartedActionsAsync(It.IsAny<Guid>())).ReturnsAsync(hasNotStartedAction);

@@ -1,4 +1,5 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
@@ -203,12 +204,12 @@ public class ActionGroupRepositoryTest
     {
         var earlierCreatedGroup = AgvActionGenerator.GeneratePickDropActionGroup(createdDate: DateTime.UtcNow.AddDays(-1));
         var laterCreatedGroup = AgvActionGenerator.GeneratePickDropActionGroup(createdDate: DateTime.UtcNow.AddDays(1));
-        
+
         var fixture = await new ActionGroupRepositoryTestFixture()
             .WithActionGroups(new List<ActionGroup> { earlierCreatedGroup, laterCreatedGroup })
             .BuildAsync();
 
-        IReadOnlyList<ActionGroup> actionGroupsResult = await fixture.ActionGroupRepository.GetActionGroupsAsync(sortBy:SortBy.CreatedDate, sortDescending: false);
+        IReadOnlyList<ActionGroup> actionGroupsResult = await fixture.ActionGroupRepository.GetActionGroupsAsync(sortBy: SortBy.CreatedDate, sortDescending: false);
         actionGroupsResult.First().ShouldBeEquivalentTo(earlierCreatedGroup);
         actionGroupsResult.Last().ShouldBeEquivalentTo(laterCreatedGroup);
     }
@@ -481,7 +482,7 @@ public class ActionGroupRepositoryTest
             .WithActionGroup(actionGroup)
             .BuildAsync();
 
-       await Should.ThrowAsync<ActionNotFoundException>( fixture.ActionGroupRepository.GetSubsequentActionAsync(agv.CorrelationId));
+        await Should.ThrowAsync<ActionNotFoundException>(fixture.ActionGroupRepository.GetSubsequentActionAsync(agv.CorrelationId));
     }
 
     [TestMethod]
@@ -598,5 +599,29 @@ public class ActionGroupRepositoryTest
 
         var currentAgvAction = await fixture.ActionGroupRepository.GetCurrentAgvActionAsync(agv.CorrelationId);
         currentAgvAction.ShouldBeNull();
+    }
+
+    [TestMethod]
+    public async Task GetRequiredActionGroupByActionIdAsync_ValidData_ReturnsActionGroup()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroup(actionGroup)
+            .BuildAsync();
+
+        var actualActionGroup = await fixture.ActionGroupRepository.GetRequiredActionGroupByActionIdAsync(actionGroup.Actions.First().CorrelationId);
+
+        actualActionGroup.ShouldBeEquivalentTo(actionGroup);
+    }
+
+    [TestMethod]
+    public async Task GetRequiredActionGroupByActionIdAsync_Unknown_ThrowsActionGroupNotFoundException()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroup(actionGroup)
+            .BuildAsync();
+
+        await Should.ThrowAsync<ActionGroupNotFoundException>(fixture.ActionGroupRepository.GetRequiredActionGroupByActionIdAsync("unknown".ToGuid()));
     }
 }

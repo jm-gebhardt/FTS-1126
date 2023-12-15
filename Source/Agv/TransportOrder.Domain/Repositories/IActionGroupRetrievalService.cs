@@ -24,11 +24,11 @@ public interface IActionGroupRetrievalService
     Task<IReadOnlyCollection<ActionGroupReadModel>> GetActionGroupsWithNodesAsync(IReadOnlyCollection<ActionGroupState> states, DateTime? fromDate, DateTime? toDate, int maxItems, ICollection<Guid>? assignedAgvIds = null, SortBy sortBy = SortBy.CreatedDate, bool sortDescending = true);
 
     /// <summary>
-    /// Get currently assigned action groups of provided AGVs.
+    /// Get current action groups of provided AGVs.
     /// </summary>
     /// <param name="agvCorrelationIds"></param>
     /// <returns></returns>
-    public Task<IReadOnlyDictionary<Guid, ActionGroupReadModel?>> GetAssignedActionGroupsWithNodesAsync(IReadOnlyCollection<Guid> agvCorrelationIds);
+    public Task<IReadOnlyDictionary<Guid, ActionGroupReadModel?>> GetCurrentActionGroupsWithNodesAsync(IReadOnlyCollection<Guid> agvCorrelationIds);
 
     /// <summary>
     /// Enrich an action group with the target node types.
@@ -39,6 +39,10 @@ public interface IActionGroupRetrievalService
     /// Get an action group with node types by correlation id.
     /// <param name="correlationId">The action group correlation id.</param>
     public Task<ActionGroupReadModel?> GetActionGroupWithNodesAsync(Guid correlationId);
+
+    /// Get the current action group for the agv with node types by correlation id.
+    /// <param name="agvCorrelationId">The agv correlation id.</param>
+    public Task<ActionGroupReadModel?> GetCurrentAgvActionGroupWithNodesAsync(Guid agvCorrelationId);
 
     /// <summary>
     /// Gets a flag if AGV is heading to nodeType (e.g. Park or Charge).

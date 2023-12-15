@@ -173,4 +173,13 @@ public class ActionGroupTests
 
         Should.Throw<ActionGroupAlreadyAssignedException>(() => actionGroup.Assign(agvToAssign));
     }
+
+    [TestMethod]
+    public void CompleteAction_LastActionToBeCompleted_SetActionGroupStateCompletedAndAssignedAgvIsSet()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Completed, assignedAgv: Guid.NewGuid());
+        actionGroup.CompleteAction(actionGroup.Actions.Single(a => a.ActionType == ActionType.Drop).CorrelationId);
+        actionGroup.State.ShouldBe(ActionGroupState.Completed);
+        actionGroup.AssignedAgv.ShouldNotBeNull();
+    }
 }

@@ -165,6 +165,15 @@ public class EfActionGroupRepository : IActionGroupRepository
         return actionGroup;
     }
 
+    /// <inheritdoc />
+    public async Task<ActionGroup> GetRequiredActionGroupByActionIdAsync(Guid correlationId)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        var actionGroup = await context.Set<ActionGroup>()
+            .SingleOrDefaultAsync(a => a.Actions.Any(aa => aa.CorrelationId == correlationId));
+        return actionGroup ?? throw new ActionGroupNotFoundException(correlationId);
+    }
+
     /// <inheritdoc cref="IActionGroupRepository"/>
     public async Task<AgvAction?> GetActionByIdAsync(Guid correlationId)
     {
@@ -351,5 +360,13 @@ public class EfActionGroupRepository : IActionGroupRepository
 
         DbSet<ActionGroup> actionGroups = context.Set<ActionGroup>();
         return (await actionGroups.SingleAsync(ag => ag.Actions.Any(a => a.CorrelationId == actionCorrelationId))).AssignedAgv;
+    }
+
+    /// <inheritdoc />
+    public async Task UpdateAsync(ActionGroup actionGroup)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        context.Set<ActionGroup>().Update(actionGroup);
+        await context.SaveChangesAsync();
     }
 }
