@@ -1,6 +1,7 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
@@ -19,8 +20,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using AgvData = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.AgvData;
 using AgvError = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.AgvError;
-using AgvPositionStatus = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv.AgvPositionStatus;
-using GraphNode = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.GraphNode;
+using AgvStatus = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv.AgvStatus;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers.Agv;
 
@@ -45,7 +45,7 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
 
     private Mock<IActionGroupRetrievalService> ActionGroupRetrievalService { get; }
 
-    private Mock<IAgvGraphRepository> AgvGraphRepository { get; }
+    private Mock<IGraphRepository> AgvGraphRepository { get; }
 
     private Mock<IAgvErrorRepository> AgvErrorRepository { get; }
 
@@ -64,7 +64,7 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
 
     public AgvsControllerTestFixture()
     {
-        AgvGraphRepository = new Mock<IAgvGraphRepository>();
+        AgvGraphRepository = new Mock<IGraphRepository>();
         AgvErrorRepository = new Mock<IAgvErrorRepository>();
         AgvRepository = new Mock<IAgvRepository>();
         QueueActionGroupRequestClient = new Mock<IRequestClient<QueueActionGroup>>();
@@ -91,7 +91,7 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
             var state = States[i];
             string ip = Ips[i];
             var correlationId = GetGuid(agvId);
-            var agvStatus = agvId == "AGV003" ? null : new Domain.Models.Agv.AgvStatus(correlationId, orderId, false, true, 10, true, true, lastNodeId: "Node");
+            var agvStatus = agvId == "AGV003" ? null : new AgvStatus(correlationId, orderId, false, true, 10, true, true, lastNodeId: "Node");
             var agvData = new AgvData(correlationId, "Karis", "BF1", ip, 1.8, 120.0, 0.6, 0.8, 0.7, 0.08726646, 1, 2.5, 1000, Array.Empty<AgvData.Sensor>());
             var agv = new Domain.Models.Agv.Agv(correlationId, agvId, agvStatus);
             agv = AgvGenerator.SetAgvState(state, false, agv);

@@ -1,5 +1,5 @@
 using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
 using JetBrains.Annotations;
@@ -41,12 +41,12 @@ public class CargoRequestHandler : IConsumer<HasAgvCargoRequest>, IConsumer<GetC
     public async Task Consume(ConsumeContext<GetCargosOfAgv> context)
     {
         var agvCorrelationId = context.Message.CorrelationId;
-        IReadOnlyCollection<Domain.Models.Agv.Cargo> cargos = await _cargoRepository.GetCargosAsync(agvCorrelationId);
+        IReadOnlyCollection<Cargo> cargos = await _cargoRepository.GetCargosAsync(agvCorrelationId);
         if (!cargos.Any())
         {
             await _agvRepository.ThrowIfAgvNotExistsAsync(agvCorrelationId);
         }
-        var message = _mapper.Map<ICollection<Cargo>>(cargos);
+        var message = _mapper.Map<ICollection<Common.Messages.AgvManagement.Cargo>>(cargos);
         await context.RespondAsync(new GotCargosOfAgv(message));
     }
 
@@ -54,14 +54,14 @@ public class CargoRequestHandler : IConsumer<HasAgvCargoRequest>, IConsumer<GetC
     public async Task Consume(ConsumeContext<GetCargosOfAgvs> context)
     {
         ICollection<Guid> agvCorrelationIds = context.Message.CorrelationIds;
-        IReadOnlyDictionary<Guid, IReadOnlyCollection<Domain.Models.Agv.Cargo>> cargosByAgvCorrelationId = await _cargoRepository.GetCargosAsync(agvCorrelationIds);
+        IReadOnlyDictionary<Guid, IReadOnlyCollection<Cargo>> cargosByAgvCorrelationId = await _cargoRepository.GetCargosAsync(agvCorrelationIds);
         IEnumerable<Guid> empty = cargosByAgvCorrelationId.Where(kvp => kvp.Value.Any()).Select(kvp => kvp.Key);
         List<Guid> agvsWithoutCargo = agvCorrelationIds.Except(empty).ToList();
         if (agvsWithoutCargo.Any())
         {
             await _agvRepository.ThrowIfAgvsNotExistAsync(agvsWithoutCargo);
         }
-        var message = _mapper.Map<IReadOnlyDictionary<Guid, ICollection<Cargo>>>(cargosByAgvCorrelationId);
+        var message = _mapper.Map<IReadOnlyDictionary<Guid, ICollection<Common.Messages.AgvManagement.Cargo>>>(cargosByAgvCorrelationId);
         await context.RespondAsync(new GotCargosOfAgvs(message));
     }
 }

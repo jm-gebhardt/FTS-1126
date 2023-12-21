@@ -1,4 +1,4 @@
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
@@ -18,20 +18,20 @@ public abstract class BaseNodeReservationManager : BaseNodePicker
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="agvGraphRepository"></param>
+    /// <param name="graphRepository"></param>
     /// <param name="nodeStateRepository"></param>
     /// <param name="routeService"></param>
     /// <param name="logger"></param>
     /// <param name="semaphoreProvider"></param>
     /// <param name="agvDataRepository"></param>
     protected BaseNodeReservationManager(
-        IAgvGraphRepository agvGraphRepository,
+        IGraphRepository graphRepository,
         INodeStateRepository nodeStateRepository,
         IRouteService routeService,
         ILogger<BaseNodeReservationManager> logger,
         ISemaphoreProvider semaphoreProvider,
         IAgvDataRepository agvDataRepository
-    ) : base(agvGraphRepository, nodeStateRepository, routeService, logger, agvDataRepository)
+    ) : base(graphRepository, nodeStateRepository, routeService, agvDataRepository, logger)
     {
         _semaphoreProvider = semaphoreProvider;
     }
@@ -50,7 +50,7 @@ public abstract class BaseNodeReservationManager : BaseNodePicker
 
             await ReserveNodeAsync(node.Id, agv.CorrelationId);
             return node;
-        }, new CancellationToken());
+        });
     }
 
     ///  <inheritdoc cref="INodeStateRepository.ReserveNodeAsync"/>

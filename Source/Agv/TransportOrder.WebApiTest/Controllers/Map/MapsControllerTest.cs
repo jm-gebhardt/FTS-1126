@@ -1,6 +1,4 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
+﻿using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Map;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Map;
 using Microsoft.AspNetCore.Mvc;
@@ -15,14 +13,7 @@ public class MapsControllerTest
     [TestMethod]
     public async Task GetMaps_ShouldSendProperCommandToMediator_WhereRequestIsNotDefined()
     {
-        var expectedAgvGraphs = new List<AgvGraph>
-        {
-            AgvGraphGenerator.CreateDefaultGraph(Guid.NewGuid()),
-            AgvGraphGenerator.CreateDefaultGraph(Guid.NewGuid())
-        };
-
         MapsControllerTestFixture<GetMapList, GetMapRequestHandler> fixture = new MapsControllerTestFixture<GetMapList, GetMapRequestHandler>()
-            .WithAgvGraphs(expectedAgvGraphs)
             .UseDefaultServices()
             .Build();
         var mapController = fixture.Controller;

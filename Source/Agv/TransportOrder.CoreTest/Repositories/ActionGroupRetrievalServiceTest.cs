@@ -1,14 +1,16 @@
 ﻿using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
-using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Graph;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
+using ActionGroup = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using AgvActionGenerator = Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper.AgvActionGenerator;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Repositories;
@@ -25,8 +27,36 @@ public class ActionGroupRetrievalServiceTest
     {
         var graph = AgvGraphGenerator.CreateDefaultGraph(correlationId);
         var mapper = GetMapper();
-        var efGraph = mapper.Map<EfGraph>(graph);
-        await fixture.AddAsync(efGraph);
+        var efGraph = mapper.Map<EfAgvGraph>(graph);
+        await fixture.AddAsync(efGraph,
+            context =>
+            {
+                foreach (var node in efGraph.Nodes)
+                {
+                    DbSet<EfNode> dbSet = context.Set<EfNode>();
+                    if (!dbSet.Any(n => n.Id == node.Id))
+                    {
+                        dbSet.Add(node);
+                    }
+                    else
+                    {
+                        dbSet.Attach(node);
+                    }
+                }
+                foreach (var edge in efGraph.Edges)
+                {
+                    DbSet<EfEdge> dbSet = context.Set<EfEdge>();
+                    if (!dbSet.Any(n => n.Id == edge.Id))
+                    {
+                        dbSet.Add(edge);
+                    }
+                    else
+                    {
+                        dbSet.Attach(edge);
+                    }
+                }
+            }
+        );
     }
 
     [TestMethod]
@@ -72,7 +102,7 @@ public class ActionGroupRetrievalServiceTest
     {
         await using var fixture = new ActionGroupRetrievalServiceTestFixture();
 
-        var actionGroup = new TransportOrder.Domain.Models.ActionGroup.ActionGroup();
+        var actionGroup = new ActionGroup();
         await fixture.AddAsync(actionGroup);
         await AddDefaultAgvGraph(fixture, "aGraph".ToGuid());
 
@@ -112,7 +142,7 @@ public class ActionGroupRetrievalServiceTest
         await fixture.AddAsync(actionGroup);
         await AddDefaultAgvGraph(fixture, "aGraph".ToGuid());
 
-        List<ActionGroupState> otherStates = Enum.GetValues<ActionGroupState>().Except(new List<ActionGroupState> { actionGroup.State }).ToList();
+        List<ActionGroupState> otherStates = Enum.GetValues<ActionGroupState>().Except(new List<ActionGroupState> {actionGroup.State}).ToList();
 
         IReadOnlyCollection<ActionGroupReadModel> actionGroupReadModel = await fixture.ActionGroupRetrievalService
             .GetActionGroupsWithNodesAsync(otherStates, null, null, 1);

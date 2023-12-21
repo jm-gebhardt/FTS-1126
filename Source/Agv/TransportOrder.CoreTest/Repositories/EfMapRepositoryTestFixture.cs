@@ -1,4 +1,5 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Utilities;
+﻿using Gebhardt.StoreWare.Agv.Common.Services;
+using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Map;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;
@@ -29,7 +30,7 @@ public class EfMapRepositoryTestFixture
             );
         Provider = collection.BuildServiceProvider(true);
         ContextFactory = Provider.GetService<IDbContextFactory<TransportOrderDbContext>>()!;
-        Repository = new EfMapRepository(ContextFactory, mockLogger.Object, new MapRepositorySemaphoreProvider());
+        Repository = new EfMapRepository(ContextFactory, new SemaphoreProvider<IMapRepositorySemaphore>(), mockLogger.Object);
     }
 
     public void Add(Map map)

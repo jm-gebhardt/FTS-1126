@@ -1,15 +1,16 @@
 ﻿using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
-using GraphEdge = Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent.GraphEdge;
-using GraphNode = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.GraphNode;
+using JetBrains.Annotations;
+using GraphNode = Gebhardt.StoreWare.Agv.Common.Models.Graphs.GraphNode;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles;
 
 /// <summary>
-/// The custom value resolver, maps from AgvGraph and and the destination Graph to the Edges property
+/// The custom value resolver, maps from IGraph and the destination Graph to the GraphEdge property
 /// </summary>
-public class GraphEdgeValueResolver : IValueResolver<AgvGraph, Graph, object>
+[UsedImplicitly]
+public class GraphGraphEdgeResolver : IValueResolver<IGraph, Graph, object>
 {
     /// <summary>
     /// The resolve method
@@ -19,7 +20,7 @@ public class GraphEdgeValueResolver : IValueResolver<AgvGraph, Graph, object>
     /// <param name="destMember"></param>
     /// <param name="context"></param>
     /// <returns></returns>
-    public object Resolve(AgvGraph source, Graph destination, object destMember, ResolutionContext context)
+    public object Resolve(IGraph source, Graph destination, object destMember, ResolutionContext context)
     {
         var graphEdges = new List<GraphEdge>();
 

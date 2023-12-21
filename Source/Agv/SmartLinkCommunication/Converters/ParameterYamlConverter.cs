@@ -1,7 +1,7 @@
 ﻿using CommandLine;
+using Gebhardt.StoreWare.Agv.SmartLinkCommunication.Models;
 using YamlDotNet.Core;
 using YamlDotNet.Serialization;
-using Gebhardt.StoreWare.Agv.SmartLinkCommunication.Models;
 
 namespace Gebhardt.StoreWare.Agv.SmartLinkCommunication.Converters;
 

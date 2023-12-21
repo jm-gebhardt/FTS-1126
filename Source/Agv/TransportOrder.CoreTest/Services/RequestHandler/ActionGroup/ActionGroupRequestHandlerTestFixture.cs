@@ -2,10 +2,10 @@ using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
-using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Graph;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -18,7 +18,7 @@ public class ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> : M
 {
     private readonly ActionGroupRetrievalServiceTestFixture _actionGroupRetrievalServiceTestFixture = new();
     private readonly ActionGroupRepositoryTestFixture _actionGroupRepositoryFixture = new();
-    private EfGraph? _efGraph;
+    private EfAgvGraph? _efGraph;
     private TransportOrder.Domain.Models.ActionGroup.ActionGroup[]? _actionGroups;
 
     private static Mapper GetMapper()
@@ -40,7 +40,7 @@ public class ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> : M
         correlationId = correlationId == default ? Guid.NewGuid() : correlationId;
         var graph = AgvGraphGenerator.CreateDefaultGraph(correlationId);
         var mapper = GetMapper();
-        _efGraph = mapper.Map<EfGraph>(graph);
+        _efGraph = mapper.Map<EfAgvGraph>(graph);
 
         return this;
     }

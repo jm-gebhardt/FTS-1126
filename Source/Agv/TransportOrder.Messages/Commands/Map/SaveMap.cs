@@ -1,10 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Map;
+﻿namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Map;
 
 /// <summary>
-/// Provides a command to save a map for an agv.
+/// Provides a command to save a map.
 /// </summary>
 /// <param name="Map">The map.</param>
-/// <param name="AgvId">The agv id.</param>
-public record SaveMap(AgvMap Map, Guid AgvId);
+public record SaveMap(Common.Models.Graphs.Map Map);

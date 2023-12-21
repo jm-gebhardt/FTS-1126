@@ -117,6 +117,7 @@ public sealed class AgvGraphBuilderStateMachine : MassTransitStateMachine<AgvGra
                     .Then(c => c.Saga.MergeGraph())
                     // Respond to the initial request with the graph
                     .Then(c => c.Publish(new AgvGraphReceived(c.Saga.CorrelationId, c.Message.Graph.SerialNumber, c.Saga.AgvGraph!)))
+                    .Then(c => c.Publish(new RequestAgvMap(c.Saga.CorrelationId, c.Message.Graph.SerialNumber, c.Saga.RelatedMapId, c.Saga.RelatedMapName!)))
                     .Finalize(),
                 // The response does not correlate to the request
                 e => e.Then(_ => _logger.LogWarning("{MessageType} does not match the request", nameof(InternalGraphReceived))))

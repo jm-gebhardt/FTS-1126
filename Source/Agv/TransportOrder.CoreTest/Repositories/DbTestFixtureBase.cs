@@ -17,9 +17,12 @@ public class DbTestFixtureBase<TContext> : IAsyncDisposable where TContext : DbC
         ContextFactory = provider.GetRequiredService<IDbContextFactory<TContext>>();
     }
 
-    public async Task AddAsync<TEntity>(TEntity entity) where TEntity : class
+    public async Task AddAsync<TEntity>(TEntity entity, Action<TContext>? beforeAddAction = null) where TEntity : class
     {
         await using var context = await ContextFactory.CreateDbContextAsync();
+
+        beforeAddAction?.Invoke(context);
+
         await context.AddAsync(entity);
         await context.SaveChangesAsync();
     }

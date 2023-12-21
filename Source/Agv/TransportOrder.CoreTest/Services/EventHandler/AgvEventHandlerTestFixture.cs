@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
+using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.EventHandler;
@@ -21,7 +23,8 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixtureWithSche
 {
     private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
     private readonly Mock<IMaintenanceService> _maintenanceService = new();
-    private readonly ActionManagerSemaphoreProvider _semaphoreProvider = new();
+    private readonly Mock<IGraphRepository> _graphRepository = new();
+    private readonly SemaphoreProvider<IAgvsSemaphore> _agvSemaphoreProvider = new();
     private readonly Mock<IAgvRepository> _agvRepository = new();
     private readonly Mock<IChooseAgvActionGroupService> _chooseAgvActionGroupService = new();
 
@@ -44,7 +47,8 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixtureWithSche
     {
         collection.AddTransient(_ => _actionGroupRepository.Object);
         collection.AddTransient(_ => _maintenanceService.Object);
-        collection.AddTransient<IActionManagerSemaphoreProvider>(_ => _semaphoreProvider);
+        collection.AddTransient<ISemaphoreProvider<IAgvsSemaphore>>(_ => _agvSemaphoreProvider);
+        collection.AddTransient<IGraphRepository>(_ => _graphRepository.Object);
         collection.AddTransient(_ => _agvRepository.Object);
         collection.AddTransient(_ => _chooseAgvActionGroupService.Object);
         collection.AddAgvSettings(_agvSettings);
@@ -55,16 +59,22 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixtureWithSche
         Build();
     }
 
+    public AgvEventHandlerTestFixture WithAgvGraph(AgvGraph agvGraph)
+    {
+        _graphRepository.Setup(x => x.GetAgvGraphAsync(It.IsAny<Guid>())).ReturnsAsync(agvGraph);
+        return this;
+    }
+
     public void AddAgv(TransportOrder.Domain.Models.Agv.Agv agv)
     {
-        _agvRepository.AddAgvsToMockRepository(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+        _agvRepository.AddAgvsToMockRepository(new List<TransportOrder.Domain.Models.Agv.Agv> {agv});
     }
 
     public void AddChargeAction(ActionGroup actionGroup = null!, bool existsPriorToTest = true)
     {
         if (existsPriorToTest)
         {
-            _actionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<IList<ActionGroupState>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(), It.IsAny<bool?>(), It.IsAny<SortBy>(), It.IsAny<bool>())).ReturnsAsync(new List<ActionGroup> { actionGroup });
+            _actionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<IList<ActionGroupState>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(), It.IsAny<bool?>(), It.IsAny<SortBy>(), It.IsAny<bool>())).ReturnsAsync(new List<ActionGroup> {actionGroup});
         }
         else
         {

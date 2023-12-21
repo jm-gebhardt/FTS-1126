@@ -70,9 +70,9 @@ public static class RequestClientGenerator<TRequest>
     ///  Create dummy <see cref="IRequestClient{TRequest}"/>
     /// </summary>
     /// <typeparam name="TResponse1">Type for first response</typeparam>
-    /// <param name="response1">First response</param>
+    /// <param name="responseFunc">Function to get response</param>
     /// <param name="exception">[Optional] throw this Exception if not null</param>
-    public static IRequestClient<TRequest> CreateDummyRequestClient<TResponse1>(TResponse1 response1, Exception? exception = null)
+    public static IRequestClient<TRequest> CreateDummyRequestClient<TResponse1>(Func<TResponse1> responseFunc, Exception? exception = null)
         where TResponse1 : class
     {
         var mockRequestClient = new Mock<IRequestClient<TRequest>>();
@@ -85,7 +85,7 @@ public static class RequestClientGenerator<TRequest>
                     throw exception;
                 }
 
-                return new DummyResponse<TResponse1>(response1);
+                return new DummyResponse<TResponse1>(responseFunc());
             });
 
         return mockRequestClient.Object;

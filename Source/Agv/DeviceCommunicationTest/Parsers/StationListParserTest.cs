@@ -1,4 +1,4 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+﻿using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
@@ -147,8 +147,6 @@ public class StationListParserTest
 
         graph.Usability.ShouldBe(AgvGraph.GraphUsability.Valid);
         parser.SerialNumber.ShouldBe(AgvTestIdentifier01);
-        graph.RelatedMapName.ShouldBe(mapId);
-        graph.RelatedMapId.ShouldBe(mapId.ToGuid());
         graph.CorrelationId.ShouldBe(AgvTestIdentifier01.ToGuid());
     }
 

@@ -1,12 +1,12 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
+using Gebhardt.StoreWare.Agv.Common.Messages.Graphs.Requests;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.CommandHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.EventHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Map;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Commands;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
@@ -17,8 +17,8 @@ using MassTransit;
 using LockAgv = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv.LockAgv;
 using RequestAgvData = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv.RequestAgvData;
 using RequestAgvGraph = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv.RequestAgvGraph;
-using UnlockAgv = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv.UnlockAgv;
 using ResetAgvErrors = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Commands.ResetAgvErrors;
+using UnlockAgv = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv.UnlockAgv;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations;
 
@@ -58,7 +58,7 @@ public static class CoreBusRegistrationExtensions
             partitioner.PartitionMessageById<StartCharging, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<StopCharging, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<UpdateAgvStatus, AgvCommandHandler>(c);
-            partitioner.PartitionMessageById<UpdateGraph, AgvCommandHandler>(c);
+            partitioner.PartitionMessageById<SetAgvGraphExist, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<GoOffline, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<UpdateAgvData, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<AcceptAgvCommand, AgvCommandHandler>(c);
@@ -88,10 +88,14 @@ public static class CoreBusRegistrationExtensions
     private static void RegisterCoreGraphHandlers(IBusRegistrationConfigurator busRegistrationConfigurator)
     {
         busRegistrationConfigurator.AddConsumer<AgvGraphReceivedEventHandler>();
+        busRegistrationConfigurator.AddConsumer<GetGraphRequestHandler>();
+        busRegistrationConfigurator.AddRequestClient<GetGraph>();
+        busRegistrationConfigurator.AddConsumer<GraphCommandHandler>();
+        busRegistrationConfigurator.AddConsumer<GraphEventHandler>();
 
         busRegistrationConfigurator.AddConsumer<NodeCommandHandler>();
 
-        busRegistrationConfigurator.AddConsumer<MapCommandHandler>(cfg => { cfg.Message<SaveMap>(x => x.UsePartitioner(PartitionCount, p => p.Message.Map.CorrelationId)); });
+        busRegistrationConfigurator.AddConsumer<MapCommandHandler>();
     }
 
     private static void RegisterCoreActionGroupHandlers(IBusRegistrationConfigurator busRegistrationConfigurator)
@@ -176,6 +180,7 @@ public static class CoreBusRegistrationExtensions
         configurator.AddConsumer<GetGraphRequestHandler>();
         configurator.AddRequestClient<GetAgvGraph>();
         configurator.AddRequestClient<GetAgvGraphs>();
+        configurator.AddRequestClient<GetMapGraph>();
 
         configurator.AddConsumer<GetAgvPositionsRequestHandler>();
         configurator.AddRequestClient<GetAgvPositions>();
@@ -209,8 +214,6 @@ public static class CoreBusRegistrationExtensions
         configurator.AddRequestClient<GetMapList>();
         configurator.AddRequestClient<GetMap>();
 
-        configurator.AddRequestClient<GetMapGraph>();
-        
         configurator.AddConsumer<GetStationsRequestHandler>();
         configurator.AddRequestClient<GetStations>();
     }

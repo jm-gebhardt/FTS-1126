@@ -11,7 +11,7 @@ public interface IMapRepository
     /// <summary>
     /// Get all maps found in MapRepository
     /// </summary>
-    public IQueryable<Map> GetAllMaps();
+    public Task<ICollection<Map>> GetAllMapsAsync();
 
     /// <summary>
     /// Get a map by its related correlationId from the MapRepository
@@ -30,6 +30,7 @@ public interface IMapRepository
     /// Checks if map related to its correlationId exists in repository
     /// </summary>
     /// <param name="correlationId">GUID of the map looked for in the repository</param>
+    [PublicAPI]
     public bool Exists(Guid correlationId);
 
     /// <summary>
@@ -37,6 +38,13 @@ public interface IMapRepository
     /// </summary>
     /// <param name="map">The map.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns>True if a change has been made</returns>
+    /// <returns>True if the Map could be stored. False if e.g. the nodes/edges or Agvs were not existing.</returns>
     Task<bool> AddOrUpdateAsync(Map map, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Adds the relation from the Agv to all Maps where the AgvGraph intersects with the nodes of the Map.
+    /// </summary>
+    /// <param name="agvId"></param>
+    /// <returns></returns>
+    Task AssignAgvGraphToMapsAsync(Guid agvId);
 }

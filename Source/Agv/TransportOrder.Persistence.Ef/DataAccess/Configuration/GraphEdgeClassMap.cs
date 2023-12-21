@@ -11,24 +11,24 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess.Config
 public class GraphEdgeClassMap : ClassMap<EfEdge>
 {
     /// <inheritdoc />
-    public override string TableName => "AgvGraphEdge";
+    public override string TableName => "GraphEdge";
 
     /// <inheritdoc />
     protected override void Configure(EntityTypeBuilder<EfEdge> entity, ModelBuilder model)
     {
-        entity.HasKey(nameof(EfEdge.GraphCorrelationId), nameof(EfEdge.Id));
+        entity.HasKey(e => e.Id);
 
         entity.HasOne<EfNode>()
             .WithMany()
-            .HasForeignKey(nameof(EfEdge.GraphCorrelationId), nameof(EfEdge.FromNodeId))
+            .HasForeignKey(e => e.FromNodeId)
             .OnDelete(DeleteBehavior.ClientCascade);
 
         entity.HasOne<EfNode>()
             .WithMany()
-            .HasForeignKey(nameof(EfEdge.GraphCorrelationId), nameof(EfEdge.ToNodeId))
+            .HasForeignKey(e => e.ToNodeId)
             .OnDelete(DeleteBehavior.ClientCascade);
 
-        entity.ConfigureAllProperties();
+        entity.ConfigureAllProperties(except: new[] {nameof(EfEdge.FromNodeId), nameof(EfEdge.ToNodeId), nameof(EfEdge.Maps), nameof(EfEdge.AgvGraphs)});
 
         entity.Property(e => e.VariantParameters).HasJsonConversion();
     }

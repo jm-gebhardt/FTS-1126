@@ -1,8 +1,8 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Contracts;
+using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using JetBrains.Annotations;
 using MassTransit;
 
-// ReSharper disable ConvertToPrimaryConstructor
 namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 
 /// <summary>
@@ -20,18 +20,18 @@ public record AgvMapReceived : CorrelatedBy<Guid>, IAgvId
     /// <summary>
     /// Map of the AGV
     /// </summary>
-    public AgvMap AgvMap { get; }
+    public Map Map { get; }
 
     /// <summary>
     /// Build message
     /// </summary>
     /// <param name="correlationId">The correlation ID of the AGV</param>
     /// <param name="agvId">Identifier of the AGV.</param>
-    /// <param name="agvMap">Map of the AGV</param>
-    public AgvMapReceived(Guid correlationId, string agvId, AgvMap agvMap)
+    /// <param name="map">Map of the AGV</param>
+    public AgvMapReceived(Guid correlationId, string agvId, Map map)
     {
         CorrelationId = correlationId;
         AgvId = agvId;
-        AgvMap = agvMap;
+        Map = map;
     }
 }

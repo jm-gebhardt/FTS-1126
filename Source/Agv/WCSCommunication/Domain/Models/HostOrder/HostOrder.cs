@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
-using JetBrains.Annotations;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.WCSCommunication.Domain.Exceptions;
+using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.WCSCommunication.Domain.Models.HostOrder;
 

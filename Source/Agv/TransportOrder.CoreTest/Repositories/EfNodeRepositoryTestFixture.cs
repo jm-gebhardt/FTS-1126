@@ -1,4 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Graph;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Map;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Node;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
@@ -25,10 +26,20 @@ public class EfNodeRepositoryTestFixture: IDisposable, IAsyncDisposable
         Repository = new EfNodeRepository(ContextFactory);
     }
 
-    public void AddGraph(EfGraph graph)
+    public void AddGraph(EfAgvGraph agvGraph)
     {
         using var context = ContextFactory.CreateDbContext();
-        context.Set<EfGraph>().Add(graph);
+        context.Set<EfAgvGraph>().Add(agvGraph);
+        context.SaveChanges();
+    }
+
+    public void AddMap(Map map)
+    {
+        using var context = ContextFactory.CreateDbContext();
+
+        context.Set<EfNode>().AttachRange(map.Nodes);
+        context.Set<EfEdge>().AttachRange(map.Edges);
+        context.Set<Map>().Add(map);
         context.SaveChanges();
     }
 

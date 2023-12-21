@@ -1,4 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using JetBrains.Annotations;
 
 // ReSharper disable InvalidUsage
@@ -19,7 +20,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
 /// <param name="AgvStatus">The agv status.</param>
 /// <param name="AgvGraph">The agv graph.</param>
 /// <param name="AgvData">The agv data.</param>
-/// <param name="AgvMap">The agv map.</param>
 [PublicAPI]
 public record SimulatedAgv(Guid CorrelationId,
     string AgvId,
@@ -32,6 +32,5 @@ public record SimulatedAgv(Guid CorrelationId,
     DateTime TimeOfLockStateChanged,
     AgvStatus? AgvStatus = null,
     AgvGraph? AgvGraph = null,
-    AgvData? AgvData = null,
-    AgvMap? AgvMap = null
+    AgvData? AgvData = null
 );

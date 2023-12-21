@@ -6,6 +6,8 @@ using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
+using Gebhardt.StoreWare.Agv.Common.Messages.Graphs.Events;
+using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.CmdOptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
@@ -21,7 +23,7 @@ using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using AgvStatus = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv.AgvStatus;
-using Cargo = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv.Cargo;
+using Cargo = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Cargo;
 using LockAgv = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv.LockAgv;
 using RequestAgvData = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands.RequestAgvData;
 using RequestAgvGraph = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands.RequestAgvGraph;
@@ -39,7 +41,7 @@ public class AgvCommandHandler :
     IConsumer<StartCharging>,
     IConsumer<StopCharging>,
     IConsumer<UpdateAgvStatus>,
-    IConsumer<UpdateGraph>,
+    IConsumer<SetAgvGraphExist>,
     IConsumer<GoOffline>,
     IConsumer<UpdateAgvData>,
     IConsumer<LockAgv>,
@@ -53,44 +55,39 @@ public class AgvCommandHandler :
     IConsumer<UpdateCargo>
 {
     private readonly ILogger<AgvCommandHandler> _logger;
-    private readonly IActionManagerSemaphoreProvider _actionManagerSemaphoreProvider;
+    private readonly ISemaphoreProvider<IAgvsSemaphore> _agvsSemaphore;
     private readonly IActionGroupRepository _actionGroupRepository;
     private readonly IAgvRepository _agvRepository;
     private readonly ISettingsProvider<AgvSettings> _settingsProvider;
     private readonly IMapper _mapper;
-    private readonly IAgvGraphRepository _agvGraphRepository;
+    private readonly IGraphRepository _graphRepository;
     private readonly ICargoRepository _cargoRepository;
-    private readonly IMapRepository _mapRepository;
     private readonly ProductionOptions _productionOptions;
     private readonly IAgvDataRepository _agvDataRepository;
     private readonly IRequestClient<QueueActionGroup> _queueActionGroupRequestClient;
 
-    /// <summary>
-    /// Initializes a new <see cref="AgvCommandHandler"/> instance.
-    /// </summary>
-    public AgvCommandHandler(IActionManagerSemaphoreProvider actionManagerSemaphoreProvider,
+    /// <inheritdoc cref="AgvCommandHandler"/>
+    public AgvCommandHandler(ISemaphoreProvider<IAgvsSemaphore> agvsSemaphore,
         IAgvRepository agvRepository,
         ISettingsProvider<AgvSettings> settingsProvider,
         IActionGroupRepository actionGroupRepository,
         IAgvDataRepository agvDataRepository,
-        IAgvGraphRepository agvGraphRepository,
+        IGraphRepository graphRepository,
         IRequestClient<QueueActionGroup> queueActionGroupRequestClient,
         ICargoRepository cargoRepository,
-        IMapRepository mapRepository,
         IMapper mapper,
         ProductionOptions productionOptions,
         ILogger<AgvCommandHandler> logger)
     {
         _logger = logger;
-        _actionManagerSemaphoreProvider = actionManagerSemaphoreProvider;
+        _agvsSemaphore = agvsSemaphore;
         _actionGroupRepository = actionGroupRepository;
         _agvRepository = agvRepository;
         _settingsProvider = settingsProvider;
         _mapper = mapper;
-        _agvGraphRepository = agvGraphRepository;
+        _graphRepository = graphRepository;
         _cargoRepository = cargoRepository;
         _queueActionGroupRequestClient = queueActionGroupRequestClient;
-        _mapRepository = mapRepository;
         _productionOptions = productionOptions;
         _agvDataRepository = agvDataRepository;
     }
@@ -101,7 +98,7 @@ public class AgvCommandHandler :
     public async Task Consume(ConsumeContext<TryReactivateChargingAgv> context)
     {
         var cancellationToken = context.CancellationToken;
-        await _actionManagerSemaphoreProvider.ExecuteLockedAsync(async () =>
+        await _agvsSemaphore.ExecuteLockedAsync(async () =>
         {
             var agvSettings = _settingsProvider.GetSettings();
             ICollection<Domain.Models.Agv.Agv> goodAgvs = await _agvRepository.GetChargingAgvsWithGoodBatteryLevelAsync(agvSettings.BatteryLevelGood);
@@ -209,9 +206,17 @@ public class AgvCommandHandler :
         (bool batteryChargeChanged, bool lastNodeIdChanged) = agv.UpdateAgvStatus(agvStatus);
         _logger.LogTrace("LastNodeIdChanged: {LastNodeIdChanged}, BatteryChargeChanged: {BatteryChargeChanged}", lastNodeIdChanged, batteryChargeChanged);
 
+        // Only request AgvGraph if a global Graph exists
         if (agv.ShouldRequestGraph())
         {
-            await PublishGraphRequestAsync(context, agv);
+            if (await _graphRepository.ExistsAsync())
+            {
+                await PublishGraphRequestAsync(context, agv);
+            }
+            else
+            {
+                await context.Publish(new GraphMissing(agv.CorrelationId));
+            }
         }
 
         if (agv.ShouldRequestData())
@@ -282,25 +287,17 @@ public class AgvCommandHandler :
     }
 
     /// <summary>
-    /// Handles the <see cref="UpdateGraph"/>
+    /// Handles the <see cref="SetAgvGraphExist"/>
     /// </summary>
-    public async Task Consume(ConsumeContext<UpdateGraph> context)
+    public async Task Consume(ConsumeContext<SetAgvGraphExist> context)
     {
-        var (correlationId, agvGraph) = context.Message;
+        var correlationId = context.Message.CorrelationId;
         var agv = await _agvRepository.GetAgvAsync(correlationId);
 
         _logger.LogDebug("UpdateGraph for agv {CorrelationId}", agv.CorrelationId);
         agv.GraphExists = true;
 
-        if (!await _agvRepository.UpdateAgvAsync(agv))
-        {
-            _logger.LogDebug("{Command}: Could not update agv {CorrelationId}", nameof(UpdateGraph), agv.CorrelationId);
-            return;
-        }
-        if (!_mapRepository.Exists(agvGraph.RelatedMapId))
-        {
-            await context.Publish(new RequestAgvMap(correlationId, agv.AgvId, agvGraph.RelatedMapId, agvGraph.RelatedMapName));
-        }
+        await _agvRepository.UpdateAgvAsync(agv);
     }
 
     /// <summary>
@@ -444,7 +441,7 @@ public class AgvCommandHandler :
         var moveActionGroup = new ActionGroup(
             groupCorrelationId,
             $"Manual {ActionType.Move}",
-            new List<AgvAction> { new(Guid.NewGuid(), ActionType.Move, targetNodeId, groupCorrelationId) },
+            new List<AgvAction> {new(Guid.NewGuid(), ActionType.Move, targetNodeId, groupCorrelationId)},
             assignedAgv: agv.CorrelationId,
             isManual: true,
             creator: creator
@@ -538,9 +535,9 @@ public class AgvCommandHandler :
     public async Task Consume(ConsumeContext<UpdateCargo> context)
     {
         var agvCorrelationId = context.Message.CorrelationId;
-        IReadOnlyCollection<Common.Messages.AgvManagement.Cargo> receivedCargos = context.Message.Cargos;
+        IReadOnlyCollection<Cargo> receivedCargos = context.Message.Cargos;
 
-        var cargos = _mapper.Map<Collection<Cargo>>(receivedCargos);
+        var cargos = _mapper.Map<Collection<Domain.Models.Agv.Cargo>>(receivedCargos);
         if (await _cargoRepository.SetCargoAsync(agvCorrelationId, cargos))
         {
             await context.Publish(new CargoChanged(agvCorrelationId, receivedCargos));
@@ -550,15 +547,10 @@ public class AgvCommandHandler :
     private async Task TryAutoAccept(IPublishEndpoint context, Domain.Models.Agv.Agv agv, CancellationToken cancellationToken)
     {
         _logger.LogDebug("AutoAccept {CorrelationId}", agv.CorrelationId);
-        if (_productionOptions.AutoAccept && agv is { GraphExists: true, DataExist: true, CurrentAgvState: AgvState.Discovered })
+        if (_productionOptions.AutoAccept && agv is {GraphExists: true, DataExist: true, CurrentAgvState: AgvState.Discovered})
         {
-            var graph = await _agvGraphRepository.GetAgvGraphAsync(agv.CorrelationId);
-            bool mapExists = _mapRepository.Exists(graph.RelatedMapId);
-            _logger.LogDebug("AutoAccept {CorrelationId}, Graph: {GraphExists}, Data: {DataExists}, Map: {MapExists}", agv.CorrelationId, agv.GraphExists, agv.DataExist, mapExists);
-            if (mapExists)
-            {
-                await TransitionToIdleAsync(context, agv, cancellationToken);
-            }
+            _logger.LogDebug("AutoAccept {CorrelationId}, Graph: {GraphExists}, Data: {DataExists}", agv.CorrelationId, agv.GraphExists, agv.DataExist);
+            await TransitionToIdleAsync(context, agv, cancellationToken);
         }
     }
 
@@ -613,7 +605,7 @@ public class AgvCommandHandler :
         _logger.LogDebug("Creating agv {CorrelationId}, {AgvId}", correlationId, agvId);
 
         var agv = new Domain.Models.Agv.Agv(correlationId, agvId, _mapper.Map<AgvStatus>(agvStatus));
-        bool graphExists = await _agvGraphRepository.ExistsAsync(correlationId);
+        bool graphExists = await _graphRepository.ExistsAsync(correlationId);
         if (!graphExists)
         {
             await PublishGraphRequestAsync(context, agv);

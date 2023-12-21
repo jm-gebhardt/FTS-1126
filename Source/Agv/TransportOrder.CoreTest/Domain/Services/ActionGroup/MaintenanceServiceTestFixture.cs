@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Routing;
@@ -10,12 +11,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Domain.Services.ActionG
 
 public class MaintenanceServiceTestFixture
 {
-    private readonly Mock<IAgvGraphRepository> _graphRepository = new();
+    private readonly Mock<IGraphRepository> _graphRepository = new();
     private readonly Mock<INodeStateRepository> _nodeStateRepository = new();
 
     public MaintenanceServiceTestFixture()
     {
-        MaintenanceService = new MaintenanceService(_graphRepository.Object, _nodeStateRepository.Object, RouteService.Object, new Mock<ILogger<MaintenanceService>>().Object, new Mock<IAgvDataRepository>().Object);
+        MaintenanceService = new MaintenanceService(_graphRepository.Object, _nodeStateRepository.Object, RouteService.Object, new Mock<IAgvDataRepository>().Object, new Mock<ILogger<MaintenanceService>>().Object);
     }
 
     public Mock<IRouteService> RouteService { get; } = new();
@@ -28,7 +29,7 @@ public class MaintenanceServiceTestFixture
             .ReturnsAsync(new Func<Guid, Expression<Func<GraphNode, bool>>, IEnumerable<GraphNode>>((_, predicate) => availableNodes.AsQueryable().Where(predicate)));
         foreach (var availableNode in availableNodes)
         {
-            _graphRepository.Setup(x => x.GetNodeAsync(availableNode.Id, agv.CorrelationId))
+            _graphRepository.Setup(x => x.GetNodeAsync(availableNode.Id))
                 .ReturnsAsync(availableNodes.First(n => n.Id == availableNode.Id));
         }
 

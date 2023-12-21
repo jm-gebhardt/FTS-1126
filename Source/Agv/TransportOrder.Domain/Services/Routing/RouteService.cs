@@ -1,5 +1,6 @@
 using Gebhardt.StoreWare.Agv.Common.Exceptions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
@@ -13,17 +14,17 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Routing;
 /// <inheritdoc />
 public class RouteService : IRouteService
 {
-    private readonly IAgvGraphRepository _agvGraphRepository;
+    private readonly IGraphRepository _graphRepository;
     private readonly IRouteFinder _routeFinder;
     private readonly ILogger<RouteService> _logger;
 
     /// <inheritdoc cref="RouteService" />
-    /// <param name="agvGraphRepository"></param>
+    /// <param name="graphRepository"></param>
     /// <param name="routeFinder"></param>
     /// <param name="logger"></param>
-    public RouteService(IAgvGraphRepository agvGraphRepository, IRouteFinder routeFinder, ILogger<RouteService> logger)
+    public RouteService(IGraphRepository graphRepository, IRouteFinder routeFinder, ILogger<RouteService> logger)
     {
-        _agvGraphRepository = agvGraphRepository;
+        _graphRepository = graphRepository;
         _routeFinder = routeFinder;
         _logger = logger;
     }
@@ -33,9 +34,9 @@ public class RouteService : IRouteService
         return agv.AgvStatus?.LastNodeId ?? throw new AgvLocationUnknownException(agv.CorrelationId);
     }
 
-    private async Task<AgvGraph> GetAgvGraph(Models.Agv.Agv agv)
+    private async Task<IGraph> GetAgvGraph(Models.Agv.Agv agv)
     {
-        return await _agvGraphRepository.GetAgvGraphAsync(agv.CorrelationId);
+        return await _graphRepository.GetAgvGraphAsync(agv.CorrelationId);
     }
 
     private async Task<Route?> GetRouteIfExistingAsync(Models.Agv.Agv agv, string destinationNodeId, string? startNodeId = null, bool throwIfNodeUnknown = false, AgvData? agvData = null, CancellationToken cancellationToken = default)
@@ -43,7 +44,7 @@ public class RouteService : IRouteService
         startNodeId ??= GetLastNodeId(agv);
 
         cancellationToken.ThrowIfCancellationRequested();
-        if (!await _agvGraphRepository.ExistsAsync(agv.CorrelationId))
+        if (!await _graphRepository.ExistsAsync(agv.CorrelationId))
         {
             _logger.LogWarning("AgvGraph for Agv with AgvId {AgvCorrelationId} does not exist. Cannot calculate route.", agv.CorrelationId);
             return null;

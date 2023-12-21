@@ -17,6 +17,27 @@ public class MapClassMap : ClassMap<Map>
     /// <param name="model"></param>
     protected override void Configure(EntityTypeBuilder<Map> entity, ModelBuilder model)
     {
-        entity.ConfigureAllProperties();
+        entity.HasKey(e => e.CorrelationId);
+
+        entity.HasMany(m => m.Edges)
+            .WithMany(n => n.Maps)
+            .UsingEntity("MapEdges");
+
+        entity.HasMany(m => m.Nodes)
+            .WithMany(n => n.Maps)
+            .UsingEntity("MapNodes");
+
+        entity.HasMany(m => m.MapAgvs)
+            .WithOne(ma => ma.Map)
+            .HasForeignKey(ma => ma.MapId);
+
+        entity.ConfigureAllProperties(except: new[] {nameof(Map.Nodes), nameof(Map.Edges), nameof(Map.MapAgvs)});
+
+        EntityTypeBuilder<MapAgv> mapAgvEntity = model.Entity<MapAgv>();
+        mapAgvEntity.HasKey(ma => new {ma.MapId, ma.AgvId});
+        mapAgvEntity.ToTable("MapAgvs");
+        mapAgvEntity.HasOne(ma => ma.Agv)
+            .WithMany()
+            .HasForeignKey(ma => ma.AgvId);
     }
 }

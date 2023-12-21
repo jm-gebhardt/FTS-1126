@@ -1,5 +1,4 @@
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using Gebhardt.StoreWare.Agv.Common.Utilities;
+using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 
 namespace Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 
@@ -147,18 +146,19 @@ public static class AgvGraphGenerator
     /// </summary>
     public static AgvGraph CreateDefaultGraph(Guid? correlationId = null, ICollection<GraphNode>? nodes = null)
     {
-        const string mapName = "Map#1";
-        return new AgvGraph(correlationId ?? Guid.NewGuid(), nodes ?? Nodes, Edges, mapName.ToGuid(), mapName);
+        return new AgvGraph(correlationId ?? Guid.NewGuid(), nodes ?? Nodes, Edges);
     }
 
     public static AgvGraph CreateDefaultGraph(GraphNode[] nodes)
     {
-        const string mapName = "Map#1";
-        return new AgvGraph(Guid.NewGuid(), nodes, Edges, mapName.ToGuid(), mapName);
+        return new AgvGraph(Guid.NewGuid(), nodes, Edges);
     }
 
-    public static AgvGraph Generate(List<GraphNode> nodes, List<GraphEdge> edges)
+    public static AgvGraph Generate(IEnumerable<GraphNode> nodes, IEnumerable<GraphEdge> edges)
     {
-        return new AgvGraph(Guid.NewGuid(), nodes, edges, Guid.NewGuid(), "Map#1");
+        return new AgvGraph(Guid.NewGuid(), nodes.ToList(), edges.ToList());
     }
 }
+
+// ReSharper disable UnusedMember.Global
+// ReSharper disable MemberCanBePrivate.Global

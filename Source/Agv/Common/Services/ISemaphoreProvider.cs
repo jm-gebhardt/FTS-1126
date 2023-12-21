@@ -1,4 +1,14 @@
-﻿namespace Gebhardt.StoreWare.Agv.Common.Services;
+﻿using JetBrains.Annotations;
+
+namespace Gebhardt.StoreWare.Agv.Common.Services;
+
+/// <summary>
+/// Provides an interface for semaphore services
+/// </summary>
+[UsedImplicitly]
+public interface ISemaphoreProvider<T> : ISemaphoreProvider where T : class
+{
+}
 
 /// <summary>
 /// Provides an interface for semaphore services
@@ -10,7 +20,7 @@ public interface ISemaphoreProvider
     /// </summary>
     /// <param name="action">The action.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
-    Task<T> ExecuteLockedAsync<T>(Func<Task<T>> action, CancellationToken cancellationToken);
+    Task<TReturn> ExecuteLockedAsync<TReturn>(Func<Task<TReturn>> action, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Executes a given action locked by the semaphore.
@@ -18,42 +28,47 @@ public interface ISemaphoreProvider
     /// <param name="action">The action.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns></returns>
-    Task ExecuteLockedAsync(Func<Task> action, CancellationToken cancellationToken);
+    Task ExecuteLockedAsync(Func<Task> action, CancellationToken cancellationToken = default);
 }
 
 /// <inheritdoc />
-public abstract class BaseSemaphoreProvider : ISemaphoreProvider
+public class SemaphoreProvider<T> : ISemaphoreProvider<T> where T : class
 {
     /// <summary>
     /// The semaphore used by this provider.
     /// </summary>
-    protected abstract SemaphoreSlim Semaphore { get; }
+    private readonly SemaphoreSlim _semaphore = new(1, 1);
+
+    private static CancellationToken GetCancellationToken(CancellationToken cancellationToken)
+    {
+        return cancellationToken != default ? cancellationToken : new CancellationTokenSource(TimeSpan.FromMinutes(1)).Token;
+    }
 
     /// <inheritdoc />
-    public async Task<T> ExecuteLockedAsync<T>(Func<Task<T>> action, CancellationToken cancellationToken)
+    public async Task<TReturn> ExecuteLockedAsync<TReturn>(Func<Task<TReturn>> action, CancellationToken cancellationToken = default)
     {
         try
         {
-            await Semaphore.WaitAsync(cancellationToken);
+            await _semaphore.WaitAsync(GetCancellationToken(cancellationToken));
             return await action();
         }
         finally
         {
-            Semaphore.Release();
+            _semaphore.Release();
         }
     }
 
     /// <inheritdoc />
-    public async Task ExecuteLockedAsync(Func<Task> action, CancellationToken cancellationToken)
+    public async Task ExecuteLockedAsync(Func<Task> action, CancellationToken cancellationToken = default)
     {
         try
         {
-            await Semaphore.WaitAsync(cancellationToken);
+            await _semaphore.WaitAsync(GetCancellationToken(cancellationToken));
             await action();
         }
         finally
         {
-            Semaphore.Release();
+            _semaphore.Release();
         }
     }
 }

@@ -9,16 +9,16 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Repositories;
 public class EfMapRepositoryTest
 {
     [TestMethod]
-    public void GetAllMaps_ReturnsEmpty_List_WhenRepositoryIsEmpty()
+    public async Task GetAllMaps_ReturnsEmpty_List_WhenRepositoryIsEmpty()
     {
         var fixture = new EfMapRepositoryTestFixture();
 
-        IQueryable<Map> maps = fixture.Repository.GetAllMaps();
+        ICollection<Map> maps = await fixture.Repository.GetAllMapsAsync();
         maps.ShouldBeEmpty();
     }
 
     [TestMethod]
-    public void GetAllMaps_ShouldReturnListOfMaps()
+    public async Task GetAllMaps_ShouldReturnListOfMaps()
     {
         var fixture = new EfMapRepositoryTestFixture();
 
@@ -28,9 +28,9 @@ public class EfMapRepositoryTest
         fixture.Add(map1);
         fixture.Add(map2);
 
-        IQueryable<Map> maps = fixture.Repository.GetAllMaps();
+        ICollection<Map> maps = await fixture.Repository.GetAllMapsAsync();
         maps.ShouldNotBeEmpty();
-        maps.Count().ShouldBe(2);
+        maps.Count.ShouldBe(2);
     }
 
     [TestMethod]

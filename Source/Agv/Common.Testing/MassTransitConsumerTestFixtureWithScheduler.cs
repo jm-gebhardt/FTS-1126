@@ -17,17 +17,17 @@ public class MassTransitConsumerTestFixtureWithScheduler<TConsumer> where TConsu
     /// <summary>
     /// Service provider
     /// </summary>
-    public ServiceProvider? Provider;
+    public ServiceProvider Provider { get; private set; } = null!;
 
     /// <summary>
     /// Started TestHarness
     /// </summary>
-    public ITestHarness? TestHarness;
+    public ITestHarness TestHarness { get; private set; } = null!;
 
     /// <summary>
     /// Consumer Hardness
     /// </summary>
-    public IConsumerTestHarness<TConsumer>? ConsumerHarness;
+    public IConsumerTestHarness<TConsumer> ConsumerHarness { get; private set; } = null!;
 
     /// <summary>
     /// Consumer test fixture to be used for consumer unit/integration tests
@@ -102,7 +102,7 @@ public class MassTransitConsumerTestFixtureWithScheduler<TConsumer> where TConsu
 
     public async Task<ScheduledMessage<T>> ScheduleMessage<T>(TimeSpan delay, T message) where T : class
     {
-        await using var scope = Provider!.CreateAsyncScope();
+        await using var scope = Provider.CreateAsyncScope();
 
         var scheduler = scope.ServiceProvider.GetRequiredService<IMessageScheduler>();
         ScheduledMessage<T> scheduledMessage = await scheduler.SchedulePublish(delay, message);

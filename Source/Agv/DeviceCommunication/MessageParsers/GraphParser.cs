@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Exceptions;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Helpers;
@@ -31,6 +32,16 @@ public class GraphParser
     private AgvGraph.GraphUsability _usability = AgvGraph.GraphUsability.Valid;
 
     private AgvGraph? _agvGraph;
+
+    /// <summary>
+    /// The name of the related map.
+    /// </summary>
+    public string? RelatedMapName { get; private set; }
+
+    /// <summary>
+    /// The Id of the related map.
+    /// </summary>
+    public Guid RelatedMapId { get; private set; }
 
     /// <summary>
     /// Constructor.
@@ -247,10 +258,11 @@ public class GraphParser
             _agvGraph = new AgvGraph(_serialNumber?.ToGuid() ?? Guid.Empty,
                 _nodes,
                 _edges,
-                _graph.RelatedMapId.ToGuid(),
-                _graph.RelatedMapId,
                 _usability
             );
+
+            RelatedMapName = _graph.RelatedMapId;
+            RelatedMapId = _graph.RelatedMapId.ToGuid();
         }
     }
 

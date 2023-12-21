@@ -1,11 +1,11 @@
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+namespace Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 
 /// <summary>
 /// Model for a node in the graph, it has X/Y/Z coordinates and a type.
 /// </summary>
-public class GraphNode
+public class GraphNode : IEquatable<GraphNode>
 {
     /// <summary>
     /// The Id of the node, based on the AGV vendor
@@ -62,5 +62,67 @@ public class GraphNode
     public GraphNode(string id)
     {
         Id = id;
+    }
+
+    /// <inheritdoc />
+    public bool Equals(GraphNode? other)
+    {
+        if (ReferenceEquals(null, other))
+        {
+            return false;
+        }
+        if (ReferenceEquals(this, other))
+        {
+            return true;
+        }
+        if (Id != other.Id)
+        {
+            return false;
+        }
+        if (Type != other.Type)
+        {
+            return false;
+        }
+        if (!X.Equals(other.X))
+        {
+            return false;
+        }
+        if (!Y.Equals(other.Y))
+        {
+            return false;
+        }
+        if (!Z.Equals(other.Z))
+        {
+            return false;
+        }
+        if (!Theta.Equals(other.Theta))
+        {
+            return false;
+        }
+        return true;
+    }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+    {
+        if (ReferenceEquals(null, obj))
+        {
+            return false;
+        }
+        if (ReferenceEquals(this, obj))
+        {
+            return true;
+        }
+        if (obj.GetType() != this.GetType())
+        {
+            return false;
+        }
+        return Equals((GraphNode) obj);
+    }
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Id, (int) Type, X, Y, Z, Theta);
     }
 }

@@ -37,10 +37,10 @@ public class AgvStateChangedConsumerTest
         responseMock.SetupGet(m => m.Message).Returns(new GotAgvs(new[] { agvMessageContent }));
 
         var fixture = new ConsumerHubTestFixture<AgvChangedConsumer, IAgvPublisher>();
-        await fixture.TestHarness!.Bus.Publish(new AgvStateChanged(agvMessageContent.CorrelationId, agvMessageContent.CurrentState, previousState, agvMessageContent));
+        await fixture.TestHarness.Bus.Publish(new AgvStateChanged(agvMessageContent.CorrelationId, agvMessageContent.CurrentState, previousState, agvMessageContent));
 
         (await fixture.TestHarness.Published.Any<AgvStateChanged>()).ShouldBeTrue();
-        (await fixture.ConsumerHarness!.Consumed.Any<AgvStateChanged>()).ShouldBeTrue();
+        (await fixture.ConsumerHarness.Consumed.Any<AgvStateChanged>()).ShouldBeTrue();
 
         fixture.PublisherMock.Verify(h => h.SendAgvStateChangedAsync(It.Is<Messages.MessageContent.Agv>(x => x.CurrentState == currentState)), Times.Once);
     }
@@ -59,10 +59,10 @@ public class AgvStateChangedConsumerTest
         responseMock.SetupGet(m => m.Message).Returns(new GotAgvs(new[] { agvMessageContent }));
 
         var fixture = new ConsumerHubTestFixture<AgvChangedConsumer, IAgvPublisher>();
-        await fixture.TestHarness!.Bus.Publish(new AgvStateChanged(agvMessageContent.CorrelationId, agvMessageContent.CurrentState, previousState, agvMessageContent));
+        await fixture.TestHarness.Bus.Publish(new AgvStateChanged(agvMessageContent.CorrelationId, agvMessageContent.CurrentState, previousState, agvMessageContent));
 
         (await fixture.TestHarness.Published.Any<AgvStateChanged>()).ShouldBeTrue();
-        (await fixture.ConsumerHarness!.Consumed.Any<AgvStateChanged>()).ShouldBeTrue();
+        (await fixture.ConsumerHarness.Consumed.Any<AgvStateChanged>()).ShouldBeTrue();
 
         fixture.PublisherMock.Verify(h => h.SendAgvStateChangedAsync(
             It.Is<Messages.MessageContent.Agv>(o => o.CorrelationId == agv.CorrelationId)), Times.Once);

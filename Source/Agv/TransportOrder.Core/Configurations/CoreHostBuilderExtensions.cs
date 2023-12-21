@@ -3,6 +3,7 @@ using Gebhardt.StoreWare.Agv.Common.Configurations;
 using Gebhardt.StoreWare.Agv.Common.Configurations.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
 using Gebhardt.StoreWare.Agv.Common.MassTransit;
+using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.CmdOptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
@@ -77,9 +78,7 @@ public static class CoreHostBuilderExtensions
 
     private static void RegisterMapServices(IServiceCollection services)
     {
-        services.AddSingleton<IChargingSemaphoreProvider, ChargingSemaphoreProvider>();
         services.AddTransient<IChargingPointManager, ChargingPointManager>();
-        services.AddSingleton<IParkingSemaphoreProvider, ParkingSemaphoreProvider>();
         services.AddTransient<IParkPointService, ParkPointService>();
         services.AddTransient<IRouteService, RouteService>();
         services.AddTransient<IAgvRouteRetrievalService, AgvRouteRetrievalService>();
@@ -90,7 +89,6 @@ public static class CoreHostBuilderExtensions
     private static void RegisterAgvServices(IServiceCollection services)
     {
         // Actions
-        services.AddSingleton<IActionManagerSemaphoreProvider, ActionManagerSemaphoreProvider>();
         services.AddTransient<IChooseAgvActionGroupService, ShortestRouteChooser>();
 
         // Agv behaviour
@@ -104,12 +102,11 @@ public static class CoreHostBuilderExtensions
         services.AddTransient<IAgvRepository, AgvRepository>();
         services.AddTransient<IAgvDataRepository, EfAgvDataRepository>();
 
-        services.AddSingleton<IMapRepositorySemaphoreProvider, MapRepositorySemaphoreProvider>();
         services.AddTransient<IMapRepository, EfMapRepository>();
-        services.AddTransient<IAgvGraphRepository, EfAgvGraphRepository>();
+        
+        services.AddTransient<IGraphRepository, EfGraphRepository>();
         services.AddTransient<INodeRepository, EfNodeRepository>();
 
-        services.AddSingleton<INodeStateDbSemaphoreProvider, NodeStateDbSemaphoreProvider>();
         services.AddTransient<INodeStateRepository, EfNodeStateRepository>();
 
         services.AddSingleton<IConcurrentDictionaryProvider<Guid, AgvPositionStatus>, AgvPositionDictionaryProvider>();
@@ -129,5 +126,6 @@ public static class CoreHostBuilderExtensions
     {
         services.AddTransient(typeof(IMessageReceiver<>), typeof(MessageReceiver<>));
         services.AddTransient(typeof(IMessageAwaiter<>), typeof(MessageAwaiter<>));
+        services.AddSingleton(typeof(ISemaphoreProvider<>), typeof(SemaphoreProvider<>));
     }
 }

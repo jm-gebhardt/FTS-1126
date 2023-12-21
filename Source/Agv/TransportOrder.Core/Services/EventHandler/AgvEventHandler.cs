@@ -1,6 +1,8 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
+using Gebhardt.StoreWare.Agv.Common.Services;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
@@ -37,17 +39,17 @@ public class AgvEventHandler :
     private readonly ILogger<AgvEventHandler> _logger;
     private readonly IAgvRepository _agvRepository;
     private readonly IActionGroupRepository _actionGroupRepository;
-    private readonly IActionManagerSemaphoreProvider _semaphoreProvider;
+    private readonly ISemaphoreProvider<IAgvsSemaphore> _semaphoreProvider;
     private readonly ISettingsProvider<AgvSettings> _settingsProvider;
+    private readonly IGraphRepository _graphRepository;
 
-    /// <summary>
-    /// Initializes a new <see cref="AgvEventHandler"/> instance.
-    /// </summary>
+    /// <inheritdoc cref="AgvEventHandler"/>
     public AgvEventHandler(
         IAgvRepository agvRepository,
         IActionGroupRepository actionGroupRepository,
-        IActionManagerSemaphoreProvider semaphoreProvider,
+        ISemaphoreProvider<IAgvsSemaphore> semaphoreProvider,
         ISettingsProvider<AgvSettings> settingsProvider,
+        IGraphRepository graphRepository,
         ILogger<AgvEventHandler> logger)
     {
         _logger = logger;
@@ -55,6 +57,7 @@ public class AgvEventHandler :
         _actionGroupRepository = actionGroupRepository;
         _semaphoreProvider = semaphoreProvider;
         _settingsProvider = settingsProvider;
+        _graphRepository = graphRepository;
     }
 
     /// <summary>
@@ -91,7 +94,7 @@ public class AgvEventHandler :
             }
 
             // Only start charging if we must or if there is nothing else to do
-            IReadOnlyList<Domain.Models.ActionGroup.ActionGroup> notStartedActionGroups = await _actionGroupRepository.GetNotStartedActionGroupsAsync(agv.CorrelationId);
+            IReadOnlyList<ActionGroup> notStartedActionGroups = await _actionGroupRepository.GetNotStartedActionGroupsAsync(agv.CorrelationId);
 
             if (agv.CheckMustCharge(agvSettings) || !notStartedActionGroups.Any())
             {
@@ -195,8 +198,11 @@ public class AgvEventHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<AgvMapReceived> context)
     {
-        var map = context.Message.AgvMap;
-        await context.Publish(new SaveMap(map, map.CorrelationId));
+        var map = context.Message.Map;
+        // at the beginning the map is just related and empty.
+        var agvGraph = await _graphRepository.GetAgvGraphAsync(context.Message.CorrelationId);
+        // so take the existing nodes and edges from the agvGraph and persist it.
+        await context.Publish(new SaveMap(map with {Nodes = agvGraph.Nodes, Edges = agvGraph.Edges}));
     }
 
     /// <summary>
@@ -239,7 +245,7 @@ public class AgvEventHandler :
     public async Task Consume(ConsumeContext<AgvGraphChanged> context)
     {
         _logger.LogInformation("{MessageType} {CorrelationId}", nameof(AgvGraphChanged), context.Message.CorrelationId);
-        await context.Publish(new UpdateGraph(context.Message.CorrelationId, context.Message.AgvGraph));
+        await context.Publish(new SetAgvGraphExist(context.Message.CorrelationId));
     }
 
     /// <summary>

@@ -1,4 +1,7 @@
-﻿namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Map;
+﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Graph;
+using JetBrains.Annotations;
+
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Map;
 
 /// <summary>
 /// class representing the Map table in Database
@@ -51,9 +54,33 @@ public record Map
     public int Height { get; init; }
 
     /// <summary>
+    /// The list of nodes in the graph.
+    /// </summary>
+    public ICollection<EfNode> Nodes { get; init; }
+
+    /// <summary>
+    /// The list of edges in the graph.
+    /// </summary>
+    public ICollection<EfEdge> Edges { get; init; }
+
+    /// <summary>
+    /// The list of AgvIds related to this map.
+    /// </summary>
+    [UsedImplicitly]
+    public ICollection<MapAgv> MapAgvs { get; init; }
+
+    /// <summary>
     /// Initializes a new <see cref="Map"/> instance.
     /// </summary>
-    public Map(Guid correlationId, string mapId, byte[]? mapValue, int width, int height, double resolution, double xOffset, double yOffset, DateTime modificationDate)
+    public Map(Guid correlationId,
+        string mapId,
+        byte[]? mapValue,
+        int width,
+        int height,
+        double resolution,
+        double xOffset,
+        double yOffset,
+        DateTime modificationDate)
     {
         CorrelationId = correlationId;
         MapId = mapId;
@@ -64,5 +91,8 @@ public record Map
         XOffset = xOffset;
         YOffset = yOffset;
         ModificationDate = modificationDate;
+        Nodes = new List<EfNode>();
+        Edges = new List<EfEdge>();
+        MapAgvs = new List<MapAgv>();
     }
 }

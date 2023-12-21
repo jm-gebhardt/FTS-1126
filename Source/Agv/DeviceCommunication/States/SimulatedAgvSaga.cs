@@ -2,6 +2,7 @@ using System.Numerics;
 using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Time;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
 using JetBrains.Annotations;
@@ -144,11 +145,6 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
     public AgvData? AgvData { get; }
 
     /// <summary>
-    /// Returns the map according to <see cref="AgvGraph"/>.
-    /// </summary>
-    public AgvMap? AgvMap { get; }
-
-    /// <summary>
     /// Current action (this is not reset after finish)
     /// </summary>
     public AgvAction? Action { get; set; }
@@ -281,7 +277,6 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
     /// <param name="currentState"></param>
     /// <param name="agvGraph"></param>
     /// <param name="agvData"></param>
-    /// <param name="agvMap"></param>
     /// <param name="currentNode"></param>
     /// <param name="errors"></param>
     public SimulatedAgvSaga(
@@ -295,7 +290,6 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
         string? currentState = null,
         AgvGraph? agvGraph = null,
         AgvData? agvData = null,
-        AgvMap? agvMap = null,
         GraphNode? currentNode = null,
         List<AgvError>? errors = null
     )
@@ -313,7 +307,6 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
         CurrentNode = currentNode;
         AgvGraph = agvGraph;
         AgvData = agvData;
-        AgvMap = agvMap;
         Errors = errors ?? new List<AgvError>();
 
         AgvStatus = new AgvStatus(
@@ -346,7 +339,6 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
         AgvGraph = agv.AgvGraph;
         AgvData = agv.AgvData;
         CurrentState = agv.CurrentState;
-        AgvMap = agv.AgvMap;
         NodeTravelTime = nodeTravelTime;
         SimulatedBatteryCharge = initialBatteryCharge;
         BatteryChargeRate = batteryChargeRate;

@@ -16,10 +16,10 @@ public class NodeCommandHandlerTest
         const string nodeId = "Charge-0";
         var fixture = new NodeCommandHandlerTestFixture().WithNodeState(new NodeLock(nodeId, NodeLockState.Free, false, null, DateTime.UtcNow));
 
-        await fixture.TestHarness!.Bus.Publish(new FreeNode(nodeId));
+        await fixture.TestHarness.Bus.Publish(new FreeNode(nodeId));
 
-        (await fixture.ConsumerHarness!.Consumed.Any<FreeNode>()).ShouldBeTrue();
+        (await fixture.ConsumerHarness.Consumed.Any<FreeNode>()).ShouldBeTrue();
         fixture.NodeStateRepository.Verify(x => x.FreeNodeAsync(It.IsAny<string>()), Times.Once);
-        (await fixture.TestHarness!.Published.Any<NodeStateChanged>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<NodeStateChanged>()).ShouldBeTrue();
     }
 }

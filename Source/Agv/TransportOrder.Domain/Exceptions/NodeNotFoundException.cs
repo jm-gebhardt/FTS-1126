@@ -4,20 +4,25 @@ using JetBrains.Annotations;
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 
 /// <summary>
-/// The Waypoint was not found in the graph
+/// The Node was not found.
 /// </summary>
 public class NodeNotFoundException : NotFoundException
 {
-    /// <see cref="NodeNotFoundException"/>>
+    /// <inheritdoc cref="NodeNotFoundException"/>>
     [PublicAPI]
     public NodeNotFoundException(Models.Agv.Agv agv, string description)
         : base(description, "Agv CorrelationId", agv.CorrelationId)
     {
     }
 
-    /// <see cref="NodeNotFoundException"/>>
+    /// <inheritdoc cref="NodeNotFoundException"/>>
     public NodeNotFoundException(Guid agvCorrelationId, string description)
         : base(description, nameof(agvCorrelationId), agvCorrelationId)
+    {
+    }
+
+    /// <inheritdoc cref="NodeNotFoundException"/>>
+    public NodeNotFoundException(string nodeId) : base($"Node with Id {nodeId} not found")
     {
     }
 }

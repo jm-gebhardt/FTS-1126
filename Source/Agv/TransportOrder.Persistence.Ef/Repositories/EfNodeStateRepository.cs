@@ -1,6 +1,8 @@
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
+using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Node;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -11,27 +13,30 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
 /// Entity framework implementation of <see cref="INodeStateRepository"/>
 /// </summary>
 public class EfNodeStateRepository : INodeStateRepository
-
 {
-    private readonly SemaphoreSlim _dbLock = new(1, 1);
     private readonly IDbContextFactory<TransportOrderDbContext> _dbContextFactory;
+    private readonly ISemaphoreProvider<INodeStateDbSemaphore> _semaphoreProvider;
     private readonly ILogger<EfNodeStateRepository> _logger;
 
     /// <summary>
     /// 
     /// </summary>
-    public EfNodeStateRepository(ILogger<EfNodeStateRepository> logger, IDbContextFactory<TransportOrderDbContext> dbContextFactory)
+    public EfNodeStateRepository(
+        IDbContextFactory<TransportOrderDbContext> dbContextFactory,
+        ISemaphoreProvider<INodeStateDbSemaphore> semaphoreProvider,
+        ILogger<EfNodeStateRepository> logger
+    )
     {
         _dbContextFactory = dbContextFactory;
+        _semaphoreProvider = semaphoreProvider;
         _logger = logger;
     }
 
     /// <inheritdoc />
-    public async Task<bool> LockNodeAsync(string nodeId)
+    public Task<bool> LockNodeAsync(string nodeId)
     {
-        try
+        return _semaphoreProvider.ExecuteLockedAsync(async () =>
         {
-            await _dbLock.WaitAsync();
             if (!IsLocked(nodeId))
             {
                 _logger.LogDebug("Locking node {NodeId}", nodeId);
@@ -39,19 +44,14 @@ public class EfNodeStateRepository : INodeStateRepository
             }
             _logger.LogDebug("Could not lock node {NodeId} because it is already locked", nodeId);
             return false;
-        }
-        finally
-        {
-            _dbLock.Release();
-        }
+        });
     }
 
     /// <inheritdoc />
-    public async Task<bool> UnlockNodeAsync(string nodeId)
+    public Task<bool> UnlockNodeAsync(string nodeId)
     {
-        try
+        return _semaphoreProvider.ExecuteLockedAsync(async () =>
         {
-            await _dbLock.WaitAsync();
             if (IsLocked(nodeId))
             {
                 _logger.LogDebug("Unlocking node {NodeId}", nodeId);
@@ -59,19 +59,14 @@ public class EfNodeStateRepository : INodeStateRepository
             }
             _logger.LogDebug("Could not unlock node {NodeId} because it is not locked", nodeId);
             return false;
-        }
-        finally
-        {
-            _dbLock.Release();
-        }
+        });
     }
 
     /// <inheritdoc />
-    public async Task<bool> ReserveNodeAsync(string nodeId, Guid agvCorrelationId)
+    public Task<bool> ReserveNodeAsync(string nodeId, Guid agvCorrelationId)
     {
-        try
+        return _semaphoreProvider.ExecuteLockedAsync(async () =>
         {
-            await _dbLock.WaitAsync();
             if (!IsLocked(nodeId) && IsFree(nodeId))
             {
                 _logger.LogDebug("Reserving node {NodeId}, for Agv {CorrelationId}", nodeId, agvCorrelationId);
@@ -79,19 +74,14 @@ public class EfNodeStateRepository : INodeStateRepository
             }
             _logger.LogDebug("Could not reserve node {NodeId} for Agv {CorrelationId} because node is not free or unlocked", nodeId, agvCorrelationId);
             return false;
-        }
-        finally
-        {
-            _dbLock.Release();
-        }
+        });
     }
 
     /// <inheritdoc />
-    public async Task<bool> UnReserveNodeAsync(Guid agvCorrelationId)
+    public Task<bool> UnReserveNodeAsync(Guid agvCorrelationId)
     {
-        try
+        return _semaphoreProvider.ExecuteLockedAsync(async () =>
         {
-            await _dbLock.WaitAsync();
             var nodeLock = GetNodeLock(agvCorrelationId);
             if (nodeLock != null)
             {
@@ -100,18 +90,14 @@ public class EfNodeStateRepository : INodeStateRepository
             }
             _logger.LogDebug("Could not unreserve any node because no node is reserved for Agv {CorrelationId}", agvCorrelationId);
             return false;
-        }
-        finally
-        {
-            _dbLock.Release();
-        }
+        });
     }
 
     /// <inheritdoc />
     public async Task<bool> OccupyNodeAsync(string nodeId, Guid agvCorrelationId)
     {
         var currentState = GetNodeLock(nodeId);
-        if (currentState is { IsLocked: true } or { NodeState: NodeLockState.Occupied })
+        if (currentState is {IsLocked: true} or {NodeState: NodeLockState.Occupied})
         {
             _logger.LogDebug("Could not not occupy node {NodeId} because it is locked or already occupied", nodeId);
             return false;
@@ -121,39 +107,29 @@ public class EfNodeStateRepository : INodeStateRepository
     }
 
     /// <inheritdoc />
-    public async Task<bool> UnOccupyNodeAsync(Guid agvCorrelationId)
+    public Task<bool> UnOccupyNodeAsync(Guid agvCorrelationId)
     {
-        try
+        return _semaphoreProvider.ExecuteLockedAsync(async () =>
         {
-            await _dbLock.WaitAsync();
             var nodeLock = GetNodeLock(agvCorrelationId);
-            if (nodeLock is { NodeState: NodeLockState.Occupied })
+            if (nodeLock is {NodeState: NodeLockState.Occupied})
             {
                 _logger.LogDebug("UnOccupy node {NodeId}, occupied by Agv {CorrelationId}", nodeLock.NodeId, agvCorrelationId);
                 return await UpdateNodeAsync(nodeLock.NodeId, NodeLockState.Free, null);
             }
             _logger.LogDebug("Could not unoccupy any node because no node is occupied by Agv {CorrelationId}", agvCorrelationId);
             return false;
-        }
-        finally
-        {
-            _dbLock.Release();
-        }
+        });
     }
 
     /// <inheritdoc />
-    public async Task<bool> FreeNodeAsync(string nodeId)
+    public Task<bool> FreeNodeAsync(string nodeId)
     {
-        try
+        return _semaphoreProvider.ExecuteLockedAsync(async () =>
         {
-            await _dbLock.WaitAsync();
             _logger.LogDebug("Free node {NodeId}", nodeId);
             return await UpdateNodeAsync(nodeId, NodeLockState.Free, null);
-        }
-        finally
-        {
-            _dbLock.Release();
-        }
+        });
     }
 
     /// <inheritdoc />

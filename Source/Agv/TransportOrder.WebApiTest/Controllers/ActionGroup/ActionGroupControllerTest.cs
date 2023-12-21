@@ -23,7 +23,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers.ActionGro
 public class ActionGroupControllerTest
 {
     [UsedImplicitly]
-    private class ActionCommandHandlerMock : IConsumer<AbortActionGroup>
+    public class ActionCommandHandlerMock : IConsumer<AbortActionGroup>
     {
         public async Task Consume(ConsumeContext<AbortActionGroup> context)
         {
@@ -175,7 +175,7 @@ public class ActionGroupControllerTest
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(ActionGroupState.Started);
         var massTransitFixture = new MassTransitConsumerTestFixture<ActionCommandHandlerMock>();
         ActionGroupControllerTestFixture<TriggerActionGroupAbortion, ActionGroupRequestHandler> fixture = new ActionGroupControllerTestFixture<TriggerActionGroupAbortion, ActionGroupRequestHandler>()
-            .Setup(massTransitFixture.TestHarness!.Bus)
+            .Setup(massTransitFixture.TestHarness.Bus)
             .AddActionGroup(actionGroup)
             .Build();
 

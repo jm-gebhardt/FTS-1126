@@ -8,6 +8,8 @@ using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
+using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
+using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
@@ -21,7 +23,6 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Map;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
-using ActionGroup = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using AgvAction = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.AgvAction;
 using MessageAgvAction = Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.AgvAction;
 
@@ -50,7 +51,7 @@ public class ActionCommandHandler :
     private readonly IActionGroupRepository _actionGroupRepository;
     private readonly IAgvDataRepository _agvDataRepository;
     private readonly IChooseAgvActionGroupService _chooseAgvActionGroupService;
-    private readonly IActionManagerSemaphoreProvider _actionManagerSemaphoreProvider;
+    private readonly ISemaphoreProvider<IAgvsSemaphore> _actionManagerSemaphoreProvider;
     private readonly IChargingPointManager _chargingPointManager;
     private readonly IParkPointService _parkPointService;
     private readonly ISettingsProvider<AgvSettings> _settingsProvider;
@@ -72,7 +73,7 @@ public class ActionCommandHandler :
         IActionGroupValidationService actionGroupValidationService,
         IChooseAgvActionGroupService chooseAgvActionGroupService,
         IActionGroupRetrievalService actionGroupRetrievalService,
-        IActionManagerSemaphoreProvider actionManagerSemaphoreProvider,
+        ISemaphoreProvider<IAgvsSemaphore> actionManagerSemaphoreProvider,
         INodeStateRepository nodeStateRepository,
         ISettingsProvider<AgvSettings> settingsProvider,
         IMapper mapper,
@@ -107,7 +108,7 @@ public class ActionCommandHandler :
         if (agvActionCanBeStarted)
         {
             var actionGroup = await _actionGroupRepository.UpdateActionAndGroupStateAsync(action, assignedAgv, ActionState.Started);
-            var actionGroupMessageContent = _mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup);
+            var actionGroupMessageContent = _mapper.Map<ActionGroup>(actionGroup);
             await context.Publish(new StartActionCommand(assignedAgv.CorrelationId, assignedAgv.AgvId, _mapper.Map<MessageAgvAction>(action)), cancellationToken);
             await context.Publish(new ActionGroupChanged(actionGroupMessageContent, actionGroup.CorrelationId), cancellationToken);
             
@@ -129,7 +130,7 @@ public class ActionCommandHandler :
             return false;
         }
 
-        IReadOnlyList<ActionGroup> startedActionGroups = await _actionGroupRepository.GetActionGroupsAsync(new List<ActionGroupState> { ActionGroupState.Started }, assignedAgvCorrelationId: assignedAgv.CorrelationId);
+        IReadOnlyList<Domain.Models.ActionGroup.ActionGroup> startedActionGroups = await _actionGroupRepository.GetActionGroupsAsync(new List<ActionGroupState> { ActionGroupState.Started }, assignedAgvCorrelationId: assignedAgv.CorrelationId);
         bool otherActionGroupsStarted = startedActionGroups.Any(a => a.CorrelationId != action.ParentId);
         if (!otherActionGroupsStarted)
         {
@@ -183,7 +184,7 @@ public class ActionCommandHandler :
         var agvCorrelationId = context.Message.AgvCorrelationId;
         var agv = await _agvRepository.GetAgvAsync(agvCorrelationId);
 
-        IReadOnlyList<ActionGroup> actionGroups = await _actionGroupRepository
+        IReadOnlyList<Domain.Models.ActionGroup.ActionGroup> actionGroups = await _actionGroupRepository
             .GetActionGroupsAsync(ActionGroupState.Created, assignedAgvCorrelationId: agv.CorrelationId, isManual: true, maxItems: 1);
 
         {
@@ -288,7 +289,7 @@ public class ActionCommandHandler :
         await PublishNodeStateChange(context, parkNode.Id);
 
         var groupCorrelationId = Guid.NewGuid();
-        var actionGroup = new ActionGroup(
+        var actionGroup = new Domain.Models.ActionGroup.ActionGroup(
             groupCorrelationId,
             string.Empty,
             actions: new List<AgvAction> {new(Guid.NewGuid(), ActionType.Move, parkNode.Id, groupCorrelationId)},
@@ -297,8 +298,8 @@ public class ActionCommandHandler :
         );
 
         await _actionGroupRepository.AddAsync(actionGroup);
-        await context.Publish(new ActionGroupCreated(_mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup), actionGroup.CorrelationId), cancellationToken);
-        await context.Publish(new ActionGroupCreatedForAgv(_mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup), agv.CorrelationId), cancellationToken);
+        await context.Publish(new ActionGroupCreated(_mapper.Map<ActionGroup>(actionGroup), actionGroup.CorrelationId), cancellationToken);
+        await context.Publish(new ActionGroupCreatedForAgv(_mapper.Map<ActionGroup>(actionGroup), agv.CorrelationId), cancellationToken);
     }
 
     /// <summary>
@@ -311,7 +312,7 @@ public class ActionCommandHandler :
         var agv = await _agvRepository.GetAgvAsync(agvCorrelationId);
 
         bool hasUnfinishedActionGroup = await _actionGroupRepository.HasUnfinishedActionGroupAsync(agv.CorrelationId);
-        IReadOnlyList<ActionGroup> actionGroups = await _actionGroupRepository.GetActionGroupsAsync(new[] { ActionGroupState.Created }, assignedAgvCorrelationId: agvCorrelationId);
+        IReadOnlyList<Domain.Models.ActionGroup.ActionGroup> actionGroups = await _actionGroupRepository.GetActionGroupsAsync(new[] { ActionGroupState.Created }, assignedAgvCorrelationId: agvCorrelationId);
         
         _logger.LogDebug("Evaluating {Name}, has unfinished drop action: {HasUnfinishedDropAction} for agv {CorrelationId}.", nameof(StartChargingActionGroup), hasUnfinishedActionGroup, agv.CorrelationId);
         
@@ -339,7 +340,7 @@ public class ActionCommandHandler :
             await PublishNodeStateChange(context, chargingNode.Id);
 
             var groupCorrelationId = Guid.NewGuid();
-            actionGroup = new ActionGroup(
+            actionGroup = new Domain.Models.ActionGroup.ActionGroup(
                 groupCorrelationId,
                 string.Empty,
                 actions: new List<AgvAction>
@@ -358,10 +359,10 @@ public class ActionCommandHandler :
             );
 
             await _actionGroupRepository.AddAsync(actionGroup);
-            await context.Publish(new ActionGroupCreated(_mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup), actionGroup.CorrelationId), cancellationToken);
+            await context.Publish(new ActionGroupCreated(_mapper.Map<ActionGroup>(actionGroup), actionGroup.CorrelationId), cancellationToken);
         }
         
-        await context.Publish(new ActionGroupCreatedForAgv(_mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup), agv.CorrelationId), cancellationToken);
+        await context.Publish(new ActionGroupCreatedForAgv(_mapper.Map<ActionGroup>(actionGroup), agv.CorrelationId), cancellationToken);
     }
 
     /// <summary>
@@ -374,7 +375,7 @@ public class ActionCommandHandler :
 
         _logger.LogTrace("Validating ActionGroup with CorrelationId: {ActionGroupId}.", actionGroup.CorrelationId);
 
-        var domainActionGroup = _mapper.Map<ActionGroup>(context.Message.ActionGroup);
+        var domainActionGroup = _mapper.Map<Domain.Models.ActionGroup.ActionGroup>(context.Message.ActionGroup);
         IEnumerable<ValidationFailure> validationFailures = await _actionGroupValidationService.ValidateAsync(domainActionGroup);
         bool isValid = !validationFailures.Any();
 
@@ -415,7 +416,7 @@ public class ActionCommandHandler :
 
         _logger.LogDebug("Adding ActionGroup with CorrelationId: {ActionGroupId}.", actionGroup.CorrelationId);
         await _actionGroupRepository.AddAsync(domainActionGroup);
-        var actionGroupMessageContent = _mapper.Map<Common.Messages.ActionGroups.ActionGroup>(domainActionGroup);
+        var actionGroupMessageContent = _mapper.Map<ActionGroup>(domainActionGroup);
         await context.Publish(new ActionGroupCreated(actionGroupMessageContent, actionGroup.CorrelationId), cancellationToken);
 
         if (!isValid)
@@ -447,7 +448,7 @@ public class ActionCommandHandler :
         actionGroup.CompleteAction(correlationId);
         await _actionGroupRepository.UpdateAsync(actionGroup);
 
-        var actionGroupMessageContent = _mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup);
+        var actionGroupMessageContent = _mapper.Map<ActionGroup>(actionGroup);
         await context.Publish(new ActionGroupChanged(actionGroupMessageContent, actionGroup.CorrelationId), cancellationToken);
         if (actionGroup.State == ActionGroupState.Completed)
         {
@@ -483,7 +484,7 @@ public class ActionCommandHandler :
         actionGroup = await _actionGroupRepository.UpdateActionAndGroupStateAsync(action, agv, ActionState.Aborted);
 
         await context.Publish(new ActionAborted(agv.CorrelationId, _mapper.Map<MessageAgvAction>(action)));
-        var actionGroupMessageContent = _mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup);
+        var actionGroupMessageContent = _mapper.Map<ActionGroup>(actionGroup);
         await context.Publish(new ActionGroupChanged(actionGroupMessageContent, actionGroup.CorrelationId));
         await context.RespondAsync(new Success());
 
@@ -509,7 +510,7 @@ public class ActionCommandHandler :
 
             return;
         }
-        var actionGroupMessageContent = _mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup);
+        var actionGroupMessageContent = _mapper.Map<ActionGroup>(actionGroup);
 
         switch (actionGroup.State)
         {

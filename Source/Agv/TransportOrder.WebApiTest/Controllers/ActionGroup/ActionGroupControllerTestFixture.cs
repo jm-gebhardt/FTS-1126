@@ -1,5 +1,6 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
@@ -17,6 +18,7 @@ using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
+using AgvAction = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.AgvAction;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers.ActionGroup;
 
@@ -28,7 +30,7 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
     private readonly Mock<IActionGroupRepository> _actionGroupRepositoryMock = new();
     private readonly Mock<IRouteService> _routeService = new();
     private readonly Mock<IChooseAgvActionGroupService> _chooseAgvActionGroupService = new();
-    private readonly ActionManagerSemaphoreProvider _semaphoreProvider = new();
+    private readonly SemaphoreProvider<IAgvsSemaphore> _semaphoreProvider = new();
     private readonly Mock<IMaintenanceService> _maintenanceService = new();
     private readonly Mock<IChargingPointManager> _chargingPointManager = new();
     private readonly Mock<IParkPointService> _parkPointService = new();
@@ -69,7 +71,7 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
             sc.AddTransient(_ => _chargingPointManager.Object);
             sc.AddTransient(_ => _parkPointService.Object);
             sc.AddTransient(_ => GetMapper());
-            sc.AddTransient<IActionManagerSemaphoreProvider>(_ => _semaphoreProvider);
+            sc.AddTransient<ISemaphoreProvider<IAgvsSemaphore>>(_ => _semaphoreProvider);
             sc.AddTransient(_ => _agvRepository.Object);
             sc.AddTransient(_ => _actionGroupValidationService.Object);
             sc.AddTransient(_ => _settingsProvider.Object);
@@ -93,8 +95,8 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
             return ag ?? throw new ActionGroupNotFoundException(c);
         });
         _actionGroupRepositoryMock.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) => _actionGroups.FirstOrDefault(a => a.CorrelationId == c));
-        _actionGroupRepositoryMock.Setup(x => x.UpdateActionAndGroupStateAsync(It.IsAny<Domain.Models.ActionGroup.AgvAction>(), It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<ActionState>()))!.ReturnsAsync(
-            (Domain.Models.ActionGroup.AgvAction action, Domain.Models.Agv.Agv _, ActionState _) => _actionGroups.FirstOrDefault(a => a.CorrelationId == action.ParentId));
+        _actionGroupRepositoryMock.Setup(x => x.UpdateActionAndGroupStateAsync(It.IsAny<AgvAction>(), It.IsAny<Domain.Models.Agv.Agv>(), It.IsAny<ActionState>()))!.ReturnsAsync(
+            (AgvAction action, Domain.Models.Agv.Agv _, ActionState _) => _actionGroups.FirstOrDefault(a => a.CorrelationId == action.ParentId));
         _retrievalServiceMock.Setup(x => x.EnrichActionGroupWithNodesAsync(It.IsAny<Domain.Models.ActionGroup.ActionGroup>())).ReturnsAsync((Domain.Models.ActionGroup.ActionGroup ag) => ag.ConvertFromActionGroupWithFakeNodeType()!);
         return this;
     }

@@ -1,4 +1,4 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+﻿using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Graph;
 
@@ -14,11 +14,6 @@ public class EfNode
     /// For internal reasons it can be necessary to build/combine an internal identification.
     /// </remarks>
     public string Id { get; init; }
-
-    /// <summary>
-    /// The CorrelationId of the AgvGraph, which is also the AgvCorrelationId
-    /// </summary>
-    public Guid GraphCorrelationId { get; init; }
 
     /// <summary>
     /// The type of the node
@@ -45,8 +40,20 @@ public class EfNode
     /// </summary>
     public float Theta { get; init; }
 
+    /// <summary>
+    /// The Maps the node is part of.
+    /// </summary>
+    public ICollection<Map.Map> Maps { get; init; }
+
+    /// <summary>
+    /// The AgvGraphs the edge is part of.
+    /// </summary>
+    public ICollection<EfAgvGraph> AgvGraphs { get; init; }
+
     private EfNode()
     {
         Id = null!;
+        Maps = null!;
+        AgvGraphs = null!;
     }
 }

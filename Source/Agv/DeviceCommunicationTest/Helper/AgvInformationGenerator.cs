@@ -1,6 +1,7 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
+using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
 
@@ -20,7 +21,6 @@ public static class AgvInformationGenerator
     private static readonly string _node03 = _destinations[0];
     private static readonly string _node04 = _destinations[1];
     private static readonly string _charge2 = _sources[2];
-    private const string MapName = "Map#1";
 
     public static AgvStatusReceived? GetAgvStatusReceived(AgvStatus? agvStatus)
     {
@@ -35,7 +35,7 @@ public static class AgvInformationGenerator
         var correlationId = agvCorrelationId != default ? agvCorrelationId : agvId.ToGuid();
         var actionGroupId = Guid.Empty;
         var agvStatus = new AgvStatus(correlationId, order, state == "Busy", true, 25 * i, _chargingState[i], false, _sources[i]);
-        var agvGraph = new AgvGraph(correlationId, GetNodes(), GetEdges(), MapName.ToGuid(), MapName);
+        var agvGraph = new AgvGraph(correlationId, GetNodes(), GetEdges());
         var agvAction = new AgvAction($"Action#{agvId}".ToGuid(), ActionType.Pick, "Drop5", actionGroupId);
         var agvInformation = GetAgvInformation(agvStatus, agvGraph, agvAction);
         return agvInformation;

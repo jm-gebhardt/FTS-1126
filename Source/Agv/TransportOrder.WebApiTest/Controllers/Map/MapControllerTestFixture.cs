@@ -17,7 +17,7 @@ public class MapControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
     public const string Base64String = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
 
     [UsedImplicitly]
-    private readonly Mock<IAgvGraphRepository> _agvGraphRepository = new();
+    private readonly Mock<IGraphRepository> _agvGraphRepository = new();
 
     private readonly Guid[] _correlationIds =
     {
@@ -45,7 +45,7 @@ public class MapControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
     {
         var mapRepositoryMock = new Mock<IMapRepository>();
 
-        mapRepositoryMock.Setup(x => x.GetAllMaps()).Returns(new EnumerableQuery<Domain.Models.Map.Map>(new List<Domain.Models.Map.Map>
+        mapRepositoryMock.Setup(x => x.GetAllMapsAsync()).ReturnsAsync(new List<Domain.Models.Map.Map>(new List<Domain.Models.Map.Map>
         {
             new(_correlationIds[0], "Area51_Floor1_Compartment47", Convert.FromBase64String(Base64String), 1, 1, 0.01, 1, 2, DateTime.UtcNow),
             new(_correlationIds[1], "Area51_Floor1_Compartment48", Convert.FromBase64String(Base64String), 1, 1, 0.02, 2, 3, DateTime.UtcNow),

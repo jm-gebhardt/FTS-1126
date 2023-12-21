@@ -1,4 +1,5 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
@@ -16,7 +17,7 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
     where TRequestClient : class
     where TConsumer : class, IConsumer
 {
-    private readonly Mock<IAgvGraphRepository> _agvGraphRepository = new();
+    private readonly Mock<IGraphRepository> _agvGraphRepository = new();
 
     // ReSharper disable once MemberCanBePrivate.Global
     public readonly Mock<IAgvRepository> AgvRepository = new();

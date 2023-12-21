@@ -23,10 +23,10 @@ public class ActionStartedConsumerTest
         agvRouteRetrievalService.Setup(m => m.GetAgvRouteAsync(agvCorrelationId, It.IsAny<string?>())).ReturnsAsync(agvRoute);
         var action = AgvActionGenerator.GenerateMoveAction();
 
-        await fixture.TestHarness!.Bus.Publish(new ActionStarted(action.CorrelationId, agvCorrelationId));
+        await fixture.TestHarness.Bus.Publish(new ActionStarted(action.CorrelationId, agvCorrelationId));
 
         (await fixture.TestHarness.Published.Any<ActionStarted>()).ShouldBeTrue();
-        (await fixture.ConsumerHarness!.Consumed.Any<ActionStarted>()).ShouldBeTrue();
+        (await fixture.ConsumerHarness.Consumed.Any<ActionStarted>()).ShouldBeTrue();
         agvRouteRetrievalService.Verify(m => m.GetAgvRouteAsync(agvCorrelationId, It.IsAny<string>()), Times.Once);
         fixture.PublisherMock.Verify(h => h.SendAgvRouteChangedAsync(agvRoute), Times.Once);
     }

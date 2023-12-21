@@ -2,6 +2,8 @@ using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
+using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
+using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.CmdOptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
@@ -38,7 +40,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
     where TRequest : class
     where TRequestHandler : class, IConsumer
 {
-    private readonly ActionManagerSemaphoreProvider _semaphoreProvider = new();
+    private readonly SemaphoreProvider<IAgvsSemaphore> _semaphoreProvider = new();
 
     private readonly Mock<ISettingsProvider<AgvSettings>> _settingsProvider = new();
 
@@ -63,7 +65,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
 
     private Mock<IActionGroupRetrievalService> ActionGroupRetrievalService { get; }
 
-    private Mock<IAgvGraphRepository> AgvGraphRepository { get; }
+    private Mock<IGraphRepository> AgvGraphRepository { get; }
 
     private Mock<IAgvErrorRepository> AgvErrorRepository { get; }
 
@@ -81,7 +83,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
 
     public AgvControllerTestFixture()
     {
-        AgvGraphRepository = new Mock<IAgvGraphRepository>();
+        AgvGraphRepository = new Mock<IGraphRepository>();
         AgvErrorRepository = new Mock<IAgvErrorRepository>();
         AgvRepository = new Mock<IAgvRepository>();
         QueueActionGroupRequestClient = new Mock<IRequestClient<QueueActionGroup>>();
@@ -251,7 +253,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             sc.AddTransient(_ => AgvErrorRepository.Object);
             sc.AddTransient(_ => CargoRepository.Object);
             sc.AddTransient(_ => QueueActionGroupRequestClient.Object);
-            sc.AddTransient<IActionManagerSemaphoreProvider>(_ => _semaphoreProvider);
+            sc.AddTransient<ISemaphoreProvider<IAgvsSemaphore>>(_ => _semaphoreProvider);
             sc.AddTransient(_ => _settingsProvider.Object);
             sc.AddTransient(_ => _mapRepository.Object);
             sc.AddTransient(_ => _productionOptions);

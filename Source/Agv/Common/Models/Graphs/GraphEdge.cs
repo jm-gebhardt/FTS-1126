@@ -1,11 +1,12 @@
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+namespace Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 
 /// <summary>
 /// An edge in the graph connects two nodes.
 /// </summary>
-public class GraphEdge
+public class GraphEdge : IEquatable<GraphEdge>
 {
     /// <summary>
     /// The Id of the edge.
@@ -46,7 +47,7 @@ public class GraphEdge
         [UsedImplicitly]
         init;
     } = 1.0;
-    
+
     /// <summary>
     /// The <see cref="EdgeType"/> of this edge.
     /// </summary>
@@ -54,7 +55,7 @@ public class GraphEdge
     {
         get;
         [UsedImplicitly]
-        set;
+        init;
     }
 
     /// <summary>
@@ -64,7 +65,7 @@ public class GraphEdge
     {
         get;
         [UsedImplicitly]
-        set;
+        init;
     }
 
     /// <summary>
@@ -105,6 +106,66 @@ public class GraphEdge
         ToNodeId = null!;
         VariantParameters = null!;
         Variant = default!;
+    }
+
+    /// <inheritdoc />
+    public bool Equals(GraphEdge? other)
+    {
+        if (ReferenceEquals(null, other))
+        {
+            return false;
+        }
+        if (ReferenceEquals(this, other))
+        {
+            return true;
+        }
+        if (!Id.Equals(other.Id))
+        {
+            return false;
+        }
+        if (FromNodeId != other.FromNodeId)
+        {
+            return false;
+        }
+        if (ToNodeId != other.ToNodeId)
+        {
+            return false;
+        }
+        if (!Length.Equals(other.Length))
+        {
+            return false;
+        }
+        if (Variant != other.Variant)
+        {
+            return false;
+        }
+        if (!VariantParameters.SequenceEqual(other.VariantParameters))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+    {
+        if (ReferenceEquals(null, obj))
+        {
+            return false;
+        }
+        if (ReferenceEquals(this, obj))
+        {
+            return true;
+        }
+
+        return obj.GetType() == GetType() && Equals((GraphEdge) obj);
+    }
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Id, FromNodeId, ToNodeId, Length, (int) Variant, VariantParameters);
     }
 
     /// <summary>

@@ -52,11 +52,11 @@ public class AgvMapConsumerTest
         var fixture = new MassTransitConsumerTestFixture<RequestAgvMapConsumer>();
 
         // Act
-        await fixture.TestHarness!.Bus.Publish(new RequestAgvMap(AgvId.ToGuid(), AgvId, MapId.ToGuid(), MapId));
+        await fixture.TestHarness.Bus.Publish(new RequestAgvMap(AgvId.ToGuid(), AgvId, MapId.ToGuid(), MapId));
 
         // Assert
         (await fixture.TestHarness.Published.Any<RequestAgvMap>()).ShouldBeTrue();
-        (await fixture.ConsumerHarness!.Consumed.Any<RequestAgvMap>()).ShouldBeTrue();
+        (await fixture.ConsumerHarness.Consumed.Any<RequestAgvMap>()).ShouldBeTrue();
 
         (await fixture.TestHarness.Published.Any<MqttRequestMap>()).ShouldBeTrue();
         var message = fixture.TestHarness.Published.Select<MqttRequestMap>().First().Context.Message;

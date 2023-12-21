@@ -1,5 +1,5 @@
 using System.Linq.Expressions;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Node;
@@ -14,13 +14,13 @@ public class MaintenanceService : BaseNodePicker, IMaintenanceService
     /// <summary>
     /// Ctor
     /// </summary>
-    /// <param name="agvGraphRepository">The graph repository</param>
+    /// <param name="graphRepository">The graph repository.</param>
     /// <param name="nodeStateRepository"></param>
     /// <param name="routeService"></param>
     /// <param name="logger"></param>
     /// <param name="agvDataRepository"></param>
-    public MaintenanceService(IAgvGraphRepository agvGraphRepository, INodeStateRepository nodeStateRepository, IRouteService routeService, ILogger<MaintenanceService> logger, IAgvDataRepository agvDataRepository)
-        : base(agvGraphRepository, nodeStateRepository, routeService, logger, agvDataRepository)
+    public MaintenanceService(IGraphRepository graphRepository, INodeStateRepository nodeStateRepository, IRouteService routeService, IAgvDataRepository agvDataRepository, ILogger<MaintenanceService> logger)
+        : base(graphRepository, nodeStateRepository, routeService, agvDataRepository, logger)
     {
     }
 

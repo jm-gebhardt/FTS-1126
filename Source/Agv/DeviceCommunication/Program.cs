@@ -9,6 +9,7 @@ using Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Exceptions;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Graphs;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.States;
@@ -47,13 +48,15 @@ try
                         services.AddTransient<IGraphGenerator, GridGraphGenerator>();
                     }
                     services.AddHostedService<SimulatedAgvProvider>();
+
                     services.ConfigureServicesMassTransit(context.Configuration,
-                        x =>
+                        configurator =>
                         {
-                            x.AddDelayedMessageScheduler();
-                            x.AddSagaStateMachine<SimulatedAgvStateMachine, SimulatedAgvSaga>()
+                            configurator.AddDelayedMessageScheduler();
+                            configurator.AddSagaStateMachine<SimulatedAgvStateMachine, SimulatedAgvSaga>()
                                 .InMemoryRepository();
-                            x.AddMqttConsumer<SimulateAgvErrorConsumer>();
+                            configurator.AddMqttConsumer<SimulateAgvErrorConsumer>();
+                            configurator.AddConsumer<SimulatedAgvProvider>();
                         }, rabbitMqConfiguration: (_, cfg) => { cfg.UseDelayedMessageScheduler(); });
                     services.AddOptions<MassTransitHostOptions>().Configure(options => { options.WaitUntilStarted = true; });
                 });
@@ -79,6 +82,7 @@ try
                             configurator.AddConsumer<RequestAgvMapConsumer>();
                             configurator.AddConsumer<AgvRequestDataConsumer>();
                             configurator.AddConsumer<ActionEventConsumer>();
+                            configurator.AddConsumer<GraphMerger>();
                         },
 
                         // ReSharper disable once UnusedParameter.Local

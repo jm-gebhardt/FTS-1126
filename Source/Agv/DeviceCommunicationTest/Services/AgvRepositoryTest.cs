@@ -1,5 +1,6 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
 using Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Helper;
@@ -11,8 +12,6 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services;
 [TestClass]
 public class AgvRepositoryTest
 {
-    private const string MapName = "Map#1";
-
     [TestMethod]
     public void GetAgvStatusAndGraph_WhenCorrelationIdExists()
     {
@@ -45,7 +44,7 @@ public class AgvRepositoryTest
 
         VerifyAgvInformation(actualAgvInformation, agvInformation);
         var agvStatus = new AgvStatus(agvCorrelationId, null, false, true, 99, false, false, "CRG5");
-        var agvGraph = new AgvGraph(agvCorrelationId, Array.Empty<GraphNode>(), Array.Empty<GraphEdge>(), MapName.ToGuid(), MapName);
+        var agvGraph = new AgvGraph(agvCorrelationId, Array.Empty<GraphNode>(), Array.Empty<GraphEdge>());
         var agvAction = new AgvAction("Action#123".ToGuid(), ActionType.Move, "Pick88", Guid.Empty);
         agvInformation = AgvInformationGenerator.GetAgvInformation(agvStatus, agvGraph, agvAction);
 
@@ -113,7 +112,7 @@ public class AgvRepositoryTest
         var actualAgvInformation = fixture.AgvRepository.GetAgvInformation(agvCorrelationId);
 
         VerifyAgvInformation(actualAgvInformation, agvInformation);
-        var testAgvGraph = new AgvGraph(agvCorrelationId, Array.Empty<GraphNode>(), Array.Empty<GraphEdge>(), MapName.ToGuid(), MapName);
+        var testAgvGraph = new AgvGraph(agvCorrelationId, Array.Empty<GraphNode>(), Array.Empty<GraphEdge>());
 
         fixture.AgvRepository.AddOrUpdateAgvGraph(agvCorrelationId, testAgvGraph);
         actualAgvInformation = fixture.AgvRepository.GetAgvInformation(agvCorrelationId);
@@ -184,8 +183,6 @@ public class AgvRepositoryTest
         {
             actualAgvInformation.AgvGraph.ShouldSatisfyAllConditions(
                 p => p?.CorrelationId.ShouldBe(expectedAgvInformation.AgvGraph.CorrelationId),
-                p => p?.RelatedMapId.ShouldBe(expectedAgvInformation.AgvGraph.RelatedMapId),
-                p => p?.RelatedMapName.ShouldBe(expectedAgvInformation.AgvGraph.RelatedMapName),
                 p => p?.Usability.ShouldBe(expectedAgvInformation.AgvGraph.Usability)
             );
 

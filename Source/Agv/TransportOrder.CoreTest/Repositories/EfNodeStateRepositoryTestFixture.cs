@@ -1,4 +1,6 @@
+using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Node;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -25,7 +27,7 @@ public class EfNodeStateRepositoryTestFixture
             );
         Provider = collection.BuildServiceProvider(true);
         ContextFactory = Provider.GetService<IDbContextFactory<TransportOrderDbContext>>()!;
-        Repository = new EfNodeStateRepository(mockLogger.Object, ContextFactory);
+        Repository = new EfNodeStateRepository(ContextFactory, new SemaphoreProvider<INodeStateDbSemaphore>(), mockLogger.Object);
     }
 
     public void Add(NodeLock nodeLock)

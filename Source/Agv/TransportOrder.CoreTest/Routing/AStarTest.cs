@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Domain.Services.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Routing.Base;
@@ -28,7 +29,6 @@ public class AStarTest
 
     public AStarTest()
     {
-        const string mapName = "Map#1";
         _graph = new AgvGraph(Guid.Empty,
             new GraphNode[]
             {
@@ -60,9 +60,7 @@ public class AStarTest
                 GraphEdge.CreateDirect("7", "8"),
                 GraphEdge.CreateDirect("9", "8"),
                 GraphEdge.CreateDirect("7", "10", 6f)
-            },
-            mapName.ToGuid(),
-            mapName);
+            });
 
         var map = new List<string>
         {
@@ -123,7 +121,7 @@ public class AStarTest
             }
             ++y;
         }
-        _grid = new AgvGraph(Guid.Empty, nodes.ToArray(), edges.ToArray(), mapName.ToGuid(), mapName);
+        _grid = new AgvGraph(Guid.Empty, nodes.ToArray(), edges.ToArray());
 
         _wikiExample = new AgvGraph(Guid.Empty,
             new GraphNode[]
@@ -147,9 +145,7 @@ public class AStarTest
                 GraphEdge.CreateDirect("Marseille", "Rio", 116f),
                 GraphEdge.CreateDirect("Berlin", "Rio", 183f),
                 GraphEdge.CreateDirect("Helsinki", "Rio", 102f)
-            },
-            mapName.ToGuid(),
-            mapName);
+            });
 
         _routingPlausibilityCheckerMock = new Mock<IRoutingPlausibilityChecker>();
         _routingPlausibilityCheckerMock.Setup(c => c.IsPlausible(It.IsAny<GraphNode>(), It.IsAny<GraphNode>()))
@@ -314,7 +310,6 @@ public class AStarTest
     [TestMethod]
     public void CalculateRoute_ReturnsNull_WhenRouteNotPlausible()
     {
-        const string mapName = "Map#1";
         var graph = new AgvGraph(Guid.Empty,
             new[]
             {
@@ -325,9 +320,7 @@ public class AStarTest
             {
                 GraphEdge.CreateDirect("1", "2"),
                 GraphEdge.CreateDirect("2", "1", 4f)
-            },
-            mapName.ToGuid(),
-            mapName);
+            });
 
         var routingPlausibilityCheckerMock = new Mock<IRoutingPlausibilityChecker>();
         routingPlausibilityCheckerMock.Setup(r => r.IsPlausible(It.IsAny<GraphNode>(), It.IsAny<GraphNode>())).Returns(true);
@@ -417,9 +410,7 @@ public class AStarTest
                 GraphEdge.CreateDirect("7", "8"),
                 GraphEdge.CreateDirect("9", "8"),
                 GraphEdge.CreateDirect("7", "10", 6f)
-            },
-            "Test".ToGuid(),
-            "Test");
+            });
 
         var sourceNode = graph.Nodes.First(x => x.Id == "1");
         var destinationNode = graph.Nodes.First(x => x.Id == "8");

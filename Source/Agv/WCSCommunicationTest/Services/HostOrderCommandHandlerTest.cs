@@ -26,9 +26,9 @@ public class HostOrderCommandHandlerTest
         var correlationId = orderId.ToGuid();
         var orderDetails = new OrderDetails(correlationId, orderId, "SRC1", "DST1", "LeNo123", HostOrderCreator.Simulation);
 
-        await fixture.TestHarness!.Bus.Publish(new CreateHostOrder(orderDetails));
+        await fixture.TestHarness.Bus.Publish(new CreateHostOrder(orderDetails));
 
-        (await fixture.ConsumerHarness!.Consumed.Any<CreateHostOrder>()).ShouldBeTrue();
+        (await fixture.ConsumerHarness.Consumed.Any<CreateHostOrder>()).ShouldBeTrue();
         fixture.HostOrderRepositoryMock.Verify(x => x.AddAsync(It.IsAny<HostOrder>()), Times.Once);
 
         (await fixture.TestHarness.Published.Any<QueueActionGroup>()).ShouldBeTrue();
@@ -47,8 +47,8 @@ public class HostOrderCommandHandlerTest
             .ReturnsAsync(hostOrder);
         fixture.HostOrderRepositoryMock.Setup(x => x.RemoveAsync(It.IsAny<HostOrder>())).Verifiable();
        
-        await fixture.TestHarness!.Bus.Publish(new RemoveInvalidHostOrder(hostOrder.CorrelationId));
-        (await fixture.ConsumerHarness!.Consumed.Any<RemoveInvalidHostOrder>()).ShouldBeTrue();
+        await fixture.TestHarness.Bus.Publish(new RemoveInvalidHostOrder(hostOrder.CorrelationId));
+        (await fixture.ConsumerHarness.Consumed.Any<RemoveInvalidHostOrder>()).ShouldBeTrue();
 
         fixture.HostOrderRepositoryMock.Verify(x => x.RemoveAsync(It.IsAny<HostOrder>()), Times.Once);
         fixture.HostCommunicatorMock.Verify(x => x.TransmitHostOrderHandlingFailure(It.IsAny<string>(), It.IsAny<string>()), Times.Once);
@@ -62,8 +62,8 @@ public class HostOrderCommandHandlerTest
         fixture.HostOrderRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<Guid>()))
             .ReturnsAsync(hostOrder);
 
-        await fixture.TestHarness!.Bus.Publish(new FinishHostOrder(hostOrder.CorrelationId, DateTime.UtcNow));
-        (await fixture.ConsumerHarness!.Consumed.Any<FinishHostOrder>()).ShouldBeTrue();
+        await fixture.TestHarness.Bus.Publish(new FinishHostOrder(hostOrder.CorrelationId, DateTime.UtcNow));
+        (await fixture.ConsumerHarness.Consumed.Any<FinishHostOrder>()).ShouldBeTrue();
         fixture.HostCommunicatorMock.Verify(x => x.TransmitHostOrderHandlingSucceeded(It.IsAny<string>()), Times.Once);
     }
 
@@ -77,8 +77,8 @@ public class HostOrderCommandHandlerTest
         fixture.HostOrderRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<Guid>()))
             .ReturnsAsync(hostOrder);
 
-        await fixture.TestHarness!.Bus.Publish(new FinishHostOrder(hostOrder.CorrelationId, now));
-        (await fixture.ConsumerHarness!.Consumed.Any<FinishHostOrder>()).ShouldBeTrue();
+        await fixture.TestHarness.Bus.Publish(new FinishHostOrder(hostOrder.CorrelationId, now));
+        (await fixture.ConsumerHarness.Consumed.Any<FinishHostOrder>()).ShouldBeTrue();
         fixture.HostCommunicatorMock.Verify(x => x.TransmitHostOrderHandlingSucceeded(It.IsAny<string>()), Times.Never);
     }
 
@@ -90,8 +90,8 @@ public class HostOrderCommandHandlerTest
         fixture.HostOrderRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<Guid>()))
             .ReturnsAsync(hostOrder);
 
-        await fixture.TestHarness!.Bus.Publish(new FinishHostOrderCancellation(hostOrder.CorrelationId, DateTime.UtcNow));
-        (await fixture.ConsumerHarness!.Consumed.Any<FinishHostOrderCancellation>()).ShouldBeTrue();
+        await fixture.TestHarness.Bus.Publish(new FinishHostOrderCancellation(hostOrder.CorrelationId, DateTime.UtcNow));
+        (await fixture.ConsumerHarness.Consumed.Any<FinishHostOrderCancellation>()).ShouldBeTrue();
         fixture.HostCommunicatorMock.Verify(x => x.TransmitHostOrderCancellationSucceeded(It.IsAny<string>()), Times.Once);
     }
 
@@ -105,8 +105,8 @@ public class HostOrderCommandHandlerTest
         fixture.HostOrderRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<Guid>()))
             .ReturnsAsync(hostOrder);
 
-        await fixture.TestHarness!.Bus.Publish(new FinishHostOrderCancellation(hostOrder.CorrelationId, now));
-        (await fixture.ConsumerHarness!.Consumed.Any<FinishHostOrderCancellation>()).ShouldBeTrue();
+        await fixture.TestHarness.Bus.Publish(new FinishHostOrderCancellation(hostOrder.CorrelationId, now));
+        (await fixture.ConsumerHarness.Consumed.Any<FinishHostOrderCancellation>()).ShouldBeTrue();
         fixture.HostCommunicatorMock.Verify(x => x.TransmitHostOrderCancellationSucceeded(It.IsAny<string>()), Times.Never);
     }
 
@@ -120,8 +120,8 @@ public class HostOrderCommandHandlerTest
         fixture.HostOrderRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<Guid>()))
             .ReturnsAsync(hostOrder);
 
-        await fixture.TestHarness!.Bus.Publish(new FinishHostOrderCancellation(hostOrder.CorrelationId, now));
-        (await fixture.ConsumerHarness!.Consumed.Any<FinishHostOrderCancellation>()).ShouldBeTrue();
+        await fixture.TestHarness.Bus.Publish(new FinishHostOrderCancellation(hostOrder.CorrelationId, now));
+        (await fixture.ConsumerHarness.Consumed.Any<FinishHostOrderCancellation>()).ShouldBeTrue();
         fixture.HostCommunicatorMock.Verify(x => x.TransmitHostOrderCancellationSucceeded(It.IsAny<string>()), Times.Never);
     }
 
@@ -133,8 +133,8 @@ public class HostOrderCommandHandlerTest
         fixture.HostOrderRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<Guid>()))
             .ReturnsAsync(hostOrder);
 
-        await fixture.TestHarness!.Bus.Publish(new HandleHostOrderStart(hostOrder.CorrelationId, "agv", DateTime.UtcNow));
-        (await fixture.ConsumerHarness!.Consumed.Any<HandleHostOrderStart>()).ShouldBeTrue();
+        await fixture.TestHarness.Bus.Publish(new HandleHostOrderStart(hostOrder.CorrelationId, "agv", DateTime.UtcNow));
+        (await fixture.ConsumerHarness.Consumed.Any<HandleHostOrderStart>()).ShouldBeTrue();
 
         fixture.HostCommunicatorMock.Verify(x => x.TransmitHostOrderStarted(It.IsAny<string>(), It.IsAny<string>()), Times.Once);
     }
@@ -149,8 +149,8 @@ public class HostOrderCommandHandlerTest
         fixture.HostOrderRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<Guid>()))
             .ReturnsAsync(hostOrder);
 
-        await fixture.TestHarness!.Bus.Publish(new HandleHostOrderStart(hostOrder.CorrelationId, "agv", now));
-        (await fixture.ConsumerHarness!.Consumed.Any<HandleHostOrderStart>()).ShouldBeTrue();
+        await fixture.TestHarness.Bus.Publish(new HandleHostOrderStart(hostOrder.CorrelationId, "agv", now));
+        (await fixture.ConsumerHarness.Consumed.Any<HandleHostOrderStart>()).ShouldBeTrue();
 
         fixture.HostCommunicatorMock.Verify(x => x.TransmitHostOrderStarted(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
     }
@@ -163,8 +163,8 @@ public class HostOrderCommandHandlerTest
         fixture.HostOrderRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<Guid>()))
             .ReturnsAsync(hostOrder);
 
-        await fixture.TestHarness!.Bus.Publish(new HandleCancellationFailure(hostOrder.CorrelationId,  HostOrderCancelFailedErrorCode.OrderAlreadyFinished));
-        (await fixture.ConsumerHarness!.Consumed.Any<HandleCancellationFailure>()).ShouldBeTrue();
+        await fixture.TestHarness.Bus.Publish(new HandleCancellationFailure(hostOrder.CorrelationId,  HostOrderCancelFailedErrorCode.OrderAlreadyFinished));
+        (await fixture.ConsumerHarness.Consumed.Any<HandleCancellationFailure>()).ShouldBeTrue();
 
         fixture.HostCommunicatorMock.Verify(x => x.TransmitHostOrderCancellationFailure(It.IsAny<string>(), It.IsAny<string>()), Times.Once);
     }
@@ -177,8 +177,8 @@ public class HostOrderCommandHandlerTest
         fixture.HostOrderRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<Guid>()))
             .ReturnsAsync(hostOrder);
 
-        await fixture.TestHarness!.Bus.Publish(new HandleHostOrderFailure(hostOrder.CorrelationId, HostOrderHandlingFailedErrorCode.FailedByTransportLayer, DateTime.UtcNow));
-        (await fixture.ConsumerHarness!.Consumed.Any<HandleHostOrderFailure>()).ShouldBeTrue();
+        await fixture.TestHarness.Bus.Publish(new HandleHostOrderFailure(hostOrder.CorrelationId, HostOrderHandlingFailedErrorCode.FailedByTransportLayer, DateTime.UtcNow));
+        (await fixture.ConsumerHarness.Consumed.Any<HandleHostOrderFailure>()).ShouldBeTrue();
 
         fixture.HostCommunicatorMock.Verify(x => x.TransmitHostOrderHandlingFailure(It.IsAny<string>(), It.IsAny<string>()), Times.Once);
     }
@@ -193,8 +193,8 @@ public class HostOrderCommandHandlerTest
         fixture.HostOrderRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<Guid>()))
             .ReturnsAsync(hostOrder);
 
-        await fixture.TestHarness!.Bus.Publish(new HandleHostOrderFailure(hostOrder.CorrelationId, HostOrderHandlingFailedErrorCode.FailedByTransportLayer, now));
-        (await fixture.ConsumerHarness!.Consumed.Any<HandleHostOrderFailure>()).ShouldBeTrue();
+        await fixture.TestHarness.Bus.Publish(new HandleHostOrderFailure(hostOrder.CorrelationId, HostOrderHandlingFailedErrorCode.FailedByTransportLayer, now));
+        (await fixture.ConsumerHarness.Consumed.Any<HandleHostOrderFailure>()).ShouldBeTrue();
 
         fixture.HostCommunicatorMock.Verify(x => x.TransmitHostOrderHandlingFailure(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
     }

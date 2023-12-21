@@ -1,5 +1,5 @@
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
@@ -13,9 +13,9 @@ public class CargoProfileTest
     public void Map_ShouldMapAllPropertiesCorrectly_WhereCargoIsMappedToDomainCargo()
     {
         var agvCorrelationId = Guid.NewGuid();
-        ICollection<Common.Messages.AgvManagement.Cargo> cargos = CargoGenerator.GenerateCargos(agvCorrelationId);
+        ICollection<Cargo> cargos = CargoGenerator.GenerateCargos(agvCorrelationId);
         var mapper = MappingHelper.GetMapper(new CargoProfile());
-        var domainCargos = mapper.Map<List<Cargo>>(cargos);
+        var domainCargos = mapper.Map<List<TransportOrder.Domain.Models.Agv.Cargo>>(cargos);
 
         foreach (var domainCargo in domainCargos)
         {

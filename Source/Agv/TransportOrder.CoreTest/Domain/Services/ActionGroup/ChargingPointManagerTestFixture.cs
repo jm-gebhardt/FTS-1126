@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using Gebhardt.StoreWare.Agv.Common.Utilities;
+using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
+using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
@@ -14,8 +15,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Domain.Services.ActionG
 
 public class ChargingPointManagerTestFixture
 {
-    private static readonly string[] _sources = { "SRC1", "SRC2", "SRC3", "CRG1" };
-    private static readonly string[] _destinations = { "DST1", "DST2", "DST3", "CRG1" };
+    private static readonly string[] _sources = {"SRC1", "SRC2", "SRC3", "CRG1"};
+    private static readonly string[] _destinations = {"DST1", "DST2", "DST3", "CRG1"};
     private static readonly string _charge = _sources[3];
     private static readonly string _node01 = _sources[0];
     private static readonly string _node02 = _sources[1];
@@ -23,9 +24,8 @@ public class ChargingPointManagerTestFixture
     private static readonly string _node04 = _destinations[1];
     private static readonly string _node05 = _sources[2];
     private static readonly string _node06 = _destinations[2];
-    private const string MapName = "Map#1";
 
-    private readonly Mock<IAgvGraphRepository> _graphRepository = new();
+    private readonly Mock<IGraphRepository> _graphRepository = new();
 
     private readonly Mock<IAgvDataRepository> _agvDataRepository = new();
 
@@ -35,13 +35,13 @@ public class ChargingPointManagerTestFixture
 
     private readonly GraphNode[] _nodes =
     {
-        new(_charge) { Type = AgvGraph.NodeType.Charge, X = -2f, Y = -2f, Z = 0f },
-        new(_node01) { Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 0f, Z = 0f },
-        new(_node02) { Type = AgvGraph.NodeType.PickDrop, X = 4f, Y = 0f, Z = 0f },
-        new(_node03) { Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 3f, Z = 0f },
-        new(_node04) { Type = AgvGraph.NodeType.PickDrop, X = 4f, Y = 3f, Z = 0f },
-        new(_node05) { Type = AgvGraph.NodeType.PickDrop, X = 6f, Y = 9f, Z = 0f },
-        new(_node06) { Type = AgvGraph.NodeType.PickDrop, X = 13f, Y = 5f, Z = 0f }
+        new(_charge) {Type = AgvGraph.NodeType.Charge, X = -2f, Y = -2f, Z = 0f},
+        new(_node01) {Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 0f, Z = 0f},
+        new(_node02) {Type = AgvGraph.NodeType.PickDrop, X = 4f, Y = 0f, Z = 0f},
+        new(_node03) {Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 3f, Z = 0f},
+        new(_node04) {Type = AgvGraph.NodeType.PickDrop, X = 4f, Y = 3f, Z = 0f},
+        new(_node05) {Type = AgvGraph.NodeType.PickDrop, X = 6f, Y = 9f, Z = 0f},
+        new(_node06) {Type = AgvGraph.NodeType.PickDrop, X = 13f, Y = 5f, Z = 0f}
     };
 
     private readonly GraphEdge[] _edges =
@@ -67,18 +67,18 @@ public class ChargingPointManagerTestFixture
         GraphEdge[] edges = _edges;
         if (withChargerNode)
         {
-            return new AgvGraph(correlationId ?? Guid.NewGuid(), nodes, edges, MapName.ToGuid(), MapName);
+            return new AgvGraph(correlationId ?? Guid.NewGuid(), nodes, edges);
         }
 
         nodes = nodes.Where(n => n.Type != AgvGraph.NodeType.Charge).ToArray();
         edges = edges.Where(edge => nodes.FirstOrDefault(node => node.Id == edge.FromNodeId)?.Type != AgvGraph.NodeType.Charge
                                     || nodes.FirstOrDefault(node => node.Id == edge.ToNodeId)?.Type != AgvGraph.NodeType.Charge).ToArray();
-        return new AgvGraph(correlationId ?? Guid.NewGuid(), nodes, edges, MapName.ToGuid(), MapName);
+        return new AgvGraph(correlationId ?? Guid.NewGuid(), nodes, edges);
     }
 
     public IChargingPointManager CreateChargingPointManager()
     {
-        return new ChargingPointManager(_graphRepository.Object, NodeStateRepository.Object, RouteService.Object, new Mock<ILogger<ChargingPointManager>>().Object, new ChargingSemaphoreProvider(), _agvDataRepository.Object);
+        return new ChargingPointManager(_graphRepository.Object, NodeStateRepository.Object, RouteService.Object, new Mock<ILogger<ChargingPointManager>>().Object, new SemaphoreProvider<IChargingSemaphore>(), _agvDataRepository.Object);
     }
 
     public void SetupNodeLocker(bool reserveSuccess, bool lockSuccess, bool unlockSuccess, Func<IQueryable<GraphNode>, IQueryable<GraphNode>>? filterFreeUnlockedNodesFunction = null)
@@ -111,7 +111,7 @@ public class ChargingPointManagerTestFixture
             .ReturnsAsync(new Func<Guid, Expression<Func<GraphNode, bool>>, IEnumerable<GraphNode>>((_, predicate) => availableNodes.AsQueryable().Where(predicate)));
         foreach (var availableNode in availableNodes)
         {
-            _graphRepository.Setup(x => x.GetNodeAsync(availableNode.Id, agv.CorrelationId))
+            _graphRepository.Setup(x => x.GetNodeAsync(availableNode.Id))
                 .ReturnsAsync(availableNodes.First(n => n.Id == availableNode.Id));
         }
 

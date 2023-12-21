@@ -95,7 +95,7 @@ public class StartActionCommandConsumerTest
     {
         var fixture = new MassTransitConsumerTestFixture<StartActionCommandConsumer>(s => { s.AddTransient<IAgvRepository>(_ => Mock.Of<IAgvRepository>()); });
         var action = new AgvAction(Guid.Empty, ActionType.Pick, string.Empty, Guid.Empty);
-        await fixture.TestHarness!.Bus.Publish(new StartActionCommand(Guid.Empty, "", action));
+        await fixture.TestHarness.Bus.Publish(new StartActionCommand(Guid.Empty, "", action));
         (await fixture.TestHarness.Consumed.Any<StartActionCommand>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<Fault<StartActionCommand>>()).ShouldBeTrue();
 

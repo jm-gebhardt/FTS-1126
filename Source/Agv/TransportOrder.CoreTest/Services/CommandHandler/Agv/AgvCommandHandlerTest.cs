@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
@@ -12,7 +13,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 using AgvActionGenerator = Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper.AgvActionGenerator;
-using AgvData = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.AgvData;
 using AgvStatus = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.AgvStatus;
 using Cargo = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Cargo;
 using RequestAgvData = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands.RequestAgvData;
@@ -32,13 +32,13 @@ public class AgvCommandHandlerTest
         var agv = AgvGenerator.GenerateChargingAgv();
 
         var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv.CorrelationId);
-        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> {agv});
         fixture.AddAction(actionGroup.Actions.Last());
         fixture.SetupAgv(true);
 
-        await fixture.TestHarness!.Bus.Publish(new TryReactivateChargingAgv());
-        (await fixture.ConsumerHarness!.Consumed.Any<TryReactivateChargingAgv>()).ShouldBeTrue();
-        (await fixture.TestHarness!.Published.Any<AbortActionGroup>()).ShouldBeTrue();
+        await fixture.TestHarness.Bus.Publish(new TryReactivateChargingAgv());
+        (await fixture.ConsumerHarness.Consumed.Any<TryReactivateChargingAgv>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<AbortActionGroup>()).ShouldBeTrue();
     }
 
     [TestMethod]
@@ -47,12 +47,12 @@ public class AgvCommandHandlerTest
         var fixture = new AgvCommandHandlerTestFixture();
         var agv = AgvGenerator.GenerateChargingAgv();
 
-        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> {agv});
         fixture.SetupAgv(hasPendingActions: false);
 
-        await fixture.TestHarness!.Bus.Publish(new TryReactivateChargingAgv());
-        (await fixture.ConsumerHarness!.Consumed.Any<TryReactivateChargingAgv>()).ShouldBeTrue();
-        (await fixture.TestHarness!.Published.Any<AbortActionGroup>()).ShouldBeFalse();
+        await fixture.TestHarness.Bus.Publish(new TryReactivateChargingAgv());
+        (await fixture.ConsumerHarness.Consumed.Any<TryReactivateChargingAgv>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<AbortActionGroup>()).ShouldBeFalse();
     }
 
     [TestMethod]
@@ -60,9 +60,9 @@ public class AgvCommandHandlerTest
     {
         var fixture = new AgvCommandHandlerTestFixture();
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv>());
-        await fixture.TestHarness!.Bus.Publish(new TryReactivateChargingAgv());
-        (await fixture.ConsumerHarness!.Consumed.Any<TryReactivateChargingAgv>()).ShouldBeTrue();
-        (await fixture.TestHarness!.Published.Any<AbortActionGroup>()).ShouldBeFalse();
+        await fixture.TestHarness.Bus.Publish(new TryReactivateChargingAgv());
+        (await fixture.ConsumerHarness.Consumed.Any<TryReactivateChargingAgv>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<AbortActionGroup>()).ShouldBeFalse();
     }
 
     [TestMethod]
@@ -70,10 +70,10 @@ public class AgvCommandHandlerTest
     {
         var fixture = new AgvCommandHandlerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv();
-        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> {agv});
 
-        await fixture.TestHarness!.Bus.Publish(new StartCharging(agv.CorrelationId));
-        (await fixture.ConsumerHarness!.Consumed.Any<StartCharging>()).ShouldBeTrue();
+        await fixture.TestHarness.Bus.Publish(new StartCharging(agv.CorrelationId));
+        (await fixture.ConsumerHarness.Consumed.Any<StartCharging>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<AgvStateChanged>()).ShouldBeTrue();
         agv.CurrentAgvState.ShouldBe(AgvState.Charging);
     }
@@ -83,8 +83,8 @@ public class AgvCommandHandlerTest
     {
         var fixture = new AgvCommandHandlerTestFixture();
 
-        await fixture.TestHarness!.Bus.Publish(new StartCharging(Guid.NewGuid()));
-        (await fixture.ConsumerHarness!.Consumed.Any<StartCharging>()).ShouldBeTrue();
+        await fixture.TestHarness.Bus.Publish(new StartCharging(Guid.NewGuid()));
+        (await fixture.ConsumerHarness.Consumed.Any<StartCharging>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<AgvStateChanged>()).ShouldBeFalse();
     }
 
@@ -94,10 +94,10 @@ public class AgvCommandHandlerTest
         var fixture = new AgvCommandHandlerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv();
         agv.TransitionToCharging();
-        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> {agv});
 
-        await fixture.TestHarness!.Bus.Publish(new StopCharging(agv.CorrelationId));
-        (await fixture.ConsumerHarness!.Consumed.Any<StopCharging>()).ShouldBeTrue();
+        await fixture.TestHarness.Bus.Publish(new StopCharging(agv.CorrelationId));
+        (await fixture.ConsumerHarness.Consumed.Any<StopCharging>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<AgvStateChanged>()).ShouldBeTrue();
         agv.CurrentAgvState.ShouldBe(AgvState.Idle);
     }
@@ -107,8 +107,8 @@ public class AgvCommandHandlerTest
     {
         var fixture = new AgvCommandHandlerTestFixture();
 
-        await fixture.TestHarness!.Bus.Publish(new StopCharging(Guid.NewGuid()));
-        (await fixture.ConsumerHarness!.Consumed.Any<StopCharging>()).ShouldBeTrue();
+        await fixture.TestHarness.Bus.Publish(new StopCharging(Guid.NewGuid()));
+        (await fixture.ConsumerHarness.Consumed.Any<StopCharging>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<AgvStateChanged>()).ShouldBeFalse();
     }
 
@@ -117,11 +117,11 @@ public class AgvCommandHandlerTest
     {
         var fixture = new AgvCommandHandlerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv();
-        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> {agv});
         fixture.AgvDataRepository.Setup(x => x.AddOrUpdateAsync(It.IsAny<AgvData>())).ReturnsAsync(true);
         var agvData = new AgvData(agv.CorrelationId, "model", "type", string.Empty, 100d, 1.0, 10.0, 10.0, 1.0, 10d, 1.0, 1.0, 42, Array.Empty<AgvData.Sensor>());
-        await fixture.TestHarness!.Bus.Publish(new UpdateAgvData(agv.CorrelationId, agvData));
-        (await fixture.ConsumerHarness!.Consumed.Any<UpdateAgvData>()).ShouldBeTrue();
+        await fixture.TestHarness.Bus.Publish(new UpdateAgvData(agv.CorrelationId, agvData));
+        (await fixture.ConsumerHarness.Consumed.Any<UpdateAgvData>()).ShouldBeTrue();
         agv.DataExist.ShouldBeTrue();
     }
 
@@ -132,12 +132,12 @@ public class AgvCommandHandlerTest
         var agv = AgvGenerator.GenerateIdleAgv();
         ScheduledMessage<AgvWentOffline> previousOfflineMessage = await fixture.ScheduleMessage(TimeSpan.FromMinutes(1), new AgvWentOffline(agv.CorrelationId, DateTime.UtcNow));
         agv.SetOnline(previousOfflineMessage.TokenId);
-        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> {agv});
 
         var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.AgvId, _mapper.Map<AgvStatus>(agv.AgvStatus!));
-        await fixture.TestHarness!.Bus.Publish(updateAgvStatus);
-        (await fixture.ConsumerHarness!.Consumed.Any<UpdateAgvStatus>()).ShouldBeTrue();
-        SendContext<AgvWentOffline> newOfflineMessage = fixture.TestHarness!.Sent.Select<AgvWentOffline>(m => m.Context.Message != previousOfflineMessage.Payload).Select(m => m.Context).Single();
+        await fixture.TestHarness.Bus.Publish(updateAgvStatus);
+        (await fixture.ConsumerHarness.Consumed.Any<UpdateAgvStatus>()).ShouldBeTrue();
+        SendContext<AgvWentOffline> newOfflineMessage = fixture.TestHarness.Sent.Select<AgvWentOffline>(m => m.Context.Message != previousOfflineMessage.Payload).Select(m => m.Context).Single();
         agv.IsOnline.ShouldBeTrue();
         agv.AgvOfflineTokenId.ShouldBe(newOfflineMessage.ScheduledMessageId);
         newOfflineMessage.Message.CorrelationId.ShouldBe(agv.CorrelationId);
@@ -148,14 +148,14 @@ public class AgvCommandHandlerTest
     {
         var fixture = new AgvCommandHandlerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv();
-        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> {agv});
         double newBatteryCharge = agv.AgvStatus!.BatteryCharge - 2.0d * TransportOrder.Domain.Models.Agv.Agv.BatteryChargeChangedThreshold;
 
         var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, newBatteryCharge, agv.AgvStatus!.Charging, agv.AgvStatus!.Disturbed, agv.AgvStatus!.LastNodeId);
         var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.AgvId, newAgvStatus);
-        await fixture.TestHarness!.Bus.Publish(updateAgvStatus);
-        (await fixture.ConsumerHarness!.Consumed.Any<UpdateAgvStatus>()).ShouldBeTrue();
-        (await fixture.TestHarness!.Published.Any<AgvBatteryChargeChanged>()).ShouldBeTrue();
+        await fixture.TestHarness.Bus.Publish(updateAgvStatus);
+        (await fixture.ConsumerHarness.Consumed.Any<UpdateAgvStatus>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<AgvBatteryChargeChanged>()).ShouldBeTrue();
     }
 
     [TestMethod]
@@ -163,13 +163,13 @@ public class AgvCommandHandlerTest
     {
         var fixture = new AgvCommandHandlerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv();
-        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> {agv});
 
         var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, agv.AgvStatus!.Disturbed, "newLastNodeId");
         var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.AgvId, newAgvStatus);
-        await fixture.TestHarness!.Bus.Publish(updateAgvStatus);
-        (await fixture.ConsumerHarness!.Consumed.Any<UpdateAgvStatus>()).ShouldBeTrue();
-        (await fixture.TestHarness!.Published.Any<AgvLastNodeIdChanged>()).ShouldBeTrue();
+        await fixture.TestHarness.Bus.Publish(updateAgvStatus);
+        (await fixture.ConsumerHarness.Consumed.Any<UpdateAgvStatus>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<AgvLastNodeIdChanged>()).ShouldBeTrue();
     }
 
     [TestMethod]
@@ -178,13 +178,13 @@ public class AgvCommandHandlerTest
         var fixture = new AgvCommandHandlerTestFixture();
         var agv = AgvGenerator.GenerateChargingAgv();
         agv.IsOnline.ShouldBeFalse();
-        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> {agv});
 
         var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, agv.AgvStatus!.Disturbed);
         var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.AgvId, newAgvStatus);
-        await fixture.TestHarness!.Bus.Publish(updateAgvStatus);
-        (await fixture.ConsumerHarness!.Consumed.Any<UpdateAgvStatus>()).ShouldBeTrue();
-        (await fixture.TestHarness!.Published.Any<AgvOnlineChanged>()).ShouldBeTrue();
+        await fixture.TestHarness.Bus.Publish(updateAgvStatus);
+        (await fixture.ConsumerHarness.Consumed.Any<UpdateAgvStatus>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<AgvOnlineChanged>()).ShouldBeTrue();
     }
 
     [TestMethod]
@@ -193,14 +193,14 @@ public class AgvCommandHandlerTest
         var fixture = new AgvCommandHandlerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv();
         agv.IsOnline.ShouldBeFalse();
-        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> {agv});
 
         var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, false, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, agv.AgvStatus!.Disturbed);
         var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.AgvId, newAgvStatus);
-        await fixture.TestHarness!.Bus.Publish(updateAgvStatus);
-        (await fixture.ConsumerHarness!.Consumed.Any<UpdateAgvStatus>()).ShouldBeTrue();
-        (await fixture.TestHarness!.Published.Any<AgvOnlineChanged>()).ShouldBeTrue();
-        (await fixture.TestHarness!.Published.Any<AgvBecameIdle>()).ShouldBeFalse();
+        await fixture.TestHarness.Bus.Publish(updateAgvStatus);
+        (await fixture.ConsumerHarness.Consumed.Any<UpdateAgvStatus>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<AgvOnlineChanged>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<AgvBecameIdle>()).ShouldBeFalse();
     }
 
     [TestMethod]
@@ -213,32 +213,34 @@ public class AgvCommandHandlerTest
             AgvDataRequestedLastTime = null,
             AgvStatus = new TransportOrder.Domain.Models.Agv.AgvStatus()
         };
-        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> {agv});
 
         var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, agv.AgvStatus!.Disturbed);
         var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.AgvId, newAgvStatus);
-        await fixture.TestHarness!.Bus.Publish(updateAgvStatus);
-        (await fixture.ConsumerHarness!.Consumed.Any<UpdateAgvStatus>()).ShouldBeTrue();
-        (await fixture.TestHarness!.Published.Any<RequestAgvData>()).ShouldBeTrue();
+        await fixture.TestHarness.Bus.Publish(updateAgvStatus);
+        (await fixture.ConsumerHarness.Consumed.Any<UpdateAgvStatus>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<RequestAgvData>()).ShouldBeTrue();
     }
 
     [TestMethod]
     public async Task Consume_UpdateAgvStatus_ShouldRequestGraph_PublishesRequestAgvGraph()
     {
-        var fixture = new AgvCommandHandlerTestFixture();
         var agv = new TransportOrder.Domain.Models.Agv.Agv("agvId")
         {
             GraphExists = false,
             AgvGraphRequestedLastTime = null,
             AgvStatus = new TransportOrder.Domain.Models.Agv.AgvStatus()
         };
-        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> {agv})
+            .WithGraphExists(true);
 
         var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, agv.AgvStatus!.Disturbed);
         var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.AgvId, newAgvStatus);
-        await fixture.TestHarness!.Bus.Publish(updateAgvStatus);
-        (await fixture.ConsumerHarness!.Consumed.Any<UpdateAgvStatus>()).ShouldBeTrue();
-        (await fixture.TestHarness!.Published.Any<RequestAgvGraph>()).ShouldBeTrue();
+        await fixture.TestHarness.Bus.Publish(updateAgvStatus);
+        (await fixture.ConsumerHarness.Consumed.Any<UpdateAgvStatus>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<RequestAgvGraph>()).ShouldBeTrue();
         fixture.AgvRepository.Verify(r =>
             r.UpdateAgvAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>()), Times.Once());
     }
@@ -251,8 +253,8 @@ public class AgvCommandHandlerTest
         fixture.SetupAgv(graphExists: true);
         var agvStatus = new AgvStatus(Guid.NewGuid(), null, false, true, 100.0d, false, false);
         var updateAgvStatus = new UpdateAgvStatus(agvStatus.CorrelationId, "agvId", agvStatus);
-        await fixture.TestHarness!.Bus.Publish(updateAgvStatus);
-        (await fixture.ConsumerHarness!.Consumed.Any<UpdateAgvStatus>()).ShouldBeTrue();
+        await fixture.TestHarness.Bus.Publish(updateAgvStatus);
+        (await fixture.ConsumerHarness.Consumed.Any<UpdateAgvStatus>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<AgvDiscovered>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<RequestAgvData>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<RequestAgvGraph>()).ShouldBeFalse();
@@ -268,8 +270,8 @@ public class AgvCommandHandlerTest
         fixture.SetupAgv(graphExists: false);
         var agvStatus = new AgvStatus(Guid.NewGuid(), null, false, true, 100.0d, false, false);
         var updateAgvStatus = new UpdateAgvStatus(agvStatus.CorrelationId, "agvId", agvStatus);
-        await fixture.TestHarness!.Bus.Publish(updateAgvStatus);
-        (await fixture.ConsumerHarness!.Consumed.Any<UpdateAgvStatus>()).ShouldBeTrue();
+        await fixture.TestHarness.Bus.Publish(updateAgvStatus);
+        (await fixture.ConsumerHarness.Consumed.Any<UpdateAgvStatus>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<RequestAgvData>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<RequestAgvGraph>()).ShouldBeTrue();
         fixture.AgvRepository.Verify(r =>
@@ -283,10 +285,10 @@ public class AgvCommandHandlerTest
         var agv = AgvGenerator.GenerateIdleAgv();
         ScheduledMessage<AgvWentOffline> offlineMessage = await fixture.ScheduleMessage(TimeSpan.FromMinutes(1), new AgvWentOffline(agv.CorrelationId, DateTime.UtcNow));
         agv.SetOnline(offlineMessage.TokenId);
-        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> {agv});
 
-        await fixture.TestHarness!.Bus.Publish(new GoOffline(agv.CorrelationId, agv.AgvOfflineTokenId!.Value));
-        (await fixture.ConsumerHarness!.Consumed.Any<GoOffline>()).ShouldBeTrue();
+        await fixture.TestHarness.Bus.Publish(new GoOffline(agv.CorrelationId, agv.AgvOfflineTokenId!.Value));
+        (await fixture.ConsumerHarness.Consumed.Any<GoOffline>()).ShouldBeTrue();
 
         (await fixture.TestHarness.Published.Any<AgvOnlineChanged>()).ShouldBeTrue();
         agv.IsOnline.ShouldBeFalse();
@@ -298,10 +300,10 @@ public class AgvCommandHandlerTest
     {
         var fixture = new AgvCommandHandlerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv();
-        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> {agv});
 
-        await fixture.TestHarness!.Bus.Publish(new GoOffline(agv.CorrelationId, Guid.NewGuid()));
-        (await fixture.ConsumerHarness!.Consumed.Any<GoOffline>()).ShouldBeTrue();
+        await fixture.TestHarness.Bus.Publish(new GoOffline(agv.CorrelationId, Guid.NewGuid()));
+        (await fixture.ConsumerHarness.Consumed.Any<GoOffline>()).ShouldBeTrue();
 
         (await fixture.TestHarness.Published.Any<AgvOnlineChanged>()).ShouldBeFalse();
         agv.IsOnline.ShouldBeFalse();
@@ -313,11 +315,11 @@ public class AgvCommandHandlerTest
     {
         var fixture = new AgvCommandHandlerTestFixture(b => b.AddRequestClient<LockAgv>());
         var agv = AgvGenerator.GenerateIdleAgv();
-        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> {agv});
         Response<LockAgvResult> response = await fixture.GetResponseAsync<LockAgvResult, LockAgv>(new LockAgv(agv.CorrelationId));
         response.Message.AgvCorrelationId.ShouldBe(agv.CorrelationId);
-        (await fixture.TestHarness!.Published.Any<AgvLockedChanged>()).ShouldBeTrue();
-        var agvLockedChanged = fixture.TestHarness!.Published.Select<AgvLockedChanged>().Single().Context.Message;
+        (await fixture.TestHarness.Published.Any<AgvLockedChanged>()).ShouldBeTrue();
+        var agvLockedChanged = fixture.TestHarness.Published.Select<AgvLockedChanged>().Single().Context.Message;
         agvLockedChanged.IsNowLocked.ShouldBeTrue();
     }
 
@@ -335,12 +337,12 @@ public class AgvCommandHandlerTest
     {
         var fixture = new AgvCommandHandlerTestFixture(b => b.AddRequestClient<UnlockAgv>());
         var agv = AgvGenerator.GenerateIdleAgv();
-        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> {agv});
         Response<UnlockAgvResult> response = await fixture.GetResponseAsync<UnlockAgvResult, UnlockAgv>(new UnlockAgv(agv.CorrelationId));
         response.Message.AgvCorrelationId.ShouldBe(agv.CorrelationId);
-        (await fixture.TestHarness!.Published.Any<AgvBecameIdle>()).ShouldBeTrue();
-        (await fixture.TestHarness!.Published.Any<AgvLockedChanged>()).ShouldBeTrue();
-        var agvLockedChanged = fixture.TestHarness!.Published.Select<AgvLockedChanged>().Single().Context.Message;
+        (await fixture.TestHarness.Published.Any<AgvBecameIdle>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<AgvLockedChanged>()).ShouldBeTrue();
+        var agvLockedChanged = fixture.TestHarness.Published.Select<AgvLockedChanged>().Single().Context.Message;
         agvLockedChanged.IsNowLocked.ShouldBeFalse();
     }
 
@@ -358,10 +360,10 @@ public class AgvCommandHandlerTest
     {
         var fixture = new AgvCommandHandlerTestFixture(b => b.AddRequestClient<SetAgvForceIdle>());
         var agv = AgvGenerator.GenerateIdleAgv();
-        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> {agv});
         Response<SetAgvForceIdleResult> response = await fixture.GetResponseAsync<SetAgvForceIdleResult, SetAgvForceIdle>(new SetAgvForceIdle(agv.CorrelationId));
         response.Message.CorrelationId.ShouldBe(agv.CorrelationId);
-        (await fixture.TestHarness!.Published.Any<AgvBecameIdle>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<AgvBecameIdle>()).ShouldBeTrue();
     }
 
     [TestMethod]
@@ -378,10 +380,10 @@ public class AgvCommandHandlerTest
     {
         var fixture = new AgvCommandHandlerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv();
-        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> {agv});
 
-        await fixture.TestHarness!.Bus.Publish(new HandleAgvActionStartFailure(agv.CorrelationId));
-        (await fixture.ConsumerHarness!.Consumed.Any<HandleAgvActionStartFailure>()).ShouldBeTrue();
+        await fixture.TestHarness.Bus.Publish(new HandleAgvActionStartFailure(agv.CorrelationId));
+        (await fixture.ConsumerHarness.Consumed.Any<HandleAgvActionStartFailure>()).ShouldBeTrue();
 
         (await fixture.TestHarness.Published.Any<AgvBecameIdle>()).ShouldBeTrue();
     }
@@ -392,10 +394,10 @@ public class AgvCommandHandlerTest
         var fixture = new AgvCommandHandlerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: NodeGenerator.GenerateParkingNode().Id);
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
-        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> {agv});
 
-        await fixture.TestHarness!.Bus.Publish(new PrepareAgvForStartingAction(actionGroup.Actions.First(), agv.CorrelationId));
-        (await fixture.ConsumerHarness!.Consumed.Any<PrepareAgvForStartingAction>()).ShouldBeTrue();
+        await fixture.TestHarness.Bus.Publish(new PrepareAgvForStartingAction(actionGroup.Actions.First(), agv.CorrelationId));
+        (await fixture.ConsumerHarness.Consumed.Any<PrepareAgvForStartingAction>()).ShouldBeTrue();
 
         (await fixture.TestHarness.Published.Any<AgvPreparedForStartingAction>()).ShouldBeTrue();
     }
@@ -406,13 +408,13 @@ public class AgvCommandHandlerTest
         var fixture = new AgvCommandHandlerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv();
         agv.SetOnline(Guid.NewGuid());
-        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> {agv});
 
         var currentAgStatus = agv.AgvStatus!;
         var agvStatus = new AgvStatus(agv.CorrelationId, currentAgStatus.OrderId, currentAgStatus.Busy, currentAgStatus.Automatic, currentAgStatus.BatteryCharge, currentAgStatus.Charging, currentAgStatus.Disturbed, currentAgStatus.LastNodeId);
         var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.AgvId, agvStatus);
-        await fixture.TestHarness!.Bus.Publish(updateAgvStatus);
-        (await fixture.ConsumerHarness!.Consumed.Any<UpdateAgvStatus>()).ShouldBeTrue();
+        await fixture.TestHarness.Bus.Publish(updateAgvStatus);
+        (await fixture.ConsumerHarness.Consumed.Any<UpdateAgvStatus>()).ShouldBeTrue();
 
         (await fixture.TestHarness.Published.Any<AgvBatteryChargeChanged>()).ShouldBeFalse();
         (await fixture.TestHarness.Published.Any<AgvLastNodeIdChanged>()).ShouldBeFalse();
@@ -432,8 +434,8 @@ public class AgvCommandHandlerTest
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> {agv});
 
         var updateCargo = new UpdateCargo(agv.CorrelationId, cargos.ToList().AsReadOnly());
-        await fixture.TestHarness!.Bus.Publish(updateCargo);
-        (await fixture.ConsumerHarness!.Consumed.Any<UpdateCargo>()).ShouldBeTrue();
-        (await fixture.TestHarness!.Published.Any<CargoChanged>()).ShouldBeTrue();
+        await fixture.TestHarness.Bus.Publish(updateCargo);
+        (await fixture.ConsumerHarness.Consumed.Any<UpdateCargo>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<CargoChanged>()).ShouldBeTrue();
     }
 }

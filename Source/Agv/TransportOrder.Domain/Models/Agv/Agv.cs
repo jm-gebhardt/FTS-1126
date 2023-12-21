@@ -142,7 +142,7 @@ public class Agv : IAgvId
     /// Time that has to pass before resending a request telegram in case AgvGraph or AgvData are still null.
     /// </summary>
     /// <remarks>Interval indicated in seconds</remarks>
-    private const int AgvRequestTimeout = 30;
+    private TimeSpan AgvRequestTimeout { get; } = TimeSpan.FromSeconds(30);
 
     /// <summary>
     /// The threshold for considering a battery change significant.
@@ -153,7 +153,7 @@ public class Agv : IAgvId
     /// Time that has to pass before resending a request telegram in case AgvGraph or AgvData are already given
     /// </summary>
     /// <remarks>Interval indicated in seconds</remarks>
-    private const int DailyRequestUpdateInterval = 24 * 3600;
+    private TimeSpan DailyRequestUpdateInterval { get; } = TimeSpan.FromHours(24);
 
     /// <summary>
     /// Default constructor required to connect.
@@ -294,7 +294,7 @@ public class Agv : IAgvId
     /// <returns>True if the state has changed</returns>
     public (bool Accepted, bool StateChanged) TryAccept()
     {
-        if (new[] { AgvState.Idle, AgvState.Busy, AgvState.Charging }.Contains(CurrentAgvState))
+        if (new[] {AgvState.Idle, AgvState.Busy, AgvState.Charging}.Contains(CurrentAgvState))
         {
             return (false, false);
         }
@@ -373,13 +373,13 @@ public class Agv : IAgvId
     /// </summary>
     public bool ShouldRequestGraph()
     {
-        double secondsSinceLastRequest = TimeSpan.MaxValue.TotalSeconds;
+        var secondsSinceLastRequest = TimeSpan.MaxValue;
         if (AgvGraphRequestedLastTime != null)
         {
-            secondsSinceLastRequest = ((TimeSpan)(DateTime.UtcNow - AgvGraphRequestedLastTime)).TotalSeconds;
+            secondsSinceLastRequest = DateTime.UtcNow - (AgvGraphRequestedLastTime ?? DateTime.MinValue);
         }
 
-        bool shouldBeRequested = !GraphExists && secondsSinceLastRequest > DailyRequestUpdateInterval;
+        bool shouldBeRequested = !GraphExists || secondsSinceLastRequest > DailyRequestUpdateInterval;
         if (shouldBeRequested)
         {
             AgvGraphRequestedLastTime = DateTime.UtcNow;
@@ -393,12 +393,12 @@ public class Agv : IAgvId
     /// <returns></returns>
     public bool ShouldRequestData()
     {
-        double secondsSinceLastRequest = TimeSpan.MaxValue.TotalSeconds;
+        var secondsSinceLastRequest = TimeSpan.MaxValue;
         if (AgvDataRequestedLastTime != null)
         {
-            secondsSinceLastRequest = ((TimeSpan)(DateTime.UtcNow - AgvDataRequestedLastTime)).TotalSeconds;
+            secondsSinceLastRequest = DateTime.UtcNow - (AgvDataRequestedLastTime ?? DateTime.MinValue);
         }
-        int timeout = DataExist ? DailyRequestUpdateInterval : AgvRequestTimeout;
+        var timeout = DataExist ? DailyRequestUpdateInterval : AgvRequestTimeout;
 
         bool shouldBeRequested = secondsSinceLastRequest > timeout;
         if (shouldBeRequested)

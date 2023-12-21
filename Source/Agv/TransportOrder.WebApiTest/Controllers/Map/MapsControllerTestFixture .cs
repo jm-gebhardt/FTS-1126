@@ -1,5 +1,4 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
+﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Map;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers.Map;
@@ -8,7 +7,6 @@ using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
-using AgvStatus = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv.AgvStatus;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers.Map;
 
@@ -18,7 +16,7 @@ public class MapsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
 {
     private const string Base64String = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
 
-    private readonly Mock<IAgvGraphRepository> _agvGraphRepository = new();
+    private readonly Mock<IGraphRepository> _agvGraphRepository = new();
 
     private readonly string[] _agvIds = { "AGV001", "AGV002", "AGV003" };
     private readonly string[] _orders = { "ORDER001", "ORDER002", "" };
@@ -44,7 +42,7 @@ public class MapsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
     {
         var mapRepositoryMock = new Mock<IMapRepository>();
 
-        mapRepositoryMock.Setup(x => x.GetAllMaps()).Returns(new EnumerableQuery<Domain.Models.Map.Map>(new List<Domain.Models.Map.Map>
+        mapRepositoryMock.Setup(x => x.GetAllMapsAsync()).ReturnsAsync(new List<Domain.Models.Map.Map>(new List<Domain.Models.Map.Map>
         {
             new(_correlationIds[0], "Area51_Floor1_Compartment47", Convert.FromBase64String(Base64String), 1, 1, 0.01, 1, 2, DateTime.UtcNow),
             new(_correlationIds[1], "Area51_Floor1_Compartment48", Convert.FromBase64String(Base64String), 1, 1, 0.02, 2, 3, DateTime.UtcNow),
@@ -108,12 +106,6 @@ public class MapsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
             sc.AddTransient(_ => GetMapper());
             sc.AddTransient(_ => _agvGraphRepository.Object);
         });
-        return this;
-    }
-
-    public MapsControllerTestFixture<TRequest, TRequestHandler> WithAgvGraphs(List<AgvGraph> agvGraphs)
-    {
-        _agvGraphRepository.Setup(x => x.GetAllAgvGraphsAsync()).ReturnsAsync(agvGraphs);
         return this;
     }
 

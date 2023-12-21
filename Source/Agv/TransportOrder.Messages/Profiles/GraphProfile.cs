@@ -1,30 +1,42 @@
 ﻿using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Graph;
 using JetBrains.Annotations;
+using Graph = Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent.Graph;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles;
 
 /// <summary>
-/// The profile for mapping between <see cref="AgvGraph"/> and <see cref="EfGraph"/>
+/// The profile for mapping between <see cref="AgvGraph"/> and <see cref="EfAgvGraph"/>
 /// </summary>
 [UsedImplicitly]
 public class GraphProfile : Profile
 {
-    /// <summary>
-    /// Constructor
-    /// </summary>
+    /// <inheritdoc cref="GraphProfile"/>
     public GraphProfile()
     {
-        CreateMap<AgvGraph, EfGraph>()
-            .ReverseMap();
+        CreateMap<AgvGraph, EfAgvGraph>().ReverseMap()
+            ;
 
         CreateMap<GraphEdge, EfEdge>()
-            .ForMember(n => n.GraphCorrelationId, opt => opt.Ignore())
-            .ReverseMap();
+            .ForMember(n => n.Maps, opt => opt.Ignore())
+            .ForMember(n => n.AgvGraphs, opt => opt.Ignore())
+            .ReverseMap()
+            ;
 
         CreateMap<GraphNode, EfNode>()
-            .ForMember(n => n.GraphCorrelationId, opt => opt.Ignore())
-            .ReverseMap();
+            .ForMember(n => n.Maps, opt => opt.Ignore())
+            .ForMember(n => n.AgvGraphs, opt => opt.Ignore())
+            .ReverseMap()
+            ;
+
+        CreateMap<GraphNode, MessageContent.GraphNode>();
+
+        CreateMap<IGraph, Graph>()
+            .ForMember(n => n.CorrelationId, opt => opt.Ignore())
+            .ForMember(nameof(Graph.Edges), opt => opt.MapFrom<GraphGraphEdgeResolver>())
+            .ReverseMap()
+            ;
     }
 }

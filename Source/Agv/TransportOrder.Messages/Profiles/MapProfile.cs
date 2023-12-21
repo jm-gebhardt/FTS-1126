@@ -14,7 +14,7 @@ public class MapProfile : Profile
     public MapProfile()
     {
         CreateMap<Map, Requests.Map.Map>()
-            .ForCtorParam(nameof(Requests.Map.Map.RelatedAgvs), opt =>
-                opt.MapFrom((src, ctx) => new RelatedMapAgvValueResolver().Resolve(src, null!, null!, ctx)));
+            .ForMember(m => m.RelatedAgvs, opt => opt.MapFrom(c => c.MapAgvs.Select(x => x.AgvId).ToArray()))
+            ;
     }
 }

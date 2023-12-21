@@ -4,8 +4,8 @@ using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
+using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
-using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Messages;
 using Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Helper;
@@ -122,59 +122,6 @@ public class SimulatedAgvStateMachineTest
         message.CorrelationId.ShouldBe(correlationId);
         message.AgvId.ShouldBe(agvId);
         message.Data.ShouldBe(agvSaga.AgvData);
-    }
-
-    [TestMethod]
-    public async Task When_RequestAgvMap_AgvMapReceived_isPublished()
-    {
-        var graph = AgvGraphGenerator.CreateDefaultGraph();
-        var node = graph.Nodes.First();
-        var agvSaga = SimulatedAgvSagaGenerator.Generate(
-            currentNode: node,
-            agvGraph: graph
-        );
-        var correlationId = agvSaga.CorrelationId;
-        string mapId = agvSaga.AgvMap!.MapId;
-        var fixture = new SimulatedAgvStateMachineTestFixture()
-            .WithAgv(agvSaga)
-            .Build();
-
-        // Publish RequestAgvMap ...
-        await fixture.TestHarness.Bus.Publish(new RequestAgvMap(correlationId, agvSaga.AgvId, mapId.ToGuid(), mapId));
-        // ... wait for being consumed ...
-        (await fixture.SagaHarness.Consumed.Any<RequestAgvMap>()).ShouldBeTrue();
-        // ... expect AgvMapReceived being published.
-        (await fixture.TestHarness.Published.Any<AgvMapReceived>()).ShouldBeTrue();
-
-        var message = fixture.TestHarness.Published.Select<AgvMapReceived>().First().Context.Message;
-        message.CorrelationId.ShouldBe(correlationId);
-        message.AgvId.ShouldBe(agvSaga.AgvId);
-        message.AgvMap.ImageData.ShouldBe(agvSaga.AgvMap!.ImageData);
-    }
-
-    [TestMethod]
-    public async Task When_RequestAgvMap_AgvMapIsNull_NoMessageIsPublished()
-    {
-        var graph = AgvGraphGenerator.CreateDefaultGraph();
-        var node = graph.Nodes.First();
-        var agvSaga = SimulatedAgvSagaGenerator.Generate(
-            currentNode: node,
-            agvGraph: graph,
-            mapExists: false
-        );
-        var correlationId = agvSaga.CorrelationId;
-        var fixture = new SimulatedAgvStateMachineTestFixture()
-            .WithAgv(agvSaga)
-            .Build();
-
-        // Publish RequestAgvMap ...
-        await fixture.TestHarness.Bus.Publish(new RequestAgvMap(correlationId, agvSaga.AgvId, Guid.NewGuid(), "non existing map"));
-        // ... wait for being consumed ...
-        (await fixture.SagaHarness.Consumed.Any<RequestAgvMap>()).ShouldBeTrue();
-        // ... but don't expect AgvMapReceived being published.
-        var token = new CancellationTokenSource();
-        token.CancelAfter(100);
-        (await fixture.TestHarness.Published.Any<AgvMapReceived>(token.Token)).ShouldBeFalse();
     }
 
     [TestMethod]

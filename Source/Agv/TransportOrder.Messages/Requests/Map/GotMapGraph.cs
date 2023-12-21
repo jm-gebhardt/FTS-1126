@@ -3,6 +3,6 @@
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Map;
 
 /// <summary>
-/// Defines the result of a <see cref="GetMapGraph"/> request.
+/// The response which is the graph for the specified map.
 /// </summary>
 public record GotMapGraph(Graph Graph);

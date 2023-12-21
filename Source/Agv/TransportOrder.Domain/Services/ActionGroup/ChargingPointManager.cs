@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
+using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
@@ -15,13 +16,13 @@ public class ChargingPointManager : BaseNodeReservationManager, IChargingPointMa
     /// <summary>
     /// Constructor for base charging point manager
     /// </summary>
-    /// <param name="graphRepository">The graph repository</param>
+    /// <param name="graphRepository">The graph repository.</param>
     /// <param name="nodeStateRepository"></param>
     /// <param name="routeService"></param>
     /// <param name="logger"></param>
     /// <param name="semaphoreProvider"></param>
     /// <param name="agvDataRepository"></param>
-    public ChargingPointManager(IAgvGraphRepository graphRepository, INodeStateRepository nodeStateRepository, IRouteService routeService, ILogger<ChargingPointManager> logger, IChargingSemaphoreProvider semaphoreProvider, IAgvDataRepository agvDataRepository)
+    public ChargingPointManager(IGraphRepository graphRepository, INodeStateRepository nodeStateRepository, IRouteService routeService, ILogger<ChargingPointManager> logger, ISemaphoreProvider<IChargingSemaphore> semaphoreProvider, IAgvDataRepository agvDataRepository)
         : base(graphRepository, nodeStateRepository, routeService, logger, semaphoreProvider, agvDataRepository)
     {
     }

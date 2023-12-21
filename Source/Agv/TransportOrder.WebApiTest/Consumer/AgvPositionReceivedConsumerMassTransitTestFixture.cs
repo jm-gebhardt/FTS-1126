@@ -20,7 +20,7 @@ internal class AgvPositionReceivedConsumerMassTransitTestFixture :
 
     public Mock<IAgvPositionRepository>? AgvPositionRepositoryMock { get; private set; }
 
-    private Mock<IAgvGraphRepository>? GraphRepositoryMock { get; set; }
+    private Mock<IGraphRepository>? GraphRepositoryMock { get; set; }
 
     public AgvPositionReceivedConsumerMassTransitTestFixture()
     {
@@ -41,7 +41,7 @@ internal class AgvPositionReceivedConsumerMassTransitTestFixture :
 
     protected override void ConfigureServices(IServiceCollection services)
     {
-        GraphRepositoryMock = new Mock<IAgvGraphRepository>();
+        GraphRepositoryMock = new Mock<IGraphRepository>();
         services.AddSingleton<IConcurrentDictionaryProvider<Guid, AgvPositionStatus>, AgvPositionDictionaryProvider>();
         if (_useAgvPositionRepositoryMock)
         {

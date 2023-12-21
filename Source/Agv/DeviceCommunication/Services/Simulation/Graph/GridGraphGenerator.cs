@@ -1,4 +1,4 @@
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Helpers;
@@ -20,57 +20,17 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph;
 ///           D0  D1  D2
 /// 
 /// </summary>
-public class GridGraphGenerator : IGraphGenerator
-{   
+public class GridGraphGenerator : GraphGeneratorBase
+{
     /// Station angles are defined as:
     ///         0
     /// 3/2 pi -|- pi/2
     ///         pi
-    private const float East = (float)Math.PI / 2f;
+    private const float East = (float) Math.PI / 2f;
 
-    private const float West = 3f * (float)Math.PI / 2f;
-    private const float South = (float)Math.PI;
+    private const float West = 3f * (float) Math.PI / 2f;
+    private const float South = (float) Math.PI;
     private const float North = 0f;
-
-    /// <summary>
-    /// Initializes a new <see cref="GridGraphGenerator"/> instance based on simulation options.
-    /// </summary>
-    public GridGraphGenerator(SimulateOptions simulateOptions)
-    {
-        Sources = simulateOptions.Sources != null ? simulateOptions.Sources.ToArray() : Array.Empty<string>();
-        Destinations = simulateOptions.Destinations != null ? simulateOptions.Destinations.ToArray() : Array.Empty<string>();
-        _gridRows = simulateOptions.GridRows;
-        _serviceNodeTypes = CreateServiceNodes();
-    }
-
-    /// <summary>
-    /// GridGraphGenerator Constructor
-    /// </summary>
-    /// <param name="sources"></param>
-    /// <param name="destinations"></param>
-    /// <param name="gridRows"></param>
-    /// <param name="serviceNodes"></param>
-    public GridGraphGenerator(
-        string[] sources,
-        string[] destinations,
-        int gridRows = 3,
-        AgvGraph.NodeType[]? serviceNodes = null)
-    {
-        Sources = sources;
-        Destinations = destinations;
-        _gridRows = gridRows;
-        _serviceNodeTypes = serviceNodes ?? Array.Empty<AgvGraph.NodeType>();
-    }
-
-    /// <summary>
-    /// List of source nodes
-    /// </summary>
-    public string[] Sources { get; }
-
-    /// <summary>
-    /// List of destination nodes
-    /// </summary>
-    public string[] Destinations { get; }
 
     private const float OriginXOffset = 5;
     private const float OriginYOffset = 5;
@@ -86,13 +46,41 @@ public class GridGraphGenerator : IGraphGenerator
     private readonly int _gridRows;
     private readonly AgvGraph.NodeType[] _serviceNodeTypes;
 
-    private string RelatedMapName => $"SIM_{GridWidth}x{_gridRows}";
+    /// <inheritdoc />
+    protected override Guid GraphId => $"SIM_{GridWidth}x{_gridRows}".ToGuid();
+
+    /// <summary>
+    /// Initializes a new <see cref="GridGraphGenerator"/> instance based on simulation options.
+    /// </summary>
+    public GridGraphGenerator(SimulateOptions simulateOptions) : base(simulateOptions.Sources != null ? simulateOptions.Sources.ToArray() : Array.Empty<string>(),
+        simulateOptions.Destinations != null ? simulateOptions.Destinations.ToArray() : Array.Empty<string>())
+    {
+        _gridRows = simulateOptions.GridRows;
+        _serviceNodeTypes = CreateServiceNodes();
+    }
+
+    /// <summary>
+    /// GridGraphGenerator Constructor
+    /// </summary>
+    /// <param name="sources"></param>
+    /// <param name="destinations"></param>
+    /// <param name="gridRows"></param>
+    /// <param name="serviceNodes"></param>
+    public GridGraphGenerator(
+        string[] sources,
+        string[] destinations,
+        int gridRows = 3,
+        AgvGraph.NodeType[]? serviceNodes = null) : base(sources, destinations)
+    {
+        _gridRows = gridRows;
+        _serviceNodeTypes = serviceNodes ?? Array.Empty<AgvGraph.NodeType>();
+    }
 
     /// <summary>
     /// Generate AgvGraph
     /// </summary>
     /// <returns></returns>
-    public AgvGraph Generate(Guid correlationId)
+    public override AgvGraph Generate(Guid correlationId)
     {
         Clear();
         AddGrid();
@@ -103,9 +91,7 @@ public class GridGraphGenerator : IGraphGenerator
         return new AgvGraph(
             correlationId,
             _otherNodes.Concat(_gridNodes).ToArray(),
-            _edges.ToArray(),
-            RelatedMapName.ToGuid(),
-            RelatedMapName
+            _edges.ToArray()
         );
     }
 
@@ -232,7 +218,7 @@ public class GridGraphGenerator : IGraphGenerator
             Type = nodeType,
             X = gridNode.X + OriginXOffset / 2 * side,
             Y = gridNode.Y,
-            Theta = side == -1? West: East
+            Theta = side == -1 ? West : East
         };
         _otherNodes.Add(serviceNode);
         AddEdge(serviceNode, gridNode);
@@ -250,7 +236,7 @@ public class GridGraphGenerator : IGraphGenerator
         }
 
         float step = 2.0f * _gridRows / _serviceNodeTypes.Length;
-        int nodeIdx = (int)(step * serviceNodeIndex + 0.5);
+        int nodeIdx = (int) (step * serviceNodeIndex + 0.5);
 
         if (nodeIdx % 2 == 0)
         {

@@ -15,7 +15,7 @@ public class ActionGroupValidator : AbstractValidator<ActionGroup>
     private const string PropertyMustNotBeNullOrEmpty = "{PropertyName} must not be null or empty.";
     private readonly IAgvRepository _agvRepository;
     private readonly IRouteService _routeService;
-    private readonly IAgvGraphRepository _agvGraphRepository;
+    private readonly IGraphRepository _graphRepository;
     private Models.Agv.Agv? _agv;
     private bool _hasRoute;
 
@@ -23,12 +23,12 @@ public class ActionGroupValidator : AbstractValidator<ActionGroup>
     public ActionGroupValidator(IAgvRepository agvRepository,
         IRouteService routeService,
         IValidator<AgvAction> actionValidator,
-        IAgvGraphRepository agvGraphRepository
+        IGraphRepository graphRepository
     )
     {
         _agvRepository = agvRepository;
         _routeService = routeService;
-        _agvGraphRepository = agvGraphRepository;
+        _graphRepository = graphRepository;
         _hasRoute = false;
 
         RuleFor(p => p.OrderId)
@@ -195,6 +195,6 @@ public class ActionGroupValidator : AbstractValidator<ActionGroup>
 
     private Task<bool> TargetNodeExists(string nodeId)
     {
-        return _agvGraphRepository.NodeExistsAsync(nodeId);
+        return _graphRepository.NodeExistsAsync(nodeId);
     }
 }

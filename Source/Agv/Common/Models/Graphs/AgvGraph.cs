@@ -1,27 +1,18 @@
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using JetBrains.Annotations;
 using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
-namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+namespace Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 
 /// <summary>
 /// AGV Graph
 /// </summary>
 [PublicAPI]
-public record AgvGraph : CorrelatedBy<Guid>
+public record AgvGraph : CorrelatedBy<Guid>, IGraph
 {
     /// <inheritdoc/>
     public Guid CorrelationId { get; init; }
-
-    /// <summary>
-    /// The Guid of the related map 
-    /// </summary>
-    public Guid RelatedMapId { get; init; }
-
-    /// <summary>
-    /// The name of the related map (map ID)
-    /// </summary>
-    public string RelatedMapName { get; init; }
 
     /// <summary>
     /// The list of nodes in the graph.
@@ -45,17 +36,13 @@ public record AgvGraph : CorrelatedBy<Guid>
     /// <param name="correlationId"></param>
     /// <param name="nodes"></param>
     /// <param name="edges"></param>
-    /// <param name="relatedMapId"></param>
-    /// <param name="relatedMapName"></param>
     /// <param name="usability">Default is <see cref="GraphUsability.Valid"/>.</param>
-    public AgvGraph(Guid correlationId, ICollection<GraphNode> nodes, ICollection<GraphEdge> edges, Guid relatedMapId, string relatedMapName, GraphUsability usability = GraphUsability.Valid)
+    public AgvGraph(Guid correlationId, ICollection<GraphNode> nodes, ICollection<GraphEdge> edges, GraphUsability usability = GraphUsability.Valid)
     {
         Nodes = nodes;
         Edges = edges;
         Usability = usability;
         CorrelationId = correlationId;
-        RelatedMapId = relatedMapId;
-        RelatedMapName = relatedMapName;
     }
 
     /// <summary>
@@ -63,7 +50,6 @@ public record AgvGraph : CorrelatedBy<Guid>
     /// </summary>
     private AgvGraph()
     {
-        RelatedMapName = null!;
         Nodes = null!;
         Edges = null!;
     }
@@ -147,5 +133,16 @@ public record AgvGraph : CorrelatedBy<Guid>
         /// <summary>Waiting point</summary>
         [UsedImplicitly]
         Park
+    }
+
+    /// <summary>
+    /// Creates a (global) graph from the given agvGraph.
+    /// </summary>
+    /// <returns></returns>
+    public Graph ToGraph()
+    {
+        var graph = new Graph();
+        graph.Merge(this);
+        return graph;
     }
 }

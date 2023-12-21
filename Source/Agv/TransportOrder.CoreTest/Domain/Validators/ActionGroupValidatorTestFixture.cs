@@ -14,7 +14,7 @@ public class ActionGroupValidatorTestFixture
 
     private readonly Mock<IAgvRepository> _agvRepository = new();
 
-    private readonly Mock<IAgvGraphRepository> _agvGraphRepository = new();
+    private readonly Mock<IGraphRepository> _agvGraphRepository = new();
 
     public ActionGroupValidator ActionGroupValidator { get; private set; } = null!;
 

@@ -2,6 +2,9 @@ using JetBrains.Annotations;
 using MassTransit;
 using MassTransit.Testing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Moq;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.Common.Testing;
 
@@ -17,17 +20,17 @@ public class MassTransitConsumerTestFixture<TConsumer> where TConsumer : class, 
     /// <summary>
     /// Service provider
     /// </summary>
-    public ServiceProvider? Provider;
+    public ServiceProvider Provider { get; private set; } = null!;
 
     /// <summary>
     /// Started TestHarness
     /// </summary>
-    public ITestHarness? TestHarness;
+    public ITestHarness TestHarness { get; private set; } = null!;
 
     /// <summary>
     /// Consumer Hardness
     /// </summary>
-    public IConsumerTestHarness<TConsumer>? ConsumerHarness;
+    public IConsumerTestHarness<TConsumer> ConsumerHarness { get; private set; } = null!;
 
     /// <summary>
     /// Consumer test fixture to be used for consumer unit/integration tests
@@ -71,6 +74,7 @@ public class MassTransitConsumerTestFixture<TConsumer> where TConsumer : class, 
                 });
             });
 
+        collection.AddSingleton(new Mock<ILogger<TConsumer>>().Object);
         _serviceActions.AddRange(services);
         foreach (Action<IServiceCollection> service in _serviceActions)
         {
@@ -104,6 +108,25 @@ public class MassTransitConsumerTestFixture<TConsumer> where TConsumer : class, 
     /// <param name="collection"></param>
     protected virtual void ConfigureServices(IServiceCollection collection)
     {
+    }
+
+    /// <summary>
+    /// Does a TestHarness.Bus.Publish and then a SagaHarness.Consumed to actually consume the message
+    /// </summary>
+    /// <param name="message"></param>
+    /// <param name="filter"></param>
+    /// <typeparam name="T"></typeparam>
+    public async Task PublishMessageAsync<T>(T message, FilterDelegate<IReceivedMessage<T>>? filter = null) where T : class
+    {
+        await TestHarness.Bus.Publish(message);
+        (await (filter != null ? ConsumerHarness.Consumed.Any(filter) : ConsumerHarness.Consumed.Any<T>())).ShouldBeTrue();
+    }
+
+    public async Task<T> GetFirstPublishedMessageAsync<T>() where T : class
+    {
+        (await TestHarness.Published.Any<T>()).ShouldBeTrue();
+        var message = TestHarness.Published.Select<T>().First().Context.Message;
+        return message;
     }
 }
 

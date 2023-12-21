@@ -1,10 +1,10 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.Common.Time;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Map;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.States;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Helper;
@@ -17,11 +17,9 @@ public static class SimulatedAgvSagaGenerator
         AgvAction? currentAction = null,
         AgvGraph? agvGraph = null,
         AgvData? agvData = null,
-        AgvMap? agvMap = null,
         ITimeProvider? timeProvider = null,
         bool graphExists = true,
         bool dataExists = true,
-        bool mapExists = true,
         string currentState = nameof(SimulatedAgvStateMachine.Idle),
         int nodeTravelTime = 10,
         int initialSoc = 75,
@@ -45,14 +43,6 @@ public static class SimulatedAgvSagaGenerator
             agvData ??= new AgvData(correlationId, "model", "type", string.Empty, 10.0, 1.0, 1.0, 1.0, 1.0, 0.08726646, 1.0, 1.0, 42, Array.Empty<AgvData.Sensor>());
         }
 
-        if (!mapExists)
-        {
-            agvMap = null;
-        }
-        else
-        {
-            agvMap ??= agvGraph != null ? new MapGenerator(agvGraph).Generate() : null;
-        }
         var agv = new SimulatedAgv(correlationId, agvId, "",
             true,
             false,
@@ -60,7 +50,7 @@ public static class SimulatedAgvSagaGenerator
             true,
             DateTime.MinValue,
             DateTime.MinValue,
-            AgvGraph: agvGraph, AgvData: agvData, AgvMap: agvMap);
+            AgvGraph: agvGraph, AgvData: agvData);
         var simulatedAgvSaga = new SimulatedAgvSaga(agv, nodeTravelTime, initialSoc, batteryChargeRate, timeProvider ?? new DateTimeNowUtcProvider(), currentNode)
         {
             Action = currentAction,

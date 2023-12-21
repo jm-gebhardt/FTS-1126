@@ -18,10 +18,10 @@ public class ActionGroupInvalidConsumerTest
         var fixture = new ConsumerHubTestFixture<ActionGroupInvalidConsumer, IActionGroupPublisher>();
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
 
-        await fixture.TestHarness!.Bus.Publish(new ActionGroupInvalid(actionGroup.CorrelationId, actionGroup, new List<string> { "Error" }));
+        await fixture.TestHarness.Bus.Publish(new ActionGroupInvalid(actionGroup.CorrelationId, actionGroup, new List<string> { "Error" }));
 
         (await fixture.TestHarness.Published.Any<ActionGroupInvalid>()).ShouldBeTrue();
-        (await fixture.ConsumerHarness!.Consumed.Any<ActionGroupInvalid>()).ShouldBeTrue();
+        (await fixture.ConsumerHarness.Consumed.Any<ActionGroupInvalid>()).ShouldBeTrue();
 
         fixture.PublisherMock.Verify(h => h.SendActionGroupChangedAsync(
             It.IsAny<ActionGroupReadModel>()), Times.Once);

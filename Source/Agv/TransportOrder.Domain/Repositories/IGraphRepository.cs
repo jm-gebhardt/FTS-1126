@@ -1,14 +1,16 @@
 ﻿using System.Linq.Expressions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Graph;
 using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 
 /// <summary>
-/// Interface for the AgvRepository.
+/// Interface for the graph repository.
 /// </summary>
 [PublicAPI]
-public interface IAgvGraphRepository
+public interface IGraphRepository
 {
     /// <summary>
     /// Gets the graph from the GraphRepository for this agv.
@@ -20,12 +22,6 @@ public interface IAgvGraphRepository
     /// </summary>
     /// <param name="mapId">The correlation id of the map.</param>
     Task<ICollection<Guid>> GetAgvsRelatedToMap(Guid mapId);
-
-    /// <summary>
-    /// Gets all AgvGraph from repository.
-    /// </summary>
-    /// <returns></returns>
-    Task<List<AgvGraph>> GetAllAgvGraphsAsync();
 
     /// <summary>
     /// Gets the graph of selected agvs.
@@ -45,21 +41,21 @@ public interface IAgvGraphRepository
     /// Get node of this agv by NodeId.
     /// </summary>
     /// <param name="id">The Id of the node to get</param>
-    /// <param name="agvCorrelationId">The AgvCorrelationId</param>
-    Task<GraphNode> GetNodeAsync(string id, Guid agvCorrelationId);
+    Task<GraphNode> GetNodeAsync(string id);
 
     /// <summary>
-    /// Gets the agv graph representative for the given map.
+    /// Gets the graph for the given map.
     /// </summary>
     /// <param name="mapCorrelationId">The correlation id of the map.</param>
     /// <returns></returns>
-    Task<AgvGraph> GetGraphForMap(Guid mapCorrelationId);
+    Task<IGraph> GetGraphForMap(Guid mapCorrelationId);
 
     /// <summary>
-    /// Update the whole graph from <see cref="AgvGraph"/>.
+    /// Update the relation to the nodes/edges and Agvs. If the AgvGraph does not exist, it will be created.
     /// </summary>
     /// <param name="agvGraph">The Agv graph to add or replace</param>
-    Task AddOrUpdateAsync(AgvGraph agvGraph);
+    /// <returns>True if the AgvGraph was added or updated. False if e.g. not all nodes/edges were existing.</returns>
+    Task<bool> AddOrUpdateAgvGraphAsync(AgvGraph agvGraph);
 
     /// <summary>
     /// Remove the graph for the given agv.
@@ -76,9 +72,39 @@ public interface IAgvGraphRepository
     Task<bool> ExistsAsync(Guid agvCorrelationId);
 
     /// <summary>
-    /// Check if a node exists in the repository regardless of an agv.
+    /// Check if a (global) graph exists.
     /// </summary>
-    /// <param name="nodeId"></param>
+    /// <returns>True if any Nodes/Edges for the (global) graph exists.</returns>
+    Task<bool> ExistsAsync();
+
+    /// <summary>
+    /// Check if a node exists in the repository.
+    /// </summary>
+    /// <param name="nodeId">The Id of the node</param>
     /// <returns></returns>
     Task<bool> NodeExistsAsync(string nodeId);
+
+    /// <summary>
+    /// Gets the (global) Graph. If there is none it will create an empty one.
+    /// </summary>
+    Task<Graph> GetGraphAsync();
+
+    /// <summary>
+    /// Get nodes , but only which are included in the predicate filter.
+    /// </summary>
+    /// <param name="predicate">Optional Linq predicate. If null, there will be no filtering</param>
+    Task<IEnumerable<GraphNode>> GetNodesAsync(Expression<Func<EfNode, bool>>? predicate = null);
+
+    /// <summary>
+    /// Updates the Graph.
+    /// </summary>
+    /// <param name="graph">The new Graph.</param>
+    Task UpdateGraphAsync(Graph graph);
+
+    /// <summary>
+    /// Get the CorrelationIds of the Agv which have at least one node in the given list.
+    /// </summary>
+    /// <param name="nodes"></param>
+    /// <returns></returns>
+    Task<ICollection<Guid>> GetAgvIdsRelatedToNodesAsync(ICollection<GraphNode> nodes);
 }

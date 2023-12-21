@@ -1,14 +1,18 @@
 ﻿using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
+using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
-using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Repositories;
@@ -19,7 +23,9 @@ public class EfAgvGraphRepositoryTest
     #region Setup
     private class EfAgvGraphRepositoryTestFixture
     {
-        public EfAgvGraphRepository Repository { get; }
+        private readonly SemaphoreProvider<IGraphRepositorySemaphore> _semaphoreProvider = new();
+
+        public EfGraphRepository Repository { get; }
 
         public EfAgvGraphRepositoryTestFixture()
         {
@@ -30,7 +36,7 @@ public class EfAgvGraphRepositoryTest
                 );
             var provider = collection.BuildServiceProvider(true);
             var contextFactory = provider.GetService<IDbContextFactory<TransportOrderDbContext>>()!;
-            Repository = new EfAgvGraphRepository(contextFactory, mapper);
+            Repository = new EfGraphRepository(contextFactory, mapper, _semaphoreProvider, Mock.Of<ILogger<EfGraphRepository>>());
         }
     }
 
@@ -39,7 +45,6 @@ public class EfAgvGraphRepositoryTest
         actualAgvGraph.ShouldNotBeNull();
         actualAgvGraph.ShouldSatisfyAllConditions(
             e => e.CorrelationId.ShouldBe(expectedAgvGraph.CorrelationId),
-            e => e.RelatedMapId.ShouldBe(expectedAgvGraph.RelatedMapId),
             e => e.Usability.ToString().ShouldBe(expectedAgvGraph.Usability.ToString()));
         actualAgvGraph.Nodes.Count.ShouldBe(expectedAgvGraph.Nodes.Count);
         actualAgvGraph.Edges.Count.ShouldBe(expectedAgvGraph.Edges.Count);
@@ -84,7 +89,8 @@ public class EfAgvGraphRepositoryTest
         var fixture = new EfAgvGraphRepositoryTestFixture();
         var correlationId = Guid.NewGuid();
         var expectedAgvGraph = AgvGraphGenerator.CreateDefaultGraph(correlationId);
-        await fixture.Repository.AddOrUpdateAsync(expectedAgvGraph);
+        await fixture.Repository.UpdateGraphAsync(new Graph {Nodes = expectedAgvGraph.Nodes, Edges = expectedAgvGraph.Edges});
+        await fixture.Repository.AddOrUpdateAgvGraphAsync(expectedAgvGraph);
         List<GraphNode> expectedNodes = expectedAgvGraph.Nodes.Where(x => x.Id.Contains('1')).ToList();
 
         List<GraphNode> nodes = (await fixture.Repository.GetNodesAsync(correlationId, node => node.Id.Contains('1'))).ToList();
@@ -102,10 +108,11 @@ public class EfAgvGraphRepositoryTest
         var fixture = new EfAgvGraphRepositoryTestFixture();
         var correlationId = Guid.NewGuid();
         var expectedAgvGraph = AgvGraphGenerator.CreateDefaultGraph(correlationId);
-        await fixture.Repository.AddOrUpdateAsync(expectedAgvGraph);
+        await fixture.Repository.UpdateGraphAsync(new Graph {Nodes = expectedAgvGraph.Nodes, Edges = expectedAgvGraph.Edges});
+        await fixture.Repository.AddOrUpdateAgvGraphAsync(expectedAgvGraph);
         var expectedNode = expectedAgvGraph.Nodes.First();
 
-        var actualNode = await fixture.Repository.GetNodeAsync(expectedNode.Id, correlationId);
+        var actualNode = await fixture.Repository.GetNodeAsync(expectedNode.Id);
 
         VerifyGraphNode(actualNode, expectedNode);
     }
@@ -116,9 +123,9 @@ public class EfAgvGraphRepositoryTest
         var fixture = new EfAgvGraphRepositoryTestFixture();
         var correlationId = Guid.NewGuid();
         var expectedAgvGraph = AgvGraphGenerator.CreateDefaultGraph(correlationId);
-        await fixture.Repository.AddOrUpdateAsync(expectedAgvGraph);
+        await fixture.Repository.AddOrUpdateAgvGraphAsync(expectedAgvGraph);
 
-        await Should.ThrowAsync<NodeNotFoundException>(async () => await fixture.Repository.GetNodeAsync("Not existing Node Id", correlationId));
+        await Should.ThrowAsync<NodeNotFoundException>(async () => await fixture.Repository.GetNodeAsync("Not existing Node Id"));
     }
 
     [TestMethod]
@@ -135,34 +142,12 @@ public class EfAgvGraphRepositoryTest
         var fixture = new EfAgvGraphRepositoryTestFixture();
         var correlationId = Guid.NewGuid();
         var expectedAgvGraph = AgvGraphGenerator.CreateDefaultGraph(correlationId);
-        await fixture.Repository.AddOrUpdateAsync(expectedAgvGraph);
+        await fixture.Repository.UpdateGraphAsync(new Graph {Nodes = expectedAgvGraph.Nodes, Edges = expectedAgvGraph.Edges});
+        await fixture.Repository.AddOrUpdateAgvGraphAsync(expectedAgvGraph);
 
         var agvGraphInRepository = await fixture.Repository.GetAgvGraphAsync(correlationId);
 
         VerifyAgvGraph(agvGraphInRepository, expectedAgvGraph);
-    }
-
-    [TestMethod]
-    public async Task GetAllAgvGraphsAsync_WhenAgvsExist_ReturnsAllAgvGraphs()
-    {
-        var fixture = new EfAgvGraphRepositoryTestFixture();
-        var agvGraphs = new List<AgvGraph>();
-
-        for (int i = 0; i < 10; i++)
-        {
-            var agvGraph = AgvGraphGenerator.CreateDefaultGraph(Guid.NewGuid());
-            agvGraphs.Add(agvGraph);
-            await fixture.Repository.AddOrUpdateAsync(agvGraph);
-        }
-
-        List<AgvGraph> agvGraphsInRepository = await fixture.Repository.GetAllAgvGraphsAsync();
-
-        agvGraphsInRepository.Count.ShouldBe(agvGraphs.Count);
-        foreach (var agvGraphInRepository in agvGraphsInRepository)
-        {
-            var expectedAgvGraph = agvGraphs.First(x => x.CorrelationId == agvGraphInRepository.CorrelationId);
-            VerifyAgvGraph(agvGraphInRepository, expectedAgvGraph);
-        }
     }
 
     [TestMethod]
@@ -171,7 +156,8 @@ public class EfAgvGraphRepositoryTest
         var fixture = new EfAgvGraphRepositoryTestFixture();
         var correlationId = Guid.NewGuid();
         var agvGraph = AgvGraphGenerator.CreateDefaultGraph(correlationId);
-        await fixture.Repository.AddOrUpdateAsync(agvGraph);
+        await fixture.Repository.UpdateGraphAsync(new Graph {Nodes = agvGraph.Nodes, Edges = agvGraph.Edges});
+        await fixture.Repository.AddOrUpdateAgvGraphAsync(agvGraph);
 
         bool isExisting = await fixture.Repository.ExistsAsync(correlationId);
 
@@ -202,7 +188,8 @@ public class EfAgvGraphRepositoryTest
         var fixture = new EfAgvGraphRepositoryTestFixture();
         var correlationId = Guid.NewGuid();
         var expectedAgvGraph = AgvGraphGenerator.CreateDefaultGraph(correlationId);
-        await fixture.Repository.AddOrUpdateAsync(expectedAgvGraph);
+        await fixture.Repository.UpdateGraphAsync(new Graph {Nodes = expectedAgvGraph.Nodes, Edges = expectedAgvGraph.Edges});
+        await fixture.Repository.AddOrUpdateAgvGraphAsync(expectedAgvGraph);
         var agvGraphInRepository = await fixture.Repository.GetAgvGraphAsync(correlationId);
         agvGraphInRepository.ShouldNotBeNull();
         VerifyAgvGraph(agvGraphInRepository, expectedAgvGraph);
@@ -222,7 +209,8 @@ public class EfAgvGraphRepositoryTest
         {
             var agvGraph = AgvGraphGenerator.CreateDefaultGraph(Guid.NewGuid());
             agvGraphs.Add(agvGraph);
-            await fixture.Repository.AddOrUpdateAsync(agvGraph);
+            await fixture.Repository.UpdateGraphAsync(new Graph {Nodes = agvGraph.Nodes, Edges = agvGraph.Edges});
+            await fixture.Repository.AddOrUpdateAgvGraphAsync(agvGraph);
         }
         List<Guid> requestedGraphs = agvGraphs.Take(agvGraphs.Count - 1).Select(a => a.CorrelationId).ToList();
         ICollection<AgvGraph> agvGraphsInRepository = await fixture.Repository.GetSelectedAgvGraphsAsync(requestedGraphs);
@@ -245,14 +233,15 @@ public class EfAgvGraphRepositoryTest
         {
             var agvGraph = AgvGraphGenerator.CreateDefaultGraph(Guid.NewGuid());
             agvGraphs.Add(agvGraph);
-            await fixture.Repository.AddOrUpdateAsync(agvGraph);
+            await fixture.Repository.UpdateGraphAsync(new Graph {Nodes = agvGraph.Nodes, Edges = agvGraph.Edges});
+            await fixture.Repository.AddOrUpdateAgvGraphAsync(agvGraph);
         }
         List<Guid> requestedGraphs = agvGraphs.Take(agvGraphs.Count - 1).Select(a => a.CorrelationId).ToList();
         var undefinedGraph = "UNDEFINED".ToGuid();
         requestedGraphs.Add(undefinedGraph);
         ICollection<AgvGraph> agvGraphsInRepository = await fixture.Repository.GetSelectedAgvGraphsAsync(requestedGraphs);
 
-        agvGraphsInRepository.Count.ShouldBe(requestedGraphs.Except(new List<Guid> { undefinedGraph }).ToList().Count);
+        agvGraphsInRepository.Count.ShouldBe(requestedGraphs.Except(new List<Guid> {undefinedGraph}).ToList().Count);
         foreach (var agvGraphInRepository in agvGraphsInRepository)
         {
             var expectedAgvGraph = agvGraphs.First(x => x.CorrelationId == agvGraphInRepository.CorrelationId);

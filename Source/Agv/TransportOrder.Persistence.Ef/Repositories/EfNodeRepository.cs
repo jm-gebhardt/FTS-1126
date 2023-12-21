@@ -1,5 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Graph;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Map;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Node;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;
@@ -29,10 +29,11 @@ public class EfNodeRepository : INodeRepository
     public async Task<ICollection<NodeLock>> GetNodeStatesForMapAsync(Guid mapCorrelationId)
     {
         await using var context = await CreateDbContextAsync();
-
-        List<string> nodeIds = await context.Set<EfGraph>()
+        
+        List<string> nodeIds = await context.Set<Map>()
             .Include(g => g.Nodes)
-            .Where(g => g.RelatedMapId == mapCorrelationId).SelectMany(g => g.Nodes)
+            .Where(m => m.CorrelationId == mapCorrelationId)
+            .SelectMany(g => g.Nodes)
             .Select(n => n.Id)
             .Distinct()
             .ToListAsync();

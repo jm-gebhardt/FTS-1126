@@ -1,4 +1,4 @@
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph;
@@ -24,4 +24,16 @@ public interface IGraphGenerator
     /// </summary>
     /// <returns></returns>
     public AgvGraph Generate(Guid correlationId);
+
+    /// <summary>
+    /// Generate Graph.
+    /// </summary>
+    /// <returns></returns>
+    Common.Models.Graphs.Graph GenerateGraph();
+
+    /// <summary>
+    /// Generate Maps.
+    /// </summary>
+    /// <returns></returns>
+    IEnumerable<Common.Models.Graphs.Map> GenerateMaps();
 }

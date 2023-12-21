@@ -1,4 +1,4 @@
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Routing;
 using Gebhardt.StoreWare.Agv.TransportOrder.Routing.Implementations;
@@ -9,13 +9,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Domain.Services.Routing
 
 public class RouteServiceTestFixture
 {
-    private readonly Mock<IAgvGraphRepository> _agvGraphRepository;
+    private readonly Mock<IGraphRepository> _agvGraphRepository;
 
     public RouteService RouteService { get; }
 
     public RouteServiceTestFixture()
     {
-        _agvGraphRepository = new Mock<IAgvGraphRepository>();
+        _agvGraphRepository = new Mock<IGraphRepository>();
         RouteService = new RouteService(_agvGraphRepository.Object, new AStarRouteFinder(), new Mock<ILogger<RouteService>>().Object);
     }
 

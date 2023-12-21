@@ -1,3 +1,4 @@
+using Gebhardt.StoreWare.Agv.Common.Persistence;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Graph;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -5,28 +6,26 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess.Configuration;
 
 /// <summary>
-/// <see cref="EfGraph" /> Entity Framework Mapping
+/// <see cref="EfAgvGraph" /> Entity Framework Mapping
 /// </summary>
-public class AgvGraphClassMap : ClassMap<EfGraph>
+public class AgvGraphClassMap : ClassMap<EfAgvGraph>
 {
     /// <inheritdoc />
     public override string TableName => "AgvGraph";
 
     /// <inheritdoc />
-    protected override void Configure(EntityTypeBuilder<EfGraph> entity, ModelBuilder model)
+    protected override void Configure(EntityTypeBuilder<EfAgvGraph> entity, ModelBuilder model)
     {
         entity.HasKey(g => g.CorrelationId);
 
-        entity.HasMany(g => g.Nodes)
-            .WithOne()
-            .HasForeignKey(a => a.GraphCorrelationId)
-            .HasPrincipalKey(g => g.CorrelationId)
-            .OnDelete(DeleteBehavior.ClientCascade);
+        entity.HasMany(m => m.Edges)
+            .WithMany(n => n.AgvGraphs)
+            .UsingEntity("AgvGraphEdges");
 
-        entity.HasMany(g => g.Edges)
-            .WithOne()
-            .HasForeignKey(a => a.GraphCorrelationId)
-            .HasPrincipalKey(g => g.CorrelationId)
-            .OnDelete(DeleteBehavior.ClientCascade);
+        entity.HasMany(m => m.Nodes)
+            .WithMany(n => n.AgvGraphs)
+            .UsingEntity("AgvGraphNodes");
+
+        entity.ConfigureAllProperties(except: new[] {nameof(EfAgvGraph.Nodes), nameof(EfAgvGraph.Edges)});
     }
 }

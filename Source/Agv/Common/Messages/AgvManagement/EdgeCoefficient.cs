@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
+using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 

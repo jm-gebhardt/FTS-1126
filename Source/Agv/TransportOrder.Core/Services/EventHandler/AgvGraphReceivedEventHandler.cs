@@ -1,4 +1,5 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
+using Gebhardt.StoreWare.Agv.Common.Messages.Graphs.Events;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 using JetBrains.Annotations;
@@ -14,15 +15,20 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.EventHandler;
 [PublicAPI]
 public class AgvGraphReceivedEventHandler : IConsumer<AgvGraphReceived>
 {
-    private readonly IAgvGraphRepository _agvGraphRepository;
+    private readonly IGraphRepository _graphRepository;
+    private readonly IMapRepository _mapRepository;
     private readonly ILogger<AgvGraphReceivedEventHandler> _logger;
 
     /// <inheritdoc cref="AgvGraphReceivedEventHandler" />
-    /// <param name="agvGraphRepository"></param>
+    /// <param name="graphRepository"></param>
+    /// <param name="mapRepository"></param>
     /// <param name="logger"></param>
-    public AgvGraphReceivedEventHandler(IAgvGraphRepository agvGraphRepository, ILogger<AgvGraphReceivedEventHandler> logger)
+    public AgvGraphReceivedEventHandler(IGraphRepository graphRepository,
+        IMapRepository mapRepository,
+        ILogger<AgvGraphReceivedEventHandler> logger)
     {
-        _agvGraphRepository = agvGraphRepository;
+        _graphRepository = graphRepository;
+        _mapRepository = mapRepository;
         _logger = logger;
     }
 
@@ -31,10 +37,16 @@ public class AgvGraphReceivedEventHandler : IConsumer<AgvGraphReceived>
     {
         var agvGraph = context.Message.Graph;
 
-        await _agvGraphRepository.AddOrUpdateAsync(agvGraph);
+        if (await _graphRepository.AddOrUpdateAgvGraphAsync(agvGraph))
+        {
+            await context.Publish(new AgvGraphChanged(agvGraph.CorrelationId));
 
-        await context.Publish(new AgvGraphChanged(agvGraph.CorrelationId, agvGraph));
-
-        _logger.LogInformation("Graph {GraphCorrelationId} added or updated in repository", agvGraph.CorrelationId);
+            _logger.LogInformation("Graph {GraphCorrelationId} added or updated in repository.", agvGraph.CorrelationId);
+        }
+        else
+        {
+            _logger.LogInformation("Graph {GraphCorrelationId} was not stored in the repository. Emitting GraphMissing event.", agvGraph.CorrelationId);
+            await context.Publish(new GraphMissing(agvGraph.CorrelationId), context.CancellationToken);
+        }
     }
 }

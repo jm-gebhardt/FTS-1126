@@ -1,6 +1,6 @@
 ﻿using System.Globalization;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
+using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Helpers;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
@@ -61,7 +61,7 @@ public class MqttMapConsumer : IConsumer<MqttMap>
                 await context.Publish(new AgvMapReceived(
                     context.Message.SerialNumber.ToGuid(),
                     context.Message.SerialNumber,
-                    new AgvMap(
+                    new Map(
                         context.Message.MapId.ToGuid(),
                         context.Message.MapId,
                         modificationDate,

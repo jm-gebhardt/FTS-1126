@@ -17,9 +17,9 @@ public class NodeStateChangedConsumerTest
         var fixture = new ConsumerHubTestFixture<NodeStateChangedConsumer, IMapPublisher>();
         var nodeState = new NodeLock("NodeId", NodeLockState.Reserved, false, Guid.NewGuid(), DateTime.UtcNow);
 
-        await fixture.TestHarness!.Bus.Publish(new NodeStateChanged(nodeState));
+        await fixture.TestHarness.Bus.Publish(new NodeStateChanged(nodeState));
 
-        (await fixture.ConsumerHarness!.Consumed.Any<NodeStateChanged>()).ShouldBeTrue();
+        (await fixture.ConsumerHarness.Consumed.Any<NodeStateChanged>()).ShouldBeTrue();
         fixture.PublisherMock.Verify(h => h.SendNodeStateChangedAsync(
             nodeState), Times.Once);
     }

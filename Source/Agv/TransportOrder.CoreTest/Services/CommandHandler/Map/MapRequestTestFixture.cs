@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
@@ -10,7 +9,6 @@ using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
-using AgvStatus = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv.AgvStatus;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.CommandHandler.Map;
 
@@ -29,27 +27,11 @@ public class MapRequestTestFixture<TRequestClient, TConsumer> : MediatorTestFixt
     private readonly string[] _orders = {"ORDER001", "ORDER002", ""};
     private readonly AgvState[] _states = {AgvState.Busy, AgvState.Discovered};
 
-    private readonly GraphNode[] _nodes =
-    {
-        new("node00") {X = 0f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint},
-        new("node10") {X = 1f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint},
-        new("node01") {X = 0f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint},
-        new("node11") {X = 1f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint}
-    };
-
     private readonly Guid[] _correlationIds =
     {
         new("7FE9372B-4219-4D09-8885-966EE125A350"),
         new("041AD79E-1952-4AB7-BD3E-9EC972E27FBF"),
         new("465A85A6-6A02-4068-A7AA-E3B4B9821019")
-    };
-
-    private readonly GraphEdge[] _edges =
-    {
-        GraphEdge.CreateDirect("node00", "node01"),
-        GraphEdge.CreateDirect("node01", "node11"),
-        GraphEdge.CreateDirect("node11", "node10"),
-        GraphEdge.CreateDirect("node10", "node00")
     };
 
     /// <summary>
@@ -75,7 +57,6 @@ public class MapRequestTestFixture<TRequestClient, TConsumer> : MediatorTestFixt
             sc.AddTransient(_ => GetMapRepository().Object);
             sc.AddTransient(_ => GetAgvRepository().Object);
             sc.AddTransient(_ => GetMapper());
-            sc.AddTransient(_ => GetAgvGraphRepository().Object);
         });
         return this;
     }
@@ -104,7 +85,7 @@ public class MapRequestTestFixture<TRequestClient, TConsumer> : MediatorTestFixt
     {
         var mapRepositoryMock = new Mock<IMapRepository>();
 
-        mapRepositoryMock.Setup(x => x.GetAllMaps()).Returns(new EnumerableQuery<TransportOrder.Domain.Models.Map.Map>(new List<TransportOrder.Domain.Models.Map.Map>
+        mapRepositoryMock.Setup(x => x.GetAllMapsAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Map.Map>(new List<TransportOrder.Domain.Models.Map.Map>
         {
             new(_correlationIds[0], "Area51_Floor1_Compartment47", Convert.FromBase64String(Base64String), 1, 1, 0.01, 1, 2, DateTime.UtcNow),
             new(_correlationIds[1], "Area51_Floor1_Compartment48", Convert.FromBase64String(Base64String), 1, 1, 0.02, 2, 3, DateTime.UtcNow),
@@ -139,23 +120,6 @@ public class MapRequestTestFixture<TRequestClient, TConsumer> : MediatorTestFixt
         repositoryMock.Setup(x => x.GetAllAgvsAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>(agvs));
         repositoryMock.Setup(x => x.GetAgvAsync(It.IsAny<Guid>())).Returns<Guid>(correlationId => Task.FromResult(agvs.Single(a => a.CorrelationId == correlationId)));
 
-        return repositoryMock;
-    }
-
-    private Mock<IAgvGraphRepository> GetAgvGraphRepository()
-    {
-        var repositoryMock = new Mock<IAgvGraphRepository>();
-        const string mapName = "Map#1";
-
-        var agvGraphs = new List<AgvGraph>();
-        for (int i = 0; i < _agvIds.Length; i++)
-        {
-            var correlationId = _correlationIds[i];
-
-            agvGraphs.Add(new AgvGraph(correlationId, _nodes, _edges, _correlationIds[2], mapName));
-        }
-
-        repositoryMock.Setup(x => x.GetAllAgvGraphsAsync()).ReturnsAsync(agvGraphs);
         return repositoryMock;
     }
 

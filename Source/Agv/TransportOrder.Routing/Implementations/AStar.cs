@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Routing.Base;
 using Gebhardt.StoreWare.Agv.TransportOrder.Routing.Models;
@@ -133,7 +134,7 @@ public class AStar : BaseRouteAlgorithm
     /// <param name="agvGraph"></param>
     /// <param name="agvData"></param>
     /// <param name="routingPlausibilityChecker">The checker to use for the check in the base implementation</param>
-    public AStar(AgvGraph agvGraph, AgvData? agvData = null, IRoutingPlausibilityChecker? routingPlausibilityChecker = null) : base(agvGraph, routingPlausibilityChecker)
+    public AStar(IGraph agvGraph, AgvData? agvData = null, IRoutingPlausibilityChecker? routingPlausibilityChecker = null) : base(agvGraph, routingPlausibilityChecker)
     {
         _nodes = agvGraph.Nodes.ToDictionary(n => n.Id, n => new ANode(n));
         _agvData = agvData;

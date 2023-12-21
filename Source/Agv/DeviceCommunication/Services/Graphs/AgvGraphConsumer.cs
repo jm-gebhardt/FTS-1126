@@ -1,4 +1,4 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+﻿using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Events;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers;
@@ -7,7 +7,7 @@ using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
+namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Graphs;
 
 /// <summary>
 /// Transform graph information from AGV into MassTransit message.

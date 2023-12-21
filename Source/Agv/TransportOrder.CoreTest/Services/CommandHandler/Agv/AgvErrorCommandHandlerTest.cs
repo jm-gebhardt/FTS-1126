@@ -15,9 +15,9 @@ public class AgvErrorCommandHandlerTest
     {
         var fixture = new AgvErrorCommandHandlerTestFixture();
 
-        await fixture.TestHarness!.Bus.Publish(new UpdateErrorStatus(Guid.NewGuid(), new List<AgvError>()));
+        await fixture.TestHarness.Bus.Publish(new UpdateErrorStatus(Guid.NewGuid(), new List<AgvError>()));
 
-        (await fixture.ConsumerHarness!.Consumed.Any<UpdateErrorStatus>()).ShouldBeTrue();
+        (await fixture.ConsumerHarness.Consumed.Any<UpdateErrorStatus>()).ShouldBeTrue();
         fixture.AgvErrorRepository.Verify(x => x.AddOrUpdateAgvErrorStatusAsync(It.IsAny<List<AgvError>>(), It.IsAny<Guid>()), Times.Once());
     }
 
@@ -27,8 +27,8 @@ public class AgvErrorCommandHandlerTest
         var fixture = new AgvErrorCommandHandlerTestFixture()
             .WithAddOrUpdateAgvErrorStatusReturnValue(true);
         
-        await fixture.TestHarness!.Bus.Publish(new UpdateErrorStatus(Guid.NewGuid(), new List<AgvError>()));
-        (await fixture.ConsumerHarness!.Consumed.Any<UpdateErrorStatus>()).ShouldBeTrue();
+        await fixture.TestHarness.Bus.Publish(new UpdateErrorStatus(Guid.NewGuid(), new List<AgvError>()));
+        (await fixture.ConsumerHarness.Consumed.Any<UpdateErrorStatus>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<AgvErrorChanged>()).ShouldBeTrue();
     }
 }

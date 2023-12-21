@@ -1,5 +1,6 @@
 ﻿using System.Linq.Expressions;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
+using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Node;
@@ -14,13 +15,21 @@ public class ParkPointService : BaseNodeReservationManager, IParkPointService
     /// <summary>
     /// Constructor for base charging point manager
     /// </summary>
-    /// <param name="agvGraphRepository">The graph repository</param>
+    /// <param name="graphRepository">The graph repository</param>
     /// <param name="nodeStateRepository"></param>
     /// <param name="routeService"></param>
     /// <param name="logger"></param>
     /// <param name="semaphoreProvider"></param>
     /// <param name="agvDataRepository"></param>
-    public ParkPointService(IAgvGraphRepository agvGraphRepository, INodeStateRepository nodeStateRepository, IRouteService routeService, ILogger<ParkPointService> logger, IParkingSemaphoreProvider semaphoreProvider, IAgvDataRepository agvDataRepository) : base(agvGraphRepository, nodeStateRepository, routeService, logger, semaphoreProvider, agvDataRepository)
+    public ParkPointService(IGraphRepository graphRepository,
+        INodeStateRepository nodeStateRepository,
+        IRouteService routeService,
+        ILogger<ParkPointService> logger,
+        ISemaphoreProvider<IParkingSemaphore> semaphoreProvider, IAgvDataRepository agvDataRepository) : base(graphRepository,
+        nodeStateRepository,
+        routeService,
+        logger,
+        semaphoreProvider, agvDataRepository)
     {
     }
 

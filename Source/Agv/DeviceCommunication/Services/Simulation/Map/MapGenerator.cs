@@ -60,13 +60,13 @@ public class MapGenerator
     /// <summary>
     /// Initial graph passed by constructor for which the image will be created.
     /// </summary>
-    private readonly AgvGraph _graph;
+    private readonly IGraph _graph;
 
     /// <summary>
     /// Constructor.
     /// </summary>
     /// <param name="graph">Map is generated based on the given graph.</param>
-    public MapGenerator(AgvGraph graph)
+    public MapGenerator(IGraph graph)
     {
         _graph = graph;
     }
@@ -76,7 +76,7 @@ public class MapGenerator
     /// </summary>
     /// <returns>Map in PNG format plus additional attributes concerning scaling.</returns>
     /// <exception cref="InvalidOperationException">Graph nodes is empty.</exception>
-    public AgvMap Generate()
+    public Common.Models.Graphs.Map Generate(Guid mapId, string mapName)
     {
         if (_graph.Nodes.Count == 0)
         {
@@ -113,7 +113,7 @@ public class MapGenerator
         float xOffset = -min.X + WallDistance;
         float yOffset = -min.Y + WallDistance;
 
-        int imageHeightPx = (int)Math.Ceiling((max.Y - min.Y + 2 * WallDistance) / resolution);
+        int imageHeightPx = (int) Math.Ceiling((max.Y - min.Y + 2 * WallDistance) / resolution);
         float wallThicknessPx = WallThickness / resolution; // Wall thickness: 24 cm
 
         var imageInfo = new SKImageInfo(ImageWidth, imageHeightPx);
@@ -143,7 +143,7 @@ public class MapGenerator
                     float ratio = wallThicknessPx * 1.5f / bounds.Height;
                     paint.TextSize = ratio * paint.TextSize;
                 }
-                canvas.DrawText(Signature, ImageWidth - 2 * wallThicknessPx, imageHeightPx - (int)(2.0 * wallThicknessPx + 0.5), paint);
+                canvas.DrawText(Signature, ImageWidth - 2 * wallThicknessPx, imageHeightPx - (int) (2.0 * wallThicknessPx + 0.5), paint);
             }
 
             using (var image = surface.Snapshot())
@@ -155,26 +155,28 @@ public class MapGenerator
             }
         }
 
-        return new AgvMap(
-            _graph.RelatedMapId,
-            _graph.RelatedMapName,
+        return new Common.Models.Graphs.Map(
+            mapId,
+            mapName,
             DateTime.UtcNow,
             Convert.ToBase64String(map),
             ImageWidth,
             imageHeightPx,
             resolution,
             xOffset,
-            yOffset);
+            yOffset,
+            _graph.Nodes,
+            _graph.Edges);
     }
 
     /// <summary>
     /// Try to generate a PNG image from the map data.
     /// </summary>
-    /// <param name="agvMap"></param>
+    /// <param name="map"></param>
     /// <returns></returns>
     [PublicAPI]
-    public static SKImage GetPng(AgvMap agvMap)
+    public static SKImage GetPng(Common.Models.Graphs.Map map)
     {
-        return SKImage.FromEncodedData(Convert.FromBase64String(agvMap.ImageData));
+        return SKImage.FromEncodedData(Convert.FromBase64String(map.ImageData));
     }
 }

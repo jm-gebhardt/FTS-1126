@@ -1,10 +1,11 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Graph;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
+using Graph = Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent.Graph;
 using GraphEdge = Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent.GraphEdge;
 using GraphNode = Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent.GraphNode;
 
@@ -16,7 +17,7 @@ public class AgvGraphProfileTest
     private const double FloatComparisonThreshold = 0.0001;
 
     /// <summary>
-    /// Maps the <see cref="AgvGraph"/> to <see cref="GraphDto"/> and should map correctly for direct edge type.
+    /// Maps the <see cref="Common.Models.Graphs.AgvGraph"/> to <see cref="GraphDto"/> and should map correctly for direct edge type.
     /// </summary>
     [TestMethod]
     public void Map_ShouldMapAllPropertiesCorrectly_WhereAgvGraphIsMappedToGraph()
@@ -77,8 +78,8 @@ public class AgvGraphProfileTest
             new() { Id = "D2", Type = AgvGraph.NodeType.Drop, X = -3f, Y = 0f, Z = 0f }
         };
 
-        var edge1 = Common.Messages.AgvManagement.GraphEdge.CreateSlanted("S1", "D1", 1f, 90, 15d);
-        var edge2 = Common.Messages.AgvManagement.GraphEdge.CreateSlanted("S2", "D2", 1f, 45, 10d);
+        var edge1 = Common.Models.Graphs.GraphEdge.CreateSlanted("S1", "D1", 1f, 90, 15d);
+        var edge2 = Common.Models.Graphs.GraphEdge.CreateSlanted("S2", "D2", 1f, 45, 10d);
 
         var agvGraph = new Graph(nodes,
             new List<GraphEdge>
@@ -130,8 +131,8 @@ public class AgvGraphProfileTest
             new() { Id = "D2", Type = AgvGraph.NodeType.Drop, X = -3f, Y = 0f, Z = 0f }
         };
 
-        var edge1 = Common.Messages.AgvManagement.GraphEdge.CreateBezier1("S1", "D1", 1f, 20, 15);
-        var edge2 = Common.Messages.AgvManagement.GraphEdge.CreateBezier1("S2", "D2", 1f, 45, 10);
+        var edge1 = Common.Models.Graphs.GraphEdge.CreateBezier1("S1", "D1", 1f, 20, 15);
+        var edge2 = Common.Models.Graphs.GraphEdge.CreateBezier1("S2", "D2", 1f, 45, 10);
 
         var agvGraph = new Graph(nodes,
             new List<GraphEdge>
@@ -183,8 +184,8 @@ public class AgvGraphProfileTest
             new() { Id = "D2", Type = AgvGraph.NodeType.Drop, X = -3f, Y = 0f, Z = 0f }
         };
 
-        var edge1 = Common.Messages.AgvManagement.GraphEdge.CreateBezier2("S1", "D1", 1f, 20, 15, 30, 25);
-        var edge2 = Common.Messages.AgvManagement.GraphEdge.CreateBezier2("S2", "D2", 1f, 45, 10, 55, 20);
+        var edge1 = Common.Models.Graphs.GraphEdge.CreateBezier2("S1", "D1", 1f, 20, 15, 30, 25);
+        var edge2 = Common.Models.Graphs.GraphEdge.CreateBezier2("S2", "D2", 1f, 45, 10, 55, 20);
 
         var agvGraph = new Graph(nodes,
             new List<GraphEdge>

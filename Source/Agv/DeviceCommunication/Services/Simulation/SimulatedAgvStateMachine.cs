@@ -89,11 +89,6 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     public Event<RequestAgvData> RequestAgvDataEvent { get; private set; } = default!;
 
     /// <summary>
-    /// RequestAgvMap was received
-    /// </summary>
-    public Event<RequestAgvMap> RequestAgvMapEvent { get; private set; } = default!;
-
-    /// <summary>
     /// RequestStatusSend was received.
     /// </summary>
     public Event<RequestStatusSendSchedulerStart> RequestStatusSendEvent { get; private set; } = default!;
@@ -181,7 +176,6 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         DuringAny(SetSendAgvStatusHandler());
         DuringAny(SetRequestAgvGraphHandler());
         DuringAny(SetRequestAgvDataHandler());
-        DuringAny(SetRequestAgvMapHandler());
         DuringAny(SetSignalPositionHandler());
         DuringAny(SetRequestStatusSendHandler());
         DuringAny(SimulateAgvErrorHandler());
@@ -330,31 +324,6 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         return When(RequestAgvGraphEvent)
             .Then(c => _logger.LogDebug("{MessageType} {AgvId} / {CorrelationId} received", nameof(RequestAgvGraph), c.Message.AgvId, c.Saga.CorrelationId))
             .ThenAsync(PublishAgvGraph);
-    }
-
-    private EventActivityBinder<SimulatedAgvSaga, RequestAgvMap> SetRequestAgvMapHandler()
-    {
-        return When(RequestAgvMapEvent)
-            .Then(c => _logger.LogDebug("{MessageType} {AgvId} / {CorrelationId} / {MapId} received", nameof(RequestAgvMap), c.Message.AgvId, c.Saga.CorrelationId, c.Message.MapId))
-            .If(c => c.Saga.AgvMap != null,
-                x => x.Publish(c =>
-                {
-                    var sagaAgvMap = c.Saga.AgvMap!;
-                    return new AgvMapReceived(
-                        c.Saga.CorrelationId,
-                        c.Saga.AgvId,
-                        new AgvMap(
-                            c.Message.MapCorrelationId,
-                            c.Message.MapId,
-                            sagaAgvMap.ModificationDate,
-                            sagaAgvMap.ImageData,
-                            sagaAgvMap.Width,
-                            sagaAgvMap.Height,
-                            sagaAgvMap.Resolution,
-                            sagaAgvMap.XOffset,
-                            sagaAgvMap.YOffset
-                        ));
-                }));
     }
 
     private EventActivityBinder<SimulatedAgvSaga, SimulateAgvError> SimulateAgvErrorHandler()

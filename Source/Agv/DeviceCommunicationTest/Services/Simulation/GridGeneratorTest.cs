@@ -1,4 +1,4 @@
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;

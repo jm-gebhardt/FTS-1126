@@ -1,3 +1,4 @@
+using System.Net;
 using Gebhardt.StoreWare.Agv.SmartLinkCommunication.Models;
 using Gebhardt.StoreWare.Agv.SmartLinkCommunication.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,7 +28,7 @@ public class ModulePollingServiceTestFixture
         var mockRequest = new RestRequest(new Uri(SmartLinkUrl));
         var mockResponse = new RestResponse<SmartLinkData>(mockRequest)
         {
-            StatusCode = System.Net.HttpStatusCode.OK,
+            StatusCode = HttpStatusCode.OK,
             Content = jsonContent,
             ResponseStatus = ResponseStatus.Completed,
             IsSuccessStatusCode = true

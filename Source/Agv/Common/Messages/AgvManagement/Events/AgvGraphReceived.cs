@@ -1,4 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Contracts;
+using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using JetBrains.Annotations;
 using MassTransit;
 

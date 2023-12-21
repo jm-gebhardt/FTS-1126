@@ -6,22 +6,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Graph;
 /// AGV Graph. This model is for EF only
 /// </summary>
 [PublicAPI]
-public record EfGraph
+public record EfAgvGraph
 {
     /// <summary>
     /// The AgvCorrelationId
     /// </summary>
     public Guid CorrelationId { get; init; }
-
-    /// <summary>
-    /// The Guid of the related map 
-    /// </summary>
-    public Guid RelatedMapId { get; init; }
-
-    /// <summary>
-    /// The name of the related map (map ID)
-    /// </summary>
-    public string RelatedMapName { get; init; }
 
     /// <summary>
     /// The list of nodes in the graph.
@@ -42,9 +32,8 @@ public record EfGraph
     /// <summary>
     /// Deserialization constructor
     /// </summary>
-    private EfGraph()
+    private EfAgvGraph()
     {
-        RelatedMapName = null!;
         Nodes = null!;
         Edges = null!;
     }

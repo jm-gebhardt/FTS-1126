@@ -18,17 +18,22 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation;
 [TestClass]
 public class SimulatedAgvProviderTest
 {
-    [TestMethod]
-    public async Task SimulatedAgvProvider_Create_Triggered_CreateAgv_Published()
+    private static SimulateOptions GetSimulatedOptions(int numberOfAgvs = 1)
     {
-        var options = new SimulateOptions()
+        return new SimulateOptions()
         {
-            Agvs = 1,
+            Agvs = numberOfAgvs,
             Sources = new[] {"S1"},
             Destinations = new[] {"D1"},
             GridRows = 3,
             GridGraph = true
         };
+    }
+
+    [TestMethod]
+    public async Task SimulatedAgvProvider_Create_Triggered_CreateAgv_Published()
+    {
+        var options = GetSimulatedOptions();
 
         StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga> fixture = new StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(
                 s =>
@@ -49,15 +54,7 @@ public class SimulatedAgvProviderTest
     [TestMethod]
     public async Task TwoAgvs_SingleSourceAndDestination_CreateAgvPublished_AgvIdUnique_Successful()
     {
-        const int numberOfAgvs = 2;
-        var options = new SimulateOptions()
-        {
-            Agvs = numberOfAgvs,
-            Sources = new[] {"S1"},
-            Destinations = new[] {"D1"},
-            GridRows = 3,
-            GridGraph = true
-        };
+        var options = GetSimulatedOptions(2);
 
         StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga> fixture = new StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(
                 s =>
@@ -77,7 +74,7 @@ public class SimulatedAgvProviderTest
 
         (await fixture.SagaHarness.Consumed.Any<SimulatedAgvStateMachine.CreateAgv>()).ShouldBeTrue();
 
-        for (int i = 0; i < numberOfAgvs; i++)
+        for (int i = 0; i < options.Agvs; i++)
         {
             int i1 = i;
             var createdSaga = fixture.SagaHarness.Sagas.Select(c => c.CorrelationId == $"SimAgv-{i1}".ToGuid()).First().Saga;

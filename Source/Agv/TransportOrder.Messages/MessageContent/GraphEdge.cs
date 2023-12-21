@@ -6,10 +6,46 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
 /// <summary>
 /// Message content for a graph edge.
 /// </summary>
-/// <param name="From">The from node.</param>
-/// <param name="To">The to node.</param>
-/// <param name="Variant">The variant of this edge.</param>
-/// <param name="VariantParameters">Parameters for the variant type of this edge.</param>
-/// <param name="Length">The length of the edge.</param>
 [UsedImplicitly]
-public record GraphEdge(GraphNode From, GraphNode To, EdgeType Variant, ICollection<EdgeCoefficient> VariantParameters, double Length = 1.0);
+public record GraphEdge
+{
+    /// <summary>The from node.</summary>
+    public GraphNode From { get; init; }
+
+    /// <summary>The to node.</summary>
+    public GraphNode To { get; init; }
+
+    /// <summary>The variant of this edge.</summary>
+    public EdgeType Variant { get; init; }
+
+    /// <summary>Parameters for the variant type of this edge.</summary>
+    public ICollection<EdgeCoefficient> VariantParameters { get; init; }
+
+    /// <summary>The length of the edge.</summary>
+    public double Length { get; init; }
+
+    /// <summary>
+    /// AutoMapper
+    /// </summary>
+    private GraphEdge()
+    {
+        From = null!;
+        To = null!;
+        VariantParameters = null!;
+    }
+
+    /// <inheritdoc cref="GraphEdge"/>
+    /// <param name="from">The from node.</param>
+    /// <param name="to">The to node.</param>
+    /// <param name="variant">The variant of this edge.</param>
+    /// <param name="variantParameters">Parameters for the variant type of this edge.</param>
+    /// <param name="length">The length of the edge.</param>
+    public GraphEdge(GraphNode from, GraphNode to, EdgeType variant, ICollection<EdgeCoefficient> variantParameters, double length = 1.0)
+    {
+        From = from;
+        To = to;
+        Variant = variant;
+        VariantParameters = variantParameters;
+        Length = length;
+    }
+}

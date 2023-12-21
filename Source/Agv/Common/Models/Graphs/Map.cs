@@ -1,14 +1,14 @@
-﻿using JetBrains.Annotations;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using JetBrains.Annotations;
 using MassTransit;
 
-// ReSharper disable ConvertToPrimaryConstructor
-namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+namespace Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 
 /// <summary>
 /// AGV Map
 /// </summary>
 [PublicAPI]
-public record AgvMap : CorrelatedBy<Guid>
+public record Map : CorrelatedBy<Guid>, IGraph
 {
     /// <inheritdoc/>
     public Guid CorrelationId { get; init; }
@@ -55,6 +55,12 @@ public record AgvMap : CorrelatedBy<Guid>
     /// </summary>
     public float YOffset { get; init; }
 
+    /// <inheritdoc />
+    public ICollection<GraphNode> Nodes { get; init; }
+
+    /// <inheritdoc />
+    public ICollection<GraphEdge> Edges { get; init; }
+
     /// <summary>
     /// Constructor
     /// </summary>
@@ -67,7 +73,9 @@ public record AgvMap : CorrelatedBy<Guid>
     /// <param name="resolution">Resolution of the Image in [m/px].</param>
     /// <param name="xOffset">Distance from the left bound to the origin of the graph coordinates.</param>
     /// <param name="yOffset">Distance from the top bound to the origin of the graph coordinates.</param>
-    public AgvMap(Guid correlationId,
+    /// <param name="nodes"></param>
+    /// <param name="edges"></param>
+    public Map(Guid correlationId,
         string mapId,
         DateTime modificationDate,
         string imageData,
@@ -75,7 +83,10 @@ public record AgvMap : CorrelatedBy<Guid>
         int height,
         float resolution,
         float xOffset,
-        float yOffset)
+        float yOffset,
+        ICollection<GraphNode>? nodes = null,
+        ICollection<GraphEdge>? edges = null
+        )
     {
         CorrelationId = correlationId;
         MapId = mapId;
@@ -86,5 +97,7 @@ public record AgvMap : CorrelatedBy<Guid>
         Resolution = resolution;
         XOffset = xOffset;
         YOffset = yOffset;
+        Nodes = nodes ?? new List<GraphNode>();
+        Edges = edges ?? new List<GraphEdge>();
     }
 }

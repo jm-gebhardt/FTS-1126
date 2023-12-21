@@ -7,7 +7,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Routing.Implementations;
 public class AStarRouteFinder : IRouteFinder
 {
     /// <inheritdoc/>>
-    public async Task<Route?> TryGetRouteAsync(AgvGraph agvGraph, AgvData? agvData = null, CancellationToken cancellationToken = default, params string[] waypoints)
+    public async Task<Route?> TryGetRouteAsync(IGraph agvGraph, AgvData? agvData = null, CancellationToken cancellationToken = default, params string[] waypoints)
     {
         var route = await Task.Run(() =>
         {

@@ -1,4 +1,4 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+﻿using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 using JetBrains.Annotations;
@@ -46,6 +46,16 @@ public class AgvGraphBuilderSaga : SagaStateMachineInstance, CorrelatedBy<Guid>
     public AgvGraph? AgvGraph { get; private set; }
 
     /// <summary>
+    /// The name of the related map.
+    /// </summary>
+    public string? RelatedMapName { get; private set; }
+
+    /// <summary>
+    /// The Id of the related map.
+    /// </summary>
+    public Guid RelatedMapId { get; private set; }
+
+    /// <summary>
     /// Create new saga instance.
     /// </summary>
     /// <param name="correlationId">Mandatory correlation ID.</param>
@@ -59,7 +69,7 @@ public class AgvGraphBuilderSaga : SagaStateMachineInstance, CorrelatedBy<Guid>
     }
 
     /// <summary>
-    /// Merge graph and station list into an <see cref="Common.Messages.AgvManagement.AgvGraph"/>.
+    /// Merge graph and station list into an <see cref="Common.Models.Graphs.AgvGraph"/>.
     /// </summary>
     /// <exception cref="InvalidOperationException">Station list/graph missing or validation issue..</exception>
     public void MergeGraph()
@@ -75,5 +85,7 @@ public class AgvGraphBuilderSaga : SagaStateMachineInstance, CorrelatedBy<Guid>
 
         var parser = new StationListParser(MqttStationList, MqttGraph);
         AgvGraph = parser.Graph;
+        RelatedMapId = parser.RelatedMapId;
+        RelatedMapName = parser.RelatedMapName;
     }
 }

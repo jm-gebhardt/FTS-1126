@@ -1,5 +1,6 @@
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Graphs;
 using Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services;
 using Microsoft.Extensions.DependencyInjection;
 

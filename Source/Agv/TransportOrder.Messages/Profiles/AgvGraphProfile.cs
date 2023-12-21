@@ -1,8 +1,6 @@
 using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
-using GraphEdge = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.GraphEdge;
-using GraphNode = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.GraphNode;
+using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
+using Graph = Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent.Graph;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles;
 
@@ -17,8 +15,8 @@ public class AgvGraphProfile : Profile
         CreateMap<GraphEdge, MessageContent.GraphEdge>(MemberList.None);
         CreateMap<GraphNode, MessageContent.GraphNode>();
         CreateMap<AgvGraph, Graph>()
-            .ForMember(nameof(Graph.Edges), opt => opt.MapFrom<GraphEdgeValueResolver>())
+            .ForMember(nameof(Graph.Edges), opt => opt.MapFrom<AgvGraphGraphEdgeResolver>())
             // Graph is a record type, therefore we must initialize all properties in the ctor
-            .ForCtorParam(nameof(Graph.Edges), opt => opt.MapFrom((src, ctx) => new GraphEdgeValueResolver().Resolve(src, null!, null!, ctx)));
+            .ForCtorParam(nameof(Graph.Edges), opt => opt.MapFrom((src, ctx) => new AgvGraphGraphEdgeResolver().Resolve(src, null!, null!, ctx)));
     }
 }

@@ -24,12 +24,6 @@ public class EfEdge
     public string ToNodeId { get; init; }
 
     /// <summary>
-    /// The Id of the parent graph
-    /// </summary>
-    [UsedImplicitly]
-    public Guid GraphCorrelationId { get; init; }
-
-    /// <summary>
     /// Length of this edge in [m].
     /// </summary>
     public double Length { get; init; } = 1.0;
@@ -45,6 +39,16 @@ public class EfEdge
     public ICollection<EdgeCoefficient> VariantParameters { get; init; }
 
     /// <summary>
+    /// The Maps the node is part of.
+    /// </summary>
+    public ICollection<Map.Map> Maps { get; init; }
+
+    /// <summary>
+    /// The AgvGraphs the node is part of.
+    /// </summary>
+    public ICollection<EfAgvGraph> AgvGraphs { get; init; }
+
+    /// <summary>
     /// Ctor
     /// </summary>
     [UsedImplicitly]
@@ -54,5 +58,7 @@ public class EfEdge
         ToNodeId = null!;
         Variant = EdgeType.Direct;
         VariantParameters = new List<EdgeCoefficient>();
+        Maps = null!;
+        AgvGraphs = null!;
     }
 }

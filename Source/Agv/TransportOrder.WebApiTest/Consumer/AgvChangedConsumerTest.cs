@@ -46,13 +46,13 @@ public class AgvChangedConsumerTest
             .ReturnsAsync(responseMock.Object);
 
         var fixture = new ConsumerHubTestFixture<AgvChangedConsumer, IAgvPublisher>(services => { services.AddSingleton(mockGetAgvsClient.Object); });
-        await fixture.TestHarness!.Bus.Publish(
+        await fixture.TestHarness.Bus.Publish(
             new AgvOnlineChanged(
                 agv.CorrelationId,
                 true
             ));
 
-        (await fixture.ConsumerHarness!.Consumed.Any<AgvOnlineChanged>()).ShouldBeTrue();
+        (await fixture.ConsumerHarness.Consumed.Any<AgvOnlineChanged>()).ShouldBeTrue();
 
         fixture.PublisherMock.Verify(h => h.SendAgvOnlineChangedAsync(
             agv.CorrelationId, true), Times.Once);
@@ -64,8 +64,8 @@ public class AgvChangedConsumerTest
         var agvCorrelationId = Guid.NewGuid();
         var fixture = new ConsumerHubTestFixture<AgvChangedConsumer, IAgvPublisher>();
 
-       await fixture.TestHarness!.Bus.Publish(new AgvBecameIdle(agvCorrelationId));
-       (await fixture.ConsumerHarness!.Consumed.Any<AgvBecameIdle>()).ShouldBeTrue();
+       await fixture.TestHarness.Bus.Publish(new AgvBecameIdle(agvCorrelationId));
+       (await fixture.ConsumerHarness.Consumed.Any<AgvBecameIdle>()).ShouldBeTrue();
        fixture.PublisherMock.Verify(h => h.SendAgvRouteChangedAsync(new CurrentAgvRouteReadModel(agvCorrelationId, Array.Empty<string>())),
            Times.Once);
     }

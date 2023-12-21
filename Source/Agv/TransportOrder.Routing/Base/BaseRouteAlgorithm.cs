@@ -1,4 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Routing.Models;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Routing.Base;
@@ -26,7 +27,7 @@ public abstract class BaseRouteAlgorithm : IRouteAlgorithm
     /// </summary>
     /// <param name="agvGraph">The agvGraph to work with</param>
     /// <param name="routingPlausibilityChecker">The checker to use for the check in the base implementation</param>
-    protected BaseRouteAlgorithm(AgvGraph agvGraph, IRoutingPlausibilityChecker? routingPlausibilityChecker = null)
+    protected BaseRouteAlgorithm(IGraph agvGraph, IRoutingPlausibilityChecker? routingPlausibilityChecker = null)
     {
         _routingPlausibilityChecker = routingPlausibilityChecker;
         Edges = agvGraph.Edges;
