@@ -288,7 +288,7 @@ public class ActionCommandHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         agv.TryTransitionToBusy(true);
-        var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv.CorrelationId, actionState: ActionState.Started);
+        var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv.CorrelationId, actionStateMove: ActionState.Started);
         var fixture = new ActionCommandHandlerTestFixture();
         fixture.AddAgv(agv);
         fixture.AddActionGroup(actionGroup);

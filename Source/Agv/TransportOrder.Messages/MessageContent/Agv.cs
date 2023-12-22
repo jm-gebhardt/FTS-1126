@@ -59,6 +59,12 @@ public record Agv
     /// </summary>
     public List<AgvError> Errors { get; init; } = new();
 
+    /// <summary>The last node id of the agv.</summary>
+    public string? LastNodeId { get; init; }
+
+    /// <summary>The last node for the agv.</summary>
+    public GraphNode? LastNode { get; init; }
+
     /// <param name="correlationId">CorrelationId</param>
     /// <param name="agvId">AGV Serial Number</param>
     /// <param name="currentState">Current State</param>
@@ -73,7 +79,9 @@ public record Agv
     /// <param name="badBatteryLevel">Lower battery level in [%] for signaling "battery bad" (defined by VDA5050)</param>
     /// <param name="goodBatteryLevel">Upper battery level in [%] for signaling "battery good" (defined by VDA5050)</param>
     /// <param name="currentActionGroup">The recent ActionGroup of the Agv</param>
-    /// <param name="agvErrorDto">List of Agv errors</param>
+    /// <param name="agvError">List of Agv errors</param>
+    /// <param name="lastNodeId">Last node id for agv.</param>
+    /// <param name="lastNode">Last node for agv.</param>
     [PublicAPI]
     public Agv(
         Guid correlationId,
@@ -90,7 +98,9 @@ public record Agv
         int badBatteryLevel,
         int goodBatteryLevel,
         ActionGroupReadModel? currentActionGroup,
-        List<AgvError> agvErrorDto
+        List<AgvError> agvError,
+        string? lastNodeId,
+        GraphNode? lastNode
     )
     {
         CorrelationId = correlationId;
@@ -107,7 +117,9 @@ public record Agv
         BadBatteryLevel = badBatteryLevel;
         GoodBatteryLevel = goodBatteryLevel;
         CurrentActionGroup = currentActionGroup;
-        Errors = agvErrorDto;
+        Errors = agvError;
+        LastNodeId = lastNodeId;
+        LastNode = lastNode;
     }
 
     /// <summary>

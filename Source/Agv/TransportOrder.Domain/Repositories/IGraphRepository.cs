@@ -107,4 +107,11 @@ public interface IGraphRepository
     /// <param name="nodes"></param>
     /// <returns></returns>
     Task<ICollection<Guid>> GetAgvIdsRelatedToNodesAsync(ICollection<GraphNode> nodes);
+
+    /// <summary>
+    /// Get last graph nodes of provided agvs.
+    /// </summary>
+    /// <param name="lastNodeIdsByAgvCorrelationId">A dictionary with agv correlation id and last node id.</param>
+    /// <returns></returns>
+    public Task<IReadOnlyDictionary<Guid, GraphNode?>> GetLastNodesForAgvsAsync(Dictionary<Guid, string?> lastNodeIdsByAgvCorrelationId);
 }

@@ -67,6 +67,7 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
         AgvGraphRepository = new Mock<IGraphRepository>();
         AgvErrorRepository = new Mock<IAgvErrorRepository>();
         AgvRepository = new Mock<IAgvRepository>();
+
         QueueActionGroupRequestClient = new Mock<IRequestClient<QueueActionGroup>>();
         AgvDataRepository = new Mock<IAgvDataRepository>();
         ActionGroupRetrievalService = new Mock<IActionGroupRetrievalService>();
@@ -77,6 +78,7 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
         AgvErrorRepository.Setup(x => x.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(new List<AgvError>());
         AgvErrorRepository.Setup(x => x.GetActiveErrorsAsync(It.IsAny<IList<Guid>>())).ReturnsAsync(new List<AgvError>());
         ActionGroupRepository.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (Domain.Models.ActionGroup.ActionGroup?) null));
+        AgvGraphRepository.Setup(x => x.GetLastNodesForAgvsAsync(It.IsAny<Dictionary<Guid, string?>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (GraphNode?) null));
     }
 
     [UsedImplicitly]
@@ -119,6 +121,8 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
         QueueActionGroupRequestClient = new Mock<IRequestClient<QueueActionGroup>>();
         QueueActionGroupRequestClient.Setup(x => x.GetResponse<Success>(It.IsAny<QueueActionGroup>(), default, default))
             .Callback((QueueActionGroup q, CancellationToken _, RequestTimeout _) => { SentQueueActionGroup = q.ActionGroup; });
+ 
+        AgvGraphRepository.Setup(x => x.GetLastNodesForAgvsAsync(It.IsAny<Dictionary<Guid, string?>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (GraphNode?)null));
 
         return this;
     }

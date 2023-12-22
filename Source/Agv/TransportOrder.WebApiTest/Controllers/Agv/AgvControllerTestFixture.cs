@@ -95,7 +95,6 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         ActionGroupRepository.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (Domain.Models.ActionGroup.ActionGroup?) null));
         AgvErrorRepository.Setup(x => x.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(new List<AgvError>());
         AgvErrorRepository.Setup(x => x.GetActiveErrorsAsync(It.IsAny<IList<Guid>>())).ReturnsAsync(new List<AgvError>());
-        ActionGroupRepository.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (Domain.Models.ActionGroup.ActionGroup?) null));
         CargoRepository = new Mock<ICargoRepository>();
     }
 
@@ -112,7 +111,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             var state = States[i];
             string ip = Ips[i];
             var correlationId = GetGuid(agvId);
-            var agvStatus = agvId == "AGV003" ? null : new AgvStatus(correlationId, orderId, true, true, 10, true, true, "Node");
+            var agvStatus = agvId == "AGV003" ? null : new AgvStatus(correlationId, orderId, true, true, 10, true, true, "WAY3");
             var agvData = new AgvData(correlationId, "Karis", "BF1", ip, 1.8, 120.0, 0.6, 0.8, 0.7, 0.08726646, 1, 2.5, 1000, Array.Empty<AgvData.Sensor>());
             var agv = new Domain.Models.Agv.Agv(correlationId, agvId, agvStatus);
             agv = AgvGenerator.SetAgvState(state, false, agv);
@@ -136,7 +135,6 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
                 data[agvData.CorrelationId] = agvData;
                 return true;
             });
-
         return this;
     }
 
@@ -228,7 +226,9 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
 
     public AgvControllerTestFixture<TRequest, TRequestHandler> WithAgvGraph(Guid correlationId, AgvGraph agvGraph)
     {
-        AgvGraphRepository.Setup(x => x.GetAgvGraphAsync(correlationId)).ReturnsAsync(agvGraph);
+         AgvGraphRepository.Setup(x => x.GetAgvGraphAsync(correlationId)).ReturnsAsync(agvGraph);
+         AgvGraphRepository.Setup(x => x.GetNodeAsync(It.IsAny<string>()))
+             .ReturnsAsync(() =>  agvGraph.Nodes.First());
         return this;
     }
 

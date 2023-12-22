@@ -316,4 +316,19 @@ public class EfGraphRepository : IGraphRepository
 
         return agvIds;
     }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyDictionary<Guid, GraphNode?>> GetLastNodesForAgvsAsync(Dictionary<Guid, string?> lastNodeIdsByAgvCorrelationId)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        DbSet<EfNode> nodeContext = context.Set<EfNode>();
+        List<EfNode> nodeList = await nodeContext.Where(n => lastNodeIdsByAgvCorrelationId.Select(l => l.Value).Contains(n.Id)).AsNoTracking().ToListAsync();
+        Dictionary<Guid, GraphNode?> nodesByAgv = new();
+        foreach (KeyValuePair<Guid, string?> element in lastNodeIdsByAgvCorrelationId)
+        {
+            var efNode = nodeList.FirstOrDefault(pn => pn.Id == element.Value);
+            nodesByAgv.Add(element.Key, _mapper.Map<GraphNode>(efNode));
+        }
+        return nodesByAgv;
+    }
 }

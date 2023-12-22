@@ -17,7 +17,7 @@ public class ActionProfileTest
     [TestMethod]
     public void Map_ActionGroupToActionGroupDto_MapsActionsInOrderBySequence()
     {
-        var mapper = MappingHelper.GetMapper(new AgvProfile(), new ActionProfile(), new AgvErrorProfile(), new ActionGroupProfile());
+        var mapper = MappingHelper.GetMapper(new AgvGraphProfile(), new AgvProfile(), new ActionProfile(), new AgvErrorProfile(), new ActionGroupProfile());
 
         List<AgvAction> actions = AgvActionGenerator.GeneratePickDropActionGroup().Actions.OrderByDescending(x => x.Sequence).ToList();
         var actionGroup = AgvActionGenerator.GenerateActionGroup(actions);

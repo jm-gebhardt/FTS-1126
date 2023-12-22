@@ -1,4 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
+using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.CommandHandler;
@@ -29,12 +30,16 @@ public class AgvControllerTest
     [TestMethod]
     public async Task GetSingleAgv_ValidData_ReturnsSingleAgvDto()
     {
-        AgvControllerTestFixture<GetAgv, GetAgvsRequestHandler> fixture = new AgvControllerTestFixture<GetAgv, GetAgvsRequestHandler>()
-            .UseDefaultServices()
-            .Build();
+        var fixture = new AgvControllerTestFixture<GetAgv, GetAgvsRequestHandler>();
 
         string agvId = fixture.AgvIds[0];
         var correlationId = agvId.ToGuid();
+        var agvGraph = AgvGraphGenerator.CreateDefaultGraph(correlationId);
+
+        fixture
+            .WithAgvGraph(correlationId, agvGraph)
+            .UseDefaultServices()
+            .Build();
 
         var controller = fixture.Controller;
         ActionResult<AgvDto> response = await controller.GetAgv(correlationId);
@@ -43,8 +48,25 @@ public class AgvControllerTest
         result.ShouldNotBeNull();
 
         var agvDto = result.Value as AgvDto;
+ 
+        var expectedAgvDto = new AgvDto(correlationId, agvId, AgvStateType.Idle, agvDto!.TimeOfStateTransition, DateTime.MinValue, false, false, true, true, 10d, true, 20, 80, null, new List<AgvErrorDto>(), new GraphNodeDto {Id = "WAY1", Type = AgvGraph.NodeType.WayPoint, X = 1.0f, Y = 2.0f, Z = 0.0f, Theta = 0.0f});
         agvDto.ShouldNotBeNull();
-        agvDto.AgvId.ShouldBe(agvId);
+        agvDto.CorrelationId.ShouldBe(expectedAgvDto.CorrelationId);
+        agvDto.AgvId.ShouldBe(expectedAgvDto.AgvId);
+        agvDto.BadBatteryLevel.ShouldBe(expectedAgvDto.BadBatteryLevel);
+        agvDto.GoodBatteryLevel.ShouldBe(expectedAgvDto.GoodBatteryLevel);
+        agvDto.BatteryCharge.ShouldBe(expectedAgvDto.BatteryCharge);
+        agvDto.IsCharging.ShouldBe(expectedAgvDto.IsCharging);
+        agvDto.IsLocked.ShouldBe(expectedAgvDto.IsLocked);
+        agvDto.IsOnline.ShouldBe(expectedAgvDto.IsOnline);
+        agvDto.IsDisturbed.ShouldBe(expectedAgvDto.IsDisturbed);
+        agvDto.IsAutomatic.ShouldBe(expectedAgvDto.IsAutomatic);
+        agvDto.IsLocked.ShouldBe(expectedAgvDto.IsLocked);
+        agvDto.CurrentState.ShouldBe(expectedAgvDto.CurrentState);
+        agvDto.CurrentActionGroup.ShouldBe(expectedAgvDto.CurrentActionGroup);
+        agvDto.Errors.ShouldBe(expectedAgvDto.Errors);
+        agvDto.TimeOfLockStateChanged.ShouldBe(DateTime.MinValue);
+        agvDto.LastNode.ShouldNotBeNull();
     }
 
     [TestMethod]

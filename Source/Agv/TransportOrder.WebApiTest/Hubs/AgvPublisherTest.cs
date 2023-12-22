@@ -21,7 +21,7 @@ public class AgvPublisherTest
     public async Task SendAgvStateAsync_SendsAgvDto_To_AgvDiscovered()
     {
         PublisherFixture<AgvPublisher, AgvHub, IAgvClient> fixture = new PublisherFixture<AgvPublisher, AgvHub, IAgvClient>()
-            .WithMapper(new AgvProfile(), new Messages.Profiles.AgvProfile(), new ActionProfile(), new AgvErrorProfile(), new AgvPositionProfile())
+            .WithMapper(new AgvProfile(), new Messages.Profiles.AgvProfile(), new ActionProfile(), new AgvErrorProfile(), new AgvPositionProfile(), new AgvGraphProfile())
             .Build();
         var agv = fixture.Mapper.Map<Messages.MessageContent.Agv>(AgvGenerator.GenerateIdleAgv());
 
@@ -34,7 +34,7 @@ public class AgvPublisherTest
     public async Task SendAgvPositionAsync_SendsAgvPositionStatusDto_To_AgvPositionChanged()
     {
         PublisherFixture<AgvPublisher, AgvHub, IAgvClient> fixture = new PublisherFixture<AgvPublisher, AgvHub, IAgvClient>()
-            .WithMapper(new AgvProfile(), new ActionProfile(), new AgvErrorProfile(), new AgvPositionProfile())
+            .WithMapper(new AgvGraphProfile(), new AgvProfile(), new ActionProfile(), new AgvErrorProfile(), new AgvPositionProfile())
             .Build();
         var agvPositionStatus = new AgvPositionStatus(AgvId.ToGuid(), AgvId, new AgvPosition(false, 0, 0, 0, 0));
 
@@ -47,7 +47,7 @@ public class AgvPublisherTest
     public async Task SendAgvRouteAsync_SendsAgvRouteDto_To_AgvRouteChanged()
     {
         PublisherFixture<AgvPublisher, AgvHub, IAgvClient> fixture = new PublisherFixture<AgvPublisher, AgvHub, IAgvClient>()
-            .WithMapper(new AgvProfile(), new ActionProfile(), new AgvErrorProfile(), new AgvPositionProfile())
+            .WithMapper(new AgvProfile(), new ActionProfile(), new AgvErrorProfile(), new AgvPositionProfile(), new AgvGraphProfile())
             .Build();
         var agvCorrelationId = Guid.NewGuid();
         var agvRoute = new CurrentAgvRouteReadModel(agvCorrelationId, Array.Empty<string>());

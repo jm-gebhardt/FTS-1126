@@ -54,7 +54,8 @@ public class AgvProfileTest
             o => o.IsDisturbed.ShouldBe(agv.AgvStatus!.Disturbed),
             o => o.IsAutomatic.ShouldBe(agv.AgvStatus!.Automatic),
             o => o.BatteryCharge.ShouldBe(agv.AgvStatus!.BatteryCharge),
-            o => o.IsCharging.ShouldBe(agv.AgvStatus!.Charging)
+            o => o.IsCharging.ShouldBe(agv.AgvStatus!.Charging),
+            o => o.LastNodeId.ShouldBe(agvStatus.LastNodeId)
         );
     }
 

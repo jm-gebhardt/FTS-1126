@@ -1,4 +1,5 @@
 using AutoMapper;
+using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
@@ -22,16 +23,18 @@ public class GetAgvsRequestHandler : IConsumer<GetAgvs>,
     private readonly IActionGroupRetrievalService _actionGroupRepository;
     private readonly IMapper _mapper;
     private readonly IAgvErrorRepository _agvErrorRepository;
+    private readonly IGraphRepository _agvGraphRepository;
 
     /// <summary>
     /// Initializes a new  <see cref="GetAgvsRequestHandler"/> instance.
     /// </summary>
-    public GetAgvsRequestHandler(IAgvRepository agvRepository, IActionGroupRetrievalService actionGroupRepository, IMapper mapper, IAgvErrorRepository agvErrorRepository)
+    public GetAgvsRequestHandler(IAgvRepository agvRepository, IActionGroupRetrievalService actionGroupRepository, IMapper mapper, IAgvErrorRepository agvErrorRepository, IGraphRepository agvGraphRepository)
     {
         _agvRepository = agvRepository;
         _actionGroupRepository = actionGroupRepository;
         _mapper = mapper;
         _agvErrorRepository = agvErrorRepository;
+        _agvGraphRepository = agvGraphRepository;
     }
 
     /// <summary>
@@ -56,10 +59,13 @@ public class GetAgvsRequestHandler : IConsumer<GetAgvs>,
             throw new AgvsNotFoundException(selectedAgvs.Except(agvCorrelationIds).ToList());
         }
 
+        Dictionary<Guid, string?> agvLastNodeIds = agvs.ToDictionary(a => a.CorrelationId, a => a.AgvStatus?.LastNodeId);
+        
+        Task<IReadOnlyDictionary<Guid, GraphNode?>> agvLastNodesTask = _agvGraphRepository.GetLastNodesForAgvsAsync(agvLastNodeIds);
+
         Task<IReadOnlyDictionary<Guid, ActionGroupReadModel?>> actionGroupsTask = _actionGroupRepository.GetCurrentActionGroupsWithNodesAsync(agvCorrelationIds);
         Task<IList<AgvError>> errorsTask = _agvErrorRepository.GetActiveErrorsAsync(agvCorrelationIds);
-
-        await Task.WhenAll(actionGroupsTask, errorsTask);
+        await Task.WhenAll(actionGroupsTask, errorsTask, agvLastNodesTask);
 
         Dictionary<Guid, List<AgvError>> allAgvErrors = errorsTask.Result
             .GroupBy(e => e.AgvCorrelationId)
@@ -74,6 +80,9 @@ public class GetAgvsRequestHandler : IConsumer<GetAgvs>,
             {
                 _mapper.Map(agvErrors, agvMessageContent);
             }
+
+            _mapper.Map(agvLastNodesTask.Result[agv.CorrelationId], agvMessageContent);
+
             return agvMessageContent;
         }).ToList();
         await context.RespondAsync(new GotAgvs(agvsMessageContent));
@@ -96,6 +105,14 @@ public class GetAgvsRequestHandler : IConsumer<GetAgvs>,
 
         IList<AgvError> agvErrors = await _agvErrorRepository.GetActiveErrorsAsync(agvCorrelationId);
         _mapper.Map(agvErrors, agvMessageContent);
+
+        string? lastNodeId = agv.AgvStatus?.LastNodeId;
+        if (lastNodeId != null)
+        {
+            var lastNode = await _agvGraphRepository.GetNodeAsync(lastNodeId);
+            _mapper.Map(lastNode, agvMessageContent);
+        }
+
         await context.RespondAsync(new GotAgv(agvMessageContent));
     }
 }
