@@ -111,7 +111,7 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
         IEnumerable<AgvData> specifications = agvs.Select((a, i) => new AgvData(a.CorrelationId, "Karis", "BF1", "ipv4 address",
             1.8, 120.0, 0.6, 0.8, 0.7, 0.08726646, i, 2.5, 1000, Array.Empty<AgvData.Sensor>()));
 
-        _agvDataRepositoryMock.Setup(x => x.GetSelectedAgvData(It.IsAny<ICollection<Guid>>())).ReturnsAsync((ICollection<Guid> ids) => specifications.Where(s => ids.Contains(s.CorrelationId)).ToList());
+        _agvDataRepositoryMock.Setup(x => x.GetSelectedAgvDataAsync(It.IsAny<ICollection<Guid>>())).ReturnsAsync((ICollection<Guid> ids) => specifications.Where(s => ids.Contains(s.CorrelationId)).ToList());
  
         Dictionary<Guid, GraphNode?> nodes = agvs.ToDictionary(a => a.CorrelationId, 
             a => a.AgvStatus!.LastNodeId != null ? new GraphNode(a.AgvStatus!.LastNodeId!) { Id = a.AgvStatus!.LastNodeId! ,Type = AgvGraph.NodeType.WayPoint, X = 1.0f, Y = 2.0f, Z = 0.0f, Theta = 0.0f} : null);

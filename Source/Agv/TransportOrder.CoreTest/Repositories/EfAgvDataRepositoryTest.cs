@@ -19,7 +19,7 @@ public class EfAgvDataRepositoryTest
         await fixture.AddRangeAsync(specifications);
 
         List<Guid> correlationIds = specifications.Take(2).Select(s => s.CorrelationId).ToList();
-        ICollection<AgvData> selectedAgvData = await fixture.Repository.GetSelectedAgvData(correlationIds);
+        ICollection<AgvData> selectedAgvData = await fixture.Repository.GetSelectedAgvDataAsync(correlationIds);
         selectedAgvData.ShouldNotBeNull();
         selectedAgvData.Count.ShouldBe(correlationIds.Count);
         foreach (var actualData in selectedAgvData)
@@ -40,7 +40,7 @@ public class EfAgvDataRepositoryTest
 
         List<Guid> correlationIds = knownData.Select(s => s.CorrelationId).ToList();
         correlationIds.Add("Unknown".ToGuid());
-        ICollection<AgvData> actualDataOfAgvs = await fixture.Repository.GetSelectedAgvData(correlationIds);
+        ICollection<AgvData> actualDataOfAgvs = await fixture.Repository.GetSelectedAgvDataAsync(correlationIds);
         actualDataOfAgvs.ShouldNotBeNull();
         actualDataOfAgvs.Count.ShouldBe(knownData.Count);
         foreach (var actualAgvData in actualDataOfAgvs)

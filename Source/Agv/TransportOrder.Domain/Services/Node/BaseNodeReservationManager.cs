@@ -45,7 +45,7 @@ public abstract class BaseNodeReservationManager : BaseNodePicker
     {
         return await _semaphoreProvider.ExecuteLockedAsync(async () =>
         {
-            var agvData = AgvDataRepository.GetAgvData(agv.CorrelationId);
+            var agvData = await AgvDataRepository.GetAgvDataAsync(agv.CorrelationId);
             var node = await PickNode(agv, agvData);
 
             await ReserveNodeAsync(node.Id, agv.CorrelationId);

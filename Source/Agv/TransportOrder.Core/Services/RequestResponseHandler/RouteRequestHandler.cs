@@ -39,7 +39,7 @@ public class RouteRequestHandler : IConsumer<GetRoute>
     {
         var getRoute = context.Message;
         var agv = await _agvRepository.GetAgvAsync(getRoute.CorrelationId);
-        var agvData = _agvDataRepository.GetAgvData(agv.CorrelationId);
+        var agvData = await _agvDataRepository.GetAgvDataAsync(agv.CorrelationId);
         Route? route;
         try
         {

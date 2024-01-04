@@ -77,14 +77,14 @@ public interface IActionGroupRepository
     /// <summary>
     /// Get the ActionGroup.
     /// </summary>
-    /// <param name="correlationId">The correlation id.</param>
+    /// <param name="correlationId">The correlation id of the ActionGroup.</param>
     /// <returns></returns>
     Task<ActionGroup?> GetActionGroupAsync(Guid correlationId);
 
     /// <summary>
     /// Get the ActionGroup.
     /// </summary>
-    /// <param name="correlationId">The correlation id.</param>
+    /// <param name="correlationId">The correlation id of the ActionGroup.</param>
     /// <exception cref="ActionGroupNotFoundException">If the action group is not found.</exception>
     Task<ActionGroup> GetRequiredActionGroupByIdAsync(Guid correlationId);
 
@@ -109,12 +109,6 @@ public interface IActionGroupRepository
     /// <returns>Returns the AgvAction identified by key.</returns>
     /// <exception cref="ActionNotFoundException">If the action is not found.</exception>
     Task<AgvAction> GetRequiredActionByIdAsync(Guid correlationId);
-
-    /// <summary>
-    /// Delete all actions with the same parent id.
-    /// </summary>
-    /// <param name="parentId">Correlation id of the parent object.</param>
-    Task DeleteByParentIdAsync(Guid parentId);
 
     /// <summary>
     /// Updates the State and the corresponding Date of the Action and 

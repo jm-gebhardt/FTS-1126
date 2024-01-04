@@ -92,6 +92,23 @@ public class ActionEventHandlerTest
     }
 
     [TestMethod]
+    public async Task Consume_ActionGroupHasNoEstimatedDuration_PublishesEstimateActionGroupDuration()
+    {
+        var fixture = new ActionEventHandlerTestFixture();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        var agvId = Guid.NewGuid();
+        var actionGroupHasNoEstimatedDuration = new ActionGroupHasNoEstimatedDuration(actionGroup.Actions.First(), 1.5, agvId, actionGroup.CorrelationId);
+
+        await fixture.PublishMessageAsync(actionGroupHasNoEstimatedDuration);
+
+        var estimateActionGroupDuration = await fixture.GetFirstPublishedMessageAsync<EstimateActionGroupDuration>();
+        estimateActionGroupDuration.FirstAction.ShouldBeEquivalentTo(actionGroupHasNoEstimatedDuration.FirstAction);
+        estimateActionGroupDuration.FirstActionCosts.ShouldBe(actionGroupHasNoEstimatedDuration.FirstActionCosts);
+        estimateActionGroupDuration.AgvId.ShouldBe(actionGroupHasNoEstimatedDuration.AgvId);
+        estimateActionGroupDuration.ActionGroupId.ShouldBe(actionGroupHasNoEstimatedDuration.ActionGroupId);
+    }
+
+    [TestMethod]
     public async Task Consume_ActionAbortionCompleted_ValidData_PublishesHandleActionCompletion()
     {
         var fixture = new ActionEventHandlerTestFixture();

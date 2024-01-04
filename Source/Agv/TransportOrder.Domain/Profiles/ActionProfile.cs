@@ -6,10 +6,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Profiles;
 /// <summary>
 /// Profile for ActionGroup
 /// </summary>
-public class ActionGroupProfile : Profile
+public class ActionProfile : Profile
 {
     /// <summary/>
-    public ActionGroupProfile()
+    public ActionProfile()
     {
         CreateMap<ActionGroup, Models.ActionGroup.ActionGroup>().ReverseMap();
         CreateMap<AgvAction, Models.ActionGroup.AgvAction>().ReverseMap();

@@ -42,6 +42,11 @@ public record ActionGroupDto : DatedMessage
     public DateTime? CompletedDate { get; init; }
 
     /// <summary>
+    /// The estimated completion date, which is calculated by the system.
+    /// </summary>
+    public DateTime? EstimatedCompletionDate { get; init; }
+
+    /// <summary>
     /// The state of the action group. 
     /// </summary>
     public ActionGroupState State { get; init; }

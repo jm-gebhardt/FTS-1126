@@ -163,6 +163,7 @@ public class EfMapRepository : IMapRepository
                 .Include(m => m.MapAgvs)
                 .Include(m => m.Edges)
                 .Include(m => m.Nodes)
+                .AsSplitQuery()
                 .SingleOrDefaultAsync(g => g.CorrelationId == map.CorrelationId);
 
             if (await context.Set<EfNode>()

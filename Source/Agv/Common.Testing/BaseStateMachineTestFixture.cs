@@ -109,7 +109,7 @@ public abstract class BaseStateMachineTestFixture<TStateMachine, TInstance>
     }
 
     /// <summary>
-    /// Does a TestHarness.Bus.Publish and then a SagaHarness.Consumed to actually consume the message
+    /// Publish and consume the message
     /// </summary>
     /// <param name="message"></param>
     /// <param name="filter"></param>

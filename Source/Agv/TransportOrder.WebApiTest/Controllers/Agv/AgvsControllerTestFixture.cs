@@ -28,14 +28,14 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
     where TRequest : class
     where TRequestHandler : class, IConsumer
 {
-    public string[] AgvIds { get; } = {"AGV001", "AGV002", "AGV003"};
+    public string[] AgvIds { get; } = { "AGV001", "AGV002", "AGV003" };
 
     // ReSharper disable once MemberCanBePrivate.Global
-    public string[] Orders { get; } = {"ORDER001", "ORDER002", ""};
+    public string[] Orders { get; } = { "ORDER001", "ORDER002", "" };
 
     public AgvState[] States { get; } = { AgvState.Idle, AgvState.Busy, AgvState.Discovered };
 
-    private string[] Ips { get; } = {"127.0.0.1", "127.0.0.2", "127.0.0.3"};
+    private string[] Ips { get; } = { "127.0.0.1", "127.0.0.2", "127.0.0.3" };
 
     private Mock<IAgvRepository> AgvRepository { get; }
 
@@ -53,14 +53,18 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
 
     private readonly GraphNode[] _nodes =
     {
-        new("node00") {X = 0f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint},
-        new("node10") {X = 1f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint},
-        new("node01") {X = 0f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint},
-        new("node11") {X = 1f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint}
+        new("node00") { X = 0f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
+        new("node10") { X = 1f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
+        new("node01") { X = 0f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
+        new("node11") { X = 1f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint }
     };
 
-    public Common.Messages.ActionGroups.ActionGroup? SentQueueActionGroup { [UsedImplicitly]
-        get; private set; }
+    public Common.Messages.ActionGroups.ActionGroup? SentQueueActionGroup
+    {
+        [UsedImplicitly]
+        get;
+        private set;
+    }
 
     public AgvsControllerTestFixture()
     {
@@ -71,14 +75,14 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
         QueueActionGroupRequestClient = new Mock<IRequestClient<QueueActionGroup>>();
         AgvDataRepository = new Mock<IAgvDataRepository>();
         ActionGroupRetrievalService = new Mock<IActionGroupRetrievalService>();
-        ActionGroupRetrievalService.Setup(r => r.GetCurrentActionGroupsWithNodesAsync(It.IsAny<IReadOnlyCollection<Guid>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (ActionGroupReadModel?) null));
+        ActionGroupRetrievalService.Setup(r => r.GetCurrentActionGroupsWithNodesAsync(It.IsAny<IReadOnlyCollection<Guid>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (ActionGroupReadModel?)null));
 
         ActionGroupRepository = new Mock<IActionGroupRepository>();
-        ActionGroupRepository.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (Domain.Models.ActionGroup.ActionGroup?) null));
+        ActionGroupRepository.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (Domain.Models.ActionGroup.ActionGroup?)null));
         AgvErrorRepository.Setup(x => x.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(new List<AgvError>());
         AgvErrorRepository.Setup(x => x.GetActiveErrorsAsync(It.IsAny<IList<Guid>>())).ReturnsAsync(new List<AgvError>());
-        ActionGroupRepository.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (Domain.Models.ActionGroup.ActionGroup?) null));
-        AgvGraphRepository.Setup(x => x.GetLastNodesForAgvsAsync(It.IsAny<Dictionary<Guid, string?>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (GraphNode?) null));
+        ActionGroupRepository.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (Domain.Models.ActionGroup.ActionGroup?)null));
+        AgvGraphRepository.Setup(x => x.GetLastNodesForAgvsAsync(It.IsAny<Dictionary<Guid, string?>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (GraphNode?)null));
     }
 
     [UsedImplicitly]
@@ -104,9 +108,9 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
 
         AgvRepository.AddAgvsToMockRepository(agvs);
 
-        AgvDataRepository.Setup(x => x.Exists(It.IsAny<Guid>())).Returns<Guid>(correlationId => data.ContainsKey(correlationId));
-        AgvDataRepository.Setup(x => x.GetAgvData(It.IsAny<Guid>()))
-            .Returns<Guid>(correlationId =>
+        AgvDataRepository.Setup(x => x.ExistsAsync(It.IsAny<Guid>())).ReturnsAsync((Guid correlationId) => data.ContainsKey(correlationId));
+        AgvDataRepository.Setup(x => x.GetAgvDataAsync(It.IsAny<Guid>()))
+            .ReturnsAsync((Guid correlationId) =>
             {
                 data.TryGetValue(correlationId, out var agvData);
                 return agvData;
@@ -121,7 +125,7 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
         QueueActionGroupRequestClient = new Mock<IRequestClient<QueueActionGroup>>();
         QueueActionGroupRequestClient.Setup(x => x.GetResponse<Success>(It.IsAny<QueueActionGroup>(), default, default))
             .Callback((QueueActionGroup q, CancellationToken _, RequestTimeout _) => { SentQueueActionGroup = q.ActionGroup; });
- 
+
         AgvGraphRepository.Setup(x => x.GetLastNodesForAgvsAsync(It.IsAny<Dictionary<Guid, string?>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (GraphNode?)null));
 
         return this;
@@ -176,7 +180,7 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
         var controller = new AgvsController(GetMapper(),
             getAgvsRequestClient,
             getCurrentAgvRoutesRequestClient,
-            getAgvPositionsRequestClient, 
+            getAgvPositionsRequestClient,
             getAgvGraphsRequestClient,
             getAgvGetAgvDataRequestClient,
             getActiveErrorsRequestClient,

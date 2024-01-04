@@ -29,7 +29,7 @@ public class ActionEventHandlerTestFixture : MassTransitConsumerTestFixtureWithS
 
     public static IMapper GetMapper()
     {
-        return MappingHelper.GetMapper(new ActionGroupProfile());
+        return MappingHelper.GetMapper(new ActionProfile());
     }
 
     public void AddAssignedAgv(Guid? correlationId)

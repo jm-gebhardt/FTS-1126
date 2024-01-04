@@ -36,7 +36,7 @@ public class GetAgvDataRequestHandler :
     public async Task Consume(ConsumeContext<GetAgvData> context)
     {
         var correlationId = context.Message.CorrelationId;
-        var agvData = _agvDataRepository.GetAgvData(correlationId);
+        var agvData = await _agvDataRepository.GetAgvDataAsync(correlationId);
         if (agvData == null)
         {
             throw new AgvDataNotFoundException(correlationId);
@@ -53,7 +53,7 @@ public class GetAgvDataRequestHandler :
     public async Task Consume(ConsumeContext<GetAgvsData> context)
     {
         ICollection<Guid> selectedAgvs = context.Message.CorrelationIds;
-        ICollection<Common.Messages.AgvManagement.AgvData> fetchedData = await _agvDataRepository.GetSelectedAgvData(selectedAgvs);
+        ICollection<Common.Messages.AgvManagement.AgvData> fetchedData = await _agvDataRepository.GetSelectedAgvDataAsync(selectedAgvs);
         if (fetchedData.Count != selectedAgvs.Count)
         {
             throw new AgvsDataBatchQueryException(selectedAgvs.Except(fetchedData.Select(p => p.CorrelationId)).ToList());

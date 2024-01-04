@@ -60,11 +60,12 @@ public interface IRouteService
     /// </summary>
     /// <param name="agv">The agv to calculate the route for</param>
     /// <param name="destinationNodeIds">The list of destination node which should be approached one by one</param>
+    /// <param name="startNodeId">The start node Id from which the route should be calculated. If null the last node Id of the agv will be used.</param>
     /// <param name="agvData">The agv data.</param>
     /// <returns>The found route</returns>
     /// <exception cref="RouteNotFoundException"></exception>
     [PublicAPI]
-    Task<Route> GetRouteAsync(Models.Agv.Agv agv, IList<string> destinationNodeIds, AgvData? agvData);
+    Task<Route> GetRouteAsync(Models.Agv.Agv agv, IList<string> destinationNodeIds, string? startNodeId, AgvData? agvData);
 
     /// <summary>
     /// Returns the node from availableNodes with the lowest cost route from agv last node

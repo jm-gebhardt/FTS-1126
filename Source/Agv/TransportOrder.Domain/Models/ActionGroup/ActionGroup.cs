@@ -66,6 +66,11 @@ public class ActionGroup
     public ActionGroupCreator Creator { get; set; }
 
     /// <summary>
+    /// The estimated duration based on the estimated duration of the actions.
+    /// </summary>
+    public TimeSpan? EstimatedDuration { get; set; }
+
+    /// <summary>
     ///  Initializes a new <see cref="ActionGroup"/> instance.
     /// </summary>
     /// <param name="correlationId">The correlation id of the <see cref="ActionGroup"/>.</param>

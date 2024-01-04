@@ -15,8 +15,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Domain.Services.ActionG
 
 public class ChargingPointManagerTestFixture
 {
-    private static readonly string[] _sources = {"SRC1", "SRC2", "SRC3", "CRG1"};
-    private static readonly string[] _destinations = {"DST1", "DST2", "DST3", "CRG1"};
+    private static readonly string[] _sources = { "SRC1", "SRC2", "SRC3", "CRG1" };
+    private static readonly string[] _destinations = { "DST1", "DST2", "DST3", "CRG1" };
     private static readonly string _charge = _sources[3];
     private static readonly string _node01 = _sources[0];
     private static readonly string _node02 = _sources[1];
@@ -35,13 +35,13 @@ public class ChargingPointManagerTestFixture
 
     private readonly GraphNode[] _nodes =
     {
-        new(_charge) {Type = AgvGraph.NodeType.Charge, X = -2f, Y = -2f, Z = 0f},
-        new(_node01) {Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 0f, Z = 0f},
-        new(_node02) {Type = AgvGraph.NodeType.PickDrop, X = 4f, Y = 0f, Z = 0f},
-        new(_node03) {Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 3f, Z = 0f},
-        new(_node04) {Type = AgvGraph.NodeType.PickDrop, X = 4f, Y = 3f, Z = 0f},
-        new(_node05) {Type = AgvGraph.NodeType.PickDrop, X = 6f, Y = 9f, Z = 0f},
-        new(_node06) {Type = AgvGraph.NodeType.PickDrop, X = 13f, Y = 5f, Z = 0f}
+        new(_charge) { Type = AgvGraph.NodeType.Charge, X = -2f, Y = -2f, Z = 0f },
+        new(_node01) { Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 0f, Z = 0f },
+        new(_node02) { Type = AgvGraph.NodeType.PickDrop, X = 4f, Y = 0f, Z = 0f },
+        new(_node03) { Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 3f, Z = 0f },
+        new(_node04) { Type = AgvGraph.NodeType.PickDrop, X = 4f, Y = 3f, Z = 0f },
+        new(_node05) { Type = AgvGraph.NodeType.PickDrop, X = 6f, Y = 9f, Z = 0f },
+        new(_node06) { Type = AgvGraph.NodeType.PickDrop, X = 13f, Y = 5f, Z = 0f }
     };
 
     private readonly GraphEdge[] _edges =
@@ -83,9 +83,9 @@ public class ChargingPointManagerTestFixture
 
     public void SetupNodeLocker(bool reserveSuccess, bool lockSuccess, bool unlockSuccess, Func<IQueryable<GraphNode>, IQueryable<GraphNode>>? filterFreeUnlockedNodesFunction = null)
     {
-        NodeStateRepository.Setup(s => s.ReserveNodeAsync(It.IsAny<string>(), It.IsAny<Guid>())).Returns(Task.FromResult(reserveSuccess));
-        NodeStateRepository.Setup(s => s.LockNodeAsync(It.IsAny<string>())).Returns(Task.FromResult(lockSuccess));
-        NodeStateRepository.Setup(s => s.UnlockNodeAsync(It.IsAny<string>())).Returns(Task.FromResult(unlockSuccess));
+        NodeStateRepository.Setup(s => s.ReserveNodeAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(reserveSuccess);
+        NodeStateRepository.Setup(s => s.LockNodeAsync(It.IsAny<string>())).ReturnsAsync(lockSuccess);
+        NodeStateRepository.Setup(s => s.UnlockNodeAsync(It.IsAny<string>())).ReturnsAsync(unlockSuccess);
 
         filterFreeUnlockedNodesFunction ??= nodes => nodes;
         NodeStateRepository.Setup(s => s.FilterFreeUnlockedNodes(It.IsAny<IQueryable<GraphNode>>())).Returns(filterFreeUnlockedNodesFunction);

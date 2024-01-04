@@ -333,25 +333,6 @@ public class ActionGroupRepositoryTest
     }
 
     [TestMethod]
-    public async Task DeleteByParentIdAsync_WhenDeleteSuccessfully_ActionGroupNotExisting()
-    {
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
-        var actionToDeleteParentId = actionGroup.Actions.First();
-        actionToDeleteParentId.ParentId.ShouldBe(actionGroup.CorrelationId);
-        var fixture = await new ActionGroupRepositoryTestFixture()
-            .WithActionGroup(actionGroup)
-            .BuildAsync();
-
-        var actionGroupInRepository = await fixture.ActionGroupRepository.GetActionGroupAsync(actionGroup.CorrelationId);
-        actionGroupInRepository.ShouldNotBeNull();
-
-        await fixture.ActionGroupRepository.DeleteByParentIdAsync(actionToDeleteParentId.ParentId);
-
-        actionGroupInRepository = await fixture.ActionGroupRepository.GetActionGroupAsync(actionGroup.CorrelationId);
-        actionGroupInRepository.ShouldBeNull();
-    }
-
-    [TestMethod]
     public async Task UpdateActionAndGroupStateAsync_WhenActionHasBeenStarted_Updates_ActionGroupState_ActionState_And_AssignedAgv()
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();

@@ -35,7 +35,8 @@ public class ActionGroupControllerTest
     public async Task GetSingleActionGroup_ValidData_ReturnsSingleActionGroupDto()
     {
         var correlationId = Guid.NewGuid();
-        var actionGroup = new ActionGroupReadModel(correlationId, "OrderId", null, DateTime.UtcNow, null, null, ActionGroupState.Created, ActionGroupCreator.TransportOrder, new List<AgvActionReadModel>(), true);
+        var startedDate = DateTime.Parse("2021-01-01T00:00:54Z").ToUniversalTime();
+        var actionGroup = new ActionGroupReadModel(correlationId, "OrderId", null, DateTime.UtcNow, startedDate, null, TimeSpan.FromSeconds(6), ActionGroupState.Created, ActionGroupCreator.TransportOrder, new List<AgvActionReadModel>(), true);
         ActionGroupControllerTestFixture<GetActionGroup, ActionGroupRequestHandler> fixture = new ActionGroupControllerTestFixture<GetActionGroup, ActionGroupRequestHandler>()
             .Setup()
             .AddActionGroup(actionGroup)
@@ -50,6 +51,7 @@ public class ActionGroupControllerTest
         var actionGroupDto = result.Value as ActionGroupDto;
         actionGroupDto.ShouldNotBeNull();
         actionGroupDto.CorrelationId.ShouldBe(actionGroup.CorrelationId);
+        actionGroupDto.EstimatedCompletionDate.ShouldBe(DateTime.Parse("2021-01-01T00:01:00Z").ToUniversalTime());
     }
 
     [TestMethod]
@@ -64,7 +66,7 @@ public class ActionGroupControllerTest
         var controller = fixture.Controller;
         await MediatorShould.ThrowRequestExceptionAsync<ActionGroupNotFoundException>(async () => await controller.GetActionGroup(correlationId));
     }
-    
+
     [TestMethod]
     public async Task CancelActionGroup_ValidData_ReturnsOk()
     {
@@ -180,7 +182,7 @@ public class ActionGroupControllerTest
             .Build();
 
         var controller = fixture.Controller;
-        var response =  await controller.AbortActionGroup(actionGroup.CorrelationId);
+        var response = await controller.AbortActionGroup(actionGroup.CorrelationId);
         var result = response as OkResult;
         result.ShouldNotBeNull();
     }
@@ -188,7 +190,7 @@ public class ActionGroupControllerTest
     [TestMethod]
     public async Task AbortActionGroup_WrongActionGroupState_ReturnsBadRequest()
     {
-        var actionGroup =  AgvActionGenerator.GeneratePickDropActionGroup();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         ActionGroupControllerTestFixture<TriggerActionGroupAbortion, ActionGroupRequestHandler> fixture = new ActionGroupControllerTestFixture<TriggerActionGroupAbortion, ActionGroupRequestHandler>()
             .Setup()
             .AddActionGroup(actionGroup)

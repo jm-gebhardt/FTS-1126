@@ -76,7 +76,7 @@ public class MapsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
         repositoryMock.SetupGet(x => x.Count).Returns(agvs.Count);
         repositoryMock.Setup(x => x.GetIdleAgvsAsync()).ReturnsAsync(new List<Domain.Models.Agv.Agv>(agvs.Where(x => x.CurrentAgvState == AgvState.Idle)));
         repositoryMock.Setup(x => x.GetAllAgvsAsync()).ReturnsAsync(new List<Domain.Models.Agv.Agv>(agvs));
-        repositoryMock.Setup(x => x.GetAgvAsync(It.IsAny<Guid>())).Returns<Guid>(correlationId => Task.FromResult(agvs.Single(a => a.CorrelationId == correlationId)));
+        repositoryMock.Setup(x => x.GetAgvAsync(It.IsAny<Guid>())).ReturnsAsync((Guid correlationId) => agvs.Single(a => a.CorrelationId == correlationId));
 
         return repositoryMock;
     }

@@ -29,7 +29,7 @@ public class AgvRouteServiceTestFixture : DbTestFixtureBase<TransportOrderDbCont
         }
 
         _agvRepositoryMock.Setup(x => x.GetLastNodeIdAsync(It.IsAny<ICollection<Guid>>()))
-            .Returns<ICollection<Guid>>(agvCorrelationIds =>
+            .ReturnsAsync((ICollection<Guid> agvCorrelationIds) =>
             {
                 var result = new Dictionary<Guid, string?>();
 
@@ -51,7 +51,7 @@ public class AgvRouteServiceTestFixture : DbTestFixtureBase<TransportOrderDbCont
                         result[id] = null;
                     }
                 }
-                return Task.FromResult((IReadOnlyDictionary<Guid, string?>)result);
+                return result;
             });
     }
 

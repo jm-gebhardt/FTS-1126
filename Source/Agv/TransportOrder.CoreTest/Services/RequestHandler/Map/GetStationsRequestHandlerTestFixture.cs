@@ -23,7 +23,7 @@ public class GetStationsRequestHandlerTestFixture : MediatorTestFixture<GetStati
     public GetStationsRequestHandlerTestFixture WithAgvsRelatedToMap(Guid mapCorrelationId, List<Guid> agvCorrelationIds, List<AgvData> agvData)
     {
         _agvGraphRepository.Setup(x => x.GetAgvsRelatedToMap(mapCorrelationId)).ReturnsAsync(agvCorrelationIds);
-        _agvDataRepository.Setup(x => x.GetSelectedAgvData(agvCorrelationIds)).ReturnsAsync(agvData);
+        _agvDataRepository.Setup(x => x.GetSelectedAgvDataAsync(agvCorrelationIds)).ReturnsAsync(agvData);
         return this;
     }
 

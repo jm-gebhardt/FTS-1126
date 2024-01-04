@@ -12,10 +12,19 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
 /// <param name="CreatedDate">The creation date.</param>
 /// <param name="StartedDate">The start date.</param>
 /// <param name="CompletedDate">The completion date.</param>
+/// <param name="EstimatedDuration">The estimated duration based on the estimated duration of the actions.</param>
 /// <param name="State">The state of the action group.</param>
 /// <param name="Creator">The creator of the action group.</param>
 /// <param name="Actions">The action.</param>
 /// <param name="IsManual">The manual creation mode flag.</param>
-public record ActionGroupReadModel(Guid CorrelationId, string OrderId, Guid? AssignedAgv,
-    DateTime CreatedDate, DateTime? StartedDate, DateTime? CompletedDate, ActionGroupState State,
-    ActionGroupCreator Creator, ICollection<AgvActionReadModel> Actions, [UsedImplicitly] bool IsManual);
+public record ActionGroupReadModel(Guid CorrelationId,
+    string OrderId,
+    Guid? AssignedAgv,
+    DateTime CreatedDate,
+    DateTime? StartedDate,
+    DateTime? CompletedDate,
+    TimeSpan? EstimatedDuration,
+    ActionGroupState State,
+    ActionGroupCreator Creator,
+    ICollection<AgvActionReadModel> Actions,
+    [UsedImplicitly] bool IsManual);

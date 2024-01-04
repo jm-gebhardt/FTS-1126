@@ -1,12 +1,12 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Profiles;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.AgvActions;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 using ActionGroup = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
+using ActionProfile = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Profiles.ActionProfile;
 using SortDirection = Shouldly.SortDirection;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Profiles;
@@ -17,7 +17,7 @@ public class ActionProfileTest
     [TestMethod]
     public void Map_ActionGroupToActionGroupDto_MapsActionsInOrderBySequence()
     {
-        var mapper = MappingHelper.GetMapper(new AgvGraphProfile(), new AgvProfile(), new ActionProfile(), new AgvErrorProfile(), new ActionGroupProfile());
+        var mapper = MappingHelper.GetMapper(new AgvGraphProfile(), new AgvProfile(), new WebApi.Profiles.ActionProfile(), new AgvErrorProfile(), new ActionProfile());
 
         List<AgvAction> actions = AgvActionGenerator.GeneratePickDropActionGroup().Actions.OrderByDescending(x => x.Sequence).ToList();
         var actionGroup = AgvActionGenerator.GenerateActionGroup(actions);
@@ -28,7 +28,7 @@ public class ActionProfileTest
     [TestMethod]
     public void Map_ActionToActionDto_MapsAllPropertiesCorrectly()
     {
-        var mapper = MappingHelper.GetMapper(new ActionProfile());
+        var mapper = MappingHelper.GetMapper(new WebApi.Profiles.ActionProfile());
 
         var action = AgvActionGenerator.GeneratePickDropActionGroup().Actions.First().ConvertFromAgvActionWithFakeNodeType();
         var actionDto = mapper.Map<AgvActionDto>(action);
@@ -48,7 +48,7 @@ public class ActionProfileTest
     [TestMethod]
     public void Map_ActionGroupToActionGroupDto_MapsAllPropertiesCorrectly()
     {
-        var mapper = MappingHelper.GetMapper(new ActionProfile(), new ActionGroupProfile());
+        var mapper = MappingHelper.GetMapper(new WebApi.Profiles.ActionProfile(), new ActionProfile());
 
         var actionGroup = mapper.Map<ActionGroup>(AgvActionGenerator.GeneratePickDropActionGroup()).ConvertFromActionGroupWithFakeNodeType();
         var actionGroupDto = mapper.Map<ActionGroupDto>(actionGroup);

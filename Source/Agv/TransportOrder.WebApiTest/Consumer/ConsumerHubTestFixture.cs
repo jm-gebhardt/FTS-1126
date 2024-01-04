@@ -1,13 +1,13 @@
 using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Profiles;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Routing;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
+using ActionProfile = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Profiles.ActionProfile;
 using AgvPositionProfile = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Profiles.AgvPositionProfile;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Consumer;
@@ -36,13 +36,13 @@ public class ConsumerHubTestFixture<TConsumer, THubContext> : MassTransitConsume
             new AgvPositionProfile(),
             new MapProfile(),
             new AgvErrorProfile(),
-            new ActionProfile(),
+            new WebApi.Profiles.ActionProfile(),
             new Messages.Profiles.AgvProfile(),
             new Messages.Profiles.AgvGraphProfile(),
             new Messages.Profiles.AgvErrorProfile(),
             new Messages.Profiles.MapProfile(),
             new Messages.Profiles.AgvPositionProfile(),
-            new ActionGroupProfile()
+            new ActionProfile()
         );
         return mapper;
     }

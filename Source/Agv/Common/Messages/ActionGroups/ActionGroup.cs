@@ -44,6 +44,12 @@ public record ActionGroup : CorrelatedBy<Guid>
     public DateTime? CompletedDate { get; set; }
 
     /// <summary>
+    /// The estimated duration of the whole ActionGroup based on the estimated duration of the actions.
+    /// </summary>
+    [UsedImplicitly]
+    public TimeSpan? EstimatedDuration { get; set; }
+
+    /// <summary>
     /// State of the ActionGroup
     /// </summary>
     [UsedImplicitly]

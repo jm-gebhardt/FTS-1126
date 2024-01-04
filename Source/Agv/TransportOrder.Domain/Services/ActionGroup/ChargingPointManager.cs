@@ -44,7 +44,7 @@ public class ChargingPointManager : BaseNodeReservationManager, IChargingPointMa
     {
         try
         {
-            var agvData = AgvDataRepository.GetAgvData(agv.CorrelationId);
+            var agvData = await AgvDataRepository.GetAgvDataAsync(agv.CorrelationId);
             return await PickNode(agv, agvData);
         }
         catch (NoNodesAvailableException)

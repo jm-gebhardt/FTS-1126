@@ -38,7 +38,7 @@ public class MaintenanceService : BaseNodePicker, IMaintenanceService
     /// <exception cref="NodeNotFoundException"></exception>
     public async Task<GraphNode> GetMaintenanceNode(Models.Agv.Agv agv)
     {
-        var agvData = AgvDataRepository.GetAgvData(agv.CorrelationId);
+        var agvData = await AgvDataRepository.GetAgvDataAsync(agv.CorrelationId);
         return await PickNode(agv, agvData);
     }
 

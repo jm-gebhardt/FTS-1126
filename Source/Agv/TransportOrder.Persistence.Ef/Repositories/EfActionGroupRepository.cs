@@ -200,15 +200,6 @@ public class EfActionGroupRepository : IActionGroupRepository
         throw new ActionNotFoundException("ActionCorrelationId", nameof(correlationId), correlationId);
     }
 
-    /// <inheritdoc cref="IActionGroupRepository"/>
-    public async Task DeleteByParentIdAsync(Guid parentId)
-    {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-        DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
-        queryable.RemoveRange(queryable.Where(a => a.CorrelationId == parentId));
-        await context.SaveChangesAsync();
-    }
-
     /// <inheritdoc />
     public async Task<ActionGroup> UpdateActionAndGroupStateAsync(AgvAction action, Domain.Models.Agv.Agv? agv, ActionState state)
     {

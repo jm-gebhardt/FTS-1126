@@ -2,6 +2,7 @@ using JetBrains.Annotations;
 using MassTransit;
 using MassTransit.Testing;
 using Microsoft.Extensions.DependencyInjection;
+using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.Common.Testing;
 
@@ -115,6 +116,25 @@ public class MassTransitConsumerTestFixtureWithScheduler<TConsumer> where TConsu
     /// <param name="collection"></param>
     protected virtual void ConfigureServices(IServiceCollection collection)
     {
+    }
+
+    /// <summary>
+    /// Publish and consume the message
+    /// </summary>
+    /// <param name="message"></param>
+    /// <param name="filter"></param>
+    /// <typeparam name="T"></typeparam>
+    public async Task PublishMessageAsync<T>(T message, FilterDelegate<IReceivedMessage<T>>? filter = null) where T : class
+    {
+        await TestHarness.Bus.Publish(message);
+        (await (filter != null ? TestHarness.Consumed.Any(filter) : ConsumerHarness.Consumed.Any<T>())).ShouldBeTrue();
+    }
+
+    public async Task<T> GetFirstPublishedMessageAsync<T>() where T : class
+    {
+        (await TestHarness.Published.Any<T>()).ShouldBeTrue();
+        var message = TestHarness.Published.Select<T>().First().Context.Message;
+        return message;
     }
 }
 

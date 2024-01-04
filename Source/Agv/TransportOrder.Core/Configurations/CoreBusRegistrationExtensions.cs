@@ -115,6 +115,7 @@ public static class CoreBusRegistrationExtensions
             c.Message<TryStartManualAction>(x =>
                 x.UsePartitioner(partitioner, p => p.Message.AgvCorrelationId));
         });
+        busRegistrationConfigurator.AddConsumer<ActionEstimationCommandHandler>();
         busRegistrationConfigurator.AddRequestClient<CancelActionGroup>();
     }
 

@@ -23,9 +23,9 @@ public class MapRequestTestFixture<TRequestClient, TConsumer> : MediatorTestFixt
 {
     public const string Base64String = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
 
-    private readonly string[] _agvIds = {"AGV001", "AGV002"};
-    private readonly string[] _orders = {"ORDER001", "ORDER002", ""};
-    private readonly AgvState[] _states = {AgvState.Busy, AgvState.Discovered};
+    private readonly string[] _agvIds = { "AGV001", "AGV002" };
+    private readonly string[] _orders = { "ORDER001", "ORDER002", "" };
+    private readonly AgvState[] _states = { AgvState.Busy, AgvState.Discovered };
 
     private readonly Guid[] _correlationIds =
     {
@@ -118,7 +118,7 @@ public class MapRequestTestFixture<TRequestClient, TConsumer> : MediatorTestFixt
         repositoryMock.SetupGet(x => x.Count).Returns(agvs.Count);
         repositoryMock.Setup(x => x.GetIdleAgvsAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>(agvs.Where(x => x.CurrentAgvState == AgvState.Idle)));
         repositoryMock.Setup(x => x.GetAllAgvsAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>(agvs));
-        repositoryMock.Setup(x => x.GetAgvAsync(It.IsAny<Guid>())).Returns<Guid>(correlationId => Task.FromResult(agvs.Single(a => a.CorrelationId == correlationId)));
+        repositoryMock.Setup(x => x.GetAgvAsync(It.IsAny<Guid>())).ReturnsAsync((Guid correlationId) => agvs.Single(a => a.CorrelationId == correlationId));
 
         return repositoryMock;
     }

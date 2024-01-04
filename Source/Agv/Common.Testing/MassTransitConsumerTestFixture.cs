@@ -111,7 +111,7 @@ public class MassTransitConsumerTestFixture<TConsumer> where TConsumer : class, 
     }
 
     /// <summary>
-    /// Does a TestHarness.Bus.Publish and then a SagaHarness.Consumed to actually consume the message
+    /// Publish and consume the message
     /// </summary>
     /// <param name="message"></param>
     /// <param name="filter"></param>
@@ -119,7 +119,7 @@ public class MassTransitConsumerTestFixture<TConsumer> where TConsumer : class, 
     public async Task PublishMessageAsync<T>(T message, FilterDelegate<IReceivedMessage<T>>? filter = null) where T : class
     {
         await TestHarness.Bus.Publish(message);
-        (await (filter != null ? ConsumerHarness.Consumed.Any(filter) : ConsumerHarness.Consumed.Any<T>())).ShouldBeTrue();
+        (await (filter != null ? TestHarness.Consumed.Any(filter) : ConsumerHarness.Consumed.Any<T>())).ShouldBeTrue();
     }
 
     public async Task<T> GetFirstPublishedMessageAsync<T>() where T : class

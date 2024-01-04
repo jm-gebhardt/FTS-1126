@@ -17,10 +17,12 @@ public class ActionProfile : Profile
     public ActionProfile()
     {
         AddGlobalIgnore(nameof(DatedMessage.MessageCreatedDate));
-        CreateMap<ActionGroupReadModel, ActionGroupDto>();
+        CreateMap<ActionGroupReadModel, ActionGroupDto>()
+            .ForMember(g => g.EstimatedCompletionDate, opt => opt.MapFrom(g => g.StartedDate + g.EstimatedDuration));
         CreateMap<AgvActionReadModel, AgvActionDto>();
         CreateMap<AgvGroupCountByState, AgvGroupCountByStateDto>();
-        CreateMap<ActionGroup, ActionGroupDto>();
+        CreateMap<ActionGroup, ActionGroupDto>()
+            .ForMember(g => g.EstimatedCompletionDate, opt => opt.MapFrom(g => g.StartedDate + g.EstimatedDuration));
         CreateMap<AgvAction, AgvActionDto>().ForMember(m => m.TargetNodeType, opt => opt.Ignore());
         CreateMap<DateTime, DateTime>().ConvertUsing(new CustomDateTimeConverter());
         CreateMap<DateTime?, DateTime?>().ConvertUsing(new CustomDateTimeConverter());
@@ -55,7 +57,7 @@ public class ActionProfile : Profile
             {
                 return null;
             }
-            var sourceTime = (DateTime)source;
+            var sourceTime = (DateTime) source;
             switch (sourceTime.Kind)
             {
                 case DateTimeKind.Unspecified:

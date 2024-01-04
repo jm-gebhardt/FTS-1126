@@ -10,7 +10,7 @@ public class AgvPositionChangedConsumerTestFixture : ConsumerHubTestFixture<AgvP
 {
     public AgvPositionChangedConsumerTestFixture WithNodeReserved(string nodeId, bool reserve = true)
     {
-        NodeStateRepositoryMock.Setup(x => x.IsNodeReservedAsync(nodeId)).Returns(Task.FromResult(reserve));
+        NodeStateRepositoryMock.Setup(x => x.IsNodeReservedAsync(nodeId)).ReturnsAsync(reserve);
         NodeStateRepositoryMock.Setup(x => x.GetNodeStateAsync(nodeId)).ReturnsAsync(new NodeLock(nodeId, NodeLockState.Reserved, false, Guid.NewGuid(), DateTime.UtcNow));
         return this;
     }
@@ -23,13 +23,13 @@ public class AgvPositionChangedConsumerTestFixture : ConsumerHubTestFixture<AgvP
 
     public AgvPositionChangedConsumerTestFixture WithOutNodeState()
     {
-        NodeStateRepositoryMock.Setup(x => x.GetNodeStateAsync(It.IsAny<string>())).Returns(Task.FromResult<NodeLock?>(null));
+        NodeStateRepositoryMock.Setup(x => x.GetNodeStateAsync(It.IsAny<string>())).ReturnsAsync((NodeLock?)null);
         return this;
     }
 
     public AgvPositionChangedConsumerTestFixture WithAgvRoute(Guid agvCorrelationId, string lastNodeId, CurrentAgvRouteReadModel? currentAgvRoute)
     {
-        AgvRouteServiceMock.Setup(x => x.GetAgvRouteAsync(agvCorrelationId, lastNodeId)).Returns(Task.FromResult(currentAgvRoute));
+        AgvRouteServiceMock.Setup(x => x.GetAgvRouteAsync(agvCorrelationId, lastNodeId)).ReturnsAsync(currentAgvRoute);
         return this;
     }
 }

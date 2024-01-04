@@ -20,6 +20,7 @@ public class ActionEventHandler :
     IConsumer<StartingActionForAgvFailed>,
     IConsumer<NonChargingActionCompleted>,
     IConsumer<NodesSelectedForAction>,
+    IConsumer<ActionGroupHasNoEstimatedDuration>,
     IConsumer<ActionAbortionCompleted>,
     IConsumer<ActionCanceled>,
     IConsumer<AutomaticActionWithdrawn>
@@ -83,6 +84,12 @@ public class ActionEventHandler :
     public async Task Consume(ConsumeContext<NodesSelectedForAction> context)
     {
         await context.Publish(new PrepareAgvForStartingAction(context.Message.Action, context.Message.AssignedAgv));
+    }
+
+    /// <inheritdoc cref="ActionGroupHasNoEstimatedDuration" />
+    public async Task Consume(ConsumeContext<ActionGroupHasNoEstimatedDuration> context)
+    {
+        await context.Publish(new EstimateActionGroupDuration(context.Message.FirstAction, context.Message.FirstActionCosts, context.Message.AgvId, context.Message.ActionGroupId));
     }
 
     /// <summary>

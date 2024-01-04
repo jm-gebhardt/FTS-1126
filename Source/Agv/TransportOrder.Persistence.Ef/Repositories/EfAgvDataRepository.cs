@@ -23,15 +23,15 @@ public class EfAgvDataRepository : IAgvDataRepository
     }
 
     /// <inheritdoc/>
-    public bool Exists(Guid correlationId)
+    public Task<bool> ExistsAsync(Guid correlationId)
     {
-        return AgvData.Any(q => q.CorrelationId == correlationId);
+        return AgvData.AnyAsync(q => q.CorrelationId == correlationId);
     }
 
     /// <inheritdoc/>
-    public AgvData? GetAgvData(Guid correlationId)
+    public Task<AgvData?> GetAgvDataAsync(Guid correlationId)
     {
-        return AgvData.FirstOrDefault(q => q.CorrelationId == correlationId);
+        return AgvData.FirstOrDefaultAsync(q => q.CorrelationId == correlationId);
     }
 
     /// <inheritdoc/>
@@ -53,7 +53,7 @@ public class EfAgvDataRepository : IAgvDataRepository
     }
 
     /// <inheritdoc/>
-    public async Task<ICollection<AgvData>> GetSelectedAgvData(ICollection<Guid> correlationIds)
+    public async Task<ICollection<AgvData>> GetSelectedAgvDataAsync(ICollection<Guid> correlationIds)
     {
         return await AgvData.Where(a => correlationIds.Contains(a.CorrelationId)).ToListAsync();
     }

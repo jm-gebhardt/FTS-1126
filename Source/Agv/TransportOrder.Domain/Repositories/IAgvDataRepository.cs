@@ -11,14 +11,14 @@ public interface IAgvDataRepository
     /// Checks if AgvData related to its correlationId exists in repository
     /// </summary>
     /// <param name="correlationId">GUID of the AgvData looked for in the repository</param>
-    public bool Exists(Guid correlationId);
+    public Task<bool> ExistsAsync(Guid correlationId);
 
     /// <summary>
     /// Gets the AgvData for an agv from the AgvDataRepository.
     /// </summary>
     /// <param name="correlationId">AGV correlationId</param>
     /// <returns><see cref="AgvData"/> object or null if no data was found for the given correlationId</returns>
-    public AgvData? GetAgvData(Guid correlationId);
+    public Task<AgvData?> GetAgvDataAsync(Guid correlationId);
 
     /// <summary>
     /// Add or update a AgvData to/in the repository.
@@ -32,5 +32,5 @@ public interface IAgvDataRepository
     /// </summary>
     /// <param name="correlationIds">The correlation id of the selected agvs.</param>
     /// <returns></returns>
-    public Task<ICollection<AgvData>> GetSelectedAgvData(ICollection<Guid> correlationIds);
+    public Task<ICollection<AgvData>> GetSelectedAgvDataAsync(ICollection<Guid> correlationIds);
 }
