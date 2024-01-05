@@ -38,6 +38,16 @@ public static class Mathematics
         var vectorStart = new Vector3(first.X, first.Y, first.Z);
         var vectorEnd = new Vector3(second.X, second.Y, second.Z);
 
-        return (vectorStart - vectorEnd).Length();
+        return EuclideanDistance(vectorStart, vectorEnd);
+    }
+
+    /// <summary>
+    /// Calculates the euclidean distance between two <see cref="Vector3"/>.
+    /// </summary>
+    /// <param name="first">The first vector.</param>
+    /// <param name="second">The second vector.</param>
+    public static double EuclideanDistance(Vector3 first, Vector3 second)
+    {
+        return (first - second).Length();
     }
 }

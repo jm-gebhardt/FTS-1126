@@ -28,6 +28,8 @@ public class GraphParser
     private float _overallDistance;
     private float _overallDuration;
 
+    private const int BezierResolution = 100;
+
     /// <summary>Indicator for graph usability (valid or not).</summary>
     private AgvGraph.GraphUsability _usability = AgvGraph.GraphUsability.Valid;
 
@@ -55,27 +57,67 @@ public class GraphParser
     }
 
     /// <summary>
-    /// Calculate distance of the <paramref name="mqttEdge"/>.
+    /// Calculate length of the <paramref name="mqttEdge"/>.
     /// </summary>
     /// <param name="mqttEdge">The edge for which the metric will be calculated.</param>
     /// <param name="nodes">List of nodes e.g. required for getting coordinates.</param>
     /// <returns>Distance of the edge.</returns>
     /// <exception cref="InvalidOperationException">Nodes addressed by the edge cannot be found
     /// in the nodes listing or isn't unique.</exception>
-    private static float CalculateDistance(MqttEdge mqttEdge, MqttNode[] nodes)
+    private static double CalculateEdgeLength(MqttEdge mqttEdge, MqttNode[] nodes)
     {
         var start = nodes.SingleOrDefault(x => x.NodeId == mqttEdge.StartId);
         var end = nodes.SingleOrDefault(x => x.NodeId == mqttEdge.EndId);
+
+        bool parsed = Enum.TryParse<EdgeType>(mqttEdge.EdgeType, true, out var edgeType);
+        if (!parsed)
+        {
+            edgeType = EdgeType.Direct;
+        }
 
         if (start == null || end == null)
         {
             throw new InvalidOperationException("Node addressed by an edge is not part of the node listing.");
         }
 
-        var vectorStart = new Vector3(start.X, start.Y, start.Z ?? 0f);
-        var vectorEnd = new Vector3(end.X, end.Y, end.Z ?? 0f);
+        double length;
 
-        return (vectorStart - vectorEnd).Length();
+        switch (edgeType)
+        {
+            case EdgeType.Bezier1:
+                var bezier = new Bezier(new List<Vector2>
+                {
+                    new(start.X, start.Y), 
+                    new(mqttEdge.ControlPoints!.First().X, mqttEdge.ControlPoints!.First().Y),
+                    new(end.X, end.Y)
+                });
+                length = bezier.GetLength(BezierResolution);
+                break;
+
+            case EdgeType.Bezier2:
+                bezier = new Bezier(new List<Vector2>
+                {
+                    new(start.X, start.Y),
+                    new(mqttEdge.ControlPoints!.First().X, mqttEdge.ControlPoints!.First().Y),
+                    new(mqttEdge.ControlPoints!.Last().X, mqttEdge.ControlPoints!.Last().Y),
+                    new(end.X, end.Y)
+                });
+                length = bezier.GetLength(BezierResolution);
+                break;
+
+            case EdgeType.Slanted:
+            case EdgeType.Polypath:
+            case EdgeType.Direct:
+                var vectorStart = new Vector3(start.X, start.Y, start.Z ?? 0f);
+                var vectorEnd = new Vector3(end.X, end.Y, end.Z ?? 0f);
+                length = Mathematics.EuclideanDistance(vectorStart, vectorEnd);
+                break;
+
+            default:
+                throw new ArgumentOutOfRangeException($"Unhandled edge type: {edgeType}");
+        }
+
+        return length;
     }
 
     /// <summary>
@@ -83,36 +125,37 @@ public class GraphParser
     /// </summary>
     private void ParseVelocity()
     {
-        if (!_checkedVelocity)
+        if (_checkedVelocity)
         {
-            _checkedVelocity = true;
-            _considerVelocity = _graph.Edges!.All(x => x.MaxVelocity > 0.00001f); // Precision of single is about 6 to 9 digits.
+            return;
         }
+        _checkedVelocity = true;
+        _considerVelocity = _graph.Edges!.All(x => x.MaxVelocity > 0.00001f); // Precision of single is about 6 to 9 digits.
     }
 
     /// <summary>
-    /// Helper to create new edge from AGV edge and calculate average graph attributes.
+    /// Helper to create new edge from AGV edge and calculate graph attributes.
     /// </summary>
-    /// <returns>Returns true when add has been added</returns>
-    private bool BuildEdge(MqttEdge mqttEdge, float metric, float distance, bool swap = false)
+    /// <returns>Returns true when the edge has been added</returns>
+    private bool BuildEdge(MqttEdge mqttEdge, float metric, double length, bool swap = false)
     {
         var (fromNode, toNode) = GetFromToNodes(mqttEdge);
-        string fromNodeId = swap ? fromNode.Id : toNode.Id;
-        string toNodeId = swap ? toNode.Id : fromNode.Id;
+        string fromNodeId = swap ? toNode.Id : fromNode.Id;
+        string toNodeId = swap ? fromNode.Id : toNode.Id;
         var id = GraphHelper.ToGuid(fromNodeId, metric, toNodeId);
-        var edge = GetGraphEdgeForCurveType(mqttEdge, metric, swap, fromNodeId, toNodeId, id);
+        var edge = GetGraphEdgeForCurveType(mqttEdge, (float)length, swap, fromNodeId, toNodeId, id);
         bool added = _edges.Add(edge);
         if (added && _considerVelocity)
         {
-            _overallDistance += distance;
+            _overallDistance += (float)length;
             // No division by zero due to _considerVelocity.
-            _overallDuration += distance / mqttEdge.MaxVelocity;
+            _overallDuration += (float)length / mqttEdge.MaxVelocity;
         }
 
         return added;
     }
 
-    private static GraphEdge GetGraphEdgeForCurveType(MqttEdge mqttEdge, float metric, bool swap, string fromNodeId, string toNodeId, Guid id)
+    private static GraphEdge GetGraphEdgeForCurveType(MqttEdge mqttEdge, float length, bool swap, string fromNodeId, string toNodeId, Guid id)
     {
         ICollection<MqttControlPoint>? controlPoints = swap ? mqttEdge.ControlPoints?.Reverse().ToList() : mqttEdge.ControlPoints;
         bool parsed = Enum.TryParse<EdgeType>(mqttEdge.EdgeType, true, out var edgeType);
@@ -123,34 +166,34 @@ public class GraphParser
         switch (edgeType)
         {
             case EdgeType.Direct:
-                return GraphEdge.CreateDirect(fromNodeId, toNodeId, metric, id);
+                return GraphEdge.CreateDirect(fromNodeId, toNodeId, length, id);
 
             case EdgeType.Bezier1:
                 if (controlPoints?.Count != 1)
                 {
                     throw new MqttGraphParsingException($"Wrong number of control points for {nameof(EdgeType.Bezier1)} curve");
                 }
-                return GraphEdge.CreateBezier1(fromNodeId, toNodeId, metric, controlPoints.First().X, controlPoints.First().Y, id);
+                return GraphEdge.CreateBezier1(fromNodeId, toNodeId, length, controlPoints.First().X, controlPoints.First().Y, id);
 
             case EdgeType.Bezier2:
                 if (controlPoints?.Count != 2)
                 {
                     throw new MqttGraphParsingException($"Wrong number of control points for {nameof(EdgeType.Bezier2)} curve");
                 }
-                return GraphEdge.CreateBezier2(fromNodeId, toNodeId, metric, controlPoints.First().X, controlPoints.First().Y, controlPoints.Last().X, controlPoints.Last().Y, id);
+                return GraphEdge.CreateBezier2(fromNodeId, toNodeId, length, controlPoints.First().X, controlPoints.First().Y, controlPoints.Last().X, controlPoints.Last().Y, id);
 
             case EdgeType.Polypath:
                 if (controlPoints == null || controlPoints.Count < 1)
                 {
                     throw new MqttGraphParsingException($"Wrong number of control points for {nameof(EdgeType.Polypath)} curve");
                 }
-                return GraphEdge.CreatePolypath(fromNodeId, toNodeId, metric, controlPoints.Select(c => new EdgeCoefficient(c.X, c.Y)).ToList(), id);
+                return GraphEdge.CreatePolypath(fromNodeId, toNodeId, length, controlPoints.Select(c => new EdgeCoefficient(c.X, c.Y)).ToList(), id);
 
             case EdgeType.Slanted:
-                return GraphEdge.CreateSlanted(fromNodeId, toNodeId, metric, mqttEdge.ExitAngle, mqttEdge.ExitDistance, id);
+                return GraphEdge.CreateSlanted(fromNodeId, toNodeId, length, mqttEdge.ExitAngle, mqttEdge.ExitDistance, id);
 
             default:
-                return GraphEdge.CreateDirect(fromNodeId, toNodeId, metric, id);
+                return GraphEdge.CreateDirect(fromNodeId, toNodeId, length, id);
         }
     }
 
@@ -174,25 +217,25 @@ public class GraphParser
 
         foreach (var edge in _graph.Edges!)
         {
-            float distance = CalculateDistance(edge, _graph.Nodes!);
+            double length = CalculateEdgeLength(edge, _graph.Nodes!);
             float metric;
             if (_considerVelocity)
             {
                 // Calculate time based costs by distance divided by velocity
                 // (no division by zero due to _considerVelocity).
-                metric = distance / edge.MaxVelocity;
+                metric = (float)length / edge.MaxVelocity;
             }
             else
             {
                 // Calculate costs based on distance.
-                metric = distance;
+                metric = (float)length;
             }
 
-            allAdded &= BuildEdge(edge, metric, distance);
+            allAdded &= BuildEdge(edge, metric, length);
             if (edge.Bidirectional)
             {
                 // Build reversed edge by swapping From and To.
-                allAdded &= BuildEdge(edge, metric, distance, true);
+                allAdded &= BuildEdge(edge, metric, length, true);
             }
         }
 
@@ -230,40 +273,41 @@ public class GraphParser
     /// </remarks>
     private void Parse()
     {
-        if (_agvGraph == null)
+        if (_agvGraph != null)
         {
-            if (!string.IsNullOrEmpty(_graph.SerialNumber))
-            {
-                _serialNumber = _graph.SerialNumber;
-            }
-            else
-            {
-                _usability = AgvGraph.GraphUsability.SerialNumberMissing;
-            }
-
-            if (_usability == AgvGraph.GraphUsability.Valid &&
-                (_graph.Nodes!.Length == 0 ||
-                 ParseNodes() == false))
-            {
-                _usability = AgvGraph.GraphUsability.InvalidNodes;
-            }
-
-            if (_usability == AgvGraph.GraphUsability.Valid &&
-                (_graph.Edges!.Length == 0 ||
-                 ParseEdges() == false))
-            {
-                _usability = AgvGraph.GraphUsability.InvalidEdges;
-            }
-
-            _agvGraph = new AgvGraph(_serialNumber?.ToGuid() ?? Guid.Empty,
-                _nodes,
-                _edges,
-                _usability
-            );
-
-            RelatedMapName = _graph.RelatedMapId;
-            RelatedMapId = _graph.RelatedMapId.ToGuid();
+            return;
         }
+        if (!string.IsNullOrEmpty(_graph.SerialNumber))
+        {
+            _serialNumber = _graph.SerialNumber;
+        }
+        else
+        {
+            _usability = AgvGraph.GraphUsability.SerialNumberMissing;
+        }
+
+        if (_usability == AgvGraph.GraphUsability.Valid &&
+            (_graph.Nodes!.Length == 0 ||
+             ParseNodes() == false))
+        {
+            _usability = AgvGraph.GraphUsability.InvalidNodes;
+        }
+
+        if (_usability == AgvGraph.GraphUsability.Valid &&
+            (_graph.Edges!.Length == 0 ||
+             ParseEdges() == false))
+        {
+            _usability = AgvGraph.GraphUsability.InvalidEdges;
+        }
+
+        _agvGraph = new AgvGraph(_serialNumber?.ToGuid() ?? Guid.Empty,
+            _nodes,
+            _edges,
+            _usability
+        );
+
+        RelatedMapName = _graph.RelatedMapId;
+        RelatedMapId = _graph.RelatedMapId.ToGuid();
     }
 
     /// <summary>

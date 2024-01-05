@@ -13,6 +13,7 @@ public abstract class BaseRouteAlgorithm : IRouteAlgorithm
     protected const double MaxVelocityStraightFallback = 1;
     protected const double MaxVelocityTurnOnSpotFallback = Math.PI;
     protected const double AccelerationFallback = 1;
+    protected const double MaxVelocityTurnFallback = 1;
     
     private readonly IRoutingPlausibilityChecker? _routingPlausibilityChecker;
 

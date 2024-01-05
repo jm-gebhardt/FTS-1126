@@ -1,4 +1,5 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
+﻿using System.Numerics;
+using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
@@ -52,7 +53,7 @@ public class EdgeCoefficient : IEquatable<EdgeCoefficient>
     public EdgeCoefficient()
     {
     }
-
+ 
     /// <summary>
     /// Checks if this <see cref="EdgeCoefficient"/> is a scalar.
     /// </summary>
@@ -63,6 +64,19 @@ public class EdgeCoefficient : IEquatable<EdgeCoefficient>
     /// Checks if this <see cref="EdgeCoefficient"/> is a point.
     /// </summary>
     public bool IsPoint => X != null && Y != null;
+
+    /// <summary>
+    /// Returns this <see cref="EdgeCoefficient"/> as a Vector2.
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">If the coefficient is not a point (X,Y unset).</exception>
+    public Vector2 ToVector2()
+    {
+        if (IsPoint)
+        {
+            return new Vector2((float)X!, (float)Y!);
+        }
+        throw new ArgumentOutOfRangeException(nameof(IsPoint), IsPoint, "Can only convert EdgeCoefficient to vector if it is a point.");
+    } 
 
     /// <summary>
     /// Equality check.

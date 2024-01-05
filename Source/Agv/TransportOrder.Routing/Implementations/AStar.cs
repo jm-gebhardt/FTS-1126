@@ -119,14 +119,24 @@ public class AStar : BaseRouteAlgorithm
     }
 
     /// <summary>List of nodes currently processing.</summary>
-    private Dictionary<string, ANode> _openList = new(); // Should be a PriorityQueue<node, float> but we need to update the sorting attribute.
+    private readonly Dictionary<string, ANode> _openList = new(); // Should be a PriorityQueue<node, float> but we need to update the sorting attribute.
 
     /// <summary>List of nodes already checked.</summary>
-    private SortedSet<string> _closedList = new();
+    private readonly SortedSet<string> _closedList = new();
 
     private readonly Dictionary<string, ANode> _nodes;
 
-    private AgvData? _agvData;
+    private readonly AgvData? _agvData;
+
+    private double MaxVelocityTurnOnSpot => _agvData?.MaxVelocityTurnOnSpot ?? MaxVelocityTurnOnSpotFallback;
+
+    private double TurnOnSpotThreshold => _agvData?.TurnOnSpotThreshold ?? MaxNonSpotTurnAngleFallback;
+
+    private double Acceleration => _agvData?.Acceleration ?? AccelerationFallback;
+
+    private double MaxVelocityStraight => _agvData?.MaxVelocityStraight ?? MaxVelocityStraightFallback;
+
+    private double MaxVelocityTurn => _agvData?.MaxVelocityTurn ?? MaxVelocityTurnFallback;
 
     /// <summary>
     /// A* implementation.
@@ -197,7 +207,7 @@ public class AStar : BaseRouteAlgorithm
             if (successor.H == 0f && successor != destination)
             {
                 // Estimated time to final destination at maximum velocity.
-                successor.H = successor.DistanceTo(destination) / (_agvData?.MaxVelocityStraight ?? MaxVelocityStraightFallback);
+                successor.H = successor.DistanceTo(destination) / MaxVelocityStraight;
             }
 
             _openList.TryAdd(successor.Node.Id, successor);
@@ -213,21 +223,34 @@ public class AStar : BaseRouteAlgorithm
     /// <param name="decelerationCost">The additional cost [s] that has to be factored if we would have to brake on this edge.</param>
     private double CalculateCosts(ANode current, GraphEdge edge, out double finalVelocity, out double decelerationCost)
     {
-        double agvAcceleration = _agvData?.Acceleration ?? AccelerationFallback;
-        
         double time = 0;
         
-        time += CalculateTurnCost(current, edge, out double actualEntryVelocity);
-
-        double maxVelocity = _agvData?.MaxVelocityStraight ?? MaxVelocityStraightFallback;
-
+        double maximumEdgeVelocity = CalculateMaximumEdgeVelocity(edge);
+        
+        time += CalculateEntryCost(current, edge, maximumEdgeVelocity, out double actualEntryVelocity);
+        
         time += edge.Variant switch
         {
-            EdgeType.Direct => CalculateTimeAndExitParametersForDistance(edge.Length, actualEntryVelocity, maxVelocity, agvAcceleration, out finalVelocity, out decelerationCost),
-            _ => CalculateTimeAndExitParametersForDistance(edge.Length, actualEntryVelocity, maxVelocity, agvAcceleration, out finalVelocity, out decelerationCost)
+            EdgeType.Direct => CalculateTimeAndExitParametersForDistance(edge.Length, actualEntryVelocity, maximumEdgeVelocity, Acceleration, out finalVelocity, out decelerationCost),
+            EdgeType.Bezier1 or EdgeType.Bezier2 => CalculateTimeAndExitParametersForDistance(edge.Length, actualEntryVelocity, maximumEdgeVelocity, Acceleration, out finalVelocity, out decelerationCost),
+            _ => CalculateTimeAndExitParametersForDistance(edge.Length, actualEntryVelocity, maximumEdgeVelocity, Acceleration, out finalVelocity, out decelerationCost)
         };
 
         return time;
+    }
+
+    /// <summary>
+    /// Calculates the maximum edge velocity [m/s].
+    /// </summary>
+    /// <param name="edge">The edge.</param>
+    private double CalculateMaximumEdgeVelocity(GraphEdge edge)
+    {
+        return edge.Variant switch
+        {
+            EdgeType.Direct => MaxVelocityStraight,
+            EdgeType.Bezier1 or EdgeType.Bezier2 => MaxVelocityTurn,
+            _ => MaxVelocityStraight
+        };
     }
 
     /// <summary>
@@ -235,11 +258,10 @@ public class AStar : BaseRouteAlgorithm
     /// </summary>
     /// <param name="current">The current <see cref="ANode"/> that we want to move from.</param>
     /// <param name="edge">The edge that we want to move on.</param>
+    /// <param name="maximumEdgeVelocity">The maximum velocity that should be reached on this edge.</param>
     /// <param name="actualEntryVelocity">The actual velocity that the Agv has at the start of the edge. (0 if we have to do a spot turn.)</param>
-    private double CalculateTurnCost(ANode current, GraphEdge edge, out double actualEntryVelocity)
+    private double CalculateEntryCost(ANode current, GraphEdge edge, double maximumEdgeVelocity, out double actualEntryVelocity)
     {
-        double maxAgvVelocityTurnOnSpot = _agvData?.MaxVelocityTurnOnSpot ?? MaxVelocityTurnOnSpotFallback;
-        double maxNonSpotTurnAngle = _agvData?.TurnOnSpotThreshold ?? MaxNonSpotTurnAngleFallback;
         double time = 0;
         double angle = 0;
 
@@ -250,17 +272,24 @@ public class AStar : BaseRouteAlgorithm
 
         bool isFirstNode = current.Predecessor.IsNullOrEmpty();
 
-        bool needsSpotTurn = angle > maxNonSpotTurnAngle || isFirstNode;
+        bool needsSpotTurn = angle > TurnOnSpotThreshold || isFirstNode;
 
         actualEntryVelocity = needsSpotTurn ? 0d : current.EntryVelocity;
+
+        // Interpolation to figure out how much slower we need to go
+        if (actualEntryVelocity > maximumEdgeVelocity)
+        {
+            time += current.DecelerationCost * actualEntryVelocity / maximumEdgeVelocity;
+            actualEntryVelocity = maximumEdgeVelocity;
+        }
 
         if (!needsSpotTurn)
         {
             return time;
         }
-
+        
         // Perform the spot turn.
-        time += angle / maxAgvVelocityTurnOnSpot;
+        time += angle / MaxVelocityTurnOnSpot;
 
         if (!isFirstNode)
         {
@@ -297,6 +326,7 @@ public class AStar : BaseRouteAlgorithm
         return edge.Variant switch
         {
             EdgeType.Direct => toNodeVector - fromNodeVector,
+            EdgeType.Bezier1 or EdgeType.Bezier2 => toNodeVector - edge.VariantParameters.Last().ToVector2(),
             // Fallback is Direct
             _ => toNodeVector - fromNodeVector
         };
@@ -314,6 +344,7 @@ public class AStar : BaseRouteAlgorithm
         return edge.Variant switch
         {
             EdgeType.Direct => toNodeVector - fromNodeVector,
+            EdgeType.Bezier1 or EdgeType.Bezier2 => edge.VariantParameters.First().ToVector2() - fromNodeVector,
             // Fallback is Direct
             _ => toNodeVector - fromNodeVector
         };
@@ -330,7 +361,7 @@ public class AStar : BaseRouteAlgorithm
         var end = _nodes[destination];
 
         // Estimate time to final destination at maximum velocity.
-        start.H = start.DistanceTo(end) / (_agvData?.MaxVelocityStraight ?? MaxVelocityStraightFallback);
+        start.H = start.DistanceTo(end) / MaxVelocityStraight;
 
         ANode? current;
         _openList.Add(start.Node.Id, start);

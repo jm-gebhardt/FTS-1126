@@ -14,4 +14,11 @@ public static class NodeExtensions
     /// <param name="node"></param>
     /// <returns></returns>
     public static Vector3 AsVector3(this GraphNode node) => new(node.X, node.Y, node.Z);
+    
+    /// <summary>
+    /// Converts a <see cref="GraphNode"/> to a <see cref="Vector2"/> by projecting it onto the plane.
+    /// </summary>
+    /// <param name="node"></param>
+    /// <returns></returns>
+    public static Vector2 AsVector2(this GraphNode node) => new(node.X, node.Y);
 }

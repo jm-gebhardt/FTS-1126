@@ -1,4 +1,6 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+﻿using System.Numerics;
+using Gebhardt.StoreWare.Agv.Common.Extensions;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Helpers;
@@ -49,11 +51,12 @@ public class FixedGraphGenerator : GraphGeneratorBase
     private const string PMilling = "P-Milling";
     private const string Pdqa = "PD-QA";
 
+/*
     /// <summary>
-    ///     Maximum edge velocity.
+    /// Maximum edge velocity. Currently not respected.
     /// </summary>
     private const float MaxEdgeVelocity = 2.5f;
-
+*/
     /// Station angles are defined as:
     /// 0
     /// 3pi/2 -|- pi/2
@@ -128,75 +131,73 @@ public class FixedGraphGenerator : GraphGeneratorBase
         // control points and edge coefficients are absolute values
         GraphEdge[] edges =
         {
-            CreateDirect(Way0029, Park1, 58.215f / MaxEdgeVelocity),
-            CreateDirect(Park1, Way0029, 58.215f / MaxEdgeVelocity),
-            CreateDirect(Way0028, Park3, 63.06f / MaxEdgeVelocity),
-            CreateDirect(Park3, Way0028, 63.06f / MaxEdgeVelocity),
-            CreateDirect(Way0029, Park2, 58.215f / MaxEdgeVelocity),
-            CreateDirect(Park2, Way0029, 58.215f / MaxEdgeVelocity),
-            CreateDirect(Way0028, Park4, 63.06f / MaxEdgeVelocity),
-            CreateDirect(Park4, Way0028, 63.06f / MaxEdgeVelocity),
-            CreateDirect(Way0030, Park5, 68.886f / MaxEdgeVelocity),
-            CreateDirect(Park5, Way0030, 68.886f / MaxEdgeVelocity),
-            CreateDirect(Way0030, Park6, 68.885f / MaxEdgeVelocity),
-            CreateDirect(Park6, Way0030, 68.885f / MaxEdgeVelocity),
-            CreateDirect(Way0009, Way0010, 13.75f / MaxEdgeVelocity),
-            CreateDirect(Way0010, Way0011, 11.25f / MaxEdgeVelocity),
-            CreateDirect(Way0010, Way0015, 10f / MaxEdgeVelocity),
-            CreateDirect(Way0011, Way0016, 10f / MaxEdgeVelocity),
-            CreateDirect(Way0012, Way0009, 16.25f / MaxEdgeVelocity),
-            CreateBezier1(Way0013, Way0009, 19.08f / MaxEdgeVelocity, 22.75d, 67.25d),
-            CreateDirect(Way0013, Way0012, 10f / MaxEdgeVelocity),
-            CreateDirect(Way0014, Way0013, 16.25f / MaxEdgeVelocity),
-            CreatePolypath(Way0014, Way0029, 40.875f / MaxEdgeVelocity, new List<EdgeCoefficient> {new(32.25d, 50d)}),
-            CreateBezier1(Way0014, Way0032, 37.125f / MaxEdgeVelocity, 31.375d, 51.125d),
-            CreateDirect(Way0015, Way0014, 13.75f / MaxEdgeVelocity),
+            CreateDirect(Way0029, Park1, 58.215f),
+            CreateDirect(Park1, Way0029, 58.215f),
+            CreateDirect(Way0028, Park3, 63.06f),
+            CreateDirect(Park3, Way0028, 63.06f),
+            CreateDirect(Way0029, Park2, 58.215f),
+            CreateDirect(Park2, Way0029, 58.215f),
+            CreateDirect(Way0028, Park4, 63.06f),
+            CreateDirect(Park4, Way0028, 63.06f),
+            CreateDirect(Way0030, Park5, 68.886f),
+            CreateDirect(Park5, Way0030, 68.886f),
+            CreateDirect(Way0030, Park6, 68.885f),
+            CreateDirect(Park6, Way0030, 68.885f),
+            CreateDirect(Way0009, Way0010, 13.75f),
+            CreateDirect(Way0010, Way0011, 11.25f),
+            CreateDirect(Way0010, Way0015, 10f),
+            CreateDirect(Way0011, Way0016, 10f),
+            CreateDirect(Way0012, Way0009, 16.25f),
+            CreateBezier1(Way0013, Way0009, 19.08f, 22.75d, nodes),
+            CreateDirect(Way0013, Way0012, 10f),
+            CreateDirect(Way0014, Way0013, 16.25f),
+            CreatePolypath(Way0014, Way0029, 40.875f, new List<EdgeCoefficient> {new(32.25d, 50d)}),
+            CreateBezier1(Way0014, Way0032, 37.125f, 31.375d, nodes),
+            CreateDirect(Way0015, Way0014, 13.75f),
 
-            CreatePolypath(Way0015, Way0017, 15.91f / MaxEdgeVelocity, new List<EdgeCoefficient>
+            CreatePolypath(Way0015, Way0017, 15.91f, new List<EdgeCoefficient>
             {
                 new(76.875d, 51.875d), new(88.2d, 51.875d)
             }),
-            CreateBezier1(Way0015, Way0018, 10f / MaxEdgeVelocity, 47.625d, 58.625d),
-            CreateDirect(Way0016, Way0015, 11.25f / MaxEdgeVelocity),
-            CreateBezier2(Way0017, Way0018, 11.32f / MaxEdgeVelocity, 72.375d, 40d, 61.375d, 52.625d),
-            CreateDirect(Way0123, Way0017, 41.27f / MaxEdgeVelocity),
-            CreateDirect(Way0017, Way0123, 41.27f / MaxEdgeVelocity),
-            CreateSlanted(Way0018, Way0014, 17f / MaxEdgeVelocity, East, 3.375),
-            CreateBezier1(Way0018, Way0022, 10f / MaxEdgeVelocity, 40.625d, 48.4d),
-            CreateDirect(Way0022, Way0023, 7.6f / MaxEdgeVelocity),
-            CreateDirect(Way0023, Way0024, 5f / MaxEdgeVelocity),
-            CreatePolypath(Way0024, Way0030, 25.77f / MaxEdgeVelocity, new List<EdgeCoefficient> {new(31.25d, 25.125d)}),
-            CreateDirect(Way0028, Way0029, 5f / MaxEdgeVelocity),
-            CreateDirect(Way0029, Way0032, 3.95f / MaxEdgeVelocity),
-            CreateDirect(Way0030, Park5, 68.89f / MaxEdgeVelocity),
-            CreateDirect(Way0030, Park6, 68.89f / MaxEdgeVelocity),
-            CreateDirect(Way0030, Way0028, 6.375f / MaxEdgeVelocity),
-            CreateDirect(Way0032, Way0013, 28.86f / MaxEdgeVelocity),
+            CreateBezier1(Way0015, Way0018, 10f, 47.625d, nodes),
+            CreateDirect(Way0016, Way0015, 11.25f),
+            CreateBezier2(Way0017, Way0018, 11.32f, 72.375d, 40d, 61.375d, nodes),
+            CreateDirect(Way0123, Way0017, 41.27f),
+            CreateDirect(Way0017, Way0123, 41.27f),
+            CreateSlanted(Way0018, Way0014, 17f, East, 3.375),
+            CreateBezier1(Way0018, Way0022, 10f, 40.625d, nodes),
+            CreateDirect(Way0022, Way0023, 7.6f),
+            CreateDirect(Way0023, Way0024, 5f),
+            CreatePolypath(Way0024, Way0030, 25.77f, new List<EdgeCoefficient> {new(31.25d, 25.125d)}),
+            CreateDirect(Way0028, Way0029, 5f),
+            CreateDirect(Way0029, Way0032, 3.95f),
+            CreateDirect(Way0030, Way0028, 6.375f),
+            CreateDirect(Way0032, Way0013, 28.86f),
 
-            CreateDirect(Way0018, Charge0, 30f / MaxEdgeVelocity),
-            CreateDirect(Charge0, Way0018, 30f / MaxEdgeVelocity),
-            CreateDirect(Way0022, Charge1, 30f / MaxEdgeVelocity),
-            CreateDirect(Charge1, Way0022, 30f / MaxEdgeVelocity),
-            CreateDirect(Way0023, Charge2, 30f / MaxEdgeVelocity),
-            CreateDirect(Charge2, Way0023, 30f / MaxEdgeVelocity),
-            CreateDirect(Way0024, Charge3, 30f / MaxEdgeVelocity),
-            CreateDirect(Charge3, Way0024, 30f / MaxEdgeVelocity),
+            CreateDirect(Way0018, Charge0, 30f),
+            CreateDirect(Charge0, Way0018, 30f),
+            CreateDirect(Way0022, Charge1, 30f),
+            CreateDirect(Charge1, Way0022, 30f),
+            CreateDirect(Way0023, Charge2, 30f),
+            CreateDirect(Charge2, Way0023, 30f),
+            CreateDirect(Way0024, Charge3, 30f),
+            CreateDirect(Charge3, Way0024, 30f),
 
-            CreateDirect(Way0012, PDrill, 30f / MaxEdgeVelocity),
-            CreateDirect(PDrill, Way0012, 30f / MaxEdgeVelocity),
-            CreateDirect(Way0013, PMilling, 30f / MaxEdgeVelocity),
-            CreateDirect(PMilling, Way0013, 30f / MaxEdgeVelocity),
-            CreateDirect(Way0032, PGrinder, 30f / MaxEdgeVelocity),
-            CreateDirect(PGrinder, Way0032, 30f / MaxEdgeVelocity),
+            CreateDirect(Way0012, PDrill, 30f),
+            CreateDirect(PDrill, Way0012, 30f),
+            CreateDirect(Way0013, PMilling, 30f),
+            CreateDirect(PMilling, Way0013, 30f),
+            CreateDirect(Way0032, PGrinder, 30f),
+            CreateDirect(PGrinder, Way0032, 30f),
 
-            CreateDirect(Way0011, DPress, 30f / MaxEdgeVelocity),
-            CreateDirect(DPress, Way0011, 30f / MaxEdgeVelocity),
-            CreateDirect(Way0017, DSaw, 30f / MaxEdgeVelocity),
-            CreateDirect(DSaw, Way0017, 30f / MaxEdgeVelocity),
-            CreateDirect(Way0016, DPaint, 30f / MaxEdgeVelocity),
-            CreateDirect(DPaint, Way0016, 30f / MaxEdgeVelocity),
-            CreateDirect(Way0123, Pdqa, 30f / MaxEdgeVelocity),
-            GraphEdge.CreateDirect(Pdqa, Way0123, 30f / MaxEdgeVelocity, GraphHelper.ToGuid(Pdqa, 30f / MaxEdgeVelocity, Way0123))
+            CreateDirect(Way0011, DPress, 30f),
+            CreateDirect(DPress, Way0011, 30f),
+            CreateDirect(Way0017, DSaw, 30f),
+            CreateDirect(DSaw, Way0017, 30f),
+            CreateDirect(Way0016, DPaint, 30f),
+            CreateDirect(DPaint, Way0016, 30f),
+            CreateDirect(Way0123, Pdqa, 30f),
+            GraphEdge.CreateDirect(Pdqa, Way0123, 30f, GraphHelper.ToGuid(Pdqa, 30f, Way0123))
         };
         return new AgvGraph(correlationId, nodes, edges);
     }
@@ -205,13 +206,21 @@ public class FixedGraphGenerator : GraphGeneratorBase
     private static GraphEdge CreateDirect(string fromNodeId, string toNodeId, float metric) => GraphEdge.CreateDirect(fromNodeId, toNodeId, metric, GraphHelper.ToGuid(fromNodeId, metric, toNodeId));
 
     /// <inheritdoc cref="GraphEdge.CreateBezier1"/>
-    private static GraphEdge CreateBezier1(string fromNodeId, string toNodeId, float metric, double x, double y) => GraphEdge.CreateBezier1(fromNodeId, toNodeId, metric, x, y, GraphHelper.ToGuid(fromNodeId, metric, toNodeId));
+    private static GraphEdge CreateBezier1(string fromNodeId, string toNodeId, double x, double y, GraphNode[] nodes)
+    {
+        float length = CalculateBezierLength(nodes, fromNodeId, toNodeId, new List<Vector2> { new((float)x, (float)y) });
+        return GraphEdge.CreateBezier1(fromNodeId, toNodeId, length, x, y, GraphHelper.ToGuid(fromNodeId, length, toNodeId));
+    }
 
     /// <inheritdoc cref="GraphEdge.CreatePolypath"/>
     private static GraphEdge CreatePolypath(string fromNodeId, string toNodeId, float metric, List<EdgeCoefficient> pathPoints) => GraphEdge.CreatePolypath(fromNodeId, toNodeId, metric, pathPoints, GraphHelper.ToGuid(fromNodeId, metric, toNodeId));
 
     /// <inheritdoc cref="GraphEdge.CreateBezier2"/>
-    private static GraphEdge CreateBezier2(string fromNodeId, string toNodeId, float maxEdgeVelocity, double x1, double y1, double x2, double y2) => GraphEdge.CreateBezier2(fromNodeId, toNodeId, maxEdgeVelocity, x1, y1, x2, y2, GraphHelper.ToGuid(fromNodeId, maxEdgeVelocity, toNodeId));
+    private static GraphEdge CreateBezier2(string fromNodeId, string toNodeId, double x1, double y1, double x2, double y2, GraphNode[] nodes)
+    {
+        float length = CalculateBezierLength(nodes, fromNodeId, toNodeId, new List<Vector2> { new((float)x1, (float)y1), new((float)x2, (float)y2) });
+        return GraphEdge.CreateBezier2(fromNodeId, toNodeId, length, x1, y1, x2, y2, GraphHelper.ToGuid(fromNodeId, length, toNodeId));
+    }
 
     /// <inheritdoc cref="GraphEdge.CreateSlanted"/>
     private static GraphEdge CreateSlanted(string fromNodeId, string toNodeId, float metric, float exitAngle, double exitDistance) => GraphEdge.CreateSlanted(fromNodeId, toNodeId, metric, exitAngle, exitDistance, GraphHelper.ToGuid(fromNodeId, metric, toNodeId));
@@ -240,5 +249,18 @@ public class FixedGraphGenerator : GraphGeneratorBase
         };
 
         yield return new MapGenerator(graph).Generate(_subMapId, SubMapName);
+    }
+
+    private static float CalculateBezierLength(GraphNode[] nodes, string fromNode, string toNode, List<Vector2> controlPoints)
+    {
+        var from = Array.Find(nodes, n => n.Id == fromNode);
+        var to = Array.Find(nodes, n => n.Id == toNode);
+
+        List<Vector2> controlPolygon = new() {from!.AsVector2()};
+        controlPolygon.AddRange(controlPoints);
+        controlPolygon.Add(to!.AsVector2());
+
+        var bezier = new Bezier(controlPolygon);
+        return (float)bezier.GetLength(100);
     }
 }
