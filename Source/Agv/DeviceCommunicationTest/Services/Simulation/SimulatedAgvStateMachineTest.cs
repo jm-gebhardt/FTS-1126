@@ -246,7 +246,7 @@ public class SimulatedAgvStateMachineTest
             .Build();
 
         // Trigger status update scheduler
-        await fixture.PublishMessageAsync(new RequestStatusSendSchedulerStart(correlationId, agvSaga.AgvId), c => c.Context.Message.CorrelationId == correlationId);
+        await fixture.PublishMessageAsync(new RequestStatusSendSchedulerStart(correlationId, agvSaga.AgvId));
 
         //Check if Scheduler sends status update
         (await fixture.TestHarness.Sent.Any<SimulatedAgvStateMachine.ScheduleStatusUpdate>(c => c.Context.Message.CorrelationId == correlationId)).ShouldBeTrue();
@@ -303,7 +303,7 @@ public class SimulatedAgvStateMachineTest
             .WithAgv(agvSaga)
             .Build();
 
-        await fixture.PublishMessageAsync(new ActionAborted(correlationId, action), c => c.Context.Message.CorrelationId == correlationId);
+        await fixture.PublishMessageAsync(new ActionAborted(correlationId, action));
 
         (await fixture.TestHarness.Published.Any<ActionAbortionCompleted>()).ShouldBeTrue();
         agvSaga.ActionStartDate.ShouldBeNull();
@@ -327,7 +327,7 @@ public class SimulatedAgvStateMachineTest
             .WithAgv(agvSaga)
             .Build();
 
-        await fixture.PublishMessageAsync(new ActionAborted(correlationId, action), c => c.Context.Message.CorrelationId == correlationId);
+        await fixture.PublishMessageAsync(new ActionAborted(correlationId, action));
         (await fixture.TestHarness.Published.Any<ActionAbortionCompleted>()).ShouldBeTrue();
         agvSaga.ActionStartDate.ShouldBeNull();
         agvSaga.CurrentState.ShouldBe(nameof(SimulatedAgvStateMachine.Idle));
@@ -346,7 +346,7 @@ public class SimulatedAgvStateMachineTest
             .WithAgv(agvSaga)
             .Build();
 
-        await fixture.PublishMessageAsync(new SimulateAgvError(correlationId, new List<AgvError>{ agvError }), c => c.Context.Message.CorrelationId == correlationId);
+        await fixture.PublishMessageAsync(new SimulateAgvError(correlationId, new List<AgvError>{ agvError }));
 
         (await fixture.SagaHarness.Consumed.Any<SimulateAgvError>()).ShouldBeTrue();
 

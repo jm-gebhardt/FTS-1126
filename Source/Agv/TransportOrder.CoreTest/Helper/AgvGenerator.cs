@@ -28,9 +28,9 @@ public static class AgvGenerator
     }
 
     [UsedImplicitly]
-    public static TransportOrder.Domain.Models.Agv.Agv GenerateChargingAgv(int index = 0, string? lastNodeId = null, bool isLocked = false, int batteryCharge = 100)
+    public static TransportOrder.Domain.Models.Agv.Agv GenerateChargingAgv(int index = 0, string? lastNodeId = "C-1", bool isLocked = false, int batteryCharge = 100)
     {
-        return GenerateAgv(AgvState.Charging, index, lastNodeId, charging: true, isLocked: isLocked, batteryCharge: batteryCharge, orderId: string.Empty);
+        return GenerateAgv(AgvState.Busy, index, lastNodeId, charging: true, isLocked: isLocked, batteryCharge: batteryCharge, orderId: string.Empty);
     }
 
     private static TransportOrder.Domain.Models.Agv.Agv GenerateAgv(
@@ -46,19 +46,19 @@ public static class AgvGenerator
     {
         string agvId = GetAgvId(index);
         var correlationId = agvId.ToGuid();
-        agvStatus ??= new AgvStatus(correlationId, orderId, agvState != AgvState.Idle, true, batteryCharge, charging, false, lastNodeId);
+        agvStatus ??= new AgvStatus(correlationId, orderId, false, true, batteryCharge, charging, false, lastNodeId);
         var agv = new TransportOrder.Domain.Models.Agv.Agv(correlationId, agvId, agvStatus, isLocked);
-        return SetAgvState(agvState, isLocked, agv);
+        return SetAgvState(agvState, agv);
     }
 
-    public static TransportOrder.Domain.Models.Agv.Agv SetAgvState(AgvState agvState, bool isLocked, TransportOrder.Domain.Models.Agv.Agv agv)
+    public static TransportOrder.Domain.Models.Agv.Agv SetAgvState(AgvState agvState, TransportOrder.Domain.Models.Agv.Agv agv)
     {
         switch (agvState)
         {
             case AgvState.Busy:
-                agv.TransitionToDiscovered(isLocked);
+                agv.TransitionToDiscovered(true);
                 agv.TransitionToIdle();
-                agv.TryTransitionToBusy(isLocked);
+                agv.TryTransitionToBusy(true);
                 break;
 
             case AgvState.Discovered:
@@ -66,14 +66,8 @@ public static class AgvGenerator
                 break;
 
             case AgvState.Idle:
-                agv.TransitionToDiscovered(isLocked);
+                agv.TransitionToDiscovered(true);
                 agv.TransitionToIdle();
-                break;
-
-            case AgvState.Charging:
-                agv.TransitionToDiscovered(isLocked);
-                agv.TransitionToIdle();
-                agv.TransitionToCharging();
                 break;
         }
         return agv;

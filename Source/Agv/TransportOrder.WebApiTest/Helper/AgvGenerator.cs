@@ -22,7 +22,7 @@ public static class AgvGenerator
     [UsedImplicitly]
     public static Domain.Models.Agv.Agv GenerateChargingAgv(int index = 0, string? lastNodeId = null)
     {
-        return GenerateAgv(AgvState.Charging, index, lastNodeId, charging: true);
+        return GenerateAgv(AgvState.Busy, index, lastNodeId, charging: true);
     }
 
     private static Domain.Models.Agv.Agv GenerateAgv(
@@ -63,12 +63,6 @@ public static class AgvGenerator
             case AgvState.Idle:
                 agv.TransitionToDiscovered(true);
                 agv.TransitionToIdle();
-                break;
-
-            case AgvState.Charging:
-                agv.TransitionToDiscovered(true);
-                agv.TransitionToIdle();
-                agv.TransitionToCharging();
                 break;
         }
         return agv;

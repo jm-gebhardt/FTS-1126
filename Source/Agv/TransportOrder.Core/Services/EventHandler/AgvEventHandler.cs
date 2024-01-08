@@ -29,8 +29,6 @@ public class AgvEventHandler :
     IConsumer<AgvMapReceived>,
     IConsumer<AgvErrorStatusReceived>,
     IConsumer<AgvStatusReceived>,
-    IConsumer<AgvStartedCharging>,
-    IConsumer<AgvStoppedCharging>,
     IConsumer<AgvGraphChanged>,
     IConsumer<AgvWentOffline>,
     IConsumer<AgvPreparedForStartingAction>,
@@ -53,7 +51,7 @@ public class AgvEventHandler :
         ILogger<AgvEventHandler> logger)
     {
         _logger = logger;
-       _agvRepository = agvRepository;
+        _agvRepository = agvRepository;
         _actionGroupRepository = actionGroupRepository;
         _semaphoreProvider = semaphoreProvider;
         _settingsProvider = settingsProvider;
@@ -80,7 +78,7 @@ public class AgvEventHandler :
         {
             bool hasUnfinishedDropAction = await _actionGroupRepository.HasUnfinishedDropActionsAsync(agv.CorrelationId);
             var agvSettings = _settingsProvider.GetSettings();
-            
+
             if (agv.IsLocked)
             {
                 _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} is locked. Try start manual action.", agvCorrelationId);
@@ -118,7 +116,7 @@ public class AgvEventHandler :
             _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} is not available.", agvCorrelationId);
             return;
         }
-       
+
         await _semaphoreProvider.ExecuteLockedAsync(async () =>
         {
             if (agv.IsLocked)
@@ -160,7 +158,7 @@ public class AgvEventHandler :
     public async Task Consume(ConsumeContext<ChargingAgvCanHandleActionsAgain> context)
     {
         _logger.LogDebug("{MessageType} received", nameof(ChargingAgvCanHandleActionsAgain));
-        await context.Publish(new TryReactivateChargingAgv());
+        await context.Publish(new TryReactivateChargingAgv(Guid.NewGuid()));
     }
 
     /// <summary>
@@ -178,14 +176,21 @@ public class AgvEventHandler :
         bool wasGood = oldSoc > agvSettings.BatteryLevelLow;
         bool isGood = newSoc > agvSettings.BatteryLevelLow;
 
-        // Check if AGV is charging and no longer low on battery
+        bool wasMaxChargedUp = oldSoc > agvSettings.MaxChargeUp;
+        bool isMaxChargedUp = newSoc > agvSettings.MaxChargeUp;
+
         if (!wasGood && isGood)
         {
             _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} is no longer low on battery and can handle actions again.", agvCorrelationId);
             await context.Publish(new ChargingAgvCanHandleActionsAgain(agvCorrelationId));
         }
 
-        // Battery needs charging
+        if (!wasMaxChargedUp && isMaxChargedUp)
+        {
+            _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} is fully charged up. So aborting charge action now.", agvCorrelationId);
+            await context.Publish(new AbortChargeAction(context.Message.CorrelationId));
+        }
+
         if (!isCharging && !isGood)
         {
             _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} needs charging.", agvCorrelationId);
@@ -221,22 +226,6 @@ public class AgvEventHandler :
     public async Task Consume(ConsumeContext<AgvStatusReceived> context)
     {
         await context.Publish(new UpdateAgvStatus(context.Message.CorrelationId, context.Message.AgvId, context.Message.AgvStatus));
-    }
-
-    /// <summary>
-    /// Handles the <see cref="AgvStartedCharging"/> event.
-    /// </summary>
-    public async Task Consume(ConsumeContext<AgvStartedCharging> context)
-    {
-        await context.Publish(new StartCharging(context.Message.CorrelationId));
-    }
-
-    /// <summary>
-    /// Handles the <see cref="AgvStoppedCharging"/> event.
-    /// </summary>
-    public async Task Consume(ConsumeContext<AgvStoppedCharging> context)
-    {
-        await context.Publish(new StopCharging(context.Message.CorrelationId));
     }
 
     /// <summary>

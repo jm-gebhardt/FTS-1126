@@ -1,8 +1,10 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;
 using Microsoft.EntityFrameworkCore;
+using ActionGroup = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
 
@@ -102,9 +104,16 @@ public class AgvRepository : IAgvRepository
 
     public async Task<ICollection<Domain.Models.Agv.Agv>> GetChargingAgvsWithMinBatteryLevelAsync(int minBatteryLevel)
     {
-        return await Agvs.Where(a => a.GraphExists &&
-                                     a.CurrentAgvState == AgvState.Busy &&
-                                     a.AgvStatus!.BatteryCharge >= minBatteryLevel).ToListAsync();
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>().AsNoTracking();
+
+        IQueryable<Domain.Models.Agv.Agv> agvContext = context.Set<Domain.Models.Agv.Agv>().AsNoTracking();
+        List<Domain.Models.Agv.Agv> agvs = await agvContext.Where(agv => agv.GraphExists &&
+                                                                         actionGroups.Any(g => g.AssignedAgv == agv.CorrelationId && g.State == ActionGroupState.Started &&
+                                                                                               g.Actions.Any(a => a.ActionType == ActionType.Charge && a.State == ActionState.Started)) &&
+                                                                         agv.CurrentAgvState == AgvState.Busy && agv.AgvStatus!.Charging &&
+                                                                         agv.AgvStatus!.BatteryCharge >= minBatteryLevel).ToListAsync();
+        return agvs;
     }
 
     public async Task<ICollection<Domain.Models.Agv.Agv>> GetReadyAgvsAsync()

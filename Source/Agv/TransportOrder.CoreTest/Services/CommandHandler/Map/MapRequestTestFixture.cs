@@ -110,7 +110,7 @@ public class MapRequestTestFixture<TRequestClient, TConsumer> : MediatorTestFixt
             var agvStatus = new AgvStatus(correlationId, order, true, true, 10, true, true);
 
             var agv = new TransportOrder.Domain.Models.Agv.Agv(correlationId, agvId, agvStatus);
-            agv = AgvGenerator.SetAgvState(state, false, agv);
+            agv = AgvGenerator.SetAgvState(state, agv);
 
             agvs.Add(agv);
         }

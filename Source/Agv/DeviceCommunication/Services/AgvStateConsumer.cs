@@ -87,24 +87,6 @@ public class AgvStateConsumer : IConsumer<MqttState>
         );
         await context.Publish(agvStatusReceived, context.CancellationToken);
 
-        var agvInformation = _agvRepository.GetAgvInformation(agvStatusReceived.CorrelationId);
-        var agvStatusReceivedFromRepository = agvInformation?.AgvStatusReceived;
-
-        if (agvStatusReceivedFromRepository != null)
-        {
-            bool oldCharging = agvStatusReceivedFromRepository.AgvStatus.Charging;
-            bool newCharging = GetCharging(message);
-
-            if (!oldCharging && newCharging)
-            {
-                await context.Publish(new AgvStartedCharging(agvStatusReceived.CorrelationId));
-            }
-            else if (oldCharging && !newCharging)
-            {
-                await context.Publish(new AgvStoppedCharging(agvStatusReceived.CorrelationId));
-            }
-        }
-
         FeedAgvRepository(agvCorrelationId, agvStatusReceived);
     }
 

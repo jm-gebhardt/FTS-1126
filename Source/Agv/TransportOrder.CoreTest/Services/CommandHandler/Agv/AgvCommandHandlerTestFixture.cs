@@ -86,7 +86,7 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixtureWithSc
     }
 
     [PublicAPI]
-    public AgvCommandHandlerTestFixture AddAction(AgvAction action)
+    public AgvCommandHandlerTestFixture WithCurrentAgvAction(AgvAction action)
     {
         _actionGroupRepository.Setup(x => x.GetCurrentAgvActionAsync(It.IsAny<Guid>())).ReturnsAsync(action);
         return this;

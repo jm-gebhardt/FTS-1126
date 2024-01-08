@@ -1,4 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
+using MassTransit;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 
@@ -7,4 +8,4 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 /// </summary>
 /// <param name="CorrelationId">The agv correlation id.</param>
 /// <param name="Action">The action.</param>
-public record AgvPreparedForStartingAction(Guid CorrelationId, AgvAction Action);
+public record AgvPreparedForStartingAction(Guid CorrelationId, AgvAction Action) : CorrelatedBy<Guid>;

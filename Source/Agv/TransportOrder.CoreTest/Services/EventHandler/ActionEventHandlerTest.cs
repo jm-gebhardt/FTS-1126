@@ -97,7 +97,7 @@ public class ActionEventHandlerTest
         var fixture = new ActionEventHandlerTestFixture();
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         var agvId = Guid.NewGuid();
-        var actionGroupHasNoEstimatedDuration = new ActionGroupHasNoEstimatedDuration(actionGroup.Actions.First(), 1.5, agvId, actionGroup.CorrelationId);
+        var actionGroupHasNoEstimatedDuration = new ActionGroupHasNoEstimatedDuration(Guid.NewGuid(), actionGroup.Actions.First(), 1.5, agvId, actionGroup.CorrelationId);
 
         await fixture.PublishMessageAsync(actionGroupHasNoEstimatedDuration);
 

@@ -25,12 +25,7 @@ public enum AgvState
     /// <summary>
     /// Busy
     /// </summary>
-    Busy,
-
-    /// <summary>
-    /// Charging
-    /// </summary>
-    Charging
+    Busy
 }
 
 /// <summary>
@@ -50,9 +45,8 @@ public static class AgvStateExtensions
         switch (newState)
         {
             case AgvState.Discovered when oldState is AgvState.Initial:
-            case AgvState.Idle when oldState is AgvState.Discovered or AgvState.Busy or AgvState.Charging or AgvState.Idle:
-            case AgvState.Charging when oldState is AgvState.Idle or AgvState.Busy:
-            case AgvState.Busy when oldState is AgvState.Idle or AgvState.Charging:
+            case AgvState.Idle when oldState is AgvState.Discovered or AgvState.Busy or AgvState.Idle:
+            case AgvState.Busy when oldState is AgvState.Idle:
                 break;
 
             default:

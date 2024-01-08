@@ -55,8 +55,6 @@ public static class CoreBusRegistrationExtensions
         {
             var partitioner = c.CreatePartitioner(PartitionCount);
             partitioner.PartitionMessageById<UpdateErrorStatus, AgvCommandHandler>(c);
-            partitioner.PartitionMessageById<StartCharging, AgvCommandHandler>(c);
-            partitioner.PartitionMessageById<StopCharging, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<UpdateAgvStatus, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<SetAgvGraphExist, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<GoOffline, AgvCommandHandler>(c);

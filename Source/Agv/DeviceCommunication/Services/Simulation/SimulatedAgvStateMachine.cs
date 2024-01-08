@@ -277,7 +277,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     private EventActivityBinder<SimulatedAgvSaga, ScheduleFinishAction> SetFinishActionHandler()
     {
         return When(FinishActionSchedule.Received)
-            .Then(c => _logger.LogDebug("{MessageType} {CorrelationId} received", nameof(ScheduleFinishAction), c.Saga.CorrelationId))
+            .Then(c => _logger.LogDebug("{MessageType} {CorrelationId} received. Current Action: {ActionType}", nameof(ScheduleFinishAction), c.Saga.CorrelationId, c.Saga.Action?.ActionType))
             .IfElse(c => c.Saga.LastActionAborted,
                 e => e.Then(c => c.Saga.LastActionAborted = false),
                 e => e.ThenAsync(FinishActionAsync)

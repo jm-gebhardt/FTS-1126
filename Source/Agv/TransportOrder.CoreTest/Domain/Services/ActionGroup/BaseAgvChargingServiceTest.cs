@@ -34,7 +34,7 @@ public class BaseAgvChargingServiceTest
         var correlationId = agvId.ToGuid();
         var agvStatus = new AgvStatus(correlationId, "", true, true, batteryCharge, charging, false);
         var agv = new TransportOrder.Domain.Models.Agv.Agv(correlationId, agvId, agvStatus);
-        agv = AgvGenerator.SetAgvState(charging ? AgvState.Charging : AgvState.Idle, false, agv);
+        agv = AgvGenerator.SetAgvState(charging ? AgvState.Busy : AgvState.Idle, agv);
         return agv;
     }
     #endregion

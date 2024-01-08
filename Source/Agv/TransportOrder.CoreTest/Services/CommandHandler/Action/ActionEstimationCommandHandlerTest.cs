@@ -14,7 +14,7 @@ public class ActionEstimationCommandHandlerTest
         var fixture = new ActionEstimationGroupTestFixture()
             .AddActionGroup(AgvActionGenerator.GenerateMoveActionGroup());
 
-        await fixture.PublishMessageAsync(new EstimateActionGroupDuration(fixture.ActionGroup.Actions.First(), 1, fixture.Agv.CorrelationId, fixture.ActionGroup.CorrelationId));
+        await fixture.PublishMessageAsync(new EstimateActionGroupDuration(Guid.NewGuid(), fixture.ActionGroup.Actions.First(), 1, fixture.Agv.CorrelationId, fixture.ActionGroup.CorrelationId));
 
         var updatedActionGroup = fixture.GetUpdatedActionGroup();
         updatedActionGroup.EstimatedDuration.ShouldNotBeNull();
@@ -28,7 +28,7 @@ public class ActionEstimationCommandHandlerTest
             .AddActionGroup(AgvActionGenerator.GeneratePickDropActionGroup())
             .AddRouteOnCosts(8);
 
-        await fixture.PublishMessageAsync(new EstimateActionGroupDuration(fixture.ActionGroup.Actions.First(), 2, fixture.Agv.CorrelationId, fixture.ActionGroup.CorrelationId));
+        await fixture.PublishMessageAsync(new EstimateActionGroupDuration(Guid.NewGuid(), fixture.ActionGroup.Actions.First(), 2, fixture.Agv.CorrelationId, fixture.ActionGroup.CorrelationId));
 
         var updatedActionGroup = fixture.GetUpdatedActionGroup();
         updatedActionGroup.EstimatedDuration.ShouldNotBeNull();
@@ -43,7 +43,7 @@ public class ActionEstimationCommandHandlerTest
             .AddActionGroup(AgvActionGenerator.GenerateChargeActionGroup())
             .AddRouteOnCosts(0);
 
-        await fixture.PublishMessageAsync(new EstimateActionGroupDuration(fixture.ActionGroup.Actions.First(), 3, fixture.Agv.CorrelationId, fixture.ActionGroup.CorrelationId));
+        await fixture.PublishMessageAsync(new EstimateActionGroupDuration(Guid.NewGuid(), fixture.ActionGroup.Actions.First(), 3, fixture.Agv.CorrelationId, fixture.ActionGroup.CorrelationId));
 
         var updatedActionGroup = fixture.GetUpdatedActionGroup();
         updatedActionGroup.EstimatedDuration.ShouldNotBeNull();

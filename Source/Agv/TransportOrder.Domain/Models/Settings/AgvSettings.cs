@@ -28,6 +28,10 @@ public record AgvSettings : SettingsBase<AgvSettings>
     [UsedImplicitly]
     public int BatteryLevelGood { get; init; } = 60;
 
+    /// <summary>At this threshold we stop the charging.</summary>
+    [UsedImplicitly]
+    public int MaxChargeUp { get; init; } = 80;
+
     /// <summary>Full battery level</summary>
     [UsedImplicitly]
     public int BatteryLevelFull { get; init; } = 100;

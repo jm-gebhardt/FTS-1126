@@ -1,4 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
+using MassTransit;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.ActionGroup;
 
@@ -9,4 +10,4 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.ActionGroup;
 /// <param name="FirstActionCosts">The costs of the first Action of the ActionGroup.</param>
 /// <param name="AgvId">The correlationId of the assigned Agv.</param>
 /// <param name="ActionGroupId">The correlationId of the ActionGroup.</param>
-public record ActionGroupHasNoEstimatedDuration(AgvAction FirstAction, double FirstActionCosts, Guid AgvId, Guid ActionGroupId);
+public record ActionGroupHasNoEstimatedDuration(Guid CorrelationId, AgvAction FirstAction, double FirstActionCosts, Guid AgvId, Guid ActionGroupId) : CorrelatedBy<Guid>;

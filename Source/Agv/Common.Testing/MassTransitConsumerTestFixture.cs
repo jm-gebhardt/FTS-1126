@@ -111,15 +111,15 @@ public class MassTransitConsumerTestFixture<TConsumer> where TConsumer : class, 
     }
 
     /// <summary>
-    /// Publish and consume the message
+    /// Does a TestHarness.Bus.Publish and then a SagaHarness.Consumed to actually consume the message
     /// </summary>
     /// <param name="message"></param>
     /// <param name="filter"></param>
     /// <typeparam name="T"></typeparam>
-    public async Task PublishMessageAsync<T>(T message, FilterDelegate<IReceivedMessage<T>>? filter = null) where T : class
+    public async Task PublishMessageAsync<T>(T message, FilterDelegate<IReceivedMessage<T>>? filter = null) where T : class, CorrelatedBy<Guid>
     {
         await TestHarness.Bus.Publish(message);
-        (await (filter != null ? TestHarness.Consumed.Any(filter) : ConsumerHarness.Consumed.Any<T>())).ShouldBeTrue();
+        (await (filter != null ? ConsumerHarness.Consumed.Any(filter) : ConsumerHarness.Consumed.Any<T>(s => s.Context.Message.CorrelationId == message.CorrelationId))).ShouldBeTrue();
     }
 
     public async Task<T> GetFirstPublishedMessageAsync<T>() where T : class

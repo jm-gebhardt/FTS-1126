@@ -1,4 +1,5 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using MassTransit;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
 
@@ -7,4 +8,4 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
 /// </summary>
 /// <param name="CorrelationId">The correlationId of the agv.</param>
 /// <param name="Cargos">The Cargos on the Agv.</param>
-public record UpdateCargo(Guid CorrelationId, IReadOnlyCollection<Cargo> Cargos);
+public record UpdateCargo(Guid CorrelationId, IReadOnlyCollection<Cargo> Cargos) : CorrelatedBy<Guid>;

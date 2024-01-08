@@ -232,17 +232,6 @@ public class Agv : IAgvId
     }
 
     /// <summary>
-    /// Charge the agv.
-    /// </summary>
-    /// <returns>True if the state has changed.</returns>
-    public bool TransitionToCharging()
-    {
-        var previousState = CurrentAgvState;
-        CurrentAgvState = CurrentAgvState.TransitionTo(AgvState.Charging);
-        return previousState != CurrentAgvState;
-    }
-
-    /// <summary>
     /// Check to see if the difference in battery charge is bigger than <see cref="BatteryChargeChangedThreshold"/>.
     /// </summary>
     /// <returns></returns>
@@ -294,7 +283,7 @@ public class Agv : IAgvId
     /// <returns>True if the state has changed</returns>
     public (bool Accepted, bool StateChanged) TryAccept()
     {
-        if (new[] {AgvState.Idle, AgvState.Busy, AgvState.Charging}.Contains(CurrentAgvState))
+        if (new[] {AgvState.Idle, AgvState.Busy}.Contains(CurrentAgvState))
         {
             return (false, false);
         }
@@ -323,7 +312,7 @@ public class Agv : IAgvId
     }
 
     /// <summary>
-    ///  Try to become busy.
+    /// Try to become busy.
     /// </summary>
     /// <returns></returns>
     public bool TryTransitionToBusy(bool ignoreLocked)
@@ -345,7 +334,7 @@ public class Agv : IAgvId
     public bool IsAvailable(bool ignoreCharging = true, bool ignoreLocked = false)
     {
         bool unlocked = !IsLocked || ignoreLocked;
-        bool chargingButIgnore = CurrentAgvState == AgvState.Charging && ignoreCharging;
+        bool chargingButIgnore = CurrentAgvState == AgvState.Busy && AgvStatus!.Charging && ignoreCharging;
         bool idle = CurrentAgvState == AgvState.Idle && !AgvStatus!.Busy;
         return IsReady && (idle || chargingButIgnore) && unlocked;
     }

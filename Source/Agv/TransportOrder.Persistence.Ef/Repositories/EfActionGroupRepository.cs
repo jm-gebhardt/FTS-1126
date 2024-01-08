@@ -345,9 +345,9 @@ public class EfActionGroupRepository : IActionGroupRepository
         DbSet<ActionGroup> actionGroups = context.Set<ActionGroup>();
 
         return await actionGroups.AnyAsync(a =>
-            (a.AssignedAgv == agvCorrelationId &&
-             new[] {ActionGroupState.Started, ActionGroupState.Created}.Contains(a.State)) ||
-            (a.AssignedAgv == null && a.State == ActionGroupState.Created)
+            a.AssignedAgv == agvCorrelationId &&
+            (a.State ==ActionGroupState.Created || (a.State == ActionGroupState.Started && a.Actions.Any(aa => aa.State == ActionState.Created)) ||
+             (a.AssignedAgv == null && a.State == ActionGroupState.Created))
         );
     }
 

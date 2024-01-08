@@ -31,6 +31,7 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixtureWithSche
     public const int BatteryLevelCritical = 10;
     public const int BatteryLevelLow = 40;
     public const int BatteryLevelGood = 80;
+    public const int BatteryLevelMaxChargeUp = 80;
     public const int BatteryLevelFull = 100;
 
     private static readonly AgvSettings _agvSettings = new()

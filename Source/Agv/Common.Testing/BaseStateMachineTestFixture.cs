@@ -114,10 +114,10 @@ public abstract class BaseStateMachineTestFixture<TStateMachine, TInstance>
     /// <param name="message"></param>
     /// <param name="filter"></param>
     /// <typeparam name="T"></typeparam>
-    public async Task PublishMessageAsync<T>(T message, FilterDelegate<IReceivedMessage<T>>? filter = null) where T : class
+    public async Task PublishMessageAsync<T>(T message, FilterDelegate<IReceivedMessage<T>>? filter = null) where T : class, CorrelatedBy<Guid>
     {
         await TestHarness.Bus.Publish(message);
-        (await (filter != null ? SagaHarness.Consumed.Any(filter) : SagaHarness.Consumed.Any<T>())).ShouldBeTrue();
+        (await (filter != null ? SagaHarness.Consumed.Any(filter) : SagaHarness.Consumed.Any<T>(s => s.Context.Message.CorrelationId == message.CorrelationId))).ShouldBeTrue();
     }
 
     public async Task<T> GetFirstPublishedMessageAsync<T>() where T : class

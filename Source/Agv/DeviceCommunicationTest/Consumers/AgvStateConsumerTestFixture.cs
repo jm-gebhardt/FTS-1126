@@ -7,11 +7,11 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers;
 
 public class AgvStateConsumerTestFixture : MqttConsumerTestFixture<AgvStateConsumer>
 {
-    public IAgvRepository AgvRepository { get; } = new AgvRepository();
+    private readonly IAgvRepository _agvRepository = new AgvRepository();
 
     public AgvStateConsumerTestFixture WithAgvInformation(AgvInformation agvInformation)
     {
-        AgvRepository.AddOrUpdate(agvInformation.AgvStatusReceived!.AgvStatus.CorrelationId, agvInformation);
+        _agvRepository.AddOrUpdate(agvInformation.AgvStatusReceived!.AgvStatus.CorrelationId, agvInformation);
         return this;
     }
 
@@ -19,7 +19,7 @@ public class AgvStateConsumerTestFixture : MqttConsumerTestFixture<AgvStateConsu
     {
         AddServices(services =>
         {
-            services.AddSingleton(_ => AgvRepository);
+            services.AddSingleton(_ => _agvRepository);
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
         });
         return this;
@@ -28,12 +28,6 @@ public class AgvStateConsumerTestFixture : MqttConsumerTestFixture<AgvStateConsu
     public AgvStateConsumerTestFixture Build()
     {
         base.Build();
-        return this;
-    }
-
-    public AgvStateConsumerTestFixture EmptyRepository()
-    {
-        AddServices(sc => sc.AddSingleton(_ => AgvRepository));
         return this;
     }
 }

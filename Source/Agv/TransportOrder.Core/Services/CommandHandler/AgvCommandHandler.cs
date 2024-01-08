@@ -39,8 +39,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.CommandHandler;
 public class AgvCommandHandler :
     IConsumer<TryReactivateChargingAgv>,
     IConsumer<UpdateErrorStatus>,
-    IConsumer<StartCharging>,
-    IConsumer<StopCharging>,
+    IConsumer<AbortChargeAction>,
     IConsumer<UpdateAgvStatus>,
     IConsumer<SetAgvGraphExist>,
     IConsumer<GoOffline>,
@@ -145,40 +144,17 @@ public class AgvCommandHandler :
     }
 
     /// <summary>
-    /// Handles the <see cref="StartCharging"/> command.
+    /// Handles the <see cref="AbortChargeAction"/> command.
     /// </summary>
-    public async Task Consume(ConsumeContext<StartCharging> context)
+    public async Task Consume(ConsumeContext<AbortChargeAction> context)
     {
-        var correlationId = context.Message.CorrelationId;
-        var agv = await _agvRepository.GetAgvAsync(correlationId);
-
-        bool stateChanged = agv.TransitionToCharging();
-
-        if (!await _agvRepository.UpdateAgvAsync(agv))
+        var agvCorrelationId = context.Message.CorrelationId;
+        var action = await _actionGroupRepository.GetCurrentAgvActionAsync(agvCorrelationId);
+        if (action?.ActionType == ActionType.Charge)
         {
-            _logger.LogDebug("{Command}: Could not update agv {CorrelationId}", nameof(StartCharging), agv.CorrelationId);
-            return;
+            _logger.LogInformation("Aborting charging action group: {ActionGroup}", action.ParentId);
+            await context.Publish(new AbortActionGroup(action.ParentId, AbortReason.ReactivatedFromCharging), context.CancellationToken);
         }
-        _logger.LogInformation("{AgvId} / {CorrelationId} has started charging (BatteryLevel: {BatteryLevel}%) => Transitioned to {State}",
-            agv.AgvId, agv.CorrelationId, agv.AgvStatus!.BatteryCharge, Enum.GetName(agv.CurrentAgvState));
-        if (stateChanged)
-        {
-            await PublishStateChange(context, agv);
-        }
-    }
-
-    /// <summary>
-    /// Handles the <see cref="StopCharging"/> command.
-    /// </summary>
-    public async Task Consume(ConsumeContext<StopCharging> context)
-    {
-        var correlationId = context.Message.CorrelationId;
-        var agv = await _agvRepository.GetAgvAsync(correlationId);
-
-        await TransitionToIdleAsync(context, agv, context.CancellationToken);
-
-        _logger.LogInformation("{AgvId} / {CorrelationId} reloaded its battery level to {BatteryLevel}% => Transitioned to {State}",
-            agv.AgvId, agv.CorrelationId, agv.AgvStatus!.BatteryCharge, Enum.GetName(agv.CurrentAgvState));
     }
 
     /// <summary>

@@ -89,7 +89,7 @@ public class ActionEventHandler :
     /// <inheritdoc cref="ActionGroupHasNoEstimatedDuration" />
     public async Task Consume(ConsumeContext<ActionGroupHasNoEstimatedDuration> context)
     {
-        await context.Publish(new EstimateActionGroupDuration(context.Message.FirstAction, context.Message.FirstActionCosts, context.Message.AgvId, context.Message.ActionGroupId));
+        await context.Publish(new EstimateActionGroupDuration(Guid.NewGuid(), context.Message.FirstAction, context.Message.FirstActionCosts, context.Message.AgvId, context.Message.ActionGroupId));
     }
 
     /// <summary>

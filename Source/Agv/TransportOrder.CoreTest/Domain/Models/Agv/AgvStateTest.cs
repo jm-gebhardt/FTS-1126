@@ -15,13 +15,7 @@ public class AgvStateTest
     [DataRow(AgvState.Discovered, AgvState.Idle)]
     // From Busy
     [DataRow(AgvState.Busy, AgvState.Idle)]
-    [DataRow(AgvState.Busy, AgvState.Charging)]
-    // From Idle
-    [DataRow(AgvState.Idle, AgvState.Charging)]
     [DataRow(AgvState.Idle, AgvState.Busy)]
-    // From Charging
-    [DataRow(AgvState.Charging, AgvState.Idle)]
-    [DataRow(AgvState.Charging, AgvState.Busy)]
     public void TransitionStateTo_ValidState_StateTransitioned(AgvState current, AgvState next)
     {
         var result = current.TransitionTo(next);
@@ -31,7 +25,6 @@ public class AgvStateTest
     [DataTestMethod]
     // From Initial
     [DataRow(AgvState.Initial, AgvState.Busy)]
-    [DataRow(AgvState.Initial, AgvState.Charging)]
     [DataRow(AgvState.Initial, AgvState.Idle)]
     // From Discovered
     [DataRow(AgvState.Discovered, AgvState.Busy)]
