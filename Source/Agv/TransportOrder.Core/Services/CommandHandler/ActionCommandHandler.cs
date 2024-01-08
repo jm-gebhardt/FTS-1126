@@ -43,7 +43,8 @@ public class ActionCommandHandler :
     IConsumer<QueueActionGroup>,
     IConsumer<CancelActionGroup>,
     IConsumer<SelectNodesForAction>,
-    IConsumer<AbortActionGroup>
+    IConsumer<AbortActionGroup>,
+    IConsumer<ResetActionGroup>
 {
     private readonly ILogger<ActionCommandHandler> _logger;
     private readonly IRouteService _routeService;
@@ -542,6 +543,33 @@ public class ActionCommandHandler :
             string serviceNode = actionGroupWithNodes.Actions.First(a => new[] {AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park}.Contains(a.TargetNodeType)).TargetNodeId;
             await context.Publish(new AutomaticActionWithdrawn(serviceNode));
         }
+    }
+
+    /// <summary>
+    /// Handles the <see cref="ResetActionGroup"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<ResetActionGroup> context)
+    {
+        var correlationId = context.Message.CorrelationId;
+        var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByIdAsync(correlationId);
+        Guid? agvCorrelationId = actionGroup.AssignedAgv;
+        var action = actionGroup.Actions.FirstOrDefault(a => a.State == ActionState.Started);
+        if (action != null && agvCorrelationId != null)
+        {
+            await context.Publish(new ActionAborted(agvCorrelationId.Value, _mapper.Map<MessageAgvAction>(action)));
+        }
+
+        actionGroup.ResetActionGroup();
+        await _actionGroupRepository.UpdateAsync(actionGroup);
+        var actionGroupWithNodes = await _actionGroupRetrievalService.EnrichActionGroupWithNodesAsync(actionGroup);
+        if (actionGroupWithNodes.Actions.Any(a => new[] { AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park }.Contains(a.TargetNodeType)))
+        {
+            string serviceNode = actionGroupWithNodes.Actions.First(a => new[] { AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park }.Contains(a.TargetNodeType)).TargetNodeId;
+            await context.Publish(new AutomaticActionWithdrawn(serviceNode));
+        }
+        var actionGroupMessageContent = _mapper.Map<ActionGroup>(actionGroup);
+        await context.Publish(new ActionGroupChanged(actionGroupMessageContent, actionGroup.CorrelationId));
+        await context.RespondAsync(new Success());
     }
 
     private async Task SelectNodesForAgvAction(IPublishEndpoint context, Domain.Models.ActionGroup.ActionGroup actionGroup, AgvAction action, Domain.Models.Agv.Agv assignedAgv, CancellationToken cancellationToken)

@@ -1,6 +1,7 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
+using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.CommandHandler.Action;
@@ -241,5 +242,40 @@ public class ActionGroupRequestHandlerTest
         
         await MediatorShould.ThrowRequestExceptionAsync<ActionGroupStateInvalidException>(async () => await fixture.GetResponseAsync<ActionGroupAbortionTriggered>(
             new TriggerActionGroupAbortion(actionGroupWithStartedAction.CorrelationId, AbortReason.ReactivatedFromCharging)));
+    }
+
+    [TestMethod]
+    public async Task Consume_TriggerActionGroupReset_ValidData_ActionGroupResetTriggered()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId, pickActionState: ActionState.Started);
+        var actionCommandHandlerTestFixture = new ActionCommandHandlerTestFixture();
+        actionCommandHandlerTestFixture.AddAgv(agv);
+        actionCommandHandlerTestFixture.AddActionGroup(actionGroup);
+        actionCommandHandlerTestFixture.AddActionGroupTargetNodeType(actionGroup, AgvGraph.NodeType.Park);
+        ActionGroupRequestHandlerTestFixture<TriggerActionGroupReset, ActionGroupRequestHandler> fixture =
+            await new ActionGroupRequestHandlerTestFixture<TriggerActionGroupReset, ActionGroupRequestHandler>()
+                .WithActionGroups(actionGroup)
+                .BuildAsync(actionCommandHandlerTestFixture.TestHarness.Bus);
+        Response<ActionGroupResetTriggered> response = await fixture.GetResponseAsync<ActionGroupResetTriggered>(new TriggerActionGroupReset(actionGroup.CorrelationId));
+        response.Message.CorrelationId.ShouldBe(actionGroup.CorrelationId);
+        (await actionCommandHandlerTestFixture.TestHarness.Published.Any<ResetActionGroup>()).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task Consume_TriggerActionGroupReset_UnknownActionGroup_ThrowsActionGroupNotFoundException()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId, pickActionState: ActionState.Started);
+        var actionCommandHandlerTestFixture = new ActionCommandHandlerTestFixture();
+        actionCommandHandlerTestFixture.AddAgv(agv);
+        actionCommandHandlerTestFixture.AddActionGroup(actionGroup);
+        actionCommandHandlerTestFixture.AddActionGroupTargetNodeType(actionGroup, AgvGraph.NodeType.Park);
+        ActionGroupRequestHandlerTestFixture<TriggerActionGroupReset, ActionGroupRequestHandler> fixture =
+            await new ActionGroupRequestHandlerTestFixture<TriggerActionGroupReset, ActionGroupRequestHandler>()
+                .WithActionGroups(actionGroup)
+                .BuildAsync(actionCommandHandlerTestFixture.TestHarness.Bus);
+        await MediatorShould.ThrowRequestExceptionAsync<ActionGroupNotFoundException>(async () =>
+            await fixture.GetResponseAsync<ActionGroupResetTriggered>(new TriggerActionGroupReset("Unknown".ToGuid())));
     }
 }

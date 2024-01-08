@@ -114,6 +114,11 @@ public static class CoreBusRegistrationExtensions
                 x.UsePartitioner(partitioner, p => p.Message.AgvCorrelationId));
             c.Message<TryStartManualAction>(x =>
                 x.UsePartitioner(partitioner, p => p.Message.AgvCorrelationId));
+
+            var actionPartitioner = c.CreatePartitioner(PartitionCount);
+            actionPartitioner.PartitionMessageById<AbortActionGroup, ActionCommandHandler>(c);
+            actionPartitioner.PartitionMessageById<ResetActionGroup, ActionCommandHandler>(c);
+            actionPartitioner.PartitionMessageById<QueueActionGroup, ActionCommandHandler>(c);
         });
         busRegistrationConfigurator.AddConsumer<ActionEstimationCommandHandler>();
         busRegistrationConfigurator.AddRequestClient<CancelActionGroup>();
@@ -155,6 +160,7 @@ public static class CoreBusRegistrationExtensions
         configurator.AddRequestClient<GetActionGroups>();
         configurator.AddRequestClient<GetActionGroupCountsByState>();
         configurator.AddRequestClient<TriggerActionGroupAbortion>();
+        configurator.AddRequestClient<TriggerActionGroupReset>();
         configurator.AddConsumer<ActionCommandHandler>();
         configurator.AddRequestClient<QueueActionGroup>();
     }

@@ -228,6 +228,21 @@ public class ActionGroup
     }
 
     /// <summary>
+    /// Reset the state of the action to <see cref="ActionState.Created"/>.
+    /// </summary>
+    /// <param name="actionId">The action id.</param>
+    private void ResetAction(Guid actionId)
+    {
+        var action = Actions.Single(a => a.CorrelationId == actionId);
+        action.StartedDate = null;
+        action.CompletedDate = null;
+        action.Nodes = Array.Empty<string>();
+        EstimatedDuration = TimeSpan.Zero;
+        action.UpdateActionState(ActionState.Created);
+        UpdateActionGroupState();
+    }
+
+    /// <summary>
     /// Starts the specified action.
     /// </summary>
     /// <param name="actionId">The id of the action.</param>
@@ -257,6 +272,21 @@ public class ActionGroup
             CancelAction(agvAction.CorrelationId);
         }
         return true;
+    }
+
+    /// <summary>
+    /// Resets the <see cref="ActionGroup"/> and all <see cref="AgvAction"/> to
+    /// <see cref="ActionState.Created"/>.
+    /// </summary>
+    public void ResetActionGroup()
+    {
+        foreach (var agvAction in Actions)
+        {
+            ResetAction(agvAction.CorrelationId);
+        }
+        AssignedAgv = null;
+        StartedDate = null;
+        CompletedDate = null;
     }
 
     /// <summary>

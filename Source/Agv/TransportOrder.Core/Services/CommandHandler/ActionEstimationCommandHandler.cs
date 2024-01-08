@@ -60,7 +60,7 @@ public class ActionEstimationCommandHandler :
             var followingRoute = await _routeService.GetRouteAsync(assignedAgv, actionsAfterFirstAction.Select(a => a.TargetNodeId).ToList(), action.TargetNodeId, agvData);
             _logger.LogDebug("Following route costs: {FollowingRouteCosts}", followingRoute.Costs);
             duration += followingRoute.Costs;
-            // costs for charging itself, just assume 1% / s, we dont have the charging rate here
+            // costs for charging itself, just assume 1% / s, we don't have the charging rate here
             double chargeCostsPerCharge = (100 - assignedAgv.AgvStatus!.BatteryCharge) * 1;
             double chargeCosts = actionsAfterFirstAction.Count(a => a.ActionType == ActionType.Charge) * chargeCostsPerCharge;
             _logger.LogDebug("Charging costs: {ChargeCosts}", chargeCosts);

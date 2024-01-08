@@ -1,4 +1,5 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
+using MassTransit;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
 
@@ -7,4 +8,4 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
 /// </summary>
 /// <param name="CorrelationId">The correlation id of the action group.</param>
 /// <param name="CancelReason">The reason for the cancel.</param>
-public record CancelActionGroup(Guid CorrelationId, CancelReason CancelReason);
+public record CancelActionGroup(Guid CorrelationId, CancelReason CancelReason): CorrelatedBy<Guid>;

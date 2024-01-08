@@ -18,7 +18,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHan
 public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
     IConsumer<GetActionGroups>,
     IConsumer<GetActionGroupCountsByState>,
-    IConsumer<TriggerActionGroupAbortion>
+    IConsumer<TriggerActionGroupAbortion>,
+    IConsumer<TriggerActionGroupReset>
 {
     private readonly IActionGroupRetrievalService _retrievalService;
     private readonly IActionGroupRepository _actionGroupRepository;
@@ -93,5 +94,18 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
             throw new ActionGroupStateInvalidException(actionGroup, failed.Reason);
         }
         await context.RespondAsync(new ActionGroupAbortionTriggered(correlationId));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="TriggerActionGroupReset"/> request.
+    /// </summary>
+    public async Task Consume(ConsumeContext<TriggerActionGroupReset> context)
+    {
+        var correlationId = context.Message.CorrelationId;
+        var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByIdAsync(correlationId);
+
+        IRequestClient<ResetActionGroup>? requestClient = context.CreateRequestClient<ResetActionGroup>(_bus);
+        await requestClient.GetResponse<Success>(new ResetActionGroup(actionGroup.CorrelationId));
+        await context.RespondAsync(new ActionGroupResetTriggered(actionGroup.CorrelationId));
     }
 }

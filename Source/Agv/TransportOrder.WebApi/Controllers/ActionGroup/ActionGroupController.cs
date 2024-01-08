@@ -19,17 +19,23 @@ public class ActionGroupController : Controller
     private readonly IRequestClient<GetActionGroup> _getActionGroupRequestClient;
     private readonly IRequestClient<TriggerActionGroupAbortion> _abortionRequestClient;
     private readonly IRequestClient<CancelActionGroup> _cancelActionGroupRequestClient;
+    private readonly IRequestClient<TriggerActionGroupReset> _resetActionGroupRequestClient;
     private readonly IMapper _mapper;
 
     /// <summary>
     /// Initializes a new <see cref="ActionGroupController" /> instance.
     /// </summary>
-    public ActionGroupController(IMapper mapper, IRequestClient<GetActionGroup> getActionGroupRequestClient, IRequestClient<CancelActionGroup> cancelActionGroupRequestClient, IRequestClient<TriggerActionGroupAbortion> abortionRequestClient)
+    public ActionGroupController(IMapper mapper, 
+        IRequestClient<GetActionGroup> getActionGroupRequestClient, 
+        IRequestClient<CancelActionGroup> cancelActionGroupRequestClient, 
+        IRequestClient<TriggerActionGroupAbortion> abortionRequestClient,
+        IRequestClient<TriggerActionGroupReset> resetActionGroupRequestClient)
     {
         _mapper = mapper;
         _getActionGroupRequestClient = getActionGroupRequestClient;
         _abortionRequestClient = abortionRequestClient;
         _cancelActionGroupRequestClient = cancelActionGroupRequestClient;
+        _resetActionGroupRequestClient = resetActionGroupRequestClient;
     }
 
     /// <summary>
@@ -77,5 +83,18 @@ public class ActionGroupController : Controller
             ActionGroupCancelFailed { ErrorCode: HostOrderCancelFailedErrorCode.OrderDoesNotExist } => NotFound(),
             _ => BadRequest(((ActionGroupCancelFailed)response.Message).ErrorCode)
         };
+    }
+
+    /// <summary>
+    /// Reset an action group, so that it can be picked by an agv again.
+    /// </summary>
+    /// <response code="200">Ok</response>
+    /// <response code="404">Action group with given correlationId not found.</response>
+    [HttpPatch]
+    [Route("/actionGroup/{correlationId:guid}/reset")]
+    public async Task<ActionResult> ResetActionGroup(Guid correlationId)
+    {
+        await _resetActionGroupRequestClient.GetResponse<ActionGroupResetTriggered>(new TriggerActionGroupReset(correlationId));
+        return Ok();
     }
 }

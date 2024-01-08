@@ -24,9 +24,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers.ActionGro
 public class ActionGroupControllerTest
 {
     [UsedImplicitly]
-    public class ActionCommandHandlerMock : IConsumer<AbortActionGroup>
+    public class ActionCommandHandlerMock : IConsumer<AbortActionGroup>, IConsumer<ResetActionGroup>
     {
         public async Task Consume(ConsumeContext<AbortActionGroup> context)
+        {
+            await context.RespondAsync(new Success());
+        }
+
+        public async Task Consume(ConsumeContext<ResetActionGroup> context)
         {
             await context.RespondAsync(new Success());
         }
@@ -212,5 +217,34 @@ public class ActionGroupControllerTest
 
         var controller = fixture.Controller;
         await MediatorShould.ThrowRequestExceptionAsync<ActionGroupNotFoundException>(async () => await controller.AbortActionGroup(correlationId));
+    }
+
+    [TestMethod]
+    public async Task ResetActionGroup_ValidData_ReturnsOk()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(ActionGroupState.Started);
+        var massTransitFixture = new MassTransitConsumerTestFixture<ActionCommandHandlerMock>();
+        ActionGroupControllerTestFixture<TriggerActionGroupReset, ActionGroupRequestHandler> fixture = new ActionGroupControllerTestFixture<TriggerActionGroupReset, ActionGroupRequestHandler>()
+            .Setup(massTransitFixture.TestHarness.Bus)
+            .AddActionGroup(actionGroup)
+            .Build();
+
+        var controller = fixture.Controller;
+        var response = await controller.ResetActionGroup(actionGroup.CorrelationId);
+        var result = response as OkResult;
+        result.ShouldNotBeNull();
+    }
+
+    [TestMethod]
+    public async Task ResetActionGroup_UnknownCorrelationId_ReturnsNotFound()
+    {
+        ActionGroupControllerTestFixture<TriggerActionGroupReset, ActionGroupRequestHandler> fixture = new ActionGroupControllerTestFixture<TriggerActionGroupReset, ActionGroupRequestHandler>()
+            .Setup()
+            .Build();
+
+        var correlationId = "Unknown".ToGuid();
+
+        var controller = fixture.Controller;
+        await MediatorShould.ThrowRequestExceptionAsync<ActionGroupNotFoundException>(async () => await controller.ResetActionGroup(correlationId));
     }
 }

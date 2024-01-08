@@ -182,4 +182,25 @@ public class ActionGroupTests
         actionGroup.State.ShouldBe(ActionGroupState.Completed);
         actionGroup.AssignedAgv.ShouldNotBeNull();
     }
+
+    [TestMethod]
+    public void ResetActionGroup_ValidData_DatesAndStatesReset()
+    {
+        var createdDate = DateTime.UtcNow;
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(
+            pickActionState: ActionState.Completed,
+            dropActionState: ActionState.Started,
+            assignedAgv: Guid.NewGuid(),
+            createdDate:createdDate);
+        actionGroup.ResetActionGroup();
+       
+        actionGroup.AssignedAgv.ShouldBeNull();
+        actionGroup.StartedDate.ShouldBeNull();
+        actionGroup.CompletedDate.ShouldBeNull();
+        actionGroup.EstimatedDuration.ShouldBe(TimeSpan.Zero);
+        actionGroup.CreatedDate.ShouldBe(createdDate);
+        actionGroup.State.ShouldBe(ActionGroupState.Created);
+        actionGroup.Actions.ShouldAllBe(a => a.Nodes.Length == 0);
+        actionGroup.Actions.ShouldAllBe(a => a.State == ActionState.Created);
+    }
 }
