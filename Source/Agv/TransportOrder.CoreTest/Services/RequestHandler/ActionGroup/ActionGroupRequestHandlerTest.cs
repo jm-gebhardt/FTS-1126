@@ -7,6 +7,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.CommandHandler.Act
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.ActionGroup;
 using MassTransit;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -173,7 +174,7 @@ public class ActionGroupRequestHandlerTest
             .BuildAsync();
 
         await MediatorShould.ThrowRequestExceptionAsync<ActionGroupNotFoundException>(async () => await fixture.GetResponseAsync<ActionGroupAbortionTriggered>(
-            new TriggerActionGroupAbortion(actionGroup.CorrelationId)));
+            new TriggerActionGroupAbortion(actionGroup.CorrelationId, AbortReason.ReactivatedFromCharging)));
     }
 
     [TestMethod]
@@ -189,7 +190,7 @@ public class ActionGroupRequestHandlerTest
             await new ActionGroupRequestHandlerTestFixture<TriggerActionGroupAbortion, ActionGroupRequestHandler>()
             .WithActionGroups(actionGroup)
             .BuildAsync(actionCommandHandlerTestFixture.TestHarness.Bus);
-        Response<ActionGroupAbortionTriggered> response = await fixture.GetResponseAsync<ActionGroupAbortionTriggered>(new TriggerActionGroupAbortion(actionGroup.CorrelationId));
+        Response<ActionGroupAbortionTriggered> response = await fixture.GetResponseAsync<ActionGroupAbortionTriggered>(new TriggerActionGroupAbortion(actionGroup.CorrelationId, AbortReason.WebApi));
         response.Message.CorrelationId.ShouldBe(actionGroup.CorrelationId);
         (await actionCommandHandlerTestFixture.TestHarness.Published.Any<AbortActionGroup>()).ShouldBeTrue();
     }
@@ -203,7 +204,7 @@ public class ActionGroupRequestHandlerTest
             .BuildAsync();
 
         await MediatorShould.ThrowRequestExceptionAsync<ActionGroupStateInvalidException>(async () => await fixture.GetResponseAsync<ActionGroupAbortionTriggered>(
-            new TriggerActionGroupAbortion(actionGroup.CorrelationId)));
+            new TriggerActionGroupAbortion(actionGroup.CorrelationId, AbortReason.ReactivatedFromCharging)));
     }
 
     [TestMethod]
@@ -217,7 +218,7 @@ public class ActionGroupRequestHandlerTest
                 .WithActionGroups(actionGroup)
                 .BuildAsync(actionCommandHandlerTestFixture.TestHarness.Bus);
         await MediatorShould.ThrowRequestExceptionAsync<ActionGroupStateInvalidException>(async () => await fixture.GetResponseAsync<ActionGroupAbortionTriggered>(
-            new TriggerActionGroupAbortion(actionGroup.CorrelationId)));
+            new TriggerActionGroupAbortion(actionGroup.CorrelationId, AbortReason.ReactivatedFromCharging)));
     }
 
     [TestMethod]
@@ -239,6 +240,6 @@ public class ActionGroupRequestHandlerTest
                 .BuildAsync(actionCommandHandlerTestFixture.TestHarness.Bus);
         
         await MediatorShould.ThrowRequestExceptionAsync<ActionGroupStateInvalidException>(async () => await fixture.GetResponseAsync<ActionGroupAbortionTriggered>(
-            new TriggerActionGroupAbortion(actionGroupWithStartedAction.CorrelationId)));
+            new TriggerActionGroupAbortion(actionGroupWithStartedAction.CorrelationId, AbortReason.ReactivatedFromCharging)));
     }
 }

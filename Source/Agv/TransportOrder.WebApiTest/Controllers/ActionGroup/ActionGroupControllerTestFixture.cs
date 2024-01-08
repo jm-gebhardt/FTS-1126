@@ -1,5 +1,6 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+using Gebhardt.StoreWare.Agv.Common.Models;
 using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
@@ -47,7 +48,7 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
         IRequestClient<GetActionGroup> getActionGroupRequestClient = GetRequestClient<GetActionGroup>();
         IRequestClient<TriggerActionGroupAbortion> abortionRequestClient = GetRequestClient<TriggerActionGroupAbortion>();
         IRequestClient<CancelActionGroup> cancelActionGroupRequestClient = GetRequestClient<CancelActionGroup>();
-        var controller = new ActionGroupController(GetMapper(), 
+        var controller = new ActionGroupController(GetMapper(),
             getActionGroupRequestClient, cancelActionGroupRequestClient, abortionRequestClient)
         {
             ControllerContext = new ControllerContext(
@@ -79,12 +80,12 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
             sc.AddTransient(_ => _agvDataRepository.Object);
             if (bus != null)
             {
-               sc.AddTransient(_ => bus);
+                sc.AddTransient(_ => bus);
             }
             else
             {
                 var busMock = new Mock<IBus>();
-               sc.AddTransient(_ => busMock.Object);
+                sc.AddTransient(_ => busMock.Object);
             }
         });
 
@@ -95,8 +96,8 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
             return ag ?? throw new ActionGroupNotFoundException(c);
         });
         _actionGroupRepositoryMock.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) => _actionGroups.FirstOrDefault(a => a.CorrelationId == c));
-        _actionGroupRepositoryMock.Setup(x => x.UpdateActionAndGroupStateAsync(It.IsAny<AgvAction>(), It.IsAny<Domain.Models.Agv.Agv>(), It.IsAny<ActionState>()))!.ReturnsAsync(
-            (AgvAction action, Domain.Models.Agv.Agv _, ActionState _) => _actionGroups.FirstOrDefault(a => a.CorrelationId == action.ParentId));
+        _actionGroupRepositoryMock.Setup(x => x.UpdateActionAndGroupStateAsync(It.IsAny<AgvAction>(), It.IsAny<Domain.Models.Agv.Agv>(), It.IsAny<ActionState>(), It.IsAny<Reason?>()))!.ReturnsAsync(
+            (AgvAction action, Domain.Models.Agv.Agv _, ActionState _, Reason? _) => _actionGroups.FirstOrDefault(a => a.CorrelationId == action.ParentId));
         _retrievalServiceMock.Setup(x => x.EnrichActionGroupWithNodesAsync(It.IsAny<Domain.Models.ActionGroup.ActionGroup>())).ReturnsAsync((Domain.Models.ActionGroup.ActionGroup ag) => ag.ConvertFromActionGroupWithFakeNodeType()!);
         return this;
     }

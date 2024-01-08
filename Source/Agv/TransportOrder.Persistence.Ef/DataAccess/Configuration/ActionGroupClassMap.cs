@@ -24,7 +24,10 @@ public class ActionGroupClassMap : ClassMap<ActionGroup>
         entity.Ignore(e => e.FirstNotStartedAction);
         entity.Property(g => g.State).HasMaxLength(MaxStateLength);
         entity.HasIndex(g => g.AssignedAgv);
-        entity.Property(e => e.AssignedAgv);
+        entity.Property(g => g.AssignedAgv);
+        
+        // Reasons is just an information, we will never want to query it, so we can simply store it as json without introducing new tables
+        entity.Property(g => g.Reasons).HasJsonConversion();
 
         entity.OwnsMany(g => g.Actions, a =>
         {

@@ -80,11 +80,11 @@ public interface IAgvRepository
     Task<ICollection<Models.Agv.Agv>> GetReadyAgvsAsync();
 
     /// <summary>
-    /// Get all charging agvs with good battery level.
+    /// Get all charging agvs with at least a certain battery level.
     /// </summary>
-    /// <param name="goodBatteryLevel">The good battery level.</param>
+    /// <param name="minBatteryLevel">The min. needed battery level of the Agv to be considered.</param>
     /// <returns></returns>
-    Task<ICollection<Models.Agv.Agv>> GetChargingAgvsWithGoodBatteryLevelAsync(int goodBatteryLevel);
+    Task<ICollection<Models.Agv.Agv>> GetChargingAgvsWithMinBatteryLevelAsync(int minBatteryLevel);
 
     /// <summary>
     /// Get the last node id of the agv with the given correlation id.

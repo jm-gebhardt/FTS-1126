@@ -1,5 +1,7 @@
 ﻿using FluentValidation;
+using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Constants;
 using AgvAction = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.AgvAction;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Validators;
@@ -14,6 +16,6 @@ public class AgvActionValidator : AbstractValidator<AgvAction>
     {
         RuleFor(p => p.State)
             .Equal(ActionState.Created)
-            .WithMessage("{PropertyName} must be in the {ComparisonValue} state.");
+            .WithReason(Reasons.ActionStateMustBeCreated, p => p.State);
     }
 }

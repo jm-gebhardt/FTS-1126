@@ -87,7 +87,7 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
             throw new ActionGroupStateInvalidException(actionGroup, "Cannot abort action that are not in state 'Started'.");
         }
         IRequestClient<AbortActionGroup>? requestClient = context.CreateRequestClient<AbortActionGroup>(_bus);
-        Response<Success, AbortActionGroupFailed> response = await requestClient.GetResponse<Success, AbortActionGroupFailed>( new AbortActionGroup(correlationId));
+        Response<Success, AbortActionGroupFailed> response = await requestClient.GetResponse<Success, AbortActionGroupFailed>(new AbortActionGroup(correlationId, context.Message.AbortReason));
         if (response.Message is AbortActionGroupFailed failed)
         {
             throw new ActionGroupStateInvalidException(actionGroup, failed.Reason);

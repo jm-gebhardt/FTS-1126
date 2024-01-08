@@ -1,4 +1,5 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+using Gebhardt.StoreWare.Agv.Common.Models;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using JetBrains.Annotations;
 using ActionGroup = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
@@ -26,11 +27,11 @@ public static class AgvActionGenerator
 
         if (targetNodeId != null)
         {
-            chargeAction.Nodes = new[] { targetNodeId };
+            chargeAction.Nodes = new[] {targetNodeId};
         }
-        var actionGroup = new ActionGroup(groupId, string.Empty, new List<AgvAction> { moveAction, chargeAction }, ActionGroupCreator.TransportOrder) { AssignedAgv = assignedAgv };
+        var actionGroup = new ActionGroup(groupId, string.Empty, new List<AgvAction> {moveAction, chargeAction}, ActionGroupCreator.TransportOrder) {AssignedAgv = assignedAgv};
         actionGroup.UpdateActionGroupState();
-       
+
         return actionGroup;
     }
 
@@ -43,12 +44,12 @@ public static class AgvActionGenerator
         };
         if (targetNodeId != null)
         {
-            parkAction.Nodes = new[] { targetNodeId };
+            parkAction.Nodes = new[] {targetNodeId};
         }
         parkAction.UpdateActionState(actionState);
         return parkAction;
     }
-    
+
     public static ActionGroup GeneratePickDropActionGroup(
         ActionState pickActionState = ActionState.Created,
         ActionState dropActionState = ActionState.Created,
@@ -56,8 +57,8 @@ public static class AgvActionGenerator
         string? destination = null,
         Guid? assignedAgv = null,
         int partial = 0,
-        DateTime createdDate = default, 
-        DateTime? completedDate = null, 
+        DateTime createdDate = default,
+        DateTime? completedDate = null,
         DateTime? startedDate = null
     )
     {
@@ -79,10 +80,10 @@ public static class AgvActionGenerator
 
         List<AgvAction> actions = partial switch
         {
-            1 => new List<AgvAction> { pickAction },
-            2 => new List<AgvAction> { dropAction },
-            3 => new List<AgvAction> { dropAction, pickAction },
-            _ => new List<AgvAction> { pickAction, dropAction }
+            1 => new List<AgvAction> {pickAction},
+            2 => new List<AgvAction> {dropAction},
+            3 => new List<AgvAction> {dropAction, pickAction},
+            _ => new List<AgvAction> {pickAction, dropAction}
         };
 
         var actionGroup = new ActionGroup(groupId, orderId, actions, ActionGroupCreator.Wms)
@@ -105,17 +106,17 @@ public static class AgvActionGenerator
         return actionGroup;
     }
 
-    public static ActionGroup GenerateMoveActionGroup(string? targetNodeId = null, bool isManual = false, Guid? assignedAgv= null)
+    public static ActionGroup GenerateMoveActionGroup(string? targetNodeId = null, bool isManual = false, Guid? assignedAgv = null)
     {
         const string orderId = "move";
         var groupId = Guid.NewGuid();
         var moveAction = new AgvAction(Guid.NewGuid(), ActionType.Move, targetNodeId ?? AgvGraphGenerator.Waypoint1.Id, groupId);
         if (targetNodeId != null)
         {
-            moveAction.Nodes = new[] { targetNodeId };
+            moveAction.Nodes = new[] {targetNodeId};
         }
 
-        var actionGroup = new ActionGroup(groupId, orderId, new List<AgvAction> { moveAction }, isManual: isManual, creator: ActionGroupCreator.TransportOrderWebApi, assignedAgv: assignedAgv);
+        var actionGroup = new ActionGroup(groupId, orderId, new List<AgvAction> {moveAction}, isManual: isManual, creator: ActionGroupCreator.TransportOrderWebApi, assignedAgv: assignedAgv);
 
         return actionGroup;
     }
@@ -166,7 +167,7 @@ public static class AgvActionGenerator
                 break;
 
             case ActionGroupState.Aborted:
-                actionGroup.AbortAction(actionId);
+                actionGroup.AbortAction(actionId, Enumerable.Empty<Reason>());
                 break;
         }
         return actionGroup;

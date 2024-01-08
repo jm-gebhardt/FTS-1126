@@ -1,4 +1,5 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+using Gebhardt.StoreWare.Agv.Common.Models;
 using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.AgvActions;
@@ -74,6 +75,12 @@ public record ActionGroupDto : DatedMessage
     /// Gets if the action group was created manually ( i.e. not by the system).
     /// </summary>
     public bool IsManual { get; set; }
+
+    /// <summary>
+    /// Are set when the ActionGroup went into a non successful state, like invalid, aborted or canceled.
+    /// </summary>
+    [UsedImplicitly]
+    public List<Reason> Reasons { get; set; } = new();
 
     /// <summary>
     /// ctor called by AutoMapper.

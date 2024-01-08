@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+using Gebhardt.StoreWare.Agv.Common.Models;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
@@ -84,7 +85,7 @@ public class ActionGroupRetrievalServiceTest
         await using var fixture = new ActionGroupRetrievalServiceTestFixture();
 
         var actionGroup = AgvActionGenerator.GenerateMoveActionGroup("UnknownTargetNodeId");
-        actionGroup.InvalidateActionGroup();
+        actionGroup.InvalidateActionGroup(Enumerable.Empty<Reason>());
         await fixture.AddAsync(actionGroup);
         await AddDefaultAgvGraph(fixture, "aGraph".ToGuid());
 
@@ -434,7 +435,7 @@ public class ActionGroupRetrievalServiceTest
         await using var fixture = new ActionGroupRetrievalServiceTestFixture();
 
         var actionGroup = AgvActionGenerator.GenerateMoveActionGroup("UnknownTargetNodeId");
-        actionGroup.InvalidateActionGroup();
+        actionGroup.InvalidateActionGroup(Enumerable.Empty<Reason>());
         await fixture.AddAsync(actionGroup);
         await AddDefaultAgvGraph(fixture, "aGraph".ToGuid());
 

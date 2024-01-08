@@ -2,6 +2,7 @@ using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.AgvActions;
 using MassTransit;
@@ -55,7 +56,7 @@ public class ActionGroupController : Controller
     [Route("/actionGroup/{correlationId:guid}/abort")]
     public async Task<ActionResult> AbortActionGroup(Guid correlationId)
     {
-        await _abortionRequestClient.GetResponse<ActionGroupAbortionTriggered>(new TriggerActionGroupAbortion(correlationId));
+        await _abortionRequestClient.GetResponse<ActionGroupAbortionTriggered>(new TriggerActionGroupAbortion(correlationId, AbortReason.WebApi));
         return Ok();
     }
 
@@ -69,7 +70,7 @@ public class ActionGroupController : Controller
     [Route("/actionGroup/{correlationId:guid}/cancel")]
     public async Task<ActionResult> CancelActionGroup(Guid correlationId)
     {
-        Response<ActionGroupCanceled, ActionGroupCancelFailed> response = await _cancelActionGroupRequestClient.GetResponse<ActionGroupCanceled, ActionGroupCancelFailed>(new CancelActionGroup(correlationId));
+        Response<ActionGroupCanceled, ActionGroupCancelFailed> response = await _cancelActionGroupRequestClient.GetResponse<ActionGroupCanceled, ActionGroupCancelFailed>(new CancelActionGroup(correlationId, CancelReason.WebApi));
         return response.Message switch
         {
             ActionGroupCanceled => Ok(),

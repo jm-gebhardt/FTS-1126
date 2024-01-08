@@ -5,7 +5,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles;
 /// <summary>
 /// Profile for date times.
 /// </summary>
-public class DateTimeProfile : Profile
+public class DateTimeProfile : WebApiProfile
 {
     /// <summary>
     /// Constructor

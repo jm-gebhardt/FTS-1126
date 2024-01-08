@@ -1,6 +1,7 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
+using Gebhardt.StoreWare.Agv.Common.Models;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
@@ -36,7 +37,7 @@ public class ActionGroupControllerTest
     {
         var correlationId = Guid.NewGuid();
         var startedDate = DateTime.Parse("2021-01-01T00:00:54Z").ToUniversalTime();
-        var actionGroup = new ActionGroupReadModel(correlationId, "OrderId", null, DateTime.UtcNow, startedDate, null, TimeSpan.FromSeconds(6), ActionGroupState.Created, ActionGroupCreator.TransportOrder, new List<AgvActionReadModel>(), true);
+        var actionGroup = new ActionGroupReadModel(correlationId, "OrderId", null, DateTime.UtcNow, startedDate, null, TimeSpan.FromSeconds(6), ActionGroupState.Created, ActionGroupCreator.TransportOrder, new List<AgvActionReadModel>(), true, new List<Reason>());
         ActionGroupControllerTestFixture<GetActionGroup, ActionGroupRequestHandler> fixture = new ActionGroupControllerTestFixture<GetActionGroup, ActionGroupRequestHandler>()
             .Setup()
             .AddActionGroup(actionGroup)

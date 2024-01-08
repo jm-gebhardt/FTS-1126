@@ -1,5 +1,7 @@
 ﻿using FluentValidation;
+using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Constants;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Routing;
 using ActionGroup = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
@@ -12,7 +14,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Validators;
 /// </summary>
 public class ActionGroupValidator : AbstractValidator<ActionGroup>
 {
-    private const string PropertyMustNotBeNullOrEmpty = "{PropertyName} must not be null or empty.";
     private readonly IAgvRepository _agvRepository;
     private readonly IRouteService _routeService;
     private readonly IGraphRepository _graphRepository;
@@ -34,27 +35,27 @@ public class ActionGroupValidator : AbstractValidator<ActionGroup>
         RuleFor(p => p.OrderId)
             .NotNull()
             .NotEmpty()
-            .WithMessage(PropertyMustNotBeNullOrEmpty);
+            .WithReason(Reasons.OrderIdIsNullOrEmpty);
 
         RuleFor(p => p.CorrelationId)
             .NotEmpty()
-            .WithMessage(PropertyMustNotBeNullOrEmpty);
+            .WithReason(Reasons.CorrelationIdIsNullOrEmpty);
 
         RuleForEach(p => p.Actions)
             .SetValidator(actionValidator);
 
         RuleFor(p => p.State)
             .Equal(ActionGroupState.Created)
-            .WithMessage("{PropertyName} must be in the {ComparisonValue} state.");
+            .WithReason(Reasons.ActionGroupStateMustBeCreated, p => p.State);
 
         RuleFor(p => p)
             .Cascade(CascadeMode.Continue)
-            .Must(p => p.Actions.All(a => a.ParentId == p.CorrelationId)).WithMessage("ParentId of each Action must match CorrelationId of ActionGroup.")
-            .Must(ActionSequenceIdsMustBeSet).WithMessage("Action sequence Ids must be set.")
-            .Must(ActionSequenceIdsMustBeUnique).WithMessage("Action sequence Ids must be unique.")
-            .Must(ActionSequenceIdsMustNotHaveAGap).WithMessage("Action sequence must not have gaps.")
-            .Must(ActionSequenceOrderedAscending).WithMessage("Actions within the group must be ordered by sequence.")
-            .MustAsync(async (actionGroup, cancellationToken) => await CanHandleRouteAsync(actionGroup, cancellationToken)).WithMessage("There must be at least one Agv that knows the complete route of all actions within the given ActionGroup.")
+            .Must(p => p.Actions.All(a => a.ParentId == p.CorrelationId)).WithReason(Reasons.ParentIdOfEachActionMustMatchCorrelationIdOfActionGroup)
+            .Must(ActionSequenceIdsMustBeSet).WithReason(Reasons.ActionSequenceIdsMustBeSet)
+            .Must(ActionSequenceIdsMustBeUnique).WithReason(Reasons.ActionSequenceIdsMustBeUnique)
+            .Must(ActionSequenceIdsMustNotHaveAGap).WithReason(Reasons.ActionSequenceMustNotHaveGaps)
+            .Must(ActionSequenceOrderedAscending).WithReason(Reasons.ActionsWithinTheGroupMustBeOrderedBySequence)
+            .MustAsync(async (actionGroup, cancellationToken) => await CanHandleRouteAsync(actionGroup, cancellationToken)).WithReason(Reasons.ThereMustBeAtLeastOneAgvThatKnowsTheCompleteRouteOfAllActionsWithinTheGivenActionGroup)
             .DependentRules(() =>
             {
                 When(_ => !_hasRoute, () =>
@@ -64,7 +65,12 @@ public class ActionGroupValidator : AbstractValidator<ActionGroup>
                     {
                         action.RuleFor(a => a.TargetNodeId)
                             .MustAsync(async (nodeId, _) => await TargetNodeExists(nodeId))
-                            .WithMessage("{PropertyName} ({PropertyValue}) must exist in the repository.");
+                            .WithReason(a => a.ActionType switch
+                            {
+                                ActionType.Pick => Reasons.PickStationNodeDoesNotExist,
+                                ActionType.Drop => Reasons.DropStationNodeDoesNotExist,
+                                _ => Reasons.TargetNodeDoesNotExist
+                            }, a => a.TargetNodeId);
                     });
                 });
             });
@@ -72,36 +78,36 @@ public class ActionGroupValidator : AbstractValidator<ActionGroup>
         RuleFor(p => p.Actions)
             .NotNull()
             .NotEmpty()
-            .WithMessage(PropertyMustNotBeNullOrEmpty);
+            .WithReason(Reasons.ActionsMustBeSet);
 
         When(p => p.IsManual, () =>
         {
             RuleFor(p => p.Actions)
                 .Must(actions => actions.Count == 1)
-                .WithMessage("There can be no more than 1 {PropertyName} for an action group that is triggered by a manual action.");
+                .WithReason(Reasons.ManualActionMustHaveExactlyOneAction);
 
             RuleFor(p => p.AssignedAgv)
                 .NotNull()
                 .NotEmpty()
-                .WithMessage("{PropertyName} must not be null or empty if the action group was triggered manually.");
+                .WithReason(Reasons.ManualActionMustHaveAgvAssigned);
         });
 
         When(p => p.AssignedAgv != null, () =>
         {
             RuleFor(p => p.IsManual)
                 .Must(p => p)
-                .WithMessage("{PropertyName} must be true if an Agv is assigned to the action group.");
+                .WithReason(Reasons.AssignedAgvRequiresManualAction);
 
             RuleFor(x => x.AssignedAgv)
                 .Must(_ => AgvExists())
-                .WithMessage("{PropertyName} must exist in the repository.");
+                .WithReason(Reasons.AgvDoesNotExist, x => x.AssignedAgv);
         });
 
         When(p => p.Actions.Any(a => a.ActionType is ActionType.Pick or ActionType.Drop), () =>
         {
             RuleFor(p => p.Actions)
                 .Must(CheckPickDropSequence)
-                .WithMessage("Pick and drop actions must match.");
+                .WithReason(Reasons.PickDropSequenceMustBeValid);
         });
     }
 
@@ -169,7 +175,7 @@ public class ActionGroupValidator : AbstractValidator<ActionGroup>
             ICollection<Models.Agv.Agv> agvs = await _agvRepository.GetAllAgvsAsync();
             _hasRoute = await _routeService.HasAnyAgvRouteAsync(actionGroup, agvs, cancellationToken);
         }
-
+        
         return _hasRoute;
     }
 

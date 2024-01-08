@@ -1,4 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+using Gebhardt.StoreWare.Agv.Common.Models;
 using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
@@ -17,6 +18,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
 /// <param name="Creator">The creator of the action group.</param>
 /// <param name="Actions">The action.</param>
 /// <param name="IsManual">The manual creation mode flag.</param>
+/// <param name="Reasons">Are set when the ActionGroup went into a non successful state, like invalid, aborted or canceled.</param>
 public record ActionGroupReadModel(Guid CorrelationId,
     string OrderId,
     Guid? AssignedAgv,
@@ -27,4 +29,5 @@ public record ActionGroupReadModel(Guid CorrelationId,
     ActionGroupState State,
     ActionGroupCreator Creator,
     ICollection<AgvActionReadModel> Actions,
-    [UsedImplicitly] bool IsManual);
+    [UsedImplicitly] bool IsManual,
+    List<Reason> Reasons);

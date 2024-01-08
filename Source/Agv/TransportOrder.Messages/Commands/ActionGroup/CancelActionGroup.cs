@@ -1,7 +1,10 @@
-﻿namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
+﻿using Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
+
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
 
 /// <summary>
 /// Provides a command to cancel an action group.
 /// </summary>
 /// <param name="CorrelationId">The correlation id of the action group.</param>
-public record CancelActionGroup(Guid CorrelationId);
+/// <param name="CancelReason">The reason for the cancel.</param>
+public record CancelActionGroup(Guid CorrelationId, CancelReason CancelReason);

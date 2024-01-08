@@ -1,5 +1,6 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+using Gebhardt.StoreWare.Agv.Common.Models;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
@@ -39,7 +40,7 @@ public class EfActionGroupRepository : IActionGroupRepository
     /// <inheritdoc />
     public async Task<IReadOnlyList<ActionGroup>> GetActionGroupsAsync(ActionGroupState state, DateTime? fromDate = null, DateTime? toDate = null, int maxItems = 0, Guid? assignedAgvCorrelationId = null, bool? isManual = null)
     {
-        return await GetActionGroupsAsync(new List<ActionGroupState> { state }, fromDate, toDate, maxItems, assignedAgvCorrelationId, isManual);
+        return await GetActionGroupsAsync(new List<ActionGroupState> {state}, fromDate, toDate, maxItems, assignedAgvCorrelationId, isManual);
     }
 
     /// <inheritdoc />
@@ -201,19 +202,20 @@ public class EfActionGroupRepository : IActionGroupRepository
     }
 
     /// <inheritdoc />
-    public async Task<ActionGroup> UpdateActionAndGroupStateAsync(AgvAction action, Domain.Models.Agv.Agv? agv, ActionState state)
+    public async Task<ActionGroup> UpdateActionAndGroupStateAsync(AgvAction action, Domain.Models.Agv.Agv? agv, ActionState state, Reason? reason = null!)
     {
         var actionGroupCorrelationId = action.ParentId;
 
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
-        var actionGroup = await queryable.FindAsync(actionGroupCorrelationId);
+        var actionGroup = await queryable
+            .Include(a => a.Actions)
+            .SingleOrDefaultAsync(a => a.CorrelationId == actionGroupCorrelationId);
 
         if (actionGroup == null)
         {
             throw new ActionGroupNotFoundException(actionGroupCorrelationId);
         }
-        await context.Entry(actionGroup).Collection(g => g.Actions).LoadAsync();
 
         action.UpdateActionState(state);
 
@@ -223,8 +225,13 @@ public class EfActionGroupRepository : IActionGroupRepository
         {
             actionGroup.Assign(agv);
         }
-       
+
         actionGroup.UpdateActionGroupState();
+
+        if (reason != null)
+        {
+            actionGroup.Reasons.Add(reason);
+        }
 
         await context.SaveChangesAsync();
 
@@ -315,7 +322,7 @@ public class EfActionGroupRepository : IActionGroupRepository
         DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
         var startedGroup = await queryable
             .Where(actionGroup => actionGroup.AssignedAgv == agvCorrelationId &&
-                                  actionGroup.State == ActionGroupState.Started && 
+                                  actionGroup.State == ActionGroupState.Started &&
                                   actionGroup.Actions.Any(a => a.State == ActionState.Completed))
             .OrderBy(a => a.StartedDate)
             .AsNoTracking()
@@ -339,7 +346,7 @@ public class EfActionGroupRepository : IActionGroupRepository
 
         return await actionGroups.AnyAsync(a =>
             (a.AssignedAgv == agvCorrelationId &&
-             new[] { ActionGroupState.Started, ActionGroupState.Created }.Contains(a.State)) ||
+             new[] {ActionGroupState.Started, ActionGroupState.Created}.Contains(a.State)) ||
             (a.AssignedAgv == null && a.State == ActionGroupState.Created)
         );
     }

@@ -1,5 +1,7 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+using Gebhardt.StoreWare.Agv.Common.Models;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
+using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
 
@@ -71,8 +73,12 @@ public class ActionGroup
     public TimeSpan? EstimatedDuration { get; set; }
 
     /// <summary>
-    ///  Initializes a new <see cref="ActionGroup"/> instance.
+    /// Are set when the ActionGroup went into a non successful state, like invalid, aborted or canceled. In case of invalid, this is considered as errors.
     /// </summary>
+    [UsedImplicitly]
+    public List<Reason> Reasons { get; set; } = new();
+
+    /// <inheritdoc cref="ActionGroup"/>
     /// <param name="correlationId">The correlation id of the <see cref="ActionGroup"/>.</param>
     /// <param name="actions">The child actions of the <see cref="ActionGroup"/>.</param>
     /// <param name="orderId">The order id.</param>
@@ -196,8 +202,10 @@ public class ActionGroup
     /// Aborts the specified action.
     /// </summary>
     /// <param name="actionId">The id of the action.</param>
-    public void AbortAction(Guid actionId)
+    /// <param name="reasons">The reasons for the abort.</param>
+    public void AbortAction(Guid actionId, IEnumerable<Reason> reasons)
     {
+        Reasons.AddRange(reasons);
         UpdateActionState(actionId, ActionState.Aborted);
     }
 
@@ -254,13 +262,14 @@ public class ActionGroup
     /// <summary>
     /// Cancels the <see cref="ActionGroup"/> and all the child <see cref="AgvAction"/>.
     /// </summary>
+    /// <param name="reasons"></param>
     /// <returns></returns>
-    public bool InvalidateActionGroup()
+    public void InvalidateActionGroup(IEnumerable<Reason> reasons)
     {
+        Reasons.AddRange(reasons);
         foreach (var agvAction in Actions)
         {
             InvalidateAction(agvAction.CorrelationId);
         }
-        return true;
     }
 }

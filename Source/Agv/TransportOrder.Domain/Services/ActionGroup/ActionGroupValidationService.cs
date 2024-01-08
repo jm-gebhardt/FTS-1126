@@ -20,20 +20,20 @@ public class ActionGroupValidationService : IActionGroupValidationService
     }
 
     /// <inheritdoc />
-    public async Task<List<ValidationFailure>> ValidateAsync(Models.ActionGroup.ActionGroup actionGroup)
+    public async Task<ValidationResult> ValidateAsync(Models.ActionGroup.ActionGroup actionGroup)
     {
         _logger.LogDebug("Validating action group for order {OrderId}", actionGroup.OrderId);
         var validationResult = await _actionGroupValidator.ValidateAsync(actionGroup);
 
-        if (validationResult.IsValid || !validationResult.Errors.Any())
+        if (!validationResult.IsValid && validationResult.Errors.Any())
         {
-            return new List<ValidationFailure>();
+            _logger.LogWarning("Action group for order {OrderId} is invalid", actionGroup.OrderId);
+            foreach (var error in validationResult.Errors)
+            {
+                _logger.LogWarning("{Message}", error.ErrorMessage);
+            }
         }
-        _logger.LogWarning("Action group for order {OrderId} is invalid", actionGroup.OrderId);
-        foreach (var error in validationResult.Errors)
-        {
-            _logger.LogWarning("{Message}", error.ErrorMessage);
-        }
-        return validationResult.Errors;
+
+        return validationResult;
     }
 }

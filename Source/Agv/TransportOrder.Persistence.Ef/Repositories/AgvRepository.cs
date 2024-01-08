@@ -100,11 +100,11 @@ public class AgvRepository : IAgvRepository
         return await dbContext.SaveChangesAsync() > 0;
     }
 
-    public async Task<ICollection<Domain.Models.Agv.Agv>> GetChargingAgvsWithGoodBatteryLevelAsync(int goodBatteryLevel)
+    public async Task<ICollection<Domain.Models.Agv.Agv>> GetChargingAgvsWithMinBatteryLevelAsync(int minBatteryLevel)
     {
         return await Agvs.Where(a => a.GraphExists &&
-                                     a.CurrentAgvState == AgvState.Charging &&
-                                     a.AgvStatus!.BatteryCharge >= goodBatteryLevel).ToListAsync();
+                                     a.CurrentAgvState == AgvState.Busy &&
+                                     a.AgvStatus!.BatteryCharge >= minBatteryLevel).ToListAsync();
     }
 
     public async Task<ICollection<Domain.Models.Agv.Agv>> GetReadyAgvsAsync()

@@ -1,7 +1,10 @@
-﻿namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
+﻿using Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
+
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
 
 /// <summary>
 /// Provides a command to abort an action group.
 /// </summary>
 /// <param name="CorrelationId">The correlation id of the action group.</param>
-public record AbortActionGroup(Guid CorrelationId);
+/// <param name="AbortReason">The reason for the abort.</param>
+public record AbortActionGroup(Guid CorrelationId, AbortReason AbortReason);

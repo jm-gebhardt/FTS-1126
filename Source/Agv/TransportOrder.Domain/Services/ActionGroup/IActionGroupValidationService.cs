@@ -11,6 +11,6 @@ public interface IActionGroupValidationService
     /// Validates the <see cref="Models.ActionGroup.ActionGroup"/>.
     /// </summary>
     /// <param name="actionGroup">The <see cref="Models.ActionGroup.ActionGroup"/> to validate.</param>
-    /// <returns></returns>
-    Task<List<ValidationFailure>> ValidateAsync(Models.ActionGroup.ActionGroup actionGroup);
+    /// <returns>The ValidationResult of FluentValidation.</returns>
+    Task<ValidationResult> ValidateAsync(Models.ActionGroup.ActionGroup actionGroup);
 }

@@ -37,6 +37,8 @@
         <EmbeddedResource Remove="Configurations\**" />
         <Folder Remove="Configurations\**" />
         <None Remove="Configurations\**" />
+        <Compile Remove="Migrations\Db_TransportOrderDbContext\20231228102336_CompletionResults.cs" />
+        <Compile Remove="Migrations\Db_TransportOrderDbContext\20231228102336_CompletionResults.Designer.cs" />
     </ItemGroup>
     <ItemGroup>
       <None Remove="DataAccess\Configuration\o0fbniyx.am4~" />

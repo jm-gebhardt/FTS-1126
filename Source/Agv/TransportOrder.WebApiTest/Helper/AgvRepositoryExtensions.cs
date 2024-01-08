@@ -26,7 +26,7 @@ public static class AgvRepositoryExtensions
         repoMock.Setup(r => r.Count).Returns(agvs.Count);
         repoMock.Setup(r => r.CheckIfAgvExistsAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) => agvs.Any(a => a.CorrelationId == c));
         repoMock.Setup(r => r.GetAllAgvsWithGraphAsync()).ReturnsAsync(agvs.Where(a => a.GraphExists).ToList());
-        repoMock.Setup(r => r.GetChargingAgvsWithGoodBatteryLevelAsync(It.IsAny<int>())).ReturnsAsync((int bl) => agvs.Where(a => a.AgvStatus?.BatteryCharge > bl).ToList());
+        repoMock.Setup(r => r.GetChargingAgvsWithMinBatteryLevelAsync(It.IsAny<int>())).ReturnsAsync((int bl) => agvs.Where(a => a.AgvStatus?.BatteryCharge > bl).ToList());
         repoMock.Setup(r => r.GetIdleAgvsAsync()).ReturnsAsync(agvs.Where(a => a.CurrentAgvState == AgvState.Idle).ToList());
         repoMock.Setup(r => r.GetReadyAgvsAsync()).ReturnsAsync(agvs.Where(a => a.IsReady).ToList());
         repoMock.Setup(r => r.SelectExistingAgvsAsync(It.IsAny<List<Guid>>())).ReturnsAsync((List<Guid> cs) => agvs.Where(a => !cs.Any() || cs.Contains(a.CorrelationId)).ToList());

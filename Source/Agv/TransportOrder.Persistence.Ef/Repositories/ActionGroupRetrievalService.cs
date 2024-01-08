@@ -100,7 +100,8 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
                     a.StartedDate,
                     a.CompletedDate)
             ).Distinct().ToList(),
-            g.IsManual
+            g.IsManual,
+            g.Reasons
         )).ToList();
 
         return result;
@@ -143,7 +144,9 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
                     actionGroup.State,
                     actionGroup.Creator,
                     GetAgvActionReadModel(actionGroup, graphNodes, unknownTargetNodeIds),
-                    actionGroup.IsManual);
+                    actionGroup.IsManual,
+                    actionGroup.Reasons
+                    );
             });
 
         return result;
@@ -204,7 +207,9 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
             actionGroup.State,
             actionGroup.Creator,
             GetAgvActionReadModel(actionGroup, graphNodes, unknownTargetNodeIds),
-            actionGroup.IsManual);
+            actionGroup.IsManual,
+            actionGroup.Reasons
+            );
 
         return result;
     }
@@ -239,7 +244,9 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
             actionGroup.State,
             actionGroup.Creator,
             GetAgvActionReadModel(actionGroup, graphNodes, unknownTargetNodeIds),
-            actionGroup.IsManual);
+            actionGroup.IsManual,
+            actionGroup.Reasons
+            );
     }
 
     /// <inheritdoc />
@@ -272,7 +279,9 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
             actionGroup.State,
             actionGroup.Creator,
             GetAgvActionReadModel(actionGroup, graphNodes, unknownTargetNodeIds),
-            actionGroup.IsManual);
+            actionGroup.IsManual,
+            actionGroup.Reasons
+            );
     }
 
     /// <inheritdoc />

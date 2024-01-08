@@ -48,7 +48,7 @@ public class ActionGroupValidatorTest
 
         TestValidationResult<ActionGroup> validationResult = await fixture.ActionGroupValidator.TestValidateAsync(actionGroup);
 
-        validationResult.ShouldHaveValidationErrorFor(x => x.OrderId).WithErrorMessage("Order Id must not be null or empty.");
+        validationResult.ShouldHaveValidationErrorFor(x => x.OrderId).WithErrorMessage("OrderId is null or empty");
     }
 
     [TestMethod]
@@ -62,7 +62,7 @@ public class ActionGroupValidatorTest
 
         TestValidationResult<ActionGroup> validationResult = await fixture.ActionGroupValidator.TestValidateAsync(actionGroup);
 
-        validationResult.ShouldHaveValidationErrorFor(p => p.AssignedAgv).WithErrorMessage("Assigned Agv must exist in the repository.");
+        validationResult.ShouldHaveValidationErrorFor(p => p.AssignedAgv).WithErrorMessage("Agv with correlation id \"1b132881-d347-9be6-2ae6-ae180760d3da\" does not exist");
     }
 
     [TestMethod]
@@ -81,7 +81,7 @@ public class ActionGroupValidatorTest
 
         TestValidationResult<ActionGroup> validationResult = await fixture.ActionGroupValidator.TestValidateAsync(actionGroup);
 
-        validationResult.ShouldHaveValidationErrorFor(x => x.Actions).WithErrorMessage("There can be no more than 1 Actions for an action group that is triggered by a manual action.");
+        validationResult.ShouldHaveValidationErrorFor(x => x.Actions).WithErrorMessage("Manual action must have exactly one action");
     }
 
     [TestMethod]
@@ -101,7 +101,7 @@ public class ActionGroupValidatorTest
 
         TestValidationResult<ActionGroup> validationResult = await fixture.ActionGroupValidator.TestValidateAsync(actionGroup);
 
-        validationResult.ShouldHaveValidationErrorFor(x => x.AssignedAgv).WithErrorMessage("Assigned Agv must not be null or empty if the action group was triggered manually.");
+        validationResult.ShouldHaveValidationErrorFor(x => x.AssignedAgv).WithErrorMessage("Manual action must have an Agv assigned");
     }
 
     [TestMethod]
@@ -120,7 +120,7 @@ public class ActionGroupValidatorTest
 
         TestValidationResult<ActionGroup> validationResult = await fixture.ActionGroupValidator.TestValidateAsync(actionGroup);
 
-        validationResult.ShouldHaveValidationErrorFor(x => x.IsManual).WithErrorMessage("Is Manual must be true if an Agv is assigned to the action group.");
+        validationResult.ShouldHaveValidationErrorFor(x => x.IsManual).WithErrorMessage("Assigned Agv requires IsManual to be set");
     }
 
     [TestMethod]
@@ -138,7 +138,7 @@ public class ActionGroupValidatorTest
 
         TestValidationResult<ActionGroup> validationResult = await fixture.ActionGroupValidator.TestValidateAsync(actionGroup);
 
-        validationResult.ShouldHaveValidationErrorFor(x => x.AssignedAgv).WithErrorMessage("Assigned Agv must exist in the repository.");
+        validationResult.ShouldHaveValidationErrorFor(x => x.AssignedAgv).WithErrorMessage("Agv with correlation id \"1b132881-d347-9be6-2ae6-ae180760d3da\" does not exist");
     }
 
     [TestMethod]
@@ -155,7 +155,7 @@ public class ActionGroupValidatorTest
 
         TestValidationResult<ActionGroup> validationResult = await fixture.ActionGroupValidator.TestValidateAsync(actionGroup);
 
-        validationResult.ShouldHaveValidationErrorFor(x => x.Actions).WithErrorMessage("Actions must not be null or empty.");
+        validationResult.ShouldHaveValidationErrorFor(x => x.Actions).WithErrorMessage("Actions must be set");
     }
 
     [TestMethod]
@@ -173,7 +173,7 @@ public class ActionGroupValidatorTest
 
         TestValidationResult<ActionGroup> validationResult = await fixture.ActionGroupValidator.TestValidateAsync(actionGroup);
 
-        validationResult.ShouldHaveValidationErrorFor(x => x.CorrelationId).WithErrorMessage("Correlation Id must not be null or empty.");
+        validationResult.ShouldHaveValidationErrorFor(x => x.CorrelationId).WithErrorMessage("CorrelationId is null or empty");
     }
 
     [TestMethod]
@@ -192,7 +192,7 @@ public class ActionGroupValidatorTest
 
         TestValidationResult<ActionGroup> validationResult = await fixture.ActionGroupValidator.TestValidateAsync(actionGroup);
 
-        validationResult.ShouldHaveValidationErrorFor(x => x.State).WithErrorMessage("State must be in the Created state.");
+        validationResult.ShouldHaveValidationErrorFor(x => x.State).WithErrorMessage("Action group state must be created, but was Started");
     }
 
     [TestMethod]
@@ -207,7 +207,7 @@ public class ActionGroupValidatorTest
 
         TestValidationResult<ActionGroup> validationResult = await fixture.ActionGroupValidator.TestValidateAsync(actionGroup);
 
-        validationResult.ShouldHaveValidationErrorFor(x => x).WithErrorMessage("There must be at least one Agv that knows the complete route of all actions within the given ActionGroup.");
+        validationResult.ShouldHaveValidationErrorFor(x => x).WithErrorMessage("There must be at least one Agv that knows the complete route of all actions within the given ActionGroup");
     }
 
     [TestMethod]
@@ -245,7 +245,7 @@ public class ActionGroupValidatorTest
 
         TestValidationResult<ActionGroup> validationResult = await fixture.ActionGroupValidator.TestValidateAsync(actionGroup);
 
-        validationResult.ShouldHaveValidationErrorFor(x => x).WithErrorMessage("ParentId of each Action must match CorrelationId of ActionGroup.");
+        validationResult.ShouldHaveValidationErrorFor(x => x).WithErrorMessage("Parent id of each action must match correlation id of action group");
     }
 
     [TestMethod]
@@ -262,7 +262,7 @@ public class ActionGroupValidatorTest
 
         TestValidationResult<ActionGroup> validationResult = await fixture.ActionGroupValidator.TestValidateAsync(actionGroup);
 
-        validationResult.ShouldHaveValidationErrorFor(x => x).WithErrorMessage("There must be at least one Agv that knows the complete route of all actions within the given ActionGroup.");
+        validationResult.ShouldHaveValidationErrorFor(x => x).WithErrorMessage("There must be at least one Agv that knows the complete route of all actions within the given ActionGroup");
     }
 
     [TestMethod]
@@ -281,7 +281,7 @@ public class ActionGroupValidatorTest
         TestValidationResult<ActionGroup> validationResult = await fixture.ActionGroupValidator.TestValidateAsync(actionGroup);
 
         validationResult.ShouldHaveValidationErrorFor(x => x.Actions)
-            .WithErrorMessage("Pick and drop actions must match.");
+            .WithErrorMessage("Pick/Drop sequence must be valid");
     }
 
     [TestMethod]
@@ -300,7 +300,7 @@ public class ActionGroupValidatorTest
         TestValidationResult<ActionGroup> validationResult = await fixture.ActionGroupValidator.TestValidateAsync(actionGroup);
 
         validationResult.ShouldHaveValidationErrorFor(x => x.Actions)
-            .WithErrorMessage("Pick and drop actions must match.");
+            .WithErrorMessage("Pick/Drop sequence must be valid");
     }
 
     [TestMethod]
@@ -319,7 +319,7 @@ public class ActionGroupValidatorTest
         TestValidationResult<ActionGroup> validationResult = await fixture.ActionGroupValidator.TestValidateAsync(actionGroup);
 
         validationResult.ShouldHaveValidationErrorFor(x => x.Actions)
-            .WithErrorMessage("Pick and drop actions must match.");
+            .WithErrorMessage("Pick/Drop sequence must be valid");
     }
 
     [TestMethod]
@@ -338,7 +338,7 @@ public class ActionGroupValidatorTest
 
         TestValidationResult<ActionGroup> validationResult = await fixture.ActionGroupValidator.TestValidateAsync(actionGroup);
 
-        validationResult.ShouldHaveValidationErrorFor("Actions[0].State").WithErrorMessage("State must be in the Created state.");
+        validationResult.ShouldHaveValidationErrorFor("Actions[0].State").WithErrorMessage("Action state must be created, but was Canceled");
     }
 
     [TestMethod]
@@ -402,7 +402,7 @@ public class ActionGroupValidatorTest
 
         TestValidationResult<ActionGroup> validationResult = await fixture.ActionGroupValidator.TestValidateAsync(actionGroup);
 
-        validationResult.ShouldHaveValidationErrorFor(a => a).WithErrorMessage("Action sequence Ids must be unique.");
+        validationResult.ShouldHaveValidationErrorFor(a => a).WithErrorMessage("Action sequence Ids must be unique");
     }
 
     [TestMethod]
@@ -437,6 +437,6 @@ public class ActionGroupValidatorTest
 
         TestValidationResult<ActionGroup> validationResult = await fixture.ActionGroupValidator.TestValidateAsync(actionGroup);
 
-        validationResult.ShouldHaveValidationErrorFor(a => a).WithErrorMessage("Action sequence must not have gaps.");
+        validationResult.ShouldHaveValidationErrorFor(a => a).WithErrorMessage("Action sequence must not have gaps");
     }
 }

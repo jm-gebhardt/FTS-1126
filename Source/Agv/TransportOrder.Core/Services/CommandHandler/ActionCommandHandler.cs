@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using FluentValidation;
-using FluentValidation.Results;
 using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
 using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
@@ -20,6 +19,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Map;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
@@ -374,17 +374,17 @@ public class ActionCommandHandler :
         _logger.LogTrace("Validating ActionGroup with CorrelationId: {ActionGroupId}.", actionGroup.CorrelationId);
 
         var domainActionGroup = _mapper.Map<Domain.Models.ActionGroup.ActionGroup>(context.Message.ActionGroup);
-        IEnumerable<ValidationFailure> validationFailures = await _actionGroupValidationService.ValidateAsync(domainActionGroup);
-        bool isValid = !validationFailures.Any();
+        var validationResult = await _actionGroupValidationService.ValidateAsync(domainActionGroup);
+        bool isValid = validationResult.IsValid;
 
         if (!isValid)
         {
-            _logger.LogError("Validation result of ActionGroup with CorrelationId: {ActionGroupId} is not valid! Errors: {Errors}", actionGroup.CorrelationId, validationFailures);
+            _logger.LogError("Validation result of ActionGroup with CorrelationId: {ActionGroupId} is not valid! Errors: {Errors}", actionGroup.CorrelationId, validationResult);
             if (throwOnInvalid)
             {
-                throw new ValidationException(validationFailures);
+                throw new ValidationException(validationResult.Errors);
             }
-            domainActionGroup.InvalidateActionGroup();
+            domainActionGroup.InvalidateActionGroup(validationResult.ToReasons());
         }
         Domain.Models.Agv.Agv? agv = null;
 
@@ -420,7 +420,7 @@ public class ActionCommandHandler :
 
         if (!isValid)
         {
-            List<string> validationFailureReasons = validationFailures.Select(error => error.ErrorMessage).ToList();
+            List<string> validationFailureReasons = validationResult.Errors.Select(error => error.ErrorMessage).ToList();
             _logger.LogDebug("ActionGroup with CorrelationId: {ActionGroupId} is not valid, publishing ActionGroupInvalid.", actionGroup.CorrelationId);
             await context.Publish(new ActionGroupInvalid(actionGroup.CorrelationId, actionGroupMessageContent, validationFailureReasons), cancellationToken);
             return;
@@ -480,7 +480,7 @@ public class ActionCommandHandler :
             return;
         }
         var agv = await _agvRepository.GetAgvAsync((Guid) actionGroup.AssignedAgv!);
-        actionGroup = await _actionGroupRepository.UpdateActionAndGroupStateAsync(action, agv, ActionState.Aborted);
+        actionGroup = await _actionGroupRepository.UpdateActionAndGroupStateAsync(action, agv, ActionState.Aborted, context.Message.AbortReason.ToReason());
 
         await context.Publish(new ActionAborted(agv.CorrelationId, _mapper.Map<MessageAgvAction>(action)));
         var actionGroupMessageContent = _mapper.Map<ActionGroup>(actionGroup);
@@ -534,7 +534,7 @@ public class ActionCommandHandler :
                 return;
         }
 
-        actionGroup = await _actionGroupRepository.UpdateActionAndGroupStateAsync(actionGroup.FirstNotStartedAction!, null, ActionState.Canceled);
+        actionGroup = await _actionGroupRepository.UpdateActionAndGroupStateAsync(actionGroup.FirstNotStartedAction!, null, ActionState.Canceled, context.Message.CancelReason.ToReason());
         await context.PublishAndRespond(new ActionGroupCanceled(actionGroupMessageContent, actionGroup.CorrelationId, DateTime.UtcNow));
         var actionGroupWithNodes = await _actionGroupRetrievalService.EnrichActionGroupWithNodesAsync(actionGroup);
         if (actionGroupWithNodes.Actions.Any(a => new[] {AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park}.Contains(a.TargetNodeType)))

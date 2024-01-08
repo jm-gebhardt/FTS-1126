@@ -32,6 +32,6 @@ public class AgvActionValidatorTest
 
         TestValidationResult<AgvAction> validationResult = await agvActionValidator.TestValidateAsync(action);
 
-        validationResult.ShouldHaveValidationErrorFor(x => x.State).WithErrorMessage("State must be in the Created state.");
+        validationResult.ShouldHaveValidationErrorFor(x => x.State).WithErrorMessage("Action state must be created, but was Canceled");
     }
 }

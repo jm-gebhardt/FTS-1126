@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using Gebhardt.StoreWare.Agv.Common.Models;
+using JetBrains.Annotations;
 using MassTransit;
 
 namespace Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
@@ -74,8 +75,12 @@ public record ActionGroup : CorrelatedBy<Guid>
     public ActionGroupCreator Creator { get; set; }
 
     /// <summary>
-    ///  Initializes a new <see cref="ActionGroup"/> instance.
+    /// Are set when the ActionGroup went into a non successful state, like invalid, aborted or canceled.
     /// </summary>
+    [UsedImplicitly]
+    public List<Reason> Reasons { get; set; } = new();
+
+    /// <inheritdoc cref="ActionGroup"/>
     /// <param name="correlationId">The CorrelationId of the <see cref="ActionGroup"/></param>
     /// <param name="actions">The child Actions of the <see cref="ActionGroup"/></param>
     /// <param name="orderId">The OrderID</param>

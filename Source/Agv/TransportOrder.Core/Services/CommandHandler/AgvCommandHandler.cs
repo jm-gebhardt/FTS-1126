@@ -17,6 +17,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Commands;
 using JetBrains.Annotations;
@@ -101,7 +102,7 @@ public class AgvCommandHandler :
         await _agvsSemaphore.ExecuteLockedAsync(async () =>
         {
             var agvSettings = _settingsProvider.GetSettings();
-            ICollection<Domain.Models.Agv.Agv> goodAgvs = await _agvRepository.GetChargingAgvsWithGoodBatteryLevelAsync(agvSettings.BatteryLevelGood);
+            ICollection<Domain.Models.Agv.Agv> goodAgvs = await _agvRepository.GetChargingAgvsWithMinBatteryLevelAsync(agvSettings.BatteryLevelLow);
 
             // preliminary logic: just go through all potential available Agvs and try to start a new action
             foreach (var agv in goodAgvs.OrderByDescending(a => a.AgvStatus!.BatteryCharge))
@@ -120,7 +121,7 @@ public class AgvCommandHandler :
                 }
 
                 _logger.LogDebug("There is a new action for the charging Agv with CorrelationId: {AgvCorrelationId}. Abort charging action group: {ActionGroup}", agv.CorrelationId, action.ParentId);
-                await context.Publish(new AbortActionGroup(action.ParentId), cancellationToken);
+                await context.Publish(new AbortActionGroup(action.ParentId, AbortReason.ReactivatedFromCharging), cancellationToken);
                 // only do this for the Agv with the best battery level and quit
                 return;
             }

@@ -22,7 +22,7 @@ public static class ActionGroupReadModelExtension
         return new ActionGroupReadModel(actionGroup.CorrelationId, actionGroup.OrderId, actionGroup.AssignedAgv,
             actionGroup.CreatedDate, actionGroup.StartedDate, actionGroup.CompletedDate, actionGroup.EstimatedDuration, actionGroup.State, actionGroup.Creator,
             actionGroup.Actions.Select(a => new AgvActionReadModel(a.CorrelationId, a.ParentId, a.Sequence, a.State,
-                a.ActionType, a.TargetNodeId, AgvGraph.NodeType.Charge, a.Nodes, a.CreatedDate, a.StartedDate, a.CompletedDate)).ToList(), actionGroup.IsManual);
+                a.ActionType, a.TargetNodeId, AgvGraph.NodeType.Charge, a.Nodes, a.CreatedDate, a.StartedDate, a.CompletedDate)).ToList(), actionGroup.IsManual, actionGroup.Reasons);
     }
 
     /// <summary>
@@ -40,7 +40,7 @@ public static class ActionGroupReadModelExtension
         return new ActionGroupReadModel(actionGroup.CorrelationId, actionGroup.OrderId, actionGroup.AssignedAgv,
             actionGroup.CreatedDate, actionGroup.StartedDate, actionGroup.CompletedDate, actionGroup.EstimatedDuration, actionGroup.State, actionGroup.Creator,
             actionGroup.Actions.Select(a => new AgvActionReadModel(a.CorrelationId, a.ParentId, a.Sequence, a.State,
-                a.ActionType, a.TargetNodeId, nodeType, a.Nodes, a.CreatedDate, a.StartedDate, a.CompletedDate)).ToList(), actionGroup.IsManual);
+                a.ActionType, a.TargetNodeId, nodeType, a.Nodes, a.CreatedDate, a.StartedDate, a.CompletedDate)).ToList(), actionGroup.IsManual, actionGroup.Reasons);
     }
 
     /// <summary>
@@ -57,6 +57,6 @@ public static class ActionGroupReadModelExtension
         return new ActionGroupReadModel(actionGroup.CorrelationId, actionGroup.OrderId, actionGroup.AssignedAgv,
             actionGroup.CreatedDate, actionGroup.StartedDate, actionGroup.CompletedDate, actionGroup.EstimatedDuration, actionGroup.State, actionGroup.Creator,
             actionGroup.Actions.Select(a => new AgvActionReadModel(a.CorrelationId, a.ParentId, a.Sequence, a.State,
-                a.ActionType, a.TargetNodeId, AgvGraph.NodeType.Charge, a.Nodes, a.CreatedDate, a.StartedDate, a.CompletedDate)).ToList(), actionGroup.IsManual);
+                a.ActionType, a.TargetNodeId, AgvGraph.NodeType.Charge, a.Nodes, a.CreatedDate, a.StartedDate, a.CompletedDate)).ToList(), actionGroup.IsManual, actionGroup.Reasons);
     }
 }

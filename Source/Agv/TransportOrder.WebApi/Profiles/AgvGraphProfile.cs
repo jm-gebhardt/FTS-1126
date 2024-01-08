@@ -8,7 +8,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles;
 /// <summary>
 /// Profile for AgvGraph related dtos.
 /// </summary>
-public class AgvGraphProfile : Profile
+public class AgvGraphProfile : WebApiProfile
 {
     /// <inheritdoc />
     public AgvGraphProfile()

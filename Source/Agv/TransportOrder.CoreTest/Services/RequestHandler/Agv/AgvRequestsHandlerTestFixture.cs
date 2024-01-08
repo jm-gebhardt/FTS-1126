@@ -68,7 +68,7 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
         AgvRepository.Setup(r => r.Count).Returns(0);
         AgvRepository.Setup(r => r.CheckIfAgvExistsAsync(It.IsAny<Guid>())).ReturnsAsync(false);
         AgvRepository.Setup(r => r.GetAllAgvsWithGraphAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>());
-        AgvRepository.Setup(r => r.GetChargingAgvsWithGoodBatteryLevelAsync(It.IsAny<int>())).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>());
+        AgvRepository.Setup(r => r.GetChargingAgvsWithMinBatteryLevelAsync(It.IsAny<int>())).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>());
         AgvRepository.Setup(r => r.GetIdleAgvsAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>());
         AgvRepository.Setup(r => r.GetReadyAgvsAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>());
         AgvRepository.Setup(r => r.SelectExistingAgvsAsync(It.IsAny<List<Guid>>())).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>());
