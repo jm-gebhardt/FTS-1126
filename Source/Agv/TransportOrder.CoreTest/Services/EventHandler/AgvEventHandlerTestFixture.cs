@@ -7,6 +7,7 @@ using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.EventHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Configurations;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Profiles;
@@ -23,10 +24,9 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixtureWithSche
 {
     private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
     private readonly Mock<IMaintenanceService> _maintenanceService = new();
-    private readonly Mock<IGraphRepository> _graphRepository = new();
     private readonly SemaphoreProvider<IAgvsSemaphore> _agvSemaphoreProvider = new();
-    private readonly Mock<IAgvRepository> _agvRepository = new();
     private readonly Mock<IChooseAgvActionGroupService> _chooseAgvActionGroupService = new();
+    private readonly Mock<IAgvDb> _agvDb = new();
 
     public const int BatteryLevelCritical = 10;
     public const int BatteryLevelLow = 40;
@@ -49,10 +49,9 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixtureWithSche
         collection.AddTransient(_ => _actionGroupRepository.Object);
         collection.AddTransient(_ => _maintenanceService.Object);
         collection.AddTransient<ISemaphoreProvider<IAgvsSemaphore>>(_ => _agvSemaphoreProvider);
-        collection.AddTransient<IGraphRepository>(_ => _graphRepository.Object);
-        collection.AddTransient(_ => _agvRepository.Object);
         collection.AddTransient(_ => _chooseAgvActionGroupService.Object);
         collection.AddAgvSettings(_agvSettings);
+        collection.AddTransient(_ => _agvDb.Object);
     }
 
     public AgvEventHandlerTestFixture()
@@ -62,13 +61,13 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixtureWithSche
 
     public AgvEventHandlerTestFixture WithAgvGraph(AgvGraph agvGraph)
     {
-        _graphRepository.Setup(x => x.GetAgvGraphAsync(It.IsAny<Guid>())).ReturnsAsync(agvGraph);
+        _agvDb.Setup(x => x.Graphs.GetAgvGraphAsync(It.IsAny<Guid>())).ReturnsAsync(agvGraph);
         return this;
     }
 
     public void AddAgv(TransportOrder.Domain.Models.Agv.Agv agv)
     {
-        _agvRepository.AddAgvsToMockRepository(new List<TransportOrder.Domain.Models.Agv.Agv> {agv});
+        _agvDb.AddAgvsToMockRepository(new List<TransportOrder.Domain.Models.Agv.Agv> {agv});
     }
 
     public void AddChargeAction(ActionGroup actionGroup = null!, bool existsPriorToTest = true)

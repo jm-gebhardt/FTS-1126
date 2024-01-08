@@ -5,6 +5,7 @@ using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
 using Gebhardt.StoreWare.Agv.Common.MassTransit;
 using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.CmdOptions;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
@@ -13,6 +14,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Routing;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Validators;
+using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Routing.Base;
@@ -113,6 +115,7 @@ public static class CoreHostBuilderExtensions
         services.AddTransient<IAgvPositionRepository, AgvPositionRepository>();
         services.AddTransient<IAgvErrorRepository, EfAgvErrorRepository>();
         services.AddTransient<ICargoRepository, CargoRepository>();
+        services.AddTransient<IAgvDb, AgvDb>();
     }
 
     private static void RegisterValidators(IServiceCollection services)

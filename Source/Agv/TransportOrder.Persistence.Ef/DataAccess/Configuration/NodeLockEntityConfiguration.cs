@@ -5,15 +5,13 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess.Configuration;
 
-/// <summary>
-/// <see cref="NodeLock"/> Entity Framework Mapping
-/// </summary>
-public class NodeLockClassMap : ClassMap<NodeLock>
+/// <inheritdoc />  
+public class NodeLockEntityConfiguration : IEntityTypeConfiguration<NodeLock>
 {
     /// <inheritdoc />
-    protected override void Configure(EntityTypeBuilder<NodeLock> entity, ModelBuilder model)
+    public void Configure(EntityTypeBuilder<NodeLock> builder)
     {
-        entity.HasKey(x => x.NodeId);
-        entity.ConfigureAllProperties();
+        builder.HasKey(x => x.NodeId);
+        builder.ConfigureAllProperties();
     }
 }

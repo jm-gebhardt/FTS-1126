@@ -2,6 +2,7 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Services;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
@@ -35,27 +36,24 @@ public class AgvEventHandler :
     IConsumer<AgvLoadStatusReceived>
 {
     private readonly ILogger<AgvEventHandler> _logger;
-    private readonly IAgvRepository _agvRepository;
     private readonly IActionGroupRepository _actionGroupRepository;
     private readonly ISemaphoreProvider<IAgvsSemaphore> _semaphoreProvider;
     private readonly ISettingsProvider<AgvSettings> _settingsProvider;
-    private readonly IGraphRepository _graphRepository;
+    private readonly IAgvDb _agvDb;
 
     /// <inheritdoc cref="AgvEventHandler"/>
     public AgvEventHandler(
-        IAgvRepository agvRepository,
         IActionGroupRepository actionGroupRepository,
         ISemaphoreProvider<IAgvsSemaphore> semaphoreProvider,
         ISettingsProvider<AgvSettings> settingsProvider,
-        IGraphRepository graphRepository,
+        IAgvDb agvDb,
         ILogger<AgvEventHandler> logger)
     {
         _logger = logger;
-        _agvRepository = agvRepository;
+        _agvDb = agvDb;
         _actionGroupRepository = actionGroupRepository;
         _semaphoreProvider = semaphoreProvider;
         _settingsProvider = settingsProvider;
-        _graphRepository = graphRepository;
     }
 
     /// <summary>
@@ -65,7 +63,7 @@ public class AgvEventHandler :
     {
         var agvCorrelationId = context.Message.CorrelationId;
 
-        var agv = await _agvRepository.GetAgvAsync(agvCorrelationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 
         if (!agv.IsAvailable(ignoreCharging: false, ignoreLocked: true))
         {
@@ -109,7 +107,7 @@ public class AgvEventHandler :
     {
         var agvCorrelationId = context.Message.CorrelationId;
         _logger.LogDebug("{MessageType} for Agv: {AgvCorrelationId} received", nameof(AgvBecameIdle), agvCorrelationId);
-        var agv = await _agvRepository.GetAgvAsync(agvCorrelationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 
         if (!agv.IsAvailable(ignoreCharging: false, ignoreLocked: true))
         {
@@ -205,7 +203,7 @@ public class AgvEventHandler :
     {
         var map = context.Message.Map;
         // at the beginning the map is just related and empty.
-        var agvGraph = await _graphRepository.GetAgvGraphAsync(context.Message.CorrelationId);
+        var agvGraph = await _agvDb.Graphs.GetAgvGraphAsync(context.Message.CorrelationId);
         // so take the existing nodes and edges from the agvGraph and persist it.
         await context.Publish(new SaveMap(map with {Nodes = agvGraph.Nodes, Edges = agvGraph.Edges}));
     }

@@ -6,7 +6,6 @@ using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
 using Gebhardt.StoreWare.Agv.Common.Logging;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;
-using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,21 +19,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Configurations;
 /// </summary>
 public class ConfigurationProviderTestFixture
 {
-    public class TestConfigurationDbContext : ConfigurableDbContext
-    {
-        public TestConfigurationDbContext(DbContextOptions options) : base(options)
-        {
-        }
-
-        protected override IEnumerable<IClassMap> Configurations
-        {
-            get
-            {
-                yield return new ConfigurationSettingsClassMap();
-            }
-        }
-    }
-
     public record TestSettings : SettingsBase<TestSettings>
     {
         public enum TestEnum
@@ -52,10 +36,10 @@ public class ConfigurationProviderTestFixture
     private readonly IHostBuilder _hostBuilder;
     private IHost _host = null!;
 
-    private DatabaseConfigurationSource<TestConfigurationDbContext>? _databaseConfigurationSource;
+    private DatabaseConfigurationSource<TransportOrderDbContext>? _databaseConfigurationSource;
     private readonly ConfigurationTypeManager _configurationTypeManager = new();
 
-    private IDbContextFactory<TestConfigurationDbContext> DbFactory => _host.Services.GetRequiredService<IDbContextFactory<TestConfigurationDbContext>>();
+    private IDbContextFactory<TransportOrderDbContext> DbFactory => _host.Services.GetRequiredService<IDbContextFactory<TransportOrderDbContext>>();
 
     public IConfiguration Configuration => _host.Services.GetRequiredService<IConfiguration>();
 
@@ -79,7 +63,7 @@ public class ConfigurationProviderTestFixture
     {
         _hostBuilder.ConfigureServices(s =>
         {
-            s.AddDbContextFactory<TestConfigurationDbContext>(options => { options.UseInMemoryDatabase(Guid.NewGuid().ToString()); }
+            s.AddDbContextFactory<TransportOrderDbContext>(options => { options.UseInMemoryDatabase(Guid.NewGuid().ToString()); }
             );
         });
         return this;
@@ -92,7 +76,7 @@ public class ConfigurationProviderTestFixture
 
         _hostBuilder.ConfigureAppConfiguration((_, config) =>
         {
-            _databaseConfigurationSource = config.AddDatabaseConfiguration<TestConfigurationDbContext>(_configurationTypeManager, logger, reloadDelay, reloadOnChange);
+            _databaseConfigurationSource = config.AddDatabaseConfiguration<TransportOrderDbContext>(_configurationTypeManager, logger, reloadDelay, reloadOnChange);
             _databaseConfigurationSource.ShouldNotBeNull();
         });
         return this;
@@ -123,7 +107,7 @@ public class ConfigurationProviderTestFixture
         _hostBuilder.ConfigureServices(sp =>
         {
             sp.AddScoped<IConfigurationTypeManager>(_ => _configurationTypeManager);
-            sp.AddScoped<DatabaseConfigurationSeeder<TestConfigurationDbContext>>();
+            sp.AddScoped<DatabaseConfigurationSeeder<TransportOrderDbContext>>();
         });
         return this;
     }
@@ -143,7 +127,7 @@ public class ConfigurationProviderTestFixture
     /// </summary>
     public async Task SeedConfigurationTypesAsync()
     {
-        var dbConfigurationSeeder = _host.Services.GetRequiredService<DatabaseConfigurationSeeder<TestConfigurationDbContext>>();
+        var dbConfigurationSeeder = _host.Services.GetRequiredService<DatabaseConfigurationSeeder<TransportOrderDbContext>>();
         await dbConfigurationSeeder.SeedDefaultConfigurationAsync();
     }
 
@@ -153,7 +137,7 @@ public class ConfigurationProviderTestFixture
     /// <returns></returns>
     public async Task<IList<ConfigurationSetting>> GetConfigurationSettingsAsync()
     {
-        IDbContextFactory<TestConfigurationDbContext> dbContextFactory = DbFactory;
+        IDbContextFactory<TransportOrderDbContext> dbContextFactory = DbFactory;
         await using var dbContext = await dbContextFactory.CreateDbContextAsync();
         return await dbContext.Set<ConfigurationSetting>().ToListAsync();
     }

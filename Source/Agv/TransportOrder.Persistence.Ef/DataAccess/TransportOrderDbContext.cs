@@ -6,9 +6,9 @@ using Microsoft.Extensions.Logging;
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;
 
 /// <summary>
-/// TransportOrder DB Context that does not use MassTransit sagas
+/// TransportOrder DB Context 
 /// </summary>
-public class TransportOrderDbContext : ConfigurableDbContext
+public class TransportOrderDbContext : DbContext
 {
     /// <summary>
     /// Configuration section where the ConnectionString for AGV Master Control is located
@@ -20,12 +20,28 @@ public class TransportOrderDbContext : ConfigurableDbContext
     /// </summary>
     public const string MigrationTableName = $"__{nameof(TransportOrderDbContext)}Migration";
 
-    /// <summary>
-    /// Constructor
-    /// </summary>
-    /// <param name="options"></param>
+    /// <inheritdoc />
     public TransportOrderDbContext(DbContextOptions<TransportOrderDbContext> options) : base(options)
     {
+    }
+
+    /// <inheritdoc />
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.ApplyConfiguration(new ActionGroupEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new AgvEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new AgvDataEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new AgvErrorEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new AgvGraphEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new GraphEdgeEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new GraphNodeEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new MapEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new MapAgvEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new CuboidEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new Point3DEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new CargoEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new ConfigurationSettingsEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new NodeLockEntityConfiguration());
     }
 
     /// <summary>
@@ -44,24 +60,5 @@ public class TransportOrderDbContext : ConfigurableDbContext
             // Logs from Microsoft.EntityFrameworkCore.Infrastructure
             c.Log((CoreEventId.ContextInitialized, LogLevel.Debug));
         });
-    }
-
-    /// <inheritdoc />
-    protected override IEnumerable<IClassMap> Configurations
-    {
-        get
-        {
-            yield return new NodeLockClassMap();
-            yield return new MapClassMap();
-            yield return new ActionGroupClassMap();
-            yield return new ConfigurationSettingsClassMap();
-            yield return new AgvGraphClassMap();
-            yield return new GraphEdgeClassMap();
-            yield return new GraphNodeClassMap();
-            yield return new AgvDataClassMap();
-            yield return new AgvErrorClassMap();
-            yield return new AgvClassMap();
-            yield return new CargoClassMap();
-        }
     }
 }

@@ -383,7 +383,7 @@ public class AgvControllerTest
 
         var controller = fixture.Controller;
         var correlationId = Guid.Empty;
-        fixture.AgvRepository.Setup(x => x.GetAgvAsync(It.Is<Guid>(g => g == correlationId))).Throws(new AgvNotFoundException(correlationId));
+        fixture.AgvDb.Setup(x => x.Agvs.GetAgvAsync(It.Is<Guid>(g => g == correlationId))).Throws(new AgvNotFoundException(correlationId));
 
         var actionResult = await controller.MoveAgv(correlationId, "Test Destination Id");
         actionResult.ShouldNotBeNull();

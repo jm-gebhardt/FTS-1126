@@ -9,6 +9,7 @@ using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.Graphs.Events;
 using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.CmdOptions;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
@@ -57,39 +58,30 @@ public class AgvCommandHandler :
     private readonly ILogger<AgvCommandHandler> _logger;
     private readonly ISemaphoreProvider<IAgvsSemaphore> _agvsSemaphore;
     private readonly IActionGroupRepository _actionGroupRepository;
-    private readonly IAgvRepository _agvRepository;
     private readonly ISettingsProvider<AgvSettings> _settingsProvider;
     private readonly IMapper _mapper;
-    private readonly IGraphRepository _graphRepository;
-    private readonly ICargoRepository _cargoRepository;
     private readonly ProductionOptions _productionOptions;
-    private readonly IAgvDataRepository _agvDataRepository;
     private readonly IRequestClient<QueueActionGroup> _queueActionGroupRequestClient;
+    private readonly IAgvDb _agvDb;
 
     /// <inheritdoc cref="AgvCommandHandler"/>
     public AgvCommandHandler(ISemaphoreProvider<IAgvsSemaphore> agvsSemaphore,
-        IAgvRepository agvRepository,
+        IAgvDb agvDb,
         ISettingsProvider<AgvSettings> settingsProvider,
         IActionGroupRepository actionGroupRepository,
-        IAgvDataRepository agvDataRepository,
-        IGraphRepository graphRepository,
         IRequestClient<QueueActionGroup> queueActionGroupRequestClient,
-        ICargoRepository cargoRepository,
         IMapper mapper,
         ProductionOptions productionOptions,
         ILogger<AgvCommandHandler> logger)
     {
         _logger = logger;
         _agvsSemaphore = agvsSemaphore;
+        _agvDb = agvDb;
         _actionGroupRepository = actionGroupRepository;
-        _agvRepository = agvRepository;
         _settingsProvider = settingsProvider;
         _mapper = mapper;
-        _graphRepository = graphRepository;
-        _cargoRepository = cargoRepository;
         _queueActionGroupRequestClient = queueActionGroupRequestClient;
         _productionOptions = productionOptions;
-        _agvDataRepository = agvDataRepository;
     }
 
     /// <summary>
@@ -101,7 +93,7 @@ public class AgvCommandHandler :
         await _agvsSemaphore.ExecuteLockedAsync(async () =>
         {
             var agvSettings = _settingsProvider.GetSettings();
-            ICollection<Domain.Models.Agv.Agv> goodAgvs = await _agvRepository.GetChargingAgvsWithMinBatteryLevelAsync(agvSettings.BatteryLevelLow);
+            ICollection<Domain.Models.Agv.Agv> goodAgvs = await _agvDb.Agvs.GetChargingAgvsWithMinBatteryLevelAsync(agvSettings.BatteryLevelLow);
 
             // preliminary logic: just go through all potential available Agvs and try to start a new action
             foreach (var agv in goodAgvs.OrderByDescending(a => a.AgvStatus!.BatteryCharge))
@@ -133,13 +125,13 @@ public class AgvCommandHandler :
     public async Task Consume(ConsumeContext<UpdateErrorStatus> context)
     {
         (var correlationId, List<AgvError> errors) = context.Message;
-        var agv = await _agvRepository.GetAgvAsync(correlationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
 
         bool agvHasError = errors.Any();
         if (agvHasError != agv.HasError)
         {
             agv.HasError = agvHasError;
-            await _agvRepository.UpdateAgvAsync(agv);
+            await _agvDb.Agvs.UpdateAgvAsync(agv);
         }
     }
 
@@ -167,7 +159,7 @@ public class AgvCommandHandler :
         Domain.Models.Agv.Agv agv;
         try
         {
-            agv = await _agvRepository.GetAgvAsync(correlationId);
+            agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
         }
         catch (AgvNotFoundException)
         {
@@ -186,7 +178,7 @@ public class AgvCommandHandler :
         // Only request AgvGraph if a global Graph exists
         if (agv.ShouldRequestGraph())
         {
-            if (await _graphRepository.ExistsAsync())
+            if (await _agvDb.Graphs.ExistsAsync())
             {
                 await PublishGraphRequestAsync(context, agv);
             }
@@ -201,7 +193,7 @@ public class AgvCommandHandler :
             await PublishDataRequestAsync(context, agv);
         }
 
-        if (!await _agvRepository.UpdateAgvAsync(agv))
+        if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
         {
             _logger.LogDebug("{Command}: Could not update agv {CorrelationId}", nameof(UpdateAgvStatus), agv.CorrelationId);
             return;
@@ -259,7 +251,7 @@ public class AgvCommandHandler :
         var correlationId = context.Message.CorrelationId;
         _logger.LogDebug("Setting Agv with CorrelationId: {AgvCorrelationId} to idle, because action has been completed and type is not charge", correlationId);
 
-        var agv = await _agvRepository.GetAgvAsync(correlationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
         await TransitionToIdleAsync(context, agv, context.CancellationToken);
     }
 
@@ -269,12 +261,12 @@ public class AgvCommandHandler :
     public async Task Consume(ConsumeContext<SetAgvGraphExist> context)
     {
         var correlationId = context.Message.CorrelationId;
-        var agv = await _agvRepository.GetAgvAsync(correlationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
 
         _logger.LogDebug("UpdateGraph for agv {CorrelationId}", agv.CorrelationId);
         agv.GraphExists = true;
 
-        await _agvRepository.UpdateAgvAsync(agv);
+        await _agvDb.Agvs.UpdateAgvAsync(agv);
     }
 
     /// <summary>
@@ -283,13 +275,13 @@ public class AgvCommandHandler :
     public async Task Consume(ConsumeContext<GoOffline> context)
     {
         var (correlationId, offlineTokenId) = context.Message;
-        var agv = await _agvRepository.GetAgvAsync(correlationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);  
 
         bool wasOnline = agv.IsOnline;
         agv.GoOffline(offlineTokenId);
         if (wasOnline && !agv.IsOnline)
         {
-            if (!await _agvRepository.UpdateAgvAsync(agv))
+            if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
             {
                 _logger.LogDebug("{Command}: Could not update agv {CorrelationId}", nameof(GoOffline), agv.CorrelationId);
                 return;
@@ -304,14 +296,14 @@ public class AgvCommandHandler :
     public async Task Consume(ConsumeContext<UpdateAgvData> context)
     {
         var (correlationId, agvData) = context.Message;
-        var agv = await _agvRepository.GetAgvAsync(correlationId);
-        if (!await _agvDataRepository.AddOrUpdateAsync(agvData))
+        var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
+        if (!await _agvDb.Data.AddOrUpdateAsync(agvData))
         {
             _logger.LogWarning("Failed to store AgvData for {AgvId} / {CorrelationId}", agv.AgvId, correlationId);
             return;
         }
         agv.DataExist = true;
-        if (!await _agvRepository.UpdateAgvAsync(agv))
+        if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
         {
             _logger.LogDebug("{Command}: Could not update agv {CorrelationId}", nameof(UpdateAgvData), agv.CorrelationId);
         }
@@ -331,7 +323,7 @@ public class AgvCommandHandler :
         }
         agv.Lock();
         _logger.LogInformation("Agv {correlationId} was locked.", agvCorrelationId);
-        if (!await _agvRepository.UpdateAgvAsync(agv))
+        if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
         {
             _logger.LogDebug("{Command}: Could not update agv {CorrelationId}", nameof(LockAgv), agv.CorrelationId);
         }
@@ -353,7 +345,7 @@ public class AgvCommandHandler :
         }
         agv.Unlock();
         _logger.LogInformation("Agv {correlationId} was unlocked.", agvCorrelationId);
-        if (!await _agvRepository.UpdateAgvAsync(agv))
+        if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
         {
             _logger.LogDebug("{Command}: Could not update agv {CorrelationId}", nameof(UnlockAgv), agv.CorrelationId);
         }
@@ -385,7 +377,7 @@ public class AgvCommandHandler :
             await context.RespondAsync(new AcceptAgvRejected(agv.CorrelationId));
             return;
         }
-        if (!await _agvRepository.UpdateAgvAsync(agv))
+        if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
         {
             _logger.LogDebug("{Command}: Could not update agv {CorrelationId}", nameof(AcceptAgvCommand), agv.CorrelationId);
         }
@@ -442,7 +434,7 @@ public class AgvCommandHandler :
             return;
         }
         bool stateChanged = agv.ForceIdle();
-        if (!await _agvRepository.UpdateAgvAsync(agv))
+        if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
         {
             _logger.LogDebug("{Command}: Could not update agv {CorrelationId}", nameof(SetAgvForceIdle), agv.CorrelationId);
             return;
@@ -462,7 +454,7 @@ public class AgvCommandHandler :
     public async Task Consume(ConsumeContext<HandleAgvActionStartFailure> context)
     {
         var correlationId = context.Message.CorrelationId;
-        var agv = await _agvRepository.GetAgvAsync(correlationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
         await TransitionToIdleAsync(context, agv, context.CancellationToken);
     }
 
@@ -472,7 +464,7 @@ public class AgvCommandHandler :
     public async Task Consume(ConsumeContext<PrepareAgvForStartingAction> context)
     {
         var (action, agvCorrelationId) = context.Message;
-        var agv = await _agvRepository.GetAgvAsync(agvCorrelationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
         bool isAvailable = agv.TryTransitionToBusy(true);
 
         if (!isAvailable)
@@ -480,7 +472,7 @@ public class AgvCommandHandler :
             _logger.LogWarning("Agv {CorrelationId} is not available for busy", agv.CorrelationId);
             return;
         }
-        if (!await _agvRepository.UpdateAgvAsync(agv))
+        if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
         {
             _logger.LogDebug("{Command}: Could not update agv {CorrelationId}", nameof(PrepareAgvForStartingAction), agv.CorrelationId);
             return;
@@ -496,7 +488,7 @@ public class AgvCommandHandler :
         Domain.Models.Agv.Agv? agv = null;
         try
         {
-            agv = await _agvRepository.GetAgvAsync(agvCorrelationId);
+            agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
         }
         catch (AgvNotFoundException)
         {
@@ -515,7 +507,7 @@ public class AgvCommandHandler :
         IReadOnlyCollection<Cargo> receivedCargos = context.Message.Cargos;
 
         var cargos = _mapper.Map<Collection<Domain.Models.Agv.Cargo>>(receivedCargos);
-        if (await _cargoRepository.SetCargoAsync(agvCorrelationId, cargos))
+        if (await _agvDb.Cargos.SetCargoAsync(agvCorrelationId, cargos))
         {
             await context.Publish(new CargoChanged(agvCorrelationId, receivedCargos));
         }
@@ -534,7 +526,7 @@ public class AgvCommandHandler :
     private async Task TransitionToIdleAsync(IPublishEndpoint context, Domain.Models.Agv.Agv agv, CancellationToken cancellationToken)
     {
         bool stateChanged = agv.TransitionToIdle();
-        if (!await _agvRepository.UpdateAgvAsync(agv))
+        if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
         {
             _logger.LogDebug("{Command}: Could not update agv {CorrelationId}", nameof(HandleActionCompletion), agv.CorrelationId);
             return;
@@ -582,7 +574,7 @@ public class AgvCommandHandler :
         _logger.LogDebug("Creating agv {CorrelationId}, {AgvId}", correlationId, agvId);
 
         var agv = new Domain.Models.Agv.Agv(correlationId, agvId, _mapper.Map<AgvStatus>(agvStatus));
-        bool graphExists = await _graphRepository.ExistsAsync(correlationId);
+        bool graphExists = await _agvDb.Graphs.ExistsAsync(correlationId);
         if (!graphExists)
         {
             await PublishGraphRequestAsync(context, agv);
@@ -590,7 +582,7 @@ public class AgvCommandHandler :
 
         agv.TransitionToDiscovered(graphExists);
         agv.AgvDataRequestedLastTime = DateTime.UtcNow;
-        await _agvRepository.AddAgvAsync(agv);
+        await _agvDb.Agvs.AddAgvAsync(agv);
         await PublishDataRequestAsync(context, agv);
 
         var agvMessageContent = _mapper.Map<Messages.MessageContent.Agv>(agv);

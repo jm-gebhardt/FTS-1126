@@ -1,6 +1,6 @@
 using AutoMapper;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agvs.Queries;
 using JetBrains.Annotations;
@@ -16,15 +16,15 @@ public class GetAgvDataRequestHandler :
     IConsumer<GetAgvData>,
     IConsumer<GetAgvsData>
 {
-    private readonly IAgvDataRepository _agvDataRepository;
+    private readonly IAgvDb _agvDb;
     private readonly IMapper _mapper;
 
     /// <summary>
     /// Initializes a new <see cref="GetAgvDataRequestHandler"/> instance.
     /// </summary>
-    public GetAgvDataRequestHandler(IAgvDataRepository agvDataRepository, IMapper mapper)
+    public GetAgvDataRequestHandler(IAgvDb agvDb, IMapper mapper)
     {
-        _agvDataRepository = agvDataRepository;
+        _agvDb = agvDb;
         _mapper = mapper;
     }
 
@@ -36,7 +36,7 @@ public class GetAgvDataRequestHandler :
     public async Task Consume(ConsumeContext<GetAgvData> context)
     {
         var correlationId = context.Message.CorrelationId;
-        var agvData = await _agvDataRepository.GetAgvDataAsync(correlationId);
+        var agvData = await _agvDb.Data.GetAgvDataAsync(correlationId);
         if (agvData == null)
         {
             throw new AgvDataNotFoundException(correlationId);
@@ -53,7 +53,7 @@ public class GetAgvDataRequestHandler :
     public async Task Consume(ConsumeContext<GetAgvsData> context)
     {
         ICollection<Guid> selectedAgvs = context.Message.CorrelationIds;
-        ICollection<Common.Messages.AgvManagement.AgvData> fetchedData = await _agvDataRepository.GetSelectedAgvDataAsync(selectedAgvs);
+        ICollection<Common.Messages.AgvManagement.AgvData> fetchedData = await _agvDb.Data.GetSelectedAgvDataAsync(selectedAgvs);
         if (fetchedData.Count != selectedAgvs.Count)
         {
             throw new AgvsDataBatchQueryException(selectedAgvs.Except(fetchedData.Select(p => p.CorrelationId)).ToList());

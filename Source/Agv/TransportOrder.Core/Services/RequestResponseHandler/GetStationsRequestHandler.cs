@@ -1,6 +1,6 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Map;
 using JetBrains.Annotations;
@@ -14,16 +14,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHan
 [UsedImplicitly]
 public class GetStationsRequestHandler : IConsumer<GetStations>
 {
-    private readonly IGraphRepository _graphRepository;
-    private readonly IAgvDataRepository _agvDataRepository;
+    private readonly IAgvDb _agvDb;
 
     /// <inheritdoc cref="GetStationsRequestHandler" />
-    /// <param name="graphRepository"></param>
-    /// <param name="agvDataRepository">Repository to access the AgvData persistence storage.</param>
-    public GetStationsRequestHandler(IGraphRepository graphRepository, IAgvDataRepository agvDataRepository)
+    public GetStationsRequestHandler(IAgvDb agvDb)
     {
-        _graphRepository = graphRepository;
-        _agvDataRepository = agvDataRepository;
+        _agvDb = agvDb;
     }
 
     /// <summary>
@@ -34,13 +30,13 @@ public class GetStationsRequestHandler : IConsumer<GetStations>
     public async Task Consume(ConsumeContext<GetStations> context)
     {
         var mapCorrelationId = context.Message.CorrelationId;
-        ICollection<Guid> agvCorrelationIds = await _graphRepository.GetAgvsRelatedToMap(mapCorrelationId);
-        ICollection<AgvData> agvsData = await _agvDataRepository.GetSelectedAgvDataAsync(agvCorrelationIds);
+        ICollection<Guid> agvCorrelationIds = await _agvDb.Graphs.GetAgvsRelatedToMap(mapCorrelationId);
+        ICollection<AgvData> agvsData = await _agvDb.Data.GetSelectedAgvDataAsync(agvCorrelationIds);
         double maxWidth = agvsData.Max(a => a.Width);
         double maxLength = agvsData.Max(a => a.Length);
         const double padding = 0.2;
 
-        List<Station> stations = (await _graphRepository.GetNodesAsync(n => n.Type != AgvGraph.NodeType.WayPoint))
+        List<Station> stations = (await _agvDb.Graphs.GetNodesAsync(n => n.Type != AgvGraph.NodeType.WayPoint))
             .Select(s => new Station(s.Id, maxLength + padding, maxWidth + padding)).ToList();
 
         await context.RespondAsync(new GotStations(stations));

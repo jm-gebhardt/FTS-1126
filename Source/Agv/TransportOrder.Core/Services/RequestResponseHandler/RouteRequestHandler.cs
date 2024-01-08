@@ -1,6 +1,6 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Exceptions;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Routing;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.ActionGroup;
@@ -17,18 +17,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHan
 [PublicAPI]
 public class RouteRequestHandler : IConsumer<GetRoute>
 {
-    private readonly IAgvRepository _agvRepository;
-    private readonly IAgvDataRepository _agvDataRepository;
+    private readonly IAgvDb _agvDb;
     private readonly IRouteService _routeService;
 
     /// <inheritdoc cref="RouteRequestHandler"/>
-    /// <param name="agvRepository">The agv repository.</param>
-    /// <param name="agvDataRepository">The agv data repository.</param>
-    /// <param name="routeService">The route service.</param>
-    public RouteRequestHandler(IAgvRepository agvRepository, IAgvDataRepository agvDataRepository, IRouteService routeService)
+    public RouteRequestHandler(IAgvDb agvDb, IRouteService routeService)
     {
-        _agvRepository = agvRepository;
-        _agvDataRepository = agvDataRepository;
+        _agvDb = agvDb;
         _routeService = routeService;
     }
 
@@ -38,8 +33,8 @@ public class RouteRequestHandler : IConsumer<GetRoute>
     public async Task Consume(ConsumeContext<GetRoute> context)
     {
         var getRoute = context.Message;
-        var agv = await _agvRepository.GetAgvAsync(getRoute.CorrelationId);
-        var agvData = await _agvDataRepository.GetAgvDataAsync(agv.CorrelationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(getRoute.CorrelationId);
+        var agvData = await _agvDb.Data.GetAgvDataAsync(agv.CorrelationId);
         Route? route;
         try
         {

@@ -1,8 +1,8 @@
 using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.Graphs.Requests;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agvs.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Map;
@@ -22,22 +22,16 @@ public class GetGraphRequestHandler :
     IConsumer<GetMapGraph>,
     IConsumer<GetGraph>
 {
-    private readonly IAgvRepository _agvRepository;
     private readonly IMapper _mapper;
-    private readonly IGraphRepository _graphRepository;
+    private readonly IAgvDb _agvDb;
 
     /// <summary>
     /// Initializes a new  <see cref="GetGraphRequestHandler"/> instance.
     /// </summary>
-    public GetGraphRequestHandler(
-        IAgvRepository agvRepository,
-        IMapper mapper,
-        IGraphRepository graphRepository
-    )
+    public GetGraphRequestHandler(IAgvDb agvDb, IMapper mapper)
     {
-        _agvRepository = agvRepository;
+        _agvDb = agvDb;
         _mapper = mapper;
-        _graphRepository = graphRepository;
     }
 
     /// <summary>
@@ -48,9 +42,9 @@ public class GetGraphRequestHandler :
     public async Task Consume(ConsumeContext<GetAgvGraph> context)
     {
         var correlationId = context.Message.CorrelationId;
-        var agv = await _agvRepository.GetAgvAsync(correlationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
 
-        var agvGraph = await _graphRepository.GetAgvGraphAsync(agv.CorrelationId);
+        var agvGraph = await _agvDb.Graphs.GetAgvGraphAsync(agv.CorrelationId);
 
         var graph = _mapper.Map<Graph>(agvGraph);
         await context.RespondAsync(new GotAgvGraph(graph));
@@ -65,13 +59,13 @@ public class GetGraphRequestHandler :
     {
         ICollection<Guid> selectedAgvs = context.Message.CorrelationIds;
 
-        ICollection<Domain.Models.Agv.Agv> agvs = await _agvRepository.SelectExistingAgvsAsync(selectedAgvs.ToList());
+        ICollection<Domain.Models.Agv.Agv> agvs = await _agvDb.Agvs.SelectExistingAgvsAsync(selectedAgvs.ToList());
         if (agvs.Count != selectedAgvs.Count)
         {
             throw new AgvsNotFoundException(selectedAgvs.Except(agvs.Select(a => a.CorrelationId)).ToList());
         }
 
-        ICollection<AgvGraph> agvGraphs = await _graphRepository.GetSelectedAgvGraphsAsync(selectedAgvs);
+        ICollection<AgvGraph> agvGraphs = await _agvDb.Graphs.GetSelectedAgvGraphsAsync(selectedAgvs);
         List<Guid> undefinedGraphs = selectedAgvs.Except(agvGraphs.Select(g => g.CorrelationId)).ToList();
         if (undefinedGraphs.Any())
         {
@@ -88,7 +82,7 @@ public class GetGraphRequestHandler :
     public async Task Consume(ConsumeContext<GetMapGraph> context)
     {
         var correlationId = context.Message.CorrelationId;
-        var graph = await _graphRepository.GetGraphForMap(correlationId);
+        var graph = await _agvDb.Graphs.GetGraphForMap(correlationId);
         var gotMapGraph = new GotMapGraph(_mapper.Map<Graph>(graph));
         await context.RespondAsync(gotMapGraph);
     }
@@ -96,7 +90,7 @@ public class GetGraphRequestHandler :
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<GetGraph> context)
     {
-        var graph = await _graphRepository.GetGraphAsync();
+        var graph = await _agvDb.Graphs.GetGraphAsync();
         await context.RespondAsync(new GotGraph(graph));
     }
 }

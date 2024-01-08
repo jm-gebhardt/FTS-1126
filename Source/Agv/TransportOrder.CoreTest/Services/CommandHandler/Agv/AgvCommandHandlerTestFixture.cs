@@ -6,6 +6,8 @@ using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.CmdOptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.CommandHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
@@ -25,28 +27,22 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixtureWithSc
 {
     private readonly SemaphoreProvider<IAgvsSemaphore> _semaphoreProvider = new();
     private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
-    public readonly Mock<IAgvRepository> AgvRepository = new();
     private readonly Mock<ILogger<AgvCommandHandler>> _logger = new();
     private readonly Mock<ISettingsProvider<AgvSettings>> _settingsProvider = new();
-    private readonly Mock<IGraphRepository> _agvGraphRepository = new();
     private readonly Mock<IMapRepository> _mapRepository = new();
     private readonly ProductionOptions _productionOptions = new() {AutoAccept = true};
-    private readonly Mock<ICargoRepository> _cargoRepository = new();
-    public readonly Mock<IAgvDataRepository> AgvDataRepository = new();
+    public readonly Mock<IAgvDb> AgvDb = new();
 
     protected override void ConfigureServices(IServiceCollection collection)
     {
         collection.AddTransient<ISemaphoreProvider<IAgvsSemaphore>>(_ => _semaphoreProvider);
         collection.AddTransient(_ => _actionGroupRepository.Object);
-        collection.AddTransient(_ => AgvRepository.Object);
         collection.AddTransient(_ => _logger.Object);
         collection.AddTransient(_ => _settingsProvider.Object);
         collection.AddTransient(_ => GetMapper());
-        collection.AddTransient(_ => _agvGraphRepository.Object);
         collection.AddTransient(_ => _mapRepository.Object);
         collection.AddTransient(_ => _productionOptions);
-        collection.AddTransient(_ => AgvDataRepository.Object);
-        collection.AddTransient(_ => _cargoRepository.Object);
+        collection.AddTransient(_ => AgvDb.Object);
     }
 
     public AgvCommandHandlerTestFixture(Action<IBusRegistrationConfigurator>? busRegistrationConfigurator = null,
@@ -66,11 +62,11 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixtureWithSc
 
     public AgvCommandHandlerTestFixture AddAgvs(List<TransportOrder.Domain.Models.Agv.Agv> agvs)
     {
-        AgvRepository.AddAgvsToMockRepository(agvs);
-        AgvRepository.Setup(r => r.UpdateAgvAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>()))
+        AgvDb.AddAgvsToMockRepository(agvs);
+        AgvDb.Setup(r => r.Agvs.UpdateAgvAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>()))
             .ReturnsAsync((TransportOrder.Domain.Models.Agv.Agv a) => agvs.Any(agv => agv.CorrelationId == a.CorrelationId))
             .Verifiable();
-        AgvRepository.Setup(r => r.AddAgvAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>())).Verifiable();
+        AgvDb.Setup(r => r.Agvs.AddAgvAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>())).Verifiable();
 
         return this;
     }
@@ -80,7 +76,7 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixtureWithSc
     {
         _actionGroupRepository.Setup(x =>
             x.AgvHasPendingActions(It.IsAny<Guid>())).ReturnsAsync(hasPendingActions);
-        _agvGraphRepository.Setup(x => x.ExistsAsync(It.IsAny<Guid>())).ReturnsAsync(graphExists);
+        AgvDb.Setup(x => x.Graphs.ExistsAsync(It.IsAny<Guid>())).ReturnsAsync(graphExists);
 
         return this;
     }
@@ -94,13 +90,19 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixtureWithSc
 
     public AgvCommandHandlerTestFixture WithSetCargoReturnValue(Guid agvCorrelationId, IReadOnlyCollection<Cargo> cargos, bool returnValue)
     {
-        _cargoRepository.Setup(x => x.SetCargoAsync(agvCorrelationId, cargos)).ReturnsAsync(returnValue);
+        AgvDb.Setup(x => x.Cargos.SetCargoAsync(agvCorrelationId, cargos)).ReturnsAsync(returnValue);
         return this;
     }
 
     public AgvCommandHandlerTestFixture WithGraphExists(bool exists)
     {
-        _agvGraphRepository.Setup(x => x.ExistsAsync()).ReturnsAsync(exists);
+        AgvDb.Setup(x => x.Graphs.ExistsAsync()).ReturnsAsync(exists);
+        return this;
+    }
+
+    public AgvCommandHandlerTestFixture WithoutAgv()
+    {
+        AgvDb.Setup(x => x.Agvs.GetAgvAsync(It.IsAny<Guid>())).ReturnsAsync((Guid id) => throw new AgvNotFoundException(id));
         return this;
     }
 

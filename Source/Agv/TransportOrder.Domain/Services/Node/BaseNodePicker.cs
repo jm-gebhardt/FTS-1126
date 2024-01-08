@@ -15,42 +15,29 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Node;
 public abstract class BaseNodePicker
 {
     /// <summary>
-    /// The graph repository.
+    /// The agv unit of work.
     /// </summary>
-    private readonly IGraphRepository _graphRepository;
+    protected readonly IAgvDb AgvDb;
 
     /// <summary>
     /// Note State repository.
     /// </summary>
     protected readonly INodeStateRepository NodeStateRepository;
 
-    /// <summary>
-    /// <see cref="AgvData"/> repository.
-    /// </summary>
-    protected readonly IAgvDataRepository AgvDataRepository;
-
     private readonly IRouteService _routeService;
     private readonly ILogger<BaseNodePicker> _logger;
 
-    /// <summary>
-    /// Ctor
-    /// </summary>
-    /// <param name="graphRepository">The graph repository.</param>
-    /// <param name="nodeStateRepository"></param>
-    /// <param name="routeService"></param>
-    /// <param name="logger"></param>
-    /// <param name="agvDataRepository">The <see cref="AgvData"/> repository.</param>
-    protected BaseNodePicker(IGraphRepository graphRepository,
+    /// <inheritdoc cref="BaseNodePicker"/>>
+    protected BaseNodePicker(
         INodeStateRepository nodeStateRepository,
         IRouteService routeService,
-        IAgvDataRepository agvDataRepository,
+        IAgvDb agvDb,
         ILogger<BaseNodePicker> logger)
     {
-        _graphRepository = graphRepository;
         NodeStateRepository = nodeStateRepository;
         _routeService = routeService;
         _logger = logger;
-        AgvDataRepository = agvDataRepository;
+        AgvDb = agvDb;
     }
 
     /// <summary>
@@ -74,7 +61,7 @@ public abstract class BaseNodePicker
 
     private async Task<IEnumerable<GraphNode>> GetAvailableNodes(Models.Agv.Agv agv)
     {
-        IEnumerable<GraphNode> nodes = await _graphRepository.GetNodesAsync(agv.CorrelationId, NodeFilter);
+        IEnumerable<GraphNode> nodes = await AgvDb.Graphs.GetNodesAsync(agv.CorrelationId, NodeFilter);
         IEnumerable<GraphNode> availableNodes = NodeStateRepository.FilterFreeUnlockedNodes(nodes);
         // ReSharper disable once PossibleMultipleEnumeration
         if (availableNodes == null || !availableNodes.Any())
@@ -133,7 +120,7 @@ public abstract class BaseNodePicker
         {
             return false;
         }
-        var currentNode = await _graphRepository.GetNodeAsync(lastNodeId);
+        var currentNode = await AgvDb.Graphs.GetNodeAsync(lastNodeId);
         bool isSuchANode = NodeFilter.Compile()(currentNode);
 
         return isSuchANode;

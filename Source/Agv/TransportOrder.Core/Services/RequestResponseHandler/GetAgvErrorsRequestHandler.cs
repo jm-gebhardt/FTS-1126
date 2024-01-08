@@ -1,6 +1,6 @@
 using AutoMapper;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agvs.Queries;
 using JetBrains.Annotations;
@@ -19,15 +19,13 @@ public class GetAgvErrorsRequestHandler :
     IConsumer<GetErrorHistoryForAgvs>,
     IConsumer<GetActiveErrorsForAgvs>
 {
-    private readonly IAgvErrorRepository _agvErrorRepository;
     private readonly IMapper _mapper;
-    private readonly IAgvRepository _agvRepository;
+    private readonly IAgvDb _agvDb;
 
     /// <inheritdoc cref="GetAgvErrorsRequestHandler"/>
-    public GetAgvErrorsRequestHandler(IAgvErrorRepository agvErrorRepository, IAgvRepository agvRepository, IMapper mapper)
+    public GetAgvErrorsRequestHandler(IAgvDb agvDb, IMapper mapper)
     {
-        _agvErrorRepository = agvErrorRepository;
-        _agvRepository = agvRepository;
+        _agvDb = agvDb;
         _mapper = mapper;
     }
 
@@ -38,8 +36,8 @@ public class GetAgvErrorsRequestHandler :
     public async Task Consume(ConsumeContext<GetAgvErrors> context)
     {
         var correlationId = context.Message.CorrelationId;
-        await _agvRepository.GetAgvAsync(correlationId);
-        IReadOnlyList<AgvError> agvErrorHistory = await _agvErrorRepository.GetErrorsAsync(correlationId, context.Message.DateFrom, context.Message.DateTo);
+        await _agvDb.Agvs.GetAgvAsync(correlationId);
+        IReadOnlyList<AgvError> agvErrorHistory = await _agvDb.Errors.GetErrorsAsync(correlationId, context.Message.DateFrom, context.Message.DateTo);
         List<Messages.Requests.Agv.Queries.AgvError> agvErrorHistoryMessageContent = agvErrorHistory.Select(e => _mapper.Map<Messages.Requests.Agv.Queries.AgvError>(e)).ToList();
         await context.RespondAsync(new GotAgvErrors(agvErrorHistoryMessageContent));
     }
@@ -51,9 +49,9 @@ public class GetAgvErrorsRequestHandler :
     public async Task Consume(ConsumeContext<GetActiveAgvErrors> context)
     {
         var correlationId = context.Message.CorrelationId;
-        await _agvRepository.GetAgvAsync(correlationId);
+        await _agvDb.Agvs.GetAgvAsync(correlationId);
 
-        IList<AgvError> agvErrors = await _agvErrorRepository.GetActiveErrorsAsync(correlationId);
+        IList<AgvError> agvErrors = await _agvDb.Errors.GetActiveErrorsAsync(correlationId);
         List<Messages.Requests.Agv.Queries.AgvError> agvErrorsMessageContent = agvErrors.Select(e => _mapper.Map<Messages.Requests.Agv.Queries.AgvError>(e)).ToList();
         await context.RespondAsync(new GotActiveAgvErrors(agvErrorsMessageContent));
     }
@@ -66,7 +64,7 @@ public class GetAgvErrorsRequestHandler :
     {
         (ICollection<Guid> selectedAgvs, var fromDate, var toDate) = context.Message;
         await CheckIfAgvsExist(selectedAgvs);
-        IReadOnlyList<AgvError> agvErrorHistory = await _agvErrorRepository.GetErrorsAsync(selectedAgvs.ToList(), fromDate, toDate);
+        IReadOnlyList<AgvError> agvErrorHistory = await _agvDb.Errors.GetErrorsAsync(selectedAgvs.ToList(), fromDate, toDate);
         Dictionary<Guid, List<AgvError>> errorsByAgv = agvErrorHistory
             .GroupBy(e => e.AgvCorrelationId)
             .ToDictionary(g => g.Key, g => g.OrderByDescending(e => e.ErrorReceived).ToList());
@@ -83,7 +81,7 @@ public class GetAgvErrorsRequestHandler :
         ICollection<Guid> selectedAgvs = context.Message.CorrelationIds;
         await CheckIfAgvsExist(selectedAgvs);
 
-        IList<AgvError> fetchedErrors = await _agvErrorRepository.GetActiveErrorsAsync(selectedAgvs.ToList());
+        IList<AgvError> fetchedErrors = await _agvDb.Errors.GetActiveErrorsAsync(selectedAgvs.ToList());
         Dictionary<Guid, List<AgvError>> errorsByAgv = fetchedErrors.GroupBy(e => e.AgvCorrelationId)
             .ToDictionary(g => g.Key, g => g.OrderByDescending(e => e.ErrorReceived).ToList());
         var errors = _mapper.Map<Dictionary<Guid, List<Messages.Requests.Agv.Queries.AgvError>>>(errorsByAgv);
@@ -92,7 +90,7 @@ public class GetAgvErrorsRequestHandler :
 
     private async Task CheckIfAgvsExist(ICollection<Guid> selectedAgvs)
     {
-        ICollection<Domain.Models.Agv.Agv> agvs = await _agvRepository.SelectExistingAgvsAsync(selectedAgvs.ToList());
+        ICollection<Domain.Models.Agv.Agv> agvs = await _agvDb.Agvs.SelectExistingAgvsAsync(selectedAgvs.ToList());
 
         if (agvs.Count != selectedAgvs.Count)
         {

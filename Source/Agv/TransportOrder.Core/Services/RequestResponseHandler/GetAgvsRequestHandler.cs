@@ -1,5 +1,6 @@
 using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
@@ -19,22 +20,18 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHan
 public class GetAgvsRequestHandler : IConsumer<GetAgvs>,
     IConsumer<GetAgv>
 {
-    private readonly IAgvRepository _agvRepository;
     private readonly IActionGroupRetrievalService _actionGroupRepository;
     private readonly IMapper _mapper;
-    private readonly IAgvErrorRepository _agvErrorRepository;
-    private readonly IGraphRepository _agvGraphRepository;
+    private readonly IAgvDb _agvDb;
 
     /// <summary>
     /// Initializes a new  <see cref="GetAgvsRequestHandler"/> instance.
     /// </summary>
-    public GetAgvsRequestHandler(IAgvRepository agvRepository, IActionGroupRetrievalService actionGroupRepository, IMapper mapper, IAgvErrorRepository agvErrorRepository, IGraphRepository agvGraphRepository)
+    public GetAgvsRequestHandler(IActionGroupRetrievalService actionGroupRepository, IAgvDb agvDb, IMapper mapper)
     {
-        _agvRepository = agvRepository;
         _actionGroupRepository = actionGroupRepository;
         _mapper = mapper;
-        _agvErrorRepository = agvErrorRepository;
-        _agvGraphRepository = agvGraphRepository;
+        _agvDb = agvDb;
     }
 
     /// <summary>
@@ -46,11 +43,11 @@ public class GetAgvsRequestHandler : IConsumer<GetAgvs>,
         ICollection<Domain.Models.Agv.Agv> agvs;
         if (!selectedAgvs.Any())
         {
-            agvs = await _agvRepository.GetAllAgvsAsync();
+            agvs = await _agvDb.Agvs.GetAllAgvsAsync();
         }
         else
         {
-            agvs = await _agvRepository.SelectExistingAgvsAsync(selectedAgvs.ToList());
+            agvs = await _agvDb.Agvs.SelectExistingAgvsAsync(selectedAgvs.ToList());
         }
 
         List<Guid> agvCorrelationIds = agvs.Select(a => a.CorrelationId).ToList();
@@ -61,10 +58,10 @@ public class GetAgvsRequestHandler : IConsumer<GetAgvs>,
 
         Dictionary<Guid, string?> agvLastNodeIds = agvs.ToDictionary(a => a.CorrelationId, a => a.AgvStatus?.LastNodeId);
         
-        Task<IReadOnlyDictionary<Guid, GraphNode?>> agvLastNodesTask = _agvGraphRepository.GetLastNodesForAgvsAsync(agvLastNodeIds);
+        Task<IReadOnlyDictionary<Guid, GraphNode?>> agvLastNodesTask = _agvDb.Graphs.GetLastNodesForAgvsAsync(agvLastNodeIds);
 
         Task<IReadOnlyDictionary<Guid, ActionGroupReadModel?>> actionGroupsTask = _actionGroupRepository.GetCurrentActionGroupsWithNodesAsync(agvCorrelationIds);
-        Task<IList<AgvError>> errorsTask = _agvErrorRepository.GetActiveErrorsAsync(agvCorrelationIds);
+        Task<IList<AgvError>> errorsTask = _agvDb.Errors.GetActiveErrorsAsync(agvCorrelationIds);
         await Task.WhenAll(actionGroupsTask, errorsTask, agvLastNodesTask);
 
         Dictionary<Guid, List<AgvError>> allAgvErrors = errorsTask.Result
@@ -96,20 +93,20 @@ public class GetAgvsRequestHandler : IConsumer<GetAgvs>,
     {
         var agvCorrelationId = context.Message.CorrelationId;
 
-        var agv = await _agvRepository.GetAgvAsync(agvCorrelationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 
         var agvMessageContent = _mapper.Map<Messages.MessageContent.Agv>(agv);
 
         var action = await _actionGroupRepository.GetCurrentAgvActionGroupWithNodesAsync(agvCorrelationId);
         _mapper.Map(action, agvMessageContent);
 
-        IList<AgvError> agvErrors = await _agvErrorRepository.GetActiveErrorsAsync(agvCorrelationId);
+        IList<AgvError> agvErrors = await _agvDb.Errors.GetActiveErrorsAsync(agvCorrelationId);
         _mapper.Map(agvErrors, agvMessageContent);
 
         string? lastNodeId = agv.AgvStatus?.LastNodeId;
         if (lastNodeId != null)
         {
-            var lastNode = await _agvGraphRepository.GetNodeAsync(lastNodeId);
+            var lastNode = await _agvDb.Graphs.GetNodeAsync(lastNodeId);
             _mapper.Map(lastNode, agvMessageContent);
         }
 

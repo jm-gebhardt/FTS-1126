@@ -2,6 +2,7 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Models;
 using Gebhardt.StoreWare.Agv.Common.Services;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
@@ -35,10 +36,9 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
     private readonly Mock<IMaintenanceService> _maintenanceService = new();
     private readonly Mock<IChargingPointManager> _chargingPointManager = new();
     private readonly Mock<IParkPointService> _parkPointService = new();
-    private readonly Mock<IAgvRepository> _agvRepository = new();
+    private readonly Mock<IAgvDb> _agvDb = new();
     private readonly Mock<IActionGroupValidationService> _actionGroupValidationService = new();
     private readonly Mock<ISettingsProvider<AgvSettings>> _settingsProvider = new();
-    private readonly Mock<IAgvDataRepository> _agvDataRepository = new();
     private readonly Mock<INodeStateRepository> _nodeStateRepositoryMock = new();
     private readonly List<ActionGroupReadModel> _actionGroupReadModels = new();
     private readonly List<Domain.Models.ActionGroup.ActionGroup> _actionGroups = new();
@@ -78,11 +78,10 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
             sc.AddTransient(_ => _parkPointService.Object);
             sc.AddTransient(_ => GetMapper());
             sc.AddTransient<ISemaphoreProvider<IAgvsSemaphore>>(_ => _semaphoreProvider);
-            sc.AddTransient(_ => _agvRepository.Object);
+            sc.AddTransient(_ => _agvDb.Object);
             sc.AddTransient(_ => _actionGroupValidationService.Object);
             sc.AddTransient(_ => _settingsProvider.Object);
             sc.AddTransient(_ => _nodeStateRepositoryMock.Object);
-            sc.AddTransient(_ => _agvDataRepository.Object);
             if (bus != null)
             {
                 sc.AddTransient(_ => bus);

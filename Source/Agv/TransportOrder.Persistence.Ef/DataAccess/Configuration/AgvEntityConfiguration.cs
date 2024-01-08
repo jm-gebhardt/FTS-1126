@@ -5,18 +5,17 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess.Configuration;
 
-/// <summary>
-/// EF configuration or an Agv.
-/// </summary>
-public class AgvClassMap : ClassMap<Domain.Models.Agv.Agv>
+/// <inheritdoc />
+public class AgvEntityConfiguration : IEntityTypeConfiguration<Domain.Models.Agv.Agv>
 {
-    protected override void Configure(EntityTypeBuilder<Domain.Models.Agv.Agv> entity, ModelBuilder model)
+    /// <inheritdoc />
+    public void Configure(EntityTypeBuilder<Domain.Models.Agv.Agv> builder)
     {
-        entity.HasKey(g => g.CorrelationId);
+        builder.HasKey(g => g.CorrelationId);
 
-        entity.ConfigureAllProperties(p => p.CanWrite && p.PropertyType != typeof(AgvStatus));
+        builder.ConfigureAllProperties(p => p.CanWrite && p.PropertyType != typeof(AgvStatus));
 
-        entity.OwnsOne(e => e.AgvStatus, o =>
+        builder.OwnsOne(e => e.AgvStatus, o =>
         {
             o.ToTable(nameof(AgvStatus));
             o.WithOwner().HasForeignKey(s => s.CorrelationId);
@@ -30,6 +29,6 @@ public class AgvClassMap : ClassMap<Domain.Models.Agv.Agv>
                 o.Property(propertyInfo.PropertyType, propertyInfo.Name);
             }
         });
-        entity.Navigation(e => e.AgvStatus).AutoInclude();
+        builder.Navigation(e => e.AgvStatus).AutoInclude();
     }
 }

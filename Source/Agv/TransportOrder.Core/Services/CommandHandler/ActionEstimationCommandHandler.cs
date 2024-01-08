@@ -1,5 +1,6 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Routing;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
@@ -20,23 +21,20 @@ public class ActionEstimationCommandHandler :
 {
     private readonly ILogger<ActionCommandHandler> _logger;
     private readonly IRouteService _routeService;
-    private readonly IAgvRepository _agvRepository;
+    private readonly IAgvDb _agvDb;
     private readonly IActionGroupRepository _actionGroupRepository;
-    private readonly IAgvDataRepository _agvDataRepository;
 
     /// <inheritdoc cref="ActionEstimationCommandHandler"/>
     public ActionEstimationCommandHandler(
         IRouteService routeService,
-        IAgvRepository agvRepository,
+        IAgvDb agvDb,
         IActionGroupRepository actionGroupRepository,
-        IAgvDataRepository agvDataRepository,
         ILogger<ActionCommandHandler> logger)
     {
         _logger = logger;
         _routeService = routeService;
-        _agvRepository = agvRepository;
+        _agvDb = agvDb;
         _actionGroupRepository = actionGroupRepository;
-        _agvDataRepository = agvDataRepository;
     }
 
     /// <inheritdoc cref="EstimateActionGroupDuration" />
@@ -45,8 +43,8 @@ public class ActionEstimationCommandHandler :
         var action = context.Message.FirstAction;
         double duration = context.Message.FirstActionCosts;
         Task<ActionGroup> actionGroupTask = _actionGroupRepository.GetRequiredActionGroupByIdAsync(context.Message.ActionGroupId);
-        Task<Domain.Models.Agv.Agv> agvTask = _agvRepository.GetAgvAsync(context.Message.AgvId);
-        Task<AgvData?> agvDataTask = _agvDataRepository.GetAgvDataAsync(context.Message.AgvId);
+        Task<Domain.Models.Agv.Agv> agvTask = _agvDb.Agvs.GetAgvAsync(context.Message.AgvId);
+        Task<AgvData?> agvDataTask = _agvDb.Data.GetAgvDataAsync(context.Message.AgvId);
         await Task.WhenAll(actionGroupTask, agvTask, agvDataTask);
         var actionGroup = actionGroupTask.Result;
         var assignedAgv = agvTask.Result;

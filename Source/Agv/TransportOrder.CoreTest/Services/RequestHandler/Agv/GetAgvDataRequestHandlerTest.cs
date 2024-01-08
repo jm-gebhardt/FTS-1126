@@ -18,6 +18,7 @@ public class GetAgvDataRequestHandlerTest
     public async Task GetAgvDataRequest_AgvDataNotFound_ExceptionThrown()
     {
         AgvRequestsHandlerTestFixture<GetAgvData, GetAgvDataRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvData, GetAgvDataRequestHandler>()
+            .WithEmptyAgvDataRepository()
             .Build();
 
         await MediatorShould.ThrowRequestExceptionAsync<AgvDataNotFoundException>(async () => await fixture.GetResponseAsync<GotAgvData>(new GetAgvData(Guid.NewGuid())));

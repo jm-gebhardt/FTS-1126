@@ -2,7 +2,7 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Commands;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,7 +12,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.RequestHandler
 
 public class ResetAgvErrorsRequestHandlerTestFixture : MediatorTestFixture<ResetAgvErrors, ResetAgvErrorsRequestHandler>
 {
-    private readonly Mock<IAgvErrorRepository> _agvErrorRepository = new();
+    private readonly Mock<IAgvDb> _agvDb = new();
     private readonly Mock<IMessageAwaiter<AgvErrorChanged>> _agvErrorChangedAwaiter = new();
     private Action? _waitForMessageAction;
 
@@ -28,14 +28,14 @@ public class ResetAgvErrorsRequestHandlerTestFixture : MediatorTestFixture<Reset
 
         AddServices(s =>
         {
-            s.AddTransient(_ => _agvErrorRepository.Object);
+            s.AddTransient(_ => _agvDb.Object);
             s.AddTransient(_ => _agvErrorChangedAwaiter.Object);
         });
     }
 
     public ResetAgvErrorsRequestHandlerTestFixture WithActiveAgvErrors(IList<AgvError> errors)
     {
-        _agvErrorRepository.Setup(x => x.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(errors);
+        _agvDb.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(errors);
         return this;
     }
 

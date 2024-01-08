@@ -9,6 +9,7 @@ using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Services;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
@@ -48,9 +49,7 @@ public class ActionCommandHandler :
 {
     private readonly ILogger<ActionCommandHandler> _logger;
     private readonly IRouteService _routeService;
-    private readonly IAgvRepository _agvRepository;
     private readonly IActionGroupRepository _actionGroupRepository;
-    private readonly IAgvDataRepository _agvDataRepository;
     private readonly IChooseAgvActionGroupService _chooseAgvActionGroupService;
     private readonly ISemaphoreProvider<IAgvsSemaphore> _actionManagerSemaphoreProvider;
     private readonly IChargingPointManager _chargingPointManager;
@@ -61,20 +60,20 @@ public class ActionCommandHandler :
     private readonly IActionGroupValidationService _actionGroupValidationService;
     private readonly IActionGroupRetrievalService _actionGroupRetrievalService;
     private readonly INodeStateRepository _nodeStateRepository;
+    private readonly IAgvDb _agvDb;
 
     /// <inheritdoc cref="ActionCommandHandler"/>
     public ActionCommandHandler(
         IChargingPointManager chargingPointManager,
         IParkPointService parkPointService,
         IRouteService routeService,
-        IAgvRepository agvRepository,
         IActionGroupRepository actionGroupRepository,
-        IAgvDataRepository agvDataRepository,
         IActionGroupValidationService actionGroupValidationService,
         IChooseAgvActionGroupService chooseAgvActionGroupService,
         IActionGroupRetrievalService actionGroupRetrievalService,
         ISemaphoreProvider<IAgvsSemaphore> actionManagerSemaphoreProvider,
         INodeStateRepository nodeStateRepository,
+        IAgvDb agvDb,
         ISettingsProvider<AgvSettings> settingsProvider,
         IMapper mapper,
         IBus bus,
@@ -82,9 +81,8 @@ public class ActionCommandHandler :
     {
         _logger = logger;
         _routeService = routeService;
-        _agvRepository = agvRepository;
+        _agvDb = agvDb;
         _actionGroupRepository = actionGroupRepository;
-        _agvDataRepository = agvDataRepository;
         _chooseAgvActionGroupService = chooseAgvActionGroupService;
         _actionManagerSemaphoreProvider = actionManagerSemaphoreProvider;
         _parkPointService = parkPointService;
@@ -104,7 +102,7 @@ public class ActionCommandHandler :
     {
         var (action, agvCorrelationId) = context.Message;
         var cancellationToken = context.CancellationToken;
-        var assignedAgv = await _agvRepository.GetAgvAsync(agvCorrelationId);
+        var assignedAgv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 
         bool agvActionCanBeStarted = await CheckAgvActionCanBeStarted(context, action, assignedAgv);
         if (agvActionCanBeStarted)
@@ -152,7 +150,7 @@ public class ActionCommandHandler :
     {
         var (actionMessageContent, assignedAgvId) = context.Message;
         var cancellationToken = context.CancellationToken;
-        var assignedAgv = await _agvRepository.GetAgvAsync(assignedAgvId);
+        var assignedAgv = await _agvDb.Agvs.GetAgvAsync(assignedAgvId);
 
         var actionGroup = await _actionGroupRepository.GetActionGroupAsync(actionMessageContent.ParentId);
 
@@ -184,7 +182,7 @@ public class ActionCommandHandler :
     public async Task Consume(ConsumeContext<TryStartManualAction> context)
     {
         var agvCorrelationId = context.Message.AgvCorrelationId;
-        var agv = await _agvRepository.GetAgvAsync(agvCorrelationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 
         IReadOnlyList<Domain.Models.ActionGroup.ActionGroup> actionGroups = await _actionGroupRepository
             .GetActionGroupsAsync(ActionGroupState.Created, assignedAgvCorrelationId: agv.CorrelationId, isManual: true, maxItems: 1);
@@ -206,7 +204,7 @@ public class ActionCommandHandler :
     {
         var agvCorrelationId = context.Message.AgvCorrelationId;
         var cancellationToken = context.CancellationToken;
-        var agv = await _agvRepository.GetAgvAsync(agvCorrelationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 
         if (!await _actionGroupRepository.HasNotStartedActionsAsync(agvCorrelationId))
         {
@@ -232,7 +230,7 @@ public class ActionCommandHandler :
     {
         var agvCorrelationId = context.Message.AgvCorrelationId;
         var cancellationToken = context.CancellationToken;
-        var agv = await _agvRepository.GetAgvAsync(agvCorrelationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 
         var agvSettings = _settingsProvider.GetSettings();
         bool needsCharging = agv.CheckMustCharge(agvSettings);
@@ -248,7 +246,7 @@ public class ActionCommandHandler :
 
         await _actionManagerSemaphoreProvider.ExecuteLockedAsync(async () =>
         {
-            var agvData = await _agvDataRepository.GetAgvDataAsync(agv.CorrelationId);
+            var agvData = await _agvDb.Data.GetAgvDataAsync(agv.CorrelationId);
             var actionGroup = await _chooseAgvActionGroupService.GetNotStartedActionGroupAsync(agv, agvData, cancellationToken);
             if (actionGroup == null)
             {
@@ -271,7 +269,7 @@ public class ActionCommandHandler :
     {
         var agvCorrelationId = context.Message.CorrelationId;
         var cancellationToken = context.CancellationToken;
-        var agv = await _agvRepository.GetAgvAsync(agvCorrelationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 
         var agvSettings = _settingsProvider.GetSettings();
         if (agv.CheckShouldCharge(agvSettings) || agv.IsLocked)
@@ -310,7 +308,7 @@ public class ActionCommandHandler :
     {
         var agvCorrelationId = context.Message.AgvCorrelationId;
         var cancellationToken = context.CancellationToken;
-        var agv = await _agvRepository.GetAgvAsync(agvCorrelationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 
         bool hasUnfinishedActionGroup = await _actionGroupRepository.HasUnfinishedActionGroupAsync(agv.CorrelationId);
         IReadOnlyList<Domain.Models.ActionGroup.ActionGroup> actionGroups = await _actionGroupRepository.GetActionGroupsAsync(new[] {ActionGroupState.Created}, assignedAgvCorrelationId: agvCorrelationId);
@@ -394,7 +392,7 @@ public class ActionCommandHandler :
         {
             if (actionGroup.AssignedAgv != null)
             {
-                agv = await _agvRepository.GetAgvAsync((Guid) actionGroup.AssignedAgv);
+                agv = await _agvDb.Agvs.GetAgvAsync((Guid) actionGroup.AssignedAgv);
                 await context.RespondAsync(new Success());
             }
             else
@@ -402,10 +400,10 @@ public class ActionCommandHandler :
                 var agvSettings = _settingsProvider.GetSettings();
                 await _actionManagerSemaphoreProvider.ExecuteLockedAsync(async () =>
                 {
-                    ICollection<Domain.Models.Agv.Agv> allReadyAgvs = await _agvRepository.GetReadyAgvsAsync();
+                    ICollection<Domain.Models.Agv.Agv> allReadyAgvs = await _agvDb.Agvs.GetReadyAgvsAsync();
                     ICollection<Domain.Models.Agv.Agv> readyAgvs = allReadyAgvs.Where(a => !(a.CurrentAgvState == AgvState.Busy && a.AgvStatus!.Charging &&
                                                                                              a.AgvStatus!.BatteryCharge < agvSettings.BatteryLevelGood)).ToList();
-                    ICollection<AgvData> agvData = await _agvDataRepository.GetSelectedAgvDataAsync(readyAgvs.Select(a => a.CorrelationId).ToList());
+                    ICollection<AgvData> agvData = await _agvDb.Data.GetSelectedAgvDataAsync(readyAgvs.Select(a => a.CorrelationId).ToList());
                     agv = await _chooseAgvActionGroupService.GetAgvAsync(domainActionGroup, readyAgvs.ToList(), agvData.ToList(), cancellationToken);
                 }, cancellationToken);
 
@@ -482,7 +480,7 @@ public class ActionCommandHandler :
             await context.RespondAsync(new AbortActionGroupFailed("Action group abortion failed, no started actions."));
             return;
         }
-        var agv = await _agvRepository.GetAgvAsync((Guid) actionGroup.AssignedAgv!);
+        var agv = await _agvDb.Agvs.GetAgvAsync((Guid) actionGroup.AssignedAgv!);
         actionGroup = await _actionGroupRepository.UpdateActionAndGroupStateAsync(action, agv, ActionState.Aborted, context.Message.AbortReason.ToReason());
 
         await context.Publish(new ActionAborted(agv.CorrelationId, _mapper.Map<MessageAgvAction>(action)));
@@ -585,7 +583,7 @@ public class ActionCommandHandler :
         // here the state has changed in all cases
         await PublishStateChange(assignedAgv);
 
-        var agvData = await _agvDataRepository.GetAgvDataAsync(assignedAgv.CorrelationId);
+        var agvData = await  _agvDb.Data.GetAgvDataAsync(assignedAgv.CorrelationId);
         var route = await _routeService.GetRouteAsync(assignedAgv, action.TargetNodeId, null, agvData, cancellationToken);
         action.Nodes = action.ActionType == ActionType.Charge ? new[] {action.TargetNodeId} : route.Nodes;
 

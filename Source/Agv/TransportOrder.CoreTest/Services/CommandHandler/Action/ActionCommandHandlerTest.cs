@@ -425,9 +425,9 @@ public class ActionCommandHandlerTest
         fixture.AddRoute(nodes: new[] {"Node1", "Node2"});
         fixture.AddActionGroup(actionGroup);
 
-        var startAction = new SelectNodesForAction(mapper.Map<Common.Messages.ActionGroups.AgvAction>(actionGroup.Actions.First()), agv.CorrelationId);
+        var selectNodesForAction = new SelectNodesForAction(mapper.Map<Common.Messages.ActionGroups.AgvAction>(actionGroup.Actions.First()), agv.CorrelationId);
 
-        await fixture.TestHarness.Bus.Publish(startAction);
+        await fixture.TestHarness.Bus.Publish(selectNodesForAction);
         (await fixture.ConsumerHarness.Consumed.Any<SelectNodesForAction>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<NodesSelectedForAction>()).ShouldBeTrue();
     }

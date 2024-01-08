@@ -12,24 +12,16 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
 /// <inheritdoc cref="IParkPointService" />
 public class ParkPointService : BaseNodeReservationManager, IParkPointService
 {
-    /// <summary>
-    /// Constructor for base charging point manager
-    /// </summary>
-    /// <param name="graphRepository">The graph repository</param>
-    /// <param name="nodeStateRepository"></param>
-    /// <param name="routeService"></param>
-    /// <param name="logger"></param>
-    /// <param name="semaphoreProvider"></param>
-    /// <param name="agvDataRepository"></param>
-    public ParkPointService(IGraphRepository graphRepository,
+    /// <inheritdoc cref="ParkPointService"/>>
+    public ParkPointService(IAgvDb agvDb,
         INodeStateRepository nodeStateRepository,
         IRouteService routeService,
         ILogger<ParkPointService> logger,
-        ISemaphoreProvider<IParkingSemaphore> semaphoreProvider, IAgvDataRepository agvDataRepository) : base(graphRepository,
+        ISemaphoreProvider<IParkingSemaphore> semaphoreProvider) : base(agvDb,
         nodeStateRepository,
         routeService,
         logger,
-        semaphoreProvider, agvDataRepository)
+        semaphoreProvider)
     {
     }
 

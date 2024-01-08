@@ -1,5 +1,5 @@
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Commands;
 using JetBrains.Annotations;
@@ -9,20 +9,20 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHan
 
 /// <summary>
 /// Defines a handler for the EmitRequestDataRequest
-/// Gets agv from agvRepository for specific correlationId, emits RequestData telegram when receiving patch request.
+/// Gets agv from agvDb for specific correlationId, emits RequestData telegram when receiving patch request.
 /// </summary>
 [UsedImplicitly]
 public class RequestAgvDataCommandHandler : IConsumer<RequestAgvData>
 {
-    private readonly IAgvRepository _agvRepository;
+    private readonly IAgvDb _agvDb;
     private readonly IBus _bus;
 
     /// <summary>
     /// Initializes a new <see  cref="RequestAgvDataCommandHandler"/> instance.
     /// </summary>
-    public RequestAgvDataCommandHandler(IAgvRepository agvRepository, IBus bus)
+    public RequestAgvDataCommandHandler(IAgvDb agvDb, IBus bus)
     {
-        _agvRepository = agvRepository;
+        _agvDb = agvDb;
         _bus = bus;
     }
 
@@ -34,7 +34,7 @@ public class RequestAgvDataCommandHandler : IConsumer<RequestAgvData>
     {
         var agvCorrelationId = context.Message.CorrelationId;
 
-        var agv = await _agvRepository.GetAgvAsync(agvCorrelationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
         await _bus.Publish(new Common.Messages.AgvManagement.Commands.RequestAgvData(agv.CorrelationId, agv.AgvId));
         await context.RespondAsync(new RequestedAgvData(agv.CorrelationId));
     }

@@ -13,17 +13,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
 /// <inheritdoc cref="IChargingPointManager"/>
 public class ChargingPointManager : BaseNodeReservationManager, IChargingPointManager
 {
-    /// <summary>
-    /// Constructor for base charging point manager
-    /// </summary>
-    /// <param name="graphRepository">The graph repository.</param>
-    /// <param name="nodeStateRepository"></param>
-    /// <param name="routeService"></param>
-    /// <param name="logger"></param>
-    /// <param name="semaphoreProvider"></param>
-    /// <param name="agvDataRepository"></param>
-    public ChargingPointManager(IGraphRepository graphRepository, INodeStateRepository nodeStateRepository, IRouteService routeService, ILogger<ChargingPointManager> logger, ISemaphoreProvider<IChargingSemaphore> semaphoreProvider, IAgvDataRepository agvDataRepository)
-        : base(graphRepository, nodeStateRepository, routeService, logger, semaphoreProvider, agvDataRepository)
+    /// <inheritdoc cref="ChargingPointManager"/>>
+    public ChargingPointManager(IAgvDb agvDb, INodeStateRepository nodeStateRepository, IRouteService routeService, ILogger<ChargingPointManager> logger, ISemaphoreProvider<IChargingSemaphore> semaphoreProvider)
+        : base(agvDb, nodeStateRepository, routeService, logger, semaphoreProvider)
     {
     }
 
@@ -44,7 +36,7 @@ public class ChargingPointManager : BaseNodeReservationManager, IChargingPointMa
     {
         try
         {
-            var agvData = await AgvDataRepository.GetAgvDataAsync(agv.CorrelationId);
+            var agvData = await AgvDb.Data.GetAgvDataAsync(agv.CorrelationId);
             return await PickNode(agv, agvData);
         }
         catch (NoNodesAvailableException)

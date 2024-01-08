@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Services;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
@@ -25,9 +26,7 @@ public class ChargingPointManagerTestFixture
     private static readonly string _node05 = _sources[2];
     private static readonly string _node06 = _destinations[2];
 
-    private readonly Mock<IGraphRepository> _graphRepository = new();
-
-    private readonly Mock<IAgvDataRepository> _agvDataRepository = new();
+    private readonly Mock<IAgvDb> _agvDb = new();
 
     public Mock<INodeStateRepository> NodeStateRepository { get; } = new();
 
@@ -78,7 +77,8 @@ public class ChargingPointManagerTestFixture
 
     public IChargingPointManager CreateChargingPointManager()
     {
-        return new ChargingPointManager(_graphRepository.Object, NodeStateRepository.Object, RouteService.Object, new Mock<ILogger<ChargingPointManager>>().Object, new SemaphoreProvider<IChargingSemaphore>(), _agvDataRepository.Object);
+        _agvDb.Setup(x => x.Data.GetAgvDataAsync(It.IsAny<Guid>())).ReturnsAsync((AgvData?)null);
+        return new ChargingPointManager(_agvDb.Object, NodeStateRepository.Object, RouteService.Object, new Mock<ILogger<ChargingPointManager>>().Object, new SemaphoreProvider<IChargingSemaphore>());
     }
 
     public void SetupNodeLocker(bool reserveSuccess, bool lockSuccess, bool unlockSuccess, Func<IQueryable<GraphNode>, IQueryable<GraphNode>>? filterFreeUnlockedNodesFunction = null)
@@ -93,8 +93,8 @@ public class ChargingPointManagerTestFixture
 
     public void SetupGraphRepository(AgvGraph graph)
     {
-        _graphRepository.Setup(x => x.GetAgvGraphAsync(It.IsAny<Guid>())).ReturnsAsync(graph);
-        _graphRepository.Setup(x => x.GetNodesAsync(It.IsAny<Guid>(), It.IsAny<Expression<Func<GraphNode, bool>>>()))
+        _agvDb.Setup(x => x.Graphs.GetAgvGraphAsync(It.IsAny<Guid>())).ReturnsAsync(graph);
+        _agvDb.Setup(x => x.Graphs.GetNodesAsync(It.IsAny<Guid>(), It.IsAny<Expression<Func<GraphNode, bool>>>()))
             .ReturnsAsync(new Func<Guid, Expression<Func<GraphNode, bool>>, IEnumerable<GraphNode>>((_, predicate) => graph.Nodes.AsQueryable().Where(predicate)));
     }
 
@@ -107,11 +107,11 @@ public class ChargingPointManagerTestFixture
 
     public ChargingPointManagerTestFixture WithAvailableNodes(TransportOrder.Domain.Models.Agv.Agv agv, List<GraphNode> availableNodes)
     {
-        _graphRepository.Setup(x => x.GetNodesAsync(agv.CorrelationId, It.IsAny<Expression<Func<GraphNode, bool>>>()))
+        _agvDb.Setup(x => x.Graphs.GetNodesAsync(agv.CorrelationId, It.IsAny<Expression<Func<GraphNode, bool>>>()))
             .ReturnsAsync(new Func<Guid, Expression<Func<GraphNode, bool>>, IEnumerable<GraphNode>>((_, predicate) => availableNodes.AsQueryable().Where(predicate)));
         foreach (var availableNode in availableNodes)
         {
-            _graphRepository.Setup(x => x.GetNodeAsync(availableNode.Id))
+            _agvDb.Setup(x => x.Graphs.GetNodeAsync(availableNode.Id))
                 .ReturnsAsync(availableNodes.First(n => n.Id == availableNode.Id));
         }
 

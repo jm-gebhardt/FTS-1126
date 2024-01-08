@@ -2,7 +2,7 @@
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Routing;
 using Gebhardt.StoreWare.Agv.TransportOrder.Routing.Models;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,15 +13,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.RequestHandler
 public class RouteRequestHandlerTestFixture<TRequestClient> : MediatorTestFixture<TRequestClient, RouteRequestHandler>
     where TRequestClient : class
 {
-    private readonly Mock<IAgvRepository> _agvRepositoryMock = new();
     private readonly Mock<IRouteService> _routeServiceMock = new();
-    private readonly Mock<IAgvDataRepository> _agvDataRepositoryMock = new();
     private readonly List<TransportOrder.Domain.Models.Agv.Agv> _agvs = new();
+    private readonly Mock<IAgvDb> _agvDb = new();
 
     public RouteRequestHandlerTestFixture<TRequestClient> WithAgv(TransportOrder.Domain.Models.Agv.Agv agv)
     {
         _agvs.Add(agv);
-
+        _agvDb.Setup(x => x.Data.GetAgvDataAsync(It.IsAny<Guid>())).ReturnsAsync((AgvData?)null);
         return this;
     }
 
@@ -33,11 +32,9 @@ public class RouteRequestHandlerTestFixture<TRequestClient> : MediatorTestFixtur
 
     public override RouteRequestHandlerTestFixture<TRequestClient> Build()
     {
-        _agvRepositoryMock.AddAgvsToMockRepository(_agvs);
-
-        AddServices(s => s.AddTransient<IAgvRepository>(_ => _agvRepositoryMock.Object));
-        AddServices(s => s.AddTransient<IAgvDataRepository>(_ => _agvDataRepositoryMock.Object));
-        AddServices(s => s.AddTransient<IRouteService>(_ => _routeServiceMock.Object));
+        AddServices(s => s.AddTransient(_ => _agvDb.Object));
+        AddServices(s => s.AddTransient(_ => _routeServiceMock.Object));
+        _agvDb.AddAgvsToMockRepository(_agvs);
         base.Build();
 
         return this;

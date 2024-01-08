@@ -1,8 +1,8 @@
 using Gebhardt.StoreWare.Agv.Common.Exceptions;
 using Gebhardt.StoreWare.Agv.Common.MassTransit;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Commands;
 using JetBrains.Annotations;
@@ -19,19 +19,19 @@ public class ResetAgvErrorsRequestHandler : IConsumer<ResetAgvErrors>
 {
     private readonly TimeSpan _resetTimeout = TimeSpan.FromSeconds(10);
     private readonly ILogger<ResetAgvErrorsRequestHandler> _logger;
-    private readonly IAgvErrorRepository _agvErrorRepository;
+    private readonly IAgvDb _agvDb;
     private readonly IMessageAwaiter<AgvErrorChanged> _agvErrorChangedAwaiter;
 
     /// <inheritdoc cref="ResetAgvErrorsRequestHandler"/>
-    /// <param name="agvErrorRepository"></param>
+    /// <param name="agvDb"></param>
     /// <param name="agvErrorChangedAwaiter"></param>
     /// <param name="logger"></param>
     public ResetAgvErrorsRequestHandler(
-        IAgvErrorRepository agvErrorRepository,
+        IAgvDb agvDb,
         IMessageAwaiter<AgvErrorChanged> agvErrorChangedAwaiter,
         ILogger<ResetAgvErrorsRequestHandler> logger)
     {
-        _agvErrorRepository = agvErrorRepository;
+        _agvDb = agvDb;
         _agvErrorChangedAwaiter = agvErrorChangedAwaiter;
         _logger = logger;
     }
@@ -59,7 +59,7 @@ public class ResetAgvErrorsRequestHandler : IConsumer<ResetAgvErrors>
         var correlationId = context.Message.CorrelationId;
         List<Guid> errorIdsToReset = context.Message.ErrorIds.ToList();
         var cancellationToken = CancellationTokenSource.CreateLinkedTokenSource(context.CancellationToken, new CancellationTokenSource(_resetTimeout).Token).Token;
-        IList<AgvError> activeErrors = await _agvErrorRepository.GetActiveErrorsAsync(correlationId);
+        IList<AgvError> activeErrors = await _agvDb.Errors.GetActiveErrorsAsync(correlationId);
 
         // agv does not have any errors
         if (!activeErrors.Any())

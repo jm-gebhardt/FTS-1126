@@ -6,6 +6,7 @@ using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.CmdOptions;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
@@ -57,21 +58,13 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
 
     public string[] Ips { get; } = { "127.0.0.1", "127.0.0.2", "127.0.0.3" };
 
-    public Mock<IAgvRepository> AgvRepository { get; }
-
-    private Mock<IAgvDataRepository> AgvDataRepository { get; }
+    public Mock<IAgvDb> AgvDb { get; }
 
     private Mock<IActionGroupRepository> ActionGroupRepository { get; }
 
     private Mock<IActionGroupRetrievalService> ActionGroupRetrievalService { get; }
 
-    private Mock<IGraphRepository> AgvGraphRepository { get; }
-
-    private Mock<IAgvErrorRepository> AgvErrorRepository { get; }
-
     private Mock<IRequestClient<QueueActionGroup>> QueueActionGroupRequestClient { get; }
-
-    private Mock<ICargoRepository> CargoRepository { get; }
 
     private readonly GraphNode[] _nodes =
     {
@@ -83,23 +76,19 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
 
     public AgvControllerTestFixture()
     {
-        AgvGraphRepository = new Mock<IGraphRepository>();
-        AgvErrorRepository = new Mock<IAgvErrorRepository>();
-        AgvRepository = new Mock<IAgvRepository>();
+        AgvDb = new Mock<IAgvDb>();
         QueueActionGroupRequestClient = new Mock<IRequestClient<QueueActionGroup>>();
-        AgvDataRepository = new Mock<IAgvDataRepository>();
         ActionGroupRetrievalService = new Mock<IActionGroupRetrievalService>();
         ActionGroupRetrievalService.Setup(r => r.GetCurrentActionGroupsWithNodesAsync(It.IsAny<IReadOnlyCollection<Guid>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (ActionGroupReadModel?)null));
 
         ActionGroupRepository = new Mock<IActionGroupRepository>();
         ActionGroupRepository.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (Domain.Models.ActionGroup.ActionGroup?)null));
-        AgvErrorRepository.Setup(x => x.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(new List<AgvError>());
-        AgvErrorRepository.Setup(x => x.GetActiveErrorsAsync(It.IsAny<IList<Guid>>())).ReturnsAsync(new List<AgvError>());
-        CargoRepository = new Mock<ICargoRepository>();
+        AgvDb.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(new List<AgvError>());
+        AgvDb.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<IList<Guid>>())).ReturnsAsync(new List<AgvError>());
     }
 
     [UsedImplicitly]
-    public AgvControllerTestFixture<TRequest, TRequestHandler> SetupAgvRepositoryWithDefaultData()
+    public AgvControllerTestFixture<TRequest, TRequestHandler> SetupAgvDbWithDefaultData()
     {
         var agvs = new List<Domain.Models.Agv.Agv>();
         var data = new Dictionary<Guid, AgvData>();
@@ -120,16 +109,17 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             data[correlationId] = agvData;
         }
 
-        AgvRepository.AddAgvsToMockRepository(agvs);
-
-        AgvDataRepository.Setup(x => x.ExistsAsync(It.IsAny<Guid>())).ReturnsAsync((Guid correlationId) => data.ContainsKey(correlationId));
-        AgvDataRepository.Setup(x => x.GetAgvDataAsync(It.IsAny<Guid>()))
+        AgvDb.AddAgvsToMockRepository(agvs);
+        AgvDb.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(new List<AgvError>());
+        AgvDb.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<IList<Guid>>())).ReturnsAsync(new List<AgvError>());
+        AgvDb.Setup(x => x.Data.ExistsAsync(It.IsAny<Guid>())).ReturnsAsync((Guid correlationId) => data.ContainsKey(correlationId));
+        AgvDb.Setup(x => x.Data.GetAgvDataAsync(It.IsAny<Guid>()))
             .ReturnsAsync((Guid correlationId) =>
             {
                 data.TryGetValue(correlationId, out var agvData);
                 return agvData;
             });
-        AgvDataRepository.Setup(x => x.AddOrUpdateAsync(It.IsAny<AgvData>()))
+        AgvDb.Setup(x => x.Data.AddOrUpdateAsync(It.IsAny<AgvData>()))
             .ReturnsAsync((AgvData agvData) =>
             {
                 data[agvData.CorrelationId] = agvData;
@@ -226,9 +216,9 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
 
     public AgvControllerTestFixture<TRequest, TRequestHandler> WithAgvGraph(Guid correlationId, AgvGraph agvGraph)
     {
-        AgvGraphRepository.Setup(x => x.GetAgvGraphAsync(correlationId)).ReturnsAsync(agvGraph);
-        AgvGraphRepository.Setup(x => x.GetNodeAsync(It.IsAny<string>()))
-            .ReturnsAsync(() => agvGraph.Nodes.First());
+         AgvDb.Setup(x => x.Graphs.GetAgvGraphAsync(correlationId)).ReturnsAsync(agvGraph);
+         AgvDb.Setup(x => x.Graphs.GetNodeAsync(It.IsAny<string>()))
+             .ReturnsAsync(() =>  agvGraph.Nodes.First());
         return this;
     }
 
@@ -238,20 +228,16 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
     /// <returns></returns>
     public AgvControllerTestFixture<TRequest, TRequestHandler> UseDefaultServices()
     {
-        SetupAgvRepositoryWithDefaultData();
+        SetupAgvDbWithDefaultData();
         AddServices(sc =>
         {
-            sc.AddTransient(_ => AgvRepository.Object);
+            sc.AddTransient(_ => AgvDb.Object);
             sc.AddTransient(_ => ActionGroupRetrievalService.Object);
-            sc.AddTransient(_ => AgvDataRepository.Object);
             sc.AddTransient(_ => GetAgvPositionRepository().Object);
             sc.AddTransient(_ => GetMapper());
             sc.AddTransient(_ => new Mock<IBus>().Object);
             sc.AddTransient(_ => new Mock<IAgvPositionRepository>().Object);
             sc.AddTransient(_ => ActionGroupRepository.Object);
-            sc.AddTransient(_ => AgvGraphRepository.Object);
-            sc.AddTransient(_ => AgvErrorRepository.Object);
-            sc.AddTransient(_ => CargoRepository.Object);
             sc.AddTransient(_ => QueueActionGroupRequestClient.Object);
             sc.AddTransient<ISemaphoreProvider<IAgvsSemaphore>>(_ => _semaphoreProvider);
             sc.AddTransient(_ => _settingsProvider.Object);

@@ -11,16 +11,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
 /// <inheritdoc cref="IMaintenanceService"/>
 public class MaintenanceService : BaseNodePicker, IMaintenanceService
 {
-    /// <summary>
-    /// Ctor
-    /// </summary>
-    /// <param name="graphRepository">The graph repository.</param>
-    /// <param name="nodeStateRepository"></param>
-    /// <param name="routeService"></param>
-    /// <param name="logger"></param>
-    /// <param name="agvDataRepository"></param>
-    public MaintenanceService(IGraphRepository graphRepository, INodeStateRepository nodeStateRepository, IRouteService routeService, IAgvDataRepository agvDataRepository, ILogger<MaintenanceService> logger)
-        : base(graphRepository, nodeStateRepository, routeService, agvDataRepository, logger)
+    /// <inheritdoc cref="MaintenanceService"/>>
+    public MaintenanceService(IAgvDb agvDb, INodeStateRepository nodeStateRepository, IRouteService routeService, ILogger<MaintenanceService> logger)
+        : base(nodeStateRepository, routeService, agvDb, logger)
     {
     }
 
@@ -38,7 +31,7 @@ public class MaintenanceService : BaseNodePicker, IMaintenanceService
     /// <exception cref="NodeNotFoundException"></exception>
     public async Task<GraphNode> GetMaintenanceNode(Models.Agv.Agv agv)
     {
-        var agvData = await AgvDataRepository.GetAgvDataAsync(agv.CorrelationId);
+        var agvData = await  AgvDb.Data.GetAgvDataAsync(agv.CorrelationId);
         return await PickNode(agv, agvData);
     }
 
