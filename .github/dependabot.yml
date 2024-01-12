@@ -11,3 +11,10 @@ updates:
        - "42f4ca0f-010d-6b7d-9420-a358bd5d6ed2" # s.schrader@gebhardt-group.com
        - "8e430a1b-4444-6317-b287-fb35034e5b1b" # m.wenninger@gebhardt-group.com
        - "c01aac72-8af7-4b1d-8393-c787d77add86" # j.schmidt@ibs-dev.de
+    groups:
+      masstransit:
+          patterns:
+            - "Masstransit*" 
+      efcore:
+          patterns:
+            - "Microsoft.EntityFrameworkCore*"         
