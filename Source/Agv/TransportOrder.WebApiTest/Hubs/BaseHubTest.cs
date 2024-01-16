@@ -13,9 +13,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Hubs;
 [TestClass]
 public class BaseHubTest
 {
-    private interface IDummyHubClient
-    {
-    }
+    private interface IDummyHubClient;
 
     private class DummyLogger : ILogger<BaseHub<IDummyHubClient>>
     {
@@ -37,12 +35,7 @@ public class BaseHubTest
         }
     }
 
-    private class DummyHub : BaseHub<IDummyHubClient>
-    {
-        public DummyHub(ILogger<BaseHub<IDummyHubClient>> logger) : base(logger)
-        {
-        }
-    }
+    private class DummyHub(ILogger<BaseHub<IDummyHubClient>> logger) : BaseHub<IDummyHubClient>(logger);
 
     /// <summary>
     /// Test connect to client

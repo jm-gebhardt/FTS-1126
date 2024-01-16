@@ -15,7 +15,7 @@ public record MapAgv
     /// <summary>
     /// The Map
     /// </summary>
-    public Map? Map { get; set; }
+    public Map? Map { get; init; }
 
     /// <summary>
     /// The CorrelationId of the Agv
@@ -25,7 +25,7 @@ public record MapAgv
     /// <summary>
     /// The Agv
     /// </summary>
-    public Agv.Agv? Agv { get; set; }
+    public Agv.Agv? Agv { get; init; }
 
     /// <summary>
     /// EF

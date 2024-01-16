@@ -3,9 +3,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Configurations;
 /// <summary>
 /// A marker interface for the <see cref="ISettings{TSettings}"/>
 /// </summary>
-public interface ISettings
-{
-}
+public interface ISettings;
 
 /// <summary>
 /// An interface for implementing a settings class. Properties should be non nullable

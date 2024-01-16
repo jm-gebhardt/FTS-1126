@@ -3,10 +3,10 @@
 # Common Docker file for all AGV projects
 # Usage: docker build --build-arg PROJECT=<project> DOTNET_VERSION=<version> [OPTIONS] PATH
 #        PROJECT             Project name (e.g. DeviceCommunication)
-#        DOTNET_VERSION      .NET version (e.g. 6.0)
+#        DOTNET_VERSION      .NET version (e.g. 8.0)
 
 ARG PROJECT
-ARG DOTNET_VERSION=6.0
+ARG DOTNET_VERSION=8.0
 
 FROM mcr.microsoft.com/dotnet/sdk:${DOTNET_VERSION} AS build-env
 ARG PROJECT

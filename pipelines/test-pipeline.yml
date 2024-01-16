@@ -25,16 +25,18 @@ stages:
   ################################################  
   - job: CodeAnalysis
     pool:
-      vmImage: windows-latest 
+      vmImage: windows-latest
     steps:
+      - script: git config --system core.longpaths true
+      - checkout: self
       - task: NuGetToolInstaller@1
         inputs:
           versionSpec: $(NugetVersion)
       - task: UseDotNet@2
-        displayName: 'Install .NET 6 SDK'
+        displayName: 'Install .NET 8 SDK'
         inputs:
           packageType: 'sdk'
-          version: '6.0.x'
+          version: '8.0.x'
           performMultiLevelLookup: true
       - task: NuGetCommand@2
         displayName: 'Restoring based on NuGetBackupFeed.config'
@@ -60,16 +62,16 @@ stages:
   ################################################  
   - job: UnitTests
     pool:
-      vmImage: windows-latest
+      vmImage: ubuntu-latest
     steps:
       - task: NuGetToolInstaller@1
         inputs:
           versionSpec: $(NugetVersion)
       - task: UseDotNet@2
-        displayName: 'Install .NET 6 SDK'
+        displayName: 'Install .NET 8 SDK'
         inputs:
           packageType: 'sdk'
-          version: '6.0.x'
+          version: '8.0.x'
           performMultiLevelLookup: true
       - task: NuGetCommand@2
         displayName: 'Restoring based on NuGetBackupFeed.config'
@@ -101,7 +103,7 @@ stages:
     dependsOn:
     - UnitTests
     pool:
-      vmImage: windows-latest
+      vmImage: ubuntu-latest
     steps:
       - download: current
         artifact: coverageReports

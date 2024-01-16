@@ -8,11 +8,10 @@ namespace Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 /// <summary>
 /// This dummy implementation is necessary because mocked responses are not working for some reason
 /// </summary>
-public class DummyResponse<TRequest> : Response<TRequest>
+public class DummyResponse<TRequest>(TRequest message) : Response<TRequest>
     where TRequest : class
 {
-    private readonly TRequest _message;
-    private readonly Guid? _correlationId;
+    private readonly Guid? _correlationId = (message as CorrelatedBy<Guid>)?.CorrelationId;
 
     public Guid? MessageId => _correlationId;
 
@@ -40,15 +39,9 @@ public class DummyResponse<TRequest> : Response<TRequest>
 
     public HostInfo Host => new Mock<HostInfo>().Object;
 
-    object Response.Message => _message;
+    object Response.Message => message;
 
-    public TRequest Message => _message;
-
-    public DummyResponse(TRequest message)
-    {
-        _message = message;
-        _correlationId = (message as CorrelatedBy<Guid>)?.CorrelationId;
-    }
+    public TRequest Message => message;
 }
 #endregion
 

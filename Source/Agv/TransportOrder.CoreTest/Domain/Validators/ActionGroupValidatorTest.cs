@@ -224,7 +224,7 @@ public class ActionGroupValidatorTest
 
         var cancellationTokenSource = new CancellationTokenSource();
         // Immediately cancel the token
-        cancellationTokenSource.Cancel();
+        await cancellationTokenSource.CancelAsync();
 
         await Should.ThrowAsync<OperationCanceledException>(async () => await fixture.ActionGroupValidator.TestValidateAsync(actionGroup, cancellationToken: cancellationTokenSource.Token));
     }

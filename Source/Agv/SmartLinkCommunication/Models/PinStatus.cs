@@ -4,7 +4,8 @@ using JetBrains.Annotations;
 namespace Gebhardt.StoreWare.Agv.SmartLinkCommunication.Models;
 
 #pragma warning disable CS1591 // we do not have any documentation from FlexLog on the API
-public record PinStatus
+[method: UsedImplicitly]
+public record PinStatus(string Id, string Direction, string? Result = null, bool? State = null)
 {
     [JsonPropertyName("id")]
     public string Id
@@ -12,7 +13,7 @@ public record PinStatus
         get;
         [PublicAPI]
         init;
-    }
+    } = Id;
 
     [JsonPropertyName("direction")]
     public string Direction
@@ -20,7 +21,7 @@ public record PinStatus
         get;
         [PublicAPI]
         init;
-    }
+    } = Direction;
 
     [JsonPropertyName("result")]
     public string? Result
@@ -28,7 +29,7 @@ public record PinStatus
         get;
         [PublicAPI]
         init;
-    }
+    } = Result;
 
     [JsonPropertyName("state")]
     public bool? State
@@ -36,22 +37,11 @@ public record PinStatus
         get;
         [PublicAPI]
         init;
-    }
+    } = State;
 
     [UsedImplicitly]
-    public PinStatus()
+    public PinStatus() : this(null!, null!)
     {
-        Direction = null!;
-        Id = null!;
-    }
-
-    [UsedImplicitly]
-    public PinStatus(string id, string direction, string? result = null, bool? state = null)
-    {
-        Id = id;
-        Direction = direction;
-        Result = result;
-        State = state;
     }
 }
 #pragma warning restore CS1591

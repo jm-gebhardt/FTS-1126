@@ -6,9 +6,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Services;
 /// Provides an interface for semaphore services
 /// </summary>
 [UsedImplicitly]
-public interface ISemaphoreProvider<T> : ISemaphoreProvider where T : class
-{
-}
+public interface ISemaphoreProvider<T> : ISemaphoreProvider where T : class;
 
 /// <summary>
 /// Provides an interface for semaphore services

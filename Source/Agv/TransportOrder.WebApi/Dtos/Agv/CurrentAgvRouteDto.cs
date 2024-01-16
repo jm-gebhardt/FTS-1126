@@ -10,7 +10,7 @@ public record CurrentAgvRouteDto
     /// <summary>
     /// The CorrelationId of the Agv.
     /// </summary>
-    public Guid CorrelationId { get; set; }
+    public Guid CorrelationId { get; init; }
 
     /// <summary>
     /// The current route of an Agv.

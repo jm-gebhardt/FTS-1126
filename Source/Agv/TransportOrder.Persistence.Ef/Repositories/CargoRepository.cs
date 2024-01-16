@@ -8,19 +8,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
 /// <summary>
 /// Registry for Cargo
 /// </summary>
-public class CargoRepository : ICargoRepository
+public class CargoRepository(IDbContextFactory<TransportOrderDbContext> dbContextFactory)
+    : ICargoRepository
 {
-    private readonly IDbContextFactory<TransportOrderDbContext> _dbContextFactory;
-
-    public CargoRepository(IDbContextFactory<TransportOrderDbContext> dbContextFactory)
-    {
-        _dbContextFactory = dbContextFactory;
-    }
-
     /// <inheritdoc />
     public async Task<bool> IsAgvLoadedAsync(Guid correlationId)
     {
-        bool isLoaded = await (await _dbContextFactory.CreateDbContextAsync()).Set<Cargo>()
+        bool isLoaded = await (await dbContextFactory.CreateDbContextAsync()).Set<Cargo>()
             .AsNoTracking()
             .AnyAsync(q => q.AgvCorrelationId == correlationId);
 
@@ -30,7 +24,7 @@ public class CargoRepository : ICargoRepository
     /// <inheritdoc />
     public async Task<IReadOnlyCollection<Cargo>> GetCargosAsync(Guid correlationId)
     {
-        List<Cargo> cargos = await (await _dbContextFactory.CreateDbContextAsync()).Set<Cargo>()
+        List<Cargo> cargos = await (await dbContextFactory.CreateDbContextAsync()).Set<Cargo>()
             .AsNoTracking()
             .Where(q => q.AgvCorrelationId == correlationId)
             .ToListAsync();
@@ -41,7 +35,7 @@ public class CargoRepository : ICargoRepository
     /// <inheritdoc />
     public async Task<IReadOnlyDictionary<Guid, IReadOnlyCollection<Cargo>>> GetCargosAsync(IEnumerable<Guid> correlationIds)
     {
-        await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using var dbContext = await dbContextFactory.CreateDbContextAsync();
         DbSet<Cargo> dbSet = dbContext.Set<Cargo>();
 
         Dictionary<Guid, IReadOnlyCollection<Cargo>> cargosByAgvCorrelationId = await dbSet
@@ -62,7 +56,7 @@ public class CargoRepository : ICargoRepository
     /// <inheritdoc />
     public async Task<bool> SetCargoAsync(Guid agvCorrelationId, IReadOnlyCollection<Cargo> cargos)
     {
-        await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using var dbContext = await dbContextFactory.CreateDbContextAsync();
         DbSet<Cargo> dbSet = dbContext.Set<Cargo>();
 
         List<Cargo> previousCargos = await dbSet

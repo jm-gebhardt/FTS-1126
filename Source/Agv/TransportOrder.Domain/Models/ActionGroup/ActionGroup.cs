@@ -65,7 +65,7 @@ public class ActionGroup
     /// <summary>
     /// The creator of the <see cref="ActionGroup"/>.
     /// </summary>
-    public ActionGroupCreator Creator { get; set; }
+    public ActionGroupCreator Creator { get; init; }
 
     /// <summary>
     /// The estimated duration based on the estimated duration of the actions.

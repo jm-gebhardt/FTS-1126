@@ -41,7 +41,7 @@ public record AgvErrorDto
     /// <summary>
     /// Date or error resolved
     /// </summary>
-    public DateTime? ErrorResolved { get; set; }
+    public DateTime? ErrorResolved { get; init; }
 
     /// <inheritdoc cref="AgvErrorDto" />
     /// <param name="correlationId"></param>

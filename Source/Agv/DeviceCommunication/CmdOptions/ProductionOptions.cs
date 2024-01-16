@@ -8,6 +8,4 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
 /// </summary>
 [UsedImplicitly]
 [Verb("production", true)]
-public sealed class ProductionOptions
-{
-}
+public sealed class ProductionOptions;

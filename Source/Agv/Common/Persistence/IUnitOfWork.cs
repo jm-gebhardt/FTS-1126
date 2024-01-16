@@ -3,6 +3,4 @@
 /// <summary>
 /// Provides a unit-of-work to coordinate changes over multiple repositories.
 /// </summary>
-public interface IUnitOfWork
-{
-}
+public interface IUnitOfWork;

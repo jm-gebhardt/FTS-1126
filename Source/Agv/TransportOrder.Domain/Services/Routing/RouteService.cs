@@ -135,7 +135,7 @@ public class RouteService : IRouteService
             if (finishedTask.Result != null)
             {
                 _logger.LogDebug("A route calculation task completed successfully. Cancelling the remaining tasks.");
-                cts.Cancel();
+                await cts.CancelAsync();
                 return true;
             }
 

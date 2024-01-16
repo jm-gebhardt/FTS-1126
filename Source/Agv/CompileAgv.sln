@@ -26,17 +26,17 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TransportOrder", "Transport
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Common.Testing", "Common.Testing\Common.Testing.csproj", "{96E44325-22D1-4912-B1D3-D159DA1926A6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TransportOrder.Domain", "TransportOrder.Domain\TransportOrder.Domain.csproj", "{8C588F55-FE26-4B0E-AC7F-F58B8A58E6C7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TransportOrder.Domain", "TransportOrder.Domain\TransportOrder.Domain.csproj", "{8C588F55-FE26-4B0E-AC7F-F58B8A58E6C7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TransportOrder.Messages", "TransportOrder.Messages\TransportOrder.Messages.csproj", "{1D3A7E2E-5C66-4924-941E-7BBC679D8C73}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TransportOrder.Messages", "TransportOrder.Messages\TransportOrder.Messages.csproj", "{1D3A7E2E-5C66-4924-941E-7BBC679D8C73}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TransportOrder.Routing", "TransportOrder.Routing\TransportOrder.Routing.csproj", "{8CDB941C-D3DC-4188-BE2B-C71EE170F6A1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TransportOrder.Routing", "TransportOrder.Routing\TransportOrder.Routing.csproj", "{8CDB941C-D3DC-4188-BE2B-C71EE170F6A1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TransportOrder.Persistence.Ef", "TransportOrder.Persistence.Ef\TransportOrder.Persistence.Ef.csproj", "{8EB979C7-C7F7-48AB-8BD1-835DCD2D931B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TransportOrder.Persistence.Ef", "TransportOrder.Persistence.Ef\TransportOrder.Persistence.Ef.csproj", "{8EB979C7-C7F7-48AB-8BD1-835DCD2D931B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmartLinkCommunication", "SmartLinkCommunication\SmartLinkCommunication.csproj", "{C59BB5BA-F60A-4D4B-9590-81524B4CEEB5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SmartLinkCommunication", "SmartLinkCommunication\SmartLinkCommunication.csproj", "{C59BB5BA-F60A-4D4B-9590-81524B4CEEB5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmartLinkCommunicationTest", "SmartLinkCommunicationTest\SmartLinkCommunicationTest.csproj", "{B2635165-E892-4A30-8FC3-9221628AC303}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SmartLinkCommunicationTest", "SmartLinkCommunicationTest\SmartLinkCommunicationTest.csproj", "{B2635165-E892-4A30-8FC3-9221628AC303}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

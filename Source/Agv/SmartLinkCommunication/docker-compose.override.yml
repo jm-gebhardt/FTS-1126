@@ -7,4 +7,4 @@ services:
       context: ../
       args:
         - PROJECT=SmartLinkCommunication
-        - DOTNET_VERSION=6.0
+        - DOTNET_VERSION=8.0

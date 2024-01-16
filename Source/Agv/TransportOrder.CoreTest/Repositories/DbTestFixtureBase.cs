@@ -30,7 +30,7 @@ public class DbTestFixtureBase<TContext> : IAsyncDisposable where TContext : DbC
     public async Task AddRangeAsync(params object[] entities)
     {
         await using var context = await ContextFactory.CreateDbContextAsync();
-        if (entities.Length == 1 && entities[0] is IEnumerable enumerable)
+        if (entities is [IEnumerable enumerable])
         {
             entities = enumerable.Cast<object>().ToArray();
         }

@@ -20,7 +20,7 @@ public class Agv : IAgvId
     public Guid CorrelationId { get; init; }
 
     /// <inheritdoc />
-    public string AgvId { get; set; }
+    public string AgvId { get; init; }
 
     /// <summary>
     /// Last received agv status.

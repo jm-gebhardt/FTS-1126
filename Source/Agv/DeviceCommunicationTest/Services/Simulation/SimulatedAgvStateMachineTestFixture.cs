@@ -9,19 +9,14 @@ using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation;
 
-public class SimulatedAgvStateMachineTestFixture : StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>
+public class SimulatedAgvStateMachineTestFixture(TimeSpan? inactivityTimeout = null) : StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(_ => { },
+    x => x.AddDelayedMessageScheduler(),
+    (_, cfg) => cfg.UseDelayedMessageScheduler(),
+    inactivityTimeout: inactivityTimeout)
 {
     private SimulateOptions? _simulateOptions;
     private readonly List<SimulatedAgvSaga> _agvSagas = new();
     private int _signalPositionIntervalMs;
-
-    public SimulatedAgvStateMachineTestFixture(TimeSpan? inactivityTimeout = null) : base(
-        _ => { },
-        x => x.AddDelayedMessageScheduler(),
-        (_, cfg) => cfg.UseDelayedMessageScheduler(),
-        inactivityTimeout: inactivityTimeout)
-    {
-    }
 
     public SimulatedAgvStateMachineTestFixture WithSignalPositionIntervalMs(int signalPositionIntervalMs)
     {

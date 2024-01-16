@@ -8,7 +8,7 @@ public class ConfigurationSetting
     /// <summary>
     /// The unique key of the configuration setting
     /// </summary>
-    public string Key { get; set; } = null!;
+    public string Key { get; init; } = null!;
 
     /// <summary>
     /// The value of the configuration setting
@@ -18,5 +18,5 @@ public class ConfigurationSetting
     /// <summary>
     /// The type name of the setting used for the configuration
     /// </summary>
-    public string ConfigurationType { get; set; } = null!;
+    public string ConfigurationType { get; init; } = null!;
 }

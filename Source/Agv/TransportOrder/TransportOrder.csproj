@@ -1,29 +1,22 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AssemblyName>Gebhardt.StoreWare.Agv.TransportOrder</AssemblyName>
     <RootNamespace>Gebhardt.StoreWare.Agv.TransportOrder</RootNamespace>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="MassTransit.Prometheus" Version="8.1.3" />
     <PackageReference Include="MassTransit.EntityFrameworkCore" Version="8.1.3" />
     <PackageReference Include="MassTransit" Version="8.1.3" />
     <PackageReference Include="MassTransit.RabbitMQ" Version="8.1.3" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.2">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.1" />
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\TransportOrder.Core\TransportOrder.Core.csproj" />
     <ProjectReference Include="..\TransportOrder.Persistence.Ef\TransportOrder.Persistence.Ef.csproj" />
     <ProjectReference Include="..\TransportOrder.WebApi\TransportOrder.WebApi.csproj" />
   </ItemGroup>
-
 </Project>

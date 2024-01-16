@@ -12,7 +12,7 @@ using AgvPositionProfile = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Profiles
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Consumer;
 
-public class ConsumerHubTestFixture<TConsumer, THubContext> : MassTransitConsumerTestFixture<TConsumer>
+public class ConsumerHubTestFixture<TConsumer, THubContext>(params Action<IServiceCollection>[] services) : MassTransitConsumerTestFixture<TConsumer>(services: services)
     where TConsumer : class, IConsumer
     where THubContext : class
 {
@@ -22,11 +22,6 @@ public class ConsumerHubTestFixture<TConsumer, THubContext> : MassTransitConsume
     public readonly Mock<INodeStateRepository> NodeStateRepositoryMock = new();
 
     public Mock<IAgvRouteRetrievalService> AgvRouteServiceMock { get; } = new();
-
-    public ConsumerHubTestFixture(params Action<IServiceCollection>[] services)
-        : base(services: services)
-    {
-    }
 
     private IMapper GetMapper()
     {

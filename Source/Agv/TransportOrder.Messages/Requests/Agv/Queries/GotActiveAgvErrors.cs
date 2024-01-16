@@ -52,7 +52,7 @@ public record AgvError
     /// <summary>
     /// Date or error resolved
     /// </summary>
-    public DateTime? ErrorResolved { get; set; }
+    public DateTime? ErrorResolved { get; init; }
 
     /// <param name="correlationId"></param>
     /// <param name="agvCorrelationId"></param>

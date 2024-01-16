@@ -3,41 +3,29 @@
 /// <summary>
 /// Provides an interface for an action semaphore provider.
 /// </summary>
-public interface IAgvsSemaphore
-{
-}
+public interface IAgvsSemaphore;
 
 /// <summary>
 /// Provides an interface for the charging semaphore service.
 /// </summary>
-public interface IChargingSemaphore
-{
-}
+public interface IChargingSemaphore;
 
 /// <summary>
 /// Provides an interface for the graph repository semaphore service.
 /// </summary>
-public interface IGraphRepositorySemaphore
-{
-}
+public interface IGraphRepositorySemaphore;
 
 /// <summary>
 /// Provides an interface for a map repository semaphore provider.
 /// </summary>
-public interface IMapRepositorySemaphore
-{
-}
+public interface IMapRepositorySemaphore;
 
 /// <summary>
 /// Provides an interface for a db lock provider on the node state.
 /// </summary>
-public interface INodeStateDbSemaphore
-{
-}
+public interface INodeStateDbSemaphore;
 
 /// <summary>
 /// Provides an interface for the parking semaphore service.
 /// </summary>
-public interface IParkingSemaphore
-{
-}
+public interface IParkingSemaphore;
