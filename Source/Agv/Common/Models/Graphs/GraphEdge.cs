@@ -86,7 +86,7 @@ public class GraphEdge : IEquatable<GraphEdge>
     /// <param name="id">The id of the edge.</param>
     /// <param name="variant">The <see cref="EdgeType"/> of the edge.</param>
     /// <param name="variantParameters">The parameters belonging to the <see cref="EdgeType"/></param>
-    private GraphEdge(string fromNodeId, string toNodeId, float length, Guid id, EdgeType variant = EdgeType.Direct, ICollection<EdgeCoefficient>? variantParameters = null)
+    public GraphEdge(string fromNodeId, string toNodeId, float length, Guid id, EdgeType variant = EdgeType.Direct, ICollection<EdgeCoefficient>? variantParameters = null)
     {
         FromNodeId = fromNodeId;
         ToNodeId = toNodeId;

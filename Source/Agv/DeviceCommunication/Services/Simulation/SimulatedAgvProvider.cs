@@ -67,7 +67,7 @@ public class SimulatedAgvProvider : BackgroundService, IConsumer<GraphMissing>
             Response<SimulatedAgvStateMachine.CreateAgvResponse> response = await client.GetResponse<SimulatedAgvStateMachine.CreateAgvResponse>(new SimulatedAgvStateMachine.CreateAgv(
                 agv.CorrelationId,
                 agv,
-                _simulateOptions.NodeTravelTime
+                _simulateOptions.SimulationSpeed
             ), timeout: _requestTimeOut);
 
             if (response.Message.CorrelationId == agv.CorrelationId)

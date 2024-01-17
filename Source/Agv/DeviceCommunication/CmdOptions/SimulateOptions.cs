@@ -23,12 +23,12 @@ public sealed class SimulateOptions
     public int Agvs { get; init; }
 
     /// <summary>
-    /// Node travel time of the agv in [ms]
+    /// The factor applied to agv velocities and acceleration to speed up the simulation.
     /// </summary>
     [UsedImplicitly]
     // ReSharper disable once StringLiteralTypo
-    [Option('n', "nodetraveltime", HelpText = "The travel time for the simulated AGV from one node to another in [ms]", Default = 5000)]
-    public int NodeTravelTime { get; init; }
+    [Option('n', "simulationspeed", HelpText = "The factor applied to agv velocities and acceleration to control the speed of the simulation", Default = 1)]
+    public int SimulationSpeed { get; init; }
 
     /// <summary>
     /// Battery discharge rate [%/s]

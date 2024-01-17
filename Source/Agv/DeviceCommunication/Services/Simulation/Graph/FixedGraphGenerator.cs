@@ -43,6 +43,7 @@ public class FixedGraphGenerator : GraphGeneratorBase
     private const string Way0030 = "WP-0030";
     private const string Way0032 = "WP-0032";
     private const string Way0123 = "WP-0123";
+
     private const string DPaint = "D-Paint";
     private const string DPress = "D-Press";
     private const string DSaw = "D-Saw";
@@ -131,79 +132,85 @@ public class FixedGraphGenerator : GraphGeneratorBase
         // control points and edge coefficients are absolute values
         GraphEdge[] edges =
         {
-            CreateDirect(Way0029, Park1, 58.215f),
-            CreateDirect(Park1, Way0029, 58.215f),
-            CreateDirect(Way0028, Park3, 63.06f),
-            CreateDirect(Park3, Way0028, 63.06f),
-            CreateDirect(Way0029, Park2, 58.215f),
-            CreateDirect(Park2, Way0029, 58.215f),
-            CreateDirect(Way0028, Park4, 63.06f),
-            CreateDirect(Park4, Way0028, 63.06f),
-            CreateDirect(Way0030, Park5, 68.886f),
-            CreateDirect(Park5, Way0030, 68.886f),
-            CreateDirect(Way0030, Park6, 68.885f),
-            CreateDirect(Park6, Way0030, 68.885f),
-            CreateDirect(Way0009, Way0010, 13.75f),
-            CreateDirect(Way0010, Way0011, 11.25f),
-            CreateDirect(Way0010, Way0015, 10f),
-            CreateDirect(Way0011, Way0016, 10f),
-            CreateDirect(Way0012, Way0009, 16.25f),
+            CreateDirect(Way0029, Park1, nodes),
+            CreateDirect(Park1, Way0029,  nodes),
+            CreateDirect(Way0028, Park3, nodes),
+            CreateDirect(Park3, Way0028,  nodes),
+            CreateDirect(Way0029, Park2, nodes),
+            CreateDirect(Park2, Way0029, nodes),
+            CreateDirect(Way0028, Park4, nodes),
+            CreateDirect(Park4, Way0028, nodes),
+            CreateDirect(Way0030, Park5, nodes),
+            CreateDirect(Park5, Way0030, nodes),
+            CreateDirect(Way0030, Park6, nodes),
+            CreateDirect(Park6, Way0030, nodes),
+            CreateDirect(Way0009, Way0010, nodes),
+            CreateDirect(Way0010, Way0011, nodes),
+            CreateDirect(Way0010, Way0015, nodes),
+            CreateDirect(Way0011, Way0016, nodes),
+            CreateDirect(Way0012, Way0009, nodes),
             CreateBezier1(Way0013, Way0009, 22.75d, 67.25d, nodes),
-            CreateDirect(Way0013, Way0012, 10f),
-            CreateDirect(Way0014, Way0013, 16.25f),
+            CreateDirect(Way0013, Way0012, nodes),
+            CreateDirect(Way0014, Way0013, nodes),
             CreatePolypath(Way0014, Way0029, 40.875f, new List<EdgeCoefficient> {new(32.25d, 50d)}),
             CreateBezier1(Way0014, Way0032, 31.375d, 51.125d, nodes),
-            CreateDirect(Way0015, Way0014, 13.75f),
+            CreateDirect(Way0015, Way0014, nodes),
 
             CreatePolypath(Way0015, Way0017, 15.91f, new List<EdgeCoefficient>
             {
                 new(76.875d, 51.875d), new(88.2d, 51.875d)
             }),
             CreateBezier1(Way0015, Way0018, 47.625d, 58.625d, nodes),
-            CreateDirect(Way0016, Way0015, 11.25f),
+            CreateDirect(Way0016, Way0015, nodes),
             CreateBezier2(Way0017, Way0018, 72.375d, 40d, 61.375d, 52.625d, nodes),
-            CreateDirect(Way0123, Way0017, 41.27f),
-            CreateDirect(Way0017, Way0123, 41.27f),
+            CreateDirect(Way0123, Way0017, nodes),
+            CreateDirect(Way0017, Way0123, nodes),
             CreateSlanted(Way0018, Way0014, 17f, East, 3.375),
             CreateBezier1(Way0018, Way0022, 40.625d, 48.4d, nodes),
-            CreateDirect(Way0022, Way0023, 7.6f),
-            CreateDirect(Way0023, Way0024, 5f),
+            CreateDirect(Way0022, Way0023, nodes),
+            CreateDirect(Way0023, Way0024, nodes),
             CreatePolypath(Way0024, Way0030, 25.77f, new List<EdgeCoefficient> {new(31.25d, 25.125d)}),
-            CreateDirect(Way0028, Way0029, 5f),
-            CreateDirect(Way0029, Way0032, 3.95f),
-            CreateDirect(Way0030, Way0028, 6.375f),
-            CreateDirect(Way0032, Way0013, 28.86f),
+            CreateDirect(Way0028, Way0029, nodes),
+            CreateDirect(Way0029, Way0032, nodes),
+            CreateDirect(Way0030, Way0028, nodes),
+            CreateDirect(Way0032, Way0013, nodes),
 
-            CreateDirect(Way0018, Charge0, 30f),
-            CreateDirect(Charge0, Way0018, 30f),
-            CreateDirect(Way0022, Charge1, 30f),
-            CreateDirect(Charge1, Way0022, 30f),
-            CreateDirect(Way0023, Charge2, 30f),
-            CreateDirect(Charge2, Way0023, 30f),
-            CreateDirect(Way0024, Charge3, 30f),
-            CreateDirect(Charge3, Way0024, 30f),
+            CreateDirect(Way0018, Charge0, nodes),
+            CreateDirect(Charge0, Way0018, nodes),
+            CreateDirect(Way0022, Charge1, nodes),
+            CreateDirect(Charge1, Way0022, nodes),
+            CreateDirect(Way0023, Charge2, nodes),
+            CreateDirect(Charge2, Way0023, nodes),
+            CreateDirect(Way0024, Charge3, nodes),
+            CreateDirect(Charge3, Way0024, nodes),
 
-            CreateDirect(Way0012, PDrill, 30f),
-            CreateDirect(PDrill, Way0012, 30f),
-            CreateDirect(Way0013, PMilling, 30f),
-            CreateDirect(PMilling, Way0013, 30f),
-            CreateDirect(Way0032, PGrinder, 30f),
-            CreateDirect(PGrinder, Way0032, 30f),
+            CreateDirect(Way0012, PDrill, nodes),
+            CreateDirect(PDrill, Way0012, nodes),
+            CreateDirect(Way0013, PMilling, nodes),
+            CreateDirect(PMilling, Way0013, nodes),
+            CreateDirect(Way0032, PGrinder, nodes),
+            CreateDirect(PGrinder, Way0032, nodes),
 
-            CreateDirect(Way0011, DPress, 30f),
-            CreateDirect(DPress, Way0011, 30f),
-            CreateDirect(Way0017, DSaw, 30f),
-            CreateDirect(DSaw, Way0017, 30f),
-            CreateDirect(Way0016, DPaint, 30f),
-            CreateDirect(DPaint, Way0016, 30f),
-            CreateDirect(Way0123, Pdqa, 30f),
-            GraphEdge.CreateDirect(Pdqa, Way0123, 30f, GraphHelper.ToGuid(Pdqa, 30f, Way0123))
+            CreateDirect(Way0011, DPress, nodes),
+            CreateDirect(DPress, Way0011, nodes),
+            CreateDirect(Way0017, DSaw, nodes),
+            CreateDirect(DSaw, Way0017, nodes),
+            CreateDirect(Way0016, DPaint, nodes),
+            CreateDirect(DPaint, Way0016, nodes),
+            CreateDirect(Way0123, Pdqa, nodes),
+            GraphEdge.CreateDirect(Pdqa, Way0123, 4.841580390930176f, GraphHelper.ToGuid(Pdqa, 30f, Way0123))
         };
         return new AgvGraph(correlationId, nodes, edges);
     }
 
     /// <inheritdoc cref="GraphEdge.CreateDirect"/>
-    private static GraphEdge CreateDirect(string fromNodeId, string toNodeId, float metric) => GraphEdge.CreateDirect(fromNodeId, toNodeId, metric, GraphHelper.ToGuid(fromNodeId, metric, toNodeId));
+    private static GraphEdge CreateDirect(string fromNodeId, string toNodeId, GraphNode[] nodes)
+    {
+        var sourceNode = nodes.Single(n => n.Id == fromNodeId);
+        var targetNode = nodes.Single(n => n.Id == toNodeId);
+        float length = (float)Mathematics.EuclideanDistance(sourceNode, targetNode);
+        return GraphEdge.CreateDirect(fromNodeId, toNodeId, length, GraphHelper.ToGuid(fromNodeId, length, toNodeId));
+    }
 
     /// <inheritdoc cref="GraphEdge.CreateBezier1"/>
     private static GraphEdge CreateBezier1(string fromNodeId, string toNodeId, double x, double y, GraphNode[] nodes)

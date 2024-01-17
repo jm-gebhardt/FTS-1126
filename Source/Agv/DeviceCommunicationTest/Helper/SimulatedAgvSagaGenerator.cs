@@ -21,7 +21,7 @@ public static class SimulatedAgvSagaGenerator
         bool graphExists = true,
         bool dataExists = true,
         string currentState = nameof(SimulatedAgvStateMachine.Idle),
-        int nodeTravelTime = 10,
+        int simulationSpeed = 1,
         int initialSoc = 75,
         double batteryChargeRate = 1.0)
     {
@@ -51,7 +51,7 @@ public static class SimulatedAgvSagaGenerator
             DateTime.MinValue,
             DateTime.MinValue,
             AgvGraph: agvGraph, AgvData: agvData);
-        var simulatedAgvSaga = new SimulatedAgvSaga(agv, nodeTravelTime, initialSoc, batteryChargeRate, timeProvider ?? new DateTimeNowUtcProvider(), currentNode)
+        var simulatedAgvSaga = new SimulatedAgvSaga(agv, simulationSpeed, initialSoc, batteryChargeRate, timeProvider ?? new DateTimeNowUtcProvider(), currentNode)
         {
             Action = currentAction,
             CurrentState = currentState

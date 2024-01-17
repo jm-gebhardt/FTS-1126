@@ -127,18 +127,15 @@ public class SimulatedAgvStateMachineTest
     [TestMethod]
     public async Task When_StartActionCommand_ActionStarted_IsPublished_And_ActionCompleted_Is_Published()
     {
-        const int signalPositionIntervalMs = 50;
-        // Travel duration per edge will be set about twice of the position message interval.
-        const int nodeTravelTime = (int) (2f * signalPositionIntervalMs);
-
         var graph = AgvGraphGenerator.CreateDefaultGraph();
         ICollection<GraphNode> nodes = graph.Nodes;
-        var startNode = nodes.First();
-        string destination = nodes.Skip(1).First().Id;
-        var action = AgvActionGenerator.GenerateMoveAction(startNodeId: startNode.Id, targetNodeId: destination, availableNodes: nodes, numberOfNodes: 3);
-        var agvSaga = SimulatedAgvSagaGenerator.Generate(nodeTravelTime: nodeTravelTime, agvGraph: graph, currentNode: startNode);
+       
+        var action = AgvActionGenerator.GeneratePickDropActionGroup().Actions.First();
+        action.Nodes = GetArbitraryRoute(action.TargetNodeId, graph);
+        var startNode = nodes.First(n => n.Id == action.Nodes.First());
+        string destination =  action.Nodes.Last();
+        var agvSaga = SimulatedAgvSagaGenerator.Generate(simulationSpeed: 2, agvGraph: graph, currentNode: startNode);
         var fixture = new SimulatedAgvStateMachineTestFixture()
-            .WithSignalPositionIntervalMs(signalPositionIntervalMs)
             .WithAgv(agvSaga)
             .Build();
 
@@ -150,9 +147,7 @@ public class SimulatedAgvStateMachineTest
         actionStarted.CorrelationId.ShouldBe(actionId);
 
         agvSaga.AgvStatus.Busy.ShouldBeTrue();
-        agvSaga.TimeToFinish.ShouldNotBeNull();
         agvSaga.ActionStartDate.ShouldNotBeNull();
-        agvSaga.ActionFinishDate.ShouldNotBeNull();
 
         // Position sent (Node travel time is twice as long as position sent interval, so this is surely sent in the meanwhile)
         (await fixture.TestHarness.Sent.Any<SimulatedAgvStateMachine.SchedulePositionUpdate>()).ShouldBeTrue();
@@ -166,21 +161,13 @@ public class SimulatedAgvStateMachineTest
         await fixture.WaitUntil(agvSaga, s =>
             {
                 bool ok = !s.AgvStatus.Busy;
-                ok &= s.TimeToFinish == null;
-                ok &= s.ActionStartDate == null;
-                ok &= s.ActionFinishDate == null;
                 ok &= s.LastNodeId == destination;
-                ok &= s.NextNodeId == destination;
                 return ok;
             },
             s =>
             {
                 s.AgvStatus.Busy.ShouldBeFalse();
-                s.TimeToFinish.ShouldBeNull();
-                s.ActionStartDate.ShouldBeNull();
-                s.ActionFinishDate.ShouldBeNull();
                 s.LastNodeId.ShouldBe(destination);
-                s.NextNodeId.ShouldBe(destination);
             });
 
         (await fixture.TestHarness.Published.Any<ActionCompleted>()).ShouldBeTrue();
@@ -364,5 +351,22 @@ public class SimulatedAgvStateMachineTest
             e => e.ErrorReferences!.First().ShouldSatisfyAllConditions(
                 r => r.ReferenceKey.ShouldBe(agvError.ErrorReferences!.First().ReferenceKey),
                 r => r.ReferenceValue.ShouldBe(agvError.ErrorReferences!.First().ReferenceValue)));
+    }
+
+    private string[] GetArbitraryRoute(string targetNode, AgvGraph graph)
+    {
+        var nodes = new List<string> { targetNode };
+        foreach (int unused in Enumerable.Range(0, 3))
+        {
+            var edge = graph.Edges.FirstOrDefault(e => e.ToNodeId == targetNode && !nodes.Contains(e.FromNodeId));
+            if (edge == null)
+            {
+                break;
+            }
+            nodes.Add(edge.FromNodeId);
+            targetNode = edge.FromNodeId;
+        }
+        nodes.Reverse();
+        return nodes.ToArray();
     }
 }

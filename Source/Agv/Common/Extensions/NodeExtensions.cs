@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
+using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.Common.Extensions;
 
@@ -13,6 +14,7 @@ public static class NodeExtensions
     /// </summary>
     /// <param name="node"></param>
     /// <returns></returns>
+    [PublicAPI]
     public static Vector3 AsVector3(this GraphNode node) => new(node.X, node.Y, node.Z);
     
     /// <summary>
@@ -21,4 +23,12 @@ public static class NodeExtensions
     /// <param name="node"></param>
     /// <returns></returns>
     public static Vector2 AsVector2(this GraphNode node) => new(node.X, node.Y);
+
+    /// <summary>
+    /// True if the given node is a station.
+    /// </summary>
+    public static bool IsStation(this GraphNode node) => new[]
+    {
+        AgvGraph.NodeType.Charge, AgvGraph.NodeType.Drop, AgvGraph.NodeType.Pick, AgvGraph.NodeType.PickDrop, AgvGraph.NodeType.Park
+    }.Contains(node.Type);
 }

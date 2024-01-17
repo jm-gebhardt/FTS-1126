@@ -39,6 +39,30 @@ public static class PhysicsHelper
     }
 
     /// <summary>
+    /// Get the maximum velocity [m/s] assuming the full length is used to accelerate from an
+    /// initial velocity to it and than decelerate to the final velocity:
+    /// From (v2-v1)/(t2-t1) = a and acceleration = -deceleration
+    /// Time needed to accelerate from the initial to the maximum velocity: timeMax = (maxVelocity - initialVelocity)/ acceleration
+    /// Time needed to decelerate from max velocity to final velocity: timeFinal = (maxVelocity - finalVelocity)/ acceleration + timeMax
+    /// With distance = distanceAcceleration + distanceDeceleration
+    /// Distance acceleration = initialVelocity * timeMax + 0.5 * acceleration * timeMax^2 + initialDistance
+    /// Distance acceleration = maxVelocity * timeFinal - 0.5 * acceleration * timeFinal^2 + distanceAcceleration
+    /// </summary>
+    /// <param name="finalVelocity">The final velocity [m/s].</param>
+    /// <param name="initialVelocity">The initial velocity [m/s].</param>
+    /// <param name="distance">The distance available [m].</param>
+    /// <param name="acceleration">The acceleration of the agv [m/s^2].</param>
+    /// <param name="initialDistance">The distance needed to reach the initial velocity [m].</param>
+    /// <returns>Maximum velocity [m/s].</returns>
+    [PublicAPI]
+    public static double MaxVelocityFromAccelerationBreakingWhenLengthIsReached(double finalVelocity, double initialVelocity, double distance, double acceleration, double initialDistance)
+    {
+        double p = -3d*(finalVelocity+initialVelocity)/5d;
+        double q = 2d * initialDistance * acceleration - distance * acceleration + Math.Pow(finalVelocity, 2d) + 2 * finalVelocity * initialVelocity;
+        return Mathematics.PqFormula(p, q);
+    }
+
+    /// <summary>
     /// Calculates the time [s] to accelerate from a standing start over a specific distance.
     /// </summary>
     /// <param name="acceleration">The acceleration [m/s].</param>

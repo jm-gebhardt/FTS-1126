@@ -16,13 +16,6 @@ public class SimulatedAgvStateMachineTestFixture(TimeSpan? inactivityTimeout = n
 {
     private SimulateOptions? _simulateOptions;
     private readonly List<SimulatedAgvSaga> _agvSagas = new();
-    private int _signalPositionIntervalMs;
-
-    public SimulatedAgvStateMachineTestFixture WithSignalPositionIntervalMs(int signalPositionIntervalMs)
-    {
-        _signalPositionIntervalMs = signalPositionIntervalMs;
-        return this;
-    }
 
     public new SimulatedAgvStateMachineTestFixture Build()
     {
@@ -34,7 +27,7 @@ public class SimulatedAgvStateMachineTestFixture(TimeSpan? inactivityTimeout = n
         {
             Add(agvSaga);
         }
-        Machine.SignalPositionIntervalMs = _signalPositionIntervalMs;
+        Machine.SignalPositionIntervalMs = 500;
         Machine.StatusUpdateIntervalMs = 50;
 
         return this;

@@ -16,7 +16,7 @@ public static class SimulateOptionsGenerator
             Agvs = numberOfSimulatedAgvs,
             Sources = sources,
             Destinations = destinations,
-            NodeTravelTime = nodeTravelTime
+            SimulationSpeed = nodeTravelTime
         };
     }
 }
