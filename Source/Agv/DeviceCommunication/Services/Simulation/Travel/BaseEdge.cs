@@ -159,16 +159,36 @@ public abstract class BaseEdge : GraphEdge
     /// </summary>
     public static float GetAgvOrientation(GraphNode source, GraphNode target)
     {
-        var toVector = target.AsVector2();
         var fromVector = source.AsVector2();
+        var toVector = target.AsVector2();
+        if (toVector == Vector2.Zero && fromVector != Vector2.Zero)
+        {
+            // use tangent
+            toVector -= fromVector;
+        }
+        if (fromVector == Vector2.Zero && toVector != Vector2.Zero)
+        {
+            // use tangent
+            fromVector -= toVector;
+        }
         return (float)(Math.Atan2(toVector.Y - fromVector.Y, toVector.X - fromVector.X) + Math.PI / 2);
     }
 
     /// <summary>
     /// Gets the agv orientation [rad].
     /// </summary>
-    protected static float GetAgvOrientation(Vector2 fromVector, Vector2 toVector)
+    public static float GetAgvOrientation(Vector2 fromVector, Vector2 toVector)
     {
+        if (toVector == Vector2.Zero && fromVector != Vector2.Zero)
+        {
+            // use tangent
+            toVector -= fromVector;
+        }
+        if (fromVector == Vector2.Zero && toVector != Vector2.Zero)
+        {
+            // use tangent
+            fromVector -= toVector;
+        }
         return (float)(Math.Atan2(toVector.Y - fromVector.Y, toVector.X - fromVector.X) + Math.PI / 2);
     }
 }

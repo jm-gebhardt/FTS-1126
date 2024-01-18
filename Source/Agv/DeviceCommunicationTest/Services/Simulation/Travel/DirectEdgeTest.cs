@@ -1,4 +1,5 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+﻿using Gebhardt.StoreWare.Agv.Common.Extensions;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
@@ -65,6 +66,32 @@ public class DirectEdgeTest
         directEdge.SourceNode.ShouldBe(Way2);
         directEdge.TargetNode.ShouldBe(Target);
         directEdge.ReferenceTarget.ShouldBe(Target);
+    }
+
+    [TestMethod]
+    public void GetAgvOrientation_SourceNodeAtZero_OrientationSet()
+    {
+        GraphNode sourceNode = new("Source") { X = 0, Y = 0 };
+        GraphNode targetNode = new("Target") { X = 1, Y = 0 };
+        var edge = GraphEdge.CreateDirect("Source", "Target");
+        var directEdge = new DirectEdge(edge, sourceNode, targetNode);
+        directEdge.AgvOrientation.ShouldBe((float)Mathematics.ConvertToRadians(90));
+
+        float orientation = BaseEdge.GetAgvOrientation(sourceNode.AsVector2(), targetNode.AsVector2());
+        orientation.ShouldBe(directEdge.AgvOrientation);
+    }
+
+    [TestMethod]
+    public void GetAgvOrientation_TargetNodeAtZero_OrientationSet()
+    {
+        GraphNode targetNode = new("Target") { X = 0, Y = 0 };
+        GraphNode sourceNode = new("Source") { X = 1, Y = 0 };
+        var edge = GraphEdge.CreateDirect("Source", "Target");
+        var directEdge = new DirectEdge(edge, sourceNode, targetNode);
+        directEdge.AgvOrientation.ShouldBe((float)Mathematics.ConvertToRadians(270));
+
+        float orientation = BaseEdge.GetAgvOrientation(sourceNode.AsVector2(), targetNode.AsVector2());
+        orientation.ShouldBe(directEdge.AgvOrientation);
     }
 
     [TestMethod]
@@ -291,7 +318,7 @@ public class DirectEdgeTest
         orientation = BaseEdge.GetPartialOrientation(now, initialTurnTime, entryTime, edge.AgvOrientation, previousEdge.AgvOrientation);
         orientation.ShouldBe(previousEdge.AgvOrientation);
 
-        // at half time of turn - agv is oriented by half to the edge (315 degrees)
+        // at halftime of turn - agv is oriented by half to the edge (315 degrees)
         now = entryTime.AddSeconds((initialTurnTime-entryTime).TotalSeconds/2d);
         orientation = BaseEdge.GetPartialOrientation(now, initialTurnTime, entryTime, edge.AgvOrientation, previousEdge.AgvOrientation);
         orientation.ShouldBe((float)Mathematics.ConvertToRadians(315), tolerance:0.001);
@@ -322,7 +349,7 @@ public class DirectEdgeTest
         orientation = BaseEdge.GetPartialOrientation(now, initialTurnTime, entryTime, edge.AgvOrientation, previousEdge.AgvOrientation);
         orientation.ShouldBe(previousEdge.AgvOrientation);
 
-        // at half time of turn - agv is oriented by half to the edge (315 degrees)
+        // at halftime of turn - agv is oriented by half to the edge (315 degrees)
         now = entryTime.AddSeconds((initialTurnTime-entryTime).TotalSeconds/2d);
         orientation = BaseEdge.GetPartialOrientation(now, initialTurnTime, entryTime, edge.AgvOrientation, previousEdge.AgvOrientation);
         orientation.ShouldBe((float)Mathematics.ConvertToRadians(315), tolerance: 0.001);
@@ -353,7 +380,7 @@ public class DirectEdgeTest
         orientation = BaseEdge.GetPartialOrientation(now, initialTurnTime, entryTime, edge.AgvOrientation, previousEdge.AgvOrientation);
         orientation.ShouldBe(previousEdge.AgvOrientation);
 
-        // at half time of turn - agv is oriented by half to the edge (225 degrees)
+        // at halftime of turn - agv is oriented by half to the edge (225 degrees)
         now = entryTime.AddSeconds((initialTurnTime-entryTime).TotalSeconds/2d);
         orientation = BaseEdge.GetPartialOrientation(now, initialTurnTime, entryTime, edge.AgvOrientation, previousEdge.AgvOrientation);
         orientation.ShouldBe((float)Mathematics.ConvertToRadians(225), tolerance: 0.001);
@@ -384,7 +411,7 @@ public class DirectEdgeTest
         orientation = BaseEdge.GetPartialOrientation(now, initialTurnTime, entryTime, edge.AgvOrientation, previousEdge.AgvOrientation);
         orientation.ShouldBe(previousEdge.AgvOrientation);
 
-        // at half time of turn - agv is oriented by half to the edge (135 degrees)
+        // at halftime of turn - agv is oriented by half to the edge (135 degrees)
         now = entryTime.AddSeconds((initialTurnTime-entryTime).TotalSeconds/2d);
         orientation = BaseEdge.GetPartialOrientation(now, initialTurnTime, entryTime, edge.AgvOrientation, previousEdge.AgvOrientation);
         orientation.ShouldBe((float)Mathematics.ConvertToRadians(135), tolerance: 0.001);
