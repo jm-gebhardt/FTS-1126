@@ -68,8 +68,6 @@ public class DirectEdge : BaseEdge
         finalVelocityMax = stopForTurnOutOfEdge || TargetNode.IsStation() ? 0 : finalVelocityMax;
         ExitVelocity = finalVelocityMax;
 
-        // Distance needed to accelerate to initial velocity (on different edge)
-        double initialDistance = PhysicsHelper.DistanceToVelocity(agvData.Acceleration, InitialVelocity);
         // Distance needed to decelerate from the maximum velocity to the final velocity
         double maxDecelerationSection = Math.Max(PhysicsHelper.DistanceToVelocityFromVelocity(agvData.Acceleration, maxVelocity, ExitVelocity),0);
         // Distance needed to accelerate from the initial velocity to the maximum velocity
@@ -92,7 +90,7 @@ public class DirectEdge : BaseEdge
             accelerationTime = maxVelocityTime = 0;
             decelerationTime = PhysicsHelper.TimeToAccelerateFromVelocity(agvData.Acceleration, DecelerationSection, InitialVelocity);
             time += accelerationTime + maxVelocityTime + decelerationTime;
-            EstimatedExitTime = InitialTurnFinishTime.AddSeconds(time);
+            EstimatedExitTime = EntryTime.AddSeconds(time);
             return;
         }
 
@@ -114,7 +112,7 @@ public class DirectEdge : BaseEdge
                 AccelerationFinishTime = InitialTurnFinishTime.AddSeconds(accelerationTime);
                 MaxVelocityFinishTime = AccelerationFinishTime.AddSeconds(maxVelocityTime);
                 time += accelerationTime + maxVelocityTime + decelerationTime;
-                EstimatedExitTime = InitialTurnFinishTime.AddSeconds(time);
+                EstimatedExitTime = EntryTime.AddSeconds(time);
                 return;
             }
 
@@ -124,9 +122,20 @@ public class DirectEdge : BaseEdge
                 MaxPossibleVelocity = PhysicsHelper.VelocityAfterDistanceFromVelocity(agvData.Acceleration, AccelerationSection, InitialVelocity);
             }
             else
-            {
-                // Get maximum velocity it can accelerate to based on final and initial velocities and edge length
-                MaxPossibleVelocity = PhysicsHelper.MaxVelocityFromAccelerationBreakingWhenLengthIsReached(ExitVelocity, InitialVelocity, Length, agvData.Acceleration, initialDistance);
+            { // the agv can not accelerate
+              // move at constant velocity, then decelerate
+                DecelerationSection = minDecelerationSection;
+                AccelerationSection = 0;
+                MaxVelocitySection = Math.Max(Length - DecelerationSection, 0);
+                AccelerationFinishTime = InitialTurnFinishTime;
+                MaxPossibleVelocity = InitialVelocity;
+                accelerationTime = 0;
+                decelerationTime = PhysicsHelper.TimeToAccelerateFromVelocity(agvData.Acceleration, DecelerationSection, InitialVelocity);
+                maxVelocityTime = MaxVelocitySection / MaxPossibleVelocity;
+                MaxVelocityFinishTime = AccelerationFinishTime.AddSeconds(maxVelocityTime);
+                time += accelerationTime + maxVelocityTime + decelerationTime;
+                EstimatedExitTime = EntryTime.AddSeconds(time);
+                return;
             }
 
             // the agv can not accelerate
@@ -142,7 +151,7 @@ public class DirectEdge : BaseEdge
                 maxVelocityTime = MaxVelocitySection / MaxPossibleVelocity;
                 MaxVelocityFinishTime = AccelerationFinishTime.AddSeconds(maxVelocityTime);
                 time += accelerationTime + maxVelocityTime + decelerationTime;
-                EstimatedExitTime = InitialTurnFinishTime.AddSeconds(time);
+                EstimatedExitTime = EntryTime.AddSeconds(time);
                 return;
             }
 
@@ -156,7 +165,7 @@ public class DirectEdge : BaseEdge
          
             AccelerationFinishTime = MaxVelocityFinishTime = InitialTurnFinishTime.AddSeconds(accelerationTime);
             time += accelerationTime + maxVelocityTime + decelerationTime;
-            EstimatedExitTime = InitialTurnFinishTime.AddSeconds(time);
+            EstimatedExitTime = EntryTime.AddSeconds(time);
             return;
         }
 

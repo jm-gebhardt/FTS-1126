@@ -50,18 +50,4 @@ public static class Mathematics
     {
         return (first - second).Length();
     }
-
-    /// <summary>
-    /// Solve the PQ formula for the normal form of quadratic equations.
-    /// 0 = x^2 + px + q
-    /// </summary>
-    /// <param name="p">p in 0 = x^2 + px + q.</param>
-    /// <param name="q">q in 0 = x^2 + px + q.</param>
-    /// <param name="firstSolution"></param>
-    /// <returns></returns>
-    public static double PqFormula(double p, double q, bool firstSolution=true)
-    {
-        double factor = firstSolution ? 1d : -1d;
-        return -p/2d + factor* Math.Sqrt(Math.Pow(p/2d , 2) - q);
-    }
 }
