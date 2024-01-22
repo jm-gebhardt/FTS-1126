@@ -23,10 +23,5 @@ public enum AgvStateType
     /// <summary>
     /// Busy
     /// </summary>
-    Busy,
-
-    /// <summary>
-    /// Charging
-    /// </summary>
-    Charging
+    Busy
 }

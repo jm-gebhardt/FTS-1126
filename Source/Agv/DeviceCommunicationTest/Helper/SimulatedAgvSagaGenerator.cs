@@ -40,7 +40,7 @@ public static class SimulatedAgvSagaGenerator
         }
         else
         {
-            agvData ??= new AgvData(correlationId, "model", "type", string.Empty, 10.0, 1.0, 1.0, 1.0, 1.0, 0.08726646, 1.0, 1.0, 42, Array.Empty<AgvData.Sensor>());
+            agvData ??= AgvDataGenerator.GenerateAgvData();
         }
 
         var agv = new SimulatedAgv(correlationId, agvId, "",

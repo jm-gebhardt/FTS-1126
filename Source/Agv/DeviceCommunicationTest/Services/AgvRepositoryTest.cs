@@ -43,7 +43,7 @@ public class AgvRepositoryTest
         var actualAgvInformation = fixture.AgvRepository.GetAgvInformation(agvCorrelationId);
 
         VerifyAgvInformation(actualAgvInformation, agvInformation);
-        var agvStatus = new AgvStatus(agvCorrelationId, null, false, true, 99, false, false, "CRG5");
+        var agvStatus = new AgvStatus(agvCorrelationId, null, false, true, 99, false, 48, -20, 20, false, "CRG5");
         var agvGraph = new AgvGraph(agvCorrelationId, Array.Empty<GraphNode>(), Array.Empty<GraphEdge>());
         var agvAction = new AgvAction("Action#123".ToGuid(), ActionType.Move, "Pick88", Guid.Empty);
         agvInformation = AgvInformationGenerator.GetAgvInformation(agvStatus, agvGraph, agvAction);
@@ -76,7 +76,7 @@ public class AgvRepositoryTest
         var actualAgvInformation = fixture.AgvRepository.GetAgvInformation(agvCorrelationId);
 
         VerifyAgvInformation(actualAgvInformation, agvInformation);
-        var agvStatus = new AgvStatus(agvCorrelationId, null, false, true, 89, false, false, "CRG6");
+        var agvStatus = new AgvStatus(agvCorrelationId, null, false, true, 89, false, 48, -20, 20, false, "CRG6");
         var agvStatusReceived = AgvInformationGenerator.GetAgvStatusReceived(agvStatus);
 
         fixture.AgvRepository.AddOrUpdateAgvStatus(agvCorrelationId, agvStatusReceived!);
@@ -93,7 +93,7 @@ public class AgvRepositoryTest
         var actualAgvInformation = fixture.AgvRepository.GetAgvInformation(agvCorrelationId);
         actualAgvInformation.ShouldBeNull();
 
-        var agvStatus = new AgvStatus(agvCorrelationId, null, false, true, 89, false, false, "CRG6");
+        var agvStatus = new AgvStatus(agvCorrelationId, null, false, true, 89, false, 48, -20, 20, false, "CRG6");
         var agvStatusReceived = AgvInformationGenerator.GetAgvStatusReceived(agvStatus);
 
         fixture.AgvRepository.AddOrUpdateAgvStatus(agvCorrelationId, agvStatusReceived!);

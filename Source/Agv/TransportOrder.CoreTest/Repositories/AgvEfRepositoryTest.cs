@@ -1,6 +1,7 @@
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -83,6 +84,89 @@ public class AgvEfRepositoryTest
     }
 
     [TestMethod]
+    public async Task GetReadyAgvsAsync_WithoutAgvStatus_DoesNotReturnAgv()
+    {
+        var fixture = new EfAgvRepositoryTestFixture();
+        var readyAgv = AgvGenerator.GenerateReadyAgv();
+        readyAgv.AgvStatus = null;
+
+        await fixture.Add(readyAgv);
+
+        (await fixture.Repository.GetReadyAgvsAsync()).ShouldBeEmpty();
+    }
+
+    [TestMethod]
+    public async Task GetReadyAgvsAsync_WithError_DoesNotReturnAgv()
+    {
+        var fixture = new EfAgvRepositoryTestFixture();
+        var readyAgv = AgvGenerator.GenerateReadyAgv();
+        readyAgv.HasError = true;
+
+        await fixture.Add(readyAgv);
+
+        (await fixture.Repository.GetReadyAgvsAsync()).ShouldBeEmpty();
+    }
+
+    [TestMethod]
+    public async Task GetReadyAgvsAsync_IsLocked_DoesNotReturnAgv()
+    {
+        var fixture = new EfAgvRepositoryTestFixture();
+        var readyAgv = AgvGenerator.GenerateReadyAgv();
+        readyAgv.Lock();
+
+        await fixture.Add(readyAgv);
+
+        readyAgv.IsLocked.ShouldBeTrue();
+        (await fixture.Repository.GetReadyAgvsAsync()).ShouldBeEmpty();
+    }
+
+    [TestMethod]
+    public async Task GetReadyAgvsAsync_NotInIdleState_DoesNotReturnAgv()
+    {
+        var fixture = new EfAgvRepositoryTestFixture();
+        var readyAgv = AgvGenerator.GenerateReadyAgv();
+        readyAgv.TryTransitionToBusy(true);
+        await fixture.Add(readyAgv);
+
+        readyAgv.CurrentAgvState.ShouldBe(AgvState.Busy);
+
+        (await fixture.Repository.GetReadyAgvsAsync()).ShouldBeEmpty();
+    }
+
+    [TestMethod]
+    public async Task GetReadyAgvsAsync_WithoutCertainBatteryLevel_DoesNotReturnAgv()
+    {
+        var fixture = new EfAgvRepositoryTestFixture();
+        var readyAgv = AgvGenerator.GenerateReadyAgv(batteryCharge: 54);
+
+        await fixture.Add(readyAgv);
+
+        (await fixture.Repository.GetReadyAgvsAsync(55)).ShouldBeEmpty();
+    }
+
+    [TestMethod]
+    public async Task GetReadyAgvsAsync_WithCertainBatteryLevel_ReturnAgv()
+    {
+        var fixture = new EfAgvRepositoryTestFixture();
+        var readyAgv = AgvGenerator.GenerateReadyAgv(batteryCharge: 55);
+
+        await fixture.Add(readyAgv);
+
+        (await fixture.Repository.GetReadyAgvsAsync(55)).Count.ShouldBe(1);
+    }
+
+    [TestMethod]
+    public async Task GetReadyAgvsAsync_ReadyAgv_ReturnsAgv()
+    {
+        var fixture = new EfAgvRepositoryTestFixture();
+        var readyAgv = AgvGenerator.GenerateReadyAgv();
+
+        await fixture.Add(readyAgv);
+
+        (await fixture.Repository.GetReadyAgvsAsync()).Count.ShouldBe(1);
+    }
+
+    [TestMethod]
     public async Task Verify_IAgvRepository_Interface_Methods()
     {
         var fixture = new EfAgvRepositoryTestFixture();
@@ -157,7 +241,7 @@ public class AgvEfRepositoryTest
     {
         var fixture = new EfAgvRepositoryTestFixture();
 
-        await Should.ThrowAsync<AgvsNotFoundException>(async () => await fixture.Repository.ThrowIfAgvsNotExistAsync(new List<Guid> {"".ToGuid()}));
+        await Should.ThrowAsync<AgvsNotFoundException>(async () => await fixture.Repository.ThrowIfAgvsNotExistAsync(new List<Guid> { "".ToGuid() }));
     }
 
     [TestMethod]
@@ -166,7 +250,7 @@ public class AgvEfRepositoryTest
         var fixture = new EfAgvRepositoryTestFixture();
         await fixture.Add(AgvGenerator.GenerateIdleAgv());
 
-        await Should.ThrowAsync<AgvsNotFoundException>(async () => await fixture.Repository.ThrowIfAgvsNotExistAsync(new List<Guid> {"".ToGuid()}));
+        await Should.ThrowAsync<AgvsNotFoundException>(async () => await fixture.Repository.ThrowIfAgvsNotExistAsync(new List<Guid> { "".ToGuid() }));
     }
 
     [TestMethod]
@@ -176,6 +260,6 @@ public class AgvEfRepositoryTest
         var agv = AgvGenerator.GenerateIdleAgv();
         await fixture.Add(agv);
 
-        await fixture.Repository.ThrowIfAgvsNotExistAsync(new List<Guid> {agv.CorrelationId});
+        await fixture.Repository.ThrowIfAgvsNotExistAsync(new List<Guid> { agv.CorrelationId });
     }
 }

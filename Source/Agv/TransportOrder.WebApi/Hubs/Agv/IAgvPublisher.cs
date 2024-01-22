@@ -78,7 +78,7 @@ public interface IAgvPublisher
     /// </summary>
     /// <param name="batteryChargeChanged"></param>
     /// <returns></returns>
-    Task SendAgvBatteryStatus(AgvBatteryChargeChanged batteryChargeChanged);
+    Task SendAgvBatteryStatusAsync(AgvBatteryChargeChanged batteryChargeChanged);
 
     /// <summary>
     /// Publishes the cargo of an Agv to all clients

@@ -26,7 +26,7 @@ public record AgvErrorStatusDto : DatedMessage
     /// ctor called by AutoMapper.
     /// </summary>
     [UsedImplicitly]
-    private AgvErrorStatusDto()
+    public AgvErrorStatusDto()
     {
         Errors = null!;
     }

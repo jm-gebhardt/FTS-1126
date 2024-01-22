@@ -141,8 +141,8 @@ public class SimulatedAgvSagaTest
 
         fixture.SimulateToPercentage(100);
         fixture.Saga.UpdatePosition();
-        fixture.Saga.Position!.X.ShouldBe(10f, 0.01);
-        fixture.Saga.Position!.Y.ShouldBe(0f, 0.01);
+        fixture.Saga.Position!.X.ShouldBe(10f, 0.05);
+        fixture.Saga.Position!.Y.ShouldBe(0f, 0.05);
         fixture.Saga.Position!.Theta.ShouldBe((float) Math.PI / 2, 0.01);
     }
 

@@ -1,10 +1,12 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Testing;
+using Gebhardt.StoreWare.Agv.Common.Testing.Configurations;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles;
@@ -24,6 +26,8 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
     // ReSharper disable once MemberCanBePrivate.Global
     public readonly Mock<IActionGroupRetrievalService> ActionGroupRepository = new();
 
+    public AgvSettings? AgvSettings { get; private set; } = new();
+
     public AgvRequestsHandlerTestFixture(IBus? bus = null)
     {
         WithEmptyGraphRepository();
@@ -37,10 +41,17 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
             {
                 s.AddTransient(_ => bus);
             }
+            s.AddFakeSettings(AgvSettings);
         });
 
         AgvDb.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(new List<AgvError>());
         AgvDb.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<IList<Guid>>())).ReturnsAsync(new List<AgvError>());
+    }
+
+    public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithAgvSettings(AgvSettings? agvSettings)
+    {
+        AgvSettings = agvSettings;
+        return this;
     }
 
     public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithEmptyGraphRepository()
@@ -60,7 +71,7 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
         AgvDb.Setup(r => r.Agvs.GetAllAgvsWithGraphAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>());
         AgvDb.Setup(r => r.Agvs.GetChargingAgvsWithMinBatteryLevelAsync(It.IsAny<int>())).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>());
         AgvDb.Setup(r => r.Agvs.GetIdleAgvsAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>());
-        AgvDb.Setup(r => r.Agvs.GetReadyAgvsAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>());
+        AgvDb.Setup(r => r.Agvs.GetReadyAgvsAsync(It.IsAny<int>())).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>());
         AgvDb.Setup(r => r.Agvs.SelectExistingAgvsAsync(It.IsAny<List<Guid>>())).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>());
         return this;
     }
@@ -104,14 +115,13 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
         ActionGroupRepository.Setup(r => r.GetCurrentAgvActionGroupWithNodesAsync(It.IsAny<Guid>()))
             .ReturnsAsync(actionGroup.ConvertFromActionGroupWithFakeNodeType());
         AgvDb.Setup(r => r.Agvs.SelectExistingAgvsAsync(It.IsAny<List<Guid>>())).ReturnsAsync((List<Guid> ids) => agvs.Where(a => ids.Contains(a.CorrelationId)).ToList());
-        IEnumerable<AgvData> specifications = agvs.Select((a, i) => new AgvData(a.CorrelationId, "Karis", "BF1", "ipv4 address",
-            1.8, 120.0, 0.6, 0.8, 0.7, 0.08726646, i, 2.5, 1000, Array.Empty<AgvData.Sensor>()));
+        IEnumerable<AgvData> specifications = agvs.Select((a, _) => AgvDataGenerator.GenerateAgvData(correlationId: a.CorrelationId));
 
-        AgvDb.Setup(x => x.Data.GetSelectedAgvDataAsync(It.IsAny<ICollection<Guid>>())).ReturnsAsync((ICollection<Guid> ids) => specifications.Where(s => ids.Contains(s.CorrelationId)).ToList());
- 
-        Dictionary<Guid, GraphNode?> nodes = agvs.ToDictionary(a => a.CorrelationId, 
-            a => a.AgvStatus!.LastNodeId != null ? new GraphNode(a.AgvStatus!.LastNodeId!) { Id = a.AgvStatus!.LastNodeId! ,Type = AgvGraph.NodeType.WayPoint, X = 1.0f, Y = 2.0f, Z = 0.0f, Theta = 0.0f} : null);
- 
+        AgvDb.Setup(x => x.Data.GetSelectedAgvDataAsync(It.IsAny<ICollection<Guid>>())).ReturnsAsync((ICollection<Guid> ids) => specifications.Where(s => !ids.Any() || ids.Contains(s.CorrelationId)).ToList());
+
+        Dictionary<Guid, GraphNode?> nodes = agvs.ToDictionary(a => a.CorrelationId,
+            a => a.AgvStatus!.LastNodeId != null ? new GraphNode(a.AgvStatus!.LastNodeId!) { Id = a.AgvStatus!.LastNodeId!, Type = AgvGraph.NodeType.WayPoint, X = 1.0f, Y = 2.0f, Z = 0.0f, Theta = 0.0f } : null);
+
         AgvDb.Setup(x => x.Graphs.GetLastNodesForAgvsAsync(It.IsAny<Dictionary<Guid, string?>>())).ReturnsAsync(() => nodes);
         return this;
     }

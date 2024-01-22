@@ -47,6 +47,7 @@ public class AgvController : Controller
     private readonly IRequestClient<HasAgvCargoRequest> _hasAgvCargoClient;
     private readonly IRequestClient<GetCargosOfAgv> _getCargosOfAgvClient;
     private readonly IRequestClient<ResetAgvErrors> _resetAgvErrorsClient;
+    private readonly IRequestClient<GetAgvSettings> _getAgvSettingsClient;
     private readonly IMapper _mapper;
 
     /// <summary>
@@ -69,8 +70,9 @@ public class AgvController : Controller
         IRequestClient<SetAgvForceIdle> setForceIdleClient,
         IRequestClient<HasAgvCargoRequest> hasAgvCargoClient,
         IRequestClient<GetCargosOfAgv> getCargosOfAgvClient,
-        IRequestClient<ResetAgvErrors> resetAgvErrorsClient
-    )
+        IRequestClient<ResetAgvErrors> resetAgvErrorsClient,
+        IRequestClient<GetAgvSettings> getAgvSettingsClient
+        )
     {
         _getAgvClient = getAgvClient;
         _getAgvGraphClient = getAgvGraphClient;
@@ -91,6 +93,7 @@ public class AgvController : Controller
         _getCargosOfAgvClient = getCargosOfAgvClient;
         _mapper = mapper;
         _resetAgvErrorsClient = resetAgvErrorsClient;
+        _getAgvSettingsClient = getAgvSettingsClient;
     }
 
     /// <summary>
@@ -134,6 +137,21 @@ public class AgvController : Controller
     {
         Response<GotAgvData> response = await _getAgvDataClient.GetResponse<GotAgvData>(new GetAgvData(correlationId));
         var agvData = _mapper.Map<AgvDataDto>(response.Message.AgvData);
+        return Ok(agvData);
+    }
+
+    /// <summary>
+    /// Get agv settings.
+    /// </summary>
+    /// <response code="200">Ok</response>
+    /// <response code="204">No Content</response>
+    /// <response code="404">AGV with given correlationId not found.</response>
+    [HttpGet]
+    [Route("/agv/{correlationId:guid}/settings")]
+    public async Task<ActionResult<AgvSettingsDto>> GetAgvSettings(Guid correlationId)
+    {
+        Response<GotAgvSettings> response = await _getAgvSettingsClient.GetResponse<GotAgvSettings>(new GetAgvSettings(correlationId));
+        var agvData = _mapper.Map<AgvSettingsDto>(response.Message.AgvSettings);
         return Ok(agvData);
     }
 

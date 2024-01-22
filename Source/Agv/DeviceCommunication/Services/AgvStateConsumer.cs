@@ -76,6 +76,9 @@ public class AgvStateConsumer : IConsumer<MqttState>
             GetAutomatic(message),
             GetBatteryCharge(message),
             GetCharging(message),
+            GetBatteryVoltage(message),
+            GetBatteryCurrent(),
+            GetBatteryTemperature(),
             GetDisturbed(message),
             GetLastNodeId(message)
         );
@@ -102,7 +105,7 @@ public class AgvStateConsumer : IConsumer<MqttState>
                     context.Message.AgvPosition.X,
                     context.Message.AgvPosition.Y * -1, // Special treatment for Karis AGV. Y Axis is inverted
                     0f,
-                    (float)Mathematics.ConvertToRadians(90.0f) - context.Message.AgvPosition.Theta, // Special treatment for Karis AGV. 90� in our System (AGV facing right) is 0� in our world
+                    (float) Mathematics.ConvertToRadians(90.0f) - context.Message.AgvPosition.Theta, // Special treatment for Karis AGV. 90° in our System (AGV facing right) is 0° in our world
                     context.Message.AgvPosition.DeviationRange
                 )), context.CancellationToken);
         }
@@ -172,25 +175,15 @@ public class AgvStateConsumer : IConsumer<MqttState>
         }
     }
 
-    private float GetBatteryCharge(MqttState message)
-    {
-        if (message.BatteryState == null)
-        {
-            return 0;
-        }
+    private float GetBatteryCharge(MqttState message) => message.BatteryState?.BatteryCharge ?? 0;
 
-        return message.BatteryState.BatteryCharge;
-    }
+    private float GetBatteryVoltage(MqttState message) => message.BatteryState?.BatteryVoltage ?? float.MinValue;
 
-    private bool GetCharging(MqttState message)
-    {
-        if (message.BatteryState == null)
-        {
-            return false;
-        }
+    private float GetBatteryCurrent() => float.MinValue;
 
-        return message.BatteryState.Charging;
-    }
+    private float GetBatteryTemperature() => float.MinValue;
+
+    private bool GetCharging(MqttState message) => message.BatteryState?.Charging ?? false;
 
     private bool GetDisturbed(MqttState message)
     {

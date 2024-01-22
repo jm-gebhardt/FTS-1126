@@ -5,6 +5,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using MassTransit;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Middleware;
 
@@ -13,6 +14,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Middleware;
 /// </summary>
 public class ExceptionHandlerMiddleware : IMiddleware
 {
+    private readonly ILogger _logger;
+
+    /// <inheritdoc cref="ExceptionHandlerMiddleware"/>
+    public ExceptionHandlerMiddleware(ILogger<ExceptionHandlerMiddleware> logger)
+    {
+        _logger = logger;
+    }
+
     /// <inheritdoc />
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
@@ -28,6 +37,7 @@ public class ExceptionHandlerMiddleware : IMiddleware
 
     private Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
+        _logger.LogError(exception, "Exception occurred during request processing");
         HttpStatusCode statusCode;
 
         if (exception is RequestFaultException or RequestException && exception.InnerException != null)

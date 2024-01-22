@@ -29,13 +29,13 @@ public class GetAgvDataRequestHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         AgvRequestsHandlerTestFixture<GetAgvsData, GetAgvDataRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvsData, GetAgvDataRequestHandler>()
-            .WithAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv })
+            .WithAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> {agv})
             .Build();
 
-        Response<GotAgvsData> response = await fixture.GetResponseAsync<GotAgvsData>(new GetAgvsData(new List<Guid> { agv.CorrelationId }));
+        Response<GotAgvsData> response = await fixture.GetResponseAsync<GotAgvsData>(new GetAgvsData(new List<Guid> {agv.CorrelationId}));
 
-        List<AgvData> actualData = response.Message.AgvData;
-        actualData.Single().CorrelationId.ShouldBe(agv.CorrelationId);
+        var actualData = response.Message.AgvData.Single();
+        actualData.CorrelationId.ShouldBe(agv.CorrelationId);
     }
 
     [TestMethod]
@@ -43,9 +43,9 @@ public class GetAgvDataRequestHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         AgvRequestsHandlerTestFixture<GetAgvsData, GetAgvDataRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvsData, GetAgvDataRequestHandler>()
-            .WithAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv })
+            .WithAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> {agv})
             .Build();
 
-        await MediatorShould.ThrowRequestExceptionAsync<AgvsDataBatchQueryException>(async () => await fixture.GetResponseAsync<GotAgvsData>(new GetAgvsData(new List<Guid> { agv.CorrelationId, "Unknown".ToGuid() })));
+        await MediatorShould.ThrowRequestExceptionAsync<AgvsDataBatchQueryException>(async () => await fixture.GetResponseAsync<GotAgvsData>(new GetAgvsData(new List<Guid> {agv.CorrelationId, "Unknown".ToGuid()})));
     }
 }

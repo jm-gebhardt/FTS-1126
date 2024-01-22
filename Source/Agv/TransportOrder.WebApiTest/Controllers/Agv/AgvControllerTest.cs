@@ -48,13 +48,11 @@ public class AgvControllerTest
         result.ShouldNotBeNull();
 
         var agvDto = result.Value as AgvDto;
- 
-        var expectedAgvDto = new AgvDto(correlationId, agvId, AgvStateType.Idle, agvDto!.TimeOfStateTransition, DateTime.MinValue, false, false, true, true, 10d, true, 20, 80, null, new List<AgvErrorDto>(), new GraphNodeDto {Id = "WAY1", Type = AgvGraph.NodeType.WayPoint, X = 1.0f, Y = 2.0f, Z = 0.0f, Theta = 0.0f});
+
+        var expectedAgvDto = new AgvDto(correlationId, agvId, AgvStateType.Idle, agvDto!.TimeOfStateTransition, DateTime.MinValue, false, false, true, true, 10d, true, null, new List<AgvErrorDto>(), new GraphNodeDto {Id = "WAY1", Type = AgvGraph.NodeType.WayPoint, X = 1.0f, Y = 2.0f, Z = 0.0f, Theta = 0.0f});
         agvDto.ShouldNotBeNull();
         agvDto.CorrelationId.ShouldBe(expectedAgvDto.CorrelationId);
         agvDto.AgvId.ShouldBe(expectedAgvDto.AgvId);
-        agvDto.BadBatteryLevel.ShouldBe(expectedAgvDto.BadBatteryLevel);
-        agvDto.GoodBatteryLevel.ShouldBe(expectedAgvDto.GoodBatteryLevel);
         agvDto.BatteryCharge.ShouldBe(expectedAgvDto.BatteryCharge);
         agvDto.IsCharging.ShouldBe(expectedAgvDto.IsCharging);
         agvDto.IsLocked.ShouldBe(expectedAgvDto.IsLocked);
@@ -160,6 +158,28 @@ public class AgvControllerTest
 
         agvData.CorrelationId.ShouldBe(correlationId);
         agvData.IpV4Address.ShouldBe(fixture.Ips[index]);
+    }
+
+    [TestMethod]
+    public async Task GetAgvSettings_ValidData_ReturnsAgvSettingsDto()
+    {
+        AgvControllerTestFixture<GetAgvSettings, GetAgvSettingsRequestHandler> fixture = new AgvControllerTestFixture<GetAgvSettings, GetAgvSettingsRequestHandler>()
+            .UseDefaultServices()
+            .Build();
+        var controller = fixture.Controller;
+        var correlationId = fixture.AgvIds[0].ToGuid();
+        ActionResult<AgvSettingsDto> response = await controller.GetAgvSettings(correlationId);
+        var result = response.Result as OkObjectResult;
+        result.ShouldNotBeNull();
+
+        var dto = result.Value as AgvSettingsDto;
+        dto.ShouldNotBeNull();
+
+        dto.CorrelationId.ShouldBe(correlationId);
+        dto.BatteryLevelCritical.ShouldBe(fixture.AgvSettings.BatteryLevelCritical);
+        dto.BatteryLevelLow.ShouldBe(fixture.AgvSettings.BatteryLevelLow);
+        dto.MinChargeUp.ShouldBe(fixture.AgvSettings.MinChargeUp);
+        dto.MaxChargeUp.ShouldBe(fixture.AgvSettings.MaxChargeUp);
     }
 
     [TestMethod]

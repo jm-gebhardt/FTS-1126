@@ -1,4 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
@@ -13,9 +14,7 @@ public class EfAgvDataRepositoryTest
     {
         var fixture = new AgvDataRepositoryTestFixture();
 
-        List<AgvData> specifications = Enumerable.Range(0, 4).Select(i =>
-            new AgvData(Guid.NewGuid(), "Karis", "BF1", "ipv4 address",
-                1.8, 120.0, 0.6, 0.8, 0.7, 0.08726646, i, 2.5, 1000, Array.Empty<AgvData.Sensor>())).ToList();
+        List<AgvData> specifications = Enumerable.Range(0, 4).Select(_ => AgvDataGenerator.GenerateAgvData()).ToList();
         await fixture.AddRangeAsync(specifications);
 
         List<Guid> correlationIds = specifications.Take(2).Select(s => s.CorrelationId).ToList();
@@ -33,9 +32,7 @@ public class EfAgvDataRepositoryTest
     {
         var fixture = new AgvDataRepositoryTestFixture();
 
-        List<AgvData> knownData = Enumerable.Range(0, 4).Select(i =>
-            new AgvData(Guid.NewGuid(), "Karis", "BF1", "ipv4 address",
-                1.8, 120.0, 0.6, 0.8, 0.7, 0.08726646, i, 2.5, 1000, Array.Empty<AgvData.Sensor>())).ToList();
+        List<AgvData> knownData = Enumerable.Range(0, 4).Select(_ => AgvDataGenerator.GenerateAgvData()).ToList();
         await fixture.AddRangeAsync(knownData);
 
         List<Guid> correlationIds = knownData.Select(s => s.CorrelationId).ToList();

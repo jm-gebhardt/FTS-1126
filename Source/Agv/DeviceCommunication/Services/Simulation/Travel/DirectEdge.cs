@@ -102,7 +102,7 @@ public class DirectEdge : BaseEdge
                 // accelerate to final velocity than move at final velocity
                 ExitVelocity = Math.Min(ExitVelocity, PhysicsHelper.VelocityAfterDistanceFromVelocity(agvData.Acceleration, Length, InitialVelocity));
                 MaxPossibleVelocity = ExitVelocity;
-                AccelerationSection = Math.Min(PhysicsHelper.DistanceToVelocityFromVelocity(agvData.Acceleration, MaxPossibleVelocity, InitialVelocity), Length);
+                AccelerationSection = Math.Min( PhysicsHelper.DistanceToVelocityFromVelocity(agvData.Acceleration, MaxPossibleVelocity, InitialVelocity), Length);
                 DecelerationSection = 0;
                 MaxVelocitySection =  Math.Max(Length - AccelerationSection, 0);
 
@@ -181,7 +181,7 @@ public class DirectEdge : BaseEdge
         MaxVelocityFinishTime = AccelerationFinishTime.AddSeconds(maxVelocityTime);
         decelerationTime = PhysicsHelper.TimeToAccelerateFromVelocity(agvData.Acceleration, DecelerationSection, finalVelocityMax);
         time += accelerationTime + maxVelocityTime + decelerationTime;
-        EstimatedExitTime = InitialTurnFinishTime.AddSeconds(time);
+        EstimatedExitTime = EntryTime.AddSeconds(time);
     }
 
     /// <inheritdoc cref="BaseEdge"/>

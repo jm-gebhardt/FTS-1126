@@ -26,7 +26,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
     /// Value for simulating change in battery charge
     /// </summary>
     public double SimulatedBatteryCharge { get; set; }
-    
+
     /// <summary>
     /// Value for simulating change in battery charge [%/s]
     /// </summary>
@@ -68,7 +68,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
 
     /// <inheritdoc cref="Agv" />
     public AgvStatus AgvStatus { get; private set; }
-    
+
     /// <summary>
     /// We still save the graph in the simulated agv for convenience.
     /// </summary>
@@ -283,6 +283,9 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
             true,
             initialBatteryCharge,
             false,
+            GetBatteryVoltage(),
+            GetBatteryCurrent(),
+            GetBatteryTemperature(),
             false,
             LastNodeId
         );
@@ -323,13 +326,39 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
             true,
             (int) SimulatedBatteryCharge,
             false,
+            GetBatteryVoltage(),
+            GetBatteryCurrent(),
+            GetBatteryTemperature(),
             false,
             LastNodeId
         );
         TravelSimulator = new AgvTravelSimulator(agv.AgvGraph, agvData, Position!);
     }
+    
+    private static float GetRandomNoise(double maxValue) => (float) (maxValue * (2 * Random.Shared.NextDouble() - 1));
 
     private string? GetOrderId() => Action?.CorrelationId.ToString();
+
+    private static float GetBatteryVoltage() => 48 + GetRandomNoise(0.1);
+
+    private static double GetBatteryTemperature() => 20 + GetRandomNoise(1);
+
+    private double GetBatteryCurrent()
+    {
+        // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
+        // for some reasons it is actually null at startup
+        if (AgvStatus?.Charging ?? false)
+        {
+            return 50 + GetRandomNoise(1);
+        }
+
+        if (AgvStatus?.Busy ?? false)
+        {
+            return -20 + GetRandomNoise(5);
+        }
+
+        return -2 + GetRandomNoise(0.1);
+    }
 
     /// <summary>
     /// Reset action
@@ -403,6 +432,9 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
             AgvStatus.Automatic,
             SimulatedBatteryCharge,
             charging,
+            GetBatteryVoltage(),
+            GetBatteryCurrent(),
+            GetBatteryTemperature(),
             AgvStatus.Disturbed,
             LastNodeId
         );

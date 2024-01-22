@@ -17,8 +17,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHan
 /// Gets all Agv from AgvRepository sorted by AgvId ascending, returns IEnumerable of Agv
 /// </summary>
 [UsedImplicitly]
-public class GetAgvsRequestHandler : IConsumer<GetAgvs>,
-    IConsumer<GetAgv>
+public class GetAgvsRequestHandler :
+    IConsumer<GetAgv>,
+    IConsumer<GetAgvs>
 {
     private readonly IActionGroupRetrievalService _actionGroupRepository;
     private readonly IMapper _mapper;
@@ -27,7 +28,11 @@ public class GetAgvsRequestHandler : IConsumer<GetAgvs>,
     /// <summary>
     /// Initializes a new  <see cref="GetAgvsRequestHandler"/> instance.
     /// </summary>
-    public GetAgvsRequestHandler(IActionGroupRetrievalService actionGroupRepository, IAgvDb agvDb, IMapper mapper)
+    public GetAgvsRequestHandler(
+        IActionGroupRetrievalService actionGroupRepository,
+        IAgvDb agvDb,
+        IMapper mapper
+        )
     {
         _actionGroupRepository = actionGroupRepository;
         _mapper = mapper;
@@ -57,7 +62,7 @@ public class GetAgvsRequestHandler : IConsumer<GetAgvs>,
         }
 
         Dictionary<Guid, string?> agvLastNodeIds = agvs.ToDictionary(a => a.CorrelationId, a => a.AgvStatus?.LastNodeId);
-        
+
         Task<IReadOnlyDictionary<Guid, GraphNode?>> agvLastNodesTask = _agvDb.Graphs.GetLastNodesForAgvsAsync(agvLastNodeIds);
 
         Task<IReadOnlyDictionary<Guid, ActionGroupReadModel?>> actionGroupsTask = _actionGroupRepository.GetCurrentActionGroupsWithNodesAsync(agvCorrelationIds);

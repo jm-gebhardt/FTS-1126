@@ -38,6 +38,6 @@ public class AgvBatteryChargeChangedConsumer :
     {
         _logger.LogTrace("{MessageType} {CorrelationId} received", nameof(AgvBatteryChargeChanged), context.Message.CorrelationId);
 
-        return _agvPublisher.SendAgvBatteryStatus(context.Message);
+        return _agvPublisher.SendAgvBatteryStatusAsync(context.Message);
     }
 }

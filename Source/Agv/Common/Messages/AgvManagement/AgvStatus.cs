@@ -11,7 +11,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 public record AgvStatus : CorrelatedBy<Guid>
 {
     /// <summary>
-    ///  AGV correlation ID
+    /// AGV correlation id.
     /// </summary>
     [UsedImplicitly]
     public Guid CorrelationId { get; init; }
@@ -34,7 +34,7 @@ public record AgvStatus : CorrelatedBy<Guid>
     /// There is at least one action pending (neither finished no failed).
     /// </remarks>
     [UsedImplicitly]
-    public bool Busy { get; init;}
+    public bool Busy { get; init; }
 
     /// <summary>
     /// AGV is in automatic mode.
@@ -47,12 +47,11 @@ public record AgvStatus : CorrelatedBy<Guid>
     public bool Automatic { get; init; }
 
     /// <summary>
-    /// Battery charge.
+    /// Battery state of charge [%].
     /// </summary>
     /// <remarks>
     /// VDA5050.state.schema.batteryState.batteryCharge
     /// Battery charge level in [%].
-    /// <para>Less than or equal <see cref="BadBatteryLevel"/>% is regarded as "battery low", charging required.</para>
     /// </remarks>
     [UsedImplicitly]
     public double BatteryCharge { get; init; }
@@ -67,6 +66,18 @@ public record AgvStatus : CorrelatedBy<Guid>
     [UsedImplicitly]
     public bool Charging { get; init; }
 
+    /// <summary>Battery voltage [V].</summary>
+    [UsedImplicitly]
+    public double BatteryVoltage { get; init; }
+
+    /// <summary>Battery current [A].</summary>
+    [UsedImplicitly]
+    public double BatteryCurrent { get; init; }
+
+    /// <summary>Battery temperature [°C].</summary>
+    [UsedImplicitly]
+    public double BatteryTemperature { get; init; }
+
     /// <summary>
     /// AGV is disturbed.
     /// </summary>
@@ -78,19 +89,7 @@ public record AgvStatus : CorrelatedBy<Guid>
     public bool Disturbed { get; init; }
 
     /// <summary>
-    /// Lower battery level in [%] for signaling "battery bad" (defined by VDA5050).
-    /// </summary>
-    [UsedImplicitly]
-    public const int BadBatteryLevel = 20;
-
-    /// <summary>
-    /// Upper battery level in [%] for signaling "battery good" (defined by VDA5050).
-    /// </summary>
-    [UsedImplicitly]
-    public const int GoodBatteryLevel = 80;
-
-    /// <summary>
-    /// nodeID of last reached node or, if AGV is currently on a node, current node.
+    /// Node id of last reached node or, if AGV is currently on a node, current node.
     /// Empty string if no lastNodeId is available.
     /// </summary>
     /// <remarks>
@@ -99,19 +98,31 @@ public record AgvStatus : CorrelatedBy<Guid>
     [UsedImplicitly]
     public string? LastNodeId { get; init; }
 
-    /// <summary>
-    /// Constructor of AgvStatus
-    /// </summary>
-    /// <param name="correlationId"></param>
+    /// <inheritdoc cref="AgvStatus"/>
+    /// <param name="correlationId">AGV correlation id.</param>
     /// <param name="orderId">Internally we are using the ActionCorrelationId</param>
-    /// <param name="busy"></param>
-    /// <param name="automatic"></param>
-    /// <param name="batteryCharge"></param>
-    /// <param name="charging"></param>
-    /// <param name="disturbed"></param>
-    /// <param name="lastNodeId"></param>
+    /// <param name="busy">AGV is busy (not idle).</param>
+    /// <param name="automatic">AGV is in automatic mode.</param>
+    /// <param name="batteryCharge">Battery state of charge [%].</param>
+    /// <param name="charging">AGV is charging.</param>
+    /// <param name="batteryVoltage">Battery voltage [V].</param>
+    /// <param name="batteryCurrent">Battery current [A].</param>
+    /// <param name="batteryTemperature">Battery temperature [°C].</param>
+    /// <param name="disturbed">AGV is disturbed.</param>
+    /// <param name="lastNodeId">Node id of last reached node or, if AGV is currently on a node, current node. Empty string if no lastNodeId is available.</param>
     [JsonConstructor]
-    public AgvStatus(Guid correlationId, string? orderId, bool busy, bool automatic, double batteryCharge, bool charging, bool disturbed, string? lastNodeId = null)
+    public AgvStatus(Guid correlationId,
+        string? orderId,
+        bool busy,
+        bool automatic,
+        double batteryCharge,
+        bool charging,
+        double batteryVoltage,
+        double batteryCurrent,
+        double batteryTemperature,
+        bool disturbed,
+        string? lastNodeId = null
+    )
     {
         CorrelationId = correlationId;
         OrderId = orderId;
@@ -119,6 +130,9 @@ public record AgvStatus : CorrelatedBy<Guid>
         Automatic = automatic;
         BatteryCharge = batteryCharge;
         Charging = charging;
+        BatteryVoltage = batteryVoltage;
+        BatteryCurrent = batteryCurrent;
+        BatteryTemperature = batteryTemperature;
         Disturbed = disturbed;
         LastNodeId = lastNodeId;
     }

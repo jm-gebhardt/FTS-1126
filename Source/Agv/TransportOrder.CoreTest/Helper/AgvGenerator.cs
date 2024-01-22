@@ -6,6 +6,12 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 
 public static class AgvGenerator
 {
+    public static TransportOrder.Domain.Models.Agv.Agv GenerateReadyAgv(int index = 0, bool isLocked = false, int batteryCharge = 100)
+    {
+        var agv = GenerateAgv(AgvState.Idle, index, "A", isLocked: isLocked, batteryCharge: batteryCharge);
+        return agv;
+    }
+
     public static TransportOrder.Domain.Models.Agv.Agv GenerateIdleAgv(int index = 0, string? lastNodeId = null, bool isLocked = false, int batteryCharge = 100)
     {
         var agv = GenerateAgv(AgvState.Idle, index, lastNodeId, isLocked: isLocked, batteryCharge: batteryCharge);

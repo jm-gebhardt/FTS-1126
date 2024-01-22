@@ -22,7 +22,8 @@ public class GetAgvDataRequestHandler :
     /// <summary>
     /// Initializes a new <see cref="GetAgvDataRequestHandler"/> instance.
     /// </summary>
-    public GetAgvDataRequestHandler(IAgvDb agvDb, IMapper mapper)
+    public GetAgvDataRequestHandler(IAgvDb agvDb,
+        IMapper mapper)
     {
         _agvDb = agvDb;
         _mapper = mapper;
@@ -58,7 +59,8 @@ public class GetAgvDataRequestHandler :
         {
             throw new AgvsDataBatchQueryException(selectedAgvs.Except(fetchedData.Select(p => p.CorrelationId)).ToList());
         }
-        var specifications = _mapper.Map<List<AgvData>>(fetchedData);
-        await context.RespondAsync(new GotAgvsData(specifications));
+        var agvDataList = _mapper.Map<List<AgvData>>(fetchedData);
+
+        await context.RespondAsync(new GotAgvsData(agvDataList));
     }
 }

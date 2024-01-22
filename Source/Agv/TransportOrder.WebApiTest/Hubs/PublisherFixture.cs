@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -10,7 +9,7 @@ public class PublisherFixture<TPublisher, THub, TClient> where TPublisher : clas
 {
     private readonly ServiceCollection _serviceCollection = new();
 
-    public Mapper Mapper { get; private set; } = null!;
+    public Mock<IMapper> MapperMock { get; } = new();
 
     public Mock<IHubContext<THub, TClient>> HubContextMock { get; }
 
@@ -26,13 +25,7 @@ public class PublisherFixture<TPublisher, THub, TClient> where TPublisher : clas
         HubContextMock.SetupGet(h => h.Clients).Returns(mockClients.Object);
         _serviceCollection.AddSingleton<IHubContext<THub, TClient>>(_ => HubContextMock.Object);
         _serviceCollection.AddSingleton<TPublisher>();
-    }
-
-    public PublisherFixture<TPublisher, THub, TClient> WithMapper(params Profile[] profiles)
-    {
-        Mapper = MappingHelper.GetMapper(profiles);
-        _serviceCollection.AddSingleton<IMapper>(Mapper);
-        return this;
+        _serviceCollection.AddSingleton<IMapper>(_ => MapperMock.Object);
     }
 
     public PublisherFixture<TPublisher, THub, TClient> Build()

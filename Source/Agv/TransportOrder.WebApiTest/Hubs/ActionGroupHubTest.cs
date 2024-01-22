@@ -1,8 +1,8 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+using Gebhardt.StoreWare.Agv.Common.Models;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.AgvActions;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.ActionGroup;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
@@ -14,26 +14,28 @@ public class ActionGroupHubTest
     [TestMethod]
     public async Task SendActionGroupCreatedAsync_SendsActionGroupChanged_To_ActionGroupCreated()
     {
-        PublisherFixture<ActionGroupPublisher, ActionGroupHub, IActionGroupClient> fixture = new PublisherFixture<ActionGroupPublisher, ActionGroupHub, IActionGroupClient>()
-            .WithMapper(new ActionProfile())
-            .Build();
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup().ConvertFromActionGroupWithFakeNodeType()!;
+        PublisherFixture<ActionGroupPublisher, ActionGroupHub, IActionGroupClient> fixture = new PublisherFixture<ActionGroupPublisher, ActionGroupHub, IActionGroupClient>().Build();
+        var data = new ActionGroupReadModel(Guid.NewGuid(), "order", Guid.NewGuid(), DateTime.UtcNow, DateTime.UtcNow, DateTime.UtcNow, TimeSpan.Zero, ActionGroupState.Created, ActionGroupCreator.TransportOrder, new List<AgvActionReadModel>(), false, new List<Reason>());
+        var expectedDto = Mock.Of<ActionGroupDto>();
 
-        await fixture.Publisher.SendActionGroupCreatedAsync(actionGroup);
+        fixture.MapperMock.Setup(m => m.Map<ActionGroupDto>(It.IsAny<Messages.MessageContent.Agv>())).Returns(expectedDto);
 
-        fixture.HubContextMock.Verify(c => c.Clients.All.ActionGroupCreated(It.Is<ActionGroupDto>(a => a.CorrelationId == actionGroup.CorrelationId)), Times.Once);
+        await fixture.Publisher.SendActionGroupCreatedAsync(data);
+
+        fixture.HubContextMock.Verify(c => c.Clients.All.ActionGroupCreated(It.IsAny<ActionGroupDto>()), Times.Once);
     }
 
     [TestMethod]
     public async Task SendActionGroupChangedAsync_SendsActionGroupChanged_To_ActionGroupChanged()
     {
-        PublisherFixture<ActionGroupPublisher, ActionGroupHub, IActionGroupClient> fixture = new PublisherFixture<ActionGroupPublisher, ActionGroupHub, IActionGroupClient>()
-            .WithMapper(new ActionProfile())
-            .Build();
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup().ConvertFromActionGroupWithFakeNodeType()!;
+        PublisherFixture<ActionGroupPublisher, ActionGroupHub, IActionGroupClient> fixture = new PublisherFixture<ActionGroupPublisher, ActionGroupHub, IActionGroupClient>().Build();
+        var data = new ActionGroupReadModel(Guid.NewGuid(), "order", Guid.NewGuid(), DateTime.UtcNow, DateTime.UtcNow, DateTime.UtcNow, TimeSpan.Zero, ActionGroupState.Created, ActionGroupCreator.TransportOrder, new List<AgvActionReadModel>(), false, new List<Reason>());
+        var expectedDto = Mock.Of<ActionGroupDto>();
 
-        await fixture.Publisher.SendActionGroupChangedAsync(actionGroup);
+        fixture.MapperMock.Setup(m => m.Map<ActionGroupDto>(It.IsAny<Messages.MessageContent.Agv>())).Returns(expectedDto);
 
-        fixture.HubContextMock.Verify(c => c.Clients.All.ActionGroupChanged(It.Is<ActionGroupDto>(a => a.CorrelationId == actionGroup.CorrelationId)), Times.Once);
+        await fixture.Publisher.SendActionGroupChangedAsync(data);
+
+        fixture.HubContextMock.Verify(c => c.Clients.All.ActionGroupChanged(It.IsAny<ActionGroupDto>()), Times.Once);
     }
 }

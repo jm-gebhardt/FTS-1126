@@ -43,12 +43,6 @@ public record AgvDto : DatedMessage
     /// <summary>Is Battery currently charging.</summary>
     public bool IsCharging { get; init; }
 
-    /// <summary>Lower battery level in [%] for signaling "battery bad" (defined by VDA5050).</summary>
-    public int BadBatteryLevel { get; init; }
-
-    /// <summary>Upper battery level in [%] for signaling "battery good" (defined by VDA5050).</summary>
-    public int GoodBatteryLevel { get; init; }
-
     /// <summary>
     /// The recent action group of the agv.
     /// </summary>
@@ -73,8 +67,6 @@ public record AgvDto : DatedMessage
     /// <param name="isAutomatic">Agv is in automatic mode.</param>
     /// <param name="batteryCharge">Battery charge level (soc).</param>
     /// <param name="isCharging">Is battery currently charging?</param>
-    /// <param name="badBatteryLevel">Lower battery level in [%] for signaling "battery bad" (defined by VDA5050).</param>
-    /// <param name="goodBatteryLevel">Upper battery level in [%] for signaling "battery good" (defined by VDA5050).</param>
     /// <param name="currentActionGroup">The recent action group of the agv.</param>
     /// <param name="agvErrorDto">List of agv errors.</param>
     /// <param name="lastNode">Last node.</param>
@@ -90,11 +82,9 @@ public record AgvDto : DatedMessage
         bool isAutomatic,
         double batteryCharge,
         bool isCharging,
-        int badBatteryLevel,
-        int goodBatteryLevel,
         ActionGroupDto? currentActionGroup,
         List<AgvErrorDto> agvErrorDto,
-         GraphNodeDto? lastNode)
+        GraphNodeDto? lastNode)
     {
         CorrelationId = correlationId;
         AgvId = agvId;
@@ -107,8 +97,6 @@ public record AgvDto : DatedMessage
         IsAutomatic = isAutomatic;
         BatteryCharge = batteryCharge;
         IsCharging = isCharging;
-        BadBatteryLevel = badBatteryLevel;
-        GoodBatteryLevel = goodBatteryLevel;
         CurrentActionGroup = currentActionGroup;
         Errors = agvErrorDto;
         LastNode = lastNode;

@@ -43,7 +43,7 @@ public class AgvTest
     [TestMethod]
     public void UpdateAgvStatus_BatteryChanged_StatusUpdated()
     {
-        var previousStatus = new AgvStatus(Guid.NewGuid(), null, false, false, 100.0d, false, false);
+        var previousStatus =  new AgvStatus(Guid.NewGuid(), null, false, false, 100.0d, false, false);
         var agv = new TransportOrder.Domain.Models.Agv.Agv(previousStatus.CorrelationId, "agvId", previousStatus);
         const double noticeableBatteryChange = TransportOrder.Domain.Models.Agv.Agv.BatteryChargeChangedThreshold * 1.01d;
         var newStatus = new AgvStatus(agv.CorrelationId, null, false, false, agv.AgvStatus!.BatteryCharge - noticeableBatteryChange, false, false);

@@ -2,6 +2,7 @@
 using System.Numerics;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
+using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Domain.Services.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Routing.Base;
@@ -24,8 +25,8 @@ public class AStarTest
     private readonly AgvGraph _wikiExample;
     private readonly Mock<IRoutingPlausibilityChecker> _routingPlausibilityCheckerMock;
 
-    private readonly AgvData _agvData = new (Guid.Empty, "test", "test", "0.0.0.0", 100, 1, 1, 0.9, Math.PI, (float)Mathematics.ConvertToRadians(5), 1, 1, 1, Array.Empty<AgvData.Sensor>());
-    private readonly AgvData _slowTurnAgvData = new (Guid.NewGuid(), "SlowTurner", "slow", "0.0.0.0", 100, 1,1,0.9, Mathematics.ConvertToRadians(1), Mathematics.ConvertToRadians(5), 0.5, 0.5, 0, Array.Empty<AgvData.Sensor>());
+    private readonly AgvData _agvData = AgvDataGenerator.GenerateAgvData(acceleration: 1, maxVelocityStraight: 1, maxVelocityTurn: 0.9, maxVelocityTurnOnSpot: Math.PI, turnOnSpotThreshold: 0.08726646);
+    private readonly AgvData _slowTurnAgvData = AgvDataGenerator.GenerateAgvData(acceleration: 1, maxVelocityStraight: 1, maxVelocityTurn: 0.9, maxVelocityTurnOnSpot: 0.0174532, turnOnSpotThreshold: 0.08726646);
 
     private IRoutingPlausibilityChecker RoutingPlausibilityChecker => _routingPlausibilityCheckerMock.Object;
 
@@ -424,35 +425,35 @@ public class AStarTest
         bool hasRoute = route != null;
         hasRoute.ShouldBe(isEdgePlausible);
     }
-    
+
     [TestMethod]
     public void CalculateRoute_BezierGraph_CorrectResult()
     {
         var bezier = new Bezier(new List<Vector2>
         {
-            new(0,0),
-            new(1,0),
-            new(1,1)
+            new(0, 0),
+            new(1, 0),
+            new(1, 1)
         });
 
         var graph = new AgvGraph(
             Guid.NewGuid(),
             new List<GraphNode>
             {
-                new("01"){ X = 0, Y = 0, Z = 0 },
-                new("02Bez"){ X = 1, Y = 1, Z = 0 }, // Node duplication to differentiate the chosen path.
-                new("02Dir"){ X = 1, Y = 1, Z = 0 },
-                new("03"){ X = 1, Y = 2, Z = 0 },
-                new("04"){ X = 2, Y = 2, Z = 0 }
+                new("01") {X = 0, Y = 0, Z = 0},
+                new("02Bez") {X = 1, Y = 1, Z = 0}, // Node duplication to differentiate the chosen path.
+                new("02Dir") {X = 1, Y = 1, Z = 0},
+                new("03") {X = 1, Y = 2, Z = 0},
+                new("04") {X = 2, Y = 2, Z = 0}
             },
             new List<GraphEdge>
             {
-                GraphEdge.CreateDirect("01", "02Dir", (float)Math.Sqrt(2)),
+                GraphEdge.CreateDirect("01", "02Dir", (float) Math.Sqrt(2)),
                 GraphEdge.CreateDirect("02Dir", "03"),
-                GraphEdge.CreateDirect("02Dir", "04", (float)Math.Sqrt(2)),
-                GraphEdge.CreateBezier1("01", "02Bez", (float)bezier.GetLength(100),1, 0),
+                GraphEdge.CreateDirect("02Dir", "04", (float) Math.Sqrt(2)),
+                GraphEdge.CreateBezier1("01", "02Bez", (float) bezier.GetLength(100), 1, 0),
                 GraphEdge.CreateDirect("02Bez", "03"),
-                GraphEdge.CreateDirect("02Bez", "04", (float)Math.Sqrt(2))
+                GraphEdge.CreateDirect("02Bez", "04", (float) Math.Sqrt(2))
             }
         );
 
@@ -476,24 +477,24 @@ public class AStarTest
     {
         var bezier = new Bezier(new List<Vector2>
         {
-            new(0,0),
-            new(1,0),
-            new(1,1)
+            new(0, 0),
+            new(1, 0),
+            new(1, 1)
         });
 
         var graph = new AgvGraph(
             Guid.NewGuid(),
             new List<GraphNode>
             {
-                new("01"){ X = 0, Y = 0, Z = 0 },
-                new("Bez"){ X = 1, Y = 1, Z = 0 },
-                new("Dir"){ X = 0.9f, Y = 2, Z = 0 },
-                new("03"){ X = 1, Y = 2, Z = 0 }
+                new("01") {X = 0, Y = 0, Z = 0},
+                new("Bez") {X = 1, Y = 1, Z = 0},
+                new("Dir") {X = 0.9f, Y = 2, Z = 0},
+                new("03") {X = 1, Y = 2, Z = 0}
             },
             new List<GraphEdge>
             {
-                GraphEdge.CreateDirect("01", "Dir", (float)Math.Sqrt(Math.Pow(0.9, 2) + 4)),
-                GraphEdge.CreateBezier1("01", "Bez", (float)bezier.GetLength(100),1, 0),
+                GraphEdge.CreateDirect("01", "Dir", (float) Math.Sqrt(Math.Pow(0.9, 2) + 4)),
+                GraphEdge.CreateBezier1("01", "Bez", (float) bezier.GetLength(100), 1, 0),
                 GraphEdge.CreateDirect("Bez", "03"),
                 GraphEdge.CreateDirect("Dir", "03", 0.1f)
             }

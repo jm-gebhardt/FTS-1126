@@ -46,6 +46,25 @@ public class AgvsControllerTest
     }
 
     [TestMethod]
+    public async Task GetAgvSettings_ReturnsAgvSettingsDtos()
+    {
+        AgvsControllerTestFixture<GetAgvsSettings, GetAgvSettingsRequestHandler> fixture = new AgvsControllerTestFixture<GetAgvsSettings, GetAgvSettingsRequestHandler>()
+            .SetupAgvDbWithDefaultData()
+            .UseDefaultServices()
+            .Build();
+
+        var controller = fixture.Controller;
+        ActionResult<IEnumerable<AgvSettingsDto>> response = await controller.GetAgvSettings(new List<Guid> {Guid.NewGuid()});
+
+        var result = response.Result as OkObjectResult;
+        result.ShouldNotBeNull();
+
+        var dtos = result.Value as List<AgvSettingsDto>;
+        dtos.ShouldNotBeEmpty();
+        dtos.Count.ShouldBe(1);
+    }
+
+    [TestMethod]
     public async Task GetAgvs_WhenAgvHasAgvError_ReturnsAgvWithAgvErrorList()
     {
         var fixture = new AgvsControllerTestFixture<GetAgvs, GetAgvsRequestHandler>();

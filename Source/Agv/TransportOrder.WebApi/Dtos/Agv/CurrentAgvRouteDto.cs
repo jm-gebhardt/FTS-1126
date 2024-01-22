@@ -28,7 +28,7 @@ public record CurrentAgvRouteDto
     /// ctor called by AutoMapper.
     /// </summary>
     [PublicAPI]
-    private CurrentAgvRouteDto()
+    public CurrentAgvRouteDto()
     {
         CurrentRoute = null!;
     }

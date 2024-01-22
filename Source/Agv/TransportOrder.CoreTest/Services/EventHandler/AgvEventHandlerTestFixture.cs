@@ -3,9 +3,9 @@ using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.Common.Testing;
+using Gebhardt.StoreWare.Agv.Common.Testing.Configurations;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.EventHandler;
-using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Configurations;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
@@ -30,15 +30,14 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixtureWithSche
 
     public const int BatteryLevelCritical = 10;
     public const int BatteryLevelLow = 40;
-    public const int BatteryLevelGood = 80;
-    public const int BatteryLevelMaxChargeUp = 80;
-    public const int BatteryLevelFull = 100;
+    public const int MinChargeUp = 80;
+    public const int MaxChargeUp = 100;
 
-    private static readonly AgvSettings _agvSettings = new()
+    public static readonly AgvSettings AgvSettings = new()
     {
         BatteryLevelCritical = BatteryLevelCritical,
-        BatteryLevelFull = BatteryLevelFull,
-        BatteryLevelGood = BatteryLevelGood,
+        MaxChargeUp = MaxChargeUp,
+        MinChargeUp = MinChargeUp,
         BatteryLevelLow = BatteryLevelLow,
         AgvOfflineTimeoutMsWhileIdle = 15000,
         AgvOfflineTimeoutMsWhileBusy = 20000
@@ -50,7 +49,7 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixtureWithSche
         collection.AddTransient(_ => _maintenanceService.Object);
         collection.AddTransient<ISemaphoreProvider<IAgvsSemaphore>>(_ => _agvSemaphoreProvider);
         collection.AddTransient(_ => _chooseAgvActionGroupService.Object);
-        collection.AddAgvSettings(_agvSettings);
+        collection.AddFakeSettings(AgvSettings);
         collection.AddTransient(_ => _agvDb.Object);
     }
 

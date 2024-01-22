@@ -116,9 +116,15 @@ public class AgvRepository : IAgvRepository
         return agvs;
     }
 
-    public async Task<ICollection<Domain.Models.Agv.Agv>> GetReadyAgvsAsync()
+    public async Task<ICollection<Domain.Models.Agv.Agv>> GetReadyAgvsAsync(int minBatteryLevel = 0)
     {
-        return await Agvs.Where(Domain.Models.Agv.Agv.IsReadyStatic).Where(a => a.GraphExists && !a.IsLocked && a.CurrentAgvState == AgvState.Idle && !a.AgvStatus!.Busy).ToListAsync();
+        return await Agvs.Where(Domain.Models.Agv.Agv.IsReadyStatic)
+            .Where(a => a.GraphExists &&
+                        !a.IsLocked &&
+                        a.CurrentAgvState == AgvState.Idle &&
+                        !a.AgvStatus!.Busy &&
+                        a.AgvStatus!.BatteryCharge >= minBatteryLevel
+            ).ToListAsync();
     }
 
     public async Task<string?> GetLastNodeIdAsync(Guid agvCorrelationId)
@@ -144,7 +150,7 @@ public class AgvRepository : IAgvRepository
 
         Dictionary<Guid, string?> lastNodeIdsById = await queryable
             .Where(s => s.AgvStatus != null)
-            .Select(s => new {s.CorrelationId, s.AgvStatus!.LastNodeId})
+            .Select(s => new { s.CorrelationId, s.AgvStatus!.LastNodeId })
             .ToDictionaryAsync(x => x.CorrelationId, x => x.LastNodeId);
 
         // for potential Agvs with no status, we want to have a null value

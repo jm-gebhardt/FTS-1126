@@ -16,14 +16,13 @@ public class BaseAgvChargingServiceTest
     #region Setup
     private const int BatteryLevelCritical = 10;
     private const int BatteryLevelLow = 40;
-    private const int BatteryLevelGood = 80;
-    private const int BatteryLevelFull = 100;
+    private const int MinChargeUp = 80;
+    private const int MaxChargeUp = 100;
 
     private static readonly AgvSettings _agvSettings = new()
     {
         BatteryLevelCritical = BatteryLevelCritical,
-        BatteryLevelFull = BatteryLevelFull,
-        BatteryLevelGood = BatteryLevelGood,
+        MaxChargeUp = MaxChargeUp,
         BatteryLevelLow = BatteryLevelLow,
         AgvOfflineTimeoutMsWhileIdle = 15000,
         AgvOfflineTimeoutMsWhileBusy = 20000
@@ -42,8 +41,8 @@ public class BaseAgvChargingServiceTest
     [TestMethod]
     [DataRow(BatteryLevelCritical, true)]
     [DataRow(BatteryLevelLow, false)]
-    [DataRow(BatteryLevelGood, false)]
-    [DataRow(BatteryLevelFull, false)]
+    [DataRow(MinChargeUp, false)]
+    [DataRow(MaxChargeUp, false)]
     public void Test_AgvNeedsCharging(int batteryCharge, bool needsCharging)
     {
         var agv = CreateAgv("AGV001", batteryCharge, false);
@@ -53,8 +52,7 @@ public class BaseAgvChargingServiceTest
     [TestMethod]
     [DataRow(BatteryLevelCritical, true)]
     [DataRow(BatteryLevelLow, true)]
-    [DataRow(BatteryLevelGood, false)]
-    [DataRow(BatteryLevelFull, false)]
+    [DataRow(MaxChargeUp, false)]
     public void Test_AgvIsEligibleForCharging(int batteryCharge, bool needsCharging)
     {
         var agv = CreateAgv("AGV001", batteryCharge, false);

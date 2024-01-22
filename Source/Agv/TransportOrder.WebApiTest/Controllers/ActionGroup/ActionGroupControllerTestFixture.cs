@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Models;
 using Gebhardt.StoreWare.Agv.Common.Services;
+using Gebhardt.StoreWare.Agv.Common.Testing.Configurations;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
@@ -38,7 +38,6 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
     private readonly Mock<IParkPointService> _parkPointService = new();
     private readonly Mock<IAgvDb> _agvDb = new();
     private readonly Mock<IActionGroupValidationService> _actionGroupValidationService = new();
-    private readonly Mock<ISettingsProvider<AgvSettings>> _settingsProvider = new();
     private readonly Mock<INodeStateRepository> _nodeStateRepositoryMock = new();
     private readonly List<ActionGroupReadModel> _actionGroupReadModels = new();
     private readonly List<Domain.Models.ActionGroup.ActionGroup> _actionGroups = new();
@@ -80,7 +79,7 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
             sc.AddTransient<ISemaphoreProvider<IAgvsSemaphore>>(_ => _semaphoreProvider);
             sc.AddTransient(_ => _agvDb.Object);
             sc.AddTransient(_ => _actionGroupValidationService.Object);
-            sc.AddTransient(_ => _settingsProvider.Object);
+            sc.AddFakeSettings(new AgvSettings());
             sc.AddTransient(_ => _nodeStateRepositoryMock.Object);
             if (bus != null)
             {

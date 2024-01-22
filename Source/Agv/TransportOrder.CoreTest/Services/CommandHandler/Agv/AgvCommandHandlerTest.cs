@@ -100,7 +100,7 @@ public class AgvCommandHandlerTest
         var agv = AgvGenerator.GenerateIdleAgv();
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> {agv});
         fixture.AgvDb.Setup(x => x.Data.AddOrUpdateAsync(It.IsAny<AgvData>())).ReturnsAsync(true);
-        var agvData = new AgvData(agv.CorrelationId, "model", "type", string.Empty, 100d, 1.0, 10.0, 10.0, 1.0, 10d, 1.0, 1.0, 42, Array.Empty<AgvData.Sensor>());
+        var agvData = AgvDataGenerator.GenerateAgvData();
         await fixture.PublishMessageAsync(new UpdateAgvData(agv.CorrelationId, agvData));
         agv.DataExist.ShouldBeTrue();
     }
@@ -129,7 +129,7 @@ public class AgvCommandHandlerTest
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> {agv});
         double newBatteryCharge = agv.AgvStatus!.BatteryCharge - 2.0d * TransportOrder.Domain.Models.Agv.Agv.BatteryChargeChangedThreshold;
 
-        var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, newBatteryCharge, agv.AgvStatus!.Charging, agv.AgvStatus!.Disturbed, agv.AgvStatus!.LastNodeId);
+        var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, newBatteryCharge, agv.AgvStatus!.Charging, 48, agv.AgvStatus!.Charging ? 20 : -10, 20, agv.AgvStatus!.Disturbed, agv.AgvStatus!.LastNodeId);
         var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.AgvId, newAgvStatus);
         await fixture.PublishMessageAsync(updateAgvStatus);
         (await fixture.TestHarness.Published.Any<AgvBatteryChargeChanged>()).ShouldBeTrue();
@@ -142,7 +142,7 @@ public class AgvCommandHandlerTest
         var agv = AgvGenerator.GenerateIdleAgv();
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> {agv});
 
-        var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, agv.AgvStatus!.Disturbed, "newLastNodeId");
+        var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, 48, agv.AgvStatus!.Charging ? 20 : -10, 20, agv.AgvStatus!.Disturbed, "newLastNodeId");
         var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.AgvId, newAgvStatus);
         await fixture.PublishMessageAsync(updateAgvStatus);
         (await fixture.TestHarness.Published.Any<AgvLastNodeIdChanged>()).ShouldBeTrue();
@@ -156,7 +156,7 @@ public class AgvCommandHandlerTest
         agv.IsOnline.ShouldBeFalse();
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> {agv});
 
-        var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, agv.AgvStatus!.Disturbed);
+        var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, 48, agv.AgvStatus!.Charging ? 20 : -10, 20, agv.AgvStatus!.Disturbed);
         var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.AgvId, newAgvStatus);
         await fixture.PublishMessageAsync(updateAgvStatus);
         (await fixture.TestHarness.Published.Any<AgvOnlineChanged>()).ShouldBeTrue();
@@ -170,7 +170,7 @@ public class AgvCommandHandlerTest
         agv.IsOnline.ShouldBeFalse();
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> {agv});
 
-        var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, false, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, agv.AgvStatus!.Disturbed);
+        var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, false, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, 48, agv.AgvStatus!.Charging ? 20 : -10, 20, agv.AgvStatus!.Disturbed);
         var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.AgvId, newAgvStatus);
         await fixture.PublishMessageAsync(updateAgvStatus);
         (await fixture.TestHarness.Published.Any<AgvOnlineChanged>()).ShouldBeTrue();
@@ -189,7 +189,7 @@ public class AgvCommandHandlerTest
         };
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> {agv});
 
-        var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, agv.AgvStatus!.Disturbed);
+        var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, 48, agv.AgvStatus!.Charging ? 20 : -10, 20, agv.AgvStatus!.Disturbed);
         var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.AgvId, newAgvStatus);
         await fixture.PublishMessageAsync(updateAgvStatus);
         (await fixture.TestHarness.Published.Any<RequestAgvData>()).ShouldBeTrue();
@@ -209,7 +209,7 @@ public class AgvCommandHandlerTest
             .AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> {agv})
             .WithGraphExists(true);
 
-        var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, agv.AgvStatus!.Disturbed);
+        var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, 48, agv.AgvStatus!.Charging ? 20 : -10, 20, agv.AgvStatus!.Disturbed);
         var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.AgvId, newAgvStatus);
         await fixture.PublishMessageAsync(updateAgvStatus);
         (await fixture.TestHarness.Published.Any<RequestAgvGraph>()).ShouldBeTrue();
@@ -223,7 +223,7 @@ public class AgvCommandHandlerTest
         var fixture = new AgvCommandHandlerTestFixture();
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv>());
         fixture.SetupAgv(graphExists: true);
-        var agvStatus = new AgvStatus(Guid.NewGuid(), null, false, true, 100.0d, false, false);
+        var agvStatus = new AgvStatus(Guid.NewGuid(), null, false, true, 100.0d, false, 48, -10, 20, false);
         var updateAgvStatus = new UpdateAgvStatus(agvStatus.CorrelationId, "agvId", agvStatus);
         await fixture.PublishMessageAsync(updateAgvStatus);
 
@@ -240,7 +240,7 @@ public class AgvCommandHandlerTest
         var fixture = new AgvCommandHandlerTestFixture();
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv>());
         fixture.SetupAgv(graphExists: false);
-        var agvStatus = new AgvStatus(Guid.NewGuid(), null, false, true, 100.0d, false, false);
+        var agvStatus = new AgvStatus(Guid.NewGuid(), null, false, true, 100.0d, false, 48, -10, 20, false);
         var updateAgvStatus = new UpdateAgvStatus(agvStatus.CorrelationId, "agvId", agvStatus);
         await fixture.PublishMessageAsync(updateAgvStatus);
 
@@ -379,7 +379,7 @@ public class AgvCommandHandlerTest
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> {agv});
 
         var currentAgStatus = agv.AgvStatus!;
-        var agvStatus = new AgvStatus(agv.CorrelationId, currentAgStatus.OrderId, currentAgStatus.Busy, currentAgStatus.Automatic, currentAgStatus.BatteryCharge, currentAgStatus.Charging, currentAgStatus.Disturbed, currentAgStatus.LastNodeId);
+        var agvStatus = new AgvStatus(agv.CorrelationId, currentAgStatus.OrderId, currentAgStatus.Busy, currentAgStatus.Automatic, currentAgStatus.BatteryCharge, currentAgStatus.Charging, 48, currentAgStatus.Charging ? 20 : -10, 20, currentAgStatus.Disturbed, currentAgStatus.LastNodeId);
         var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.AgvId, agvStatus);
         await fixture.PublishMessageAsync(updateAgvStatus);
 

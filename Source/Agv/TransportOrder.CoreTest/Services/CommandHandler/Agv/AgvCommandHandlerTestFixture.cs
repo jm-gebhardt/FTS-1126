@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
 using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.Common.Testing;
+using Gebhardt.StoreWare.Agv.Common.Testing.Configurations;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.CmdOptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.CommandHandler;
@@ -23,12 +23,15 @@ using Moq;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.CommandHandler.Agv;
 
-public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixtureWithScheduler<AgvCommandHandler>
+public class AgvCommandHandlerTestFixture(
+    Action<IBusRegistrationConfigurator>? busRegistrationConfigurator = null,
+    Action<IBusRegistrationContext, IInMemoryBusFactoryConfigurator>? inMemoryConfiguration = null,
+    params Action<IServiceCollection>[] services)
+    : MassTransitConsumerTestFixtureWithScheduler<AgvCommandHandler>(busRegistrationConfigurator, inMemoryConfiguration, services)
 {
     private readonly SemaphoreProvider<IAgvsSemaphore> _semaphoreProvider = new();
     private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
     private readonly Mock<ILogger<AgvCommandHandler>> _logger = new();
-    private readonly Mock<ISettingsProvider<AgvSettings>> _settingsProvider = new();
     private readonly Mock<IMapRepository> _mapRepository = new();
     private readonly ProductionOptions _productionOptions = new() {AutoAccept = true};
     public readonly Mock<IAgvDb> AgvDb = new();
@@ -38,26 +41,11 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixtureWithSc
         collection.AddTransient<ISemaphoreProvider<IAgvsSemaphore>>(_ => _semaphoreProvider);
         collection.AddTransient(_ => _actionGroupRepository.Object);
         collection.AddTransient(_ => _logger.Object);
-        collection.AddTransient(_ => _settingsProvider.Object);
+        collection.AddFakeSettings(new AgvSettings());
         collection.AddTransient(_ => GetMapper());
         collection.AddTransient(_ => _mapRepository.Object);
         collection.AddTransient(_ => _productionOptions);
         collection.AddTransient(_ => AgvDb.Object);
-    }
-
-    public AgvCommandHandlerTestFixture(Action<IBusRegistrationConfigurator>? busRegistrationConfigurator = null,
-        Action<IBusRegistrationContext, IInMemoryBusFactoryConfigurator>? inMemoryConfiguration = null,
-        params Action<IServiceCollection>[] services) : base(busRegistrationConfigurator, inMemoryConfiguration, services)
-    {
-        _settingsProvider.Setup(s => s.GetSettings()).Returns(new AgvSettings
-        {
-            BatteryLevelCritical = 10,
-            BatteryLevelGood = 80,
-            BatteryLevelFull = 100,
-            BatteryLevelLow = 20,
-            AgvOfflineTimeoutMsWhileBusy = 10000,
-            AgvOfflineTimeoutMsWhileIdle = 10000
-        });
     }
 
     public AgvCommandHandlerTestFixture AddAgvs(List<TransportOrder.Domain.Models.Agv.Agv> agvs)

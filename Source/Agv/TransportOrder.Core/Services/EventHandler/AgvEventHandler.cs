@@ -164,34 +164,36 @@ public class AgvEventHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<AgvBatteryChargeChanged> context)
     {
-        var agvSettings = _settingsProvider.GetSettings();
-        var agvCorrelationId = context.Message.CorrelationId;
+        var message = context.Message;
+        var agvCorrelationId = message.CorrelationId;
 
-        double oldSoc = context.Message.OldBatteryCharge;
-        double newSoc = context.Message.NewBatteryCharge;
+        double oldSoc = message.OldBatteryCharge;
+        double newSoc = message.NewBatteryCharge;
 
         bool isCharging = oldSoc < newSoc;
-        bool wasGood = oldSoc > agvSettings.BatteryLevelLow;
-        bool isGood = newSoc > agvSettings.BatteryLevelLow;
+        bool wasMinChargedUp = oldSoc >= message.MinChargeUp;
+        bool isMinChargedUp = newSoc >= message.MinChargeUp;
 
-        bool wasMaxChargedUp = oldSoc > agvSettings.MaxChargeUp;
-        bool isMaxChargedUp = newSoc > agvSettings.MaxChargeUp;
+        bool wasMaxChargedUp = oldSoc >= message.MaxChargeUp;
+        bool isMaxChargedUp = newSoc >= message.MaxChargeUp;
 
-        if (!wasGood && isGood)
+        bool isLow = newSoc <= message.BatteryLevelLow;
+
+        if (!wasMinChargedUp && isMinChargedUp)
         {
-            _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} is no longer low on battery and can handle actions again.", agvCorrelationId);
+            _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} has reached min charge up level and can handle actions again.", agvCorrelationId);
             await context.Publish(new ChargingAgvCanHandleActionsAgain(agvCorrelationId));
         }
 
         if (!wasMaxChargedUp && isMaxChargedUp)
         {
-            _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} is fully charged up. So aborting charge action now.", agvCorrelationId);
-            await context.Publish(new AbortChargeAction(context.Message.CorrelationId));
+            _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} has reached max charge up level. So aborting charge action now.", agvCorrelationId);
+            await context.Publish(new AbortChargeAction(message.CorrelationId));
         }
 
-        if (!isCharging && !isGood)
+        if (!isCharging && isLow)
         {
-            _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} needs charging.", agvCorrelationId);
+            _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} is below low level, it needs charging.", agvCorrelationId);
             await context.Publish(new AgvNeedsCharging(agvCorrelationId));
         }
     }

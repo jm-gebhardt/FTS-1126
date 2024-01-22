@@ -23,6 +23,7 @@ public class AgvsController : Controller
     private readonly IRequestClient<GetActiveErrorsForAgvs> _getActiveErrorsClient;
     private readonly IRequestClient<GetErrorHistoryForAgvs> _getErrorHistoryClient;
     private readonly IRequestClient<GetCargosOfAgvs> _getCargosOfAgvsClient;
+    private readonly IRequestClient<GetAgvsSettings> _getAgvsSettingsClient;
 
     private readonly IMapper _mapper;
 
@@ -37,7 +38,8 @@ public class AgvsController : Controller
         IRequestClient<GetAgvsData> getAgvDataClient,
         IRequestClient<GetActiveErrorsForAgvs> getActiveErrorsClient,
         IRequestClient<GetErrorHistoryForAgvs> getErrorHistoryClient,
-        IRequestClient<GetCargosOfAgvs> getCargosOfAgvsClient
+        IRequestClient<GetCargosOfAgvs> getCargosOfAgvsClient,
+        IRequestClient<GetAgvsSettings> getAgvsSettingsClient
     )
     {
         _getAgvsClient = getAgvsClient;
@@ -49,6 +51,7 @@ public class AgvsController : Controller
         _getActiveErrorsClient = getActiveErrorsClient;
         _getErrorHistoryClient = getErrorHistoryClient;
         _getCargosOfAgvsClient = getCargosOfAgvsClient;
+        _getAgvsSettingsClient = getAgvsSettingsClient;
     }
 
     /// <summary>
@@ -120,6 +123,21 @@ public class AgvsController : Controller
         Response<GotAgvsData> response = await _getAgvDataClient.GetResponse<GotAgvsData>(new GetAgvsData(correlationIds));
         var graphs = _mapper.Map<List<AgvDataDto>>(response.Message.AgvData);
         return Ok(graphs);
+    }
+
+    /// <summary>
+    /// Get list of selected agvs' settings
+    /// </summary>
+    /// <param name="correlationIds">Only Agvs contained in this list will be considered</param>
+    /// <response code="200">Ok</response>
+    /// <response code="400">One or more of given correlation ids is unknown.</response>
+    [HttpPost]
+    [Route("/agvs/settings")]
+    public async Task<ActionResult<IEnumerable<AgvSettingsDto>>> GetAgvSettings([FromQuery] ICollection<Guid> correlationIds)
+    {
+        Response<GotAgvsSettings> response = await _getAgvsSettingsClient.GetResponse<GotAgvsSettings>(new GetAgvsSettings(correlationIds));
+        var dto = _mapper.Map<List<AgvSettingsDto>>(response.Message.AgvSettings);
+        return Ok(dto);
     }
 
     /// <summary>

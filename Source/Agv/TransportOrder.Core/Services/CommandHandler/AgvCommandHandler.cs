@@ -12,7 +12,6 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Core.CmdOptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
@@ -24,6 +23,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Commands;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
+using AgvSettings = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings.AgvSettings;
 using AgvStatus = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv.AgvStatus;
 using Cargo = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Cargo;
 using LockAgv = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv.LockAgv;
@@ -93,7 +93,7 @@ public class AgvCommandHandler :
         await _agvsSemaphore.ExecuteLockedAsync(async () =>
         {
             var agvSettings = _settingsProvider.GetSettings();
-            ICollection<Domain.Models.Agv.Agv> goodAgvs = await _agvDb.Agvs.GetChargingAgvsWithMinBatteryLevelAsync(agvSettings.BatteryLevelLow);
+            ICollection<Domain.Models.Agv.Agv> goodAgvs = await _agvDb.Agvs.GetChargingAgvsWithMinBatteryLevelAsync(agvSettings.MinChargeUp);
 
             // preliminary logic: just go through all potential available Agvs and try to start a new action
             foreach (var agv in goodAgvs.OrderByDescending(a => a.AgvStatus!.BatteryCharge))
@@ -225,15 +225,25 @@ public class AgvCommandHandler :
         bool lastNodeIdChanged,
         bool wasOnline)
     {
+        var agvStatus = agv.AgvStatus!;
         if (batteryChargeChanged)
         {
-            await context.Publish(new AgvBatteryChargeChanged(agv.CorrelationId, oldStatus!.BatteryCharge, agv.AgvStatus!.BatteryCharge));
+            var agvSettings = _settingsProvider.GetSettings();
+
+            await context.Publish(new AgvBatteryChargeChanged(agv.CorrelationId,
+                oldStatus!.BatteryCharge,
+                agvStatus.BatteryCharge,
+                agvSettings,
+                agvStatus,
+                // some time estimation
+                agvStatus.Charging ? DateTime.UtcNow + TimeSpan.FromSeconds((100 - agvStatus.BatteryCharge) * 1) : null,
+                DateTime.UtcNow.AddDays(-2)));
         }
         if (lastNodeIdChanged)
         {
-            await context.Publish(new AgvLastNodeIdChanged(agv.CorrelationId, oldStatus!.LastNodeId, agv.AgvStatus!.LastNodeId));
+            await context.Publish(new AgvLastNodeIdChanged(agv.CorrelationId, oldStatus!.LastNodeId, agvStatus.LastNodeId));
         }
-        if (agv.CurrentAgvState == AgvState.Idle && !agv.AgvStatus!.Busy && oldStatus!.Busy)
+        if (agv.CurrentAgvState == AgvState.Idle && !agvStatus.Busy && oldStatus!.Busy)
         {
             await context.Publish(new AgvBecameIdle(agv.CorrelationId));
         }
@@ -275,7 +285,7 @@ public class AgvCommandHandler :
     public async Task Consume(ConsumeContext<GoOffline> context)
     {
         var (correlationId, offlineTokenId) = context.Message;
-        var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);  
+        var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
 
         bool wasOnline = agv.IsOnline;
         agv.GoOffline(offlineTokenId);

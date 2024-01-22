@@ -78,9 +78,7 @@ public record AgvData : CorrelatedBy<Guid>
     /// </summary>
     public Sensor[] Sensors { get; init; }
 
-    /// <summary>
-    /// Initializes a new instance of <see cref="AgvData"/>
-    /// </summary>
+    /// <inheritdoc cref="AgvData"/>
     public AgvData(Guid correlationId,
         string model,
         string type,

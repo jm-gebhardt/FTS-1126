@@ -43,12 +43,6 @@ public record Agv
     /// <summary>Is Battery currently charging</summary>
     public bool IsCharging { get; init; }
 
-    /// <summary>Lower battery level in [%] for signaling "battery bad" (defined by VDA5050)</summary>
-    public int BadBatteryLevel { get; init; }
-
-    /// <summary>Upper battery level in [%] for signaling "battery good" (defined by VDA5050)</summary>
-    public int GoodBatteryLevel { get; init; }
-
     /// <summary>
     /// The recent ActionGroup of the Agv
     /// </summary>
@@ -76,8 +70,6 @@ public record Agv
     /// <param name="isAutomatic">AGV is in automatic mode</param>
     /// <param name="batteryCharge">Battery charge level (Soc)</param>
     /// <param name="isCharging">Is Battery currently charging</param>
-    /// <param name="badBatteryLevel">Lower battery level in [%] for signaling "battery bad" (defined by VDA5050)</param>
-    /// <param name="goodBatteryLevel">Upper battery level in [%] for signaling "battery good" (defined by VDA5050)</param>
     /// <param name="currentActionGroup">The recent ActionGroup of the Agv</param>
     /// <param name="agvError">List of Agv errors</param>
     /// <param name="lastNodeId">Last node id for agv.</param>
@@ -95,8 +87,6 @@ public record Agv
         bool isAutomatic,
         double batteryCharge,
         bool isCharging,
-        int badBatteryLevel,
-        int goodBatteryLevel,
         ActionGroupReadModel? currentActionGroup,
         List<AgvError> agvError,
         string? lastNodeId,
@@ -114,8 +104,6 @@ public record Agv
         IsAutomatic = isAutomatic;
         BatteryCharge = batteryCharge;
         IsCharging = isCharging;
-        BadBatteryLevel = badBatteryLevel;
-        GoodBatteryLevel = goodBatteryLevel;
         CurrentActionGroup = currentActionGroup;
         Errors = agvError;
         LastNodeId = lastNodeId;

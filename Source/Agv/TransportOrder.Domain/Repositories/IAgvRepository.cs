@@ -76,8 +76,9 @@ public interface IAgvRepository
     /// <summary>
     /// Get all ready agvs.
     /// </summary>
+    /// <param name="minBatteryLevel">The Agv must have at least this battery level to be contained.</param>
     /// <returns></returns>
-    Task<ICollection<Models.Agv.Agv>> GetReadyAgvsAsync();
+    Task<ICollection<Models.Agv.Agv>> GetReadyAgvsAsync(int minBatteryLevel = 0);
 
     /// <summary>
     /// Get all charging agvs with at least a certain battery level.
