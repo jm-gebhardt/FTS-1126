@@ -21,12 +21,16 @@ services:
       - MQTT_PASSWORD=${RABBITMQ_PASSWORD}
       - MONGODB=mongo
     volumes:
-      - ../../Certs/client:/home/karis/client
+      - ../../../Certs/client:/home/karis/client
     depends_on:
       mongo:
         condition: service_started
     ports:
       - 127.0.0.1:8081:80
+    ulimits:
+      nofile:
+        soft: 1024
+        hard: 524288
     
   karis1:
     image: registry.gitlab.com/tar4/karis_virtual
@@ -42,6 +46,10 @@ services:
     ports:
       - 127.0.0.1:8082:80
       - 127.0.0.1:30061:30061
+    ulimits:
+      nofile:
+        soft: 1024
+        hard: 524288
     
   mongo:
     hostname: mongo.karis.agv
