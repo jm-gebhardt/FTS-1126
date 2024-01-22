@@ -38,18 +38,12 @@ public class AgvControllerTest
 
         fixture
             .WithAgvGraph(correlationId, agvGraph)
-            .UseDefaultServices()
+            .SetupAgvDbWithDefaultData()
             .Build();
 
-        var controller = fixture.Controller;
-        ActionResult<AgvDto> response = await controller.GetAgv(correlationId);
+        var agvDto = await fixture.GetControllerResultAsync(c => c.GetAgv(correlationId));
 
-        var result = response.Result as OkObjectResult;
-        result.ShouldNotBeNull();
-
-        var agvDto = result.Value as AgvDto;
-
-        var expectedAgvDto = new AgvDto(correlationId, agvId, AgvStateType.Idle, agvDto!.TimeOfStateTransition, DateTime.MinValue, false, false, true, true, 10d, true, null, new List<AgvErrorDto>(), new GraphNodeDto {Id = "WAY1", Type = AgvGraph.NodeType.WayPoint, X = 1.0f, Y = 2.0f, Z = 0.0f, Theta = 0.0f});
+        var expectedAgvDto = new AgvDto(correlationId, agvId, AgvStateType.Idle, agvDto.TimeOfStateTransition, DateTime.MinValue, false, false, true, true, 10d, true, null, new List<AgvErrorDto>(), new GraphNodeDto {Id = "WAY1", Type = AgvGraph.NodeType.WayPoint, X = 1.0f, Y = 2.0f, Z = 0.0f, Theta = 0.0f});
         agvDto.ShouldNotBeNull();
         agvDto.CorrelationId.ShouldBe(expectedAgvDto.CorrelationId);
         agvDto.AgvId.ShouldBe(expectedAgvDto.AgvId);
@@ -71,7 +65,7 @@ public class AgvControllerTest
     public async Task GetSingleAgv_UnknownCorrelationId_ReturnsNotFound()
     {
         AgvControllerTestFixture<GetAgv, GetAgvsRequestHandler> fixture = new AgvControllerTestFixture<GetAgv, GetAgvsRequestHandler>()
-            .UseDefaultServices()
+            .SetupAgvDbWithDefaultData()
             .Build();
 
         const string agvId = "INVALID";
@@ -92,16 +86,10 @@ public class AgvControllerTest
 
         fixture
             .WithAgvGraph(correlationId, agvGraph)
-            .UseDefaultServices()
+            .SetupAgvDbWithDefaultData()
             .Build();
 
-        var controller = fixture.Controller;
-        ActionResult<GraphDto> response = await controller.GetAgvGraph(correlationId);
-        var result = response.Result as OkObjectResult;
-        result.ShouldNotBeNull();
-
-        var graph = result.Value as GraphDto;
-        graph.ShouldNotBeNull();
+        var graph = await fixture.GetControllerResultAsync(c => c.GetAgvGraph(correlationId));
 
         graph.CorrelationId.ShouldBe(correlationId);
         graph.Nodes.Count.ShouldBe(agvGraph.Nodes.Count);
@@ -131,7 +119,7 @@ public class AgvControllerTest
     public async Task GetAgvGraph_UnknownCorrelationId_ReturnsNotFound()
     {
         AgvControllerTestFixture<GetAgvGraph, GetGraphRequestHandler> fixture = new AgvControllerTestFixture<GetAgvGraph, GetGraphRequestHandler>()
-            .UseDefaultServices()
+            .SetupAgvDbWithDefaultData()
             .Build();
         var controller = fixture.Controller;
         var correlationId = Guid.Empty;
@@ -145,15 +133,11 @@ public class AgvControllerTest
     public async Task GetAgvData_ValidData_ReturnsAgvDataDto(int index)
     {
         AgvControllerTestFixture<GetAgvData, GetAgvDataRequestHandler> fixture = new AgvControllerTestFixture<GetAgvData, GetAgvDataRequestHandler>()
-            .UseDefaultServices()
+            .SetupAgvDbWithDefaultData()
             .Build();
-        var controller = fixture.Controller;
         var correlationId = fixture.AgvIds[index].ToGuid();
-        ActionResult<AgvDataDto> response = await controller.GetAgvData(correlationId);
-        var result = response.Result as OkObjectResult;
-        result.ShouldNotBeNull();
 
-        var agvData = result.Value as AgvDataDto;
+        var agvData = await fixture.GetControllerResultAsync(c => c.GetAgvData(correlationId));
         agvData.ShouldNotBeNull();
 
         agvData.CorrelationId.ShouldBe(correlationId);
@@ -164,16 +148,11 @@ public class AgvControllerTest
     public async Task GetAgvSettings_ValidData_ReturnsAgvSettingsDto()
     {
         AgvControllerTestFixture<GetAgvSettings, GetAgvSettingsRequestHandler> fixture = new AgvControllerTestFixture<GetAgvSettings, GetAgvSettingsRequestHandler>()
-            .UseDefaultServices()
+            .SetupAgvDbWithDefaultData()
             .Build();
-        var controller = fixture.Controller;
         var correlationId = fixture.AgvIds[0].ToGuid();
-        ActionResult<AgvSettingsDto> response = await controller.GetAgvSettings(correlationId);
-        var result = response.Result as OkObjectResult;
-        result.ShouldNotBeNull();
-
-        var dto = result.Value as AgvSettingsDto;
-        dto.ShouldNotBeNull();
+        
+        var dto = await fixture.GetControllerResultAsync(c => c.GetAgvSettings(correlationId));
 
         dto.CorrelationId.ShouldBe(correlationId);
         dto.BatteryLevelCritical.ShouldBe(fixture.AgvSettings.BatteryLevelCritical);
@@ -186,7 +165,7 @@ public class AgvControllerTest
     public async Task GetAgvData_UnknownCorrelationId_ReturnsNotFound()
     {
         AgvControllerTestFixture<GetAgvData, GetAgvDataRequestHandler> fixture = new AgvControllerTestFixture<GetAgvData, GetAgvDataRequestHandler>()
-            .UseDefaultServices()
+            .SetupAgvDbWithDefaultData()
             .Build();
         var controller = fixture.Controller;
         var correlationId = Guid.Empty;
@@ -207,7 +186,7 @@ public class AgvControllerTest
         IRequestClient<AcceptAgv> requestClient = RequestClientGenerator<AcceptAgv>.CreateDummyRequestClient(response1, response2, response3, responseToUse);
 
         fixture.AddService(sc => sc.AddTransient(_ => requestClient))
-            .UseDefaultServices()
+            .SetupAgvDbWithDefaultData()
             .Build();
 
         var result = await fixture.Controller.AcceptAgv(correlationId);
@@ -227,7 +206,7 @@ public class AgvControllerTest
         IRequestClient<AcceptAgv> requestClient = RequestClientGenerator<AcceptAgv>.CreateDummyRequestClient(response1, response2, response3, responseToUse);
 
         fixture.AddService(sc => sc.AddTransient(_ => requestClient))
-            .UseDefaultServices()
+            .SetupAgvDbWithDefaultData()
             .Build();
 
         var result = await fixture.Controller.AcceptAgv(correlationId);
@@ -247,7 +226,7 @@ public class AgvControllerTest
         IRequestClient<AcceptAgv> requestClient = RequestClientGenerator<AcceptAgv>.CreateDummyRequestClient(response1, response2, response3, responseToUse);
 
         fixture.AddService(sc => sc.AddTransient(_ => requestClient))
-            .UseDefaultServices()
+            .SetupAgvDbWithDefaultData()
             .Build();
 
         var result = await fixture.Controller.AcceptAgv(correlationId);
@@ -258,7 +237,7 @@ public class AgvControllerTest
     public async Task UnlockAgv_UnknownCorrelationId_ReturnsNotFound()
     {
         AgvControllerTestFixture<UnlockAgv, AgvCommandHandler> fixture = new AgvControllerTestFixture<UnlockAgv, AgvCommandHandler>()
-            .UseDefaultServices()
+            .SetupAgvDbWithDefaultData()
             .Build();
         var controller = fixture.Controller;
         var correlationId = Guid.Empty;
@@ -273,7 +252,7 @@ public class AgvControllerTest
     public async Task UnlockAgv_WhenNotInDiscovered_UnlocksAgv()
     {
         AgvControllerTestFixture<UnlockAgv, AgvCommandHandler> fixture = new AgvControllerTestFixture<UnlockAgv, AgvCommandHandler>()
-            .UseDefaultServices()
+            .SetupAgvDbWithDefaultData()
             .Build();
         var controller = fixture.Controller;
         var correlationId = fixture.AgvIds[1].ToGuid(); // AGV not in state 'Discovered'
@@ -290,7 +269,7 @@ public class AgvControllerTest
     public async Task UnlockAgv_Ok()
     {
         AgvControllerTestFixture<UnlockAgv, AgvCommandHandler> fixture = new AgvControllerTestFixture<UnlockAgv, AgvCommandHandler>()
-            .UseDefaultServices()
+            .SetupAgvDbWithDefaultData()
             .Build();
         var controller = fixture.Controller;
         var correlationId = fixture.AgvIds[2].ToGuid();
@@ -307,7 +286,7 @@ public class AgvControllerTest
     public async Task LockAgv_Ok()
     {
         AgvControllerTestFixture<LockAgv, AgvCommandHandler> fixture = new AgvControllerTestFixture<LockAgv, AgvCommandHandler>()
-            .UseDefaultServices()
+            .SetupAgvDbWithDefaultData()
             .Build();
         var controller = fixture.Controller;
         var correlationId = fixture.AgvIds[2].ToGuid();
@@ -324,7 +303,7 @@ public class AgvControllerTest
     public async Task EmitRequestAgvData_NotFound()
     {
         AgvControllerTestFixture<RequestAgvData, RequestAgvDataCommandHandler> fixture = new AgvControllerTestFixture<RequestAgvData, RequestAgvDataCommandHandler>()
-            .UseDefaultServices()
+            .SetupAgvDbWithDefaultData()
             .Build();
         var controller = fixture.Controller;
         var correlationId = Guid.Empty;
@@ -336,7 +315,7 @@ public class AgvControllerTest
     public async Task EmitRequestAgvData_Ok()
     {
         AgvControllerTestFixture<RequestAgvData, RequestAgvDataCommandHandler> fixture = new AgvControllerTestFixture<RequestAgvData, RequestAgvDataCommandHandler>()
-            .UseDefaultServices()
+            .SetupAgvDbWithDefaultData()
             .Build();
         var controller = fixture.Controller;
         var correlationId = fixture.AgvIds[2].ToGuid();
@@ -353,7 +332,7 @@ public class AgvControllerTest
     public async Task EmitRequestAgvGraph_NotFound()
     {
         AgvControllerTestFixture<RequestAgvGraph, RequestAgvGraphCommandHandler> fixture = new AgvControllerTestFixture<RequestAgvGraph, RequestAgvGraphCommandHandler>()
-            .UseDefaultServices()
+            .SetupAgvDbWithDefaultData()
             .Build();
         var controller = fixture.Controller;
         var correlationId = Guid.Empty;
@@ -365,7 +344,7 @@ public class AgvControllerTest
     public async Task EmitRequestAgvGraph_Ok()
     {
         AgvControllerTestFixture<RequestAgvGraph, RequestAgvGraphCommandHandler> fixture = new AgvControllerTestFixture<RequestAgvGraph, RequestAgvGraphCommandHandler>()
-            .UseDefaultServices()
+            .SetupAgvDbWithDefaultData()
             .Build();
         var controller = fixture.Controller;
         var correlationId = fixture.AgvIds[2].ToGuid();
@@ -382,15 +361,12 @@ public class AgvControllerTest
     public async Task MoveAgv_Ok()
     {
         AgvControllerTestFixture<MoveAgv, AgvCommandHandler> fixture = new AgvControllerTestFixture<MoveAgv, AgvCommandHandler>()
-            .UseDefaultServices()
+            .SetupAgvDbWithDefaultData()
             .Build();
-        var controller = fixture.Controller;
         var correlationId = fixture.AgvIds[2].ToGuid();
         const string targetNodeId = "Test Destination Id";
 
-        var actionResult = await controller.MoveAgv(correlationId, targetNodeId);
-        var result = actionResult as OkObjectResult;
-        result.ShouldNotBeNull();
+        var result = await fixture.GetControllerResultAsync<Guid, OkObjectResult>(c => c.MoveAgv(correlationId, targetNodeId));
         result.Value.ShouldBeOfType<Guid>();
     }
 
@@ -398,16 +374,26 @@ public class AgvControllerTest
     public async Task MoveAgv_UnknownAgv_NotFoundResult()
     {
         AgvControllerTestFixture<MoveAgv, AgvCommandHandler> fixture = new AgvControllerTestFixture<MoveAgv, AgvCommandHandler>()
-            .UseDefaultServices()
+            .SetupAgvDbWithDefaultData()
             .Build();
 
-        var controller = fixture.Controller;
         var correlationId = Guid.Empty;
         fixture.AgvDb.Setup(x => x.Agvs.GetAgvAsync(It.Is<Guid>(g => g == correlationId))).Throws(new AgvNotFoundException(correlationId));
 
-        var actionResult = await controller.MoveAgv(correlationId, "Test Destination Id");
-        actionResult.ShouldNotBeNull();
-        var result = actionResult as NotFoundResult;
-        result.ShouldNotBeNull();
+        await fixture.GetControllerResultAsync<Guid, NotFoundResult>(c => c.MoveAgv(correlationId, "Test Destination Id"));
+    }
+
+    [TestMethod]
+    public async Task GetAgvs_WhenAgvHasCargo_ReturnsAgvWithCargo()
+    {
+        AgvControllerTestFixture<GetAgvHasCargo, CargoRequestHandler> fixture = new AgvControllerTestFixture<GetAgvHasCargo, CargoRequestHandler>()
+            .SetupAgvDbWithDefaultData()
+            .Build();
+
+        var agvCorrelationId = fixture.AgvIds[0].ToGuid();
+        fixture.WithHasCargo(agvCorrelationId, true);
+
+        bool dto = await fixture.GetControllerResultValueAsync(c => c.HasCargo(agvCorrelationId));
+        dto.ShouldBeTrue();
     }
 }

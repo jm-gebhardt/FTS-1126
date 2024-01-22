@@ -1,7 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Map;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Map;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
@@ -14,15 +12,9 @@ public class MapsControllerTest
     public async Task GetMaps_ShouldSendProperCommandToMediator_WhereRequestIsNotDefined()
     {
         MapsControllerTestFixture<GetMapList, GetMapRequestHandler> fixture = new MapsControllerTestFixture<GetMapList, GetMapRequestHandler>()
-            .UseDefaultServices()
             .Build();
-        var mapController = fixture.Controller;
-        ActionResult<IEnumerable<MapMetaDataDto>> response = await mapController.GetMaps();
 
-        var result = response.Result as OkObjectResult;
-        var resultValue = result!.Value as IEnumerable<MapMetaDataDto>;
-
-        resultValue.ShouldNotBeEmpty();
+        await fixture.GetControllerResultAsync(c => c.GetMaps());
 
         var harness = fixture.TestHarness;
 

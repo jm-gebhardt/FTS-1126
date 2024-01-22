@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Node;
+﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Node;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Map;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers.Map;
@@ -26,8 +25,6 @@ public class MapControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         new("465A85A6-6A02-4068-A7AA-E3B4B9821019")
     };
 
-    public IMapper Mapper = null!;
-
     protected override MapController GetController()
     {
         IRequestClient<GetMapImage> getMapImageRequestClient = GetRequestClient<GetMapImage>();
@@ -36,8 +33,7 @@ public class MapControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         IRequestClient<GetMapNodeStates> getMapNodeStatesClient = GetRequestClient<GetMapNodeStates>();
         IRequestClient<GetStations> getStationsClient = GetRequestClient<GetStations>();
 
-        var controller = new MapController(GetMapper(), getMapImageRequestClient, getMapRequestClient, getMapGraphClient, getMapNodeStatesClient, getStationsClient);
-        Mapper = GetMapper();
+        var controller = new MapController(Mapper!, getMapImageRequestClient, getMapRequestClient, getMapGraphClient, getMapNodeStatesClient, getStationsClient);
         return controller;
     }
 
@@ -54,33 +50,6 @@ public class MapControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         mapRepositoryMock.Setup(x => x.GetMapImage(It.IsAny<Guid>())).Returns(Convert.FromBase64String(Base64String));
 
         return mapRepositoryMock;
-    }
-
-    /// <summary>
-    /// Adds the service to the service collection
-    /// </summary>
-    /// <param name="serviceAction">The action of the service to add</param>
-    /// <returns></returns>
-    [UsedImplicitly]
-    public MapControllerTestFixture<TRequest, TRequestHandler> AddService(Action<IServiceCollection> serviceAction)
-    {
-        AddServices(serviceAction);
-        return this;
-    }
-
-    /// <summary>
-    /// Adds the <see cref="IMapRepository"/> mock object
-    /// </summary>
-    /// <returns></returns>
-    [UsedImplicitly]
-    public MapControllerTestFixture<TRequest, TRequestHandler> AddMapRepositoryMock(Action<Mock<IMapRepository>> mapRepositoryAction)
-    {
-        var mapRepositoryMock = new Mock<IMapRepository>();
-        mapRepositoryAction.Invoke(mapRepositoryMock);
-
-        AddServices(sc => sc.AddTransient(_ => mapRepositoryMock.Object));
-
-        return this;
     }
 
     /// <summary>
@@ -104,7 +73,7 @@ public class MapControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
     {
         var nodeRepositoryMock = new Mock<INodeRepository>();
         nodeRepositoryMock.Setup(x => x.GetNodeStatesForMapAsync(It.IsAny<Guid>())).ReturnsAsync(nodeStates);
-        AddService(s => s.AddTransient(_ => nodeRepositoryMock.Object));
+        AddServices(s => s.AddTransient(_ => nodeRepositoryMock.Object));
         return this;
     }
 }

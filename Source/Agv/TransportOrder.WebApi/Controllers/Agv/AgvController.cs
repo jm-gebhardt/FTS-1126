@@ -44,7 +44,7 @@ public class AgvController : Controller
     private readonly IRequestClient<GetAgvErrors> _getAgvErrorHistoryRequestClient;
     private readonly IRequestClient<MoveAgv> _moveAgvClient;
     private readonly IRequestClient<SetAgvForceIdle> _setForceIdleClient;
-    private readonly IRequestClient<HasAgvCargoRequest> _hasAgvCargoClient;
+    private readonly IRequestClient<GetAgvHasCargo> _getAgvHasCargoClient;
     private readonly IRequestClient<GetCargosOfAgv> _getCargosOfAgvClient;
     private readonly IRequestClient<ResetAgvErrors> _resetAgvErrorsClient;
     private readonly IRequestClient<GetAgvSettings> _getAgvSettingsClient;
@@ -68,7 +68,7 @@ public class AgvController : Controller
         IRequestClient<GetAgvErrors> getAgvErrorHistoryRequestClient,
         IRequestClient<MoveAgv> moveAgvClient,
         IRequestClient<SetAgvForceIdle> setForceIdleClient,
-        IRequestClient<HasAgvCargoRequest> hasAgvCargoClient,
+        IRequestClient<GetAgvHasCargo> getAgvHasCargoClient,
         IRequestClient<GetCargosOfAgv> getCargosOfAgvClient,
         IRequestClient<ResetAgvErrors> resetAgvErrorsClient,
         IRequestClient<GetAgvSettings> getAgvSettingsClient
@@ -89,7 +89,7 @@ public class AgvController : Controller
         _getAgvErrorHistoryRequestClient = getAgvErrorHistoryRequestClient;
         _moveAgvClient = moveAgvClient;
         _setForceIdleClient = setForceIdleClient;
-        _hasAgvCargoClient = hasAgvCargoClient;
+        _getAgvHasCargoClient = getAgvHasCargoClient;
         _getCargosOfAgvClient = getCargosOfAgvClient;
         _mapper = mapper;
         _resetAgvErrorsClient = resetAgvErrorsClient;
@@ -352,7 +352,7 @@ public class AgvController : Controller
     /// <returns>The CorrelationId of the created ActionGroup</returns>
     [HttpPatch]
     [Route("/agv/{correlationId:guid}/move")]
-    public async Task<ActionResult> MoveAgv(Guid correlationId, string destinationNodeId)
+    public async Task<ActionResult<Guid>> MoveAgv(Guid correlationId, string destinationNodeId)
     {
         Response<MoveAgvResult, AgvNotFoundResult> response = await _moveAgvClient.GetResponse<MoveAgvResult, AgvNotFoundResult>(new MoveAgv(correlationId, destinationNodeId, ActionGroupCreator.TransportOrderWebApi));
 
@@ -392,8 +392,8 @@ public class AgvController : Controller
     [Route("/agv/{correlationId:guid}/hasCargo")]
     public async Task<ActionResult<bool>> HasCargo(Guid correlationId)
     {
-        Response<HasAgvCargoResult> response = await _hasAgvCargoClient.GetResponse<HasAgvCargoResult>(new HasAgvCargoRequest(correlationId));
-        return Ok(response.Message.HasAgvCargo);
+        Response<GotAgvHasCargo> response = await _getAgvHasCargoClient.GetResponse<GotAgvHasCargo>(new GetAgvHasCargo(correlationId));
+        return Ok(response.Message.AgvHasCargo.HasCargo);
     }
 
     /// <summary>

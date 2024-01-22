@@ -13,7 +13,7 @@ public class AgvRepository : IAgvRepository
     private readonly IDbContextFactory<TransportOrderDbContext> _dbContextFactory;
 
     /// <summary>
-    ///Initializes a new <see cref="AgvRepository"/> instance.
+    /// Initializes a new <see cref="AgvRepository"/> instance.
     /// </summary>
     public AgvRepository(IDbContextFactory<TransportOrderDbContext> dbContextFactory)
     {

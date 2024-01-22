@@ -49,7 +49,7 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
         IRequestClient<CancelActionGroup> cancelActionGroupRequestClient = GetRequestClient<CancelActionGroup>();
         IRequestClient<TriggerActionGroupReset> triggerResetRequestClient = GetRequestClient<TriggerActionGroupReset>();
 
-        var controller = new ActionGroupController(GetMapper(), 
+        var controller = new ActionGroupController(Mapper!, 
             getActionGroupRequestClient, 
             cancelActionGroupRequestClient, 
             abortionRequestClient,
@@ -75,7 +75,6 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
             sc.AddTransient(_ => _maintenanceService.Object);
             sc.AddTransient(_ => _chargingPointManager.Object);
             sc.AddTransient(_ => _parkPointService.Object);
-            sc.AddTransient(_ => GetMapper());
             sc.AddTransient<ISemaphoreProvider<IAgvsSemaphore>>(_ => _semaphoreProvider);
             sc.AddTransient(_ => _agvDb.Object);
             sc.AddTransient(_ => _actionGroupValidationService.Object);
@@ -113,8 +112,7 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
 
     public ActionGroupControllerTestFixture<TRequest, TRequestHandler> AddActionGroup(Common.Messages.ActionGroups.ActionGroup actionGroup)
     {
-        var mapper = GetMapper();
-        _actionGroups.Add(mapper.Map<Domain.Models.ActionGroup.ActionGroup>(actionGroup));
+        _actionGroups.Add(Mapper!.Map<Domain.Models.ActionGroup.ActionGroup>(actionGroup));
         return this;
     }
 

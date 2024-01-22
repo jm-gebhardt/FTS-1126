@@ -1,3 +1,4 @@
+using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
@@ -59,6 +60,18 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
         new("node11") {X = 1f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint}
     };
 
+    private IRequestClient<GetAgvs>? _getAgvsRequestClient;
+    private IRequestClient<GetCurrentAgvRoutes>? _getCurrentAgvRoutesRequestClient;
+    private IRequestClient<GetAgvPositions>? _getAgvPositionsRequestClient;
+    private IRequestClient<GetAgvGraphs>? _getAgvGraphsRequestClient;
+    private IRequestClient<GetAgvsData>? _getAgvGetAgvDataRequestClient;
+    private IRequestClient<GetActiveErrorsForAgvs>? _getActiveErrorsRequestClient;
+    private IRequestClient<GetErrorHistoryForAgvs>? _getErrorHistoryRequestClient;
+    private IRequestClient<GetAgvsSettings>? _getAgvsSettingsRequestClient;
+    private IRequestClient<GetCargosOfAgvs>? _getCargosOfAgvsRequestClient;
+    private IRequestClient<GetAgvsHasCargo>? _getAgvsHasCargoRequestClient;
+    private readonly IAgvPositionRepository _agvPositionRepository;
+
     public Common.Messages.ActionGroups.ActionGroup? SentQueueActionGroup
     {
         [UsedImplicitly]
@@ -73,6 +86,7 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
         QueueActionGroupRequestClient = new Mock<IRequestClient<QueueActionGroup>>();
         ActionGroupRetrievalService = new Mock<IActionGroupRetrievalService>();
         ActionGroupRetrievalService.Setup(r => r.GetCurrentActionGroupsWithNodesAsync(It.IsAny<IReadOnlyCollection<Guid>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (ActionGroupReadModel?) null));
+        _agvPositionRepository = GetAgvPositionRepository().Object;
 
         ActionGroupRepository = new Mock<IActionGroupRepository>();
         ActionGroupRepository.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (Domain.Models.ActionGroup.ActionGroup?) null));
@@ -150,42 +164,38 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
         return repository;
     }
 
-    /// <summary>
-    /// Adds the service to the service collection
-    /// </summary>
-    /// <param name="serviceAction">The action of the service to add</param>
-    /// <returns></returns>
-    [UsedImplicitly]
-    public AgvsControllerTestFixture<TRequest, TRequestHandler> AddService(Action<IServiceCollection> serviceAction)
+    public AgvsControllerTestFixture<TRequest, TRequestHandler> WithHasCargo(Dictionary<Guid, bool> hasCargoById)
     {
-        AddServices(serviceAction);
+        AgvDb.Setup(x => x.Cargos.HaveAgvsCargoAsync(It.IsAny<IList<Guid>>())).ReturnsAsync(hasCargoById);
         return this;
     }
 
     /// <inheritdoc/>
     protected override AgvsController GetController()
     {
-        IRequestClient<GetAgvs> getAgvsRequestClient = GetRequestClient<GetAgvs>();
-        IRequestClient<GetCurrentAgvRoutes> getCurrentAgvRoutesRequestClient = GetRequestClient<GetCurrentAgvRoutes>();
-        IRequestClient<GetAgvPositions> getAgvPositionsRequestClient = GetRequestClient<GetAgvPositions>();
-        IRequestClient<GetAgvGraphs> getAgvGraphsRequestClient = GetRequestClient<GetAgvGraphs>();
-        IRequestClient<GetAgvsData> getAgvGetAgvDataRequestClient = GetRequestClient<GetAgvsData>();
-        IRequestClient<GetActiveErrorsForAgvs> getActiveErrorsRequestClient = GetRequestClient<GetActiveErrorsForAgvs>();
-        IRequestClient<GetErrorHistoryForAgvs> getErrorHistoryRequestClient = GetRequestClient<GetErrorHistoryForAgvs>();
-        IRequestClient<GetCargosOfAgvs> getCargosOfAgvsRequestClient = GetRequestClient<GetCargosOfAgvs>();
-        IRequestClient<GetAgvsSettings> getAgvsSettingsRequestClient = GetRequestClient<GetAgvsSettings>();
+        _getAgvsRequestClient ??= GetRequestClient<GetAgvs>();
+        _getCurrentAgvRoutesRequestClient ??= GetRequestClient<GetCurrentAgvRoutes>();
+        _getAgvPositionsRequestClient ??= GetRequestClient<GetAgvPositions>();
+        _getAgvGraphsRequestClient ??= GetRequestClient<GetAgvGraphs>();
+        _getAgvGetAgvDataRequestClient ??= GetRequestClient<GetAgvsData>();
+        _getActiveErrorsRequestClient ??= GetRequestClient<GetActiveErrorsForAgvs>();
+        _getErrorHistoryRequestClient ??= GetRequestClient<GetErrorHistoryForAgvs>();
+        _getCargosOfAgvsRequestClient ??= GetRequestClient<GetCargosOfAgvs>();
+        _getAgvsSettingsRequestClient ??= GetRequestClient<GetAgvsSettings>();
+        _getAgvsHasCargoRequestClient ??= GetRequestClient<GetAgvsHasCargo>();
 
-        var controller = new AgvsController(GetMapper(),
-            getAgvsRequestClient,
-            getCurrentAgvRoutesRequestClient,
-            getAgvPositionsRequestClient,
-            getAgvGraphsRequestClient,
-            getAgvGetAgvDataRequestClient,
-            getActiveErrorsRequestClient,
-            getErrorHistoryRequestClient,
-            getCargosOfAgvsRequestClient,
-            getAgvsSettingsRequestClient
-            )
+        var controller = new AgvsController(Mapper!,
+            _getAgvsRequestClient,
+            _getCurrentAgvRoutesRequestClient,
+            _getAgvPositionsRequestClient,
+            _getAgvGraphsRequestClient,
+            _getAgvGetAgvDataRequestClient,
+            _getActiveErrorsRequestClient,
+            _getErrorHistoryRequestClient,
+            _getAgvsSettingsRequestClient,
+            _getCargosOfAgvsRequestClient,
+            _getAgvsHasCargoRequestClient
+        )
         {
             ControllerContext = new ControllerContext(
                 new ActionContext(
@@ -197,30 +207,6 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
         return controller;
     }
 
-    /// <summary>
-    /// Uses the default services
-    /// </summary>
-    /// <returns></returns>
-    public AgvsControllerTestFixture<TRequest, TRequestHandler> UseDefaultServices()
-    {
-        SetupAgvDbWithDefaultData();
-        AddServices(sc =>
-        {
-            sc.AddTransient(_ => AgvDb.Object);
-            sc.AddTransient(_ => ActionGroupRetrievalService.Object);
-            sc.AddTransient(_ => AgvDb.Object);
-            sc.AddTransient(_ => GetAgvPositionRepository().Object);
-            sc.AddTransient(_ => GetMapper());
-            sc.AddTransient(_ => new Mock<IBus>().Object);
-            sc.AddTransient(_ => new Mock<IAgvPositionRepository>().Object);
-            sc.AddTransient(_ => ActionGroupRepository.Object);
-            sc.AddTransient(_ => QueueActionGroupRequestClient.Object);
-            sc.AddFakeSettings(_agvSettings);
-        });
-
-        return this;
-    }
-
     public AgvsControllerTestFixture<TRequest, TRequestHandler> WithActiveAgvErrors(IList<AgvError> agvErrors)
     {
         AgvDb.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(agvErrors);
@@ -230,6 +216,20 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
 
     public new AgvsControllerTestFixture<TRequest, TRequestHandler> Build()
     {
+        AddServices(sc =>
+        {
+            sc.AddTransient(_ => AgvDb.Object);
+            sc.AddTransient(_ => ActionGroupRetrievalService.Object);
+            sc.AddTransient(_ => AgvDb.Object);
+            sc.AddTransient(_ => _agvPositionRepository);
+            sc.AddTransient<IMapper>(_ => Mapper!);
+            sc.AddTransient(_ => new Mock<IBus>().Object);
+            sc.AddTransient(_ => new Mock<IAgvPositionRepository>().Object);
+            sc.AddTransient(_ => ActionGroupRepository.Object);
+            sc.AddTransient(_ => QueueActionGroupRequestClient.Object);
+            sc.AddFakeSettings(_agvSettings);
+        });
+
         base.Build();
 
         return this;

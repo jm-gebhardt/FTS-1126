@@ -1,12 +1,12 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
+﻿using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agvs.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
+using AgvError = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.AgvError;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers.Agv;
 
@@ -18,18 +18,9 @@ public class AgvsControllerTest
     {
         AgvsControllerTestFixture<GetAgvs, GetAgvsRequestHandler> fixture = new AgvsControllerTestFixture<GetAgvs, GetAgvsRequestHandler>()
             .SetupAgvDbWithDefaultData()
-            .UseDefaultServices()
             .Build();
 
-        var controller = fixture.Controller;
-        ActionResult<IEnumerable<AgvDto>> response = await controller.GetAgvs();
-
-        var result = response.Result as OkObjectResult;
-        result.ShouldNotBeNull();
-
-        var agvsIterable = result.Value as IList<AgvDto>;
-        agvsIterable.ShouldNotBeNull();
-        List<AgvDto> agvs = agvsIterable.ToList();
+        List<AgvDto> agvs = (await fixture.GetControllerResultAsync(c => c.GetAgvs())).ToList();
         agvs.Count.ShouldBe(fixture.AgvIds.Length);
 
         for (int index = 0; index < fixture.AgvIds.Length; index++)
@@ -50,16 +41,10 @@ public class AgvsControllerTest
     {
         AgvsControllerTestFixture<GetAgvsSettings, GetAgvSettingsRequestHandler> fixture = new AgvsControllerTestFixture<GetAgvsSettings, GetAgvSettingsRequestHandler>()
             .SetupAgvDbWithDefaultData()
-            .UseDefaultServices()
             .Build();
 
-        var controller = fixture.Controller;
-        ActionResult<IEnumerable<AgvSettingsDto>> response = await controller.GetAgvSettings(new List<Guid> {Guid.NewGuid()});
+        List<AgvSettingsDto> dtos = (await fixture.GetControllerResultAsync(c => c.GetAgvSettings(new List<Guid> {Guid.NewGuid()}))).ToList();
 
-        var result = response.Result as OkObjectResult;
-        result.ShouldNotBeNull();
-
-        var dtos = result.Value as List<AgvSettingsDto>;
         dtos.ShouldNotBeEmpty();
         dtos.Count.ShouldBe(1);
     }
@@ -70,19 +55,11 @@ public class AgvsControllerTest
         var fixture = new AgvsControllerTestFixture<GetAgvs, GetAgvsRequestHandler>();
         List<AgvError> expectedAgvErrors = fixture.AgvIds.Select(agvId => AgvErrorGenerator.GenerateAgvError(agvId.ToGuid())).ToList();
 
-        fixture.UseDefaultServices()
+        fixture.SetupAgvDbWithDefaultData()
             .WithActiveAgvErrors(expectedAgvErrors)
             .Build();
 
-        var controller = fixture.Controller;
-        ActionResult<IEnumerable<AgvDto>> response = await controller.GetAgvs();
-
-        var result = response.Result as OkObjectResult;
-        result.ShouldNotBeNull();
-
-        var agvsIterable = result.Value as IList<AgvDto>;
-        agvsIterable.ShouldNotBeNull();
-        List<AgvDto> agvs = agvsIterable.ToList();
+        List<AgvDto> agvs = (await fixture.GetControllerResultAsync(c => c.GetAgvs())).ToList();
         agvs.Count.ShouldBe(fixture.AgvIds.Length);
 
         for (int index = 0; index < fixture.AgvIds.Length; index++)
@@ -101,5 +78,20 @@ public class AgvsControllerTest
                 agvDtoError.ErrorResolved.ShouldBe(expectedAgvError.ErrorResolved);
             }
         }
+    }
+
+    [TestMethod]
+    public async Task GetAgvs_WhenAgvHasCargo_ReturnsAgvWithCargo()
+    {
+        var hasCargoById = new Dictionary<Guid, bool> {{Guid.NewGuid(), true}};
+        AgvsControllerTestFixture<GetAgvsHasCargo, CargoRequestHandler> fixture = new AgvsControllerTestFixture<GetAgvsHasCargo, CargoRequestHandler>()
+            .SetupAgvDbWithDefaultData()
+            .WithHasCargo(hasCargoById)
+            .Build();
+
+        List<AgvHasCargoDto> dto = (await fixture.GetControllerResultAsync(c => c.HasCargo(hasCargoById.Select(h => h.Key).ToList()))).ToList();
+        dto.Count.ShouldBe(1);
+        dto[0].CorrelationId.ShouldBe(hasCargoById.Keys.First());
+        dto[0].HasCargo.ShouldBe(hasCargoById.Values.First());
     }
 }

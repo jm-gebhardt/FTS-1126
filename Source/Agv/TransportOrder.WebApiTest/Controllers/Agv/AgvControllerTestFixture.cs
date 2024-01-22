@@ -73,6 +73,8 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         new("node11") {X = 1f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint}
     };
 
+    private readonly IAgvPositionRepository _agvPositionRepository;
+
     public AgvSettings AgvSettings { get; } = new();
 
     public AgvControllerTestFixture()
@@ -81,6 +83,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         QueueActionGroupRequestClient = new Mock<IRequestClient<QueueActionGroup>>();
         ActionGroupRetrievalService = new Mock<IActionGroupRetrievalService>();
         ActionGroupRetrievalService.Setup(r => r.GetCurrentActionGroupsWithNodesAsync(It.IsAny<IReadOnlyCollection<Guid>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (ActionGroupReadModel?) null));
+        _agvPositionRepository = GetAgvPositionRepository().Object;
 
         ActionGroupRepository = new Mock<IActionGroupRepository>();
         ActionGroupRepository.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (Domain.Models.ActionGroup.ActionGroup?) null));
@@ -156,10 +159,16 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
     /// </summary>
     /// <param name="serviceAction">The action of the service to add</param>
     /// <returns></returns>
-    [UsedImplicitly]
     public AgvControllerTestFixture<TRequest, TRequestHandler> AddService(Action<IServiceCollection> serviceAction)
     {
         AddServices(serviceAction);
+        return this;
+    }
+
+    [PublicAPI]
+    public AgvControllerTestFixture<TRequest, TRequestHandler> WithHasCargo(Guid agvCorrelationId, bool hasCargo)
+    {
+        AgvDb.Setup(x => x.Cargos.HasAgvCargoAsync(agvCorrelationId)).ReturnsAsync(hasCargo);
         return this;
     }
 
@@ -181,12 +190,12 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         IRequestClient<GetAgvErrors> getAgvErrorHistoryRequestClient = GetRequestClient<GetAgvErrors>();
         IRequestClient<MoveAgv> moveAgvRequestClient = GetRequestClient<MoveAgv>();
         IRequestClient<SetAgvForceIdle> setAgvForceIdleClient = GetRequestClient<SetAgvForceIdle>();
-        IRequestClient<HasAgvCargoRequest> isAgvLoadedClient = GetRequestClient<HasAgvCargoRequest>();
+        IRequestClient<GetAgvHasCargo> getAgvHasCargoClient = GetRequestClient<GetAgvHasCargo>();
         IRequestClient<GetCargosOfAgv> getCargosOfAgvClient = GetRequestClient<GetCargosOfAgv>();
         IRequestClient<ResetAgvErrors> resetAgvErrorsClient = GetRequestClient<ResetAgvErrors>();
         IRequestClient<GetAgvSettings> getAgvSettingsRequestClient = GetRequestClient<GetAgvSettings>();
 
-        var controller = new AgvController(GetMapper(),
+        var controller = new AgvController(Mapper!,
             getAgvRequestClient,
             getAgvGraphRequestClient,
             getAgvDataRequestClient,
@@ -202,7 +211,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             getAgvErrorHistoryRequestClient,
             moveAgvRequestClient,
             setAgvForceIdleClient,
-            isAgvLoadedClient,
+            getAgvHasCargoClient,
             getCargosOfAgvClient,
             resetAgvErrorsClient,
             getAgvSettingsRequestClient
@@ -226,19 +235,13 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         return this;
     }
 
-    /// <summary>
-    /// Uses the default services
-    /// </summary>
-    /// <returns></returns>
-    public AgvControllerTestFixture<TRequest, TRequestHandler> UseDefaultServices()
+    public new AgvControllerTestFixture<TRequest, TRequestHandler> Build()
     {
-        SetupAgvDbWithDefaultData();
         AddServices(sc =>
         {
             sc.AddTransient(_ => AgvDb.Object);
             sc.AddTransient(_ => ActionGroupRetrievalService.Object);
-            sc.AddTransient(_ => GetAgvPositionRepository().Object);
-            sc.AddTransient(_ => GetMapper());
+            sc.AddTransient(_ => _agvPositionRepository);
             sc.AddTransient(_ => new Mock<IBus>().Object);
             sc.AddTransient(_ => new Mock<IAgvPositionRepository>().Object);
             sc.AddTransient(_ => ActionGroupRepository.Object);
@@ -248,12 +251,6 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             sc.AddTransient(_ => _mapRepository.Object);
             sc.AddTransient(_ => _productionOptions);
         });
-
-        return this;
-    }
-
-    public new AgvControllerTestFixture<TRequest, TRequestHandler> Build()
-    {
         base.Build();
 
         return this;

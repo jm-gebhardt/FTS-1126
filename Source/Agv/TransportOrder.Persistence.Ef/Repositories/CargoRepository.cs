@@ -8,17 +8,39 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
 /// <summary>
 /// Registry for Cargo
 /// </summary>
-public class CargoRepository(IDbContextFactory<TransportOrderDbContext> dbContextFactory)
+public class CargoRepository(IDbContextFactory<TransportOrderDbContext> dbContextFactory, IAgvRepository agvRepository)
     : ICargoRepository
 {
     /// <inheritdoc />
-    public async Task<bool> IsAgvLoadedAsync(Guid correlationId)
+    public async Task<bool> HasAgvCargoAsync(Guid correlationId)
     {
         bool isLoaded = await (await dbContextFactory.CreateDbContextAsync()).Set<Cargo>()
             .AsNoTracking()
             .AnyAsync(q => q.AgvCorrelationId == correlationId);
 
         return isLoaded;
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyDictionary<Guid, bool>> HaveAgvsCargoAsync(ICollection<Guid> correlationIds)
+    {
+        await using var dbContext = await dbContextFactory.CreateDbContextAsync();
+        await agvRepository.ThrowIfAgvsNotExistAsync(correlationIds);
+        DbSet<Cargo> dbSet = dbContext.Set<Cargo>();
+
+        Dictionary<Guid, bool> hasCargoByAgvCorrelationId = await dbSet
+            .AsNoTracking()
+            .Where(q => correlationIds.Contains(q.AgvCorrelationId))
+            .GroupBy(c => c.AgvCorrelationId)
+            .ToDictionaryAsync(q => q.Key, _ => true);
+
+        foreach (var correlationId in correlationIds)
+        {
+            // add hasCargo = false for Agvs without cargos
+            hasCargoByAgvCorrelationId.TryAdd(correlationId, false);
+        }
+
+        return hasCargoByAgvCorrelationId;
     }
 
     /// <inheritdoc />
@@ -33,9 +55,10 @@ public class CargoRepository(IDbContextFactory<TransportOrderDbContext> dbContex
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyDictionary<Guid, IReadOnlyCollection<Cargo>>> GetCargosAsync(IEnumerable<Guid> correlationIds)
+    public async Task<IReadOnlyDictionary<Guid, IReadOnlyCollection<Cargo>>> GetCargosAsync(ICollection<Guid> correlationIds)
     {
         await using var dbContext = await dbContextFactory.CreateDbContextAsync();
+        await agvRepository.ThrowIfAgvsNotExistAsync(correlationIds);
         DbSet<Cargo> dbSet = dbContext.Set<Cargo>();
 
         Dictionary<Guid, IReadOnlyCollection<Cargo>> cargosByAgvCorrelationId = await dbSet

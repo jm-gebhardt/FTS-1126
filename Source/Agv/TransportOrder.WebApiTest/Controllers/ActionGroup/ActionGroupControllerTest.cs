@@ -11,7 +11,6 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.ActionGroup;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.AgvActions;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.AspNetCore.Mvc;
@@ -48,13 +47,7 @@ public class ActionGroupControllerTest
             .AddActionGroup(actionGroup)
             .Build();
 
-        var controller = fixture.Controller;
-        ActionResult<ActionGroupDto> response = await controller.GetActionGroup(actionGroup.CorrelationId);
-
-        var result = response.Result as OkObjectResult;
-        result.ShouldNotBeNull();
-
-        var actionGroupDto = result.Value as ActionGroupDto;
+        var actionGroupDto = await fixture.GetControllerResultAsync(c => c.GetActionGroup(correlationId));
         actionGroupDto.ShouldNotBeNull();
         actionGroupDto.CorrelationId.ShouldBe(actionGroup.CorrelationId);
         actionGroupDto.EstimatedCompletionDate.ShouldBe(DateTime.Parse("2021-01-01T00:01:00Z").ToUniversalTime());
@@ -82,11 +75,7 @@ public class ActionGroupControllerTest
             .AddActionGroup(actionGroup)
             .Build();
 
-        var controller = fixture.Controller;
-
-        var response = await controller.CancelActionGroup(actionGroup.CorrelationId);
-        var result = response as OkResult;
-        result.ShouldNotBeNull();
+        await fixture.GetControllerResultAsync<OkResult>(c => c.CancelActionGroup(actionGroup.CorrelationId));
     }
 
     [TestMethod]
@@ -98,11 +87,7 @@ public class ActionGroupControllerTest
             .AddActionGroup(actionGroup)
             .Build();
 
-        var controller = fixture.Controller;
-
-        var response = await controller.CancelActionGroup(Guid.NewGuid());
-        var result = response as NotFoundResult;
-        result.ShouldNotBeNull();
+        await fixture.GetControllerResultAsync<NotFoundResult>(c => c.CancelActionGroup(Guid.NewGuid()));
     }
 
     [TestMethod]

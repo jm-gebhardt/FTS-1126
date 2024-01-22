@@ -1,4 +1,5 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
 using JetBrains.Annotations;
 
@@ -18,5 +19,7 @@ public class CargoProfile : WebApiProfile
             .ForCtorParam("cargoType", opt => opt.MapFrom(src => src.LoadType))
             .ForCtorParam("cargoPosition", opt => opt.MapFrom(src => src.LoadPosition)
         );
+        
+        CreateMap<AgvHasCargo, AgvHasCargoDto>();
     }
 }

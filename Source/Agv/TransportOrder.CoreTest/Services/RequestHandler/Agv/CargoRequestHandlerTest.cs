@@ -3,9 +3,11 @@ using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
 using MassTransit;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.RequestHandler.Agv;
@@ -80,55 +82,78 @@ public class CargoRequestHandlerTest
     }
 
     [TestMethod]
-    public async Task GetCargosOfAgvs_WhenAnyAgvDoesNotExist_ThrowsException()
+    public async Task GetCargosOfAgvs_WhenAgvRepositoryThrows_ThrowsException()
     {
-        var agvCorrelationId1 = Guid.NewGuid();
-        var agvCorrelationId2 = Guid.NewGuid();
-        var expectedCargosByAgvCorrelationId = new Dictionary<Guid, ICollection<Cargo>>
-        {
-            {agvCorrelationId1, CargoGenerator.GenerateCargos(agvCorrelationId1)},
-            {agvCorrelationId2, CargoGenerator.GenerateCargos(agvCorrelationId2)}
-        };
         CargoRequestHandlerTestFixture<GetCargosOfAgvs, CargoRequestHandler> fixture = new CargoRequestHandlerTestFixture<GetCargosOfAgvs, CargoRequestHandler>()
-            .WithCargos(expectedCargosByAgvCorrelationId)
             .Build();
 
-        await MediatorShould.ThrowRequestExceptionAsync<AgvsNotFoundException>(async () => await fixture.GetResponseAsync<GotCargosOfAgvs>(new GetCargosOfAgvs(new List<Guid> {agvCorrelationId1, agvCorrelationId2, Guid.NewGuid()})));
+        fixture.AgvDb.Setup(x => x.Cargos.GetCargosAsync(It.IsAny<ICollection<Guid>>())).ReturnsAsync((ICollection<Guid> correlationIds) => throw new AgvsNotFoundException(correlationIds));
+
+        await MediatorShould.ThrowRequestExceptionAsync<AgvsNotFoundException>(async () => await fixture.GetResponseAsync<GotCargosOfAgvs>(new GetCargosOfAgvs(new List<Guid> {Guid.NewGuid()})));
     }
 
     [TestMethod]
-    public async Task HasAgvCargo_WhenAgvHasCargo_ReturnsTrue()
+    public async Task GetAgvHasCargo_WhenAgvHasCargo_ReturnsTrue()
     {
         var agvCorrelationId = Guid.NewGuid();
         ICollection<Cargo> cargos = CargoGenerator.GenerateCargos(agvCorrelationId);
-        CargoRequestHandlerTestFixture<HasAgvCargoRequest, CargoRequestHandler> fixture = new CargoRequestHandlerTestFixture<HasAgvCargoRequest, CargoRequestHandler>()
+        CargoRequestHandlerTestFixture<GetAgvHasCargo, CargoRequestHandler> fixture = new CargoRequestHandlerTestFixture<GetAgvHasCargo, CargoRequestHandler>()
             .WithCargo(agvCorrelationId, cargos)
             .Build();
 
-        Response<HasAgvCargoResult> response = await fixture.GetResponseAsync<HasAgvCargoResult>(new HasAgvCargoRequest(agvCorrelationId));
+        Response<GotAgvHasCargo> response = await fixture.GetResponseAsync<GotAgvHasCargo>(new GetAgvHasCargo(agvCorrelationId));
 
-        response.Message.HasAgvCargo.ShouldBeTrue();
+        response.Message.AgvHasCargo.HasCargo.ShouldBeTrue();
     }
 
     [TestMethod]
-    public async Task HasAgvCargo_WhenAgvDoesNotHaveCargo_ReturnsFalse()
+    public async Task GetAgvHasCargo_WhenAgvDoesNotHaveCargo_ReturnsFalse()
     {
         var agvCorrelationId = Guid.NewGuid();
-        CargoRequestHandlerTestFixture<HasAgvCargoRequest, CargoRequestHandler> fixture = new CargoRequestHandlerTestFixture<HasAgvCargoRequest, CargoRequestHandler>()
+        CargoRequestHandlerTestFixture<GetAgvHasCargo, CargoRequestHandler> fixture = new CargoRequestHandlerTestFixture<GetAgvHasCargo, CargoRequestHandler>()
             .WithCargo(agvCorrelationId, new Collection<Cargo>())
             .Build();
 
-        Response<HasAgvCargoResult> response = await fixture.GetResponseAsync<HasAgvCargoResult>(new HasAgvCargoRequest(agvCorrelationId));
+        Response<GotAgvHasCargo> response = await fixture.GetResponseAsync<GotAgvHasCargo>(new GetAgvHasCargo(agvCorrelationId));
 
-        response.Message.HasAgvCargo.ShouldBeFalse();
+        response.Message.AgvHasCargo.HasCargo.ShouldBeFalse();
     }
 
     [TestMethod]
-    public async Task HasAgvCargo_WhenAgvDoesNotExist_ThrowsException()
+    public async Task GetAgvHasCargo_WhenAgvDoesNotExist_ThrowsException()
     {
-        CargoRequestHandlerTestFixture<HasAgvCargoRequest, CargoRequestHandler> fixture = new CargoRequestHandlerTestFixture<HasAgvCargoRequest, CargoRequestHandler>()
+        CargoRequestHandlerTestFixture<GetAgvHasCargo, CargoRequestHandler> fixture = new CargoRequestHandlerTestFixture<GetAgvHasCargo, CargoRequestHandler>()
             .Build();
 
-        await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await fixture.GetResponseAsync<HasAgvCargoResult>(new HasAgvCargoRequest(Guid.NewGuid())));
+        await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await fixture.GetResponseAsync<GotAgvHasCargo>(new GetAgvHasCargo(Guid.NewGuid())));
+    }
+
+    [TestMethod]
+    public async Task GetAgvsHasCargo_WhenAgvsExist_ReturnsGotGetAgvsHasCargo()
+    {
+        var agvCorrelationIds = new List<Guid> {Guid.NewGuid(), Guid.NewGuid()};
+        ICollection<Cargo> cargos = CargoGenerator.GenerateCargos(agvCorrelationIds[0]);
+        CargoRequestHandlerTestFixture<GetAgvsHasCargo, CargoRequestHandler> fixture = new CargoRequestHandlerTestFixture<GetAgvsHasCargo, CargoRequestHandler>()
+            .WithCargo(agvCorrelationIds[0], cargos)
+            .WithCargo(agvCorrelationIds[1], new Collection<Cargo>())
+            .Build();
+
+        Response<GotAgvsHasCargo> response = await fixture.GetResponseAsync<GotAgvsHasCargo>(new GetAgvsHasCargo(agvCorrelationIds));
+
+        List<AgvHasCargo> agvsHaveCargo = response.Message.AgvsHasCargo;
+        agvsHaveCargo.Count.ShouldBe(2);
+        agvsHaveCargo[0].CorrelationId.ShouldBe(agvCorrelationIds[0]);
+        agvsHaveCargo[0].HasCargo.ShouldBeTrue();
+        agvsHaveCargo[1].CorrelationId.ShouldBe(agvCorrelationIds[1]);
+        agvsHaveCargo[1].HasCargo.ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public async Task GetAgvsHasCargo_WhenAgvDoesNotExist_ThrowsException()
+    {
+        CargoRequestHandlerTestFixture<GetAgvsHasCargo, CargoRequestHandler> fixture = new CargoRequestHandlerTestFixture<GetAgvsHasCargo, CargoRequestHandler>()
+            .Build();
+
+        await MediatorShould.ThrowRequestExceptionAsync<AgvsNotFoundException>(async () => await fixture.GetResponseAsync<GotCargosOfAgvs>(new GetAgvsHasCargo(new List<Guid> {Guid.NewGuid()})));
     }
 }

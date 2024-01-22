@@ -16,7 +16,10 @@ public class MapsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
 {
     private const string Base64String = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
 
-    private readonly Mock<IGraphRepository> _agvGraphRepository = new();
+    private readonly Mock<IGraphRepository> _agvGraphRepositoryMock = new();
+
+    private readonly IMapRepository _mapRepository;
+    private readonly IAgvRepository _agvRepository;
 
     private readonly string[] _agvIds = { "AGV001", "AGV002", "AGV003" };
     private readonly string[] _orders = { "ORDER001", "ORDER002", "" };
@@ -28,6 +31,12 @@ public class MapsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
         new("041AD79E-1952-4AB7-BD3E-9EC972E27FBF"),
         new("465A85A6-6A02-4068-A7AA-E3B4B9821019")
     };
+
+    public MapsControllerTestFixture()
+    {
+        _mapRepository = GetMapRepository().Object;
+        _agvRepository = GetAgvRepository().Object;
+    }
 
     protected override MapsController GetController()
     {
@@ -82,34 +91,6 @@ public class MapsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
     }
 
     /// <summary>
-    /// Adds the service to the service collection
-    /// </summary>
-    /// <param name="serviceAction">The action of the service to add</param>
-    /// <returns></returns>
-    [UsedImplicitly]
-    public MapsControllerTestFixture<TRequest, TRequestHandler> AddService(Action<IServiceCollection> serviceAction)
-    {
-        AddServices(serviceAction);
-        return this;
-    }
-
-    /// <summary>
-    /// Uses the default services
-    /// </summary>
-    /// <returns></returns>
-    public MapsControllerTestFixture<TRequest, TRequestHandler> UseDefaultServices()
-    {
-        AddServices(sc =>
-        {
-            sc.AddTransient(_ => GetMapRepository().Object);
-            sc.AddTransient(_ => GetAgvRepository().Object);
-            sc.AddTransient(_ => GetMapper());
-            sc.AddTransient(_ => _agvGraphRepository.Object);
-        });
-        return this;
-    }
-
-    /// <summary>
     /// Adds the <see cref="IMapRepository"/> mock object
     /// </summary>
     /// <returns></returns>
@@ -126,6 +107,13 @@ public class MapsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
 
     public new MapsControllerTestFixture<TRequest, TRequestHandler> Build()
     {
+        AddServices(sc =>
+        {
+            sc.AddTransient(_ => _mapRepository);
+            sc.AddTransient(_ => _agvRepository);
+            sc.AddTransient(_ => _agvGraphRepositoryMock.Object);
+        });
+        
         base.Build();
         return this;
     }

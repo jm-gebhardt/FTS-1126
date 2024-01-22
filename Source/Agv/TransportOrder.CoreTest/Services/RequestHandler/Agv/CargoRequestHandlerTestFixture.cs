@@ -15,7 +15,7 @@ public class CargoRequestHandlerTestFixture<TRequest, TConsumer> : MediatorTestF
     where TRequest : class
     where TConsumer : class, IConsumer
 {
-    private readonly Mock<IAgvDb> _agvDb = new();
+    public readonly Mock<IAgvDb> AgvDb = new();
     private readonly IMapper _mapper = MappingHelper.GetMapper(new CargoProfile());
     private readonly List<Guid> _existingAgvs = new();
     private readonly Dictionary<Guid, IReadOnlyCollection<Cargo>> _cargosByAgv = new();
@@ -28,20 +28,25 @@ public class CargoRequestHandlerTestFixture<TRequest, TConsumer> : MediatorTestF
 
         AddServices(s =>
         {
-            s.AddTransient<IAgvDb>(_ => _agvDb.Object);
+            s.AddTransient<IAgvDb>(_ => AgvDb.Object);
             s.AddTransient(_ => _mapper);
         });
     }
 
     private void SetupCargoRepositoryMock()
     {
-        _agvDb.Setup(x => x.Cargos.GetCargosAsync(It.IsAny<Guid>())).ReturnsAsync((Guid correlationId) => _cargosByAgv.TryGetValue(correlationId, out IReadOnlyCollection<Cargo>? cargos) ? cargos : new List<Cargo>());
-        _agvDb.Setup(x => x.Cargos.GetCargosAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync((IEnumerable<Guid> correlationIds) => _cargosByAgv.Where(kvp => correlationIds.Contains(kvp.Key)).ToDictionary(kvp => kvp.Key, kvp => kvp.Value));
+        AgvDb.Setup(x => x.Cargos.GetCargosAsync(It.IsAny<Guid>())).ReturnsAsync((Guid correlationId) => _cargosByAgv.TryGetValue(correlationId, out IReadOnlyCollection<Cargo>? cargos) ? cargos : new List<Cargo>());
+        AgvDb.Setup(x => x.Cargos.GetCargosAsync((ICollection<Guid>) It.IsAny<IEnumerable<Guid>>())).ReturnsAsync((IEnumerable<Guid> correlationIds) => _cargosByAgv.Where(kvp => correlationIds.Contains(kvp.Key)).ToDictionary(kvp => kvp.Key, kvp => kvp.Value));
+
+        AgvDb.Setup(x => x.Cargos.HaveAgvsCargoAsync(It.IsAny<ICollection<Guid>>()))
+            .ReturnsAsync((ICollection<Guid> correlationIds) =>
+                _cargosByAgv.Where(kvp => correlationIds.Contains(kvp.Key))
+                    .ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Any()));
     }
 
     private void SetupAgvRepositoryMock()
     {
-        _agvDb.Setup(a => a.Agvs.ThrowIfAgvNotExistsAsync(It.IsAny<Guid>())).Callback<Guid>(correlationId =>
+        AgvDb.Setup(a => a.Agvs.ThrowIfAgvNotExistsAsync(It.IsAny<Guid>())).Callback<Guid>(correlationId =>
         {
             if (!_existingAgvs.Contains(correlationId))
             {
@@ -49,7 +54,7 @@ public class CargoRequestHandlerTestFixture<TRequest, TConsumer> : MediatorTestF
             }
         });
 
-        _agvDb.Setup(a => a.Agvs.ThrowIfAgvsNotExistAsync(It.IsAny<ICollection<Guid>>())).Callback<ICollection<Guid>>(requestedIds =>
+        AgvDb.Setup(a => a.Agvs.ThrowIfAgvsNotExistAsync(It.IsAny<ICollection<Guid>>())).Callback<ICollection<Guid>>(requestedIds =>
         {
             List<Guid> notExistingAgvs = requestedIds.Except(_existingAgvs).ToList();
             if (notExistingAgvs.Any())
@@ -85,7 +90,7 @@ public class CargoRequestHandlerTestFixture<TRequest, TConsumer> : MediatorTestF
 
     private void SetupIsAgvLoaded(Guid agvCorrelationId, ICollection<Cargo> cargos)
     {
-        _agvDb.Setup(x => x.Cargos.IsAgvLoadedAsync(agvCorrelationId)).ReturnsAsync(cargos.Any());
+        AgvDb.Setup(x => x.Cargos.HasAgvCargoAsync(agvCorrelationId)).ReturnsAsync(cargos.Any());
     }
 
     public override CargoRequestHandlerTestFixture<TRequest, TConsumer> Build()

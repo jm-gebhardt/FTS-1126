@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.DependencyInjection;
+using Shouldly;
 using ActionProfile = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Profiles.ActionProfile;
 using AgvPositionProfile = Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles.AgvPositionProfile;
 
@@ -17,6 +19,8 @@ public abstract class ControllerTestFixture<TRequest, TRequestHandler, TControll
     where TRequestHandler : class, IConsumer
     where TController : Controller
 {
+    public IMapper? Mapper { get; } = GetMapper();
+
     private IRequestClient<TRequest> GetRequestClient()
     {
         return Mediator!.CreateRequestClient<TRequest>();
@@ -31,10 +35,11 @@ public abstract class ControllerTestFixture<TRequest, TRequestHandler, TControll
         return typeof(TRequest) == typeof(TClient) ? (IRequestClient<TClient>) GetRequestClient() : null!;
     }
 
-    protected IMapper GetMapper()
+    private static IMapper GetMapper()
     {
         var mapper = MappingHelper.GetMapper(
             new AgvProfile(),
+            new CargoProfile(),
             new AgvGraphProfile(),
             new AgvPositionProfile(),
             new MapProfile(),
@@ -51,6 +56,7 @@ public abstract class ControllerTestFixture<TRequest, TRequestHandler, TControll
 
     public override MediatorTestFixture<TRequest, TRequestHandler> Build()
     {
+        AddServices(s => s.AddTransient(_ => Mapper!));
         base.Build();
 
         Controller = GetController();
@@ -61,5 +67,40 @@ public abstract class ControllerTestFixture<TRequest, TRequestHandler, TControll
                 new ControllerActionDescriptor()));
 
         return this;
+    }
+
+    public async Task GetControllerResultAsync<TResponse>(Func<TController, Task<ActionResult>> controllerAction) where TResponse : class
+    {
+        var controllerResult = await controllerAction(Controller);
+        var result = controllerResult as TResponse;
+        result.ShouldNotBeNull();
+    }
+
+    public async Task<TResponse> GetControllerResultAsync<TResult, TResponse>(Func<TController, Task<ActionResult<TResult>>> controllerAction) where TResponse : class
+    {
+        ActionResult<TResult> controllerResult = await controllerAction(Controller);
+        var result = controllerResult.Result as TResponse;
+        result.ShouldNotBeNull();
+
+        return result;
+    }
+
+    public async Task<TResult> GetControllerResultValueAsync<TResult>(Func<TController, Task<ActionResult<TResult>>> controllerAction)
+    {
+        var okResult = await GetControllerResultAsync<TResult, OkObjectResult>(controllerAction);
+        var result = okResult.Value is TResult value ? value : default;
+        if (result == null)
+        {
+            throw new Exception("Result is null");
+        }
+        return result;
+    }
+
+    public async Task<TResult> GetControllerResultAsync<TResult>(Func<TController, Task<ActionResult<TResult>>> controllerAction) where TResult : class
+    {
+        var okResult = await GetControllerResultAsync<TResult, OkObjectResult>(controllerAction);
+        var result = okResult.Value as TResult;
+        result.ShouldNotBeNull();
+        return result;
     }
 }

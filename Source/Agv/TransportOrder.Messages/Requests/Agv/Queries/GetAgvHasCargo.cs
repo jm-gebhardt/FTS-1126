@@ -6,4 +6,4 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
 /// Request to get the HasCargo state for the specified AgvCorrelationId.
 /// </summary>
 /// <param name="CorrelationId"></param>
-public record HasAgvCargoRequest(Guid CorrelationId) : CorrelatedBy<Guid>;
+public record GetAgvHasCargo(Guid CorrelationId) : CorrelatedBy<Guid>;

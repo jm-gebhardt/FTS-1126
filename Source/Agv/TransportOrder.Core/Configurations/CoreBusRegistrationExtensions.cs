@@ -192,11 +192,12 @@ public static class CoreBusRegistrationExtensions
         configurator.AddRequestClient<GetAgvPosition>();
 
         configurator.AddConsumer<GetAgvsRequestHandler>();
-        configurator.AddRequestClient<HasAgvCargoRequest>();
         configurator.AddRequestClient<GetAgvs>();
         configurator.AddRequestClient<GetAgv>();
 
         configurator.AddConsumer<CargoRequestHandler>();
+        configurator.AddRequestClient<GetAgvHasCargo>();
+        configurator.AddRequestClient<GetAgvsHasCargo>();
         configurator.AddRequestClient<GetCargosOfAgv>();
         configurator.AddRequestClient<GetCargosOfAgvs>();
 
