@@ -5,7 +5,8 @@ using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Extensions;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Data;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graphs;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Maps;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Travel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
@@ -43,7 +44,7 @@ public class DirectEdgeTest
 
     private void SetupWoodShop()
     {
-        var generator = new FixedGraphGenerator();
+        var generator = new FixedGraphGenerator(new GeneratedMapGenerator());
         WoodShop = generator.Generate(Guid.NewGuid());
     }
 

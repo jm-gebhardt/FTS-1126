@@ -16,11 +16,39 @@ public static class MapHelper
     public static (int Width, int Height) GetMapDimensions(byte[] mapValue)
     {
         SKImage image;
-        if (mapValue is { Length: >= 1 } && (image = SKImage.FromEncodedData(mapValue)) != null)
+        if (mapValue is {Length: >= 1} && (image = SKImage.FromEncodedData(mapValue)) != null)
         {
             return (image.Width, image.Height);
         }
 
         throw new MapCreationException(mapValue);
+    }
+
+    /// <summary>
+    /// Extract the scale up factor, x offset and y offset from the given filename.
+    /// Structure: "mapName_scaleUp_xOffset_yOffset.png"
+    /// </summary>
+    /// <param name="filename"></param>
+    /// <param name="throwException"></param>
+    /// <returns></returns>
+    public static (float scaleUpFactor, float xOffset, float yOffset) ParseFilename(string filename, bool throwException = false)
+    {
+        float scaleUpFactor = 1;
+        float xOffset = 0;
+        float yOffset = 0;
+        string[] parts = Path.GetFileNameWithoutExtension(filename).Split('_');
+
+        if (parts.Length != 4 ||
+            !float.TryParse(parts[1], out scaleUpFactor) ||
+            !float.TryParse(parts[2], out xOffset) ||
+            !float.TryParse(parts[3], out yOffset))
+        {
+            if (throwException)
+            {
+                throw new FormatException("Filename parameters are not valid numbers.");
+            }
+        }
+
+        return (scaleUpFactor, xOffset, yOffset);
     }
 }

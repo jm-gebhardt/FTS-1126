@@ -2,7 +2,7 @@ using Gebhardt.StoreWare.Agv.Common.Messages.Graphs.Events;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Data;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graphs;
 using MassTransit;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;

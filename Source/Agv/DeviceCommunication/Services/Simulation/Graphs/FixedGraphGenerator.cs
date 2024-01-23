@@ -4,9 +4,9 @@ using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Helpers;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Map;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Maps;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph;
+namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graphs;
 
 /// <summary>
 /// Provides a fixed graph including all supported
@@ -67,7 +67,7 @@ public class FixedGraphGenerator : GraphGeneratorBase
     private const float East = (float) Math.PI / 2f;
     private const float West = 3f * (float) Math.PI / 2f;
 
-    private const string MainMapName = "Charge / Park";
+    private const string MainMapName = "Charge Park";
     private const string SubMapName = "Stations";
 
     private readonly Guid _mainMapId = MainMapName.ToGuid();
@@ -77,7 +77,7 @@ public class FixedGraphGenerator : GraphGeneratorBase
     protected override Guid GraphId { get; } = "FixedGraph".ToGuid();
 
     /// <inheritdoc cref="FixedGraphGenerator" />
-    public FixedGraphGenerator() : base(new[] {Pdqa, PGrinder, PDrill, PMilling}, new[] {DPaint, DPress, DSaw, Pdqa})
+    public FixedGraphGenerator(IMapGenerator mapGenerator) : base(new[] {Pdqa, PGrinder, PDrill, PMilling}, new[] {DPaint, DPress, DSaw, Pdqa}, mapGenerator)
     {
     }
 
@@ -133,9 +133,9 @@ public class FixedGraphGenerator : GraphGeneratorBase
         GraphEdge[] edges =
         {
             CreateDirect(Way0029, Park1, nodes),
-            CreateDirect(Park1, Way0029,  nodes),
+            CreateDirect(Park1, Way0029, nodes),
             CreateDirect(Way0028, Park3, nodes),
-            CreateDirect(Park3, Way0028,  nodes),
+            CreateDirect(Park3, Way0028, nodes),
             CreateDirect(Way0029, Park2, nodes),
             CreateDirect(Park2, Way0029, nodes),
             CreateDirect(Way0028, Park4, nodes),
@@ -208,14 +208,14 @@ public class FixedGraphGenerator : GraphGeneratorBase
     {
         var sourceNode = nodes.Single(n => n.Id == fromNodeId);
         var targetNode = nodes.Single(n => n.Id == toNodeId);
-        float length = (float)Mathematics.EuclideanDistance(sourceNode, targetNode);
+        float length = (float) Mathematics.EuclideanDistance(sourceNode, targetNode);
         return GraphEdge.CreateDirect(fromNodeId, toNodeId, length, GraphHelper.ToGuid(fromNodeId, length, toNodeId));
     }
 
     /// <inheritdoc cref="GraphEdge.CreateBezier1"/>
     private static GraphEdge CreateBezier1(string fromNodeId, string toNodeId, double x, double y, GraphNode[] nodes)
     {
-        float length = CalculateBezierLength(nodes, fromNodeId, toNodeId, new List<Vector2> { new((float)x, (float)y) });
+        float length = CalculateBezierLength(nodes, fromNodeId, toNodeId, new List<Vector2> {new((float) x, (float) y)});
         return GraphEdge.CreateBezier1(fromNodeId, toNodeId, length, x, y, GraphHelper.ToGuid(fromNodeId, length, toNodeId));
     }
 
@@ -225,7 +225,7 @@ public class FixedGraphGenerator : GraphGeneratorBase
     /// <inheritdoc cref="GraphEdge.CreateBezier2"/>
     private static GraphEdge CreateBezier2(string fromNodeId, string toNodeId, double x1, double y1, double x2, double y2, GraphNode[] nodes)
     {
-        float length = CalculateBezierLength(nodes, fromNodeId, toNodeId, new List<Vector2> { new((float)x1, (float)y1), new((float)x2, (float)y2) });
+        float length = CalculateBezierLength(nodes, fromNodeId, toNodeId, new List<Vector2> {new((float) x1, (float) y1), new((float) x2, (float) y2)});
         return GraphEdge.CreateBezier2(fromNodeId, toNodeId, length, x1, y1, x2, y2, GraphHelper.ToGuid(fromNodeId, length, toNodeId));
     }
 
@@ -233,29 +233,29 @@ public class FixedGraphGenerator : GraphGeneratorBase
     private static GraphEdge CreateSlanted(string fromNodeId, string toNodeId, float metric, float exitAngle, double exitDistance) => GraphEdge.CreateSlanted(fromNodeId, toNodeId, metric, exitAngle, exitDistance, GraphHelper.ToGuid(fromNodeId, metric, toNodeId));
 
     /// <inheritdoc />
-    protected override IEnumerable<Common.Models.Graphs.Map> GenerateMapsBasedOnGlobalGraph(Common.Models.Graphs.Graph globalGraph)
+    protected override IEnumerable<Map> GenerateMapsBasedOnGlobalGraph(Graph globalGraph)
     {
         foreach (var map in base.GenerateMapsBasedOnGlobalGraph(globalGraph))
         {
             yield return map;
         }
-
+        
         List<GraphNode> nodes = globalGraph.Nodes.Where(n => n.X <= 48).ToList();
-        var graph = new Common.Models.Graphs.Graph
+        var graph = new Graph
         {
             Nodes = nodes,
             Edges = globalGraph.Edges.Where(e => nodes.Any(n => n.Id == e.FromNodeId) && nodes.Any(n => n.Id == e.ToNodeId)).ToList()
         };
-
-        yield return new MapGenerator(graph).Generate(_mainMapId, MainMapName);
-
-        graph = new Common.Models.Graphs.Graph()
+        
+        yield return MapGenerator.Generate(_mainMapId, MainMapName, graph);
+        
+        graph = new Graph()
         {
             Nodes = globalGraph.Nodes.Where(n => !graph.Nodes.Contains(n)).ToList(),
             Edges = globalGraph.Edges.Where(n => !graph.Edges.Contains(n)).ToList()
         };
-
-        yield return new MapGenerator(graph).Generate(_subMapId, SubMapName);
+        
+        yield return MapGenerator.Generate(_subMapId, SubMapName, graph);
     }
 
     private static float CalculateBezierLength(GraphNode[] nodes, string fromNode, string toNode, List<Vector2> controlPoints)
@@ -268,6 +268,6 @@ public class FixedGraphGenerator : GraphGeneratorBase
         controlPolygon.Add(to!.AsVector2());
 
         var bezier = new Bezier(controlPolygon);
-        return (float)bezier.GetLength(100);
+        return (float) bezier.GetLength(100);
     }
 }

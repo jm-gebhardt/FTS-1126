@@ -2,8 +2,9 @@ using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Helpers;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Maps;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph;
+namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graphs;
 
 /// <summary>
 /// Generated Grid Style Graph
@@ -52,8 +53,10 @@ public class GridGraphGenerator : GraphGeneratorBase
     /// <summary>
     /// Initializes a new <see cref="GridGraphGenerator"/> instance based on simulation options.
     /// </summary>
-    public GridGraphGenerator(SimulateOptions simulateOptions) : base(simulateOptions.Sources != null ? simulateOptions.Sources.ToArray() : Array.Empty<string>(),
-        simulateOptions.Destinations != null ? simulateOptions.Destinations.ToArray() : Array.Empty<string>())
+    public GridGraphGenerator(SimulateOptions simulateOptions, IMapGenerator mapGenerator)
+        : base(simulateOptions.Sources != null ? simulateOptions.Sources.ToArray() : Array.Empty<string>(),
+            simulateOptions.Destinations != null ? simulateOptions.Destinations.ToArray() : Array.Empty<string>(),
+            mapGenerator)
     {
         _gridRows = simulateOptions.GridRows;
         _serviceNodeTypes = CreateServiceNodes();
@@ -64,13 +67,16 @@ public class GridGraphGenerator : GraphGeneratorBase
     /// </summary>
     /// <param name="sources"></param>
     /// <param name="destinations"></param>
+    /// <param name="mapGenerator"></param>
     /// <param name="gridRows"></param>
     /// <param name="serviceNodes"></param>
     public GridGraphGenerator(
         string[] sources,
         string[] destinations,
+        IMapGenerator mapGenerator,
         int gridRows = 3,
-        AgvGraph.NodeType[]? serviceNodes = null) : base(sources, destinations)
+        AgvGraph.NodeType[]? serviceNodes = null)
+        : base(sources, destinations, mapGenerator)
     {
         _gridRows = gridRows;
         _serviceNodeTypes = serviceNodes ?? Array.Empty<AgvGraph.NodeType>();

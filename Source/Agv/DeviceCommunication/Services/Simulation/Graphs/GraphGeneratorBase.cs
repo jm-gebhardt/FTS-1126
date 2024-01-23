@@ -1,14 +1,19 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Map;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Maps;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph;
+namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graphs;
 
 /// <summary>
 /// Base class for graph generators.
 /// </summary>
 public abstract class GraphGeneratorBase : IGraphGenerator
 {
+    /// <summary>
+    /// The map generator
+    /// </summary>
+    protected IMapGenerator MapGenerator { get; }
+
     /// <inheritdoc />
     public string[] Sources { get; }
 
@@ -24,7 +29,7 @@ public abstract class GraphGeneratorBase : IGraphGenerator
     public abstract AgvGraph Generate(Guid correlationId);
 
     /// <inheritdoc />
-    public IEnumerable<Common.Models.Graphs.Map> GenerateMaps()
+    public IEnumerable<Map> GenerateMaps()
     {
         var graph = GenerateGraph();
         return GenerateMapsBasedOnGlobalGraph(graph);
@@ -35,26 +40,28 @@ public abstract class GraphGeneratorBase : IGraphGenerator
     /// </summary>
     /// <param name="globalGraph"></param>
     /// <returns></returns>
-    protected virtual IEnumerable<Common.Models.Graphs.Map> GenerateMapsBasedOnGlobalGraph(Common.Models.Graphs.Graph globalGraph)
+    protected virtual IEnumerable<Map> GenerateMapsBasedOnGlobalGraph(Graph globalGraph)
     {
         const string allMapName = "Global";
-        var graph1 = new Common.Models.Graphs.Graph
+        var graph1 = new Graph
         {
             Nodes = globalGraph.Nodes,
             Edges = globalGraph.Edges
         };
-        yield return new MapGenerator(graph1).Generate(allMapName.ToGuid(), allMapName);
+        yield return MapGenerator.Generate(allMapName.ToGuid(), allMapName, graph1);
     }
 
     /// <inheritdoc cref="GraphGeneratorBase"/>
-    /// <param name="sources"></param>
-    /// <param name="destinations"></param>
-    protected GraphGeneratorBase(string[] sources, string[] destinations)
+    /// <param name="sources">The source nodes.</param>
+    /// <param name="destinations">The destination nodes.</param>
+    /// <param name="mapGenerator">The map generator.</param>
+    protected GraphGeneratorBase(string[] sources, string[] destinations, IMapGenerator mapGenerator)
     {
         Sources = sources;
         Destinations = destinations;
+        MapGenerator = mapGenerator;
     }
 
     /// <inheritdoc />
-    public Common.Models.Graphs.Graph GenerateGraph() => Generate(GraphId).ToGraph();
+    public Graph GenerateGraph() => Generate(GraphId).ToGraph();
 }

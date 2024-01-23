@@ -27,4 +27,36 @@ public class MapHelperTests
         dimensions.Width.ShouldBe(1);
         dimensions.Height.ShouldBe(1);
     }
+
+    [TestMethod]
+    public void ParseFilename_ValidFilename_ReturnsCorrectValues()
+    {
+        const string filename = "exampleMap_1.2_-3.4_5.6.png";
+
+        (float scaleUpFactor, float xOffset, float yOffset) = MapHelper.ParseFilename(filename);
+
+        scaleUpFactor.ShouldBe(1.2f);
+        xOffset.ShouldBe(-3.4f);
+        yOffset.ShouldBe(5.6f);
+    }
+
+    [TestMethod]
+    public void ParseFilename_InvalidFilename_ThrowsFormatException()
+    {
+        const string filename = "invalidFilename.png";
+
+        Should.Throw<FormatException>(() => MapHelper.ParseFilename(filename, true));
+    }
+
+    [TestMethod]
+    public void ParseFilename_InvalidFilename_NoThrow_ReturnsDefaultValues()
+    {
+        const string filename = "invalidFilename.png";
+
+        (float scaleUpFactor, float xOffset, float yOffset) = MapHelper.ParseFilename(filename);
+
+        scaleUpFactor.ShouldBe(1f);
+        xOffset.ShouldBe(0f);
+        yOffset.ShouldBe(0f);
+    }
 }

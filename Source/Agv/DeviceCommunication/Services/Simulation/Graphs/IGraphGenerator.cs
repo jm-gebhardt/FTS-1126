@@ -1,7 +1,7 @@
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph;
+namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graphs;
 
 /// <summary>
 /// Graph Generator
@@ -29,11 +29,11 @@ public interface IGraphGenerator
     /// Generate Graph.
     /// </summary>
     /// <returns></returns>
-    Common.Models.Graphs.Graph GenerateGraph();
+    Graph GenerateGraph();
 
     /// <summary>
     /// Generate Maps.
     /// </summary>
     /// <returns></returns>
-    IEnumerable<Common.Models.Graphs.Map> GenerateMaps();
+    IEnumerable<Map> GenerateMaps();
 }

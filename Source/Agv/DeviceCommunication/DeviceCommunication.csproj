@@ -31,4 +31,18 @@
       <_Parameter1>Gebhardt.StoreWare.Agv.$(MSBuildProjectName)Test</_Parameter1>
     </AssemblyAttribute>
   </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="Services\Simulation\Graph\FixedGraphGenerator.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Resources\BackgroundImages\Charge Park_1.16_-11_-21.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\BackgroundImages\Global_1.08_-11_-21.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\BackgroundImages\Stations_1.13_-63.3_-21.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 </Project>

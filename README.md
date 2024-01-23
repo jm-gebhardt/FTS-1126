@@ -199,3 +199,30 @@ If this is not desired, it can be disabled for the whole class or on property le
 ### SectionName
 By default, the name of the setting class is used as key, e.g. as key in the database, you can overwrite this in the settings class:
 ```public override string SectionName => "Test";```
+
+
+## Background Map Image Setup
+
+### Storing and Deploying the PNG
+
+- The PNG image is stored within the project's resources and is deployed during the build process (`Resources\BackgroundImages\*.png`).
+- This image can be replaced post-deployment to update the map background.
+
+### File Naming Convention
+
+To properly align the map graphic with the graph, the scaling factor, x-offset, and y-offset need to be manually determined and then encoded into the filename. The structure of the filename should follow this pattern:
+
+`mapName_scaleUp_xOffset_yOffset.png`
+
+#### Example
+
+- Filename: `stations_1.2_-10_-22.png`
+- Name of the map: `stations`
+- Upscale factor: `1.2` (greater than the graph scale)
+- x-offset: `-10` (units in the graph coordinate system)
+- y-offset: `-22` (units in the graph coordinate system)
+
+### Fallback Mechanism
+
+- In cases where these values are not defined in the filename, such as with a file named `stations.png`, default values are used: upscale factor (`1`), x-offset (`0`), and y-offset (`0`).
+- If no image file is found for the specified map name, the background image is generated automatically.

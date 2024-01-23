@@ -11,7 +11,8 @@ using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Graphs;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graphs;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Maps;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.States;
 using MassTransit;
 using MassTransit.Configuration;
@@ -42,10 +43,12 @@ try
                     if (simulationOptions.FixedGraph)
                     {
                         services.AddTransient<IGraphGenerator, FixedGraphGenerator>();
+                        services.AddTransient<IMapGenerator, FixedGraphMapGenerator>();
                     }
                     else if (simulationOptions.GridGraph)
                     {
                         services.AddTransient<IGraphGenerator, GridGraphGenerator>();
+                        services.AddTransient<IMapGenerator, GeneratedMapGenerator>();
                     }
                     services.AddHostedService<SimulatedAgvProvider>();
 

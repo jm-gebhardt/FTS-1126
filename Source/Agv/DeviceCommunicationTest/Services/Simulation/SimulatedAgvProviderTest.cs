@@ -2,7 +2,8 @@ using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graph;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graphs;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Maps;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.States;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
@@ -40,7 +41,7 @@ public class SimulatedAgvProviderTest
                 {
                     s.AddSingleton(options);
                     s.AddLogging();
-                    s.AddTransient<IGraphGenerator, GridGraphGenerator>(_ => new GridGraphGenerator(options));
+                    s.AddTransient<IGraphGenerator, GridGraphGenerator>(_ => new GridGraphGenerator(options, new GeneratedMapGenerator()));
                     s.AddHostedService<SimulatedAgvProvider>();
                 },
                 inactivityTimeout: TimeSpan.FromSeconds(6))
@@ -61,7 +62,7 @@ public class SimulatedAgvProviderTest
                 {
                     s.AddSingleton(options);
                     s.AddLogging();
-                    s.AddTransient<IGraphGenerator, GridGraphGenerator>(_ => new GridGraphGenerator(options));
+                    s.AddTransient<IGraphGenerator, GridGraphGenerator>(_ => new GridGraphGenerator(options, new GeneratedMapGenerator()));
                     s.AddHostedService<SimulatedAgvProvider>();
                 },
                 inactivityTimeout: TimeSpan.FromSeconds(6),
