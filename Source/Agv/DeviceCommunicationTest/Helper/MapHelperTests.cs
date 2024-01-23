@@ -1,4 +1,5 @@
-﻿using Gebhardt.StoreWare.Agv.DeviceCommunication.Exceptions;
+﻿using System.Globalization;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Exceptions;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Helpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
@@ -32,6 +33,20 @@ public class MapHelperTests
     public void ParseFilename_ValidFilename_ReturnsCorrectValues()
     {
         const string filename = "exampleMap_1.2_-3.4_5.6.png";
+
+        (float scaleUpFactor, float xOffset, float yOffset) = MapHelper.ParseFilename(filename);
+
+        scaleUpFactor.ShouldBe(1.2f);
+        xOffset.ShouldBe(-3.4f);
+        yOffset.ShouldBe(5.6f);
+    }
+
+    [TestMethod]
+    public void ParseFilename_GermanLocale_ReturnsCorrectValues()
+    {
+        const string filename = "exampleMap_1.2_-3.4_5.6.png";
+
+        CultureInfo.CurrentCulture = new CultureInfo("de-DE");
 
         (float scaleUpFactor, float xOffset, float yOffset) = MapHelper.ParseFilename(filename);
 

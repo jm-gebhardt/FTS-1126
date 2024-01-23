@@ -1,4 +1,5 @@
-﻿using Gebhardt.StoreWare.Agv.DeviceCommunication.Exceptions;
+﻿using System.Globalization;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Exceptions;
 using SkiaSharp;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Helpers;
@@ -38,10 +39,12 @@ public static class MapHelper
         float yOffset = 0;
         string[] parts = Path.GetFileNameWithoutExtension(filename).Split('_');
 
+        var invariantCulture = CultureInfo.InvariantCulture;
+
         if (parts.Length != 4 ||
-            !float.TryParse(parts[1], out scaleUpFactor) ||
-            !float.TryParse(parts[2], out xOffset) ||
-            !float.TryParse(parts[3], out yOffset))
+            !float.TryParse(parts[1], invariantCulture, out scaleUpFactor) ||
+            !float.TryParse(parts[2], invariantCulture, out xOffset) ||
+            !float.TryParse(parts[3], invariantCulture, out yOffset))
         {
             if (throwException)
             {
