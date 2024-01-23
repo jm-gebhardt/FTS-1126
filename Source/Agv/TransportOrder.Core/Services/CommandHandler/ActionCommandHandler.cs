@@ -305,15 +305,17 @@ public class ActionCommandHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<StartChargingActionGroup> context)
     {
-        var agvCorrelationId = context.Message.AgvCorrelationId;
+        (var agvCorrelationId, string? chargeStationId, var actionGroupCreator) = context.Message;
+        bool chargerProvided = !string.IsNullOrEmpty(chargeStationId);
+
         var cancellationToken = context.CancellationToken;
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 
         bool hasUnfinishedActionGroup = await _actionGroupRepository.HasUnfinishedActionGroupAsync(agv.CorrelationId);
-        IReadOnlyList<Domain.Models.ActionGroup.ActionGroup> actionGroups = await _actionGroupRepository.GetActionGroupsAsync(new[] { ActionGroupState.Created }, assignedAgvCorrelationId: agvCorrelationId);
-        _logger.LogDebug("Evaluating {Name}, has unfinished drop action: {HasUnfinishedDropAction} for agv {CorrelationId}.", nameof(StartChargingActionGroup), hasUnfinishedActionGroup, agv.CorrelationId);
+        IReadOnlyList<Domain.Models.ActionGroup.ActionGroup> actionGroups = await _actionGroupRepository.GetActionGroupsAsync(new[] {ActionGroupState.Created}, assignedAgvCorrelationId: agvCorrelationId);
+        _logger.LogDebug("Evaluating {Name}, has unfinished action: {HasUnfinishedActionGroup} for agv {CorrelationId}.", nameof(StartChargingActionGroup), hasUnfinishedActionGroup, agv.CorrelationId);
 
-        if (agv.IsLocked || hasUnfinishedActionGroup)
+        if (agv.IsLocked || (hasUnfinishedActionGroup && !chargerProvided))
         {
             return;
         }
@@ -333,8 +335,12 @@ public class ActionCommandHandler :
 
         if (actionGroup == null)
         {
-            var chargingNode = await _chargingPointManager.ReserveChargerAsync(agv);
-            await PublishNodeStateChange(context, chargingNode.Id);
+            if (!chargerProvided)
+            {
+                var chargingNode = await _chargingPointManager.ReserveChargerAsync(agv);
+                chargeStationId = chargingNode.Id;
+            }
+            await PublishNodeStateChange(context, chargeStationId!);
 
             var groupCorrelationId = Guid.NewGuid();
             actionGroup = new Domain.Models.ActionGroup.ActionGroup(
@@ -342,24 +348,27 @@ public class ActionCommandHandler :
                 string.Empty,
                 actions: new List<AgvAction>
                 {
-                    new(Guid.NewGuid(), ActionType.Move, chargingNode.Id, groupCorrelationId)
+                    new(Guid.NewGuid(), ActionType.Move, chargeStationId!, groupCorrelationId)
                     {
                         Sequence = 0
                     },
-                    new(Guid.NewGuid(), ActionType.Charge, chargingNode.Id, groupCorrelationId)
+                    new(Guid.NewGuid(), ActionType.Charge, chargeStationId!, groupCorrelationId)
                     {
                         Sequence = 1
                     }
                 },
                 assignedAgv: agv.CorrelationId,
-                creator: ActionGroupCreator.TransportOrder
+                creator: actionGroupCreator,
+                isManual: chargerProvided
             );
 
             await _actionGroupRepository.AddAsync(actionGroup);
             await context.Publish(new ActionGroupCreated(_mapper.Map<ActionGroup>(actionGroup), actionGroup.CorrelationId), cancellationToken);
         }
-
-        await context.Publish(new ActionGroupCreatedForAgv(_mapper.Map<ActionGroup>(actionGroup), agv.CorrelationId), cancellationToken);
+        if (!agv.IsLocked && !hasUnfinishedActionGroup && !agv.IsCharging)
+        {
+            await context.Publish(new ActionGroupCreatedForAgv(_mapper.Map<ActionGroup>(actionGroup), agv.CorrelationId), cancellationToken);
+        }
     }
 
     /// <summary>

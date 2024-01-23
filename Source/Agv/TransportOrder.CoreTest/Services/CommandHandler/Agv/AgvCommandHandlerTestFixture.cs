@@ -14,6 +14,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Profiles;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles;
 using JetBrains.Annotations;
 using MassTransit;
@@ -34,6 +35,8 @@ public class AgvCommandHandlerTestFixture(
     private readonly Mock<ILogger<AgvCommandHandler>> _logger = new();
     private readonly Mock<IMapRepository> _mapRepository = new();
     private readonly ProductionOptions _productionOptions = new() {AutoAccept = true};
+    private readonly Mock<IChargingPointManager> _chargingPointManager = new();
+    private readonly Mock<INodeStateRepository> _nodeStateRepository = new();
     public readonly Mock<IAgvDb> AgvDb = new();
 
     protected override void ConfigureServices(IServiceCollection collection)
@@ -46,6 +49,8 @@ public class AgvCommandHandlerTestFixture(
         collection.AddTransient(_ => _mapRepository.Object);
         collection.AddTransient(_ => _productionOptions);
         collection.AddTransient(_ => AgvDb.Object);
+        collection.AddTransient(_ => _chargingPointManager.Object);
+        collection.AddTransient(_ => _nodeStateRepository.Object);
     }
 
     public AgvCommandHandlerTestFixture AddAgvs(List<TransportOrder.Domain.Models.Agv.Agv> agvs)

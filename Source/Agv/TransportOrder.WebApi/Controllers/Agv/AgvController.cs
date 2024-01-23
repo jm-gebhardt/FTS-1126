@@ -2,6 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
@@ -48,6 +49,7 @@ public class AgvController : Controller
     private readonly IRequestClient<GetCargosOfAgv> _getCargosOfAgvClient;
     private readonly IRequestClient<ResetAgvErrors> _resetAgvErrorsClient;
     private readonly IRequestClient<GetAgvSettings> _getAgvSettingsClient;
+    private readonly IRequestClient<SendAgvToCharger> _sendAgvToChargerClient;
     private readonly IMapper _mapper;
 
     /// <summary>
@@ -71,8 +73,9 @@ public class AgvController : Controller
         IRequestClient<GetAgvHasCargo> getAgvHasCargoClient,
         IRequestClient<GetCargosOfAgv> getCargosOfAgvClient,
         IRequestClient<ResetAgvErrors> resetAgvErrorsClient,
-        IRequestClient<GetAgvSettings> getAgvSettingsClient
-        )
+        IRequestClient<GetAgvSettings> getAgvSettingsClient,
+        IRequestClient<SendAgvToCharger> sendAgvToChargerClient
+    )
     {
         _getAgvClient = getAgvClient;
         _getAgvGraphClient = getAgvGraphClient;
@@ -94,6 +97,7 @@ public class AgvController : Controller
         _mapper = mapper;
         _resetAgvErrorsClient = resetAgvErrorsClient;
         _getAgvSettingsClient = getAgvSettingsClient;
+        _sendAgvToChargerClient = sendAgvToChargerClient;
     }
 
     /// <summary>
@@ -409,5 +413,18 @@ public class AgvController : Controller
         Response<GotCargosOfAgv> response = await _getCargosOfAgvClient.GetResponse<GotCargosOfAgv>(new GetCargosOfAgv(correlationId));
         var dto = _mapper.Map<ICollection<CargoDto>>(response.Message.Cargos);
         return Ok(dto);
+    }
+
+    /// <summary>
+    /// Send agv to closest charger.
+    /// </summary>
+    /// <response code="200">Agv send to charger.</response>
+    /// <response code="404">Agv with given correlationId not found or no free charge station available.</response>
+    [HttpPatch]
+    [Route("/agv/{correlationId:guid}/charge")]
+    public async Task<ActionResult> SendAgvToCharger(Guid correlationId)
+    {
+        await _sendAgvToChargerClient.GetResponse<Success>(new SendAgvToCharger(correlationId));
+        return Ok();
     }
 }

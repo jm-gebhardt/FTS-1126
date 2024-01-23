@@ -12,15 +12,17 @@ public interface IChargingPointManager
     /// Selects a free charger based on the agvs graph
     /// </summary>
     /// <param name="agv"></param>
+    /// <param name="startNodeId">The start node Id from which the route should be calculated. If null the last node Id of the agv will be used.</param>
     /// <returns>The best free charger, throws if it could not reserve it</returns>
-    Task<GraphNode> ReserveChargerAsync(Models.Agv.Agv agv);
+    Task<GraphNode> ReserveChargerAsync(Models.Agv.Agv agv, string? startNodeId = null);
 
     /// <summary>
     /// Chooses the best free charger based on the agvs graph
     /// </summary>
     /// <param name="agv"></param>
+    /// <param name="startNodeId">The start node Id from which the route should be calculated. If null the last node Id of the agv will be used.</param>
     /// <returns>The best free charger, or null if all occupied</returns>
-    Task<GraphNode?> GetBestChargerAsync(Models.Agv.Agv agv);
+    Task<GraphNode?> GetBestChargerAsync(Models.Agv.Agv agv, string? startNodeId = null);
 
     /// <summary>
     /// Reserves the given charger

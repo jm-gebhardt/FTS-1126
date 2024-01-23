@@ -5,6 +5,7 @@ using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.CommandHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Commands;
@@ -395,5 +396,31 @@ public class AgvControllerTest
 
         bool dto = await fixture.GetControllerResultValueAsync(c => c.HasCargo(agvCorrelationId));
         dto.ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task SendAgvToCharger_Ok()
+    {
+        AgvControllerTestFixture<SendAgvToCharger, SendAgvToChargerRequestHandler> fixture = new AgvControllerTestFixture<SendAgvToCharger, SendAgvToChargerRequestHandler>()
+            .SetupAgvDbWithDefaultData()
+            .Build();
+        var controller = fixture.Controller;
+        var correlationId = fixture.AgvIds[2].ToGuid();
+
+        var actionResult = await controller.SendAgvToCharger(correlationId);
+        var result = actionResult as OkObjectResult;
+        result.ShouldBeAssignableTo<OkResult>();
+    }
+
+    [TestMethod]
+    public async Task SendAgvToCharger_UnknownAgv_NotFoundResult()
+    {
+        AgvControllerTestFixture<SendAgvToCharger, SendAgvToChargerRequestHandler> fixture = new AgvControllerTestFixture<SendAgvToCharger, SendAgvToChargerRequestHandler>()
+            .SetupAgvDbWithDefaultData()
+            .Build();
+        var correlationId = Guid.Empty;
+        fixture.AgvDb.Setup(x => x.Agvs.GetAgvAsync(It.Is<Guid>(g => g == correlationId))).Throws(new AgvNotFoundException(correlationId));
+        var controller = fixture.Controller;
+        await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await controller.SendAgvToCharger(correlationId));
     }
 }

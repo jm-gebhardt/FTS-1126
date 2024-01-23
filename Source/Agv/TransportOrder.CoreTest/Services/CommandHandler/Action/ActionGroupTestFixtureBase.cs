@@ -133,7 +133,7 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
 
     public void AddChargingPointManager(GraphNode chargeGraphNode)
     {
-        _chargingPointManager.Setup(x => x.ReserveChargerAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>())).ReturnsAsync(chargeGraphNode);
+        _chargingPointManager.Setup(x => x.ReserveChargerAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), null)).ReturnsAsync(chargeGraphNode);
         _nodeStateRepositoryMock.Setup(x => x.GetNodeStateAsync(It.IsAny<string>())).ReturnsAsync(new NodeLock(chargeGraphNode.Id, NodeLockState.Reserved, false, Guid.NewGuid(), DateTime.UtcNow));
     }
 

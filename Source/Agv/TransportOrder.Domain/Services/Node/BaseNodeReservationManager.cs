@@ -31,13 +31,14 @@ public abstract class BaseNodeReservationManager : BaseNodePicker
     /// Pick given node and reserve
     /// </summary>
     /// <param name="agv"></param>
+    /// <param name="startNodeId">The start node Id from which the route should be calculated. If null the last node Id of the agv will be used.</param>
     /// <returns></returns>
-    protected async Task<GraphNode> PickAndReserveNodeAsync(Models.Agv.Agv agv)
+    protected async Task<GraphNode> PickAndReserveNodeAsync(Models.Agv.Agv agv, string? startNodeId = null)
     {
         return await _semaphoreProvider.ExecuteLockedAsync(async () =>
         {
             var agvData = await AgvDb.Data.GetAgvDataAsync(agv.CorrelationId);
-            var node = await PickNode(agv, agvData);
+            var node = await PickNode(agv, agvData, startNodeId);
 
             await ReserveNodeAsync(node.Id, agv.CorrelationId);
             return node;

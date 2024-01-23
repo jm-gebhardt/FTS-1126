@@ -204,6 +204,9 @@ public static class CoreBusRegistrationExtensions
         configurator.AddConsumer<GetAgvSettingsRequestHandler>();
         configurator.AddRequestClient<GetAgvSettings>();
         configurator.AddRequestClient<GetAgvsSettings>();
+
+        configurator.AddConsumer<SendAgvToChargerRequestHandler>();
+        configurator.AddRequestClient<SendAgvToCharger>();
     }
 
     private static void RegisterMediatorRoutingRequestHandlers(IMediatorRegistrationConfigurator configurator)

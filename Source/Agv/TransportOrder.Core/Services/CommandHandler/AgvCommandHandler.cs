@@ -72,7 +72,8 @@ public class AgvCommandHandler :
         IRequestClient<QueueActionGroup> queueActionGroupRequestClient,
         IMapper mapper,
         ProductionOptions productionOptions,
-        ILogger<AgvCommandHandler> logger)
+        ILogger<AgvCommandHandler> logger
+        )
     {
         _logger = logger;
         _agvsSemaphore = agvsSemaphore;

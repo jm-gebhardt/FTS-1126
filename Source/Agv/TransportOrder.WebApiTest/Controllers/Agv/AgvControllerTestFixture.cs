@@ -1,3 +1,4 @@
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
@@ -13,6 +14,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Commands;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
@@ -65,6 +67,8 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
 
     private Mock<IRequestClient<QueueActionGroup>> QueueActionGroupRequestClient { get; }
 
+    private Mock<IChargingPointManager> ChargingPointManager { get; }
+
     private readonly GraphNode[] _nodes =
     {
         new("node00") {X = 0f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint},
@@ -77,8 +81,11 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
 
     public AgvSettings AgvSettings { get; } = new();
 
+    private readonly Domain.Models.ActionGroup.AgvAction _chargeAction = new(Guid.NewGuid(), ActionType.Charge, "Charger-1", Guid.NewGuid());
+
     public AgvControllerTestFixture()
     {
+        // _chargingPointManager.GetBestChargerAsync(agv, nodeId);
         AgvDb = new Mock<IAgvDb>();
         QueueActionGroupRequestClient = new Mock<IRequestClient<QueueActionGroup>>();
         ActionGroupRetrievalService = new Mock<IActionGroupRetrievalService>();
@@ -86,9 +93,14 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         _agvPositionRepository = GetAgvPositionRepository().Object;
 
         ActionGroupRepository = new Mock<IActionGroupRepository>();
-        ActionGroupRepository.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (Domain.Models.ActionGroup.ActionGroup?) null));
+        ActionGroupRepository.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (Domain.Models.ActionGroup.ActionGroup?)null));
+        ActionGroupRepository.Setup(r => r.GetCurrentAgvActionAsync(It.IsAny<Guid>())).ReturnsAsync( _chargeAction );
         AgvDb.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(new List<AgvError>());
         AgvDb.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<IList<Guid>>())).ReturnsAsync(new List<AgvError>());
+
+        ChargingPointManager = new Mock<IChargingPointManager>();
+        ChargingPointManager.Setup(c => c.GetBestChargerAsync(It.IsAny<Domain.Models.Agv.Agv>(), It.IsAny<string>())).ReturnsAsync(new GraphNode("Charger-1"));
+        ChargingPointManager.Setup(c => c.ReserveChargerAsync(It.IsAny<Domain.Models.Agv.Agv>(), It.IsAny<string>())).ReturnsAsync(new GraphNode("Charger-1"));
     }
 
     [UsedImplicitly]
@@ -194,6 +206,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         IRequestClient<GetCargosOfAgv> getCargosOfAgvClient = GetRequestClient<GetCargosOfAgv>();
         IRequestClient<ResetAgvErrors> resetAgvErrorsClient = GetRequestClient<ResetAgvErrors>();
         IRequestClient<GetAgvSettings> getAgvSettingsRequestClient = GetRequestClient<GetAgvSettings>();
+        IRequestClient<SendAgvToCharger> sendAgvToChargerClient = GetRequestClient<SendAgvToCharger>();
 
         var controller = new AgvController(Mapper!,
             getAgvRequestClient,
@@ -214,7 +227,8 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             getAgvHasCargoClient,
             getCargosOfAgvClient,
             resetAgvErrorsClient,
-            getAgvSettingsRequestClient
+            getAgvSettingsRequestClient,
+            sendAgvToChargerClient
         )
         {
             ControllerContext = new ControllerContext(
@@ -246,6 +260,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             sc.AddTransient(_ => new Mock<IAgvPositionRepository>().Object);
             sc.AddTransient(_ => ActionGroupRepository.Object);
             sc.AddTransient(_ => QueueActionGroupRequestClient.Object);
+            sc.AddTransient(_ => ChargingPointManager.Object);
             sc.AddTransient<ISemaphoreProvider<IAgvsSemaphore>>(_ => _semaphoreProvider);
             sc.AddFakeSettings(AgvSettings);
             sc.AddTransient(_ => _mapRepository.Object);

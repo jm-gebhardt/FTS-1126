@@ -72,7 +72,7 @@ public class EfNodeStateRepository : INodeStateRepository
                 _logger.LogDebug("Reserving node {NodeId}, for Agv {CorrelationId}", nodeId, agvCorrelationId);
                 return await UpdateNodeAsync(nodeId, NodeLockState.Reserved, agvCorrelationId);
             }
-            _logger.LogDebug("Could not reserve node {NodeId} for Agv {CorrelationId} because node is not free or unlocked", nodeId, agvCorrelationId);
+            _logger.LogDebug("Could not reserve node {NodeId} for agv {CorrelationId} because node is locked or not free.", nodeId, agvCorrelationId);
             return false;
         });
     }
@@ -88,7 +88,8 @@ public class EfNodeStateRepository : INodeStateRepository
                 _logger.LogDebug("UnReserve node {NodeId}, reserved for Agv {CorrelationId}", nodeLock.NodeId, agvCorrelationId);
                 return await UpdateNodeAsync(nodeLock.NodeId, NodeLockState.Free, null);
             }
-            _logger.LogDebug("Could not unreserve any node because no node is reserved for Agv {CorrelationId}", agvCorrelationId);
+            // ReSharper disable once StringLiteralTypo
+            _logger.LogDebug("Could not unreserve any node because no node is reserved for agv {CorrelationId}", agvCorrelationId);
             return false;
         });
     }
@@ -114,10 +115,11 @@ public class EfNodeStateRepository : INodeStateRepository
             var nodeLock = GetNodeLock(agvCorrelationId);
             if (nodeLock is {NodeState: NodeLockState.Occupied})
             {
-                _logger.LogDebug("UnOccupy node {NodeId}, occupied by Agv {CorrelationId}", nodeLock.NodeId, agvCorrelationId);
+                _logger.LogDebug("UnOccupy node {NodeId}, occupied by agv {CorrelationId}", nodeLock.NodeId, agvCorrelationId);
                 return await UpdateNodeAsync(nodeLock.NodeId, NodeLockState.Free, null);
             }
-            _logger.LogDebug("Could not unoccupy any node because no node is occupied by Agv {CorrelationId}", agvCorrelationId);
+            // ReSharper disable once StringLiteralTypo
+            _logger.LogDebug("Could not unoccupy any node because no node is occupied by agv {CorrelationId}", agvCorrelationId);
             return false;
         });
     }

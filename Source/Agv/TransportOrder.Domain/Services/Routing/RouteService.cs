@@ -180,11 +180,11 @@ public class RouteService : IRouteService
     }
 
     ///<inheritdoc />
-    public async Task<GraphNode> GetNodeWithLowestCostsAsync(Models.Agv.Agv agv, IList<GraphNode> availableNodes, AgvData? agvData)
+    public async Task<GraphNode> GetNodeWithLowestCostsAsync(Models.Agv.Agv agv, IList<GraphNode> availableNodes, AgvData? agvData, string? startNodeId = null)
     {
         IEnumerable<GraphNode> graphNodes = availableNodes.ToList();
         List<Route> routes = await Task.WhenAll(graphNodes
-                .Select(n => GetRouteIfExistingAsync(agv, n.Id, agvData: agvData)))
+                .Select(n => GetRouteIfExistingAsync(agv, n.Id, agvData: agvData, startNodeId: startNodeId)))
             .ContinueWith(x => x.Result.Where(route => route != null)
                 .Cast<Route>().ToList(), TaskContinuationOptions.NotOnFaulted);
 

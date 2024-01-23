@@ -23,21 +23,21 @@ public class ChargingPointManager : BaseNodeReservationManager, IChargingPointMa
     protected override string Description => "Charging";
 
     /// <inheritdoc />
-    public Task<GraphNode> ReserveChargerAsync(Models.Agv.Agv agv)
+    public Task<GraphNode> ReserveChargerAsync(Models.Agv.Agv agv, string? startNodeId = null)
     {
-        return PickAndReserveNodeAsync(agv);
+        return PickAndReserveNodeAsync(agv, startNodeId);
     }
 
     /// <inheritdoc />
     protected override Expression<Func<GraphNode, bool>> NodeFilter => node => node.Type == AgvGraph.NodeType.Charge;
 
     /// <inheritdoc />
-    public async Task<GraphNode?> GetBestChargerAsync(Models.Agv.Agv agv)
+    public async Task<GraphNode?> GetBestChargerAsync(Models.Agv.Agv agv, string? startNodeId = null)
     {
         try
         {
             var agvData = await AgvDb.Data.GetAgvDataAsync(agv.CorrelationId);
-            return await PickNode(agv, agvData);
+            return await PickNode(agv, agvData, startNodeId);
         }
         catch (NoNodesAvailableException)
         {

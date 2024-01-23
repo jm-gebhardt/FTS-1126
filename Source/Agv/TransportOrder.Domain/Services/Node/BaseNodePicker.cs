@@ -50,11 +50,12 @@ public abstract class BaseNodePicker
     /// </summary>
     /// <param name="agv"></param>
     /// <param name="agvData"></param>
+    /// <param name="startNodeId">The start node Id from which the route should be calculated. If null the last node Id of the agv will be used.</param>
     /// <returns></returns>
-    protected async Task<GraphNode> PickNode(Models.Agv.Agv agv, AgvData? agvData)
+    protected async Task<GraphNode> PickNode(Models.Agv.Agv agv, AgvData? agvData, string? startNodeId = null)
     {
         IEnumerable<GraphNode> availableNodes = await GetAvailableNodes(agv);
-        var node = await SelectBestNode(availableNodes, agv, agvData);
+        var node = await SelectBestNode(availableNodes, agv, agvData, startNodeId);
 
         return node;
     }
@@ -84,12 +85,13 @@ public abstract class BaseNodePicker
     /// <param name="availableNodes">The nodes which can be selected, it is ensured that it contains at least one available node</param>
     /// <param name="agv">The agv</param>
     /// <param name="agvData">The agv data</param>
+    /// <param name="startNodeId">The start node Id from which the route should be calculated. If null the last node Id of the agv will be used.</param>
     /// <returns>The best node</returns>
     [PublicAPI]
-    protected virtual Task<GraphNode> SelectBestNode(IEnumerable<GraphNode> availableNodes, Models.Agv.Agv agv, AgvData? agvData)
+    protected virtual Task<GraphNode> SelectBestNode(IEnumerable<GraphNode> availableNodes, Models.Agv.Agv agv, AgvData? agvData, string? startNodeId = null)
     {
         _logger.LogDebug("Choosing node with lowest costs");
-        return _routeService.GetNodeWithLowestCostsAsync(agv, availableNodes.ToList(), agvData);
+        return _routeService.GetNodeWithLowestCostsAsync(agv, availableNodes.ToList(), agvData, startNodeId);
     }
 
     /// <summary>
