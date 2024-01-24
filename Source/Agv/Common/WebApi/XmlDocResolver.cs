@@ -2,7 +2,7 @@
 using System.Xml.Linq;
 using System.Xml.XPath;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi;
+namespace Gebhardt.StoreWare.Agv.Common.WebApi;
 
 /// <summary>
 /// Helper class to resolve inherited comments in xml docs

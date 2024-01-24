@@ -17,7 +17,7 @@ public class MediatorTestFixture<TRequest, TConsumer>
     where TRequest : class
     where TConsumer : class, IConsumer
 {
-    private readonly List<Action<IServiceCollection>> _serviceActions = new();
+    protected readonly List<Action<IServiceCollection>> ServiceActions = new();
     private readonly List<Action<IMediatorRegistrationConfigurator>> _configureMediatorAction = new();
 
     /// <summary>
@@ -51,7 +51,7 @@ public class MediatorTestFixture<TRequest, TConsumer>
             })
             .AddMassTransitTestHarness(x => { x.UsingInMemory((context, cfg) => { cfg.ConfigureEndpoints(context); }); });
 
-        foreach (Action<IServiceCollection> service in _serviceActions)
+        foreach (Action<IServiceCollection> service in ServiceActions)
         {
             service.Invoke(collection);
         }
@@ -87,7 +87,7 @@ public class MediatorTestFixture<TRequest, TConsumer>
     /// <returns></returns>
     public MediatorTestFixture<TRequest, TConsumer> AddServices(Action<IServiceCollection> services)
     {
-        _serviceActions.Add(services);
+        ServiceActions.Add(services);
         return this;
     }
 

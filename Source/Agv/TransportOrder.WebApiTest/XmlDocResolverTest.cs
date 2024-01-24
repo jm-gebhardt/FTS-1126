@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 using System.Xml.Linq;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi;
+using Gebhardt.StoreWare.Agv.Common.WebApi;
 using MassTransit;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;

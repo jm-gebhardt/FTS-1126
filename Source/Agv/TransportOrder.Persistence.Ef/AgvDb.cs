@@ -30,4 +30,10 @@ public class AgvDb: IAgvDb
         Graphs = graphs;
         Agvs = agvs;
     }
+
+    /// <inheritdoc cref="IAgvDb"/>>
+    public Task<int> SaveAsync(CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
 }

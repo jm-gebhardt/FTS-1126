@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi;
+﻿namespace Gebhardt.StoreWare.Agv.Common.WebApi;
 
 /// <summary>
 /// Class for generating type names
