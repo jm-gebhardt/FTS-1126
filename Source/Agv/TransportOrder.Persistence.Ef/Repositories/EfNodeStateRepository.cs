@@ -82,7 +82,7 @@ public class EfNodeStateRepository : INodeStateRepository
     {
         return _semaphoreProvider.ExecuteLockedAsync(async () =>
         {
-            var nodeLock = GetNodeLock(agvCorrelationId);
+            var nodeLock = GetNodeLockInState(agvCorrelationId, NodeLockState.Reserved);
             if (nodeLock != null)
             {
                 _logger.LogDebug("UnReserve node {NodeId}, reserved for Agv {CorrelationId}", nodeLock.NodeId, agvCorrelationId);
@@ -112,8 +112,8 @@ public class EfNodeStateRepository : INodeStateRepository
     {
         return _semaphoreProvider.ExecuteLockedAsync(async () =>
         {
-            var nodeLock = GetNodeLock(agvCorrelationId);
-            if (nodeLock is {NodeState: NodeLockState.Occupied})
+            var nodeLock = GetNodeLockInState(agvCorrelationId, NodeLockState.Occupied);
+            if (nodeLock != null)
             {
                 _logger.LogDebug("UnOccupy node {NodeId}, occupied by agv {CorrelationId}", nodeLock.NodeId, agvCorrelationId);
                 return await UpdateNodeAsync(nodeLock.NodeId, NodeLockState.Free, null);
@@ -188,12 +188,13 @@ public class EfNodeStateRepository : INodeStateRepository
             .FirstOrDefault(n => n.NodeId == nodeId);
     }
 
-    private NodeLock? GetNodeLock(Guid agvCorrelationId)
+    private NodeLock? GetNodeLockInState(Guid agvCorrelationId, NodeLockState nodeLockState)
     {
         using var dbContext = _dbContextFactory.CreateDbContext();
+ 
         return dbContext.Set<NodeLock>()
             .AsNoTracking()
-            .FirstOrDefault(n => n.AgvCorrelationId == agvCorrelationId);
+            .FirstOrDefault(n => n.AgvCorrelationId == agvCorrelationId && n.NodeState == nodeLockState);
     }
 
     private async Task<bool> UpdateNodeAsync(string nodeId, NodeLockState nodeState, Guid? agvCorrelationId)

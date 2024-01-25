@@ -248,7 +248,7 @@ public class Agv : IAgvId
     {
         if (AgvStatus == null)
         {
-            return false;
+            return !string.IsNullOrEmpty(newLastNodeId);
         }
         return AgvStatus.LastNodeId != newLastNodeId;
     }
