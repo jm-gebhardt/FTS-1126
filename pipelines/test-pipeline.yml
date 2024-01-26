@@ -56,7 +56,7 @@ stages:
           solutionOrProjectPath: '$(SourceDirectory)/$(Build.Target)'
           additionalArguments: '--no-build'
           failBuildLevelSelector: Suggestion
-          resharperNuGetVersion: '2023.2.2'
+          resharperNuGetVersion: '2023.3.3'
   ################################################
   # Run Unit Tests
   ################################################  
