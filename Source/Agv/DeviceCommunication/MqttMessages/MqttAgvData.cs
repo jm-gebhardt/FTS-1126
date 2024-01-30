@@ -82,7 +82,7 @@ public record MqttAgvData
     /// The maximum acceleration of the AGV [m/s^2]
     /// </summary>
     public double? Acceleration { get; set; }
-    
+
     /// <summary>
     /// The list of sensors in the agv
     /// </summary>

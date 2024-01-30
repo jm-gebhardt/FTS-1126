@@ -117,12 +117,12 @@ public class GraphNode : IEquatable<GraphNode>
         {
             return false;
         }
-        return Equals((GraphNode) obj);
+        return Equals((GraphNode)obj);
     }
 
     /// <inheritdoc />
     public override int GetHashCode()
     {
-        return HashCode.Combine(Id, (int) Type, X, Y, Z, Theta);
+        return HashCode.Combine(Id, (int)Type, X, Y, Z, Theta);
     }
 }

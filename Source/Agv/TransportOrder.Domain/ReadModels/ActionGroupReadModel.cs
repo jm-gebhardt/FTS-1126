@@ -19,7 +19,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
 /// <param name="Actions">The action.</param>
 /// <param name="IsManual">The manual creation mode flag.</param>
 /// <param name="Reasons">Are set when the ActionGroup went into a non successful state, like invalid, aborted or canceled.</param>
-public record ActionGroupReadModel(Guid CorrelationId,
+public record ActionGroupReadModel(
+    Guid CorrelationId,
     string OrderId,
     Guid? AssignedAgv,
     DateTime CreatedDate,

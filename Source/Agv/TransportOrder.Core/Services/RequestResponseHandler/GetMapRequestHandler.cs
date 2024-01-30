@@ -38,7 +38,7 @@ public class GetMapRequestHandler :
         ICollection<Map> fetchedMaps = await _mapRepository.GetAllMapsAsync();
         // reversing the list is a quick fix that the global map is on that. This needs improvement in the future.
         var maps = _mapper.Map<List<Messages.Requests.Map.Map>>(fetchedMaps.Reverse());
-        await context.RespondAsync(new GotMapList {Maps = maps});
+        await context.RespondAsync(new GotMapList { Maps = maps });
     }
 
     /// <summary>

@@ -98,7 +98,7 @@ public class EfNodeStateRepository : INodeStateRepository
     public async Task<bool> OccupyNodeAsync(string nodeId, Guid agvCorrelationId)
     {
         var currentState = GetNodeLock(nodeId);
-        if (currentState is {IsLocked: true} or {NodeState: NodeLockState.Occupied})
+        if (currentState is { IsLocked: true } or { NodeState: NodeLockState.Occupied })
         {
             _logger.LogDebug("Could not not occupy node {NodeId} because it is locked or already occupied", nodeId);
             return false;
@@ -191,7 +191,7 @@ public class EfNodeStateRepository : INodeStateRepository
     private NodeLock? GetNodeLockInState(Guid agvCorrelationId, NodeLockState nodeLockState)
     {
         using var dbContext = _dbContextFactory.CreateDbContext();
- 
+
         return dbContext.Set<NodeLock>()
             .AsNoTracking()
             .FirstOrDefault(n => n.AgvCorrelationId == agvCorrelationId && n.NodeState == nodeLockState);

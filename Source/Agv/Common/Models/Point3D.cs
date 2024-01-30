@@ -24,7 +24,7 @@ public record Point3D
     /// Angle (rotation) [rad]
     /// </summary>
     public float Theta { get; init; }
-    
+
     /// <inheritdoc cref="Point3D"/>
     /// <param name="x">X-position [m]</param>
     /// <param name="y">Y-position [m]</param>

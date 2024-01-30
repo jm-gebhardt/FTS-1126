@@ -18,8 +18,8 @@ public class CargoProfile : WebApiProfile
             .ForCtorParam("cargoId", opt => opt.MapFrom(src => src.LoadId))
             .ForCtorParam("cargoType", opt => opt.MapFrom(src => src.LoadType))
             .ForCtorParam("cargoPosition", opt => opt.MapFrom(src => src.LoadPosition)
-        );
-        
+            );
+
         CreateMap<AgvHasCargo, AgvHasCargoDto>();
     }
 }

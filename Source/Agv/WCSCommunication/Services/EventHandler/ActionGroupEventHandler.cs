@@ -10,7 +10,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services.EventHandler;
 /// Provides handlers for action group related events.
 /// </summary>
 [UsedImplicitly]
-public class ActionGroupEventHandler:
+public class ActionGroupEventHandler :
     IConsumer<ActionGroupInvalid>,
     IConsumer<ActionGroupStarted>,
     IConsumer<ActionGroupCompleted>,
@@ -67,7 +67,7 @@ public class ActionGroupEventHandler:
     /// </summary>
     public async Task Consume(ConsumeContext<ActionGroupCancelFailed> context)
     {
-        var (actionGroup,  correlationId,  errorCode) = context.Message;
+        var (actionGroup, correlationId, errorCode) = context.Message;
         if (actionGroup.Creator is ActionGroupCreator.Wms or ActionGroupCreator.Simulation)
         {
             await context.Publish(new HandleCancellationFailure(correlationId, errorCode));

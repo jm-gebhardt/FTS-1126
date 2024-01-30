@@ -605,4 +605,37 @@ public class ActionGroupRepositoryTest
 
         await Should.ThrowAsync<ActionGroupNotFoundException>(fixture.ActionGroupRepository.GetRequiredActionGroupByActionIdAsync("unknown".ToGuid()));
     }
+
+    [TestMethod]
+    public async Task HasStartedAction_AgvIsAssignedToActionGroupWithStartedAction_ReturnsTrue()
+    {
+        var agv = Guid.NewGuid();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv, pickActionState: ActionState.Started);
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroup(actionGroup)
+            .BuildAsync();
+        (await fixture.ActionGroupRepository.HasStartedActionAsync(agv)).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task HasStartedAction_AgvIsNotAssignedToActionGroupWithStartedAction_ReturnsFalse()
+    {
+        var agv = Guid.NewGuid();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: "another agv".ToGuid(), pickActionState: ActionState.Started);
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroup(actionGroup)
+            .BuildAsync();
+        (await fixture.ActionGroupRepository.HasStartedActionAsync(agv)).ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public async Task HasStartedAction_ActionGroupWithoutStartedAction_ReturnsFalse()
+    {
+        var agv = Guid.NewGuid();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv, pickActionState: ActionState.Completed, dropActionState: ActionState.Created);
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroup(actionGroup)
+            .BuildAsync();
+        (await fixture.ActionGroupRepository.HasStartedActionAsync(agv)).ShouldBeFalse();
+    }
 }

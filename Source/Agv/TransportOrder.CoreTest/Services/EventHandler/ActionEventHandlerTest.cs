@@ -44,15 +44,16 @@ public class ActionEventHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_ActionCompletedEvent_ValidData_PublishesCompleteAction()
+    public async Task Consume_ActionCompletedEvent_ValidData_PublishesCompleteActionOfActionGroup()
     {
+        var actionGroup = AgvActionGenerator.GenerateChargeActionGroup();
         var fixture = new ActionEventHandlerTestFixture();
-        var actionCompletedEvent = new ActionCompleted(Guid.NewGuid());
+        fixture.AddActionGroup(actionGroup);
+        var actionCompletedEvent = new ActionCompleted(actionGroup.Actions.First().CorrelationId);
         await fixture.TestHarness.Bus.Publish(actionCompletedEvent);
 
         (await fixture.ConsumerHarness.Consumed.Any<ActionCompleted>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<CompleteAction>(f =>
-            f.Context.Message == new CompleteAction(actionCompletedEvent.CorrelationId))).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<CompleteActionOfActionGroup>()).ShouldBeTrue();
     }
 
     [TestMethod]
@@ -80,7 +81,7 @@ public class ActionEventHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_NodesSelectedForAction_ValidData_PublishesPrepareAgvForStartingAction()
+    public async Task Consume_NodesSelectedForAction_ValidData_PublishesEstimateActionGroupDuration()
     {
         var fixture = new ActionEventHandlerTestFixture();
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
@@ -88,24 +89,22 @@ public class ActionEventHandlerTest
         await fixture.TestHarness.Bus.Publish(nodesSelectedForAction);
 
         (await fixture.ConsumerHarness.Consumed.Any<NodesSelectedForAction>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<PrepareAgvForStartingAction>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<EstimateActionGroupDuration>()).ShouldBeTrue();
     }
 
     [TestMethod]
-    public async Task Consume_ActionGroupHasNoEstimatedDuration_PublishesEstimateActionGroupDuration()
+    public async Task Consume_ActionDurationEstimated_ValidData_PublishesPrepareAgvForStartingAction()
     {
         var fixture = new ActionEventHandlerTestFixture();
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         var agvId = Guid.NewGuid();
-        var actionGroupHasNoEstimatedDuration = new ActionGroupHasNoEstimatedDuration(Guid.NewGuid(), actionGroup.Actions.First(), 1.5, agvId, actionGroup.CorrelationId);
+        var actionDurationEstimated = new ActionDurationEstimated(actionGroup.Actions.First(), agvId, actionGroup.CorrelationId);
 
-        await fixture.PublishMessageAsync(actionGroupHasNoEstimatedDuration);
+        await fixture.PublishMessageAsync(actionDurationEstimated);
 
-        var estimateActionGroupDuration = await fixture.GetFirstPublishedMessageAsync<EstimateActionGroupDuration>();
-        estimateActionGroupDuration.FirstAction.ShouldBeEquivalentTo(actionGroupHasNoEstimatedDuration.FirstAction);
-        estimateActionGroupDuration.FirstActionCosts.ShouldBe(actionGroupHasNoEstimatedDuration.FirstActionCosts);
-        estimateActionGroupDuration.AgvId.ShouldBe(actionGroupHasNoEstimatedDuration.AgvId);
-        estimateActionGroupDuration.ActionGroupId.ShouldBe(actionGroupHasNoEstimatedDuration.ActionGroupId);
+        var firstPublishedMessage = await fixture.GetFirstPublishedMessageAsync<PrepareAgvForStartingAction>();
+        firstPublishedMessage.Action.ShouldBeEquivalentTo(actionDurationEstimated.Action);
+        firstPublishedMessage.CorrelationId.ShouldBe(actionDurationEstimated.AgvId);
     }
 
     [TestMethod]

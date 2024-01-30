@@ -20,7 +20,7 @@ public class HostOrderCommandHandlerTest
     public async Task Consume_CreateHostOrder_ValidData_CreatesOrderPublishesQueueActionGroupWithPickDropActions()
     {
         using var fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>();
-        fixture.HostOrderRepositoryMock.Setup( x=>x.AddAsync(It.IsAny<HostOrder>())).Verifiable();
+        fixture.HostOrderRepositoryMock.Setup(x => x.AddAsync(It.IsAny<HostOrder>())).Verifiable();
 
         const string orderId = "Order#01";
         var correlationId = orderId.ToGuid();
@@ -46,7 +46,7 @@ public class HostOrderCommandHandlerTest
         fixture.HostOrderRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<Guid>()))
             .ReturnsAsync(hostOrder);
         fixture.HostOrderRepositoryMock.Setup(x => x.RemoveAsync(It.IsAny<HostOrder>())).Verifiable();
-       
+
         await fixture.TestHarness.Bus.Publish(new RemoveInvalidHostOrder(hostOrder.CorrelationId));
         (await fixture.ConsumerHarness.Consumed.Any<RemoveInvalidHostOrder>()).ShouldBeTrue();
 
@@ -163,7 +163,7 @@ public class HostOrderCommandHandlerTest
         fixture.HostOrderRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<Guid>()))
             .ReturnsAsync(hostOrder);
 
-        await fixture.TestHarness.Bus.Publish(new HandleCancellationFailure(hostOrder.CorrelationId,  HostOrderCancelFailedErrorCode.OrderAlreadyFinished));
+        await fixture.TestHarness.Bus.Publish(new HandleCancellationFailure(hostOrder.CorrelationId, HostOrderCancelFailedErrorCode.OrderAlreadyFinished));
         (await fixture.ConsumerHarness.Consumed.Any<HandleCancellationFailure>()).ShouldBeTrue();
 
         fixture.HostCommunicatorMock.Verify(x => x.TransmitHostOrderCancellationFailure(It.IsAny<string>(), It.IsAny<string>()), Times.Once);

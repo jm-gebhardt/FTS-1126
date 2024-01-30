@@ -34,10 +34,7 @@ public static class HostBuilderExtension
                     x.AddBusConsumers();
 
                     x.AddMediator(c => c.AddMediatorConsumers());
-                }, rabbitMqConfiguration: (ctx, cfg) =>
-                {
-                    cfg.UseConsumeFilter<AgvTracingConsumeFilters>(ctx);
-                });
+                }, rabbitMqConfiguration: (ctx, cfg) => { cfg.UseConsumeFilter<AgvTracingConsumeFilters>(ctx); });
             }
             catch (InvalidOperationException e)
             {

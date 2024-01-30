@@ -16,7 +16,7 @@ public class QueryableExtensionTest
     {
         var firstEntry = new TestType(DateTime.UtcNow, "a");
         var secondEntry = new TestType(DateTime.UtcNow.AddDays(2), "b");
-        IQueryable<TestType> testQueryAble = new List<TestType> {firstEntry, secondEntry }.AsQueryable();
+        IQueryable<TestType> testQueryAble = new List<TestType> { firstEntry, secondEntry }.AsQueryable();
 
         IOrderedQueryable<TestType> ordered = testQueryAble.OrderByProperty("ADate");
         ordered.First().ShouldBe(secondEntry);
@@ -30,7 +30,7 @@ public class QueryableExtensionTest
         var secondEntry = new TestType(DateTime.UtcNow.AddDays(2), "b");
         IQueryable<TestType> testQueryAble = new List<TestType> { firstEntry, secondEntry }.AsQueryable();
 
-        IOrderedQueryable<TestType> ordered = testQueryAble.OrderByProperty("ADate", isDescending:false);
+        IOrderedQueryable<TestType> ordered = testQueryAble.OrderByProperty("ADate", isDescending: false);
         ordered.First().ShouldBe(firstEntry);
         ordered.Last().ShouldBe(secondEntry);
     }
@@ -42,6 +42,6 @@ public class QueryableExtensionTest
         var secondEntry = new TestType(DateTime.UtcNow.AddDays(2), "b");
         IQueryable<TestType> testQueryAble = new List<TestType> { firstEntry, secondEntry }.AsQueryable();
 
-        Should.Throw<PropertyNotFoundException>( () => testQueryAble.OrderByProperty("unknown"));
+        Should.Throw<PropertyNotFoundException>(() => testQueryAble.OrderByProperty("unknown"));
     }
 }

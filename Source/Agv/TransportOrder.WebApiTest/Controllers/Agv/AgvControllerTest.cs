@@ -44,7 +44,7 @@ public class AgvControllerTest
 
         var agvDto = await fixture.GetControllerResultAsync(c => c.GetAgv(correlationId));
 
-        var expectedAgvDto = new AgvDto(correlationId, agvId, AgvStateType.Idle, agvDto.TimeOfStateTransition, DateTime.MinValue, false, false, true, true, 10d, true, null, new List<AgvErrorDto>(), new GraphNodeDto {Id = "WAY1", Type = AgvGraph.NodeType.WayPoint, X = 1.0f, Y = 2.0f, Z = 0.0f, Theta = 0.0f});
+        var expectedAgvDto = new AgvDto(correlationId, agvId, AgvStateType.Idle, agvDto.TimeOfStateTransition, DateTime.MinValue, false, false, true, true, 10d, true, null, new List<AgvErrorDto>(), new GraphNodeDto { Id = "WAY1", Type = AgvGraph.NodeType.WayPoint, X = 1.0f, Y = 2.0f, Z = 0.0f, Theta = 0.0f });
         agvDto.ShouldNotBeNull();
         agvDto.CorrelationId.ShouldBe(expectedAgvDto.CorrelationId);
         agvDto.AgvId.ShouldBe(expectedAgvDto.AgvId);
@@ -152,7 +152,7 @@ public class AgvControllerTest
             .SetupAgvDbWithDefaultData()
             .Build();
         var correlationId = fixture.AgvIds[0].ToGuid();
-        
+
         var dto = await fixture.GetControllerResultAsync(c => c.GetAgvSettings(correlationId));
 
         dto.CorrelationId.ShouldBe(correlationId);

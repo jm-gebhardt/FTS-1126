@@ -11,12 +11,12 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.Filters;
 /// agv tracing.
 /// </summary>
 [UsedImplicitly]
-public class AgvTracingConsumeFilters: BaseTracingFilter,
+public class AgvTracingConsumeFilters : BaseTracingFilter,
     IFilter<ConsumeContext<RequestAgvGraph>>,
     IFilter<ConsumeContext<AgvErrorStatusReceived>>
 {
     /// <inheritdoc cref="AgvTracingConsumeFilters"/>>
-    public AgvTracingConsumeFilters(ILogger<AgvTracingConsumeFilters> logger) : base (logger)
+    public AgvTracingConsumeFilters(ILogger<AgvTracingConsumeFilters> logger) : base(logger)
     {
     }
 

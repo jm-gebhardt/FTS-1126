@@ -36,9 +36,10 @@ public class ActionEventHandlerTestFixture : MassTransitConsumerTestFixtureWithS
     {
         _actionGroupRepository.Setup(x => x.GetAgvAssignedToAction(It.IsAny<Guid>())).ReturnsAsync(correlationId);
     }
-    
+
     public void AddActionGroup(ActionGroup actionGroup)
     {
         _actionGroupRepository.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup);
+        _actionGroupRepository.Setup(x => x.GetRequiredActionGroupByActionIdAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup);
     }
 }

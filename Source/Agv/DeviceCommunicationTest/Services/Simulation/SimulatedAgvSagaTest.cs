@@ -143,7 +143,7 @@ public class SimulatedAgvSagaTest
         fixture.Saga.UpdatePosition();
         fixture.Saga.Position!.X.ShouldBe(10f, 0.05);
         fixture.Saga.Position!.Y.ShouldBe(0f, 0.05);
-        fixture.Saga.Position!.Theta.ShouldBe((float) Math.PI / 2, 0.01);
+        fixture.Saga.Position!.Theta.ShouldBe((float)Math.PI / 2, 0.01);
     }
 
     [TestMethod]
@@ -153,19 +153,19 @@ public class SimulatedAgvSagaTest
         var node2 = NodeGenerator.GenerateNode(x: -10, y: 0, nodeId: "W2");
 
         var edge = GraphEdge.CreateDirect(node1.Id, node2.Id);
-        var graph = AgvGraphGenerator.Generate(new List<GraphNode> {node1, node2}, new List<GraphEdge> {edge});
+        var graph = AgvGraphGenerator.Generate(new List<GraphNode> { node1, node2 }, new List<GraphEdge> { edge });
 
         var fixture = new SimulatedAgvSagaTestFixture()
             .WithGraph(graph)
             .WithPosition(node1)
             .WithNumberOfEdges(0)
-            .WithTheseNodes(new List<GraphNode>{node1, node2})
+            .WithTheseNodes(new List<GraphNode> { node1, node2 })
             .WithActionStartNodeId(node1.Id)
             .WithActionTargetNodeId(node1.Id)
             .Build();
 
         fixture.Saga.Position!.X.ShouldBe(0f, 0.01);
         fixture.Saga.Position!.Y.ShouldBe(0f, 0.01);
-        fixture.Saga.Position!.Theta.ShouldBe((float) 3 / 2 * (float) Math.PI, 0.01);
+        fixture.Saga.Position!.Theta.ShouldBe((float)3 / 2 * (float)Math.PI, 0.01);
     }
 }

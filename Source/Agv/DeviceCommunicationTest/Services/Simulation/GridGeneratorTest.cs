@@ -9,10 +9,10 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation;
 [TestClass]
 public class GridGeneratorTest
 {
-    private const float East = (float) Math.PI / 2f;
+    private const float East = (float)Math.PI / 2f;
 
-    private const float West = 3f * (float) Math.PI / 2f;
-    private const float South = (float) Math.PI;
+    private const float West = 3f * (float)Math.PI / 2f;
+    private const float South = (float)Math.PI;
     private const float North = 0f;
 
     [TestMethod]
@@ -80,7 +80,7 @@ public class GridGeneratorTest
     {
         string[] sources = GenerateNodeIds("S", 2);
         string[] destinations = GenerateNodeIds("D", 2);
-        var serviceNodeTypes = new[] {AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park};
+        var serviceNodeTypes = new[] { AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park };
         var generator = new GridGraphGenerator(sources, destinations, new GeneratedMapGenerator(), 1, serviceNodeTypes);
         var graph = generator.Generate(Guid.NewGuid());
 
@@ -97,7 +97,7 @@ public class GridGeneratorTest
     [TestMethod]
     public void GenerateGrid_FourServiceNode_Successful()
     {
-        var serviceNodes = new[] {AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park, AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park};
+        var serviceNodes = new[] { AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park, AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park };
         string[] sources = GenerateNodeIds("S", 2);
         string[] destinations = GenerateNodeIds("D", 2);
         var generator = new GridGraphGenerator(sources, destinations, new GeneratedMapGenerator(), 2, serviceNodes);
@@ -113,7 +113,7 @@ public class GridGeneratorTest
     [TestMethod]
     public void GenerateGrid_FourServiceNode_AllNodeIds_Unique()
     {
-        var serviceNodes = new[] {AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park, AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park};
+        var serviceNodes = new[] { AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park, AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park };
         string[] sources = GenerateNodeIds("S", 2);
         string[] destinations = GenerateNodeIds("D", 2);
         var generator = new GridGraphGenerator(sources, destinations, new GeneratedMapGenerator(), 2, serviceNodes);
@@ -127,7 +127,7 @@ public class GridGeneratorTest
     [TestMethod]
     public void GenerateGrid_FourServiceNode_AllEdges_Unique()
     {
-        var serviceNodes = new[] {AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park, AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park};
+        var serviceNodes = new[] { AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park, AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park };
         string[] sources = GenerateNodeIds("S", 2);
         string[] destinations = GenerateNodeIds("D", 2);
         var generator = new GridGraphGenerator(sources, destinations, new GeneratedMapGenerator(), 2, serviceNodes);
@@ -138,7 +138,7 @@ public class GridGeneratorTest
     [TestMethod]
     public void GenerateGrid_TwoServiceNode_AllEdgesAdded()
     {
-        var serviceNodes = new[] {AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park};
+        var serviceNodes = new[] { AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park };
         string[] sources = GenerateNodeIds("S", 2);
         string[] destinations = GenerateNodeIds("D", 2);
         var generator = new GridGraphGenerator(sources, destinations, new GeneratedMapGenerator(), 3, serviceNodes);
@@ -147,22 +147,22 @@ public class GridGeneratorTest
         string[][] expectedEdges =
         {
             // Grid
-            new[] {"N000-000", "N001-000"},
-            new[] {"N000-000", "N000-001"},
-            new[] {"N001-000", "N001-001"},
-            new[] {"N000-001", "N001-001"},
-            new[] {"N000-001", "N000-002"},
-            new[] {"N001-001", "N001-002"},
-            new[] {"N000-002", "N001-002"},
+            new[] { "N000-000", "N001-000" },
+            new[] { "N000-000", "N000-001" },
+            new[] { "N001-000", "N001-001" },
+            new[] { "N000-001", "N001-001" },
+            new[] { "N000-001", "N000-002" },
+            new[] { "N001-001", "N001-002" },
+            new[] { "N000-002", "N001-002" },
             // Source
-            new[] {"S0", "N000-000"},
-            new[] {"S1", "N001-000"},
+            new[] { "S0", "N000-000" },
+            new[] { "S1", "N001-000" },
             // Destination
-            new[] {"D0", "N000-002"},
-            new[] {"D1", "N001-002"},
+            new[] { "D0", "N000-002" },
+            new[] { "D1", "N001-002" },
             // Service
-            new[] {"Charge-0", "N000-000"},
-            new[] {"Park-1", "N001-001"}
+            new[] { "Charge-0", "N000-000" },
+            new[] { "Park-1", "N001-001" }
         };
 
         string[] graphEdges = graph.Edges.Select(e => $"{e.FromNodeId}-{e.ToNodeId}").ToArray();
@@ -185,7 +185,7 @@ public class GridGeneratorTest
         string[] sources = GenerateNodeIds("S", 2);
         string[] destinations = GenerateNodeIds("D", 2);
         var generator = new GridGraphGenerator(sources, destinations, new GeneratedMapGenerator(), 1,
-            new[] {AgvGraph.NodeType.Charge, AgvGraph.NodeType.Charge, AgvGraph.NodeType.Charge}
+            new[] { AgvGraph.NodeType.Charge, AgvGraph.NodeType.Charge, AgvGraph.NodeType.Charge }
         );
         generator.Generate(Guid.NewGuid());
     }

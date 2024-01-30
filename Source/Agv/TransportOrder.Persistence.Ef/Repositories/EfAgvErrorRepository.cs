@@ -46,7 +46,7 @@ public class EfAgvErrorRepository : IAgvErrorRepository
     /// <inheritdoc />
     public Task<IList<AgvError>> GetActiveErrorsAsync(Guid agvCorrelationId)
     {
-        return GetActiveErrorsAsync(new List<Guid> {agvCorrelationId});
+        return GetActiveErrorsAsync(new List<Guid> { agvCorrelationId });
     }
 
     /// <inheritdoc />
@@ -63,7 +63,7 @@ public class EfAgvErrorRepository : IAgvErrorRepository
     /// <inheritdoc />
     public Task<IReadOnlyList<AgvError>> GetErrorsAsync(Guid agvCorrelationId, DateTime dateFrom, DateTime dateTo)
     {
-        return GetErrorsAsync(new List<Guid> {agvCorrelationId}, dateFrom, dateTo);
+        return GetErrorsAsync(new List<Guid> { agvCorrelationId }, dateFrom, dateTo);
     }
 
     /// <inheritdoc />

@@ -24,7 +24,7 @@ public class ActionGroupStartedConsumerTest
         (await fixture.ConsumerHarness.Consumed.Any<ActionGroupStarted>()).ShouldBeTrue();
 
         fixture.PublisherMock.Verify(h => h.SendAssignedActionGroupChangedAsync(
-            (Guid) actionGroup.AssignedAgv!,
+            (Guid)actionGroup.AssignedAgv!,
             It.Is<ActionGroup>(a => a.AssignedAgv == actionGroup.AssignedAgv)), Times.Once);
     }
 }

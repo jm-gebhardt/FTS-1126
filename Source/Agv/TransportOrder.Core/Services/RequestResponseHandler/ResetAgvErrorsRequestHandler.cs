@@ -41,9 +41,9 @@ public class ResetAgvErrorsRequestHandler : IConsumer<ResetAgvErrors>
         List<AgvError> unresolvedErrors =
             // all errors must be resolved
             !errorIdsToReset.Any() ?
-            errorChange.Errors :
-            // or only the specified errors
-            errorChange.Errors.Where(error => errorIdsToReset.Contains(error.CorrelationId)).ToList();
+                errorChange.Errors :
+                // or only the specified errors
+                errorChange.Errors.Where(error => errorIdsToReset.Contains(error.CorrelationId)).ToList();
 
         bool allErrorsResolved = !unresolvedErrors.Any();
         if (!allErrorsResolved)

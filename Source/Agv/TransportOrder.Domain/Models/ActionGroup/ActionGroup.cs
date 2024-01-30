@@ -155,9 +155,16 @@ public class ActionGroup
                 break;
 
             case ActionGroupState.Completed:
+                CompletedDate = now;
+                break;
+
             case ActionGroupState.Failed:
             case ActionGroupState.Canceled:
             case ActionGroupState.Invalid:
+                CompletedDate = now;
+                break;
+
+            case ActionGroupState.Aborted:
                 CompletedDate = now;
                 break;
         }

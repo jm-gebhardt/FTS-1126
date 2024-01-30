@@ -14,14 +14,14 @@ public class MapPublisher : IMapPublisher
     /// <inheritdoc cref="IMapPublisher"/>
     public MapPublisher(IHubContext<MapHub, IMapClient> hubContext, IMapper mapper)
     {
-        _hubContext=hubContext;
+        _hubContext = hubContext;
         _mapper = mapper;
     }
 
     /// <inheritdoc/>
     public Task SendNodeStateChangedAsync(NodeLock nodeState)
     {
-       var nodeStateDto = _mapper.Map<NodeStateDto>(nodeState);
-       return _hubContext.Clients.All.NodeStateChanged(nodeStateDto);
+        var nodeStateDto = _mapper.Map<NodeStateDto>(nodeState);
+        return _hubContext.Clients.All.NodeStateChanged(nodeStateDto);
     }
 }

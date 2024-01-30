@@ -12,7 +12,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Filters;
 /// agv tracing.
 /// </summary>
 [UsedImplicitly]
-public class AgvTracingConsumeFilters: BaseTracingFilter,
+public class AgvTracingConsumeFilters : BaseTracingFilter,
     IFilter<ConsumeContext<PrepareAgvForStartingAction>>,
     IFilter<ConsumeContext<HandleActionCompletion>>,
     IFilter<ConsumeContext<AgvPreparedForStartingAction>>,
@@ -21,7 +21,7 @@ public class AgvTracingConsumeFilters: BaseTracingFilter,
     IFilter<ConsumeContext<AgvLastNodeIdChanged>>
 {
     /// <inheritdoc cref="AgvTracingConsumeFilters"/>>
-    public AgvTracingConsumeFilters(ILogger<AgvTracingConsumeFilters> logger) : base (logger)
+    public AgvTracingConsumeFilters(ILogger<AgvTracingConsumeFilters> logger) : base(logger)
     {
     }
 
@@ -44,7 +44,7 @@ public class AgvTracingConsumeFilters: BaseTracingFilter,
         LogDebug(context);
         await next.Send(context);
     }
-    
+
     public async Task Send(ConsumeContext<AgvNeedsCharging> context, IPipe<ConsumeContext<AgvNeedsCharging>> next)
     {
         LogDebug(context);

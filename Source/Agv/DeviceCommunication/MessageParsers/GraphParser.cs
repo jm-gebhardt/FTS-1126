@@ -87,7 +87,7 @@ public class GraphParser
             case EdgeType.Bezier1:
                 var bezier = new Bezier(new List<Vector2>
                 {
-                    new(start.X, start.Y), 
+                    new(start.X, start.Y),
                     new(mqttEdge.ControlPoints!.First().X, mqttEdge.ControlPoints!.First().Y),
                     new(end.X, end.Y)
                 });

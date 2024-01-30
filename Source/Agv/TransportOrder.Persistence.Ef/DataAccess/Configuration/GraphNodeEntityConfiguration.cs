@@ -16,6 +16,6 @@ public class GraphNodeEntityConfiguration : IEntityTypeConfiguration<EfNode>
         builder.ToTable(TableName);
         builder.HasKey(e => e.Id);
 
-        builder.ConfigureAllProperties(except: new[] {nameof(EfNode.Maps), nameof(EfNode.AgvGraphs)});
+        builder.ConfigureAllProperties(except: new[] { nameof(EfNode.Maps), nameof(EfNode.AgvGraphs) });
     }
 }

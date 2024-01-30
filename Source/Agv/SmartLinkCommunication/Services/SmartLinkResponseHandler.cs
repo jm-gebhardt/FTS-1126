@@ -82,7 +82,7 @@ public class SmartLinkResponseHandler : ISmartLinkResponseHandler
                 if (data.TryGetValue(id, out var io))
                 {
                     // as we have only configured input pins, we can safely cast to bool, as input pins have a State in all cases (whereas output do not)
-                    ProcessIoState(ioConfig, (bool) io.State!);
+                    ProcessIoState(ioConfig, (bool)io.State!);
                 }
                 else
                 {

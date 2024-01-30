@@ -13,7 +13,7 @@ public class NodeStateRequestHandlerTestFixture<TRequestClient, TConsumer> : Med
     where TConsumer : class, IConsumer
 {
     private readonly Mock<INodeRepository> _nodeRepositoryMock = new();
-    
+
     public NodeStateRequestHandlerTestFixture()
     {
         WithEmptyRepository();
@@ -22,7 +22,7 @@ public class NodeStateRequestHandlerTestFixture<TRequestClient, TConsumer> : Med
 
     public NodeStateRequestHandlerTestFixture<TRequestClient, TConsumer> WithEmptyRepository()
     {
-        _nodeRepositoryMock.Setup(r => r.GetNodeStatesForMapAsync(It.IsAny<Guid>())).ReturnsAsync((Guid correlationId) => throw new MapNotFoundException(nameof(correlationId),correlationId));
+        _nodeRepositoryMock.Setup(r => r.GetNodeStatesForMapAsync(It.IsAny<Guid>())).ReturnsAsync((Guid correlationId) => throw new MapNotFoundException(nameof(correlationId), correlationId));
         return this;
     }
 

@@ -49,9 +49,9 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
         IRequestClient<CancelActionGroup> cancelActionGroupRequestClient = GetRequestClient<CancelActionGroup>();
         IRequestClient<TriggerActionGroupReset> triggerResetRequestClient = GetRequestClient<TriggerActionGroupReset>();
 
-        var controller = new ActionGroupController(Mapper!, 
-            getActionGroupRequestClient, 
-            cancelActionGroupRequestClient, 
+        var controller = new ActionGroupController(Mapper!,
+            getActionGroupRequestClient,
+            cancelActionGroupRequestClient,
             abortionRequestClient,
             triggerResetRequestClient)
         {

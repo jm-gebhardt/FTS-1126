@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess.Configuration;
 
 /// <inheritdoc />
-public class MapAgvEntityConfiguration: IEntityTypeConfiguration<MapAgv>
+public class MapAgvEntityConfiguration : IEntityTypeConfiguration<MapAgv>
 {
     /// <inheritdoc />
     public void Configure(EntityTypeBuilder<MapAgv> builder)

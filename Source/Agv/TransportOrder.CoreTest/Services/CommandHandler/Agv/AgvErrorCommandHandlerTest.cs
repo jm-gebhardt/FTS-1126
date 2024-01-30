@@ -26,7 +26,7 @@ public class AgvErrorCommandHandlerTest
     {
         var fixture = new AgvErrorCommandHandlerTestFixture()
             .WithAddOrUpdateAgvErrorStatusReturnValue(true);
-        
+
         await fixture.TestHarness.Bus.Publish(new UpdateErrorStatus(Guid.NewGuid(), new List<AgvError>()));
         (await fixture.ConsumerHarness.Consumed.Any<UpdateErrorStatus>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<AgvErrorChanged>()).ShouldBeTrue();

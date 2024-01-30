@@ -4,7 +4,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef;
 
 /// <inheritdoc cref="IAgvDb"/>>
-public class AgvDb: IAgvDb
+public class AgvDb : IAgvDb
 {
     /// <inheritdoc cref="IAgvDb"/>>
     public IAgvDataRepository Data { get; }

@@ -21,16 +21,16 @@ public class GetAgvSettingsRequestHandlerTest
 
         await MediatorShould.ThrowRequestExceptionAsync<NoSettingsFoundException>(async () => await fixture.GetResponseAsync<GotAgvSettings>(new GetAgvSettings(Guid.NewGuid())));
     }
-    
+
     [TestMethod]
     public async Task Consume_GetAgvSettings_ValidData_ReturnsSelectedSettings()
     {
         var correlationId = Guid.NewGuid();
         AgvRequestsHandlerTestFixture<GetAgvsSettings, GetAgvSettingsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvsSettings, GetAgvSettingsRequestHandler>()
             .Build();
-        
-        Response<GotAgvsSettings> response = await fixture.GetResponseAsync<GotAgvsSettings>(new GetAgvsSettings(new List<Guid> {correlationId}));
-    
+
+        Response<GotAgvsSettings> response = await fixture.GetResponseAsync<GotAgvsSettings>(new GetAgvsSettings(new List<Guid> { correlationId }));
+
         var message = response.Message.AgvSettings.Single();
         message.CorrelationId.ShouldBe(correlationId);
         message.BatteryLevelCritical.ShouldBe(fixture.AgvSettings!.BatteryLevelCritical);

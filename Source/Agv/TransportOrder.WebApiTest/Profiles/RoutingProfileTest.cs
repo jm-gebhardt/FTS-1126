@@ -28,7 +28,7 @@ public class RoutingProfileTest
     [TestMethod]
     public void Map_ShouldMapAllPropertiesCorrectly_WhereMapMessageContentIsMappedToDtoMap()
     {
-        var route = new Route(Guid.NewGuid(), new[]{"A", "B"});
+        var route = new Route(Guid.NewGuid(), new[] { "A", "B" });
         var dto = _mapper.Map<RouteDto>(route);
 
         dto.ShouldNotBeNull();

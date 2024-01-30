@@ -10,7 +10,7 @@ namespace Gebhardt.StoreWare.Agv.Statistics.Services.EventHandler;
 /// Provides handlers for agv positions
 /// </summary>
 [UsedImplicitly]
-public class PositionEventHandler: IConsumer<AgvPositionReceived>
+public class PositionEventHandler : IConsumer<AgvPositionReceived>
 {
     private readonly IStatisticsDb _db;
 

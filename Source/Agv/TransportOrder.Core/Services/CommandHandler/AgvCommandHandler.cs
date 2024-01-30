@@ -73,7 +73,7 @@ public class AgvCommandHandler :
         IMapper mapper,
         ProductionOptions productionOptions,
         ILogger<AgvCommandHandler> logger
-        )
+    )
     {
         _logger = logger;
         _agvsSemaphore = agvsSemaphore;
@@ -421,7 +421,7 @@ public class AgvCommandHandler :
         var moveActionGroup = new ActionGroup(
             groupCorrelationId,
             $"Manual {ActionType.Move}",
-            new List<AgvAction> {new(Guid.NewGuid(), ActionType.Move, targetNodeId, groupCorrelationId)},
+            new List<AgvAction> { new(Guid.NewGuid(), ActionType.Move, targetNodeId, groupCorrelationId) },
             assignedAgv: agv.CorrelationId,
             isManual: true,
             creator: creator
@@ -466,7 +466,11 @@ public class AgvCommandHandler :
     {
         var correlationId = context.Message.CorrelationId;
         var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
-        await TransitionToIdleAsync(context, agv, context.CancellationToken);
+        bool hasStartedAction = await _actionGroupRepository.HasStartedActionAsync(agv.CorrelationId);
+        if (!hasStartedAction)
+        {
+            await TransitionToIdleAsync(context, agv, context.CancellationToken);
+        }
     }
 
     /// <summary>
@@ -527,7 +531,7 @@ public class AgvCommandHandler :
     private async Task TryAutoAccept(IPublishEndpoint context, Domain.Models.Agv.Agv agv, CancellationToken cancellationToken)
     {
         _logger.LogDebug("AutoAccept {CorrelationId}", agv.CorrelationId);
-        if (_productionOptions.AutoAccept && agv is {GraphExists: true, DataExist: true, CurrentAgvState: AgvState.Discovered})
+        if (_productionOptions.AutoAccept && agv is { GraphExists: true, DataExist: true, CurrentAgvState: AgvState.Discovered })
         {
             _logger.LogDebug("AutoAccept {CorrelationId}, Graph: {GraphExists}, Data: {DataExists}", agv.CorrelationId, agv.GraphExists, agv.DataExist);
             await TransitionToIdleAsync(context, agv, cancellationToken);

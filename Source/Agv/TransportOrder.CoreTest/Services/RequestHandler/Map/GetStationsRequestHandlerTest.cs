@@ -27,8 +27,8 @@ public class GetStationsRequestHandlerTest
         var agvCorrelationId2 = Guid.NewGuid();
         var agvData1 = AgvDataGenerator.GenerateAgvData(agvCorrelationId1, width: 1.5, length: maxLength);
         var agvData2 = AgvDataGenerator.GenerateAgvData(agvCorrelationId2, width: maxWidth, length: 1.2);
-        var agvCorrelationIds = new List<Guid> {agvCorrelationId1, agvCorrelationId2};
-        var agvsData = new List<AgvData> {agvData1, agvData2};
+        var agvCorrelationIds = new List<Guid> { agvCorrelationId1, agvCorrelationId2 };
+        var agvsData = new List<AgvData> { agvData1, agvData2 };
         var graphNodes = new List<GraphNode>
         {
             NodeGenerator.GenerateNode(nodeId: "StationPickDrop", nodeType: AgvGraph.NodeType.PickDrop),
@@ -43,7 +43,7 @@ public class GetStationsRequestHandlerTest
             .ToList();
         var fixture = new GetStationsRequestHandlerTestFixture()
             .WithAgvsRelatedToMap(mapCorrelationId, agvCorrelationIds, agvsData)
-            .WithGraph(new Graph {Nodes = graphNodes})
+            .WithGraph(new Graph { Nodes = graphNodes })
             .WithAgvGraphs(agvCorrelationIds, agvGraphs)
             .Build();
 

@@ -16,7 +16,7 @@ public record AgvData : CorrelatedBy<Guid>
     /// <summary>
     /// The model name of the AGV
     /// </summary>
-    public string Model { get;init; }
+    public string Model { get; init; }
 
     /// <summary>
     /// The type of the AGV
@@ -72,7 +72,7 @@ public record AgvData : CorrelatedBy<Guid>
     /// The max. payload of the AGV in [kg]
     /// </summary>
     public long Payload { get; init; }
-    
+
     /// <summary>
     /// The list of sensors in the agv
     /// </summary>

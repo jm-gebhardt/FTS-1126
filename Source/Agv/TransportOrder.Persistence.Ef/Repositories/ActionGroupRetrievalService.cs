@@ -55,7 +55,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
 
         if (assignedAgvIds != null)
         {
-            query = query.Where(g => g.AssignedAgv != null && assignedAgvIds.Contains((Guid) g.AssignedAgv));
+            query = query.Where(g => g.AssignedAgv != null && assignedAgvIds.Contains((Guid)g.AssignedAgv));
         }
 
         query = query.OrderByProperty(sortBy.ToString(), isDescending: sortDescending).ThenByDescending(g => g.IsManual);
@@ -93,7 +93,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
                     a.ActionType,
                     a.TargetNodeId,
                     graphNodesById.Count == 0 || !graphNodesById.TryGetValue(a.TargetNodeId, out _) ?
-                        AgvGraph.NodeType.WayPoint :                // WayPoint is the default value for not available targetNodeIds
+                        AgvGraph.NodeType.WayPoint : // WayPoint is the default value for not available targetNodeIds
                         graphNodesById[a.TargetNodeId].Type,
                     a.Nodes,
                     a.CreatedDate,
@@ -112,7 +112,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
     {
         await using var context = await CreateDbContextAsync();
         List<ActionGroup> actionGroups = await context.Set<ActionGroup>()
-            .Where(g => g.AssignedAgv != null && agvCorrelationIds.Contains((Guid) g.AssignedAgv) && g.State == ActionGroupState.Started)
+            .Where(g => g.AssignedAgv != null && agvCorrelationIds.Contains((Guid)g.AssignedAgv) && g.State == ActionGroupState.Started)
             .OrderByDescending(g => g.StartedDate)
             .ToListAsync();
 
@@ -123,7 +123,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
             .ToListAsync();
 
         List<string> unknownTargetNodeIds = graphNodes.Count == 0 ? targetNodeIds : targetNodeIds.Except(graphNodes.Select(n => n.Id)).ToList();
-        
+
         Dictionary<Guid, ActionGroupReadModel?> result = agvCorrelationIds.ToDictionary(
             agvCorrelationId => agvCorrelationId,
             agvCorrelationId =>
@@ -146,7 +146,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
                     GetAgvActionReadModel(actionGroup, graphNodes, unknownTargetNodeIds),
                     actionGroup.IsManual,
                     actionGroup.Reasons
-                    );
+                );
             });
 
         return result;
@@ -180,7 +180,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
                 return agvActionReadModels2.ToList();
             }
         }
-       
+
         return agvActionReadModels2.Union(agvActionReadModels1).ToList();
     }
 
@@ -190,7 +190,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
         await using var context = await CreateDbContextAsync();
 
         List<string> targetNodeIds = actionGroup.Actions.Select(a => a.TargetNodeId).Distinct().ToList();
- 
+
         List<EfNode> graphNodes = await context.Set<EfNode>()
             .Where(n => targetNodeIds.Contains(n.Id))
             .ToListAsync();
@@ -209,7 +209,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
             GetAgvActionReadModel(actionGroup, graphNodes, unknownTargetNodeIds),
             actionGroup.IsManual,
             actionGroup.Reasons
-            );
+        );
 
         return result;
     }
@@ -246,7 +246,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
             GetAgvActionReadModel(actionGroup, graphNodes, unknownTargetNodeIds),
             actionGroup.IsManual,
             actionGroup.Reasons
-            );
+        );
     }
 
     /// <inheritdoc />
@@ -281,7 +281,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
             GetAgvActionReadModel(actionGroup, graphNodes, unknownTargetNodeIds),
             actionGroup.IsManual,
             actionGroup.Reasons
-            );
+        );
     }
 
     /// <inheritdoc />

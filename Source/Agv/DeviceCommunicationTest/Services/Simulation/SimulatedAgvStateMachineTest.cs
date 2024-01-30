@@ -129,11 +129,11 @@ public class SimulatedAgvStateMachineTest
     {
         var graph = AgvGraphGenerator.CreateDefaultGraph();
         ICollection<GraphNode> nodes = graph.Nodes;
-       
+
         var action = AgvActionGenerator.GeneratePickDropActionGroup().Actions.First();
         action.Nodes = GetArbitraryRoute(action.TargetNodeId, graph);
         var startNode = nodes.First(n => n.Id == action.Nodes.First());
-        string destination =  action.Nodes.Last();
+        string destination = action.Nodes.Last();
         var agvSaga = SimulatedAgvSagaGenerator.Generate(simulationSpeed: 2, agvGraph: graph, currentNode: startNode);
         var fixture = new SimulatedAgvStateMachineTestFixture()
             .WithAgv(agvSaga)
@@ -322,7 +322,7 @@ public class SimulatedAgvStateMachineTest
 
         await fixture.PublishMessageAsync(new SimulatedAgvStateMachine.ScheduleFinishAction(correlationId));
     }
-    
+
     [TestMethod]
     public async Task Consume_SimulateAgvError_PublishesAgvErrorStatusReceived()
     {
@@ -333,7 +333,7 @@ public class SimulatedAgvStateMachineTest
             .WithAgv(agvSaga)
             .Build();
 
-        await fixture.PublishMessageAsync(new SimulateAgvError(correlationId, new List<AgvError>{ agvError }));
+        await fixture.PublishMessageAsync(new SimulateAgvError(correlationId, new List<AgvError> { agvError }));
 
         (await fixture.SagaHarness.Consumed.Any<SimulateAgvError>()).ShouldBeTrue();
 

@@ -30,7 +30,7 @@ public class ResetAgvErrorsRequestHandlerTest
     public async Task Consume_ResetAgvErrorsResult_WithoutSpecifiedErrorIdsToResetAndThereAreActiveErrors_ResetsAll()
     {
         var agvCorrelationId = Guid.NewGuid();
-        var errors = new List<AgvError> {AgvErrorGenerator.GenerateAgvError()};
+        var errors = new List<AgvError> { AgvErrorGenerator.GenerateAgvError() };
         var fixture = new ResetAgvErrorsRequestHandlerTestFixture()
             .WithActiveAgvErrors(errors)
             .Build();
@@ -57,7 +57,7 @@ public class ResetAgvErrorsRequestHandlerTest
             .Build();
 
         var errorToReset = errors[0].CorrelationId;
-        await fixture.GetResponseAsync<ResetAgvErrorsResult>(new ResetAgvErrors(agvCorrelationId, new Collection<Guid> {errorToReset}));
+        await fixture.GetResponseAsync<ResetAgvErrorsResult>(new ResetAgvErrors(agvCorrelationId, new Collection<Guid> { errorToReset }));
 
         var message = await fixture.GetFirstPublishedMessageAsync<Common.Messages.AgvManagement.Commands.ResetAgvErrors>();
         message.CorrelationId.ShouldBe(agvCorrelationId);
@@ -80,7 +80,7 @@ public class ResetAgvErrorsRequestHandlerTest
             .Build();
 
         var errorToReset = Guid.NewGuid();
-        await fixture.GetResponseAsync<ResetAgvErrorsResult>(new ResetAgvErrors(agvCorrelationId, new Collection<Guid> {errorToReset}));
+        await fixture.GetResponseAsync<ResetAgvErrorsResult>(new ResetAgvErrors(agvCorrelationId, new Collection<Guid> { errorToReset }));
 
         (await fixture.TestHarness.Published.Any<Common.Messages.AgvManagement.Commands.ResetAgvErrors>()).ShouldBeFalse();
     }
@@ -89,7 +89,7 @@ public class ResetAgvErrorsRequestHandlerTest
     public async Task? Consume_ResetAgvErrorsResult_WithWaitForMessageThrowsException_ThrowsException()
     {
         var agvCorrelationId = Guid.NewGuid();
-        var errors = new List<AgvError> {AgvErrorGenerator.GenerateAgvError()};
+        var errors = new List<AgvError> { AgvErrorGenerator.GenerateAgvError() };
         var fixture = new ResetAgvErrorsRequestHandlerTestFixture()
             .WithActiveAgvErrors(errors)
             .WithWaitForMessageAction(() => throw new WaitForMessageFailedException<AgvErrorChanged>("Error did not changed"))

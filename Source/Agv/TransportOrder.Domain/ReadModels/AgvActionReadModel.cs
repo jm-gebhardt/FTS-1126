@@ -17,6 +17,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
 /// <param name="CreatedDate">The creation date.</param>
 /// <param name="StartedDate">The start date.</param>
 /// <param name="CompletedDate">The completion date.</param>
-public record AgvActionReadModel(Guid CorrelationId, Guid ParentId, int Sequence, ActionState State,
-    ActionType ActionType, string TargetNodeId, AgvGraph.NodeType TargetNodeType, string[] Nodes,
-    DateTime CreatedDate, DateTime? StartedDate, DateTime? CompletedDate);
+public record AgvActionReadModel(
+    Guid CorrelationId,
+    Guid ParentId,
+    int Sequence,
+    ActionState State,
+    ActionType ActionType,
+    string TargetNodeId,
+    AgvGraph.NodeType TargetNodeType,
+    string[] Nodes,
+    DateTime CreatedDate,
+    DateTime? StartedDate,
+    DateTime? CompletedDate);

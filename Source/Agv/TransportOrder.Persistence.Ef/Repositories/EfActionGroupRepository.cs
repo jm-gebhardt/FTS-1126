@@ -21,9 +21,7 @@ public class EfActionGroupRepository : IActionGroupRepository
 {
     private readonly IDbContextFactory<TransportOrderDbContext> _dbContextFactory;
 
-    /// <summary>
-    /// Constructor.
-    /// </summary>
+    /// <inheritdoc cref="EfActionGroupRepository"/>
     public EfActionGroupRepository(IDbContextFactory<TransportOrderDbContext> dbContextFactory)
     {
         _dbContextFactory = dbContextFactory;
@@ -40,7 +38,7 @@ public class EfActionGroupRepository : IActionGroupRepository
     /// <inheritdoc />
     public async Task<IReadOnlyList<ActionGroup>> GetActionGroupsAsync(ActionGroupState state, DateTime? fromDate = null, DateTime? toDate = null, int maxItems = 0, Guid? assignedAgvCorrelationId = null, bool? isManual = null)
     {
-        return await GetActionGroupsAsync(new List<ActionGroupState> {state}, fromDate, toDate, maxItems, assignedAgvCorrelationId, isManual);
+        return await GetActionGroupsAsync(new List<ActionGroupState> { state }, fromDate, toDate, maxItems, assignedAgvCorrelationId, isManual);
     }
 
     /// <inheritdoc />
@@ -232,7 +230,6 @@ public class EfActionGroupRepository : IActionGroupRepository
         {
             actionGroup.Reasons.Add(reason);
         }
-
         await context.SaveChangesAsync();
 
         return actionGroup;
@@ -261,7 +258,7 @@ public class EfActionGroupRepository : IActionGroupRepository
         DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
         bool hasNotStartedActions = await queryable.Where(actionGroup =>
                 actionGroup.AssignedAgv == agvCorrelationId &&
-                actionGroup.State != ActionGroupState.Completed &&
+                (actionGroup.State == ActionGroupState.Created || (actionGroup.State == ActionGroupState.Started && actionGroup.Actions.Any(aa => aa.State == ActionState.Created))) &&
                 actionGroup.Actions.Any(a => a.State != ActionState.Completed && a.State != ActionState.Started)
             )
             .AsNoTracking()
@@ -346,7 +343,7 @@ public class EfActionGroupRepository : IActionGroupRepository
 
         return await actionGroups.AnyAsync(a =>
             a.AssignedAgv == agvCorrelationId &&
-            (a.State ==ActionGroupState.Created || (a.State == ActionGroupState.Started && a.Actions.Any(aa => aa.State == ActionState.Created)) ||
+            (a.State == ActionGroupState.Created || (a.State == ActionGroupState.Started && a.Actions.Any(aa => aa.State == ActionState.Created)) ||
              (a.AssignedAgv == null && a.State == ActionGroupState.Created))
         );
     }
@@ -358,6 +355,15 @@ public class EfActionGroupRepository : IActionGroupRepository
 
         DbSet<ActionGroup> actionGroups = context.Set<ActionGroup>();
         return (await actionGroups.SingleAsync(ag => ag.Actions.Any(a => a.CorrelationId == actionCorrelationId))).AssignedAgv;
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> HasStartedActionAsync(Guid agvCorrelationId)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+
+        DbSet<ActionGroup> actionGroups = context.Set<ActionGroup>();
+        return await actionGroups.AnyAsync(ag => ag.State == ActionGroupState.Started && ag.AssignedAgv == agvCorrelationId && ag.Actions.Any(a => a.State == ActionState.Started));
     }
 
     /// <inheritdoc />

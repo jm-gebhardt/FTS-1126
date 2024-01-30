@@ -64,9 +64,9 @@ public class AgvChangedConsumerTest
         var agvCorrelationId = Guid.NewGuid();
         var fixture = new ConsumerHubTestFixture<AgvChangedConsumer, IAgvPublisher>();
 
-       await fixture.TestHarness.Bus.Publish(new AgvBecameIdle(agvCorrelationId));
-       (await fixture.ConsumerHarness.Consumed.Any<AgvBecameIdle>()).ShouldBeTrue();
-       fixture.PublisherMock.Verify(h => h.SendAgvRouteChangedAsync(new CurrentAgvRouteReadModel(agvCorrelationId, Array.Empty<string>())),
-           Times.Once);
+        await fixture.TestHarness.Bus.Publish(new AgvBecameIdle(agvCorrelationId));
+        (await fixture.ConsumerHarness.Consumed.Any<AgvBecameIdle>()).ShouldBeTrue();
+        fixture.PublisherMock.Verify(h => h.SendAgvRouteChangedAsync(new CurrentAgvRouteReadModel(agvCorrelationId, Array.Empty<string>())),
+            Times.Once);
     }
 }

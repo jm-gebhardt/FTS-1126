@@ -15,7 +15,7 @@ public class AgvTravelSimulatorTest
 {
     private string[] GetArbitraryRoute(string targetNode, AgvGraph graph)
     {
-        var nodes = new List<string> {targetNode};
+        var nodes = new List<string> { targetNode };
         foreach (int unused in Enumerable.Range(0, 3))
         {
             var edge = graph.Edges.FirstOrDefault(e => e.ToNodeId == targetNode && !nodes.Contains(e.FromNodeId));
@@ -80,7 +80,7 @@ public class AgvTravelSimulatorTest
         var agvData = new KarisType1(correlationId, "ip address");
         var generator = new FixedGraphGenerator(new GeneratedMapGenerator());
         var graph = generator.Generate(agvData.CorrelationId);
-        string[] nodes = {"D-Paint", "WP-0016", "WP-0015", "WP-0014", "WP-0029", "Park-1"};
+        string[] nodes = { "D-Paint", "WP-0016", "WP-0015", "WP-0014", "WP-0029", "Park-1" };
         var startNode = graph.Nodes.First(n => n.Id == nodes.First());
         var position = new AgvPosition(true, startNode.X, startNode.Y, startNode.Z, startNode.Theta);
         var simulator = new AgvTravelSimulator(graph, agvData, position);
@@ -106,7 +106,7 @@ public class AgvTravelSimulatorTest
         var agvData = new KarisType1(correlationId, "ip address");
         var generator = new FixedGraphGenerator(new GeneratedMapGenerator());
         var graph = generator.Generate(agvData.CorrelationId);
-        string[] nodes = {"D-Press", "WP-0011", "WP-0016", "WP-0015", "WP-0017", "WP-0123", "PD-QA"};
+        string[] nodes = { "D-Press", "WP-0011", "WP-0016", "WP-0015", "WP-0017", "WP-0123", "PD-QA" };
         var startNode = graph.Nodes.First(n => n.Id == nodes.First());
         var position = new AgvPosition(true, startNode.X, startNode.Y, startNode.Z, startNode.Theta);
         var simulator = new AgvTravelSimulator(graph, agvData, position);
@@ -152,7 +152,7 @@ public class AgvTravelSimulatorTest
         var position = new AgvPosition(true, 1, 1, 1, 0);
         var simulator = new AgvTravelSimulator(agvGraph, agvData, position);
 
-        simulator.EstimateTravelTimes(new List<string> {agvGraph.Nodes.First(n => n.Type == AgvGraph.NodeType.Charge).Id}, DateTime.UtcNow, 0);
+        simulator.EstimateTravelTimes(new List<string> { agvGraph.Nodes.First(n => n.Type == AgvGraph.NodeType.Charge).Id }, DateTime.UtcNow, 0);
 
         simulator.CurrentEdge.ShouldNotBeNull();
         simulator.FollowingEdges.ShouldNotBeEmpty();
@@ -222,7 +222,7 @@ public class AgvTravelSimulatorTest
 
         var targetReached = entryTime.Add(simulator.TravelDuration!.Value);
         simulator.UpdatePosition(targetReached);
-        simulator.Position.Theta.ShouldBe(lastOrientationOnEdge - (float) Math.PI);
+        simulator.Position.Theta.ShouldBe(lastOrientationOnEdge - (float)Math.PI);
         simulator.CurrentEdge.ShouldBe(simulator.FollowingEdges.Last());
         simulator.CurrentNode.ShouldBe(targetNode);
     }

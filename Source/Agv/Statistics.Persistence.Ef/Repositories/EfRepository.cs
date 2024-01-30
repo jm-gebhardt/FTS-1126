@@ -7,9 +7,9 @@ namespace Statistics.Persistence.Ef.Repositories;
 /// <summary>
 /// Provides an abstract base class for all repository implementations.
 /// </summary>
-public abstract class EfRepository<T, TContext>: IRepository<T>
-where T : class
-where TContext : DbContext
+public abstract class EfRepository<T, TContext> : IRepository<T>
+    where T : class
+    where TContext : DbContext
 {
     private readonly TContext _context;
 

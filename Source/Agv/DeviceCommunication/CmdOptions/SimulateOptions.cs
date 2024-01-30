@@ -12,7 +12,7 @@ public sealed class SimulateOptions
 {
     private const string GridGraphSet = "GridGraph";
     private const string FixedGraphSet = "FixedGraph";
-   
+
     /// <summary>
     /// Number of AGVs
     /// </summary>
@@ -67,7 +67,7 @@ public sealed class SimulateOptions
     /// </summary>
     [UsedImplicitly]
     // ReSharper disable once StringLiteralTypo
-    [Option('g',"gridgraph", HelpText = "Use the grid graph generator", SetName = GridGraphSet, Default=false)]
+    [Option('g', "gridgraph", HelpText = "Use the grid graph generator", SetName = GridGraphSet, Default = false)]
     public bool GridGraph { get; init; }
 
     /// <summary>
@@ -105,4 +105,3 @@ public sealed class SimulateOptions
 
     private readonly int _gridRows;
 }
-

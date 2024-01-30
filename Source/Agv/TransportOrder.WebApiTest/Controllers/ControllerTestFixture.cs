@@ -32,7 +32,7 @@ public abstract class ControllerTestFixture<TRequest, TRequestHandler, TControll
 
     protected IRequestClient<TClient> GetRequestClient<TClient>() where TClient : class
     {
-        return typeof(TRequest) == typeof(TClient) ? (IRequestClient<TClient>) GetRequestClient() : null!;
+        return typeof(TRequest) == typeof(TClient) ? (IRequestClient<TClient>)GetRequestClient() : null!;
     }
 
     private static IMapper GetMapper()

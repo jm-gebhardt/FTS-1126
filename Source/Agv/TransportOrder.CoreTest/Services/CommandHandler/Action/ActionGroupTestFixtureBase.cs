@@ -71,9 +71,9 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
         Build();
         if (inactivityTimeout != null)
         {
-            TestHarness.TestInactivityTimeout = (TimeSpan) inactivityTimeout;
+            TestHarness.TestInactivityTimeout = (TimeSpan)inactivityTimeout;
         }
-        ActionGroupRepository.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync((ActionGroup?) null);
+        ActionGroupRepository.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync((ActionGroup?)null);
         ActionGroupRepository.Setup(x => x.AddAsync(It.IsAny<ActionGroup>())).Verifiable();
     }
 
@@ -82,17 +82,18 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
         Build();
         if (inactivityTimeout != null)
         {
-            TestHarness.TestInactivityTimeout = (TimeSpan) inactivityTimeout;
+            TestHarness.TestInactivityTimeout = (TimeSpan)inactivityTimeout;
         }
-        ActionGroupRepository.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync((ActionGroup?) null);
+        ActionGroupRepository.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync((ActionGroup?)null);
         ActionGroupRepository.Setup(x => x.AddAsync(It.IsAny<ActionGroup>())).Verifiable();
     }
 
-    public void AddAgv(TransportOrder.Domain.Models.Agv.Agv agv)
+    public ActionGroupTestFixtureBase<T> AddAgv(TransportOrder.Domain.Models.Agv.Agv agv)
     {
-        _agvDb.Setup(x => x.Data.GetAgvDataAsync(It.IsAny<Guid>())).ReturnsAsync((AgvData?) null);
-        _agvDb.AddAgvsToMockRepository(new List<TransportOrder.Domain.Models.Agv.Agv> {agv});
-        _agvDb.AddAgvsToMockRepository(new List<TransportOrder.Domain.Models.Agv.Agv> {agv});
+        _agvDb.Setup(x => x.Data.GetAgvDataAsync(It.IsAny<Guid>())).ReturnsAsync((AgvData?)null);
+        _agvDb.AddAgvsToMockRepository(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+        _agvDb.AddAgvsToMockRepository(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+        return this;
     }
 
     public virtual ActionGroupTestFixtureBase<T> AddActionGroup(ActionGroup actionGroup, bool hasUnfinishedAction = true, bool hasNotStartedAction = true, bool existsPriorToTest = true)
@@ -102,10 +103,10 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
         ActionGroupRepository.Setup(x => x.GetRequiredActionGroupByIdAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup);
         ActionGroupRepository.Setup(x => x.UpdateActionAndGroupStateAsync(It.IsAny<AgvAction>(), It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<ActionState>(), It.IsAny<Reason>())).ReturnsAsync(actionGroup);
         ActionGroupRepository.Setup(x => x.GetSubsequentActionAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup.Actions.First());
-        ActionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<ActionGroupState>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(), It.IsAny<bool?>())).ReturnsAsync(new List<ActionGroup> {actionGroup});
+        ActionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<ActionGroupState>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(), It.IsAny<bool?>())).ReturnsAsync(new List<ActionGroup> { actionGroup });
         if (existsPriorToTest)
         {
-            ActionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<IList<ActionGroupState>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(), It.IsAny<bool?>(), It.IsAny<SortBy>(), It.IsAny<bool>())).ReturnsAsync(new List<ActionGroup> {actionGroup});
+            ActionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<IList<ActionGroupState>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(), It.IsAny<bool?>(), It.IsAny<SortBy>(), It.IsAny<bool>())).ReturnsAsync(new List<ActionGroup> { actionGroup });
             _chooseAgvActionGroupService.Setup(x => x.GetNotStartedActionGroupAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<AgvData>(), It.IsAny<CancellationToken>())).ReturnsAsync(actionGroup);
         }
         else
@@ -121,33 +122,38 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
         return this;
     }
 
-    public void AddActionGroupRetrieval(bool headingTo)
+    public ActionGroupTestFixtureBase<T> AddActionGroupRetrieval(bool headingTo)
     {
         _actionGroupRetrievalService.Setup(x => x.IsAgvHeadingToNodeOfType(It.IsAny<Guid>(), It.IsAny<AgvGraph.NodeType>())).ReturnsAsync(headingTo);
+        return this;
     }
 
-    public void AddActionGroupTargetNodeType(ActionGroup actionGroup, AgvGraph.NodeType nodeType)
+    public  ActionGroupTestFixtureBase<T> AddActionGroupTargetNodeType(ActionGroup actionGroup, AgvGraph.NodeType nodeType)
     {
         _actionGroupRetrievalService.Setup(x => x.EnrichActionGroupWithNodesAsync(It.IsAny<ActionGroup>())).ReturnsAsync(actionGroup.ConvertFromActionGroupWithGivenNodeType(nodeType)!);
+        return this;
     }
 
-    public void AddChargingPointManager(GraphNode chargeGraphNode)
+    public ActionGroupTestFixtureBase<T> AddChargingPointManager(GraphNode chargeGraphNode)
     {
         _chargingPointManager.Setup(x => x.ReserveChargerAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), null)).ReturnsAsync(chargeGraphNode);
         _nodeStateRepositoryMock.Setup(x => x.GetNodeStateAsync(It.IsAny<string>())).ReturnsAsync(new NodeLock(chargeGraphNode.Id, NodeLockState.Reserved, false, Guid.NewGuid(), DateTime.UtcNow));
+        return this;
     }
 
-    public void AddParkingPointManager(GraphNode parkGraphNode)
+    public ActionGroupTestFixtureBase<T> AddParkingPointManager(GraphNode parkGraphNode)
     {
         _parkPointService.Setup(x => x.ReserveParkAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>())).ReturnsAsync(parkGraphNode);
         _nodeStateRepositoryMock.Setup(x => x.GetNodeStateAsync(It.IsAny<string>())).ReturnsAsync(new NodeLock(parkGraphNode.Id, NodeLockState.Reserved, false, Guid.NewGuid(), DateTime.UtcNow));
+        return this;
     }
 
-    public void AddRoute(string[] nodes)
+    public ActionGroupTestFixtureBase<T> AddRoute(string[] nodes)
     {
-        _agvDb.Setup(x => x.Data.GetAgvDataAsync(It.IsAny<Guid>())).ReturnsAsync((AgvData?) null);
+        _agvDb.Setup(x => x.Data.GetAgvDataAsync(It.IsAny<Guid>())).ReturnsAsync((AgvData?)null);
         RouteService.Setup(x => x.GetRouteAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<string>(), null, It.IsAny<AgvData>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Route(1f, nodes));
+        return this;
     }
 
     public void SetupValidationResult(ValidationResult validationResult)

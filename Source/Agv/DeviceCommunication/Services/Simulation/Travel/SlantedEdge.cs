@@ -13,15 +13,15 @@ public class SlantedEdge : BaseEdge
     private DirectEdge _currentSection;
 
     /// <inheritdoc cref="SlantedEdge"/>>
-    public SlantedEdge(GraphEdge edge, GraphNode sourceNode, GraphNode targetNode) : base(edge,  sourceNode, targetNode)
+    public SlantedEdge(GraphEdge edge, GraphNode sourceNode, GraphNode targetNode) : base(edge, sourceNode, targetNode)
     {
         double angle = (double)edge.VariantParameters.First().Scalar!;
         double distance = (double)edge.VariantParameters.Last().Scalar!;
-        double outAngle = 2*Math.PI +angle; // 
+        double outAngle = 2 * Math.PI + angle; // 
         var virtualNodes = new List<GraphNode>
         {
-            new ("1"){X= sourceNode.X - (float)(distance*Math.Sin(angle)), Y= sourceNode.Y - (float)(distance*Math.Cos(angle)) },
-            new ("2"){X= targetNode.X + (float)(distance*Math.Sin(outAngle)), Y= targetNode.Y + (float)(distance*Math.Cos(outAngle)) }
+            new("1") { X = sourceNode.X - (float)(distance * Math.Sin(angle)), Y = sourceNode.Y - (float)(distance * Math.Cos(angle)) },
+            new("2") { X = targetNode.X + (float)(distance * Math.Sin(outAngle)), Y = targetNode.Y + (float)(distance * Math.Cos(outAngle)) }
         };
         var source = SourceNode;
         GraphEdge? sectionEdge;
@@ -47,8 +47,8 @@ public class SlantedEdge : BaseEdge
         EntryAngle = entryAngle;
         foreach (var item in _sections.Select((section, index) => new { section, index }))
         {
-            var target = item.index <= _sections.Count -2 ? _sections[item.index + 1].TargetNode : nextTarget;
-            var source = item.index <= _sections.Count -2 ? _sections[item.index + 1].SourceNode : nextSource;
+            var target = item.index <= _sections.Count - 2 ? _sections[item.index + 1].TargetNode : nextTarget;
+            var source = item.index <= _sections.Count - 2 ? _sections[item.index + 1].SourceNode : nextSource;
             item.section.SetAngles(entryAngle, source, target);
             entryAngle = item.section.ExitAngle;
         }

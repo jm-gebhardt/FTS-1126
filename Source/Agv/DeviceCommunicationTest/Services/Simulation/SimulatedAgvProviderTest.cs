@@ -24,8 +24,8 @@ public class SimulatedAgvProviderTest
         return new SimulateOptions()
         {
             Agvs = numberOfAgvs,
-            Sources = new[] {"S1"},
-            Destinations = new[] {"D1"},
+            Sources = new[] { "S1" },
+            Destinations = new[] { "D1" },
             GridRows = 3,
             GridGraph = true
         };

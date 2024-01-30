@@ -175,9 +175,15 @@ public interface IActionGroupRepository
     Task<Guid?> GetAgvAssignedToAction(Guid actionCorrelationId);
 
     /// <summary>
+    /// Checks if the agv has actions that are started.
+    /// </summary>
+    /// <param name="agvCorrelationId">The correlation id of the agv.</param>
+    Task<bool> HasStartedActionAsync(Guid agvCorrelationId);
+
+    /// <summary>
     /// Update an action group.
     /// </summary>
-    /// <param name="actionGroup"></param>
+    /// <param name="actionGroup">The action group to be updated</param>
     /// <returns></returns>
     Task UpdateAsync(ActionGroup actionGroup);
 }

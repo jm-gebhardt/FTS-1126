@@ -7,7 +7,7 @@ namespace Gebhardt.StoreWare.Agv.SmartLinkCommunication.Services;
 public class ModuleScopeFactory : IModuleScopeFactory
 {
     private readonly IServiceScopeFactory _serviceScopeFactory;
-    
+
     /// <inheritdoc cref="ModuleScopeFactory"/>
     /// <param name="serviceScopeFactory"></param>
     public ModuleScopeFactory(IServiceScopeFactory serviceScopeFactory)

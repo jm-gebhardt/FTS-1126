@@ -25,6 +25,6 @@ public class MapEntityConfiguration : IEntityTypeConfiguration<Map>
             .WithOne(ma => ma.Map)
             .HasForeignKey(ma => ma.MapId);
 
-        builder.ConfigureAllProperties(except: new[] {nameof(Map.Nodes), nameof(Map.Edges), nameof(Map.MapAgvs)});
+        builder.ConfigureAllProperties(except: new[] { nameof(Map.Nodes), nameof(Map.Edges), nameof(Map.MapAgvs) });
     }
 }

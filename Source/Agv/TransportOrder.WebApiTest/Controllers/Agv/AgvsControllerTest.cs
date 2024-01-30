@@ -43,7 +43,7 @@ public class AgvsControllerTest
             .SetupAgvDbWithDefaultData()
             .Build();
 
-        List<AgvSettingsDto> dtos = (await fixture.GetControllerResultAsync(c => c.GetAgvSettings(new List<Guid> {Guid.NewGuid()}))).ToList();
+        List<AgvSettingsDto> dtos = (await fixture.GetControllerResultAsync(c => c.GetAgvSettings(new List<Guid> { Guid.NewGuid() }))).ToList();
 
         dtos.ShouldNotBeEmpty();
         dtos.Count.ShouldBe(1);
@@ -83,7 +83,7 @@ public class AgvsControllerTest
     [TestMethod]
     public async Task GetAgvs_WhenAgvHasCargo_ReturnsAgvWithCargo()
     {
-        var hasCargoById = new Dictionary<Guid, bool> {{Guid.NewGuid(), true}};
+        var hasCargoById = new Dictionary<Guid, bool> { { Guid.NewGuid(), true } };
         AgvsControllerTestFixture<GetAgvsHasCargo, CargoRequestHandler> fixture = new AgvsControllerTestFixture<GetAgvsHasCargo, CargoRequestHandler>()
             .SetupAgvDbWithDefaultData()
             .WithHasCargo(hasCargoById)

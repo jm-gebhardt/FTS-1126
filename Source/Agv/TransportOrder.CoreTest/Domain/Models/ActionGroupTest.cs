@@ -191,9 +191,9 @@ public class ActionGroupTests
             pickActionState: ActionState.Completed,
             dropActionState: ActionState.Started,
             assignedAgv: Guid.NewGuid(),
-            createdDate:createdDate);
+            createdDate: createdDate);
         actionGroup.ResetActionGroup();
-       
+
         actionGroup.AssignedAgv.ShouldBeNull();
         actionGroup.StartedDate.ShouldBeNull();
         actionGroup.CompletedDate.ShouldBeNull();

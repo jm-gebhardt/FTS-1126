@@ -11,5 +11,5 @@ public interface IMapRepository : IRepository<Map>
     /// <summary>
     /// Get all maps for a given grid.
     /// </summary>
-   Task<ICollection<Map>> GetMapsForGridAsync(Guid gridId);
+    Task<ICollection<Map>> GetMapsForGridAsync(Guid gridId);
 }

@@ -64,15 +64,15 @@ public class CargoRequestHandlerTest
         var agvCorrelationId3 = Guid.NewGuid();
         var expectedCargosByAgvCorrelationId = new Dictionary<Guid, ICollection<Cargo>>
         {
-            {agvCorrelationId1, CargoGenerator.GenerateCargos(agvCorrelationId1)},
-            {agvCorrelationId2, CargoGenerator.GenerateCargos(agvCorrelationId2)},
-            {agvCorrelationId3, CargoGenerator.GenerateCargos(agvCorrelationId3)}
+            { agvCorrelationId1, CargoGenerator.GenerateCargos(agvCorrelationId1) },
+            { agvCorrelationId2, CargoGenerator.GenerateCargos(agvCorrelationId2) },
+            { agvCorrelationId3, CargoGenerator.GenerateCargos(agvCorrelationId3) }
         };
         CargoRequestHandlerTestFixture<GetCargosOfAgvs, CargoRequestHandler> fixture = new CargoRequestHandlerTestFixture<GetCargosOfAgvs, CargoRequestHandler>()
             .WithCargos(expectedCargosByAgvCorrelationId)
             .Build();
 
-        Response<GotCargosOfAgvs> response = await fixture.GetResponseAsync<GotCargosOfAgvs>(new GetCargosOfAgvs(new List<Guid> {agvCorrelationId1, agvCorrelationId2, agvCorrelationId3}));
+        Response<GotCargosOfAgvs> response = await fixture.GetResponseAsync<GotCargosOfAgvs>(new GetCargosOfAgvs(new List<Guid> { agvCorrelationId1, agvCorrelationId2, agvCorrelationId3 }));
 
         response.Message.CargosByAgvCorrelationId.Count.ShouldBe(expectedCargosByAgvCorrelationId.Count);
         foreach (KeyValuePair<Guid, ICollection<Cargo>> kv in response.Message.CargosByAgvCorrelationId)
@@ -89,7 +89,7 @@ public class CargoRequestHandlerTest
 
         fixture.AgvDb.Setup(x => x.Cargos.GetCargosAsync(It.IsAny<ICollection<Guid>>())).ReturnsAsync((ICollection<Guid> correlationIds) => throw new AgvsNotFoundException(correlationIds));
 
-        await MediatorShould.ThrowRequestExceptionAsync<AgvsNotFoundException>(async () => await fixture.GetResponseAsync<GotCargosOfAgvs>(new GetCargosOfAgvs(new List<Guid> {Guid.NewGuid()})));
+        await MediatorShould.ThrowRequestExceptionAsync<AgvsNotFoundException>(async () => await fixture.GetResponseAsync<GotCargosOfAgvs>(new GetCargosOfAgvs(new List<Guid> { Guid.NewGuid() })));
     }
 
     [TestMethod]
@@ -131,7 +131,7 @@ public class CargoRequestHandlerTest
     [TestMethod]
     public async Task GetAgvsHasCargo_WhenAgvsExist_ReturnsGotGetAgvsHasCargo()
     {
-        var agvCorrelationIds = new List<Guid> {Guid.NewGuid(), Guid.NewGuid()};
+        var agvCorrelationIds = new List<Guid> { Guid.NewGuid(), Guid.NewGuid() };
         ICollection<Cargo> cargos = CargoGenerator.GenerateCargos(agvCorrelationIds[0]);
         CargoRequestHandlerTestFixture<GetAgvsHasCargo, CargoRequestHandler> fixture = new CargoRequestHandlerTestFixture<GetAgvsHasCargo, CargoRequestHandler>()
             .WithCargo(agvCorrelationIds[0], cargos)
@@ -154,6 +154,6 @@ public class CargoRequestHandlerTest
         CargoRequestHandlerTestFixture<GetAgvsHasCargo, CargoRequestHandler> fixture = new CargoRequestHandlerTestFixture<GetAgvsHasCargo, CargoRequestHandler>()
             .Build();
 
-        await MediatorShould.ThrowRequestExceptionAsync<AgvsNotFoundException>(async () => await fixture.GetResponseAsync<GotCargosOfAgvs>(new GetAgvsHasCargo(new List<Guid> {Guid.NewGuid()})));
+        await MediatorShould.ThrowRequestExceptionAsync<AgvsNotFoundException>(async () => await fixture.GetResponseAsync<GotCargosOfAgvs>(new GetAgvsHasCargo(new List<Guid> { Guid.NewGuid() })));
     }
 }

@@ -8,4 +8,4 @@ namespace Statistics.Domain.ReadModels;
 /// <param name="GridId">The grid id.</param>
 /// <param name="Frequencies">The position frequencies [[xIndex, yIndex, value]].</param>
 [UsedImplicitly]
-public record PositionFrequency(Guid GridId, ICollection<ICollection<float>>Frequencies);
+public record PositionFrequency(Guid GridId, ICollection<ICollection<float>> Frequencies);

@@ -26,7 +26,7 @@ try
                     app.UseMetricServer();
                     app.UseStatisticsWebApi();
                     app.UseDeveloperExceptionPage();
-                })); 
+                }));
 
     var host = hostBuilder.Build();
     using (var scope = host.Services.CreateScope())

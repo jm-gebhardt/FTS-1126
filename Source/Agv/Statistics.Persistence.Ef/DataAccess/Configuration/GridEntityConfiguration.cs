@@ -5,7 +5,7 @@ using Statistics.Domain.Models;
 namespace Statistics.Persistence.Ef.DataAccess.Configuration;
 
 /// <inheritdoc />
-public class GridEntityConfiguration: IEntityTypeConfiguration<Grid>
+public class GridEntityConfiguration : IEntityTypeConfiguration<Grid>
 {
     /// <inheritdoc />
     public void Configure(EntityTypeBuilder<Grid> builder)

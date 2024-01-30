@@ -1,5 +1,4 @@
-﻿
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Graph;

@@ -25,10 +25,10 @@ public class GeneratedMapGeneratorTest
         var graph = new AgvGraph(Guid.Empty,
             new GraphNode[]
             {
-                new("S1") {Type = AgvGraph.NodeType.Pick, X = 0f, Y = -2f, Z = 0f},
-                new("D1") {Type = AgvGraph.NodeType.Drop, X = 4f, Y = 6f, Z = 0f},
-                new("S2") {Type = AgvGraph.NodeType.Pick, X = 7f, Y = 4f, Z = 0f},
-                new("D2") {Type = AgvGraph.NodeType.Drop, X = -3f, Y = 0f, Z = 0f}
+                new("S1") { Type = AgvGraph.NodeType.Pick, X = 0f, Y = -2f, Z = 0f },
+                new("D1") { Type = AgvGraph.NodeType.Drop, X = 4f, Y = 6f, Z = 0f },
+                new("S2") { Type = AgvGraph.NodeType.Pick, X = 7f, Y = 4f, Z = 0f },
+                new("D2") { Type = AgvGraph.NodeType.Drop, X = -3f, Y = 0f, Z = 0f }
             },
             new[]
             {
@@ -59,8 +59,8 @@ public class GeneratedMapGeneratorTest
         var graph = new AgvGraph(Guid.Empty,
             new[]
             {
-                new GraphNode("S1") {Type = AgvGraph.NodeType.Pick, X = 1000f, Y = 1000f, Z = 0f},
-                new GraphNode("D1") {Type = AgvGraph.NodeType.Drop, X = 1010f, Y = 1010f, Z = 0f}
+                new GraphNode("S1") { Type = AgvGraph.NodeType.Pick, X = 1000f, Y = 1000f, Z = 0f },
+                new GraphNode("D1") { Type = AgvGraph.NodeType.Drop, X = 1010f, Y = 1010f, Z = 0f }
             },
             new[]
             {

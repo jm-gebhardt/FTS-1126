@@ -66,14 +66,14 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixtureWithSche
 
     public void AddAgv(TransportOrder.Domain.Models.Agv.Agv agv)
     {
-        _agvDb.AddAgvsToMockRepository(new List<TransportOrder.Domain.Models.Agv.Agv> {agv});
+        _agvDb.AddAgvsToMockRepository(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
     }
 
     public void AddChargeAction(ActionGroup actionGroup = null!, bool existsPriorToTest = true)
     {
         if (existsPriorToTest)
         {
-            _actionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<IList<ActionGroupState>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(), It.IsAny<bool?>(), It.IsAny<SortBy>(), It.IsAny<bool>())).ReturnsAsync(new List<ActionGroup> {actionGroup});
+            _actionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<IList<ActionGroupState>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(), It.IsAny<bool?>(), It.IsAny<SortBy>(), It.IsAny<bool>())).ReturnsAsync(new List<ActionGroup> { actionGroup });
         }
         else
         {

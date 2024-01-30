@@ -115,6 +115,9 @@ public class AgvAction : IParentedBy<Guid>
                 break;
 
             case ActionState.Completed:
+                CompletedDate = now;
+                break;
+
             case ActionState.Failed:
             case ActionState.Canceled:
             case ActionState.Invalid:
@@ -128,6 +131,6 @@ public class AgvAction : IParentedBy<Guid>
     /// </summary>
     public override string ToString()
     {
-        return $"Nodes: {string.Join(",",Nodes)} TargetNode: {TargetNodeId} CorrelationId: {CorrelationId}, ParentId: {ParentId}";
+        return $"Nodes: {string.Join(",", Nodes)} TargetNode: {TargetNodeId} CorrelationId: {CorrelationId}, ParentId: {ParentId}";
     }
 }

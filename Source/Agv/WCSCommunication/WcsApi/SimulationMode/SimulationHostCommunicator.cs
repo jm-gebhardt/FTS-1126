@@ -8,16 +8,16 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.WcsApi.SimulationMode;
 ///  Simulate finishing of host orders
 /// </summary>
 [UsedImplicitly]
-public class SimulationHostCommunicator: IHostCommunicator
+public class SimulationHostCommunicator : IHostCommunicator
 {
     private readonly ILogger<SimulationHostCommunicator> _logger;
-   
+
     /// <inheritdoc cref="SimulationHostCommunicator"/>>
     public SimulationHostCommunicator(ILogger<SimulationHostCommunicator> logger)
     {
         _logger = logger;
     }
-    
+
     /// <inheritdoc cref="IHostCommunicator"/>>
     public Task<bool> TransmitHostOrderHandlingSucceeded(string orderId)
     {

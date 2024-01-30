@@ -17,7 +17,7 @@ public static class MapHelper
     public static (int Width, int Height) GetMapDimensions(byte[] mapValue)
     {
         SKImage image;
-        if (mapValue is {Length: >= 1} && (image = SKImage.FromEncodedData(mapValue)) != null)
+        if (mapValue is { Length: >= 1 } && (image = SKImage.FromEncodedData(mapValue)) != null)
         {
             return (image.Width, image.Height);
         }

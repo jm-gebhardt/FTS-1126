@@ -283,7 +283,7 @@ public class Agv : IAgvId
     /// <returns>True if the state has changed</returns>
     public (bool Accepted, bool StateChanged) TryAccept()
     {
-        if (new[] {AgvState.Idle, AgvState.Busy}.Contains(CurrentAgvState))
+        if (new[] { AgvState.Idle, AgvState.Busy }.Contains(CurrentAgvState))
         {
             return (false, false);
         }

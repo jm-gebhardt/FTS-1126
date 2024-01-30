@@ -224,11 +224,11 @@ public class AStar : BaseRouteAlgorithm
     private double CalculateCosts(ANode current, GraphEdge edge, out double finalVelocity, out double decelerationCost)
     {
         double time = 0;
-        
+
         double maximumEdgeVelocity = CalculateMaximumEdgeVelocity(edge);
-        
+
         time += CalculateEntryCost(current, edge, maximumEdgeVelocity, out double actualEntryVelocity);
-        
+
         time += edge.Variant switch
         {
             EdgeType.Direct => CalculateTimeAndExitParametersForDistance(edge.Length, actualEntryVelocity, maximumEdgeVelocity, Acceleration, out finalVelocity, out decelerationCost),
@@ -287,7 +287,7 @@ public class AStar : BaseRouteAlgorithm
         {
             return time;
         }
-        
+
         // Perform the spot turn.
         time += angle / MaxVelocityTurnOnSpot;
 

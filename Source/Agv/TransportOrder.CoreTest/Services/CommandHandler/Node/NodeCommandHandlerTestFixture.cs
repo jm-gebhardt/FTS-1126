@@ -7,7 +7,7 @@ using Moq;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.CommandHandler.Node;
 
-public class NodeCommandHandlerTestFixture: MassTransitConsumerTestFixture<NodeCommandHandler>
+public class NodeCommandHandlerTestFixture : MassTransitConsumerTestFixture<NodeCommandHandler>
 {
     public readonly Mock<INodeStateRepository> NodeStateRepository = new();
 

@@ -11,7 +11,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.CommandHandler;
 /// Provides handlers for node-related commands.
 /// </summary>
 [UsedImplicitly]
-public class NodeCommandHandler: IConsumer<FreeNode>
+public class NodeCommandHandler : IConsumer<FreeNode>
 {
     private readonly INodeStateRepository _nodeStateRepository;
     private readonly ILogger<NodeCommandHandler> _logger;
@@ -31,7 +31,7 @@ public class NodeCommandHandler: IConsumer<FreeNode>
         string nodeId = context.Message.NodeId;
         if (!await _nodeStateRepository.FreeNodeAsync(nodeId))
         {
-          _logger.LogWarning("Could not free node {NodeId}, node is locked.", nodeId);
+            _logger.LogWarning("Could not free node {NodeId}, node is locked.", nodeId);
         }
 
         var nodeState = await _nodeStateRepository.GetNodeStateAsync(nodeId);

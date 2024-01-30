@@ -62,8 +62,8 @@ public class GraphTest
     {
         var id = Guid.NewGuid();
         var fixture = new GraphTestFixture()
-            .WithGraphEdges(EdgeGenerator.Generate(variantParameters: new List<EdgeCoefficient> {new(1)}, id: id))
-            .WithAgvGraphEdges(EdgeGenerator.Generate(variantParameters: new List<EdgeCoefficient> {new(2)}, id: id))
+            .WithGraphEdges(EdgeGenerator.Generate(variantParameters: new List<EdgeCoefficient> { new(1) }, id: id))
+            .WithAgvGraphEdges(EdgeGenerator.Generate(variantParameters: new List<EdgeCoefficient> { new(2) }, id: id))
             .Build();
 
         Should.Throw<InvalidOperationException>(() => fixture.Graph.Merge(fixture.AgvGraph));
@@ -75,7 +75,7 @@ public class GraphTest
         var id = Guid.NewGuid();
         var fixture = new GraphTestFixture()
             .WithGraphEdges(EdgeGenerator.Generate(variantParameters: new List<EdgeCoefficient>(), id: id))
-            .WithAgvGraphEdges(EdgeGenerator.Generate(variantParameters: new List<EdgeCoefficient> {new(2)}, id: id))
+            .WithAgvGraphEdges(EdgeGenerator.Generate(variantParameters: new List<EdgeCoefficient> { new(2) }, id: id))
             .Build();
 
         Should.Throw<InvalidOperationException>(() => fixture.Graph.Merge(fixture.AgvGraph));

@@ -46,7 +46,7 @@ public class SendAgvToChargerRequestHandler : IConsumer<SendAgvToCharger>
         {
             charger = await _chargingPointManager.ReserveChargerAsync(agv, nodeId);
         }
-        catch 
+        catch
         {
             throw new NoChargeStationAvailableException();
         }

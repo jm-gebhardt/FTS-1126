@@ -23,7 +23,7 @@ public static class NodesExtension
         double xMax = Math.Ceiling(nodes.MaxBy(n => n.X)!.X);
         double yMax = Math.Ceiling(nodes.MaxBy(n => n.Y)!.Y);
 
-        int xSize = (int)Math.Ceiling((xMax - xStart +  xStep) / xStep);
+        int xSize = (int)Math.Ceiling((xMax - xStart + xStep) / xStep);
         int ySize = (int)Math.Ceiling((yMax - yStart + yStep) / yStep);
 
         return new Grid(gridName, ySize, xSize, xStart, xStep, yStart, yStep);

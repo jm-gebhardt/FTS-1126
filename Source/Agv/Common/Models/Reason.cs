@@ -77,6 +77,6 @@ public class Reason
     /// <inheritdoc />
     public override string ToString()
     {
-        return Parameters is {Length: > 0} ? string.Format(Template, Parameters.Cast<object?>().ToArray()) : Template;
+        return Parameters is { Length: > 0 } ? string.Format(Template, Parameters.Cast<object?>().ToArray()) : Template;
     }
 }

@@ -27,10 +27,10 @@ public class GridGraphGenerator : GraphGeneratorBase
     ///         0
     /// 3/2 pi -|- pi/2
     ///         pi
-    private const float East = (float) Math.PI / 2f;
+    private const float East = (float)Math.PI / 2f;
 
-    private const float West = 3f * (float) Math.PI / 2f;
-    private const float South = (float) Math.PI;
+    private const float West = 3f * (float)Math.PI / 2f;
+    private const float South = (float)Math.PI;
     private const float North = 0f;
 
     private const float OriginXOffset = 5;
@@ -242,7 +242,7 @@ public class GridGraphGenerator : GraphGeneratorBase
         }
 
         float step = 2.0f * _gridRows / _serviceNodeTypes.Length;
-        int nodeIdx = (int) (step * serviceNodeIndex + 0.5);
+        int nodeIdx = (int)(step * serviceNodeIndex + 0.5);
 
         if (nodeIdx % 2 == 0)
         {

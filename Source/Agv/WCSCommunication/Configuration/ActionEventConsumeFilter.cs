@@ -18,7 +18,7 @@ public class ActionEventConsumeFilter<T> : IFilter<ConsumeContext<T>>
         {
             if (((IActionGroupEvent)context.Message).ActionGroup.Creator is ActionGroupCreator.Wms or ActionGroupCreator.Simulation)
             {
-               await next.Send(context);
+                await next.Send(context);
             }
         }
         else
@@ -28,5 +28,7 @@ public class ActionEventConsumeFilter<T> : IFilter<ConsumeContext<T>>
     }
 
     /// <inheritdoc />
-    public void Probe(ProbeContext context) { }
+    public void Probe(ProbeContext context)
+    {
+    }
 }

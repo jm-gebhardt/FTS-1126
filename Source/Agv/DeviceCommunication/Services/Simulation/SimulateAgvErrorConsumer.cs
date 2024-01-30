@@ -20,7 +20,7 @@ public class SimulateAgvErrorConsumer : IConsumer<MqttSimulateAgvError>
     {
         _logger = logger;
     }
-    
+
     /// <summary>
     /// Create consumer for <see cref="MqttSimulateAgvError" /> and translate message to <see cref="SimulateAgvError" /> message
     /// </summary>

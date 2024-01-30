@@ -105,7 +105,7 @@ public class AgvPositionChangedConsumerTest
                 newLastNodeId));
         (await fixture.TestHarness.Published.Any<AgvLastNodeIdChanged>()).ShouldBeTrue();
         (await fixture.ConsumerHarness.Consumed.Any<AgvLastNodeIdChanged>()).ShouldBeTrue();
-  
+
         (await fixture.TestHarness.Published.Any<NodeStateChanged>()).ShouldBeFalse();
         fixture.NodeStateRepositoryMock.Verify(r => r.OccupyNodeAsync(newLastNodeId, AgvId.ToGuid()), Times.Never);
     }

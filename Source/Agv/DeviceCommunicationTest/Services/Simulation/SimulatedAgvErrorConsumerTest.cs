@@ -24,11 +24,11 @@ public class SimulatedAgvErrorConsumerTest
 
         var agvCorrelationId = Guid.NewGuid();
         var agvError = AgvErrorGenerator.GenerateAgvError(agvCorrelationId);
-        await fixture.TestHarness.Bus.Publish(new MqttSimulateAgvError { CorrelationId = agvCorrelationId, AgvErrors = new List<AgvError>{ agvError } });
-        
+        await fixture.TestHarness.Bus.Publish(new MqttSimulateAgvError { CorrelationId = agvCorrelationId, AgvErrors = new List<AgvError> { agvError } });
+
         (await fixture.ConsumerHarness.Consumed.Any<MqttSimulateAgvError>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<SimulateAgvError>()).ShouldBeTrue();
-        
+
         var message = fixture.TestHarness.Published.Select<SimulateAgvError>().First().Context.Message;
         message.CorrelationId.ShouldBe(agvCorrelationId);
         message.AgvErrors.ShouldNotBeNull();

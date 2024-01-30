@@ -10,7 +10,7 @@ namespace Gebhardt.StoreWare.Agv.Statistics.Services.RequestResponseHandler;
 /// Provides handlers for grid-related requests.
 /// </summary>
 [UsedImplicitly]
-public class GridRequestHandler: 
+public class GridRequestHandler :
     IConsumer<GetGrids>,
     IConsumer<GetPositionFrequenciesForGrid>
 {
@@ -27,8 +27,8 @@ public class GridRequestHandler:
     /// </summary>
     public async Task Consume(ConsumeContext<GetGrids> context)
     {
-       ICollection<Grid> grids = await _db.Grids.GetAll();
-       await context.RespondAsync(new GotGrids(grids.ToList()));
+        ICollection<Grid> grids = await _db.Grids.GetAll();
+        await context.RespondAsync(new GotGrids(grids.ToList()));
     }
 
     /// <summary>

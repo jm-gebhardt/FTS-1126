@@ -13,7 +13,7 @@ public class ModulePollingService : IPollable
     private readonly ModuleConfig _moduleConfig;
 
     /// <inheritdoc />
-    public int PollingInterval => (int) _moduleConfig.PollingInterval.TotalMilliseconds;
+    public int PollingInterval => (int)_moduleConfig.PollingInterval.TotalMilliseconds;
 
     /// <inheritdoc cref="ModulePollingService" />
     /// <param name="serviceProvider"></param>

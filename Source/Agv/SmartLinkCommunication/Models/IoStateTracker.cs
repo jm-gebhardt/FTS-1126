@@ -38,7 +38,7 @@ public class IoStateTracker : IDisposable, IAsyncDisposable
     {
         if (_timerDuration != null && _timer != null)
         {
-            _timer.Change((TimeSpan) _timerDuration, Timeout.InfiniteTimeSpan);
+            _timer.Change((TimeSpan)_timerDuration, Timeout.InfiniteTimeSpan);
             IsTimerRunning = true;
         }
     }
@@ -61,7 +61,7 @@ public class IoStateTracker : IDisposable, IAsyncDisposable
             {
                 callback();
             }
-        }, null, (TimeSpan) _timerDuration, Timeout.InfiniteTimeSpan);
+        }, null, (TimeSpan)_timerDuration, Timeout.InfiniteTimeSpan);
         IsTimerRunning = true;
 
         return this;

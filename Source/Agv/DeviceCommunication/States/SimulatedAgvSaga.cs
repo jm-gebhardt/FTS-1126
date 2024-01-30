@@ -324,7 +324,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
             GetOrderId(),
             false,
             true,
-            (int) SimulatedBatteryCharge,
+            (int)SimulatedBatteryCharge,
             false,
             GetBatteryVoltage(),
             GetBatteryCurrent(),
@@ -334,8 +334,8 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
         );
         TravelSimulator = new AgvTravelSimulator(agv.AgvGraph, agvData, Position!);
     }
-    
-    private static float GetRandomNoise(double maxValue) => (float) (maxValue * (2 * Random.Shared.NextDouble() - 1));
+
+    private static float GetRandomNoise(double maxValue) => (float)(maxValue * (2 * Random.Shared.NextDouble() - 1));
 
     private string? GetOrderId() => Action?.CorrelationId.ToString();
 
@@ -398,7 +398,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
     /// <summary>
     /// Updates AgvStatusReceived
     /// </summary>
-    public void UpdateStatus(double timeDiffMs, double batteryChargeRate, double batteryDischargeRate)
+    public void UpdateStatus(double timeDiffS, double batteryChargeRate, double batteryDischargeRate)
     {
         bool charging = false;
         if (CurrentNode != null && Action != null) // AGV is charging if it is at a charging station
@@ -409,11 +409,11 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
         double chargeDiff;
         if (charging)
         {
-            chargeDiff = timeDiffMs * batteryChargeRate;
+            chargeDiff = timeDiffS * batteryChargeRate;
         }
         else
         {
-            chargeDiff = timeDiffMs * -batteryDischargeRate;
+            chargeDiff = timeDiffS * -batteryDischargeRate;
         }
 
         bool busy = new[]

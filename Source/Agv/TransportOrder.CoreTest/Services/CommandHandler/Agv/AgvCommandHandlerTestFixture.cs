@@ -34,7 +34,7 @@ public class AgvCommandHandlerTestFixture(
     private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
     private readonly Mock<ILogger<AgvCommandHandler>> _logger = new();
     private readonly Mock<IMapRepository> _mapRepository = new();
-    private readonly ProductionOptions _productionOptions = new() {AutoAccept = true};
+    private readonly ProductionOptions _productionOptions = new() { AutoAccept = true };
     private readonly Mock<IChargingPointManager> _chargingPointManager = new();
     private readonly Mock<INodeStateRepository> _nodeStateRepository = new();
     public readonly Mock<IAgvDb> AgvDb = new();
@@ -78,6 +78,12 @@ public class AgvCommandHandlerTestFixture(
     public AgvCommandHandlerTestFixture WithCurrentAgvAction(AgvAction action)
     {
         _actionGroupRepository.Setup(x => x.GetCurrentAgvActionAsync(It.IsAny<Guid>())).ReturnsAsync(action);
+        return this;
+    }
+
+    public AgvCommandHandlerTestFixture WithHasStartedAction(bool hasStartedAction)
+    {
+        _actionGroupRepository.Setup(x => x.HasStartedActionAsync(It.IsAny<Guid>())).ReturnsAsync(hasStartedAction);
         return this;
     }
 

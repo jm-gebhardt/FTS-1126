@@ -223,7 +223,7 @@ public class StartActionCommandConsumerTest
             var mqttMessage = publishedMessage.Context.Message;
 
             mqttMessage.SerialNumber.ShouldBe(agvId);
-         
+
             mqttMessage.Stations?.FromStationIdentifier.ShouldBe(string.Empty);
             mqttMessage.Stations?.ToStationIdentifier.ShouldBe(toStationId);
             mqttMessage.OrderType.ShouldBe(OrderType.Charge);

@@ -159,13 +159,13 @@ public class GraphEdge : IEquatable<GraphEdge>
             return true;
         }
 
-        return obj.GetType() == GetType() && Equals((GraphEdge) obj);
+        return obj.GetType() == GetType() && Equals((GraphEdge)obj);
     }
 
     /// <inheritdoc />
     public override int GetHashCode()
     {
-        return HashCode.Combine(Id, FromNodeId, ToNodeId, Length, (int) Variant, VariantParameters);
+        return HashCode.Combine(Id, FromNodeId, ToNodeId, Length, (int)Variant, VariantParameters);
     }
 
     /// <summary>
@@ -193,7 +193,7 @@ public class GraphEdge : IEquatable<GraphEdge>
     [UsedImplicitly]
     public static GraphEdge CreateBezier1(string fromNodeId, string toNodeId, float length, double x, double y, Guid? id = null)
     {
-        return new GraphEdge(fromNodeId, toNodeId, length, id ?? Guid.NewGuid(), EdgeType.Bezier1, new List<EdgeCoefficient> {new(x, y)});
+        return new GraphEdge(fromNodeId, toNodeId, length, id ?? Guid.NewGuid(), EdgeType.Bezier1, new List<EdgeCoefficient> { new(x, y) });
     }
 
     /// <summary>
@@ -210,7 +210,7 @@ public class GraphEdge : IEquatable<GraphEdge>
     [UsedImplicitly]
     public static GraphEdge CreateBezier2(string fromNodeId, string toNodeId, float length, double x1, double y1, double x2, double y2, Guid? id = null)
     {
-        return new GraphEdge(fromNodeId, toNodeId, length, id ?? Guid.NewGuid(), EdgeType.Bezier2, new List<EdgeCoefficient> {new(x1, y1), new(x2, y2)});
+        return new GraphEdge(fromNodeId, toNodeId, length, id ?? Guid.NewGuid(), EdgeType.Bezier2, new List<EdgeCoefficient> { new(x1, y1), new(x2, y2) });
     }
 
     /// <summary>
@@ -224,7 +224,7 @@ public class GraphEdge : IEquatable<GraphEdge>
     /// <param name="id">Optional id.</param>
     public static GraphEdge CreateSlanted(string fromNodeId, string toNodeId, float length, double exitAngle, double exitDistance, Guid? id = null)
     {
-        return new GraphEdge(fromNodeId, toNodeId, length, id ?? Guid.NewGuid(), EdgeType.Slanted, new List<EdgeCoefficient> {new(exitAngle), new(exitDistance)});
+        return new GraphEdge(fromNodeId, toNodeId, length, id ?? Guid.NewGuid(), EdgeType.Slanted, new List<EdgeCoefficient> { new(exitAngle), new(exitDistance) });
     }
 
     /// <summary>

@@ -21,7 +21,7 @@ public class NodeStateRequestHandlerTest
             .Build();
 
         Response<GotMapNodeStates> response = await fixture.GetResponseAsync<GotMapNodeStates>(new GetMapNodeStates(Guid.NewGuid()));
-        response.Message.NodeLocks.ShouldBe(nodeStates, ignoreOrder:true);
+        response.Message.NodeLocks.ShouldBe(nodeStates, ignoreOrder: true);
     }
 
     [TestMethod]

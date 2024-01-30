@@ -175,7 +175,7 @@ public class ActionGroupValidator : AbstractValidator<ActionGroup>
             ICollection<Models.Agv.Agv> agvs = await _agvRepository.GetAllAgvsAsync();
             _hasRoute = await _routeService.HasAnyAgvRouteAsync(actionGroup, agvs, cancellationToken);
         }
-        
+
         return _hasRoute;
     }
 

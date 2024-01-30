@@ -27,7 +27,7 @@ public static class Mathematics
     {
         return Math.Acos(Vector2.Dot(v1, v2) / (Vector2.Distance(Vector2.Zero, v1) * Vector2.Distance(Vector2.Zero, v2)));
     }
-    
+
     /// <summary>
     /// Calculates the euclidean distance between two <see cref="GraphNode"/>.
     /// </summary>

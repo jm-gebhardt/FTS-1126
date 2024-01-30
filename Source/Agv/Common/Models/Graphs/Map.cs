@@ -86,7 +86,7 @@ public record Map : CorrelatedBy<Guid>, IGraph
         float yOffset,
         ICollection<GraphNode>? nodes = null,
         ICollection<GraphEdge>? edges = null
-        )
+    )
     {
         CorrelationId = correlationId;
         MapId = mapId;

@@ -7,7 +7,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Extensions;
 /// <summary>
 /// Provides extension methods for sorting a queryable.
 /// </summary>
-public static  class QueryableExtension
+public static class QueryableExtension
 {
     private static readonly MethodInfo _orderByMethod =
         typeof(Queryable).GetMethods().Single(method =>
@@ -25,7 +25,7 @@ public static  class QueryableExtension
     /// <param name="propertyName">The property name.</param>
     /// <param name="isDescending">Flag, if true sorts by descending order.</param>
     public static IOrderedQueryable<T> OrderByProperty<T>(
-        this IQueryable<T> queryable, string propertyName, bool isDescending=true)
+        this IQueryable<T> queryable, string propertyName, bool isDescending = true)
     {
         if (typeof(T).GetProperty(propertyName, BindingFlags.IgnoreCase |
                                                 BindingFlags.Public | BindingFlags.Instance) == null)

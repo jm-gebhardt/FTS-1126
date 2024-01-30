@@ -72,7 +72,7 @@ public class Grid(string gridName, int ySize, int xSize, double xStart, double x
         (double gridXMax, double gridYMax) = grid.GetXyMax();
 
         // Set new x and y start by full x or y steps, resp.ly.
-        double xStartDiff =Math.Ceiling((XStart - grid.XStart) / XStep) * XStep;
+        double xStartDiff = Math.Ceiling((XStart - grid.XStart) / XStep) * XStep;
         XStart -= Math.Max(xStartDiff, 0);
         double yStartDiff = Math.Ceiling((YStart - grid.YStart) / YStep) * YStep;
         YStart -= Math.Max(yStartDiff, 0);
@@ -82,7 +82,7 @@ public class Grid(string gridName, int ySize, int xSize, double xStart, double x
         xMax += Math.Max(xMaxDiff, 0);
         double yMaxDiff = Math.Ceiling((gridYMax - yMax) / YStep) * YStep;
         yMax += Math.Max(yMaxDiff, 0);
-        XSize = (int)Math.Ceiling((xMax - XStart +  XStep) / XStep);
+        XSize = (int)Math.Ceiling((xMax - XStart + XStep) / XStep);
         YSize = (int)Math.Ceiling((yMax - YStart + YStep) / YStep);
     }
 

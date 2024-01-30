@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
 
 /// <inheritdoc/>
-public class EfNodeRepository : INodeRepository 
+public class EfNodeRepository : INodeRepository
 {
     private readonly IDbContextFactory<TransportOrderDbContext> _dbContextFactory;
 
@@ -29,7 +29,7 @@ public class EfNodeRepository : INodeRepository
     public async Task<ICollection<NodeLock>> GetNodeStatesForMapAsync(Guid mapCorrelationId)
     {
         await using var context = await CreateDbContextAsync();
-        
+
         List<string> nodeIds = await context.Set<Map>()
             .Include(g => g.Nodes)
             .Where(m => m.CorrelationId == mapCorrelationId)
@@ -46,7 +46,7 @@ public class EfNodeRepository : INodeRepository
         List<NodeLock> nodeStates = await context.Set<NodeLock>()
             .Where(nl => nodeIds.Contains(nl.NodeId))
             .ToListAsync();
-       
+
         // Add state for nodes without an existing lock
         nodeStates.AddRange(nodeIds.Except(nodeStates.Select(n => n.NodeId))
             .Select(id => new NodeLock(id, NodeLockState.Free, false, null, DateTime.MinValue)));

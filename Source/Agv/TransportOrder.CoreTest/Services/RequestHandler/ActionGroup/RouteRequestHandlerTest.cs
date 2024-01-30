@@ -15,7 +15,7 @@ public class RouteRequestHandlerTest
     public async Task Consume_GetRoute_RouteExists_RespondsWithRoute()
     {
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "S1");
-        string[] nodes = {"S", "A", "B", "D"};
+        string[] nodes = { "S", "A", "B", "D" };
 
         RouteRequestHandlerTestFixture<GetRoute> fixture = new RouteRequestHandlerTestFixture<GetRoute>()
             .WithAgv(agv)
@@ -35,7 +35,7 @@ public class RouteRequestHandlerTest
     public async Task Consume_GetRoute_AgvDoesNotExist_ThrowsAgvNotFoundException()
     {
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "S1");
-        string[] nodes = {"S", "A", "B", "D"};
+        string[] nodes = { "S", "A", "B", "D" };
 
         RouteRequestHandlerTestFixture<GetRoute> fixture = new RouteRequestHandlerTestFixture<GetRoute>()
             .WithRoute(agv, "D", nodes)

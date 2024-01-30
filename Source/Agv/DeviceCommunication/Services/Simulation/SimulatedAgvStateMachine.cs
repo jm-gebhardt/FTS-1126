@@ -158,11 +158,11 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         _batteryChargeRate = _simulateOptions.BatteryChargeRate;
         _initialBatteryCharge = _simulateOptions.InitialBatteryCharge;
         const int initialTravelTime = 5000;
-        StatusUpdateIntervalMs = Math.Clamp(_simulateOptions.SimulationSpeed *initialTravelTime / 2, 100, 10000); // Send twice per node (min 0.1s, max 10s)
-        SignalPositionIntervalMs = Math.Clamp(_simulateOptions.SimulationSpeed*initialTravelTime / 10, 200, 2000); // Send 10x per node (min 0.2s, max 2s)
+        StatusUpdateIntervalMs = Math.Clamp(_simulateOptions.SimulationSpeed * initialTravelTime / 2, 100, 10000); // Send twice per node (min 0.1s, max 10s)
+        SignalPositionIntervalMs = Math.Clamp(_simulateOptions.SimulationSpeed * initialTravelTime / 10, 200, 2000); // Send 10x per node (min 0.2s, max 2s)
 
         _logger.LogInformation("Initialized SimulatedAgvStateMachine with Graph (fixed :{FixedGraph}/ grid:{GridGraph} with rows {Rows}) and simulation speed of {SimulationSpeed}",
-            _simulateOptions.FixedGraph,_simulateOptions.GridGraph, _simulateOptions.GridRows, _simulateOptions.SimulationSpeed);
+            _simulateOptions.FixedGraph, _simulateOptions.GridGraph, _simulateOptions.GridRows, _simulateOptions.SimulationSpeed);
 
         SetSagaFactory();
         SetScheduler();
@@ -273,7 +273,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         c.Saga.LastActionAborted = false;
         c.Saga.Action = c.Message.Action;
         c.Saga.ActionStartDate = DateTime.UtcNow;
-        c.Saga.TravelSimulator.EstimateTravelTimes(c.Message.Action.Nodes, c.Saga.ActionStartDate!.Value, 0);      
+        c.Saga.TravelSimulator.EstimateTravelTimes(c.Message.Action.Nodes, c.Saga.ActionStartDate!.Value, 0);
     }
 
     private EventActivityBinder<SimulatedAgvSaga, ScheduleFinishAction> SetFinishActionHandler()
@@ -310,7 +310,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     {
         return When(SignalPositionSchedule.Received)
             .Then(c => _logger.LogTrace("{MessageType} {CorrelationId} received", nameof(SchedulePositionUpdate), c.Saga.CorrelationId))
-            .ThenAsync(PublishPositionAsync)    
+            .ThenAsync(PublishPositionAsync)
             .Schedule(SignalPositionSchedule, c => new SchedulePositionUpdate(c.Saga.CorrelationId), GetPositionScheduleInterval);
     }
 
@@ -380,14 +380,14 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     private TimeSpan GetPositionScheduleInterval(SagaConsumeContext<SimulatedAgvSaga> context)
     {
         var currentEdge = context.Saga.TravelSimulator.GetShortestEdge();
-        int interval = GetRequestIntervalOnEdge(12, 200, 2000, currentEdge);
+        int interval = GetRequestIntervalOnEdge(12, 100, 10000, currentEdge);
         return TimeSpan.FromMilliseconds(interval);
     }
 
     private TimeSpan GetStatusUpdateInterval(SagaConsumeContext<SimulatedAgvSaga> context)
     {
         var currentEdge = context.Saga.TravelSimulator.CurrentEdge;
-        int interval = GetRequestIntervalOnEdge(2, 100, 10000, currentEdge);
+        int interval = GetRequestIntervalOnEdge(2, 200, 2000, currentEdge);
         return TimeSpan.FromMilliseconds(interval);
     }
 

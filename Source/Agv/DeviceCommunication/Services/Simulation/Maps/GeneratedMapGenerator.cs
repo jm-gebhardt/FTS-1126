@@ -68,7 +68,7 @@ public class GeneratedMapGenerator : MapGeneratorBase
         float xOffset = -Min.X + WallDistance;
         float yOffset = -Min.Y + WallDistance;
 
-        int imageHeightPx = (int) Math.Ceiling((Max.Y - Min.Y + 2 * WallDistance) / resolution);
+        int imageHeightPx = (int)Math.Ceiling((Max.Y - Min.Y + 2 * WallDistance) / resolution);
         float wallThicknessPx = WallThickness / resolution; // Wall thickness: 24 cm
 
         var imageInfo = new SKImageInfo(ImageWidth, imageHeightPx);
@@ -95,7 +95,7 @@ public class GeneratedMapGenerator : MapGeneratorBase
             float ratio = wallThicknessPx * 1.5f / bounds.Height;
             paint2.TextSize = ratio * paint2.TextSize;
         }
-        canvas.DrawText(Signature, ImageWidth - 2 * wallThicknessPx, imageHeightPx - (int) (2.0 * wallThicknessPx + 0.5), paint2);
+        canvas.DrawText(Signature, ImageWidth - 2 * wallThicknessPx, imageHeightPx - (int)(2.0 * wallThicknessPx + 0.5), paint2);
 
         using var image = surface.Snapshot();
         using var data = image.Encode(SKEncodedImageFormat.Png, 100);

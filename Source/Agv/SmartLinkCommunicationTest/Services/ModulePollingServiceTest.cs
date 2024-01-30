@@ -20,7 +20,7 @@ public class ModulePollingServiceTest
             .Build();
 
         await fixture.ModulePollingService.Poll(CancellationToken.None).ShouldNotThrowAsync();
-        
+
         fixture.SmartLinkService.Verify(service => service.GetDataAsync(), Times.Once);
         fixture.SmartLinkResponseHandler.Verify(handler => handler.HandleAsync(It.IsAny<SmartLinkData>()), Times.Once);
     }

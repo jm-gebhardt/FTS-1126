@@ -63,7 +63,7 @@ public class ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> : M
         AddServices(s => s.AddTransient<IMapper>(_ => Mock.Of<IMapper>()));
         if (bus != null)
         {
-            AddServices(s =>s.AddTransient(_ => bus));
+            AddServices(s => s.AddTransient(_ => bus));
         }
         else
         {

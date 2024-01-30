@@ -17,7 +17,7 @@ public class ActionStartedConsumerTest
     public async Task Receiving_ActionStarted_SendsAssignedActionGroupChanged()
     {
         var agvCorrelationId = Guid.NewGuid();
-        var agvRoute = new CurrentAgvRouteReadModel(agvCorrelationId, new[] {"1", "2"});
+        var agvRoute = new CurrentAgvRouteReadModel(agvCorrelationId, new[] { "1", "2" });
         var fixture = new ConsumerHubTestFixture<ActionStartedConsumer, IAgvPublisher>();
         Mock<IAgvRouteRetrievalService> agvRouteRetrievalService = fixture.AgvRouteServiceMock;
         agvRouteRetrievalService.Setup(m => m.GetAgvRouteAsync(agvCorrelationId, It.IsAny<string?>())).ReturnsAsync(agvRoute);

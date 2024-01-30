@@ -105,7 +105,7 @@ public static class PhysicsHelper
         {
             throw new ArgumentOutOfRangeException(nameof(distance), distance, "Distance can not be negative.");
         }
-        
+
         return Math.Sqrt(Math.Pow(initialVelocity, 2) + 2 * acceleration * distance);
     }
 

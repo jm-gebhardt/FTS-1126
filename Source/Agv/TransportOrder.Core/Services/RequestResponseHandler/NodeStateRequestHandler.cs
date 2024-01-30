@@ -10,7 +10,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHan
 /// Represents a handler for node-related requests.
 /// </summary>
 [UsedImplicitly]
-public class NodeStateRequestHandler: IConsumer<GetMapNodeStates>
+public class NodeStateRequestHandler : IConsumer<GetMapNodeStates>
 {
     private readonly INodeRepository _nodeRepository;
 

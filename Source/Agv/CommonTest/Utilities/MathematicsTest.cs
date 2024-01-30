@@ -22,7 +22,7 @@ public class MathematicsTest
     [TestMethod]
     public void AngleBetween_ValidData_CorrectResult()
     {
-        Mathematics.AngleBetween(new Vector2(1, 0), new Vector2( -1, 0)).ShouldBe(Math.PI, 0.0001);
+        Mathematics.AngleBetween(new Vector2(1, 0), new Vector2(-1, 0)).ShouldBe(Math.PI, 0.0001);
         Mathematics.AngleBetween(new Vector2(1, 0), new Vector2(1, 0)).ShouldBe(0, 0.0001);
         Mathematics.AngleBetween(new Vector2(1, 0), new Vector2(0, 1)).ShouldBe(Math.PI / 2d, 0.0001);
         Mathematics.AngleBetween(new Vector2(-1, 0), new Vector2(1, 0)).ShouldBe(Math.PI, 0.0001);
@@ -32,11 +32,11 @@ public class MathematicsTest
     [TestMethod]
     public void EuclideanDistance_ValidInput_CorrectResult()
     {
-        Mathematics.EuclideanDistance(new GraphNode("") {X=0, Y=0, Z=0}, new GraphNode("") { X=1, Y=0, Z=0 }).ShouldBe(1, 0.0001);
-        Mathematics.EuclideanDistance(new GraphNode("") {X=0, Y=0, Z=0}, new GraphNode("") { X=0, Y=0, Z=0 }).ShouldBe(0, 0.0001);
-        Mathematics.EuclideanDistance(new GraphNode("") {X=0, Y=0, Z=0}, new GraphNode("") { X=0, Y=1, Z=0 }).ShouldBe(1, 0.0001);
-        Mathematics.EuclideanDistance(new GraphNode("") {X=0, Y=0, Z=0}, new GraphNode("") { X=0, Y=0, Z=1 }).ShouldBe(1, 0.0001);
-        Mathematics.EuclideanDistance(new GraphNode("") {X=0, Y=0, Z=1}, new GraphNode("") { X=0, Y=0, Z=-1 }).ShouldBe(2, 0.0001);
-        Mathematics.EuclideanDistance(new GraphNode("") {X=0, Y=1, Z=0}, new GraphNode("") { X=1, Y=0, Z=0 }).ShouldBe(1.4142, 0.0001);
+        Mathematics.EuclideanDistance(new GraphNode("") { X = 0, Y = 0, Z = 0 }, new GraphNode("") { X = 1, Y = 0, Z = 0 }).ShouldBe(1, 0.0001);
+        Mathematics.EuclideanDistance(new GraphNode("") { X = 0, Y = 0, Z = 0 }, new GraphNode("") { X = 0, Y = 0, Z = 0 }).ShouldBe(0, 0.0001);
+        Mathematics.EuclideanDistance(new GraphNode("") { X = 0, Y = 0, Z = 0 }, new GraphNode("") { X = 0, Y = 1, Z = 0 }).ShouldBe(1, 0.0001);
+        Mathematics.EuclideanDistance(new GraphNode("") { X = 0, Y = 0, Z = 0 }, new GraphNode("") { X = 0, Y = 0, Z = 1 }).ShouldBe(1, 0.0001);
+        Mathematics.EuclideanDistance(new GraphNode("") { X = 0, Y = 0, Z = 1 }, new GraphNode("") { X = 0, Y = 0, Z = -1 }).ShouldBe(2, 0.0001);
+        Mathematics.EuclideanDistance(new GraphNode("") { X = 0, Y = 1, Z = 0 }, new GraphNode("") { X = 1, Y = 0, Z = 0 }).ShouldBe(1.4142, 0.0001);
     }
 }

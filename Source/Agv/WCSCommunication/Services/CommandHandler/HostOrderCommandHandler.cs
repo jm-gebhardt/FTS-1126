@@ -14,7 +14,7 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services.CommandHandler;
 /// Provides handlers for host order related commands.
 /// </summary>
 [UsedImplicitly]
-public class HostOrderCommandHandler: 
+public class HostOrderCommandHandler :
     IConsumer<CreateHostOrder>,
     IConsumer<RemoveInvalidHostOrder>,
     IConsumer<FinishHostOrder>,
@@ -52,7 +52,7 @@ public class HostOrderCommandHandler:
             hostOrder.CorrelationId,
             hostOrder.OrderId,
             hostOrder.Actions.Select(a => new AgvAction(a.CorrelationId, a.ActionType, a.Node, hostOrder.CorrelationId)
-                {Sequence = a.SequenceNumber}).ToList(),
+                { Sequence = a.SequenceNumber }).ToList(),
             orderDetails.Creator.ConvertToActionGroupCreator(),
             orderDetails.CreationDate);
         await context.Publish(new QueueActionGroup(actionGroup, false));

@@ -8,7 +8,7 @@ namespace Gebhardt.StoreWare.Agv.CommonTest.Utilities;
 public class PhysicsHelperTest
 {
     [TestMethod]
-    [DataRow(65d, 3d, 704d + 1/6d)]
+    [DataRow(65d, 3d, 704d + 1 / 6d)]
     [DataRow(0d, 100d, 0d)]
     [DataRow(100d, 25d, 200d)]
     public void DistanceToVelocity_ValidInput_CorrectResult(double maxVelocity, double acceleration, double expectedDistance)
@@ -40,7 +40,7 @@ public class PhysicsHelperTest
     [DataRow(10d, 100d, 1d, 4.373253d)]
     [DataRow(25d, 10d, 12d, 0.535086d)]
     [DataRow(10d, 0d, 100d, 0d)]
-    [DataRow(1d, 10d,  3d, 2.38516d)]
+    [DataRow(1d, 10d, 3d, 2.38516d)]
     [DataRow(1d, 10d, 2d, 2.89897d)]
     [DataRow(1d, 10d, 1d, 3.58257d)]
     [DataRow(1d, 10d, 0d, 4.47213d)]
@@ -118,7 +118,7 @@ public class PhysicsHelperTest
         deceleration.ShouldBe(5, 0.0001);
         maxVel.ShouldBe(0, 0.0001);
     }
-    
+
     [TestMethod]
     public void CalculateAccelerateMaxVelocityDecelerateSections_ExactSpaceToDecelerateFromInitialVelocity_DecelerateSectionEqualToDistance()
     {
@@ -162,7 +162,7 @@ public class PhysicsHelperTest
         Should.Throw<ArgumentOutOfRangeException>(() => PhysicsHelper.VelocityAfterDistanceFromVelocity(1, -1, 1));
         Should.Throw<ArgumentOutOfRangeException>(() => PhysicsHelper.VelocityAfterDistanceFromVelocity(-1, 1, 1));
     }
-    
+
     [TestMethod]
     public void CalculateTimeToAccelerateAndMoveAtMaxVelocity_InvalidData_ThrowArgumentOutOfRangeException()
     {

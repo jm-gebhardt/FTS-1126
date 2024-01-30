@@ -65,7 +65,7 @@ public class ReasonTest
     [TestMethod]
     public void Reason_WithNullParameters_ShouldFillOutWithNull()
     {
-        var reason = new Reason("Error {0} occurred", (string?) null);
+        var reason = new Reason("Error {0} occurred", (string?)null);
 
         reason.ToString().ShouldBe("Error  occurred");
     }

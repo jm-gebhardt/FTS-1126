@@ -64,8 +64,8 @@ public class FixedGraphGenerator : GraphGeneratorBase
     /// pi
     private const float North = 0f;
 
-    private const float East = (float) Math.PI / 2f;
-    private const float West = 3f * (float) Math.PI / 2f;
+    private const float East = (float)Math.PI / 2f;
+    private const float West = 3f * (float)Math.PI / 2f;
 
     private const string MainMapName = "Charge Park";
     private const string SubMapName = "Stations";
@@ -77,7 +77,7 @@ public class FixedGraphGenerator : GraphGeneratorBase
     protected override Guid GraphId { get; } = "FixedGraph".ToGuid();
 
     /// <inheritdoc cref="FixedGraphGenerator" />
-    public FixedGraphGenerator(IMapGenerator mapGenerator) : base(new[] {Pdqa, PGrinder, PDrill, PMilling}, new[] {DPaint, DPress, DSaw, Pdqa}, mapGenerator)
+    public FixedGraphGenerator(IMapGenerator mapGenerator) : base(new[] { Pdqa, PGrinder, PDrill, PMilling }, new[] { DPaint, DPress, DSaw, Pdqa }, mapGenerator)
     {
     }
 
@@ -86,46 +86,46 @@ public class FixedGraphGenerator : GraphGeneratorBase
     {
         var nodes = new GraphNode[]
         {
-            new(Park1) {Type = AgvGraph.NodeType.Park, X = 19.375f, Y = 43.125f, Z = 0f, Theta = West},
-            new(Park2) {Type = AgvGraph.NodeType.Park, X = 33.125f, Y = 43.125f, Z = 0f, Theta = East},
-            new(Park3) {Type = AgvGraph.NodeType.Park, X = 19.375f, Y = 34.375f, Z = 0f, Theta = West},
-            new(Park4) {Type = AgvGraph.NodeType.Park, X = 31.875f, Y = 34.375f, Z = 0f, Theta = East},
-            new(Park5) {Type = AgvGraph.NodeType.Park, X = 19.375f, Y = 29.375f, Z = 0f, Theta = West},
-            new(Park6) {Type = AgvGraph.NodeType.Park, X = 31.875f, Y = 29.375f, Z = 0f, Theta = East},
+            new(Park1) { Type = AgvGraph.NodeType.Park, X = 19.375f, Y = 43.125f, Z = 0f, Theta = West },
+            new(Park2) { Type = AgvGraph.NodeType.Park, X = 33.125f, Y = 43.125f, Z = 0f, Theta = East },
+            new(Park3) { Type = AgvGraph.NodeType.Park, X = 19.375f, Y = 34.375f, Z = 0f, Theta = West },
+            new(Park4) { Type = AgvGraph.NodeType.Park, X = 31.875f, Y = 34.375f, Z = 0f, Theta = East },
+            new(Park5) { Type = AgvGraph.NodeType.Park, X = 19.375f, Y = 29.375f, Z = 0f, Theta = West },
+            new(Park6) { Type = AgvGraph.NodeType.Park, X = 31.875f, Y = 29.375f, Z = 0f, Theta = East },
 
-            new(Charge0) {Type = AgvGraph.NodeType.Charge, X = 46.875f, Y = 44.375f, Z = 0f, Theta = North},
-            new(Charge1) {Type = AgvGraph.NodeType.Charge, X = 46.875f, Y = 39.375f, Z = 0f, Theta = East},
-            new(Charge2) {Type = AgvGraph.NodeType.Charge, X = 46.875f, Y = 31.875f, Z = 0f, Theta = East},
-            new(Charge3) {Type = AgvGraph.NodeType.Charge, X = 46.875f, Y = 24.375f, Z = 0f, Theta = East},
+            new(Charge0) { Type = AgvGraph.NodeType.Charge, X = 46.875f, Y = 44.375f, Z = 0f, Theta = North },
+            new(Charge1) { Type = AgvGraph.NodeType.Charge, X = 46.875f, Y = 39.375f, Z = 0f, Theta = East },
+            new(Charge2) { Type = AgvGraph.NodeType.Charge, X = 46.875f, Y = 31.875f, Z = 0f, Theta = East },
+            new(Charge3) { Type = AgvGraph.NodeType.Charge, X = 46.875f, Y = 24.375f, Z = 0f, Theta = East },
 
-            new(DPaint) {Type = AgvGraph.NodeType.Drop, X = 93.295f, Y = 59.375f, Z = 0f, Theta = East},
-            new(DPress) {Type = AgvGraph.NodeType.Drop, X = 93.295f, Y = 68.125f, Z = 0f, Theta = East},
-            new(DSaw) {Type = AgvGraph.NodeType.Drop, X = 93.17f, Y = 44.375f, Z = 0f, Theta = East},
+            new(DPaint) { Type = AgvGraph.NodeType.Drop, X = 93.295f, Y = 59.375f, Z = 0f, Theta = East },
+            new(DPress) { Type = AgvGraph.NodeType.Drop, X = 93.295f, Y = 68.125f, Z = 0f, Theta = East },
+            new(DSaw) { Type = AgvGraph.NodeType.Drop, X = 93.17f, Y = 44.375f, Z = 0f, Theta = East },
 
-            new(PDrill) {Type = AgvGraph.NodeType.Pick, X = 14.375f, Y = 68.125f, Z = 0f, Theta = West},
-            new(PGrinder) {Type = AgvGraph.NodeType.Pick, X = 14.375f, Y = 50.625f, Z = 0f, Theta = West},
-            new(PMilling) {Type = AgvGraph.NodeType.Pick, X = 14.375f, Y = 59.375f, Z = 0f, Theta = West},
+            new(PDrill) { Type = AgvGraph.NodeType.Pick, X = 14.375f, Y = 68.125f, Z = 0f, Theta = West },
+            new(PGrinder) { Type = AgvGraph.NodeType.Pick, X = 14.375f, Y = 50.625f, Z = 0f, Theta = West },
+            new(PMilling) { Type = AgvGraph.NodeType.Pick, X = 14.375f, Y = 59.375f, Z = 0f, Theta = West },
 
-            new(Pdqa) {Type = AgvGraph.NodeType.PickDrop, X = 92.965f, Y = 26.7425f, Z = 0f, Theta = (float) Mathematics.ConvertToRadians(73.4)},
+            new(Pdqa) { Type = AgvGraph.NodeType.PickDrop, X = 92.965f, Y = 26.7425f, Z = 0f, Theta = (float)Mathematics.ConvertToRadians(73.4) },
 
-            new(Way0009) {Type = AgvGraph.NodeType.WayPoint, X = 39.375f, Y = 68.125f, Z = 0f, Theta = 0},
-            new(Way0010) {Type = AgvGraph.NodeType.WayPoint, X = 64.375f, Y = 68.125f, Z = 0f, Theta = 0},
-            new(Way0011) {Type = AgvGraph.NodeType.WayPoint, X = 88.325f, Y = 68.125f, Z = 0f, Theta = 0},
-            new(Way0012) {Type = AgvGraph.NodeType.WayPoint, X = 21.875f, Y = 68.125f, Z = 0f, Theta = 0},
-            new(Way0013) {Type = AgvGraph.NodeType.WayPoint, X = 21.875f, Y = 59.375f, Z = 0f, Theta = 0},
-            new(Way0014) {Type = AgvGraph.NodeType.WayPoint, X = 33.125f, Y = 59.375f, Z = 0f, Theta = 0},
-            new(Way0015) {Type = AgvGraph.NodeType.WayPoint, X = 76.875f, Y = 59.375f, Z = 0f, Theta = 0},
-            new(Way0016) {Type = AgvGraph.NodeType.WayPoint, X = 88.325f, Y = 59.375f, Z = 0f, Theta = 0},
-            new(Way0017) {Type = AgvGraph.NodeType.WayPoint, X = 88.2f, Y = 44.375f, Z = 0f, Theta = 0},
-            new(Way0018) {Type = AgvGraph.NodeType.WayPoint, X = 46.875f, Y = 49.375f, Z = 0f, Theta = 0},
-            new(Way0022) {Type = AgvGraph.NodeType.WayPoint, X = 40.625f, Y = 39.375f, Z = 0f, Theta = 0},
-            new(Way0023) {Type = AgvGraph.NodeType.WayPoint, X = 40.625f, Y = 31.875f, Z = 0f, Theta = 0},
-            new(Way0024) {Type = AgvGraph.NodeType.WayPoint, X = 40.625f, Y = 24.375f, Z = 0f, Theta = 0},
-            new(Way0028) {Type = AgvGraph.NodeType.WayPoint, X = 25.625f, Y = 34.375f, Z = 0f, Theta = 0},
-            new(Way0029) {Type = AgvGraph.NodeType.WayPoint, X = 25.625f, Y = 43.125f, Z = 0f, Theta = 0},
-            new(Way0030) {Type = AgvGraph.NodeType.WayPoint, X = 25.625f, Y = 29.375f, Z = 0f, Theta = 0},
-            new(Way0032) {Type = AgvGraph.NodeType.WayPoint, X = 21.875f, Y = 50.625f, Z = 0f, Theta = 0},
-            new(Way0123) {Type = AgvGraph.NodeType.WayPoint, X = 88.325f, Y = 28.125f, Z = 0f, Theta = 0}
+            new(Way0009) { Type = AgvGraph.NodeType.WayPoint, X = 39.375f, Y = 68.125f, Z = 0f, Theta = 0 },
+            new(Way0010) { Type = AgvGraph.NodeType.WayPoint, X = 64.375f, Y = 68.125f, Z = 0f, Theta = 0 },
+            new(Way0011) { Type = AgvGraph.NodeType.WayPoint, X = 88.325f, Y = 68.125f, Z = 0f, Theta = 0 },
+            new(Way0012) { Type = AgvGraph.NodeType.WayPoint, X = 21.875f, Y = 68.125f, Z = 0f, Theta = 0 },
+            new(Way0013) { Type = AgvGraph.NodeType.WayPoint, X = 21.875f, Y = 59.375f, Z = 0f, Theta = 0 },
+            new(Way0014) { Type = AgvGraph.NodeType.WayPoint, X = 33.125f, Y = 59.375f, Z = 0f, Theta = 0 },
+            new(Way0015) { Type = AgvGraph.NodeType.WayPoint, X = 76.875f, Y = 59.375f, Z = 0f, Theta = 0 },
+            new(Way0016) { Type = AgvGraph.NodeType.WayPoint, X = 88.325f, Y = 59.375f, Z = 0f, Theta = 0 },
+            new(Way0017) { Type = AgvGraph.NodeType.WayPoint, X = 88.2f, Y = 44.375f, Z = 0f, Theta = 0 },
+            new(Way0018) { Type = AgvGraph.NodeType.WayPoint, X = 46.875f, Y = 49.375f, Z = 0f, Theta = 0 },
+            new(Way0022) { Type = AgvGraph.NodeType.WayPoint, X = 40.625f, Y = 39.375f, Z = 0f, Theta = 0 },
+            new(Way0023) { Type = AgvGraph.NodeType.WayPoint, X = 40.625f, Y = 31.875f, Z = 0f, Theta = 0 },
+            new(Way0024) { Type = AgvGraph.NodeType.WayPoint, X = 40.625f, Y = 24.375f, Z = 0f, Theta = 0 },
+            new(Way0028) { Type = AgvGraph.NodeType.WayPoint, X = 25.625f, Y = 34.375f, Z = 0f, Theta = 0 },
+            new(Way0029) { Type = AgvGraph.NodeType.WayPoint, X = 25.625f, Y = 43.125f, Z = 0f, Theta = 0 },
+            new(Way0030) { Type = AgvGraph.NodeType.WayPoint, X = 25.625f, Y = 29.375f, Z = 0f, Theta = 0 },
+            new(Way0032) { Type = AgvGraph.NodeType.WayPoint, X = 21.875f, Y = 50.625f, Z = 0f, Theta = 0 },
+            new(Way0123) { Type = AgvGraph.NodeType.WayPoint, X = 88.325f, Y = 28.125f, Z = 0f, Theta = 0 }
         };
 
         // metric = length/maxEdgeVelocity
@@ -152,7 +152,7 @@ public class FixedGraphGenerator : GraphGeneratorBase
             CreateBezier1(Way0013, Way0009, 22.75d, 67.25d, nodes),
             CreateDirect(Way0013, Way0012, nodes),
             CreateDirect(Way0014, Way0013, nodes),
-            CreatePolypath(Way0014, Way0029, 40.875f, new List<EdgeCoefficient> {new(32.25d, 50d)}),
+            CreatePolypath(Way0014, Way0029, 40.875f, new List<EdgeCoefficient> { new(32.25d, 50d) }),
             CreateBezier1(Way0014, Way0032, 31.375d, 51.125d, nodes),
             CreateDirect(Way0015, Way0014, nodes),
 
@@ -169,7 +169,7 @@ public class FixedGraphGenerator : GraphGeneratorBase
             CreateBezier1(Way0018, Way0022, 40.625d, 48.4d, nodes),
             CreateDirect(Way0022, Way0023, nodes),
             CreateDirect(Way0023, Way0024, nodes),
-            CreatePolypath(Way0024, Way0030, 25.77f, new List<EdgeCoefficient> {new(31.25d, 25.125d)}),
+            CreatePolypath(Way0024, Way0030, 25.77f, new List<EdgeCoefficient> { new(31.25d, 25.125d) }),
             CreateDirect(Way0028, Way0029, nodes),
             CreateDirect(Way0029, Way0032, nodes),
             CreateDirect(Way0030, Way0028, nodes),
@@ -208,14 +208,14 @@ public class FixedGraphGenerator : GraphGeneratorBase
     {
         var sourceNode = nodes.Single(n => n.Id == fromNodeId);
         var targetNode = nodes.Single(n => n.Id == toNodeId);
-        float length = (float) Mathematics.EuclideanDistance(sourceNode, targetNode);
+        float length = (float)Mathematics.EuclideanDistance(sourceNode, targetNode);
         return GraphEdge.CreateDirect(fromNodeId, toNodeId, length, GraphHelper.ToGuid(fromNodeId, length, toNodeId));
     }
 
     /// <inheritdoc cref="GraphEdge.CreateBezier1"/>
     private static GraphEdge CreateBezier1(string fromNodeId, string toNodeId, double x, double y, GraphNode[] nodes)
     {
-        float length = CalculateBezierLength(nodes, fromNodeId, toNodeId, new List<Vector2> {new((float) x, (float) y)});
+        float length = CalculateBezierLength(nodes, fromNodeId, toNodeId, new List<Vector2> { new((float)x, (float)y) });
         return GraphEdge.CreateBezier1(fromNodeId, toNodeId, length, x, y, GraphHelper.ToGuid(fromNodeId, length, toNodeId));
     }
 
@@ -225,7 +225,7 @@ public class FixedGraphGenerator : GraphGeneratorBase
     /// <inheritdoc cref="GraphEdge.CreateBezier2"/>
     private static GraphEdge CreateBezier2(string fromNodeId, string toNodeId, double x1, double y1, double x2, double y2, GraphNode[] nodes)
     {
-        float length = CalculateBezierLength(nodes, fromNodeId, toNodeId, new List<Vector2> {new((float) x1, (float) y1), new((float) x2, (float) y2)});
+        float length = CalculateBezierLength(nodes, fromNodeId, toNodeId, new List<Vector2> { new((float)x1, (float)y1), new((float)x2, (float)y2) });
         return GraphEdge.CreateBezier2(fromNodeId, toNodeId, length, x1, y1, x2, y2, GraphHelper.ToGuid(fromNodeId, length, toNodeId));
     }
 
@@ -239,22 +239,22 @@ public class FixedGraphGenerator : GraphGeneratorBase
         {
             yield return map;
         }
-        
+
         List<GraphNode> nodes = globalGraph.Nodes.Where(n => n.X <= 48).ToList();
         var graph = new Graph
         {
             Nodes = nodes,
             Edges = globalGraph.Edges.Where(e => nodes.Any(n => n.Id == e.FromNodeId) && nodes.Any(n => n.Id == e.ToNodeId)).ToList()
         };
-        
+
         yield return MapGenerator.Generate(_mainMapId, MainMapName, graph);
-        
+
         graph = new Graph()
         {
             Nodes = globalGraph.Nodes.Where(n => !graph.Nodes.Contains(n)).ToList(),
             Edges = globalGraph.Edges.Where(n => !graph.Edges.Contains(n)).ToList()
         };
-        
+
         yield return MapGenerator.Generate(_subMapId, SubMapName, graph);
     }
 
@@ -263,11 +263,11 @@ public class FixedGraphGenerator : GraphGeneratorBase
         var from = Array.Find(nodes, n => n.Id == fromNode);
         var to = Array.Find(nodes, n => n.Id == toNode);
 
-        List<Vector2> controlPolygon = new() {from!.AsVector2()};
+        List<Vector2> controlPolygon = new() { from!.AsVector2() };
         controlPolygon.AddRange(controlPoints);
         controlPolygon.Add(to!.AsVector2());
 
         var bezier = new Bezier(controlPolygon);
-        return (float) bezier.GetLength(100);
+        return (float)bezier.GetLength(100);
     }
 }

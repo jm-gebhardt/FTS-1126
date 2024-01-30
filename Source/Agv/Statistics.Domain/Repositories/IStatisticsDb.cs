@@ -6,7 +6,7 @@ namespace Statistics.Domain.Repositories;
 /// <summary>
 /// Provides a unit-of-work for the statistics data access.
 /// </summary>
-public interface IStatisticsDb: IUnitOfWork
+public interface IStatisticsDb : IUnitOfWork
 {
     /// <summary>
     /// The <see cref="Map"/> repository.

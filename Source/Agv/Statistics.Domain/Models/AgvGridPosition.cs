@@ -40,7 +40,7 @@ public class AgvGridPosition
     /// <summary>
     /// The agv id.
     /// </summary>
-    public string AgvId {get; init; }
+    public string AgvId { get; init; }
 
     /// <summary>
     /// The time the agv was at this position.

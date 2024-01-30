@@ -9,7 +9,7 @@ namespace Statistics.WebApi.Profiles;
 /// Profile for mapping the <see cref="PositionFrequencyDto"/>.
 /// </summary>
 [UsedImplicitly]
-public class PositionFrequencyProfile: Profile
+public class PositionFrequencyProfile : Profile
 {
     /// <inheritdoc />
     public PositionFrequencyProfile()

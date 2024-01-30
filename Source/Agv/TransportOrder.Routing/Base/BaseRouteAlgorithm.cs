@@ -14,7 +14,7 @@ public abstract class BaseRouteAlgorithm : IRouteAlgorithm
     protected const double MaxVelocityTurnOnSpotFallback = Math.PI;
     protected const double AccelerationFallback = 1;
     protected const double MaxVelocityTurnFallback = 1;
-    
+
     private readonly IRoutingPlausibilityChecker? _routingPlausibilityChecker;
 
     /// <summary>List of edges coming from the AGV graph.</summary>

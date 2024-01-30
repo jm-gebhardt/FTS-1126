@@ -35,16 +35,16 @@ public class AStarTest
         _graph = new AgvGraph(Guid.Empty,
             new GraphNode[]
             {
-                new("1") {Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 5f, Z = 0f},
-                new("2") {Type = AgvGraph.NodeType.PickDrop, X = 1f, Y = 5f, Z = 0f},
-                new("3") {Type = AgvGraph.NodeType.PickDrop, X = 1f, Y = 2f, Z = 0f},
-                new("4") {Type = AgvGraph.NodeType.PickDrop, X = 3f, Y = 3f, Z = 0f},
-                new("5") {Type = AgvGraph.NodeType.PickDrop, X = 3f, Y = 6f, Z = 0f},
-                new("6") {Type = AgvGraph.NodeType.PickDrop, X = 3f, Y = 2f, Z = 0f},
-                new("7") {Type = AgvGraph.NodeType.PickDrop, X = 6f, Y = 0f, Z = 0f},
-                new("8") {Type = AgvGraph.NodeType.PickDrop, X = 7f, Y = 1f, Z = 0f},
-                new("9") {Type = AgvGraph.NodeType.PickDrop, X = 8f, Y = 2f, Z = 0f},
-                new("10") {Type = AgvGraph.NodeType.PickDrop, X = 8f, Y = 5f, Z = 0f}
+                new("1") { Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 5f, Z = 0f },
+                new("2") { Type = AgvGraph.NodeType.PickDrop, X = 1f, Y = 5f, Z = 0f },
+                new("3") { Type = AgvGraph.NodeType.PickDrop, X = 1f, Y = 2f, Z = 0f },
+                new("4") { Type = AgvGraph.NodeType.PickDrop, X = 3f, Y = 3f, Z = 0f },
+                new("5") { Type = AgvGraph.NodeType.PickDrop, X = 3f, Y = 6f, Z = 0f },
+                new("6") { Type = AgvGraph.NodeType.PickDrop, X = 3f, Y = 2f, Z = 0f },
+                new("7") { Type = AgvGraph.NodeType.PickDrop, X = 6f, Y = 0f, Z = 0f },
+                new("8") { Type = AgvGraph.NodeType.PickDrop, X = 7f, Y = 1f, Z = 0f },
+                new("9") { Type = AgvGraph.NodeType.PickDrop, X = 8f, Y = 2f, Z = 0f },
+                new("10") { Type = AgvGraph.NodeType.PickDrop, X = 8f, Y = 5f, Z = 0f }
             },
             new[]
             {
@@ -105,7 +105,7 @@ public class AStarTest
             {
                 if (c == ' ')
                 {
-                    var next = new GraphNode($"{x:D2}/{y:D2}") {X = x, Y = y, Z = 0f, Type = AgvGraph.NodeType.WayPoint};
+                    var next = new GraphNode($"{x:D2}/{y:D2}") { X = x, Y = y, Z = 0f, Type = AgvGraph.NodeType.WayPoint };
                     nodes.Add(next);
                     var prev = nodes.SingleOrDefault(n => n.Id == $"{x - 1:D2}/{y:D2}");
                     if (prev != null)
@@ -129,13 +129,13 @@ public class AStarTest
         _wikiExample = new AgvGraph(Guid.Empty,
             new GraphNode[]
             {
-                new("Nairobi") {Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 0f, Z = 0f},
-                new("Tokyo") {Type = AgvGraph.NodeType.PickDrop, X = 42f, Y = 80f, Z = 0f},
-                new("Marseille") {Type = AgvGraph.NodeType.PickDrop, X = 104f, Y = 100f, Z = 0f},
-                new("Berlin") {Type = AgvGraph.NodeType.PickDrop, X = 96f, Y = 60f, Z = 0f},
-                new("Denver") {Type = AgvGraph.NodeType.PickDrop, X = 104f, Y = -10f, Z = 0f},
-                new("Helsinki") {Type = AgvGraph.NodeType.PickDrop, X = 150f, Y = 20f, Z = 0f},
-                new("Rio") {Type = AgvGraph.NodeType.PickDrop, X = 200f, Y = 92f, Z = 0f}
+                new("Nairobi") { Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 0f, Z = 0f },
+                new("Tokyo") { Type = AgvGraph.NodeType.PickDrop, X = 42f, Y = 80f, Z = 0f },
+                new("Marseille") { Type = AgvGraph.NodeType.PickDrop, X = 104f, Y = 100f, Z = 0f },
+                new("Berlin") { Type = AgvGraph.NodeType.PickDrop, X = 96f, Y = 60f, Z = 0f },
+                new("Denver") { Type = AgvGraph.NodeType.PickDrop, X = 104f, Y = -10f, Z = 0f },
+                new("Helsinki") { Type = AgvGraph.NodeType.PickDrop, X = 150f, Y = 20f, Z = 0f },
+                new("Rio") { Type = AgvGraph.NodeType.PickDrop, X = 200f, Y = 92f, Z = 0f }
             },
             new[]
             {
@@ -186,7 +186,7 @@ public class AStarTest
 
         var route = aStar.CalculateRoute("Nairobi", "Rio");
         route.ShouldNotBeNull();
-        route.Nodes.ShouldBe(new[] {"Nairobi", "Tokyo", "Marseille", "Rio"});
+        route.Nodes.ShouldBe(new[] { "Nairobi", "Tokyo", "Marseille", "Rio" });
         route.Costs.ShouldBe(291.8725786, 0.00001f);
     }
 
@@ -197,7 +197,7 @@ public class AStarTest
 
         var route = aStar.CalculateRoute("Nairobi", "Nairobi");
         route.ShouldNotBeNull();
-        route.Nodes.ShouldBe(new[] {"Nairobi"});
+        route.Nodes.ShouldBe(new[] { "Nairobi" });
         route.Costs.ShouldBe(0f, 0.00001f);
     }
 
@@ -208,7 +208,7 @@ public class AStarTest
 
         var route = aStar.CalculateRoute("Denver", "Nairobi", "Rio");
         route.ShouldNotBeNull();
-        route.Nodes.ShouldBe(new[] {"Denver", "Nairobi", "Tokyo", "Marseille", "Rio"});
+        route.Nodes.ShouldBe(new[] { "Denver", "Nairobi", "Tokyo", "Marseille", "Rio" });
         route.Costs.ShouldBe(289 + 145 + 3.3725786, 0.00001f);
     }
 
@@ -217,11 +217,11 @@ public class AStarTest
     {
         var aStar = new AStar(_wikiExample, _agvData, RoutingPlausibilityChecker);
 
-        string[] waypoints = {"Denver", "Nairobi", "Nairobi", "Rio"}; // (Denver => Nairobi) + (Nairobi => Rio)
+        string[] waypoints = { "Denver", "Nairobi", "Nairobi", "Rio" }; // (Denver => Nairobi) + (Nairobi => Rio)
 
         var route = aStar.CalculateRoute(waypoints);
         route.ShouldNotBeNull();
-        route.Nodes.ShouldBe(new[] {"Denver", "Nairobi", "Tokyo", "Marseille", "Rio"});
+        route.Nodes.ShouldBe(new[] { "Denver", "Nairobi", "Tokyo", "Marseille", "Rio" });
         route.Costs.ShouldBe(289 + 145 + 3.3725786, 0.00001f);
     }
 
@@ -316,8 +316,8 @@ public class AStarTest
         var graph = new AgvGraph(Guid.Empty,
             new[]
             {
-                new GraphNode("1") {Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 5f, Z = 0f},
-                new GraphNode("2") {Type = AgvGraph.NodeType.Drop, X = 1f, Y = 5f, Z = 0f}
+                new GraphNode("1") { Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 5f, Z = 0f },
+                new GraphNode("2") { Type = AgvGraph.NodeType.Drop, X = 1f, Y = 5f, Z = 0f }
             },
             new[]
             {
@@ -345,9 +345,9 @@ public class AStarTest
         agvGraphTextFixtureMock.Setup(method => method.GetAllPossibleRoutesOrdered())
             .Returns(new[]
             {
-                new[] {"Nairobi", "Tokyo", "Marseille", "Rio"},
-                new[] {"Nairobi", "Tokyo", "Berlin", "Rio"},
-                new[] {"Nairobi", "Denver", "Helsinki", "Rio"}
+                new[] { "Nairobi", "Tokyo", "Marseille", "Rio" },
+                new[] { "Nairobi", "Tokyo", "Berlin", "Rio" },
+                new[] { "Nairobi", "Denver", "Helsinki", "Rio" }
             });
         var agvGraphTextFixture = agvGraphTextFixtureMock.Object;
 
@@ -361,7 +361,7 @@ public class AStarTest
         agvGraphTextFixtureMock.Setup(method => method.GetAllPossibleRoutesOrdered())
             .Returns(new[]
             {
-                new[] {"Nairobi", "Oslo", "LoneDestination"}
+                new[] { "Nairobi", "Oslo", "LoneDestination" }
             });
         var agvGraphTextFixture = agvGraphTextFixtureMock.Object;
 
@@ -385,16 +385,16 @@ public class AStarTest
         var graph = new AgvGraph(Guid.Empty,
             new GraphNode[]
             {
-                new("1") {Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 5f, Z = 0f},
-                new("2") {Type = AgvGraph.NodeType.PickDrop, X = 1f, Y = 5f, Z = 0f},
-                new("3") {Type = AgvGraph.NodeType.PickDrop, X = 1f, Y = 2f, Z = 0f},
-                new("4") {Type = AgvGraph.NodeType.PickDrop, X = 3f, Y = 3f, Z = 0f},
-                new("5") {Type = AgvGraph.NodeType.PickDrop, X = 3f, Y = 6f, Z = 0f},
-                new("6") {Type = AgvGraph.NodeType.PickDrop, X = 3f, Y = 2f, Z = 0f},
-                new("7") {Type = AgvGraph.NodeType.PickDrop, X = 6f, Y = 0f, Z = 0f},
-                new("8") {Type = AgvGraph.NodeType.PickDrop, X = 7f, Y = 1f, Z = 0f},
-                new("9") {Type = AgvGraph.NodeType.PickDrop, X = 8f, Y = 2f, Z = 0f},
-                new("10") {Type = AgvGraph.NodeType.PickDrop, X = 8f, Y = 5f, Z = 0f}
+                new("1") { Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 5f, Z = 0f },
+                new("2") { Type = AgvGraph.NodeType.PickDrop, X = 1f, Y = 5f, Z = 0f },
+                new("3") { Type = AgvGraph.NodeType.PickDrop, X = 1f, Y = 2f, Z = 0f },
+                new("4") { Type = AgvGraph.NodeType.PickDrop, X = 3f, Y = 3f, Z = 0f },
+                new("5") { Type = AgvGraph.NodeType.PickDrop, X = 3f, Y = 6f, Z = 0f },
+                new("6") { Type = AgvGraph.NodeType.PickDrop, X = 3f, Y = 2f, Z = 0f },
+                new("7") { Type = AgvGraph.NodeType.PickDrop, X = 6f, Y = 0f, Z = 0f },
+                new("8") { Type = AgvGraph.NodeType.PickDrop, X = 7f, Y = 1f, Z = 0f },
+                new("9") { Type = AgvGraph.NodeType.PickDrop, X = 8f, Y = 2f, Z = 0f },
+                new("10") { Type = AgvGraph.NodeType.PickDrop, X = 8f, Y = 5f, Z = 0f }
             },
             new[]
             {
@@ -440,20 +440,20 @@ public class AStarTest
             Guid.NewGuid(),
             new List<GraphNode>
             {
-                new("01") {X = 0, Y = 0, Z = 0},
-                new("02Bez") {X = 1, Y = 1, Z = 0}, // Node duplication to differentiate the chosen path.
-                new("02Dir") {X = 1, Y = 1, Z = 0},
-                new("03") {X = 1, Y = 2, Z = 0},
-                new("04") {X = 2, Y = 2, Z = 0}
+                new("01") { X = 0, Y = 0, Z = 0 },
+                new("02Bez") { X = 1, Y = 1, Z = 0 }, // Node duplication to differentiate the chosen path.
+                new("02Dir") { X = 1, Y = 1, Z = 0 },
+                new("03") { X = 1, Y = 2, Z = 0 },
+                new("04") { X = 2, Y = 2, Z = 0 }
             },
             new List<GraphEdge>
             {
-                GraphEdge.CreateDirect("01", "02Dir", (float) Math.Sqrt(2)),
+                GraphEdge.CreateDirect("01", "02Dir", (float)Math.Sqrt(2)),
                 GraphEdge.CreateDirect("02Dir", "03"),
-                GraphEdge.CreateDirect("02Dir", "04", (float) Math.Sqrt(2)),
-                GraphEdge.CreateBezier1("01", "02Bez", (float) bezier.GetLength(100), 1, 0),
+                GraphEdge.CreateDirect("02Dir", "04", (float)Math.Sqrt(2)),
+                GraphEdge.CreateBezier1("01", "02Bez", (float)bezier.GetLength(100), 1, 0),
                 GraphEdge.CreateDirect("02Bez", "03"),
-                GraphEdge.CreateDirect("02Bez", "04", (float) Math.Sqrt(2))
+                GraphEdge.CreateDirect("02Bez", "04", (float)Math.Sqrt(2))
             }
         );
 
@@ -486,15 +486,15 @@ public class AStarTest
             Guid.NewGuid(),
             new List<GraphNode>
             {
-                new("01") {X = 0, Y = 0, Z = 0},
-                new("Bez") {X = 1, Y = 1, Z = 0},
-                new("Dir") {X = 0.9f, Y = 2, Z = 0},
-                new("03") {X = 1, Y = 2, Z = 0}
+                new("01") { X = 0, Y = 0, Z = 0 },
+                new("Bez") { X = 1, Y = 1, Z = 0 },
+                new("Dir") { X = 0.9f, Y = 2, Z = 0 },
+                new("03") { X = 1, Y = 2, Z = 0 }
             },
             new List<GraphEdge>
             {
-                GraphEdge.CreateDirect("01", "Dir", (float) Math.Sqrt(Math.Pow(0.9, 2) + 4)),
-                GraphEdge.CreateBezier1("01", "Bez", (float) bezier.GetLength(100), 1, 0),
+                GraphEdge.CreateDirect("01", "Dir", (float)Math.Sqrt(Math.Pow(0.9, 2) + 4)),
+                GraphEdge.CreateBezier1("01", "Bez", (float)bezier.GetLength(100), 1, 0),
                 GraphEdge.CreateDirect("Bez", "03"),
                 GraphEdge.CreateDirect("Dir", "03", 0.1f)
             }

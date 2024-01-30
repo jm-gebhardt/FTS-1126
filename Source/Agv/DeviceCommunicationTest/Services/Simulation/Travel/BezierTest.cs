@@ -24,7 +24,7 @@ public class BezierTest
 
     private GraphNode Target { get; } = new("Src3") { X = 5, Y = 1 };
 
-    private GraphEdge Edge { get; } = GraphEdge.CreateBezier2("Way2", "Src3", 4,  5, 3,3, 1);
+    private GraphEdge Edge { get; } = GraphEdge.CreateBezier2("Way2", "Src3", 4, 5, 3, 3, 1);
 
     [TestMethod]
     public void Construct_ValidData_PropertiesSet()

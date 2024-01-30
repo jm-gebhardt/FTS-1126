@@ -11,7 +11,7 @@ namespace SmartLinkCommunicationTest.Services;
 public class IoActionExecutionServiceTestFixture
 {
     private readonly List<Action<IServiceCollection>> _serviceActions = new();
-    
+
     /// <summary>
     /// Service provider
     /// </summary>
@@ -21,7 +21,7 @@ public class IoActionExecutionServiceTestFixture
     /// Started TestHarness
     /// </summary>
     private ITestHarness? _testHarness;
-    
+
     public readonly IoActionExecutionService IoActionExecutionService;
 
     public Mock<IBus> Bus { get; } = new();
@@ -35,13 +35,13 @@ public class IoActionExecutionServiceTestFixture
     {
         _serviceActions.Add(services);
     }
-    
+
     public IoActionExecutionServiceTestFixture()
     {
         AddServices(sc => sc.AddTransient(_ => Bus.Object));
         IoActionExecutionService = new IoActionExecutionService(Bus.Object);
     }
-    
+
     public IoActionExecutionServiceTestFixture Build()
     {
         var collection = new ServiceCollection().AddMassTransitTestHarness(x =>

@@ -27,17 +27,17 @@ public static class MassTransitHostBuilderExtensions
             try
             {
                 services.ConfigureServicesMassTransit(context.Configuration, x =>
-                    {
-                        x.AddCoreConsumer()
-                            .AddWebApiConsumer();
+                {
+                    x.AddCoreConsumer()
+                        .AddWebApiConsumer();
 
-                        x.AddMediator(c => c.AddMediator());
-                    }, rabbitMqConfiguration: (ctx, cfg) =>
-                    {
-                        cfg.UseDelayedMessageScheduler();
-                        cfg.UseConsumeFilter<ActionGroupTracingConsumeFilters>(ctx);
-                        cfg.UseConsumeFilter<AgvTracingConsumeFilters>(ctx);
-                    });
+                    x.AddMediator(c => c.AddMediator());
+                }, rabbitMqConfiguration: (ctx, cfg) =>
+                {
+                    cfg.UseDelayedMessageScheduler();
+                    cfg.UseConsumeFilter<ActionGroupTracingConsumeFilters>(ctx);
+                    cfg.UseConsumeFilter<AgvTracingConsumeFilters>(ctx);
+                });
             }
             catch (InvalidOperationException e)
             {

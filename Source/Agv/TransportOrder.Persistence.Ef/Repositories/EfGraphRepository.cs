@@ -172,7 +172,7 @@ public class EfGraphRepository : IGraphRepository
 
             if (existingGraph == null)
             {
-                context.Add((object) efGraph);
+                context.Add((object)efGraph);
             }
             else
             {

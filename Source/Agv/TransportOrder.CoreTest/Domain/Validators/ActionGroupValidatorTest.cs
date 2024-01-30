@@ -36,7 +36,7 @@ public class ActionGroupValidatorTest
     public async Task ValidateAsync_WhenOrderIdIsNullOrEmpty_Fails(string orderId)
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        var actions = new List<AgvAction> {AgvActionGenerator.GenerateParkAction("Park1")};
+        var actions = new List<AgvAction> { AgvActionGenerator.GenerateParkAction("Park1") };
         var actionGroup = AgvActionGenerator.GenerateActionGroup(actions, orderId: orderId);
 
         var fixture = new ActionGroupValidatorTestFixture()
@@ -162,7 +162,7 @@ public class ActionGroupValidatorTest
     public async Task ValidateAsync_WhenCorrelationIdIsEmpty_Fails()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        var actions = new List<AgvAction> {AgvActionGenerator.GenerateParkAction(parentId: null, targetNodeId: "Park1")};
+        var actions = new List<AgvAction> { AgvActionGenerator.GenerateParkAction(parentId: null, targetNodeId: "Park1") };
         var actionGroup = AgvActionGenerator.GenerateActionGroup(actions, correlationId: Guid.Empty);
         var fixture = new ActionGroupValidatorTestFixture()
             .WithAgv(agv)
@@ -233,7 +233,7 @@ public class ActionGroupValidatorTest
     public async Task ValidateAsync_WhenAnyParentIdNotMatchCorrelationId_Fails()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        var actions = new List<AgvAction> {AgvActionGenerator.GenerateParkAction(parentId: "DifferentActionGroup".ToGuid(), targetNodeId: "Park1")};
+        var actions = new List<AgvAction> { AgvActionGenerator.GenerateParkAction(parentId: "DifferentActionGroup".ToGuid(), targetNodeId: "Park1") };
         var actionGroup = AgvActionGenerator.GenerateActionGroup(actions, correlationId: "ActionGroup".ToGuid());
 
         var fixture = new ActionGroupValidatorTestFixture()

@@ -22,8 +22,11 @@ public class GraphEdgeValueResolver : IValueResolver<Graph, GraphDto, object>
             if (nodeDict.TryGetValue(edge.From.Id, out var fromNode) &&
                 nodeDict.TryGetValue(edge.To.Id, out var toNode))
             {
-                graphEdges.Add(new GraphEdgeDto { FromNodeId = fromNode.Id, ToNodeId = toNode.Id, 
-                    Variant = edge.Variant, VariantParameters = edge.VariantParameters, Length = edge.Length });
+                graphEdges.Add(new GraphEdgeDto
+                {
+                    FromNodeId = fromNode.Id, ToNodeId = toNode.Id,
+                    Variant = edge.Variant, VariantParameters = edge.VariantParameters, Length = edge.Length
+                });
             }
         }
 

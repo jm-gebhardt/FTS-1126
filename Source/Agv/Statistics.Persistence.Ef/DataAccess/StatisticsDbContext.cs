@@ -5,7 +5,7 @@ using Statistics.Persistence.Ef.DataAccess.Configuration;
 
 namespace Statistics.Persistence.Ef.DataAccess;
 
-public class StatisticsDbContext: DbContext
+public class StatisticsDbContext : DbContext
 {
     /// <summary>
     /// Configuration section where the ConnectionString for the statistics service is located

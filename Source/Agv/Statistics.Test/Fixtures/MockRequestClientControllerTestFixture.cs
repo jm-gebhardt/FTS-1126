@@ -11,14 +11,14 @@ namespace Statistics.Test.Fixtures;
 /// Provides a controller test fixture with mock request clients.
 /// </summary>
 /// <typeparam name="TController"></typeparam>
-public class MockRequestClientControllerTestFixture<TController> 
+public class MockRequestClientControllerTestFixture<TController>
     where TController : Controller
 {
     private readonly List<Action<IServiceCollection>> _serviceActions = new();
     private ServiceProvider _provider = null!;
 
     [UsedImplicitly]
-    protected MockRequestClientControllerTestFixture<TController>Build()
+    protected MockRequestClientControllerTestFixture<TController> Build()
     {
         var collection = new ServiceCollection();
         foreach (Action<IServiceCollection> service in _serviceActions)
@@ -37,7 +37,7 @@ public class MockRequestClientControllerTestFixture<TController>
 
     [UsedImplicitly]
     protected MockRequestClientControllerTestFixture<TController> AddRequestClientMock<TMessage>(Mock<IRequestClient<TMessage>> clientMock)
-    where TMessage:class
+        where TMessage : class
     {
         _serviceActions.Add(s => s.AddTransient<IRequestClient<TMessage>>(_ => clientMock.Object));
         return this;

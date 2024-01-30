@@ -244,7 +244,7 @@ public class AgvEventHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_AgvPreparedForStartingAction_ValidData_StartAction()
+    public async Task Consume_AgvPreparedForStartingAction_ValidData_StartActionOfActionGroup()
     {
         var fixture = new AgvEventHandlerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv();
@@ -252,7 +252,7 @@ public class AgvEventHandlerTest
 
         await fixture.PublishMessageAsync(new AgvPreparedForStartingAction(agv.CorrelationId, actionGroup.Actions.First()));
 
-        (await fixture.TestHarness.Published.Any<StartAction>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<StartActionOfActionGroup>()).ShouldBeTrue();
     }
 
     [TestMethod]

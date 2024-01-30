@@ -83,10 +83,7 @@ try
                 partitioner.PartitionMessageById<HandleHostOrderStart, HostOrderCommandHandler>(c);
                 partitioner.PartitionMessageById<HandleHostOrderFailure, HostOrderCommandHandler>(c);
             });
-        }, (ctx, cfg) =>
-        {
-            cfg.UseConsumeFilter(typeof(ActionEventConsumeFilter<>), ctx);
-        });
+        }, (ctx, cfg) => { cfg.UseConsumeFilter(typeof(ActionEventConsumeFilter<>), ctx); });
     });
 
     var host = hostBuilder?.Build();

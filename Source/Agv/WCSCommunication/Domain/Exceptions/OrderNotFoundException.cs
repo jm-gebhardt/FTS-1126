@@ -1,5 +1,4 @@
-﻿
-namespace Gebhardt.StoreWare.Agv.WCSCommunication.Domain.Exceptions;
+﻿namespace Gebhardt.StoreWare.Agv.WCSCommunication.Domain.Exceptions;
 
 /// <summary>
 /// Represents the exception thrown when an order could not be found.

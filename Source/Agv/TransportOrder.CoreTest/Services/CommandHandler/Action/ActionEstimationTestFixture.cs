@@ -8,7 +8,7 @@ using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.CommandHandler.Action;
 
-public class ActionEstimationGroupTestFixture : ActionGroupTestFixtureBase<ActionEstimationCommandHandler>
+public class ActionEstimationGroupTestFixture : ActionGroupTestFixtureBase<ActionCommandHandler>
 {
     public TransportOrder.Domain.Models.Agv.Agv Agv { get; }
 
@@ -31,18 +31,19 @@ public class ActionEstimationGroupTestFixture : ActionGroupTestFixtureBase<Actio
         return this;
     }
 
+    // ReSharper disable once UnusedMethodReturnValue.Global
     public ActionEstimationGroupTestFixture AddRouteOnCosts(double onCosts)
     {
         string[] targetNodes = ActionGroup.Actions.Select(a => a.TargetNodeId).ToArray();
-        RouteService.Setup(r => r.GetRouteAsync(Agv, targetNodes.Skip(1).ToArray(), targetNodes[0], It.IsAny<AgvData>()))
+        RouteService.Setup(r => r.GetRouteAsync(Agv, targetNodes.ToArray(), null, It.IsAny<AgvData>()))
             .ReturnsAsync(new Route(onCosts, null!));
 
         return this;
     }
 
-    public ActionGroup GetUpdatedActionGroup()
+    public ActionGroup VerifyActionGroupUpdate(Times times)
     {
-        ActionGroupRepository.Verify(a => a.UpdateAsync(It.IsAny<ActionGroup>()), Times.Once);
+        ActionGroupRepository.Verify(a => a.UpdateAsync(It.IsAny<ActionGroup>()), times);
         ActionGroup.ShouldNotBeNull();
         return ActionGroup;
     }

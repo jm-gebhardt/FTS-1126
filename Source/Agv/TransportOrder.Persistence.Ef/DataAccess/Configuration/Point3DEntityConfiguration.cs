@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess.Configuration;
 
 /// <inheritdoc />  
-public class Point3DEntityConfiguration: IEntityTypeConfiguration<Point3D>
+public class Point3DEntityConfiguration : IEntityTypeConfiguration<Point3D>
 {
     private const string ShadowIdName = "CargoId";
 

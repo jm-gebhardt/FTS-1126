@@ -20,9 +20,9 @@ public class ActionEventHandler :
     IConsumer<StartingActionForAgvFailed>,
     IConsumer<NonChargingActionCompleted>,
     IConsumer<NodesSelectedForAction>,
-    IConsumer<ActionGroupHasNoEstimatedDuration>,
     IConsumer<ActionAbortionCompleted>,
     IConsumer<ActionCanceled>,
+    IConsumer<ActionDurationEstimated>,
     IConsumer<AutomaticActionWithdrawn>
 {
     private readonly ILogger<ActionEventHandler> _logger;
@@ -58,8 +58,9 @@ public class ActionEventHandler :
     public async Task Consume(ConsumeContext<ActionCompleted> context)
     {
         var actionCorrelationId = context.Message.CorrelationId;
+        var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByActionIdAsync(actionCorrelationId);
         _logger.LogDebug("{MessageType} for actionId: {ActionCorrelationId} received", nameof(ActionCompleted), actionCorrelationId);
-        await context.Publish(new CompleteAction(actionCorrelationId));
+        await context.Publish(new CompleteActionOfActionGroup(actionCorrelationId, actionGroup.CorrelationId));
     }
 
     /// <summary>
@@ -83,13 +84,13 @@ public class ActionEventHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<NodesSelectedForAction> context)
     {
-        await context.Publish(new PrepareAgvForStartingAction(context.Message.Action, context.Message.AssignedAgv));
+        await context.Publish(new EstimateActionGroupDuration(context.Message.Action, context.Message.AssignedAgv, context.Message.Action.ParentId));
     }
 
-    /// <inheritdoc cref="ActionGroupHasNoEstimatedDuration" />
-    public async Task Consume(ConsumeContext<ActionGroupHasNoEstimatedDuration> context)
+    /// <inheritdoc cref="ActionDurationEstimated" />
+    public async Task Consume(ConsumeContext<ActionDurationEstimated> context)
     {
-        await context.Publish(new EstimateActionGroupDuration(Guid.NewGuid(), context.Message.FirstAction, context.Message.FirstActionCosts, context.Message.AgvId, context.Message.ActionGroupId));
+        await context.Publish(new PrepareAgvForStartingAction(context.Message.Action, context.Message.AgvId));
     }
 
     /// <summary>

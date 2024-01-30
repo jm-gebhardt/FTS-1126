@@ -16,7 +16,7 @@ public class CargoProfileTest
         var agvCorrelationId = Guid.NewGuid();
         ICollection<Cargo> cargos = CargoGenerator.GenerateCargos(agvCorrelationId);
         var mapper = MappingHelper.GetMapper(new CargoProfile());
- 
+
         var cargoDtos = mapper.Map<List<CargoDto>>(cargos);
 
         foreach (var dtoCargo in cargoDtos)

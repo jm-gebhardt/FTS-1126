@@ -69,7 +69,7 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
     public async Task Consume(ConsumeContext<GetActionGroupCountsByState> context)
     {
         AgvGroupCountByState[] actionGroupStateCounts = await Task.WhenAll(Enum.GetValues<ActionGroupState>().Select(state =>
-            _actionGroupRepository.GetActionGroupsCountAsync(new[] {state})
+            _actionGroupRepository.GetActionGroupsCountAsync(new[] { state })
                 .ContinueWith(actionGroupCount => new AgvGroupCountByState(state, actionGroupCount.Result))));
 
         await context.RespondAsync(new GotActionGroupCountsByState(actionGroupStateCounts));

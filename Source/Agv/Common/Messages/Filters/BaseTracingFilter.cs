@@ -21,7 +21,7 @@ public abstract class BaseTracingFilter
     /// </summary>
     /// <typeparam name="T">Message type.</typeparam>
     /// <param name="context">Consume context.</param>
-    protected void LogInformation<T>(ConsumeContext<T> context) where T: class
+    protected void LogInformation<T>(ConsumeContext<T> context) where T : class
     {
         _logger.LogInformation(
             "{Timestamp:yyyy-MM-dd HH:mm:ss.fffff} Consumed {Content}", DateTime.UtcNow, context.Message);

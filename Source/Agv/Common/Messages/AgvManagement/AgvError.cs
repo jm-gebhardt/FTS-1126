@@ -12,7 +12,7 @@ public record AgvError : CorrelatedBy<Guid>
     /// The correlation id of the agv error.
     /// </summary>
     public Guid CorrelationId { get; init; } = Guid.NewGuid();
-    
+
     /// <summary>
     /// The correlation id of the agv.
     /// </summary>

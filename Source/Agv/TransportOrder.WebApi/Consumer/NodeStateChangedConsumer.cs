@@ -9,7 +9,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Consumer;
 /// Represents the handler for node state changes.
 /// </summary>
 [UsedImplicitly]
-public class NodeStateChangedConsumer: IConsumer<NodeStateChanged>
+public class NodeStateChangedConsumer : IConsumer<NodeStateChanged>
 {
     private readonly IMapPublisher _mapPublisher;
 

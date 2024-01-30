@@ -15,7 +15,7 @@ public class DirectEdge : BaseEdge
     /// <summary>
     /// The time the agv finishes to accelerate.
     /// </summary>
-    public  DateTime AccelerationFinishTime { get; private set; }
+    public DateTime AccelerationFinishTime { get; private set; }
 
     /// <summary>
     /// The time the agv finishes to run at maximum possible velocity.
@@ -59,7 +59,7 @@ public class DirectEdge : BaseEdge
             time += EntryAngle / agvData.MaxVelocityTurnOnSpot;
         }
         InitialTurnFinishTime = EntryTime.AddSeconds(time);
-        
+
         double maxVelocity = Math.Min(agvData.MaxVelocityStraight, MaxVelocity);
 
         bool stopForTurnOutOfEdge = ExitAngle >= agvData.TurnOnSpotThreshold && agvData.TurnOnSpotThreshold != 0;
@@ -69,9 +69,9 @@ public class DirectEdge : BaseEdge
         ExitVelocity = finalVelocityMax;
 
         // Distance needed to decelerate from the maximum velocity to the final velocity
-        double maxDecelerationSection = Math.Max(PhysicsHelper.DistanceToVelocityFromVelocity(agvData.Acceleration, maxVelocity, ExitVelocity),0);
+        double maxDecelerationSection = Math.Max(PhysicsHelper.DistanceToVelocityFromVelocity(agvData.Acceleration, maxVelocity, ExitVelocity), 0);
         // Distance needed to accelerate from the initial velocity to the maximum velocity
-        double maxAccelerationSection = Math.Max(PhysicsHelper.DistanceToVelocityFromVelocity(agvData.Acceleration, maxVelocity, InitialVelocity),0);
+        double maxAccelerationSection = Math.Max(PhysicsHelper.DistanceToVelocityFromVelocity(agvData.Acceleration, maxVelocity, InitialVelocity), 0);
 
         // Minimum distance needed to decelerate
         double minDecelerationSection = Math.Max(PhysicsHelper.DistanceToVelocityFromVelocity(agvData.Acceleration, InitialVelocity, ExitVelocity), 0);
@@ -102,9 +102,9 @@ public class DirectEdge : BaseEdge
                 // accelerate to final velocity than move at final velocity
                 ExitVelocity = Math.Min(ExitVelocity, PhysicsHelper.VelocityAfterDistanceFromVelocity(agvData.Acceleration, Length, InitialVelocity));
                 MaxPossibleVelocity = ExitVelocity;
-                AccelerationSection = Math.Min( PhysicsHelper.DistanceToVelocityFromVelocity(agvData.Acceleration, MaxPossibleVelocity, InitialVelocity), Length);
+                AccelerationSection = Math.Min(PhysicsHelper.DistanceToVelocityFromVelocity(agvData.Acceleration, MaxPossibleVelocity, InitialVelocity), Length);
                 DecelerationSection = 0;
-                MaxVelocitySection =  Math.Max(Length - AccelerationSection, 0);
+                MaxVelocitySection = Math.Max(Length - AccelerationSection, 0);
 
                 accelerationTime = PhysicsHelper.TimeToAccelerateFromVelocity(agvData.Acceleration, AccelerationSection, InitialVelocity);
                 maxVelocityTime = MaxVelocitySection / MaxPossibleVelocity;
@@ -117,53 +117,34 @@ public class DirectEdge : BaseEdge
             }
 
             if (Math.Abs(ExitVelocity - InitialVelocity) <= double.Epsilon)
-            {  // accelerate on half of the edge, then decelerate
+            {
+                // accelerate on half of the edge, then decelerate
                 AccelerationSection = Length / 2d;
                 MaxPossibleVelocity = PhysicsHelper.VelocityAfterDistanceFromVelocity(agvData.Acceleration, AccelerationSection, InitialVelocity);
-            }
-            else
-            { // the agv can not accelerate
-              // move at constant velocity, then decelerate
-                DecelerationSection = minDecelerationSection;
-                AccelerationSection = 0;
-                MaxVelocitySection = Math.Max(Length - DecelerationSection, 0);
-                AccelerationFinishTime = InitialTurnFinishTime;
-                MaxPossibleVelocity = InitialVelocity;
-                accelerationTime = 0;
-                decelerationTime = PhysicsHelper.TimeToAccelerateFromVelocity(agvData.Acceleration, DecelerationSection, InitialVelocity);
-                maxVelocityTime = MaxVelocitySection / MaxPossibleVelocity;
-                MaxVelocityFinishTime = AccelerationFinishTime.AddSeconds(maxVelocityTime);
+                AccelerationSection = PhysicsHelper.DistanceToVelocityFromVelocity(agvData.Acceleration, MaxPossibleVelocity, InitialVelocity);
+                DecelerationSection = Math.Max(Length - AccelerationSection, 0);
+                MaxVelocitySection = 0;
+
+                accelerationTime = PhysicsHelper.TimeToAccelerateFromVelocity(agvData.Acceleration, AccelerationSection, InitialVelocity);
+                decelerationTime = PhysicsHelper.TimeToAccelerateFromVelocity(agvData.Acceleration, DecelerationSection, ExitVelocity);
+                maxVelocityTime = 0;
+
+                AccelerationFinishTime = MaxVelocityFinishTime = InitialTurnFinishTime.AddSeconds(accelerationTime);
                 time += accelerationTime + maxVelocityTime + decelerationTime;
                 EstimatedExitTime = EntryTime.AddSeconds(time);
                 return;
             }
 
-            // the agv can not accelerate
-            if (MaxPossibleVelocity < initialVelocity )
-            { // move at constant velocity, then decelerate
-                DecelerationSection = minDecelerationSection;
-                AccelerationSection = 0;
-                MaxVelocitySection = Math.Max(Length - DecelerationSection, 0);
-                AccelerationFinishTime = InitialTurnFinishTime;
-                MaxPossibleVelocity = InitialVelocity;
-                accelerationTime = 0;
-                decelerationTime = PhysicsHelper.TimeToAccelerateFromVelocity(agvData.Acceleration, DecelerationSection, InitialVelocity);
-                maxVelocityTime = MaxVelocitySection / MaxPossibleVelocity;
-                MaxVelocityFinishTime = AccelerationFinishTime.AddSeconds(maxVelocityTime);
-                time += accelerationTime + maxVelocityTime + decelerationTime;
-                EstimatedExitTime = EntryTime.AddSeconds(time);
-                return;
-            }
-
-            AccelerationSection = PhysicsHelper.DistanceToVelocityFromVelocity(agvData.Acceleration, MaxPossibleVelocity, InitialVelocity);
-            DecelerationSection =  Math.Max(Length - AccelerationSection, 0);
-            MaxVelocitySection = 0;
-
-            accelerationTime = PhysicsHelper.TimeToAccelerateFromVelocity(agvData.Acceleration, AccelerationSection, InitialVelocity);
-            decelerationTime = PhysicsHelper.TimeToAccelerateFromVelocity(agvData.Acceleration,DecelerationSection, ExitVelocity);
-            maxVelocityTime = 0;
-         
-            AccelerationFinishTime = MaxVelocityFinishTime = InitialTurnFinishTime.AddSeconds(accelerationTime);
+            // move at constant velocity, then decelerate
+            DecelerationSection = minDecelerationSection;
+            AccelerationSection = 0;
+            MaxVelocitySection = Math.Max(Length - DecelerationSection, 0);
+            AccelerationFinishTime = InitialTurnFinishTime;
+            MaxPossibleVelocity = InitialVelocity;
+            accelerationTime = 0;
+            decelerationTime = PhysicsHelper.TimeToAccelerateFromVelocity(agvData.Acceleration, DecelerationSection, InitialVelocity);
+            maxVelocityTime = MaxVelocitySection / MaxPossibleVelocity;
+            MaxVelocityFinishTime = AccelerationFinishTime.AddSeconds(maxVelocityTime);
             time += accelerationTime + maxVelocityTime + decelerationTime;
             EstimatedExitTime = EntryTime.AddSeconds(time);
             return;
@@ -211,10 +192,10 @@ public class DirectEdge : BaseEdge
         // The agv is accelerating.
         double currentVelocity;
         if (now <= AccelerationFinishTime && AccelerationSection > double.Epsilon)
-        {  
+        {
             secondsOnSection = (now - InitialTurnFinishTime).TotalSeconds;
             currentVelocity = InitialVelocity + agvData.Acceleration * secondsOnSection;
-            distance +=  PhysicsHelper.DistanceToVelocityFromVelocity(agvData.Acceleration, currentVelocity, InitialVelocity);
+            distance += PhysicsHelper.DistanceToVelocityFromVelocity(agvData.Acceleration, currentVelocity, InitialVelocity);
             return distance;
         }
         distance += AccelerationSection;
@@ -228,7 +209,7 @@ public class DirectEdge : BaseEdge
         distance += MaxVelocitySection;
         // The agv is decelerating.
         secondsOnSection = (now - MaxVelocityFinishTime).TotalSeconds;
-        currentVelocity = Math.Max(MaxPossibleVelocity - agvData.Acceleration * secondsOnSection,0);
+        currentVelocity = Math.Max(MaxPossibleVelocity - agvData.Acceleration * secondsOnSection, 0);
         double currentDecelerationSection = PhysicsHelper.DistanceToVelocity(agvData.Acceleration, currentVelocity);
         double fullDecelerationSection = PhysicsHelper.DistanceToVelocity(agvData.Acceleration, MaxPossibleVelocity);
         distance += fullDecelerationSection - currentDecelerationSection;

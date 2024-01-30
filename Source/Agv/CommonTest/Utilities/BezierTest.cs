@@ -16,7 +16,7 @@ public class BezierTest
         middle.X.ShouldBe(0.5f, 0.0001);
         middle.Y.ShouldBe(0.75f, 0.0001);
     }
-    
+
     [TestMethod]
     public void DeCasteljau_ValidData_CorrectTangent()
     {
@@ -77,8 +77,8 @@ public class BezierTest
     public void BezierConstructor_InvalidData_ThrowsArgumentOutOfRangeException()
     {
         Should.Throw<ArgumentOutOfRangeException>(() => new Bezier(new List<Vector2>()));
-        Should.Throw<ArgumentOutOfRangeException>(() => new Bezier(new List<Vector2>{ new(0, 0) }));
-        Should.Throw<ArgumentOutOfRangeException>(() => new Bezier(new List<Vector2>{ new(0, 0), new(0, 1) }));
+        Should.Throw<ArgumentOutOfRangeException>(() => new Bezier(new List<Vector2> { new(0, 0) }));
+        Should.Throw<ArgumentOutOfRangeException>(() => new Bezier(new List<Vector2> { new(0, 0), new(0, 1) }));
     }
 
     [TestMethod]
@@ -89,7 +89,7 @@ public class BezierTest
         Should.Throw<ArgumentOutOfRangeException>(() => bezier.InterpolateCurve(0));
         Should.Throw<ArgumentOutOfRangeException>(() => bezier.InterpolateCurve(-1));
     }
-    
+
     [TestMethod]
     public void DeCasteljau_InvalidData_ThrowsArgumentOutOfRangeException()
     {

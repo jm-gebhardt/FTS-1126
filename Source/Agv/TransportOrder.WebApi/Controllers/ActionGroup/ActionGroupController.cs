@@ -25,9 +25,9 @@ public class ActionGroupController : Controller
     /// <summary>
     /// Initializes a new <see cref="ActionGroupController" /> instance.
     /// </summary>
-    public ActionGroupController(IMapper mapper, 
-        IRequestClient<GetActionGroup> getActionGroupRequestClient, 
-        IRequestClient<CancelActionGroup> cancelActionGroupRequestClient, 
+    public ActionGroupController(IMapper mapper,
+        IRequestClient<GetActionGroup> getActionGroupRequestClient,
+        IRequestClient<CancelActionGroup> cancelActionGroupRequestClient,
         IRequestClient<TriggerActionGroupAbortion> abortionRequestClient,
         IRequestClient<TriggerActionGroupReset> resetActionGroupRequestClient)
     {

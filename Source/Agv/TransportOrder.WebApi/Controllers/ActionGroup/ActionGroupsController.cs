@@ -41,7 +41,7 @@ public class ActionGroupsController : Controller
             states,
             fromDate ?? DateTime.MinValue,
             toDate ?? DateTime.MaxValue,
-            assignedAgv != null ? new List<Guid> {(Guid) assignedAgv} : null,
+            assignedAgv != null ? new List<Guid> { (Guid)assignedAgv } : null,
             limit,
             sortBy,
             sortDirection == SortDirection.Desc));

@@ -33,6 +33,6 @@ public class CargoEntityConfiguration : IEntityTypeConfiguration<Cargo>
             .HasForeignKey<Cuboid>(ShadowIdName)
             .OnDelete(DeleteBehavior.ClientCascade);
         builder.Navigation(p => p.Dimension).AutoInclude();
-        builder.ConfigureAllProperties(except: new[] {nameof(Cargo.CenterPointPosition), nameof(Cargo.Dimension)});
+        builder.ConfigureAllProperties(except: new[] { nameof(Cargo.CenterPointPosition), nameof(Cargo.Dimension) });
     }
 }

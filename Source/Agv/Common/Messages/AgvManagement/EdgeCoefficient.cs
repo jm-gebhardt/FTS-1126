@@ -53,13 +53,13 @@ public class EdgeCoefficient : IEquatable<EdgeCoefficient>
     public EdgeCoefficient()
     {
     }
- 
+
     /// <summary>
     /// Checks if this <see cref="EdgeCoefficient"/> is a scalar.
     /// </summary>
     [UsedImplicitly]
     public bool IsScalar => Scalar != null;
-    
+
     /// <summary>
     /// Checks if this <see cref="EdgeCoefficient"/> is a point.
     /// </summary>
@@ -76,7 +76,7 @@ public class EdgeCoefficient : IEquatable<EdgeCoefficient>
             return new Vector2((float)X!, (float)Y!);
         }
         throw new ArgumentOutOfRangeException(nameof(IsPoint), IsPoint, "Can only convert EdgeCoefficient to vector if it is a point.");
-    } 
+    }
 
     /// <summary>
     /// Equality check.
@@ -138,4 +138,3 @@ public class EdgeCoefficient : IEquatable<EdgeCoefficient>
         return !Equals(left, right);
     }
 }
-

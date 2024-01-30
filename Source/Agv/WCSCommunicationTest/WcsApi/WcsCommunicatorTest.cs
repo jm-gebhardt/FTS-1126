@@ -139,7 +139,7 @@ public class WcsCommunicatorTest
 
         const string orderId = "TestOrder123";
 
-        Should.Throw<OrderNotFoundException>(async() => await fixture.Communicator.TransmitHostOrderCancellationSucceeded(orderId));
+        Should.Throw<OrderNotFoundException>(async () => await fixture.Communicator.TransmitHostOrderCancellationSucceeded(orderId));
 
         context.FromAgv.Count().ShouldBe(0);
     }
@@ -176,7 +176,7 @@ public class WcsCommunicatorTest
 
         await using var context = await fixture.DbContextFactory.CreateDbContextAsync();
 
-        Should.Throw<OrderNotFoundException>(async() => await fixture.Communicator.TransmitHostOrderCancellationFailure("unknownOrder", HostOrderCancelFailedErrorCode.OrderAlreadyCanceled.ToString()));
+        Should.Throw<OrderNotFoundException>(async () => await fixture.Communicator.TransmitHostOrderCancellationFailure("unknownOrder", HostOrderCancelFailedErrorCode.OrderAlreadyCanceled.ToString()));
 
         context.FromAgv.Count().ShouldBe(0);
     }

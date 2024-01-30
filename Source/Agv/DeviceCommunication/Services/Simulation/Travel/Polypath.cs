@@ -15,7 +15,7 @@ public class Polypath : BaseEdge
     public List<DirectEdge> Sections { get; } = new();
 
     private DirectEdge _currentSection;
-    
+
     /// <inheritdoc cref="Polypath"/>>
     public Polypath(GraphEdge edge, GraphNode sourceNode, GraphNode targetNode) : base(edge, sourceNode, targetNode)
     {
@@ -23,9 +23,9 @@ public class Polypath : BaseEdge
         var source = SourceNode;
         GraphEdge? sectionEdge;
         DirectEdge? section;
-        foreach (var controlPoint in controlPoints.Select((edgeCoefficient, index) => new{ edgeCoefficient, index}))
+        foreach (var controlPoint in controlPoints.Select((edgeCoefficient, index) => new { edgeCoefficient, index }))
         {
-            var target =  new GraphNode(controlPoint.index.ToString()) { X = (float)controlPoint.edgeCoefficient.X!, Y = (float)controlPoint.edgeCoefficient.Y! };
+            var target = new GraphNode(controlPoint.index.ToString()) { X = (float)controlPoint.edgeCoefficient.X!, Y = (float)controlPoint.edgeCoefficient.Y! };
             sectionEdge = CreateDirect(source.Id, target.Id, (float)Mathematics.EuclideanDistance(source, target), Guid.NewGuid());
             section = new DirectEdge(sectionEdge, source, target);
             Sections.Add(section);
@@ -63,9 +63,9 @@ public class Polypath : BaseEdge
         EntryAngle = entryAngle;
         foreach (var item in Sections.Select((section, index) => new { section, index }))
         {
-            var target = item.index <= Sections.Count -2 ? Sections[item.index + 1].TargetNode : nextTarget;
-            var source = item.index <= Sections.Count -2 ? Sections[item.index + 1].SourceNode : nextSource;
-            item.section.SetAngles(entryAngle,source, target);
+            var target = item.index <= Sections.Count - 2 ? Sections[item.index + 1].TargetNode : nextTarget;
+            var source = item.index <= Sections.Count - 2 ? Sections[item.index + 1].SourceNode : nextSource;
+            item.section.SetAngles(entryAngle, source, target);
             entryAngle = item.section.ExitAngle;
         }
         ExitAngle = Sections.Last().ExitAngle;
@@ -74,8 +74,8 @@ public class Polypath : BaseEdge
     /// <inheritdoc cref="BaseEdge"/>>
     public override AgvPosition GetCurrentPosition(DateTime now, AgvData agvData, float previousOrientation)
     {
-       GetCurrentSection(now);
-       return _currentSection.GetCurrentPosition(now, agvData, GetPreviousOrientation(previousOrientation));
+        GetCurrentSection(now);
+        return _currentSection.GetCurrentPosition(now, agvData, GetPreviousOrientation(previousOrientation));
     }
 
     private void GetCurrentSection(DateTime now)

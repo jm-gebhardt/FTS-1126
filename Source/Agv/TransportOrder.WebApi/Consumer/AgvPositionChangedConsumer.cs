@@ -23,7 +23,6 @@ public class AgvPositionChangedConsumer :
     private readonly ILogger<AgvPositionChangedConsumer> _logger;
     private readonly IAgvPublisher _agvPublisher;
     private readonly INodeStateRepository _nodeStateRepository;
-    private readonly IActionGroupRepository _actionGroupRepository;
     private readonly IActionGroupRetrievalService _actionGroupRetrievalService;
     private readonly IAgvRouteRetrievalService _agvRouteRetrievalService;
     private readonly IMapper _mapper;
@@ -42,7 +41,6 @@ public class AgvPositionChangedConsumer :
         _logger = logger;
         _agvPublisher = agvPublisher;
         _nodeStateRepository = nodeStateRepository;
-        _actionGroupRepository = actionGroupRepository;
         _actionGroupRetrievalService = actionGroupRetrievalService;
         _agvRouteRetrievalService = agvRouteRetrievalService;
         _mapper = mapper;
@@ -73,7 +71,7 @@ public class AgvPositionChangedConsumer :
         if (oldLastNodeId != null)
         {
             bool nodeWasOccupied = await _nodeStateRepository.UnOccupyNodeAsync(agvCorrelationId);
-            if(nodeWasOccupied)
+            if (nodeWasOccupied)
             {
                 await PublishNodeStateChange(context, oldLastNodeId);
             }

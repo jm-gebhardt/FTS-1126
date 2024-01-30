@@ -24,7 +24,7 @@ public class SlantedEdgeTest
 
     private GraphNode Target { get; } = new("Src3") { X = 5, Y = 1 };
 
-    private GraphEdge Edge { get; } = GraphEdge.CreateSlanted("Way2", "Src3", 4,0,1);
+    private GraphEdge Edge { get; } = GraphEdge.CreateSlanted("Way2", "Src3", 4, 0, 1);
 
     [TestMethod]
     public void Construct_ValidData_PropertiesSet()
@@ -51,7 +51,7 @@ public class SlantedEdgeTest
     {
         var slanted = new SlantedEdge(Edge, Source, Target);
         double entryAngle = Mathematics.ConvertToRadians(90);
-        slanted.SetAngles(entryAngle, Target, new GraphNode("") { X=4, Y=0 });
+        slanted.SetAngles(entryAngle, Target, new GraphNode("") { X = 4, Y = 0 });
         slanted.EntryAngle.ShouldBe(entryAngle);
         slanted.ExitAngle.ShouldBe(Mathematics.ConvertToRadians(45), tolerance: 0.001);
     }
@@ -64,7 +64,7 @@ public class SlantedEdgeTest
         slanted.SetAngles(0, null, null);
         var entryTime = DateTime.UtcNow;
         slanted.EstimateTravelTime(agvData, 0, entryTime);
-        var position = slanted.GetCurrentPosition(slanted.EstimatedExitTime, agvData,0);
+        var position = slanted.GetCurrentPosition(slanted.EstimatedExitTime, agvData, 0);
         position.X.ShouldBe(Target.X);
         position.Y.ShouldBe(Target.Y, tolerance: 0.002);
         position.Z.ShouldBe(Target.Z);

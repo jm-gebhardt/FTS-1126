@@ -113,7 +113,7 @@ public class MapsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
             sc.AddTransient(_ => _agvRepository);
             sc.AddTransient(_ => _agvGraphRepositoryMock.Object);
         });
-        
+
         base.Build();
         return this;
     }

@@ -12,6 +12,12 @@ public static class AgvGenerator
         return agv;
     }
 
+    public static TransportOrder.Domain.Models.Agv.Agv GenerateBusyAgv(int index = 0, bool isLocked = false, int batteryCharge = 100)
+    {
+        var agv = GenerateAgv(AgvState.Busy, index, "A", isLocked: isLocked, batteryCharge: batteryCharge);
+        return agv;
+    }
+
     public static TransportOrder.Domain.Models.Agv.Agv GenerateIdleAgv(int index = 0, string? lastNodeId = null, bool isLocked = false, int batteryCharge = 100)
     {
         var agv = GenerateAgv(AgvState.Idle, index, lastNodeId, isLocked: isLocked, batteryCharge: batteryCharge);

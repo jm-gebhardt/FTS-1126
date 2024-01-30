@@ -14,10 +14,10 @@ public class AgvDataExtensionTest
         var agv = new KarisType1(Guid.NewGuid(), "ip address");
         const int factor = 2;
         var updatedAgv = agv.SetSimulationSpeed(factor);
-        updatedAgv.Acceleration.ShouldBe(agv.Acceleration*factor);
-        updatedAgv.MaxVelocityTurn.ShouldBe(agv.MaxVelocityTurn*factor);
-        updatedAgv.MaxVelocityTurnOnSpot.ShouldBe(agv.MaxVelocityTurnOnSpot*factor);
-        updatedAgv.MaxVelocityStraight.ShouldBe(agv.MaxVelocityStraight*factor);
+        updatedAgv.Acceleration.ShouldBe(agv.Acceleration * factor);
+        updatedAgv.MaxVelocityTurn.ShouldBe(agv.MaxVelocityTurn * factor);
+        updatedAgv.MaxVelocityTurnOnSpot.ShouldBe(agv.MaxVelocityTurnOnSpot * factor);
+        updatedAgv.MaxVelocityStraight.ShouldBe(agv.MaxVelocityStraight * factor);
         updatedAgv.Model.ShouldBe(agv.Model);
         updatedAgv.Length.ShouldBe(agv.Length);
         updatedAgv.Payload.ShouldBe(agv.Payload);

@@ -62,7 +62,7 @@ public class SimulatedAgvSagaTestFixture
     public SimulatedAgvSagaTestFixture WithActionTargetNodeId(string id)
     {
         _targetNodeId = id;
-        _edge = GraphEdge.CreateDirect(_startNodeId, _targetNodeId, (float)Mathematics.EuclideanDistance(_nodes!.First(n=>n.Id==_startNodeId), _nodes!.First(n => n.Id==_targetNodeId)));
+        _edge = GraphEdge.CreateDirect(_startNodeId, _targetNodeId, (float)Mathematics.EuclideanDistance(_nodes!.First(n => n.Id == _startNodeId), _nodes!.First(n => n.Id == _targetNodeId)));
         return this;
     }
 
@@ -102,7 +102,7 @@ public class SimulatedAgvSagaTestFixture
 
     public void SimulateToPercentage(double progressPercentage)
     {
-        double progress = Saga.TravelSimulator.TravelDuration!.Value.TotalSeconds * progressPercentage / 100; 
+        double progress = Saga.TravelSimulator.TravelDuration!.Value.TotalSeconds * progressPercentage / 100;
         _timeProvider.SetNow(_startTime.AddSeconds(progress));
     }
 }

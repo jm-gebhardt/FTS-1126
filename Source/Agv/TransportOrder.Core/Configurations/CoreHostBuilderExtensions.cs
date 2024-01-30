@@ -52,7 +52,7 @@ public static class CoreHostBuilderExtensions
             RegisterRepositoryServices(services);
 
             RegisterValidators(services);
-            
+
             RegisterMiscellaneousServices(services);
 
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
@@ -105,7 +105,7 @@ public static class CoreHostBuilderExtensions
         services.AddTransient<IAgvDataRepository, EfAgvDataRepository>();
 
         services.AddTransient<IMapRepository, EfMapRepository>();
-        
+
         services.AddTransient<IGraphRepository, EfGraphRepository>();
         services.AddTransient<INodeRepository, EfNodeRepository>();
 

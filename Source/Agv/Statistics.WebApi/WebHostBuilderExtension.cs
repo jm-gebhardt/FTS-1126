@@ -89,10 +89,7 @@ public static class WebHostBuilderExtension
         app.UseAuthentication(); // verify user
         app.UseAuthorization(); // use security tokens
 
-        app.UseEndpoints(endpoints =>
-        {
-            endpoints.MapControllers();
-        });
+        app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
         app.UseSwagger(c =>
         {
             c.PreSerializeFilters.Add((swaggerDoc, request) =>
@@ -107,10 +104,7 @@ public static class WebHostBuilderExtension
                 }
             });
         });
-        app.UseSwaggerUI(options =>
-        {
-            options.SwaggerEndpoint(new RestApiGroup());
-        });
+        app.UseSwaggerUI(options => { options.SwaggerEndpoint(new RestApiGroup()); });
         app.UseSwaggerUI();
         return app;
     }

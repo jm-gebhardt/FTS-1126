@@ -143,7 +143,7 @@ public class ActionGroupRetrievalServiceTest
         await fixture.AddAsync(actionGroup);
         await AddDefaultAgvGraph(fixture, "aGraph".ToGuid());
 
-        List<ActionGroupState> otherStates = Enum.GetValues<ActionGroupState>().Except(new List<ActionGroupState> {actionGroup.State}).ToList();
+        List<ActionGroupState> otherStates = Enum.GetValues<ActionGroupState>().Except(new List<ActionGroupState> { actionGroup.State }).ToList();
 
         IReadOnlyCollection<ActionGroupReadModel> actionGroupReadModel = await fixture.ActionGroupRetrievalService
             .GetActionGroupsWithNodesAsync(otherStates, null, null, 1);
@@ -467,7 +467,7 @@ public class ActionGroupRetrievalServiceTest
     {
         await using var fixture = new ActionGroupRetrievalServiceTestFixture();
         var agv = Guid.NewGuid();
-        var actionGroup = AgvActionGenerator.GenerateMoveActionGroup("UnknownTargetNodeId", assignedAgv:agv);
+        var actionGroup = AgvActionGenerator.GenerateMoveActionGroup("UnknownTargetNodeId", assignedAgv: agv);
         actionGroup.StartAction(actionGroup.Actions.First().CorrelationId);
         await fixture.AddAsync(actionGroup);
         await AddDefaultAgvGraph(fixture, "aGraph".ToGuid());

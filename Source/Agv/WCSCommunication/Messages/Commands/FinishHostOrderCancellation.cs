@@ -7,4 +7,4 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.Messages.Commands;
 /// </summary>
 /// <param name="CorrelationId">The correlation id of the order.</param>
 /// <param name="Timestamp">The time the order was canceled.</param>
-public record FinishHostOrderCancellation(Guid CorrelationId, DateTime Timestamp): CorrelatedBy<Guid>;
+public record FinishHostOrderCancellation(Guid CorrelationId, DateTime Timestamp) : CorrelatedBy<Guid>;

@@ -19,7 +19,7 @@ public class ParameterYamlConverter : IYamlTypeConverter
     /// <inheritdoc />
     public object ReadYaml(IParser parser, Type type)
     {
-        var typesToTry = new List<Type> {typeof(ActionDefinition)}; // Add other types as needed
+        var typesToTry = new List<Type> { typeof(ActionDefinition) }; // Add other types as needed
 
         foreach (var targetType in typesToTry)
         {
@@ -29,7 +29,7 @@ public class ParameterYamlConverter : IYamlTypeConverter
 
                 var deserializer = new DeserializerBuilder().Build();
                 object? obj = deserializer.Deserialize(parser, listType);
-                obj = ((IEnumerable<object>?) obj?.Cast<object>())?.ToList();
+                obj = ((IEnumerable<object>?)obj?.Cast<object>())?.ToList();
 
                 if (obj != null)
                 {

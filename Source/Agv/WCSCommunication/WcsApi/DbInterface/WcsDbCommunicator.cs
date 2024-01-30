@@ -11,10 +11,10 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunication.WcsApi.DbInterface;
 /// FromAgv/ToAgv database tables.
 /// </summary>
 [UsedImplicitly]
-public class WcsDbCommunicator: IHostCommunicator
+public class WcsDbCommunicator : IHostCommunicator
 {
     private readonly IDbContextFactory<WcsHostDbContext> _contextFactory;
-    
+
     /// <inheritdoc cref="WcsDbCommunicator"/>
     public WcsDbCommunicator(IDbContextFactory<WcsHostDbContext> contextFactory)
     {
@@ -37,7 +37,7 @@ public class WcsDbCommunicator: IHostCommunicator
             throw new OrderNotFoundException(orderId);
         }
         dbContext.FromAgv.Add(FromAgv.CreateInstance(order, OrderStatus.Finished, RecordType.TransportOrder));
-        
+
         return await dbContext.SaveChangesAsync() > 0;
     }
 

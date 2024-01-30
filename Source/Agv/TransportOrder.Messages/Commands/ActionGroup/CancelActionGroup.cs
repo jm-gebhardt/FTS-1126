@@ -8,4 +8,4 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
 /// </summary>
 /// <param name="CorrelationId">The correlation id of the action group.</param>
 /// <param name="CancelReason">The reason for the cancel.</param>
-public record CancelActionGroup(Guid CorrelationId, CancelReason CancelReason): CorrelatedBy<Guid>;
+public record CancelActionGroup(Guid CorrelationId, CancelReason CancelReason) : CorrelatedBy<Guid>;

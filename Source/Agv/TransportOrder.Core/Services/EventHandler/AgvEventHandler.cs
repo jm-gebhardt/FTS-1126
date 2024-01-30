@@ -207,7 +207,7 @@ public class AgvEventHandler :
         // at the beginning the map is just related and empty.
         var agvGraph = await _agvDb.Graphs.GetAgvGraphAsync(context.Message.CorrelationId);
         // so take the existing nodes and edges from the agvGraph and persist it.
-        await context.Publish(new SaveMap(map with {Nodes = agvGraph.Nodes, Edges = agvGraph.Edges}));
+        await context.Publish(new SaveMap(map with { Nodes = agvGraph.Nodes, Edges = agvGraph.Edges }));
     }
 
     /// <summary>
@@ -242,7 +242,7 @@ public class AgvEventHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<AgvPreparedForStartingAction> context)
     {
-        await context.Publish(new StartAction(context.Message.Action, context.Message.CorrelationId));
+        await context.Publish(new StartActionOfActionGroup(context.Message.Action, context.Message.CorrelationId));
     }
 
     /// <summary>

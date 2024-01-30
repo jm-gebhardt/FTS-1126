@@ -16,7 +16,7 @@ public class Bezier
     /// The degree of the bezier curve.
     /// </summary>
     private int Degree => ControlPolygon.Count;
-    
+
     /// <summary>
     /// Initializes a <see cref="Bezier"/> instance.
     /// </summary>
@@ -45,7 +45,7 @@ public class Bezier
 
         List<Vector2> result = new() { ControlPolygon.First() };
 
-        for(int i = 1; i < resolution - 1; ++i)
+        for (int i = 1; i < resolution - 1; ++i)
         {
             result.Add(DeCasteljau(stepSize * i));
         }
@@ -76,7 +76,7 @@ public class Bezier
             throw new ArgumentOutOfRangeException(nameof(intervalPosition), intervalPosition, "Position must be inside the interval [0,1].");
         }
 
-        var intermediatePoints = new Vector2[Degree,Degree];
+        var intermediatePoints = new Vector2[Degree, Degree];
 
         for (int i = 0; i < Degree; i++)
         {
@@ -95,7 +95,7 @@ public class Bezier
         tangentPoint1 = intermediatePoints[0, Degree - 2];
         tangentPoint2 = intermediatePoints[1, Degree - 2];
 
-        return intermediatePoints[0, Degree-1];
+        return intermediatePoints[0, Degree - 1];
     }
 
     /// <summary>

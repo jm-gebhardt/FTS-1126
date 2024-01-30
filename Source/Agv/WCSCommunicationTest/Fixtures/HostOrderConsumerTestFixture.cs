@@ -7,8 +7,8 @@ using Moq;
 
 namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Fixtures;
 
-public class HostOrderConsumerTestFixture<TConsumer>: MassTransitConsumerTestFixture<TConsumer>, IDisposable
-where TConsumer: class, IConsumer
+public class HostOrderConsumerTestFixture<TConsumer> : MassTransitConsumerTestFixture<TConsumer>, IDisposable
+    where TConsumer : class, IConsumer
 {
     public readonly Mock<IHostOrderRepository> HostOrderRepositoryMock = new();
 

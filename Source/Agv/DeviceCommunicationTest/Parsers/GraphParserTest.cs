@@ -208,7 +208,7 @@ public class GraphParserTest
         };
         var edges = new MqttEdge[]
         {
-            new() { EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = false, MaxVelocity = 1 , EdgeType = "Bezier1", ControlPoints = new List<MqttControlPoint>{new(), new()}}
+            new() { EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = false, MaxVelocity = 1, EdgeType = "Bezier1", ControlPoints = new List<MqttControlPoint> { new(), new() } }
         };
         var parser = new GraphParser(new MqttGraph(AgvTestIdentifier02, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
         Should.Throw<MqttGraphParsingException>(() => parser.Graph.Edges);
@@ -224,7 +224,7 @@ public class GraphParserTest
         };
         var edges = new MqttEdge[]
         {
-            new() { EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = false, MaxVelocity = 1 , EdgeType = "Bezier1", ControlPoints = new List<MqttControlPoint>{new()}}
+            new() { EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = false, MaxVelocity = 1, EdgeType = "Bezier1", ControlPoints = new List<MqttControlPoint> { new() } }
         };
         var parser = new GraphParser(new MqttGraph(AgvTestIdentifier02, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
         var graph = parser.Graph;
@@ -245,7 +245,7 @@ public class GraphParserTest
         };
         var edges = new MqttEdge[]
         {
-            new() { EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = false, MaxVelocity = 1 , EdgeType = "Bezier2", ControlPoints = new List<MqttControlPoint>{new()}}
+            new() { EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = false, MaxVelocity = 1, EdgeType = "Bezier2", ControlPoints = new List<MqttControlPoint> { new() } }
         };
         var parser = new GraphParser(new MqttGraph(AgvTestIdentifier02, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
         Should.Throw<MqttGraphParsingException>(() => parser.Graph.Edges);
@@ -261,7 +261,7 @@ public class GraphParserTest
         };
         var edges = new MqttEdge[]
         {
-            new() { EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = false, MaxVelocity = 1 , EdgeType = "Bezier2", ControlPoints = new List<MqttControlPoint>{new(), new()}}
+            new() { EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = false, MaxVelocity = 1, EdgeType = "Bezier2", ControlPoints = new List<MqttControlPoint> { new(), new() } }
         };
         var parser = new GraphParser(new MqttGraph(AgvTestIdentifier02, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
         var graph = parser.Graph;
@@ -282,8 +282,11 @@ public class GraphParserTest
         };
         var edges = new MqttEdge[]
         {
-            new() { EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = true, MaxVelocity = 1 , EdgeType = "Bezier2",
-                ControlPoints = new List<MqttControlPoint>{new(){X=1,Y=1}, new(){X=2,Y=2}}}
+            new()
+            {
+                EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = true, MaxVelocity = 1, EdgeType = "Bezier2",
+                ControlPoints = new List<MqttControlPoint> { new() { X = 1, Y = 1 }, new() { X = 2, Y = 2 } }
+            }
         };
         var parser = new GraphParser(new MqttGraph(AgvTestIdentifier02, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
         var graph = parser.Graph;
@@ -307,7 +310,7 @@ public class GraphParserTest
         };
         var edges = new MqttEdge[]
         {
-            new() { EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = false, MaxVelocity = 1 , EdgeType = "Polypath"}
+            new() { EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = false, MaxVelocity = 1, EdgeType = "Polypath" }
         };
         var parser = new GraphParser(new MqttGraph(AgvTestIdentifier02, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
         Should.Throw<MqttGraphParsingException>(() => parser.Graph.Edges);
@@ -323,7 +326,7 @@ public class GraphParserTest
         };
         var edges = new MqttEdge[]
         {
-            new() { EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = false, MaxVelocity = 1 , EdgeType = "Polypath", ControlPoints = new List<MqttControlPoint>{new(), new()}}
+            new() { EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = false, MaxVelocity = 1, EdgeType = "Polypath", ControlPoints = new List<MqttControlPoint> { new(), new() } }
         };
         var parser = new GraphParser(new MqttGraph(AgvTestIdentifier02, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
         var graph = parser.Graph;
@@ -344,8 +347,11 @@ public class GraphParserTest
         };
         var edges = new MqttEdge[]
         {
-            new() { EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = true, MaxVelocity = 1 , EdgeType = "Polypath", 
-                ControlPoints = new List<MqttControlPoint>{new(){X=1,Y=1}, new(){X=2,Y=2}}}
+            new()
+            {
+                EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = true, MaxVelocity = 1, EdgeType = "Polypath",
+                ControlPoints = new List<MqttControlPoint> { new() { X = 1, Y = 1 }, new() { X = 2, Y = 2 } }
+            }
         };
         var parser = new GraphParser(new MqttGraph(AgvTestIdentifier02, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
         var graph = parser.Graph;
@@ -369,7 +375,7 @@ public class GraphParserTest
         };
         var edges = new MqttEdge[]
         {
-            new() { EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = false, MaxVelocity = 1 , EdgeType = "Slanted", ExitAngle = 1.5f, ExitDistance = 2}
+            new() { EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = false, MaxVelocity = 1, EdgeType = "Slanted", ExitAngle = 1.5f, ExitDistance = 2 }
         };
         var parser = new GraphParser(new MqttGraph(AgvTestIdentifier02, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
         var graph = parser.Graph;
@@ -390,7 +396,7 @@ public class GraphParserTest
         };
         var edges = new MqttEdge[]
         {
-            new() { EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = false, MaxVelocity = 1, EdgeType = "unknown"}
+            new() { EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = false, MaxVelocity = 1, EdgeType = "unknown" }
         };
         var parser = new GraphParser(new MqttGraph(AgvTestIdentifier02, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
 

@@ -13,7 +13,7 @@ namespace Gebhardt.StoreWare.Agv.Statistics.Services.EventHandler;
 /// Provides handlers for grid-related events.
 /// </summary>
 [UsedImplicitly]
-public class GridEventHandler:
+public class GridEventHandler :
     IConsumer<GraphChanged>
 {
     private readonly IStatisticsDb _db;
@@ -53,7 +53,7 @@ public class GridEventHandler:
             }
 
             ICollection<Map> mapsForGrid = await _db.Maps.GetMapsForGridAsync(grid.GridId);
-            
+
             //Create map objects for the grid based on the x and y index of the maximum and
             //minimum x and y positions covered by the map.
             foreach (var agvMap in maps)

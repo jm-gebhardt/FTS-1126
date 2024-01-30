@@ -32,7 +32,7 @@ public class GetAgvsRequestHandler :
         IActionGroupRetrievalService actionGroupRepository,
         IAgvDb agvDb,
         IMapper mapper
-        )
+    )
     {
         _actionGroupRepository = actionGroupRepository;
         _mapper = mapper;

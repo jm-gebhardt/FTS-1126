@@ -77,7 +77,7 @@ public class ExceptionHandlerMiddleware : IMiddleware
         }
 
         string result = JsonSerializer.Serialize(problem);
-        context.Response.StatusCode = (int) statusCode;
+        context.Response.StatusCode = (int)statusCode;
         context.Response.ContentType = "application/json";
         return context.Response.WriteAsync(result);
     }

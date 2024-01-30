@@ -19,13 +19,13 @@ public class GridController : Controller
     /// <inheritdoc cref="GridController"/>>
     public GridController(
         IMapper mapper,
-        IRequestClient<GetGrids> getGridsRequestClient, 
+        IRequestClient<GetGrids> getGridsRequestClient,
         IRequestClient<GetPositionFrequenciesForGrid> positionFrequencyClient)
-        {
-            _mapper = mapper;
-            _getGridsClient = getGridsRequestClient;
-            _getPositionFrequencyClient = positionFrequencyClient;
-        }
+    {
+        _mapper = mapper;
+        _getGridsClient = getGridsRequestClient;
+        _getPositionFrequencyClient = positionFrequencyClient;
+    }
 
     /// <summary>
     /// Get all grids.

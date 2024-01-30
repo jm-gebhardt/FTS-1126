@@ -17,7 +17,7 @@ public record ActionAborted : CorrelatedBy<Guid>
     public AgvAction Action { get; }
 
     /// <inheritdoc cref="ActionAborted"/>
-    public ActionAborted(Guid correlationId,  AgvAction action)
+    public ActionAborted(Guid correlationId, AgvAction action)
     {
         CorrelationId = correlationId;
         Action = action;

@@ -17,7 +17,7 @@ public static class ConsumeContextExtension
     /// <param name="message">The message to be published/responded.</param>
     /// <returns></returns>
     public static async Task PublishAndRespond<TConsumedMessage, TMessage>(this ConsumeContext<TConsumedMessage> context, TMessage message)
-    where TMessage: class where TConsumedMessage : class
+        where TMessage : class where TConsumedMessage : class
     {
         await context.Publish(message);
         if (context.ResponseAddress != null)

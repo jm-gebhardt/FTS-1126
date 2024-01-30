@@ -8,7 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Repositories;
 
-public class EfNodeRepositoryTestFixture: IDisposable, IAsyncDisposable
+public class EfNodeRepositoryTestFixture : IDisposable, IAsyncDisposable
 {
     public EfNodeRepository Repository { get; }
 
@@ -19,8 +19,8 @@ public class EfNodeRepositoryTestFixture: IDisposable, IAsyncDisposable
     public EfNodeRepositoryTestFixture()
     {
         var collection = new ServiceCollection()
-       .AddDbContextFactory<TransportOrderDbContext>(options => { options.UseInMemoryDatabase(Guid.NewGuid().ToString()); }
-        );
+            .AddDbContextFactory<TransportOrderDbContext>(options => { options.UseInMemoryDatabase(Guid.NewGuid().ToString()); }
+            );
         Provider = collection.BuildServiceProvider(true);
         ContextFactory = Provider.GetService<IDbContextFactory<TransportOrderDbContext>>()!;
         Repository = new EfNodeRepository(ContextFactory);

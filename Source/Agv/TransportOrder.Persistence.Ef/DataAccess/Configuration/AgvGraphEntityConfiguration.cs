@@ -11,7 +11,7 @@ public class AgvGraphEntityConfiguration : IEntityTypeConfiguration<EfAgvGraph>
     private const string TableName = "AgvGraph";
 
     /// <inheritdoc />
-   public void Configure(EntityTypeBuilder<EfAgvGraph> builder)
+    public void Configure(EntityTypeBuilder<EfAgvGraph> builder)
     {
         builder.ToTable(TableName);
         builder.HasKey(g => g.CorrelationId);
@@ -24,6 +24,6 @@ public class AgvGraphEntityConfiguration : IEntityTypeConfiguration<EfAgvGraph>
             .WithMany(n => n.AgvGraphs)
             .UsingEntity("AgvGraphNodes");
 
-        builder.ConfigureAllProperties(except: new[] {nameof(EfAgvGraph.Nodes), nameof(EfAgvGraph.Edges)});
+        builder.ConfigureAllProperties(except: new[] { nameof(EfAgvGraph.Nodes), nameof(EfAgvGraph.Edges) });
     }
 }

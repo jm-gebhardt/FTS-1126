@@ -33,9 +33,9 @@ public class AgvGraphProfileTest
         var agvGraph = new Graph(nodes,
             new List<GraphEdge>
             {
-                new(nodes.Single(e => e.Id == "S1"), nodes.Single(e => e.Id == "D1"), EdgeType.Direct, 
+                new(nodes.Single(e => e.Id == "S1"), nodes.Single(e => e.Id == "D1"), EdgeType.Direct,
                     new List<EdgeCoefficient>(), 8.9443),
-                new(nodes.Single(e => e.Id == "S2"), nodes.Single(e => e.Id == "D2"), EdgeType.Direct, 
+                new(nodes.Single(e => e.Id == "S2"), nodes.Single(e => e.Id == "D2"), EdgeType.Direct,
                     new List<EdgeCoefficient>(), 8.9443)
             }, Guid.NewGuid());
 
@@ -111,10 +111,10 @@ public class AgvGraphProfileTest
             Math.Abs(n.Z - x.Z) < FloatComparisonThreshold));
 
         graph.Edges.ShouldAllBe(x => agvGraph.Edges.Any(e => e.From.Id == x.FromNodeId &&
-                                                              e.To.Id == x.ToNodeId &&
-                                                              e.Variant == x.Variant &&
-                                                              e.VariantParameters == x.VariantParameters &&
-                                                              Math.Abs(e.Length - x.Length) < FloatComparisonThreshold));
+                                                             e.To.Id == x.ToNodeId &&
+                                                             e.Variant == x.Variant &&
+                                                             e.VariantParameters == x.VariantParameters &&
+                                                             Math.Abs(e.Length - x.Length) < FloatComparisonThreshold));
     }
 
     /// <summary>
@@ -164,10 +164,10 @@ public class AgvGraphProfileTest
             Math.Abs(n.Z - x.Z) < FloatComparisonThreshold));
 
         graph.Edges.ShouldAllBe(x => agvGraph.Edges.Any(e => e.From.Id == x.FromNodeId &&
-                                                              e.To.Id == x.ToNodeId &&
-                                                              e.Variant == x.Variant &&
-                                                              e.VariantParameters == x.VariantParameters &&
-                                                              Math.Abs(e.Length - x.Length) < FloatComparisonThreshold));
+                                                             e.To.Id == x.ToNodeId &&
+                                                             e.Variant == x.Variant &&
+                                                             e.VariantParameters == x.VariantParameters &&
+                                                             Math.Abs(e.Length - x.Length) < FloatComparisonThreshold));
     }
 
     /// <summary>
@@ -217,9 +217,9 @@ public class AgvGraphProfileTest
             Math.Abs(n.Z - x.Z) < FloatComparisonThreshold));
 
         graph.Edges.ShouldAllBe(x => agvGraph.Edges.Any(e => e.From.Id == x.FromNodeId &&
-                                                              e.To.Id == x.ToNodeId &&
-                                                              e.Variant == x.Variant &&
-                                                              e.VariantParameters == x.VariantParameters &&
-                                                              Math.Abs(e.Length - x.Length) < FloatComparisonThreshold));
+                                                             e.To.Id == x.ToNodeId &&
+                                                             e.Variant == x.Variant &&
+                                                             e.VariantParameters == x.VariantParameters &&
+                                                             Math.Abs(e.Length - x.Length) < FloatComparisonThreshold));
     }
 }

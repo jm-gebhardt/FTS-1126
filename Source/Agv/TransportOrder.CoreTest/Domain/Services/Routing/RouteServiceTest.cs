@@ -24,7 +24,7 @@ public class RouteServiceTest
         var actualRoute = await fixture.RouteService.GetRouteAsync(agv, node);
 
         actualRoute.Costs.ShouldBe(0);
-        actualRoute.Nodes.ShouldBe(new[] {node});
+        actualRoute.Nodes.ShouldBe(new[] { node });
     }
 
     [TestMethod]

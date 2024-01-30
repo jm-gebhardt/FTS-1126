@@ -40,7 +40,7 @@ public abstract class BaseEdge : GraphEdge
     /// The maximum allowed velocity on the edge.
     /// </summary>
     protected double MaxVelocity { get; }
-   
+
     /// <summary>
     /// The estimated time when the agv exits from the edge.
     /// </summary>
@@ -117,7 +117,7 @@ public abstract class BaseEdge : GraphEdge
     /// <returns></returns>
     public static float GetPartialOrientation(DateTime now, DateTime initialTurnTime, DateTime entryTime, float orientation, float previousOrientation)
     {
-        if (now >=  initialTurnTime)
+        if (now >= initialTurnTime)
         {
             return orientation;
         }
@@ -125,22 +125,22 @@ public abstract class BaseEdge : GraphEdge
         double secondsToTurn = (initialTurnTime - entryTime).TotalSeconds;
         double turningFraction = Math.Abs(secondsToTurn) > double.Epsilon ? secondsSinceEntry / secondsToTurn : 0;
 
-       double angle = (orientation - previousOrientation) % (2d * Math.PI);
-       if (Math.Abs(angle) > Math.PI)
-       {
-           angle -= Math.Sign(angle) * 2d * Math.PI ;
-       }
+        double angle = (orientation - previousOrientation) % (2d * Math.PI);
+        if (Math.Abs(angle) > Math.PI)
+        {
+            angle -= Math.Sign(angle) * 2d * Math.PI;
+        }
 
         orientation = (previousOrientation + (float)(angle * turningFraction)) % (float)(2d * Math.PI);
 
-       if (orientation < 0)
-       {
-           orientation += (float)(2d * Math.PI);
-       }
-       if (orientation > 2f * Math.PI)
-       {
-           orientation -= (float)(2d * Math.PI);
-       }
+        if (orientation < 0)
+        {
+            orientation += (float)(2d * Math.PI);
+        }
+        if (orientation > 2f * Math.PI)
+        {
+            orientation -= (float)(2d * Math.PI);
+        }
         return orientation;
     }
 

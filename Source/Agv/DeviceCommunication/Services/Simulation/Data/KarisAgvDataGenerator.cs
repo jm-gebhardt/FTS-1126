@@ -5,10 +5,10 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Data;
 /// <summary>
 /// Karis Agv Data Generator where types are generated in a round robin fashion
 /// </summary>
-public class KarisAgvDataGenerator: IAgvDataGenerator
+public class KarisAgvDataGenerator : IAgvDataGenerator
 {
     private const string IpAddressBase = "192.168.0.2";
-    
+
     /// <summary>
     /// Karis Types
     /// </summary>
@@ -18,18 +18,18 @@ public class KarisAgvDataGenerator: IAgvDataGenerator
         /// Type 1
         /// </summary>
         Type1,
-        
+
         /// <summary>
         /// Type 2
         /// </summary>
         Type2,
-        
+
         /// <summary>
         /// Type 3
         /// </summary>
         Type3
     }
-    
+
     /// <inheritdoc />
     public AgvData Generate(int agvIdx, Guid correlationId)
     {
@@ -42,7 +42,7 @@ public class KarisAgvDataGenerator: IAgvDataGenerator
             _ => new KarisType1(correlationId, GetIpAddress(agvIdx))
         };
     }
-    
+
     /// <summary>
     /// Round Robin Agv Type
     /// </summary>
@@ -51,9 +51,9 @@ public class KarisAgvDataGenerator: IAgvDataGenerator
     private static AgvType RoundRobinAgvType(int index)
     {
         int typeCount = Enum.GetNames(typeof(AgvType)).Length;
-        return (AgvType) (index % typeCount);
+        return (AgvType)(index % typeCount);
     }
-    
+
     /// <summary>
     /// Get successive IP Addresses
     /// Will repeat after 254 AGVs

@@ -24,7 +24,7 @@ public class StationProfileTest
             x => x.Length.ShouldBe(station.Length),
             x => x.Width.ShouldBe(station.Width));
     }
-    
+
     [TestMethod]
     public void Map_WhenStationIsNull_ReturnsNull()
     {

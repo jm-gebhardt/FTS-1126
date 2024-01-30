@@ -81,7 +81,7 @@ public interface IAgvClient
     /// <returns></returns>
     [SignalRMethod("BatteryStatusChanged")]
     Task BatteryStatusChanged(AgvBatteryStatusDto batteryStatus);
-    
+
     /// <summary>
     /// Cargo of Agv(s) changed
     /// </summary>

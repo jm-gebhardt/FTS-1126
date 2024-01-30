@@ -24,7 +24,7 @@ public class ActionGroupEventHandlerTest
         await fixture.TestHarness.Bus.Publish(actionGroupInvalid);
 
         (await fixture.ConsumerHarness.Consumed.Any<ActionGroupInvalid>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<RemoveInvalidHostOrder>(f => 
+        (await fixture.TestHarness.Published.Any<RemoveInvalidHostOrder>(f =>
             f.Context.Message == new RemoveInvalidHostOrder(actionGroupInvalid.CorrelationId))).ShouldBeTrue();
     }
 
@@ -37,7 +37,7 @@ public class ActionGroupEventHandlerTest
         var actionGroupStarted = new ActionGroupStarted(actionGroup, actionGroup.CorrelationId, DateTime.UtcNow);
 
         await fixture.TestHarness.Bus.Publish(actionGroupStarted);
-       
+
         (await fixture.ConsumerHarness.Consumed.Any<ActionGroupStarted>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<HandleHostOrderStart>(f =>
             f.Context.Message == new HandleHostOrderStart(actionGroup.CorrelationId, actionGroup.AssignedAgv!.Value.ToString(), actionGroupStarted.MessageCreatedDate))).ShouldBeTrue();

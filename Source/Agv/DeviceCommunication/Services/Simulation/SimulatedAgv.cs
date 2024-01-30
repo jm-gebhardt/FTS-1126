@@ -21,7 +21,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
 /// <param name="AgvGraph">The agv graph.</param>
 /// <param name="AgvData">The agv data.</param>
 [PublicAPI]
-public record SimulatedAgv(Guid CorrelationId,
+public record SimulatedAgv(
+    Guid CorrelationId,
     string AgvId,
     string CurrentState,
     bool IsOnline,
