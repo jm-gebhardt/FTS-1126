@@ -20,8 +20,14 @@ using MassTransit.Serialization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Quartz;
+
+const string quartzSchedulerName = "MassTransit-DeviceCommunication";
+const string quartzSchedulerId = "AUTO";
+const string quartzQueueName = "quartz-DeviceCommunication";
 
 var initialLogger = InitialLogger.Create<Program>();
+
 try
 {
     IHostBuilder? hostBuilder = null;
@@ -51,16 +57,31 @@ try
                         services.AddTransient<IMapGenerator, GeneratedMapGenerator>();
                     }
                     services.AddHostedService<SimulatedAgvProvider>();
+                    
+                    services.AddQuartz(q =>
+                    {
+                        q.SchedulerName = quartzSchedulerName;
+                        q.SchedulerId = quartzSchedulerId;
+                        
+                        // convert time zones using converter that can handle Windows/Linux differences
+                        q.UseTimeZoneConverter();
+                    });
 
                     services.ConfigureServicesMassTransit(context.Configuration,
                         configurator =>
                         {
-                            configurator.AddDelayedMessageScheduler();
+                            configurator.AddPublishMessageScheduler();
+                            
+                            configurator.AddQuartzConsumers(options => options.QueueName = quartzQueueName);
+                            
                             configurator.AddSagaStateMachine<SimulatedAgvStateMachine, SimulatedAgvSaga>()
                                 .InMemoryRepository();
                             configurator.AddMqttConsumer<SimulateAgvErrorConsumer>();
                             configurator.AddConsumer<SimulatedAgvProvider>();
-                        }, rabbitMqConfiguration: (_, cfg) => { cfg.UseDelayedMessageScheduler(); });
+                        }, rabbitMqConfiguration: (_, cfg) =>
+                        {
+                            cfg.UsePublishMessageScheduler();
+                        });
                     services.AddOptions<MassTransitHostOptions>().Configure(options => { options.WaitUntilStarted = true; });
                 });
         })

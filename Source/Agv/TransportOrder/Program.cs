@@ -15,6 +15,10 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Prometheus;
 
+const string quartzSchedulerName = "MassTransit-TransportOrder";
+const string quartzSchedulerId = "AUTO";
+const string quartzQueueName = "quartz-TransportOrder";
+
 var initialLogger = InitialLogger.Create<Program>();
 
 try
@@ -25,7 +29,7 @@ try
         .WithParsed(productionOptions =>
         {
             hostBuilder = GebhardtStartup.CreateHostBuilder(args)
-                .AddMassTransit(initialLogger)
+                .AddMassTransit(initialLogger, TransportOrderDbContext.ConfigSectionName, quartzSchedulerName, quartzSchedulerId, quartzQueueName)
                 .AddTransportOrderCore(productionOptions);
         });
 

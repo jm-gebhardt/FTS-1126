@@ -3,8 +3,10 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Filters;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi;
 using MassTransit;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Quartz;
 
 // ReSharper disable once CheckNamespace
 namespace Gebhardt.StoreWare.Agv.TransportOrder;
@@ -19,8 +21,12 @@ public static class MassTransitHostBuilderExtensions
     /// </summary>
     /// <param name="hostBuilder"><see cref="IHostBuilder"/></param>
     /// <param name="initialLogger"><see cref="ILogger"/></param>
+    /// <param name="quartzDbConfigurationSection">Configuration section used for Quartz SQL persistence</param>
+    /// <param name="quartzSchedulerName">Quartz scheduler name</param>
+    /// <param name="quartzSchedulerId">Quartz scheduler id</param>
+    /// <param name="quartzQueueName">Quartz queue name</param>
     /// <returns><see cref="IHostBuilder"/></returns>
-    public static IHostBuilder AddMassTransit(this IHostBuilder hostBuilder, ILogger initialLogger)
+    public static IHostBuilder AddMassTransit(this IHostBuilder hostBuilder, ILogger initialLogger, string quartzDbConfigurationSection, string quartzSchedulerName, string quartzSchedulerId, string quartzQueueName)
     {
         hostBuilder.ConfigureServices((context, services) =>
         {
@@ -32,11 +38,38 @@ public static class MassTransitHostBuilderExtensions
                         .AddWebApiConsumer();
 
                     x.AddMediator(c => c.AddMediator());
+                    x.AddPublishMessageScheduler();
+                    x.AddQuartzConsumers(options => options.QueueName = quartzQueueName);
                 }, rabbitMqConfiguration: (ctx, cfg) =>
                 {
-                    cfg.UseDelayedMessageScheduler();
+                    cfg.UsePublishMessageScheduler();
                     cfg.UseConsumeFilter<ActionGroupTracingConsumeFilters>(ctx);
                     cfg.UseConsumeFilter<AgvTracingConsumeFilters>(ctx);
+                });
+
+                services.AddQuartz(q =>
+                {
+                    q.SchedulerName = quartzSchedulerName;
+                    q.SchedulerId = quartzSchedulerId;
+
+                    // convert time zones using converter that can handle Windows/Linux differences
+                    q.UseTimeZoneConverter();
+
+                    q.UsePersistentStore(s =>
+                    {
+                        s.UseProperties = true;
+                        s.UseNewtonsoftJsonSerializer();
+                        string? connectionString = context.Configuration.GetConnectionString(quartzDbConfigurationSection);
+                        if (connectionString != null)
+                        {
+                            s.UseSqlServer(connectionString);
+                        }
+                        else
+                        {
+                            initialLogger.LogError("Connection string \"{}\" was not found'", quartzDbConfigurationSection);
+                            throw new InvalidOperationException($"Connection string \"{quartzDbConfigurationSection}\" was not found.");
+                        }
+                    });
                 });
             }
             catch (InvalidOperationException e)
