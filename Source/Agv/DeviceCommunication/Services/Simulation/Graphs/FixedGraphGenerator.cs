@@ -162,7 +162,7 @@ public class FixedGraphGenerator : GraphGeneratorBase
             }),
             CreateBezier1(Way0015, Way0018, 47.625d, 58.625d, nodes),
             CreateDirect(Way0016, Way0015, nodes),
-            CreateBezier2(Way0017, Way0018, 72.375d, 40d, 61.375d, 52.625d, nodes),
+            CreateBezier2(Way0017, Way0018, 80d, 52d, 54.375d, 45d, nodes),
             CreateDirect(Way0123, Way0017, nodes),
             CreateDirect(Way0017, Way0123, nodes),
             CreateSlanted(Way0018, Way0014, 17f, East, 3.375),
