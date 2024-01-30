@@ -111,7 +111,7 @@ public class GetAgvsRequestHandler :
         string? lastNodeId = agv.AgvStatus?.LastNodeId;
         if (lastNodeId != null)
         {
-            var lastNode = await _agvDb.Graphs.GetNodeAsync(lastNodeId);
+            var lastNode = await _agvDb.Graphs.TryGetNodeAsync(lastNodeId);
             _mapper.Map(lastNode, agvMessageContent);
         }
 

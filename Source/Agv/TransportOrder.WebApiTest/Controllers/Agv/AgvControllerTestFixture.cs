@@ -244,7 +244,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
     public AgvControllerTestFixture<TRequest, TRequestHandler> WithAgvGraph(Guid correlationId, AgvGraph agvGraph)
     {
         AgvDb.Setup(x => x.Graphs.GetAgvGraphAsync(correlationId)).ReturnsAsync(agvGraph);
-        AgvDb.Setup(x => x.Graphs.GetNodeAsync(It.IsAny<string>()))
+        AgvDb.Setup(x => x.Graphs.TryGetNodeAsync(It.IsAny<string>()))
             .ReturnsAsync(() => agvGraph.Nodes.First());
         return this;
     }

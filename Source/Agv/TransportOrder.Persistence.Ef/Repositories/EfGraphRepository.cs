@@ -119,6 +119,20 @@ public class EfGraphRepository : IGraphRepository
     }
 
     /// <inheritdoc />
+    public async Task<GraphNode?> TryGetNodeAsync(string id)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        var node = await context.Set<EfNode>()
+            .Where(n => n.Id == id)
+            .AsNoTracking()
+            .SingleOrDefaultAsync();
+
+        var graphNode = _mapper.Map<GraphNode?>(node);
+
+        return graphNode;
+    }
+
+    /// <inheritdoc />
     public async Task<IGraph> GetGraphForMap(Guid mapCorrelationId)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();

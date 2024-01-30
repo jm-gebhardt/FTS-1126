@@ -129,6 +129,34 @@ public class EfAgvGraphRepositoryTest
     }
 
     [TestMethod]
+    public async Task TryGetNodeAsync_WhenNodeExist_ReturnsNode()
+    {
+        var fixture = new EfAgvGraphRepositoryTestFixture();
+        var correlationId = Guid.NewGuid();
+        var expectedAgvGraph = AgvGraphGenerator.CreateDefaultGraph(correlationId);
+        await fixture.Repository.UpdateGraphAsync(new Graph { Nodes = expectedAgvGraph.Nodes, Edges = expectedAgvGraph.Edges });
+        await fixture.Repository.AddOrUpdateAgvGraphAsync(expectedAgvGraph);
+        var expectedNode = expectedAgvGraph.Nodes.First();
+
+        var actualNode = await fixture.Repository.TryGetNodeAsync(expectedNode.Id);
+
+        VerifyGraphNode(actualNode!, expectedNode);
+    }
+
+    [TestMethod]
+    public async Task TryGetNodeAsync_WhenNodeIsNotFound_ReturnsNull()
+    {
+        var fixture = new EfAgvGraphRepositoryTestFixture();
+        var correlationId = Guid.NewGuid();
+        var expectedAgvGraph = AgvGraphGenerator.CreateDefaultGraph(correlationId);
+        await fixture.Repository.AddOrUpdateAgvGraphAsync(expectedAgvGraph);
+
+        var actualNode = await fixture.Repository.TryGetNodeAsync("Not existing Node Id");
+
+        actualNode.ShouldBeNull();
+    }
+
+    [TestMethod]
     public async Task GetAgvGraphAsync_WhenGraphIsNotExisting_ThrowsAgvGraphNotDefinedException()
     {
         var fixture = new EfAgvGraphRepositoryTestFixture();

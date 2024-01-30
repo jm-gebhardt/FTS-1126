@@ -44,6 +44,12 @@ public interface IGraphRepository
     Task<GraphNode> GetNodeAsync(string id);
 
     /// <summary>
+    /// Try to get node of this agv by NodeId.
+    /// </summary>
+    /// <param name="id">The Id of the node to get</param>
+    Task<GraphNode?> TryGetNodeAsync(string id);
+
+    /// <summary>
     /// Gets the graph for the given map.
     /// </summary>
     /// <param name="mapCorrelationId">The correlation id of the map.</param>
