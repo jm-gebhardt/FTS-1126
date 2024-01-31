@@ -55,6 +55,14 @@ public sealed class SimulateOptions
     public int InitialBatteryCharge { get; init; }
 
     /// <summary>
+    /// If set the initial battery charge of the agv will deviate in this range (+/-) from initial battery charge in [%]
+    /// </summary>
+    [UsedImplicitly]
+    // ReSharper disable once StringLiteralTypo
+    [Option("initialbatterychargedeviation", HelpText = "If set the initial battery charge of the agv will deviate in this range (+/-) from initial battery charge in [%]", Default = 0)]
+    public int InitialBatteryChargeDeviation { get; init; }
+
+    /// <summary>
     /// Flag to use the grid graph generator in simulation mode
     /// </summary>
     [UsedImplicitly]

@@ -18,8 +18,18 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States;
 public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
 {
     private readonly ITimeProvider _timeProvider;
-    private const int AliveChargeThreshold = 5;
+
     private const float InitialTheta = 0f;
+
+    /// <summary>
+    /// Threshold [%] for battery charge to be considered alive.
+    /// </summary>
+    public const int AliveChargeThreshold = 5;
+
+    /// <summary>
+    /// Maximum possible battery charge [%].
+    /// </summary>
+    public const double MaxCharge = 100;
 
     private readonly AgvGraph? _agvGraph;
 
@@ -201,7 +211,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
             }
             if (Action.ActionType == ActionType.Charge)
             {
-                double chargeDiff = 100 - SimulatedBatteryCharge;
+                double chargeDiff = MaxCharge - SimulatedBatteryCharge;
                 if (chargeDiff <= 0)
                 {
                     return TimeSpan.Zero;
@@ -402,7 +412,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
         bool charging = false;
         if (CurrentNode != null && Action != null) // AGV is charging if it is at a charging station
         {
-            charging = ActionStartDate != null && CurrentNode.Type == AgvGraph.NodeType.Charge && AgvStatus.BatteryCharge < 100 && Action.ActionType == ActionType.Charge;
+            charging = ActionStartDate != null && CurrentNode.Type == AgvGraph.NodeType.Charge && AgvStatus.BatteryCharge < MaxCharge && Action.ActionType == ActionType.Charge;
         }
 
         double chargeDiff;
@@ -420,7 +430,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
             nameof(SimulatedAgvStateMachine.BusyMoving)
         }.Any(c => c == CurrentState);
 
-        SimulatedBatteryCharge = Math.Clamp(SimulatedBatteryCharge + chargeDiff, 0, 100);
+        SimulatedBatteryCharge = Math.Clamp(SimulatedBatteryCharge + chargeDiff, 0, MaxCharge);
         IsOnline = SimulatedBatteryCharge > AliveChargeThreshold;
         UpdatePosition();
 

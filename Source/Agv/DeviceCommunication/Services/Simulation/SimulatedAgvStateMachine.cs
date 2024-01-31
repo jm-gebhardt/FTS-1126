@@ -134,9 +134,10 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     private readonly ILogger<SimulatedAgvStateMachine> _logger;
     private readonly SimulateOptions _simulateOptions;
     private readonly ITimeProvider _timeProvider;
-    private readonly double _batteryDischargeRate; // Rate at which the battery charge decreases during simulation in [%/s]
-    private readonly double _batteryChargeRate; // Rate at which the battery charge increases during charge in [%/s]
-    private readonly int _initialBatteryCharge;
+
+    private double BatteryDischargeRate => _simulateOptions.BatteryDischargeRate; // Rate at which the battery charge decreases during simulation in [%/s]
+
+    private double BatteryChargeRate => _simulateOptions.BatteryChargeRate; // Rate at which the battery charge increases during charge in [%/s]
 
     /// <summary>
     /// SimulatedAgvStateMachine Constructor
@@ -149,9 +150,6 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         _logger = logger;
         _simulateOptions = simulateOptions;
         _timeProvider = timeProvider;
-        _batteryDischargeRate = _simulateOptions.BatteryDischargeRate;
-        _batteryChargeRate = _simulateOptions.BatteryChargeRate;
-        _initialBatteryCharge = _simulateOptions.InitialBatteryCharge;
         const int initialTravelTime = 5000;
         StatusUpdateIntervalMs = Math.Clamp(_simulateOptions.SimulationSpeed * initialTravelTime / 2, 100, 10000); // Send twice per node (min 0.1s, max 10s)
         SignalPositionIntervalMs = Math.Clamp(_simulateOptions.SimulationSpeed * initialTravelTime / 10, 200, 2000); // Send 10x per node (min 0.2s, max 2s)
@@ -211,8 +209,17 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     private void SetSagaFactory()
     {
         Event(() => CreateAgvEvent, e =>
-            e.SetSagaFactory(context => new SimulatedAgvSaga(context.Message.Agv, context.Message.SimulationSpeed, _initialBatteryCharge, _batteryChargeRate, _timeProvider))
+            e.SetSagaFactory(context => new SimulatedAgvSaga(context.Message.Agv, context.Message.SimulationSpeed, GetInitialBatteryCharge(), BatteryChargeRate, _timeProvider))
         );
+    }
+
+    private int GetInitialBatteryCharge()
+    {
+        int maxDeviation = _simulateOptions.InitialBatteryChargeDeviation;
+        int calculatedBatteryCharge = _simulateOptions.InitialBatteryCharge + Random.Shared.Next(-maxDeviation, maxDeviation + 1);
+        const int safetyAgainstDeadBirth = 5;
+        int initialBatteryCharge = Math.Clamp(calculatedBatteryCharge, SimulatedAgvSaga.AliveChargeThreshold + safetyAgainstDeadBirth, (int) SimulatedAgvSaga.MaxCharge);
+        return initialBatteryCharge;
     }
     #endregion
 
@@ -358,7 +365,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         int interval = _simulateOptions.SimulationSpeed / requestsOnEdge;
         if (currentEdge != null)
         {
-            interval = (int)(currentEdge.EstimatedExitTime - currentEdge.InitialTurnFinishTime).TotalMilliseconds / requestsOnEdge;
+            interval = (int) (currentEdge.EstimatedExitTime - currentEdge.InitialTurnFinishTime).TotalMilliseconds / requestsOnEdge;
         }
 
         return Math.Clamp(interval, lowerBound, upperBound);
@@ -383,7 +390,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         _logger.LogTrace("Status event from AGV {AgvId} / {CorrelationId}",
             context.Saga.SerialNumber, context.Saga.CorrelationId);
 
-        context.Saga.UpdateStatus(GetStatusUpdateInterval(context).TotalSeconds, _batteryChargeRate, _batteryDischargeRate); // Update status before each send
+        context.Saga.UpdateStatus(GetStatusUpdateInterval(context).TotalSeconds, BatteryChargeRate, BatteryDischargeRate); // Update status before each send
 
         if (context.Saga.IsOnline) // Only send status if AGV is still alive
         {
