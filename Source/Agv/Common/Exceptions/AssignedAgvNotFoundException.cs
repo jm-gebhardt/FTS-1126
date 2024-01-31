@@ -10,13 +10,13 @@ public class AssignedAgvNotFoundException : Exception
     /// <summary>
     /// Assigned Agv was not found
     /// </summary>
-    /// <param name="agvId"></param>
+    /// <param name="agvSerialNumber">The serial number of the agv.</param>
     /// <param name="action">The AgvAction where the Agv should be assigned to</param>
     /// <param name="correlationId"></param>
-    public AssignedAgvNotFoundException(Guid correlationId, string agvId, AgvAction action)
+    public AssignedAgvNotFoundException(Guid correlationId, string agvSerialNumber, AgvAction action)
         : base($"No assigned Agv for action with CorrelationId: {action.CorrelationId} " +
                $"AssignedAgv: {correlationId} " +
-               $"AgvId: {agvId}")
+               $"AgvSerialNumber: {agvSerialNumber}")
     {
     }
 }

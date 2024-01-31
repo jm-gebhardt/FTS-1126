@@ -19,8 +19,11 @@ public record AgvDto : DatedMessage
     /// <summary>The CorrelationId of the agv.</summary>
     public Guid CorrelationId { get; init; }
 
-    /// <summary>The agv serial number.</summary>
-    public string AgvId { get; init; }
+    /// <summary>The serial number of the agv.</summary>
+    public string SerialNumber { get; init; }
+
+    /// <summary>The name of the agv.</summary>
+    public string Name { get; init; }
 
     /// <summary>The current state of the agv.</summary>
     public AgvStateType CurrentState { get; init; }
@@ -57,7 +60,8 @@ public record AgvDto : DatedMessage
     public GraphNodeDto? LastNode { get; init; }
 
     /// <param name="correlationId">CorrelationId.</param>
-    /// <param name="agvId">AGV Serial Number.</param>
+    /// <param name="serialNumber">AGV Serial Number.</param>
+    /// <param name="name">The name of the agv.</param>
     /// <param name="currentState">Current State.</param>
     /// <param name="timeOfStateTransition">Time of the last state transition.</param>
     /// <param name ="timeOfLockStateChanged">Time of the last lock state change.</param>
@@ -72,7 +76,8 @@ public record AgvDto : DatedMessage
     /// <param name="lastNode">Last node.</param>
     [PublicAPI]
     public AgvDto(Guid correlationId,
-        string agvId,
+        string serialNumber,
+        string name,
         AgvStateType currentState,
         DateTime timeOfStateTransition,
         DateTime timeOfLockStateChanged,
@@ -87,7 +92,8 @@ public record AgvDto : DatedMessage
         GraphNodeDto? lastNode)
     {
         CorrelationId = correlationId;
-        AgvId = agvId;
+        SerialNumber = serialNumber;
+        Name = name;
         CurrentState = currentState;
         TimeOfStateTransition = timeOfStateTransition;
         TimeOfLockStateChanged = timeOfLockStateChanged;
@@ -107,6 +113,7 @@ public record AgvDto : DatedMessage
     /// </summary>
     public AgvDto()
     {
-        AgvId = null!;
+        SerialNumber = null!;
+        Name = null!;
     }
 }

@@ -9,26 +9,24 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 /// An event reporting the current position of an AGV.
 /// </summary>
 [PublicAPI]
-public record AgvPositionReceived : CorrelatedBy<Guid>, IAgvId
+public record AgvPositionReceived : CorrelatedBy<Guid>, IAgv
 {
-    /// <inheritdoc/>
+    /// <inheritdoc cref="IAgv.CorrelationId" />
     public Guid CorrelationId { get; }
 
     /// <inheritdoc />
-    public string AgvId { get; }
+    public string SerialNumber { get; }
 
     /// <summary>
     /// Current AGV position
     /// </summary>
     public AgvPosition AgvPosition { get; }
 
-    /// <summary>
-    /// Initializes a new instance of <see cref="AgvPositionReceived"/>
-    /// </summary>
-    public AgvPositionReceived(Guid correlationId, string agvId, AgvPosition agvPosition)
+    /// <inheritdoc cref="AgvPositionReceived"/>
+    public AgvPositionReceived(Guid correlationId, string serialNumber, AgvPosition agvPosition)
     {
         CorrelationId = correlationId;
-        AgvId = agvId;
+        SerialNumber = serialNumber;
         AgvPosition = agvPosition;
     }
 }

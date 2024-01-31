@@ -23,7 +23,7 @@ public class MapRequestTestFixture<TRequestClient, TConsumer> : MediatorTestFixt
 {
     public const string Base64String = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
 
-    private readonly string[] _agvIds = { "AGV001", "AGV002" };
+    private readonly string[] _agvSerialNumbers = { "AGV001", "AGV002" };
     private readonly string[] _orders = { "ORDER001", "ORDER002", "" };
     private readonly AgvState[] _states = { AgvState.Busy, AgvState.Discovered };
 
@@ -101,15 +101,15 @@ public class MapRequestTestFixture<TRequestClient, TConsumer> : MediatorTestFixt
 
         var agvs = new List<TransportOrder.Domain.Models.Agv.Agv>();
 
-        for (int i = 0; i < _agvIds.Length; i++)
+        for (int i = 0; i < _agvSerialNumbers.Length; i++)
         {
-            string agvId = _agvIds[i];
+            string agvSerialNumber = _agvSerialNumbers[i];
             string order = _orders[i];
             var state = _states[i];
             var correlationId = _correlationIds[i];
             var agvStatus = new AgvStatus(correlationId, order, true, true, 10, true, true);
 
-            var agv = new TransportOrder.Domain.Models.Agv.Agv(correlationId, agvId, agvStatus);
+            var agv = new TransportOrder.Domain.Models.Agv.Agv(correlationId, agvSerialNumber, agvStatus);
             agv = AgvGenerator.SetAgvState(state, agv);
 
             agvs.Add(agv);

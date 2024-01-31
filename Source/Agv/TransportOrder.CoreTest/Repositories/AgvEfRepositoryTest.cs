@@ -59,7 +59,7 @@ public class AgvEfRepositoryTest
         var readyAgv = (await fixture.Repository.GetIdleAgvsAsync()).First();
         readyAgv.CorrelationId.ShouldBe(agv.CorrelationId);
         readyAgv.CurrentAgvState.ShouldBe(agv.CurrentAgvState);
-        readyAgv.AgvId.ShouldBe(agv.AgvId);
+        readyAgv.SerialNumber.ShouldBe(agv.SerialNumber);
         readyAgv.AgvStatus.ShouldBe(agv.AgvStatus);
         readyAgv.IsOnline.ShouldBeFalse();
     }
@@ -79,7 +79,7 @@ public class AgvEfRepositoryTest
         var readyAgv = (await fixture.Repository.GetIdleAgvsAsync()).First();
         readyAgv.CorrelationId.ShouldBe(idleAgv.CorrelationId);
         readyAgv.CurrentAgvState.ShouldBe(idleAgv.CurrentAgvState);
-        readyAgv.AgvId.ShouldBe(idleAgv.AgvId);
+        readyAgv.SerialNumber.ShouldBe(idleAgv.SerialNumber);
         readyAgv.AgvStatus.ShouldBe(idleAgv.AgvStatus);
     }
 
@@ -192,7 +192,7 @@ public class AgvEfRepositoryTest
         {
             var foundAgv = await agvRepository.GetAgvAsync(actualAgv.CorrelationId);
             foundAgv.ShouldNotBeNull();
-            foundAgv.AgvId.ShouldBe(actualAgv.AgvId);
+            foundAgv.SerialNumber.ShouldBe(actualAgv.SerialNumber);
         }
 
         await Should.ThrowAsync<AgvNotFoundException>(agvRepository.GetAgvAsync(Guid.Empty));

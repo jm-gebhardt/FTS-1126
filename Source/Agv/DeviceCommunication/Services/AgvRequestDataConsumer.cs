@@ -29,8 +29,8 @@ public class AgvRequestDataConsumer : IConsumer<RequestAgvData>
     /// <param name="context">Context of the consumer wrapping details surrounding the inbound message.</param>
     public async Task Consume(ConsumeContext<RequestAgvData> context)
     {
-        await context.PublishMqtt(new MqttRequestData(context.Message.AgvId, Guid.NewGuid()), context.CancellationToken);
+        await context.PublishMqtt(new MqttRequestData(context.Message.SerialNumber, Guid.NewGuid()), context.CancellationToken);
 
-        _logger.LogInformation("{MessageType} from AGV {AgvId} / {CorrelationId} received", nameof(RequestAgvData), context.Message.AgvId, context.CorrelationId);
+        _logger.LogInformation("{MessageType} from AGV {AgvId} / {CorrelationId} received", nameof(RequestAgvData), context.Message.SerialNumber, context.CorrelationId);
     }
 }

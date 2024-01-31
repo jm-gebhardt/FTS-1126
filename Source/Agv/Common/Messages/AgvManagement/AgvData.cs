@@ -29,6 +29,11 @@ public record AgvData : CorrelatedBy<Guid>
     public string IpV4Address { get; init; }
 
     /// <summary>
+    /// The software version of the AGV
+    /// </summary>
+    public string SoftwareVersion { get; init; }
+
+    /// <summary>
     /// The maximum velocity of the AGV in straight direction [m/s]
     /// </summary>
     public double MaxVelocityStraight { get; init; }
@@ -83,6 +88,7 @@ public record AgvData : CorrelatedBy<Guid>
         string model,
         string type,
         string ipV4Address,
+        string softwareVersion,
         double batteryCapacity,
         double acceleration,
         double maxVelocityStraight,
@@ -99,6 +105,7 @@ public record AgvData : CorrelatedBy<Guid>
         Model = model;
         Type = type;
         IpV4Address = ipV4Address;
+        SoftwareVersion = softwareVersion;
         Acceleration = acceleration;
         BatteryCapacity = batteryCapacity;
         MaxVelocityStraight = maxVelocityStraight;

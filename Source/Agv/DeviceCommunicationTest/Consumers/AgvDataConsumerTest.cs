@@ -15,7 +15,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers;
 [TestClass]
 public class AgvDataConsumerTest
 {
-    private const string AgvTestIdentifier = "#0815#";
+    private const string AgvSerialNumber = "#0815#";
 
     /// <summary>
     /// Test for consuming invalid AGV data message.
@@ -47,17 +47,17 @@ public class AgvDataConsumerTest
             new() { SensorIdentifier = "Back02" },
             new() { SensorIdentifier = "Front02" }
         };
-        var message = new MqttAgvData(AgvTestIdentifier, "Karis", "BF1", "127.0.0.1", 1.8, 120.0, 0.6, 0.8, 0.7, 0.9, 2.5, 1.5, 1000, sensors);
+        var message = new MqttAgvData(AgvSerialNumber, "Karis", "BF1", "127.0.0.1", 1.8, 120.0, 0.6, 0.8, 0.7, 0.9, 2.5, 1.5, 1000, sensors);
         await fixture.TestHarness.Bus.PublishMqtt(message, null);
         (await fixture.TestHarness.Published.Any<MqttAgvData>()).ShouldBeTrue();
 
         var consumedMessage = fixture.ConsumerHarness.Consumed.Select<MqttAgvData>().First().Context.Message;
-        consumedMessage.SerialNumber.ShouldBe(AgvTestIdentifier);
+        consumedMessage.SerialNumber.ShouldBe(AgvSerialNumber);
         (await fixture.TestHarness.Published.Any<AgvDataReceived>()).ShouldBeTrue();
 
         var publishedData = fixture.TestHarness.Published.Select<AgvDataReceived>().First().Context.Message;
-        publishedData.CorrelationId.ShouldBe(AgvTestIdentifier.ToGuid());
-        publishedData.AgvId.ShouldBe(AgvTestIdentifier);
+        publishedData.CorrelationId.ShouldBe(AgvSerialNumber.ToGuid());
+        publishedData.SerialNumber.ShouldBe(AgvSerialNumber);
         publishedData.Data.Sensors.Length.ShouldBe(4);
         publishedData.Data.Model.ShouldBe("Karis");
         publishedData.Data.Type.ShouldNotBeNull();

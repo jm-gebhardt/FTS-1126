@@ -81,7 +81,7 @@ public class SimulatedAgvProviderTest
             var createdSaga = fixture.SagaHarness.Sagas.Select(c => c.CorrelationId == $"SimAgv-{i1}".ToGuid()).First().Saga;
 
             createdSaga.CorrelationId.ShouldBe($"SimAgv-{i}".ToGuid());
-            createdSaga.AgvId.ShouldBe($"SimAgv-{i}");
+            createdSaga.SerialNumber.ShouldBe($"SimAgv-{i}");
             createdSaga.AgvStatus.ShouldNotBeNull();
             createdSaga.AgvGraph.ShouldNotBeNull();
             createdSaga.AgvData.ShouldNotBeNull();

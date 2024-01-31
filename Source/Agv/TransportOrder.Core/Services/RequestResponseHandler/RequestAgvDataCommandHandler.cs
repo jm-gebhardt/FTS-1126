@@ -35,7 +35,7 @@ public class RequestAgvDataCommandHandler : IConsumer<RequestAgvData>
         var agvCorrelationId = context.Message.CorrelationId;
 
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
-        await _bus.Publish(new Common.Messages.AgvManagement.Commands.RequestAgvData(agv.CorrelationId, agv.AgvId));
+        await _bus.Publish(new Common.Messages.AgvManagement.Commands.RequestAgvData(agv.CorrelationId, agv.SerialNumber));
         await context.RespondAsync(new RequestedAgvData(agv.CorrelationId));
     }
 }

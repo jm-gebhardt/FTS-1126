@@ -26,7 +26,7 @@ public class PositionEventHandler : IConsumer<AgvPositionReceived>
     public async Task Consume(ConsumeContext<AgvPositionReceived> context)
     {
         var position = context.Message.AgvPosition;
-        string agv = context.Message.AgvId;
+        string agv = context.Message.SerialNumber;
 
         ICollection<Grid> grids = await _db.Grids.GetAll();
         foreach (var grid in grids)

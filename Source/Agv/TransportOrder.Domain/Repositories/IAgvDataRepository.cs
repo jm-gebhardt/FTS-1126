@@ -25,7 +25,7 @@ public interface IAgvDataRepository
     /// </summary>
     /// <param name="agvData">AgvData</param>
     /// <returns>True if a change has been made</returns>
-    public Task<bool> AddOrUpdateAsync(AgvData agvData);
+    public Task AddOrUpdateAsync(AgvData agvData);
 
     /// <summary>
     /// Gets the data of selected agvs.

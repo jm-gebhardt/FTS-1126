@@ -27,11 +27,11 @@ public class ChargingPointManagerTest
     [TestMethod]
     public async Task GetBestCharger_WhenFreeChargerNodesExists_ReturnFirstFreeChargerNode()
     {
-        const string agvId = "AGV001";
-        var correlationId = agvId.ToGuid();
+        const string agvSerialNumber = "AGV001";
+        var correlationId = agvSerialNumber.ToGuid();
         var fixture = new ChargingPointManagerTestFixture();
         var agvGraph = fixture.GetAgvGraph(true, correlationId);
-        var agv = fixture.GetAgv(correlationId, agvId, "Idle", "");
+        var agv = fixture.GetAgv(correlationId, agvSerialNumber, "Idle", "");
         var chargingNode = NodeGenerator.GenerateChargingNode();
         var availableNodes = new List<GraphNode>
         {
@@ -53,11 +53,11 @@ public class ChargingPointManagerTest
     [TestMethod]
     public async Task GetBestCharger_WhenFreeChargerNodesDoesNotExists_ReturnNull()
     {
-        const string agvId = "AGV001";
-        var correlationId = agvId.ToGuid();
+        const string agvSerialNumber = "AGV001";
+        var correlationId = agvSerialNumber.ToGuid();
         var fixture = new ChargingPointManagerTestFixture();
         var agvGraph = fixture.GetAgvGraph(false, correlationId);
-        var agv = fixture.GetAgv(correlationId, agvId, "Idle", "");
+        var agv = fixture.GetAgv(correlationId, agvSerialNumber, "Idle", "");
 
         fixture.SetupGraphRepository(agvGraph);
         fixture.SetupNodeLocker(true, true, true);
@@ -69,11 +69,11 @@ public class ChargingPointManagerTest
     [TestMethod]
     public async Task ReserveCharger_WhenNodeIsChargerTypeAndFree_ReturnTrue()
     {
-        const string agvId = "AGV001";
-        var correlationId = agvId.ToGuid();
+        const string agvSerialNumber = "AGV001";
+        var correlationId = agvSerialNumber.ToGuid();
         var fixture = new ChargingPointManagerTestFixture();
         var agvGraph = fixture.GetAgvGraph(true, correlationId);
-        var agv = fixture.GetAgv(correlationId, agvId, "Idle", "");
+        var agv = fixture.GetAgv(correlationId, agvSerialNumber, "Idle", "");
         var chargingNode = NodeGenerator.GenerateChargingNode();
         var availableNodes = new List<GraphNode>
         {
@@ -116,12 +116,12 @@ public class ChargingPointManagerTest
     [TestMethod]
     public async Task FindAndReserveFreeCharger_WhenFreeChargerExist_ReturnChargerNodeInReservedState()
     {
-        const string agvId = "AGV001";
-        var correlationId = agvId.ToGuid();
+        const string agvSerialNumber = "AGV001";
+        var correlationId = agvSerialNumber.ToGuid();
 
         var fixture = new ChargingPointManagerTestFixture();
         var agvGraph = fixture.GetAgvGraph(true, correlationId);
-        var agv = fixture.GetAgv(correlationId, agvId, "Idle", "");
+        var agv = fixture.GetAgv(correlationId, agvSerialNumber, "Idle", "");
         var chargingNode = NodeGenerator.GenerateChargingNode();
         var availableNodes = new List<GraphNode>
         {
@@ -144,11 +144,11 @@ public class ChargingPointManagerTest
     [TestMethod]
     public async Task FindAndReserveFreeCharger_WhenNoFreeChargerExist_ThrowsException()
     {
-        const string agvId = "AGV001";
-        var correlationId = agvId.ToGuid();
+        const string agvSerialNumber = "AGV001";
+        var correlationId = agvSerialNumber.ToGuid();
         var fixture = new ChargingPointManagerTestFixture();
         var agvGraph = fixture.GetAgvGraph(false, correlationId);
-        var agv = fixture.GetAgv(correlationId, agvId, "Idle", "");
+        var agv = fixture.GetAgv(correlationId, agvSerialNumber, "Idle", "");
 
         fixture.SetupGraphRepository(agvGraph);
         fixture.SetupNodeLocker(true, true, true);

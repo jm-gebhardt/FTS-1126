@@ -1,37 +1,38 @@
+using Gebhardt.StoreWare.Agv.Common.Contracts;
 using MassTransit;
 
 namespace Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
 
 /// <summary>
-/// Triggers the action on the Agv side
+/// Triggers the action on the agv side.
 /// </summary>
-public record StartActionCommand : CorrelatedBy<Guid>
+public record StartActionCommand : CorrelatedBy<Guid>, IAgv
 {
     /// <summary>
-    /// The Agv CorrelationId
+    /// The Agv CorrelationId.
     /// </summary>
     public Guid CorrelationId { get; }
 
     /// <summary>
-    /// Id of the agv the action is send to
+    /// The serial number of the agv which executes the action.
     /// </summary>
-    public string AgvId { get; }
+    public string SerialNumber { get; }
 
     /// <summary>
-    /// Action to be executed
+    /// Action to be executed.
     /// </summary>
     public AgvAction Action { get; }
 
     /// <summary>
     /// Constructor
     /// </summary>
-    /// <param name="correlationId">CorrelationId</param>
-    /// <param name="agvId">Id of the agv the action is send to</param>
-    /// <param name="action">Action to be executed</param>
-    public StartActionCommand(Guid correlationId, string agvId, AgvAction action)
+    /// <param name="correlationId">The Agv correlation Id.</param>
+    /// <param name="serialNumber">The serial number of the agv which executes the action.</param>
+    /// <param name="action">Action to be executed.</param>
+    public StartActionCommand(Guid correlationId, string serialNumber, AgvAction action)
     {
         CorrelationId = correlationId;
         Action = action;
-        AgvId = agvId;
+        SerialNumber = serialNumber;
     }
 }

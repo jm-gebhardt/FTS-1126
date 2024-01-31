@@ -1,4 +1,5 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+﻿using Gebhardt.StoreWare.Agv.Common.Contracts;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
 using JetBrains.Annotations;
@@ -8,7 +9,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
 /// <summary>
 /// Represents a message content for an agv.
 /// </summary>
-public record Agv
+public record Agv : IAgv
 {
     /// <summary>Is agv disturbed. There is at least one error with level "FATAL"</summary>
     public bool IsDisturbed { get; init; }
@@ -16,11 +17,14 @@ public record Agv
     /// <summary>AGV is in automatic mode</summary>
     public bool IsAutomatic { get; init; }
 
-    /// <summary>The CorrelationId of the Agv</summary>
+    /// <inheritdoc />    
     public Guid CorrelationId { get; init; }
 
-    /// <summary>AGV Serial Number</summary>
-    public string AgvId { get; init; } = null!;
+    /// <inheritdoc cref="IAgv.CorrelationId" />
+    public string SerialNumber { get; init; } = null!;
+
+    /// <summary>The name of the agv.</summary>
+    public string Name { get; init; } = null!;
 
     /// <summary>Current State</summary>
     public AgvState CurrentState { get; init; }
@@ -60,7 +64,8 @@ public record Agv
     public GraphNode? LastNode { get; init; }
 
     /// <param name="correlationId">CorrelationId</param>
-    /// <param name="agvId">AGV Serial Number</param>
+    /// <param name="serialNumber">The serial number of the agv.</param>
+    /// <param name="name">The name of the agv.</param>
     /// <param name="currentState">Current State</param>
     /// <param name="timeOfStateTransition">Time of the last state transition</param>
     /// <param name ="timeOfLockStateChanged">Time of the last lock state change</param>
@@ -77,7 +82,8 @@ public record Agv
     [PublicAPI]
     public Agv(
         Guid correlationId,
-        string agvId,
+        string serialNumber,
+        string name,
         AgvState currentState,
         DateTime timeOfStateTransition,
         DateTime timeOfLockStateChanged,
@@ -94,7 +100,8 @@ public record Agv
     )
     {
         CorrelationId = correlationId;
-        AgvId = agvId;
+        SerialNumber = serialNumber;
+        Name = name;
         CurrentState = currentState;
         TimeOfStateTransition = timeOfStateTransition;
         TimeOfLockStateChanged = timeOfLockStateChanged;

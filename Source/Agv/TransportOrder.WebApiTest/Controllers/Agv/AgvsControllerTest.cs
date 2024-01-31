@@ -21,15 +21,15 @@ public class AgvsControllerTest
             .Build();
 
         List<AgvDto> agvs = (await fixture.GetControllerResultAsync(c => c.GetAgvs())).ToList();
-        agvs.Count.ShouldBe(fixture.AgvIds.Length);
+        agvs.Count.ShouldBe(fixture.AgvSerialNumbers.Length);
 
-        for (int index = 0; index < fixture.AgvIds.Length; index++)
+        for (int index = 0; index < fixture.AgvSerialNumbers.Length; index++)
         {
-            string agvId = fixture.AgvIds[index];
+            string agvSerialNumber = fixture.AgvSerialNumbers[index];
             var state = fixture.States[index];
 
-            agvs[index].CorrelationId.ShouldBe(agvId.ToGuid());
-            agvs[index].AgvId.ShouldBe(agvId);
+            agvs[index].CorrelationId.ShouldBe(agvSerialNumber.ToGuid());
+            agvs[index].SerialNumber.ShouldBe(agvSerialNumber);
 
             agvs[index].CurrentState.ToString().ShouldBe(state.ToString());
             agvs[index].Errors.ShouldBeEmpty();
@@ -53,16 +53,16 @@ public class AgvsControllerTest
     public async Task GetAgvs_WhenAgvHasAgvError_ReturnsAgvWithAgvErrorList()
     {
         var fixture = new AgvsControllerTestFixture<GetAgvs, GetAgvsRequestHandler>();
-        List<AgvError> expectedAgvErrors = fixture.AgvIds.Select(agvId => AgvErrorGenerator.GenerateAgvError(agvId.ToGuid())).ToList();
+        List<AgvError> expectedAgvErrors = fixture.AgvSerialNumbers.Select(agvId => AgvErrorGenerator.GenerateAgvError(agvId.ToGuid())).ToList();
 
         fixture.SetupAgvDbWithDefaultData()
             .WithActiveAgvErrors(expectedAgvErrors)
             .Build();
 
         List<AgvDto> agvs = (await fixture.GetControllerResultAsync(c => c.GetAgvs())).ToList();
-        agvs.Count.ShouldBe(fixture.AgvIds.Length);
+        agvs.Count.ShouldBe(fixture.AgvSerialNumbers.Length);
 
-        for (int index = 0; index < fixture.AgvIds.Length; index++)
+        for (int index = 0; index < fixture.AgvSerialNumbers.Length; index++)
         {
             agvs[index].Errors.ShouldNotBeEmpty();
             foreach (var agvDtoError in agvs[index].Errors)

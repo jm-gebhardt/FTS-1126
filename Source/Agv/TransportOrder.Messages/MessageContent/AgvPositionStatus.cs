@@ -1,3 +1,4 @@
+using Gebhardt.StoreWare.Agv.Common.Contracts;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using JetBrains.Annotations;
 
@@ -7,7 +8,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
 /// Represents the position status of an agv.
 /// </summary>
 /// <param name="CorrelationId">The correlationId of the AGV</param>
-/// <param name="AgvId">Identifier of the AGV</param>
+/// <param name="SerialNumber">The serial number of the agv.</param>
 /// <param name="AgvPosition">AGV position</param>
 [UsedImplicitly]
-public record AgvPositionStatus(Guid CorrelationId, string AgvId, AgvPosition AgvPosition);
+public record AgvPositionStatus(Guid CorrelationId, string SerialNumber, AgvPosition AgvPosition) : IAgv;

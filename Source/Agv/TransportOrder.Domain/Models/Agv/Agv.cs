@@ -9,18 +9,21 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 /// <summary>
 /// Represents the agv.
 /// </summary>
-public class Agv : IAgvId
+public class Agv : IAgv
 {
     private AgvState _currentState;
     private bool _isLocked;
 
-    /// <summary>
-    /// The correlation id of the agv.
-    /// </summary>
+    /// <inheritdoc />
     public Guid CorrelationId { get; init; }
 
     /// <inheritdoc />
-    public string AgvId { get; init; }
+    public string SerialNumber { get; init; }
+
+    /// <summary>
+    /// The name of the agv.
+    /// </summary>
+    public string Name { get; private set; }
 
     /// <summary>
     /// Last received agv status.
@@ -155,20 +158,21 @@ public class Agv : IAgvId
     /// <remarks>Interval indicated in seconds</remarks>
     private TimeSpan DailyRequestUpdateInterval { get; } = TimeSpan.FromHours(24);
 
-    /// <summary>
-    /// Default constructor required to connect.
-    /// </summary>
+    /// <inheritdoc cref="Agv"/>
     public Agv(Guid correlationId,
-        string agvId,
+        string serialNumber,
         AgvStatus? agvStatus = null,
-        bool isLocked = false)
+        bool isLocked = false,
+        string? agvName = null
+    )
     {
         if (correlationId == Guid.Empty)
         {
             throw new InvalidOperationException($"{GetType()} requires correlation ID.");
         }
         CorrelationId = correlationId;
-        AgvId = agvId;
+        SerialNumber = serialNumber;
+        Name = agvName ?? serialNumber;
         AgvStatus = agvStatus;
         IsLocked = isLocked;
         NeedsMaintenance = false;
@@ -179,10 +183,11 @@ public class Agv : IAgvId
     /// EfCore ctor.
     /// </summary>
     [UsedImplicitly]
-    public Agv(string agvId)
+    public Agv(string serialNumber, string? agvName = null)
     {
-        CorrelationId = agvId.ToGuid();
-        AgvId = agvId;
+        CorrelationId = serialNumber.ToGuid();
+        SerialNumber = serialNumber;
+        Name = agvName ?? serialNumber;
         CurrentAgvState = AgvState.Initial;
     }
 
@@ -191,7 +196,8 @@ public class Agv : IAgvId
     /// </summary>
     public Agv()
     {
-        AgvId = null!;
+        SerialNumber = null!;
+        Name = null!;
         CurrentAgvState = AgvState.Initial;
     }
 

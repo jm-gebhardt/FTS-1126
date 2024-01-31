@@ -28,7 +28,7 @@ public class AgvDataEventHandler : IConsumer<AgvDataReceived>
     /// <param name="context"></param>
     public async Task Consume(ConsumeContext<AgvDataReceived> context)
     {
-        _logger.LogInformation("Received AgvData for {AgvId} / {CorrelationId}", context.Message.AgvId, context.Message.CorrelationId);
+        _logger.LogInformation("Received AgvData for {AgvId} / {CorrelationId}", context.Message.SerialNumber, context.Message.CorrelationId);
 
         await context.Publish(new UpdateAgvData(context.Message.CorrelationId, context.Message.Data));
     }

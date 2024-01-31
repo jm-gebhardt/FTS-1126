@@ -72,11 +72,11 @@ public class SimulatedAgvProvider : BackgroundService, IConsumer<GraphMissing>
 
             if (response.Message.CorrelationId == agv.CorrelationId)
             {
-                _logger?.LogInformation("AGV[{AgvId}]: state machine ready, agv was created", agv.AgvId);
+                _logger?.LogInformation("AGV[{AgvId}]: state machine ready, agv was created", agv.SerialNumber);
             }
             else
             {
-                _logger?.LogError("Could not create AGV[{AgvId}]", agv.AgvId);
+                _logger?.LogError("Could not create AGV[{AgvId}]", agv.SerialNumber);
             }
         }
         _logger?.LogInformation("Create AGV finished");
@@ -85,13 +85,13 @@ public class SimulatedAgvProvider : BackgroundService, IConsumer<GraphMissing>
 
     private SimulatedAgv GenerateAgv(int agvIndex)
     {
-        string agvId = $"{AgvPrefix}-{agvIndex}";
-        var correlationId = agvId.ToGuid();
+        string agvSerialNumber = $"{AgvPrefix}-{agvIndex}";
+        var correlationId = agvSerialNumber.ToGuid();
         var grid = _graphGenerator.Generate(correlationId);
 
         return new SimulatedAgv(
             correlationId,
-            agvId,
+            agvSerialNumber,
             "Initial",
             true,
             false,

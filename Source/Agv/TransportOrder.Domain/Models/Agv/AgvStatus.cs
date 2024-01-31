@@ -9,7 +9,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 public record AgvStatus
 {
     /// <summary>
-    ///  AGV correlation ID
+    /// AGV correlation ID
     /// </summary>
     [UsedImplicitly]
     public Guid CorrelationId { get; }

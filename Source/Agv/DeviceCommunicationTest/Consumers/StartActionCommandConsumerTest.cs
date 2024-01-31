@@ -41,14 +41,14 @@ public class StartActionCommandConsumerTest
         using (fixture.TestHarness.Bus.ConnectPublishObserver(publishObserver))
         {
             var actionCorrelationId = Guid.NewGuid();
-            const string agvId = "agv0";
+            const string agvSerialNumber = "agv0";
             const string orderId = "1234";
             var orderCorrelationId = orderId.ToGuid();
             const string toStationId = "Drop5";
 
             var action = new AgvAction(actionCorrelationId, ActionType.Pick, toStationId, orderCorrelationId);
             var correlationId = Guid.NewGuid();
-            var message = new StartActionCommand(correlationId, agvId, action);
+            var message = new StartActionCommand(correlationId, agvSerialNumber, action);
 
             // Publish ExecuteTransportOrder
             await fixture.TestHarness.Bus.Publish(message);
@@ -78,7 +78,7 @@ public class StartActionCommandConsumerTest
             // Check content
             var mqttMessage = publishedMessage.Context.Message;
 
-            mqttMessage.SerialNumber.ShouldBe(agvId);
+            mqttMessage.SerialNumber.ShouldBe(agvSerialNumber);
             // For pick action Karis expects destination as source ...
             mqttMessage.Stations?.FromStationIdentifier.ShouldBe(toStationId);
             // ... and empty destination.
@@ -120,14 +120,14 @@ public class StartActionCommandConsumerTest
         using (fixture.TestHarness.Bus.ConnectPublishObserver(publishObserver))
         {
             var actionCorrelationId = Guid.NewGuid();
-            const string agvId = "agv0";
+            const string agvSerialNumber = "agv0";
             const string orderId = "1234";
             var orderCorrelationId = orderId.ToGuid();
             const string toStationId = "Charge-1";
 
             var action = new AgvAction(actionCorrelationId, ActionType.Move, toStationId, orderCorrelationId);
             var correlationId = Guid.NewGuid();
-            var message = new StartActionCommand(correlationId, agvId, action);
+            var message = new StartActionCommand(correlationId, agvSerialNumber, action);
 
             // Publish ExecuteTransportOrder
             await fixture.TestHarness.Bus.Publish(message);
@@ -157,7 +157,7 @@ public class StartActionCommandConsumerTest
             // Check content
             var mqttMessage = publishedMessage.Context.Message;
 
-            mqttMessage.SerialNumber.ShouldBe(agvId);
+            mqttMessage.SerialNumber.ShouldBe(agvSerialNumber);
 
             mqttMessage.Stations?.FromStationIdentifier.ShouldBe(string.Empty);
             mqttMessage.Stations?.ToStationIdentifier.ShouldBe(toStationId);
@@ -185,14 +185,14 @@ public class StartActionCommandConsumerTest
         using (fixture.TestHarness.Bus.ConnectPublishObserver(publishObserver))
         {
             var actionCorrelationId = Guid.NewGuid();
-            const string agvId = "agv0";
+            const string agvSerialNumber = "agv0";
             const string orderId = "1234";
             var orderCorrelationId = orderId.ToGuid();
             const string toStationId = "Charge-1";
 
             var action = new AgvAction(actionCorrelationId, ActionType.Charge, toStationId, orderCorrelationId);
             var correlationId = Guid.NewGuid();
-            var message = new StartActionCommand(correlationId, agvId, action);
+            var message = new StartActionCommand(correlationId, agvSerialNumber, action);
 
             // Publish ExecuteTransportOrder
             await fixture.TestHarness.Bus.Publish(message);
@@ -222,8 +222,7 @@ public class StartActionCommandConsumerTest
             // Check content
             var mqttMessage = publishedMessage.Context.Message;
 
-            mqttMessage.SerialNumber.ShouldBe(agvId);
-
+            mqttMessage.SerialNumber.ShouldBe(agvSerialNumber);
             mqttMessage.Stations?.FromStationIdentifier.ShouldBe(string.Empty);
             mqttMessage.Stations?.ToStationIdentifier.ShouldBe(toStationId);
             mqttMessage.OrderType.ShouldBe(OrderType.Charge);

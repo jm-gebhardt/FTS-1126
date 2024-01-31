@@ -83,7 +83,7 @@ public class AgvRepository : IAgvRepository
 
     public async Task<ICollection<Domain.Models.Agv.Agv>> SelectExistingAgvsAsync(List<Guid> agvCorrelationIds)
     {
-        return await Agvs.Where(a => !agvCorrelationIds.Any() || agvCorrelationIds.Contains(a.CorrelationId)).OrderBy(a => a.AgvId).ToListAsync();
+        return await Agvs.Where(a => !agvCorrelationIds.Any() || agvCorrelationIds.Contains(a.CorrelationId)).OrderBy(a => a.SerialNumber).ToListAsync();
     }
 
     public async Task<bool> UpdateAgvAsync(Domain.Models.Agv.Agv agv)

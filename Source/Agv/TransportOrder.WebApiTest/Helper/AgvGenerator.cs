@@ -34,14 +34,14 @@ public static class AgvGenerator
         bool isLocked = false
     )
     {
-        string agvId = GetAgvId(index);
-        var correlationId = agvId.ToGuid();
+        string agvSerialNumber = GetAgvSerialNumber(index);
+        var correlationId = agvSerialNumber.ToGuid();
         agvStatus ??= new AgvStatus(correlationId, "orderId", true, true, 1, charging, false, lastNodeId);
-        var agv = new Domain.Models.Agv.Agv(correlationId, agvId, agvStatus);
+        var agv = new Domain.Models.Agv.Agv(correlationId, agvSerialNumber, agvStatus);
         return SetAgvState(state, isLocked, agv);
     }
 
-    private static string GetAgvId(int index)
+    private static string GetAgvSerialNumber(int index)
     {
         return $"AGV{index:D3}";
     }

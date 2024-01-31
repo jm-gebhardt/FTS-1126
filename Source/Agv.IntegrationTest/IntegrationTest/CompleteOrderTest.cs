@@ -76,16 +76,16 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest
             cancellationTokenSource.Dispose();
         }
 
-        private async Task<TestAgv> AddAgv(string agvId, CancellationToken token)
+        private async Task<TestAgv> AddAgv(string agvSerialNumber, CancellationToken token)
         {
             var restApi = new RestApi();
 
-            var agv = new TestAgv(agvId);
+            var agv = new TestAgv(agvSerialNumber);
             await agv.SubscribeDataTopics();
 
             _ = agv.StartSendingStatus(token);
 
-            var restAgv = await restApi.WaitForAgv(agv.AgvId);
+            var restAgv = await restApi.WaitForAgv(agv.SerialNumber);
             restAgv.ShouldNotBeNull();
 
             (await restApi.WaitForAgvData(restAgv["correlationId"]?.ToString())).ShouldNotBeNull();

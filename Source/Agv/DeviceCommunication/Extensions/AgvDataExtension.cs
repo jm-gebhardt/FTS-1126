@@ -19,6 +19,7 @@ public static class AgvDataExtension
             agvData.Model,
             agvData.Type,
             agvData.IpV4Address,
+            agvData.SoftwareVersion,
             agvData.BatteryCapacity,
             agvData.Acceleration * simulationSpeed,
             agvData.MaxVelocityStraight * simulationSpeed,

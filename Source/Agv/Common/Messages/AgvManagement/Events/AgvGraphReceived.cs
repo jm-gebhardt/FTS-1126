@@ -14,13 +14,13 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 /// routing algorithms by having information like metric.
 /// </remarks>
 [PublicAPI]
-public record AgvGraphReceived : CorrelatedBy<Guid>, IAgvId
+public record AgvGraphReceived : CorrelatedBy<Guid>, IAgv
 {
-    /// <inheritdoc/>
+    /// <inheritdoc cref="IAgv.CorrelationId" />
     public Guid CorrelationId { get; }
 
     /// <inheritdoc />
-    public string AgvId { get; }
+    public string SerialNumber { get; }
 
     /// <summary>
     /// Agv Graph
@@ -31,12 +31,12 @@ public record AgvGraphReceived : CorrelatedBy<Guid>, IAgvId
     /// Build message.
     /// </summary>
     /// <param name="correlationId">Unique AGV Correlation ID</param>
-    /// <param name="agvId">AGV serial number</param>
+    /// <param name="serialNumber">The serial number of the agv</param>
     /// <param name="graph">AGV graph</param>
-    public AgvGraphReceived(Guid correlationId, string agvId, AgvGraph graph)
+    public AgvGraphReceived(Guid correlationId, string serialNumber, AgvGraph graph)
     {
         CorrelationId = correlationId;
-        AgvId = agvId;
+        SerialNumber = serialNumber;
         Graph = graph;
     }
 }

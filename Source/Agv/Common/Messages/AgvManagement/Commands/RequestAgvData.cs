@@ -9,22 +9,22 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 /// Command to request the data of an AGV.
 /// </summary>
 [PublicAPI]
-public record RequestAgvData : CorrelatedBy<Guid>, IAgvId
+public record RequestAgvData : CorrelatedBy<Guid>, IAgv
 {
-    /// <inheritdoc/>
+    /// <inheritdoc cref="IAgv.CorrelationId" />
     public Guid CorrelationId { get; }
 
     /// <inheritdoc />
-    public string AgvId { get; }
+    public string SerialNumber { get; }
 
     /// <summary>
     /// Build message
     /// </summary>
-    /// <param name="correlationId"></param>
-    /// <param name="agvId"></param>
-    public RequestAgvData(Guid correlationId, string agvId)
+    /// <param name="correlationId">The correlation Id of the Agv.</param>
+    /// <param name="serialNumber">The serial number of the agv.</param>
+    public RequestAgvData(Guid correlationId, string serialNumber)
     {
         CorrelationId = correlationId;
-        AgvId = agvId;
+        SerialNumber = serialNumber;
     }
 }

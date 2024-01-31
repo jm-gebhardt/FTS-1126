@@ -13,7 +13,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers;
 [TestClass]
 public class AgvGraphConsumerTest
 {
-    private const string AgvTestIdentifier = "#0815#";
+    private const string AgvSerialNumber = "#0815#";
 
     /// <summary>
     /// Test for consuming AGV graph message.
@@ -33,7 +33,7 @@ public class AgvGraphConsumerTest
         {
             new() { EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = false, MaxVelocity = 1 }
         };
-        var message = new MqttGraph(AgvTestIdentifier, DateTimeOffset.UtcNow, nodes, edges, string.Empty);
+        var message = new MqttGraph(AgvSerialNumber, DateTimeOffset.UtcNow, nodes, edges, string.Empty);
 
         await fixture.TestHarness.Bus.PublishMqtt(message, null);
 
@@ -41,14 +41,14 @@ public class AgvGraphConsumerTest
         (await fixture.TestHarness.Published.Any<MqttGraph>()).ShouldBeTrue();
         // ... and has the message been consumed?
         var consumed = fixture.ConsumerHarness.Consumed.Select<MqttGraph>().First().Context.Message;
-        consumed.SerialNumber.ShouldBe(AgvTestIdentifier);
+        consumed.SerialNumber.ShouldBe(AgvSerialNumber);
 
         // Did the consumer forward a Graph message ...
         (await fixture.TestHarness.Published.Any<InternalGraphReceived>()).ShouldBeTrue();
         // ... with expected content?
         var published = fixture.TestHarness.Published.Select<InternalGraphReceived>().First().Context.Message;
-        published.CorrelationId.ShouldBe(AgvTestIdentifier.ToGuid());
-        published.Graph.SerialNumber.ShouldBe(AgvTestIdentifier);
+        published.CorrelationId.ShouldBe(AgvSerialNumber.ToGuid());
+        published.Graph.SerialNumber.ShouldBe(AgvSerialNumber);
         published.Graph.Nodes?.Length.ShouldBe(2);
         published.Graph.Edges?.Length.ShouldBe(1);
     }

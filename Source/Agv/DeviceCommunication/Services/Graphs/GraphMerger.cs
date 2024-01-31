@@ -29,18 +29,18 @@ public class GraphMerger : IConsumer<AgvGraphReceived>
     public async Task Consume(ConsumeContext<AgvGraphReceived> context)
     {
         var correlationId = context.Message.CorrelationId;
-        _logger.LogDebug("Received graph from Agv {AgvId} with correlationId {CorrelationId}", context.Message.AgvId, correlationId);
+        _logger.LogDebug("Received graph from Agv {AgvId} with correlationId {CorrelationId}", context.Message.SerialNumber, correlationId);
         Response<GotGraph> graphResponse = await _getGraphClient.GetResponse<GotGraph>(new GetGraph(correlationId));
         var graph = graphResponse.Message.Graph;
 
         if (graph.Merge(context.Message.Graph))
         {
-            _logger.LogInformation("Merged graph from Agv {AgvId} with correlationId {CorrelationId}", context.Message.AgvId, correlationId);
+            _logger.LogInformation("Merged graph from Agv {AgvId} with correlationId {CorrelationId}", context.Message.SerialNumber, correlationId);
             await context.Publish(new GraphChanged(correlationId, graph));
         }
         else
         {
-            _logger.LogDebug("Graph from Agv {AgvId} with correlationId {CorrelationId} is already contained in the graph.", context.Message.AgvId, correlationId);
+            _logger.LogDebug("Graph from Agv {AgvId} with correlationId {CorrelationId} is already contained in the graph.", context.Message.SerialNumber, correlationId);
         }
     }
 }

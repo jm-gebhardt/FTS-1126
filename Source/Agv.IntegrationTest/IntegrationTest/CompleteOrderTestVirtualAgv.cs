@@ -73,14 +73,14 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest
         [TestMethod]
         public async Task SingleVirtualAgvAdd_OrderProcessedSuccessful()
         {
-            const string agvId = "karis0";
+            const string agvSerialNumber = "karis0";
             const string orderId = "Order#1";
             const string leNo = "123";
             const string source = "PVB02";
             const string destination = "PVB03";
 
             var restApi = new RestApi();
-            var restAgv = await restApi.WaitForAgv(agvId);
+            var restAgv = await restApi.WaitForAgv(agvSerialNumber);
             restAgv.ShouldNotBeNull();
 
             var agvCorrelationId = restAgv["correlationId"]?.ToString();

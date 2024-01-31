@@ -24,6 +24,9 @@ public record AgvData
     /// <summary>The IP Address of the AGV</summary>
     public string? IpV4Address { get; init; }
 
+    /// <summary>The software version of the AGV</summary>
+    public string SoftwareVersion { get; init; }
+
     /// <summary>The capacity of the AGVs battery in [Ah]</summary>
     public double BatteryCapacity { get; init; }
 
@@ -60,6 +63,7 @@ public record AgvData
     /// <param name="model">The model name of the AGV</param>
     /// <param name="type">The type of the AGV</param>
     /// <param name="ipV4Address">The IP Address of the AGV</param>
+    /// <param name="softwareVersion">The software version of the AGV</param>
     /// <param name="batteryCapacity">The capacity of the AGVs battery in [Ah]</param>
     /// <param name="acceleration">The maximum velocity of the AGV while turning on spot [m/s^2]</param>
     /// <param name="maxVelocityStraight">The maximum velocity of the AGV in straight direction [m/s]</param>
@@ -76,6 +80,7 @@ public record AgvData
         string model,
         string type,
         string? ipV4Address,
+        string softwareVersion,
         double batteryCapacity,
         double? acceleration,
         double maxVelocityStraight,
@@ -91,6 +96,7 @@ public record AgvData
         Model = model;
         Type = type;
         IpV4Address = ipV4Address;
+        SoftwareVersion = softwareVersion;
         BatteryCapacity = batteryCapacity;
         Acceleration = acceleration;
         MaxVelocityStraight = maxVelocityStraight;
@@ -110,6 +116,7 @@ public record AgvData
     {
         Model = null!;
         Type = null!;
+        SoftwareVersion = null!;
         Sensors = null!;
     }
 }

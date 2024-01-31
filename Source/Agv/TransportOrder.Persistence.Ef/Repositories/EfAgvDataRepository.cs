@@ -35,7 +35,7 @@ public class EfAgvDataRepository : IAgvDataRepository
     }
 
     /// <inheritdoc/>
-    public async Task<bool> AddOrUpdateAsync(AgvData agvData)
+    public async Task AddOrUpdateAsync(AgvData agvData)
     {
         await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
         DbSet<AgvData> dbSet = dbContext.Set<AgvData>();
@@ -49,7 +49,7 @@ public class EfAgvDataRepository : IAgvDataRepository
             dbSet.Add(agvData);
         }
 
-        return await dbContext.SaveChangesAsync() > 0;
+        await dbContext.SaveChangesAsync();
     }
 
     /// <inheritdoc/>

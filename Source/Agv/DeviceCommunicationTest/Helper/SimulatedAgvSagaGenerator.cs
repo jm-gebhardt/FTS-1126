@@ -12,7 +12,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Helper;
 public static class SimulatedAgvSagaGenerator
 {
     public static SimulatedAgvSaga Generate(
-        string agvId = "Agv#1",
+        string agvSerialNumber = "Agv#1",
         GraphNode? currentNode = null,
         AgvAction? currentAction = null,
         AgvGraph? agvGraph = null,
@@ -25,7 +25,7 @@ public static class SimulatedAgvSagaGenerator
         int initialSoc = 75,
         double batteryChargeRate = 1.0)
     {
-        var correlationId = agvId.ToGuid();
+        var correlationId = agvSerialNumber.ToGuid();
         if (!graphExists)
         {
             agvGraph = null;
@@ -43,7 +43,7 @@ public static class SimulatedAgvSagaGenerator
             agvData ??= AgvDataGenerator.GenerateAgvData();
         }
 
-        var agv = new SimulatedAgv(correlationId, agvId, "",
+        var agv = new SimulatedAgv(correlationId, agvSerialNumber, "",
             true,
             false,
             false,

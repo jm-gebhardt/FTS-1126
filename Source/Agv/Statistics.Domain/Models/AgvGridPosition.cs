@@ -38,9 +38,9 @@ public class AgvGridPosition
     public float Y { get; init; }
 
     /// <summary>
-    /// The agv id.
+    /// The agv serial number.
     /// </summary>
-    public string AgvId { get; init; }
+    public string SerialNumber { get; init; }
 
     /// <summary>
     /// The time the agv was at this position.
@@ -48,11 +48,11 @@ public class AgvGridPosition
     public DateTime Timestamp { get; init; }
 
     /// <inheritdoc cref="AgvGridPosition"/>>
-    public AgvGridPosition(Guid gridId, string agvId, float x, float y, int xIndex, int yIndex, DateTime time)
+    public AgvGridPosition(Guid gridId, string serialNumber, float x, float y, int xIndex, int yIndex, DateTime time)
     {
         PositionId = Guid.NewGuid();
         GridId = gridId;
-        AgvId = agvId;
+        SerialNumber = serialNumber;
         X = x;
         Y = y;
         XIndex = xIndex;
@@ -64,6 +64,6 @@ public class AgvGridPosition
     private AgvGridPosition()
     {
         PositionId = Guid.NewGuid();
-        AgvId = string.Empty;
+        SerialNumber = string.Empty;
     }
 }

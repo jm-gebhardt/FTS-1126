@@ -194,7 +194,7 @@ public class RouteService : IRouteService
         }
         string lowestCostDestinationNodeId = routes.MinBy(r => r.Costs)!.Nodes.Last();
 
-        _logger.LogDebug("Destination node with lowest cost route for Agv with AgvId {AgvId} is: {Node}. This was chosen out of: {AvailableNodes}", agv.AgvId, lowestCostDestinationNodeId, graphNodes.Select(n => n.Id).ToList());
+        _logger.LogDebug("Destination node with lowest cost route for Agv with serial number {SerialNumber} is: {Node}. This was chosen out of: {AvailableNodes}", agv.SerialNumber, lowestCostDestinationNodeId, graphNodes.Select(n => n.Id).ToList());
         return graphNodes.First(n => n.Id == lowestCostDestinationNodeId);
     }
 }

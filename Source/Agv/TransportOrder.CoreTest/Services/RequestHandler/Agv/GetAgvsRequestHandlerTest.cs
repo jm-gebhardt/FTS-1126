@@ -41,7 +41,7 @@ public class GetAgvsRequestHandlerTest
         response.Message.Agvs.Count.ShouldBe(1);
         var agvDto = response.Message.Agvs.First();
         agvDto.CorrelationId.ShouldBe(agvs.First().CorrelationId);
-        agvDto.AgvId.ShouldBe(agvs.First().AgvId);
+        agvDto.SerialNumber.ShouldBe(agvs.First().SerialNumber);
         agvDto.CurrentActionGroup.ShouldBeNull();
         agvDto.LastNode.ShouldBeNull();
     }
@@ -88,7 +88,7 @@ public class GetAgvsRequestHandlerTest
         Response<GotAgvs> response = await fixture.GetResponseAsync<GotAgvs>(new GetAgvs(correlationIds));
         response.Message.Agvs.Count.ShouldBe(3);
         response.Message.Agvs.First().CorrelationId.ShouldBe(agv1.CorrelationId);
-        GraphNode?[] lastNodes = response.Message.Agvs.OrderBy(a => a.AgvId).Select(a => a.LastNode).ToArray();
+        GraphNode?[] lastNodes = response.Message.Agvs.OrderBy(a => a.SerialNumber).Select(a => a.LastNode).ToArray();
         lastNodes.ShouldNotBeNull();
         lastNodes[0].ShouldNotBeNull();
         lastNodes[0]!.Id.ShouldBe(myLastNodeId + "1");

@@ -112,7 +112,7 @@ public class ActionCommandHandler :
             actionGroup.StartAction(action.CorrelationId);
             await _actionGroupRepository.UpdateAsync(actionGroup);
             var actionGroupMessageContent = _mapper.Map<ActionGroup>(actionGroup);
-            await context.Publish(new StartActionCommand(assignedAgv.CorrelationId, assignedAgv.AgvId, _mapper.Map<MessageAgvAction>(action)), cancellationToken);
+            await context.Publish(new StartActionCommand(assignedAgv.CorrelationId, assignedAgv.SerialNumber, _mapper.Map<MessageAgvAction>(action)), cancellationToken);
             await context.Publish(new ActionGroupChanged(actionGroupMessageContent, actionGroup.CorrelationId), cancellationToken);
 
             if (action.IsFirstAction)
@@ -396,7 +396,7 @@ public class ActionCommandHandler :
 
         if (agv.IsCharging || await _actionGroupRetrievalService.IsAgvHeadingToNodeOfType(agvCorrelationId, AgvGraph.NodeType.Charge))
         {
-            _logger.LogDebug("No need for another charge action because the agv is already charging for agvId: {AgvId}.", agv.AgvId);
+            _logger.LogDebug("No need for another charge action because the agv is already charging for serial number: {SerialNumber}.", agv.SerialNumber);
             // This might happen if the AssignAsync action is called several times due to a low SOC value, although the agv is already charging
             return;
         }

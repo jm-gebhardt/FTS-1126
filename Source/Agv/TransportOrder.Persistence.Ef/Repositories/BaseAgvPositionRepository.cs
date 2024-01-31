@@ -52,7 +52,7 @@ public abstract class BaseAgvPositionRepository : IAgvPositionRepository
         {
             UpdateInternal(agvPositionStatus);
 
-            var agvPositionChanged = new AgvPositionChanged(correlationId, agvPositionStatus.AgvPosition, previousAgvPosition?.AgvPosition, agvPositionStatus.AgvId);
+            var agvPositionChanged = new AgvPositionChanged(correlationId, agvPositionStatus.AgvPosition, previousAgvPosition?.AgvPosition, agvPositionStatus.SerialNumber);
             await _bus.Publish(agvPositionChanged);
         }
     }

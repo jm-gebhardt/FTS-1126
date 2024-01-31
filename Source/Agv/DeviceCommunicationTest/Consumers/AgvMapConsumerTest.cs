@@ -16,7 +16,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers;
 [TestClass]
 public class AgvMapConsumerTest
 {
-    private const string AgvId = "Agv01";
+    private const string AgvSerialNumber = "Agv01";
     private const string MapId = "baseMap";
 
     /// <summary/>
@@ -32,7 +32,7 @@ public class AgvMapConsumerTest
         NullData
     }
 
-    private readonly MqttMap _mqttMap = new(AgvId, AgvId)
+    private readonly MqttMap _mqttMap = new(AgvSerialNumber, AgvSerialNumber)
     {
         Data = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
         MapId = MapId,
@@ -52,7 +52,7 @@ public class AgvMapConsumerTest
         var fixture = new MassTransitConsumerTestFixture<RequestAgvMapConsumer>();
 
         // Act
-        await fixture.TestHarness.Bus.Publish(new RequestAgvMap(AgvId.ToGuid(), AgvId, MapId.ToGuid(), MapId));
+        await fixture.TestHarness.Bus.Publish(new RequestAgvMap(AgvSerialNumber.ToGuid(), AgvSerialNumber, MapId.ToGuid(), MapId));
 
         // Assert
         (await fixture.TestHarness.Published.Any<RequestAgvMap>()).ShouldBeTrue();
@@ -60,7 +60,7 @@ public class AgvMapConsumerTest
 
         (await fixture.TestHarness.Published.Any<MqttRequestMap>()).ShouldBeTrue();
         var message = fixture.TestHarness.Published.Select<MqttRequestMap>().First().Context.Message;
-        message.SerialNumber.ShouldBe(AgvId);
+        message.SerialNumber.ShouldBe(AgvSerialNumber);
     }
 
     /// <summary>

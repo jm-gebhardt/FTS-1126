@@ -308,11 +308,7 @@ public class AgvCommandHandler :
     {
         var (correlationId, agvData) = context.Message;
         var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
-        if (!await _agvDb.Data.AddOrUpdateAsync(agvData))
-        {
-            _logger.LogWarning("Failed to store AgvData for {AgvId} / {CorrelationId}", agv.AgvId, correlationId);
-            return;
-        }
+        await _agvDb.Data.AddOrUpdateAsync(agvData);
         agv.DataExist = true;
         if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
         {
@@ -384,7 +380,7 @@ public class AgvCommandHandler :
         (bool accepted, bool stateChanged) = agv.TryAccept();
         if (!accepted)
         {
-            _logger.LogDebug("Could not transition {AgvId} / {CorrelationId} to idle in state {State}", agv.AgvId, agv.CorrelationId, Enum.GetName(agv.CurrentAgvState));
+            _logger.LogDebug("Could not transition {AgvId} / {CorrelationId} to idle in state {State}", agv.SerialNumber, agv.CorrelationId, Enum.GetName(agv.CurrentAgvState));
             await context.RespondAsync(new AcceptAgvRejected(agv.CorrelationId));
             return;
         }
@@ -392,7 +388,7 @@ public class AgvCommandHandler :
         {
             _logger.LogDebug("{Command}: Could not update agv {CorrelationId}", nameof(AcceptAgvCommand), agv.CorrelationId);
         }
-        _logger.LogDebug("AGV {AgvId} / {CorrelationId} was set to idle", agv.AgvId, agv.CorrelationId);
+        _logger.LogDebug("AGV {AgvId} / {CorrelationId} was set to idle", agv.SerialNumber, agv.CorrelationId);
         await context.Publish(new AgvBecameIdle(agv.CorrelationId));
         if (stateChanged)
         {
@@ -450,7 +446,7 @@ public class AgvCommandHandler :
             _logger.LogDebug("{Command}: Could not update agv {CorrelationId}", nameof(SetAgvForceIdle), agv.CorrelationId);
             return;
         }
-        _logger.LogWarning("AGV {AgvId} / {CorrelationId} was set to idle by force", agv.AgvId, agv.CorrelationId);
+        _logger.LogWarning("AGV {AgvId} / {CorrelationId} was set to idle by force", agv.SerialNumber, agv.CorrelationId);
         await context.Publish(new AgvBecameIdle(correlationId));
         if (stateChanged)
         {
@@ -568,14 +564,14 @@ public class AgvCommandHandler :
     private async Task PublishGraphRequestAsync(IPublishEndpoint context, Domain.Models.Agv.Agv agv)
     {
         _logger.LogDebug("Requesting graph for agv {CorrelationId}", agv.CorrelationId);
-        await context.Publish(new RequestAgvGraph(agv.CorrelationId, agv.AgvId));
+        await context.Publish(new RequestAgvGraph(agv.CorrelationId, agv.SerialNumber));
         agv.AgvGraphRequestedLastTime = DateTime.UtcNow;
     }
 
     private async Task PublishDataRequestAsync(IPublishEndpoint context, Domain.Models.Agv.Agv agv)
     {
         _logger.LogDebug("Requesting data for agv {CorrelationId}", agv.CorrelationId);
-        await context.Publish(new RequestAgvData(agv.CorrelationId, agv.AgvId));
+        await context.Publish(new RequestAgvData(agv.CorrelationId, agv.SerialNumber));
         agv.AgvDataRequestedLastTime = DateTime.UtcNow;
     }
 
@@ -584,11 +580,11 @@ public class AgvCommandHandler :
     /// </summary>
     private async Task CreateAgv(ConsumeContext<UpdateAgvStatus> context)
     {
-        (var correlationId, string agvId, var agvStatus) = context.Message;
+        (var correlationId, string agvSerialNumber, var agvStatus) = context.Message;
 
-        _logger.LogDebug("Creating agv {CorrelationId}, {AgvId}", correlationId, agvId);
+        _logger.LogDebug("Creating agv {CorrelationId}, {AgvId}", correlationId, agvSerialNumber);
 
-        var agv = new Domain.Models.Agv.Agv(correlationId, agvId, _mapper.Map<AgvStatus>(agvStatus));
+        var agv = new Domain.Models.Agv.Agv(correlationId, agvSerialNumber, _mapper.Map<AgvStatus>(agvStatus));
         bool graphExists = await _agvDb.Graphs.ExistsAsync(correlationId);
         if (!graphExists)
         {

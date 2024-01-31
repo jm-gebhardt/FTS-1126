@@ -9,13 +9,13 @@ namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 /// An event reporting the retrieval of AGV data.
 /// </summary>
 [PublicAPI]
-public record AgvDataReceived : CorrelatedBy<Guid>, IAgvId
+public record AgvDataReceived : CorrelatedBy<Guid>, IAgv
 {
-    /// <inheritdoc/>
+    /// <inheritdoc cref="IAgv.CorrelationId" />
     public Guid CorrelationId { get; }
 
     /// <inheritdoc />
-    public string AgvId { get; }
+    public string SerialNumber { get; }
 
     /// <summary>
     /// Agv Graph
@@ -26,12 +26,12 @@ public record AgvDataReceived : CorrelatedBy<Guid>, IAgvId
     /// Build message.
     /// </summary>
     /// <param name="correlationId">Unique AGV Correlation ID</param>
-    /// <param name="agvId">AGV serial number</param>
+    /// <param name="serialNumber">The serial number of the agv.</param>
     /// <param name="data">AGV data</param>
-    public AgvDataReceived(Guid correlationId, string agvId, AgvData data)
+    public AgvDataReceived(Guid correlationId, string serialNumber, AgvData data)
     {
         CorrelationId = correlationId;
-        AgvId = agvId;
+        SerialNumber = serialNumber;
         Data = data;
     }
 }

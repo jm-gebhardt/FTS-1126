@@ -29,8 +29,8 @@ public class RequestAgvMapConsumer : IConsumer<RequestAgvMap>
     /// </summary>
     public async Task Consume(ConsumeContext<RequestAgvMap> context)
     {
-        await context.PublishMqtt(new MqttRequestMap(context.Message.AgvId, context.Message.CorrelationId), context.CancellationToken);
+        await context.PublishMqtt(new MqttRequestMap(context.Message.SerialNumber, context.Message.CorrelationId), context.CancellationToken);
         _logger.LogInformation("Requesting map {MapId}/{MapCorrelationId} for AGV {AgvId}/{CorrelationId}",
-            context.Message.MapId, context.Message.MapCorrelationId, context.Message.AgvId, context.Message.CorrelationId);
+            context.Message.MapId, context.Message.MapCorrelationId, context.Message.SerialNumber, context.Message.CorrelationId);
     }
 }

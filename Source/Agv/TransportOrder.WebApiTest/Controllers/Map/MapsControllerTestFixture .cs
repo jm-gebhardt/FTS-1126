@@ -21,7 +21,7 @@ public class MapsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
     private readonly IMapRepository _mapRepository;
     private readonly IAgvRepository _agvRepository;
 
-    private readonly string[] _agvIds = { "AGV001", "AGV002", "AGV003" };
+    private readonly string[] _agvSerialNumbers = { "AGV001", "AGV002", "AGV003" };
     private readonly string[] _orders = { "ORDER001", "ORDER002", "" };
     private readonly AgvState[] _states = { AgvState.Idle, AgvState.Busy, AgvState.Discovered };
 
@@ -68,15 +68,15 @@ public class MapsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
 
         var agvs = new List<Domain.Models.Agv.Agv>();
 
-        for (int i = 0; i < _agvIds.Length; i++)
+        for (int i = 0; i < _agvSerialNumbers.Length; i++)
         {
-            string agvId = _agvIds[i];
+            string agvSerialNumber = _agvSerialNumbers[i];
             string orderId = _orders[i];
             var state = _states[i];
             var correlationId = _correlationIds[i];
             var agvStatus = new AgvStatus(correlationId, orderId, true, true, 10, true, true);
 
-            var agv = new Domain.Models.Agv.Agv(correlationId, agvId, agvStatus);
+            var agv = new Domain.Models.Agv.Agv(correlationId, agvSerialNumber, agvStatus);
             agv = AgvGenerator.SetAgvState(state, false, agv);
 
             agvs.Add(agv);

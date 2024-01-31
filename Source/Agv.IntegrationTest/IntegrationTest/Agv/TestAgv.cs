@@ -63,7 +63,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Agv
         /// <summary>
         /// Agv Id
         /// </summary>
-        public readonly string AgvId;
+        public readonly string SerialNumber;
 
         private readonly MqttClient _mqttClient;
         private const int PublishStatusInterval = 1000;
@@ -71,10 +71,10 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Agv
         /// <summary>
         /// Test Agv constructor
         /// </summary>
-        /// <param name="agvId"></param>
-        public TestAgv(string agvId)
+        /// <param name="serialNumber"></param>
+        public TestAgv(string serialNumber)
         {
-            AgvId = agvId;
+            SerialNumber = serialNumber;
             _mqttClient = new MqttClient();
         }
 
@@ -90,7 +90,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Agv
             while (cancellationToken is { IsCancellationRequested: false })
             {
                 Console.WriteLine("Publishing Status");
-                ChangeAgvId(message);
+                ChangeAgvSerialNumber(message);
                 await _mqttClient.Publish(MqttClient.Topic.Status, message.ToString(), cancellationToken);
                 await Task.Delay(PublishStatusInterval, cancellationToken);
             }
@@ -103,13 +103,13 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Agv
         {
             await _mqttClient.Start();
             _mqttClient.SubscribeAndRespond(MqttClient.Topic.RequestData, MqttClient.Topic.AgvData, "AgvData.json",
-                IsCurrentAgv, ChangeAgvId);
+                IsCurrentAgv, ChangeAgvSerialNumber);
             _mqttClient.SubscribeAndRespond(MqttClient.Topic.RequestGraph, MqttClient.Topic.Graph, "Graph.json",
-                IsCurrentAgv, ChangeAgvId);
+                IsCurrentAgv, ChangeAgvSerialNumber);
             _mqttClient.SubscribeAndRespond(MqttClient.Topic.RequestStationList, MqttClient.Topic.StationList,
-                "StationList.json", IsCurrentAgv, ChangeAgvId);
+                "StationList.json", IsCurrentAgv, ChangeAgvSerialNumber);
             _mqttClient.SubscribeAndRespond(MqttClient.Topic.RequestMap, MqttClient.Topic.Map, "Map.json", IsCurrentAgv,
-                ChangeAgvId);
+                ChangeAgvSerialNumber);
         }
 
         /// <summary>
@@ -119,7 +119,7 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Agv
         {
             await _mqttClient.Start();
             var response = _mqttClient.ReadSample("OrderEvent.json");
-            ChangeAgvId(response);
+            ChangeAgvSerialNumber(response);
 
             _mqttClient.Subscribe(MqttClient.Topic.RequestOrder, async (request) =>
             {
@@ -146,12 +146,12 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Agv
 
         private bool IsCurrentAgv(JToken jsonMessage)
         {
-            return jsonMessage["serialNumber"]?.ToString() == AgvId;
+            return jsonMessage["serialNumber"]?.ToString() == SerialNumber;
         }
 
-        private void ChangeAgvId(JToken response)
+        private void ChangeAgvSerialNumber(JToken response)
         {
-            response["serialNumber"] = AgvId;
+            response["serialNumber"] = SerialNumber;
         }
     }
 }

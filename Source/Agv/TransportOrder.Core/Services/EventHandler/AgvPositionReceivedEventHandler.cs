@@ -41,7 +41,7 @@ public class AgvPositionReceivedEventHandler : IConsumer<AgvPositionReceived>
         _logger.LogTrace(
             "{MessageType} {AgvId} / {CorrelationId} received",
             nameof(AgvPositionReceived),
-            context.Message.AgvId,
+            context.Message.SerialNumber,
             context.Message.CorrelationId
         );
 

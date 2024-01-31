@@ -13,8 +13,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers;
 [TestClass]
 public class StationListParserTest
 {
-    private const string AgvTestIdentifier01 = "#2410#";
-    private const string AgvTestIdentifier02 = "#0815#";
+    private const string AgvSerialNumber1 = "#2410#";
+    private const string AgvSerialNumber2 = "#0815#";
 
     /// <summary>
     /// Test recognition of missing input at all.
@@ -37,8 +37,8 @@ public class StationListParserTest
     public void Parse_WithMissingGraphEdgeAndStation_GraphInvalid()
     {
         var parser = new StationListParser(
-            new MqttStationList(AgvTestIdentifier01, DateTimeOffset.UtcNow, Array.Empty<Station>()),
-            new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow, Array.Empty<MqttNode>(), Array.Empty<MqttEdge>(), string.Empty));
+            new MqttStationList(AgvSerialNumber1, DateTimeOffset.UtcNow, Array.Empty<Station>()),
+            new MqttGraph(AgvSerialNumber1, DateTimeOffset.UtcNow, Array.Empty<MqttNode>(), Array.Empty<MqttEdge>(), string.Empty));
         var graph = parser.Graph;
 
         graph.Usability.ShouldBe(AgvGraph.GraphUsability.InvalidNodes);
@@ -57,8 +57,8 @@ public class StationListParserTest
             new() { NodeId = 2, X = 9f, Y = 9f, Z = 0f }
         };
         var parser = new StationListParser(
-            new MqttStationList(AgvTestIdentifier01, DateTimeOffset.UtcNow, Array.Empty<Station>()),
-            new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow, nodes, Array.Empty<MqttEdge>(), string.Empty));
+            new MqttStationList(AgvSerialNumber1, DateTimeOffset.UtcNow, Array.Empty<Station>()),
+            new MqttGraph(AgvSerialNumber1, DateTimeOffset.UtcNow, nodes, Array.Empty<MqttEdge>(), string.Empty));
         var graph = parser.Graph;
 
         graph.Usability.ShouldBe(AgvGraph.GraphUsability.InvalidEdges);
@@ -80,8 +80,8 @@ public class StationListParserTest
             new() { EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = true, MaxVelocity = 1 }
         };
         var parser = new StationListParser(
-            new MqttStationList(AgvTestIdentifier01, DateTimeOffset.UtcNow, Array.Empty<Station>()),
-            new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
+            new MqttStationList(AgvSerialNumber1, DateTimeOffset.UtcNow, Array.Empty<Station>()),
+            new MqttGraph(AgvSerialNumber1, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
         var graph = parser.Graph;
 
         graph.Usability.ShouldBe(AgvGraph.GraphUsability.InvalidStations);
@@ -107,12 +107,12 @@ public class StationListParserTest
             new(Function.Pick, "P01", new Position(0f, 0f, 0f), "")
         };
         var parser = new StationListParser(
-            new MqttStationList(AgvTestIdentifier01, DateTimeOffset.UtcNow, stations),
-            new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
+            new MqttStationList(AgvSerialNumber1, DateTimeOffset.UtcNow, stations),
+            new MqttGraph(AgvSerialNumber1, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
         var graph = parser.Graph;
 
         graph.Usability.ShouldBe(AgvGraph.GraphUsability.Valid);
-        parser.SerialNumber.ShouldBe(AgvTestIdentifier01);
+        parser.SerialNumber.ShouldBe(AgvSerialNumber1);
         //              3 = 2 nodes + 1 station
         graph.Nodes.Count.ShouldBe(3);
         //              4 = 2 * 2 bidirectional edges
@@ -141,13 +141,13 @@ public class StationListParserTest
             new(Function.Pick, "P01", new Position(0f, 0f, 0f), "")
         };
         var parser = new StationListParser(
-            new MqttStationList(AgvTestIdentifier01, DateTimeOffset.UtcNow, stations),
-            new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow, nodes, edges, mapId, Guid.NewGuid()));
+            new MqttStationList(AgvSerialNumber1, DateTimeOffset.UtcNow, stations),
+            new MqttGraph(AgvSerialNumber1, DateTimeOffset.UtcNow, nodes, edges, mapId, Guid.NewGuid()));
         var graph = parser.Graph;
 
         graph.Usability.ShouldBe(AgvGraph.GraphUsability.Valid);
-        parser.SerialNumber.ShouldBe(AgvTestIdentifier01);
-        graph.CorrelationId.ShouldBe(AgvTestIdentifier01.ToGuid());
+        parser.SerialNumber.ShouldBe(AgvSerialNumber1);
+        graph.CorrelationId.ShouldBe(AgvSerialNumber1.ToGuid());
     }
 
     /// <summary>
@@ -170,8 +170,8 @@ public class StationListParserTest
             new(Function.Pick, "P01", new Position(0f, 0f, 0f), "")
         };
         var parser = new StationListParser(
-            new MqttStationList(AgvTestIdentifier01, DateTimeOffset.UtcNow, stations),
-            new MqttGraph(AgvTestIdentifier02, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
+            new MqttStationList(AgvSerialNumber1, DateTimeOffset.UtcNow, stations),
+            new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
         var graph = parser.Graph;
 
         graph.Usability.ShouldBe(AgvGraph.GraphUsability.SerialNumberMismatch);
@@ -217,11 +217,11 @@ public class StationListParserTest
             new(Function.Both, "S3", new Position(0f, 6f, -2f), "")
         };
         var parser = new StationListParser(
-            new MqttStationList(AgvTestIdentifier01, DateTimeOffset.UtcNow, stations),
-            new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
+            new MqttStationList(AgvSerialNumber1, DateTimeOffset.UtcNow, stations),
+            new MqttGraph(AgvSerialNumber1, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
 
         var agvGraph = parser.Graph;
-        parser.SerialNumber.ShouldBe(AgvTestIdentifier01);
+        parser.SerialNumber.ShouldBe(AgvSerialNumber1);
 
         agvGraph.Nodes.Count.ShouldBe(5);
         agvGraph.Edges.Count.ShouldBe(8);

@@ -33,8 +33,8 @@ public class AgvControllerTest
     {
         var fixture = new AgvControllerTestFixture<GetAgv, GetAgvsRequestHandler>();
 
-        string agvId = fixture.AgvIds[0];
-        var correlationId = agvId.ToGuid();
+        string agvSerialNumber = fixture.AgvSerialNumbers[0];
+        var correlationId = agvSerialNumber.ToGuid();
         var agvGraph = AgvGraphGenerator.CreateDefaultGraph(correlationId);
 
         fixture
@@ -44,10 +44,10 @@ public class AgvControllerTest
 
         var agvDto = await fixture.GetControllerResultAsync(c => c.GetAgv(correlationId));
 
-        var expectedAgvDto = new AgvDto(correlationId, agvId, AgvStateType.Idle, agvDto.TimeOfStateTransition, DateTime.MinValue, false, false, true, true, 10d, true, null, new List<AgvErrorDto>(), new GraphNodeDto { Id = "WAY1", Type = AgvGraph.NodeType.WayPoint, X = 1.0f, Y = 2.0f, Z = 0.0f, Theta = 0.0f });
+        var expectedAgvDto = new AgvDto(correlationId, agvSerialNumber, agvSerialNumber, AgvStateType.Idle, agvDto.TimeOfStateTransition, DateTime.MinValue, false, false, true, true, 10d, true, null, new List<AgvErrorDto>(), new GraphNodeDto {Id = "WAY1", Type = AgvGraph.NodeType.WayPoint, X = 1.0f, Y = 2.0f, Z = 0.0f, Theta = 0.0f});
         agvDto.ShouldNotBeNull();
         agvDto.CorrelationId.ShouldBe(expectedAgvDto.CorrelationId);
-        agvDto.AgvId.ShouldBe(expectedAgvDto.AgvId);
+        agvDto.SerialNumber.ShouldBe(expectedAgvDto.SerialNumber);
         agvDto.BatteryCharge.ShouldBe(expectedAgvDto.BatteryCharge);
         agvDto.IsCharging.ShouldBe(expectedAgvDto.IsCharging);
         agvDto.IsLocked.ShouldBe(expectedAgvDto.IsLocked);
@@ -69,8 +69,8 @@ public class AgvControllerTest
             .SetupAgvDbWithDefaultData()
             .Build();
 
-        const string agvId = "INVALID";
-        var correlationId = agvId.ToGuid();
+        const string agvSerialNumber = "INVALID";
+        var correlationId = agvSerialNumber.ToGuid();
 
         var controller = fixture.Controller;
         await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await controller.GetAgv(correlationId));
@@ -82,7 +82,7 @@ public class AgvControllerTest
     public async Task GetAgvGraph_ValidData_ReturnsGraphDto(int index)
     {
         var fixture = new AgvControllerTestFixture<GetAgvGraph, GetGraphRequestHandler>();
-        var correlationId = fixture.AgvIds[index].ToGuid();
+        var correlationId = fixture.AgvSerialNumbers[index].ToGuid();
         var agvGraph = AgvGraphGenerator.CreateDefaultGraph(correlationId);
 
         fixture
@@ -136,7 +136,7 @@ public class AgvControllerTest
         AgvControllerTestFixture<GetAgvData, GetAgvDataRequestHandler> fixture = new AgvControllerTestFixture<GetAgvData, GetAgvDataRequestHandler>()
             .SetupAgvDbWithDefaultData()
             .Build();
-        var correlationId = fixture.AgvIds[index].ToGuid();
+        var correlationId = fixture.AgvSerialNumbers[index].ToGuid();
 
         var agvData = await fixture.GetControllerResultAsync(c => c.GetAgvData(correlationId));
         agvData.ShouldNotBeNull();
@@ -151,8 +151,7 @@ public class AgvControllerTest
         AgvControllerTestFixture<GetAgvSettings, GetAgvSettingsRequestHandler> fixture = new AgvControllerTestFixture<GetAgvSettings, GetAgvSettingsRequestHandler>()
             .SetupAgvDbWithDefaultData()
             .Build();
-        var correlationId = fixture.AgvIds[0].ToGuid();
-
+        var correlationId = fixture.AgvSerialNumbers[0].ToGuid();
         var dto = await fixture.GetControllerResultAsync(c => c.GetAgvSettings(correlationId));
 
         dto.CorrelationId.ShouldBe(correlationId);
@@ -178,7 +177,7 @@ public class AgvControllerTest
     public async Task AcceptAgv_WhenAgvInDiscovered_ReturnOkResult()
     {
         var fixture = new AgvControllerTestFixture<AcceptAgvCommand, AgvCommandHandler>();
-        var correlationId = fixture.AgvIds[2].ToGuid(); // AGV in state 'Discovered'
+        var correlationId = fixture.AgvSerialNumbers[2].ToGuid(); // AGV in state 'Discovered'
 
         var response1 = new AcceptAgvSucceeded(correlationId);
         var response2 = new AcceptAgvRejected(correlationId);
@@ -198,7 +197,7 @@ public class AgvControllerTest
     public async Task AcceptAgv_WhenAgvNotInDiscovered_ReturnConflictResult()
     {
         var fixture = new AgvControllerTestFixture<AcceptAgvCommand, AgvCommandHandler>();
-        var correlationId = fixture.AgvIds[1].ToGuid(); // AGV in state 'Busy'
+        var correlationId = fixture.AgvSerialNumbers[1].ToGuid(); // AGV in state 'Busy'
 
         var response1 = new AcceptAgvSucceeded(correlationId);
         var response2 = new AcceptAgvRejected(correlationId);
@@ -256,7 +255,7 @@ public class AgvControllerTest
             .SetupAgvDbWithDefaultData()
             .Build();
         var controller = fixture.Controller;
-        var correlationId = fixture.AgvIds[1].ToGuid(); // AGV not in state 'Discovered'
+        var correlationId = fixture.AgvSerialNumbers[1].ToGuid(); // AGV not in state 'Discovered'
 
         var result = await controller.UnlockAgv(correlationId) as OkResult;
         result.ShouldNotBeNull();
@@ -273,7 +272,7 @@ public class AgvControllerTest
             .SetupAgvDbWithDefaultData()
             .Build();
         var controller = fixture.Controller;
-        var correlationId = fixture.AgvIds[2].ToGuid();
+        var correlationId = fixture.AgvSerialNumbers[2].ToGuid();
 
         var result = await controller.UnlockAgv(correlationId) as OkResult;
         result.ShouldNotBeNull();
@@ -290,7 +289,7 @@ public class AgvControllerTest
             .SetupAgvDbWithDefaultData()
             .Build();
         var controller = fixture.Controller;
-        var correlationId = fixture.AgvIds[2].ToGuid();
+        var correlationId = fixture.AgvSerialNumbers[2].ToGuid();
 
         var result = await controller.LockAgv(correlationId) as OkResult;
         result.ShouldNotBeNull();
@@ -319,7 +318,7 @@ public class AgvControllerTest
             .SetupAgvDbWithDefaultData()
             .Build();
         var controller = fixture.Controller;
-        var correlationId = fixture.AgvIds[2].ToGuid();
+        var correlationId = fixture.AgvSerialNumbers[2].ToGuid();
 
         var result = await controller.EmitRequestData(correlationId) as OkResult;
         result.ShouldNotBeNull();
@@ -348,7 +347,7 @@ public class AgvControllerTest
             .SetupAgvDbWithDefaultData()
             .Build();
         var controller = fixture.Controller;
-        var correlationId = fixture.AgvIds[2].ToGuid();
+        var correlationId = fixture.AgvSerialNumbers[2].ToGuid();
 
         var result = await controller.EmitRequestGraph(correlationId) as OkResult;
         result.ShouldNotBeNull();
@@ -364,7 +363,7 @@ public class AgvControllerTest
         AgvControllerTestFixture<MoveAgv, AgvCommandHandler> fixture = new AgvControllerTestFixture<MoveAgv, AgvCommandHandler>()
             .SetupAgvDbWithDefaultData()
             .Build();
-        var correlationId = fixture.AgvIds[2].ToGuid();
+        var correlationId = fixture.AgvSerialNumbers[2].ToGuid();
         const string targetNodeId = "Test Destination Id";
 
         var result = await fixture.GetControllerResultAsync<Guid, OkObjectResult>(c => c.MoveAgv(correlationId, targetNodeId));
@@ -391,7 +390,7 @@ public class AgvControllerTest
             .SetupAgvDbWithDefaultData()
             .Build();
 
-        var agvCorrelationId = fixture.AgvIds[0].ToGuid();
+        var agvCorrelationId = fixture.AgvSerialNumbers[0].ToGuid();
         fixture.WithHasCargo(agvCorrelationId, true);
 
         bool dto = await fixture.GetControllerResultValueAsync(c => c.HasCargo(agvCorrelationId));
@@ -405,7 +404,7 @@ public class AgvControllerTest
             .SetupAgvDbWithDefaultData()
             .Build();
         var controller = fixture.Controller;
-        var correlationId = fixture.AgvIds[2].ToGuid();
+        var correlationId = fixture.AgvSerialNumbers[2].ToGuid();
 
         var actionResult = await controller.SendAgvToCharger(correlationId);
         var result = actionResult as OkObjectResult;

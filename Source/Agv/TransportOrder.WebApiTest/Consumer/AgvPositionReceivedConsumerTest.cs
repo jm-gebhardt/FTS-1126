@@ -16,8 +16,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Consumer;
 [TestClass]
 public class AgvPositionReceivedConsumerTest
 {
-    private const string AgvTestIdentifier01 = "#2410#";
-    private const string AgvTestIdentifier02 = "#0815#";
+    private const string AgvSerialNumber1 = "#2410#";
+    private const string AgvSerialNumber2 = "#0815#";
 
     /// <summary>
     /// Test creation of repository and try to access AGV that doesn't exits.
@@ -29,8 +29,8 @@ public class AgvPositionReceivedConsumerTest
 
         await fixture.TestHarness.Bus.Publish(
             new AgvPositionReceived(
-                AgvTestIdentifier01.ToGuid(),
-                AgvTestIdentifier01,
+                AgvSerialNumber1.ToGuid(),
+                AgvSerialNumber1,
                 new AgvPosition(false, 0, 0, 0, 0)
             ));
 
@@ -66,14 +66,14 @@ public class AgvPositionReceivedConsumerTest
 
         await fixture.TestHarness.Bus.Publish(
             new AgvPositionReceived(
-                AgvTestIdentifier01.ToGuid(),
-                AgvTestIdentifier01,
+                AgvSerialNumber1.ToGuid(),
+                AgvSerialNumber1,
                 new AgvPosition(init1, x1, y1, z1, theta1, deviation1)
             ));
         await fixture.TestHarness.Bus.Publish(
             new AgvPositionReceived(
-                AgvTestIdentifier02.ToGuid(),
-                AgvTestIdentifier02,
+                AgvSerialNumber2.ToGuid(),
+                AgvSerialNumber2,
                 new AgvPosition(init2, x2, y2, z2, theta2)
             ));
 
@@ -83,7 +83,7 @@ public class AgvPositionReceivedConsumerTest
         var repository = fixture.Provider.GetRequiredService<IAgvPositionRepository>();
         repository.ShouldNotBeNull();
 
-        var position = repository.GetPosition(AgvTestIdentifier01.ToGuid());
+        var position = repository.GetPosition(AgvSerialNumber1.ToGuid());
         position.ShouldNotBeNull();
         position.AgvPosition.PositionInitialized.ShouldBe(init1);
         position.AgvPosition.X.ShouldBe(x1, 0.00001);
@@ -92,7 +92,7 @@ public class AgvPositionReceivedConsumerTest
         position.AgvPosition.Theta.ShouldBe(theta1, 0.00001);
         position.AgvPosition.DeviationRange!.Value.ShouldBe(deviation1, 0.00001);
 
-        position = repository.GetPosition(AgvTestIdentifier02.ToGuid());
+        position = repository.GetPosition(AgvSerialNumber2.ToGuid());
         position.ShouldNotBeNull();
         position.AgvPosition.X.ShouldBe(x2, 0.00001);
         position.AgvPosition.Y.ShouldBe(y2, 0.00001);
@@ -115,8 +115,8 @@ public class AgvPositionReceivedConsumerTest
 
         await fixture.TestHarness.Bus.Publish(
             new AgvPositionReceived(
-                AgvTestIdentifier01.ToGuid(),
-                AgvTestIdentifier01,
+                AgvSerialNumber1.ToGuid(),
+                AgvSerialNumber1,
                 new AgvPosition(false, 0, 0, 0, 0)
             ));
 
@@ -124,6 +124,6 @@ public class AgvPositionReceivedConsumerTest
         (await fixture.ConsumerHarness.Consumed.Any<AgvPositionReceived>()).ShouldBeTrue();
 
         agvPositionRepositoryMock.Verify(h => h.UpdatePositionAsync(
-            It.Is<AgvPositionStatus>(o => o.AgvId == AgvTestIdentifier01 && o.CorrelationId == AgvTestIdentifier01.ToGuid())), Times.Once);
+            It.Is<AgvPositionStatus>(o => o.SerialNumber == AgvSerialNumber1 && o.CorrelationId == AgvSerialNumber1.ToGuid())), Times.Once);
     }
 }

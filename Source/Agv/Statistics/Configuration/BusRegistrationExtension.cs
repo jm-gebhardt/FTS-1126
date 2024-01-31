@@ -22,7 +22,7 @@ public static class BusRegistrationExtension
         cfg.AddConsumer<PositionEventHandler>(c =>
         {
             var partitioner = c.CreatePartitioner(PartitionCount);
-            c.Message<AgvPositionReceived>(x => x.UsePartitioner(partitioner, p => p.Message.AgvId));
+            c.Message<AgvPositionReceived>(x => x.UsePartitioner(partitioner, p => p.Message.SerialNumber));
         });
         return cfg;
     }

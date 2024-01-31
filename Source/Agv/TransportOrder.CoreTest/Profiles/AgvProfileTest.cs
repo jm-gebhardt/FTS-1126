@@ -43,7 +43,7 @@ public class AgvProfileTest
 
         var agvMessageContent = mapper.Map<Messages.MessageContent.Agv>(agv);
         agvMessageContent.ShouldSatisfyAllConditions(
-            o => o.AgvId.ShouldBe(agv.AgvId),
+            o => o.SerialNumber.ShouldBe(agv.SerialNumber),
             o => o.CorrelationId.ShouldBe(agv.CorrelationId),
             o => o.CurrentState.ShouldBe(agv.CurrentAgvState),
             o => o.TimeOfStateTransition.ShouldBe(agv.TimeOfStateTransition),

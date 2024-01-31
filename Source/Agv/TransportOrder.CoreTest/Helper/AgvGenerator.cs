@@ -56,10 +56,10 @@ public static class AgvGenerator
         string orderId = "orderId"
     )
     {
-        string agvId = GetAgvId(index);
-        var correlationId = agvId.ToGuid();
+        string agvSerialNumber = GetAgvSerialNumber(index);
+        var correlationId = agvSerialNumber.ToGuid();
         agvStatus ??= new AgvStatus(correlationId, orderId, false, true, batteryCharge, charging, false, lastNodeId);
-        var agv = new TransportOrder.Domain.Models.Agv.Agv(correlationId, agvId, agvStatus, isLocked);
+        var agv = new TransportOrder.Domain.Models.Agv.Agv(correlationId, agvSerialNumber, agvStatus, isLocked);
         return SetAgvState(agvState, agv);
     }
 
@@ -85,7 +85,7 @@ public static class AgvGenerator
         return agv;
     }
 
-    private static string GetAgvId(int index)
+    private static string GetAgvSerialNumber(int index)
     {
         return $"AGV{index:D3}";
     }

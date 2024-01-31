@@ -10,19 +10,19 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
 /// </summary>
 public class AgvRepository : IAgvRepository
 {
-    private readonly ConcurrentDictionary<Guid, AgvInformation> _agvInformationByAgvCorrelationId = new();
+    private readonly ConcurrentDictionary<Guid, AgvInformation> _agvInformationByAgvId = new();
 
     /// <inheritdoc />
     public AgvInformation? GetAgvInformation(Guid correlationId)
     {
-        _agvInformationByAgvCorrelationId.TryGetValue(correlationId, out var agvInformation);
+        _agvInformationByAgvId.TryGetValue(correlationId, out var agvInformation);
         return agvInformation;
     }
 
     /// <inheritdoc />
     public void AddOrUpdate(Guid correlationId, AgvInformation agvInformation)
     {
-        _agvInformationByAgvCorrelationId.AddOrUpdate(correlationId, agvInformation, (_, _) => agvInformation);
+        _agvInformationByAgvId.AddOrUpdate(correlationId, agvInformation, (_, _) => agvInformation);
     }
 
     /// <inheritdoc />

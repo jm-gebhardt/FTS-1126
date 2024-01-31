@@ -37,7 +37,7 @@ public class ActionEventHandlerTest
         (await fixture.ConsumerHarness.Consumed.Any<ActionAborted>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<MqttOrder>()).ShouldBeTrue();
         var mqttMessage = fixture.TestHarness.Published.Select<MqttOrder>().First().Context.Message;
-        mqttMessage.SerialNumber.ShouldBe(agvInformation.AgvStatusReceived!.AgvId);
+        mqttMessage.SerialNumber.ShouldBe(agvInformation.AgvStatusReceived!.SerialNumber);
         mqttMessage.OrderType.ShouldBe(OrderType.Pick);
         mqttMessage.RecordType.ShouldBe(OrderRecordType.OrderCancel);
         mqttMessage.OrderId.ShouldBe(action.CorrelationId.ToString());

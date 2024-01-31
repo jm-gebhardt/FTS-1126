@@ -39,7 +39,7 @@ public class GetAgvPositionsRequestHandler :
         {
             throw new AgvsNotFoundException(selectedAgvs.Except(fetchedPositions.Select(p => p.CorrelationId)).ToList());
         }
-        List<Messages.MessageContent.AgvPositionStatus> agvPositions = fetchedPositions.Select(p => new Messages.MessageContent.AgvPositionStatus(p.CorrelationId, p.AgvId, p.AgvPosition)).ToList();
+        List<Messages.MessageContent.AgvPositionStatus> agvPositions = fetchedPositions.Select(p => new Messages.MessageContent.AgvPositionStatus(p.CorrelationId, p.SerialNumber, p.AgvPosition)).ToList();
         await context.RespondAsync(new GotAgvPositions(agvPositions));
     }
 
@@ -54,6 +54,6 @@ public class GetAgvPositionsRequestHandler :
         {
             throw new AgvNotFoundException(correlationId);
         }
-        await context.RespondAsync(new GotAgvPosition(new Messages.MessageContent.AgvPositionStatus(agvPosition.CorrelationId, agvPosition.AgvId, agvPosition.AgvPosition)));
+        await context.RespondAsync(new GotAgvPosition(new Messages.MessageContent.AgvPositionStatus(agvPosition.CorrelationId, agvPosition.SerialNumber, agvPosition.AgvPosition)));
     }
 }

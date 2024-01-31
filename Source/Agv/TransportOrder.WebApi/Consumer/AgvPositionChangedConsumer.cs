@@ -52,7 +52,7 @@ public class AgvPositionChangedConsumer :
     /// <param name="context"></param>
     public async Task Consume(ConsumeContext<AgvPositionChanged> context)
     {
-        _logger.LogTrace("{MessageType} {AgvId}/{CorrelationId} received. Value: {AgvPositionStatus}", nameof(AgvPositionChanged), context.Message.AgvId, context.Message.CorrelationId, context.Message);
+        _logger.LogTrace("{MessageType} {AgvId}/{CorrelationId} received. Value: {AgvPositionStatus}", nameof(AgvPositionChanged), context.Message.SerialNumber, context.Message.CorrelationId, context.Message);
 
         var agvPositionStatus = _mapper.Map<AgvPositionStatus>(context.Message);
         await _agvPublisher.SendAgvPositionAsync(agvPositionStatus);

@@ -17,14 +17,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Consumer;
 [TestClass]
 public class AgvChangedConsumerTest
 {
-    private const string AgvId = "agv1";
+    private const string AgvSerialNumber = "agv1";
 
     [TestMethod]
     [DataRow(true)]
     [DataRow(false)]
     public async Task Receiving_AgvOnlineChanged_SendAgvStateToAllClients(bool alive)
     {
-        var agv = new Domain.Models.Agv.Agv(AgvId.ToGuid(), AgvId);
+        var agv = new Domain.Models.Agv.Agv(AgvSerialNumber.ToGuid(), AgvSerialNumber);
         agv.TransitionToDiscovered(true);
         agv.TransitionToIdle();
         agv.SetOnline(Guid.NewGuid());

@@ -20,12 +20,12 @@ public class AgvPositionProfileTest
     [TestMethod]
     public void Map_ShouldMapAllPropertiesCorrectly_WhereAgvPositionChangedIsMappedToAgvPositionStatus()
     {
-        const string agvId = "agv1";
+        const string agvSerialNumber = "agv1";
         var agvPositionChanged = new AgvPositionChanged(
-            agvId.ToGuid(),
+            agvSerialNumber.ToGuid(),
             new AgvPosition(false, 0, 0, 0, 0),
             null,
-            agvId
+            agvSerialNumber
         );
 
         var mapper = MappingHelper.GetMapper(new AgvPositionProfile());
@@ -39,7 +39,7 @@ public class AgvPositionProfileTest
             s => s.Theta.ShouldBe(agvPositionChanged.NewAgvPosition.Theta),
             s => s.DeviationRange.ShouldBe(agvPositionChanged.NewAgvPosition.DeviationRange));
 
-        agvPositionStatus.AgvId.ShouldBe(agvPositionChanged.AgvId);
+        agvPositionStatus.SerialNumber.ShouldBe(agvPositionChanged.SerialNumber);
         agvPositionStatus.CorrelationId.ShouldBe(agvPositionChanged.CorrelationId);
     }
 
@@ -49,10 +49,10 @@ public class AgvPositionProfileTest
     [TestMethod]
     public void Map_ShouldMapAllPropertiesCorrectly_WhereAgvPositionReceivedIsMappedToAgvPositionStatus()
     {
-        const string agvId = "agv1";
+        const string agvSerialNumber = "agv1";
         var agvPositionReceived = new AgvPositionReceived(
-            agvId.ToGuid(),
-            agvId,
+            agvSerialNumber.ToGuid(),
+            agvSerialNumber,
             new AgvPosition(false, 0, 0, 0, 0)
         );
 
@@ -67,18 +67,18 @@ public class AgvPositionProfileTest
             s => s.Theta.ShouldBe(agvPositionReceived.AgvPosition.Theta),
             s => s.DeviationRange.ShouldBe(agvPositionReceived.AgvPosition.DeviationRange));
 
-        agvPositionStatus.AgvId.ShouldBe(agvPositionReceived.AgvId);
+        agvPositionStatus.SerialNumber.ShouldBe(agvPositionReceived.SerialNumber);
         agvPositionStatus.CorrelationId.ShouldBe(agvPositionReceived.CorrelationId);
     }
 
     [TestMethod]
     public void Map_ShouldMapAllPropertiesCorrectly_WhereAgvPositionStatusDtoIsMappedToAgvPositionStatus()
     {
-        const string agvId = "agv1";
+        const string agvSerialNumber = "agv1";
 
         var agvPositionStatus = new AgvPositionStatus(
             Guid.NewGuid(),
-            agvId,
+            agvSerialNumber,
             new AgvPosition(false, 0, 0, 0, 0)
         );
 
@@ -94,7 +94,7 @@ public class AgvPositionProfileTest
             s => s.Theta.ShouldBe(agvPositionStatus.AgvPosition.Theta),
             s => s.DeviationRange.ShouldBe(agvPositionStatus.AgvPosition.DeviationRange));
 
-        agvPositionStatusDto.AgvId.ShouldBe(agvPositionStatus.AgvId);
+        agvPositionStatusDto.SerialNumber.ShouldBe(agvPositionStatus.SerialNumber);
         agvPositionStatusDto.CorrelationId.ShouldBe(agvPositionStatus.CorrelationId);
     }
 }

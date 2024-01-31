@@ -28,11 +28,11 @@ public class BaseAgvChargingServiceTest
         AgvOfflineTimeoutMsWhileBusy = 20000
     };
 
-    private TransportOrder.Domain.Models.Agv.Agv CreateAgv(string agvId, int batteryCharge, bool charging)
+    private TransportOrder.Domain.Models.Agv.Agv CreateAgv(string serialNumber, int batteryCharge, bool charging)
     {
-        var correlationId = agvId.ToGuid();
+        var correlationId = serialNumber.ToGuid();
         var agvStatus = new AgvStatus(correlationId, "", true, true, batteryCharge, charging, false);
-        var agv = new TransportOrder.Domain.Models.Agv.Agv(correlationId, agvId, agvStatus);
+        var agv = new TransportOrder.Domain.Models.Agv.Agv(correlationId, serialNumber, agvStatus);
         agv = AgvGenerator.SetAgvState(charging ? AgvState.Busy : AgvState.Idle, agv);
         return agv;
     }

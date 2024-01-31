@@ -9,7 +9,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
 /// Represents a simulated agv.
 /// </summary>
 /// <param name="CorrelationId">The agv correlation id.</param>
-/// <param name="AgvId">The agv id.</param>
+/// <param name="SerialNumber">The serial number of the agv.</param>
 /// <param name="CurrentState">The current state o the agv.</param>
 /// <param name="IsOnline">Flag indicating if the agv is online.</param>
 /// <param name="IsLocked">Flag indicating if the agv is locked.</param>
@@ -23,7 +23,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
 [PublicAPI]
 public record SimulatedAgv(
     Guid CorrelationId,
-    string AgvId,
+    string SerialNumber,
     string CurrentState,
     bool IsOnline,
     bool IsLocked,

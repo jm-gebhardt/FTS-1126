@@ -33,14 +33,14 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
     where TRequest : class
     where TRequestHandler : class, IConsumer
 {
-    public string[] AgvIds { get; } = { "AGV001", "AGV002", "AGV003" };
+    public string[] AgvSerialNumbers { get; } = {"AGV001", "AGV002", "AGV003"};
 
     // ReSharper disable once MemberCanBePrivate.Global
-    public string[] Orders { get; } = { "ORDER001", "ORDER002", "" };
+    public string[] Orders { get; } = {"ORDER001", "ORDER002", ""};
 
-    public AgvState[] States { get; } = { AgvState.Idle, AgvState.Busy, AgvState.Discovered };
+    public AgvState[] States { get; } = {AgvState.Idle, AgvState.Busy, AgvState.Discovered};
 
-    private string[] Ips { get; } = { "127.0.0.1", "127.0.0.2", "127.0.0.3" };
+    private string[] Ips { get; } = {"127.0.0.1", "127.0.0.2", "127.0.0.3"};
 
     private readonly AgvSettings _agvSettings = new();
 
@@ -54,10 +54,10 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
 
     private readonly GraphNode[] _nodes =
     {
-        new("node00") { X = 0f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
-        new("node10") { X = 1f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
-        new("node01") { X = 0f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
-        new("node11") { X = 1f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint }
+        new("node00") {X = 0f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint},
+        new("node10") {X = 1f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint},
+        new("node01") {X = 0f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint},
+        new("node11") {X = 1f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint}
     };
 
     private IRequestClient<GetAgvs>? _getAgvsRequestClient;
@@ -85,15 +85,15 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
 
         QueueActionGroupRequestClient = new Mock<IRequestClient<QueueActionGroup>>();
         ActionGroupRetrievalService = new Mock<IActionGroupRetrievalService>();
-        ActionGroupRetrievalService.Setup(r => r.GetCurrentActionGroupsWithNodesAsync(It.IsAny<IReadOnlyCollection<Guid>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (ActionGroupReadModel?)null));
+        ActionGroupRetrievalService.Setup(r => r.GetCurrentActionGroupsWithNodesAsync(It.IsAny<IReadOnlyCollection<Guid>>())).ReturnsAsync(() => AgvSerialNumbers.ToDictionary(GetGuid, _ => (ActionGroupReadModel?) null));
         _agvPositionRepository = GetAgvPositionRepository().Object;
 
         ActionGroupRepository = new Mock<IActionGroupRepository>();
-        ActionGroupRepository.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (Domain.Models.ActionGroup.ActionGroup?)null));
+        ActionGroupRepository.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvSerialNumbers.ToDictionary(GetGuid, _ => (Domain.Models.ActionGroup.ActionGroup?) null));
         AgvDb.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(new List<AgvError>());
         AgvDb.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<IList<Guid>>())).ReturnsAsync(new List<AgvError>());
-        ActionGroupRepository.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (Domain.Models.ActionGroup.ActionGroup?)null));
-        AgvDb.Setup(x => x.Graphs.GetLastNodesForAgvsAsync(It.IsAny<Dictionary<Guid, string?>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (GraphNode?)null));
+        ActionGroupRepository.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvSerialNumbers.ToDictionary(GetGuid, _ => (Domain.Models.ActionGroup.ActionGroup?) null));
+        AgvDb.Setup(x => x.Graphs.GetLastNodesForAgvsAsync(It.IsAny<Dictionary<Guid, string?>>())).ReturnsAsync(() => AgvSerialNumbers.ToDictionary(GetGuid, _ => (GraphNode?) null));
     }
 
     [UsedImplicitly]
@@ -101,16 +101,16 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
     {
         var data = new Dictionary<Guid, AgvData>();
         List<Domain.Models.Agv.Agv> agvs = new();
-        for (int i = 0; i < AgvIds.Length; i++)
+        for (int i = 0; i < AgvSerialNumbers.Length; i++)
         {
-            string agvId = AgvIds[i];
+            string agvSerialNumber = AgvSerialNumbers[i];
             string orderId = Orders[i];
             var state = States[i];
             string ip = Ips[i];
-            var correlationId = GetGuid(agvId);
-            var agvStatus = agvId == "AGV003" ? null : new AgvStatus(correlationId, orderId, false, true, 10, true, true, lastNodeId: "Node");
+            var correlationId = GetGuid(agvSerialNumber);
+            var agvStatus = agvSerialNumber == "AGV003" ? null : new AgvStatus(correlationId, orderId, false, true, 10, true, true, lastNodeId: "Node");
             var agvData = AgvDataGenerator.GenerateAgvData(ipV4Address: ip);
-            var agv = new Domain.Models.Agv.Agv(correlationId, agvId, agvStatus);
+            var agv = new Domain.Models.Agv.Agv(correlationId, agvSerialNumber, agvStatus);
             agv = AgvGenerator.SetAgvState(state, false, agv);
 
             agvs.Add(agv);
@@ -127,35 +127,31 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
                 return agvData;
             });
         AgvDb.Setup(x => x.Data.AddOrUpdateAsync(It.IsAny<AgvData>()))
-            .ReturnsAsync((AgvData agvData) =>
-            {
-                data[agvData.CorrelationId] = agvData;
-                return true;
-            });
+            .Callback((AgvData agvData) => { data[agvData.CorrelationId] = agvData; });
 
         QueueActionGroupRequestClient = new Mock<IRequestClient<QueueActionGroup>>();
         QueueActionGroupRequestClient.Setup(x => x.GetResponse<Success>(It.IsAny<QueueActionGroup>(), default, default))
             .Callback((QueueActionGroup q, CancellationToken _, RequestTimeout _) => { SentQueueActionGroup = q.ActionGroup; });
 
-        AgvDb.Setup(x => x.Graphs.GetLastNodesForAgvsAsync(It.IsAny<Dictionary<Guid, string?>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (GraphNode?)null));
+        AgvDb.Setup(x => x.Graphs.GetLastNodesForAgvsAsync(It.IsAny<Dictionary<Guid, string?>>())).ReturnsAsync(() => AgvSerialNumbers.ToDictionary(GetGuid, _ => (GraphNode?) null));
 
         return this;
     }
 
-    private static Guid GetGuid(string agvId) => agvId.ToGuid();
+    private static Guid GetGuid(string agvSerialNumber) => agvSerialNumber.ToGuid();
 
     private Mock<IAgvPositionRepository> GetAgvPositionRepository()
     {
         var repository = new Mock<IAgvPositionRepository>();
         var agvPositions = new List<AgvPositionStatus>();
 
-        for (int i = 0; i < AgvIds.Length; i++)
+        for (int i = 0; i < AgvSerialNumbers.Length; i++)
         {
-            string agvId = AgvIds[i];
-            var correlationId = GetGuid(agvId);
+            string agvSerialNumber = AgvSerialNumbers[i];
+            var correlationId = GetGuid(agvSerialNumber);
             var node = _nodes[i];
 
-            agvPositions.Add(new AgvPositionStatus(correlationId, agvId, new AgvPosition(true, node.X, node.Y, node.Z, 0.5f)));
+            agvPositions.Add(new AgvPositionStatus(correlationId, agvSerialNumber, new AgvPosition(true, node.X, node.Y, node.Z, 0.5f)));
         }
 
         repository.Setup(x => x.GetAllPositions()).Returns(agvPositions);

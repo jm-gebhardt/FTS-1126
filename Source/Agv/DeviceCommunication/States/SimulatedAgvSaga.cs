@@ -1,3 +1,4 @@
+using Gebhardt.StoreWare.Agv.Common.Contracts;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
@@ -14,7 +15,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States;
 /// Agv Saga for simulated AGVs
 /// </summary>
 [PublicAPI]
-public class SimulatedAgvSaga : SagaStateMachineInstance
+public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
 {
     private readonly ITimeProvider _timeProvider;
     private const int AliveChargeThreshold = 5;
@@ -37,13 +38,11 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
     /// </summary>
     public GraphNode? CurrentNode { get; set; }
 
-    /// <summary>
-    /// Correlation ID
-    /// </summary>
+    /// <inheritdoc cref="IAgv.CorrelationId" />
     public Guid CorrelationId { get; set; }
 
-    /// <inheritdoc cref="Agv" />
-    public string AgvId { get; }
+    /// <inheritdoc/>
+    public string SerialNumber { get; }
 
     /// <inheritdoc cref="Agv" />
     public string CurrentState { get; set; }
@@ -233,7 +232,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
     /// SimulatedAgvSaga constructor used for testing
     /// </summary>
     /// <param name="correlationId"></param>
-    /// <param name="agvId"></param>
+    /// <param name="serialNumber"></param>
     /// <param name="simulationSpeed"></param>
     /// <param name="initialBatteryCharge"></param>
     /// <param name="batteryChargeRate"></param>
@@ -245,7 +244,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
     /// <param name="errors"></param>
     public SimulatedAgvSaga(
         Guid correlationId,
-        string agvId,
+        string serialNumber,
         int simulationSpeed,
         int initialBatteryCharge,
         double batteryChargeRate,
@@ -264,7 +263,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
         BatteryChargeRate = batteryChargeRate;
         _timeProvider = timeProvider;
         CorrelationId = correlationId;
-        AgvId = agvId;
+        SerialNumber = serialNumber;
         SimulationSpeed = simulationSpeed;
         CurrentState = currentState ?? "";
         CurrentNode = currentNode;
@@ -305,7 +304,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
     {
         _timeProvider = timeProvider;
         CorrelationId = agv.CorrelationId;
-        AgvId = agv.AgvId;
+        SerialNumber = agv.SerialNumber;
         CurrentNode = currentNode;
         AgvGraph = agv.AgvGraph;
         var agvData = agv.AgvData;
@@ -324,7 +323,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
             GetOrderId(),
             false,
             true,
-            (int)SimulatedBatteryCharge,
+            (int) SimulatedBatteryCharge,
             false,
             GetBatteryVoltage(),
             GetBatteryCurrent(),
@@ -335,7 +334,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance
         TravelSimulator = new AgvTravelSimulator(agv.AgvGraph, agvData, Position!);
     }
 
-    private static float GetRandomNoise(double maxValue) => (float)(maxValue * (2 * Random.Shared.NextDouble() - 1));
+    private static float GetRandomNoise(double maxValue) => (float) (maxValue * (2 * Random.Shared.NextDouble() - 1));
 
     private string? GetOrderId() => Action?.CorrelationId.ToString();
 

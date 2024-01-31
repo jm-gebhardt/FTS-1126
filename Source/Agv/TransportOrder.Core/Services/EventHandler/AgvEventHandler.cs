@@ -225,7 +225,7 @@ public class AgvEventHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<AgvStatusReceived> context)
     {
-        await context.Publish(new UpdateAgvStatus(context.Message.CorrelationId, context.Message.AgvId, context.Message.AgvStatus));
+        await context.Publish(new UpdateAgvStatus(context.Message.CorrelationId, context.Message.SerialNumber, context.Message.AgvStatus));
     }
 
     /// <summary>

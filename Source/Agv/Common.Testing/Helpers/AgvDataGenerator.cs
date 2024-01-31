@@ -20,6 +20,7 @@ public static class AgvDataGenerator
             "Karis",
             "BF1",
             ipV4Address,
+            "v0",
             batteryCapacity,
             acceleration,
             maxVelocityStraight,

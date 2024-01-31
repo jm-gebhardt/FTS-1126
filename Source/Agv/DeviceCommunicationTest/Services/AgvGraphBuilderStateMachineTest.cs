@@ -18,17 +18,17 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services;
 [TestClass]
 public class AgvGraphBuilderStateMachineTest
 {
-    private const string AgvTestIdentifier01 = "#2410#";
+    private const string AgvSerialNumber = "#2410#";
 
     [TestMethod]
     public async Task When_RequestAgvGraphReceived_NewAgvGraphBuilderSagaCreated()
     {
-        var correlationId = AgvTestIdentifier01.ToGuid();
+        var correlationId = AgvSerialNumber.ToGuid();
 
         StateMachineTestFixture<AgvGraphBuilderStateMachine, AgvGraphBuilderSaga> fixture = new StateMachineTestFixture<AgvGraphBuilderStateMachine, AgvGraphBuilderSaga>()
             .Build();
 
-        await fixture.TestHarness.Bus.Publish(new RequestAgvGraph(correlationId, AgvTestIdentifier01));
+        await fixture.TestHarness.Bus.Publish(new RequestAgvGraph(correlationId, AgvSerialNumber));
         (await fixture.SagaHarness.Consumed.Any<RequestAgvGraph>()).ShouldBeTrue();
 
         var saga = fixture.SagaHarness.Sagas.Select(s => s.CorrelationId == correlationId).First().Saga;
@@ -47,7 +47,7 @@ public class AgvGraphBuilderStateMachineTest
         StateMachineTestFixture<AgvGraphBuilderStateMachine, AgvGraphBuilderSaga> fixture = new StateMachineTestFixture<AgvGraphBuilderStateMachine, AgvGraphBuilderSaga>()
             .Build();
 
-        await fixture.TestHarness.Bus.Publish(new RequestAgvGraph(correlationId, AgvTestIdentifier01));
+        await fixture.TestHarness.Bus.Publish(new RequestAgvGraph(correlationId, AgvSerialNumber));
         (await fixture.SagaHarness.Consumed.Any<RequestAgvGraph>()).ShouldBeFalse();
 
         (await fixture.SagaHarness.NotExists(Guid.Empty, TimeSpan.FromMilliseconds(10))).ShouldBeNull();
@@ -59,13 +59,13 @@ public class AgvGraphBuilderStateMachineTest
     [TestMethod]
     public async Task When_AllStatesPassedByReceive_ValidGraphPublished()
     {
-        var correlationId = AgvTestIdentifier01.ToGuid();
+        var correlationId = AgvSerialNumber.ToGuid();
 
         StateMachineTestFixture<AgvGraphBuilderStateMachine, AgvGraphBuilderSaga> fixture = new StateMachineTestFixture<AgvGraphBuilderStateMachine, AgvGraphBuilderSaga>()
             .Build();
 
         // Publish RequestAgvGraph ...
-        await fixture.TestHarness.Bus.Publish(new RequestAgvGraph(correlationId, AgvTestIdentifier01));
+        await fixture.TestHarness.Bus.Publish(new RequestAgvGraph(correlationId, AgvSerialNumber));
         // ... expect it's gonna be consumed by the state machine.
         (await fixture.SagaHarness.Consumed.Any<RequestAgvGraph>()).ShouldBeTrue();
 
@@ -81,7 +81,7 @@ public class AgvGraphBuilderStateMachineTest
         saga.AgvGraph.ShouldBeNull();
 
         var requestIdList = saga.CurrentMqttRequestId; // Has been chosen by the state machine as request ID for MQTT.
-        var stationList = new MqttStationList(AgvTestIdentifier01, DateTimeOffset.UtcNow,
+        var stationList = new MqttStationList(AgvSerialNumber, DateTimeOffset.UtcNow,
             new Station[]
             {
                 new(Function.Pick, "P01", new Position(1f, 2f, 3f), "42"),
@@ -108,7 +108,7 @@ public class AgvGraphBuilderStateMachineTest
         stationD02.TypeId.ShouldBe("7");
 
         var requestIdGraph = saga.CurrentMqttRequestId; // Has been chosen by the state machine as request ID for MQTT.
-        var graph = new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow,
+        var graph = new MqttGraph(AgvSerialNumber, DateTimeOffset.UtcNow,
             new MqttNode[]
             {
                 new() { NodeId = 1, X = 0f, Y = 0f, Z = 0f },
@@ -131,7 +131,7 @@ public class AgvGraphBuilderStateMachineTest
         var publishedData = fixture.TestHarness.Published.Select<AgvGraphReceived>().First().Context.Message;
 
         publishedData.CorrelationId.ShouldBe(correlationId);
-        publishedData.Graph.CorrelationId.ShouldBe(AgvTestIdentifier01.ToGuid());
+        publishedData.Graph.CorrelationId.ShouldBe(AgvSerialNumber.ToGuid());
         // 2 stations + 2 nodes
         publishedData.Graph.Nodes.Count.ShouldBe(2 + 2);
         // 4 edges (2 (bidirectional) per station + 2 edges (bidirectional) from graph
@@ -144,13 +144,13 @@ public class AgvGraphBuilderStateMachineTest
     [TestMethod]
     public async Task When_InvalidStationListReceive_InvalidGraphPublished()
     {
-        var correlationId = AgvTestIdentifier01.ToGuid();
+        var correlationId = AgvSerialNumber.ToGuid();
 
         StateMachineTestFixture<AgvGraphBuilderStateMachine, AgvGraphBuilderSaga> fixture = new StateMachineTestFixture<AgvGraphBuilderStateMachine, AgvGraphBuilderSaga>()
             .Build();
 
         // Publish RequestAgvGraph ...
-        await fixture.TestHarness.Bus.Publish(new RequestAgvGraph(correlationId, AgvTestIdentifier01));
+        await fixture.TestHarness.Bus.Publish(new RequestAgvGraph(correlationId, AgvSerialNumber));
         // ... expect it's gonna be consumed by the state machine.
         (await fixture.SagaHarness.Consumed.Any<RequestAgvGraph>()).ShouldBeTrue();
 
@@ -163,7 +163,7 @@ public class AgvGraphBuilderStateMachineTest
         saga.CurrentState.ShouldBe(fixture.SagaHarness.StateMachine.RequestAgvGraphReceived);
 
         var requestIdList = saga.CurrentMqttRequestId; // Has been chosen by the state machine as request ID for MQTT.
-        var stationList = new MqttStationList(AgvTestIdentifier01, DateTimeOffset.UtcNow,
+        var stationList = new MqttStationList(AgvSerialNumber, DateTimeOffset.UtcNow,
             new Station[]
             {
                 new(Function.Pick, "P01", new Position(1f, 2f, 3f), "42"),
@@ -182,7 +182,7 @@ public class AgvGraphBuilderStateMachineTest
         saga.CurrentState.ShouldBe(fixture.SagaHarness.StateMachine.StationListReceived);
 
         var requestIdGraph = saga.CurrentMqttRequestId; // Has been chosen by the state machine as request ID for MQTT.
-        var graph = new MqttGraph(AgvTestIdentifier01, DateTimeOffset.UtcNow,
+        var graph = new MqttGraph(AgvSerialNumber, DateTimeOffset.UtcNow,
             new MqttNode[]
             {
                 new() { NodeId = 1, X = 0f, Y = 0f, Z = 0f },

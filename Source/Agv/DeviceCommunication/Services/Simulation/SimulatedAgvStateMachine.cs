@@ -89,11 +89,6 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     public Event<RequestAgvData> RequestAgvDataEvent { get; private set; } = default!;
 
     /// <summary>
-    /// RequestStatusSend was received.
-    /// </summary>
-    public Event<RequestStatusSendSchedulerStart> RequestStatusSendEvent { get; private set; } = default!;
-
-    /// <summary>
     /// <see cref="ActionAborted"/> was received.
     /// </summary>
     public Event<ActionAborted> AgvActionAbortedEvent { get; private set; } = default!;
@@ -178,7 +173,6 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         DuringAny(SetRequestAgvGraphHandler());
         DuringAny(SetRequestAgvDataHandler());
         DuringAny(SetSignalPositionHandler());
-        DuringAny(SetRequestStatusSendHandler());
         DuringAny(SimulateAgvErrorHandler());
         DuringAny(ResetAgvErrorsHandler());
 
@@ -226,7 +220,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     private EventActivityBinder<SimulatedAgvSaga, CreateAgv> SetInitialCreateAgvHandler()
     {
         return When(CreateAgvEvent)
-            .Then(c => _logger.LogDebug("{MessageType} {AgvId} / {CorrelationId} received", nameof(CreateAgv), c.Message.Agv.AgvId, c.Saga.CorrelationId))
+            .Then(c => _logger.LogDebug("{MessageType} {AgvId} / {CorrelationId} received", nameof(CreateAgv), c.Message.Agv.SerialNumber, c.Saga.CorrelationId))
             .TransitionTo(Idle)
             .ThenAsync(PublishStatusAsync)
             .ThenAsync(PublishPositionAsync)
@@ -238,14 +232,14 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     private EventActivityBinder<SimulatedAgvSaga, StartActionCommand> SetStartActionHandler()
     {
         return When(StartActionCommandEvent)
-            .Then(c => _logger.LogDebug("{MessageType} {AgvId} / {CorrelationId} received", nameof(StartActionCommand), c.Message.AgvId, c.Saga.CorrelationId))
+            .Then(c => _logger.LogDebug("{MessageType} {AgvId} / {CorrelationId} received", nameof(StartActionCommand), c.Message.SerialNumber, c.Saga.CorrelationId))
             .Then(Validate)
             .Then(c =>
             {
                 SetCurrentAction(c);
 
                 _logger.LogInformation("AGV {AgvId} / {CorrelationId} started action {ActionType} to {TargetNodeId} for {ParentId}. Action will be finished at {ActionFinishDate:HH:mm:ss.fff}",
-                    c.Saga.AgvId, c.Saga.CorrelationId,
+                    c.Saga.SerialNumber, c.Saga.CorrelationId,
                     c.Message.Action.ActionType, c.Message.Action.TargetNodeId, c.Message.Action.ParentId, c.Saga.ActionFinishDate);
             })
             .TransitionTo(BusyMoving)
@@ -291,13 +285,6 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     #endregion
 
     #region Message handlers
-    private EventActivityBinder<SimulatedAgvSaga, RequestStatusSendSchedulerStart> SetRequestStatusSendHandler()
-    {
-        return When(RequestStatusSendEvent)
-            .Then(c => { _logger.LogTrace("{MessageType} {CorrelationId} received", nameof(RequestStatusSendSchedulerStart), c.Saga.CorrelationId); })
-            .Schedule(StatusUpdateSchedule, c => new ScheduleStatusUpdate(c.Saga.CorrelationId), GetStatusUpdateInterval);
-    }
-
     private EventActivityBinder<SimulatedAgvSaga, ScheduleStatusUpdate> SetSendAgvStatusHandler()
     {
         return When(StatusUpdateSchedule.Received)
@@ -317,14 +304,14 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     private EventActivityBinder<SimulatedAgvSaga, RequestAgvData> SetRequestAgvDataHandler()
     {
         return When(RequestAgvDataEvent)
-            .Then(c => _logger.LogDebug("{MessageType} {AgvId} / {CorrelationId} received", nameof(RequestAgvData), c.Message.AgvId, c.Saga.CorrelationId))
+            .Then(c => _logger.LogDebug("{MessageType} {AgvId} / {CorrelationId} received", nameof(RequestAgvData), c.Message.SerialNumber, c.Saga.CorrelationId))
             .ThenAsync(PublishAgvData);
     }
 
     private EventActivityBinder<SimulatedAgvSaga, RequestAgvGraph> SetRequestAgvGraphHandler()
     {
         return When(RequestAgvGraphEvent)
-            .Then(c => _logger.LogDebug("{MessageType} {AgvId} / {CorrelationId} received", nameof(RequestAgvGraph), c.Message.AgvId, c.Saga.CorrelationId))
+            .Then(c => _logger.LogDebug("{MessageType} {AgvId} / {CorrelationId} received", nameof(RequestAgvGraph), c.Message.SerialNumber, c.Saga.CorrelationId))
             .ThenAsync(PublishAgvGraph);
     }
 
@@ -394,7 +381,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     private async Task PublishStatusAsync(BehaviorContext<SimulatedAgvSaga> context)
     {
         _logger.LogTrace("Status event from AGV {AgvId} / {CorrelationId}",
-            context.Saga.AgvId, context.Saga.CorrelationId);
+            context.Saga.SerialNumber, context.Saga.CorrelationId);
 
         context.Saga.UpdateStatus(GetStatusUpdateInterval(context).TotalSeconds, _batteryChargeRate, _batteryDischargeRate); // Update status before each send
 
@@ -402,7 +389,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         {
             await context.Publish(new AgvStatusReceived(
                 context.Saga.CorrelationId,
-                context.Saga.AgvId,
+                context.Saga.SerialNumber,
                 context.Saga.AgvStatus
             ), context.CancellationToken);
         }
@@ -417,12 +404,12 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         if (position != null)
         {
             _logger.LogTrace("Position event from AGV {AgvId} / {CorrelationId} on edge {Edge}: {Position}",
-                saga.AgvId, saga.CorrelationId,
+                saga.SerialNumber, saga.CorrelationId,
                 saga.TravelSimulator.CurrentEdge, position);
 
             await context.Publish(new AgvPositionReceived(
                 saga.CorrelationId,
-                saga.AgvId,
+                saga.SerialNumber,
                 position
             ), context.CancellationToken);
 
@@ -439,7 +426,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         var agvSaga = context.Saga;
         if (agvSaga.AgvData != null)
         {
-            await context.Publish(new AgvDataReceived(agvSaga.CorrelationId, agvSaga.AgvId, agvSaga.AgvData));
+            await context.Publish(new AgvDataReceived(agvSaga.CorrelationId, agvSaga.SerialNumber, agvSaga.AgvData));
         }
     }
 
@@ -448,7 +435,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         var agvSaga = context.Saga;
         if (agvSaga.AgvGraph != null)
         {
-            await context.Publish(new AgvGraphReceived(agvSaga.CorrelationId, agvSaga.AgvId, agvSaga.AgvGraph));
+            await context.Publish(new AgvGraphReceived(agvSaga.CorrelationId, agvSaga.SerialNumber, agvSaga.AgvGraph));
         }
     }
 
@@ -476,7 +463,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         {
             var agvCorrelationId = context.Saga.CorrelationId;
             _logger.LogInformation("AGV {AgvId} / {CorrelationId} finished action {ActionType} for {OrderId}",
-                context.Saga.AgvId, agvCorrelationId, action.ActionType, action.ParentId);
+                context.Saga.SerialNumber, agvCorrelationId, action.ActionType, action.ParentId);
 
             var cargos = new List<Cargo>();
             if (action.ActionType == ActionType.Pick)
@@ -506,7 +493,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         else
         {
             _logger.LogInformation("Agv {AgvId} / {CorrelationId} aborted action {ActionType} for {OrderId}",
-                context.Saga.AgvId, context.Saga.CorrelationId, action.ActionType, action.ParentId);
+                context.Saga.SerialNumber, context.Saga.CorrelationId, action.ActionType, action.ParentId);
 
             await context.Publish(new ActionAbortionCompleted(action.CorrelationId));
         }

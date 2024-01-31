@@ -42,12 +42,12 @@ public class StartActionCommandConsumer :
         OrderType orderType;
         string sourceToSend = string.Empty;
         string destinationToSend = string.Empty;
-        string agvId = context.Message.AgvId;
+        string agvSerialNumber = context.Message.SerialNumber;
         var assignedAgv = context.Message.CorrelationId;
 
-        if (string.IsNullOrEmpty(agvId))
+        if (string.IsNullOrEmpty(agvSerialNumber))
         {
-            throw new AssignedAgvNotFoundException(assignedAgv, agvId, action);
+            throw new AssignedAgvNotFoundException(assignedAgv, agvSerialNumber, action);
         }
 
         switch (actionType)
@@ -80,7 +80,7 @@ public class StartActionCommandConsumer :
         // And we transferring the Action's Guid
         await context.PublishMqtt(new MqttOrder(action.CorrelationId.ToString())
         {
-            SerialNumber = agvId,
+            SerialNumber = agvSerialNumber,
             OrderType = orderType,
             OrderId = action.CorrelationId.ToString(),
             RecordType = OrderRecordType.Order,
@@ -93,7 +93,7 @@ public class StartActionCommandConsumer :
 
         FeedAgvRepository(assignedAgv, action);
         _logger.LogInformation("Sent transport order: {OrderId} for AGV:{AssignedAgv}/{AgvId} at target: {TargetNodeId}",
-            action.CorrelationId, assignedAgv, agvId, targetNodeId);
+            action.CorrelationId, assignedAgv, agvSerialNumber, targetNodeId);
     }
 
     private void FeedAgvRepository(Guid correlationId, AgvAction agvAction)

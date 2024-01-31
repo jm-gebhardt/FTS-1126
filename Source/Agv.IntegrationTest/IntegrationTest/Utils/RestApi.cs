@@ -131,9 +131,9 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
         /// <summary>
         /// Wait for a specific AGV
         /// </summary>
-        /// <param name="agvId"></param>
+        /// <param name="agvSerialNumber"></param>
         /// <returns>JObject of AGV or null if not found or unsuccessful</returns>
-        public async Task<JToken?> WaitForAgv(string agvId)
+        public async Task<JToken?> WaitForAgv(string agvSerialNumber)
         {
             return await Poll(async () =>
             {
@@ -144,10 +144,10 @@ namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
                     return null;
                 }
 
-                var agv = agvs.FirstOrDefault(token => token["agvId"]?.ToString() == agvId);
+                var agv = agvs.FirstOrDefault(token => token["serialNumber"]?.ToString() == agvSerialNumber);
                 if (agv == null)
                 {
-                    await WriteError($"AGV '{agvId}' not found");
+                    await WriteError($"AGV '{agvSerialNumber}' not found");
                     return null;
                 }
 

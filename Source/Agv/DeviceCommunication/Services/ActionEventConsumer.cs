@@ -35,20 +35,20 @@ public class ActionEventConsumer : IConsumer<ActionAborted>
         var (assignedAgv, action) = context.Message;
 
         var agvInformation = _agvRepository.GetAgvInformation(assignedAgv);
-        if (agvInformation == null || agvInformation.AgvStatusReceived!.AgvId.IsNullOrEmpty())
+        if (agvInformation == null || agvInformation.AgvStatusReceived!.SerialNumber.IsNullOrEmpty())
         {
-            throw new AssignedAgvNotFoundException(assignedAgv, agvInformation!.AgvStatusReceived!.AgvId, action);
+            throw new AssignedAgvNotFoundException(assignedAgv, agvInformation!.AgvStatusReceived!.SerialNumber, action);
         }
         string orderId = action.CorrelationId.ToString();
         var orderType = action.ActionType.ToOrderType();
 
-        _logger.LogDebug("Aborting action {Action} for order {Order} of agv {AgvId}/{AgvCorrelationId}", action.CorrelationId, orderId, agvInformation.AgvStatusReceived!.AgvId, assignedAgv);
+        _logger.LogDebug("Aborting action {Action} for order {Order} of agv {AgvId}/{AgvCorrelationId}", action.CorrelationId, orderId, agvInformation.AgvStatusReceived!.SerialNumber, assignedAgv);
 
         // We are using the ActionCorrelationId as "orderId"
         // And we transferring the Action's Guid
         await context.PublishMqtt(new MqttOrder(orderId)
         {
-            SerialNumber = agvInformation.AgvStatusReceived!.AgvId,
+            SerialNumber = agvInformation.AgvStatusReceived!.SerialNumber,
             OrderType = orderType,
             OrderId = orderId,
             RecordType = OrderRecordType.OrderCancel

@@ -98,11 +98,11 @@ public class ChargingPointManagerTestFixture
             .ReturnsAsync(new Func<Guid, Expression<Func<GraphNode, bool>>, IEnumerable<GraphNode>>((_, predicate) => graph.Nodes.AsQueryable().Where(predicate)));
     }
 
-    public TransportOrder.Domain.Models.Agv.Agv GetAgv(Guid correlationId, string agvId, string order, string? lastNodeId = null)
+    public TransportOrder.Domain.Models.Agv.Agv GetAgv(Guid correlationId, string serialNumber, string order, string? lastNodeId = null)
     {
         var agvStatus = new AgvStatus(correlationId, order, true, true, 10, false, false, lastNodeId);
 
-        return new TransportOrder.Domain.Models.Agv.Agv(correlationId, agvId, agvStatus);
+        return new TransportOrder.Domain.Models.Agv.Agv(correlationId, serialNumber, agvStatus);
     }
 
     public ChargingPointManagerTestFixture WithAvailableNodes(TransportOrder.Domain.Models.Agv.Agv agv, List<GraphNode> availableNodes)

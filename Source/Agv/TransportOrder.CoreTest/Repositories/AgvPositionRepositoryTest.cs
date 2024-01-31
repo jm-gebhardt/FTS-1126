@@ -59,7 +59,7 @@ public class AgvPositionRepositoryTest
 
         fixture.BusMock.Verify(b => b.Publish(It.Is<AgvPositionChanged>(o =>
                 o.NewAgvPosition == agvPositionStatus.AgvPosition &&
-                o.AgvId == agvPositionStatus.AgvId),
+                o.SerialNumber == agvPositionStatus.SerialNumber),
             It.IsAny<CancellationToken>()), Times.Once());
     }
 

@@ -78,12 +78,12 @@ public sealed class AgvGraphBuilderStateMachine : MassTransitStateMachine<AgvGra
     private EventActivityBinder<AgvGraphBuilderSaga, RequestAgvGraph> RequestAgvGraphHandler()
     {
         return When(RequestAgvGraphEvent)
-            .Then(c => _logger.LogInformation("{MessageType} {AgvId} / {CorrelationId} received", nameof(RequestAgvGraph), c.Message.AgvId, c.Message.CorrelationId))
+            .Then(c => _logger.LogInformation("{MessageType} {AgvId} / {CorrelationId} received", nameof(RequestAgvGraph), c.Message.SerialNumber, c.Message.CorrelationId))
             .TransitionTo(RequestAgvGraphReceived)
             // Create a new request ID and store in saga instance.
             .Then(c => c.Saga.CurrentMqttRequestId = Guid.NewGuid())
             // Request the station list.
-            .Then(c => c.PublishMqtt(new MqttRequestStationList(c.Message.AgvId, c.Saga.CurrentMqttRequestId), null));
+            .Then(c => c.PublishMqtt(new MqttRequestStationList(c.Message.SerialNumber, c.Saga.CurrentMqttRequestId), null));
     }
 
     private EventActivityBinder<AgvGraphBuilderSaga, InternalStationListReceived> StationListHandler()

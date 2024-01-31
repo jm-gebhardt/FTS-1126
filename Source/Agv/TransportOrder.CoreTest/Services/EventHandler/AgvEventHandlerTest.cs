@@ -206,13 +206,13 @@ public class AgvEventHandlerTest
     [TestMethod]
     public async Task Consume_AgvMapReceived_ValidData_PublishesSaveMap()
     {
-        const string agvId = "AGV001";
-        var agvCorrelationId = agvId.ToGuid();
+        const string agvSerialNumber = "AGV001";
+        var agvCorrelationId = agvSerialNumber.ToGuid();
         var map = new Map(new Guid(), "", DateTime.MaxValue, "", 0, 0, 0.5f, 0.5f, 0.5f);
         var fixture = new AgvEventHandlerTestFixture()
             .WithAgvGraph(AgvGraphGenerator.CreateDefaultGraph());
 
-        await fixture.PublishMessageAsync(new AgvMapReceived(agvCorrelationId, agvId, map));
+        await fixture.PublishMessageAsync(new AgvMapReceived(agvCorrelationId, agvSerialNumber, map));
 
         (await fixture.TestHarness.Published.Any<SaveMap>(f => f.Context.Message.Map.CorrelationId == map.CorrelationId)).ShouldBeTrue();
     }
@@ -224,7 +224,7 @@ public class AgvEventHandlerTest
         var agv = AgvGenerator.GenerateIdleAgv();
         fixture.AddAgv(agv);
 
-        await fixture.PublishMessageAsync(new AgvStatusReceived(agv.CorrelationId, agv.AgvId, _mapper.Map<AgvStatus>(agv.AgvStatus!)));
+        await fixture.PublishMessageAsync(new AgvStatusReceived(agv.CorrelationId, agv.SerialNumber, _mapper.Map<AgvStatus>(agv.AgvStatus!)));
 
         (await fixture.TestHarness.Published.Any<UpdateAgvStatus>()).ShouldBeTrue();
     }

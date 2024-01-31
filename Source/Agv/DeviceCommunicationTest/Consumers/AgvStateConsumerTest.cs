@@ -11,7 +11,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers;
 [TestClass]
 public class AgvStateConsumerTest
 {
-    private const string AgvTestIdentifier02 = "#0815#";
+    private const string AgvSerialNumber = "#0815#";
 
     /// <summary>
     ///  Test for consuming invalid AGV status message.
@@ -47,7 +47,7 @@ public class AgvStateConsumerTest
 
         var publishedStatus = fixture.TestHarness.Published.Select<AgvStatusReceived>().First().Context.Message;
         publishedStatus.CorrelationId.ShouldBe(agvTestIdentifier.ToGuid());
-        publishedStatus.AgvId.ShouldBe(agvTestIdentifier);
+        publishedStatus.SerialNumber.ShouldBe(agvTestIdentifier);
     }
 
     /// <summary>
@@ -62,7 +62,7 @@ public class AgvStateConsumerTest
         var fixture = new AgvStateConsumerTestFixture().UseDefaultServices().Build();
         const string orderId = "Order123";
 
-        await fixture.TestHarness.Bus.PublishMqtt(new MqttState(AgvTestIdentifier02, orderId)
+        await fixture.TestHarness.Bus.PublishMqtt(new MqttState(AgvSerialNumber, orderId)
         {
             LastNodeId = sentLastNodeId,
             AgvPosition = null
@@ -87,7 +87,7 @@ public class AgvStateConsumerTest
         var fixture = new AgvStateConsumerTestFixture().UseDefaultServices().Build();
         const string orderId = "Order123";
 
-        await fixture.TestHarness.Bus.PublishMqtt(new MqttState(AgvTestIdentifier02, orderId)
+        await fixture.TestHarness.Bus.PublishMqtt(new MqttState(AgvSerialNumber, orderId)
         {
             AgvPosition = new MqttAgvPosition()
             {
@@ -117,8 +117,8 @@ public class AgvStateConsumerTest
         consumedState.AgvPosition.Y.ShouldBe(y, 0.00001);
 
         var publishedPos = fixture.TestHarness.Published.Select<AgvPositionReceived>().First().Context.Message;
-        publishedPos.CorrelationId.ShouldBe(AgvTestIdentifier02.ToGuid());
-        publishedPos.AgvId.ShouldBe(AgvTestIdentifier02);
+        publishedPos.CorrelationId.ShouldBe(AgvSerialNumber.ToGuid());
+        publishedPos.SerialNumber.ShouldBe(AgvSerialNumber);
         publishedPos.AgvPosition.PositionInitialized.ShouldBe(positionInitialized);
         publishedPos.AgvPosition.Theta.ShouldBe((float)Mathematics.ConvertToRadians(90) - theta);
         publishedPos.AgvPosition.X.ShouldBe(x);

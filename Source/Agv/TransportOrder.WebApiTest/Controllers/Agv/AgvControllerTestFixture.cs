@@ -48,16 +48,16 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
 
     private readonly Mock<IMapRepository> _mapRepository = new();
 
-    private readonly ProductionOptions _productionOptions = new() { AutoAccept = true };
+    private readonly ProductionOptions _productionOptions = new() {AutoAccept = true};
 
-    public string[] AgvIds { get; } = { "AGV001", "AGV002", "AGV003" };
+    public string[] AgvSerialNumbers { get; } = {"AGV001", "AGV002", "AGV003"};
 
     // ReSharper disable once MemberCanBePrivate.Global
-    public string[] Orders { get; } = { "ORDER001", "ORDER002", "" };
+    public string[] Orders { get; } = {"ORDER001", "ORDER002", ""};
 
-    private AgvState[] States { get; } = { AgvState.Idle, AgvState.Busy, AgvState.Discovered };
+    private AgvState[] States { get; } = {AgvState.Idle, AgvState.Busy, AgvState.Discovered};
 
-    public string[] Ips { get; } = { "127.0.0.1", "127.0.0.2", "127.0.0.3" };
+    public string[] Ips { get; } = {"127.0.0.1", "127.0.0.2", "127.0.0.3"};
 
     public Mock<IAgvDb> AgvDb { get; }
 
@@ -71,10 +71,10 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
 
     private readonly GraphNode[] _nodes =
     {
-        new("node00") { X = 0f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
-        new("node10") { X = 1f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
-        new("node01") { X = 0f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
-        new("node11") { X = 1f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint }
+        new("node00") {X = 0f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint},
+        new("node10") {X = 1f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint},
+        new("node01") {X = 0f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint},
+        new("node11") {X = 1f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint}
     };
 
     private readonly IAgvPositionRepository _agvPositionRepository;
@@ -89,11 +89,11 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         AgvDb = new Mock<IAgvDb>();
         QueueActionGroupRequestClient = new Mock<IRequestClient<QueueActionGroup>>();
         ActionGroupRetrievalService = new Mock<IActionGroupRetrievalService>();
-        ActionGroupRetrievalService.Setup(r => r.GetCurrentActionGroupsWithNodesAsync(It.IsAny<IReadOnlyCollection<Guid>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (ActionGroupReadModel?)null));
+        ActionGroupRetrievalService.Setup(r => r.GetCurrentActionGroupsWithNodesAsync(It.IsAny<IReadOnlyCollection<Guid>>())).ReturnsAsync(() => AgvSerialNumbers.ToDictionary(GetGuid, _ => (ActionGroupReadModel?) null));
         _agvPositionRepository = GetAgvPositionRepository().Object;
 
         ActionGroupRepository = new Mock<IActionGroupRepository>();
-        ActionGroupRepository.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvIds.ToDictionary(GetGuid, _ => (Domain.Models.ActionGroup.ActionGroup?)null));
+        ActionGroupRepository.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvSerialNumbers.ToDictionary(GetGuid, _ => (Domain.Models.ActionGroup.ActionGroup?) null));
         ActionGroupRepository.Setup(r => r.GetCurrentAgvActionAsync(It.IsAny<Guid>())).ReturnsAsync(_chargeAction);
         AgvDb.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(new List<AgvError>());
         AgvDb.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<IList<Guid>>())).ReturnsAsync(new List<AgvError>());
@@ -109,16 +109,16 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         var agvs = new List<Domain.Models.Agv.Agv>();
         var data = new Dictionary<Guid, AgvData>();
 
-        for (int i = 0; i < AgvIds.Length; i++)
+        for (int i = 0; i < AgvSerialNumbers.Length; i++)
         {
-            string agvId = AgvIds[i];
+            string agvSerialNumber = AgvSerialNumbers[i];
             string orderId = Orders[i];
             var state = States[i];
             string ip = Ips[i];
-            var correlationId = GetGuid(agvId);
-            var agvStatus = agvId == "AGV003" ? null : new AgvStatus(correlationId, orderId, true, true, 10, true, true, "WAY3");
+            var correlationId = GetGuid(agvSerialNumber);
+            var agvStatus = agvSerialNumber == "AGV003" ? null : new AgvStatus(correlationId, orderId, true, true, 10, true, true, "WAY3");
             var agvData = AgvDataGenerator.GenerateAgvData(correlationId: correlationId, ipV4Address: ip);
-            var agv = new Domain.Models.Agv.Agv(correlationId, agvId, agvStatus);
+            var agv = new Domain.Models.Agv.Agv(correlationId, agvSerialNumber, agvStatus);
             agv = AgvGenerator.SetAgvState(state, false, agv);
 
             agvs.Add(agv);
@@ -136,28 +136,24 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
                 return agvData;
             });
         AgvDb.Setup(x => x.Data.AddOrUpdateAsync(It.IsAny<AgvData>()))
-            .ReturnsAsync((AgvData agvData) =>
-            {
-                data[agvData.CorrelationId] = agvData;
-                return true;
-            });
+            .Callback((AgvData agvData) => { data[agvData.CorrelationId] = agvData; });
         return this;
     }
 
-    private static Guid GetGuid(string agvId) => agvId.ToGuid();
+    private static Guid GetGuid(string agvSerialNumber) => agvSerialNumber.ToGuid();
 
     private Mock<IAgvPositionRepository> GetAgvPositionRepository()
     {
         var repository = new Mock<IAgvPositionRepository>();
         var agvPositions = new List<AgvPositionStatus>();
 
-        for (int i = 0; i < AgvIds.Length; i++)
+        for (int i = 0; i < AgvSerialNumbers.Length; i++)
         {
-            string agvId = AgvIds[i];
-            var correlationId = GetGuid(agvId);
+            string agvSerialNumber = AgvSerialNumbers[i];
+            var correlationId = GetGuid(agvSerialNumber);
             var node = _nodes[i];
 
-            agvPositions.Add(new AgvPositionStatus(correlationId, agvId, new AgvPosition(true, node.X, node.Y, node.Z, 0.5f)));
+            agvPositions.Add(new AgvPositionStatus(correlationId, agvSerialNumber, new AgvPosition(true, node.X, node.Y, node.Z, 0.5f)));
         }
 
         repository.Setup(x => x.GetAllPositions()).Returns(agvPositions);
