@@ -1,12 +1,12 @@
 ﻿{
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "title": "map",
-    "description": "Information about scale of the map and where to get it",
+    "description": "Information about scale of the map and where to get it.",
     "subtopic": "/map",
     "type": "object",
     "properties": {
         "SerialNumber": {
-            "description": "Serial number of the AGV.",
+            "description": "Serial number of the agv.",
             "type": "string",
             "examples": [
                 "1234-5678",
@@ -34,24 +34,24 @@
         },
         "Data": {
             "type": "string",
-            "description": "The base 64 encoded data of the png image",
+            "description": "The base 64 encoded data of the png image.",
             "contentEncoding": "base64",
             "contentMediaType": "image/png"
         },
         "Resolution": {
             "type": "number",
-            "description": "The resolution of the maps image. Expressed as how many [m] per pixel are represented",
+            "description": "The resolution of the maps image. Expressed as how many [m] per pixel are represented.",
             "examples": [
                 0.01
             ]
         },
         "XOffset": {
             "type": "number",
-            "description": "The x offset of the map in [m] (from the left upper corner) where the mapped graph coordinate system starts"
+            "description": "The x offset of the map in [m] (from the left upper corner) where the mapped graph coordinate system starts."
         },
         "YOffset": {
             "type": "number",
-            "description": "The y offset of the map in [m] (from the left upper corner) where the mapped graph coordinate system starts"
+            "description": "The y offset of the map in [m] (from the left upper corner) where the mapped graph coordinate system starts."
         }
     },
     "required": [

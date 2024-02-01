@@ -1,12 +1,12 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "title": "orderStatus",
-    "description": "Order status of an ongoing order",
+    "description": "Order status of an ongoing order.",
     "subtopic": "/orderStatus",
     "type": "object",
     "properties": {
         "SerialNumber": {
-            "description": "The unique identifier of the agv",
+            "description": "The unique identifier of the agv.",
             "type": "string",
             "examples": [
                 "AGV1",
@@ -15,11 +15,11 @@
         },
         "OrderId": {
             "type": "string",
-            "description": "The unique ID of the order"
+            "description": "The unique ID of the order."
         },
         "OrderType": {
             "type": "string",
-            "description": "The type of the order. Pick/Drop/Transport/Move/Charge",
+            "description": "The type of the order (Pick/Drop/Transport/Move/Charge).",
             "enum": [
                 "Pick",
                 "Drop",
@@ -33,7 +33,7 @@
             "properties": {
                 "FromStationIdentifier": {
                     "type": "string",
-                    "description": "The unique identifier of the station where to pick from",
+                    "description": "The unique identifier of the station where to pick from.",
                     "examples": [
                         "Source1",
                         "Source31"
@@ -41,7 +41,7 @@
                 },
                 "ToStationIdentifier": {
                     "type": "string",
-                    "description": "The unique identifier of the station where to drop",
+                    "description": "The unique identifier of the station where to drop.",
                     "examples": [
                         "Destination2",
                         "Destination42"
@@ -63,7 +63,7 @@
         },
         "coordinates": {
             "type": "object",
-            "description": "The coordinates of the point where to go to",
+            "description": "The coordinates of the point where to go to.",
             "properties": {
                 "ToX": {
                     "type": "number"
@@ -83,7 +83,7 @@
         },
         "Blocked": {
             "type": "string",
-            "description": "Indicates a temporary block of the execution of the order due to some obstacles on the path or manual interference",
+            "description": "Indicates a temporary block of the execution of the order due to some obstacles on the path or manual interference.",
             "examples": [
                 "true",
                 "false"
@@ -91,14 +91,14 @@
         },
         "CurrentPath": {
             "type": "array",
-            "description": "The remaining path to the next station (not the total path) expressed as an array of nodes to travel over",
+            "description": "The remaining path to the next station (not the total path) expressed as an array of nodes to travel over.",
             "items": {
                 "type": "integer"
             }
         },
         "EstimatedRemainingExecutionTime": {
             "type": "number",
-            "description": "The remaining execution time of the whole order in seconds"
+            "description": "The remaining execution time of the whole order in seconds."
         }
     },
     "required": [

@@ -1,12 +1,12 @@
 ﻿{
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "title": "horizon",
-    "description": "New horizon for the AGV to which it is allowed to travel",
+    "description": "New horizon for the agv to which it is allowed to travel.",
     "subtopic": "/horizon",
     "type": "object",
     "properties": {
         "SerialNumber": {
-            "description": "Serial number of the AGV.",
+            "description": "Serial number of the agv.",
             "type": "string",
             "examples": [
                 "1234-5678",
@@ -15,7 +15,7 @@
         },
         "OrderId": {
             "type": "integer",
-            "description": "The unique ID of the current order"
+            "description": "The unique ID of the current order."
         },
         "Horizon": {
             "type": "array",

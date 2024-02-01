@@ -1,12 +1,12 @@
 ﻿{
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "title": "requestSensorStates",
-    "description": "A request to send sensor states in the state message",
+    "description": "A request to send sensor states in the state message.",
     "subtopic": "/requestSensorStates",
     "type": "object",
     "properties": {
         "SerialNumber": {
-            "description": "Serial number of the AGV.",
+            "description": "Serial number of the agv.",
             "type": "string",
             "examples": [
                 "1234-5678",

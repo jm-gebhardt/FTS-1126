@@ -14,7 +14,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 public record MqttAgvData
 {
     /// <summary>
-    /// Serial number of the AGV.
+    /// Serial number of the agv.
     /// </summary>
     public string SerialNumber { get; set; }
 
@@ -24,52 +24,52 @@ public record MqttAgvData
     public Guid? RequestId { get; set; }
 
     /// <summary>
-    /// The model name of the AGV
+    /// The model name of the agv.
     /// </summary>
     public string Model { get; set; }
 
     /// <summary>
-    /// The type of the AGV
+    /// The type of the agv.
     /// </summary>
     public string Type { get; set; }
 
     /// <summary>
-    /// The IP Address of the AGV
+    /// The IP Address of the agv.
     /// </summary>
     public string? IpV4Address { get; set; }
 
     /// <summary>
-    /// The length of the AGV in [m]
+    /// The length of the agv in [m].
     /// </summary>
     public double? Length { get; set; }
 
     /// <summary>
-    /// The width of the AGV in [m]
+    /// The width of the agv in [m].
     /// </summary>
     public double? Width { get; set; }
 
     /// <summary>
-    /// The max. payload of the AGV in [kg]
+    /// The maximum payload of the agv in [kg].
     /// </summary>
     public long? Payload { get; set; }
 
     /// <summary>
-    /// The capacity of the AGVs battery in [Ah]
+    /// The capacity of the agv battery in [Ah].
     /// </summary>
     public double BatteryCapacity { get; set; }
 
     /// <summary>
-    /// The maximum velocity of the AGV in straight direction [m/s]
+    /// The maximum velocity of the agv in straight direction [m/s].
     /// </summary>
     public double MaxVelocityStraight { get; set; }
 
     /// <summary>
-    /// The maximum velocity of the AGV in while turning [m/s]
+    /// The maximum velocity of the agv in while turning [m/s].
     /// </summary>
     public double? MaxVelocityTurn { get; set; }
 
     /// <summary>
-    /// The maximum velocity of the AGV while turning on spot [rad/s]
+    /// The maximum velocity of the agv while turning on spot [rad/s].
     /// </summary>
     public double? MaxVelocityTurnOnSpot { get; set; }
 
@@ -79,23 +79,29 @@ public record MqttAgvData
     public double? TurnOnSpotThreshold { get; set; }
 
     /// <summary>
-    /// The maximum acceleration of the AGV [m/s^2]
+    /// The maximum acceleration of the agv [m/s^2].
     /// </summary>
     public double? Acceleration { get; set; }
 
     /// <summary>
-    /// The list of sensors in the agv
+    /// The list of sensors in the agv.
     /// </summary>
     public Sensor[] Sensors { get; set; }
 
     /// <summary>
-    /// Initializes a new instance of <see cref="MqttAgvData"/>
+    /// The software version of the agv.
+    /// </summary>
+    public string? SoftwareVersion { get; set; }
+
+    /// <summary>
+    /// Initializes a new instance of <see cref="MqttAgvData"/>.
     /// </summary>
     public MqttAgvData(
         string serialNumber,
         string model,
         string type,
         string? ipV4Address,
+        string? softwareVersion,
         double maxVelocityStraight,
         double batteryCapacity,
         double? length,
@@ -111,6 +117,7 @@ public record MqttAgvData
         Model = model;
         Type = type;
         IpV4Address = ipV4Address;
+        SoftwareVersion = softwareVersion;
         MaxVelocityStraight = maxVelocityStraight;
         BatteryCapacity = batteryCapacity;
         Length = length;
@@ -125,13 +132,13 @@ public record MqttAgvData
 }
 
 /// <summary>
-/// A sensor object skeleton
+/// A sensor object skeleton.
 /// </summary>
 [PublicAPI]
 public record Sensor
 {
     /// <summary>
-    /// The identifier of the sensor
+    /// The identifier of the sensor.
     /// </summary>
     public string? SensorIdentifier { get; set; }
 }

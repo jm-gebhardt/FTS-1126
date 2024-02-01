@@ -1,12 +1,12 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "title": "agvData",
-    "description": "The basic AGV data from the AGV",
+    "description": "The basic AGV data from the agv.",
     "subtopic": "/agvData",
     "type": "object",
     "properties": {
         "SerialNumber": {
-            "description": "Serial number of the AGV.",
+            "description": "Serial number of the agv.",
             "type": "string",
             "examples": [
                 "1234-5678",
@@ -19,7 +19,7 @@
         },
         "Model": {
             "type": "string",
-            "description": "The model name of the AGV",
+            "description": "The model name of the agv.",
             "examples": [
                 "Karis",
                 "GridSkitter"
@@ -27,7 +27,7 @@
         },
         "Type": {
             "type": "string",
-            "description": "The type of the AGV",
+            "description": "The type of the agv.",
             "examples": [
                 "Bauform1",
                 "BF1"
@@ -35,58 +35,62 @@
         },
         "IpV4Address": {
             "type": "string",
-            "description": "The IP Address of the AGV",
+            "description": "The IP Address of the agv.",
             "examples": [
                 "10.0.0.23",
                 "192.168.178.123"
             ]
         },
+        "SoftwareVersion": {
+            "type": "string",
+            "description": "The software version for the agv."
+        },
         "Length": {
             "type": "number",
-            "description": "The length of the AGV in [m]"
+            "description": "The length of the agv in [m]."
         },
         "Width": {
             "type": "number",
-            "description": "The width of the AGV in [m]"
+            "description": "The width of the agv in [m]."
         },
         "Payload": {
             "type": "integer",
-            "description": "The max. payload of the AGV in [kg]"
+            "description": "The max. payload of the agv in [kg]."
         },
         "BatteryCapacity": {
             "type": "number",
-            "description": "The capacity of the AGVs battery in [Ah]"
+            "description": "The capacity of the agvs battery in [Ah]."
         },
         "MaxVelocityStraight": {
             "type": "number",
-            "description": "The maximum velocity of the AGV in straight direction [m/s]"
+            "description": "The maximum velocity of the agv in straight direction [m/s]."
         },
         "MaxVelocityTurn": {
             "type": "number",
-            "description": "The maximum velocity of the AGV in while turning [m/s]"
+            "description": "The maximum velocity of the agv in while turning [m/s]."
         },
         "MaxVelocityTurnOnSpot": {
             "type": "number",
-            "description": "The maximum velocity of the AGV while turning on spot [rad/s]"
+            "description": "The maximum velocity of the agv while turning on spot [rad/s]."
         },
         "TurnOnSpotThreshold": {
             "type": "number",
-            "description": "Threshold angle by which the AGV will stop and turn on spot [rad]"
+            "description": "Threshold angle by which the agv will stop and turn on spot [rad]."
         },
         "Acceleration": {
             "type": "number",
-            "description": "The maximum velocity of the AGV while turning on spot [m/s^2]"
+            "description": "The maximum velocity of the agv while turning on spot [m/s^2]."
         },
         "Sensors": {
             "type": "array",
-            "description": "The list of sensors in the agv",
+            "description": "The list of sensors in the agv.",
             "items": [
                 {
                     "type": "object",
                     "properties": {
                         "SensorIdentifier": {
                             "type": "string",
-                            "description": "The identifier of the sensor"
+                            "description": "The identifier of the sensor."
                         }
                     }
                 }
@@ -95,10 +99,18 @@
     },
     "required": [
         "SerialNumber",
-        "Model",
         "RequestId",
+        "Model",
         "Type",
+        "IpV4Address",
+        "Length",
+        "Width",
+        "Payload",
+        "BatteryCapacity",
         "MaxVelocityStraight",
-        "BatteryCapacity"
+        "MaxVelocityTurn",
+        "MaxVelocityTurnOnSpot",
+        "TurnOnSpotThreshold",
+        "Acceleration"
     ]
 }

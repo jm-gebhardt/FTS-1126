@@ -1,12 +1,12 @@
 ﻿{
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "title": "responseRoutingCosts",
-    "description": "Response to a routing cost request",
+    "description": "Response to a routing cost request.",
     "subtopic": "/responseRoutingCosts",
     "type": "object",
     "properties": {
         "SerialNumber": {
-            "description": "Serial number of the AGV.",
+            "description": "Serial number of the agv.",
             "type": "string",
             "examples": [
                 "1234-5678",
@@ -22,7 +22,7 @@
             "properties": {
                 "FromStationIdentifier": {
                     "type": "string",
-                    "description": "The unique identifier of the station where to pick from",
+                    "description": "The unique identifier of the station where to pick from.",
                     "examples": [
                         "Source1",
                         "Source31"
@@ -30,7 +30,7 @@
                 },
                 "ToStationIdentifier": {
                     "type": "string",
-                    "description": "The unique identifier of the station where to drop",
+                    "description": "The unique identifier of the station where to drop.",
                     "examples": [
                         "Destination2",
                         "Destination42"
@@ -44,7 +44,7 @@
         },
         "coordinates": {
             "type": "object",
-            "description": "The coordinates of the point where to go to",
+            "description": "The coordinates of the point where to go to.",
             "properties": {
                 "ToX": {
                     "type": "number"
@@ -64,11 +64,11 @@
         },
         "Cost": {
             "type": "number",
-            "description": "The costs of the route"
+            "description": "The costs of the route."
         },
         "Unit": {
             "type": "string",
-            "description": "The unit in which the costs are expressed",
+            "description": "The unit in which the costs are expressed.",
             "examples": [
                 "s",
                 "ms"
@@ -76,7 +76,7 @@
         },
         "Route": {
             "type": "array",
-            "description": "The path expressed as an array of nodes to travel over",
+            "description": "The path expressed as an array of nodes to travel over.",
             "items": {
                 "type": "integer"
             }

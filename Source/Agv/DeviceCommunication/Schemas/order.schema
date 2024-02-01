@@ -1,12 +1,12 @@
 ﻿{
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "title": "order",
-    "description": "New Order for the AGV",
+    "description": "New order for the agv.",
     "subtopic": "/order",
     "type": "object",
     "properties": {
         "SerialNumber": {
-            "description": "Serial number of the AGV.",
+            "description": "Serial number of the agv.",
             "type": "string",
             "examples": [
                 "1234-5678",
@@ -15,11 +15,11 @@
         },
         "OrderId": {
             "type": "string",
-            "description": "The unique ID of the order"
+            "description": "The unique ID of the order."
         },
         "OrderType": {
             "type": "string",
-            "description": "The type of the order. Pick/Drop/Transport/Move/Charge",
+            "description": "The type of the order (Pick/Drop/Transport/Move/Charge).",
             "enum": [
                 "Pick",
                 "Drop",
@@ -30,7 +30,7 @@
         },
         "RecordType": {
             "type": "string",
-            "description": "The type of the order. Order/OrderUpdate/OrderCancel",
+            "description": "The type of the order (Order/OrderUpdate/OrderCancel).",
             "enum": [
                 "Order",
                 "OrderUpdate",
@@ -42,7 +42,7 @@
             "properties": {
                 "FromStationIdentifier": {
                     "type": "string",
-                    "description": "The unique identifier of the station where to pick from",
+                    "description": "The unique identifier of the station where to pick from.",
                     "examples": [
                         "Source1",
                         "Source31"
@@ -50,7 +50,7 @@
                 },
                 "ToStationIdentifier": {
                     "type": "string",
-                    "description": "The unique identifier of the station where to drop",
+                    "description": "The unique identifier of the station where to drop.",
                     "examples": [
                         "Destination2",
                         "Destination42"
@@ -72,7 +72,7 @@
         },
         "coordinates": {
             "type": "object",
-            "description": "The coordinates of the point where to go to",
+            "description": "The coordinates of the point where to go to.",
             "properties": {
                 "ToX": {
                     "type": "number"
@@ -92,7 +92,7 @@
         },
         "route": {
             "type": "object",
-            "description": "The route to travel set by the master control expressed in nodes and edges",
+            "description": "The route to travel set by the master control expressed in nodes and edges.",
             "properties": {
                 "Nodes": {
                     "type": "array",

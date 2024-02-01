@@ -59,7 +59,7 @@ public record AgvStatus
     /// </summary>
     /// <remarks>
     /// VDA5050.state.schema.batteryState.charging
-    /// Charging in progress.
+    /// The charging is in progress.
     /// </remarks>
     [UsedImplicitly]
     public bool Charging { get; }

@@ -1,12 +1,12 @@
 ﻿{
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "title": "orderEvent",
-    "description": "Order event of an ongoing order",
+    "description": "Order event of an ongoing order.",
     "subtopic": "/orderEvent",
     "type": "object",
     "properties": {
         "SerialNumber": {
-            "description": "The unique identifier of the agv",
+            "description": "The unique identifier of the agv.",
             "type": "string",
             "examples": [
                 "AGV1",
@@ -15,11 +15,11 @@
         },
         "OrderId": {
             "type": "string",
-            "description": "The unique ID of the order"
+            "description": "The unique ID of the order."
         },
         "OrderEventType": {
             "type": "string",
-            "description": "The type of the order event. Started/Picked/Completed/Cancelled/CancelFailed/Failed",
+            "description": "The type of the order event (Started/Picked/Completed/Cancelled/CancelFailed/Failed/Updated/UpdateFailed).",
             "enum": [
                 "Started",
                 "Picked",

@@ -1,12 +1,12 @@
 ﻿{
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "graph",
-  "description": "Graph representing the paths on which the AGV travels",
+  "description": "Graph representing the paths on which the agv travels.",
   "subtopic": "/graph",
   "type": "object",
   "properties": {
     "SerialNumber": {
-      "description": "Serial number of the AGV.",
+      "description": "Serial number of the agv.",
       "type": "string",
       "examples": [
         "1234-5678",
@@ -27,50 +27,50 @@
     },
     "RelatedMapId": {
       "type": "string",
-      "description": "The unique ID of the map that belongs to the graph",
+      "description": "The unique ID of the map that belongs to the graph.",
       "examples": [
            "Area51_Floor1_Compartment47"
       ]
     },
     "Nodes": {
       "type": "array",
-      "description": "The list of nodes in the graph",
+      "description": "The list of nodes in the graph.",
       "items": [
         {
           "type": "object",
-          "description": "Node representation",
+          "description": "The Node representation.",
           "properties": {
             "NodeId": {
               "type": "integer",
-              "description": "The unique ID of the node"
+              "description": "The unique ID of the node."
             },
             "X": {
               "type": "number",
-              "description": "The x coordinate of the node"
+              "description": "The x coordinate of the node."
             },
             "Y": {
               "type": "number",
-              "description": "The y coordinate of the node"
+              "description": "The y coordinate of the node."
             },
             "Z": {
               "type": "number",
-              "description": "The z coordinate of the node. For example if there is a another floor. This field is not required"
+              "description": "The z coordinate of the node. For example if there is a another floor. This field is not required."
             },
             "Attributes": {
               "type": "array",
-              "description": "The list of attributes attached to the node",
+              "description": "The list of attributes attached to the node.",
               "items": [
                 {
                   "type": "object",
-                  "description": "Node attribute",
+                  "description": "The node attribute.",
                   "properties": {
                     "Key": {
                       "type": "string",
-                      "description": "The key (name) of the attribute"
+                      "description": "The key (name) of the attribute."
                     },
                     "Value": {
                       "type": "string",
-                      "description": "The value of the attribute"
+                      "description": "The value of the attribute."
                     }
                   },
                   "required": [
@@ -91,23 +91,23 @@
     },
     "Edges": {
       "type": "array",
-      "description": "The list of edges in the graph",
+      "description": "The list of edges in the graph.",
       "items": [
         {
           "type": "object",
-          "description": "Edge representation",
+          "description": "The Edge representation.",
             "properties": {
                 "EdgeId": {
                     "type": "integer",
-                    "description": "The unique ID of the edge"
+                    "description": "The unique ID of the edge."
                 },
                 "StartId": {
                     "type": "integer",
-                    "description": "The ID of the node where the edge starts"
+                    "description": "The ID of the node where the edge starts."
                 },
                 "EndId": {
                     "type": "integer",
-                    "description": "The ID of the node where the edge ends"
+                    "description": "The ID of the node where the edge ends."
                 },
                 "Bidirectional": {
                     "type": "boolean",
@@ -119,15 +119,22 @@
                 },
                 "MaxVelocity": {
                     "type": "integer",
-                    "description": "The maximum allowed velocity on that edge"
+                    "description": "The maximum allowed velocity on that edge [m/s]."
                 },
                 "EdgyType": {
                     "type": "string",
-                    "description": "The edge type (Bezier1/Bezier2/Direct/Slanted/Polypath)"
+                    "description": "The edge type (Direct/Slanted/Bezier1/Bezier2/Polypath).",
+                    "enum": [
+                        "Direct",
+                        "Slanted",
+                        "Bezier1",
+                        "Bezier2",
+                        "Polypath"
+                    ]
                 },
                 "ControlPoints": {
                     "type": "array",
-                    "description": "The list of control points (absolute locations)",
+                    "description": "The list of control points (absolute locations). Bezier1 has one, Bezier2 has two and Slanted at least one control points.",
                     "items": [
                         {
                             "type": "object",
@@ -149,15 +156,15 @@
                 },
                 "ExitAngle": {
                     "type": "number",
-                    "description": "The exit angle of a curve of type 'Slanted'"
+                    "description": "The exit angle of a curve of type 'Slanted'."
                 },
                 "ExitDistance": {
                     "type": "number",
-                    "description": "The exit distance of a curve of type 'Slanted'"
+                    "description": "The exit distance of a curve of type 'Slanted'."
                 },
                 "Attributes": {
                     "type": "array",
-                    "description": "The list of attributes attached to the edge",
+                    "description": "The list of attributes attached to the edge.",
                     "items": [
                         {
                             "type": "object",
@@ -165,11 +172,11 @@
                             "properties": {
                                 "Key": {
                                     "type": "string",
-                                    "description": "The key (name) of the attribute"
+                                    "description": "The key (name) of the attribute."
                                 },
                                 "Value": {
                                     "type": "string",
-                                    "description": "The value of the attribute"
+                                    "description": "The value of the attribute."
                                 }
                             },
                             "required": [

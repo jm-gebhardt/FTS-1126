@@ -77,8 +77,8 @@ public class AgvStateConsumer : IConsumer<MqttState>
             GetBatteryCharge(message),
             GetCharging(message),
             GetBatteryVoltage(message),
-            GetBatteryCurrent(),
-            GetBatteryTemperature(),
+            GetBatteryCurrent(message),
+            GetBatteryTemperature(message),
             GetDisturbed(message),
             GetLastNodeId(message)
         );
@@ -175,13 +175,13 @@ public class AgvStateConsumer : IConsumer<MqttState>
         }
     }
 
-    private float GetBatteryCharge(MqttState message) => message.BatteryState?.BatteryCharge ?? 0;
+    private float GetBatteryCharge(MqttState message) => message.BatteryState?.BatteryCharge ?? -1f;
 
-    private float GetBatteryVoltage(MqttState message) => message.BatteryState?.BatteryVoltage ?? float.MinValue;
+    private float GetBatteryVoltage(MqttState message) => message.BatteryState?.BatteryVoltage ?? -1f;
 
-    private float GetBatteryCurrent() => float.MinValue;
+    private float GetBatteryCurrent(MqttState message) => message.BatteryState?.BatteryCurrent ?? -1f;
 
-    private float GetBatteryTemperature() => float.MinValue;
+    private float GetBatteryTemperature(MqttState message) => message.BatteryState?.BatteryTemperature ?? -1f;
 
     private bool GetCharging(MqttState message) => message.BatteryState?.Charging ?? false;
 

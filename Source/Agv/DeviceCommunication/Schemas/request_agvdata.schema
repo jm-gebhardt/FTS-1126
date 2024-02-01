@@ -1,12 +1,12 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "title": "requestAgvData",
-    "description": "Requests the basic AGV data from the AGV",
+    "description": "Requests the basic agv data from the agv.",
     "subtopic": "/requestAgvData",
     "type": "object",
     "properties": {
         "SerialNumber": {
-            "description": "Serial number of the AGV.",
+            "description": "Serial number of the agv.",
             "type": "string",
             "examples": [
                 "1234-5678",

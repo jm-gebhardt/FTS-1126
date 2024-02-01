@@ -85,7 +85,7 @@ public class AgvDataParser
             _data.Model ?? throw new ArgumentNullException(nameof(MqttAgvData.Model)),
             _data.Type ?? throw new ArgumentNullException(nameof(MqttAgvData.Type)),
             _data.IpV4Address ?? throw new ArgumentNullException(nameof(MqttAgvData.IpV4Address)),
-            "v42.3",// Where to get from?
+            _data.SoftwareVersion ?? "v0",
             _data.BatteryCapacity,
             _data.Acceleration ?? throw new ArgumentNullException(nameof(MqttAgvData.Acceleration)),
             _data.MaxVelocityStraight,

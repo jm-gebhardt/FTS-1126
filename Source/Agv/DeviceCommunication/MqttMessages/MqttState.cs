@@ -279,9 +279,19 @@ public record MqttBatteryState
     public float? BatteryHealth { get; set; }
 
     /// <summary>
-    /// Battery voltage
+    /// Battery voltage.
     /// </summary>
     public float? BatteryVoltage { get; set; }
+
+    /// <summary>
+    /// Battery temperature in Celsius.
+    /// </summary>
+    public float? BatteryTemperature { get; set; }
+
+    /// <summary>
+    /// Battery current in Ampere.
+    /// </summary>
+    public float? BatteryCurrent { get; set; }
 
     /// <summary>
     /// If true: Charging in progress.
@@ -289,24 +299,24 @@ public record MqttBatteryState
     public bool Charging { get; set; }
 
     /// <summary>
-    /// estimated reach with actual AgvState of Charge
+    /// Estimated reach with actual AgvState of charge.
     /// </summary>
     public float? Reach { get; set; }
 }
 
 /// <summary>
-/// All information relating to the edges
+/// All information relating to the edges.
 /// </summary>
 [PublicAPI]
 public record MqttEdgeState
 {
     /// <summary>
-    /// Verbose Edge description
+    /// Verbose edge description.
     /// </summary>
     public string? EdgeDescription { get; set; }
 
     /// <summary>
-    /// Unique edge identification
+    /// Unique edge identification.
     /// </summary>
     public string? EdgeId { get; set; }
 
