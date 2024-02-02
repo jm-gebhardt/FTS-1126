@@ -275,7 +275,7 @@ public class Agv : IAgv
         bool batteryChargeChanged = CheckBatteryChargeChange(newStatus.BatteryCharge);
         if (!batteryChargeChanged && AgvStatus != null)
         {
-            newStatus = new AgvStatus(newStatus.CorrelationId, newStatus.OrderId, newStatus.Busy, newStatus.Automatic, AgvStatus.BatteryCharge, newStatus.Charging, newStatus.Disturbed, newStatus.LastNodeId);
+            newStatus = new AgvStatus(newStatus.CorrelationId, newStatus.OrderId, newStatus.Busy, newStatus.Automatic, AgvStatus.BatteryCharge, newStatus.Charging, newStatus.Disturbed, newStatus.LastNodeId, newStatus.BatteryVoltage, newStatus.BatteryCurrent, newStatus.BatteryTemperature);
         }
 
         bool lastNodeIdChanged = CheckLastNodeIdChanged(newStatus.LastNodeId);

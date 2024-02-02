@@ -56,6 +56,21 @@ public class AgvTest
     }
 
     [TestMethod]
+    public void UpdateAgvStatus_BatteryChangedAndVoltageCurrentTemperature_StatusUpdated()
+    {
+        var previousStatus = new AgvStatus(Guid.NewGuid(), null, false, false, 100.0d, false, false, null, 10d, 30.5d, 20.2d);
+        var agv = new TransportOrder.Domain.Models.Agv.Agv(previousStatus.CorrelationId, "agvId", previousStatus);
+        const double noticeableBatteryChange = TransportOrder.Domain.Models.Agv.Agv.BatteryChargeChangedThreshold * 1.01d;
+        var newStatus = new AgvStatus(agv.CorrelationId, null, false, false, agv.AgvStatus!.BatteryCharge - noticeableBatteryChange, false, false, null, 15d, 35.5d, 25.2d);
+
+        (bool batteryChargeChanged, bool lastNodeIdChanged) = agv.UpdateAgvStatus(newStatus);
+
+        batteryChargeChanged.ShouldBeTrue();
+        lastNodeIdChanged.ShouldBeFalse();
+        agv.AgvStatus.ShouldBe(newStatus);
+    }
+
+    [TestMethod]
     public void UpdateAgvStatus_BatteryLevelChangedInsignificantly_StatusUpdated()
     {
         var previousStatus = new AgvStatus(Guid.NewGuid(), null, false, false, 100.0d, false, false);
