@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
+using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
@@ -112,8 +113,9 @@ public class AgvCommandHandler :
                     continue;
                 }
 
-                _logger.LogDebug("There is a new action for the charging Agv with CorrelationId: {AgvCorrelationId}. Abort charging action group: {ActionGroup}", agv.CorrelationId, action.ParentId);
+                _logger.LogDebug("There is a new action for the charging Agv with CorrelationId: {AgvCorrelationId}. Abort charging action group: {ActionGroupCorrelationId}", agv.CorrelationId, action.ParentId);
                 await context.Publish(new AbortActionGroup(action.ParentId, AbortReason.ReactivatedFromCharging), cancellationToken);
+
                 // only do this for the Agv with the best battery level and quit
                 return;
             }
@@ -127,8 +129,17 @@ public class AgvCommandHandler :
     {
         (var correlationId, List<AgvError> errors) = context.Message;
         var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
-
         bool agvHasError = errors.Any();
+
+        foreach (var agvError in errors.Where(e => e.ErrorLevel == ErrorLevel.Fatal))
+        {
+            _logger.LogAgvError(306, agv.CorrelationId, "AGV Error", $"AGV {agv.SerialNumber} threw error {agvError.ErrorDescription}");
+        }
+        foreach (var agvError in errors.Where(e => e.ErrorLevel == ErrorLevel.Warning))
+        {
+            _logger.LogAgvWarning(307, agv.CorrelationId, "AGV Warning", $"AGV {agv.SerialNumber} threw warning {agvError.ErrorDescription}");
+        }
+
         if (agvHasError != agv.HasError)
         {
             agv.HasError = agvHasError;
@@ -145,7 +156,7 @@ public class AgvCommandHandler :
         var action = await _actionGroupRepository.GetCurrentAgvActionAsync(agvCorrelationId);
         if (action?.ActionType == ActionType.Charge)
         {
-            _logger.LogInformation("Aborting charging action group: {ActionGroup}", action.ParentId);
+            _logger.LogInformation("Aborting charging action group: {ActionGroupCorrelationId}", action.ParentId);
             await context.Publish(new AbortActionGroup(action.ParentId, AbortReason.ReactivatedFromCharging), context.CancellationToken);
         }
     }
@@ -167,14 +178,21 @@ public class AgvCommandHandler :
             await CreateAgv(context);
             return;
         }
-        _logger.LogDebug("Updating AgvStatus for agv {CorrelationId}, {OldStatus} -> {NewStatus}", correlationId, agv.AgvStatus?.ToString(), agvStatus.ToString());
+        _logger.LogDebug("Updating AgvStatus for agv {AgvCorrelationId}, {OldStatus} -> {NewStatus}", correlationId, agv.AgvStatus?.ToString(), agvStatus.ToString());
         var oldStatus = agv.AgvStatus;
         bool wasOnline = agv.IsOnline;
 
         await ResetOfflineWatchDog(context, agv);
-
+        bool wasReady = agv.IsReady;
         (bool batteryChargeChanged, bool lastNodeIdChanged) = agv.UpdateAgvStatus(agvStatus);
-        _logger.LogTrace("LastNodeIdChanged: {LastNodeIdChanged}, BatteryChargeChanged: {BatteryChargeChanged}", lastNodeIdChanged, batteryChargeChanged);
+        bool isReady = agv.IsReady;
+
+        LogBatteryStates(oldStatus, agv.AgvStatus);
+
+        if (!wasReady && isReady)
+        {
+            _logger.LogAgvInformation(303, correlationId, "AGV Ready", $"AGV {agv.SerialNumber} became ready");
+        }
 
         // Only request AgvGraph if a global Graph exists
         if (agv.ShouldRequestGraph())
@@ -196,7 +214,7 @@ public class AgvCommandHandler :
 
         if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
         {
-            _logger.LogDebug("{Command}: Could not update agv {CorrelationId}", nameof(UpdateAgvStatus), agv.CorrelationId);
+            _logger.LogDebug("{Command}: Could not update agv {AgvCorrelationId}", nameof(UpdateAgvStatus), agv.CorrelationId);
             return;
         }
         await PublishAgvStatusUpdateEvents(context, agv, batteryChargeChanged, oldStatus, lastNodeIdChanged, wasOnline);
@@ -251,6 +269,7 @@ public class AgvCommandHandler :
         if (!wasOnline && agv.IsOnline)
         {
             await context.Publish(new AgvOnlineChanged(agv.CorrelationId, true));
+            _logger.LogAgvInformation(304, agvStatus.CorrelationId, "AGV Online", $"AGV {agv.SerialNumber} is online");
         }
     }
 
@@ -274,9 +293,9 @@ public class AgvCommandHandler :
         var correlationId = context.Message.CorrelationId;
         var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
 
-        _logger.LogDebug("UpdateGraph for agv {CorrelationId}", agv.CorrelationId);
         agv.GraphExists = true;
 
+        _logger.LogAgvInformation(302, correlationId, "AGV Graph Received", $"AGV {agv.SerialNumber} graph has been received");
         await _agvDb.Agvs.UpdateAgvAsync(agv);
     }
 
@@ -294,10 +313,11 @@ public class AgvCommandHandler :
         {
             if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
             {
-                _logger.LogDebug("{Command}: Could not update agv {CorrelationId}", nameof(GoOffline), agv.CorrelationId);
+                _logger.LogDebug("{Command}: Could not update agv {AgvCorrelationId}", nameof(GoOffline), agv.CorrelationId);
                 return;
             }
             await context.Publish(new AgvOnlineChanged(agv.CorrelationId, false));
+            _logger.LogAgvInformation(305, agv.CorrelationId, "AGV Offline", $"AGV {agv.SerialNumber} is offline");
         }
     }
 
@@ -312,8 +332,9 @@ public class AgvCommandHandler :
         agv.DataExist = true;
         if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
         {
-            _logger.LogDebug("{Command}: Could not update agv {CorrelationId}", nameof(UpdateAgvData), agv.CorrelationId);
+            _logger.LogDebug("{Command}: Could not update agv {AgvCorrelationId}", nameof(UpdateAgvData), agv.CorrelationId);
         }
+        _logger.LogAgvInformation(301, correlationId, "AGV Information Received", $"AGV {agv.SerialNumber} information has been received");
     }
 
     /// <summary>
@@ -329,11 +350,12 @@ public class AgvCommandHandler :
             return;
         }
         agv.Lock();
-        _logger.LogInformation("Agv {correlationId} was locked.", agvCorrelationId);
         if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
         {
-            _logger.LogDebug("{Command}: Could not update agv {CorrelationId}", nameof(LockAgv), agv.CorrelationId);
+            _logger.LogDebug("{Command}: Could not update agv {AgvCorrelationId}", nameof(LockAgv), agv.CorrelationId);
         }
+
+        _logger.LogAgvInformation(308, agv.CorrelationId, "AGV Locked", $"AGV {agv.SerialNumber} is locked");
         await context.Publish(new AgvLockedChanged(agv.CorrelationId, true));
         await context.RespondAsync(new LockAgvResult(agv.CorrelationId));
     }
@@ -351,11 +373,12 @@ public class AgvCommandHandler :
             return;
         }
         agv.Unlock();
-        _logger.LogInformation("Agv {correlationId} was unlocked.", agvCorrelationId);
+
         if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
         {
-            _logger.LogDebug("{Command}: Could not update agv {CorrelationId}", nameof(UnlockAgv), agv.CorrelationId);
+            _logger.LogDebug("{Command}: Could not update agv {AgvCorrelationId}", nameof(UnlockAgv), agv.CorrelationId);
         }
+        _logger.LogAgvInformation(309, agv.CorrelationId, "AGV Unlocked", $"AGV {agv.SerialNumber} is unlocked");
 
         // publish also when state was already idle, to trigger further assignments
         _logger.LogInformation("Agv {correlationId} was unlocked.", agvCorrelationId);
@@ -380,13 +403,13 @@ public class AgvCommandHandler :
         (bool accepted, bool stateChanged) = agv.TryAccept();
         if (!accepted)
         {
-            _logger.LogDebug("Could not transition {AgvId} / {CorrelationId} to idle in state {State}", agv.SerialNumber, agv.CorrelationId, Enum.GetName(agv.CurrentAgvState));
+            _logger.LogDebug("Could not transition {AgvId} / {AgvCorrelationId} to idle in state {State}", agv.SerialNumber, agv.CorrelationId, Enum.GetName(agv.CurrentAgvState));
             await context.RespondAsync(new AcceptAgvRejected(agv.CorrelationId));
             return;
         }
         if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
         {
-            _logger.LogDebug("{Command}: Could not update agv {CorrelationId}", nameof(AcceptAgvCommand), agv.CorrelationId);
+            _logger.LogDebug("{Command}: Could not update agv {AgvCorrelationId}", nameof(AcceptAgvCommand), agv.CorrelationId);
         }
         _logger.LogDebug("AGV {AgvId} / {CorrelationId} was set to idle", agv.SerialNumber, agv.CorrelationId);
         await context.Publish(new AgvBecameIdle(agv.CorrelationId));
@@ -443,10 +466,10 @@ public class AgvCommandHandler :
         bool stateChanged = agv.ForceIdle();
         if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
         {
-            _logger.LogDebug("{Command}: Could not update agv {CorrelationId}", nameof(SetAgvForceIdle), agv.CorrelationId);
+            _logger.LogDebug("{Command}: Could not update agv {AgvCorrelationId}", nameof(SetAgvForceIdle), agv.CorrelationId);
             return;
         }
-        _logger.LogWarning("AGV {AgvId} / {CorrelationId} was set to idle by force", agv.SerialNumber, agv.CorrelationId);
+        _logger.LogWarning("AGV {AgvId} / {AgvCorrelationId} was set to idle by force", agv.SerialNumber, agv.CorrelationId);
         await context.Publish(new AgvBecameIdle(correlationId));
         if (stateChanged)
         {
@@ -480,12 +503,12 @@ public class AgvCommandHandler :
 
         if (!isAvailable)
         {
-            _logger.LogWarning("Agv {CorrelationId} is not available for busy", agv.CorrelationId);
+            _logger.LogWarning("Agv {AgvCorrelationId} is not available for busy", agv.CorrelationId);
             return;
         }
         if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
         {
-            _logger.LogDebug("{Command}: Could not update agv {CorrelationId}", nameof(PrepareAgvForStartingAction), agv.CorrelationId);
+            _logger.LogDebug("{Command}: Could not update agv {AgvCorrelationId}", nameof(PrepareAgvForStartingAction), agv.CorrelationId);
             return;
         }
 
@@ -503,7 +526,7 @@ public class AgvCommandHandler :
         }
         catch (AgvNotFoundException)
         {
-            _logger.LogWarning("Agv {Agv} not found for responding to request.", agvCorrelationId);
+            _logger.LogWarning("Agv {AgvCorrelationId} not found for responding to request.", agvCorrelationId);
         }
         return agv;
     }
@@ -522,6 +545,8 @@ public class AgvCommandHandler :
         {
             await context.Publish(new CargoChanged(agvCorrelationId, receivedCargos));
         }
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+        _logger.LogAgvInformation(310, agvCorrelationId, "Cargo Updated", $"AGV {agv.SerialNumber} cargo updated");
     }
 
     private async Task TryAutoAccept(IPublishEndpoint context, Domain.Models.Agv.Agv agv, CancellationToken cancellationToken)
@@ -529,7 +554,7 @@ public class AgvCommandHandler :
         _logger.LogDebug("AutoAccept {CorrelationId}", agv.CorrelationId);
         if (_productionOptions.AutoAccept && agv is { GraphExists: true, DataExist: true, CurrentAgvState: AgvState.Discovered })
         {
-            _logger.LogDebug("AutoAccept {CorrelationId}, Graph: {GraphExists}, Data: {DataExists}", agv.CorrelationId, agv.GraphExists, agv.DataExist);
+            _logger.LogDebug("AutoAccept {AgvCorrelationId}, Graph: {GraphExists}, Data: {DataExists}", agv.CorrelationId, agv.GraphExists, agv.DataExist);
             await TransitionToIdleAsync(context, agv, cancellationToken);
         }
     }
@@ -539,7 +564,7 @@ public class AgvCommandHandler :
         bool stateChanged = agv.TransitionToIdle();
         if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
         {
-            _logger.LogDebug("{Command}: Could not update agv {CorrelationId}", nameof(HandleActionCompletion), agv.CorrelationId);
+            _logger.LogDebug("{Command}: Could not update agv {AgvCorrelationId}", nameof(HandleActionCompletion), agv.CorrelationId);
             return;
         }
 
@@ -552,6 +577,7 @@ public class AgvCommandHandler :
         if (stateChanged)
         {
             await PublishStateChange(context, agv);
+            _logger.LogAgvInformation(311, agv.CorrelationId, "AGV Became Idle", $"AGV {agv.SerialNumber} became idle");
         }
     }
 
@@ -563,14 +589,14 @@ public class AgvCommandHandler :
 
     private async Task PublishGraphRequestAsync(IPublishEndpoint context, Domain.Models.Agv.Agv agv)
     {
-        _logger.LogDebug("Requesting graph for agv {CorrelationId}", agv.CorrelationId);
+        _logger.LogDebug("Requesting graph for agv {AgvCorrelationId}", agv.CorrelationId);
         await context.Publish(new RequestAgvGraph(agv.CorrelationId, agv.SerialNumber));
         agv.AgvGraphRequestedLastTime = DateTime.UtcNow;
     }
 
     private async Task PublishDataRequestAsync(IPublishEndpoint context, Domain.Models.Agv.Agv agv)
     {
-        _logger.LogDebug("Requesting data for agv {CorrelationId}", agv.CorrelationId);
+        _logger.LogDebug("Requesting data for agv {AgvCorrelationId}", agv.CorrelationId);
         await context.Publish(new RequestAgvData(agv.CorrelationId, agv.SerialNumber));
         agv.AgvDataRequestedLastTime = DateTime.UtcNow;
     }
@@ -582,9 +608,10 @@ public class AgvCommandHandler :
     {
         (var correlationId, string agvSerialNumber, var agvStatus) = context.Message;
 
-        _logger.LogDebug("Creating agv {CorrelationId}, {AgvId}", correlationId, agvSerialNumber);
+        _logger.LogAgvInformation(300, correlationId, "AGV Discovered", $"AGV {agvSerialNumber} has been discovered");
 
         var agv = new Domain.Models.Agv.Agv(correlationId, agvSerialNumber, _mapper.Map<AgvStatus>(agvStatus));
+
         bool graphExists = await _agvDb.Graphs.ExistsAsync(correlationId);
         if (!graphExists)
         {
@@ -598,5 +625,61 @@ public class AgvCommandHandler :
 
         var agvMessageContent = _mapper.Map<Messages.MessageContent.Agv>(agv);
         await context.Publish(new AgvDiscovered(agvMessageContent));
+    }
+
+    private void LogBatteryStates(AgvStatus? oldAgvStatus, AgvStatus? newAgvStatus)
+    {
+        if (newAgvStatus == null || oldAgvStatus == null)
+        {
+            return;
+        }
+        var agvSettings = _settingsProvider.GetSettings();
+        double oldSoc = oldAgvStatus.BatteryCharge;
+        double newSoc = newAgvStatus.BatteryCharge;
+
+        bool wasCharging = oldAgvStatus.Charging;
+        bool isCharging = newAgvStatus.Charging;
+
+        bool wasMinChargedUp = oldSoc >= agvSettings.MinChargeUp;
+        bool isMinChargedUp = newSoc >= agvSettings.MinChargeUp;
+
+        bool wasMaxChargedUp = oldSoc >= agvSettings.MaxChargeUp;
+        bool isMaxChargedUp = newSoc >= agvSettings.MaxChargeUp;
+
+        bool wasCritical = oldSoc >= agvSettings.BatteryLevelCritical;
+        bool isCritical = newSoc >= agvSettings.BatteryLevelCritical;
+
+        bool isLow = newSoc <= agvSettings.BatteryLevelLow;
+        bool wasLow = oldSoc <= agvSettings.BatteryLevelLow;
+
+        if (wasCharging && !isCharging)
+        {
+            _logger.LogBatteryInformation(205, oldAgvStatus.CorrelationId, "Battery Fully Charged", $"Battery has finished charging at {newAgvStatus.BatteryCharge}%");
+        }
+
+        if (!wasMaxChargedUp && isMaxChargedUp)
+        {
+            _logger.LogBatteryInformation(204, oldAgvStatus.CorrelationId, "Maximum Charging Level", $"Battery has reached maximum charging level of {agvSettings.MaxChargeUp}%");
+        }
+
+        if (!wasMinChargedUp && isMinChargedUp)
+        {
+            _logger.LogBatteryInformation(203, oldAgvStatus.CorrelationId, "Minimum Charging Level", $"Battery has reached minimum charging level of {agvSettings.MinChargeUp}%");
+        }
+
+        if (!wasCritical && isCritical)
+        {
+            _logger.LogBatteryInformation(200, oldAgvStatus.CorrelationId, "Critical Charging Level", $"Battery has reached critical charging level of {agvSettings.BatteryLevelCritical}%");
+        }
+
+        if (!wasLow && isLow)
+        {
+            _logger.LogBatteryInformation(203, oldAgvStatus.CorrelationId, "Low Charging Level", $"Battery has reached low charging level of {agvSettings.BatteryLevelLow}");
+        }
+
+        if (isCharging && !wasCharging)
+        {
+            _logger.LogBatteryInformation(201, oldAgvStatus.CorrelationId, "Started Charging", $"Battery started charging at level of {newAgvStatus.BatteryCharge}");
+        }
     }
 }

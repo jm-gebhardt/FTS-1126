@@ -333,7 +333,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
             GetOrderId(),
             false,
             true,
-            (int) SimulatedBatteryCharge,
+            (int)SimulatedBatteryCharge,
             false,
             GetBatteryVoltage(),
             GetBatteryCurrent(),
@@ -344,7 +344,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
         TravelSimulator = new AgvTravelSimulator(agv.AgvGraph, agvData, Position!);
     }
 
-    private static float GetRandomNoise(double maxValue) => (float) (maxValue * (2 * Random.Shared.NextDouble() - 1));
+    private static float GetRandomNoise(double maxValue) => (float)(maxValue * (2 * Random.Shared.NextDouble() - 1));
 
     private string? GetOrderId() => Action?.CorrelationId.ToString();
 

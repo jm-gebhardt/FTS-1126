@@ -39,7 +39,7 @@ public class ActionCommandHandlerActionGroupDurationEstimationTest
     public async Task Consume_EstimateActionGroupDuration_ValidData_PublishActionDurationEstimatedUpdateActionGroup()
     {
         var fixture = new ActionEstimationGroupTestFixture();
-            fixture.AddActionGroup(AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv:fixture.Agv.CorrelationId, duration: TimeSpan.Zero))
+        fixture.AddActionGroup(AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: fixture.Agv.CorrelationId, duration: TimeSpan.Zero))
             .AddRouteOnCosts(42);
 
         await fixture.PublishMessageAsync(new EstimateActionGroupDuration(fixture.ActionGroup.Actions.First(), fixture.ActionGroup.AssignedAgv!.Value, fixture.ActionGroup.CorrelationId));

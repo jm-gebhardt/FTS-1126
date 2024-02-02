@@ -40,8 +40,12 @@ public class AgvGridPosition
     /// <summary>
     /// The agv serial number.
     /// </summary>
-    [PublicAPI]
-    public string SerialNumber { get; init; }
+    public string SerialNumber
+    {
+        [PublicAPI]
+        get;
+        init;
+    }
 
     /// <summary>
     /// The time the agv was at this position.

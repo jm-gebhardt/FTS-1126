@@ -48,7 +48,7 @@ public class ActionEventHandler :
 
         var firstNotStartedAction = actionGroup!.FirstNotStartedAction;
         var action = actionGroupInMessage.Actions.First(a => a.CorrelationId == firstNotStartedAction!.CorrelationId);
-        _logger.LogInformation("Received action group created for agv {Agv}, action group {Group}, starting action {Action} next.", assignedAgv, action.ActionType, actionGroup.CorrelationId);
+        _logger.LogInformation("Received action group created for agv {AgvCorrelationId}, action group {ActionGroupCorrelationId}, starting action {Action} next.", assignedAgv, action.ParentId, action.CorrelationId);
         await context.Publish(new SelectNodesForAction(action, assignedAgv));
     }
 
@@ -59,7 +59,7 @@ public class ActionEventHandler :
     {
         var actionCorrelationId = context.Message.CorrelationId;
         var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByActionIdAsync(actionCorrelationId);
-        _logger.LogDebug("{MessageType} for actionId: {ActionCorrelationId} received", nameof(ActionCompleted), actionCorrelationId);
+
         await context.Publish(new CompleteActionOfActionGroup(actionCorrelationId, actionGroup.CorrelationId));
     }
 
@@ -117,7 +117,7 @@ public class ActionEventHandler :
         Guid? assignedAgv = await _actionGroupRepository.GetAgvAssignedToAction(actionCorrelationId);
         if (assignedAgv == null)
         {
-            _logger.LogError("Could not complete action abortion for action {Action}, no assigned agv", actionCorrelationId);
+            _logger.LogError("Could not complete action cancellation for action {Action}, no assigned agv", actionCorrelationId);
             return;
         }
         await context.Publish(new HandleActionCompletion(assignedAgv.Value));

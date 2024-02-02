@@ -39,7 +39,7 @@ public class AgvPositionReceivedEventHandler : IConsumer<AgvPositionReceived>
     public async Task Consume(ConsumeContext<AgvPositionReceived> context)
     {
         _logger.LogTrace(
-            "{MessageType} {AgvId} / {CorrelationId} received",
+            "{MessageType} {AgvId} / {AgvCorrelationId} received",
             nameof(AgvPositionReceived),
             context.Message.SerialNumber,
             context.Message.CorrelationId

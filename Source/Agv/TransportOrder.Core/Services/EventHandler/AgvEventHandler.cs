@@ -106,7 +106,6 @@ public class AgvEventHandler :
     public async Task Consume(ConsumeContext<AgvBecameIdle> context)
     {
         var agvCorrelationId = context.Message.CorrelationId;
-        _logger.LogDebug("{MessageType} for Agv: {AgvCorrelationId} received", nameof(AgvBecameIdle), agvCorrelationId);
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 
         if (!agv.IsAvailable(ignoreCharging: false, ignoreLocked: true))
@@ -216,7 +215,6 @@ public class AgvEventHandler :
     public async Task Consume(ConsumeContext<AgvErrorStatusReceived> context)
     {
         List<AgvError> agvErrors = context.Message.Errors ?? new List<AgvError>();
-
         await context.Publish(new UpdateErrorStatus(context.Message.CorrelationId, agvErrors));
     }
 
@@ -233,7 +231,7 @@ public class AgvEventHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<AgvGraphChanged> context)
     {
-        _logger.LogInformation("{MessageType} {CorrelationId}", nameof(AgvGraphChanged), context.Message.CorrelationId);
+        _logger.LogInformation("{MessageType} {AgvCorrelationId}", nameof(AgvGraphChanged), context.Message.CorrelationId);
         await context.Publish(new SetAgvGraphExist(context.Message.CorrelationId));
     }
 

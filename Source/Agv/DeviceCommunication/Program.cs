@@ -57,12 +57,12 @@ try
                         services.AddTransient<IMapGenerator, GeneratedMapGenerator>();
                     }
                     services.AddHostedService<SimulatedAgvProvider>();
-                    
+
                     services.AddQuartz(q =>
                     {
                         q.SchedulerName = quartzSchedulerName;
                         q.SchedulerId = quartzSchedulerId;
-                        
+
                         // convert time zones using converter that can handle Windows/Linux differences
                         q.UseTimeZoneConverter();
                     });
@@ -71,17 +71,14 @@ try
                         configurator =>
                         {
                             configurator.AddPublishMessageScheduler();
-                            
+
                             configurator.AddQuartzConsumers(options => options.QueueName = quartzQueueName);
-                            
+
                             configurator.AddSagaStateMachine<SimulatedAgvStateMachine, SimulatedAgvSaga>()
                                 .InMemoryRepository();
                             configurator.AddMqttConsumer<SimulateAgvErrorConsumer>();
                             configurator.AddConsumer<SimulatedAgvProvider>();
-                        }, rabbitMqConfiguration: (_, cfg) =>
-                        {
-                            cfg.UsePublishMessageScheduler();
-                        });
+                        }, rabbitMqConfiguration: (_, cfg) => { cfg.UsePublishMessageScheduler(); });
                     services.AddOptions<MassTransitHostOptions>().Configure(options => { options.WaitUntilStarted = true; });
                 });
         })
