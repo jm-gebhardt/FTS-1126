@@ -5,88 +5,92 @@ using SignalRSwaggerGen.Attributes;
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Agv;
 
 /// <summary>
-/// Agv related SignalR methods
+/// Provides client methods for agv-related events.
 /// </summary>
 [SignalRHub(AgvHub.UrlPath, documentNames: new[] { HubApiGroup.GroupName })]
 public interface IAgvClient
 {
     /// <summary>
-    /// Agv has been discovered
+    /// Agv has been discovered.
     /// </summary>
-    /// <param name="agv"></param>
+    /// <param name="agv">The agv.</param>
     [SignalRMethod("AgvDiscovered")]
     Task AgvDiscovered(AgvDto agv);
 
     /// <summary>
-    /// Agv state changed
+    /// Agv state changed.
     /// </summary>
-    /// <param name="agvState"></param>
+    /// <param name="agvState">The agv state.</param>
     [SignalRMethod("AgvStateChanged")]
     Task AgvStateChanged(AgvStateDto agvState);
 
     /// <summary>
-    /// Agv position changed
+    /// Agv position changed.
     /// </summary>
-    /// <param name="positionStatus"></param>
+    /// <param name="positionStatus">The agv position status.</param>
     [SignalRMethod("AgvPositionChanged")]
     Task AgvPositionChanged(AgvPositionStatusDto positionStatus);
 
     /// <summary>
-    /// Agv errors changed
+    /// Agv errors changed.
     /// </summary>
-    /// <param name="errorStatus"></param>
+    /// <param name="errorStatus">The agv error status.</param>
     [SignalRMethod("AgvErrorChanged")]
     Task AgvErrorChanged(AgvErrorStatusDto errorStatus);
 
     /// <summary>
-    /// Agv online changed
+    /// Agv online changed.
     /// </summary>
-    /// <param name="onlineStatus"></param>
+    /// <param name="onlineStatus">The agv online status.</param>
     [SignalRMethod("AgvOnlineChanged")]
     Task AgvOnlineChanged(AgvOnlineStatusDto onlineStatus);
 
     /// <summary>
-    /// Agv locked changed
+    /// Agv locked changed.
     /// </summary>
-    /// <param name="lockedStatus"></param>
+    /// <param name="lockedStatus">The agv locked status.</param>
     [SignalRMethod("AgvLockedChanged")]
     Task AgvLockedChanged(AgvLockedStatusDto lockedStatus);
 
     /// <summary>
-    /// Agv removed
+    /// Agv removed.
     /// </summary>
-    /// <param name="removed"></param>
+    /// <param name="removed">The agv removed status.</param>
     [SignalRMethod("AgvRemoved")]
     Task AgvRemoved(AgvRemovedDto removed);
 
     /// <summary>
-    /// Agv route changed
+    /// Agv route changed.
     /// </summary>
-    /// <param name="currentRoute"></param>
-    /// <returns></returns>
+    /// <param name="currentRoute">The current route of the agv.</param>
     [SignalRMethod("AgvRouteChanged")]
     Task AgvRouteChanged(CurrentAgvRouteDto currentRoute);
 
     /// <summary>
-    /// Assigned action group changed
+    /// Assigned action group changed.
     /// </summary>
     /// <param name="assignedActionGroup"></param>
     [SignalRMethod("AssignedActionGroupChanged")]
     Task AssignedActionGroupChanged(AssignedActionGroupDto assignedActionGroup);
 
     /// <summary>
-    /// Publishes the battery status of an Agv to all clients
+    /// Publishes the battery status of an Agv to all clients.
     /// </summary>
-    /// <param name="batteryStatus"></param>
-    /// <returns></returns>
+    /// <param name="batteryStatus">The agv battery status.</param>
     [SignalRMethod("BatteryStatusChanged")]
     Task BatteryStatusChanged(AgvBatteryStatusDto batteryStatus);
 
     /// <summary>
-    /// Cargo of Agv(s) changed
+    /// Cargo of Agv(s) changed.
     /// </summary>
-    /// <param name="cargos"></param>
-    /// <returns></returns>
+    /// <param name="cargos">The agv cargo.</param>
     [SignalRMethod("CargoChanged")]
     Task CargoChanged(ICollection<CargoDto> cargos);
+
+    /// <summary>
+    /// Agv hasCargo changed.
+    /// </summary>
+    /// <param name="hasCargoStatus">The agv cargo status.</param>
+    [SignalRMethod("AgvHasCargoChanged")]
+    Task AgvHasCargoChanged(AgvHasCargoDto hasCargoStatus);
 }

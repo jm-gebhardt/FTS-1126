@@ -21,6 +21,7 @@ using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Moq.Language;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.CommandHandler.Agv;
 
@@ -90,6 +91,16 @@ public class AgvCommandHandlerTestFixture(
     public AgvCommandHandlerTestFixture WithSetCargoReturnValue(Guid agvCorrelationId, IReadOnlyCollection<Cargo> cargos, bool returnValue)
     {
         AgvDb.Setup(x => x.Cargos.SetCargoAsync(agvCorrelationId, cargos)).ReturnsAsync(returnValue);
+        return this;
+    }
+
+    public AgvCommandHandlerTestFixture WithHasCargoStates(params bool[] hasCargos)
+    {
+        ISetupSequentialResult<Task<bool>> setup = AgvDb.SetupSequence(x => x.Cargos.HasAgvCargoAsync(It.IsAny<Guid>()));
+        foreach (bool hasCargo in hasCargos)
+        {
+            setup.ReturnsAsync(hasCargo);
+        }   
         return this;
     }
 

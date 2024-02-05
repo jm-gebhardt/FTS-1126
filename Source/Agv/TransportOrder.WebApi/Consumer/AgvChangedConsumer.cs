@@ -18,7 +18,8 @@ public class AgvChangedConsumer : IConsumer<AgvStateChanged>,
     IConsumer<AgvOnlineChanged>,
     IConsumer<AgvDiscovered>,
     IConsumer<AgvBecameIdle>,
-    IConsumer<CargoChanged>
+    IConsumer<CargoChanged>,
+    IConsumer<HasCargoChanged>
 {
     private readonly ILogger<AgvChangedConsumer> _logger;
     private readonly IAgvPublisher _agvPublisher;
@@ -108,10 +109,17 @@ public class AgvChangedConsumer : IConsumer<AgvStateChanged>,
     /// <summary>
     /// Send Cargo changed message to all clients
     /// </summary>
-    /// <param name="context"></param>
     public async Task Consume(ConsumeContext<CargoChanged> context)
     {
         _logger.LogTrace("{MessageType} {CorrelationId} received", nameof(CargoChanged), context.Message.CorrelationId);
         await _agvPublisher.SendCargoChangeAsync(context.Message.Cargos);
+    }
+
+    /// <summary>
+    /// Handles the <see cref="HasCargoChanged"/> event.
+    /// </summary>
+    public async Task Consume(ConsumeContext<HasCargoChanged> context)
+    {
+        await _agvPublisher.SendAgvHasCargoChangedAsync(context.Message.AgvCorrelationId, context.Message.HasCargo);
     }
 }

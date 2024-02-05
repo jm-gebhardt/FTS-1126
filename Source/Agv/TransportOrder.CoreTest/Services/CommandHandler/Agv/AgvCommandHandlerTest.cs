@@ -401,19 +401,40 @@ public class AgvCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_UpdateCargo_CargoChanged_PublishesCargoChanged()
+    public async Task Consume_UpdateCargo_CargoChanged_PublishesHasCargoChanged()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         ICollection<Cargo> cargos = CargoGenerator.GenerateCargos(agv.CorrelationId);
         var domainCargos = _mapper.Map<IReadOnlyCollection<TransportOrder.Domain.Models.Agv.Cargo>>(cargos);
 
         var fixture = new AgvCommandHandlerTestFixture()
+            .WithHasCargoStates([true, false])
             .WithSetCargoReturnValue(agv.CorrelationId, domainCargos, true);
-        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+        fixture.AddAgvs([agv]);
 
         var updateCargo = new UpdateCargo(agv.CorrelationId, cargos.ToList().AsReadOnly());
         await fixture.PublishMessageAsync(updateCargo);
 
         (await fixture.TestHarness.Published.Any<CargoChanged>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<HasCargoChanged>()).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task Consume_UpdateCargo_CargoUnchanged_DoesNotPublishHasCargoChanged()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        ICollection<Cargo> cargos = CargoGenerator.GenerateCargos(agv.CorrelationId);
+        var domainCargos = _mapper.Map<IReadOnlyCollection<TransportOrder.Domain.Models.Agv.Cargo>>(cargos);
+
+        var fixture = new AgvCommandHandlerTestFixture()
+            .WithHasCargoStates([true, true])
+            .WithSetCargoReturnValue(agv.CorrelationId, domainCargos, false);
+        fixture.AddAgvs([agv]);
+
+        var updateCargo = new UpdateCargo(agv.CorrelationId, cargos.ToList().AsReadOnly());
+        await fixture.PublishMessageAsync(updateCargo);
+
+        (await fixture.TestHarness.Published.Any<CargoChanged>()).ShouldBeFalse();
+        (await fixture.TestHarness.Published.Any<HasCargoChanged>()).ShouldBeFalse();
     }
 }

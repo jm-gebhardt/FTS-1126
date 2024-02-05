@@ -517,6 +517,29 @@ public class AgvCommandHandler :
         await context.Publish(new AgvPreparedForStartingAction(agvCorrelationId, action));
     }
 
+    /// <summary>
+    /// Handles the <see cref="UpdateCargo"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<UpdateCargo> context)
+    {
+        var agvCorrelationId = context.Message.CorrelationId;
+        IReadOnlyCollection<Cargo> receivedCargos = context.Message.Cargos;
+
+        bool hadCargo = await _agvDb.Cargos.HasAgvCargoAsync(agvCorrelationId);
+        var cargos = _mapper.Map<Collection<Domain.Models.Agv.Cargo>>(receivedCargos);
+        if (await _agvDb.Cargos.SetCargoAsync(agvCorrelationId, cargos))
+        {
+            await context.Publish(new CargoChanged(agvCorrelationId, receivedCargos));
+        }
+        bool hasCargo = await _agvDb.Cargos.HasAgvCargoAsync(agvCorrelationId);
+        if (hadCargo != hasCargo)
+        {
+            await context.Publish(new HasCargoChanged(agvCorrelationId, hasCargo));
+        }
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+        _logger.LogAgvInformation(310, agvCorrelationId, "Cargo Updated", $"AGV {agv.SerialNumber} cargo updated");
+    }
+
     private async Task<Domain.Models.Agv.Agv?> TryGetAgv(Guid agvCorrelationId)
     {
         Domain.Models.Agv.Agv? agv = null;
@@ -529,24 +552,6 @@ public class AgvCommandHandler :
             _logger.LogWarning("Agv {AgvCorrelationId} not found for responding to request.", agvCorrelationId);
         }
         return agv;
-    }
-
-    /// <summary>
-    /// Updates Cargos and publishes <see cref="CargoChanged" /> if there are changes
-    /// </summary>
-    /// <param name="context"></param>
-    public async Task Consume(ConsumeContext<UpdateCargo> context)
-    {
-        var agvCorrelationId = context.Message.CorrelationId;
-        IReadOnlyCollection<Cargo> receivedCargos = context.Message.Cargos;
-
-        var cargos = _mapper.Map<Collection<Domain.Models.Agv.Cargo>>(receivedCargos);
-        if (await _agvDb.Cargos.SetCargoAsync(agvCorrelationId, cargos))
-        {
-            await context.Publish(new CargoChanged(agvCorrelationId, receivedCargos));
-        }
-        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
-        _logger.LogAgvInformation(310, agvCorrelationId, "Cargo Updated", $"AGV {agv.SerialNumber} cargo updated");
     }
 
     private async Task TryAutoAccept(IPublishEndpoint context, Domain.Models.Agv.Agv agv, CancellationToken cancellationToken)

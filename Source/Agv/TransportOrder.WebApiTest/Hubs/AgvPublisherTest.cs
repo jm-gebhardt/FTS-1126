@@ -184,4 +184,14 @@ public class AgvPublisherTest
 
         fixture.HubContextMock.Verify(c => c.Clients.All.CargoChanged(It.Is<ICollection<CargoDto>>(dtoCollection => dtoCollection == expectedDtoCollection)), Times.Once);
     }
+
+    [TestMethod]
+    public async Task SendAgvHasCargoChanged_ValidData_SendAgvHasCargoDto()
+    {
+        var agvCorrelationId = Guid.NewGuid();
+        const bool hasCargo = true;
+        PublisherFixture<AgvPublisher, AgvHub, IAgvClient> fixture = new PublisherFixture<AgvPublisher, AgvHub, IAgvClient>().Build();
+        await fixture.Publisher.SendAgvHasCargoChangedAsync(agvCorrelationId, hasCargo);
+        fixture.HubContextMock.Verify(c => c.Clients.All.AgvHasCargoChanged(It.Is<AgvHasCargoDto>(dto => dto == new AgvHasCargoDto(agvCorrelationId, hasCargo))), Times.Once);
+    }
 }

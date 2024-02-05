@@ -69,4 +69,17 @@ public class AgvChangedConsumerTest
         fixture.PublisherMock.Verify(h => h.SendAgvRouteChangedAsync(new CurrentAgvRouteReadModel(agvCorrelationId, Array.Empty<string>())),
             Times.Once);
     }
+
+    [TestMethod]
+    public async Task Consume_HasCargoChanged_ValidData_SentAgvHasCargoChanged()
+    {
+        var agvCorrelationId = Guid.NewGuid();
+        const bool hasCargo = true;
+        var fixture = new ConsumerHubTestFixture<AgvChangedConsumer, IAgvPublisher>();
+
+        await fixture.TestHarness.Bus.Publish(new HasCargoChanged(agvCorrelationId, hasCargo));
+        (await fixture.ConsumerHarness.Consumed.Any<HasCargoChanged>()).ShouldBeTrue();
+        fixture.PublisherMock.Verify(h => h.SendAgvHasCargoChangedAsync(agvCorrelationId, hasCargo),
+            Times.Once);
+    }
 }

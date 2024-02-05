@@ -32,7 +32,8 @@ public interface IAgvRepository
     /// <summary>
     /// Get specific AGV
     /// </summary>
-    /// <returns>Agv object or null if no AGV with the given correlationId was found</returns>
+    /// <returns>Agv object.</returns>
+    /// <exception cref="AgvNotFoundException">If the agv with the given correlation id does not exist.</exception>
     Task<Models.Agv.Agv> GetAgvAsync(Guid correlationId);
 
     /// <summary>
