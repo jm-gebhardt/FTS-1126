@@ -39,18 +39,21 @@ public class AgvTracingConsumeFilters : BaseTracingFilter,
         await next.Send(context);
     }
 
+    /// <inheritdoc />
     public async Task Send(ConsumeContext<AgvPreparedForStartingAction> context, IPipe<ConsumeContext<AgvPreparedForStartingAction>> next)
     {
         LogDebug(context);
         await next.Send(context);
     }
 
+    /// <inheritdoc />
     public async Task Send(ConsumeContext<AgvNeedsCharging> context, IPipe<ConsumeContext<AgvNeedsCharging>> next)
     {
         LogDebug(context);
         await next.Send(context);
     }
 
+    /// <inheritdoc />
     public async Task Send(ConsumeContext<AgvBecameIdle> context, IPipe<ConsumeContext<AgvBecameIdle>> next)
     {
         LogDebug(context);

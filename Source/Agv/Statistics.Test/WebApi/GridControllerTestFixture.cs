@@ -1,14 +1,14 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
+using Gebhardt.StoreWare.Agv.Statistics.Domain.Models;
+using Gebhardt.StoreWare.Agv.Statistics.Domain.ReadModels;
+using Gebhardt.StoreWare.Agv.Statistics.Messages.Requests;
+using Gebhardt.StoreWare.Agv.Statistics.Test.Fixtures;
+using Gebhardt.StoreWare.Agv.Statistics.WebApi.Controllers;
+using Gebhardt.StoreWare.Agv.Statistics.WebApi.Profiles;
 using MassTransit;
 using Moq;
-using Statistics.Domain.Models;
-using Statistics.Domain.ReadModels;
-using Statistics.Messages.Requests;
-using Statistics.Test.Fixtures;
-using Statistics.WebApi.Controllers;
-using Statistics.WebApi.Profiles;
 
-namespace Statistics.Test.WebApi;
+namespace Gebhardt.StoreWare.Agv.Statistics.Test.WebApi;
 
 public class GridControllerTestFixture : MockRequestClientControllerTestFixture<GridController>
 {

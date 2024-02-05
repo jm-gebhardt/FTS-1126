@@ -1,11 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Gebhardt.StoreWare.Agv.Statistics.Domain.Models;
+using Gebhardt.StoreWare.Agv.Statistics.Domain.ReadModels;
+using Gebhardt.StoreWare.Agv.Statistics.WebApi.Dtos;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
-using Statistics.Domain.Models;
-using Statistics.Domain.ReadModels;
-using Statistics.WebApi.Dtos;
 
-namespace Statistics.Test.WebApi;
+namespace Gebhardt.StoreWare.Agv.Statistics.Test.WebApi;
 
 [TestClass]
 public class GridControllerTest

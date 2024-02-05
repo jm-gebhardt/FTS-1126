@@ -1,8 +1,8 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
+using Gebhardt.StoreWare.Agv.Statistics.Domain.Models;
+using Gebhardt.StoreWare.Agv.Statistics.Domain.Repositories;
 using JetBrains.Annotations;
 using MassTransit;
-using Statistics.Domain.Models;
-using Statistics.Domain.Repositories;
 
 namespace Gebhardt.StoreWare.Agv.Statistics.Services.EventHandler;
 

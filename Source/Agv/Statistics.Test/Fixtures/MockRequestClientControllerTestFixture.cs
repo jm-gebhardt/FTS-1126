@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 
-namespace Statistics.Test.Fixtures;
+namespace Gebhardt.StoreWare.Agv.Statistics.Test.Fixtures;
 
 /// <summary>
 /// Provides a controller test fixture with mock request clients.

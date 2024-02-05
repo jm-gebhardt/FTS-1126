@@ -1,11 +1,11 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.Graphs.Events;
+using Gebhardt.StoreWare.Agv.Statistics.Domain.Exceptions;
+using Gebhardt.StoreWare.Agv.Statistics.Domain.Models;
+using Gebhardt.StoreWare.Agv.Statistics.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.Statistics.Extensions;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
-using Statistics.Domain.Exceptions;
-using Statistics.Domain.Models;
-using Statistics.Domain.Repositories;
 
 namespace Gebhardt.StoreWare.Agv.Statistics.Services.EventHandler;
 

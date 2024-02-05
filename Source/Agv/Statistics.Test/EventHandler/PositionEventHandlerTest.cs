@@ -1,12 +1,12 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
+using Gebhardt.StoreWare.Agv.Statistics.Domain.Models;
 using Gebhardt.StoreWare.Agv.Statistics.Services.EventHandler;
+using Gebhardt.StoreWare.Agv.Statistics.Test.Fixtures;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
-using Statistics.Domain.Models;
-using Statistics.Test.Fixtures;
 
-namespace Statistics.Test.EventHandler;
+namespace Gebhardt.StoreWare.Agv.Statistics.Test.EventHandler;
 
 [TestClass]
 public class PositionEventHandlerTest

@@ -1,15 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
-  <ItemGroup>
-    <Folder Include="Models\" />
-    <Folder Include="ReadModels\" />
-    <Folder Include="Repositories\" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Common\Common.csproj" />
-  </ItemGroup>
+    <PropertyGroup>
+        <AssemblyName>Gebhardt.StoreWare.Agv.Statistics.Domain</AssemblyName>
+    </PropertyGroup>
+    <Import Project="..\SharedProjectSettings.csproj"/>
+    <ItemGroup>
+        <ProjectReference Include="..\Common\Common.csproj"/>
+    </ItemGroup>
 </Project>

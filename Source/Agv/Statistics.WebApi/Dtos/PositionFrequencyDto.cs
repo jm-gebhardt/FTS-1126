@@ -1,7 +1,7 @@
-﻿using JetBrains.Annotations;
-using Statistics.Domain.ReadModels;
+﻿using Gebhardt.StoreWare.Agv.Statistics.Domain.ReadModels;
+using JetBrains.Annotations;
 
-namespace Statistics.WebApi.Dtos;
+namespace Gebhardt.StoreWare.Agv.Statistics.WebApi.Dtos;
 
 /// <summary>
 /// Provides a Dto for <see cref="PositionFrequency"/>

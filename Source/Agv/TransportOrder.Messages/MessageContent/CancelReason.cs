@@ -14,8 +14,16 @@ public enum CancelReason : byte
     WebApi = 0
 }
 
+/// <summary>
+/// Extension methods for <see cref="CancelReason"/>.
+/// </summary>
 public static class CancelReasonExtensions
 {
+    /// <summary>
+    /// Converts the <see cref="CancelReason"/> to a <see cref="Reason"/>.
+    /// </summary>
+    /// <param name="cancelReason"></param>
+    /// <returns></returns>
     public static Reason? ToReason(this CancelReason cancelReason)
     {
         string? template = cancelReason switch

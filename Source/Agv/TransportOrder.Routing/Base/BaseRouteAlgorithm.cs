@@ -9,10 +9,29 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Routing.Base;
 /// </summary>
 public abstract class BaseRouteAlgorithm : IRouteAlgorithm
 {
+    /// <summary>
+    /// The fallback value for max non spot turn angle.
+    /// </summary>
     protected const double MaxNonSpotTurnAngleFallback = 5 * Math.PI / 180d;
+
+    /// <summary>
+    /// The fallback value for max velocity straight.
+    /// </summary>
     protected const double MaxVelocityStraightFallback = 1;
+
+    /// <summary>
+    /// The fallback value for max velocity turn on spot.
+    /// </summary>
     protected const double MaxVelocityTurnOnSpotFallback = Math.PI;
+
+    /// <summary>
+    /// The fallback values or acceleration.
+    /// </summary>
     protected const double AccelerationFallback = 1;
+
+    /// <summary>
+    /// The fallback value for deceleration.
+    /// </summary>
     protected const double MaxVelocityTurnFallback = 1;
 
     private readonly IRoutingPlausibilityChecker? _routingPlausibilityChecker;
@@ -58,7 +77,7 @@ public abstract class BaseRouteAlgorithm : IRouteAlgorithm
 
         if (source == destination) // Already at destination -> 0 cost
         {
-            return new Route(0f, new[] { source });
+            return new Route(0f, new[] {source});
         }
 
         return CalculateRouteInternal(source, destination);

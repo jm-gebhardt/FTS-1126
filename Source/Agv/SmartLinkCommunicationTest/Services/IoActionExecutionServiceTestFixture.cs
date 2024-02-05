@@ -6,7 +6,7 @@ using MassTransit.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 
-namespace SmartLinkCommunicationTest.Services;
+namespace Gebhardt.StoreWare.Agv.SmartLinkCommunicationTest.Services;
 
 public class IoActionExecutionServiceTestFixture
 {

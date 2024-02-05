@@ -1,6 +1,9 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Configurations;
 using Gebhardt.StoreWare.Agv.Common.Configurations.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages.Filters;
+using Gebhardt.StoreWare.Agv.Statistics.Domain.Repositories;
+using Gebhardt.StoreWare.Agv.Statistics.Persistence.Ef.DataAccess;
+using Gebhardt.StoreWare.Agv.Statistics.Persistence.Ef.Repositories;
 using Gebhardt.StoreWare.Agv.Statistics.Services.BackgroundServices;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
@@ -8,9 +11,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Statistics.Domain.Repositories;
-using Statistics.Persistence.Ef.DataAccess;
-using Statistics.Persistence.Ef.Repositories;
 
 namespace Gebhardt.StoreWare.Agv.Statistics.Configuration;
 

@@ -1,10 +1,10 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
+using Gebhardt.StoreWare.Agv.Statistics.Domain.Models;
+using Gebhardt.StoreWare.Agv.Statistics.Domain.Repositories;
+using Gebhardt.StoreWare.Agv.Statistics.Messages.Commands;
 using MassTransit;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Statistics.Domain.Models;
-using Statistics.Domain.Repositories;
-using Statistics.Messages.Commands;
 
 namespace Gebhardt.StoreWare.Agv.Statistics.Services.BackgroundServices;
 

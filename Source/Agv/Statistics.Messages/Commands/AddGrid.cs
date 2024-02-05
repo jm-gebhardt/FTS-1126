@@ -1,6 +1,6 @@
 ﻿using JetBrains.Annotations;
 
-namespace Statistics.Messages.Commands;
+namespace Gebhardt.StoreWare.Agv.Statistics.Messages.Commands;
 
 /// <summary>
 /// Provides a command to add a new grid.

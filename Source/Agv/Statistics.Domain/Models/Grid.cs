@@ -1,6 +1,6 @@
-﻿using Statistics.Domain.Exceptions;
+﻿using Gebhardt.StoreWare.Agv.Statistics.Domain.Exceptions;
 
-namespace Statistics.Domain.Models;
+namespace Gebhardt.StoreWare.Agv.Statistics.Domain.Models;
 
 /// <summary>
 /// Represents a grid.

@@ -38,7 +38,7 @@ public class EfActionGroupRepository : IActionGroupRepository
     /// <inheritdoc />
     public async Task<IReadOnlyList<ActionGroup>> GetActionGroupsAsync(ActionGroupState state, DateTime? fromDate = null, DateTime? toDate = null, int maxItems = 0, Guid? assignedAgvCorrelationId = null, bool? isManual = null)
     {
-        return await GetActionGroupsAsync(new List<ActionGroupState> { state }, fromDate, toDate, maxItems, assignedAgvCorrelationId, isManual);
+        return await GetActionGroupsAsync(new List<ActionGroupState> {state}, fromDate, toDate, maxItems, assignedAgvCorrelationId, isManual);
     }
 
     /// <inheritdoc />
@@ -267,6 +267,7 @@ public class EfActionGroupRepository : IActionGroupRepository
         return hasNotStartedActions;
     }
 
+    /// <inheritdoc />
     public async Task<bool> HasUnfinishedActionGroupAsync(Guid agvCorrelationId)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();

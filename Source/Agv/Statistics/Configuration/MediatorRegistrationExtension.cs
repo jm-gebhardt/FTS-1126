@@ -1,6 +1,6 @@
-﻿using Gebhardt.StoreWare.Agv.Statistics.Services.RequestResponseHandler;
+﻿using Gebhardt.StoreWare.Agv.Statistics.Messages.Requests;
+using Gebhardt.StoreWare.Agv.Statistics.Services.RequestResponseHandler;
 using MassTransit;
-using Statistics.Messages.Requests;
 
 namespace Gebhardt.StoreWare.Agv.Statistics.Configuration;
 

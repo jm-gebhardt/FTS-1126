@@ -1,17 +1,17 @@
-﻿using Microsoft.AspNetCore.Hosting;
-using System.Reflection;
-using Microsoft.Extensions.DependencyInjection;
+﻿using System.Reflection;
 using System.Text.Json.Serialization;
 using System.Xml.Linq;
 using System.Xml.XPath;
 using Gebhardt.StoreWare.Agv.Common.WebApi;
+using Gebhardt.StoreWare.Agv.Statistics.WebApi.Controllers;
+using Gebhardt.StoreWare.Agv.Statistics.WebApi.Swagger;
 using Microsoft.AspNetCore.Builder;
-using Swashbuckle.AspNetCore.SwaggerGen;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
-using Statistics.WebApi.Controllers;
-using Statistics.WebApi.Swagger;
+using Swashbuckle.AspNetCore.SwaggerGen;
 
-namespace Statistics.WebApi;
+namespace Gebhardt.StoreWare.Agv.Statistics.WebApi;
 
 /// <summary>
 /// Provides extension methods for <see cref="IWebHostBuilder"/>

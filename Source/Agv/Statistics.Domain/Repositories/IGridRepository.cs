@@ -1,7 +1,7 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Persistence;
-using Statistics.Domain.Models;
+using Gebhardt.StoreWare.Agv.Statistics.Domain.Models;
 
-namespace Statistics.Domain.Repositories;
+namespace Gebhardt.StoreWare.Agv.Statistics.Domain.Repositories;
 
 /// <summary>
 /// Provides a repository for grid related queries.

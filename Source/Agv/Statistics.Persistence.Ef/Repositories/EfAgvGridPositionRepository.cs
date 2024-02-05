@@ -1,10 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Statistics.Domain.Models;
-using Statistics.Domain.ReadModels;
-using Statistics.Domain.Repositories;
-using Statistics.Persistence.Ef.DataAccess;
+﻿using Gebhardt.StoreWare.Agv.Statistics.Domain.Models;
+using Gebhardt.StoreWare.Agv.Statistics.Domain.ReadModels;
+using Gebhardt.StoreWare.Agv.Statistics.Domain.Repositories;
+using Gebhardt.StoreWare.Agv.Statistics.Persistence.Ef.DataAccess;
+using Microsoft.EntityFrameworkCore;
 
-namespace Statistics.Persistence.Ef.Repositories;
+namespace Gebhardt.StoreWare.Agv.Statistics.Persistence.Ef.Repositories;
 
 /// <inheritdoc cref="IAgvGridPositionRepository"/>>.
 public class EfAgvGridPositionRepository(StatisticsDbContext context) : EfRepository<AgvGridPosition, StatisticsDbContext>(context), IAgvGridPositionRepository

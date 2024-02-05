@@ -1,5 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
-using Statistics.Domain.Models;
+using Gebhardt.StoreWare.Agv.Statistics.Domain.Models;
 
 namespace Gebhardt.StoreWare.Agv.Statistics.Extensions;
 

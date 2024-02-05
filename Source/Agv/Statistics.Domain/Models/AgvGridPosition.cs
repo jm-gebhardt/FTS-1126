@@ -1,6 +1,6 @@
 ﻿using JetBrains.Annotations;
 
-namespace Statistics.Domain.Models;
+namespace Gebhardt.StoreWare.Agv.Statistics.Domain.Models;
 
 /// <summary>
 /// Represents an agv position on a grid.

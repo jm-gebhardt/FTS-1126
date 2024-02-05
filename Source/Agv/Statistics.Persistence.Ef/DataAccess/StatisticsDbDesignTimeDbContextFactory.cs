@@ -1,7 +1,7 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Persistence;
 using JetBrains.Annotations;
 
-namespace Statistics.Persistence.Ef.DataAccess;
+namespace Gebhardt.StoreWare.Agv.Statistics.Persistence.Ef.DataAccess;
 
 /// <inheritdoc />
 [UsedImplicitly]

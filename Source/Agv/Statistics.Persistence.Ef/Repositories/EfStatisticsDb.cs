@@ -1,8 +1,8 @@
-﻿using JetBrains.Annotations;
-using Statistics.Domain.Repositories;
-using Statistics.Persistence.Ef.DataAccess;
+﻿using Gebhardt.StoreWare.Agv.Statistics.Domain.Repositories;
+using Gebhardt.StoreWare.Agv.Statistics.Persistence.Ef.DataAccess;
+using JetBrains.Annotations;
 
-namespace Statistics.Persistence.Ef.Repositories;
+namespace Gebhardt.StoreWare.Agv.Statistics.Persistence.Ef.Repositories;
 
 /// <inheritdoc cref="IStatisticsDb" />
 public class EfStatisticsDb : IStatisticsDb, IAsyncDisposable
@@ -13,6 +13,7 @@ public class EfStatisticsDb : IStatisticsDb, IAsyncDisposable
     private readonly bool _efMapRepositoryRegistered;
     private readonly bool _efAgvGridPositionRepositoryRegistered;
 
+    /// <inheritdoc />
     public async Task<int> SaveAsync(CancellationToken cancellationToken = default)
     {
         // Ensure transaction safety even if non-EfCore versions of repositories are registered.

@@ -1,6 +1,6 @@
 ﻿using JetBrains.Annotations;
 
-namespace Statistics.Domain.ReadModels;
+namespace Gebhardt.StoreWare.Agv.Statistics.Domain.ReadModels;
 
 /// <summary>
 /// Represents the position frequencies on a grid.

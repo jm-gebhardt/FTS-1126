@@ -1,7 +1,7 @@
 using System.Text.Json;
 using Gebhardt.StoreWare.Agv.SmartLinkCommunication.Models;
 
-namespace SmartLinkCommunicationTest.Helpers;
+namespace Gebhardt.StoreWare.Agv.SmartLinkCommunicationTest.Helpers;
 
 public static class SmartLinkDataGenerator
 {

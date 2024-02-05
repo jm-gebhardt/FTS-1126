@@ -1,10 +1,10 @@
 using Gebhardt.StoreWare.Agv.SmartLinkCommunication.Models;
 using Gebhardt.StoreWare.Agv.SmartLinkCommunication.Services;
+using Gebhardt.StoreWare.Agv.SmartLinkCommunicationTest.Helpers;
 using Microsoft.Extensions.Logging;
 using Moq;
-using SmartLinkCommunicationTest.Helpers;
 
-namespace SmartLinkCommunicationTest.Services;
+namespace Gebhardt.StoreWare.Agv.SmartLinkCommunicationTest.Services;
 
 public class SmartLinkResponseHandlerTestFixture
 {

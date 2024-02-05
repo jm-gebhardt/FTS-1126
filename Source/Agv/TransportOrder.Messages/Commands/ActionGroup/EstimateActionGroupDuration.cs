@@ -11,5 +11,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
 /// <param name="ActionGroupId">The correlationId of the ActionGroup.</param>
 public record EstimateActionGroupDuration(AgvAction Action, Guid AgvId, Guid ActionGroupId) : CorrelatedBy<Guid>
 {
+    /// <inheritdoc />
     public Guid CorrelationId => ActionGroupId;
 }

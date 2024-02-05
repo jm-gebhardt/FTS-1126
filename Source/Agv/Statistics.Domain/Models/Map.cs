@@ -1,4 +1,4 @@
-﻿namespace Statistics.Domain.Models;
+﻿namespace Gebhardt.StoreWare.Agv.Statistics.Domain.Models;
 
 /// <summary>
 /// Represents a map

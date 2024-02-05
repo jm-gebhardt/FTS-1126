@@ -121,6 +121,7 @@ public class EfMapRepository : IMapRepository
         return await _semaphoreProvider.ExecuteLockedAsync(async () => await AddOrUpdateAsync(map), cancellationToken);
     }
 
+    /// <inheritdoc />
     public Task AssignAgvGraphToMapsAsync(Guid agvId)
     {
         return _semaphoreProvider.ExecuteLockedAsync(async () =>

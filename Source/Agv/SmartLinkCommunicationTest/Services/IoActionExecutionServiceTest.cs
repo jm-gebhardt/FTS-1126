@@ -1,10 +1,10 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
 using Gebhardt.StoreWare.Agv.SmartLinkCommunication.Models;
+using Gebhardt.StoreWare.Agv.SmartLinkCommunicationTest.Helpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
-using SmartLinkCommunicationTest.Helpers;
 
-namespace SmartLinkCommunicationTest.Services;
+namespace Gebhardt.StoreWare.Agv.SmartLinkCommunicationTest.Services;
 
 [TestClass]
 public class IoActionExecutionServiceTest

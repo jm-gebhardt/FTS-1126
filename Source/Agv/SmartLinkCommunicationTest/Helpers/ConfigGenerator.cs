@@ -2,7 +2,7 @@ using Gebhardt.StoreWare.Agv.SmartLinkCommunication.Converters;
 using Gebhardt.StoreWare.Agv.SmartLinkCommunication.Models;
 using YamlDotNet.Serialization;
 
-namespace SmartLinkCommunicationTest.Helpers;
+namespace Gebhardt.StoreWare.Agv.SmartLinkCommunicationTest.Helpers;
 
 public static class ConfigGenerator
 {

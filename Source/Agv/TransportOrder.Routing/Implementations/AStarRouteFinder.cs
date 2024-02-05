@@ -4,6 +4,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Routing.Models;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Routing.Implementations;
 
+/// <inheritdoc />
 public class AStarRouteFinder : IRouteFinder
 {
     /// <inheritdoc/>>

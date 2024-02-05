@@ -3,7 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using Shouldly;
 
-namespace SmartLinkCommunicationTest.Services;
+namespace Gebhardt.StoreWare.Agv.SmartLinkCommunicationTest.Services;
 
 [TestClass]
 public class DeserializationTest

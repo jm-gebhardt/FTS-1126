@@ -9,5 +9,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
 /// <param name="ActionGroupCorrelationId">The correlation id o the action group.</param>
 public record CompleteActionOfActionGroup(Guid ActionCorrelationId, Guid ActionGroupCorrelationId) : CorrelatedBy<Guid>
 {
+    /// <inheritdoc />
     public Guid CorrelationId => ActionGroupCorrelationId;
 }

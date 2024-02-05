@@ -316,6 +316,7 @@ public class EfGraphRepository : IGraphRepository
         }, CancellationToken.None);
     }
 
+    /// <inheritdoc />
     public async Task<ICollection<Guid>> GetAgvIdsRelatedToNodesAsync(ICollection<GraphNode> nodes)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();

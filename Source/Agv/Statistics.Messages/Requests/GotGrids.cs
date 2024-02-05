@@ -1,6 +1,6 @@
-﻿using Statistics.Domain.Models;
+﻿using Gebhardt.StoreWare.Agv.Statistics.Domain.Models;
 
-namespace Statistics.Messages.Requests;
+namespace Gebhardt.StoreWare.Agv.Statistics.Messages.Requests;
 
 /// <summary>
 /// Represents the response to the <see cref="GetGrids"/> request.

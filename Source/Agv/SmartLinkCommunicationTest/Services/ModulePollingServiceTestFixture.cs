@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using RestSharp;
 
-namespace SmartLinkCommunicationTest.Services;
+namespace Gebhardt.StoreWare.Agv.SmartLinkCommunicationTest.Services;
 
 public class ModulePollingServiceTestFixture
 {

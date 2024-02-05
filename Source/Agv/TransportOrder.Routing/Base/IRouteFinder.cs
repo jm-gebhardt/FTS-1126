@@ -3,6 +3,9 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Routing.Models;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Routing.Base;
 
+/// <summary>
+/// To find a route.
+/// </summary>
 public interface IRouteFinder
 {
     /// <summary>

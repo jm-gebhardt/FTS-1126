@@ -1,33 +1,30 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <AssemblyName>Gebhardt.StoreWare.Agv.WCSCommunicationTest</AssemblyName>
-    <Description>
-    </Description>
-    <IsPackable>false</IsPackable>
-    <NoWarn>1591</NoWarn>
-    <TargetFramework>net8.0</TargetFramework>
-  </PropertyGroup>
-  <Import Project="..\SharedProjectSettings.csproj" />
-  <ItemGroup>
-    <PackageReference Include="MassTransit.Prometheus" Version="8.1.3" />
-    <PackageReference Include="MassTransit.EntityFrameworkCore" Version="8.1.3" />
-    <PackageReference Include="MassTransit" Version="8.1.3" />
-    <PackageReference Include="JetBrains.Annotations" Version="2023.3.0" />
-    <PackageReference Include="MassTransit.RabbitMQ" Version="8.1.3" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
-    <PackageReference Include="moq" Version="4.20.70" />
-    <PackageReference Include="MSTest.TestAdapter" Version="3.2.0" />
-    <PackageReference Include="MSTest.TestFramework" Version="3.2.0" />
-    <PackageReference Include="coverlet.collector" Version="6.0.0">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="Shouldly" Version="4.2.1" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.1" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Common.Testing\Common.Testing.csproj" />
-    <ProjectReference Include="..\WCSCommunication\WCSCommunication.csproj" />
-  </ItemGroup>
+    <PropertyGroup>
+        <AssemblyName>Gebhardt.StoreWare.Agv.WCSCommunicationTest</AssemblyName>
+        <IsPackable>false</IsPackable>
+        <NoWarn>1591</NoWarn>
+    </PropertyGroup>
+    <Import Project="..\SharedProjectSettings.csproj"/>
+    <ItemGroup>
+        <PackageReference Include="MassTransit.Prometheus" Version="8.1.3"/>
+        <PackageReference Include="MassTransit.EntityFrameworkCore" Version="8.1.3"/>
+        <PackageReference Include="MassTransit" Version="8.1.3"/>
+        <PackageReference Include="JetBrains.Annotations" Version="2023.3.0"/>
+        <PackageReference Include="MassTransit.RabbitMQ" Version="8.1.3"/>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0"/>
+        <PackageReference Include="moq" Version="4.20.70"/>
+        <PackageReference Include="MSTest.TestAdapter" Version="3.2.0"/>
+        <PackageReference Include="MSTest.TestFramework" Version="3.2.0"/>
+        <PackageReference Include="coverlet.collector" Version="6.0.0">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+        <PackageReference Include="Shouldly" Version="4.2.1"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.1"/>
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.3"/>
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\Common.Testing\Common.Testing.csproj"/>
+        <ProjectReference Include="..\WCSCommunication\WCSCommunication.csproj"/>
+    </ItemGroup>
 </Project>

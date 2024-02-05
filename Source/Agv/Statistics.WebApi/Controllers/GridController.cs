@@ -1,10 +1,10 @@
 ﻿using AutoMapper;
+using Gebhardt.StoreWare.Agv.Statistics.Messages.Requests;
+using Gebhardt.StoreWare.Agv.Statistics.WebApi.Dtos;
 using MassTransit;
 using Microsoft.AspNetCore.Mvc;
-using Statistics.Messages.Requests;
-using Statistics.WebApi.Dtos;
 
-namespace Statistics.WebApi.Controllers;
+namespace Gebhardt.StoreWare.Agv.Statistics.WebApi.Controllers;
 
 /// <summary>
 /// Single action group requests.

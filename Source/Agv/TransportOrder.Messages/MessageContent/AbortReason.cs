@@ -19,8 +19,16 @@ public enum AbortReason : byte
     ReactivatedFromCharging = 1
 }
 
+/// <summary>
+/// Extension methods for <see cref="AbortReason"/>.
+/// </summary>
 public static class AbortReasonExtensions
 {
+    /// <summary>
+    /// Converts the <see cref="AbortReason"/> to a <see cref="Reason"/>.
+    /// </summary>
+    /// <param name="abortReason"></param>
+    /// <returns></returns>
     public static Reason? ToReason(this AbortReason abortReason)
     {
         string? template = abortReason switch

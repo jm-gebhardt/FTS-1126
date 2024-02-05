@@ -1,33 +1,31 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <IsPackable>false</IsPackable>
-    <NoWarn>1591</NoWarn>
-    <TargetFramework>net8.0</TargetFramework>
-  </PropertyGroup>
-  <Import Project="..\SharedProjectSettings.csproj" />
-  <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
-    <PackageReference Include="MSTest.TestAdapter" Version="3.2.0" />
-    <PackageReference Include="MSTest.TestFramework" Version="3.2.0" />
-    <PackageReference Include="coverlet.collector" Version="6.0.0">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Shouldly" Version="4.2.1" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Common.Testing\Common.Testing.csproj" />
-    <ProjectReference Include="..\SmartLinkCommunication\SmartLinkCommunication.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Update="TestData\SmartLinkResponse.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="TestData\module_config.yml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
+    <PropertyGroup>
+        <AssemblyName>Gebhardt.StoreWare.Agv.SmartLinkCommunicationTest</AssemblyName>
+        <IsPackable>false</IsPackable>
+        <NoWarn>1591</NoWarn>
+    </PropertyGroup>
+    <Import Project="..\SharedProjectSettings.csproj"/>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0"/>
+        <PackageReference Include="MSTest.TestAdapter" Version="3.2.0"/>
+        <PackageReference Include="MSTest.TestFramework" Version="3.2.0"/>
+        <PackageReference Include="coverlet.collector" Version="6.0.0">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Shouldly" Version="4.2.1"/>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0"/>
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\Common.Testing\Common.Testing.csproj"/>
+        <ProjectReference Include="..\SmartLinkCommunication\SmartLinkCommunication.csproj"/>
+    </ItemGroup>
+    <ItemGroup>
+        <None Update="TestData\SmartLinkResponse.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="TestData\module_config.yml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
 </Project>

@@ -1,7 +1,7 @@
 using JetBrains.Annotations;
 using Microsoft.OpenApi.Models;
 
-namespace Statistics.WebApi.Swagger;
+namespace Gebhardt.StoreWare.Agv.Statistics.WebApi.Swagger;
 
 /// <summary>
 /// Api Group Interface

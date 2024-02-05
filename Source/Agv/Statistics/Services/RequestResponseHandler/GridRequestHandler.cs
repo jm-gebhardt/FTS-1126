@@ -1,8 +1,8 @@
-﻿using JetBrains.Annotations;
+﻿using Gebhardt.StoreWare.Agv.Statistics.Domain.Models;
+using Gebhardt.StoreWare.Agv.Statistics.Domain.Repositories;
+using Gebhardt.StoreWare.Agv.Statistics.Messages.Requests;
+using JetBrains.Annotations;
 using MassTransit;
-using Statistics.Domain.Models;
-using Statistics.Domain.Repositories;
-using Statistics.Messages.Requests;
 
 namespace Gebhardt.StoreWare.Agv.Statistics.Services.RequestResponseHandler;
 

@@ -8,6 +8,7 @@ using ActionGroup = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGr
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
 
+/// <inheritdoc />
 public class AgvRepository : IAgvRepository
 {
     private readonly IDbContextFactory<TransportOrderDbContext> _dbContextFactory;
@@ -25,23 +26,28 @@ public class AgvRepository : IAgvRepository
             .Set<Domain.Models.Agv.Agv>()
             .AsNoTracking(); // No need to track changes
 
+    /// <inheritdoc />
     public int Count => Agvs.Count();
 
+    /// <inheritdoc />
     public async Task<ICollection<Domain.Models.Agv.Agv>> GetAllAgvsAsync()
     {
         return await Agvs.ToListAsync();
     }
 
+    /// <inheritdoc />
     public async Task<ICollection<Domain.Models.Agv.Agv>> GetAllAgvsWithGraphAsync()
     {
         return await Agvs.Where(a => a.GraphExists).ToListAsync();
     }
 
+    /// <inheritdoc />
     public async Task<ICollection<Domain.Models.Agv.Agv>> GetIdleAgvsAsync()
     {
         return await Agvs.Where(x => x.CurrentAgvState == AgvState.Idle).ToListAsync();
     }
 
+    /// <inheritdoc />
     public async Task<Domain.Models.Agv.Agv> GetAgvAsync(Guid correlationId)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
@@ -53,6 +59,7 @@ public class AgvRepository : IAgvRepository
         return agv;
     }
 
+    /// <inheritdoc />
     public async Task<bool> CheckIfAgvExistsAsync(Guid correlationId)
     {
         return await Agvs.AnyAsync(a => a.CorrelationId == correlationId);
@@ -63,6 +70,7 @@ public class AgvRepository : IAgvRepository
         return await Agvs.Where(a => correlationIds.Contains(a.CorrelationId)).Select(a => a.CorrelationId).ToListAsync();
     }
 
+    /// <inheritdoc />
     public async Task ThrowIfAgvNotExistsAsync(Guid correlationId)
     {
         if (!await CheckIfAgvExistsAsync(correlationId))
@@ -71,6 +79,7 @@ public class AgvRepository : IAgvRepository
         }
     }
 
+    /// <inheritdoc />
     public async Task ThrowIfAgvsNotExistAsync(ICollection<Guid> correlationIds)
     {
         ICollection<Guid> existingAgvs = await CheckIfAgvExistAsync(correlationIds);
@@ -81,11 +90,13 @@ public class AgvRepository : IAgvRepository
         }
     }
 
+    /// <inheritdoc />
     public async Task<ICollection<Domain.Models.Agv.Agv>> SelectExistingAgvsAsync(List<Guid> agvCorrelationIds)
     {
         return await Agvs.Where(a => !agvCorrelationIds.Any() || agvCorrelationIds.Contains(a.CorrelationId)).OrderBy(a => a.SerialNumber).ToListAsync();
     }
 
+    /// <inheritdoc />
     public async Task<bool> UpdateAgvAsync(Domain.Models.Agv.Agv agv)
     {
         await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
@@ -94,6 +105,7 @@ public class AgvRepository : IAgvRepository
         return await dbContext.SaveChangesAsync() > 0;
     }
 
+    /// <inheritdoc />
     public async Task<bool> AddAgvAsync(Domain.Models.Agv.Agv agv)
     {
         await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
@@ -102,6 +114,7 @@ public class AgvRepository : IAgvRepository
         return await dbContext.SaveChangesAsync() > 0;
     }
 
+    /// <inheritdoc />
     public async Task<ICollection<Domain.Models.Agv.Agv>> GetChargingAgvsWithMinBatteryLevelAsync(int minBatteryLevel)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
@@ -116,6 +129,7 @@ public class AgvRepository : IAgvRepository
         return agvs;
     }
 
+    /// <inheritdoc />
     public async Task<ICollection<Domain.Models.Agv.Agv>> GetReadyAgvsAsync(int minBatteryLevel = 0)
     {
         return await Agvs.Where(Domain.Models.Agv.Agv.IsReadyStatic)
@@ -127,6 +141,7 @@ public class AgvRepository : IAgvRepository
             ).ToListAsync();
     }
 
+    /// <inheritdoc />
     public async Task<string?> GetLastNodeIdAsync(Guid agvCorrelationId)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
@@ -138,6 +153,7 @@ public class AgvRepository : IAgvRepository
         return lastNodeId;
     }
 
+    /// <inheritdoc />
     public async Task<IReadOnlyDictionary<Guid, string?>> GetLastNodeIdAsync(ICollection<Guid> agvCorrelationIds)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
@@ -150,7 +166,7 @@ public class AgvRepository : IAgvRepository
 
         Dictionary<Guid, string?> lastNodeIdsById = await queryable
             .Where(s => s.AgvStatus != null)
-            .Select(s => new { s.CorrelationId, s.AgvStatus!.LastNodeId })
+            .Select(s => new {s.CorrelationId, s.AgvStatus!.LastNodeId})
             .ToDictionaryAsync(x => x.CorrelationId, x => x.LastNodeId);
 
         // for potential Agvs with no status, we want to have a null value

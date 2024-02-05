@@ -1,5 +1,8 @@
 ﻿namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
 
+/// <summary>
+/// Settings for the AGV.
+/// </summary>
 public record AgvSettings
 {
     /// <summary>The agv correlation id</summary>

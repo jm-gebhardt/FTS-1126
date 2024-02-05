@@ -17,7 +17,7 @@ public class MapFromFileGenerator : MapGeneratorBase
     {
         string directoryPath = Path.Combine(AppContext.BaseDirectory, "Resources", "BackgroundImages");
         string searchPattern = $"{mapName}*.png";
-
+        
         string[] files = Directory.GetFiles(directoryPath, searchPattern);
         switch (files.Length)
         {

@@ -10,5 +10,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
 /// <param name="AssignedAgv">The agv.</param>
 public record StartActionOfActionGroup(AgvAction Action, Guid AssignedAgv) : CorrelatedBy<Guid>
 {
+    /// <inheritdoc />
     public Guid CorrelationId => Action.ParentId;
 }

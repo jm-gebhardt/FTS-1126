@@ -3,7 +3,7 @@ using Gebhardt.StoreWare.Agv.Statistics.Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Statistics.Test.Extensions;
+namespace Gebhardt.StoreWare.Agv.Statistics.Test.Extensions;
 
 [TestClass]
 public class NodesExtensionTest
