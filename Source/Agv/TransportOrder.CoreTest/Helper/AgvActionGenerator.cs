@@ -146,7 +146,7 @@ public static class AgvActionGenerator
         switch (state)
         {
             case ActionGroupState.Started:
-                actionGroup.StartAction(actionId);
+                actionGroup.StartAction(actionId, []);
                 break;
 
             case ActionGroupState.Completed:

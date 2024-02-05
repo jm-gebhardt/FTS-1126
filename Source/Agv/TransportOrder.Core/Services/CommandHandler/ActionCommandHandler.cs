@@ -108,7 +108,7 @@ public class ActionCommandHandler :
         bool agvActionCanBeStarted = await CheckAgvActionCanBeStarted(context, action, assignedAgv, actionGroup);
         if (agvActionCanBeStarted)
         {
-            actionGroup.StartAction(action.CorrelationId);
+            actionGroup.StartAction(action.CorrelationId, action.Nodes);
             await _actionGroupRepository.UpdateAsync(actionGroup);
             var actionGroupMessageContent = _mapper.Map<ActionGroup>(actionGroup);
             await context.Publish(new StartActionCommand(assignedAgv.CorrelationId, assignedAgv.SerialNumber, _mapper.Map<MessageAgvAction>(action)), cancellationToken);

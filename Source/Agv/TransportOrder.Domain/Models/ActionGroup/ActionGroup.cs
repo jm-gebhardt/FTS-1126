@@ -253,8 +253,10 @@ public class ActionGroup
     /// Starts the specified action.
     /// </summary>
     /// <param name="actionId">The id of the action.</param>
-    public void StartAction(Guid actionId)
+    /// <param name="nodes">The nodes of the action.</param>
+    public void StartAction(Guid actionId, string[] nodes)
     {
+        Actions.Single(a => a.CorrelationId == actionId).Nodes = nodes;
         UpdateActionState(actionId, ActionState.Started);
     }
 

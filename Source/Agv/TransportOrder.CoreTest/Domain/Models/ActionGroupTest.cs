@@ -52,13 +52,14 @@ public class ActionGroupTests
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
 
         actionGroup.StartedDate.ShouldBeNull();
-
-        actionGroup.StartAction(actionGroup.Actions.First().CorrelationId);
+        string[] nodes = ["source", "target"];
+        actionGroup.StartAction(actionGroup.Actions.First().CorrelationId, nodes);
         actionGroup.UpdateActionGroupState();
 
         actionGroup.State.ShouldBe(ActionGroupState.Started);
         actionGroup.StartedDate.ShouldNotBeNull();
         actionGroup.StartedDate.Value.ShouldBeInRange(now, DateTime.UtcNow);
+        actionGroup.Actions.First().Nodes.ShouldBe(nodes);
     }
 
     [TestMethod]
@@ -67,7 +68,7 @@ public class ActionGroupTests
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         var previousDate = DateTime.Today.AddDays(-10);
 
-        actionGroup.StartAction(actionGroup.Actions.First().CorrelationId);
+        actionGroup.StartAction(actionGroup.Actions.First().CorrelationId, []);
         actionGroup.StartedDate = previousDate;
 
         actionGroup.UpdateActionGroupState();
@@ -202,5 +203,21 @@ public class ActionGroupTests
         actionGroup.State.ShouldBe(ActionGroupState.Created);
         actionGroup.Actions.ShouldAllBe(a => a.Nodes.Length == 0);
         actionGroup.Actions.ShouldAllBe(a => a.State == ActionState.Created);
+    }
+
+    [TestMethod]
+    public void StartAction_ValidData_NodesAndDatesSet()
+    {
+        var now = DateTime.UtcNow;
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+
+        actionGroup.StartedDate.ShouldBeNull();
+        string[] nodes = ["source", "target"];
+        actionGroup.StartAction(actionGroup.Actions.First().CorrelationId, nodes);
+
+        actionGroup.State.ShouldBe(ActionGroupState.Started);
+        actionGroup.StartedDate.ShouldNotBeNull();
+        actionGroup.StartedDate.Value.ShouldBeInRange(now, DateTime.UtcNow);
+        actionGroup.Actions.First().Nodes.ShouldBe(nodes);
     }
 }

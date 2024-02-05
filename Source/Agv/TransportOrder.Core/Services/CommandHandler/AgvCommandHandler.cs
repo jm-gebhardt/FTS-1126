@@ -654,32 +654,32 @@ public class AgvCommandHandler :
 
         if (wasCharging && !isCharging)
         {
-            _logger.LogBatteryInformation(205, oldAgvStatus.CorrelationId, "Battery Fully Charged", $"Battery has finished charging at {newAgvStatus.BatteryCharge}%");
+            _logger.LogBatteryInformation(205, oldAgvStatus.CorrelationId, "Battery Fully Charged", $"Battery has finished charging at {Math.Round(newAgvStatus.BatteryCharge)}%");
         }
 
         if (!wasMaxChargedUp && isMaxChargedUp)
         {
-            _logger.LogBatteryInformation(204, oldAgvStatus.CorrelationId, "Maximum Charging Level", $"Battery has reached maximum charging level of {agvSettings.MaxChargeUp}%");
+            _logger.LogBatteryInformation(204, oldAgvStatus.CorrelationId, "Maximum Charging Level", $"Battery has reached maximum charging level {agvSettings.MaxChargeUp}%");
         }
 
         if (!wasMinChargedUp && isMinChargedUp)
         {
-            _logger.LogBatteryInformation(203, oldAgvStatus.CorrelationId, "Minimum Charging Level", $"Battery has reached minimum charging level of {agvSettings.MinChargeUp}%");
+            _logger.LogBatteryInformation(203, oldAgvStatus.CorrelationId, "Minimum Charging Level", $"Battery has reached minimum charging level {agvSettings.MinChargeUp}%");
         }
 
         if (!wasCritical && isCritical)
         {
-            _logger.LogBatteryInformation(200, oldAgvStatus.CorrelationId, "Critical Charging Level", $"Battery has reached critical charging level of {agvSettings.BatteryLevelCritical}%");
+            _logger.LogBatteryInformation(200, oldAgvStatus.CorrelationId, "Critical Charging Level", $"Battery has reached critical charging level {agvSettings.BatteryLevelCritical}%");
         }
 
         if (!wasLow && isLow)
         {
-            _logger.LogBatteryInformation(203, oldAgvStatus.CorrelationId, "Low Charging Level", $"Battery has reached low charging level of {agvSettings.BatteryLevelLow}");
+            _logger.LogBatteryInformation(203, oldAgvStatus.CorrelationId, "Low Charging Level", $"Battery has reached low charging level {agvSettings.BatteryLevelLow}%");
         }
 
         if (isCharging && !wasCharging)
         {
-            _logger.LogBatteryInformation(201, oldAgvStatus.CorrelationId, "Started Charging", $"Battery started charging at level of {newAgvStatus.BatteryCharge}");
+            _logger.LogBatteryInformation(201, oldAgvStatus.CorrelationId, "Started Charging", $"Battery started charging at level {Math.Round(newAgvStatus.BatteryCharge)}%");
         }
     }
 }

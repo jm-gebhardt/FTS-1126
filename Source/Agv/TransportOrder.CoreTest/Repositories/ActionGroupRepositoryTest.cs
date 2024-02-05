@@ -437,7 +437,7 @@ public class ActionGroupRepositoryTest
         var agv = AgvGenerator.GenerateIdleAgv();
         actionGroup.AssignedAgv = agv.CorrelationId;
 
-        actionGroup.StartAction(actionGroup.Actions.First().CorrelationId);
+        actionGroup.StartAction(actionGroup.Actions.First().CorrelationId, ["source", "way", "target"]);
         actionGroup.CompleteAction(actionGroup.Actions.First().CorrelationId);
 
         var subsequentAction = actionGroup.Actions.ElementAt(1);
@@ -457,7 +457,7 @@ public class ActionGroupRepositoryTest
         var agv = AgvGenerator.GenerateIdleAgv();
         actionGroup.AssignedAgv = agv.CorrelationId;
 
-        actionGroup.StartAction(actionGroup.Actions.First().CorrelationId);
+        actionGroup.StartAction(actionGroup.Actions.First().CorrelationId, ["source", "way", "target"]);
 
         var fixture = await new ActionGroupRepositoryTestFixture()
             .WithActionGroup(actionGroup)
