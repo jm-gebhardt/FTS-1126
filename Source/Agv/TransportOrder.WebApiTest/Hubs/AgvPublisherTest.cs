@@ -85,12 +85,12 @@ public class AgvPublisherTest
 
         fixture.MapperMock.Setup(m => m.Map<ActionGroupDto>(It.IsAny<Common.Messages.ActionGroups.ActionGroup>())).Returns(actionGroupDto);
 
-        await fixture.Publisher.SendAssignedActionGroupChangedAsync(correlationId, assignedActionGroup);
+        await fixture.Publisher.SendAssignedActionGroupChangedAsync(correlationId, assignedActionGroup.CorrelationId);
 
         fixture.HubContextMock.Verify(c => c.Clients.All.AssignedActionGroupChanged(It.IsAny<AssignedActionGroupDto>()), Times.Once);
         capturedDto.ShouldNotBeNull();
         capturedDto.CorrelationId.ShouldBe(correlationId);
-        capturedDto.ActionGroup.ShouldBe(actionGroupDto);
+        capturedDto.ActionGroupCorrelationId.ShouldBe(actionGroupDto.CorrelationId);
     }
 
     [TestMethod]

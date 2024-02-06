@@ -63,8 +63,8 @@ public interface IAgvPublisher
     /// Publishes the currently assigned action group of an Agv to all clients.
     /// </summary>
     /// <param name="correlationId">The correlationId of the agv</param>
-    /// <param name="assignedActionGroup">Can be an action group or null (if the last action group has completed).</param>
-    Task SendAssignedActionGroupChangedAsync(Guid correlationId, Common.Messages.ActionGroups.ActionGroup? assignedActionGroup);
+    /// <param name="assignedActionGroupCorrelationId">Can be an action group correlationId or null (if the last action group has completed).</param>
+    Task SendAssignedActionGroupChangedAsync(Guid correlationId, Guid? assignedActionGroupCorrelationId);
 
     /// <summary>
     /// Publishes the battery status of an Agv to all clients.

@@ -38,6 +38,6 @@ public class ActionGroupStartedConsumer : IConsumer<ActionGroupStarted>
     {
         var (actionGroup, correlationId, _) = context.Message;
         _logger.LogTrace("{MessageType} {CorrelationId} received", nameof(ActionGroupStarted), correlationId);
-        return _agvPublisher.SendAssignedActionGroupChangedAsync((Guid)actionGroup.AssignedAgv!, actionGroup);
+        return _agvPublisher.SendAssignedActionGroupChangedAsync(actionGroup.AssignedAgv!.Value, actionGroup.CorrelationId);
     }
 }
