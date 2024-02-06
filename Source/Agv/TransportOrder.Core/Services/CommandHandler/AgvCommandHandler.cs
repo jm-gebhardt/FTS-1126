@@ -54,7 +54,8 @@ public class AgvCommandHandler :
     IConsumer<HandleAgvActionStartFailure>,
     IConsumer<HandleActionCompletion>,
     IConsumer<PrepareAgvForStartingAction>,
-    IConsumer<UpdateCargo>
+    IConsumer<UpdateCargo>,
+    IConsumer<ResetOfflineWatchdog>
 {
     private readonly ILogger<AgvCommandHandler> _logger;
     private readonly ISemaphoreProvider<IAgvsSemaphore> _agvsSemaphore;
@@ -538,6 +539,16 @@ public class AgvCommandHandler :
         }
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
         _logger.LogAgvInformation(310, agvCorrelationId, "Cargo Updated", $"AGV {agv.SerialNumber} cargo updated");
+    }
+
+    /// <summary>
+    /// Handles the <see cref="ResetOfflineWatchdog"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<ResetOfflineWatchdog> context)
+    {
+        var agv = await _agvDb.Agvs.GetAgvAsync(context.Message.CorrelationId);
+        await ResetOfflineWatchDog(context, agv);
+        await _agvDb.Agvs.UpdateAgvAsync(agv);
     }
 
     private async Task<Domain.Models.Agv.Agv?> TryGetAgv(Guid agvCorrelationId)

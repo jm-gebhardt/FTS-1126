@@ -5,6 +5,7 @@ using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
 using Gebhardt.StoreWare.Agv.Common.MassTransit;
 using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.CmdOptions;
+using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.BackgroundServices;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
@@ -90,6 +91,7 @@ public static class CoreHostBuilderExtensions
 
     private static void RegisterAgvServices(IServiceCollection services)
     {
+        services.AddHostedService<OfflineWatchdogInitializer>();
         // Actions
         services.AddTransient<IChooseAgvActionGroupService, ShortestRouteChooser>();
 

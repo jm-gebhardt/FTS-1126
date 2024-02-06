@@ -29,7 +29,7 @@ try
         .WithParsed(productionOptions =>
         {
             hostBuilder = GebhardtStartup.CreateHostBuilder(args)
-                .AddMassTransit(initialLogger, TransportOrderDbContext.ConfigSectionName, quartzSchedulerName, quartzSchedulerId, quartzQueueName)
+                .AddMassTransit(initialLogger, quartzSchedulerName, quartzSchedulerId, quartzQueueName)
                 .AddTransportOrderCore(productionOptions);
         });
 
