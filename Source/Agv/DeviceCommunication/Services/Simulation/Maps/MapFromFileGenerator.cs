@@ -12,13 +12,20 @@ public class MapFromFileGenerator : MapGeneratorBase
 {
     private string? _filePath;
     private string? _fileName;
+    private readonly string _directoryPath;
+
+    /// <inheritdoc cref="MapFromFileGenerator"/>
+    /// <param name="directoryPath">The full path to the directory where we can search for the images.</param>
+    public MapFromFileGenerator(string directoryPath)
+    {
+        _directoryPath = directoryPath;
+    }
 
     private string GetFilePath(string mapName)
     {
-        string directoryPath = Path.Combine(AppContext.BaseDirectory, "Resources", "BackgroundImages");
         string searchPattern = $"{mapName}*.png";
-        
-        string[] files = Directory.GetFiles(directoryPath, searchPattern);
+
+        string[] files = Directory.GetFiles(_directoryPath, searchPattern);
         switch (files.Length)
         {
             case 0:

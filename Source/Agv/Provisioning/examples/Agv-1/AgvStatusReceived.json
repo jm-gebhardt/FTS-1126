@@ -1,0 +1,17 @@
+{
+  "CorrelationId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+  "SerialNumber": "Agv-1",
+  "AgvStatus": {
+    "CorrelationId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "OrderId": null,
+    "Busy": false,
+    "Automatic": true,
+    "BatteryCharge": 74.98,
+    "Charging": false,
+    "BatteryVoltage": 48.034358978271484,
+    "BatteryCurrent": -2.069389820098877,
+    "BatteryTemperature": 19.702510833740234,
+    "Disturbed": false,
+    "LastNodeId": "D-Saw"
+  }
+}

@@ -226,3 +226,34 @@ To properly align the map graphic with the graph, the scaling factor, x-offset, 
 
 - In cases where these values are not defined in the filename, such as with a file named `stations.png`, default values are used: upscale factor (`1`), x-offset (`0`), and y-offset (`0`).
 - If no image file is found for the specified map name, the background image is generated automatically.
+
+# Provisioning
+For provisioning, you need a fully running system.
+You need some environment variables to be set, e.g. RabbitMQ connection.
+The data is loaded from the data folder, but the path can be specified by IConfiguration.
+You find an example structure in the Provisioning/examples/ folder.
+
+### Agvs
+To provision an Agv, you must store the desired data under data\{AgvName}\:
+- AgvStatusReceived.json
+- AgvGraphReceived.json
+- AgvData.json
+  Each file is optional. If it is found, it is seeded, otherwise it is skipped.
+  For more Agvs, just create another folder with the same structure.
+
+### Graph and Maps
+For the Map and Graph, you have to place the following files under data\:
+- GraphAndMap.json
+- Map image as PNG
+
+#### Map Alignment
+To properly align the map graphic with the graph, the scaling factor, x-offset, and y-offset need to be manually determined and then encoded into the filename.
+he structure of the filename should follow this pattern:
+`mapName_scaleUp_xOffset_yOffset.png`
+
+**Example**
+- Filename: `stations_1.2_-10_-22.png`
+- Name of the map: `stations`
+- Upscale factor: `1.2` (greater than the graph scale)
+- x-offset: `-10` (units in the graph coordinate system)
+- y-offset: `-22` (units in the graph coordinate system)

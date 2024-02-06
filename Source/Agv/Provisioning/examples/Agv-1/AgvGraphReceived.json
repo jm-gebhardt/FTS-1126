@@ -1,0 +1,865 @@
+{
+  "CorrelationId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+  "SerialNumber": "Agv-1",
+  "Graph": {
+    "CorrelationId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "Nodes": [
+      {
+        "Id": "Park-1",
+        "Type": 5,
+        "X": 19.375,
+        "Y": 43.125,
+        "Z": 0.0,
+        "Theta": 4.712389
+      },
+      {
+        "Id": "Park-2",
+        "Type": 5,
+        "X": 33.125,
+        "Y": 43.125,
+        "Z": 0.0,
+        "Theta": 1.5707964
+      },
+      {
+        "Id": "Park-3",
+        "Type": 5,
+        "X": 19.375,
+        "Y": 34.375,
+        "Z": 0.0,
+        "Theta": 4.712389
+      },
+      {
+        "Id": "Park-4",
+        "Type": 5,
+        "X": 31.875,
+        "Y": 34.375,
+        "Z": 0.0,
+        "Theta": 1.5707964
+      },
+      {
+        "Id": "Park-5",
+        "Type": 5,
+        "X": 19.375,
+        "Y": 29.375,
+        "Z": 0.0,
+        "Theta": 4.712389
+      },
+      {
+        "Id": "Park-6",
+        "Type": 5,
+        "X": 31.875,
+        "Y": 29.375,
+        "Z": 0.0,
+        "Theta": 1.5707964
+      },
+      {
+        "Id": "Charger-0",
+        "Type": 1,
+        "X": 46.875,
+        "Y": 44.375,
+        "Z": 0.0,
+        "Theta": 0.0
+      },
+      {
+        "Id": "Charger-1",
+        "Type": 1,
+        "X": 46.875,
+        "Y": 39.375,
+        "Z": 0.0,
+        "Theta": 1.5707964
+      },
+      {
+        "Id": "Charger-2",
+        "Type": 1,
+        "X": 46.875,
+        "Y": 31.875,
+        "Z": 0.0,
+        "Theta": 1.5707964
+      },
+      {
+        "Id": "Charger-3",
+        "Type": 1,
+        "X": 46.875,
+        "Y": 24.375,
+        "Z": 0.0,
+        "Theta": 1.5707964
+      },
+      {
+        "Id": "D-Paint",
+        "Type": 3,
+        "X": 93.295,
+        "Y": 59.375,
+        "Z": 0.0,
+        "Theta": 1.5707964
+      },
+      {
+        "Id": "D-Press",
+        "Type": 3,
+        "X": 93.295,
+        "Y": 68.125,
+        "Z": 0.0,
+        "Theta": 1.5707964
+      },
+      {
+        "Id": "D-Saw",
+        "Type": 3,
+        "X": 93.17,
+        "Y": 44.375,
+        "Z": 0.0,
+        "Theta": 1.5707964
+      },
+      {
+        "Id": "P-Drill",
+        "Type": 2,
+        "X": 14.375,
+        "Y": 68.125,
+        "Z": 0.0,
+        "Theta": 4.712389
+      },
+      {
+        "Id": "P-Grinder",
+        "Type": 2,
+        "X": 14.375,
+        "Y": 50.625,
+        "Z": 0.0,
+        "Theta": 4.712389
+      },
+      {
+        "Id": "P-Milling",
+        "Type": 2,
+        "X": 14.375,
+        "Y": 59.375,
+        "Z": 0.0,
+        "Theta": 4.712389
+      },
+      {
+        "Id": "PD-QA",
+        "Type": 4,
+        "X": 92.965,
+        "Y": 26.7425,
+        "Z": 0.0,
+        "Theta": 1.2810717
+      },
+      {
+        "Id": "WP-0009",
+        "Type": 0,
+        "X": 39.375,
+        "Y": 68.125,
+        "Z": 0.0,
+        "Theta": 0.0
+      },
+      {
+        "Id": "WP-0010",
+        "Type": 0,
+        "X": 64.375,
+        "Y": 68.125,
+        "Z": 0.0,
+        "Theta": 0.0
+      },
+      {
+        "Id": "WP-0011",
+        "Type": 0,
+        "X": 88.325,
+        "Y": 68.125,
+        "Z": 0.0,
+        "Theta": 0.0
+      },
+      {
+        "Id": "WP-0012",
+        "Type": 0,
+        "X": 21.875,
+        "Y": 68.125,
+        "Z": 0.0,
+        "Theta": 0.0
+      },
+      {
+        "Id": "WP-0013",
+        "Type": 0,
+        "X": 21.875,
+        "Y": 59.375,
+        "Z": 0.0,
+        "Theta": 0.0
+      },
+      {
+        "Id": "WP-0014",
+        "Type": 0,
+        "X": 33.125,
+        "Y": 59.375,
+        "Z": 0.0,
+        "Theta": 0.0
+      },
+      {
+        "Id": "WP-0015",
+        "Type": 0,
+        "X": 76.875,
+        "Y": 59.375,
+        "Z": 0.0,
+        "Theta": 0.0
+      },
+      {
+        "Id": "WP-0016",
+        "Type": 0,
+        "X": 88.325,
+        "Y": 59.375,
+        "Z": 0.0,
+        "Theta": 0.0
+      },
+      {
+        "Id": "WP-0017",
+        "Type": 0,
+        "X": 88.2,
+        "Y": 44.375,
+        "Z": 0.0,
+        "Theta": 0.0
+      },
+      {
+        "Id": "WP-0018",
+        "Type": 0,
+        "X": 46.875,
+        "Y": 49.375,
+        "Z": 0.0,
+        "Theta": 0.0
+      },
+      {
+        "Id": "WP-0022",
+        "Type": 0,
+        "X": 40.625,
+        "Y": 39.375,
+        "Z": 0.0,
+        "Theta": 0.0
+      },
+      {
+        "Id": "WP-0023",
+        "Type": 0,
+        "X": 40.625,
+        "Y": 31.875,
+        "Z": 0.0,
+        "Theta": 0.0
+      },
+      {
+        "Id": "WP-0024",
+        "Type": 0,
+        "X": 40.625,
+        "Y": 24.375,
+        "Z": 0.0,
+        "Theta": 0.0
+      },
+      {
+        "Id": "WP-0028",
+        "Type": 0,
+        "X": 25.625,
+        "Y": 34.375,
+        "Z": 0.0,
+        "Theta": 0.0
+      },
+      {
+        "Id": "WP-0029",
+        "Type": 0,
+        "X": 25.625,
+        "Y": 43.125,
+        "Z": 0.0,
+        "Theta": 0.0
+      },
+      {
+        "Id": "WP-0030",
+        "Type": 0,
+        "X": 25.625,
+        "Y": 29.375,
+        "Z": 0.0,
+        "Theta": 0.0
+      },
+      {
+        "Id": "WP-0032",
+        "Type": 0,
+        "X": 21.875,
+        "Y": 50.625,
+        "Z": 0.0,
+        "Theta": 0.0
+      },
+      {
+        "Id": "WP-0123",
+        "Type": 0,
+        "X": 88.325,
+        "Y": 28.125,
+        "Z": 0.0,
+        "Theta": 0.0
+      }
+    ],
+    "Edges": [
+      {
+        "Id": "2ac260fa-f0b0-25ac-fd8d-2f2e1717ac25",
+        "FromNodeId": "WP-0029",
+        "ToNodeId": "Park-1",
+        "Length": 6.25,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "d7141ed5-52a1-350b-6985-382771ae9c4b",
+        "FromNodeId": "Park-1",
+        "ToNodeId": "WP-0029",
+        "Length": 6.25,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "01bb4ec0-6efb-d96c-a78b-631986f574b8",
+        "FromNodeId": "WP-0028",
+        "ToNodeId": "Park-3",
+        "Length": 6.25,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "32064658-ee1a-65e7-b9ed-4a24ab9906b5",
+        "FromNodeId": "Park-3",
+        "ToNodeId": "WP-0028",
+        "Length": 6.25,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "05357af2-4eab-eb56-59b2-b64185c81d1f",
+        "FromNodeId": "WP-0029",
+        "ToNodeId": "Park-2",
+        "Length": 7.5,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "6a708c93-6f41-5ead-040f-508bbbccbca0",
+        "FromNodeId": "Park-2",
+        "ToNodeId": "WP-0029",
+        "Length": 7.5,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "1dc3f84c-9210-c8fe-e033-864a8ee6e190",
+        "FromNodeId": "WP-0028",
+        "ToNodeId": "Park-4",
+        "Length": 6.25,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "ab4abf53-c6f0-18d6-28a5-45362f2a40dd",
+        "FromNodeId": "Park-4",
+        "ToNodeId": "WP-0028",
+        "Length": 6.25,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "87bdc944-7bfe-4002-2808-49ab69813cd6",
+        "FromNodeId": "WP-0030",
+        "ToNodeId": "Park-5",
+        "Length": 6.25,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "9e556f67-bdc7-3434-10b3-01d71f6dd3f6",
+        "FromNodeId": "Park-5",
+        "ToNodeId": "WP-0030",
+        "Length": 6.25,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "d6fca2b6-f8fd-e662-185b-a46697ddad42",
+        "FromNodeId": "WP-0030",
+        "ToNodeId": "Park-6",
+        "Length": 6.25,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "d02ad1d7-55fc-e054-02b8-3e484a4a7f46",
+        "FromNodeId": "Park-6",
+        "ToNodeId": "WP-0030",
+        "Length": 6.25,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "f85a047c-889a-41f0-5be4-df0cebd5808e",
+        "FromNodeId": "WP-0009",
+        "ToNodeId": "WP-0010",
+        "Length": 25.0,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "5f777840-1e2f-66de-67c8-0544b65143cf",
+        "FromNodeId": "WP-0010",
+        "ToNodeId": "WP-0011",
+        "Length": 23.949996948242188,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "96f1021d-d21d-b585-a1b3-0f2801cca318",
+        "FromNodeId": "WP-0010",
+        "ToNodeId": "WP-0015",
+        "Length": 15.258194923400879,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "ac5e9966-b20e-f0a9-0370-8629708db4c9",
+        "FromNodeId": "WP-0011",
+        "ToNodeId": "WP-0016",
+        "Length": 8.75,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "6de9bf2b-0148-7b04-2650-ef987695cf1a",
+        "FromNodeId": "WP-0012",
+        "ToNodeId": "WP-0009",
+        "Length": 17.5,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "1e19b128-6a46-785c-97df-93fb9586cc29",
+        "FromNodeId": "WP-0013",
+        "ToNodeId": "WP-0009",
+        "Length": 21.191648483276367,
+        "Variant": 2,
+        "VariantParameters": [
+          {
+            "Scalar": null,
+            "X": 22.75,
+            "Y": 67.25,
+            "IsScalar": false,
+            "IsPoint": true
+          }
+        ]
+      },
+      {
+        "Id": "ec0e46be-1600-2866-8909-a5928b9728c1",
+        "FromNodeId": "WP-0013",
+        "ToNodeId": "WP-0012",
+        "Length": 8.75,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "6e729cc2-a589-037c-464a-b3534707ee3a",
+        "FromNodeId": "WP-0014",
+        "ToNodeId": "WP-0013",
+        "Length": 11.25,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "edab6792-8054-e865-d703-9bb21dd817c7",
+        "FromNodeId": "WP-0014",
+        "ToNodeId": "WP-0029",
+        "Length": 40.875,
+        "Variant": 4,
+        "VariantParameters": [
+          {
+            "Scalar": null,
+            "X": 32.25,
+            "Y": 50.0,
+            "IsScalar": false,
+            "IsPoint": true
+          }
+        ]
+      },
+      {
+        "Id": "cf0f2d24-2c4a-43c3-af1b-099cde1459fc",
+        "FromNodeId": "WP-0014",
+        "ToNodeId": "WP-0032",
+        "Length": 15.538732528686523,
+        "Variant": 2,
+        "VariantParameters": [
+          {
+            "Scalar": null,
+            "X": 31.375,
+            "Y": 51.125,
+            "IsScalar": false,
+            "IsPoint": true
+          }
+        ]
+      },
+      {
+        "Id": "974c725c-a7d9-a177-45b9-41c351e4f9f8",
+        "FromNodeId": "WP-0015",
+        "ToNodeId": "WP-0014",
+        "Length": 43.75,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "dcd1a4d3-2d3f-eba1-22b1-254fc8d10f1c",
+        "FromNodeId": "WP-0015",
+        "ToNodeId": "WP-0017",
+        "Length": 15.90999984741211,
+        "Variant": 4,
+        "VariantParameters": [
+          {
+            "Scalar": null,
+            "X": 76.875,
+            "Y": 51.875,
+            "IsScalar": false,
+            "IsPoint": true
+          },
+          {
+            "Scalar": null,
+            "X": 88.2,
+            "Y": 51.875,
+            "IsScalar": false,
+            "IsPoint": true
+          }
+        ]
+      },
+      {
+        "Id": "f3253b00-38be-40a5-3b79-ac23b3b20836",
+        "FromNodeId": "WP-0015",
+        "ToNodeId": "WP-0018",
+        "Length": 33.64433288574219,
+        "Variant": 2,
+        "VariantParameters": [
+          {
+            "Scalar": null,
+            "X": 47.625,
+            "Y": 58.625,
+            "IsScalar": false,
+            "IsPoint": true
+          }
+        ]
+      },
+      {
+        "Id": "9973a4d2-8415-3729-6997-e3aaa9bbd47e",
+        "FromNodeId": "WP-0016",
+        "ToNodeId": "WP-0015",
+        "Length": 11.449996948242188,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "d22c5ee3-568f-e6fe-3388-3c5b82e6801f",
+        "FromNodeId": "WP-0017",
+        "ToNodeId": "WP-0018",
+        "Length": 42.34010696411133,
+        "Variant": 3,
+        "VariantParameters": [
+          {
+            "Scalar": null,
+            "X": 80.0,
+            "Y": 52.0,
+            "IsScalar": false,
+            "IsPoint": true
+          },
+          {
+            "Scalar": null,
+            "X": 54.375,
+            "Y": 45.0,
+            "IsScalar": false,
+            "IsPoint": true
+          }
+        ]
+      },
+      {
+        "Id": "d7b6d475-2f04-6aae-1bc3-271158a95a04",
+        "FromNodeId": "WP-0123",
+        "ToNodeId": "WP-0017",
+        "Length": 16.25048065185547,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "09624da7-d240-5fc7-41e9-03131c7d245b",
+        "FromNodeId": "WP-0017",
+        "ToNodeId": "WP-0123",
+        "Length": 16.25048065185547,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "a762a637-092b-9cd2-3072-67dbd01cceb8",
+        "FromNodeId": "WP-0018",
+        "ToNodeId": "WP-0014",
+        "Length": 17.0,
+        "Variant": 1,
+        "VariantParameters": [
+          {
+            "Scalar": 1.5707963705062866,
+            "X": null,
+            "Y": null,
+            "IsScalar": true,
+            "IsPoint": false
+          },
+          {
+            "Scalar": 3.375,
+            "X": null,
+            "Y": null,
+            "IsScalar": true,
+            "IsPoint": false
+          }
+        ]
+      },
+      {
+        "Id": "d7cd990a-7782-417d-d022-5aca820f3c07",
+        "FromNodeId": "WP-0018",
+        "ToNodeId": "WP-0022",
+        "Length": 13.021474838256836,
+        "Variant": 2,
+        "VariantParameters": [
+          {
+            "Scalar": null,
+            "X": 40.625,
+            "Y": 48.4,
+            "IsScalar": false,
+            "IsPoint": true
+          }
+        ]
+      },
+      {
+        "Id": "a295f53b-e774-65bd-9571-9724bb9ff8eb",
+        "FromNodeId": "WP-0022",
+        "ToNodeId": "WP-0023",
+        "Length": 7.5,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "60222ad4-1e87-4714-964e-2426492419e3",
+        "FromNodeId": "WP-0023",
+        "ToNodeId": "WP-0024",
+        "Length": 7.5,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "426213ce-9b58-f6ce-dd51-7892e6045000",
+        "FromNodeId": "WP-0024",
+        "ToNodeId": "WP-0030",
+        "Length": 25.770000457763672,
+        "Variant": 4,
+        "VariantParameters": [
+          {
+            "Scalar": null,
+            "X": 31.25,
+            "Y": 25.125,
+            "IsScalar": false,
+            "IsPoint": true
+          }
+        ]
+      },
+      {
+        "Id": "49a87af3-e0b8-0126-a920-ee497e4afaa4",
+        "FromNodeId": "WP-0028",
+        "ToNodeId": "WP-0029",
+        "Length": 8.75,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "e3b4df3c-0312-6db4-a62a-b7dbaca26f83",
+        "FromNodeId": "WP-0029",
+        "ToNodeId": "WP-0032",
+        "Length": 8.385254859924316,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "e890a216-fd04-1be7-8d46-42a2a84167cb",
+        "FromNodeId": "WP-0030",
+        "ToNodeId": "WP-0028",
+        "Length": 5.0,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "1fc35bbb-74a8-16ea-4b95-c3f00cb85fc0",
+        "FromNodeId": "WP-0032",
+        "ToNodeId": "WP-0013",
+        "Length": 8.75,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "8dee5ee1-8611-a7fa-ff17-7ac56c7a3e8f",
+        "FromNodeId": "WP-0018",
+        "ToNodeId": "Charger-0",
+        "Length": 5.0,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "5422f67b-3de1-5ee0-1319-d7d81a674b14",
+        "FromNodeId": "Charger-0",
+        "ToNodeId": "WP-0018",
+        "Length": 5.0,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "0eb213f2-3d1e-8eb4-8e03-0e5d408e982c",
+        "FromNodeId": "WP-0022",
+        "ToNodeId": "Charger-1",
+        "Length": 6.25,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "b58c22e3-f69e-99c4-fdf8-7457b4ae708e",
+        "FromNodeId": "Charger-1",
+        "ToNodeId": "WP-0022",
+        "Length": 6.25,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "a917004f-9168-e6e4-4e9d-779257d4e93d",
+        "FromNodeId": "WP-0023",
+        "ToNodeId": "Charger-2",
+        "Length": 6.25,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "edffc4cb-2f59-7e6d-fb4e-c29ef9720abc",
+        "FromNodeId": "Charger-2",
+        "ToNodeId": "WP-0023",
+        "Length": 6.25,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "d5162fda-8175-43e0-b094-5d0c6e93e83a",
+        "FromNodeId": "WP-0024",
+        "ToNodeId": "Charger-3",
+        "Length": 6.25,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "ef7b76d6-c6bd-e095-bdce-28d12c874653",
+        "FromNodeId": "Charger-3",
+        "ToNodeId": "WP-0024",
+        "Length": 6.25,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "bba18df4-b95d-14da-67bb-56b4d7446ea8",
+        "FromNodeId": "WP-0012",
+        "ToNodeId": "P-Drill",
+        "Length": 7.5,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "186811e1-c6c4-3415-caa3-f20b4eea6aef",
+        "FromNodeId": "P-Drill",
+        "ToNodeId": "WP-0012",
+        "Length": 7.5,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "15a964f7-a1fa-4920-0840-2c1d5ea706dd",
+        "FromNodeId": "WP-0013",
+        "ToNodeId": "P-Milling",
+        "Length": 7.5,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "95900018-1dda-1abf-436e-c1f0d0aebd07",
+        "FromNodeId": "P-Milling",
+        "ToNodeId": "WP-0013",
+        "Length": 7.5,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "eb8da009-0c47-e37b-fb5b-369ee0a22945",
+        "FromNodeId": "WP-0032",
+        "ToNodeId": "P-Grinder",
+        "Length": 7.5,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "49779dff-f369-69f8-abe2-30a32458e3a0",
+        "FromNodeId": "P-Grinder",
+        "ToNodeId": "WP-0032",
+        "Length": 7.5,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "a6f73fa0-dbb9-53d5-6530-b6f5ee565965",
+        "FromNodeId": "WP-0011",
+        "ToNodeId": "D-Press",
+        "Length": 4.970001220703125,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "ae1a219e-f3e0-a543-d365-223e7e9f802b",
+        "FromNodeId": "D-Press",
+        "ToNodeId": "WP-0011",
+        "Length": 4.970001220703125,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "77e0990f-bc3c-72a5-c591-3ce464564a77",
+        "FromNodeId": "WP-0017",
+        "ToNodeId": "D-Saw",
+        "Length": 4.970001220703125,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "ad951c67-8d43-d0f7-899b-7b47003ff36d",
+        "FromNodeId": "D-Saw",
+        "ToNodeId": "WP-0017",
+        "Length": 4.970001220703125,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "a8e0ee4d-5a49-1890-4fda-3cdafae3fe3a",
+        "FromNodeId": "WP-0016",
+        "ToNodeId": "D-Paint",
+        "Length": 4.970001220703125,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "0771d832-9867-c5f8-9659-f41b5f2a6bc2",
+        "FromNodeId": "D-Paint",
+        "ToNodeId": "WP-0016",
+        "Length": 4.970001220703125,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "02480165-5af0-13b0-7847-9005cbc90fd3",
+        "FromNodeId": "WP-0123",
+        "ToNodeId": "PD-QA",
+        "Length": 4.841580390930176,
+        "Variant": 0,
+        "VariantParameters": []
+      },
+      {
+        "Id": "82830f5d-3662-e6e2-dec5-5b291c5d5898",
+        "FromNodeId": "PD-QA",
+        "ToNodeId": "WP-0123",
+        "Length": 4.841580390930176,
+        "Variant": 0,
+        "VariantParameters": []
+      }
+    ],
+    "Usability": 0
+  }
+}

@@ -42,13 +42,13 @@ public abstract class GraphGeneratorBase : IGraphGenerator
     /// <returns></returns>
     protected virtual IEnumerable<Map> GenerateMapsBasedOnGlobalGraph(Graph globalGraph)
     {
-        const string allMapName = "Global";
+        const string globalMapName = "Global";
         var graph1 = new Graph
         {
             Nodes = globalGraph.Nodes,
             Edges = globalGraph.Edges
         };
-        yield return MapGenerator.Generate(allMapName.ToGuid(), allMapName, graph1);
+        yield return MapGenerator.Generate(globalMapName.ToGuid(), globalMapName, graph1);
     }
 
     /// <inheritdoc cref="GraphGeneratorBase"/>

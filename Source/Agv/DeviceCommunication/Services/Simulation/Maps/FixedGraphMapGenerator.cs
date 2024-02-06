@@ -15,7 +15,7 @@ public class FixedGraphMapGenerator : IMapGenerator
     /// <inheritdoc />
     public Map Generate(Guid mapId, string mapName, IGraph graph)
     {
-        IMapGenerator generator = new MapFromFileGenerator();
+        IMapGenerator generator = new MapFromFileGenerator(Path.Combine(AppContext.BaseDirectory, "Resources", "BackgroundImages"));
         if (!generator.CanBeUsed(mapName))
         {
             generator = new GeneratedMapGenerator();
