@@ -6,7 +6,7 @@ using MassTransit;
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 
 /// <summary>
-/// all encompassing state of the AGV.
+/// All encompassing state of the AGV.
 /// </summary>
 [PublicAPI]
 [EntityName("amq.topic")]
@@ -35,7 +35,7 @@ public record MqttState
     public List<MqttActionState>? ActionStates { get; set; }
 
     /// <summary>
-    /// The AGVs position
+    /// The AGVs position.
     /// </summary>
     public MqttAgvPosition? AgvPosition { get; set; }
 
@@ -103,7 +103,7 @@ public record MqttState
     public List<MqttLoad>? Loads { get; set; }
 
     /// <summary>
-    /// Manufacturer of the AGV
+    /// Manufacturer of the AGV.
     /// </summary>
     public string? Manufacturer { get; set; }
 
@@ -122,7 +122,7 @@ public record MqttState
     /// <summary>
     /// Current operating mode of the AGV.
     /// </summary>
-    public MqttOperatingMode MqttOperatingMode { get; set; }
+    public MqttOperatingMode OperatingMode { get; set; }
 
     /// <summary>
     /// Order Update Identification to identify that an order update has been accepted by the
@@ -138,7 +138,7 @@ public record MqttState
     public bool? Paused { get; set; }
 
     /// <summary>
-    /// Object that holds information about the safety status
+    /// Object that holds information about the safety status.
     /// </summary>
     public MqttSafetyState? SafetyState { get; set; }
 
@@ -148,7 +148,7 @@ public record MqttState
     public DateTimeOffset Timestamp { get; set; }
 
     /// <summary>
-    /// The AGVs velocity in vehicle coordinates
+    /// The AGVs velocity in vehicle coordinates.
     /// </summary>
     public MqttVelocity? Velocity { get; set; }
 
@@ -165,7 +165,7 @@ public record MqttState
     public string? ZoneSetId { get; set; }
 
     /// <summary>
-    /// Initializes a new instance of <see cref="MqttState"/>
+    /// Initializes a new instance of <see cref="MqttState"/>.
     /// </summary>
     public MqttState(string serialNumber, string orderId)
     {
@@ -175,7 +175,7 @@ public record MqttState
 }
 
 /// <summary>
-/// Handling the ActionState
+/// Handling the ActionState.
 /// </summary>
 [PublicAPI]
 public record MqttActionState
@@ -186,7 +186,7 @@ public record MqttActionState
     public string? ActionDescription { get; set; }
 
     /// <summary>
-    /// Unique actionId
+    /// Unique actionId.
     /// </summary>
     public string? ActionId { get; set; }
 
@@ -194,7 +194,7 @@ public record MqttActionState
     /// WAITING: waiting for trigger
     /// FAILED: action could not be performed.
     /// </summary>
-    public MqttActionStatus MqttActionStatus { get; set; }
+    public MqttActionStatus ActionStatus { get; set; }
 
     /// <summary>
     /// actionType of the action.
@@ -209,7 +209,7 @@ public record MqttActionState
 }
 
 /// <summary>
-/// The AGVs position
+/// The AGVs position.
 /// </summary>
 [PublicAPI]
 public record MqttAgvPosition
@@ -230,12 +230,12 @@ public record MqttAgvPosition
     public float? LocalizationScore { get; set; }
 
     /// <summary>
-    /// Short map description
+    /// Short map description.
     /// </summary>
     public string? MapDescription { get; set; }
 
     /// <summary>
-    /// Unique identifier of AGV map - not in GUID form
+    /// Unique identifier of AGV map - not in GUID form.
     /// </summary>
     public string? MapId { get; set; }
 
@@ -250,12 +250,12 @@ public record MqttAgvPosition
     public float Theta { get; set; }
 
     /// <summary>
-    /// X component of AGV position
+    /// X component of AGV position.
     /// </summary>
     public float X { get; set; }
 
     /// <summary>
-    /// Y component of AGV position
+    /// Y component of AGV position.
     /// </summary>
     public float Y { get; set; }
 }
@@ -367,7 +367,7 @@ public record MqttTrajectory
 }
 
 /// <summary>
-/// Handling the control points
+/// Handling the control points.
 /// </summary>
 [PublicAPI]
 public record MqttControlPoint
@@ -379,18 +379,18 @@ public record MqttControlPoint
     public float Weight { get; set; }
 
     /// <summary>
-    /// The x coordinate of the control point
+    /// The x coordinate of the control point.
     /// </summary>
     public float X { get; set; }
 
     /// <summary>
-    /// The y coordinate of the control point
+    /// The y coordinate of the control point.
     /// </summary>
     public float Y { get; set; }
 }
 
 /// <summary>
-/// Information related to processing errors
+/// Information related to processing errors.
 /// </summary>
 [PublicAPI]
 public record MqttError
@@ -407,7 +407,7 @@ public record MqttError
     public MqttErrorLevel ErrorLevel { get; set; }
 
     /// <summary>
-    /// List of above mentioned ErrorReferences
+    /// List of above-mentioned ErrorReferences.
     /// </summary>
     public List<MqttErrorReference>? ErrorReferences { get; set; }
 
@@ -425,34 +425,34 @@ public record MqttError
 public record MqttErrorReference
 {
     /// <summary>
-    /// Property for reference key
+    /// Property for reference key.
     /// </summary>
     public string? ReferenceKey { get; set; }
 
     /// <summary>
-    /// Property for reference value
+    /// Property for reference value.
     /// </summary>
     public string? ReferenceValue { get; set; }
 }
 
 /// <summary>
-/// 
+/// More agv information.
 /// </summary>
 [PublicAPI]
 public record MqttInformation
 {
     /// <summary>
-    /// Verbose description of error.
+    /// Verbose description of information.
     /// </summary>
     public string? InfoDescription { get; set; }
 
     /// <summary>
     /// Type of information
     /// </summary>
-    public MqttInfoLevel MqttInfoLevel { get; set; }
+    public MqttInfoLevel InfoLevel { get; set; }
 
     /// <summary>
-    /// List of above mentioned InfoReferences
+    /// List of above-mentioned InfoReferences
     /// </summary>
     public List<MqttInfoReference>? InfoReferences { get; set; }
 
@@ -470,12 +470,12 @@ public record MqttInformation
 public record MqttInfoReference
 {
     /// <summary>
-    /// Property for reference key
+    /// Property for reference key.
     /// </summary>
     public string? ReferenceKey { get; set; }
 
     /// <summary>
-    /// Property for reference value
+    /// Property for reference value.
     /// </summary>
     public string? ReferenceValue { get; set; }
 }
@@ -514,12 +514,12 @@ public record MqttLoad
     public string? LoadPosition { get; set; }
 
     /// <summary>
-    /// The type of the load
+    /// The type of the load.
     /// </summary>
     public string? LoadType { get; set; }
 
     /// <summary>
-    /// Weight of load in kg
+    /// Weight of load in kg.
     /// </summary>
     public float? Weight { get; set; }
 }
@@ -533,22 +533,22 @@ public record MqttLoad
 public record MqttBoundingBoxReference
 {
     /// <summary>
-    /// Theta component of bounding box reference
+    /// Theta component of bounding box reference.
     /// </summary>
     public float? Theta { get; set; }
 
     /// <summary>
-    /// X component of bounding box reference
+    /// X component of bounding box reference.
     /// </summary>
     public float X { get; set; }
 
     /// <summary>
-    /// Y component of bounding box reference
+    /// Y component of bounding box reference.
     /// </summary>
     public float Y { get; set; }
 
     /// <summary>
-    /// Z component of bounding box reference
+    /// Z component of bounding box reference.
     /// </summary>
     public float Z { get; set; }
 }
@@ -578,18 +578,18 @@ public record MqttLoadDimensions
 }
 
 /// <summary>
-/// All information related to Node states
+/// All information related to Node states.
 /// </summary>
 [PublicAPI]
 public record MqttNodeState
 {
     /// <summary>
-    /// Verbose node description
+    /// Verbose node description.
     /// </summary>
     public string? NodeDescription { get; set; }
 
     /// <summary>
-    /// Unique node identification
+    /// Unique node identification.
     /// </summary>
     public string? NodeId { get; set; }
 
@@ -597,7 +597,7 @@ public record MqttNodeState
     /// Node position. The object is defined in chapter 5.4 Topic: Order (from master control to
     /// AGV).
     /// Optional:
-    /// Master control has this information. Can be sent additionally, e. g. for debugging
+    /// Master control has this information. Can be sent additionally, e.g. for debugging
     /// purposes.
     /// </summary>
     public MqttNodePosition? NodePosition { get; set; }
@@ -618,68 +618,68 @@ public record MqttNodeState
 /// Node position. The object is defined in chapter 5.4 Topic: Order (from master control to
 /// AGV).
 /// Optional:
-/// Master control has this information. Can be sent additionally, e. g. for debugging
+/// Master control has this information. Can be sent additionally, e.g. for debugging
 /// purposes.
 /// </summary>
 [PublicAPI]
 public record MqttNodePosition
 {
     /// <summary>
-    /// The id of the node in the map
+    /// The id of the node in the map.
     /// </summary>
     public string? MapId { get; set; }
 
     /// <summary>
-    /// Orientation of the node in the map
+    /// Orientation of the node in the map.
     /// </summary>
     public float Theta { get; set; }
 
     /// <summary>
-    /// X coordinate of the node in the map
+    /// X coordinate of the node in the map.
     /// </summary>
     public float X { get; set; }
 
     /// <summary>
-    /// Y coordinate of the node in the map
+    /// Y coordinate of the node in the map.
     /// </summary>
     public float Y { get; set; }
 }
 
 /// <summary>
-/// Object that holds information about the safety status
+/// Object that holds information about the safety status.
 /// </summary>
 [PublicAPI]
 public record MqttSafetyState
 {
     /// <summary>
-    /// autoAck, manual, remote, none
+    /// The stop mode: autoAck, manual, remote, none.
     /// </summary>
-    public MqttEStop MqttEStop { get; set; }
+    public MqttEStop EStop { get; set; }
 
     /// <summary>
-    /// Protective field violation
+    /// Protective field violation.
     /// </summary>
     public bool FieldViolation { get; set; }
 }
 
 /// <summary>
-/// The AGVs velocity in vehicle coordinates
+/// The AGVs velocity in vehicle coordinates.
 /// </summary>
 [PublicAPI]
 public record MqttVelocity
 {
     /// <summary>
-    /// The direction of the velocity vector
+    /// The direction of the velocity vector.
     /// </summary>
     public float? Omega { get; set; }
 
     /// <summary>
-    /// The x value of the velocity vector
+    /// The x value of the velocity vector.
     /// </summary>
     public float? Vx { get; set; }
 
     /// <summary>
-    /// The y value of the velocity vector
+    /// The y value of the velocity vector.
     /// </summary>
     public float? Vy { get; set; }
 }
@@ -722,7 +722,7 @@ public enum MqttErrorLevel
 }
 
 /// <summary>
-/// Type of information
+/// Type of information.
 /// </summary>
 [PublicAPI]
 public enum MqttInfoLevel

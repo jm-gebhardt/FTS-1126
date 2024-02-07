@@ -33,13 +33,13 @@
           "properties": {
             "function": {
               "type": "string",
-              "description": "The function of the station: Pick/Drop/Both/Charge/Park.",
+              "description": "The function of the station: PICK/DROP/BOTH/CHARGE/PARK.",
               "enum": [
-                "Pick",
-                "Drop",
-                "Both",
-                "Charge",
-                "Park"
+                "PICK",
+                "DROP",
+                "BOTH",
+                "CHARGE",
+                "PARK"
               ]
             },
             "identifier": {

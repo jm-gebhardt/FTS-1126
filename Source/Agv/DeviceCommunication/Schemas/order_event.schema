@@ -19,16 +19,16 @@
         },
         "OrderEventType": {
             "type": "string",
-            "description": "The type of the order event (Started/Picked/Completed/Cancelled/CancelFailed/Failed/Updated/UpdateFailed).",
+            "description": "The type of the order event (STARTED/PICKED/COMPLETED/CANCELED/CANCELFAILED/UPDATED/UPDATEFAILED/FAILED).",
             "enum": [
-                "Started",
-                "Picked",
-                "Completed",
-                "Cancelled",
-                "CancelFailed",
-                "Updated",
-                "UpdateFailed",
-                "Failed"
+                "STARTED",
+                "PICKED",
+                "COMPLETED",
+                "CANCELED",
+                "CANCELFAILED",
+                "UPDATED",
+                "UPDATEFAILED",
+                "FAILED"
             ]
         }
     },

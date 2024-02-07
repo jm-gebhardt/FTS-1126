@@ -121,20 +121,20 @@
                     "type": "integer",
                     "description": "The maximum allowed velocity on that edge [m/s]."
                 },
-                "EdgyType": {
+                "EdgeType": {
                     "type": "string",
-                    "description": "The edge type (Direct/Slanted/Bezier1/Bezier2/Polypath).",
+                    "description": "The edge type (DIRECT/SLANTED/BEZIER1/BEZIER2/POLYPATH).",
                     "enum": [
-                        "Direct",
-                        "Slanted",
-                        "Bezier1",
-                        "Bezier2",
-                        "Polypath"
+                        "DIRECT",
+                        "SLANTED",
+                        "BEZIER1",
+                        "BEZIER2",
+                        "POLYPATH"
                     ]
                 },
                 "ControlPoints": {
                     "type": "array",
-                    "description": "The list of control points (absolute locations). Bezier1 has one, Bezier2 has two and Slanted at least one control points.",
+                    "description": "The list of control points (absolute locations). BEZIER1 has one, BEZIER2 has two and SLANTED at least one control points.",
                     "items": [
                         {
                             "type": "object",
@@ -156,11 +156,11 @@
                 },
                 "ExitAngle": {
                     "type": "number",
-                    "description": "The exit angle of a curve of type 'Slanted'."
+                    "description": "The exit angle of a curve of type 'SLANTED'."
                 },
                 "ExitDistance": {
                     "type": "number",
-                    "description": "The exit distance of a curve of type 'Slanted'."
+                    "description": "The exit distance of a curve of type 'SLANTED'."
                 },
                 "Attributes": {
                     "type": "array",

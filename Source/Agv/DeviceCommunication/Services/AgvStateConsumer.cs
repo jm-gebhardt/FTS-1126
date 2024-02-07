@@ -149,7 +149,7 @@ public class AgvStateConsumer : IConsumer<MqttState>
 
         foreach (var actionState in message.ActionStates)
         {
-            switch (actionState.MqttActionStatus)
+            switch (actionState.ActionStatus)
             {
                 case MqttActionStatus.Failed: break;
                 case MqttActionStatus.Finished: break;
@@ -164,7 +164,7 @@ public class AgvStateConsumer : IConsumer<MqttState>
 
     private bool GetAutomatic(MqttState message)
     {
-        switch (message.MqttOperatingMode)
+        switch (message.OperatingMode)
         {
             case MqttOperatingMode.Automatic: return true;
             case MqttOperatingMode.Manual: return false;
@@ -189,7 +189,7 @@ public class AgvStateConsumer : IConsumer<MqttState>
     {
         if (message.SafetyState != null)
         {
-            if (message.SafetyState.MqttEStop != MqttEStop.None)
+            if (message.SafetyState.EStop != MqttEStop.None)
             {
                 return true;
             }

@@ -33,7 +33,7 @@ public class ExecuteMqttPublishTest
 
         using (fixture.TestHarness.Bus.ConnectPublishObserver(publishObserver))
         {
-            await fixture.TestHarness.Bus.PublishMqtt(new MqttState(serialNumber, orderId) { MqttOperatingMode = MqttOperatingMode.Automatic }, null);
+            await fixture.TestHarness.Bus.PublishMqtt(new MqttState(serialNumber, orderId) { OperatingMode = MqttOperatingMode.Automatic }, null);
 
             IPublishedMessage<MqttState> publishedMessage = publishObserver.Messages.Select<MqttState>().First();
 
@@ -41,7 +41,7 @@ public class ExecuteMqttPublishTest
             publishedMessage.Context.ContentType.ShouldBe(SystemTextJsonRawMessageSerializer.JsonContentType);
             publishedMessage.Context.Message.SerialNumber.ShouldBe(serialNumber);
             publishedMessage.Context.Message.OrderId.ShouldBe(orderId);
-            publishedMessage.Context.Message.MqttOperatingMode.ShouldBe(MqttOperatingMode.Automatic);
+            publishedMessage.Context.Message.OperatingMode.ShouldBe(MqttOperatingMode.Automatic);
         }
     }
 }

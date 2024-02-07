@@ -19,13 +19,13 @@
         },
         "OrderType": {
             "type": "string",
-            "description": "The type of the order (Pick/Drop/Transport/Move/Charge).",
+            "description": "The type of the order (PICK/DROP/TRANSPORT/MOVE/CHARGE).",
             "enum": [
-                "Pick",
-                "Drop",
-                "Transport",
-                "Move",
-                "Charge"
+                "PICK",
+                "DROP",
+                "TRANSPORT",
+                "MOVE",
+                "CHARGE"
             ]
         },
         "stations": {
