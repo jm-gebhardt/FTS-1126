@@ -15,6 +15,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Metrics;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
@@ -189,6 +190,7 @@ public class AgvCommandHandler :
         bool isReady = agv.IsReady;
 
         LogBatteryStates(oldStatus, agv.AgvStatus);
+        PublishMetrics(agv.AgvStatus);
 
         if (!wasReady && isReady)
         {
@@ -697,5 +699,14 @@ public class AgvCommandHandler :
         {
             _logger.LogBatteryInformation(201, oldAgvStatus.CorrelationId, "Started Charging", $"Battery started charging at level {Math.Round(newAgvStatus.BatteryCharge)}%");
         }
+    }
+
+    private void PublishMetrics(AgvStatus? agvStatus)
+    {
+        if (agvStatus == null)
+        {
+            return;
+        }
+        MetricCollector.BatteryChargeGauge.WithLabels(agvStatus.CorrelationId.ToString()).Set(agvStatus.BatteryCharge);
     }
 }
