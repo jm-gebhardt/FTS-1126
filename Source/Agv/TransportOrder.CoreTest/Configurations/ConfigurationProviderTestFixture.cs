@@ -127,7 +127,8 @@ public class ConfigurationProviderTestFixture
     /// </summary>
     public async Task SeedConfigurationTypesAsync()
     {
-        var dbConfigurationSeeder = _host.Services.GetRequiredService<DatabaseConfigurationSeeder<TransportOrderDbContext>>();
+        using var scope = _host.Services.CreateScope();
+        var dbConfigurationSeeder = scope.ServiceProvider.GetRequiredService<DatabaseConfigurationSeeder<TransportOrderDbContext>>();
         await dbConfigurationSeeder.SeedDefaultConfigurationAsync();
     }
 
