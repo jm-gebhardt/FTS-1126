@@ -197,6 +197,7 @@ public class ActionCommandHandlerTest
         (await fixture.TestHarness.Published.Any<ActionGroupCanceled>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<ActionGroupCancelFailed>()).ShouldBeFalse();
         (await fixture.TestHarness.Published.Any<AutomaticActionWithdrawn>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<ActionGroupChanged>()).ShouldBeTrue();
     }
 
     [TestMethod]
@@ -336,7 +337,7 @@ public class ActionCommandHandlerTest
         var parkAction = AgvActionGenerator.GenerateParkAction(parentId: actionGroupId, actionState: ActionState.Started);
         var actionGroup = new ActionGroup(actionGroupId,
             string.Empty,
-            new List<AgvAction> { parkAction },
+            new List<AgvAction> {parkAction},
             ActionGroupCreator.TransportOrder,
             createdDate: DateTime.UtcNow, assignedAgv: agv.CorrelationId);
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
@@ -388,7 +389,7 @@ public class ActionCommandHandlerTest
         var mapper = ActionCommandHandlerTestFixture.GetMapper();
         const string failureReason = "reason";
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
-        fixture.SetupValidationResult(new ValidationResult(new List<ValidationFailure> { new("propertyName", failureReason) }));
+        fixture.SetupValidationResult(new ValidationResult(new List<ValidationFailure> {new("propertyName", failureReason)}));
 
         await fixture.TestHarness.Bus.Publish(new QueueActionGroup(mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup), false));
 
@@ -407,7 +408,7 @@ public class ActionCommandHandlerTest
         var actionGroupInvalidEvent = fixture.TestHarness.Published.Select<ActionGroupInvalid>().First().Context.Message;
         actionGroupInvalidEvent.CorrelationId.ShouldBe(actionGroup.CorrelationId);
         actionGroupInvalidEvent.ActionGroup.State.ShouldBe(ActionGroupState.Invalid);
-        actionGroupInvalidEvent.ValidationErrors.ShouldBe(new List<string> { failureReason });
+        actionGroupInvalidEvent.ValidationErrors.ShouldBe(new List<string> {failureReason});
 
         (await fixture.TestHarness.Published.Any<StartActionCommand>()).ShouldBeFalse();
         (await fixture.TestHarness.Published.Any<ActionGroupStarted>()).ShouldBeFalse();
@@ -422,7 +423,7 @@ public class ActionCommandHandlerTest
         var mapper = ActionCommandHandlerTestFixture.GetMapper();
         const string failureReason = "reason";
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
-        fixture.SetupValidationResult(new ValidationResult(new List<ValidationFailure> { new("propertyName", failureReason) }));
+        fixture.SetupValidationResult(new ValidationResult(new List<ValidationFailure> {new("propertyName", failureReason)}));
 
         await fixture.TestHarness.Bus.Publish(new QueueActionGroup(mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup), true));
         (await fixture.ConsumerHarness.Consumed.Any<QueueActionGroup>()).ShouldBeTrue();
@@ -525,7 +526,7 @@ public class ActionCommandHandlerTest
         var agv = AgvGenerator.GenerateIdleAgv();
         const string parkNodeName = "Park-1";
 
-        var parkActions = new List<AgvAction> { AgvActionGenerator.GenerateParkAction(targetNodeId: parkNodeName) };
+        var parkActions = new List<AgvAction> {AgvActionGenerator.GenerateParkAction(targetNodeId: parkNodeName)};
         var parkActionGroup = AgvActionGenerator.GenerateActionGroup(parkActions);
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddAgv(agv)
@@ -547,7 +548,7 @@ public class ActionCommandHandlerTest
         var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: 20);
         const string parkNodeName = "Park-1";
 
-        var parkActions = new List<AgvAction> { AgvActionGenerator.GenerateParkAction(targetNodeId: parkNodeName) };
+        var parkActions = new List<AgvAction> {AgvActionGenerator.GenerateParkAction(targetNodeId: parkNodeName)};
         var parkActionGroup = AgvActionGenerator.GenerateActionGroup(parkActions);
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddAgv(agv)
@@ -570,7 +571,7 @@ public class ActionCommandHandlerTest
         agv.Lock();
         const string parkNodeName = "Park-1";
 
-        var parkActions = new List<AgvAction> { AgvActionGenerator.GenerateParkAction(targetNodeId: parkNodeName) };
+        var parkActions = new List<AgvAction> {AgvActionGenerator.GenerateParkAction(targetNodeId: parkNodeName)};
         var parkActionGroup = AgvActionGenerator.GenerateActionGroup(parkActions);
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddAgv(agv)

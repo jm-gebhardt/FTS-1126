@@ -218,7 +218,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         int maxDeviation = _simulateOptions.InitialBatteryChargeDeviation;
         int calculatedBatteryCharge = _simulateOptions.InitialBatteryCharge + Random.Shared.Next(-maxDeviation, maxDeviation + 1);
         const int safetyAgainstDeadBirth = 5;
-        int initialBatteryCharge = Math.Clamp(calculatedBatteryCharge, SimulatedAgvSaga.AliveChargeThreshold + safetyAgainstDeadBirth, (int)SimulatedAgvSaga.MaxCharge);
+        int initialBatteryCharge = Math.Clamp(calculatedBatteryCharge, SimulatedAgvSaga.AliveChargeThreshold + safetyAgainstDeadBirth, (int) SimulatedAgvSaga.MaxCharge);
         return initialBatteryCharge;
     }
     #endregion
@@ -365,7 +365,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         int interval = _simulateOptions.SimulationSpeed / requestsOnEdge;
         if (currentEdge != null)
         {
-            interval = (int)(currentEdge.EstimatedExitTime - currentEdge.InitialTurnFinishTime).TotalMilliseconds / requestsOnEdge;
+            interval = (int) (currentEdge.EstimatedExitTime - currentEdge.InitialTurnFinishTime).TotalMilliseconds / requestsOnEdge;
         }
 
         return Math.Clamp(interval, lowerBound, upperBound);
@@ -479,7 +479,10 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
                 var cargo = new Cargo(Guid.NewGuid(), agvCorrelationId, "Cargo 1", "default", new Point3D(0, 0, 0, 0), new Cuboid(100f, 200f, 50f), "top", 21);
                 cargos.Add(cargo);
             }
-            await context.Publish(new AgvLoadStatusReceived(agvCorrelationId, cargos));
+            if (action.ActionType is ActionType.Pick or ActionType.Drop)
+            {
+                await context.Publish(new AgvLoadStatusReceived(agvCorrelationId, cargos));
+            }
 
             await context.Publish(new ActionCompleted(action.CorrelationId));
         }
