@@ -14,11 +14,6 @@ public enum OrderEventType
     Started,
 
     /// <summary>
-    /// Pick for transport order completed
-    /// </summary>
-    Picked,
-
-    /// <summary>
     /// Transport order completed
     /// </summary>
     Completed,
