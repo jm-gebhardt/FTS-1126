@@ -9,6 +9,8 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Travel;
 /// </summary>
 public class AgvTravelSimulator
 {
+    private readonly List<GraphNode> _nodes = new();
+
     /// <summary>
     /// All edges of the agvs graph as <see cref="BaseEdge"/>.
     /// </summary>
@@ -72,6 +74,8 @@ public class AgvTravelSimulator
             Edges.Add(edge);
         }
 
+        _nodes = graph.Nodes.ToList();
+
         Position = position;
         AgvData = data!;
     }
@@ -89,19 +93,15 @@ public class AgvTravelSimulator
         double entryAngle = 0;
         BaseEdge? edge;
 
-        if (nodes.Count < 2)
+        // e.g. charge action
+        if (nodes.Count == 1)
         {
-            edge = Edges.Single(e => e.FromNodeId == nodes.Single());
-            edge.SetAngles(0, null, null);
-            edge.EstimateTravelTime(AgvData, 0, entryTime);
-            FollowingEdges.Add(edge);
-            CurrentEdge = FollowingEdges.FirstOrDefault();
-            CurrentNode = CurrentEdge?.SourceNode;
+            // CurrentEdge = FollowingEdges.FirstOrDefault();
+            CurrentEdge = null;
+            CurrentNode = _nodes.Single(e => e.Id == nodes.Single());
 
-            if (FollowingEdges.Any())
-            {
-                TravelDuration = FollowingEdges.Last().EstimatedExitTime - CurrentEdge!.EntryTime;
-            }
+            // already there
+            TravelDuration = TimeSpan.Zero;
             return;
         }
 
@@ -150,27 +150,23 @@ public class AgvTravelSimulator
             return;
         }
 
-        currentTime = currentTime > FollowingEdges.Last().EstimatedExitTime ?
-            FollowingEdges.Last().EstimatedExitTime :
-            currentTime;
+        // limit currentTime to the estimated exit time of the last edge, as the agv does not move further.
+        currentTime = currentTime > FollowingEdges.Last().EstimatedExitTime ? FollowingEdges.Last().EstimatedExitTime : currentTime;
         CurrentEdge = GetCurrentEdge(currentTime);
         double? progress = (currentTime - FollowingEdges.First().EntryTime) / TravelDuration;
-        var position = CurrentEdge.GetCurrentPosition(currentTime, AgvData, OrientationOnPreviousEdge);
-        float theta = position.Theta;
         CurrentNode = CurrentEdge.SourceNode;
-        Position = new AgvPosition(true, position.X, position.Y, position.Z, theta);
+        Position = CurrentEdge.GetCurrentPosition(currentTime, AgvData, OrientationOnPreviousEdge);
 
-        // look back at station
-        if (CurrentEdge.TargetNode.IsStation() && Math.Abs(progress!.Value - 1d) < double.Epsilon)
+        // Agv is at the end of the route
+        if (Math.Abs(progress!.Value - 1d) < double.Epsilon)
         {
-            theta -= (float)Math.PI;
+            float theta = Position.Theta;
+            // quick turn at station, as our Agv are not yet capable of reversing  
+            if (CurrentEdge.TargetNode.IsStation())
+            {
+                theta -= (float)Math.PI;
+            }
             CurrentNode = CurrentEdge.TargetNode;
-            Position = new AgvPosition(true, CurrentNode.X, CurrentNode.Y, CurrentNode.Z, theta);
-        }
-
-        // Do not move to waypoint if action is from/to pick-drop station or during charging
-        if (CurrentNode.IsStation() && FollowingEdges.Count == 1)
-        {
             Position = new AgvPosition(true, CurrentNode.X, CurrentNode.Y, CurrentNode.Z, theta);
         }
     }

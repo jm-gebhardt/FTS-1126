@@ -123,6 +123,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
 
         // we have no stations, so we just pick a random node
         var node = !stations.Any() ? graphNodes.ElementAt(Random.Shared.Next(0, graphNodes.Count)) : stations[Random.Shared.Next(0, stations.Count)];
+         
         SetPosition(node);
     }
 
