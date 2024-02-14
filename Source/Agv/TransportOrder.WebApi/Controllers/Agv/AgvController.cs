@@ -352,19 +352,21 @@ public class AgvController : Controller
     /// Move agv manually to a specific node. 
     /// </summary>
     /// <response code="200">Ok: The ActionGroup for the move was created and is going to be processed</response>
+    /// <response code="400">Target node does not exist.</response>
     /// <response code="404">Agv with given correlationId not found.</response>
     /// <returns>The CorrelationId of the created ActionGroup</returns>
     [HttpPatch]
     [Route("/agv/{correlationId:guid}/move")]
     public async Task<ActionResult<Guid>> MoveAgv(Guid correlationId, string destinationNodeId)
     {
-        Response<MoveAgvResult, AgvNotFoundResult> response = await _moveAgvClient.GetResponse<MoveAgvResult, AgvNotFoundResult>(new MoveAgv(correlationId, destinationNodeId, ActionGroupCreator.TransportOrderWebApi));
+        Response<AgvMoveSuccessful, AgvMoveFailed, AgvNotFoundResult> response = await _moveAgvClient.GetResponse<AgvMoveSuccessful, AgvMoveFailed, AgvNotFoundResult>(new MoveAgv(correlationId, destinationNodeId, ActionGroupCreator.TransportOrderWebApi));
 
-        if (response.Message is MoveAgvResult moveAgvResult)
+        return response.Message switch
         {
-            return Ok(moveAgvResult.ActionGroupCorrelationId);
-        }
-        return NotFound();
+            AgvMoveFailed moveAgvFailureMessage => BadRequest(moveAgvFailureMessage.Reason),
+            AgvMoveSuccessful moveAgvSuccessMessage => Ok(moveAgvSuccessMessage.ActionGroupCorrelationId),
+            _ => NotFound()
+        };
     }
 
     /// <summary>

@@ -140,6 +140,12 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         return this;
     }
 
+    public AgvControllerTestFixture<TRequest, TRequestHandler> SetupAgvDbWitNodeExists(bool nodeExists)
+    {
+        AgvDb.Setup(x => x.Graphs.NodeExistsAsync(It.IsAny<string>())).ReturnsAsync(nodeExists);
+        return this;
+    }
+
     private static Guid GetGuid(string agvSerialNumber) => agvSerialNumber.ToGuid();
 
     private Mock<IAgvPositionRepository> GetAgvPositionRepository()

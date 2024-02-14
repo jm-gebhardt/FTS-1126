@@ -362,12 +362,27 @@ public class AgvControllerTest
     {
         AgvControllerTestFixture<MoveAgv, AgvCommandHandler> fixture = new AgvControllerTestFixture<MoveAgv, AgvCommandHandler>()
             .SetupAgvDbWithDefaultData()
+            .SetupAgvDbWitNodeExists(true)
             .Build();
         var correlationId = fixture.AgvSerialNumbers[2].ToGuid();
-        const string targetNodeId = "Test Destination Id";
+        const string targetNodeId = "known target node id";
 
         var result = await fixture.GetControllerResultAsync<Guid, OkObjectResult>(c => c.MoveAgv(correlationId, targetNodeId));
         result.Value.ShouldBeOfType<Guid>();
+    }
+
+    [TestMethod]
+    public async Task MoveAgv_UnknownTargetNode_BadRequest()
+    {
+        AgvControllerTestFixture<MoveAgv, AgvCommandHandler> fixture = new AgvControllerTestFixture<MoveAgv, AgvCommandHandler>()
+            .SetupAgvDbWithDefaultData()
+            .SetupAgvDbWitNodeExists(false)
+            .Build();
+        var correlationId = fixture.AgvSerialNumbers[2].ToGuid();
+        const string targetNodeId = "unknown target node id";
+
+        var result = await fixture.GetControllerResultAsync<Guid, BadRequestObjectResult>(c => c.MoveAgv(correlationId, targetNodeId));
+        result.Value.ShouldBeOfType<string>();
     }
 
     [TestMethod]

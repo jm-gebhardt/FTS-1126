@@ -437,6 +437,13 @@ public class AgvCommandHandler :
             return;
         }
 
+        if (!await _agvDb.Graphs.NodeExistsAsync(targetNodeId))
+        {
+            _logger.LogError("Manual move of {AgvCorrelationId} failed, node {TargetNode} does not exist", agv.CorrelationId, targetNodeId);
+            await context.RespondAsync(new AgvMoveFailed($"Node {targetNodeId} does not exist."));
+            return;
+        }
+
         var groupCorrelationId = Guid.NewGuid();
         _logger.LogInformation("{MessageType} for AgvCorrelationId: {AgvCorrelationId} to destinationNodeId:{DestinationNodeId} received. Sending QueueActionGroup {ActionGroupCorrelationId}", nameof(MoveAgv), context.Message.CorrelationId, context.Message.TargetNodeId, groupCorrelationId);
 
@@ -450,7 +457,7 @@ public class AgvCommandHandler :
         );
 
         await _queueActionGroupRequestClient.GetResponse<Success>(new QueueActionGroup(moveActionGroup, true));
-        await context.RespondAsync(new MoveAgvResult(moveActionGroup.CorrelationId));
+        await context.RespondAsync(new AgvMoveSuccessful(moveActionGroup.CorrelationId));
     }
 
     /// <summary>
