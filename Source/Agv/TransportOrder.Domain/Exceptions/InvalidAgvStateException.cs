@@ -12,7 +12,7 @@ public class InvalidAgvStateException : Exception
     /// <summary>
     /// Initializes a new <see cref="InvalidAgvStateException"/> instance.
     /// </summary>
-    /// <param name="description">What nodes were you looking for?</param>
+    /// <param name="description">The description of the exception.</param>
     public InvalidAgvStateException(string description) : base(description)
     {
     }

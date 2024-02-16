@@ -100,6 +100,18 @@ public class EfGraphRepository : IGraphRepository
     }
 
     /// <inheritdoc />
+    public async Task<ICollection<GraphNode>> GetNodesByIdsAsync( ICollection<string> nodeIds)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+         List<EfNode> nodes = await context.Set<EfAgvGraph>()
+            .Include(g => g.Nodes)
+            .SelectMany(g => g.Nodes)
+            .Where(n => nodeIds.Contains(n.Id))
+            .ToListAsync();
+        return _mapper.Map<List<GraphNode>>(nodes);
+    }
+
+    /// <inheritdoc />
     public async Task<GraphNode> GetNodeAsync(string id)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();

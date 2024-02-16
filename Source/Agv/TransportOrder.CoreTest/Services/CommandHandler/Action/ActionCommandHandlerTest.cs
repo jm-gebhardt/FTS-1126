@@ -16,8 +16,8 @@ using Moq;
 using Shouldly;
 using ActionGroup = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using AgvAction = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.AgvAction;
-using ResetActionGroup = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup.ResetActionGroup;
 using GraphNode = Gebhardt.StoreWare.Agv.Common.Models.Graphs.GraphNode;
+using ResetActionGroup = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup.ResetActionGroup;
 using ValidationResult = FluentValidation.Results.ValidationResult;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.CommandHandler.Action;

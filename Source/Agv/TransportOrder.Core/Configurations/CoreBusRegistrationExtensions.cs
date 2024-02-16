@@ -162,6 +162,8 @@ public static class CoreBusRegistrationExtensions
         configurator.AddRequestClient<GetActionGroupCountsByState>();
         configurator.AddRequestClient<TriggerActionGroupAbortion>();
         configurator.AddRequestClient<TriggerActionGroupReset>();
+        configurator.AddConsumer<CreateActionGroupRequestHandler>();
+        configurator.AddRequestClient<CreatePickDropActionGroup>();
         configurator.AddConsumer<ActionCommandHandler>();
         configurator.AddRequestClient<QueueActionGroup>();
     }

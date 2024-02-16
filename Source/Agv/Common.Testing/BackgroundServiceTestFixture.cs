@@ -13,39 +13,41 @@ namespace Gebhardt.StoreWare.Agv.Common.Testing;
 [PublicAPI]
 public class BackgroundServiceTestFixture<TBackgroundService> where TBackgroundService : BackgroundService
 {
+    private readonly IServiceCollection _serviceCollection;
+
     /// <summary>
     /// Service provider
     /// </summary>
-    public readonly ServiceProvider Provider;
+    public ServiceProvider Provider { get; private set; } = null!;
 
     /// <summary>
     /// Started TestHarness
     /// </summary>
-    public readonly ITestHarness TestHarness;
+    public ITestHarness TestHarness { get; private set; } = null!;
 
     /// <summary>
     /// Started background service
     /// </summary>
-    public readonly TBackgroundService? HostedService;
+    public TBackgroundService? HostedService { get; private set; }
 
     /// <summary>
     /// Test Fixture to be used for background service tests
     /// </summary>
-    /// <param name="services">Service Collection instance with MassTransitTestHarness added</param>
-    /// <param name="busRegistrationConfigurator">MassTransit Registration with consumer already added</param>
-    public BackgroundServiceTestFixture(Action<IServiceCollection>? services = null, Action<IBusRegistrationConfigurator>? busRegistrationConfigurator = null)
+    public BackgroundServiceTestFixture()
     {
-        var collection = new ServiceCollection()
-            .AddMassTransitTestHarness(x =>
-            {
-                busRegistrationConfigurator?.Invoke(x);
-                x.UsingInMemory((context, cfg) => { cfg.ConfigureEndpoints(context); });
-            })
+        _serviceCollection = new ServiceCollection()
+            .AddMassTransitTestHarness(x => { x.UsingInMemory((context, cfg) => { cfg.ConfigureEndpoints(context); }); })
             .AddHostedService<TBackgroundService>();
+    }
 
-        services?.Invoke(collection);
+    protected void AddServices(Action<IServiceCollection> services)
+    {
+        services.Invoke(_serviceCollection);
+    }
 
-        Provider = collection.BuildServiceProvider(true);
+    protected void Build()
+    {
+        Provider = _serviceCollection.BuildServiceProvider(true);
         TestHarness = Provider.GetTestHarness();
         HostedService = Provider.GetServices<IHostedService>().FirstOrDefault(x => x is TBackgroundService) as TBackgroundService;
 

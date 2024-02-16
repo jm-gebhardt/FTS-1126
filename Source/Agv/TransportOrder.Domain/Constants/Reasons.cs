@@ -27,8 +27,6 @@ public static class Reasons
 
     public const string ManualActionMustHaveAgvAssigned = "Manual action must have an Agv assigned";
 
-    public const string AssignedAgvRequiresManualAction = "Assigned Agv requires IsManual to be set";
-
     public const string AgvDoesNotExist = "Agv with correlation id \"{0}\" does not exist";
 
     public const string PickDropSequenceMustBeValid = "Pick/Drop sequence must be valid";

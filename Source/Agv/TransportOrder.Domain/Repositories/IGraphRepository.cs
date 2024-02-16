@@ -38,6 +38,12 @@ public interface IGraphRepository
     Task<IEnumerable<GraphNode>> GetNodesAsync(Guid agvCorrelationId, Expression<Func<GraphNode, bool>>? predicate = null);
 
     /// <summary>
+    /// Get distinct nodes by given ids.
+    /// </summary>
+    /// <param name="nodeIds">The node ids.</param>
+    Task<ICollection<GraphNode>> GetNodesByIdsAsync(ICollection<string> nodeIds);
+
+    /// <summary>
     /// Get node of this agv by NodeId.
     /// </summary>
     /// <param name="id">The Id of the node to get</param>

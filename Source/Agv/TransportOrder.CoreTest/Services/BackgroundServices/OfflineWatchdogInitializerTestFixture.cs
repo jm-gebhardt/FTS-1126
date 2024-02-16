@@ -1,7 +1,6 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.BackgroundServices;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
-using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 
@@ -12,18 +11,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.BackgroundServ
 /// </summary>
 public class OfflineWatchdogInitializerTestFixture : BackgroundServiceTestFixture<OfflineWatchdogInitializer>
 {
-    private static readonly Mock<IAgvDb> _agvDbMock = new();
+    private readonly Mock<IAgvDb> _agvDbMock = new();
 
     /// <inheritdoc cref="OfflineWatchdogInitializerTestFixture"/>>
-    public OfflineWatchdogInitializerTestFixture(Action<IServiceCollection>? services = null, Action<IBusRegistrationConfigurator>? busRegistrationConfigurator = null)
-        : base(
-            services: collection =>
-            {
-                services?.Invoke(collection);
-                collection.AddTransient(_ => _agvDbMock.Object);
-            },
-            busRegistrationConfigurator: busRegistrationConfigurator)
+    public OfflineWatchdogInitializerTestFixture()
     {
+        AddServices(c => c.AddTransient(_ => _agvDbMock.Object));
+        Build();
     }
 
     public OfflineWatchdogInitializerTestFixture AddAgvs(ICollection<TransportOrder.Domain.Models.Agv.Agv> agvs)

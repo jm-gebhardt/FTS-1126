@@ -13,7 +13,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Middleware;
 public class ExceptionHandlerMiddlewareTest
 {
     [TestMethod]
-    public async Task Invoke_ShouldReturnNotFoundStatusCode_WhereRequestThrowsAMapNotFoundException()
+    public async Task Invoke_RequestHandlerThrowsMapNotFoundException_ReturnsNotFoundStatusCode()
     {
         var defaultContext = new DefaultHttpContext();
 
@@ -21,6 +21,32 @@ public class ExceptionHandlerMiddlewareTest
         await exceptionMiddleware.InvokeAsync(defaultContext, _ => throw new MapNotFoundException());
 
         defaultContext.Response.StatusCode.ShouldBe((int)HttpStatusCode.NotFound);
+        defaultContext.Response.ContentType.ShouldBe("application/json");
+        defaultContext.Response.Body.ShouldNotBeNull();
+    }
+
+    [TestMethod]
+    public async Task Invoke_RequestHandlerThrowsNodeNotFoundException_ReturnsBadRequestStatusCode()
+    {
+        var defaultContext = new DefaultHttpContext();
+
+        var exceptionMiddleware = new ExceptionHandlerMiddleware(Mock.Of<ILogger<ExceptionHandlerMiddleware>>());
+        await exceptionMiddleware.InvokeAsync(defaultContext, _ => throw new NodeNotFoundException("a node that was not found"));
+
+        defaultContext.Response.StatusCode.ShouldBe((int)HttpStatusCode.BadRequest);
+        defaultContext.Response.ContentType.ShouldBe("application/json");
+        defaultContext.Response.Body.ShouldNotBeNull();
+    }
+
+    [TestMethod]
+    public async Task Invoke_RequestHandlerThrowsInvalidNodeTypeException_ReturnsBadRequestStatusCode()
+    {
+        var defaultContext = new DefaultHttpContext();
+
+        var exceptionMiddleware = new ExceptionHandlerMiddleware(Mock.Of<ILogger<ExceptionHandlerMiddleware>>());
+        await exceptionMiddleware.InvokeAsync(defaultContext, _ => throw new InvalidNodeTypeException("a node", "an invalid type", "an expected type"));
+
+        defaultContext.Response.StatusCode.ShouldBe((int)HttpStatusCode.BadRequest);
         defaultContext.Response.ContentType.ShouldBe("application/json");
         defaultContext.Response.Body.ShouldNotBeNull();
     }

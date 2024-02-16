@@ -53,12 +53,11 @@ public class ExceptionHandlerMiddleware : IMiddleware
 
         switch (exception)
         {
-            case NotFoundException:
-                statusCode = HttpStatusCode.NotFound;
-                break;
-
             case NotInCorrectStateException:
             case ActionGroupStateInvalidException:
+            case InvalidNodeTypeException:
+            case ActionGroupInvalidException:
+            case NodeNotFoundException:
             case BadRequestException:
                 statusCode = HttpStatusCode.BadRequest;
                 break;
@@ -69,6 +68,10 @@ public class ExceptionHandlerMiddleware : IMiddleware
 
             case ResetAgvErrorFailedException:
                 statusCode = HttpStatusCode.InternalServerError;
+                break;
+            
+            case NotFoundException:
+                statusCode = HttpStatusCode.NotFound;
                 break;
 
             default:

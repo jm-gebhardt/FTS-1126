@@ -100,7 +100,7 @@ public class AgvCommandHandlerTestFixture(
         foreach (bool hasCargo in hasCargos)
         {
             setup.ReturnsAsync(hasCargo);
-        }   
+        }
         return this;
     }
 

@@ -48,12 +48,14 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
         IRequestClient<TriggerActionGroupAbortion> abortionRequestClient = GetRequestClient<TriggerActionGroupAbortion>();
         IRequestClient<CancelActionGroup> cancelActionGroupRequestClient = GetRequestClient<CancelActionGroup>();
         IRequestClient<TriggerActionGroupReset> triggerResetRequestClient = GetRequestClient<TriggerActionGroupReset>();
+        IRequestClient<CreatePickDropActionGroup> createActionGroupRequestClient = GetRequestClient<CreatePickDropActionGroup>();
 
         var controller = new ActionGroupController(Mapper!,
             getActionGroupRequestClient,
             cancelActionGroupRequestClient,
             abortionRequestClient,
-            triggerResetRequestClient)
+            triggerResetRequestClient,
+            createActionGroupRequestClient)
         {
             ControllerContext = new ControllerContext(
                 new ActionContext(

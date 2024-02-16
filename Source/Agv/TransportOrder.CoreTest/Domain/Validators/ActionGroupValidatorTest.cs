@@ -105,25 +105,6 @@ public class ActionGroupValidatorTest
     }
 
     [TestMethod]
-    public async Task ValidateAsync_WhenAssignedAgvNotNullAndIsManualIsFalse_Fails()
-    {
-        var agv = AgvGenerator.GenerateIdleAgv();
-        var actionGroup = AgvActionGenerator.GenerateMoveActionGroup(isManual: false);
-        actionGroup.AssignedAgv = agv.CorrelationId;
-
-        var fixture = new ActionGroupValidatorTestFixture()
-            .WithAgv(agv)
-            .WithRoute(agv, actionGroup)
-            .WithAgvCanHandleRoute(agv, actionGroup)
-            .WithNodesExisting(actionGroup)
-            .Build();
-
-        TestValidationResult<ActionGroup> validationResult = await fixture.ActionGroupValidator.TestValidateAsync(actionGroup);
-
-        validationResult.ShouldHaveValidationErrorFor(x => x.IsManual).WithErrorMessage("Assigned Agv requires IsManual to be set");
-    }
-
-    [TestMethod]
     public async Task ValidateAsync_WhenAssignedAgvNotNullAndAgvDoesNotExist_Fails()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
@@ -180,7 +161,7 @@ public class ActionGroupValidatorTest
     public async Task ValidateAsync_WhenStateOfActionGroupIsNotCreated_Fails()
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
-        actionGroup.StartAction(actionGroup.Actions.First().CorrelationId, ["source","way","target"]); // manually setting to not Created state
+        actionGroup.StartAction(actionGroup.Actions.First().CorrelationId, ["source", "way", "target"]); // manually setting to not Created state
         var agv = AgvGenerator.GenerateIdleAgv();
 
         var fixture = new ActionGroupValidatorTestFixture()

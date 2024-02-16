@@ -31,4 +31,20 @@ public static class NodeExtensions
     {
         AgvGraph.NodeType.Charge, AgvGraph.NodeType.Drop, AgvGraph.NodeType.Pick, AgvGraph.NodeType.PickDrop, AgvGraph.NodeType.Park
     }.Contains(node.Type);
+
+    /// <summary>
+    /// True if the given node is a pick station.
+    /// </summary>
+    public static bool IsPickStation(this GraphNode node) => new[]
+    {
+         AgvGraph.NodeType.Pick, AgvGraph.NodeType.PickDrop
+    }.Contains(node.Type);
+
+    /// <summary>
+    /// True if the given node is a drop station.
+    /// </summary>
+    public static bool IsDropStation(this GraphNode node) => new[]
+    {
+        AgvGraph.NodeType.Drop, AgvGraph.NodeType.PickDrop
+    }.Contains(node.Type);
 }

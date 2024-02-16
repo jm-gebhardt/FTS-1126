@@ -94,10 +94,6 @@ public class ActionGroupValidator : AbstractValidator<ActionGroup>
 
         When(p => p.AssignedAgv != null, () =>
         {
-            RuleFor(p => p.IsManual)
-                .Must(p => p)
-                .WithReason(Reasons.AssignedAgvRequiresManualAction);
-
             RuleFor(x => x.AssignedAgv)
                 .Must(_ => AgvExists())
                 .WithReason(Reasons.AgvDoesNotExist, x => x.AssignedAgv);

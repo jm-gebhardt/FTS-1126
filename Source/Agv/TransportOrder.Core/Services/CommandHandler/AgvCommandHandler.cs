@@ -1,5 +1,4 @@
-﻿using System.Collections.ObjectModel;
-using AutoMapper;
+﻿using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
 using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
@@ -25,6 +24,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Commands;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
+using System.Collections.ObjectModel;
 using AgvSettings = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings.AgvSettings;
 using AgvStatus = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv.AgvStatus;
 using Cargo = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Cargo;

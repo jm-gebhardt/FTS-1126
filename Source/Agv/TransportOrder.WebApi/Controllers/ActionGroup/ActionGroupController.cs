@@ -7,6 +7,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.AgvActions;
 using MassTransit;
 using Microsoft.AspNetCore.Mvc;
+using ActionGroupCreated = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.ActionGroup.ActionGroupCreated;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers.ActionGroup;
 
@@ -20,6 +21,7 @@ public class ActionGroupController : Controller
     private readonly IRequestClient<TriggerActionGroupAbortion> _abortionRequestClient;
     private readonly IRequestClient<CancelActionGroup> _cancelActionGroupRequestClient;
     private readonly IRequestClient<TriggerActionGroupReset> _resetActionGroupRequestClient;
+    private readonly IRequestClient<CreatePickDropActionGroup> _createActionGroupClient;
     private readonly IMapper _mapper;
 
     /// <summary>
@@ -29,13 +31,15 @@ public class ActionGroupController : Controller
         IRequestClient<GetActionGroup> getActionGroupRequestClient,
         IRequestClient<CancelActionGroup> cancelActionGroupRequestClient,
         IRequestClient<TriggerActionGroupAbortion> abortionRequestClient,
-        IRequestClient<TriggerActionGroupReset> resetActionGroupRequestClient)
+        IRequestClient<TriggerActionGroupReset> resetActionGroupRequestClient,
+        IRequestClient<CreatePickDropActionGroup> createActionGroupClient)
     {
         _mapper = mapper;
         _getActionGroupRequestClient = getActionGroupRequestClient;
         _abortionRequestClient = abortionRequestClient;
         _cancelActionGroupRequestClient = cancelActionGroupRequestClient;
         _resetActionGroupRequestClient = resetActionGroupRequestClient;
+        _createActionGroupClient = createActionGroupClient;
     }
 
     /// <summary>
@@ -96,5 +100,25 @@ public class ActionGroupController : Controller
     {
         await _resetActionGroupRequestClient.GetResponse<ActionGroupResetTriggered>(new TriggerActionGroupReset(correlationId));
         return Ok();
+    }
+
+    /// <summary>
+    /// Create a pick-drop action group.
+    /// </summary>
+    /// <param name="pickStation">The pick station.</param>
+    /// <param name="dropStation">The drop station.</param>
+    /// <param name="agvCorrelationId">The assigned agv (optional).</param>
+    /// <returns>The created action group.</returns>
+    /// <response code="200">Ok</response>
+    /// <response code="400">The given pick or drop station node is not of type pick, drop, or pickdrop, respectively.
+    /// Or the action group is invalid (e.g. there is no agv that can reach both the pick and drop station.).
+    /// Or the given pick or drop station not found</response>
+    /// <response code="404">AGV with given correlationId not found .</response>
+    [HttpPost]
+    [Route("/actionGroup")]
+    public async Task<ActionResult<ActionGroupDto>> CreatePickDropActionGroup(string pickStation, string dropStation, Guid? agvCorrelationId)
+    {
+        Response<ActionGroupCreated> response = await _createActionGroupClient.GetResponse<ActionGroupCreated>(new CreatePickDropActionGroup(pickStation, dropStation, agvCorrelationId));
+        return Ok(_mapper.Map<ActionGroupDto>(response.Message.ActionGroup));
     }
 }

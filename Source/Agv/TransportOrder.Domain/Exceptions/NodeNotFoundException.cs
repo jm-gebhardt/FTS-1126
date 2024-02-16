@@ -22,7 +22,7 @@ public class NodeNotFoundException : NotFoundException
     }
 
     /// <inheritdoc cref="NodeNotFoundException"/>>
-    public NodeNotFoundException(string nodeId) : base($"Node with Id {nodeId} not found")
+    public NodeNotFoundException(string nodeId) : base($"Node with Id {nodeId}")
     {
     }
 }
