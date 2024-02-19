@@ -1,15 +1,18 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Services;
+using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Testing.Configurations;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.CmdOptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Node;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
@@ -48,16 +51,18 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
 
     private readonly Mock<IMapRepository> _mapRepository = new();
 
-    private readonly ProductionOptions _productionOptions = new() {AutoAccept = true};
+    private readonly ProductionOptions _productionOptions = new() { AutoAccept = true };
 
-    public string[] AgvSerialNumbers { get; } = {"AGV001", "AGV002", "AGV003"};
+    private readonly Mock<INodeStateRepository> _nodeStateRepository = new();
+
+    public string[] AgvSerialNumbers { get; } = { "AGV001", "AGV002", "AGV003" };
 
     // ReSharper disable once MemberCanBePrivate.Global
-    public string[] Orders { get; } = {"ORDER001", "ORDER002", ""};
+    public string[] Orders { get; } = { "ORDER001", "ORDER002", "" };
 
-    private AgvState[] States { get; } = {AgvState.Idle, AgvState.Busy, AgvState.Discovered};
+    private AgvState[] States { get; } = { AgvState.Idle, AgvState.Busy, AgvState.Discovered };
 
-    public string[] Ips { get; } = {"127.0.0.1", "127.0.0.2", "127.0.0.3"};
+    public string[] Ips { get; } = { "127.0.0.1", "127.0.0.2", "127.0.0.3" };
 
     public Mock<IAgvDb> AgvDb { get; }
 
@@ -71,10 +76,10 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
 
     private readonly GraphNode[] _nodes =
     {
-        new("node00") {X = 0f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint},
-        new("node10") {X = 1f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint},
-        new("node01") {X = 0f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint},
-        new("node11") {X = 1f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint}
+        new("node00") { X = 0f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
+        new("node10") { X = 1f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
+        new("node01") { X = 0f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
+        new("node11") { X = 1f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint }
     };
 
     private readonly IAgvPositionRepository _agvPositionRepository;
@@ -89,11 +94,11 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         AgvDb = new Mock<IAgvDb>();
         QueueActionGroupRequestClient = new Mock<IRequestClient<QueueActionGroup>>();
         ActionGroupRetrievalService = new Mock<IActionGroupRetrievalService>();
-        ActionGroupRetrievalService.Setup(r => r.GetCurrentActionGroupsWithNodesAsync(It.IsAny<IReadOnlyCollection<Guid>>())).ReturnsAsync(() => AgvSerialNumbers.ToDictionary(GetGuid, _ => (ActionGroupReadModel?) null));
+        ActionGroupRetrievalService.Setup(r => r.GetCurrentActionGroupsWithNodesAsync(It.IsAny<IReadOnlyCollection<Guid>>())).ReturnsAsync(() => AgvSerialNumbers.ToDictionary(GetGuid, _ => (ActionGroupReadModel?)null));
         _agvPositionRepository = GetAgvPositionRepository().Object;
 
         ActionGroupRepository = new Mock<IActionGroupRepository>();
-        ActionGroupRepository.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvSerialNumbers.ToDictionary(GetGuid, _ => (Domain.Models.ActionGroup.ActionGroup?) null));
+        ActionGroupRepository.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvSerialNumbers.ToDictionary(GetGuid, _ => (Domain.Models.ActionGroup.ActionGroup?)null));
         ActionGroupRepository.Setup(r => r.GetCurrentAgvActionAsync(It.IsAny<Guid>())).ReturnsAsync(_chargeAction);
         AgvDb.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(new List<AgvError>());
         AgvDb.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<IList<Guid>>())).ReturnsAsync(new List<AgvError>());
@@ -129,6 +134,14 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         AgvDb.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(new List<AgvError>());
         AgvDb.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<IList<Guid>>())).ReturnsAsync(new List<AgvError>());
         AgvDb.Setup(x => x.Data.ExistsAsync(It.IsAny<Guid>())).ReturnsAsync((Guid correlationId) => data.ContainsKey(correlationId));
+        AgvDb.Setup(x => x.Agvs.ThrowIfAgvNotExistsAsync(It.IsAny<Guid>()))
+            .Callback((Guid correlationId) =>
+            {
+                if (agvs.FirstOrDefault(a => a.CorrelationId == correlationId) == null)
+                {
+                    throw new AgvNotFoundException(correlationId);
+                }
+            });
         AgvDb.Setup(x => x.Data.GetAgvDataAsync(It.IsAny<Guid>()))
             .ReturnsAsync((Guid correlationId) =>
             {
@@ -140,9 +153,9 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         return this;
     }
 
-    public AgvControllerTestFixture<TRequest, TRequestHandler> SetupAgvDbWitNodeExists(bool nodeExists)
+    public AgvControllerTestFixture<TRequest, TRequestHandler> SetupAgvDbWitNode(GraphNode node)
     {
-        AgvDb.Setup(x => x.Graphs.NodeExistsAsync(It.IsAny<string>())).ReturnsAsync(nodeExists);
+        AgvDb.Setup(x => x.Graphs.GetNodeAsync(It.IsAny<string>())).ReturnsAsync(node);
         return this;
     }
 
@@ -204,6 +217,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         IRequestClient<GetActiveAgvErrors> getAgvErrorsRequestClient = GetRequestClient<GetActiveAgvErrors>();
         IRequestClient<GetAgvErrors> getAgvErrorHistoryRequestClient = GetRequestClient<GetAgvErrors>();
         IRequestClient<MoveAgv> moveAgvRequestClient = GetRequestClient<MoveAgv>();
+        IRequestClient<ChargeAgv> chargeAgvRequestClient = GetRequestClient<ChargeAgv>();
         IRequestClient<SetAgvForceIdle> setAgvForceIdleClient = GetRequestClient<SetAgvForceIdle>();
         IRequestClient<GetAgvHasCargo> getAgvHasCargoClient = GetRequestClient<GetAgvHasCargo>();
         IRequestClient<GetCargosOfAgv> getCargosOfAgvClient = GetRequestClient<GetCargosOfAgv>();
@@ -227,6 +241,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             getAgvErrorsRequestClient,
             getAgvErrorHistoryRequestClient,
             moveAgvRequestClient,
+            chargeAgvRequestClient,
             setAgvForceIdleClient,
             getAgvHasCargoClient,
             getCargosOfAgvClient,
@@ -253,8 +268,20 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         return this;
     }
 
+    [UsedImplicitly]
+    public class FakeQueueActionGroupConsumer : IConsumer<QueueActionGroup>
+    {
+        public async Task Consume(ConsumeContext<QueueActionGroup> context)
+        {
+            await context.RespondAsync(new Success());
+        }
+    }
+
     public new AgvControllerTestFixture<TRequest, TRequestHandler> Build()
     {
+        var busFixture = new MassTransitConsumerTestFixture<FakeQueueActionGroupConsumer>();
+        _nodeStateRepository.Setup(x => x.ReserveNodeAsync(It.IsAny<string>(), It.IsAny<Guid>())).Verifiable();
+        _nodeStateRepository.Setup(x => x.GetNodeStateAsync(It.IsAny<string>())).ReturnsAsync((NodeLock?)null);
         AddServices(sc =>
         {
             sc.AddTransient(_ => AgvDb.Object);
@@ -269,6 +296,8 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             sc.AddFakeSettings(AgvSettings);
             sc.AddTransient(_ => _mapRepository.Object);
             sc.AddTransient(_ => _productionOptions);
+            sc.AddTransient(_ => busFixture.TestHarness.Bus);
+            sc.AddTransient(_ => _nodeStateRepository.Object);
         });
         base.Build();
 

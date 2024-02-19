@@ -386,42 +386,29 @@ public class AgvControllerTest
     [TestMethod]
     public async Task MoveAgv_Ok()
     {
-        AgvControllerTestFixture<MoveAgv, AgvCommandHandler> fixture = new AgvControllerTestFixture<MoveAgv, AgvCommandHandler>()
+        var targetNode = new GraphNode("target");
+        AgvControllerTestFixture<MoveAgv, MoveAgvRequestHandler> fixture = new AgvControllerTestFixture<MoveAgv, MoveAgvRequestHandler>()
             .SetupAgvDbWithDefaultData()
-            .SetupAgvDbWitNodeExists(true)
+            .SetupAgvDbWitNode(targetNode)
             .Build();
         var correlationId = fixture.AgvSerialNumbers[2].ToGuid();
-        const string targetNodeId = "known target node id";
 
-        var result = await fixture.GetControllerResultAsync<Guid, OkObjectResult>(c => c.MoveAgv(correlationId, targetNodeId));
+        var result = await fixture.GetControllerResultAsync<Guid, OkObjectResult>(c => c.MoveAgv(correlationId, targetNode.Id));
         result.Value.ShouldBeOfType<Guid>();
     }
 
     [TestMethod]
-    public async Task MoveAgv_UnknownTargetNode_BadRequest()
+    public async Task ChargeAgvAtCharger_Ok()
     {
-        AgvControllerTestFixture<MoveAgv, AgvCommandHandler> fixture = new AgvControllerTestFixture<MoveAgv, AgvCommandHandler>()
+        var targetNode = new GraphNode("charger") { Type = AgvGraph.NodeType.Charge };
+        AgvControllerTestFixture<ChargeAgv, MoveAgvRequestHandler> fixture = new AgvControllerTestFixture<ChargeAgv, MoveAgvRequestHandler>()
             .SetupAgvDbWithDefaultData()
-            .SetupAgvDbWitNodeExists(false)
+            .SetupAgvDbWitNode(targetNode)
             .Build();
         var correlationId = fixture.AgvSerialNumbers[2].ToGuid();
-        const string targetNodeId = "unknown target node id";
 
-        var result = await fixture.GetControllerResultAsync<Guid, BadRequestObjectResult>(c => c.MoveAgv(correlationId, targetNodeId));
-        result.Value.ShouldBeOfType<string>();
-    }
-
-    [TestMethod]
-    public async Task MoveAgv_UnknownAgv_NotFoundResult()
-    {
-        AgvControllerTestFixture<MoveAgv, AgvCommandHandler> fixture = new AgvControllerTestFixture<MoveAgv, AgvCommandHandler>()
-            .SetupAgvDbWithDefaultData()
-            .Build();
-
-        var correlationId = Guid.Empty;
-        fixture.AgvDb.Setup(x => x.Agvs.GetAgvAsync(It.Is<Guid>(g => g == correlationId))).Throws(new AgvNotFoundException(correlationId));
-
-        await fixture.GetControllerResultAsync<Guid, NotFoundResult>(c => c.MoveAgv(correlationId, "Test Destination Id"));
+        var result = await fixture.GetControllerResultAsync<Guid, OkObjectResult>(c => c.ChargeAgvAtCharger(correlationId, targetNode.Id));
+        result.Value.ShouldBeOfType<Guid>();
     }
 
     [TestMethod]

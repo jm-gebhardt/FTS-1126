@@ -110,12 +110,6 @@ public class AgvCommandHandlerTestFixture(
         return this;
     }
 
-    public AgvCommandHandlerTestFixture WithNodeExists(bool exists)
-    {
-        AgvDb.Setup(x => x.Graphs.NodeExistsAsync(It.IsAny<string>())).ReturnsAsync(exists);
-        return this;
-    }
-
     public AgvCommandHandlerTestFixture WithoutAgv()
     {
         AgvDb.Setup(x => x.Agvs.GetAgvAsync(It.IsAny<Guid>())).ReturnsAsync((Guid id) => throw new AgvNotFoundException(id));

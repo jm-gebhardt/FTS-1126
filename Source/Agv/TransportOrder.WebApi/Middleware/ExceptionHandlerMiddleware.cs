@@ -58,6 +58,7 @@ public class ExceptionHandlerMiddleware : IMiddleware
             case InvalidNodeTypeException:
             case ActionGroupInvalidException:
             case NodeNotFoundException:
+            case NoNodesAvailableException:
             case BadRequestException:
                 statusCode = HttpStatusCode.BadRequest;
                 break;

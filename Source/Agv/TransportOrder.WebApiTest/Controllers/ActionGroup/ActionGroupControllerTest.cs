@@ -1,5 +1,4 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
 using Gebhardt.StoreWare.Agv.Common.Models;
 using Gebhardt.StoreWare.Agv.Common.Testing;
@@ -11,8 +10,6 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.ActionGroup;
-using JetBrains.Annotations;
-using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
@@ -22,20 +19,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Controllers.ActionGro
 [TestClass]
 public class ActionGroupControllerTest
 {
-    [UsedImplicitly]
-    public class ActionCommandHandlerMock : IConsumer<AbortActionGroup>, IConsumer<ResetActionGroup>
-    {
-        public async Task Consume(ConsumeContext<AbortActionGroup> context)
-        {
-            await context.RespondAsync(new Success());
-        }
-
-        public async Task Consume(ConsumeContext<ResetActionGroup> context)
-        {
-            await context.RespondAsync(new Success());
-        }
-    }
-
     [TestMethod]
     public async Task GetSingleActionGroup_ValidData_ReturnsSingleActionGroupDto()
     {
@@ -166,7 +149,7 @@ public class ActionGroupControllerTest
     public async Task AbortActionGroup_ValidData_ReturnsOk()
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(ActionGroupState.Started);
-        var massTransitFixture = new MassTransitConsumerTestFixture<ActionCommandHandlerMock>();
+        var massTransitFixture = new MassTransitConsumerTestFixture<SuccessResponseConsumer<AbortActionGroup>>();
         ActionGroupControllerTestFixture<TriggerActionGroupAbortion, ActionGroupRequestHandler> fixture = new ActionGroupControllerTestFixture<TriggerActionGroupAbortion, ActionGroupRequestHandler>()
             .Setup(massTransitFixture.TestHarness.Bus)
             .AddActionGroup(actionGroup)
@@ -208,7 +191,7 @@ public class ActionGroupControllerTest
     public async Task ResetActionGroup_ValidData_ReturnsOk()
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(ActionGroupState.Started);
-        var massTransitFixture = new MassTransitConsumerTestFixture<ActionCommandHandlerMock>();
+        var massTransitFixture = new MassTransitConsumerTestFixture<SuccessResponseConsumer<ResetActionGroup>>();
         ActionGroupControllerTestFixture<TriggerActionGroupReset, ActionGroupRequestHandler> fixture = new ActionGroupControllerTestFixture<TriggerActionGroupReset, ActionGroupRequestHandler>()
             .Setup(massTransitFixture.TestHarness.Bus)
             .AddActionGroup(actionGroup)

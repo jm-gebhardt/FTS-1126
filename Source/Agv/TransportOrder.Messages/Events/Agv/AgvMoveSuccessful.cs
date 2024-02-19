@@ -1,4 +1,4 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
+﻿using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 

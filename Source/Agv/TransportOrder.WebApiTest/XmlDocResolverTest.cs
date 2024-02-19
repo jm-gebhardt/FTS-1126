@@ -1,9 +1,9 @@
-﻿using System.Reflection;
-using System.Xml.Linq;
-using Gebhardt.StoreWare.Agv.Common.WebApi;
+﻿using Gebhardt.StoreWare.Agv.Common.WebApi;
 using MassTransit;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
+using System.Reflection;
+using System.Xml.Linq;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest;
 

@@ -2,10 +2,7 @@
 using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
 using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.Graphs.Events;
 using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.CmdOptions;
@@ -50,7 +47,6 @@ public class AgvCommandHandler :
     IConsumer<LockAgv>,
     IConsumer<UnlockAgv>,
     IConsumer<AcceptAgvCommand>,
-    IConsumer<MoveAgv>,
     IConsumer<SetAgvForceIdle>,
     IConsumer<HandleAgvActionStartFailure>,
     IConsumer<HandleActionCompletion>,
@@ -64,7 +60,6 @@ public class AgvCommandHandler :
     private readonly ISettingsProvider<AgvSettings> _settingsProvider;
     private readonly IMapper _mapper;
     private readonly ProductionOptions _productionOptions;
-    private readonly IRequestClient<QueueActionGroup> _queueActionGroupRequestClient;
     private readonly IAgvDb _agvDb;
 
     /// <inheritdoc cref="AgvCommandHandler"/>
@@ -72,7 +67,6 @@ public class AgvCommandHandler :
         IAgvDb agvDb,
         ISettingsProvider<AgvSettings> settingsProvider,
         IActionGroupRepository actionGroupRepository,
-        IRequestClient<QueueActionGroup> queueActionGroupRequestClient,
         IMapper mapper,
         ProductionOptions productionOptions,
         ILogger<AgvCommandHandler> logger
@@ -84,7 +78,6 @@ public class AgvCommandHandler :
         _actionGroupRepository = actionGroupRepository;
         _settingsProvider = settingsProvider;
         _mapper = mapper;
-        _queueActionGroupRequestClient = queueActionGroupRequestClient;
         _productionOptions = productionOptions;
     }
 
@@ -416,43 +409,6 @@ public class AgvCommandHandler :
     }
 
     /// <summary>
-    /// Handles the <see cref="MoveAgv"/> request.
-    /// </summary>
-    public async Task Consume(ConsumeContext<MoveAgv> context)
-    {
-        (var correlationId, string targetNodeId, var creator) = context.Message;
-
-        var agv = await TryGetAgv(correlationId);
-        if (agv == null)
-        {
-            await context.RespondAsync(new AgvNotFoundResult(correlationId));
-            return;
-        }
-
-        if (!await _agvDb.Graphs.NodeExistsAsync(targetNodeId))
-        {
-            _logger.LogError("Manual move of {AgvCorrelationId} failed, node {TargetNode} does not exist", agv.CorrelationId, targetNodeId);
-            await context.RespondAsync(new AgvMoveFailed($"Node {targetNodeId} does not exist."));
-            return;
-        }
-
-        var groupCorrelationId = Guid.NewGuid();
-        _logger.LogInformation("{MessageType} for AgvCorrelationId: {AgvCorrelationId} to destinationNodeId:{DestinationNodeId} received. Sending QueueActionGroup {ActionGroupCorrelationId}", nameof(MoveAgv), context.Message.CorrelationId, context.Message.TargetNodeId, groupCorrelationId);
-
-        var moveActionGroup = new ActionGroup(
-            groupCorrelationId,
-            $"Manual {ActionType.Move}",
-            new List<AgvAction> {new(Guid.NewGuid(), ActionType.Move, targetNodeId, groupCorrelationId)},
-            assignedAgv: agv.CorrelationId,
-            isManual: true,
-            creator: creator
-        );
-
-        await _queueActionGroupRequestClient.GetResponse<Success>(new QueueActionGroup(moveActionGroup, true));
-        await context.RespondAsync(new AgvMoveSuccessful(moveActionGroup.CorrelationId));
-    }
-
-    /// <summary>
     /// Handles the <see cref="SetAgvForceIdle"/> command.
     /// </summary>
     public async Task Consume(ConsumeContext<SetAgvForceIdle> context)
@@ -565,7 +521,7 @@ public class AgvCommandHandler :
     private async Task TryAutoAccept(IPublishEndpoint context, Domain.Models.Agv.Agv agv, CancellationToken cancellationToken)
     {
         _logger.LogDebug("AutoAccept {CorrelationId}", agv.CorrelationId);
-        if (_productionOptions.AutoAccept && agv is {GraphExists: true, DataExist: true, CurrentAgvState: AgvState.Discovered})
+        if (_productionOptions.AutoAccept && agv is { GraphExists: true, DataExist: true, CurrentAgvState: AgvState.Discovered })
         {
             _logger.LogDebug("AutoAccept {AgvCorrelationId}, Graph: {GraphExists}, Data: {DataExists}", agv.CorrelationId, agv.GraphExists, agv.DataExist);
             await TransitionToIdleAsync(context, agv, cancellationToken);

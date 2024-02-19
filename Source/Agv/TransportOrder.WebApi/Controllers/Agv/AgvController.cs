@@ -3,7 +3,6 @@ using System.ComponentModel.DataAnnotations;
 using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
@@ -44,6 +43,7 @@ public class AgvController : Controller
     private readonly IRequestClient<RequestAgvGraph> _emitRequestGraphClient;
     private readonly IRequestClient<GetActiveAgvErrors> _getAgvErrorsRequestClient;
     private readonly IRequestClient<GetAgvErrors> _getAgvErrorHistoryRequestClient;
+    private readonly IRequestClient<ChargeAgv> _chargeAgvClient;
     private readonly IRequestClient<MoveAgv> _moveAgvClient;
     private readonly IRequestClient<SetAgvForceIdle> _setForceIdleClient;
     private readonly IRequestClient<GetAgvHasCargo> _getAgvHasCargoClient;
@@ -71,6 +71,7 @@ public class AgvController : Controller
         IRequestClient<GetActiveAgvErrors> getAgvErrorsRequestClient,
         IRequestClient<GetAgvErrors> getAgvErrorHistoryRequestClient,
         IRequestClient<MoveAgv> moveAgvClient,
+        IRequestClient<ChargeAgv> chargeAgvClient,
         IRequestClient<SetAgvForceIdle> setForceIdleClient,
         IRequestClient<GetAgvHasCargo> getAgvHasCargoClient,
         IRequestClient<GetCargosOfAgv> getCargosOfAgvClient,
@@ -94,6 +95,7 @@ public class AgvController : Controller
         _getAgvErrorsRequestClient = getAgvErrorsRequestClient;
         _getAgvErrorHistoryRequestClient = getAgvErrorHistoryRequestClient;
         _moveAgvClient = moveAgvClient;
+        _chargeAgvClient = chargeAgvClient;
         _setForceIdleClient = setForceIdleClient;
         _getAgvHasCargoClient = getAgvHasCargoClient;
         _getCargosOfAgvClient = getCargosOfAgvClient;
@@ -370,21 +372,32 @@ public class AgvController : Controller
     /// Move agv manually to a specific node. 
     /// </summary>
     /// <response code="200">Ok: The ActionGroup for the move was created and is going to be processed</response>
-    /// <response code="400">Target node does not exist.</response>
+    /// <response code="400">Target node does not exist or is reserved or occupied.</response>
     /// <response code="404">Agv with given correlationId not found.</response>
     /// <returns>The CorrelationId of the created ActionGroup</returns>
     [HttpPatch]
     [Route("/agv/{correlationId:guid}/move")]
     public async Task<ActionResult<Guid>> MoveAgv(Guid correlationId, string destinationNodeId)
     {
-        Response<AgvMoveSuccessful, AgvMoveFailed, AgvNotFoundResult> response = await _moveAgvClient.GetResponse<AgvMoveSuccessful, AgvMoveFailed, AgvNotFoundResult>(new MoveAgv(correlationId, destinationNodeId, ActionGroupCreator.TransportOrderWebApi));
+        Response<AgvMoveSuccessful> response = await _moveAgvClient.GetResponse<AgvMoveSuccessful>(new MoveAgv(correlationId, destinationNodeId, ActionGroupCreator.TransportOrderWebApi));
 
-        return response.Message switch
-        {
-            AgvMoveFailed moveAgvFailureMessage => BadRequest(moveAgvFailureMessage.Reason),
-            AgvMoveSuccessful moveAgvSuccessMessage => Ok(moveAgvSuccessMessage.ActionGroupCorrelationId),
-            _ => NotFound()
-        };
+        return Ok(response.Message.ActionGroupCorrelationId);
+    }
+
+    /// <summary>
+    /// Move agv manually to a specific charger and charge it there. 
+    /// </summary>
+    /// <response code="200">Ok: The ActionGroup for the move was created and is going to be processed</response>
+    /// <response code="400">Charger does not exist, is not of type charge, or is reserved or occupied.</response>
+    /// <response code="404">Agv with given correlationId not found.</response>
+    /// <returns>The CorrelationId of the created ActionGroup</returns>
+    [HttpPatch]
+    [Route("/agv/{correlationId:guid}/chargeAtCharger")]
+    public async Task<ActionResult<Guid>> ChargeAgvAtCharger(Guid correlationId, string chargerId)
+    {
+        Response<AgvMoveSuccessful> response = await _chargeAgvClient.GetResponse<AgvMoveSuccessful>(new ChargeAgv(correlationId, chargerId));
+
+        return Ok(response.Message.ActionGroupCorrelationId);
     }
 
     /// <summary>
@@ -436,7 +449,7 @@ public class AgvController : Controller
     }
 
     /// <summary>
-    /// Send agv to closest charger.
+    /// Send agv to nearest charger.
     /// </summary>
     /// <response code="200">Agv send to charger.</response>
     /// <response code="404">Agv with given correlationId not found or no free charge station available.</response>

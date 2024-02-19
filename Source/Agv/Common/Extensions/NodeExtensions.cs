@@ -47,4 +47,16 @@ public static class NodeExtensions
     {
         AgvGraph.NodeType.Drop, AgvGraph.NodeType.PickDrop
     }.Contains(node.Type);
+    
+    /// <summary>
+    /// True if a nodes needs to be reserved.
+    /// </summary>
+    /// <param name="node">The node.</param>
+    public static bool NeedsReservation (this GraphNode node) =>  new []{ AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park}.Contains(node.Type);
+
+    /// <summary>
+    /// True if a nodes is a charge node.
+    /// </summary>
+    /// <param name="node">The node.</param>
+    public static bool IsCharger(this GraphNode node) => node.Type == AgvGraph.NodeType.Charge;
 }

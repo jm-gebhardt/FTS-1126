@@ -1,6 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.Graphs.Requests;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.CommandHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.EventHandler;
@@ -63,7 +62,6 @@ public static class CoreBusRegistrationExtensions
             partitioner.PartitionMessageById<AcceptAgvCommand, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<LockAgv, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<UnlockAgv, AgvCommandHandler>(c);
-            partitioner.PartitionMessageById<MoveAgv, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<SetAgvForceIdle, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<HandleAgvActionStartFailure, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<HandleActionCompletion, AgvCommandHandler>(c);
@@ -74,7 +72,6 @@ public static class CoreBusRegistrationExtensions
         busRegistrationConfigurator.AddRequestClient<AcceptAgvCommand>();
         busRegistrationConfigurator.AddRequestClient<LockAgv>();
         busRegistrationConfigurator.AddRequestClient<UnlockAgv>();
-        busRegistrationConfigurator.AddRequestClient<MoveAgv>();
         busRegistrationConfigurator.AddRequestClient<SetAgvForceIdle>();
 
         busRegistrationConfigurator.AddConsumer<ResetAgvErrorsRequestHandler>();
@@ -198,6 +195,10 @@ public static class CoreBusRegistrationExtensions
         configurator.AddConsumer<GetAgvPositionsRequestHandler>();
         configurator.AddRequestClient<GetAgvPositions>();
         configurator.AddRequestClient<GetAgvPosition>();
+
+        configurator.AddConsumer<MoveAgvRequestHandler>();
+        configurator.AddRequestClient<MoveAgv>();
+        configurator.AddRequestClient<ChargeAgv>();
 
         configurator.AddConsumer<GetAgvsRequestHandler>();
         configurator.AddRequestClient<GetAgvs>();

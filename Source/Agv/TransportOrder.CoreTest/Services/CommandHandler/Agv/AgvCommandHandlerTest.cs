@@ -1,11 +1,6 @@
 ﻿using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
-using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Metrics;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
@@ -13,7 +8,6 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Commands;
-using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
@@ -446,65 +440,5 @@ public class AgvCommandHandlerTest
 
         (await fixture.TestHarness.Published.Any<CargoChanged>()).ShouldBeFalse();
         (await fixture.TestHarness.Published.Any<HasCargoChanged>()).ShouldBeFalse();
-    }
-
-    [TestMethod]
-    public async Task Consume_MoveAgv_AgvDoesNotExist_RespondsAgvNotFoundResult()
-    {
-        var fixture = new AgvCommandHandlerTestFixture()
-            .AddAgvs([]);
-
-        await fixture.PublishMessageAsync(new MoveAgv("unknown agv".ToGuid(), "known target", ActionGroupCreator.TransportOrderWebApi));
-        
-        (await fixture.TestHarness.Published.Any<AgvNotFoundResult>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<AgvMoveFailed>()).ShouldBeFalse();
-        (await fixture.TestHarness.Published.Any<QueueActionGroup>()).ShouldBeFalse();
-        (await fixture.TestHarness.Published.Any<AgvMoveSuccessful>()).ShouldBeFalse();
-    }
-
-    [TestMethod]
-    public async Task Consume_MoveAgv_TargetDoesNotExist_RespondsAgvMoveFailed()
-    {
-        var agv = AgvGenerator.GenerateIdleAgv();
-        var fixture = new AgvCommandHandlerTestFixture()
-            .AddAgvs([agv])
-            .WithNodeExists(false);
-
-        await fixture.PublishMessageAsync(new MoveAgv(agv.CorrelationId, "unknown target", ActionGroupCreator.TransportOrderWebApi));
-
-        (await fixture.TestHarness.Published.Any<AgvNotFoundResult>()).ShouldBeFalse();
-        (await fixture.TestHarness.Published.Any<AgvMoveFailed>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<QueueActionGroup>()).ShouldBeFalse();
-        (await fixture.TestHarness.Published.Any<AgvMoveSuccessful>()).ShouldBeFalse();
-    }
-
-    [UsedImplicitly]
-    private class FakeQueueActionGroupConsumer: IConsumer<QueueActionGroup>
-    {
-        public async Task Consume(ConsumeContext<QueueActionGroup> context)
-        {
-            await context.RespondAsync(new Success());
-        }
-    }
-
-    [TestMethod]
-    public async Task Consume_MoveAgv_ValidData_Responds_AgvMoveSuccessful()
-    {    
-       var agv = AgvGenerator.GenerateIdleAgv();
-        var fixture = new AgvCommandHandlerTestFixture(
-                busRegistrationConfigurator: c=>
-                {
-                    c.AddConsumer<FakeQueueActionGroupConsumer>();
-                    c.AddRequestClient<QueueActionGroup>();
-                })
-            .AddAgvs([agv])
-            .WithNodeExists(true);
-
-        await fixture.PublishMessageAsync(new MoveAgv(agv.CorrelationId, "known target", ActionGroupCreator.TransportOrderWebApi));
-       
-        (await fixture.TestHarness.Published.Any<AgvNotFoundResult>()).ShouldBeFalse();
-        (await fixture.TestHarness.Published.Any<AgvMoveFailed>()).ShouldBeFalse();
-        (await fixture.TestHarness.Published.Any<QueueActionGroup>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<AgvMoveSuccessful>()).ShouldBeTrue();
     }
 }
