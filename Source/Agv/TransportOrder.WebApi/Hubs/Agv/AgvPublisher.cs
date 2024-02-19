@@ -62,7 +62,7 @@ public class AgvPublisher : IAgvPublisher
     /// <inheritdoc/>
     public Task SendAgvBatteryStatusAsync(AgvBatteryChargeChanged batteryChargeChanged)
     {
-        var dto = _mapper.Map<AgvBatteryStatusDto>(batteryChargeChanged);
+        var dto = _mapper.Map<AgvBatteryStatusDto>(batteryChargeChanged.AgvBatteryStatus);
         return _hubContext.Clients.All.BatteryStatusChanged(dto);
     }
 

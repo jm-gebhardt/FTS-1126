@@ -36,7 +36,7 @@ public abstract class DesignTimeDbContextFactory<TDbContext> : IDesignTimeDbCont
         var hostBuilder = Host.CreateDefaultBuilder(args);
         string path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
         hostBuilder.ConfigureHostConfiguration(builder => builder.SetBasePath(path)
-            .AddJsonFile("appsettings.json")
+            .AddJsonFile("appsettings.json", true)
             .AddEnvironmentVariables());
         hostBuilder.ConfigureServices((ctx, services) =>
         {

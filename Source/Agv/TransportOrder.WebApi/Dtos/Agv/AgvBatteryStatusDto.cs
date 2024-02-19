@@ -3,7 +3,7 @@
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
 
 /// <summary>
-/// Dto for battery status of an AGV
+/// Dto for battery status of an AGV.
 /// </summary>
 public record AgvBatteryStatusDto : DatedMessage
 {

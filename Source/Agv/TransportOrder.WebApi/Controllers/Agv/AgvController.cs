@@ -33,6 +33,7 @@ public class AgvController : Controller
     private readonly IRequestClient<GetAgv> _getAgvClient;
     private readonly IRequestClient<GetAgvGraph> _getAgvGraphClient;
     private readonly IRequestClient<GetAgvData> _getAgvDataClient;
+    private readonly IRequestClient<GetAgvBattery> _getAgvBatteryClient;
     private readonly IRequestClient<GetCurrentAgvRoute> _getCurrentAgvRouteClient;
     private readonly IRequestClient<GetRoute> _getRouteClient;
     private readonly IRequestClient<GetAgvPosition> _getAgvPositionClient;
@@ -58,6 +59,7 @@ public class AgvController : Controller
     public AgvController(IMapper mapper, IRequestClient<GetAgv> getAgvClient,
         IRequestClient<GetAgvGraph> getAgvGraphClient,
         IRequestClient<GetAgvData> getAgvDataClient,
+        IRequestClient<GetAgvBattery> getAgvBatteryClient,
         IRequestClient<GetCurrentAgvRoute> getCurrentAgvRouteClient,
         IRequestClient<GetRoute> getRouteClient,
         IRequestClient<GetAgvPosition> getAgvPositionClient,
@@ -80,6 +82,7 @@ public class AgvController : Controller
         _getAgvClient = getAgvClient;
         _getAgvGraphClient = getAgvGraphClient;
         _getAgvDataClient = getAgvDataClient;
+        _getAgvBatteryClient = getAgvBatteryClient;
         _getCurrentAgvRouteClient = getCurrentAgvRouteClient;
         _getRouteClient = getRouteClient;
         _getAgvPositionClient = getAgvPositionClient;
@@ -142,6 +145,21 @@ public class AgvController : Controller
         Response<GotAgvData> response = await _getAgvDataClient.GetResponse<GotAgvData>(new GetAgvData(correlationId));
         var agvData = _mapper.Map<AgvDataDto>(response.Message.AgvData);
         return Ok(agvData);
+    }
+
+    /// <summary>
+    /// Get agv battery.
+    /// </summary>
+    /// <response code="200">Ok</response>
+    /// <response code="204">No Content</response>
+    /// <response code="404">AGV with given correlationId not found.</response>
+    [HttpGet]
+    [Route("/agv/{correlationId:guid}/battery")]
+    public async Task<ActionResult<AgvBatteryStatusDto>> GetAgvBattery(Guid correlationId)
+    {
+        Response<GotAgvBattery> response = await _getAgvBatteryClient.GetResponse<GotAgvBattery>(new GetAgvBattery(correlationId));
+        var agvBattery = _mapper.Map<AgvBatteryStatusDto>(response.Message.AgvBatteryStatus);
+        return Ok(agvBattery);
     }
 
     /// <summary>

@@ -78,6 +78,14 @@ public record AgvStatus : CorrelatedBy<Guid>
     [UsedImplicitly]
     public double BatteryTemperature { get; init; }
 
+    /// <summary>Time when the Agv is fully charged.</summary>
+    [UsedImplicitly]
+    public DateTime? EstimatedFullyChargedTime { get; init; }
+
+    /// <summary>The date when the battery was replaced the last time.</summary>
+    [UsedImplicitly]
+    public DateTime? LastBatteryReplacement { get; init; }
+
     /// <summary>
     /// AGV is disturbed.
     /// </summary>
@@ -110,6 +118,8 @@ public record AgvStatus : CorrelatedBy<Guid>
     /// <param name="batteryTemperature">Battery temperature [°C].</param>
     /// <param name="disturbed">AGV is disturbed.</param>
     /// <param name="lastNodeId">Node id of last reached node or, if AGV is currently on a node, current node. Empty string if no lastNodeId is available.</param>
+    /// <param name="estimatedFullyChargedTime">Time when the Agv is fully charged.</param>
+    /// <param name="lastBatteryReplacement">The date when the battery was replaced the last time.</param>
     [JsonConstructor]
     public AgvStatus(Guid correlationId,
         string? orderId,
@@ -121,7 +131,9 @@ public record AgvStatus : CorrelatedBy<Guid>
         double batteryCurrent,
         double batteryTemperature,
         bool disturbed,
-        string? lastNodeId = null
+        string? lastNodeId = null,
+        DateTime? estimatedFullyChargedTime = null,
+        DateTime? lastBatteryReplacement = null
     )
     {
         CorrelationId = correlationId;
@@ -135,6 +147,8 @@ public record AgvStatus : CorrelatedBy<Guid>
         BatteryTemperature = batteryTemperature;
         Disturbed = disturbed;
         LastNodeId = lastNodeId;
+        EstimatedFullyChargedTime = estimatedFullyChargedTime;
+        LastBatteryReplacement = lastBatteryReplacement;
     }
 
     /// <summary>

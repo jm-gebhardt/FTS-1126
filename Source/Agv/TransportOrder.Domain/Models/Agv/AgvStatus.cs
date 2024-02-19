@@ -45,14 +45,14 @@ public record AgvStatus
     public bool Automatic { get; }
 
     /// <summary>
-    /// Battery charge.
+    /// Battery charge [%].
     /// </summary>
     /// <remarks>
     /// VDA5050.state.schema.batteryState.batteryCharge
     /// Battery charge level in [%].
     /// </remarks>
     [UsedImplicitly]
-    public double BatteryCharge { get; }
+    public double BatteryCharge { get; init; }
 
     /// <summary>
     /// AGV is charging.
@@ -76,6 +76,14 @@ public record AgvStatus
     [UsedImplicitly]
     public double BatteryTemperature { get; init; }
 
+    /// <summary>Time when the Agv is fully charged.</summary>
+    [UsedImplicitly]
+    public DateTime? EstimatedFullyChargedTime { get; init; }
+
+    /// <summary>The date when the battery was replaced the last time.</summary>
+    [UsedImplicitly]
+    public DateTime? LastBatteryReplacement { get; init; }
+
     /// <summary>
     /// AGV is disturbed.
     /// </summary>
@@ -98,17 +106,19 @@ public record AgvStatus
     /// <summary>
     /// Constructor of AgvStatus
     /// </summary>
-    /// <param name="correlationId"></param>
+    /// <param name="correlationId">AGV correlation ID</param>
     /// <param name="orderId">Internally we are using the ActionCorrelationId</param>
-    /// <param name="busy"></param>
-    /// <param name="automatic"></param>
-    /// <param name="batteryCharge"></param>
+    /// <param name="busy">AGV is busy (not idle).</param>
+    /// <param name="automatic">AGV is in automatic mode.</param>
+    /// <param name="batteryCharge">Battery charge [%]</param>
+    /// <param name="charging">AGV is charging.</param>
+    /// <param name="disturbed">AGV is disturbed.</param>
+    /// <param name="lastNodeId">nodeID of last reached node or, if AGV is currently on a node, current node.</param>
     /// <param name="batteryVoltage">Battery voltage [V].</param>
     /// <param name="batteryCurrent">Battery current [A].</param>
     /// <param name="batteryTemperature">Battery temperature [°C].</param>
-    /// <param name="charging"></param>
-    /// <param name="disturbed"></param>
-    /// <param name="lastNodeId"></param>
+    /// <param name="estimatedFullyChargedTime">Time when the Agv is fully charged.</param>
+    /// <param name="lastBatteryReplacement">The date when the battery was replaced the last time.</param>
     [JsonConstructor]
     public AgvStatus(Guid correlationId,
         string? orderId,
@@ -120,8 +130,10 @@ public record AgvStatus
         string? lastNodeId = null,
         double batteryVoltage = double.MaxValue,
         double batteryCurrent = double.MinValue,
-        double batteryTemperature = double.MaxValue
-    )
+        double batteryTemperature = double.MaxValue,
+        DateTime? estimatedFullyChargedTime = null,
+        DateTime? lastBatteryReplacement = null
+    ) : this()
     {
         CorrelationId = correlationId;
         OrderId = orderId;
@@ -134,6 +146,15 @@ public record AgvStatus
         BatteryVoltage = batteryVoltage;
         BatteryCurrent = batteryCurrent;
         BatteryTemperature = batteryTemperature;
+        // if these values are not set, we take the default values to simulate some data
+        if (estimatedFullyChargedTime != null)
+        {
+            EstimatedFullyChargedTime = estimatedFullyChargedTime;
+        }
+        if (lastBatteryReplacement != null)
+        {
+            LastBatteryReplacement = lastBatteryReplacement;
+        }
     }
 
     /// <summary>
@@ -149,5 +170,7 @@ public record AgvStatus
         Charging = false;
         Disturbed = false;
         LastNodeId = null;
+        EstimatedFullyChargedTime = Charging ? DateTime.UtcNow + TimeSpan.FromSeconds((100 - BatteryCharge) * 1) : null;
+        LastBatteryReplacement = DateTime.UtcNow.AddDays(-2);
     }
 }

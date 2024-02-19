@@ -10,7 +10,6 @@ using Gebhardt.StoreWare.Agv.Common.Messages.Graphs.Events;
 using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.CmdOptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
@@ -24,6 +23,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Commands;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
+using AgvError = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.AgvError;
 using System.Collections.ObjectModel;
 using AgvSettings = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings.AgvSettings;
 using AgvStatus = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv.AgvStatus;
@@ -170,16 +170,14 @@ public class AgvCommandHandler :
     {
         (var correlationId, string _, var agvStatusMessageContent) = context.Message;
         var agvStatus = _mapper.Map<AgvStatus>(agvStatusMessageContent);
-        Domain.Models.Agv.Agv agv;
-        try
-        {
-            agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
-        }
-        catch (AgvNotFoundException)
+
+        var agv = await _agvDb.Agvs.TryGetAgvAsync(correlationId);
+        if (agv == null)
         {
             await CreateAgv(context);
             return;
         }
+
         _logger.LogDebug("Updating AgvStatus for agv {AgvCorrelationId}, {OldStatus} -> {NewStatus}", correlationId, agv.AgvStatus?.ToString(), agvStatus.ToString());
         var oldStatus = agv.AgvStatus;
         bool wasOnline = agv.IsOnline;
@@ -251,15 +249,9 @@ public class AgvCommandHandler :
         if (batteryChargeChanged)
         {
             var agvSettings = _settingsProvider.GetSettings();
+            var agvBatteryStatus = new AgvBatteryStatus(_mapper.Map<Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.AgvStatus>(agvStatus), _mapper.Map<Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent.AgvSettings>(agvSettings));
 
-            await context.Publish(new AgvBatteryChargeChanged(agv.CorrelationId,
-                oldStatus!.BatteryCharge,
-                agvStatus.BatteryCharge,
-                agvSettings,
-                agvStatus,
-                // some time estimation
-                agvStatus.Charging ? DateTime.UtcNow + TimeSpan.FromSeconds((100 - agvStatus.BatteryCharge) * 1) : null,
-                DateTime.UtcNow.AddDays(-2)));
+            await context.Publish(new AgvBatteryChargeChanged(oldStatus!.BatteryCharge, agvBatteryStatus));
         }
         if (lastNodeIdChanged)
         {
@@ -450,7 +442,7 @@ public class AgvCommandHandler :
         var moveActionGroup = new ActionGroup(
             groupCorrelationId,
             $"Manual {ActionType.Move}",
-            new List<AgvAction> { new(Guid.NewGuid(), ActionType.Move, targetNodeId, groupCorrelationId) },
+            new List<AgvAction> {new(Guid.NewGuid(), ActionType.Move, targetNodeId, groupCorrelationId)},
             assignedAgv: agv.CorrelationId,
             isManual: true,
             creator: creator
@@ -562,12 +554,8 @@ public class AgvCommandHandler :
 
     private async Task<Domain.Models.Agv.Agv?> TryGetAgv(Guid agvCorrelationId)
     {
-        Domain.Models.Agv.Agv? agv = null;
-        try
-        {
-            agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
-        }
-        catch (AgvNotFoundException)
+        var agv = await _agvDb.Agvs.TryGetAgvAsync(agvCorrelationId);
+        if (agv == null)
         {
             _logger.LogWarning("Agv {AgvCorrelationId} not found for responding to request.", agvCorrelationId);
         }
@@ -577,7 +565,7 @@ public class AgvCommandHandler :
     private async Task TryAutoAccept(IPublishEndpoint context, Domain.Models.Agv.Agv agv, CancellationToken cancellationToken)
     {
         _logger.LogDebug("AutoAccept {CorrelationId}", agv.CorrelationId);
-        if (_productionOptions.AutoAccept && agv is { GraphExists: true, DataExist: true, CurrentAgvState: AgvState.Discovered })
+        if (_productionOptions.AutoAccept && agv is {GraphExists: true, DataExist: true, CurrentAgvState: AgvState.Discovered})
         {
             _logger.LogDebug("AutoAccept {AgvCorrelationId}, Graph: {GraphExists}, Data: {DataExists}", agv.CorrelationId, agv.GraphExists, agv.DataExist);
             await TransitionToIdleAsync(context, agv, cancellationToken);

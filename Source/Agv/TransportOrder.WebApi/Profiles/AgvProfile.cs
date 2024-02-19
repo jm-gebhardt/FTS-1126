@@ -23,7 +23,6 @@ public class AgvProfile : WebApiProfile
         CreateMap<CurrentAgvRouteReadModel, CurrentAgvRouteDto>()
             .ForMember(c => c.CurrentRoute, c => c.MapFrom(o => o));
         CreateMap<AgvState, AgvStateType>();
-        CreateMap<AgvBatteryChargeChanged, AgvBatteryStatusDto>()
-            .ForMember(c => c.BatteryCharge, o => o.MapFrom(s => s.NewBatteryCharge));
+        CreateMap<AgvBatteryStatus, AgvBatteryStatusDto>();
     }
 }

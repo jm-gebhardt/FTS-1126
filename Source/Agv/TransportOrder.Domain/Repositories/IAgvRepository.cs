@@ -37,6 +37,12 @@ public interface IAgvRepository
     Task<Models.Agv.Agv> GetAgvAsync(Guid correlationId);
 
     /// <summary>
+    /// Get specific AGV
+    /// </summary>
+    /// <returns>Agv object or null.</returns>
+    Task<Domain.Models.Agv.Agv?> TryGetAgvAsync(Guid correlationId);
+
+    /// <summary>
     /// Checks if the agv matching the correlation id exists.
     /// </summary>
     /// <param name="correlationId">The correlation id to check.</param>

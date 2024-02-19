@@ -166,10 +166,9 @@ public class AgvEventHandlerTest
     [DataRow(AgvEventHandlerTestFixture.BatteryLevelLow, AgvEventHandlerTestFixture.BatteryLevelCritical)]
     public async Task Consume_AgvBatteryChargeChanged_Publish_AgvNeedsCharging(int oldCharge, int newCharge)
     {
-        var correlationId = Guid.NewGuid();
         var fixture = new AgvEventHandlerTestFixture();
 
-        await fixture.PublishMessageAsync(new AgvBatteryChargeChanged(correlationId, oldCharge, newCharge, AgvEventHandlerTestFixture.AgvSettings, new TransportOrder.Domain.Models.Agv.AgvStatus(), null, null));
+        await fixture.PublishMessageAsync(new AgvBatteryChargeChanged(oldCharge, new AgvBatteryStatus(new AgvStatus(), AgvEventHandlerTestFixture.AgvSettingsMessage)));
 
         (await fixture.TestHarness.Published.Any<AgvNeedsCharging>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<ChargingAgvCanHandleActionsAgain>()).ShouldBeFalse();
@@ -179,10 +178,11 @@ public class AgvEventHandlerTest
     [TestMethod]
     public async Task Consume_AgvBatteryChargeChanged_Publish_AbortChargeAction()
     {
-        var correlationId = Guid.NewGuid();
         var fixture = new AgvEventHandlerTestFixture();
 
-        await fixture.PublishMessageAsync(new AgvBatteryChargeChanged(correlationId, AgvEventHandlerTestFixture.MaxChargeUp - 1, AgvEventHandlerTestFixture.MaxChargeUp, AgvEventHandlerTestFixture.AgvSettings, new TransportOrder.Domain.Models.Agv.AgvStatus(), null, null));
+        const double oldCharge = AgvEventHandlerTestFixture.MaxChargeUp - 1;
+        const double newCharge = AgvEventHandlerTestFixture.MaxChargeUp;
+        await fixture.PublishMessageAsync(new AgvBatteryChargeChanged(oldCharge, new AgvBatteryStatus(new AgvStatus {BatteryCharge = newCharge}, AgvEventHandlerTestFixture.AgvSettingsMessage)));
 
         (await fixture.TestHarness.Published.Any<AbortChargeAction>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<ChargingAgvCanHandleActionsAgain>()).ShouldBeFalse();
@@ -194,10 +194,8 @@ public class AgvEventHandlerTest
     [DataRow(AgvEventHandlerTestFixture.BatteryLevelLow, AgvEventHandlerTestFixture.MaxChargeUp)]
     public async Task Consume_AgvBatteryChargeChanged_Publish_ChargingAgvsCanHandleActionsAgainEvent(int oldCharge, int newCharge)
     {
-        var correlationId = Guid.NewGuid();
         var fixture = new AgvEventHandlerTestFixture();
-
-        await fixture.PublishMessageAsync(new AgvBatteryChargeChanged(correlationId, oldCharge, newCharge, AgvEventHandlerTestFixture.AgvSettings, new TransportOrder.Domain.Models.Agv.AgvStatus(), null, null));
+        await fixture.PublishMessageAsync(new AgvBatteryChargeChanged(oldCharge, new AgvBatteryStatus(new AgvStatus {BatteryCharge = newCharge}, AgvEventHandlerTestFixture.AgvSettingsMessage)));
 
         (await fixture.TestHarness.Published.Any<ChargingAgvCanHandleActionsAgain>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<AgvNeedsCharging>()).ShouldBeFalse();

@@ -32,7 +32,7 @@ public class AgvProfileTest
         var stateTransitionTimestamp = DateTime.UtcNow;
 
         var actionGroup = new ActionGroupReadModel(correlationId, orderId, correlationId, stateTransitionTimestamp, null, null, TimeSpan.FromHours(99), ActionGroupState.Created, ActionGroupCreator.TransportOrderWebApi, new List<AgvActionReadModel>(), false, new List<Reason>());
-        var agvMessageContent = new Messages.MessageContent.Agv(correlationId, agvSerialNumber, agvSerialNumber, AgvState.Idle, stateTransitionTimestamp, DateTime.MinValue, true, false, false, true, 50d, false, actionGroup, new List<AgvError>(), lastNodeId, new Messages.MessageContent.GraphNode { Id = lastNodeId, Type = AgvGraph.NodeType.WayPoint, X = 1.0f, Y = 2.0f, Z = 0.0f, Theta = 0.0f });
+        var agvMessageContent = new Messages.MessageContent.Agv(correlationId, agvSerialNumber, agvSerialNumber, AgvState.Idle, stateTransitionTimestamp, DateTime.MinValue, true, false, false, true, 50d, false, actionGroup, new List<AgvError>(), lastNodeId, new Messages.MessageContent.GraphNode {Id = lastNodeId, Type = AgvGraph.NodeType.WayPoint, X = 1.0f, Y = 2.0f, Z = 0.0f, Theta = 0.0f});
 
         var mapper = GetMapper();
 
@@ -84,24 +84,24 @@ public class AgvProfileTest
     }
 
     [TestMethod]
-    public void Map_ShouldMapAllPropertiesCorrectly_WhereAgvBatteryChargeChangedIsMappedToAgvBatteryStatusDto()
+    public void Map_ShouldMapAllPropertiesCorrectly_WhereAgvBatteryStatusIsMappedToAgvBatteryStatusDto()
     {
-        var agvBatteryChargeChanged = new AgvBatteryChargeChanged(Guid.NewGuid(), 1, 2, 3, 4, 5, 6, true, 7, 8, 9, null, null);
+        var agvBatteryStatus = new AgvBatteryStatus(Guid.NewGuid(), 2, true, 7, 8, 9, 3, 4, 5, 6, null, null);
 
         var mapper = GetMapper();
 
-        var dto = mapper.Map<AgvBatteryStatusDto>(agvBatteryChargeChanged);
-        dto.CorrelationId.ShouldBe(agvBatteryChargeChanged.CorrelationId);
-        dto.BatteryCharge.ShouldBe(agvBatteryChargeChanged.NewBatteryCharge);
-        dto.BatteryLevelCritical.ShouldBe(agvBatteryChargeChanged.BatteryLevelCritical);
-        dto.BatteryLevelLow.ShouldBe(agvBatteryChargeChanged.BatteryLevelLow);
-        dto.MinChargeUp.ShouldBe(agvBatteryChargeChanged.MinChargeUp);
-        dto.MaxChargeUp.ShouldBe(agvBatteryChargeChanged.MaxChargeUp);
-        dto.IsCharging.ShouldBe(agvBatteryChargeChanged.IsCharging);
-        dto.BatteryVoltage.ShouldBe(agvBatteryChargeChanged.BatteryVoltage);
-        dto.BatteryCurrent.ShouldBe(agvBatteryChargeChanged.BatteryCurrent);
-        dto.BatteryTemperature.ShouldBe(agvBatteryChargeChanged.BatteryTemperature);
-        dto.EstimatedFullyChargedTime.ShouldBe(agvBatteryChargeChanged.EstimatedFullyChargedTime);
-        dto.LastBatteryReplacement.ShouldBe(agvBatteryChargeChanged.LastBatteryReplacement);
+        var dto = mapper.Map<AgvBatteryStatusDto>(agvBatteryStatus);
+        dto.CorrelationId.ShouldBe(agvBatteryStatus.CorrelationId);
+        dto.BatteryCharge.ShouldBe(agvBatteryStatus.BatteryCharge);
+        dto.BatteryLevelCritical.ShouldBe(agvBatteryStatus.BatteryLevelCritical);
+        dto.BatteryLevelLow.ShouldBe(agvBatteryStatus.BatteryLevelLow);
+        dto.MinChargeUp.ShouldBe(agvBatteryStatus.MinChargeUp);
+        dto.MaxChargeUp.ShouldBe(agvBatteryStatus.MaxChargeUp);
+        dto.IsCharging.ShouldBe(agvBatteryStatus.IsCharging);
+        dto.BatteryVoltage.ShouldBe(agvBatteryStatus.BatteryVoltage);
+        dto.BatteryCurrent.ShouldBe(agvBatteryStatus.BatteryCurrent);
+        dto.BatteryTemperature.ShouldBe(agvBatteryStatus.BatteryTemperature);
+        dto.EstimatedFullyChargedTime.ShouldBe(agvBatteryStatus.EstimatedFullyChargedTime);
+        dto.LastBatteryReplacement.ShouldBe(agvBatteryStatus.LastBatteryReplacement);
     }
 }

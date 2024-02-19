@@ -275,7 +275,21 @@ public class Agv : IAgv
         bool batteryChargeChanged = CheckBatteryChargeChange(newStatus.BatteryCharge);
         if (!batteryChargeChanged && AgvStatus != null)
         {
-            newStatus = new AgvStatus(newStatus.CorrelationId, newStatus.OrderId, newStatus.Busy, newStatus.Automatic, AgvStatus.BatteryCharge, newStatus.Charging, newStatus.Disturbed, newStatus.LastNodeId, newStatus.BatteryVoltage, newStatus.BatteryCurrent, newStatus.BatteryTemperature);
+            newStatus = new AgvStatus(newStatus.CorrelationId,
+                newStatus.OrderId,
+                newStatus.Busy,
+                newStatus.Automatic,
+                // use old battery charge, do not update if it is not considered significant
+                AgvStatus.BatteryCharge,
+                newStatus.Charging,
+                newStatus.Disturbed,
+                newStatus.LastNodeId,
+                newStatus.BatteryVoltage,
+                newStatus.BatteryCurrent,
+                newStatus.BatteryTemperature,
+                newStatus.EstimatedFullyChargedTime,
+                newStatus.LastBatteryReplacement
+            );
         }
 
         bool lastNodeIdChanged = CheckLastNodeIdChanged(newStatus.LastNodeId);
@@ -289,7 +303,7 @@ public class Agv : IAgv
     /// <returns>True if the state has changed</returns>
     public (bool Accepted, bool StateChanged) TryAccept()
     {
-        if (new[] { AgvState.Idle, AgvState.Busy }.Contains(CurrentAgvState))
+        if (new[] {AgvState.Idle, AgvState.Busy}.Contains(CurrentAgvState))
         {
             return (false, false);
         }

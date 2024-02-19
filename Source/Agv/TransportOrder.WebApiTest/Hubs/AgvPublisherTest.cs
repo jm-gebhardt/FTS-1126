@@ -192,6 +192,6 @@ public class AgvPublisherTest
         const bool hasCargo = true;
         PublisherFixture<AgvPublisher, AgvHub, IAgvClient> fixture = new PublisherFixture<AgvPublisher, AgvHub, IAgvClient>().Build();
         await fixture.Publisher.SendAgvHasCargoChangedAsync(agvCorrelationId, hasCargo);
-        fixture.HubContextMock.Verify(c => c.Clients.All.AgvHasCargoChanged(It.Is<AgvHasCargoDto>(dto => dto == new AgvHasCargoDto(agvCorrelationId, hasCargo))), Times.Once);
+        fixture.HubContextMock.Verify(c => c.Clients.All.AgvHasCargoChanged(It.Is<AgvHasCargoDto>(dto => dto.CorrelationId == agvCorrelationId && dto.HasCargo == hasCargo)), Times.Once);
     }
 }

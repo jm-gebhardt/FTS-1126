@@ -50,12 +50,19 @@ public class AgvRepository : IAgvRepository
     /// <inheritdoc />
     public async Task<Domain.Models.Agv.Agv> GetAgvAsync(Guid correlationId)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-        var agv = await context.Set<Domain.Models.Agv.Agv>().Where(a => a.CorrelationId == correlationId).SingleOrDefaultAsync();
+        var agv = await TryGetAgvAsync(correlationId);
         if (agv == null)
         {
             throw new AgvNotFoundException(correlationId);
         }
+        return agv;
+    }
+
+    /// <inheritdoc />
+    public async Task<Domain.Models.Agv.Agv?> TryGetAgvAsync(Guid correlationId)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        var agv = await context.Set<Domain.Models.Agv.Agv>().Where(a => a.CorrelationId == correlationId).SingleOrDefaultAsync();
         return agv;
     }
 

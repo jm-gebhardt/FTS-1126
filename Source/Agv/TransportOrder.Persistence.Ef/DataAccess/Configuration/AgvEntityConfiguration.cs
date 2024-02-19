@@ -22,11 +22,20 @@ public class AgvEntityConfiguration : IEntityTypeConfiguration<Domain.Models.Agv
             o.HasKey(s => s.CorrelationId);
             foreach (var propertyInfo in typeof(AgvStatus).GetProperties())
             {
-                if (propertyInfo.Name == nameof(AgvStatus.CorrelationId))
+                switch (propertyInfo.Name)
                 {
-                    continue;
+                    case nameof(AgvStatus.CorrelationId):
+            
+                    // read only properties, until further implementation.
+                    case nameof(AgvStatus.EstimatedFullyChargedTime):
+                    case nameof(AgvStatus.LastBatteryReplacement):
+                        o.Ignore(propertyInfo.Name);
+                        break;
+            
+                    default:
+                        o.Property(propertyInfo.PropertyType, propertyInfo.Name);
+                        break;
                 }
-                o.Property(propertyInfo.PropertyType, propertyInfo.Name);
             }
         });
         builder.Navigation(e => e.AgvStatus).AutoInclude();

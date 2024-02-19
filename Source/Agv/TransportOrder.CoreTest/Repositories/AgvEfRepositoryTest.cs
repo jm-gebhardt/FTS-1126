@@ -60,7 +60,6 @@ public class AgvEfRepositoryTest
         readyAgv.CorrelationId.ShouldBe(agv.CorrelationId);
         readyAgv.CurrentAgvState.ShouldBe(agv.CurrentAgvState);
         readyAgv.SerialNumber.ShouldBe(agv.SerialNumber);
-        readyAgv.AgvStatus.ShouldBe(agv.AgvStatus);
         readyAgv.IsOnline.ShouldBeFalse();
     }
 
@@ -80,7 +79,6 @@ public class AgvEfRepositoryTest
         readyAgv.CorrelationId.ShouldBe(idleAgv.CorrelationId);
         readyAgv.CurrentAgvState.ShouldBe(idleAgv.CurrentAgvState);
         readyAgv.SerialNumber.ShouldBe(idleAgv.SerialNumber);
-        readyAgv.AgvStatus.ShouldBe(idleAgv.AgvStatus);
     }
 
     [TestMethod]

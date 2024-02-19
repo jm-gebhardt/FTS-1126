@@ -68,10 +68,10 @@ public class AgvEventHandler :
         if (!agv.IsAvailable(ignoreCharging: false, ignoreLocked: true))
         {
             // AGV is still busy
-            _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} is not available (charging ignored).", agvCorrelationId);
+            _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} is not available (charging ignored)", agvCorrelationId);
             return;
         }
-        _logger.LogDebug("Try assigning charging action for agv with CorrelationId: {AgvCorrelationId} because it is ready (and needs charging).", agvCorrelationId);
+        _logger.LogDebug("Try assigning charging action for agv with CorrelationId: {AgvCorrelationId} because it is ready (and needs charging)", agvCorrelationId);
         await _semaphoreProvider.ExecuteLockedAsync(async () =>
         {
             bool hasUnfinishedDropAction = await _actionGroupRepository.HasUnfinishedDropActionsAsync(agv.CorrelationId);
@@ -79,13 +79,13 @@ public class AgvEventHandler :
 
             if (agv.IsLocked)
             {
-                _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} is locked. Try start manual action.", agvCorrelationId);
+                _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} is locked. Try start manual action", agvCorrelationId);
                 await context.Publish(new TryStartManualAction(agv.CorrelationId));
                 return;
             }
             if (hasUnfinishedDropAction)
             {
-                _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} has unfinished drop action.", agvCorrelationId);
+                _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} has unfinished drop action", agvCorrelationId);
                 return;
             }
 
@@ -94,7 +94,7 @@ public class AgvEventHandler :
 
             if (agv.CheckMustCharge(agvSettings) || !notStartedActionGroups.Any())
             {
-                _logger.LogInformation("Create and start charging group for agv {CorrelationId}.", agv.CorrelationId);
+                _logger.LogInformation("Create and start charging group for agv {CorrelationId}", agv.CorrelationId);
                 await context.Publish(new StartChargingActionGroup(agv.CorrelationId));
             }
         }, context.CancellationToken);
@@ -110,7 +110,7 @@ public class AgvEventHandler :
 
         if (!agv.IsAvailable(ignoreCharging: false, ignoreLocked: true))
         {
-            _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} is not available.", agvCorrelationId);
+            _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} is not available", agvCorrelationId);
             return;
         }
 
@@ -125,7 +125,7 @@ public class AgvEventHandler :
             bool hasUnfinishedActionGroup = await _actionGroupRepository.HasUnfinishedActionGroupAsync(agv.CorrelationId);
             if (hasUnfinishedActionGroup)
             {
-                _logger.LogDebug("Starting next action for agv: {AgvCorrelationId}.", agv.CorrelationId);
+                _logger.LogDebug("Starting next action for agv: {AgvCorrelationId}", agv.CorrelationId);
                 await context.Publish(new TryStartNextActionInActionGroup(agv.CorrelationId));
                 return;
             }
@@ -134,7 +134,7 @@ public class AgvEventHandler :
             bool needsCharging = agv.CheckMustCharge(agvSettings);
             if (!needsCharging)
             {
-                _logger.LogDebug("Starting new action for agv: {AgvCorrelationId}.", agv.CorrelationId);
+                _logger.LogDebug("Starting new action for agv: {AgvCorrelationId}", agv.CorrelationId);
                 await context.Publish(new TryStartNewActionGroup(agv.CorrelationId));
             }
         }, context.CancellationToken);
@@ -167,32 +167,32 @@ public class AgvEventHandler :
         var agvCorrelationId = message.CorrelationId;
 
         double oldSoc = message.OldBatteryCharge;
-        double newSoc = message.NewBatteryCharge;
+        double newSoc = message.AgvBatteryStatus.BatteryCharge;
 
         bool isCharging = oldSoc < newSoc;
-        bool wasMinChargedUp = oldSoc >= message.MinChargeUp;
-        bool isMinChargedUp = newSoc >= message.MinChargeUp;
+        bool wasMinChargedUp = oldSoc >= message.AgvBatteryStatus.MinChargeUp;
+        bool isMinChargedUp = newSoc >= message.AgvBatteryStatus.MinChargeUp;
 
-        bool wasMaxChargedUp = oldSoc >= message.MaxChargeUp;
-        bool isMaxChargedUp = newSoc >= message.MaxChargeUp;
+        bool wasMaxChargedUp = oldSoc >= message.AgvBatteryStatus.MaxChargeUp;
+        bool isMaxChargedUp = newSoc >= message.AgvBatteryStatus.MaxChargeUp;
 
-        bool isLow = newSoc <= message.BatteryLevelLow;
+        bool isLow = newSoc <= message.AgvBatteryStatus.BatteryLevelLow;
 
         if (!wasMinChargedUp && isMinChargedUp)
         {
-            _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} has reached min charge up level and can handle actions again.", agvCorrelationId);
+            _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} has reached min charge up level and can handle actions again", agvCorrelationId);
             await context.Publish(new ChargingAgvCanHandleActionsAgain(agvCorrelationId));
         }
 
         if (!wasMaxChargedUp && isMaxChargedUp)
         {
-            _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} has reached max charge up level. So aborting charge action now.", agvCorrelationId);
+            _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} has reached max charge up level. So aborting charge action now", agvCorrelationId);
             await context.Publish(new AbortChargeAction(message.CorrelationId));
         }
 
         if (!isCharging && isLow)
         {
-            _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} is below low level, it needs charging.", agvCorrelationId);
+            _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} is below low level, it needs charging", agvCorrelationId);
             await context.Publish(new AgvNeedsCharging(agvCorrelationId));
         }
     }

@@ -33,7 +33,7 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixtureWithSche
     public const int MinChargeUp = 80;
     public const int MaxChargeUp = 100;
 
-    public static readonly AgvSettings AgvSettings = new()
+    private static readonly AgvSettings _agvSettings = new()
     {
         BatteryLevelCritical = BatteryLevelCritical,
         MaxChargeUp = MaxChargeUp,
@@ -43,13 +43,23 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixtureWithSche
         AgvOfflineTimeoutMsWhileBusy = 20000
     };
 
+    public static readonly Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent.AgvSettings AgvSettingsMessage = new()
+    {
+        BatteryLevelCritical = _agvSettings.BatteryLevelCritical,
+        MaxChargeUp = _agvSettings.MaxChargeUp,
+        MinChargeUp = _agvSettings.MinChargeUp,
+        BatteryLevelLow = _agvSettings.BatteryLevelLow,
+        AgvOfflineTimeoutMsWhileIdle = _agvSettings.AgvOfflineTimeoutMsWhileIdle,
+        AgvOfflineTimeoutMsWhileBusy = _agvSettings.AgvOfflineTimeoutMsWhileBusy
+    };
+
     protected override void ConfigureServices(IServiceCollection collection)
     {
         collection.AddTransient(_ => _actionGroupRepository.Object);
         collection.AddTransient(_ => _maintenanceService.Object);
         collection.AddTransient<ISemaphoreProvider<IAgvsSemaphore>>(_ => _agvSemaphoreProvider);
         collection.AddTransient(_ => _chooseAgvActionGroupService.Object);
-        collection.AddFakeSettings(AgvSettings);
+        collection.AddFakeSettings(_agvSettings);
         collection.AddTransient(_ => _agvDb.Object);
     }
 
@@ -66,14 +76,14 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixtureWithSche
 
     public void AddAgv(TransportOrder.Domain.Models.Agv.Agv agv)
     {
-        _agvDb.AddAgvsToMockRepository(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+        _agvDb.AddAgvsToMockRepository(new List<TransportOrder.Domain.Models.Agv.Agv> {agv});
     }
 
     public void AddChargeAction(ActionGroup actionGroup = null!, bool existsPriorToTest = true)
     {
         if (existsPriorToTest)
         {
-            _actionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<IList<ActionGroupState>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(), It.IsAny<bool?>(), It.IsAny<SortBy>(), It.IsAny<bool>())).ReturnsAsync(new List<ActionGroup> { actionGroup });
+            _actionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<IList<ActionGroupState>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(), It.IsAny<bool?>(), It.IsAny<SortBy>(), It.IsAny<bool>())).ReturnsAsync(new List<ActionGroup> {actionGroup});
         }
         else
         {

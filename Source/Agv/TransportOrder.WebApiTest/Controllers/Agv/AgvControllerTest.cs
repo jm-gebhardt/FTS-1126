@@ -44,7 +44,7 @@ public class AgvControllerTest
 
         var agvDto = await fixture.GetControllerResultAsync(c => c.GetAgv(correlationId));
 
-        var expectedAgvDto = new AgvDto(correlationId, agvSerialNumber, agvSerialNumber, AgvStateType.Idle, agvDto.TimeOfStateTransition, DateTime.MinValue, false, false, true, true, 10d, true, null, new List<AgvErrorDto>(), new GraphNodeDto { Id = "WAY1", Type = AgvGraph.NodeType.WayPoint, X = 1.0f, Y = 2.0f, Z = 0.0f, Theta = 0.0f });
+        var expectedAgvDto = new AgvDto(correlationId, agvSerialNumber, agvSerialNumber, AgvStateType.Idle, agvDto.TimeOfStateTransition, DateTime.MinValue, false, false, true, true, 10d, true, null, new List<AgvErrorDto>(), new GraphNodeDto {Id = "WAY1", Type = AgvGraph.NodeType.WayPoint, X = 1.0f, Y = 2.0f, Z = 0.0f, Theta = 0.0f});
         agvDto.ShouldNotBeNull();
         agvDto.CorrelationId.ShouldBe(expectedAgvDto.CorrelationId);
         agvDto.SerialNumber.ShouldBe(expectedAgvDto.SerialNumber);
@@ -143,6 +143,32 @@ public class AgvControllerTest
 
         agvData.CorrelationId.ShouldBe(correlationId);
         agvData.IpV4Address.ShouldBe(fixture.Ips[index]);
+    }
+
+    [TestMethod]
+    [DataRow(0)]
+    [DataRow(1)]
+    public async Task GetAgvBattery_ValidData_ReturnsAgvBatteryStatusDto(int index)
+    {
+        AgvControllerTestFixture<GetAgvBattery, GetAgvBatteryRequestHandler> fixture = new AgvControllerTestFixture<GetAgvBattery, GetAgvBatteryRequestHandler>()
+            .SetupAgvDbWithDefaultData()
+            .Build();
+        var correlationId = fixture.AgvSerialNumbers[index].ToGuid();
+
+        var agvData = await fixture.GetControllerResultAsync(c => c.GetAgvBattery(correlationId));
+        agvData.ShouldNotBeNull();
+
+        agvData.CorrelationId.ShouldBe(correlationId);
+    }
+
+    [TestMethod]
+    public async Task GetAgvBattery_UnknownCorrelationId_ThrowsException()
+    {
+        AgvControllerTestFixture<GetAgvBattery, GetAgvBatteryRequestHandler> fixture = new AgvControllerTestFixture<GetAgvBattery, GetAgvBatteryRequestHandler>()
+            .SetupAgvDbWithDefaultData()
+            .Build();
+
+        await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await fixture.GetControllerResultAsync(c => c.GetAgvBattery(Guid.Empty)));
     }
 
     [TestMethod]
