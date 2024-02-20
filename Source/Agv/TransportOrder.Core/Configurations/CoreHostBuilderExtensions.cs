@@ -55,7 +55,7 @@ public static class CoreHostBuilderExtensions
             RegisterRepositoryServices(services);
 
             RegisterValidators(services);
-            
+
             RegisterSignificanceCheckers(services);
 
             RegisterMiscellaneousServices(services);
@@ -134,7 +134,6 @@ public static class CoreHostBuilderExtensions
     private static void RegisterSignificanceCheckers(IServiceCollection services)
     {
         services.AddSingleton<ISignificanceChecker<AgvPosition>, AgvPositionSignificanceChecker>();
-        services.AddSingleton<ISignificanceChecker<AgvPosition?>, AgvPositionNullableSignificanceChecker>();
     }
 
     private static void RegisterMiscellaneousServices(IServiceCollection services)

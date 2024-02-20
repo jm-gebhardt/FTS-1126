@@ -25,13 +25,14 @@ public class AgvEntityConfiguration : IEntityTypeConfiguration<Domain.Models.Agv
                 switch (propertyInfo.Name)
                 {
                     case nameof(AgvStatus.CorrelationId):
-            
+                        continue;
+
                     // read only properties, until further implementation.
                     case nameof(AgvStatus.EstimatedFullyChargedTime):
                     case nameof(AgvStatus.LastBatteryReplacement):
                         o.Ignore(propertyInfo.Name);
                         break;
-            
+
                     default:
                         o.Property(propertyInfo.PropertyType, propertyInfo.Name);
                         break;

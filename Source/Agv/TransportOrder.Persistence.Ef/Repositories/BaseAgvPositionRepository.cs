@@ -14,12 +14,12 @@ public abstract class BaseAgvPositionRepository : IAgvPositionRepository
 {
     private const int MaxSilenceInSeconds = 1;
     private readonly IBus _bus;
-    private readonly ISignificanceChecker<AgvPosition?> _significanceChecker;
+    private readonly ISignificanceChecker<AgvPosition> _significanceChecker;
 
     /// <summary>
     /// Constructor
     /// </summary>
-    protected BaseAgvPositionRepository(IBus bus, ISignificanceChecker<AgvPosition?> significanceChecker)
+    protected BaseAgvPositionRepository(IBus bus, ISignificanceChecker<AgvPosition> significanceChecker)
     {
         _bus = bus;
         _significanceChecker = significanceChecker;

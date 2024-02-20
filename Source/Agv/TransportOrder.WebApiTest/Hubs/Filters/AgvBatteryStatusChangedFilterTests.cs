@@ -29,6 +29,17 @@ public class AgvBatteryStatusChangedFilterTests
     }
 
     [TestMethod]
+    public void HasSignificantChanges_WhenBatteryChargeDoesNotChangeSignificantly_ReturnsFalse()
+    {
+        var fixture = new AgvBatteryStatusTestFixture()
+            .WithPreviousDataFrom(DateTime.Parse("2024-02-20T08:24:36.9265131Z"))
+            .WithHasSignificantChanges(false);
+
+        var data = AgvBatteryStatusDtoGenerator.Generate(DateTime.Parse("2024-02-20T08:24:37.9370972Z"));
+        fixture.Filter.ShouldPublish(data).ShouldBeFalse();
+    }
+
+    [TestMethod]
     public void ShouldPublish_WhenMaxSilenceExceeded_ReturnsTrue()
     {
         var fixture = new AgvBatteryStatusTestFixture()

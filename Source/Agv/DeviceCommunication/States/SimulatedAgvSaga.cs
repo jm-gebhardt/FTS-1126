@@ -351,7 +351,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
 
     private static float GetBatteryVoltage() => 48 + GetRandomNoise(0.1);
 
-    private static double GetBatteryTemperature() => 20 + GetRandomNoise(1);
+    private static double GetBatteryTemperature() => 20 + GetRandomNoise(0.1);
 
     private double GetBatteryCurrent()
     {
