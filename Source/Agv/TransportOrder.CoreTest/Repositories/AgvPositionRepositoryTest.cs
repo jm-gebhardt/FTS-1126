@@ -34,11 +34,11 @@ public class AgvPositionRepositoryTest
         var agvPositionStatus = AgvPositionStatusGenerator.Generate();
         var newAgvPositionUpdated = AgvPositionStatusGenerator.Generate(2, 3, 4, agvPositionStatus.CorrelationId);
         var fixture = new AgvPositionRepositoryTestFixture()
-            .WithAgvPositionStatus(agvPositionStatus);
+            .WithAgvPositionStatus(agvPositionStatus)
+            .WithSignificanceCheckerReturns(true);
         var agvPositionRepository = fixture.AgvPositionRepository;
 
         List<AgvPositionStatus> positions = agvPositionRepository.GetAllPositions();
-
         positions.Count.ShouldBe(1);
         positions.First().ShouldBe(agvPositionStatus);
 
@@ -50,7 +50,7 @@ public class AgvPositionRepositoryTest
     }
 
     [TestMethod]
-    public async Task UpdatePosition_PublishesAgvPositionChangedOnTheBus_WhenTheChangeDetectorReturnsTrue()
+    public async Task UpdatePosition_PublishesAgvPositionChangedOnTheBus_WhenTheChangeCheckerReturnsTrue()
     {
         var fixture = new AgvPositionRepositoryTestFixture();
 
@@ -126,7 +126,8 @@ public class AgvPositionRepositoryTest
         var agvPositionStatus2 = AgvPositionStatusGenerator.Generate(x2, y2, z2, correlationId, theta2, positionInitialized2, deviationRange2);
 
         var fixture = new AgvPositionRepositoryTestFixture()
-            .WithAgvPositionStatus(agvPositionStatus1);
+            .WithAgvPositionStatus(agvPositionStatus1)
+            .WithSignificanceCheckerReturns(expectedUpdateCall);
 
         await fixture.AgvPositionRepository.UpdatePositionAsync(agvPositionStatus2);
 

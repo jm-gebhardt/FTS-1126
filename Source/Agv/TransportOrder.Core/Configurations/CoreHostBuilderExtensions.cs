@@ -3,6 +3,7 @@ using Gebhardt.StoreWare.Agv.Common.Configurations;
 using Gebhardt.StoreWare.Agv.Common.Configurations.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
 using Gebhardt.StoreWare.Agv.Common.MassTransit;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.CmdOptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.BackgroundServices;
@@ -14,6 +15,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Routing;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.SignificanceChecker;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Validators;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;
@@ -53,6 +55,8 @@ public static class CoreHostBuilderExtensions
             RegisterRepositoryServices(services);
 
             RegisterValidators(services);
+            
+            RegisterSignificanceCheckers(services);
 
             RegisterMiscellaneousServices(services);
 
@@ -125,6 +129,12 @@ public static class CoreHostBuilderExtensions
         services.AddTransient<IActionGroupValidationService, ActionGroupValidationService>();
         services.AddTransient<IValidator<ActionGroup>, ActionGroupValidator>();
         services.AddTransient<IValidator<AgvAction>, AgvActionValidator>();
+    }
+
+    private static void RegisterSignificanceCheckers(IServiceCollection services)
+    {
+        services.AddSingleton<ISignificanceChecker<AgvPosition>, AgvPositionSignificanceChecker>();
+        services.AddSingleton<ISignificanceChecker<AgvPosition?>, AgvPositionNullableSignificanceChecker>();
     }
 
     private static void RegisterMiscellaneousServices(IServiceCollection services)

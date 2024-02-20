@@ -46,7 +46,7 @@ public record AgvPositionDto
     /// ctor called by AutoMapper.
     /// </summary>
     [PublicAPI]
-    private AgvPositionDto()
+    public AgvPositionDto()
     {
     }
 }

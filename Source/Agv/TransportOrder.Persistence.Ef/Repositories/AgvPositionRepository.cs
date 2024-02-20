@@ -1,4 +1,6 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Services;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
 using MassTransit;
 
@@ -12,7 +14,7 @@ public class AgvPositionRepository : BaseAgvPositionRepository
     private readonly IConcurrentDictionaryProvider<Guid, AgvPositionStatus> _positionDictionaryProvider;
 
     /// <inheritdoc/>
-    public AgvPositionRepository(IBus bus, IConcurrentDictionaryProvider<Guid, AgvPositionStatus> dictionaryProvider) : base(bus)
+    public AgvPositionRepository(IBus bus, IConcurrentDictionaryProvider<Guid, AgvPositionStatus> dictionaryProvider, ISignificanceChecker<AgvPosition?> significanceChecker) : base(bus, significanceChecker)
     {
         _positionDictionaryProvider = dictionaryProvider;
     }

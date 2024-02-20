@@ -1,4 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
@@ -11,35 +12,17 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
 /// </summary>
 public abstract class BaseAgvPositionRepository : IAgvPositionRepository
 {
-    private const float PositionThreshold = 0.005f;
-    private const float DeviationRangeThreshold = 0.001f;
     private const int MaxSilenceInSeconds = 1;
     private readonly IBus _bus;
+    private readonly ISignificanceChecker<AgvPosition?> _significanceChecker;
 
     /// <summary>
     /// Constructor
     /// </summary>
-    protected BaseAgvPositionRepository(IBus bus)
+    protected BaseAgvPositionRepository(IBus bus, ISignificanceChecker<AgvPosition?> significanceChecker)
     {
         _bus = bus;
-    }
-
-    private static bool Equals(AgvPosition? agvPosition1, AgvPosition agvPosition2)
-    {
-        if (agvPosition1 == null)
-        {
-            return false;
-        }
-
-        bool equals =
-            agvPosition1.PositionInitialized == agvPosition2.PositionInitialized
-            && Math.Abs(agvPosition1.X - agvPosition2.X) <= PositionThreshold
-            && Math.Abs(agvPosition1.Y - agvPosition2.Y) <= PositionThreshold
-            && Math.Abs(agvPosition1.Z - agvPosition2.Z) <= PositionThreshold
-            && Math.Abs(agvPosition1.Theta - agvPosition2.Theta) <= PositionThreshold
-            && Math.Abs(agvPosition1.DeviationRange.GetValueOrDefault() - agvPosition2.DeviationRange.GetValueOrDefault()) < DeviationRangeThreshold;
-
-        return equals;
+        _significanceChecker = significanceChecker;
     }
 
     /// <inheritdoc />
@@ -48,7 +31,9 @@ public abstract class BaseAgvPositionRepository : IAgvPositionRepository
         var correlationId = agvPositionStatus.CorrelationId;
         var previousAgvPosition = GetPosition(correlationId);
 
-        if (!Equals(previousAgvPosition?.AgvPosition, agvPositionStatus.AgvPosition) || previousAgvPosition!.CreatedDate < agvPositionStatus.CreatedDate.AddSeconds(-MaxSilenceInSeconds))
+        if (previousAgvPosition == null ||
+            agvPositionStatus.CreatedDate.AddSeconds(-MaxSilenceInSeconds) >= previousAgvPosition.CreatedDate ||
+            _significanceChecker.HasSignificantChanges(previousAgvPosition.AgvPosition, agvPositionStatus.AgvPosition))
         {
             UpdateInternal(agvPositionStatus);
 

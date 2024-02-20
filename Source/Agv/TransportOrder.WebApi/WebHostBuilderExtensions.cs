@@ -4,11 +4,15 @@ using System.Text.Json.Serialization;
 using System.Xml.Linq;
 using System.Xml.XPath;
 using Gebhardt.StoreWare.Agv.Common.Extensions;
+using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.Common.WebApi;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Filters;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Filters.SignificanceCheckers;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Map;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Middleware;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.SchemaFilter;
@@ -41,6 +45,12 @@ public static class WebHostBuilderExtensions
             services.AddTransient<IActionGroupPublisher, ActionGroupPublisher>();
             services.AddTransient<IAgvPublisher, AgvPublisher>();
             services.AddTransient<IMapPublisher, MapPublisher>();
+
+            services.AddSingleton<IHubFilter<AgvBatteryStatusDto>, AgvBatteryStatusChangedFilter>();
+            services.AddSingleton<IHubFilter<AgvPositionStatusDto>, AgvPositionStatusChangedFilter>();
+
+            services.AddSingleton<ISignificanceChecker<AgvBatteryStatusDto>, AgvBatteryStatusSignificanceChecker>();
+            services.AddSingleton<ISignificanceChecker<AgvPositionDto>, AgvPositionSignificanceChecker>();
 
             services.AddScoped<ExceptionHandlerMiddleware>();
             services.AddMvc();
@@ -133,7 +143,7 @@ public static class WebHostBuilderExtensions
                 {
                     swaggerDoc.Servers = new List<OpenApiServer>()
                     {
-                        new() { Description = "Server behind Proxy", Url = serverPath }
+                        new() {Description = "Server behind Proxy", Url = serverPath}
                     };
                 }
             });

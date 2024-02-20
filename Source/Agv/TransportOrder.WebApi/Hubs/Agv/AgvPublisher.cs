@@ -5,6 +5,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.AgvActions;
+using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Filters;
 using Microsoft.AspNetCore.SignalR;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Agv;
@@ -16,11 +17,20 @@ public class AgvPublisher : IAgvPublisher
 {
     private readonly IHubContext<AgvHub, IAgvClient> _hubContext;
     private readonly IMapper _mapper;
+    private readonly IHubFilter<AgvBatteryStatusDto> _agvBatteryChargeChangedHubFilter;
+    private readonly IHubFilter<AgvPositionStatusDto> _agvPositionChangedHubFilter;
 
     /// <summary/>
-    public AgvPublisher(IHubContext<AgvHub, IAgvClient> hubContext, IMapper mapper)
+    public AgvPublisher(
+        IHubContext<AgvHub, IAgvClient> hubContext,
+        IHubFilter<AgvBatteryStatusDto> agvBatteryChargeChangedHubFilter,
+        IHubFilter<AgvPositionStatusDto> agvPositionChangedHubFilter,
+        IMapper mapper
+    )
     {
         _hubContext = hubContext;
+        _agvBatteryChargeChangedHubFilter = agvBatteryChargeChangedHubFilter;
+        _agvPositionChangedHubFilter = agvPositionChangedHubFilter;
         _mapper = mapper;
     }
 
@@ -39,10 +49,13 @@ public class AgvPublisher : IAgvPublisher
     }
 
     /// <inheritdoc/>
-    public Task SendAgvPositionAsync(AgvPositionStatus agvPosition)
+    public async Task SendAgvPositionAsync(AgvPositionStatus agvPosition)
     {
         var dto = _mapper.Map<AgvPositionStatusDto>(agvPosition);
-        return _hubContext.Clients.All.AgvPositionChanged(dto);
+        if (_agvPositionChangedHubFilter.ShouldPublish(dto))
+        {
+            await _hubContext.Clients.All.AgvPositionChanged(dto);
+        }
     }
 
     /// <inheritdoc/>
@@ -60,10 +73,13 @@ public class AgvPublisher : IAgvPublisher
     }
 
     /// <inheritdoc/>
-    public Task SendAgvBatteryStatusAsync(AgvBatteryChargeChanged batteryChargeChanged)
+    public async Task SendAgvBatteryStatusAsync(AgvBatteryChargeChanged batteryChargeChanged)
     {
         var dto = _mapper.Map<AgvBatteryStatusDto>(batteryChargeChanged.AgvBatteryStatus);
-        return _hubContext.Clients.All.BatteryStatusChanged(dto);
+        if (_agvBatteryChargeChangedHubFilter.ShouldPublish(dto))
+        {
+            await _hubContext.Clients.All.BatteryStatusChanged(dto);
+        }
     }
 
     /// <inheritdoc/>
