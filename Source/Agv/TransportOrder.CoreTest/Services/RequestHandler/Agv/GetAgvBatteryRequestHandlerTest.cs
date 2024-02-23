@@ -2,7 +2,9 @@ using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agvs.Queries;
 using MassTransit;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
@@ -23,7 +25,7 @@ public class GetAgvBatteryRequestHandlerTest
     }
 
     [TestMethod]
-    public async Task GetAgvBattery_ValidData_ReturnsSelectedData()
+    public async Task GetAgvBattery_ValidData_ReturnsBatteryStatus()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         AgvRequestsHandlerTestFixture<GetAgvBattery, GetAgvBatteryRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvBattery, GetAgvBatteryRequestHandler>()
@@ -34,5 +36,25 @@ public class GetAgvBatteryRequestHandlerTest
 
         var actualData = response.Message.AgvBatteryStatus;
         actualData.CorrelationId.ShouldBe(agv.CorrelationId);
+    }
+
+    [TestMethod]
+    public async Task GetAgvBattery_ValidData_ReturnsSelectedBatteryStatus()
+    {
+        List<TransportOrder.Domain.Models.Agv.Agv> agvs = AgvGenerator.GenerateIdleAgvs(2).ToList();
+        AgvRequestsHandlerTestFixture<GetAgvsBattery, GetAgvBatteryRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvsBattery, GetAgvBatteryRequestHandler>()
+            .WithAgvs(agvs)
+            .Build();
+
+        Response<GotAgvsBattery> response = await fixture.GetResponseAsync<GotAgvsBattery>(new GetAgvsBattery(agvs.Select(a => a.CorrelationId).ToList()));
+
+        List<AgvBatteryStatus> actualData = response.Message.AgvBatteryStatus;
+        actualData.Count.ShouldBe(2);
+        for (int i = 0; i < 2; i++)
+        {
+            actualData[i].CorrelationId.ShouldBe(agvs[i].CorrelationId);
+            actualData[i].BatteryCharge.ShouldBe(agvs[i].AgvStatus!.BatteryCharge);
+            actualData[i].BatteryLevelLow.ShouldBe(fixture.AgvSettings!.BatteryLevelLow);
+        }
     }
 }

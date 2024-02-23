@@ -153,7 +153,6 @@ public class AgvController : Controller
     /// Get agv battery.
     /// </summary>
     /// <response code="200">Ok</response>
-    /// <response code="204">No Content</response>
     /// <response code="404">AGV with given correlationId not found.</response>
     [HttpGet]
     [Route("/agv/{correlationId:guid}/battery")]

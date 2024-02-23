@@ -182,6 +182,7 @@ public static class CoreBusRegistrationExtensions
         
         configurator.AddConsumer<GetAgvBatteryRequestHandler>();
         configurator.AddRequestClient<GetAgvBattery>();
+        configurator.AddRequestClient<GetAgvsBattery>();
 
         configurator.AddConsumer<GetCurrentAgvRouteRequestHandler>();
         configurator.AddRequestClient<GetCurrentAgvRoute>();

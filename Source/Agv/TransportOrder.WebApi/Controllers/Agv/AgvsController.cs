@@ -20,6 +20,7 @@ public class AgvsController : Controller
     private readonly IRequestClient<GetAgvPositions> _getAgvPositionsClient;
     private readonly IRequestClient<GetAgvGraphs> _getAgvGraphsClient;
     private readonly IRequestClient<GetAgvsData> _getAgvDataClient;
+    private readonly IRequestClient<GetAgvsBattery> _getAgvsBatteryClient;
     private readonly IRequestClient<GetActiveErrorsForAgvs> _getActiveErrorsClient;
     private readonly IRequestClient<GetErrorHistoryForAgvs> _getErrorHistoryClient;
     private readonly IRequestClient<GetCargosOfAgvs> _getCargosOfAgvsClient;
@@ -37,6 +38,7 @@ public class AgvsController : Controller
         IRequestClient<GetAgvPositions> getAgvPositionsClient,
         IRequestClient<GetAgvGraphs> getAgvGraphsClient,
         IRequestClient<GetAgvsData> getAgvDataClient,
+        IRequestClient<GetAgvsBattery> getAgvsBatteryClient,
         IRequestClient<GetActiveErrorsForAgvs> getActiveErrorsClient,
         IRequestClient<GetErrorHistoryForAgvs> getErrorHistoryClient,
         IRequestClient<GetAgvsSettings> getAgvsSettingsClient,
@@ -50,6 +52,7 @@ public class AgvsController : Controller
         _mapper = mapper;
         _getAgvGraphsClient = getAgvGraphsClient;
         _getAgvDataClient = getAgvDataClient;
+        _getAgvsBatteryClient = getAgvsBatteryClient;
         _getActiveErrorsClient = getActiveErrorsClient;
         _getErrorHistoryClient = getErrorHistoryClient;
         _getCargosOfAgvsClient = getCargosOfAgvsClient;
@@ -126,6 +129,21 @@ public class AgvsController : Controller
         Response<GotAgvsData> response = await _getAgvDataClient.GetResponse<GotAgvsData>(new GetAgvsData(correlationIds));
         var graphs = _mapper.Map<List<AgvDataDto>>(response.Message.AgvData);
         return Ok(graphs);
+    }
+
+    /// <summary>
+    /// Get list of selected agvs' battery.
+    /// </summary>
+    /// <param name="correlationIds">Only Agvs contained in this list will be considered</param>
+    /// <response code="200">Ok</response>
+    /// <response code="400">One or more of given correlation ids is unknown.</response>
+    [HttpPost]
+    [Route("/agvs/battery")]
+    public async Task<ActionResult<IEnumerable<AgvBatteryStatusDto>>> GetAgvsBattery([FromQuery] ICollection<Guid> correlationIds)
+    {
+        Response<GotAgvsBattery> response = await _getAgvsBatteryClient.GetResponse<GotAgvsBattery>(new GetAgvsBattery(correlationIds));
+        var agvBattery = _mapper.Map<List<AgvBatteryStatusDto>>(response.Message.AgvBatteryStatus);
+        return Ok(agvBattery);
     }
 
     /// <summary>

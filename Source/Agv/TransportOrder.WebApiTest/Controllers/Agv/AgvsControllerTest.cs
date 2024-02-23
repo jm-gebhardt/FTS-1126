@@ -37,13 +37,29 @@ public class AgvsControllerTest
     }
 
     [TestMethod]
+    public async Task GetAgvsBattery_ValidData_ReturnsAgvBattery()
+    {
+        AgvsControllerTestFixture<GetAgvsBattery, GetAgvBatteryRequestHandler> fixture = new AgvsControllerTestFixture<GetAgvsBattery, GetAgvBatteryRequestHandler>()
+            .SetupAgvDbWithDefaultData()
+            .Build();
+
+        List<AgvBatteryStatusDto> agvBatteryStatus = (await fixture.GetControllerResultAsync(c => c.GetAgvsBattery(fixture.AgvSerialNumbers.Take(2).Select(s => s.ToGuid()).ToList()))).ToList();
+        agvBatteryStatus.Count.ShouldBe(2);
+
+        for (int index = 0; index < 2; index++)
+        {
+            agvBatteryStatus[index].CorrelationId.ShouldBe(fixture.AgvSerialNumbers[index].ToGuid());
+        }
+    }
+
+    [TestMethod]
     public async Task GetAgvSettings_ReturnsAgvSettingsDtos()
     {
         AgvsControllerTestFixture<GetAgvsSettings, GetAgvSettingsRequestHandler> fixture = new AgvsControllerTestFixture<GetAgvsSettings, GetAgvSettingsRequestHandler>()
             .SetupAgvDbWithDefaultData()
             .Build();
 
-        List<AgvSettingsDto> dtos = (await fixture.GetControllerResultAsync(c => c.GetAgvSettings(new List<Guid> { Guid.NewGuid() }))).ToList();
+        List<AgvSettingsDto> dtos = (await fixture.GetControllerResultAsync(c => c.GetAgvSettings(new List<Guid> {Guid.NewGuid()}))).ToList();
 
         dtos.ShouldNotBeEmpty();
         dtos.Count.ShouldBe(1);
@@ -83,7 +99,7 @@ public class AgvsControllerTest
     [TestMethod]
     public async Task GetAgvs_WhenAgvHasCargo_ReturnsAgvWithCargo()
     {
-        var hasCargoById = new Dictionary<Guid, bool> { { Guid.NewGuid(), true } };
+        var hasCargoById = new Dictionary<Guid, bool> {{Guid.NewGuid(), true}};
         AgvsControllerTestFixture<GetAgvsHasCargo, CargoRequestHandler> fixture = new AgvsControllerTestFixture<GetAgvsHasCargo, CargoRequestHandler>()
             .SetupAgvDbWithDefaultData()
             .WithHasCargo(hasCargoById)
