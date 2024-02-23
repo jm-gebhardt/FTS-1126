@@ -1,5 +1,5 @@
 ﻿{
-  "CorrelationId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+  "CorrelationId": "9a2b914c-ba59-7913-1d33-1c429a9104a2",
   "SerialNumber": "Agv-1",
   "Model": "Example-Model-99",
   "RequestId": "c2db5d8b-4802-4d9c-81e5-f7da9ca26893",
@@ -13,6 +13,7 @@
   "MaxVelocityTurn": 0.01,
   "MaxVelocityTurnOnSpot": 0.02,
   "Acceleration": 0.34,
+  "SoftwareVersion": "v1.1",
   "Sensors": [
     {
       "SensorIdentifier": "Gyro"
