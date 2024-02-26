@@ -2,13 +2,27 @@
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Map;
 using MassTransit;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.CommandHandler.Map;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.RequestHandler.Map;
 
 [TestClass]
-public class GetMapListRequestHandlerTest
+public class GetMapRequestHandlerTest
 {
+    [TestMethod]
+    public async Task GetMap_ShouldReturnMap_WhenMapExists()
+    {
+        MapRequestTestFixture<GetMap, GetMapRequestHandler> fixture = new MapRequestTestFixture<GetMap, GetMapRequestHandler>()
+            .UseDefaultServices()
+            .Build();
+
+        Response<GotMap> response = await fixture.GetResponseAsync<GotMap>(new GetMap(fixture.Maps[0].CorrelationId));
+
+        fixture.MapRepositoryMock.Verify(m => m.GetMapAsync(fixture.Maps[0].CorrelationId), Times.Once);
+        response.Message.Map.CorrelationId.ShouldBe(fixture.Maps[0].CorrelationId);
+    }
+
     [TestMethod]
     public async Task GetMaps_ShouldReturnListOfMaps_WhereMapRepositoryIsContained()
     {

@@ -10,7 +10,7 @@ using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.CommandHandler.Map;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.RequestHandler.Map;
 
 /// <summary>
 /// Testing fixture to test map request
@@ -23,9 +23,9 @@ public class MapRequestTestFixture<TRequestClient, TConsumer> : MediatorTestFixt
 {
     public const string Base64String = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
 
-    private readonly string[] _agvSerialNumbers = { "AGV001", "AGV002" };
-    private readonly string[] _orders = { "ORDER001", "ORDER002", "" };
-    private readonly AgvState[] _states = { AgvState.Busy, AgvState.Discovered };
+    private readonly string[] _agvSerialNumbers = {"AGV001", "AGV002"};
+    private readonly string[] _orders = {"ORDER001", "ORDER002", ""};
+    private readonly AgvState[] _states = {AgvState.Busy, AgvState.Discovered};
 
     private readonly Guid[] _correlationIds =
     {
@@ -33,6 +33,21 @@ public class MapRequestTestFixture<TRequestClient, TConsumer> : MediatorTestFixt
         new("041AD79E-1952-4AB7-BD3E-9EC972E27FBF"),
         new("465A85A6-6A02-4068-A7AA-E3B4B9821019")
     };
+
+    public Mock<IMapRepository> MapRepositoryMock { get; }
+
+    public List<TransportOrder.Domain.Models.Map.Map> Maps { get; }
+
+    public MapRequestTestFixture()
+    {
+        Maps = new List<TransportOrder.Domain.Models.Map.Map>
+        {
+            new(_correlationIds[0], "Area51_Floor1_Compartment47", Convert.FromBase64String(Base64String), 1, 1, 0.01, 1, 2, DateTime.UtcNow),
+            new(_correlationIds[1], "Area51_Floor1_Compartment48", Convert.FromBase64String(Base64String), 1, 1, 0.02, 2, 3, DateTime.UtcNow),
+            new(_correlationIds[2], "Area51_Floor1_Compartment49", Convert.FromBase64String(Base64String), 1, 1, 0.03, 2, 1, DateTime.UtcNow)
+        };
+        MapRepositoryMock = GetMapRepository();
+    }
 
     /// <summary>
     /// Adds the service to the service collection
@@ -54,7 +69,7 @@ public class MapRequestTestFixture<TRequestClient, TConsumer> : MediatorTestFixt
     {
         AddServices(sc =>
         {
-            sc.AddTransient(_ => GetMapRepository().Object);
+            sc.AddTransient(_ => MapRepositoryMock.Object);
             sc.AddTransient(_ => GetAgvRepository().Object);
             sc.AddTransient(_ => GetMapper());
         });
@@ -85,12 +100,8 @@ public class MapRequestTestFixture<TRequestClient, TConsumer> : MediatorTestFixt
     {
         var mapRepositoryMock = new Mock<IMapRepository>();
 
-        mapRepositoryMock.Setup(x => x.GetAllMapsAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Map.Map>(new List<TransportOrder.Domain.Models.Map.Map>
-        {
-            new(_correlationIds[0], "Area51_Floor1_Compartment47", Convert.FromBase64String(Base64String), 1, 1, 0.01, 1, 2, DateTime.UtcNow),
-            new(_correlationIds[1], "Area51_Floor1_Compartment48", Convert.FromBase64String(Base64String), 1, 1, 0.02, 2, 3, DateTime.UtcNow),
-            new(_correlationIds[2], "Area51_Floor1_Compartment49", Convert.FromBase64String(Base64String), 1, 1, 0.03, 2, 1, DateTime.UtcNow)
-        }));
+        mapRepositoryMock.Setup(x => x.GetMapAsync(It.IsAny<Guid>())).ReturnsAsync((Guid correlationId) => Maps.Single(m => m.CorrelationId == correlationId));
+        mapRepositoryMock.Setup(x => x.GetAllMapsAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Map.Map>(Maps));
 
         return mapRepositoryMock;
     }

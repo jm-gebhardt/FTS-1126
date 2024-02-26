@@ -25,9 +25,7 @@ public class EfMapRepositoryTestFixture
     public EfMapRepositoryTestFixture()
     {
         var mockLogger = new Mock<ILogger<EfMapRepository>>();
-        var collection = new ServiceCollection()
-            .AddDbContextFactory<TransportOrderDbContext>(options => { options.UseInMemoryDatabase(Guid.NewGuid().ToString()); }
-            );
+        var collection = new ServiceCollection().AddDbContextFactory<TransportOrderDbContext>(options => options.UseInMemoryDatabase(Guid.NewGuid().ToString()));
         Provider = collection.BuildServiceProvider(true);
         ContextFactory = Provider.GetService<IDbContextFactory<TransportOrderDbContext>>()!;
         Repository = new EfMapRepository(ContextFactory, new SemaphoreProvider<IMapRepositorySemaphore>(), mockLogger.Object);
@@ -40,7 +38,7 @@ public class EfMapRepositoryTestFixture
         context.SaveChanges();
     }
 
-    public Map GetNewMap(string mapId)
+    public Map GetNewMap(string mapId = "default")
     {
         const float resolution = 1;
         const float xOffset = 1;

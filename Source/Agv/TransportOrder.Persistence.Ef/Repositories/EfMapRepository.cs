@@ -101,7 +101,8 @@ public class EfMapRepository : IMapRepository
     /// <inheritdoc/>
     public async Task<Map> GetMapAsync(Guid correlationId)
     {
-        var map = await Maps.FirstOrDefaultAsync(q => q.CorrelationId == correlationId);
+        var map = await Maps.Include(m => m.MapAgvs)
+            .FirstOrDefaultAsync(q => q.CorrelationId == correlationId);
         if (map == null)
         {
             throw new MapNotFoundException();

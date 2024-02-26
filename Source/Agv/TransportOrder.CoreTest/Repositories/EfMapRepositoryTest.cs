@@ -22,8 +22,8 @@ public class EfMapRepositoryTest
     {
         var fixture = new EfMapRepositoryTestFixture();
 
-        var map1 = fixture.GetNewMap("basicMap1");
-        var map2 = fixture.GetNewMap("basicMap2");
+        var map1 = fixture.GetNewMap();
+        var map2 = fixture.GetNewMap("2");
 
         fixture.Add(map1);
         fixture.Add(map2);
@@ -34,21 +34,33 @@ public class EfMapRepositoryTest
     }
 
     [TestMethod]
-    public void GetMap_ShouldReturnMapValue_WhenMapIsFound()
+    public void GetMapImage_ShouldReturnMapImage_WhenMapIsFound()
     {
         var fixture = new EfMapRepositoryTestFixture();
 
-        var map1 = fixture.GetNewMap("basicMap1");
-        var map2 = fixture.GetNewMap("basicMap2");
+        var map1 = fixture.GetNewMap();
 
         fixture.Add(map1);
-        fixture.Add(map2);
 
         byte[]? mapValue1 = fixture.Repository.GetMapImage(map1.CorrelationId);
-        byte[]? mapValue2 = fixture.Repository.GetMapImage(map1.CorrelationId);
 
         map1.MapValue.ShouldBe(mapValue1);
-        map2.MapValue.ShouldBe(mapValue2);
+    }
+
+    [TestMethod]
+    public async Task GetMapAsync_ShouldContainMapAgv_WhenMapIsFound()
+    {
+        var fixture = new EfMapRepositoryTestFixture();
+
+        var map = fixture.GetNewMap();
+        map.MapAgvs.Add(new MapAgv(map.CorrelationId, map, Guid.NewGuid(), null));
+        fixture.Add(map);
+
+        var actualMap = await fixture.Repository.GetMapAsync(map.CorrelationId);
+
+        actualMap.MapAgvs.Count.ShouldBe(1);
+        actualMap.MapAgvs.Single().MapId.ShouldBe(map.CorrelationId);
+        actualMap.MapAgvs.Single().AgvId.ShouldBe(actualMap.MapAgvs.Single().AgvId);
     }
 
     [TestMethod]
@@ -56,7 +68,7 @@ public class EfMapRepositoryTest
     {
         var fixture = new EfMapRepositoryTestFixture();
 
-        var map = fixture.GetNewMap("basicMap");
+        var map = fixture.GetNewMap();
 
         fixture.Add(map);
 
@@ -68,7 +80,7 @@ public class EfMapRepositoryTest
     {
         var fixture = new EfMapRepositoryTestFixture();
 
-        var map = fixture.GetNewMap("basicMap");
+        var map = fixture.GetNewMap();
 
         fixture.Add(map);
 
@@ -81,7 +93,7 @@ public class EfMapRepositoryTest
     {
         var fixture = new EfMapRepositoryTestFixture();
 
-        var map = fixture.GetNewMap("basicMap");
+        var map = fixture.GetNewMap();
 
         fixture.Add(map);
 
@@ -93,7 +105,7 @@ public class EfMapRepositoryTest
     public async Task AddOrUpdate_ShouldReturnTrue_WhenAddingNewMap()
     {
         var fixture = new EfMapRepositoryTestFixture();
-        var map = fixture.GetNewMap("mapId");
+        var map = fixture.GetNewMap();
 
         bool result = await fixture.Repository.AddOrUpdateAsync(map, new CancellationToken());
         result.ShouldBeTrue();
@@ -108,7 +120,7 @@ public class EfMapRepositoryTest
     {
         var fixture = new EfMapRepositoryTestFixture();
 
-        var map = fixture.GetNewMap("mapId");
+        var map = fixture.GetNewMap();
 
         bool result = await fixture.Repository.AddOrUpdateAsync(map, new CancellationToken());
         result.ShouldBeTrue();
