@@ -17,7 +17,7 @@ public static class MapHelper
     public static (int Width, int Height) GetMapDimensions(byte[] mapValue)
     {
         SKImage image;
-        if (mapValue is { Length: >= 1 } && (image = SKImage.FromEncodedData(mapValue)) != null)
+        if (mapValue is {Length: >= 1} && (image = SKImage.FromEncodedData(mapValue)) != null)
         {
             return (image.Width, image.Height);
         }
@@ -41,10 +41,10 @@ public static class MapHelper
 
         var invariantCulture = CultureInfo.InvariantCulture;
 
-        if (parts.Length != 4 ||
-            !float.TryParse(parts[1], invariantCulture, out scaleUpFactor) ||
-            !float.TryParse(parts[2], invariantCulture, out xOffset) ||
-            !float.TryParse(parts[3], invariantCulture, out yOffset))
+        if (parts.Length < 4 ||
+            !float.TryParse(parts[^3], invariantCulture, out scaleUpFactor) ||
+            !float.TryParse(parts[^2], invariantCulture, out xOffset) ||
+            !float.TryParse(parts[^1], invariantCulture, out yOffset))
         {
             if (throwException)
             {

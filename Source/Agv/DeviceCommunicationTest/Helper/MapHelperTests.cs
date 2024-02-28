@@ -32,7 +32,7 @@ public class MapHelperTests
     [TestMethod]
     public void ParseFilename_ValidFilename_ReturnsCorrectValues()
     {
-        const string filename = "exampleMap_1.2_-3.4_5.6.png";
+        const string filename = "example_Map_1.2_-3.4_5.6.png";
 
         (float scaleUpFactor, float xOffset, float yOffset) = MapHelper.ParseFilename(filename);
 
