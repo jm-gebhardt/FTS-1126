@@ -39,4 +39,15 @@ public class MathematicsTest
         Mathematics.EuclideanDistance(new GraphNode("") { X = 0, Y = 0, Z = 1 }, new GraphNode("") { X = 0, Y = 0, Z = -1 }).ShouldBe(2, 0.0001);
         Mathematics.EuclideanDistance(new GraphNode("") { X = 0, Y = 1, Z = 0 }, new GraphNode("") { X = 1, Y = 0, Z = 0 }).ShouldBe(1.4142, 0.0001);
     }
+    
+    [TestMethod]
+    public void RotateMoveVector3_ValidData_CorrectResult()
+    {
+        Mathematics.RotateMoveVector3(new Vector3(0, 10, 0), 0, 0).ShouldBe(new Vector3(0, 10, 0));
+        Mathematics.RotateMoveVector3(new Vector3(10, 10, 0), 0, 10).ShouldBe(new Vector3(10, 0, 0));
+        Mathematics.RotateMoveVector3(new Vector3(10, 10, 0), Math.PI, 10).ShouldBe(new Vector3(10, 20, 0));
+        Mathematics.RotateMoveVector3(new Vector3(10, 10, 0), Math.PI * 2d, 10).ShouldBe(new Vector3(10, 0, 0));
+        Mathematics.RotateMoveVector3(new Vector3(10, 10, 0), Math.PI * 0.5d, 10).ShouldBe(new Vector3(0, 10, 0));
+        Mathematics.RotateMoveVector3(new Vector3(10, 10, 0), Math.PI * -0.5d, 10).ShouldBe(new Vector3(20, 10, 0));
+    }
 }

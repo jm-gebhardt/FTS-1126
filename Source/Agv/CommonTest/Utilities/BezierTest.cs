@@ -1,5 +1,5 @@
 ﻿using System.Numerics;
-using Gebhardt.StoreWare.Agv.Common.Utilities;
+using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 

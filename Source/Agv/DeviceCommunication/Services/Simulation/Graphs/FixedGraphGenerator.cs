@@ -152,24 +152,24 @@ public class FixedGraphGenerator : GraphGeneratorBase
             CreateBezier1(Way0013, Way0009, 22.75d, 67.25d, nodes),
             CreateDirect(Way0013, Way0012, nodes),
             CreateDirect(Way0014, Way0013, nodes),
-            CreatePolypath(Way0014, Way0029, 40.875f, new List<EdgeCoefficient> { new(32.25d, 50d) }),
+            CreatePolypath(Way0014, Way0029,  new List<EdgeCoefficient> { new(32.25d, 50d) }, nodes),
             CreateBezier1(Way0014, Way0032, 31.375d, 51.125d, nodes),
             CreateDirect(Way0015, Way0014, nodes),
 
-            CreatePolypath(Way0015, Way0017, 15.91f, new List<EdgeCoefficient>
+            CreatePolypath(Way0015, Way0017, new List<EdgeCoefficient>
             {
                 new(76.875d, 51.875d), new(88.2d, 51.875d)
-            }),
+            },nodes),
             CreateBezier1(Way0015, Way0018, 47.625d, 58.625d, nodes),
             CreateDirect(Way0016, Way0015, nodes),
             CreateBezier2(Way0017, Way0018, 80d, 52d, 54.375d, 45d, nodes),
             CreateDirect(Way0123, Way0017, nodes),
             CreateDirect(Way0017, Way0123, nodes),
-            CreateSlanted(Way0018, Way0014, 17f, East, 3.375),
+            CreateSlanted(Way0018, Way0014, East, 3.375, nodes),
             CreateBezier1(Way0018, Way0022, 40.625d, 48.4d, nodes),
             CreateDirect(Way0022, Way0023, nodes),
             CreateDirect(Way0023, Way0024, nodes),
-            CreatePolypath(Way0024, Way0030, 25.77f, new List<EdgeCoefficient> { new(31.25d, 25.125d) }),
+            CreatePolypath(Way0024, Way0030, new List<EdgeCoefficient> { new(31.25d, 25.125d) }, nodes),
             CreateDirect(Way0028, Way0029, nodes),
             CreateDirect(Way0029, Way0032, nodes),
             CreateDirect(Way0030, Way0028, nodes),
@@ -220,7 +220,16 @@ public class FixedGraphGenerator : GraphGeneratorBase
     }
 
     /// <inheritdoc cref="GraphEdge.CreatePolypath"/>
-    private static GraphEdge CreatePolypath(string fromNodeId, string toNodeId, float metric, List<EdgeCoefficient> pathPoints) => GraphEdge.CreatePolypath(fromNodeId, toNodeId, metric, pathPoints, GraphHelper.ToGuid(fromNodeId, metric, toNodeId));
+    private static GraphEdge CreatePolypath(string fromNodeId, string toNodeId, List<EdgeCoefficient> pathPoints, GraphNode[] nodes)
+    {
+        var sourceNode = nodes.Single(n => n.Id == fromNodeId).AsVector3();
+        var targetNode = nodes.Single(n => n.Id == toNodeId).AsVector3();
+        List<Vector3> points = [sourceNode];
+        points.AddRange(pathPoints.Select(c => new Vector3((float)c.X!, (float)c.Y!, 0f)));
+        points.Add(targetNode);
+        double length = new Polypath(points).GetLength();
+        return GraphEdge.CreatePolypath(fromNodeId, toNodeId, (float)length, pathPoints, GraphHelper.ToGuid(fromNodeId, (float)length, toNodeId));
+    }
 
     /// <inheritdoc cref="GraphEdge.CreateBezier2"/>
     private static GraphEdge CreateBezier2(string fromNodeId, string toNodeId, double x1, double y1, double x2, double y2, GraphNode[] nodes)
@@ -230,7 +239,13 @@ public class FixedGraphGenerator : GraphGeneratorBase
     }
 
     /// <inheritdoc cref="GraphEdge.CreateSlanted"/>
-    private static GraphEdge CreateSlanted(string fromNodeId, string toNodeId, float metric, float exitAngle, double exitDistance) => GraphEdge.CreateSlanted(fromNodeId, toNodeId, metric, exitAngle, exitDistance, GraphHelper.ToGuid(fromNodeId, metric, toNodeId));
+    private static GraphEdge CreateSlanted(string fromNodeId, string toNodeId, float exitAngle, double exitDistance, GraphNode[] nodes)
+    {
+        var sourceNode = nodes.Single(n => n.Id == fromNodeId);
+        var targetNode = nodes.Single(n => n.Id == toNodeId);
+        double length = new Slanted(sourceNode.AsVector3(), targetNode.AsVector3(), exitAngle, exitDistance).GetLength();
+        return GraphEdge.CreateSlanted(fromNodeId, toNodeId,(float) length, exitAngle, exitDistance, GraphHelper.ToGuid(fromNodeId, (float)length, toNodeId));
+    }
 
     /// <inheritdoc />
     protected override IEnumerable<Map> GenerateMapsBasedOnGlobalGraph(Graph globalGraph)

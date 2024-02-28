@@ -1,8 +1,8 @@
-﻿using System.Numerics;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Exceptions;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Extensions;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Helpers;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
 using JetBrains.Annotations;
@@ -80,43 +80,14 @@ public class GraphParser
             throw new InvalidOperationException("Node addressed by an edge is not part of the node listing.");
         }
 
-        double length;
-
-        switch (edgeType)
+        double length = edgeType switch
         {
-            case EdgeType.Bezier1:
-                var bezier = new Bezier(new List<Vector2>
-                {
-                    new(start.X, start.Y),
-                    new(mqttEdge.ControlPoints!.First().X, mqttEdge.ControlPoints!.First().Y),
-                    new(end.X, end.Y)
-                });
-                length = bezier.GetLength(BezierResolution);
-                break;
-
-            case EdgeType.Bezier2:
-                bezier = new Bezier(new List<Vector2>
-                {
-                    new(start.X, start.Y),
-                    new(mqttEdge.ControlPoints!.First().X, mqttEdge.ControlPoints!.First().Y),
-                    new(mqttEdge.ControlPoints!.Last().X, mqttEdge.ControlPoints!.Last().Y),
-                    new(end.X, end.Y)
-                });
-                length = bezier.GetLength(BezierResolution);
-                break;
-
-            case EdgeType.Slanted:
-            case EdgeType.Polypath:
-            case EdgeType.Direct:
-                var vectorStart = new Vector3(start.X, start.Y, start.Z ?? 0f);
-                var vectorEnd = new Vector3(end.X, end.Y, end.Z ?? 0f);
-                length = Mathematics.EuclideanDistance(vectorStart, vectorEnd);
-                break;
-
-            default:
-                throw new ArgumentOutOfRangeException($"Unhandled edge type: {edgeType}");
-        }
-
+            EdgeType.Bezier1 or EdgeType.Bezier2 => mqttEdge.ToBezier(start, end).GetLength(BezierResolution),
+            EdgeType.Polypath => mqttEdge.ToPolypath(start, end).GetLength(),
+            EdgeType.Slanted => mqttEdge.ToSlanted(start, end).GetLength(),
+            EdgeType.Direct => mqttEdge.ToDirect(start, end).GetLength(),
+            _ => throw new ArgumentOutOfRangeException($"Unhandled edge type: {edgeType}")
+        };
         return length;
     }
 

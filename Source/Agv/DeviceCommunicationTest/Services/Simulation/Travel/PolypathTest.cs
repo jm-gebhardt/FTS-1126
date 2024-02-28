@@ -2,9 +2,9 @@
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Travel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
+using Polypath = Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Travel.Polypath;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation.Travel;
 

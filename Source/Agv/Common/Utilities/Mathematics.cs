@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
+using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.Common.Utilities;
 
@@ -49,5 +50,17 @@ public static class Mathematics
     public static double EuclideanDistance(Vector3 first, Vector3 second)
     {
         return (first - second).Length();
+    }
+    
+    /// <summary>
+    /// Rotates a <see cref="Vector3"/> projected to the plane and moves it a set distance.
+    /// </summary>
+    /// <param name="vector">^The <see cref="Vector3"/> to rotate and move.</param>
+    /// <param name="angle">The (clockwise) angle to rotate the vector by in [rad].</param>
+    /// <param name="distance">The distance to move the vector.</param>
+    [PublicAPI]
+    public static Vector3 RotateMoveVector3(Vector3 vector, double angle, double distance)
+    {
+        return new Vector3(vector.X - (float)(distance * Math.Sin(angle)), vector.Y - (float)(distance * Math.Cos(angle)), 0f);
     }
 }
