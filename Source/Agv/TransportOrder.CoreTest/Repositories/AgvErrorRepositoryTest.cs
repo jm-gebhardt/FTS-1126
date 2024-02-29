@@ -30,7 +30,7 @@ public class AgvErrorRepositoryTest
     }
 
     [TestMethod]
-    public async Task Consume_AddOrUpdateAgvErrorStatusAsync_WhenSuccessfullyAddedToRepository_CanGetAgvError()
+    public async Task GetActiveErrorsAsync_WhenSuccessfullyAddedToRepository_CanGetAgvError()
     {
         const int errorCount = 5;
         var agvCorrelationId = Guid.NewGuid();
@@ -45,7 +45,21 @@ public class AgvErrorRepositoryTest
     }
 
     [TestMethod]
-    public async Task Consume_AddOrUpdateAgvErrorStatusAsync_WhenErrorTypeNotIncludedInAgvErrorStatus_ResolveAgvError()
+    public async Task AddOrUpdateAgvErrorStatusAsync_WhenErrorBecomesAWarning_ReturnsTrue()
+    {
+        var agvCorrelationId = Guid.NewGuid();
+        var agvError = AgvErrorGenerator.GenerateAgvError(agvCorrelationId: agvCorrelationId, errorLevel: ErrorLevel.Fatal);
+        var fixture = new AgvErrorRepositoryTestFixture();
+
+        await fixture.AgvErrorRepository.AddOrUpdateAgvErrorStatusAsync([agvError], agvCorrelationId);  
+        agvError = AgvErrorGenerator.GenerateAgvError(agvCorrelationId: agvCorrelationId, errorLevel: ErrorLevel.Warning);
+
+        bool changed = await fixture.AgvErrorRepository.AddOrUpdateAgvErrorStatusAsync([agvError], agvCorrelationId);
+        changed.ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task AddOrUpdateAgvErrorStatusAsync_WhenErrorTypeNotIncludedInAgvErrorStatus_ResolveAgvError()
     {
         const int errorCount = 5;
         var agvCorrelationId = Guid.NewGuid();
@@ -68,7 +82,7 @@ public class AgvErrorRepositoryTest
     }
 
     [TestMethod]
-    public async Task GetErrorsAsync_WhenThereAreNoActiveErrorsForAgv_ReturnsEmptyAgvErrors()
+    public async Task GetActiveErrorsAsync_WhenThereAreNoActiveErrorsForAgv_ReturnsEmptyAgvErrors()
     {
         var fixture = new AgvErrorRepositoryTestFixture();
 
@@ -78,7 +92,7 @@ public class AgvErrorRepositoryTest
     }
 
     [TestMethod]
-    public async Task GetErrorsAsync_WhenThereAreActiveErrorsForAgv_ReturnsAgvErrors()
+    public async Task GetActiveErrorsAsync_WhenThereAreActiveErrorsForAgv_ReturnsAgvErrors()
     {
         const int errorCount = 5;
         var agvCorrelationId = Guid.NewGuid();
@@ -94,7 +108,7 @@ public class AgvErrorRepositoryTest
     }
 
     [TestMethod]
-    public async Task GetErrorHistoryAsync_WhenThereAreNoErrorsForAgv_ReturnsEmptyAgvErrors()
+    public async Task GetErrorsAsync_WhenThereAreNoErrorsForAgv_ReturnsEmptyAgvErrors()
     {
         var agvCorrelationId = Guid.NewGuid();
         var fixture = new AgvErrorRepositoryTestFixture();
@@ -105,7 +119,7 @@ public class AgvErrorRepositoryTest
     }
 
     [TestMethod]
-    public async Task GetErrorHistoryAsync_WhenThereAreErrorsForAgv_ReturnsAgvErrors()
+    public async Task GetErrorsAsync_WhenThereAreErrorsForAgv_ReturnsAgvErrors()
     {
         const int errorCount = 5;
         var agvCorrelationId = Guid.NewGuid();
@@ -117,6 +131,6 @@ public class AgvErrorRepositoryTest
         IReadOnlyList<AgvError> actualAgvErrors = await fixture.AgvErrorRepository.GetErrorsAsync(agvCorrelationId, DateTime.MinValue, DateTime.MaxValue);
 
         actualAgvErrors.ShouldNotBeEmpty();
-        VerifyAgvErrorsInRepository((IList<AgvError>?)actualAgvErrors, agvErrorStatus);
+        VerifyAgvErrorsInRepository((IList<AgvError>?) actualAgvErrors, agvErrorStatus);
     }
 }

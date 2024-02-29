@@ -58,6 +58,6 @@ public record AgvPosition
     /// </summary>
     public override string ToString()
     {
-        return $"[X={X}/Y={Y}/Z={Z}]";
+        return $"[X={X:F3}/Y={Y:F3}/Theta={Theta:F3}]";
     }
 }

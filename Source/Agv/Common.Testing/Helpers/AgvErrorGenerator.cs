@@ -8,7 +8,7 @@ namespace Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 /// </summary>
 public static class AgvErrorGenerator
 {
-    public static AgvErrorStatusReceived GenerateAgvErrorStatus(int errorItems, Guid agvCorrelationId)
+    public static AgvErrorStatusReceived GenerateAgvErrorStatus(int errorItems, Guid agvCorrelationId, ErrorLevel errorLevel = ErrorLevel.Fatal)
     {
         var errors = new List<AgvError>();
         for (int i = 0; i < errorItems; i++)
@@ -16,7 +16,7 @@ public static class AgvErrorGenerator
             errors.Add(new AgvError(
                 agvCorrelationId,
                 $"error description#{i}",
-                ErrorLevel.Fatal,
+                errorLevel,
                 $"error type#{i}",
                 new List<ErrorReference>(),
                 DateTime.UtcNow
@@ -26,16 +26,16 @@ public static class AgvErrorGenerator
         return new AgvErrorStatusReceived(agvCorrelationId, errors);
     }
 
-    public static AgvError GenerateAgvError(Guid? agvCorrelationId = null, List<ErrorReference>? errorReferences = null)
+    public static AgvError GenerateAgvError(Guid? agvCorrelationId = null, List<ErrorReference>? errorReferences = null, ErrorLevel errorLevel = ErrorLevel.Fatal)
     {
         agvCorrelationId ??= Guid.NewGuid();
         return new AgvError(agvCorrelationId.Value,
             $"ErrorDescription({agvCorrelationId})",
-            ErrorLevel.Fatal,
+            errorLevel,
             $"ErrorType({agvCorrelationId})",
             errorReferences ?? new List<ErrorReference>
             {
-                new() { ReferenceKey = $"ReferenceKey#{agvCorrelationId}", ReferenceValue = $"ReferenceValue#{agvCorrelationId}" }
+                new() {ReferenceKey = $"ReferenceKey#{agvCorrelationId}", ReferenceValue = $"ReferenceValue#{agvCorrelationId}"}
             },
             DateTime.UtcNow);
     }

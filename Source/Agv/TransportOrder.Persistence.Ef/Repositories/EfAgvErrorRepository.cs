@@ -20,15 +20,16 @@ public class EfAgvErrorRepository : IAgvErrorRepository
     public async Task<bool> AddOrUpdateAgvErrorStatusAsync(List<AgvError>? errors, Guid agvCorrelationId)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        IQueryable<AgvError> agvErrorsInRepository = context.Set<AgvError>()
-            .Where(e => e.AgvCorrelationId == agvCorrelationId && e.ErrorResolved == null);
+        List<AgvError> previousErrors = await context.Set<AgvError>()
+            .Where(e => e.AgvCorrelationId == agvCorrelationId && e.ErrorResolved == null)
+            .ToListAsync();
 
-        List<AgvError> resolvedErrors = await agvErrorsInRepository.Where(e => errors == null || !errors.Select(t => t.ErrorType).Contains(e.ErrorType)).ToListAsync();
+        List<AgvError> resolvedErrors = previousErrors.Where(p => errors == null || !errors.Any(p.IsSameError)).ToList();
         ResolveErrors(resolvedErrors);
 
         if (errors?.Any() ?? false)
         {
-            List<AgvError> newErrors = errors.Where(e => !agvErrorsInRepository.Select(t => t.ErrorType).Contains(e.ErrorType)).ToList();
+            List<AgvError> newErrors = errors.Where(e => !previousErrors.Any(e.IsSameError)).ToList();
             await context.AddRangeAsync(newErrors);
         }
         bool changed = await context.SaveChangesAsync() != 0;
@@ -46,7 +47,7 @@ public class EfAgvErrorRepository : IAgvErrorRepository
     /// <inheritdoc />
     public Task<IList<AgvError>> GetActiveErrorsAsync(Guid agvCorrelationId)
     {
-        return GetActiveErrorsAsync(new List<Guid> { agvCorrelationId });
+        return GetActiveErrorsAsync(new List<Guid> {agvCorrelationId});
     }
 
     /// <inheritdoc />
@@ -63,7 +64,7 @@ public class EfAgvErrorRepository : IAgvErrorRepository
     /// <inheritdoc />
     public Task<IReadOnlyList<AgvError>> GetErrorsAsync(Guid agvCorrelationId, DateTime dateFrom, DateTime dateTo)
     {
-        return GetErrorsAsync(new List<Guid> { agvCorrelationId }, dateFrom, dateTo);
+        return GetErrorsAsync(new List<Guid> {agvCorrelationId}, dateFrom, dateTo);
     }
 
     /// <inheritdoc />

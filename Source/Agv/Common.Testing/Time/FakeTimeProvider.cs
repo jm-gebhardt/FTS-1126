@@ -6,9 +6,15 @@ public class FakeTimeProvider : ITimeProvider
 {
     private DateTime _now;
 
-    public DateTime Now()
+    public DateTime Now() => _now;
+
+    public FakeTimeProvider()
     {
-        return _now;
+    }
+
+    public FakeTimeProvider(DateTime now)
+    {
+        _now = now;
     }
 
     public void SetNow(DateTime now)

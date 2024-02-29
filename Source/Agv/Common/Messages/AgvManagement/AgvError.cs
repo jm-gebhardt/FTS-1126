@@ -77,4 +77,14 @@ public record AgvError : CorrelatedBy<Guid>
     {
         ErrorType = null!;
     }
+
+    /// <summary>
+    /// Compares two errors according to their type and level.
+    /// </summary>
+    /// <param name="error2">The error to compare to.</param>
+    /// <returns>True if the error type and level is the same.</returns>
+    public bool IsSameError(AgvError error2)
+    {
+        return ErrorType == error2.ErrorType && ErrorLevel == error2.ErrorLevel;
+    }
 }

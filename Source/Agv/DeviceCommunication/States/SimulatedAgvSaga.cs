@@ -123,7 +123,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
 
         // we have no stations, so we just pick a random node
         var node = !stations.Any() ? graphNodes.ElementAt(Random.Shared.Next(0, graphNodes.Count)) : stations[Random.Shared.Next(0, stations.Count)];
-         
+
         SetPosition(node);
     }
 
@@ -225,9 +225,14 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
 
     /// <summary>
     /// Time the order will be finished
-    /// This value is calculated base on OrderStartDate and the number of nodes
+    /// This value is calculated base on OrderStartDate and the number of nodes. Keeps running when the drive is paused, e.g. due to an error.
     /// </summary>
-    public DateTime? ActionFinishDate => ActionStartDate != null ? ActionStartDate + ActionDuration : null;
+    public DateTime? ActionFinishDate => ActionStartDate != null ? ActionStartDate + ActionDuration + TravelSimulator.PauseTime : null;
+
+    /// <summary>
+    /// Remaining duration of the action. Keeps running when the drive is paused, e.g. due to an error.
+    /// </summary>
+    public TimeSpan? RemainingDuration => ActionFinishDate - DateTime.UtcNow;
 
     /// <summary>
     /// Simulated Agv errors
@@ -237,7 +242,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
     /// <summary>
     /// The agv travel simulator.
     /// </summary>
-    public AgvTravelSimulator TravelSimulator { get; set; }
+    public IAgvTravelSimulator TravelSimulator { get; set; }
 
     /// <summary>
     /// SimulatedAgvSaga constructor used for testing
@@ -299,7 +304,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
             false,
             LastNodeId
         );
-        TravelSimulator = new AgvTravelSimulator(agvGraph, agvData, Position!);
+        TravelSimulator = new AgvTravelSimulator(agvGraph, agvData!, Position!, _timeProvider);
     }
 
     /// <summary>
@@ -334,7 +339,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
             GetOrderId(),
             false,
             true,
-            (int)SimulatedBatteryCharge,
+            (int) SimulatedBatteryCharge,
             false,
             GetBatteryVoltage(),
             GetBatteryCurrent(),
@@ -342,10 +347,10 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
             false,
             LastNodeId
         );
-        TravelSimulator = new AgvTravelSimulator(agv.AgvGraph, agvData, Position!);
+        TravelSimulator = new AgvTravelSimulator(agv.AgvGraph, agvData!, Position!, _timeProvider);
     }
 
-    private static float GetRandomNoise(double maxValue) => (float)(maxValue * (2 * Random.Shared.NextDouble() - 1));
+    private static float GetRandomNoise(double maxValue) => (float) (maxValue * (2 * Random.Shared.NextDouble() - 1));
 
     private string? GetOrderId() => Action?.CorrelationId.ToString();
 
@@ -387,8 +392,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
     {
         if (Action != null && TravelSimulator.CurrentEdge != null!)
         {
-            var now = _timeProvider.Now();
-            TravelSimulator.UpdatePosition(now);
+            TravelSimulator.UpdatePosition();
             CurrentNode = TravelSimulator.CurrentNode!;
             Position = TravelSimulator.Position;
         }

@@ -6,6 +6,7 @@ using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Data;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.States;
 using Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Helper;
+using Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation.Travel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
@@ -143,7 +144,7 @@ public class SimulatedAgvSagaTest
         fixture.Saga.UpdatePosition();
         fixture.Saga.Position!.X.ShouldBe(10f, 0.05);
         fixture.Saga.Position!.Y.ShouldBe(0f, 0.05);
-        fixture.Saga.Position!.Theta.ShouldBe((float)Math.PI / 2, 0.01);
+        fixture.Saga.Position!.Theta.ShouldBe((float) Math.PI / 2, 0.01);
     }
 
     [TestMethod]
@@ -153,19 +154,46 @@ public class SimulatedAgvSagaTest
         var node2 = NodeGenerator.GenerateNode(x: -10, y: 0, nodeId: "W2");
 
         var edge = GraphEdge.CreateDirect(node1.Id, node2.Id);
-        var graph = AgvGraphGenerator.Generate(new List<GraphNode> { node1, node2 }, new List<GraphEdge> { edge });
+        var graph = AgvGraphGenerator.Generate(new List<GraphNode> {node1, node2}, new List<GraphEdge> {edge});
 
         var fixture = new SimulatedAgvSagaTestFixture()
             .WithGraph(graph)
             .WithPosition(node1)
             .WithNumberOfEdges(0)
-            .WithTheseNodes(new List<GraphNode> { node1, node2 })
+            .WithTheseNodes(new List<GraphNode> {node1, node2})
             .WithActionStartNodeId(node1.Id)
             .WithActionTargetNodeId(node1.Id)
             .Build();
 
         fixture.Saga.Position!.X.ShouldBe(0f, 0.01);
         fixture.Saga.Position!.Y.ShouldBe(0f, 0.01);
-        fixture.Saga.Position!.Theta.ShouldBe((float)3 / 2 * (float)Math.PI, 0.01);
+        fixture.Saga.Position!.Theta.ShouldBe((float) 3 / 2 * (float) Math.PI, 0.01);
+    }
+
+    [TestMethod]
+    public void ActionFinishDate_WithMoveAction_ConsidersPauseTime()
+    {
+        var saga = SimulatedAgvSagaGenerator.Generate();
+        saga.ActionStartDate = new DateTime(2000, 1, 1, 0, 0, 0);
+        saga.Action = AgvActionGenerator.GenerateMoveAction();
+        saga.TravelSimulator = new AgvTravelSimulatorMock()
+            .WithTravelDuration(new TimeSpan(0, 0, 10))
+            .WithPauseTime(new TimeSpan(0, 0, 7))
+            .Object;
+
+        saga.ActionFinishDate.ShouldBe(new DateTime(2000, 1, 1, 0, 0, 17));
+    }
+
+    [TestMethod]
+    public void RemainingDuration_WithActionFinishDate_CalculatesProperly()
+    {
+        var saga = SimulatedAgvSagaGenerator.Generate();
+        saga.ActionStartDate = new DateTime(3000, 1, 1, 0, 0, 0);
+        saga.Action = AgvActionGenerator.GenerateMoveAction();
+        saga.TravelSimulator = new AgvTravelSimulatorMock().Object;
+        TimeSpan? remainingDuration = saga.RemainingDuration;
+
+        var expectedRemaining = (TimeSpan) (saga.ActionStartDate - DateTime.UtcNow);
+        ((TimeSpan) remainingDuration!).TotalSeconds.ShouldBe(expectedRemaining.TotalSeconds);
     }
 }

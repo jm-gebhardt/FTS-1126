@@ -1,6 +1,7 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Travel;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.States;
 using Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Helper;
 using MassTransit;
@@ -54,6 +55,16 @@ public class SimulatedAgvStateMachineTestFixture(TimeSpan? inactivityTimeout = n
     public SimulatedAgvStateMachineTestFixture WithAgv(SimulatedAgvSaga agvSaga)
     {
         _agvSagas.Add(agvSaga);
+        return this;
+    }
+
+    public SimulatedAgvStateMachineTestFixture WithAgvTravelSimulator(IAgvTravelSimulator agvTravelSimulator)
+    {
+        foreach (var agvSaga in _agvSagas)
+        {
+            agvSaga.TravelSimulator = agvTravelSimulator;
+        }
+
         return this;
     }
 }

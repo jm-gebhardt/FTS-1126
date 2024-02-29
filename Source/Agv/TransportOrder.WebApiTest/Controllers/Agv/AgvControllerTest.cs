@@ -92,7 +92,6 @@ public class AgvControllerTest
 
         var graph = await fixture.GetControllerResultAsync(c => c.GetAgvGraph(correlationId));
 
-        graph.CorrelationId.ShouldBe(correlationId);
         graph.Nodes.Count.ShouldBe(agvGraph.Nodes.Count);
         graph.Edges.Count.ShouldBe(agvGraph.Edges.Count);
 

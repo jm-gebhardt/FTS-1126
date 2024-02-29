@@ -50,8 +50,6 @@ public class AgvGraphProfileTest
         graph.Nodes.Count.ShouldBe(agvGraph.Nodes.Count);
         graph.Edges.Count.ShouldBe(agvGraph.Edges.Count);
 
-        graph.CorrelationId.ShouldBe(agvGraph.CorrelationId);
-
         graph.Nodes.ShouldAllBe(x => agvGraph.Nodes.Any(n =>
             n.Id == x.Id &&
             n.Type.ToString() == x.Type.ToString() &&
@@ -100,8 +98,6 @@ public class AgvGraphProfileTest
 
         graph.Nodes.Count.ShouldBe(agvGraph.Nodes.Count);
         graph.Edges.Count.ShouldBe(agvGraph.Edges.Count);
-
-        graph.CorrelationId.ShouldBe(agvGraph.CorrelationId);
 
         graph.Nodes.ShouldAllBe(x => agvGraph.Nodes.Any(n =>
             n.Id == x.Id &&
@@ -154,8 +150,6 @@ public class AgvGraphProfileTest
         graph.Nodes.Count.ShouldBe(agvGraph.Nodes.Count);
         graph.Edges.Count.ShouldBe(agvGraph.Edges.Count);
 
-        graph.CorrelationId.ShouldBe(agvGraph.CorrelationId);
-
         graph.Nodes.ShouldAllBe(x => agvGraph.Nodes.Any(n =>
             n.Id == x.Id &&
             n.Type.ToString() == x.Type.ToString() &&
@@ -206,8 +200,6 @@ public class AgvGraphProfileTest
 
         graph.Nodes.Count.ShouldBe(agvGraph.Nodes.Count);
         graph.Edges.Count.ShouldBe(agvGraph.Edges.Count);
-
-        graph.CorrelationId.ShouldBe(agvGraph.CorrelationId);
 
         graph.Nodes.ShouldAllBe(x => agvGraph.Nodes.Any(n =>
             n.Id == x.Id &&

@@ -2,6 +2,7 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
+using Gebhardt.StoreWare.Agv.Common.Testing.Time;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Extensions;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Data;
@@ -56,7 +57,7 @@ public class DirectEdgeTest
             var startNode = WoodShop.Nodes.First();
             position = new AgvPosition(true, startNode.X, startNode.Y, startNode.Z, startNode.Theta);
         }
-        WoodShopSimulator = new AgvTravelSimulator(WoodShop, agv, position);
+        WoodShopSimulator = new AgvTravelSimulator(WoodShop, agv, position, new FakeTimeProvider());
     }
 
     [TestMethod]

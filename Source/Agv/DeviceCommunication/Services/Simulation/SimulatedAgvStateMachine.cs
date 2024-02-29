@@ -45,7 +45,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     /// <summary>
     /// Internal message to schedule finishing the action
     /// </summary>
-    /// <param name="CorrelationId"></param>
+    /// <param name="CorrelationId">The correlation Id of the action.</param>
     public record ScheduleFinishAction(Guid CorrelationId) : CorrelatedBy<Guid>;
 
     /// <summary>
@@ -282,12 +282,20 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         return When(FinishActionSchedule.Received)
             .Then(c => _logger.LogDebug("{MessageType} {CorrelationId} received. Current Action: {ActionType}", nameof(ScheduleFinishAction), c.Saga.CorrelationId, c.Saga.Action?.ActionType))
             .IfElse(c => c.Saga.LastActionAborted,
-                e => e.Then(c => c.Saga.LastActionAborted = false),
-                e => e.ThenAsync(FinishActionAsync)
-                    .TransitionTo(Idle)
-                    .ThenAsync(PublishStatusAsync)
-                    .Then(c => _logger.LogDebug("{MessageType} {CorrelationId} received", nameof(ScheduleFinishAction), c.Saga.CorrelationId))
-                    .ThenAsync(PublishPositionAsync));
+                ifLastActionAborted => ifLastActionAborted
+                    .Then(c => c.Saga.LastActionAborted = false),
+                ifNormalAction => ifNormalAction.IfElse(c => c.Saga.RemainingDuration > TimeSpan.Zero,
+                    ifActionStillRunning =>
+                        // reschedule finish action if action still needs time
+                        ifActionStillRunning.Schedule(FinishActionSchedule, c => new ScheduleFinishAction(c.Saga.CorrelationId), c => c.Saga.RemainingDuration!.Value),
+                    ifActionFinished =>
+                        ifActionFinished.ThenAsync(FinishActionAsync)
+                            .TransitionTo(Idle)
+                            .ThenAsync(PublishStatusAsync)
+                            .Then(c => _logger.LogDebug("{MessageType} {CorrelationId} received", nameof(ScheduleFinishAction), c.Saga.CorrelationId))
+                            .ThenAsync(PublishPositionAsync)
+                )
+            );
     }
     #endregion
 
@@ -328,8 +336,18 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
             .Then(c => _logger.LogInformation("{MessageType} / {CorrelationId} received", nameof(SimulateAgvError), c.Saga.CorrelationId))
             .Then(c =>
             {
-                c.Saga.Errors.RemoveAll(error => c.Message.AgvErrors.All(e => e.ErrorType != error.ErrorType));
-                c.Saga.Errors.AddRange(c.Message.AgvErrors.Where(e => c.Saga.Errors.All(e2 => e2.ErrorType != e.ErrorType)));
+                bool hadError = c.Saga.Errors.Any(e => e.ErrorLevel == ErrorLevel.Fatal);
+                c.Saga.Errors.RemoveAll(error => c.Message.AgvErrors.All(e => !e.IsSameError(error)));
+                c.Saga.Errors.AddRange(c.Message.AgvErrors.Where(e => c.Saga.Errors.All(e2 => !e2.IsSameError(e))));
+                bool hasError = c.Saga.Errors.Any(e => e.ErrorLevel == ErrorLevel.Fatal);
+                if (!hadError && hasError)
+                {
+                    c.Saga.TravelSimulator.Pause();
+                }
+                else if (hadError && !hasError)
+                {
+                    c.Saga.TravelSimulator.Resume();
+                }
             })
             .ThenAsync(PublishAgvError);
     }

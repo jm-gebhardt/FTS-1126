@@ -4,6 +4,7 @@ using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Travel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
+using Gebhardt.StoreWare.Agv.Common.Testing.Time;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Data;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graphs;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Maps;
@@ -15,7 +16,7 @@ public class AgvTravelSimulatorTest
 {
     private string[] GetArbitraryRoute(string targetNode, AgvGraph graph)
     {
-        var nodes = new List<string> { targetNode };
+        var nodes = new List<string> {targetNode};
         foreach (int unused in Enumerable.Range(0, 3))
         {
             var edge = graph.Edges.FirstOrDefault(e => e.ToNodeId == targetNode && !nodes.Contains(e.FromNodeId));
@@ -37,7 +38,7 @@ public class AgvTravelSimulatorTest
         var agvData = new KarisType1(correlationId, "ip address");
         var agvGraph = AgvGraphGenerator.CreateDefaultGraph(correlationId);
         var position = new AgvPosition(true, 1, 1, 1, 0);
-        var simulator = new AgvTravelSimulator(agvGraph, agvData, position);
+        var simulator = new AgvTravelSimulator(agvGraph, agvData, position, new FakeTimeProvider());
         simulator.ShouldNotBeNull();
         simulator.CurrentEdge.ShouldBeNull();
         simulator.Position.ShouldBe(position);
@@ -57,7 +58,7 @@ public class AgvTravelSimulatorTest
         string[] nodes = GetArbitraryRoute("PD-QA", graph);
         var startNode = graph.Nodes.First(n => n.Id == nodes.First());
         var position = new AgvPosition(true, startNode.X, startNode.Y, startNode.Z, startNode.Theta);
-        var simulator = new AgvTravelSimulator(graph, agvData, position);
+        var simulator = new AgvTravelSimulator(graph, agvData, position, new FakeTimeProvider());
 
         var entryTime = DateTime.UtcNow;
         const double initialVelocity = 0;
@@ -80,10 +81,10 @@ public class AgvTravelSimulatorTest
         var agvData = new KarisType1(correlationId, "ip address");
         var generator = new FixedGraphGenerator(new GeneratedMapGenerator());
         var graph = generator.Generate(agvData.CorrelationId);
-        string[] nodes = { "D-Paint", "WP-0016", "WP-0015", "WP-0014", "WP-0029", "Park-1" };
+        string[] nodes = {"D-Paint", "WP-0016", "WP-0015", "WP-0014", "WP-0029", "Park-1"};
         var startNode = graph.Nodes.First(n => n.Id == nodes.First());
         var position = new AgvPosition(true, startNode.X, startNode.Y, startNode.Z, startNode.Theta);
-        var simulator = new AgvTravelSimulator(graph, agvData, position);
+        var simulator = new AgvTravelSimulator(graph, agvData, position, new FakeTimeProvider());
 
         var entryTime = DateTime.UtcNow;
         const double initialVelocity = 0;
@@ -106,10 +107,10 @@ public class AgvTravelSimulatorTest
         var agvData = new KarisType1(correlationId, "ip address");
         var generator = new FixedGraphGenerator(new GeneratedMapGenerator());
         var graph = generator.Generate(agvData.CorrelationId);
-        string[] nodes = { "D-Press", "WP-0011", "WP-0016", "WP-0015", "WP-0017", "WP-0123", "PD-QA" };
+        string[] nodes = {"D-Press", "WP-0011", "WP-0016", "WP-0015", "WP-0017", "WP-0123", "PD-QA"};
         var startNode = graph.Nodes.First(n => n.Id == nodes.First());
         var position = new AgvPosition(true, startNode.X, startNode.Y, startNode.Z, startNode.Theta);
-        var simulator = new AgvTravelSimulator(graph, agvData, position);
+        var simulator = new AgvTravelSimulator(graph, agvData, position, new FakeTimeProvider());
 
         var entryTime = DateTime.UtcNow;
         const double initialVelocity = 0;
@@ -134,7 +135,7 @@ public class AgvTravelSimulatorTest
         var agvGraph = generator.Generate(agvData.CorrelationId);
 
         var position = new AgvPosition(true, 1, 1, 1, 0);
-        var simulator = new AgvTravelSimulator(agvGraph, agvData, position);
+        var simulator = new AgvTravelSimulator(agvGraph, agvData, position, new FakeTimeProvider());
 
         simulator.EstimateTravelTimes(new List<string>(), DateTime.UtcNow, 0);
 
@@ -151,16 +152,17 @@ public class AgvTravelSimulatorTest
         var agvData = new KarisType1(correlationId, "ip address");
         var node = agvGraph.Nodes.First(n => n.Type == AgvGraph.NodeType.Charge);
         var position = new AgvPosition(true, node.X, node.Y, node.Z, node.Theta);
-        var simulator = new AgvTravelSimulator(agvGraph, agvData, position);
+        var fakeTimeProvider = new FakeTimeProvider(DateTime.UtcNow);
+        var simulator = new AgvTravelSimulator(agvGraph, agvData, position, fakeTimeProvider);
 
-        simulator.EstimateTravelTimes(new List<string> { node.Id }, DateTime.UtcNow, 0);
+        simulator.EstimateTravelTimes(new List<string> {node.Id}, fakeTimeProvider.Now(), 0);
 
         simulator.CurrentEdge.ShouldBeNull();
         simulator.CurrentNode.ShouldBe(node);
         simulator.FollowingEdges.ShouldBeEmpty();
         simulator.TravelDuration.ShouldBe(TimeSpan.Zero);
 
-        simulator.UpdatePosition(DateTime.UtcNow);
+        simulator.UpdatePosition();
         simulator.Position.ShouldBe(position);
     }
 
@@ -174,10 +176,11 @@ public class AgvTravelSimulatorTest
         var sourceNode = agvGraph.Nodes.Single(n => n.Id == edge.FromNodeId);
         var targetNode = agvGraph.Nodes.Single(n => n.Id == edge.ToNodeId);
         var position = new AgvPosition(true, sourceNode.X, sourceNode.Y, sourceNode.Z, sourceNode.Theta);
-        var simulator = new AgvTravelSimulator(agvGraph, agvData, position);
+        var fakeTimeProvider = new FakeTimeProvider(DateTime.UtcNow);
+        var simulator = new AgvTravelSimulator(agvGraph, agvData, position, fakeTimeProvider);
         var time = DateTime.UtcNow;
 
-        simulator.EstimateTravelTimes(new List<string> { sourceNode.Id, targetNode.Id }, time, 0);
+        simulator.EstimateTravelTimes(new List<string> {sourceNode.Id, targetNode.Id}, time, 0);
 
         simulator.CurrentEdge.ShouldBe(edge);
         simulator.CurrentNode.ShouldBe(sourceNode);
@@ -186,9 +189,10 @@ public class AgvTravelSimulatorTest
         simulator.FollowingEdges.Single().TargetNode.ShouldBe(targetNode);
         simulator.TravelDuration.ShouldNotBeNull();
 
-        simulator.UpdatePosition(time + simulator.TravelDuration!.Value);
+        fakeTimeProvider.SetNow(time + simulator.TravelDuration!.Value);
+        simulator.UpdatePosition();
         simulator.CurrentNode.ShouldBe(targetNode);
-        simulator.Position.ShouldBe(new AgvPosition(true, targetNode.X, targetNode.Y, targetNode.Z, (float)Math.PI));
+        simulator.Position.ShouldBe(new AgvPosition(true, targetNode.X, targetNode.Y, targetNode.Z, (float) Math.PI));
     }
 
     [TestMethod]
@@ -201,14 +205,15 @@ public class AgvTravelSimulatorTest
         string[] nodes = GetArbitraryRoute("PD-QA", graph);
         var startNode = graph.Nodes.First(n => n.Id == nodes.First());
         var position = new AgvPosition(true, startNode.X, startNode.Y, startNode.Z, startNode.Theta);
-        var simulator = new AgvTravelSimulator(graph, agvData, position);
+        var fakeTimeProvider = new FakeTimeProvider(DateTime.UtcNow);
+        var simulator = new AgvTravelSimulator(graph, agvData, position, fakeTimeProvider);
 
         var entryTime = DateTime.UtcNow;
         const double initialVelocity = 0;
         simulator.EstimateTravelTimes(nodes, entryTime, initialVelocity);
 
-        var now = entryTime.Add(simulator.TravelDuration!.Value);
-        simulator.UpdatePosition(now);
+        fakeTimeProvider.SetNow(entryTime.Add(simulator.TravelDuration!.Value));
+        simulator.UpdatePosition();
 
         simulator.Position.ShouldNotBe(position);
         simulator.CurrentEdge.ShouldBe(simulator.FollowingEdges.Last());
@@ -222,9 +227,9 @@ public class AgvTravelSimulatorTest
         var agvData = new KarisType1(correlationId, "ip address");
         var agvGraph = AgvGraphGenerator.CreateDefaultGraph(correlationId);
         var position = new AgvPosition(true, 1, 1, 1, 0);
-        var simulator = new AgvTravelSimulator(agvGraph, agvData, position);
+        var simulator = new AgvTravelSimulator(agvGraph, agvData, position, new FakeTimeProvider());
 
-        simulator.UpdatePosition(DateTime.UtcNow);
+        simulator.UpdatePosition();
         simulator.Position.ShouldBe(position);
         simulator.CurrentEdge.ShouldBeNull();
     }
@@ -239,22 +244,23 @@ public class AgvTravelSimulatorTest
         string[] nodes = GetArbitraryRoute("PD-QA", graph);
         var startNode = graph.Nodes.First(n => n.Id == nodes.First());
         var position = new AgvPosition(true, startNode.X, startNode.Y, startNode.Z, startNode.Theta);
-        var simulator = new AgvTravelSimulator(graph, agvData, position);
-
         var entryTime = DateTime.UtcNow;
+        var fakeTimeProvider = new FakeTimeProvider(entryTime);
+        var simulator = new AgvTravelSimulator(graph, agvData, position, fakeTimeProvider);
+
         const double initialVelocity = 0;
         simulator.EstimateTravelTimes(nodes, entryTime, initialVelocity);
 
         var targetNode = graph.Nodes.First(n => n.Id == nodes.Last());
-        var shortlyBeforeTargetReached = entryTime.Add(0.95 * simulator.TravelDuration!.Value);
-        simulator.UpdatePosition(shortlyBeforeTargetReached);
+        fakeTimeProvider.SetNow(entryTime.Add(0.95 * simulator.TravelDuration!.Value));
+        simulator.UpdatePosition();
         simulator.CurrentNode.ShouldNotBe(targetNode);
 
         float lastOrientationOnEdge = simulator.Position.Theta;
 
-        var targetReached = entryTime.Add(simulator.TravelDuration!.Value);
-        simulator.UpdatePosition(targetReached);
-        simulator.Position.Theta.ShouldBe(lastOrientationOnEdge - (float)Math.PI);
+        fakeTimeProvider.SetNow(entryTime.Add(simulator.TravelDuration!.Value));
+        simulator.UpdatePosition();
+        simulator.Position.Theta.ShouldBe(lastOrientationOnEdge - (float) Math.PI);
         simulator.CurrentEdge.ShouldBe(simulator.FollowingEdges.Last());
         simulator.CurrentNode.ShouldBe(targetNode);
     }
@@ -269,7 +275,7 @@ public class AgvTravelSimulatorTest
         action.Nodes = GetArbitraryRoute(action.TargetNodeId, agvGraph);
         var startNode = agvGraph.Nodes.First(n => n.Id == action.Nodes.First());
         var position = new AgvPosition(true, startNode.X, startNode.Y, startNode.Z, startNode.Theta);
-        var simulator = new AgvTravelSimulator(agvGraph, agvData, position);
+        var simulator = new AgvTravelSimulator(agvGraph, agvData, position, new FakeTimeProvider());
 
         var entryTime = DateTime.UtcNow;
         const double initialVelocity = 0;
@@ -285,5 +291,74 @@ public class AgvTravelSimulatorTest
         simulator.FollowingEdges.ShouldBeEmpty();
         simulator.TravelDuration.ShouldBeNull();
         simulator.CurrentNode.ShouldNotBeNull();
+    }
+
+    [TestMethod]
+    public void PauseTime_ConsidersPreviousAndActivePause()
+    {
+        var correlationId = Guid.NewGuid();
+        var agvGraph = AgvGraphGenerator.CreateDefaultGraph(correlationId);
+        var agvData = new KarisType1(correlationId, "ip address");
+        var action = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: correlationId).Actions.First();
+        action.Nodes = GetArbitraryRoute(action.TargetNodeId, agvGraph);
+        var startNode = agvGraph.Nodes.First(n => n.Id == action.Nodes.First());
+        var position = new AgvPosition(true, startNode.X, startNode.Y, startNode.Z, startNode.Theta);
+        var fakeTimeProvider = new FakeTimeProvider();
+        var simulator = new AgvTravelSimulator(agvGraph, agvData, position, fakeTimeProvider);
+        var pauseFrom = new DateTime(2000, 1, 1, 0, 0, 0);
+        fakeTimeProvider.SetNow(pauseFrom);
+
+        simulator.Pause();
+        var pauseTo = new DateTime(2000, 1, 1, 0, 0, 1);
+        fakeTimeProvider.SetNow(pauseTo);
+        simulator.Resume();
+        var pauseFrom2 = new DateTime(2000, 1, 1, 0, 0, 10);
+        fakeTimeProvider.SetNow(pauseFrom2);
+        simulator.Pause();
+        var pauseTo2 = new DateTime(2000, 1, 1, 0, 0, 11);
+        fakeTimeProvider.SetNow(pauseTo2);
+
+        var pauseTime1 = pauseTo - pauseFrom;
+        var activePause = pauseTo2 - pauseFrom2;
+        simulator.PauseTime.ShouldBe(pauseTime1 + activePause);
+    }
+
+    [TestMethod]
+    public void Pause_FreezesPosition()
+    {
+        var correlationId = Guid.NewGuid();
+        var agvGraph = AgvGraphGenerator.CreateDefaultGraph(correlationId);
+        var agvData = new KarisType1(correlationId, "ip address");
+        var edge = agvGraph.Edges.First();
+        var sourceNode = agvGraph.Nodes.Single(n => n.Id == edge.FromNodeId);
+        var targetNode = agvGraph.Nodes.Single(n => n.Id == edge.ToNodeId);
+        var position = new AgvPosition(true, sourceNode.X, sourceNode.Y, sourceNode.Z, sourceNode.Theta);
+        var fakeTimeProvider = new FakeTimeProvider();
+        var simulator = new AgvTravelSimulator(agvGraph, agvData, position, fakeTimeProvider);
+        var time = new DateTime(2000, 1, 1, 0, 0, 0);
+        fakeTimeProvider.SetNow(time);
+
+        simulator.EstimateTravelTimes(new List<string> {sourceNode.Id, targetNode.Id}, time, 0);
+
+        simulator.CurrentEdge.ShouldBe(edge);
+        simulator.CurrentNode.ShouldBe(sourceNode);
+        simulator.FollowingEdges.Count.ShouldBe(1);
+        simulator.FollowingEdges.Single().SourceNode.ShouldBe(sourceNode);
+        simulator.FollowingEdges.Single().TargetNode.ShouldBe(targetNode);
+        simulator.TravelDuration.ShouldNotBeNull();
+
+        var halfNodeTime = simulator.TravelDuration!.Value / 2;
+        var currentTime = time + halfNodeTime;
+        fakeTimeProvider.SetNow(currentTime);
+        simulator.UpdatePosition();
+        simulator.Pause();
+        position = simulator.Position;
+        fakeTimeProvider.SetNow(currentTime += TimeSpan.FromSeconds(43));
+        simulator.UpdatePosition();
+        simulator.Position.ShouldBe(position);
+        simulator.Resume();
+        fakeTimeProvider.SetNow(currentTime + halfNodeTime);
+        simulator.UpdatePosition();
+        simulator.Position.ShouldBe(new AgvPosition(true, targetNode.X, targetNode.Y, targetNode.Z, (float) Math.PI));
     }
 }

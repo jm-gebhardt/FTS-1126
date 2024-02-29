@@ -9,7 +9,9 @@ using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Messages;
 using Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Helper;
+using Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation.Travel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation;
@@ -282,7 +284,7 @@ public class SimulatedAgvStateMachineTest
             .WithAgv(agvSaga)
             .Build();
 
-        await fixture.PublishMessageAsync(new SimulateAgvError(correlationId, new List<AgvError> { agvError }));
+        await fixture.PublishMessageAsync(new SimulateAgvError(correlationId, new List<AgvError> {agvError}));
 
         (await fixture.SagaHarness.Consumed.Any<SimulateAgvError>()).ShouldBeTrue();
 
@@ -302,9 +304,44 @@ public class SimulatedAgvStateMachineTest
                 r => r.ReferenceValue.ShouldBe(agvError.ErrorReferences!.First().ReferenceValue)));
     }
 
+    [TestMethod]
+    public async Task Consume_SimulateAgvError_CallsTravelSimulatorPause_WhenErrorAdded()
+    {
+        var agvSaga = SimulatedAgvSagaGenerator.Generate();
+        var correlationId = agvSaga.CorrelationId;
+        var agvError = AgvErrorGenerator.GenerateAgvError(correlationId);
+        var agvTravelSimulatorMock = new AgvTravelSimulatorMock();
+        var fixture = new SimulatedAgvStateMachineTestFixture()
+            .WithAgv(agvSaga)
+            .WithAgvTravelSimulator(agvTravelSimulatorMock.Object)
+            .Build();
+
+        await fixture.PublishMessageAsync(new SimulateAgvError(correlationId, new List<AgvError> {agvError}));
+
+        agvTravelSimulatorMock.Mock.Verify(m => m.Pause(), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task Consume_SimulateAgvError_CallsTravelSimulatorResume_WhenErrorRemoved()
+    {
+        var agvSaga = SimulatedAgvSagaGenerator.Generate();
+        var correlationId = agvSaga.CorrelationId;
+        var agvError = AgvErrorGenerator.GenerateAgvError(correlationId);
+        var agvTravelSimulatorMock = new AgvTravelSimulatorMock();
+        var fixture = new SimulatedAgvStateMachineTestFixture()
+            .WithAgv(agvSaga)
+            .WithAgvTravelSimulator(agvTravelSimulatorMock.Object)
+            .Build();
+
+        await fixture.PublishMessageAsync(new SimulateAgvError(correlationId, new List<AgvError> {agvError}));
+        await fixture.PublishMessageAsync(new SimulateAgvError(correlationId, new List<AgvError>()), m => (m.MessageObject as SimulateAgvError)?.AgvErrors.Count == 0);
+
+        agvTravelSimulatorMock.Mock.Verify(m => m.Resume(), Times.Once);
+    }
+
     private string[] GetArbitraryRoute(string targetNode, AgvGraph graph)
     {
-        var nodes = new List<string> { targetNode };
+        var nodes = new List<string> {targetNode};
         foreach (int unused in Enumerable.Range(0, 3))
         {
             var edge = graph.Edges.FirstOrDefault(e => e.ToNodeId == targetNode && !nodes.Contains(e.FromNodeId));
