@@ -400,9 +400,9 @@ public class ActionCommandHandlerTest
         actionGroupCreatedEvent.CorrelationId.ShouldBe(actionGroup.CorrelationId);
         actionGroupCreatedEvent.ActionGroup.State.ShouldBe(ActionGroupState.Invalid);
 
-        var actionGroupChangedEvent = fixture.TestHarness.Published.Select<ActionGroupCreated>().First().Context.Message;
-        actionGroupChangedEvent.CorrelationId.ShouldBe(actionGroup.CorrelationId);
-        actionGroupChangedEvent.ActionGroup.State.ShouldBe(ActionGroupState.Invalid);
+        var invalidEvent = fixture.TestHarness.Published.Select<ActionGroupInvalid>().First().Context.Message;
+        invalidEvent.CorrelationId.ShouldBe(actionGroup.CorrelationId);
+        invalidEvent.ActionGroup.State.ShouldBe(ActionGroupState.Invalid);
 
         (await fixture.TestHarness.Published.Any<ActionGroupInvalid>()).ShouldBeTrue();
         var actionGroupInvalidEvent = fixture.TestHarness.Published.Select<ActionGroupInvalid>().First().Context.Message;

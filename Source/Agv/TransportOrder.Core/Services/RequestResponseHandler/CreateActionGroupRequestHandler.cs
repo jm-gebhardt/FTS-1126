@@ -25,18 +25,23 @@ public class CreateActionGroupRequestHandler :
     private readonly IAgvDb _agvDb;
     private readonly IMapper _mapper;
     private readonly IActionGroupValidationService _actionGroupValidationService;
+    private readonly IBus _bus;
 
     /// <inheritdoc cref="CreateActionGroupRequestHandler" />
     public CreateActionGroupRequestHandler(IActionGroupRetrievalService retrievalService,
         IActionGroupRepository actionGroupRepository,
         IActionGroupValidationService actionGroupValidationService,
-        IAgvDb agvDb, IMapper mapper)
+        IBus bus,
+        IAgvDb agvDb,
+        IMapper mapper
+        )
     {
         _retrievalService = retrievalService;
         _actionGroupRepository = actionGroupRepository;
         _agvDb = agvDb;
         _mapper = mapper;
         _actionGroupValidationService = actionGroupValidationService;
+        _bus = bus;
     }
 
     /// <summary>
@@ -49,7 +54,7 @@ public class CreateActionGroupRequestHandler :
         var actionGroup = await CreatePickDropActionGroup(sourceNode, targetNode, agvCorrelationId);
         await _actionGroupRepository.AddAsync(actionGroup);
 
-        await context.Publish(new Common.Messages.ActionGroups.Events.ActionGroupCreated(_mapper.Map<ActionGroup>(actionGroup), actionGroup.CorrelationId));
+        await _bus.Publish(new Common.Messages.ActionGroups.Events.ActionGroupCreated(_mapper.Map<ActionGroup>(actionGroup), actionGroup.CorrelationId));
         await context.RespondAsync(new ActionGroupCreated(await _retrievalService.EnrichActionGroupWithNodesAsync(actionGroup)));
     }
 
@@ -88,7 +93,7 @@ public class CreateActionGroupRequestHandler :
         else
         {
             // get source and target from the graph of the given agv
-            nodes = (await _agvDb.Graphs.GetNodesAsync(agvCorrelationId.Value, node => new[] { source, target }.Contains(node.Id))).ToList();
+            nodes = (await _agvDb.Graphs.GetNodesAsync(agvCorrelationId.Value, node => new[] {source, target}.Contains(node.Id))).ToList();
         }
 
         return (nodes.SelectById(source), nodes.SelectById(target));
@@ -103,8 +108,8 @@ public class CreateActionGroupRequestHandler :
             $"M-{DateTime.UtcNow:yyyyMMdd-tthhmm}",
             actions: new List<Domain.Models.ActionGroup.AgvAction>
             {
-                new(Guid.NewGuid(), ActionType.Pick, sourceNode, correlationId) { Sequence = 0 },
-                new(Guid.NewGuid(), ActionType.Drop, targetNode, correlationId) { Sequence = 1 }
+                new(Guid.NewGuid(), ActionType.Pick, sourceNode, correlationId) {Sequence = 0},
+                new(Guid.NewGuid(), ActionType.Drop, targetNode, correlationId) {Sequence = 1}
             },
             creator: ActionGroupCreator.TransportOrderWebApi,
             assignedAgv: agvCorrelationId

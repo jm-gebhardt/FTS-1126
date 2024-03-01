@@ -2,8 +2,10 @@
 using JetBrains.Annotations;
 using MassTransit;
 using MassTransit.Mediator;
+using MassTransit.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
+using MediatorTestHarness = Gebhardt.StoreWare.Agv.Common.Testing.TestHarness.MediatorTestHarness;
 
 namespace Gebhardt.StoreWare.Agv.Common.Testing;
 
@@ -23,17 +25,19 @@ public class MediatorTestFixture<TRequest, TConsumer>
     /// <summary>
     /// Service provider
     /// </summary>
-    public ServiceProvider Provider = null!;
+    public ServiceProvider Provider { get; private set; } = null!;
 
     /// <summary>
     /// Started TestHarness
     /// </summary>
-    public IMediatorTestHarness TestHarness = null!;
+    public IMediatorTestHarness TestHarness { get; private set; } = null!;
 
     /// <summary>
     /// Mediator
     /// </summary>
-    public IMediator? Mediator;
+    public IMediator? Mediator { get; private set; }
+
+    public ITestHarness MassTransitTestHarness { get; private set; } = null!;
 
     /// <summary>
     /// Builds the service provider based on the service collection, in order to be able to register services lazy
@@ -58,6 +62,7 @@ public class MediatorTestFixture<TRequest, TConsumer>
 
         Provider = collection.BuildServiceProvider(true);
         Mediator = Provider.GetRequiredService<IMediator>();
+        MassTransitTestHarness = Provider.GetTestHarness();
         TestHarness = new MediatorTestHarness(Mediator);
         TestHarness.Start();
 
