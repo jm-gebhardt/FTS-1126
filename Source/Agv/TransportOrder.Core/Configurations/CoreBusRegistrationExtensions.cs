@@ -66,6 +66,8 @@ public static class CoreBusRegistrationExtensions
             partitioner.PartitionMessageById<HandleAgvActionStartFailure, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<HandleActionCompletion, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<PrepareAgvForStartingAction, AgvCommandHandler>(c);
+            partitioner.PartitionMessageById<PrepareParkingOfAgv, AgvCommandHandler>(c);
+            partitioner.PartitionMessageById<PrepareChargingOfAgv, AgvCommandHandler>(c);
         });
         busRegistrationConfigurator.AddConsumer<AgvEventHandler>();
 
@@ -100,10 +102,6 @@ public static class CoreBusRegistrationExtensions
         busRegistrationConfigurator.AddConsumer<ActionCommandHandler>(c =>
         {
             var partitioner = c.CreatePartitioner(PartitionCount);
-            c.Message<CreateParkingActionGroup>(x =>
-                x.UsePartitioner(partitioner, p => p.Message.CorrelationId));
-            c.Message<StartChargingActionGroup>(x =>
-                x.UsePartitioner(partitioner, p => p.Message.AgvCorrelationId));
             c.Message<TryStartNextActionInActionGroup>(x =>
                 x.UsePartitioner(partitioner, p => p.Message.AgvCorrelationId));
             c.Message<TryStartNewActionGroup>(x =>
@@ -112,12 +110,14 @@ public static class CoreBusRegistrationExtensions
                 x.UsePartitioner(partitioner, p => p.Message.AgvCorrelationId));
 
             var actionPartitioner = c.CreatePartitioner(PartitionCount);
+            actionPartitioner.PartitionMessageById<StartChargingActionGroup, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<AbortActionGroup, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<ResetActionGroup, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<QueueActionGroup, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<EstimateActionGroupDuration, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<StartActionOfActionGroup, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<CompleteActionOfActionGroup, ActionCommandHandler>(c);
+            actionPartitioner.PartitionMessageById<CreateParkingActionGroup, ActionCommandHandler>(c);
         });
         busRegistrationConfigurator.AddRequestClient<CancelActionGroup>();
     }
@@ -179,7 +179,7 @@ public static class CoreBusRegistrationExtensions
         configurator.AddConsumer<GetAgvDataRequestHandler>();
         configurator.AddRequestClient<GetAgvData>();
         configurator.AddRequestClient<GetAgvsData>();
-        
+
         configurator.AddConsumer<GetAgvBatteryRequestHandler>();
         configurator.AddRequestClient<GetAgvBattery>();
         configurator.AddRequestClient<GetAgvsBattery>();

@@ -83,4 +83,12 @@ public interface INodeStateRepository
     /// <param name="nodeId">The node id.</param>
     /// <returns></returns>
     Task<NodeLock?> GetNodeStateAsync(string nodeId);
+
+    /// <summary>
+    /// Checks if any of the given nodes is reserved for the given agv.
+    /// </summary>
+    /// <param name="agvCorrelationId">The agv correlation id.</param>
+    /// <param name="nodes">The nodes in question.</param>
+    /// <returns></returns>
+    Task<bool> IsAnyNodeReservedForAgv(Guid agvCorrelationId, ICollection<string> nodes);
 }

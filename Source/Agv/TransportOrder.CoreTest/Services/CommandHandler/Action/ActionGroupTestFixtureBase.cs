@@ -10,7 +10,6 @@ using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Node;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Profiles;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
@@ -33,12 +32,10 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
 {
     private readonly Mock<IChooseAgvActionGroupService> _chooseAgvActionGroupService = new();
     private readonly SemaphoreProvider<IAgvsSemaphore> _semaphoreProvider = new();
-    private readonly Mock<IChargingPointManager> _chargingPointManager = new();
-    private readonly Mock<IParkPointService> _parkPointService = new();
+
     private readonly Mock<IAgvDb> _agvDb = new();
     private readonly Mock<IActionGroupValidationService> _actionGroupValidationService = new();
     private readonly Mock<IActionGroupRetrievalService> _actionGroupRetrievalService = new();
-    private readonly Mock<INodeStateRepository> _nodeStateRepositoryMock = new();
 
     protected Mock<IRouteService> RouteService { get; } = new();
 
@@ -52,15 +49,12 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
         collection.AddTransient(_ => ActionGroupRepository.Object);
         collection.AddTransient(_ => RouteService.Object);
         collection.AddTransient(_ => _chooseAgvActionGroupService.Object);
-        collection.AddTransient(_ => _chargingPointManager.Object);
-        collection.AddTransient(_ => _parkPointService.Object);
         collection.AddTransient(_ => GetMapper());
         collection.AddTransient<ISemaphoreProvider<IAgvsSemaphore>>(_ => _semaphoreProvider);
         collection.AddTransient(_ => _agvDb.Object);
         collection.AddTransient(_ => _actionGroupValidationService.Object);
         collection.AddFakeSettings(() => _agvSettings);
         collection.AddTransient(_ => _actionGroupRetrievalService.Object);
-        collection.AddTransient(_ => _nodeStateRepositoryMock.Object);
     }
 
     protected ActionGroupTestFixtureBase(TimeSpan? inactivityTimeout = null, Action<IBusRegistrationConfigurator>? busRegistrationConfigurator = null,
@@ -131,20 +125,6 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
     public ActionGroupTestFixtureBase<T> AddActionGroupTargetNodeType(ActionGroup actionGroup, AgvGraph.NodeType nodeType)
     {
         _actionGroupRetrievalService.Setup(x => x.EnrichActionGroupWithNodesAsync(It.IsAny<ActionGroup>())).ReturnsAsync(actionGroup.ConvertFromActionGroupWithGivenNodeType(nodeType)!);
-        return this;
-    }
-
-    public ActionGroupTestFixtureBase<T> AddChargingPointManager(GraphNode chargeGraphNode)
-    {
-        _chargingPointManager.Setup(x => x.ReserveChargerAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), null)).ReturnsAsync(chargeGraphNode);
-        _nodeStateRepositoryMock.Setup(x => x.GetNodeStateAsync(It.IsAny<string>())).ReturnsAsync(new NodeLock(chargeGraphNode.Id, NodeLockState.Reserved, false, Guid.NewGuid(), DateTime.UtcNow));
-        return this;
-    }
-
-    public ActionGroupTestFixtureBase<T> AddParkingPointManager(GraphNode parkGraphNode)
-    {
-        _parkPointService.Setup(x => x.ReserveParkAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>())).ReturnsAsync(parkGraphNode);
-        _nodeStateRepositoryMock.Setup(x => x.GetNodeStateAsync(It.IsAny<string>())).ReturnsAsync(new NodeLock(parkGraphNode.Id, NodeLockState.Reserved, false, Guid.NewGuid(), DateTime.UtcNow));
         return this;
     }
 

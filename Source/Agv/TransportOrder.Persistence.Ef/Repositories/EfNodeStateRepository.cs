@@ -153,6 +153,14 @@ public class EfNodeStateRepository : INodeStateRepository
             .SingleOrDefaultAsync(nl => nl.NodeId == nodeId);
     }
 
+    /// <inheritdoc />
+    public async Task<bool> IsAnyNodeReservedForAgv(Guid agvCorrelationId, ICollection<string> nodes)
+    {
+        await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Set<NodeLock>()
+            .AnyAsync(n => nodes.Contains(n.NodeId) && n.AgvCorrelationId == agvCorrelationId && n.NodeState == NodeLockState.Reserved);
+    }
+
     private bool IsLocked(string nodeId)
     {
         using var dbContext = _dbContextFactory.CreateDbContext();

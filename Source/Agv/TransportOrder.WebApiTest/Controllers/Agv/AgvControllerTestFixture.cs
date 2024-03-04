@@ -55,6 +55,8 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
 
     private readonly Mock<INodeStateRepository> _nodeStateRepository = new();
 
+    private readonly Mock<IParkPointService> _parkPointService = new();
+
     public string[] AgvSerialNumbers { get; } = { "AGV001", "AGV002", "AGV003" };
 
     // ReSharper disable once MemberCanBePrivate.Global
@@ -298,6 +300,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             sc.AddTransient(_ => _productionOptions);
             sc.AddTransient(_ => busFixture.TestHarness.Bus);
             sc.AddTransient(_ => _nodeStateRepository.Object);
+            sc.AddTransient(_ => _parkPointService.Object);
         });
         base.Build();
 

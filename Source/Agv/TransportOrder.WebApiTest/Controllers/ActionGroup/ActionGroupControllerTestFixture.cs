@@ -34,11 +34,8 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
     private readonly Mock<IChooseAgvActionGroupService> _chooseAgvActionGroupService = new();
     private readonly SemaphoreProvider<IAgvsSemaphore> _semaphoreProvider = new();
     private readonly Mock<IMaintenanceService> _maintenanceService = new();
-    private readonly Mock<IChargingPointManager> _chargingPointManager = new();
-    private readonly Mock<IParkPointService> _parkPointService = new();
     private readonly Mock<IAgvDb> _agvDb = new();
     private readonly Mock<IActionGroupValidationService> _actionGroupValidationService = new();
-    private readonly Mock<INodeStateRepository> _nodeStateRepositoryMock = new();
     private readonly List<ActionGroupReadModel> _actionGroupReadModels = new();
     private readonly List<Domain.Models.ActionGroup.ActionGroup> _actionGroups = new();
 
@@ -75,13 +72,10 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
             sc.AddTransient(_ => _routeService.Object);
             sc.AddTransient(_ => _chooseAgvActionGroupService.Object);
             sc.AddTransient(_ => _maintenanceService.Object);
-            sc.AddTransient(_ => _chargingPointManager.Object);
-            sc.AddTransient(_ => _parkPointService.Object);
             sc.AddTransient<ISemaphoreProvider<IAgvsSemaphore>>(_ => _semaphoreProvider);
             sc.AddTransient(_ => _agvDb.Object);
             sc.AddTransient(_ => _actionGroupValidationService.Object);
             sc.AddFakeSettings(new AgvSettings());
-            sc.AddTransient(_ => _nodeStateRepositoryMock.Object);
             if (bus != null)
             {
                 sc.AddTransient(_ => bus);

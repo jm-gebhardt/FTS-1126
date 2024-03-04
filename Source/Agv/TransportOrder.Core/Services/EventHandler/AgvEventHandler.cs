@@ -33,7 +33,9 @@ public class AgvEventHandler :
     IConsumer<AgvGraphChanged>,
     IConsumer<AgvWentOffline>,
     IConsumer<AgvPreparedForStartingAction>,
-    IConsumer<AgvLoadStatusReceived>
+    IConsumer<AgvLoadStatusReceived>,
+    IConsumer<ParkingNodeSelectedForAgv>,
+    IConsumer<ChargingNodeSelectedForAgv>
 {
     private readonly ILogger<AgvEventHandler> _logger;
     private readonly IActionGroupRepository _actionGroupRepository;
@@ -95,7 +97,7 @@ public class AgvEventHandler :
             if (agv.CheckMustCharge(agvSettings) || !notStartedActionGroups.Any())
             {
                 _logger.LogInformation("Create and start charging group for agv {CorrelationId}", agv.CorrelationId);
-                await context.Publish(new StartChargingActionGroup(agv.CorrelationId));
+                await context.Publish(new PrepareChargingOfAgv(agv.CorrelationId));
             }
         }, context.CancellationToken);
     }
@@ -146,7 +148,7 @@ public class AgvEventHandler :
     public async Task Consume(ConsumeContext<AgvCanStartIdleAction> context)
     {
         var agvCorrelationId = context.Message.CorrelationId;
-        await context.Publish(new CreateParkingActionGroup(agvCorrelationId));
+        await context.Publish(new PrepareParkingOfAgv(agvCorrelationId));
     }
 
     /// <summary>
@@ -254,9 +256,24 @@ public class AgvEventHandler :
     /// <summary>
     /// Handles the <see cref="AgvLoadStatusReceived"/> event.
     /// </summary>
-    /// <param name="context"></param>
     public async Task Consume(ConsumeContext<AgvLoadStatusReceived> context)
     {
         await context.Publish(new UpdateCargo(context.Message.CorrelationId, context.Message.Cargos));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="ParkingNodeSelectedForAgv"/> event.
+    /// </summary>
+    public async Task Consume(ConsumeContext<ParkingNodeSelectedForAgv> context)
+    {
+        await context.Publish(new CreateParkingActionGroup(Guid.NewGuid(), context.Message.CorrelationId, context.Message.ParkingNode));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="ChargingNodeSelectedForAgv"/> event.
+    /// </summary>
+    public async Task Consume(ConsumeContext<ChargingNodeSelectedForAgv> context)
+    {
+        await context.Publish(new StartChargingActionGroup(Guid.NewGuid(), context.Message.CorrelationId, context.Message.ChargeStationId, context.Message.Initiator));
     }
 }

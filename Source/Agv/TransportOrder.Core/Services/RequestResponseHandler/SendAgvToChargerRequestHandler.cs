@@ -51,7 +51,7 @@ public class SendAgvToChargerRequestHandler : IConsumer<SendAgvToCharger>
             throw new NoChargeStationAvailableException();
         }
 
-        await context.Publish(new StartChargingActionGroup(agvCorrelationId, charger.Id, ActionGroupCreator.TransportOrderWebApi));
+        await context.Publish(new StartChargingActionGroup(Guid.NewGuid(), agvCorrelationId, charger.Id, ActionGroupCreator.TransportOrderWebApi));
 
         await context.RespondAsync(new Success());
     }

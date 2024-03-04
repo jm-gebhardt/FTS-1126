@@ -1,6 +1,7 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Models;
+using Gebhardt.StoreWare.Agv.Common.Persistence;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
@@ -77,7 +78,7 @@ public class EfActionGroupRepository : IActionGroupRepository
         List<ActionGroup> actionGroupsAsync = await actionGroups
             .AsNoTracking()
             .Take(maxItems)
-            .ToListAsync();
+            .ToListWithNoLockAsync();
         return actionGroupsAsync;
     }
 
@@ -246,7 +247,7 @@ public class EfActionGroupRepository : IActionGroupRepository
                 actionGroup.Actions.Any(a => a.State != ActionState.Completed && a.ActionType == ActionType.Drop)
             )
             .AsNoTracking()
-            .AnyAsync();
+            .AnyWithNoLockAsync();
 
         return hasUnfinishedDropActions;
     }
@@ -262,7 +263,7 @@ public class EfActionGroupRepository : IActionGroupRepository
                 actionGroup.Actions.Any(a => a.State != ActionState.Completed && a.State != ActionState.Started)
             )
             .AsNoTracking()
-            .AnyAsync();
+            .AnyWithNoLockAsync();
 
         return hasNotStartedActions;
     }
@@ -295,7 +296,7 @@ public class EfActionGroupRepository : IActionGroupRepository
             .OrderBy(g => g.CreatedDate)
             .ThenByDescending(g => g.IsManual)
             .AsNoTracking()
-            .ToListAsync();
+            .ToListWithNoLockAsync();
 
         return notStartedActionGroups;
     }

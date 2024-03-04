@@ -56,4 +56,11 @@ public class ChargingPointManager : BaseNodeReservationManager, IChargingPointMa
     {
         return await IsAgvOnSuchANode(agv);
     }
+
+    /// <inheritdoc />
+    public async Task<bool> AgvHasReservedChargerAsync(Guid agvCorrelationId)
+    {
+        List<string> nodes = (await AgvDb.Graphs.GetNodesAsync(agvCorrelationId, NodeFilter)).Select( n => n.Id).ToList();
+        return await NodeStateRepository.IsAnyNodeReservedForAgv(agvCorrelationId, nodes);
+    }
 }

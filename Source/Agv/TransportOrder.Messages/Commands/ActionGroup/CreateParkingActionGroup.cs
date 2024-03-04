@@ -3,7 +3,9 @@
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
 
 /// <summary>
-/// Provides a command to create a parking <see cref="ActionGroup"/> for an agv.
+/// Provides a command to create a parking action group.
 /// </summary>
-/// <param name="CorrelationId">The correlationId of the agv.</param>
-public record CreateParkingActionGroup(Guid CorrelationId) : CorrelatedBy<Guid>;
+/// <param name="CorrelationId">The action group correlation id.</param>
+/// <param name="AgvCorrelationId">The agv correlation id.</param>
+/// <param name="ParkingNodeId">The parking node id.</param>
+public record CreateParkingActionGroup(Guid CorrelationId, Guid AgvCorrelationId, string ParkingNodeId):CorrelatedBy<Guid>;

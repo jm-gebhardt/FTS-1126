@@ -8,7 +8,6 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.CommandHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.ActionGroup;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Map;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
 using MassTransit;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -16,7 +15,6 @@ using Moq;
 using Shouldly;
 using ActionGroup = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using AgvAction = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.AgvAction;
-using GraphNode = Gebhardt.StoreWare.Agv.Common.Models.Graphs.GraphNode;
 using ResetActionGroup = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup.ResetActionGroup;
 using ValidationResult = FluentValidation.Results.ValidationResult;
 
@@ -466,15 +464,13 @@ public class ActionCommandHandlerTest
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddAgv(agv)
             .AddActionGroup(chargeActionGroup, hasUnfinishedAction: false, existsPriorToTest: false)
-            .AddActionGroupRetrieval(headingTo: false)
-            .AddChargingPointManager(chargeGraphNode: new GraphNode(chargeNodeName));
+            .AddActionGroupRetrieval(headingTo: false);
 
-        var command = new StartChargingActionGroup(agv.CorrelationId);
+        var command = new StartChargingActionGroup(chargeActionGroup.CorrelationId, agv.CorrelationId, chargeNodeName);
         await fixture.TestHarness.Bus.Publish(command);
         (await fixture.ConsumerHarness.Consumed.Any<StartChargingActionGroup>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<ActionGroupCreated>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<ActionGroupCreatedForAgv>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<NodeStateChanged>()).ShouldBeTrue();
     }
 
     [TestMethod]
@@ -488,15 +484,13 @@ public class ActionCommandHandlerTest
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddAgv(agv)
             .AddActionGroup(chargeActionGroup, hasUnfinishedAction: false)
-            .AddActionGroupRetrieval(headingTo: false)
-            .AddChargingPointManager(chargeGraphNode: new GraphNode(chargeNodeName));
+            .AddActionGroupRetrieval(headingTo: false);
 
-        var command = new StartChargingActionGroup(agv.CorrelationId);
+        var command = new StartChargingActionGroup(chargeActionGroup.CorrelationId, agv.CorrelationId, chargeNodeName);
         await fixture.TestHarness.Bus.Publish(command);
         (await fixture.ConsumerHarness.Consumed.Any<StartChargingActionGroup>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<ActionGroupCreated>()).ShouldBeFalse();
         (await fixture.TestHarness.Published.Any<ActionGroupCreatedForAgv>()).ShouldBeFalse();
-        (await fixture.TestHarness.Published.Any<NodeStateChanged>()).ShouldBeFalse();
     }
 
     [TestMethod]
@@ -509,15 +503,13 @@ public class ActionCommandHandlerTest
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddAgv(agv)
             .AddActionGroup(chargeActionGroup, hasUnfinishedAction: false)
-            .AddActionGroupRetrieval(headingTo: false)
-            .AddChargingPointManager(chargeGraphNode: new GraphNode(chargeNodeName));
+            .AddActionGroupRetrieval(headingTo: false);
 
-        var command = new StartChargingActionGroup(agv.CorrelationId);
+        var command = new StartChargingActionGroup(chargeActionGroup.CorrelationId, agv.CorrelationId, chargeNodeName);
         await fixture.TestHarness.Bus.Publish(command);
         (await fixture.ConsumerHarness.Consumed.Any<StartChargingActionGroup>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<ActionGroupCreated>()).ShouldBeFalse();
         (await fixture.TestHarness.Published.Any<ActionGroupCreatedForAgv>()).ShouldBeFalse();
-        (await fixture.TestHarness.Published.Any<NodeStateChanged>()).ShouldBeFalse();
     }
 
     [TestMethod]
@@ -530,61 +522,13 @@ public class ActionCommandHandlerTest
         var parkActionGroup = AgvActionGenerator.GenerateActionGroup(parkActions);
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddAgv(agv)
-            .AddActionGroup(parkActionGroup, hasUnfinishedAction: false)
-            .AddActionGroupRetrieval(headingTo: false)
-            .AddParkingPointManager(parkGraphNode: new GraphNode(parkNodeName));
+            .AddActionGroup(parkActionGroup, hasUnfinishedAction: false);
 
-        var command = new CreateParkingActionGroup(agv.CorrelationId);
+        var command = new CreateParkingActionGroup(Guid.NewGuid(), agv.CorrelationId, parkNodeName);
         await fixture.TestHarness.Bus.Publish(command);
         (await fixture.ConsumerHarness.Consumed.Any<CreateParkingActionGroup>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<ActionGroupCreated>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<ActionGroupCreatedForAgv>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<NodeStateChanged>()).ShouldBeTrue();
-    }
-
-    [TestMethod]
-    public async Task Consume_CreateParkingActionGroup_BatteryIsLow_DoesNotPublishActionGroupCreatedAndActionGroupCreatedForAgv()
-    {
-        var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: 20);
-        const string parkNodeName = "Park-1";
-
-        var parkActions = new List<AgvAction> { AgvActionGenerator.GenerateParkAction(targetNodeId: parkNodeName) };
-        var parkActionGroup = AgvActionGenerator.GenerateActionGroup(parkActions);
-        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
-            .AddAgv(agv)
-            .AddActionGroup(parkActionGroup, hasUnfinishedAction: false)
-            .AddActionGroupRetrieval(headingTo: false)
-            .AddParkingPointManager(parkGraphNode: new GraphNode(parkNodeName));
-
-        var command = new CreateParkingActionGroup(agv.CorrelationId);
-        await fixture.TestHarness.Bus.Publish(command);
-        (await fixture.ConsumerHarness.Consumed.Any<CreateParkingActionGroup>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<ActionGroupCreated>()).ShouldBeFalse();
-        (await fixture.TestHarness.Published.Any<ActionGroupCreatedForAgv>()).ShouldBeFalse();
-        (await fixture.TestHarness.Published.Any<NodeStateChanged>()).ShouldBeFalse();
-    }
-
-    [TestMethod]
-    public async Task Consume_CreateParkingActionGroup_AgvLocked_DoesNotPublishActionGroupCreatedAndActionGroupCreatedForAgv()
-    {
-        var agv = AgvGenerator.GenerateIdleAgv();
-        agv.Lock();
-        const string parkNodeName = "Park-1";
-
-        var parkActions = new List<AgvAction> { AgvActionGenerator.GenerateParkAction(targetNodeId: parkNodeName) };
-        var parkActionGroup = AgvActionGenerator.GenerateActionGroup(parkActions);
-        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
-            .AddAgv(agv)
-            .AddActionGroup(parkActionGroup, hasUnfinishedAction: false)
-            .AddActionGroupRetrieval(headingTo: false)
-            .AddParkingPointManager(parkGraphNode: new GraphNode(parkNodeName));
-
-        var command = new CreateParkingActionGroup(agv.CorrelationId);
-        await fixture.TestHarness.Bus.Publish(command);
-        (await fixture.ConsumerHarness.Consumed.Any<CreateParkingActionGroup>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<ActionGroupCreated>()).ShouldBeFalse();
-        (await fixture.TestHarness.Published.Any<ActionGroupCreatedForAgv>()).ShouldBeFalse();
-        (await fixture.TestHarness.Published.Any<NodeStateChanged>()).ShouldBeFalse();
     }
 
     [TestMethod]

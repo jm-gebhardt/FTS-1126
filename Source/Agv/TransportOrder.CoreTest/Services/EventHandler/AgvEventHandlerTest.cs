@@ -13,6 +13,7 @@ using MassTransit;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 using AgvActionGenerator = Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper.AgvActionGenerator;
+using ParkingNodeSelectedForAgv = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv.ParkingNodeSelectedForAgv;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.EventHandler;
 
@@ -138,7 +139,7 @@ public class AgvEventHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_AgvCanStartIdleAction_AgvWithBatteryLevelGood_PublishesCreateParkingActionGroup()
+    public async Task Consume_AgvCanStartIdleAction_AgvWithBatteryLevelGood_PublishesPrepareParkingOfAgv()
     {
         var fixture = new AgvEventHandlerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv();
@@ -146,7 +147,7 @@ public class AgvEventHandlerTest
 
         await fixture.PublishMessageAsync(new AgvCanStartIdleAction(agv.CorrelationId));
 
-        (await fixture.TestHarness.Published.Any<CreateParkingActionGroup>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<PrepareParkingOfAgv>()).ShouldBeTrue();
     }
 
     [TestMethod]
@@ -267,5 +268,21 @@ public class AgvEventHandlerTest
         var updateLoadStatus = fixture.TestHarness.Published.Select<UpdateCargo>().First().Context.Message;
         updateLoadStatus.CorrelationId.ShouldBe(agvCorrelationId);
         updateLoadStatus.Cargos.ShouldBeEquivalentTo(cargos);
+    }
+
+    [TestMethod]
+    public async Task Consume_ParkingNodeSelectedForAgv_PublishesCreateActionGroup()
+    {
+        var fixture = new AgvEventHandlerTestFixture();
+        await fixture.PublishMessageAsync(new ParkingNodeSelectedForAgv(Guid.NewGuid(), "a parking node"));
+        (await fixture.TestHarness.Published.Any<CreateParkingActionGroup>()).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task Consume_ChargingNodeSelectedForAgv_PublishesStartChargingActionGroup()
+    {
+        var fixture = new AgvEventHandlerTestFixture();
+        await fixture.PublishMessageAsync(new ChargingNodeSelectedForAgv(Guid.NewGuid(), "a charging node"));
+        (await fixture.TestHarness.Published.Any<StartChargingActionGroup>()).ShouldBeTrue();
     }
 }

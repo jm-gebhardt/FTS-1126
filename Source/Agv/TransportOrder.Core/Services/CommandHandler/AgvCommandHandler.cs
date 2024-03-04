@@ -22,6 +22,8 @@ using MassTransit;
 using Microsoft.Extensions.Logging;
 using AgvError = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.AgvError;
 using System.Collections.ObjectModel;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Map;
 using AgvSettings = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings.AgvSettings;
 using AgvStatus = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv.AgvStatus;
 using Cargo = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Cargo;
@@ -52,7 +54,9 @@ public class AgvCommandHandler :
     IConsumer<HandleActionCompletion>,
     IConsumer<PrepareAgvForStartingAction>,
     IConsumer<UpdateCargo>,
-    IConsumer<ResetOfflineWatchdog>
+    IConsumer<ResetOfflineWatchdog>,
+    IConsumer<PrepareParkingOfAgv>,
+    IConsumer<PrepareChargingOfAgv>
 {
     private readonly ILogger<AgvCommandHandler> _logger;
     private readonly ISemaphoreProvider<IAgvsSemaphore> _agvsSemaphore;
@@ -61,12 +65,18 @@ public class AgvCommandHandler :
     private readonly IMapper _mapper;
     private readonly ProductionOptions _productionOptions;
     private readonly IAgvDb _agvDb;
+    private readonly IParkPointService _parkPointService;
+    private readonly INodeStateRepository _nodeStateRepository;
+    private readonly IChargingPointManager _chargingPointManager;
 
     /// <inheritdoc cref="AgvCommandHandler"/>
     public AgvCommandHandler(ISemaphoreProvider<IAgvsSemaphore> agvsSemaphore,
         IAgvDb agvDb,
         ISettingsProvider<AgvSettings> settingsProvider,
         IActionGroupRepository actionGroupRepository,
+        IParkPointService parkPointService,
+        IChargingPointManager chargingPointManager,
+        INodeStateRepository nodeStateRepository,
         IMapper mapper,
         ProductionOptions productionOptions,
         ILogger<AgvCommandHandler> logger
@@ -76,9 +86,76 @@ public class AgvCommandHandler :
         _agvsSemaphore = agvsSemaphore;
         _agvDb = agvDb;
         _actionGroupRepository = actionGroupRepository;
+        _parkPointService = parkPointService;
+        _nodeStateRepository = nodeStateRepository;
         _settingsProvider = settingsProvider;
         _mapper = mapper;
         _productionOptions = productionOptions;
+        _chargingPointManager = chargingPointManager;
+    }
+
+    /// <summary>
+    /// Handles the <see cref="PrepareChargingOfAgv"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<PrepareChargingOfAgv> context)
+    {
+        var (agvCorrelationId, initiator) = context.Message;
+
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+
+        bool hasUnfinishedActionGroup = await _actionGroupRepository.HasUnfinishedActionGroupAsync(agv.CorrelationId);
+        _logger.LogDebug("Evaluating {Name}, has unfinished action: {HasUnfinishedActionGroup} for agv {AgvCorrelationId}.", nameof(PrepareChargingOfAgv), hasUnfinishedActionGroup, agv.CorrelationId);
+
+        if (agv.IsLocked || hasUnfinishedActionGroup)
+        {
+            return;
+        }
+
+        if (agv.IsCharging || await _chargingPointManager.AgvHasReservedChargerAsync(agvCorrelationId))
+        {
+            _logger.LogDebug("No need for another charge action because the agv {SerialNumber}/{AgvCorrelationId} is already charging", agv.SerialNumber, agv.CorrelationId);
+            // This might happen if the AssignAsync action is called several times due to a low SOC value, although the agv is already charging
+            return;
+        }
+
+        // Let's see if there is a pending charge action group
+        IReadOnlyList<Domain.Models.ActionGroup.ActionGroup> actionGroups = await _actionGroupRepository.GetActionGroupsAsync(new[] { ActionGroupState.Created }, assignedAgvCorrelationId: agvCorrelationId);
+        var actionGroup = actionGroups.FirstOrDefault(a => a.Actions.Any(ac => ac.ActionType == ActionType.Charge));
+        if (actionGroup != null)
+        {
+            _logger.LogDebug("No need for another charge action because the agv {SerialNumber}/{AgvCorrelationId} has already an assigned a charge action group", agv.SerialNumber, agv.CorrelationId);
+            // This might happen if the AssignAsync action is called several times due to a low SOC value, although the agv is already charging
+            return;
+        }
+
+        var chargingNode = await _chargingPointManager.ReserveChargerAsync(agv);
+        await PublishNodeStateChange(context, chargingNode.Id);
+        await context.Publish(new ChargingNodeSelectedForAgv(agv.CorrelationId, chargingNode.Id, initiator));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="PrepareParkingOfAgv"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<PrepareParkingOfAgv> context)
+    {
+        var agvCorrelationId = context.Message.CorrelationId;
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+        var agvSettings = _settingsProvider.GetSettings();
+
+        if (agv.CheckShouldCharge(agvSettings) || agv.IsLocked)
+        {
+            return;
+        }
+        if (await _parkPointService.IsOnAParkNodeAsync(agv) || await _parkPointService.AgvHasReservedParkingNodeAsync(agvCorrelationId))
+        {
+            _logger.LogDebug("No need for a park action because the agv is already in parking for agvId: {AgvCorrelationId}.", agv.CorrelationId);
+            return;
+        }
+        _logger.LogInformation("Starting park action for agv with CorrelationId: {AgvCorrelationId}.", agv.CorrelationId);
+
+        var parkNode = await _parkPointService.ReserveParkAsync(agv);
+        await PublishNodeStateChange(context, parkNode.Id);
+        await context.Publish(new ParkingNodeSelectedForAgv(agv.CorrelationId, parkNode.Id));
     }
 
     /// <summary>
@@ -659,5 +736,16 @@ public class AgvCommandHandler :
             return;
         }
         MetricCollector.BatteryChargeGauge.WithLabels(agvStatus.CorrelationId.ToString()).Set(agvStatus.BatteryCharge);
+    }
+
+    private async Task PublishNodeStateChange(IPublishEndpoint context, string nodeId)
+    {
+        var nodeState = await _nodeStateRepository.GetNodeStateAsync(nodeId);
+        if (nodeState == null)
+        {
+            _logger.LogError("Could not retrieve node state for node {NodeId}", nodeId);
+            return;
+        }
+        await context.Publish(new NodeStateChanged(nodeState));
     }
 }

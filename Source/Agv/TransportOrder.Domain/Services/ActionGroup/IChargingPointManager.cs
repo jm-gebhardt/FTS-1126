@@ -39,4 +39,11 @@ public interface IChargingPointManager
     /// <returns>True if the lastNodeId of the Agv is a charging point, False if the lastNodeId of the agv is null</returns>
     [UsedImplicitly]
     Task<bool> IsOnAChargingNodeAsync(Models.Agv.Agv agv);
+
+    /// <summary>
+    /// Checks if the agv has already reserved a charger.
+    /// </summary>
+    /// <param name="agvCorrelationId">The correlation id of the agv.</param>
+    /// <returns>True if a charger has been reserved previously for this agv.</returns>
+    Task<bool> AgvHasReservedChargerAsync(Guid agvCorrelationId);
 }
