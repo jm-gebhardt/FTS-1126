@@ -1,0 +1,17 @@
+{
+    "CorrelationId": "b8fbd408-83b9-3c87-8c91-9bc8c870f325",
+    "SerialNumber": "KARIS-Flow-1",
+    "AgvStatus": {
+        "CorrelationId": "b8fbd408-83b9-3c87-8c91-9bc8c870f325",
+        "OrderId": null,
+        "Busy": false,
+        "Automatic": true,
+        "BatteryCharge": 74.98,
+        "Charging": false,
+        "BatteryVoltage": 48.034358978271484,
+        "BatteryCurrent": -2.069389820098877,
+        "BatteryTemperature": 19.702510833740234,
+        "Disturbed": false,
+        "LastNodeId": ""
+    }
+}

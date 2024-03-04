@@ -1,0 +1,26 @@
+﻿{
+    "CorrelationId": "b8fbd408-83b9-3c87-8c91-9bc8c870f325",
+    "SerialNumber": "KARIS-Flow-1",
+    "Model": "KARIS",
+    "RequestId": "c2db5d8b-4802-4d9c-81e5-f7da9ca26893",
+    "Type": "Type 2",
+    "MaxVelocityStraight": 2.0,
+    "BatteryCapacity": 60.00,
+    "IpV4Address": "000.000.000.000",
+    "Length": 1.087,
+    "Width": 0.687,
+    "Payload": 50,
+    "MaxVelocityTurn": 1.0,
+    "MaxVelocityTurnOnSpot": 0.5,
+    "TurnOnSpotThreshold": 0.087267,
+    "Acceleration": 1.00,
+    "SoftwareVersion": "v1.0",
+    "Sensors": [
+        {
+            "SensorIdentifier": "Sensor 1"
+        },
+        {
+            "SensorIdentifier": "Sensor 2"
+        }
+    ]
+}

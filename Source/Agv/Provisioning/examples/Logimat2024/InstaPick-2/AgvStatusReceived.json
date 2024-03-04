@@ -1,0 +1,17 @@
+{
+    "CorrelationId": "7115cec3-30c7-6e6d-db6d-85d2ac1efdbf",
+    "SerialNumber": "InstaPick-2",
+    "AgvStatus": {
+        "CorrelationId": "7115cec3-30c7-6e6d-db6d-85d2ac1efdbf",
+        "OrderId": null,
+        "Busy": false,
+        "Automatic": true,
+        "BatteryCharge": 74.98,
+        "Charging": false,
+        "BatteryVoltage": 48.034358978271484,
+        "BatteryCurrent": -2.069389820098877,
+        "BatteryTemperature": 19.702510833740234,
+        "Disturbed": false,
+        "LastNodeId": ""
+    }
+}

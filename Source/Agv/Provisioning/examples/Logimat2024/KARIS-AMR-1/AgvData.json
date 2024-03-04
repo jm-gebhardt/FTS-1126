@@ -1,0 +1,29 @@
+﻿{
+    "CorrelationId": "e9c4beb6-446c-9cf6-6304-d55fdd8736d6",
+    "SerialNumber": "KARIS-AMR-1",
+    "Model": "KARIS",
+    "RequestId": "c2db5d8b-4802-4d9c-81e5-f7da9ca26893",
+    "Type": "Type 3",
+    "MaxVelocityStraight": 2.00,
+    "BatteryCapacity": 60.00,
+    "IpV4Address": "000.000.000.000",
+    "Length": 1.292,
+    "Width": 0.892,
+    "Payload": 60,
+    "MaxVelocityTurn": 1.00,
+    "MaxVelocityTurnOnSpot": 0.5,
+    "TurnOnSpotThreshold": 0.087267,
+    "Acceleration": 1.00,
+    "SoftwareVersion": "v1.0",
+    "Sensors": [
+        {
+            "SensorIdentifier": "Sensor 1"
+        },
+        {
+            "SensorIdentifier": "Sensor 2"
+        },
+        {
+            "SensorIdentifier": "Sensor 3"
+        }
+    ]
+}

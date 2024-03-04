@@ -1,0 +1,23 @@
+﻿{
+    "CorrelationId": "78f7b2bd-8cce-4bac-8928-af6903af6f85",
+    "SerialNumber": "InstaPick-1",
+    "Model": "InstaPick Model 01",
+    "RequestId": "c2db5d8b-4802-4d9c-81e5-f7da9ca26893",
+    "Type": "P",
+    "MaxVelocityStraight": 0.123,
+    "BatteryCapacity": 60.00,
+    "IpV4Address": "000.000.000.000",
+    "Length": 0.45,
+    "Width": 0.90,
+    "Payload": 35,
+    "MaxVelocityTurn": 0.01,
+    "MaxVelocityTurnOnSpot": 0.02,
+    "TurnOnSpotThreshold": 0.087267,
+    "Acceleration": 0.34,
+    "SoftwareVersion": "v1.0",
+    "Sensors": [
+        {
+            "SensorIdentifier": "Gyro"
+        }
+    ]
+}
