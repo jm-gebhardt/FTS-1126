@@ -291,18 +291,20 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
         AgvData = agvData;
         Errors = errors ?? new List<AgvError>();
 
+        const bool charging = false;
         AgvStatus = new AgvStatus(
             CorrelationId,
             GetOrderId(),
             false,
             true,
             initialBatteryCharge,
-            false,
+            charging,
             GetBatteryVoltage(),
             GetBatteryCurrent(),
             GetBatteryTemperature(),
             false,
-            LastNodeId
+            LastNodeId,
+            GetEstimatedFullyChargedTime(charging)
         );
         TravelSimulator = new AgvTravelSimulator(agvGraph, agvData!, Position!, _timeProvider);
     }
@@ -334,18 +336,20 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
         SimulatedBatteryCharge = initialBatteryCharge;
         BatteryChargeRate = batteryChargeRate;
 
+        const bool charging = false;
         AgvStatus = new AgvStatus(
             CorrelationId,
             GetOrderId(),
             false,
             true,
             (int) SimulatedBatteryCharge,
-            false,
+            charging,
             GetBatteryVoltage(),
             GetBatteryCurrent(),
             GetBatteryTemperature(),
             false,
-            LastNodeId
+            LastNodeId,
+            GetEstimatedFullyChargedTime(charging)
         );
         TravelSimulator = new AgvTravelSimulator(agv.AgvGraph, agvData!, Position!, _timeProvider);
     }
@@ -357,6 +361,8 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
     private static float GetBatteryVoltage() => 48 + GetRandomNoise(0.1);
 
     private static double GetBatteryTemperature() => 20 + GetRandomNoise(0.1);
+
+    private DateTime? GetEstimatedFullyChargedTime(bool charging) => charging ? _timeProvider.Now().AddSeconds((MaxCharge - SimulatedBatteryCharge) / BatteryChargeRate) : null;
 
     private double GetBatteryCurrent()
     {
@@ -450,7 +456,8 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
             GetBatteryCurrent(),
             GetBatteryTemperature(),
             AgvStatus.Disturbed,
-            LastNodeId
+            LastNodeId,
+            GetEstimatedFullyChargedTime(charging)
         );
     }
 }

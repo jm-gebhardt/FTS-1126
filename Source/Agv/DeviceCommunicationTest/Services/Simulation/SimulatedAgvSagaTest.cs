@@ -41,14 +41,21 @@ public class SimulatedAgvSagaTest
         const int initialSoc = 50;
         const double chargeDiff = 0.1;
         const double timeDiff = 60;
+        var now = DateTime.UtcNow;
+        const double batteryChargeRate = 0.1;
         var saga = SimulatedAgvSagaGenerator.Generate(currentNode: NodeGenerator.GenerateChargingNode(),
             currentAction: AgvActionGenerator.GenerateChargeAction(),
-            initialSoc: initialSoc);
-        saga.ActionStartDate = DateTime.UtcNow;
+            initialSoc: initialSoc,
+            timeProvider: new FakeTimeProvider(now),
+            batteryChargeRate: batteryChargeRate);
+        saga.ActionStartDate = now;
         saga.UpdateStatus(timeDiff, chargeDiff, chargeDiff);
 
-        saga.SimulatedBatteryCharge.ShouldBe(initialSoc + chargeDiff * timeDiff);
+        const double batteryCharge = initialSoc + chargeDiff * timeDiff;
+        saga.SimulatedBatteryCharge.ShouldBe(batteryCharge);
         saga.AgvStatus.Charging.ShouldBeTrue();
+        saga.AgvStatus.EstimatedFullyChargedTime.ShouldNotBeNull();
+        ((DateTime) saga.AgvStatus.EstimatedFullyChargedTime!).ShouldBe(now.AddSeconds((SimulatedAgvSaga.MaxCharge - batteryCharge) / batteryChargeRate));
     }
 
     [TestMethod]

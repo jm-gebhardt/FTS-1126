@@ -146,11 +146,8 @@ public record AgvStatus
         BatteryVoltage = batteryVoltage;
         BatteryCurrent = batteryCurrent;
         BatteryTemperature = batteryTemperature;
-        // if these values are not set, we take the default values to simulate some data
-        if (estimatedFullyChargedTime != null)
-        {
-            EstimatedFullyChargedTime = estimatedFullyChargedTime;
-        }
+        EstimatedFullyChargedTime = estimatedFullyChargedTime;
+        // if the value is not set, we take the default value to simulate some data
         if (lastBatteryReplacement != null)
         {
             LastBatteryReplacement = lastBatteryReplacement;
@@ -170,7 +167,6 @@ public record AgvStatus
         Charging = false;
         Disturbed = false;
         LastNodeId = null;
-        EstimatedFullyChargedTime = Charging ? DateTime.UtcNow + TimeSpan.FromSeconds((100 - BatteryCharge) * 1) : null;
         LastBatteryReplacement = DateTime.UtcNow.AddDays(-2);
     }
 }
