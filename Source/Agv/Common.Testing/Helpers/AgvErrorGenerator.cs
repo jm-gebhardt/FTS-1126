@@ -8,16 +8,19 @@ namespace Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 /// </summary>
 public static class AgvErrorGenerator
 {
-    public static AgvErrorStatusReceived GenerateAgvErrorStatus(int errorItems, Guid agvCorrelationId, ErrorLevel errorLevel = ErrorLevel.Fatal)
+    public static AgvErrorStatusReceived GenerateAgvErrorStatus(int errorItems, Guid agvCorrelationId, string errorCode = "", ErrorLevel errorLevel = ErrorLevel.Fatal, ErrorCategory errorCategory = ErrorCategory.General)
     {
         var errors = new List<AgvError>();
         for (int i = 0; i < errorItems; i++)
         {
             errors.Add(new AgvError(
                 agvCorrelationId,
+                $"error title#{i}",
                 $"error description#{i}",
+                errorCode,
                 errorLevel,
                 $"error type#{i}",
+                errorCategory,
                 new List<ErrorReference>(),
                 DateTime.UtcNow
             ));
@@ -26,17 +29,17 @@ public static class AgvErrorGenerator
         return new AgvErrorStatusReceived(agvCorrelationId, errors);
     }
 
-    public static AgvError GenerateAgvError(Guid? agvCorrelationId = null, List<ErrorReference>? errorReferences = null, ErrorLevel errorLevel = ErrorLevel.Fatal)
+    public static AgvError GenerateAgvError(Guid? agvCorrelationId = null, List<ErrorReference>? errorReferences = null, string errorCode = "", ErrorLevel errorLevel = ErrorLevel.Fatal, ErrorCategory errorCategory = ErrorCategory.General)
     {
         agvCorrelationId ??= Guid.NewGuid();
         return new AgvError(agvCorrelationId.Value,
+            $"ErrorTitle({agvCorrelationId})",
             $"ErrorDescription({agvCorrelationId})",
+            errorCode,
             errorLevel,
             $"ErrorType({agvCorrelationId})",
-            errorReferences ?? new List<ErrorReference>
-            {
-                new() {ReferenceKey = $"ReferenceKey#{agvCorrelationId}", ReferenceValue = $"ReferenceValue#{agvCorrelationId}"}
-            },
+            errorCategory,
+            errorReferences ?? [new ErrorReference { ReferenceKey = $"ReferenceKey#{agvCorrelationId}", ReferenceValue = $"ReferenceValue#{agvCorrelationId}" }],
             DateTime.UtcNow);
     }
 }

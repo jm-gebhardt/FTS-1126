@@ -1,5 +1,6 @@
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
+using Gebhardt.StoreWare.Agv.Common.Testing.Time;
 using Gebhardt.StoreWare.Agv.Common.Time;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Extensions;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
@@ -185,15 +186,18 @@ public class SimulatedAgvSagaTest
     }
 
     [TestMethod]
-    public void RemainingDuration_WithActionFinishDate_CalculatesProperly()
+    public void RemainingDuration_WithActionFinishDate_CalculatesRemainingDurationProperly()
     {
-        var saga = SimulatedAgvSagaGenerator.Generate();
-        saga.ActionStartDate = new DateTime(3000, 1, 1, 0, 0, 0);
+        var now = new DateTime(3000, 1, 1, 0, 5, 0);
+        var finish = now.AddSeconds(5);
+        var saga = SimulatedAgvSagaGenerator.Generate(timeProvider: new FakeTimeProvider(now));
+        // As we do not have a travel duration: ActionFinishDate = ActionStartDate
+        saga.ActionStartDate = finish;
         saga.Action = AgvActionGenerator.GenerateMoveAction();
         saga.TravelSimulator = new AgvTravelSimulatorMock().Object;
-        TimeSpan? remainingDuration = saga.RemainingDuration;
+        var remainingDuration = (TimeSpan)saga.RemainingDuration!;
 
-        var expectedRemaining = (TimeSpan) (saga.ActionStartDate - DateTime.UtcNow);
-        ((TimeSpan) remainingDuration!).TotalSeconds.ShouldBe(expectedRemaining.TotalSeconds);
+        var expectedRemaining = (DateTime)saga.ActionFinishDate! - now;
+        remainingDuration.TotalSeconds.ShouldBe(expectedRemaining.TotalSeconds);
     }
 }

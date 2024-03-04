@@ -39,11 +39,12 @@ public static class LoggingExtension
     /// <param name="logger">The logger.</param>
     /// <param name="code">The log message code.</param>
     /// <param name="agvId">The correlation id of the agv.</param>
+    /// <param name="errorCode">The error code of the agv error.</param>
     /// <param name="title">The title.</param>
     /// <param name="message">The message.</param>
-    public static void LogAgvError(this ILogger logger, int code, Guid agvId, string title, string message)
+    public static void LogAgvError(this ILogger logger, int code, Guid agvId, string? errorCode, string title, string message)
     {
-        logger.LogError("{Timestamp:yyyy-MM-dd HH:mm:ss.fffff} {LogCode} {AgvCorrelationId} {LogCategory} {Title} {Message}", DateTime.UtcNow, code, agvId, nameof(Categories.Agv), title, message);
+        logger.LogError("{Timestamp:yyyy-MM-dd HH:mm:ss.fffff} {LogCode} {AgvCorrelationId} {LogCategory} {ErrorCode} {Title} {Message}", DateTime.UtcNow, code, agvId, nameof(Categories.Agv), errorCode, title, message);
     }
 
     /// <summary>
@@ -52,11 +53,12 @@ public static class LoggingExtension
     /// <param name="logger">The logger.</param>
     /// <param name="code">The log message code.</param>
     /// <param name="agvId">The correlation id of the agv.</param>
+    /// <param name="errorCode">The error code of the agv error.</param>
     /// <param name="title">The title.</param>
     /// <param name="message">The message.</param>
-    public static void LogAgvWarning(this ILogger logger, int code, Guid agvId, string title, string message)
+    public static void LogAgvWarning(this ILogger logger, int code, Guid agvId, string? errorCode, string title, string message)
     {
-        logger.LogWarning("{Timestamp:yyyy-MM-dd HH:mm:ss.fffff} {LogCode} {AgvCorrelationId} {LogCategory} {Title} {Message}", DateTime.UtcNow, code, agvId, nameof(Categories.Agv), title, message);
+        logger.LogWarning("{Timestamp:yyyy-MM-dd HH:mm:ss.fffff} {LogCode} {AgvCorrelationId} {LogCategory} {ErrorCode} {Title} {Message}", DateTime.UtcNow, code, agvId, nameof(Categories.Agv), errorCode, title, message);
     }
 
     /// <summary>

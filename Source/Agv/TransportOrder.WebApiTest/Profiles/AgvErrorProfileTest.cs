@@ -16,7 +16,7 @@ public class AgvErrorProfileTest
         var agvCorrelationId = Guid.NewGuid();
         var agvError = AgvErrorGenerator.GenerateAgvError(agvCorrelationId);
 
-        var errorMessageContent = new AgvError(agvError.AgvCorrelationId, agvError.ErrorDescription, agvError.ErrorLevel, agvError.ErrorType, agvError.ErrorReferences, agvError.ErrorReceived);
+        var errorMessageContent = new AgvError(agvError.AgvCorrelationId, agvError.ErrorTitle, agvError.ErrorDescription, agvError.ErrorCode, agvError.ErrorLevel, agvError.ErrorType, agvError.ErrorCategory, agvError.ErrorReferences, agvError.ErrorReceived);
         var mapper = MappingHelper.GetMapper(new AgvErrorProfile());
         var agvErrorDto = mapper.Map<AgvErrorDto>(errorMessageContent);
 
@@ -26,7 +26,10 @@ public class AgvErrorProfileTest
             o => o.ErrorType.ShouldBe(agvError.ErrorType),
             o => o.ErrorReceived.ShouldBe(agvError.ErrorReceived),
             o => o.ErrorDescription.ShouldBe(agvError.ErrorDescription),
-            o => o.ErrorResolved.ShouldBe(agvError.ErrorResolved)
+            o => o.ErrorResolved.ShouldBe(agvError.ErrorResolved),
+            o => o.ErrorTitle.ShouldBe(agvError.ErrorTitle),
+            o => o.ErrorCode.ShouldBe(agvError.ErrorCode),
+            o => o.ErrorCategory.ShouldBe(agvError.ErrorCategory)
         );
     }
 }

@@ -232,7 +232,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
     /// <summary>
     /// Remaining duration of the action. Keeps running when the drive is paused, e.g. due to an error.
     /// </summary>
-    public TimeSpan? RemainingDuration => ActionFinishDate - DateTime.UtcNow;
+    public TimeSpan? RemainingDuration => ActionFinishDate - _timeProvider.Now();
 
     /// <summary>
     /// Simulated Agv errors

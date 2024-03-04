@@ -24,6 +24,7 @@ using AgvError = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.AgvError;
 using System.Collections.ObjectModel;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Map;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Constants;
 using AgvSettings = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings.AgvSettings;
 using AgvStatus = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv.AgvStatus;
 using Cargo = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Cargo;
@@ -205,11 +206,11 @@ public class AgvCommandHandler :
 
         foreach (var agvError in errors.Where(e => e.ErrorLevel == ErrorLevel.Fatal))
         {
-            _logger.LogAgvError(306, agv.CorrelationId, "AGV Error", $"AGV {agv.SerialNumber} threw error {agvError.ErrorDescription}");
+            _logger.LogAgvError(LogCodes.AgvError, agv.CorrelationId, agvError.ErrorCode, "AGV Error", $"AGV {agv.SerialNumber} threw error {agvError.ErrorDescription}");
         }
         foreach (var agvError in errors.Where(e => e.ErrorLevel == ErrorLevel.Warning))
         {
-            _logger.LogAgvWarning(307, agv.CorrelationId, "AGV Warning", $"AGV {agv.SerialNumber} threw warning {agvError.ErrorDescription}");
+            _logger.LogAgvWarning(LogCodes.AgvWarning, agv.CorrelationId, agvError.ErrorCode, "AGV Warning", $"AGV {agv.SerialNumber} threw warning {agvError.ErrorDescription}");
         }
 
         if (agvHasError != agv.HasError)
@@ -262,7 +263,7 @@ public class AgvCommandHandler :
 
         if (!wasReady && isReady)
         {
-            _logger.LogAgvInformation(303, correlationId, "AGV Ready", $"AGV {agv.SerialNumber} became ready");
+            _logger.LogAgvInformation(LogCodes.AgvReady, correlationId, "AGV Ready", $"AGV {agv.SerialNumber} became ready");
         }
 
         // Only request AgvGraph if a global Graph exists
@@ -334,7 +335,7 @@ public class AgvCommandHandler :
         if (!wasOnline && agv.IsOnline)
         {
             await context.Publish(new AgvOnlineChanged(agv.CorrelationId, true));
-            _logger.LogAgvInformation(304, agvStatus.CorrelationId, "AGV Online", $"AGV {agv.SerialNumber} is online");
+            _logger.LogAgvInformation(LogCodes.AgvOnline, agvStatus.CorrelationId, "AGV Online", $"AGV {agv.SerialNumber} is online");
         }
     }
 
@@ -360,7 +361,7 @@ public class AgvCommandHandler :
 
         agv.GraphExists = true;
 
-        _logger.LogAgvInformation(302, correlationId, "AGV Graph Received", $"AGV {agv.SerialNumber} graph has been received");
+        _logger.LogAgvInformation(LogCodes.AgvGraphReceived, correlationId, "AGV Graph Received", $"AGV {agv.SerialNumber} graph has been received");
         await _agvDb.Agvs.UpdateAgvAsync(agv);
     }
 
@@ -382,7 +383,7 @@ public class AgvCommandHandler :
                 return;
             }
             await context.Publish(new AgvOnlineChanged(agv.CorrelationId, false));
-            _logger.LogAgvInformation(305, agv.CorrelationId, "AGV Offline", $"AGV {agv.SerialNumber} is offline");
+            _logger.LogAgvInformation(LogCodes.AgvOffline, agv.CorrelationId, "AGV Offline", $"AGV {agv.SerialNumber} is offline");
         }
     }
 
@@ -399,7 +400,7 @@ public class AgvCommandHandler :
         {
             _logger.LogDebug("{Command}: Could not update agv {AgvCorrelationId}", nameof(UpdateAgvData), agv.CorrelationId);
         }
-        _logger.LogAgvInformation(301, correlationId, "AGV Information Received", $"AGV {agv.SerialNumber} information has been received");
+        _logger.LogAgvInformation(LogCodes.AgvInformationReceived, correlationId, "AGV Information Received", $"AGV {agv.SerialNumber} information has been received");
     }
 
     /// <summary>
@@ -420,7 +421,7 @@ public class AgvCommandHandler :
             _logger.LogDebug("{Command}: Could not update agv {AgvCorrelationId}", nameof(LockAgv), agv.CorrelationId);
         }
 
-        _logger.LogAgvInformation(308, agv.CorrelationId, "AGV Locked", $"AGV {agv.SerialNumber} is locked");
+        _logger.LogAgvInformation(LogCodes.AgvLocked, agv.CorrelationId, "AGV Locked", $"AGV {agv.SerialNumber} is locked");
         await context.Publish(new AgvLockedChanged(agv.CorrelationId, true));
         await context.RespondAsync(new LockAgvResult(agv.CorrelationId));
     }
@@ -443,7 +444,7 @@ public class AgvCommandHandler :
         {
             _logger.LogDebug("{Command}: Could not update agv {AgvCorrelationId}", nameof(UnlockAgv), agv.CorrelationId);
         }
-        _logger.LogAgvInformation(309, agv.CorrelationId, "AGV Unlocked", $"AGV {agv.SerialNumber} is unlocked");
+        _logger.LogAgvInformation(LogCodes.AgvUnlocked, agv.CorrelationId, "AGV Unlocked", $"AGV {agv.SerialNumber} is unlocked");
 
         // publish also when state was already idle, to trigger further assignments
         _logger.LogInformation("Agv {correlationId} was unlocked.", agvCorrelationId);
@@ -572,7 +573,7 @@ public class AgvCommandHandler :
             await context.Publish(new HasCargoChanged(agvCorrelationId, hasCargo));
         }
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
-        _logger.LogAgvInformation(310, agvCorrelationId, "Cargo Updated", $"AGV {agv.SerialNumber} cargo updated");
+        _logger.LogAgvInformation(LogCodes.AgvCargoUpdated, agvCorrelationId, "Cargo Updated", $"AGV {agv.SerialNumber} cargo updated");
     }
 
     /// <summary>
@@ -623,7 +624,7 @@ public class AgvCommandHandler :
         if (stateChanged)
         {
             await PublishStateChange(context, agv);
-            _logger.LogAgvInformation(311, agv.CorrelationId, "AGV Became Idle", $"AGV {agv.SerialNumber} became idle");
+            _logger.LogAgvInformation(LogCodes.AgvIdle, agv.CorrelationId, "AGV Became Idle", $"AGV {agv.SerialNumber} became idle");
         }
     }
 
@@ -654,7 +655,7 @@ public class AgvCommandHandler :
     {
         (var correlationId, string agvSerialNumber, var agvStatus) = context.Message;
 
-        _logger.LogAgvInformation(300, correlationId, "AGV Discovered", $"AGV {agvSerialNumber} has been discovered");
+        _logger.LogAgvInformation(LogCodes.AgvDiscovered, correlationId, "AGV Discovered", $"AGV {agvSerialNumber} has been discovered");
 
         var agv = new Domain.Models.Agv.Agv(correlationId, agvSerialNumber, _mapper.Map<AgvStatus>(agvStatus));
 
@@ -700,32 +701,32 @@ public class AgvCommandHandler :
 
         if (wasCharging && !isCharging)
         {
-            _logger.LogBatteryInformation(205, oldAgvStatus.CorrelationId, "Battery Fully Charged", $"Battery has finished charging at {Math.Round(newAgvStatus.BatteryCharge)}%");
+            _logger.LogBatteryInformation(LogCodes.BatteryFullyCharged, oldAgvStatus.CorrelationId, "Battery Fully Charged", $"Battery has finished charging at {Math.Round(newAgvStatus.BatteryCharge)}%");
         }
 
         if (!wasMaxChargedUp && isMaxChargedUp)
         {
-            _logger.LogBatteryInformation(204, oldAgvStatus.CorrelationId, "Maximum Charging Level", $"Battery has reached maximum charging level {agvSettings.MaxChargeUp}%");
+            _logger.LogBatteryInformation(LogCodes.BatteryMaxChargeLevel, oldAgvStatus.CorrelationId, "Maximum Charging Level", $"Battery has reached maximum charging level {agvSettings.MaxChargeUp}%");
         }
 
         if (!wasMinChargedUp && isMinChargedUp)
         {
-            _logger.LogBatteryInformation(203, oldAgvStatus.CorrelationId, "Minimum Charging Level", $"Battery has reached minimum charging level {agvSettings.MinChargeUp}%");
+            _logger.LogBatteryInformation(LogCodes.BatteryMinChargeLevel, oldAgvStatus.CorrelationId, "Minimum Charging Level", $"Battery has reached minimum charging level {agvSettings.MinChargeUp}%");
         }
 
         if (!wasCritical && isCritical)
         {
-            _logger.LogBatteryInformation(200, oldAgvStatus.CorrelationId, "Critical Charging Level", $"Battery has reached critical charging level {agvSettings.BatteryLevelCritical}%");
+            _logger.LogBatteryInformation(LogCodes.BatteryCriticalChargeLevel, oldAgvStatus.CorrelationId, "Critical Charging Level", $"Battery has reached critical charging level {agvSettings.BatteryLevelCritical}%");
         }
 
         if (!wasLow && isLow)
         {
-            _logger.LogBatteryInformation(203, oldAgvStatus.CorrelationId, "Low Charging Level", $"Battery has reached low charging level {agvSettings.BatteryLevelLow}%");
+            _logger.LogBatteryInformation(LogCodes.BatteryLowChargeLevel, oldAgvStatus.CorrelationId, "Low Charging Level", $"Battery has reached low charging level {agvSettings.BatteryLevelLow}%");
         }
 
         if (isCharging && !wasCharging)
         {
-            _logger.LogBatteryInformation(201, oldAgvStatus.CorrelationId, "Started Charging", $"Battery started charging at level {Math.Round(newAgvStatus.BatteryCharge)}%");
+            _logger.LogBatteryInformation(LogCodes.BatteryStartedCharging, oldAgvStatus.CorrelationId, "Started Charging", $"Battery started charging at level {Math.Round(newAgvStatus.BatteryCharge)}%");
         }
     }
 

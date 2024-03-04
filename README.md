@@ -5,7 +5,7 @@ Orders are managed by the TransportOrder Service e.g. to maximize AGV productivi
 This software is organizes as MicroServices communicating using MassTransit and RabbitMQ.  
 All outside communication with an ERP/StoreWare or AGVs is done using separate services.
 
-This projects is using .NET 6 (v6.0.408) and requires a running [RabbitMQ](https://www.rabbitmq.com/) instance. Install guide can be found in the [wiki](https://dev.azure.com/GebhardtGroup/StoreWare/_wiki/wikis/StoreWare.wiki/134/RabbitMQ)
+This projects is using .NET 8 and requires a running [RabbitMQ](https://www.rabbitmq.com/) instance. Install guide can be found in the [wiki](https://dev.azure.com/GebhardtGroup/StoreWare/_wiki/wikis/StoreWare.wiki/134/RabbitMQ)
 
 
 ## Structure

@@ -1,4 +1,5 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
 
@@ -24,6 +25,12 @@ public record AgvError
     public Guid AgvCorrelationId { get; init; }
 
     /// <summary>
+    /// The error title.
+    /// </summary>
+    [PublicAPI]
+    public string? ErrorTitle { get; init; }
+
+    /// <summary>
     /// Verbose description of error.
     /// </summary>
     public string? ErrorDescription { get; init; }
@@ -35,9 +42,21 @@ public record AgvError
     public ErrorLevel ErrorLevel { get; init; }
 
     /// <summary>
+    /// The error code.
+    /// </summary>
+    [PublicAPI]
+    public string? ErrorCode { get; init; }
+
+    /// <summary>
     /// Type of error
     /// </summary>
     public string? ErrorType { get; init; }
+
+    /// <summary>
+    /// The error category.
+    /// </summary>
+    [PublicAPI]
+    public ErrorCategory ErrorCategory { get; init; }
 
     /// <summary>
     ///  List of above mentioned ErrorReferences
@@ -54,20 +73,17 @@ public record AgvError
     /// </summary>
     public DateTime? ErrorResolved { get; init; }
 
-    /// <param name="correlationId"></param>
-    /// <param name="agvCorrelationId"></param>
-    /// <param name="errorDescription"></param>
-    /// <param name="errorLevel"></param>
-    /// <param name="errorType"></param>
-    /// <param name="errorReferences"></param>
-    /// <param name="errorReceived"></param>
-    public AgvError(Guid correlationId, Guid agvCorrelationId, string? errorDescription, ErrorLevel errorLevel, string? errorType, List<ErrorReference>? errorReferences, DateTime errorReceived)
+    /// <inheritdoc cref="AgvError" />
+    public AgvError(Guid correlationId, Guid agvCorrelationId, string? errorTitle, string? errorDescription, string? errorCode, ErrorLevel errorLevel, string? errorType, ErrorCategory errorCategory, List<ErrorReference>? errorReferences, DateTime errorReceived)
     {
         CorrelationId = correlationId;
         AgvCorrelationId = agvCorrelationId;
+        ErrorTitle = errorTitle;
         ErrorDescription = errorDescription;
+        ErrorCode = errorCode;
         ErrorLevel = errorLevel;
         ErrorType = errorType;
+        ErrorCategory = errorCategory;
         ErrorReferences = errorReferences;
         ErrorReceived = errorReceived;
     }
