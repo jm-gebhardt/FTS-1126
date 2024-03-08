@@ -1,7 +1,7 @@
 using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
-namespace Gebhardt.StoreWare.Agv.Common.Configurations;
+namespace Gebhardt.StoreWare.Agv.Common.Persistence.Ef;
 
 /// <summary>
 /// Observer for changes on entities

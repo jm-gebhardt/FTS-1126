@@ -1,7 +1,7 @@
 ﻿using System.Transactions;
 using Microsoft.EntityFrameworkCore;
 
-namespace Gebhardt.StoreWare.Agv.Common.Persistence;
+namespace Gebhardt.StoreWare.Agv.Common.Persistence.Ef;
 
 /// <summary>
 /// Provides extension methods for queryables.

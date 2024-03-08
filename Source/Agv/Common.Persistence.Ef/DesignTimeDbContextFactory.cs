@@ -6,7 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-namespace Gebhardt.StoreWare.Agv.Common.Persistence;
+namespace Gebhardt.StoreWare.Agv.Common.Persistence.Ef;
 
 /// <summary>
 /// Provides a base class for design time db context factories. The dotnet ef tool automatically discovers

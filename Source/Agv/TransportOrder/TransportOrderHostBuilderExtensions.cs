@@ -18,6 +18,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Routing;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.SignificanceChecker;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Validators;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef;
+using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Configuration;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Routing.Base;
@@ -27,12 +28,12 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations;
+namespace Gebhardt.StoreWare.Agv.TransportOrder;
 
 /// <summary>
 /// IHostBuilder extensions
 /// </summary>
-public static class CoreHostBuilderExtensions
+public static class TransportOrderHostBuilderExtensions
 {
     /// <summary>
     /// Configured the HostBuilder to used the TransportOrderCore <paramref name="hostBuilder" />

@@ -4,7 +4,7 @@ using Gebhardt.StoreWare.Agv.Common.Configurations.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Configurations.Models;
 using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
 using Gebhardt.StoreWare.Agv.Common.Logging;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations;
+using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Configuration;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;

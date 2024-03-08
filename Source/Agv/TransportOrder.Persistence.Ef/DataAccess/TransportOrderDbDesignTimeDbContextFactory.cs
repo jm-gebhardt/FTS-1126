@@ -1,4 +1,4 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Persistence;
+﻿using Gebhardt.StoreWare.Agv.Common.Persistence.Ef;
 using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;

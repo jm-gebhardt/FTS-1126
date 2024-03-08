@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Configuration;
 
 /// <summary>
 /// Represents a database source of configuration key/values

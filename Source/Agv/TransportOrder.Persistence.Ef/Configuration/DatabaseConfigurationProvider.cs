@@ -1,10 +1,10 @@
-using Gebhardt.StoreWare.Agv.Common.Configurations;
 using Gebhardt.StoreWare.Agv.Common.Configurations.Models;
+using Gebhardt.StoreWare.Agv.Common.Persistence.Ef;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Configuration;
 
 /// <summary>
 /// Implementation of a database configuration provider

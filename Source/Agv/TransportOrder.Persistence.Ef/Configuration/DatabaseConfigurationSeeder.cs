@@ -3,7 +3,7 @@ using Gebhardt.StoreWare.Agv.Common.Configurations.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations;
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Configuration;
 
 /// <summary>
 /// Seeds the default settings into the database
