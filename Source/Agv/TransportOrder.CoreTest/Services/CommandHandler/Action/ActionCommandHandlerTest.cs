@@ -436,6 +436,26 @@ public class ActionCommandHandlerTest
     }
 
     [TestMethod]
+    public async Task Consume_QueueActionGroup_AssignedActionGroup_PublishesActionGroupCreatedForAgv()
+    {
+        var fixture = new ActionCommandHandlerTestFixture();
+        var mapper = ActionCommandHandlerTestFixture.GetMapper();
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
+        fixture.SetupValidationResult(new ValidationResult());
+        fixture.AddAgv(agv);
+
+        await fixture.TestHarness.Bus.Publish(new QueueActionGroup(mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup), true));
+        (await fixture.ConsumerHarness.Consumed.Any<QueueActionGroup>()).ShouldBeTrue();
+
+        (await fixture.TestHarness.Published.Any<ActionGroupCreated>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<ActionGroupInvalid>()).ShouldBeFalse();
+        (await fixture.TestHarness.Published.Any<ActionGroupCreatedForAgv>()).ShouldBeTrue();
+
+        fixture.IsActionGroupSaved(Times.Once());
+    }
+
+    [TestMethod]
     public async Task Consume_SelectNodesForAction_ValidData_PublishesNodesSelectedForAction()
     {
         var mapper = ActionCommandHandlerTestFixture.GetMapper();

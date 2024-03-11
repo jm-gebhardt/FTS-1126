@@ -108,34 +108,16 @@ public class AgvTest
     public void IsAvailable_IsReadyIdleAndUnlocked_IsAvailable()
     {
         var agv = AgvGenerator.GenerateIdleAgv(isLocked: false, lastNodeId: "node");
-        agv.IsAvailable(ignoreLocked: false, ignoreCharging: false).ShouldBeTrue();
+        agv.IsAvailable(ignoreLocked: false).ShouldBeTrue();
     }
 
     [DataRow(true, true)]
     [DataRow(false, false)]
     [TestMethod]
-    public void IsAvailable_IsReadIdleAndLocked_IsAvailableIfLockedIsIgnored(bool ignoreLocked, bool expectedIsAvailable)
+    public void IsAvailable_IsReadyIdleAndLocked_IsAvailableIfLockedIsIgnored(bool ignoreLocked, bool expectedIsAvailable)
     {
         var agv = AgvGenerator.GenerateIdleAgv(isLocked: true, lastNodeId: "node");
-        agv.IsAvailable(ignoreLocked: ignoreLocked, ignoreCharging: false).ShouldBe(expectedIsAvailable);
-    }
-
-    [DataRow(true, true)]
-    [DataRow(false, false)]
-    [TestMethod]
-    public void IsAvailable_IsReadChargingAndUnLocked_IsAvailableIfChargingIsIgnored(bool ignoreCharging, bool expectedIsAvailable)
-    {
-        var agv = AgvGenerator.GenerateChargingAgv(isLocked: false, lastNodeId: "node");
-        agv.IsAvailable(ignoreCharging).ShouldBe(expectedIsAvailable);
-    }
-
-    [DataRow(true, true)]
-    [DataRow(false, false)]
-    [TestMethod]
-    public void IsAvailable_IsReadChargingAndLocked_IsAvailableIfLockedAndChargingAreIgnored(bool ignoreLocked, bool expectedIsAvailable)
-    {
-        var agv = AgvGenerator.GenerateChargingAgv(isLocked: true, lastNodeId: "node");
-        agv.IsAvailable(ignoreLocked: ignoreLocked, ignoreCharging: true).ShouldBe(expectedIsAvailable);
+        agv.IsAvailable(ignoreLocked: ignoreLocked).ShouldBe(expectedIsAvailable);
     }
 
     [TestMethod]

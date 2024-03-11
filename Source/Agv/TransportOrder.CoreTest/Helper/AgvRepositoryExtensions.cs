@@ -7,7 +7,9 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 
 public static class AgvRepositoryExtensions
 {
-    public static void AddAgvsToMockRepository(this Mock<IAgvDb> repoMock, List<TransportOrder.Domain.Models.Agv.Agv> agvs)
+    public static void AddAgvsToMockRepository(this Mock<IAgvDb> repoMock, List<TransportOrder.Domain.Models.Agv.Agv> agvs) => AddAgvsToMockRepository(repoMock, agvs.ToArray());
+
+    public static void AddAgvsToMockRepository(this Mock<IAgvDb> repoMock, params TransportOrder.Domain.Models.Agv.Agv[] agvs)
     {
         repoMock.Setup(s => s.Agvs.GetAllAgvsAsync()).ReturnsAsync(agvs);
 

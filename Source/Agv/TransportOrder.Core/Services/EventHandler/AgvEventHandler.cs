@@ -51,11 +51,11 @@ public class AgvEventHandler :
         IAgvDb agvDb,
         ILogger<AgvEventHandler> logger)
     {
-        _logger = logger;
-        _agvDb = agvDb;
         _actionGroupRepository = actionGroupRepository;
         _semaphoreProvider = semaphoreProvider;
         _settingsProvider = settingsProvider;
+        _agvDb = agvDb;
+        _logger = logger;
     }
 
     /// <summary>
@@ -67,7 +67,7 @@ public class AgvEventHandler :
 
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 
-        if (!agv.IsAvailable(ignoreCharging: false, ignoreLocked: true))
+        if (!agv.IsAvailable(ignoreLocked: true))
         {
             // AGV is still busy
             _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} is not available (charging ignored)", agvCorrelationId);
@@ -110,7 +110,7 @@ public class AgvEventHandler :
         var agvCorrelationId = context.Message.CorrelationId;
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 
-        if (!agv.IsAvailable(ignoreCharging: false, ignoreLocked: true))
+        if (!agv.IsAvailable(ignoreLocked: true))
         {
             _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} is not available", agvCorrelationId);
             return;

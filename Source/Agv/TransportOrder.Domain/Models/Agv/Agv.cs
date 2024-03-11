@@ -303,7 +303,7 @@ public class Agv : IAgv
     /// <returns>True if the state has changed</returns>
     public (bool Accepted, bool StateChanged) TryAccept()
     {
-        if (new[] {AgvState.Idle, AgvState.Busy}.Contains(CurrentAgvState))
+        if (new[] { AgvState.Idle, AgvState.Busy }.Contains(CurrentAgvState))
         {
             return (false, false);
         }
@@ -349,14 +349,12 @@ public class Agv : IAgv
     /// <summary>
     /// Checks if the agv is available.
     /// </summary>
-    /// <param name="ignoreCharging">If charging should be ignored.</param>
     /// <param name="ignoreLocked">If locked should be ignored.</param>
-    public bool IsAvailable(bool ignoreCharging = true, bool ignoreLocked = false)
+    public bool IsAvailable(bool ignoreLocked = false)
     {
         bool unlocked = !IsLocked || ignoreLocked;
-        bool chargingButIgnore = CurrentAgvState == AgvState.Busy && AgvStatus!.Charging && ignoreCharging;
         bool idle = CurrentAgvState == AgvState.Idle && !AgvStatus!.Busy;
-        return IsReady && (idle || chargingButIgnore) && unlocked;
+        return IsReady && idle && unlocked;
     }
 
     /// <summary>

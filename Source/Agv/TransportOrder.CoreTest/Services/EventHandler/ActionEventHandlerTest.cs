@@ -1,6 +1,7 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Node;
@@ -16,11 +17,11 @@ public class ActionEventHandlerTest
     [TestMethod]
     public async Task Consume_ActionGroupCreatedForAgv_PickDropActionGroup_PublishesSelectNodesForAction()
     {
-        var fixture = new ActionEventHandlerTestFixture();
         var mapper = ActionEventHandlerTestFixture.GetMapper();
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "NodeId");
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
-        fixture.AddActionGroup(actionGroup);
+        var fixture = new ActionEventHandlerTestFixture()
+            .AddActionGroup(actionGroup);
         var actionGroupCreatedForAgv = new ActionGroupCreatedForAgv(mapper.Map<ActionGroup>(actionGroup), agv.CorrelationId);
         await fixture.TestHarness.Bus.Publish(actionGroupCreatedForAgv);
 
@@ -31,24 +32,57 @@ public class ActionEventHandlerTest
     [TestMethod]
     public async Task Consume_ActionGroupCreatedForAgv_ChargeActionGroup_PublishesSelectNodesForAction()
     {
-        var fixture = new ActionEventHandlerTestFixture();
         var mapper = ActionEventHandlerTestFixture.GetMapper();
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "NodeId");
         var actionGroup = AgvActionGenerator.GenerateChargeActionGroup();
-        fixture.AddActionGroup(actionGroup);
+        var fixture = new ActionEventHandlerTestFixture()
+            .AddActionGroup(actionGroup);
         var actionGroupCreatedForAgv = new ActionGroupCreatedForAgv(mapper.Map<ActionGroup>(actionGroup), agv.CorrelationId);
         await fixture.TestHarness.Bus.Publish(actionGroupCreatedForAgv);
 
         (await fixture.ConsumerHarness.Consumed.Any<ActionGroupCreatedForAgv>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<SelectNodesForAction>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<AbortChargeAction>()).ShouldBeFalse();
+    }
+
+    [DataTestMethod]
+    [DataRow(40, 40, true)]
+    [DataRow(39, 40, false)]
+    [DataRow(41, 40, true)]
+    public async Task Consume_ActionGroupCreatedForAgv_IfChargeActionIsRunningAndAboveThresholdForAbort_PublishesAbortChargeAction(int agvCharge, int threshold, bool expectedToAbortChargeAction)
+    {
+        var mapper = ActionEventHandlerTestFixture.GetMapper();
+        var agv = AgvGenerator.GenerateChargingAgv(batteryCharge: agvCharge);
+        var chargeAction = AgvActionGenerator.GenerateChargeAction();
+        var actionGroup = AgvActionGenerator.GenerateChargeActionGroup();
+        var fixture = new ActionEventHandlerTestFixture()
+            .AddActionGroup(actionGroup)
+            .AddAgvs(agv)
+            .WithCurrentAgvAction(chargeAction)
+            .WithAgvSettings(new AgvSettings {MinChargeUp = threshold});
+        var actionGroupCreatedForAgv = new ActionGroupCreatedForAgv(mapper.Map<ActionGroup>(actionGroup), agv.CorrelationId);
+        await fixture.TestHarness.Bus.Publish(actionGroupCreatedForAgv);
+
+        (await fixture.ConsumerHarness.Consumed.Any<ActionGroupCreatedForAgv>()).ShouldBeTrue();
+
+        if (expectedToAbortChargeAction)
+        {
+            (await fixture.TestHarness.Published.Any<AbortChargeAction>()).ShouldBeTrue();
+            (await fixture.TestHarness.Published.Any<SelectNodesForAction>()).ShouldBeFalse();
+        }
+        else
+        {
+            (await fixture.TestHarness.Published.Any<AbortChargeAction>()).ShouldBeFalse();
+            (await fixture.TestHarness.Published.Any<SelectNodesForAction>()).ShouldBeTrue();
+        }
     }
 
     [TestMethod]
     public async Task Consume_ActionCompletedEvent_ValidData_PublishesCompleteActionOfActionGroup()
     {
         var actionGroup = AgvActionGenerator.GenerateChargeActionGroup();
-        var fixture = new ActionEventHandlerTestFixture();
-        fixture.AddActionGroup(actionGroup);
+        var fixture = new ActionEventHandlerTestFixture()
+            .AddActionGroup(actionGroup);
         var actionCompletedEvent = new ActionCompleted(actionGroup.Actions.First().CorrelationId);
         await fixture.TestHarness.Bus.Publish(actionCompletedEvent);
 
@@ -110,8 +144,8 @@ public class ActionEventHandlerTest
     [TestMethod]
     public async Task Consume_ActionAbortionCompleted_ValidData_PublishesHandleActionCompletion()
     {
-        var fixture = new ActionEventHandlerTestFixture();
-        fixture.AddAssignedAgv(Guid.NewGuid());
+        var fixture = new ActionEventHandlerTestFixture()
+            .AddAssignedAgv(Guid.NewGuid());
         await fixture.TestHarness.Bus.Publish(new ActionAbortionCompleted(Guid.NewGuid()));
         (await fixture.ConsumerHarness.Consumed.Any<ActionAbortionCompleted>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<HandleActionCompletion>()).ShouldBeTrue();
@@ -120,8 +154,8 @@ public class ActionEventHandlerTest
     [TestMethod]
     public async Task Consume_ActionAbortionCompleted_NoAssignedAgv_DoesNotPublishHandleActionCompletion()
     {
-        var fixture = new ActionEventHandlerTestFixture();
-        fixture.AddAssignedAgv(null);
+        var fixture = new ActionEventHandlerTestFixture()
+            .AddAssignedAgv(null);
         await fixture.TestHarness.Bus.Publish(new ActionAbortionCompleted(Guid.NewGuid()));
         (await fixture.ConsumerHarness.Consumed.Any<ActionAbortionCompleted>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<HandleActionCompletion>()).ShouldBeFalse();
@@ -130,8 +164,8 @@ public class ActionEventHandlerTest
     [TestMethod]
     public async Task Consume_ActionCanceled_NoAssignedAgv_DoesNotPublishHandleActionCompletion()
     {
-        var fixture = new ActionEventHandlerTestFixture();
-        fixture.AddAssignedAgv(null);
+        var fixture = new ActionEventHandlerTestFixture()
+            .AddAssignedAgv(null);
         await fixture.TestHarness.Bus.Publish(new ActionCanceled(Guid.NewGuid()));
         (await fixture.ConsumerHarness.Consumed.Any<ActionCanceled>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<HandleActionCompletion>()).ShouldBeFalse();
@@ -140,8 +174,8 @@ public class ActionEventHandlerTest
     [TestMethod]
     public async Task Consume_ActionCanceled_ValidData_PublishesHandleActionCompletion()
     {
-        var fixture = new ActionEventHandlerTestFixture();
-        fixture.AddAssignedAgv(Guid.NewGuid());
+        var fixture = new ActionEventHandlerTestFixture()
+            .AddAssignedAgv(Guid.NewGuid());
         await fixture.TestHarness.Bus.Publish(new ActionCanceled(Guid.NewGuid()));
         (await fixture.ConsumerHarness.Consumed.Any<ActionCanceled>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<HandleActionCompletion>()).ShouldBeTrue();

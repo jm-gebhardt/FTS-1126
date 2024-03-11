@@ -19,21 +19,24 @@ public static class AgvActionGenerator
         };
         moveAction.UpdateActionState(actionStateMove);
 
-        var chargeAction = new AgvAction(Guid.NewGuid(), ActionType.Charge, targetNodeId ?? AgvGraphGenerator.ChargingClose.Id, groupId)
-        {
-            Sequence = 1
-        };
+        var chargeAction = GenerateChargeAction(groupId, targetNodeId, 1);
         chargeAction.UpdateActionState(actionStateCharge);
 
         if (targetNodeId != null)
         {
-            chargeAction.Nodes = new[] { targetNodeId };
+            chargeAction.Nodes = [targetNodeId];
         }
-        var actionGroup = new ActionGroup(groupId, string.Empty, new List<AgvAction> { moveAction, chargeAction }, ActionGroupCreator.TransportOrder) { AssignedAgv = assignedAgv };
+        var actionGroup = new ActionGroup(groupId, string.Empty, new List<AgvAction> {moveAction, chargeAction}, ActionGroupCreator.TransportOrder) {AssignedAgv = assignedAgv};
         actionGroup.UpdateActionGroupState();
 
         return actionGroup;
     }
+
+    public static AgvAction GenerateChargeAction(Guid? groupId = null, string? targetNodeId = null, int sequence = 0) =>
+        new(Guid.NewGuid(), ActionType.Charge, targetNodeId ?? AgvGraphGenerator.ChargingClose.Id, groupId ?? Guid.NewGuid())
+        {
+            Sequence = sequence
+        };
 
     [UsedImplicitly]
     public static AgvAction GenerateParkAction(string? targetNodeId = null, Guid? parentId = null, int sequence = 0, ActionState actionState = ActionState.Created)
@@ -44,7 +47,7 @@ public static class AgvActionGenerator
         };
         if (targetNodeId != null)
         {
-            parkAction.Nodes = new[] { targetNodeId };
+            parkAction.Nodes = [targetNodeId];
         }
         parkAction.UpdateActionState(actionState);
         return parkAction;
@@ -81,10 +84,10 @@ public static class AgvActionGenerator
 
         List<AgvAction> actions = partial switch
         {
-            1 => new List<AgvAction> { pickAction },
-            2 => new List<AgvAction> { dropAction },
-            3 => new List<AgvAction> { dropAction, pickAction },
-            _ => new List<AgvAction> { pickAction, dropAction }
+            1 => new List<AgvAction> {pickAction},
+            2 => new List<AgvAction> {dropAction},
+            3 => new List<AgvAction> {dropAction, pickAction},
+            _ => new List<AgvAction> {pickAction, dropAction}
         };
 
         var actionGroup = new ActionGroup(groupId, orderId, actions, ActionGroupCreator.Wms)
@@ -115,10 +118,10 @@ public static class AgvActionGenerator
         var moveAction = new AgvAction(Guid.NewGuid(), ActionType.Move, targetNodeId ?? AgvGraphGenerator.Waypoint1.Id, groupId);
         if (targetNodeId != null)
         {
-            moveAction.Nodes = new[] { targetNodeId };
+            moveAction.Nodes = [targetNodeId];
         }
 
-        var actionGroup = new ActionGroup(groupId, orderId, new List<AgvAction> { moveAction }, isManual: isManual, creator: ActionGroupCreator.TransportOrderWebApi, assignedAgv: assignedAgv) { EstimatedDuration = duration };
+        var actionGroup = new ActionGroup(groupId, orderId, new List<AgvAction> {moveAction}, isManual: isManual, creator: ActionGroupCreator.TransportOrderWebApi, assignedAgv: assignedAgv) {EstimatedDuration = duration};
 
         return actionGroup;
     }

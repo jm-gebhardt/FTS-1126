@@ -1,4 +1,8 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
+﻿using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
@@ -27,15 +31,23 @@ public class ActionEventHandler :
 {
     private readonly ILogger<ActionEventHandler> _logger;
     private readonly IActionGroupRepository _actionGroupRepository;
+    private readonly ISettingsProvider<AgvSettings> _settingsProvider;
+    private readonly IAgvDb _agvDb;
 
     /// <summary>
     /// Initializes a new <see cref="ActionEventHandler"/> instance.
     /// </summary>
     public ActionEventHandler(
-        ILogger<ActionEventHandler> logger, IActionGroupRepository actionGroupRepository)
+        IActionGroupRepository actionGroupRepository,
+        IAgvDb agvDb,
+        ISettingsProvider<AgvSettings> settingsProvider,
+        ILogger<ActionEventHandler> logger
+    )
     {
-        _logger = logger;
         _actionGroupRepository = actionGroupRepository;
+        _agvDb = agvDb;
+        _settingsProvider = settingsProvider;
+        _logger = logger;
     }
 
     /// <summary>
@@ -44,9 +56,22 @@ public class ActionEventHandler :
     public async Task Consume(ConsumeContext<ActionGroupCreatedForAgv> context)
     {
         var (actionGroupInMessage, assignedAgv) = context.Message;
-        var actionGroup = await _actionGroupRepository.GetActionGroupAsync(actionGroupInMessage.CorrelationId);
+        var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByIdAsync(actionGroupInMessage.CorrelationId);
 
-        var firstNotStartedAction = actionGroup!.FirstNotStartedAction;
+        var chargeAction = await _actionGroupRepository.GetCurrentAgvActionAsync(assignedAgv);
+        if (chargeAction?.ActionType == ActionType.Charge)
+        {
+            var agv = await _agvDb.Agvs.GetAgvAsync(assignedAgv);
+            var agvSettings = _settingsProvider.GetSettings();
+            if (agv.AgvStatus?.BatteryCharge >= agvSettings.MinChargeUp)
+            {
+                _logger.LogInformation("Aborting charging for action group: {ActionGroupCorrelationId}", chargeAction.ParentId);
+                await context.Publish(new AbortChargeAction(assignedAgv));
+                return;
+            }
+        }
+
+        var firstNotStartedAction = actionGroup.FirstNotStartedAction;
         var action = actionGroupInMessage.Actions.First(a => a.CorrelationId == firstNotStartedAction!.CorrelationId);
         _logger.LogInformation("Received action group created for agv {AgvCorrelationId}, action group {ActionGroupCorrelationId}, starting action {Action} next.", assignedAgv, action.ParentId, action.CorrelationId);
         await context.Publish(new SelectNodesForAction(action, assignedAgv));
