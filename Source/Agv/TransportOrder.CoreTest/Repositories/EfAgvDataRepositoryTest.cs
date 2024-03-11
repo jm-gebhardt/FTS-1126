@@ -45,4 +45,31 @@ public class EfAgvDataRepositoryTest
             actualAgvData.ShouldBeEquivalentTo(knownData.Single(s => s.CorrelationId == actualAgvData.CorrelationId));
         }
     }
+
+    [TestMethod]
+    public async Task GetLargestAgvDimensionAsync_ValidAgvData_ReturnsMaxWidthMaxLength()
+    {
+        var fixture = new AgvDataRepositoryTestFixture();
+
+        List<AgvData> specifications = Enumerable.Range(0, 4).Select(_ => AgvDataGenerator.GenerateAgvData()).ToList();
+        double expectedMaxWidth = specifications.Max(s => s.Width);
+        double expectedMaxLength = specifications.Max(s => s.Length);
+        await fixture.AddRangeAsync(specifications);
+
+        (double maxWidth, double maxLength) = await fixture.Repository.GetLargestAgvDimensionAsync();
+
+        maxWidth.ShouldBe(expectedMaxWidth);
+        maxLength.ShouldBe(expectedMaxLength);
+    }
+
+    [TestMethod]
+    public async Task GetLargestAgvDimensionAsync_NoAgvData_ReturnsDefaultValue()
+    {
+        var fixture = new AgvDataRepositoryTestFixture();
+
+        (double maxWidth, double maxLength) = await fixture.Repository.GetLargestAgvDimensionAsync();
+
+        maxWidth.ShouldBe(0.0);
+        maxLength.ShouldBe(0.0);
+    }
 }

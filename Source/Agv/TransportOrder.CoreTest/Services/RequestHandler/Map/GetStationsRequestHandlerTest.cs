@@ -42,9 +42,9 @@ public class GetStationsRequestHandlerTest
             .Select(nodes => AgvGraphGenerator.CreateDefaultGraph(mapCorrelationId, nodes))
             .ToList();
         var fixture = new GetStationsRequestHandlerTestFixture()
-            .WithAgvsRelatedToMap(mapCorrelationId, agvCorrelationIds, agvsData)
             .WithGraph(new Graph { Nodes = graphNodes })
             .WithAgvGraphs(agvCorrelationIds, agvGraphs)
+            .WithAgvsRelatedToMap(mapCorrelationId, agvCorrelationIds, agvsData)
             .Build();
 
         Response<GotStations> response = await fixture.GetResponseAsync<GotStations>(new GetStations(mapCorrelationId));
@@ -59,5 +59,59 @@ public class GetStationsRequestHandlerTest
             s.Width.ShouldBeEquivalentTo(maxWidth + padding);
             s.Length.ShouldBeEquivalentTo(maxLength + padding);
         });
+    }
+
+    [TestMethod]
+    public async Task Consume_GetStations_NoAgvsAvailable_ReturnsCorrectStations()
+    {
+        const double stationPadding = 0.2;
+        const string stationPickName = "StationPick";
+        const string notAStation = "NotAStation";
+        var mapCorrelationId = Guid.NewGuid();
+        var graphNodes = new List<GraphNode>
+        {
+            NodeGenerator.GenerateNode(nodeId: "StationPickDrop", nodeType: AgvGraph.NodeType.PickDrop),
+            NodeGenerator.GenerateNode(nodeId: "StationCharge", nodeType: AgvGraph.NodeType.Charge),
+            NodeGenerator.GenerateNode(nodeId: "StationDrop", nodeType: AgvGraph.NodeType.Drop),
+            NodeGenerator.GenerateNode(nodeId: "StationPark", nodeType: AgvGraph.NodeType.Park),
+            NodeGenerator.GenerateNode(nodeId: stationPickName, nodeType: AgvGraph.NodeType.Pick),
+            NodeGenerator.GenerateNode(nodeId: notAStation, nodeType: AgvGraph.NodeType.WayPoint)
+        };
+        var fixture = new GetStationsRequestHandlerTestFixture()
+            .WithGraph(new Graph { Nodes = graphNodes })
+            .Build();
+
+        Response<GotStations> response = await fixture.GetResponseAsync<GotStations>(new GetStations(mapCorrelationId));
+
+        List<Station> gotStations = response.Message.Stations;
+        gotStations.ShouldNotBeNull();
+        gotStations.Count.ShouldBe(5);
+        gotStations.Count(s => s.Id == stationPickName).ShouldBe(1);
+        gotStations.Count(s => s.Id.StartsWith(notAStation)).ShouldBe(0);
+        gotStations.ForEach(s =>
+        {
+            s.Width.ShouldBeEquivalentTo(stationPadding);
+            s.Length.ShouldBeEquivalentTo(stationPadding);
+        });
+    }
+
+    [TestMethod]
+    public async Task Consume_GetStations_NoStationsAvailable_ReturnsEmptyList()
+    {
+        const string notAStation = "NotAStation";
+        var mapCorrelationId = Guid.NewGuid();
+        var graphNodes = new List<GraphNode>
+        {
+            NodeGenerator.GenerateNode(nodeId: notAStation, nodeType: AgvGraph.NodeType.WayPoint)
+        };
+        var fixture = new GetStationsRequestHandlerTestFixture()
+            .WithGraph(new Graph { Nodes = graphNodes })
+            .Build();
+
+        Response<GotStations> response = await fixture.GetResponseAsync<GotStations>(new GetStations(mapCorrelationId));
+
+        List<Station> gotStations = response.Message.Stations;
+        gotStations.ShouldNotBeNull();
+        gotStations.Count.ShouldBe(0);
     }
 }

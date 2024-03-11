@@ -1,5 +1,4 @@
 using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
@@ -11,18 +10,24 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Map;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using System.Linq.Expressions;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
+using AgvData = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.AgvData;
+using Graph = Gebhardt.StoreWare.Agv.Common.Models.Graphs.Graph;
+using GraphNode = Gebhardt.StoreWare.Agv.Common.Models.Graphs.GraphNode;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.RequestHandler.Map;
 
 public class GetStationsRequestHandlerTestFixture : MediatorTestFixture<GetStations, GetStationsRequestHandler>
 {
     private readonly Mock<IAgvDb> _agvDb = new();
+    private readonly Mock<IMapRepository> _mapRepository = new();
     private readonly IMapper _mapper = MappingHelper.GetMapper(new GraphProfile());
 
     public GetStationsRequestHandlerTestFixture WithAgvsRelatedToMap(Guid mapCorrelationId, List<Guid> agvCorrelationIds, List<AgvData> agvData)
     {
         _agvDb.Setup(x => x.Graphs.GetAgvsRelatedToMap(mapCorrelationId)).ReturnsAsync(agvCorrelationIds);
         _agvDb.Setup(x => x.Data.GetSelectedAgvDataAsync(agvCorrelationIds)).ReturnsAsync(agvData);
+        _agvDb.Setup(x => x.Data.GetLargestAgvDimensionAsync()).ReturnsAsync((agvData.Max(d => d.Width), agvData.Max(d => d.Length)));
         return this;
     }
 
@@ -37,6 +42,8 @@ public class GetStationsRequestHandlerTestFixture : MediatorTestFixture<GetStati
 
         _agvDb.Setup(x => x.Graphs.GetNodesAsync(It.IsAny<Guid>(), It.IsAny<Expression<Func<GraphNode, bool>>>())).ReturnsAsync(graph.Nodes);
         _agvDb.Setup(x => x.Graphs.ExistsAsync()).ReturnsAsync(true);
+        _agvDb.Setup(x => x.Data.GetLargestAgvDimensionAsync()).ReturnsAsync(( 0,0));
+        _mapRepository.Setup(x => x.GetStationsForMapAsync(It.IsAny<Guid>())).ReturnsAsync(graph.Nodes.Where(n => n.Type != AgvGraph.NodeType.WayPoint));
         return this;
     }
 
@@ -52,6 +59,7 @@ public class GetStationsRequestHandlerTestFixture : MediatorTestFixture<GetStati
         {
             sc.AddTransient(_ => _agvDb.Object);
             sc.AddTransient(_ => _agvDb.Object);
+            sc.AddTransient(_ => _mapRepository.Object);
         });
         base.Build();
         return this;

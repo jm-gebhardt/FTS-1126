@@ -1,4 +1,6 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Services;
+﻿using AutoMapper;
+using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
+using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Graph;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Map;
@@ -7,6 +9,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Map = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Map.Map;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
 
@@ -18,20 +21,24 @@ public class EfMapRepository : IMapRepository
     private readonly IDbContextFactory<TransportOrderDbContext> _dbContextFactory;
     private readonly ILogger<EfMapRepository> _logger;
     private readonly ISemaphoreProvider<IMapRepositorySemaphore> _semaphoreProvider;
+    private readonly IMapper _mapper;
 
     /// <summary>
     /// Constructor of the EF MapRepository.
     /// </summary>
     /// <param name="dbContextFactory"></param>
+    /// <param name="mapper"></param>
     /// <param name="logger"></param>
     /// <param name="semaphoreProvider">The semaphore provider.</param>
     public EfMapRepository(IDbContextFactory<TransportOrderDbContext> dbContextFactory,
+        IMapper mapper,
         ISemaphoreProvider<IMapRepositorySemaphore> semaphoreProvider,
         ILogger<EfMapRepository> logger)
     {
         _dbContextFactory = dbContextFactory;
         _logger = logger;
         _semaphoreProvider = semaphoreProvider;
+        _mapper = mapper;
     }
 
     private IQueryable<Map> Maps =>
@@ -153,6 +160,26 @@ public class EfMapRepository : IMapRepository
                 await context.SaveChangesAsync();
             }, CancellationToken.None
         );
+    }
+
+    /// <inheritdoc />
+    public async Task<IEnumerable<GraphNode>> GetStationsForMapAsync(Guid mapCorrelationId)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+
+        var map = await context.Set<Map>()
+                .Include(m => m.Nodes)
+                .AsNoTracking()
+                .SingleOrDefaultAsync(m => m.CorrelationId == mapCorrelationId);
+
+        if (map == null)
+        {
+            throw new MapNotFoundException();
+        }
+
+        var stations = _mapper.Map<List<GraphNode>>(map.Nodes.Where(n => n.Type != AgvGraph.NodeType.WayPoint));
+
+        return stations;
     }
 
     private async Task<bool> AddOrUpdateAsync(Map map)

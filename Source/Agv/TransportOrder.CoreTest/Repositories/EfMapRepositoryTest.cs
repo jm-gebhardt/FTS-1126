@@ -1,7 +1,9 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Utilities;
+﻿using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
+using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Map;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
+using Map = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Map.Map;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Repositories;
 
@@ -146,5 +148,17 @@ public class EfMapRepositoryTest
         mapImage = fixture.Repository.GetMapImage(mapUpdate.CorrelationId);
         mapImage.ShouldNotBeNull();
         mapImage.ShouldBe(mapUpdate.MapValue);
+    }
+
+    [TestMethod]
+    public async Task GetStationsAsync_NoStationExist_ReturnsEmptyList()
+    {
+        var fixture = new EfMapRepositoryTestFixture();
+        var map = fixture.GetNewMap();
+
+        fixture.Add(map);
+
+        List<GraphNode> stationGraphNodes = (await fixture.Repository.GetStationsForMapAsync(map.CorrelationId)).ToList();
+        stationGraphNodes.Count.ShouldBe(0);
     }
 }
