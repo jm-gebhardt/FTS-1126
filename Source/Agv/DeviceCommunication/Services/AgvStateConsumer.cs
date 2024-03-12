@@ -64,7 +64,7 @@ public class AgvStateConsumer : IConsumer<MqttState>
 
     private async Task SendAgvLoadStatusAsync(ConsumeContext<MqttState> context, Guid agvCorrelationId, MqttState message)
     {
-        await context.Publish(new AgvLoadStatusReceived(agvCorrelationId, GetCargos(message)));
+        await context.Publish(new AgvLoadStatusReceived(agvCorrelationId, GetCargos(agvCorrelationId, message)));
     }
 
     private async Task SendAgvStatusAsync(ConsumeContext<MqttState> context, Guid agvCorrelationId, MqttState message, string serialNumber)
@@ -208,7 +208,7 @@ public class AgvStateConsumer : IConsumer<MqttState>
         return !string.IsNullOrEmpty(message.LastNodeId) ? message.LastNodeId : null;
     }
 
-    private Collection<Cargo> GetCargos(MqttState message)
+    private Collection<Cargo> GetCargos(Guid agvCorrelationId, MqttState message)
     {
         List<MqttLoad>? loads = message.Loads;
         if (loads == null)
@@ -220,8 +220,13 @@ public class AgvStateConsumer : IConsumer<MqttState>
         {
             throw new ArgumentNullException(nameof(MqttLoad.LoadId), "LoadId must be set! This was the assumption at the time of implementation.");
         }
-
+        
         var cargos = _mapper.Map<Collection<Cargo>>(loads);
+        foreach (var load in cargos)
+        {
+            _mapper.Map(agvCorrelationId, load);
+        }
+
         return cargos;
     }
 }
