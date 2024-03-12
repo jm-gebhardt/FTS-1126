@@ -1,4 +1,5 @@
 using Gebhardt.StoreWare.Agv.Common.Contracts;
+using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
@@ -147,8 +148,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
             return InitialTheta;
         }
 
-        float theta = BaseEdge.GetAgvOrientation(graphNode, otherNode);
-        return theta;
+        return graphNode.IsStation() ? BaseEdge.GetAgvOrientation(otherNode, graphNode) : BaseEdge.GetAgvOrientation(graphNode, otherNode);
     }
 
     /// <inheritdoc cref="Agv" />

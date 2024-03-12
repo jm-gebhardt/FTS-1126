@@ -72,24 +72,25 @@ public abstract class BaseEdge : GraphEdge
     public float AgvOrientation { get; protected init; }
 
     /// <inheritdoc cref="BaseEdge"/>>
-    protected BaseEdge(GraphEdge edge, GraphNode sourceNode, GraphNode targetNode) : base(edge.FromNodeId, edge.ToNodeId, (float)edge.Length, edge.Id, edge.Variant, edge.VariantParameters)
+    protected BaseEdge(GraphEdge edge, GraphNode sourceNode, GraphNode targetNode, bool agvGoesBackwards = false) : base(edge.FromNodeId, edge.ToNodeId, (float)edge.Length, edge.Id, edge.Variant, edge.VariantParameters)
     {
         SourceNode = sourceNode;
         TargetNode = targetNode;
         ReferenceTarget = targetNode;
         MaxVelocity = 1000;
-        AgvOrientation = GetAgvOrientation(sourceNode, targetNode);
+        AgvOrientation = agvGoesBackwards ? GetAgvOrientation(targetNode, sourceNode) : GetAgvOrientation(sourceNode, targetNode);
     }
 
     /// <summary>
     /// Set <see cref="EntryAngle"/> and <see cref="ExitAngle"/> of the edge.
     /// </summary>
-    public virtual void SetAngles(double entryAngle, GraphNode? nextSource, GraphNode? nextTarget)
+    public virtual void SetAngles(double entryAngle, GraphNode? nextSource, GraphNode? nextTarget, bool turnAgvAtExit = false)
     {
         EntryAngle = entryAngle;
         if (nextTarget != null && nextSource != null)
         {
             ExitAngle = GetExitAngle(nextSource, nextTarget);
+            ExitAngle = ExitAngle == 0 && turnAgvAtExit ? Math.PI : ExitAngle;
         }
     }
 

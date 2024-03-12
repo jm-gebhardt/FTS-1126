@@ -13,7 +13,7 @@ public class SlantedEdge : BaseEdge
     private DirectEdge _currentSection;
 
     /// <inheritdoc cref="SlantedEdge"/>>
-    public SlantedEdge(GraphEdge edge, GraphNode sourceNode, GraphNode targetNode) : base(edge, sourceNode, targetNode)
+    public SlantedEdge(GraphEdge edge, GraphNode sourceNode, GraphNode targetNode, bool agvGoesBackwards = false) : base(edge, sourceNode, targetNode)
     {
         double angle = (double)edge.VariantParameters.First().Scalar!;
         double distance = (double)edge.VariantParameters.Last().Scalar!;
@@ -29,7 +29,7 @@ public class SlantedEdge : BaseEdge
         foreach (var virtualNode in virtualNodes)
         {
             sectionEdge = CreateDirect(source.Id, virtualNode.Id, (float)Mathematics.EuclideanDistance(source, virtualNode), Guid.NewGuid());
-            section = new DirectEdge(sectionEdge, source, virtualNode);
+            section = new DirectEdge(sectionEdge, source, virtualNode, agvGoesBackwards && _sections.Count == 0);
             _sections.Add(section);
             source = virtualNode;
         }
@@ -42,14 +42,14 @@ public class SlantedEdge : BaseEdge
     }
 
     /// <inheritdoc cref="BaseEdge"/>>
-    public override void SetAngles(double entryAngle, GraphNode? nextSource, GraphNode? nextTarget)
+    public override void SetAngles(double entryAngle, GraphNode? nextSource, GraphNode? nextTarget, bool turnAgvAtExit = false)
     {
         EntryAngle = entryAngle;
         foreach (var item in _sections.Select((section, index) => new { section, index }))
         {
             var target = item.index <= _sections.Count - 2 ? _sections[item.index + 1].TargetNode : nextTarget;
             var source = item.index <= _sections.Count - 2 ? _sections[item.index + 1].SourceNode : nextSource;
-            item.section.SetAngles(entryAngle, source, target);
+            item.section.SetAngles(entryAngle, source, target, turnAgvAtExit && item.index == 0);
             entryAngle = item.section.ExitAngle;
         }
         ExitAngle = _sections.Last().ExitAngle;

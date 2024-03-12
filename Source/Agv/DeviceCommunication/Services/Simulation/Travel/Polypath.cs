@@ -17,7 +17,7 @@ public class Polypath : BaseEdge
     private DirectEdge _currentSection;
 
     /// <inheritdoc cref="Polypath"/>>
-    public Polypath(GraphEdge edge, GraphNode sourceNode, GraphNode targetNode) : base(edge, sourceNode, targetNode)
+    public Polypath(GraphEdge edge, GraphNode sourceNode, GraphNode targetNode, bool agvGoesBackwards = false) : base(edge, sourceNode, targetNode)
     {
         List<EdgeCoefficient> controlPoints = edge.VariantParameters.ToList();
         var source = SourceNode;
@@ -27,7 +27,7 @@ public class Polypath : BaseEdge
         {
             var target = new GraphNode(controlPoint.index.ToString()) { X = (float)controlPoint.edgeCoefficient.X!, Y = (float)controlPoint.edgeCoefficient.Y! };
             sectionEdge = CreateDirect(source.Id, target.Id, (float)Mathematics.EuclideanDistance(source, target), Guid.NewGuid());
-            section = new DirectEdge(sectionEdge, source, target);
+            section = new DirectEdge(sectionEdge, source, target, agvGoesBackwards && Sections.Count == 0);
             Sections.Add(section);
             source = target;
         }
@@ -58,14 +58,14 @@ public class Polypath : BaseEdge
     }
 
     /// <inheritdoc cref="BaseEdge"/>>
-    public override void SetAngles(double entryAngle, GraphNode? nextSource, GraphNode? nextTarget)
+    public override void SetAngles(double entryAngle, GraphNode? nextSource, GraphNode? nextTarget, bool turnAgvAtExit = false)
     {
         EntryAngle = entryAngle;
         foreach (var item in Sections.Select((section, index) => new { section, index }))
         {
             var target = item.index <= Sections.Count - 2 ? Sections[item.index + 1].TargetNode : nextTarget;
             var source = item.index <= Sections.Count - 2 ? Sections[item.index + 1].SourceNode : nextSource;
-            item.section.SetAngles(entryAngle, source, target);
+            item.section.SetAngles(entryAngle, source, target, turnAgvAtExit && item.index == 0);
             entryAngle = item.section.ExitAngle;
         }
         ExitAngle = Sections.Last().ExitAngle;

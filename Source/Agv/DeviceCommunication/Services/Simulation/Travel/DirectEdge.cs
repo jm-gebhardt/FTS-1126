@@ -43,7 +43,7 @@ public class DirectEdge : BaseEdge
     public double DecelerationSection { get; private set; }
 
     /// <inheritdoc cref="DirectEdge"/>
-    public DirectEdge(GraphEdge edge, GraphNode sourceNode, GraphNode targetNode) : base(edge, sourceNode, targetNode)
+    public DirectEdge(GraphEdge edge, GraphNode sourceNode, GraphNode targetNode, bool agvGoesBackwards = false) : base(edge, sourceNode, targetNode, agvGoesBackwards)
     {
     }
 

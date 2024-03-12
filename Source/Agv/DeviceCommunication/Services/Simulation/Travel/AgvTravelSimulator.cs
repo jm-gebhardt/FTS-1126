@@ -72,14 +72,15 @@ public class AgvTravelSimulator : IAgvTravelSimulator
         {
             var sourceNode = graph.Nodes.Single(n => n.Id == graphEdge.FromNodeId);
             var targetNode = graph.Nodes.Single(n => n.Id == graphEdge.ToNodeId);
+            bool agvGoesBackwards = sourceNode.IsStation();
             BaseEdge edge = graphEdge.Variant switch
             {
-                EdgeType.Direct => new DirectEdge(graphEdge, sourceNode, targetNode),
-                EdgeType.Polypath => new Polypath(graphEdge, sourceNode, targetNode),
-                EdgeType.Slanted => new SlantedEdge(graphEdge, sourceNode, targetNode),
-                EdgeType.Bezier1 => new BezierEdge(graphEdge, sourceNode, targetNode),
-                EdgeType.Bezier2 => new BezierEdge(graphEdge, sourceNode, targetNode),
-                _ => new DirectEdge(graphEdge, sourceNode, targetNode)
+                EdgeType.Direct => new DirectEdge(graphEdge, sourceNode, targetNode, agvGoesBackwards),
+                EdgeType.Polypath => new Polypath(graphEdge, sourceNode, targetNode, agvGoesBackwards),
+                EdgeType.Slanted => new SlantedEdge(graphEdge, sourceNode, targetNode, agvGoesBackwards),
+                EdgeType.Bezier1 => new BezierEdge(graphEdge, sourceNode, targetNode, agvGoesBackwards),
+                EdgeType.Bezier2 => new BezierEdge(graphEdge, sourceNode, targetNode, agvGoesBackwards),
+                _ => new DirectEdge(graphEdge, sourceNode, targetNode, agvGoesBackwards)
             };
             Edges.Add(edge);
         }
@@ -111,7 +112,7 @@ public class AgvTravelSimulator : IAgvTravelSimulator
             return;
         }
 
-        foreach (var node in nodes.Select((id, index) => new {id, index}))
+        foreach (var node in nodes.Select((id, index) => new { id, index }))
         {
             if (node.index >= nodes.Count - 2)
             {
@@ -124,12 +125,14 @@ public class AgvTravelSimulator : IAgvTravelSimulator
 
             edge = Edges.Single(e => e.FromNodeId == node.id && e.ToNodeId == nodes[node.index + 1]);
             var nextEdge = Edges.First(e => e.FromNodeId == nodes[node.index + 1] && e.ToNodeId == nodes[node.index + 2]);
-            edge.SetAngles(entryAngle, nextEdge.SourceNode, nextEdge.ReferenceTarget);
+            bool turnAgvAtExit = FollowingEdges.Count == 0 && edge.SourceNode.IsStation();
+            edge.SetAngles(entryAngle, nextEdge.SourceNode, nextEdge.ReferenceTarget, turnAgvAtExit);
             edge.EstimateTravelTime(_agvData, initialVelocity, entryTime);
-            entryTime = edge.EstimatedExitTime;
-            initialVelocity = edge.ExitVelocity;
-            entryAngle = edge.ExitAngle;
             FollowingEdges.Add(edge);
+
+            entryTime = edge.EstimatedExitTime;
+            initialVelocity = turnAgvAtExit ? 0 : edge.ExitVelocity;
+            entryAngle = edge.ExitAngle;
         }
         edge = Edges.Single(e => e.FromNodeId == nodes[^2] && e.ToNodeId == nodes[^1]);
         edge.SetAngles(entryAngle, null, null);
@@ -169,14 +172,8 @@ public class AgvTravelSimulator : IAgvTravelSimulator
         // Agv is at the end of the route
         if (Math.Abs(progress!.Value - 1d) < double.Epsilon)
         {
-            float theta = Position.Theta;
-            // quick turn at station, as our Agv are not yet capable of reversing  
-            if (CurrentEdge.TargetNode.IsStation())
-            {
-                theta -= (float) Math.PI;
-            }
             CurrentNode = CurrentEdge.TargetNode;
-            Position = new AgvPosition(true, CurrentNode.X, CurrentNode.Y, CurrentNode.Z, theta);
+            Position = new AgvPosition(true, CurrentNode.X, CurrentNode.Y, CurrentNode.Z, Position.Theta);
         }
     }
 

@@ -17,7 +17,7 @@ public class BezierEdge : BaseEdge
     private const float PositionCloseToTarget = 0.95f;
 
     /// <inheritdoc cref="BezierEdge"/>
-    public BezierEdge(GraphEdge edge, GraphNode sourceNode, GraphNode targetNode) : base(edge, sourceNode, targetNode)
+    public BezierEdge(GraphEdge edge, GraphNode sourceNode, GraphNode targetNode, bool agvGoesBackwards = false) : base(edge, sourceNode, targetNode)
     {
         var controlPolygon = new List<Vector2> { new(sourceNode.X, sourceNode.Y) };
         controlPolygon.AddRange(VariantParameters.Select(variantParameter => new Vector2((float)variantParameter.X!, (float)variantParameter.Y!)));
@@ -28,7 +28,7 @@ public class BezierEdge : BaseEdge
         ReferenceTarget = new GraphNode("bezier") { X = sourceVector1.X, Y = sourceVector1.Y, Z = SourceNode.Z };
 
         var targetVector = _bezier.DeCasteljau(PositionCloseToTarget, out _, out _);
-        AgvOrientation = GetAgvOrientation(targetVector, targetNode.AsVector2());
+        AgvOrientation = agvGoesBackwards ? GetAgvOrientation(sourceVector1, sourceNode.AsVector2()) : GetAgvOrientation(targetVector, targetNode.AsVector2());
     }
 
     /// <inheritdoc cref="BaseEdge"/>
@@ -57,7 +57,7 @@ public class BezierEdge : BaseEdge
     }
 
     /// <inheritdoc cref="BaseEdge"/>>
-    public override void SetAngles(double entryAngle, GraphNode? nextSource, GraphNode? nextTarget)
+    public override void SetAngles(double entryAngle, GraphNode? nextSource, GraphNode? nextTarget, bool turnAgvAtExit = false)
     {
         EntryAngle = entryAngle;
         if (nextTarget == null || nextSource == null)
@@ -73,6 +73,7 @@ public class BezierEdge : BaseEdge
         var nextTargetPosition = nextTarget.AsVector2();
         var tangentOnNextEdge = nextTargetPosition - nextSourcePosition;
         ExitAngle = Mathematics.AngleBetween(tangentOnCurrentEdge, tangentOnNextEdge);
+        ExitAngle = ExitAngle == 0 && turnAgvAtExit ? Math.PI : ExitAngle;
     }
 
     /// <inheritdoc cref="BaseEdge"/>
