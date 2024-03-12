@@ -1,0 +1,75 @@
+version: '3.8'
+
+volumes:
+  logimat_data: {}
+
+networks:
+  agv_net:
+    external: true
+
+services:
+  instapick-1:
+    image: logimatpublisher:latest 
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - TOPIC=agv/status
+      - MSG_FILE=InstaPick-1.txt
+    volumes:
+      - ./InstaPick-1.txt:/app/InstaPick-1.txt
+    networks:
+      - agv_net  
+
+  instapick-2:
+    image: logimatpublisher:latest 
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - TOPIC=agv/status
+      - MSG_FILE=InstaPick-2.txt
+    volumes:
+      - ./InstaPick-2.txt:/app/InstaPick-2.txt
+    networks:
+      - agv_net      
+
+  karis-amr:
+    image: logimatpublisher:latest 
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - TOPIC=agv/status
+      - MSG_FILE=KARIS-AMR-1.txt
+    volumes:
+      - ./KARIS-AMR-1.txt:/app/KARIS-AMR-1.txt
+    networks:
+      - agv_net          
+
+  karis-flow:
+    image: logimatpublisher:latest 
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - TOPIC=agv/status
+      - MSG_FILE=KARIS-FLOW-1.txt
+    volumes:
+      - ./KARIS-FLOW-1.txt:/app/KARIS-FLOW-1.txt
+    networks:
+      - agv_net      
+
+  omnipallet:
+    image: logimatpublisher:latest 
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - TOPIC=agv/status
+      - MSG_FILE=Omnipallet-1.txt
+    volumes:
+      - ./Omnipallet-1.txt:/app/Omnipallet-1.txt
+    networks:
+      - agv_net         
+

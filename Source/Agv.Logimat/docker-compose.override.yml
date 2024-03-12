@@ -1,0 +1,17 @@
+version: '3.8'
+services:
+  instapick-1:
+    build:
+      context: ./
+  instapick-2:
+    build:
+      context: ./    
+  karis-amr:
+    build:
+      context: ./     
+  karis-flow:
+    build:
+      context: ./        
+  omnipallet:
+    build:
+      context: ./       
