@@ -2,7 +2,7 @@
 	"Graph": {
 		"Nodes": [
 			{
-				"Id": "WP-0001",
+				"Id": "WP-1",
 				"Type": 0,
 				"X": 2.035,
 				"Y": 0.55,
@@ -10,25 +10,9 @@
 				"Theta": 0
 			},
 			{
-				"Id": "WP-0009",
+				"Id": "WP-9",
 				"Type": 0,
 				"X": 2.035,
-				"Y": 4.75,
-				"Z": 0.0,
-				"Theta": 0.0
-			},
-			{
-				"Id": "WP-0021",
-				"Type": 0,
-				"X": 4.1,
-				"Y": 0.55,
-				"Z": 0.0,
-				"Theta": 0
-			},
-			{
-				"Id": "WP-0029",
-				"Type": 0,
-				"X": 4.1,
 				"Y": 4.75,
 				"Z": 0.0,
 				"Theta": 0.0
@@ -37,16 +21,8 @@
 		"Edges": [
 			{
 				"Id": "2ac260fa-f0b0-25ac-fd8d-2f2e1717ac21",
-				"FromNodeId": "WP-0001",
-				"ToNodeId": "WP-0009",
-				"Length": 4.2,
-				"Variant": 0,
-				"VariantParameters": []
-			},
-			{
-				"Id": "2ac260fa-f0b0-25ac-fd8d-2f2e1717ac29",
-				"FromNodeId": "WP-0021",
-				"ToNodeId": "WP-0029",
+				"FromNodeId": "WP-1",
+				"ToNodeId": "WP-9",
 				"Length": 4.2,
 				"Variant": 0,
 				"VariantParameters": []
