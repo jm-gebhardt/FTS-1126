@@ -48,7 +48,6 @@ public class ActionCommandHandler :
     IConsumer<ResetActionGroup>,
     IConsumer<EstimateActionGroupDuration>
 {
-    private const int SwitchingCost = 2;
     private readonly ILogger<ActionCommandHandler> _logger;
     private readonly IRouteService _routeService;
     private readonly IActionGroupRepository _actionGroupRepository;
@@ -60,6 +59,7 @@ public class ActionCommandHandler :
     private readonly IActionGroupValidationService _actionGroupValidationService;
     private readonly IActionGroupRetrievalService _actionGroupRetrievalService;
     private readonly IAgvDb _agvDb;
+    private readonly IActionGroupDurationEstimationService _durationEstimationService;
 
     /// <inheritdoc cref="ActionCommandHandler"/>
     public ActionCommandHandler(
@@ -69,6 +69,7 @@ public class ActionCommandHandler :
         IChooseAgvActionGroupService chooseAgvActionGroupService,
         IActionGroupRetrievalService actionGroupRetrievalService,
         ISemaphoreProvider<IAgvsSemaphore> actionManagerSemaphoreProvider,
+        IActionGroupDurationEstimationService durationEstimationService,
         IAgvDb agvDb,
         ISettingsProvider<AgvSettings> settingsProvider,
         IMapper mapper,
@@ -83,6 +84,7 @@ public class ActionCommandHandler :
         _actionManagerSemaphoreProvider = actionManagerSemaphoreProvider;
         _actionGroupValidationService = actionGroupValidationService;
         _actionGroupRetrievalService = actionGroupRetrievalService;
+        _durationEstimationService = durationEstimationService;
         _settingsProvider = settingsProvider;
         _mapper = mapper;
         _bus = bus;
@@ -217,7 +219,13 @@ public class ActionCommandHandler :
         duration += actionGroup.Actions.Count(a => a.ActionType == ActionType.Charge) * chargeCostsPerCharge;
 
         // costs for action switching / state transitions of the Agv from one action to the next action
-        duration += actionGroup.Actions.Count * SwitchingCost;
+        duration += actionGroup.Actions.Count * ActionCosts.SwitchingActions;
+
+        // average of unaccounted for costs (e.g. cargo loading and unloading) for pick/drop actions
+        if (actionGroup.IsMovingCargo)
+        {
+            duration += await _durationEstimationService.GetAverageDurationEstimateDeviationAsync(actionGroup.AssignedAgv!.Value, actionGroup.GetTargets());
+        }
 
         actionGroup.EstimatedDuration = TimeSpan.FromSeconds(duration);
 

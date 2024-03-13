@@ -638,4 +638,94 @@ public class ActionGroupRepositoryTest
             .BuildAsync();
         (await fixture.ActionGroupRepository.HasStartedActionAsync(agv)).ShouldBeFalse();
     }
+
+    [TestMethod]
+    public async Task GetAverageDurationEstimateDeviationAsync_ValidData_ReturnsAverageValueForPickDropActionGroupsWithGivenTargetNodes()
+    {
+        var agv = Guid.NewGuid();
+        const double deviation = 10;
+        var startedDate = DateTime.UtcNow;
+        var completedDate = DateTime.UtcNow.AddSeconds(60);
+        var duration = completedDate - startedDate - TimeSpan.FromSeconds(deviation);
+
+        var pickDropActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv,
+            pickActionState: ActionState.Completed,
+            dropActionState: ActionState.Completed,
+            startedDate: startedDate,
+            completedDate: completedDate,
+            duration: duration);
+        var otherActionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv);
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([pickDropActionGroup, otherActionGroup])
+            .BuildAsync();
+
+        (await fixture.ActionGroupRepository.GetAverageDurationEstimateDeviationAsync(agv, pickDropActionGroup.GetTargets())).ShouldBe(deviation);
+    }
+
+    [TestMethod]
+    public async Task GetAverageDurationEstimateDeviationAsync_NoActionGroupsForThisAgv_ReturnsZero()
+    {
+        var agv = Guid.NewGuid();
+        const double deviation = 10;
+        var startedDate = DateTime.UtcNow;
+        var completedDate = DateTime.UtcNow.AddSeconds(60);
+        var duration = completedDate - startedDate - TimeSpan.FromSeconds(deviation);
+
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv,
+            pickActionState: ActionState.Completed,
+            dropActionState: ActionState.Completed,
+            startedDate: startedDate,
+            completedDate: completedDate,
+            duration: duration);
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroup(actionGroup)
+            .BuildAsync();
+      
+        (await fixture.ActionGroupRepository.GetAverageDurationEstimateDeviationAsync("a different agv".ToGuid(), actionGroup.GetTargets())).ShouldBe(0);
+    }
+
+    [TestMethod]
+    public async Task GetAverageDurationEstimateDeviationAsync_NoActionGroupWithTheseTargets_ReturnsZero()
+    {
+        var agv = Guid.NewGuid();
+        const double deviation = 10;
+        var startedDate = DateTime.UtcNow;
+        var completedDate = DateTime.UtcNow.AddSeconds(60);
+        var duration = completedDate - startedDate - TimeSpan.FromSeconds(deviation);
+
+        var pickDropActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv,
+            pickActionState: ActionState.Completed,
+            dropActionState: ActionState.Completed,
+            startedDate: startedDate,
+            completedDate: completedDate,
+            duration: duration);
+        var otherActionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv);
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([pickDropActionGroup, otherActionGroup])
+            .BuildAsync();
+
+        (await fixture.ActionGroupRepository.GetAverageDurationEstimateDeviationAsync(agv, ["a different pick node", "a different drop node"])).ShouldBe(0);
+    }
+
+    [TestMethod]
+    public async Task GetAverageDurationEstimateDeviationAsync_NoCompletedActionGroupWithTheseTargets_ReturnsZero()
+    {
+        var agv = Guid.NewGuid();
+        const double deviation = 10;
+        var startedDate = DateTime.UtcNow;
+        var completedDate = DateTime.UtcNow.AddSeconds(60);
+        var duration = completedDate - startedDate - TimeSpan.FromSeconds(deviation);
+
+        var uncompletedPickDropActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv,
+            pickActionState: ActionState.Completed,
+            dropActionState: ActionState.Started,
+            startedDate: startedDate,
+            duration: duration);
+        var otherActionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv);
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([uncompletedPickDropActionGroup, otherActionGroup])
+            .BuildAsync();
+
+        (await fixture.ActionGroupRepository.GetAverageDurationEstimateDeviationAsync(agv, uncompletedPickDropActionGroup.GetTargets())).ShouldBe(0);
+    }
 }

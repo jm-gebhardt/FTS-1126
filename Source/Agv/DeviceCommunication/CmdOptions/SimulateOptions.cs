@@ -6,6 +6,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
 /// <summary>
 /// CommandLine Options for Simulation Mode
 /// </summary>
+// ReSharper disable StringLiteralTypo
 [UsedImplicitly]
 [Verb("simulate", HelpText = "Run in simulation mode")]
 public sealed class SimulateOptions
@@ -26,15 +27,27 @@ public sealed class SimulateOptions
     /// The factor applied to agv velocities and acceleration to speed up the simulation.
     /// </summary>
     [UsedImplicitly]
-    // ReSharper disable once StringLiteralTypo
     [Option('n', "simulationspeed", HelpText = "The factor applied to agv velocities and acceleration to control the speed of the simulation", Default = 1)]
     public int SimulationSpeed { get; init; }
+
+    /// <summary>
+    /// Cargo loading time [s].
+    /// </summary>
+    [UsedImplicitly]
+    [Option("cargoloadingtime", HelpText = "Time span [s] needed to load cargo onto an agv", Default = 10)]
+    public int CargoLoadingTime { get; init; }
+
+    /// <summary>
+    ///  Cargo unloading time [s].
+    /// </summary>
+    [UsedImplicitly]
+    [Option("cargounloadingtime", HelpText = "Time span [s] needed to unload cargo from an agv", Default = 10)]
+    public int CargoUnloadingTime { get; init; }
 
     /// <summary>
     /// Battery discharge rate [%/s]
     /// </summary>
     [UsedImplicitly]
-    // ReSharper disable once StringLiteralTypo
     [Option("batterydischargerate", HelpText = "Rate at which the battery charge decreases during simulation in [%/s]", Default = 0.1)]
     public double BatteryDischargeRate { get; init; }
 
@@ -42,7 +55,6 @@ public sealed class SimulateOptions
     /// Battery charge rate [%/s]
     /// </summary>
     [UsedImplicitly]
-    // ReSharper disable once StringLiteralTypo
     [Option("batterychargerate", HelpText = "Rate at which the battery charge increases during charge in [%/s]", Default = 1.0)]
     public double BatteryChargeRate { get; init; }
 
@@ -50,7 +62,6 @@ public sealed class SimulateOptions
     /// Initial battery charge of AGV in [%]
     /// </summary>
     [UsedImplicitly]
-    // ReSharper disable once StringLiteralTypo
     [Option("initialbatterycharge", HelpText = "Initial battery charge of AGV in [%]", Default = 75)]
     public int InitialBatteryCharge { get; init; }
 
@@ -58,7 +69,6 @@ public sealed class SimulateOptions
     /// If set the initial battery charge of the agv will deviate in this range (+/-) from initial battery charge in [%]
     /// </summary>
     [UsedImplicitly]
-    // ReSharper disable once StringLiteralTypo
     [Option("initialbatterychargedeviation", HelpText = "If set the initial battery charge of the agv will deviate in this range (+/-) from initial battery charge in [%]", Default = 0)]
     public int InitialBatteryChargeDeviation { get; init; }
 
@@ -74,7 +84,6 @@ public sealed class SimulateOptions
     /// Flag to use the grid graph generator in simulation mode
     /// </summary>
     [UsedImplicitly]
-    // ReSharper disable once StringLiteralTypo
     [Option('g', "gridgraph", HelpText = "Use the grid graph generator", SetName = GridGraphSet, Default = false)]
     public bool GridGraph { get; init; }
 
@@ -96,7 +105,6 @@ public sealed class SimulateOptions
     /// Number of grid rows [3..[
     /// </summary>
     [UsedImplicitly]
-    // ReSharper disable once StringLiteralTypo
     [Option('r', "gridrows", HelpText = "Number of grid rows of simulated map [3..[", Default = 3, SetName = GridGraphSet)]
     public int GridRows
     {

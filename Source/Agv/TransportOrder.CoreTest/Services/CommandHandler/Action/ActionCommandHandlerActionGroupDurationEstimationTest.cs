@@ -1,5 +1,6 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Constants;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.ActionGroup;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -40,12 +41,43 @@ public class ActionCommandHandlerActionGroupDurationEstimationTest
     {
         var fixture = new ActionEstimationGroupTestFixture();
         fixture.AddActionGroup(AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: fixture.Agv.CorrelationId, duration: TimeSpan.Zero))
-            .AddRouteOnCosts(42);
+            .AddRouteOnCosts(42).AddDurationEstimateDeviation();
 
         await fixture.PublishMessageAsync(new EstimateActionGroupDuration(fixture.ActionGroup.Actions.First(), fixture.ActionGroup.AssignedAgv!.Value, fixture.ActionGroup.CorrelationId));
 
         (await fixture.TestHarness.Published.Any<ActionDurationEstimated>()).ShouldBeTrue();
         var actionGroup = fixture.VerifyActionGroupUpdate(Times.Once());
         actionGroup.EstimatedDuration.ShouldNotBe(TimeSpan.Zero);
+    }
+
+    [TestMethod]
+    public async Task Consume_EstimateActionGroupDuration_PickDropActionGroup_ConsidersDeviation()
+    {
+        const int deviation = 10;
+        var fixture = new ActionEstimationGroupTestFixture();
+        fixture.AddActionGroup(AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: fixture.Agv.CorrelationId, duration: TimeSpan.Zero))
+            .AddRouteOnCosts(0).AddDurationEstimateDeviation(deviation);
+
+        await fixture.PublishMessageAsync(new EstimateActionGroupDuration(fixture.ActionGroup.Actions.First(), fixture.ActionGroup.AssignedAgv!.Value, fixture.ActionGroup.CorrelationId));
+
+        (await fixture.TestHarness.Published.Any<ActionDurationEstimated>()).ShouldBeTrue();
+        var actionGroup = fixture.VerifyActionGroupUpdate(Times.Once());
+        actionGroup.EstimatedDuration.ShouldBe(TimeSpan.FromSeconds(deviation + actionGroup.Actions.Count * ActionCosts.SwitchingActions));
+    }
+
+    [TestMethod]
+    public async Task Consume_EstimateActionGroupDuration_NotPickDropActionGroup_DoesNotConsidersDeviation()
+    {
+        const int deviation = 5;
+        const int routeCost = 10;
+        var fixture = new ActionEstimationGroupTestFixture();
+        fixture.AddActionGroup(AgvActionGenerator.GenerateMoveActionGroup(assignedAgv: fixture.Agv.CorrelationId, duration: TimeSpan.Zero))
+            .AddRouteOnCosts(routeCost).AddDurationEstimateDeviation(deviation);
+
+        await fixture.PublishMessageAsync(new EstimateActionGroupDuration(fixture.ActionGroup.Actions.First(), fixture.ActionGroup.AssignedAgv!.Value, fixture.ActionGroup.CorrelationId));
+
+        (await fixture.TestHarness.Published.Any<ActionDurationEstimated>()).ShouldBeTrue();
+        var actionGroup = fixture.VerifyActionGroupUpdate(Times.Once());
+        actionGroup.EstimatedDuration.ShouldBe(TimeSpan.FromSeconds(routeCost + actionGroup.Actions.Count * ActionCosts.SwitchingActions));
     }
 }

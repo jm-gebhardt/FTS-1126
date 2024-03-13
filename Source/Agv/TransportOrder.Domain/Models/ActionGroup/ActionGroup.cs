@@ -50,6 +50,11 @@ public class ActionGroup
     /// </summary>
     public AgvAction? FirstNotStartedAction => Actions.OrderBy(a => a.Sequence).FirstOrDefault(a => a.State == ActionState.Created);
 
+    /// <summary>
+    /// True, if the action group is moving cargo.
+    /// </summary>
+    public bool IsMovingCargo => Actions.Any(a => a.ActionType == ActionType.Pick || a.ActionType == ActionType.Drop);
+
     private readonly List<AgvAction> _actions;
 
     /// <summary>
@@ -310,5 +315,14 @@ public class ActionGroup
         {
             InvalidateAction(agvAction.CorrelationId);
         }
+    }
+
+    /// <summary>
+    /// Get the targets of the action group.
+    /// </summary>
+    /// <returns>Node ids if the targets.</returns>
+    public string[] GetTargets()
+    {
+        return !Actions.Any() ? [] : Actions.Select(a => a.TargetNodeId).ToArray();
     }
 }

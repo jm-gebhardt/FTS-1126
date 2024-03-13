@@ -38,7 +38,8 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
     private readonly Mock<IActionGroupValidationService> _actionGroupValidationService = new();
     private readonly List<ActionGroupReadModel> _actionGroupReadModels = new();
     private readonly List<Domain.Models.ActionGroup.ActionGroup> _actionGroups = new();
-
+    private readonly Mock<IActionGroupDurationEstimationService> _actionGroupDurationEstimationService = new();
+    
     protected override ActionGroupController GetController()
     {
         IRequestClient<GetActionGroup> getActionGroupRequestClient = GetRequestClient<GetActionGroup>();
@@ -69,6 +70,7 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
         {
             sc.AddTransient(_ => _retrievalServiceMock.Object);
             sc.AddTransient(_ => _actionGroupRepositoryMock.Object);
+            sc.AddTransient(_ => _actionGroupDurationEstimationService.Object);
             sc.AddTransient(_ => _routeService.Object);
             sc.AddTransient(_ => _chooseAgvActionGroupService.Object);
             sc.AddTransient(_ => _maintenanceService.Object);

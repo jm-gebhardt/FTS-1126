@@ -142,5 +142,8 @@ public static class TransportOrderHostBuilderExtensions
         services.AddTransient(typeof(IMessageReceiver<>), typeof(MessageReceiver<>));
         services.AddTransient(typeof(IMessageAwaiter<>), typeof(MessageAwaiter<>));
         services.AddSingleton(typeof(ISemaphoreProvider<>), typeof(SemaphoreProvider<>));
+
+        services.AddSingleton<IConcurrentDictionaryProvider<string, (double value, DateTime lastUpdated)>, DeviationCacheProvider>();
+        services.AddTransient<IActionGroupDurationEstimationService, ActionGroupDurationEstimationService>();
     }
 }

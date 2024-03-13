@@ -16,6 +16,7 @@ public class ActionGroupEntityConfiguration : IEntityTypeConfiguration<ActionGro
     {
         builder.HasKey(g => g.CorrelationId);
         builder.Ignore(e => e.FirstNotStartedAction);
+        builder.Ignore(e => e.IsMovingCargo);
         builder.Property(g => g.State).HasMaxLength(MaxStateLength);
         builder.HasIndex(g => g.AssignedAgv);
         builder.Property(e => e.AssignedAgv);

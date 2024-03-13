@@ -186,4 +186,13 @@ public interface IActionGroupRepository
     /// <param name="actionGroup">The action group to be updated</param>
     /// <returns></returns>
     Task UpdateAsync(ActionGroup actionGroup);
+
+    /// <summary>
+    ///  Gets the average deviation between the actual and estimated
+    /// duration [s] of an action group for the given target nodes.
+    /// </summary>
+    /// <param name="agvCorrelationId">The agv correlation id.</param>
+    /// <param name="targetNodes">The target nodes.</param>
+    /// <returns>The deviation in seconds.</returns>
+    Task<double> GetAverageDurationEstimateDeviationAsync(Guid agvCorrelationId, string[] targetNodes );
 }

@@ -375,4 +375,28 @@ public class EfActionGroupRepository : IActionGroupRepository
         context.Set<ActionGroup>().Update(actionGroup);
         await context.SaveChangesAsync();
     }
+
+    /// <inheritdoc />
+    public async Task<double> GetAverageDurationEstimateDeviationAsync(Guid agvCorrelationId, string[] targetNodes)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        try
+        {
+            // Use average assuming extreme outliers are rare.
+            // There is no median db operation and client side median calculations can be memory intense for large numbers
+            // of action groups.
+            DbSet<ActionGroup> actionGroups = context.Set<ActionGroup>();
+
+            return actionGroups.Where(ag =>
+                    ag.StartedDate.HasValue && ag.CompletedDate.HasValue && ag.EstimatedDuration.HasValue &&
+                    ag.AssignedAgv == agvCorrelationId &&
+                    ag.Actions.All(a => targetNodes.Contains(a.TargetNodeId)))
+                .Average(ag => (ag.CompletedDate!.Value - ag.StartedDate!.Value - ag.EstimatedDuration!.Value).TotalSeconds);
+        }
+        catch (InvalidOperationException)
+        {
+            // no action groups found that match the query
+            return 0;
+        }
+    }
 }

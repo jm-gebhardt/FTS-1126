@@ -41,6 +41,13 @@ public class ActionEstimationGroupTestFixture : ActionGroupTestFixtureBase<Actio
         return this;
     }
 
+    // ReSharper disable once UnusedMethodReturnValue.Global
+    public ActionEstimationGroupTestFixture AddDurationEstimateDeviation(double deviation = 0)
+    {
+        ActionGroupDurationEstimationService.Setup(x => x.GetAverageDurationEstimateDeviationAsync(It.IsAny<Guid>(), It.IsAny<string[]>())).ReturnsAsync(deviation);
+        return this;
+    }
+
     public ActionGroup VerifyActionGroupUpdate(Times times)
     {
         ActionGroupRepository.Verify(a => a.UpdateAsync(It.IsAny<ActionGroup>()), times);

@@ -41,12 +41,15 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
 
     protected Mock<IActionGroupRepository> ActionGroupRepository { get; } = new();
 
+    protected Mock<IActionGroupDurationEstimationService> ActionGroupDurationEstimationService { get; } = new();
+
     public readonly AgvSettings Settings = new();
     private readonly AgvSettings _agvSettings = new();
 
     protected override void ConfigureServices(IServiceCollection collection)
     {
         collection.AddTransient(_ => ActionGroupRepository.Object);
+        collection.AddTransient(_ => ActionGroupDurationEstimationService.Object);
         collection.AddTransient(_ => RouteService.Object);
         collection.AddTransient(_ => _chooseAgvActionGroupService.Object);
         collection.AddTransient(_ => GetMapper());

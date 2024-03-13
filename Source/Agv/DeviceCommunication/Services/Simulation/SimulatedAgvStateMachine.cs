@@ -499,6 +499,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
             }
             if (action.ActionType is ActionType.Pick or ActionType.Drop)
             {
+                await WaitForCargoHandlingAsync(context);
                 await context.Publish(new AgvLoadStatusReceived(agvCorrelationId, cargos));
             }
 
@@ -508,6 +509,19 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         // update position last time before the ActionStart time is gone
         context.Saga.UpdatePosition();
         context.Saga.ResetAction();
+    }
+
+    private async Task WaitForCargoHandlingAsync(BehaviorContext<SimulatedAgvSaga, ScheduleFinishAction> context)
+    {
+        var action = context.Saga.Action;
+        float delay = action!.ActionType switch
+        {
+            ActionType.Drop => _simulateOptions.CargoUnloadingTime,
+            ActionType.Pick => _simulateOptions.CargoLoadingTime,
+            _ => 0
+        } /( float)_simulateOptions.SimulationSpeed;
+
+        await Task.Delay(TimeSpan.FromSeconds(delay));
     }
 
     private async Task HandleActionAbortionAsync(BehaviorContext<SimulatedAgvSaga, ActionAborted> context)
