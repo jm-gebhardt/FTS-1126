@@ -9,8 +9,8 @@ public class AgvsNotFoundException : BatchQueryException
     /// Agvs was not found by correlation id.
     /// </summary>
     /// <param name="correlationIds">Correlation ids of the agvs</param>
-    public AgvsNotFoundException(ICollection<Guid>? correlationIds)
-        : base($"Unknown agv correlation ids: {string.Join(',', correlationIds!.Select(c => c.ToString()))} ")
+    public AgvsNotFoundException(ICollection<Guid> correlationIds)
+        : base($"Unknown agv correlation ids: {string.Join(',', correlationIds.Select(c => c.ToString()))}")
     {
     }
 }

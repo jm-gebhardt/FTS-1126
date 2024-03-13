@@ -1,4 +1,5 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+﻿using Gebhardt.StoreWare.Agv.Common.Exceptions;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Testing;
@@ -7,11 +8,11 @@ using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Node;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Map;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.RequestHandler.Agv;
@@ -53,7 +54,6 @@ public class MoveAgvRequestHandlerTest
         MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler>()
             .AddAgvs([agv])
             .WithNode(targetNode)
-            .WithNodeState(null)
             .BuildAsync(busFixture.TestHarness.Bus);
 
         await fixture.GetResponseAsync<AgvMoveSuccessful>(new MoveAgv(agv.CorrelationId, targetNode.Id, ActionGroupCreator.TransportOrderWebApi));
@@ -69,13 +69,44 @@ public class MoveAgvRequestHandlerTest
         MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler>()
             .AddAgvs([agv])
             .WithNode(targetNode)
-            .WithNodeState(new NodeLock(targetNode.Id, NodeLockState.Free, false, null, DateTime.UtcNow))
             .BuildAsync(busFixture.TestHarness.Bus);
 
         await fixture.GetResponseAsync<AgvMoveSuccessful>(new MoveAgv(agv.CorrelationId, targetNode.Id, ActionGroupCreator.TransportOrderWebApi));
         (await busFixture.TestHarness.Published.Any<QueueActionGroup>()).ShouldBeTrue();
-        fixture.VerifyNodeWasReserved(targetNode.Id, agv.CorrelationId);
+        fixture.VerifyNodeWasReserved(targetNode, agv.CorrelationId);
         (await busFixture.TestHarness.Published.Any<NodeStateChanged>()).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task Consume_MoveAgv_TargetNodeNeedsReservation_ButServiceThrows()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var targetNode = new GraphNode("target") { Type = AgvGraph.NodeType.Park };
+        var busFixture = new MassTransitConsumerTestFixture<SuccessResponseConsumer<QueueActionGroup>>();
+        MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler>()
+            .AddAgvs([agv])
+            .WithNode(targetNode)
+            .BuildAsync(busFixture.TestHarness.Bus);
+
+        await fixture.GetResponseAsync<AgvMoveSuccessful>(new MoveAgv(agv.CorrelationId, targetNode.Id, ActionGroupCreator.TransportOrderWebApi));
+        (await busFixture.TestHarness.Published.Any<QueueActionGroup>()).ShouldBeTrue();
+        fixture.VerifyNodeWasReserved(targetNode, agv.CorrelationId);
+        (await busFixture.TestHarness.Published.Any<NodeStateChanged>()).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task Consume_ChargeAgv_ParkReservationThrows_ThrowsException()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var charger = new GraphNode("park") { Type = AgvGraph.NodeType.Park };
+        MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler>()
+            .AddAgvs([agv])
+            .WithNode(charger)
+            .BuildAsync();
+        fixture.ParkPointService.Setup(x => x.ReserveParkAsync(It.IsAny<string>(), agv.CorrelationId)).ThrowsAsync(new ParkNodeNotAvailableException(""));
+
+        await MediatorShould.ThrowRequestExceptionAsync<ParkNodeNotAvailableException>(async () => await fixture.GetResponseAsync<MoveAgv>(
+            new MoveAgv(agv.CorrelationId, "known target", ActionGroupCreator.TransportOrderWebApi)));
     }
 
     [TestMethod]
@@ -103,20 +134,18 @@ public class MoveAgvRequestHandlerTest
             new ChargeAgv(agv.CorrelationId, "unknown charger")));
     }
 
-    [DataTestMethod]
-    [DataRow(NodeLockState.Occupied)]
-    [DataRow(NodeLockState.Reserved)]
-    public async Task Consume_ChargeAgv_ChargerNodeFree_ThrowsNoNodesAvailableException(NodeLockState state)
+    [TestMethod]
+    public async Task Consume_ChargeAgv_ChargeReservationThrows_ThrowsException()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var charger = new GraphNode("charger") { Type = AgvGraph.NodeType.Charge };
         MoveAgvRequestHandlerTestFixture<ChargeAgv, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<ChargeAgv, MoveAgvRequestHandler>()
             .AddAgvs([agv])
             .WithNode(charger)
-            .WithNodeState(new NodeLock(charger.Id, state, false, null, DateTime.UtcNow))
             .BuildAsync();
+        fixture.ChargingPointManager.Setup(x => x.ReserveChargerAsync(It.IsAny<GraphNode>(), It.IsAny<Guid>())).ThrowsAsync(new ChargeStationNotAvailableException(""));
 
-        await MediatorShould.ThrowRequestExceptionAsync<NoNodesAvailableException>(async () => await fixture.GetResponseAsync<ChargeAgv>(
+        await MediatorShould.ThrowRequestExceptionAsync<ChargeStationNotAvailableException>(async () => await fixture.GetResponseAsync<ChargeAgv>(
             new ChargeAgv(agv.CorrelationId, charger.Id)));
     }
 
@@ -148,12 +177,12 @@ public class MoveAgvRequestHandlerTest
         MoveAgvRequestHandlerTestFixture<ChargeAgv, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<ChargeAgv, MoveAgvRequestHandler>()
             .AddAgvs([agv])
             .WithNode(charger)
-            .WithNodeState(new NodeLock(charger.Id, NodeLockState.Free, false, null, DateTime.UtcNow))
+            // .WithNodeState(new NodeLock(charger.Id, NodeLockState.Free, false, null, DateTime.UtcNow))
             .BuildAsync(busFixture.TestHarness.Bus);
 
         await fixture.GetResponseAsync<AgvMoveSuccessful>(new ChargeAgv(agv.CorrelationId, charger.Id));
         (await busFixture.TestHarness.Published.Any<QueueActionGroup>()).ShouldBeTrue();
-        fixture.VerifyNodeWasReserved(charger.Id, agv.CorrelationId);
+        fixture.VerifyNodeWasReserved(charger, agv.CorrelationId);
         (await busFixture.TestHarness.Published.Any<NodeStateChanged>()).ShouldBeTrue();
     }
 }

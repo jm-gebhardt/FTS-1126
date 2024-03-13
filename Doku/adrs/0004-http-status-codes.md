@@ -19,7 +19,11 @@ We have agreed to use the following principles for HTTP status codes in the API:
     204 No Content will be returned when a request is successful, but the result is non-existent or null.
     400 Bad Request will indicate client-side errors, such as invalid request parameters.
     404 Not Found will be used when the requested resource does not exist, implying that the URL is incorrect.
+    409 Conflict will be used when e.g. the charger is currently unavailable, because it is already in use by another Agv.
 
 ## Consequences
 
 Implementing these specific HTTP status codes will lead to clearer and more precise API responses, which is more straightforward by signaling the nature of issues, such as incorrect URLs.
+
+## Changes
+2024-03-08: Added 409 Conflict status code

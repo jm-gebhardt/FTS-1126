@@ -110,6 +110,7 @@ public class AgvController : Controller
     /// </summary>
     /// <response code="200">Ok</response>
     /// <response code="404">Agv with given correlation id not found.</response>
+    /// <returns>The full agv.</returns>
     [HttpGet]
     [Route("/agv/{correlationId:guid}")]
     public async Task<ActionResult<AgvDto>> GetAgv(Guid correlationId)
@@ -125,6 +126,7 @@ public class AgvController : Controller
     /// <response code="200">Ok</response>
     /// <response code="204">No content</response>
     /// <response code="404">Agv with given correlation id not found.</response>
+    /// <returns>The agv graph of that agv.</returns>
     [HttpGet]
     [Route("/agv/{correlationId:guid}/graph")]
     public async Task<ActionResult<GraphDto>> GetAgvGraph(Guid correlationId)
@@ -140,6 +142,7 @@ public class AgvController : Controller
     /// <response code="200">Ok</response>
     /// <response code="204">No Content</response>
     /// <response code="404">AGV with given correlationId not found.</response>
+    /// <returns>The agv data of that agv.</returns>
     [HttpGet]
     [Route("/agv/{correlationId:guid}/data")]
     public async Task<ActionResult<AgvDataDto>> GetAgvData(Guid correlationId)
@@ -154,6 +157,7 @@ public class AgvController : Controller
     /// </summary>
     /// <response code="200">Ok</response>
     /// <response code="404">AGV with given correlationId not found.</response>
+    /// <returns>The battery status of that agv.</returns>
     [HttpGet]
     [Route("/agv/{correlationId:guid}/battery")]
     public async Task<ActionResult<AgvBatteryStatusDto>> GetAgvBattery(Guid correlationId)
@@ -169,13 +173,14 @@ public class AgvController : Controller
     /// <response code="200">Ok</response>
     /// <response code="204">No Content</response>
     /// <response code="404">AGV with given correlationId not found.</response>
+    /// <returns>The current settings of that agv.</returns>
     [HttpGet]
     [Route("/agv/{correlationId:guid}/settings")]
     public async Task<ActionResult<AgvSettingsDto>> GetAgvSettings(Guid correlationId)
     {
         Response<GotAgvSettings> response = await _getAgvSettingsClient.GetResponse<GotAgvSettings>(new GetAgvSettings(correlationId));
-        var agvData = _mapper.Map<AgvSettingsDto>(response.Message.AgvSettings);
-        return Ok(agvData);
+        var dto = _mapper.Map<AgvSettingsDto>(response.Message.AgvSettings);
+        return Ok(dto);
     }
 
     /// <summary>
@@ -186,6 +191,7 @@ public class AgvController : Controller
     /// <response code="200">AgvRoute</response>
     /// <response code="204">No running ActionGroup and therefore current route does not exist.</response>
     /// <response code="404">Agv with given correlation id not found.</response>
+    /// <returns>The current route of that Agv.</returns>
     [HttpGet]
     [Route("/agv/{correlationId:guid}/currentRoute")]
     public async Task<ActionResult<CurrentRouteDto?>> GetAgvRoute(Guid correlationId)
@@ -206,6 +212,7 @@ public class AgvController : Controller
     /// <response code="204">No Route found.</response>
     /// <response code="400">Start/Destination node node found.</response>
     /// <response code="404">Agv with given correlation id not found.</response>
+    /// <returns>The calculated route for the given parameters.</returns>
     [HttpGet]
     [Route("/agv/{correlationId:guid}/route")]
     public async Task<ActionResult<RouteDto>> GetAgvRoute(Guid correlationId, [Required] string destinationNodeId, string? startNodeId = null)
@@ -220,6 +227,7 @@ public class AgvController : Controller
     /// </summary>
     /// <response code="200">Ok</response>
     /// <response code="404">AGV with given correlationId not found.</response>
+    /// <returns>The current agv position.</returns>
     [HttpGet]
     [Route("/agv/{correlationId:guid}/position")]
     public async Task<ActionResult<AgvPositionStatusDto>> GetAgvPosition(Guid correlationId)
@@ -233,7 +241,7 @@ public class AgvController : Controller
     /// <summary>
     /// Get list of active errors of an agv.
     /// </summary>
-    /// <returns></returns>
+    /// <returns>The list of active errors of that agv.</returns>
     [HttpGet]
     [Route("/agv/{correlationId:guid}/errors")]
     public async Task<ActionResult<IEnumerable<AgvErrorDto>>> GetAgvErrors(Guid correlationId)
@@ -251,7 +259,7 @@ public class AgvController : Controller
     /// <param name="errorIds">If specified, resets all specified errors. If no errors are explicitly specified, it resets all active errors.</param>
     /// <response code="200">All errors were reset successfully.</response>
     /// <response code="404">Agv with given correlationId not found.</response>
-    /// <returns></returns>
+    /// <returns>The description of the result.</returns>
     [HttpPatch]
     [Route("/agv/{correlationId:guid}/errors/reset")]
     public async Task<ActionResult<string>> ResetAgvErrors(Guid correlationId, Collection<Guid>? errorIds = null)
@@ -266,7 +274,7 @@ public class AgvController : Controller
     /// <param name="correlationId">The agv correlation id.</param>
     /// <param name="dateFrom">Only consider errors with a ErrorReceived newer than this parameter (if set)</param>
     /// <param name="dateTo">Only consider errors a ErrorReceived older than this parameter (if set)</param>
-    /// <returns></returns>
+    /// <returns>The list of historic errors of that agv.</returns>
     [HttpGet]
     [Route("/agv/{correlationId:guid}/errorHistory")]
     public async Task<ActionResult<IEnumerable<AgvErrorDto>>> GetAgvErrorHistory(Guid correlationId, DateTime? dateFrom, DateTime? dateTo)
@@ -373,6 +381,7 @@ public class AgvController : Controller
     /// <response code="200">Ok: The ActionGroup for the move was created and is going to be processed</response>
     /// <response code="400">Target node does not exist or is reserved or occupied.</response>
     /// <response code="404">Agv with given correlationId not found.</response>
+    /// <response code="409">Destination node needs reservation, but is currently not available.</response>
     /// <returns>The CorrelationId of the created ActionGroup</returns>
     [HttpPatch]
     [Route("/agv/{correlationId:guid}/move")]
@@ -386,9 +395,12 @@ public class AgvController : Controller
     /// <summary>
     /// Move agv manually to a specific charger and charge it there. 
     /// </summary>
-    /// <response code="200">Ok: The ActionGroup for the move was created and is going to be processed</response>
-    /// <response code="400">Charger does not exist, is not of type charge, or is reserved or occupied.</response>
-    /// <response code="404">Agv with given correlationId not found.</response>
+    /// <param name="correlationId">The correlation ID of the AGV.</param>
+    /// <param name="chargerId">The identifier of the charger.</param>
+    /// <response code="200">Ok: The ActionGroup for the move was created and is going to be processed.</response>
+    /// <response code="400">ChargerId does not correspond to a charger or does not exist at all.</response>
+    /// <response code="404">AGV with given correlationId not found.</response>
+    /// <response code="409">Charger is currently not available.</response>
     /// <returns>The CorrelationId of the created ActionGroup</returns>
     [HttpPatch]
     [Route("/agv/{correlationId:guid}/chargeAtCharger")]
@@ -405,7 +417,6 @@ public class AgvController : Controller
     /// <param name="correlationId">The correlation id of the Agv.</param>
     /// <response code="200">Ok: The agv was set to idle.</response>
     /// <response code="404">AGV with given correlationId not found.</response>
-    /// <returns>The correlation id of the agv.</returns>
     [HttpPatch]
     [Route("/agv/{correlationId:guid}/setForceIdle")]
     public async Task<ActionResult> SetForceIdle(Guid correlationId)
@@ -423,7 +434,7 @@ public class AgvController : Controller
     /// </summary>
     /// <param name="correlationId">The correlation id of the agv.</param>
     /// <response code="404">Agv with given correlationId not found.</response>
-    /// <returns></returns>
+    /// <returns>True if the Agv has cargo.</returns>
     [HttpGet]
     [Route("/agv/{correlationId:guid}/hasCargo")]
     public async Task<ActionResult<bool>> HasCargo(Guid correlationId)
@@ -437,7 +448,7 @@ public class AgvController : Controller
     /// </summary>
     /// <param name="correlationId">The correlation id of the agv.</param>
     /// <response code="404">Agv with given correlationId not found.</response>
-    /// <returns></returns>
+    /// <returns>The list of cargos of that agv.</returns>
     [HttpGet]
     [Route("/agv/{correlationId:guid}/cargos")]
     public async Task<ActionResult<ICollection<CargoDto>>> GetCargosOfAgv(Guid correlationId)
@@ -450,8 +461,10 @@ public class AgvController : Controller
     /// <summary>
     /// Send agv to nearest charger.
     /// </summary>
-    /// <response code="200">Agv send to charger.</response>
-    /// <response code="404">Agv with given correlationId not found or no free charge station available.</response>
+    /// <param name="correlationId">The correlation ID of the AGV.</param>
+    /// <response code="200">Ok: The ActionGroup for the charge was created and is going to be processed.</response>
+    /// <response code="404">AGV with given correlationId not found.</response>
+    /// <response code="409">No charger is currently available.</response>
     [HttpPatch]
     [Route("/agv/{correlationId:guid}/charge")]
     public async Task<ActionResult> SendAgvToCharger(Guid correlationId)

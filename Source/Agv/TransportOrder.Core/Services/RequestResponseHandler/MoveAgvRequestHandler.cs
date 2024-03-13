@@ -5,14 +5,13 @@ using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Node;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Map;
 using JetBrains.Annotations;
 using MassTransit;
-using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
 
@@ -21,7 +20,13 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHan
 /// </summary>
 /// <inheritdoc cref="MoveAgvRequestHandler"/>>
 [UsedImplicitly]
-public class MoveAgvRequestHandler(IAgvDb agvDb, IBus bus, ILogger<MoveAgvRequestHandler> logger, INodeStateRepository nodeStateRepository) :
+public class MoveAgvRequestHandler(
+    IAgvDb agvDb,
+    IBus bus,
+    INodeStateRepository nodeStateRepository,
+    IParkPointService parkPointService,
+    IChargingPointManager chargingPointManager
+) :
     IConsumer<MoveAgv>,
     IConsumer<ChargeAgv>
 {
@@ -94,16 +99,20 @@ public class MoveAgvRequestHandler(IAgvDb agvDb, IBus bus, ILogger<MoveAgvReques
 
     private async Task ReserveNodeForAgv(GraphNode targetNode, Guid agvCorrelationId)
     {
-        var nodeState = await nodeStateRepository.GetNodeStateAsync(targetNode.Id);
-
-        if (nodeState != null && nodeState.NodeState != NodeLockState.Free)
+        switch (targetNode.Type)
         {
-            string state = nodeState.NodeState == NodeLockState.Occupied ? nameof(NodeLockState.Occupied) : nameof(NodeLockState.Reserved);
-            logger.LogWarning("Could not reserve node for {AgvCorrelationId}, target node is {NodeState}", agvCorrelationId, state);
-            throw new NoNodesAvailableException($"Target node is already {state}");
+            case AgvGraph.NodeType.Charge:
+                await chargingPointManager.ReserveChargerAsync(targetNode, agvCorrelationId);
+                break;
+
+            case AgvGraph.NodeType.Park:
+                await parkPointService.ReserveParkAsync(targetNode.Id, agvCorrelationId);
+                break;
+
+            default:
+                throw new ArgumentOutOfRangeException($"Unable to reserve node type: {targetNode.Type}");
         }
 
-        await nodeStateRepository.ReserveNodeAsync(targetNode.Id, agvCorrelationId);
         await PublishNodeStateChange(targetNode.Id);
     }
 

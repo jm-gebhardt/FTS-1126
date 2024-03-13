@@ -1,6 +1,8 @@
 ﻿using System.Linq.Expressions;
+using Gebhardt.StoreWare.Agv.Common.Exceptions;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Services;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Node;
@@ -35,6 +37,19 @@ public class ParkPointService : BaseNodeReservationManager, IParkPointService
     public Task<GraphNode> ReserveParkAsync(Models.Agv.Agv agv)
     {
         return PickAndReserveNodeAsync(agv);
+    }
+
+    /// <inheritdoc />
+    public async Task ReserveParkAsync(string parkNodeId, Guid agvCorrelationId)
+    {
+        try
+        {
+            await ReserveNodeAsync(parkNodeId, agvCorrelationId);
+        }
+        catch (ReserveNodeFailedException)
+        {
+            throw new ParkNodeNotAvailableException(parkNodeId);
+        }
     }
 
     /// <inheritdoc />

@@ -9,8 +9,8 @@ public class AgvsDataBatchQueryException : BatchQueryException
     /// Initializes a new <see cref="AgvsDataBatchQueryException"/>.
     /// </summary>
     /// <param name="correlationIds">the correlation is of the agvs</param>
-    public AgvsDataBatchQueryException(ICollection<Guid>? correlationIds)
-        : base($"Data not found for agvs: {string.Join(',', correlationIds!.Select(c => c.ToString()))} ")
+    public AgvsDataBatchQueryException(ICollection<Guid> correlationIds)
+        : base($"Data not found for agvs: {string.Join(',', correlationIds.Select(c => c.ToString()))}")
     {
     }
 }

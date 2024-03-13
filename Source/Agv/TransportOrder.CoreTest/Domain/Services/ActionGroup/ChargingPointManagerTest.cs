@@ -1,3 +1,4 @@
+using Gebhardt.StoreWare.Agv.Common.Exceptions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
@@ -96,6 +97,12 @@ public class ChargingPointManagerTest
         VerifyGraphNode(bestCharger, chargingNode);
     }
 
+    //
+    // [DataTestMethod]
+    // [DataRow(NodeLockState.Occupied)]
+    // [DataRow(NodeLockState.Reserved)]
+    // public async Task Consume_ChargeAgv_ChargeReservationThrows_ThrowsException(NodeLockState state)
+
     [TestMethod]
     public async Task ReserveCharger_WhenNodeIsNotChargerTypeAndFree_ReturnFalse()
     {
@@ -142,7 +149,7 @@ public class ChargingPointManagerTest
     }
 
     [TestMethod]
-    public async Task FindAndReserveFreeCharger_WhenNoFreeChargerExist_ThrowsException()
+    public async Task FindAndReserveFreeCharger_WhenNoChargerExist_ThrowsException()
     {
         const string agvSerialNumber = "AGV001";
         var correlationId = agvSerialNumber.ToGuid();
@@ -153,7 +160,53 @@ public class ChargingPointManagerTest
         fixture.SetupGraphRepository(agvGraph);
         fixture.SetupNodeLocker(true, true, true);
 
-        await Should.ThrowAsync<Exception>(async () => await fixture.CreateChargingPointManager().ReserveChargerAsync(agv));
+        await Should.ThrowAsync<NoChargeStationAvailableException>(async () => await fixture.CreateChargingPointManager().ReserveChargerAsync(agv));
+    }
+
+    [TestMethod]
+    public async Task FindAndReserveFreeCharger_WhenReserveFails_ThrowsException()
+    {
+        const string agvSerialNumber = "AGV001";
+        var correlationId = agvSerialNumber.ToGuid();
+
+        var fixture = new ChargingPointManagerTestFixture();
+        var agvGraph = fixture.GetAgvGraph(true, correlationId);
+        var agv = fixture.GetAgv(correlationId, agvSerialNumber, "Idle", "");
+        var chargingNode = NodeGenerator.GenerateChargingNode();
+        var availableNodes = new List<GraphNode>
+        {
+            chargingNode
+        };
+
+        fixture.SetupGraphRepository(agvGraph);
+        fixture.WithAvailableNodes(agv, availableNodes)
+            .WithLowestCostNode(agv, availableNodes, chargingNode);
+        fixture.SetupNodeLocker(false, false, false);
+
+        await Should.ThrowAsync<NoChargeStationAvailableException>(async () => await fixture.CreateChargingPointManager().ReserveChargerAsync(agv));
+    }
+
+    [TestMethod]
+    public async Task ReserveChargerAsync_WhenReserveFails_ThrowsException()
+    {
+        const string agvSerialNumber = "AGV001";
+        var correlationId = agvSerialNumber.ToGuid();
+
+        var fixture = new ChargingPointManagerTestFixture();
+        var agvGraph = fixture.GetAgvGraph(true, correlationId);
+        var agv = fixture.GetAgv(correlationId, agvSerialNumber, "Idle", "");
+        var chargingNode = NodeGenerator.GenerateChargingNode();
+        var availableNodes = new List<GraphNode>
+        {
+            chargingNode
+        };
+
+        fixture.SetupGraphRepository(agvGraph);
+        fixture.WithAvailableNodes(agv, availableNodes)
+            .WithLowestCostNode(agv, availableNodes, chargingNode);
+        fixture.SetupNodeLocker(false, false, false);
+
+        await Should.ThrowAsync<NodeNotAvailableException>(async () => await fixture.CreateChargingPointManager().ReserveChargerAsync(chargingNode, correlationId));
     }
 
     [TestMethod]

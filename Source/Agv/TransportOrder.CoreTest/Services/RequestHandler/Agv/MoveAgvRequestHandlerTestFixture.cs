@@ -2,8 +2,8 @@
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Node;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -17,12 +17,18 @@ public class MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> : Media
     private readonly Mock<IAgvDb> _agvDb = new();
     private readonly Mock<INodeStateRepository> _nodeStateRepository = new();
 
+    public Mock<IParkPointService> ParkPointService { get; } = new();
+
+    public Mock<IChargingPointManager> ChargingPointManager { get; } = new();
+
     public MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> BuildAsync(IBus? bus = null)
     {
         AddServices(s =>
         {
             s.AddTransient(_ => _agvDb.Object);
             s.AddTransient(_ => _nodeStateRepository.Object);
+            s.AddTransient(_ => ParkPointService.Object);
+            s.AddTransient(_ => ChargingPointManager.Object);
         });
 
         if (bus != null)
@@ -58,15 +64,21 @@ public class MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> : Media
         return this;
     }
 
-    public MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> WithNodeState(NodeLock? state)
+    public void VerifyNodeWasReserved(GraphNode targetNode, Guid agvId)
     {
-        _nodeStateRepository.Setup(x => x.GetNodeStateAsync(It.IsAny<string>())).ReturnsAsync(state);
-        return this;
-    }
+        // _nodeStateRepository.Verify(x => x.ReserveNodeAsync(It.Is<string>(n => n == targetNodeId), It.Is<Guid>(a => a == agvId)), Times.Once());
+        switch (targetNode.Type)
+        {
+            case AgvGraph.NodeType.Charge:
+                ChargingPointManager.Verify(x => x.ReserveChargerAsync(It.Is<GraphNode>(n => n == targetNode), It.Is<Guid>(a => a == agvId)), Times.Once());
+                break;
 
-    public void VerifyNodeWasReserved(string targetNodeId, Guid agvId)
-    {
-        _nodeStateRepository.Verify(
-            x => x.ReserveNodeAsync(It.Is<string>(n => n == targetNodeId), It.Is<Guid>(a => a == agvId)), Times.Once());
+            case AgvGraph.NodeType.Park:
+                ParkPointService.Verify(x => x.ReserveParkAsync(It.Is<string>(n => n == targetNode.Id), It.Is<Guid>(a => a == agvId)), Times.Once());
+                break;
+
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
     }
 }

@@ -58,7 +58,6 @@ public class ExceptionHandlerMiddleware : IMiddleware
             case InvalidNodeTypeException:
             case ActionGroupInvalidException:
             case NodeNotFoundException:
-            case NoNodesAvailableException:
             case BadRequestException:
                 statusCode = HttpStatusCode.BadRequest;
                 break;
@@ -67,10 +66,15 @@ public class ExceptionHandlerMiddleware : IMiddleware
                 statusCode = HttpStatusCode.BadRequest;
                 break;
 
+            case NodeNotAvailableException:
+            case NoNodesAvailableException:
+                statusCode = HttpStatusCode.Conflict;
+                break;
+
             case ResetAgvErrorFailedException:
                 statusCode = HttpStatusCode.InternalServerError;
                 break;
-            
+
             case NotFoundException:
                 statusCode = HttpStatusCode.NotFound;
                 break;
@@ -81,7 +85,7 @@ public class ExceptionHandlerMiddleware : IMiddleware
         }
 
         string result = JsonSerializer.Serialize(problem);
-        context.Response.StatusCode = (int)statusCode;
+        context.Response.StatusCode = (int) statusCode;
         context.Response.ContentType = "application/json";
         return context.Response.WriteAsync(result);
     }

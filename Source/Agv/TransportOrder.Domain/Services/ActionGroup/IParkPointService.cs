@@ -15,6 +15,14 @@ public interface IParkPointService
     Task<GraphNode> ReserveParkAsync(Models.Agv.Agv agv);
 
     /// <summary>
+    /// Reserve specific parking node. 
+    /// </summary>
+    /// <param name="parkNodeId"></param>
+    /// <param name="agvCorrelationId"></param>
+    /// <returns>Throws if reservations fails.</returns>
+    Task ReserveParkAsync(string parkNodeId, Guid agvCorrelationId);
+
+    /// <summary>
     /// Checks if the agv is on a park node
     /// </summary>
     /// <param name="agv">The agv.</param>
