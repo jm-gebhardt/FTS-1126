@@ -32,6 +32,32 @@ public class AgvTravelSimulatorTest
         return nodes.ToArray();
     }
 
+    private readonly AgvGraph _wikiExample = new(Guid.Empty,
+        new GraphNode[]
+        {
+            new("Nairobi") { Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 0f, Z = 0f },
+            new("Tokyo") { Type = AgvGraph.NodeType.PickDrop, X = 42f, Y = 80f, Z = 0f },
+            new("Marseille") { Type = AgvGraph.NodeType.PickDrop, X = 104f, Y = 100f, Z = 0f },
+            new("Berlin") { Type = AgvGraph.NodeType.PickDrop, X = 96f, Y = 60f, Z = 0f },
+            new("Denver") { Type = AgvGraph.NodeType.PickDrop, X = 104f, Y = -10f, Z = 0f },
+            new("Helsinki") { Type = AgvGraph.NodeType.PickDrop, X = 150f, Y = 20f, Z = 0f },
+            new("Rio") { Type = AgvGraph.NodeType.PickDrop, X = 200f, Y = 92f, Z = 0f }
+        },
+        new[]
+        {
+            GraphEdge.CreateDirect("Nairobi", "Tokyo", 70f),
+            GraphEdge.CreateDirect("Nairobi", "Denver", 145f),
+            GraphEdge.CreateDirect("Denver", "Nairobi", 145f),
+            GraphEdge.CreateDirect("Tokyo", "Marseille", 103f),
+            GraphEdge.CreateDirect("Tokyo", "Berlin", 53f),
+            GraphEdge.CreateDirect("Denver", "Helsinki", 84f),
+            GraphEdge.CreateDirect("Marseille", "Rio", 116f),
+            GraphEdge.CreateDirect("Berlin", "Rio", 183f),
+            GraphEdge.CreateDirect("Helsinki", "Rio", 102f)
+        });
+
+    private readonly AgvData _agvData = AgvDataGenerator.GenerateAgvData(acceleration: 1, maxVelocityStraight: 1, maxVelocityTurn: 0.9, maxVelocityTurnOnSpot: Math.PI, turnOnSpotThreshold: 0.08726646);
+
     [TestMethod]
     public void Construct_ValidData_EdgesAndPositionSet()
     {
@@ -92,6 +118,30 @@ public class AgvTravelSimulatorTest
         simulator.EstimateTravelTimes(nodes, entryTime, initialVelocity);
         simulator.FollowingEdges.Count.ShouldBe(nodes.Length - 1);
         simulator.TravelDuration!.Value.ShouldBeGreaterThan(TimeSpan.Zero);
+        simulator.FollowingEdges.ForEach(e =>
+        {
+            e.EntryTime.ShouldBeGreaterThanOrEqualTo(entryTime);
+            e.EstimatedExitTime.ShouldBeGreaterThanOrEqualTo(entryTime);
+        });
+        simulator.CurrentEdge!.SourceNode.ShouldBe(startNode);
+        simulator.FollowingEdges.Last().TargetNode.Id.ShouldBe(nodes.Last());
+    }
+
+    [TestMethod]
+    public void EstimateTravelTimes_WikipediaExample() // For comparison with identical test of a*
+    {
+        string[] nodes = { "Nairobi", "Tokyo", "Marseille", "Rio" };
+        var startNode = _wikiExample.Nodes.First(n => n.Id == nodes.First());
+        var position = new AgvPosition(true, startNode.X, startNode.Y, startNode.Z, startNode.Theta);
+        var simulator = new AgvTravelSimulator(_wikiExample, _agvData, position, new FakeTimeProvider());
+
+        var entryTime = DateTime.UtcNow;
+        const double initialVelocity = 0;
+        simulator.EstimateTravelTimes(nodes, entryTime, initialVelocity);
+        simulator.FollowingEdges.Count.ShouldBe(nodes.Length - 1);
+        simulator.TravelDuration!.Value.ShouldBeGreaterThan(TimeSpan.Zero);
+        double turnForwardCost = Mathematics.ConvertToRadians(180) / _agvData.MaxVelocityTurnOnSpot;
+        simulator.TravelDuration!.Value.TotalSeconds.ShouldBe(291.8725786 +  turnForwardCost, 0.51);
         simulator.FollowingEdges.ForEach(e =>
         {
             e.EntryTime.ShouldBeGreaterThanOrEqualTo(entryTime);

@@ -147,7 +147,7 @@ public class AgvTravelSimulator : IAgvTravelSimulator
             TravelDuration = FollowingEdges.Last().EstimatedExitTime - CurrentEdge!.EntryTime;
         }
     }
-
+    
     /// <inheritdoc />
     public void UpdatePosition()
     {

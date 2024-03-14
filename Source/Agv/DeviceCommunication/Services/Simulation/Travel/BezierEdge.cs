@@ -9,7 +9,7 @@ namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Travel;
 /// <summary>
 /// Represents a <see cref="BaseEdge"/> of type <see cref="EdgeType.Bezier1"/> or <see cref="EdgeType.Bezier2"/> .
 /// </summary>
-public class BezierEdge : BaseEdge
+public class BezierEdge : SimpleEdge
 {
     private readonly Bezier _bezier;
 
@@ -31,29 +31,10 @@ public class BezierEdge : BaseEdge
         AgvOrientation = agvGoesBackwards ? GetAgvOrientation(sourceVector1, sourceNode.AsVector2()) : GetAgvOrientation(targetVector, targetNode.AsVector2());
     }
 
-    /// <inheritdoc cref="BaseEdge"/>
-    public override void EstimateTravelTime(AgvData agvData, double initialVelocity, DateTime entryTime)
+    /// <inheritdoc cref="SimpleEdge"/>>
+    protected override double GetAgvMaxVelocity(AgvData agvData)
     {
-        InitialVelocity = initialVelocity;
-        EntryTime = entryTime;
-
-        bool stopForTurnIntoEdge = EntryAngle >= agvData.TurnOnSpotThreshold && agvData.TurnOnSpotThreshold != 0;
-        double time = 0;
-        if (stopForTurnIntoEdge)
-        {
-            time += EntryAngle / agvData.MaxVelocityTurnOnSpot;
-        }
-        InitialTurnFinishTime = EntryTime.AddSeconds(time);
-
-        double maxVelocity = Math.MinMagnitude(agvData.MaxVelocityTurn, MaxVelocity);
-
-        double maxTime = PhysicsHelper.CalculateTimeToAccelerateAndMoveAtMaxVelocity(agvData.Acceleration, Length, maxVelocity, initialVelocity, out double finalVelocity);
-        time += maxTime;
-
-        EstimatedExitTime = EntryTime.AddSeconds(time);
-
-        bool stopForTurnOutOfEdge = ExitAngle >= agvData.TurnOnSpotThreshold && agvData.TurnOnSpotThreshold != 0;
-        ExitVelocity = stopForTurnOutOfEdge ? 0 : finalVelocity;
+        return agvData.MaxVelocityTurn;
     }
 
     /// <inheritdoc cref="BaseEdge"/>>
@@ -79,13 +60,8 @@ public class BezierEdge : BaseEdge
     /// <inheritdoc cref="BaseEdge"/>
     public override AgvPosition GetCurrentPosition(DateTime now, AgvData agvData, float previousOrientation)
     {
-        double secondsOnEdge = (now - InitialTurnFinishTime).TotalSeconds;
-        if (now < InitialTurnFinishTime)
-        {
-            secondsOnEdge = (now - EntryTime).TotalSeconds;
-        }
-        double edgeTravelTime = (EstimatedExitTime - InitialTurnFinishTime).TotalSeconds;
-        double interValPosition = Math.Clamp(secondsOnEdge / edgeTravelTime, 0, 1);
+        double travelDistance = GetEdgeTravelDistance(agvData, now);
+        double interValPosition = Math.Clamp(travelDistance / Length, 0, 1);
 
         var position = _bezier.DeCasteljau(interValPosition, out var sourceVector, out _);
         float theta = GetAgvOrientation(sourceVector, position);
