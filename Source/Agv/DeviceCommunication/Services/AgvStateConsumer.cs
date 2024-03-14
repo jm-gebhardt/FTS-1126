@@ -58,7 +58,7 @@ public class AgvStateConsumer : IConsumer<MqttState>
             _logger.LogError("Missing serialNumber in {MessageType} message: {Status}", nameof(MqttState), context.Message);
             throw new SerialNumberNotSetException(nameof(MqttState));
         }
-        _logger.LogDebug("{MessageType} from {AgvId} received", nameof(MqttState), serialNumber);
+        _logger.LogInformation("Received {MessageType} from {AgvId}", nameof(MqttState), serialNumber);
         return serialNumber;
     }
 

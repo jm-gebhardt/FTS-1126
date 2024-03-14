@@ -77,7 +77,7 @@ public class StartActionCommandConsumer :
         }
 
         // We are using the ActionCorrelationId as "orderId"
-        // And we transferring the Action's Guid
+        // And we are transferring the Action's Guid
         await context.PublishMqtt(new MqttOrder(action.CorrelationId.ToString())
         {
             SerialNumber = agvSerialNumber,

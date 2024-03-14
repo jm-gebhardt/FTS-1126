@@ -37,6 +37,8 @@ public class MqttMapConsumer : IConsumer<MqttMap>
             _logger.LogError("Missing serialNumber in MqttMap message: {Status}", context.Message);
             throw new InvalidOperationException($"Cannot handle {typeof(MqttMap)} message, serialNumber must not be null or empty");
         }
+        _logger.LogInformation("Received {MessageType} for {SerialNumber}", nameof(MqttMap), context.Message.SerialNumber);
+
         if (!DateTime.TryParse(context.Message.ModificationDate, null, DateTimeStyles.RoundtripKind, out var modificationDate))
         {
             _logger.LogError("Invalid datetime format for modification date: {Status}", context.Message);

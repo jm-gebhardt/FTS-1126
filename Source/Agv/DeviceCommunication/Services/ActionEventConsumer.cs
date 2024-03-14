@@ -42,10 +42,10 @@ public class ActionEventConsumer : IConsumer<ActionAborted>
         string orderId = action.CorrelationId.ToString();
         var orderType = action.ActionType.ToOrderType();
 
-        _logger.LogDebug("Aborting action {Action} for order {Order} of agv {AgvId}/{AgvCorrelationId}", action.CorrelationId, orderId, agvInformation.AgvStatusReceived!.SerialNumber, assignedAgv);
+        _logger.LogInformation("Received {MessageType} for {Action} of order {Order} assigned to agv {AgvId}/{AgvCorrelationId}", nameof(ActionAborted), action.CorrelationId, orderId, agvInformation.AgvStatusReceived!.SerialNumber, assignedAgv);
 
         // We are using the ActionCorrelationId as "orderId"
-        // And we transferring the Action's Guid
+        // And we are transferring the Action's Guid
         await context.PublishMqtt(new MqttOrder(orderId)
         {
             SerialNumber = agvInformation.AgvStatusReceived!.SerialNumber,
