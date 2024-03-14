@@ -53,10 +53,16 @@ sudo docker compose --env-file ../../../.env  up -d karis-amr
 sudo docker compose --env-file ../../../.env  up -d karis-flow
 ```
 
-### Omnipallet
+### Omnipallet-1
 
 ```bash
-sudo docker compose --env-file ../../../.env  up -d omnipallet
+sudo docker compose --env-file ../../../.env  up -d omnipallet-1
+```
+
+### Omnipallet-2
+
+```bash
+sudo docker compose --env-file ../../../.env  up -d omnipallet-2
 ```
 
 ## Stop 

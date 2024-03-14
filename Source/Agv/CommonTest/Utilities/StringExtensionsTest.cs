@@ -37,4 +37,18 @@ public class StringExtensionsTest
         yield return new object[] { "This is an invalid string" };
         yield return new object[] { "!@#$%^&*()" };
     }
+
+    [DataTestMethod]
+    [DataRow("InstaPick-1", "78f7b2bd-8cce-4bac-8928-af6903af6f85")]
+    [DataRow("InstaPick-2", "7115cec3-30c7-6e6d-db6d-85d2ac1efdbf")]
+    [DataRow("KARIS-AMR-1", "e9c4beb6-446c-9cf6-6304-d55fdd8736d6")]
+    [DataRow("KARIS-Flow-1", "b8fbd408-83b9-3c87-8c91-9bc8c870f325")]
+    [DataRow("Omnipallet-1", "83446ca0-130f-ed81-521a-69b3e55242ac")]
+    [DataRow("Omnipallet-2", "be5fa3ef-cbf8-f815-758e-bfc0c888cd48")]
+    public void ToGuid_ShouldWorkFor(string inputString, string expectedGuid)
+    {
+        var guid = inputString.ToGuid();
+
+        guid.ShouldBe(new Guid(expectedGuid));
+    }
 }

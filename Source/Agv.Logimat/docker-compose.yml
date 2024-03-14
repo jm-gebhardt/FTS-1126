@@ -60,7 +60,7 @@ services:
     networks:
       - agv_net      
 
-  omnipallet:
+  omnipallet-1:
     image: logimatpublisher:latest 
     environment:
       - RABBITMQ_HOST=rabbitmq
@@ -70,6 +70,19 @@ services:
       - MSG_FILE=Omnipallet-1.txt
     volumes:
       - ./Omnipallet-1.txt:/app/Omnipallet-1.txt
+    networks:
+      - agv_net         
+
+  omnipallet-2:
+    image: logimatpublisher:latest 
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - TOPIC=agv/status
+      - MSG_FILE=Omnipallet-2.txt
+    volumes:
+      - ./Omnipallet-2.txt:/app/Omnipallet-2.txt
     networks:
       - agv_net         
 

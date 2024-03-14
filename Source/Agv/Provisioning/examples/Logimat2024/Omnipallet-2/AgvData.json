@@ -1,0 +1,23 @@
+﻿{
+  "CorrelationId": "be5fa3ef-cbf8-f815-758e-bfc0c888cd48",
+  "SerialNumber": "Omnipallet-2",
+  "Model": "Omnipallet Model 01",
+  "RequestId": "c2db5d8b-4802-4d9c-81e5-f7da9ca26893",
+  "Type": "O",
+  "MaxVelocityStraight": 0.123,
+  "BatteryCapacity": 60.00,
+  "IpV4Address": "000.000.000.000",
+  "Length": 1.0,
+  "Width": 1.0,
+  "Payload": 120,
+  "MaxVelocityTurn": 0.01,
+  "MaxVelocityTurnOnSpot": 0.02,
+  "TurnOnSpotThreshold": 0.087267,
+  "Acceleration": 0.34,
+  "SoftwareVersion": "v1.0",
+  "Sensors": [
+    {
+      "SensorIdentifier": "Gyro"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "CorrelationId": "be5fa3ef-cbf8-f815-758e-bfc0c888cd48",
+  "SerialNumber": "Omnipallet-2",
+  "AgvStatus": {
+    "CorrelationId": "be5fa3ef-cbf8-f815-758e-bfc0c888cd48",
+    "OrderId": null,
+    "Busy": false,
+    "Automatic": true,
+    "BatteryCharge": 74.98,
+    "Charging": false,
+    "BatteryVoltage": 48.034358978271484,
+    "BatteryCurrent": -2.069389820098877,
+    "BatteryTemperature": 19.702510833740234,
+    "Disturbed": false,
+    "LastNodeId": ""
+  }
+}

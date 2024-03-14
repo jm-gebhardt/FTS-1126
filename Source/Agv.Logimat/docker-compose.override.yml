@@ -12,6 +12,9 @@ services:
   karis-flow:
     build:
       context: ./        
-  omnipallet:
+  omnipallet-1:
+    build:
+      context: ./       
+  omnipallet-2:
     build:
       context: ./       
