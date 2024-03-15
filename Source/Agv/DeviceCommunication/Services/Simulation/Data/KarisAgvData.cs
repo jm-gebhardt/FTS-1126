@@ -26,7 +26,13 @@ public record KarisType1 : AgvData
         0.562,
         0.687,
         40,
-        new Sensor[] { new() { SensorIdentifier = "Sensor 1" } }
+        new Sensor[]
+        {
+            new() { SensorIdentifier = "Laserdistanzsensor (front) - sicher" },
+            new() { SensorIdentifier = "Laserdistanzsensor (back) - sicher" },
+            new() { SensorIdentifier = "Laserdistanzsensor - Navigation" },
+            new() { SensorIdentifier = "Belegtsensor" }
+        }
     )
     {
     }
@@ -57,8 +63,10 @@ public record KarisType2 : AgvData
         50,
         new Sensor[]
         {
-            new() { SensorIdentifier = "Sensor 1" },
-            new() { SensorIdentifier = "Sensor 2" }
+            new() { SensorIdentifier = "Laserdistanzsensor (front) - sicher" },
+            new() { SensorIdentifier = "Laserdistanzsensor (back) - sicher" },
+            new() { SensorIdentifier = "Laserdistanzsensor - Navigation" },
+            new() { SensorIdentifier = "Belegtsensor" }
         }
     )
     {
@@ -90,9 +98,10 @@ public record KarisType3 : AgvData
         60,
         new Sensor[]
         {
-            new() { SensorIdentifier = "Sensor 1" },
-            new() { SensorIdentifier = "Sensor 2" },
-            new() { SensorIdentifier = "Sensor 3" }
+            new() { SensorIdentifier = "Laserdistanzsensor (front) - sicher" },
+            new() { SensorIdentifier = "Laserdistanzsensor (back) - sicher" },
+            new() { SensorIdentifier = "Laserdistanzsensor - Navigation" },
+            new() { SensorIdentifier = "Belegtsensor" }
         }
     )
     {
