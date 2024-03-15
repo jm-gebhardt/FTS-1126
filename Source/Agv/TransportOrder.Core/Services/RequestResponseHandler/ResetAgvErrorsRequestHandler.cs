@@ -64,6 +64,8 @@ public class ResetAgvErrorsRequestHandler : IConsumer<ResetAgvErrors>
         // agv does not have any errors
         if (!activeErrors.Any())
         {
+            await _agvDb.Agvs.ThrowIfAgvNotExistsAsync(correlationId);
+            _logger.LogInformation("No active errors for Agv {AgvCorrelationId}", correlationId);
             await context.RespondAsync(new ResetAgvErrorsResult("No active errors. So all good already."));
             return;
         }

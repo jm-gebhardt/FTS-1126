@@ -6,7 +6,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Commands;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
-using System.Collections.ObjectModel;
+using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.RequestHandler.Agv;
 
@@ -16,12 +16,13 @@ public class ResetAgvErrorsRequestHandlerTest
     [TestMethod]
     public async Task Consume_ResetAgvErrorsResult_WithoutSpecifiedErrorIdsToResetButThereAreNoActiveErrors_DoesNotSendResetAgvErrors()
     {
-        var agvCorrelationId = Guid.NewGuid();
+        var agv = AgvGenerator.GenerateIdleAgv();
         var fixture = new ResetAgvErrorsRequestHandlerTestFixture()
-            .WithActiveAgvErrors(new List<AgvError>())
+            .WithActiveAgvErrors([])
+            .WithAgv(agv)
             .Build();
 
-        await fixture.GetResponseAsync<ResetAgvErrorsResult>(new ResetAgvErrors(agvCorrelationId, new Collection<Guid>()));
+        await fixture.GetResponseAsync<ResetAgvErrorsResult>(new ResetAgvErrors(agv.CorrelationId, []));
 
         (await fixture.TestHarness.Published.Any<Common.Messages.AgvManagement.Commands.ResetAgvErrors>()).ShouldBeFalse();
     }
@@ -35,7 +36,7 @@ public class ResetAgvErrorsRequestHandlerTest
             .WithActiveAgvErrors(errors)
             .Build();
 
-        await fixture.GetResponseAsync<ResetAgvErrorsResult>(new ResetAgvErrors(agvCorrelationId, new Collection<Guid>()));
+        await fixture.GetResponseAsync<ResetAgvErrorsResult>(new ResetAgvErrors(agvCorrelationId, []));
 
         var message = await fixture.GetFirstPublishedMessageAsync<Common.Messages.AgvManagement.Commands.ResetAgvErrors>();
         message.CorrelationId.ShouldBe(agvCorrelationId);
@@ -57,7 +58,7 @@ public class ResetAgvErrorsRequestHandlerTest
             .Build();
 
         var errorToReset = errors[0].CorrelationId;
-        await fixture.GetResponseAsync<ResetAgvErrorsResult>(new ResetAgvErrors(agvCorrelationId, new Collection<Guid> { errorToReset }));
+        await fixture.GetResponseAsync<ResetAgvErrorsResult>(new ResetAgvErrors(agvCorrelationId, [errorToReset]));
 
         var message = await fixture.GetFirstPublishedMessageAsync<Common.Messages.AgvManagement.Commands.ResetAgvErrors>();
         message.CorrelationId.ShouldBe(agvCorrelationId);
@@ -80,7 +81,7 @@ public class ResetAgvErrorsRequestHandlerTest
             .Build();
 
         var errorToReset = Guid.NewGuid();
-        await fixture.GetResponseAsync<ResetAgvErrorsResult>(new ResetAgvErrors(agvCorrelationId, new Collection<Guid> { errorToReset }));
+        await fixture.GetResponseAsync<ResetAgvErrorsResult>(new ResetAgvErrors(agvCorrelationId, [errorToReset]));
 
         (await fixture.TestHarness.Published.Any<Common.Messages.AgvManagement.Commands.ResetAgvErrors>()).ShouldBeFalse();
     }
@@ -95,6 +96,18 @@ public class ResetAgvErrorsRequestHandlerTest
             .WithWaitForMessageAction(() => throw new WaitForMessageFailedException<AgvErrorChanged>("Error did not changed"))
             .Build();
 
-        await MediatorShould.ThrowRequestExceptionAsync<ResetAgvErrorFailedException>(async () => await fixture.GetResponseAsync<ResetAgvErrorsResult>(new ResetAgvErrors(agvCorrelationId, new Collection<Guid>())));
+        await MediatorShould.ThrowRequestExceptionAsync<ResetAgvErrorFailedException>(async () => await fixture.GetResponseAsync<ResetAgvErrorsResult>(new ResetAgvErrors(agvCorrelationId, [])));
+    }
+
+    [TestMethod]
+    public async Task Consume_ResetAgvErrorsResult_WhenAgvDoesNotExist_ThrowsException()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var fixture = new ResetAgvErrorsRequestHandlerTestFixture()
+            .WithActiveAgvErrors([])
+            .WithAgv(agv)
+            .Build();
+
+        await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await fixture.GetResponseAsync<ResetAgvErrorsResult>(new ResetAgvErrors(Guid.NewGuid(), [])));
     }
 }

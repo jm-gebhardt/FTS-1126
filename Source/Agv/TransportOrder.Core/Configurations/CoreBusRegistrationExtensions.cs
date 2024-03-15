@@ -76,9 +76,6 @@ public static class CoreBusRegistrationExtensions
         busRegistrationConfigurator.AddRequestClient<UnlockAgv>();
         busRegistrationConfigurator.AddRequestClient<SetAgvForceIdle>();
 
-        busRegistrationConfigurator.AddConsumer<ResetAgvErrorsRequestHandler>();
-        busRegistrationConfigurator.AddRequestClient<ResetAgvErrors>();
-
         busRegistrationConfigurator.AddConsumer<AgvErrorCommandHandler>();
         busRegistrationConfigurator.AddRequestClient<UpdateErrorStatus>();
     }
@@ -149,6 +146,9 @@ public static class CoreBusRegistrationExtensions
         configurator.AddRequestClient<GetActiveAgvErrors>();
         configurator.AddRequestClient<GetActiveErrorsForAgvs>();
         configurator.AddRequestClient<GetErrorHistoryForAgvs>();
+
+        configurator.AddConsumer<ResetAgvErrorsRequestHandler>();
+        configurator.AddRequestClient<ResetAgvErrors>();
     }
 
     private static void RegisterMediatorActionGroupHandlers(IMediatorRegistrationConfigurator configurator)

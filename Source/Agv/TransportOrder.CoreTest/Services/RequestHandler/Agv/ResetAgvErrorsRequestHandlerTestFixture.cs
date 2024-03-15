@@ -2,6 +2,7 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
+using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Commands;
@@ -48,6 +49,12 @@ public class ResetAgvErrorsRequestHandlerTestFixture : MediatorTestFixture<Reset
     public new ResetAgvErrorsRequestHandlerTestFixture Build()
     {
         base.Build();
+        return this;
+    }
+
+    public ResetAgvErrorsRequestHandlerTestFixture WithAgv(TransportOrder.Domain.Models.Agv.Agv agv)
+    {
+        _agvDb.AddAgvsToMockRepository(agv);
         return this;
     }
 }

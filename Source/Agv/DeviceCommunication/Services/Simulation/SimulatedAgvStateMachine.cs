@@ -330,25 +330,27 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
             .ThenAsync(PublishAgvGraph);
     }
 
+    private static void SimulateErrors<T>(BehaviorContext<SimulatedAgvSaga, T> c, List<AgvError> errors) where T : class
+    {
+        bool hadError = c.Saga.Errors.Any(e => e.ErrorLevel == ErrorLevel.Fatal);
+        c.Saga.Errors.RemoveAll(error => errors.All(e => !e.IsSameError(error)));
+        c.Saga.Errors.AddRange(errors.Where(e => c.Saga.Errors.All(e2 => !e2.IsSameError(e))));
+        bool hasError = c.Saga.Errors.Any(e => e.ErrorLevel == ErrorLevel.Fatal);
+        if (!hadError && hasError)
+        {
+            c.Saga.TravelSimulator.Pause();
+        }
+        else if (hadError && !hasError)
+        {
+            c.Saga.TravelSimulator.Resume();
+        }
+    }
+
     private EventActivityBinder<SimulatedAgvSaga, SimulateAgvError> SimulateAgvErrorHandler()
     {
         return When(SimulateAgvErrorEvent)
             .Then(c => _logger.LogInformation("{MessageType} / {CorrelationId} received", nameof(SimulateAgvError), c.Saga.CorrelationId))
-            .Then(c =>
-            {
-                bool hadError = c.Saga.Errors.Any(e => e.ErrorLevel == ErrorLevel.Fatal);
-                c.Saga.Errors.RemoveAll(error => c.Message.AgvErrors.All(e => !e.IsSameError(error)));
-                c.Saga.Errors.AddRange(c.Message.AgvErrors.Where(e => c.Saga.Errors.All(e2 => !e2.IsSameError(e))));
-                bool hasError = c.Saga.Errors.Any(e => e.ErrorLevel == ErrorLevel.Fatal);
-                if (!hadError && hasError)
-                {
-                    c.Saga.TravelSimulator.Pause();
-                }
-                else if (hadError && !hasError)
-                {
-                    c.Saga.TravelSimulator.Resume();
-                }
-            })
+            .Then(c => { SimulateErrors(c, c.Message.AgvErrors); })
             .ThenAsync(PublishAgvError);
     }
 
@@ -362,7 +364,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
 
                 // reset all errors if no errorIds are given
                 bool resetAllErrors = !c.Message.ErrorIds.Any();
-                c.Saga.Errors = resetAllErrors ? new List<AgvError>() : c.Saga.Errors.Where(error => !c.Message.ErrorIds.Contains(error.CorrelationId)).ToList();
+                SimulateErrors(c, resetAllErrors ? [] : c.Saga.Errors.Where(error => !c.Message.ErrorIds.Contains(error.CorrelationId)).ToList());
             })
             .ThenAsync(PublishAgvError);
     }

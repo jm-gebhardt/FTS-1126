@@ -339,6 +339,24 @@ public class SimulatedAgvStateMachineTest
         agvTravelSimulatorMock.Mock.Verify(m => m.Resume(), Times.Once);
     }
 
+    [TestMethod]
+    public async Task Consume_ResetAgvErrors_CallsTravelSimulatorResume_WhenErrorRemoved()
+    {
+        var agvSaga = SimulatedAgvSagaGenerator.Generate();
+        var correlationId = agvSaga.CorrelationId;
+        var agvError = AgvErrorGenerator.GenerateAgvError(correlationId);
+        var agvTravelSimulatorMock = new AgvTravelSimulatorMock();
+        var fixture = new SimulatedAgvStateMachineTestFixture()
+            .WithAgv(agvSaga)
+            .WithAgvTravelSimulator(agvTravelSimulatorMock.Object)
+            .Build();
+
+        await fixture.PublishMessageAsync(new SimulateAgvError(correlationId, new List<AgvError> {agvError}));
+        await fixture.PublishMessageAsync(new ResetAgvErrors(correlationId, []));
+
+        agvTravelSimulatorMock.Mock.Verify(m => m.Resume(), Times.Once);
+    }
+
     private string[] GetArbitraryRoute(string targetNode, AgvGraph graph)
     {
         var nodes = new List<string> {targetNode};
