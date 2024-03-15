@@ -34,14 +34,14 @@ public sealed class SimulateOptions
     /// Cargo loading time [s].
     /// </summary>
     [UsedImplicitly]
-    [Option("cargoloadingtime", HelpText = "Time span [s] needed to load cargo onto an agv", Default = 10)]
+    [Option("cargoloadingtime", HelpText = "Time span [s] needed to load cargo onto an agv", Default = 3)]
     public int CargoLoadingTime { get; init; }
 
     /// <summary>
     ///  Cargo unloading time [s].
     /// </summary>
     [UsedImplicitly]
-    [Option("cargounloadingtime", HelpText = "Time span [s] needed to unload cargo from an agv", Default = 10)]
+    [Option("cargounloadingtime", HelpText = "Time span [s] needed to unload cargo from an agv", Default = 3)]
     public int CargoUnloadingTime { get; init; }
 
     /// <summary>
