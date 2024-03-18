@@ -8,7 +8,7 @@
     "BatteryCapacity": 60.00,
     "IpV4Address": "000.000.000.000",
     "Length": 1.292,
-    "Width": 0.892,
+    "Width": 1.2,
     "Payload": 60,
     "MaxVelocityTurn": 1.00,
     "MaxVelocityTurnOnSpot": 0.5,
