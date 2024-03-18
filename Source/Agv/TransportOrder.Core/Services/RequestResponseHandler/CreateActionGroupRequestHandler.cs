@@ -3,6 +3,7 @@ using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Constants;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Node;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
@@ -10,6 +11,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.ActionGroup;
 using JetBrains.Annotations;
 using MassTransit;
+using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
 
@@ -26,6 +28,7 @@ public class CreateActionGroupRequestHandler :
     private readonly IMapper _mapper;
     private readonly IActionGroupValidationService _actionGroupValidationService;
     private readonly IBus _bus;
+    private readonly ILogger<CreateActionGroupRequestHandler> _logger;
 
     /// <inheritdoc cref="CreateActionGroupRequestHandler" />
     public CreateActionGroupRequestHandler(IActionGroupRetrievalService retrievalService,
@@ -33,7 +36,8 @@ public class CreateActionGroupRequestHandler :
         IActionGroupValidationService actionGroupValidationService,
         IBus bus,
         IAgvDb agvDb,
-        IMapper mapper
+        IMapper mapper,
+        ILogger<CreateActionGroupRequestHandler> logger
         )
     {
         _retrievalService = retrievalService;
@@ -42,6 +46,7 @@ public class CreateActionGroupRequestHandler :
         _mapper = mapper;
         _actionGroupValidationService = actionGroupValidationService;
         _bus = bus;
+        _logger = logger;
     }
 
     /// <summary>
@@ -53,6 +58,7 @@ public class CreateActionGroupRequestHandler :
 
         var actionGroup = await CreatePickDropActionGroup(sourceNode, targetNode, agvCorrelationId);
         await _actionGroupRepository.AddAsync(actionGroup);
+        _logger.LogOrderInformation(LogCodes.OrderCreated, agvCorrelationId.GetValueOrDefault(), actionGroup.CorrelationId, "Order created", $"Order {actionGroup.OrderId} was created successfully");
 
         await _bus.Publish(new Common.Messages.ActionGroups.Events.ActionGroupCreated(_mapper.Map<ActionGroup>(actionGroup), actionGroup.CorrelationId));
         await context.RespondAsync(new ActionGroupCreated(await _retrievalService.EnrichActionGroupWithNodesAsync(actionGroup)));
