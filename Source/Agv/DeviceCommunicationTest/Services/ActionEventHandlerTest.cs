@@ -2,8 +2,8 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Enums;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.Enums;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.MqttMessages;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
 using Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Helper;
 using Microsoft.Extensions.DependencyInjection;

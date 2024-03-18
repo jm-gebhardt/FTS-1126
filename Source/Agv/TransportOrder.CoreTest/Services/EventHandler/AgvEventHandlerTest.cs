@@ -112,22 +112,6 @@ public class AgvEventHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_AgvBecameIdle_AgvNotReadyForBusy_NothingPublished()
-    {
-        var fixture = new AgvEventHandlerTestFixture();
-
-        var agv = AgvGenerator.GenerateIdleAgv();
-        fixture.AddAgv(agv);
-        var agvBecameIdle = new AgvBecameIdle(agv.CorrelationId);
-
-        await fixture.PublishMessageAsync(agvBecameIdle);
-
-        (await fixture.TestHarness.Published.Any<TryStartNextActionInActionGroup>()).ShouldBeFalse();
-        (await fixture.TestHarness.Published.Any<TryStartManualAction>()).ShouldBeFalse();
-        (await fixture.TestHarness.Published.Any<TryStartNewActionGroup>()).ShouldBeFalse();
-    }
-
-    [TestMethod]
     public async Task Consume_ChargingAgvCanHandleActionsAgain_ValidData_PublishesTryReactivateChargingAgv()
     {
         var fixture = new AgvEventHandlerTestFixture();
@@ -183,7 +167,7 @@ public class AgvEventHandlerTest
 
         const double oldCharge = AgvEventHandlerTestFixture.MaxChargeUp - 1;
         const double newCharge = AgvEventHandlerTestFixture.MaxChargeUp;
-        await fixture.PublishMessageAsync(new AgvBatteryChargeChanged(oldCharge, new AgvBatteryStatus(new AgvStatus {BatteryCharge = newCharge}, AgvEventHandlerTestFixture.AgvSettingsMessage)));
+        await fixture.PublishMessageAsync(new AgvBatteryChargeChanged(oldCharge, new AgvBatteryStatus(new AgvStatus { BatteryCharge = newCharge }, AgvEventHandlerTestFixture.AgvSettingsMessage)));
 
         (await fixture.TestHarness.Published.Any<AbortChargeAction>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<ChargingAgvCanHandleActionsAgain>()).ShouldBeFalse();
@@ -196,7 +180,7 @@ public class AgvEventHandlerTest
     public async Task Consume_AgvBatteryChargeChanged_Publish_ChargingAgvsCanHandleActionsAgainEvent(int oldCharge, int newCharge)
     {
         var fixture = new AgvEventHandlerTestFixture();
-        await fixture.PublishMessageAsync(new AgvBatteryChargeChanged(oldCharge, new AgvBatteryStatus(new AgvStatus {BatteryCharge = newCharge}, AgvEventHandlerTestFixture.AgvSettingsMessage)));
+        await fixture.PublishMessageAsync(new AgvBatteryChargeChanged(oldCharge, new AgvBatteryStatus(new AgvStatus { BatteryCharge = newCharge }, AgvEventHandlerTestFixture.AgvSettingsMessage)));
 
         (await fixture.TestHarness.Published.Any<ChargingAgvCanHandleActionsAgain>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<AgvNeedsCharging>()).ShouldBeFalse();

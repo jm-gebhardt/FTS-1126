@@ -1,8 +1,8 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Events;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.Events;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.MqttMessages;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.States;
 using JetBrains.Annotations;
 using MassTransit;

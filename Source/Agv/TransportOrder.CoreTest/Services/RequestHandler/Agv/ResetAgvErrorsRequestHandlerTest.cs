@@ -1,5 +1,6 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Exceptions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
@@ -32,13 +33,14 @@ public class ResetAgvErrorsRequestHandlerTest
     {
         var agvCorrelationId = Guid.NewGuid();
         var errors = new List<AgvError> { AgvErrorGenerator.GenerateAgvError() };
-        var fixture = new ResetAgvErrorsRequestHandlerTestFixture()
+        var busFixture = new MassTransitConsumerTestFixture<SuccessResponseConsumer<Common.Messages.AgvManagement.Commands.ResetAgvErrors>>();
+        var fixture = new ResetAgvErrorsRequestHandlerTestFixture(bus: busFixture.TestHarness.Bus)
             .WithActiveAgvErrors(errors)
             .Build();
 
         await fixture.GetResponseAsync<ResetAgvErrorsResult>(new ResetAgvErrors(agvCorrelationId, []));
 
-        var message = await fixture.GetFirstPublishedMessageAsync<Common.Messages.AgvManagement.Commands.ResetAgvErrors>();
+        var message = await busFixture.GetFirstPublishedMessageAsync<Common.Messages.AgvManagement.Commands.ResetAgvErrors>();
         message.CorrelationId.ShouldBe(agvCorrelationId);
         message.ErrorIds.ShouldBeEmpty();
     }
@@ -53,14 +55,15 @@ public class ResetAgvErrorsRequestHandlerTest
             AgvErrorGenerator.GenerateAgvError(),
             AgvErrorGenerator.GenerateAgvError()
         };
-        var fixture = new ResetAgvErrorsRequestHandlerTestFixture()
+        var busFixture = new MassTransitConsumerTestFixture<SuccessResponseConsumer<Common.Messages.AgvManagement.Commands.ResetAgvErrors>>();
+        var fixture = new ResetAgvErrorsRequestHandlerTestFixture(bus : busFixture.TestHarness.Bus)
             .WithActiveAgvErrors(errors)
             .Build();
 
         var errorToReset = errors[0].CorrelationId;
         await fixture.GetResponseAsync<ResetAgvErrorsResult>(new ResetAgvErrors(agvCorrelationId, [errorToReset]));
 
-        var message = await fixture.GetFirstPublishedMessageAsync<Common.Messages.AgvManagement.Commands.ResetAgvErrors>();
+        var message = await busFixture.GetFirstPublishedMessageAsync<Common.Messages.AgvManagement.Commands.ResetAgvErrors>();
         message.CorrelationId.ShouldBe(agvCorrelationId);
         message.ErrorIds.Count.ShouldBe(1);
         message.ErrorIds.ShouldContain(errorToReset);

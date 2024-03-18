@@ -1,6 +1,6 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.MqttMessages;
 using JetBrains.Annotations;
 using MassTransit;
 

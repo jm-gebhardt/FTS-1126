@@ -1,4 +1,5 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Node;
+﻿using Gebhardt.StoreWare.Agv.Common.WebApi;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Node;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Graph;
 

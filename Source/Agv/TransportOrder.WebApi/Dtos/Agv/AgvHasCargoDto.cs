@@ -1,4 +1,6 @@
-﻿namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
+﻿using Gebhardt.StoreWare.Agv.Common.WebApi;
+
+namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
 
 /// <summary>
 /// Agv has cargo.

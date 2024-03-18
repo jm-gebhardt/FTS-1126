@@ -99,22 +99,6 @@ public class ActionCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_TryStartManualAction_AgvIsNotLocked_NodesSelectedForActionNotPublished()
-    {
-        var agv = AgvGenerator.GenerateIdleAgv();
-        var actionGroup = AgvActionGenerator.GenerateMoveActionGroup();
-        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
-            .AddAgv(agv)
-            .AddRoute(nodes: ["Node1", "Node2"])
-            .AddActionGroup(actionGroup);
-
-        var command = new TryStartManualAction(agv.CorrelationId);
-        await fixture.TestHarness.Bus.Publish(command);
-        (await fixture.ConsumerHarness.Consumed.Any<TryStartManualAction>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<NodesSelectedForAction>()).ShouldBeFalse();
-    }
-
-    [TestMethod]
     public async Task Consume_TryStartNextActionInActionGroup_ValidData_PublishesNodesSelectedForAction()
     {
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "NodeId");

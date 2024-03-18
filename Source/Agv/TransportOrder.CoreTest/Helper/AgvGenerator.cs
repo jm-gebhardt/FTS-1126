@@ -12,24 +12,24 @@ public static class AgvGenerator
         return agv;
     }
 
-    public static TransportOrder.Domain.Models.Agv.Agv GenerateBusyAgv(int index = 0, bool isLocked = false, int batteryCharge = 100)
+    public static TransportOrder.Domain.Models.Agv.Agv GenerateBusyAgv(int index = 0, bool isLocked = false, int batteryCharge = 100, bool hasError = false)
     {
-        var agv = GenerateAgv(AgvState.Busy, index, "A", isLocked: isLocked, batteryCharge: batteryCharge);
+        var agv = GenerateAgv(AgvState.Busy, index, "A", isLocked: isLocked, batteryCharge: batteryCharge, hasError: hasError);
         return agv;
     }
 
-    public static TransportOrder.Domain.Models.Agv.Agv GenerateIdleAgv(int index = 0, string? lastNodeId = null, bool isLocked = false, int batteryCharge = 100)
+    public static TransportOrder.Domain.Models.Agv.Agv GenerateIdleAgv(int index = 0, string? lastNodeId = "node", bool isLocked = false, int batteryCharge = 100, bool hasError = false)
     {
-        var agv = GenerateAgv(AgvState.Idle, index, lastNodeId, isLocked: isLocked, batteryCharge: batteryCharge);
+        var agv = GenerateAgv(AgvState.Idle, index, lastNodeId, isLocked: isLocked, batteryCharge: batteryCharge, hasError: hasError);
         return agv;
     }
 
-    public static IEnumerable<TransportOrder.Domain.Models.Agv.Agv> GenerateIdleAgvs(int count, string? lastNodeId = null, bool isLocked = false, int batteryCharge = 100)
+    public static IEnumerable<TransportOrder.Domain.Models.Agv.Agv> GenerateIdleAgvs(int count, string? lastNodeId = null, bool isLocked = false, int batteryCharge = 100, bool hasError = false)
     {
         int index = 0;
         for (int i = 0; i < count; i++)
         {
-            yield return GenerateAgv(AgvState.Idle, ++index, lastNodeId, isLocked: isLocked, batteryCharge: batteryCharge);
+            yield return GenerateAgv(AgvState.Idle, ++index, lastNodeId, isLocked: isLocked, batteryCharge: batteryCharge, hasError: hasError);
         }
     }
 
@@ -53,13 +53,17 @@ public static class AgvGenerator
         bool charging = false,
         bool isLocked = false,
         int batteryCharge = 100,
-        string orderId = "orderId"
+        string orderId = "orderId",
+        bool hasError = false
     )
     {
         string agvSerialNumber = GetAgvSerialNumber(index);
         var correlationId = agvSerialNumber.ToGuid();
         agvStatus ??= new AgvStatus(correlationId, orderId, false, true, batteryCharge, charging, false, lastNodeId);
-        var agv = new TransportOrder.Domain.Models.Agv.Agv(correlationId, agvSerialNumber, agvStatus, isLocked);
+        var agv = new TransportOrder.Domain.Models.Agv.Agv(correlationId, agvSerialNumber, agvStatus, isLocked)
+        {
+            HasError = hasError
+        };
         return SetAgvState(agvState, agv);
     }
 

@@ -99,6 +99,48 @@ public class AgvCommandHandlerTest
     }
 
     [TestMethod]
+    public async Task Consume_UpdateErrorStatus_WithErrors_SetHasErrorToTrue()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+        await fixture.PublishMessageAsync(new UpdateErrorStatus(agv.CorrelationId, [AgvErrorGenerator.GenerateAgvError(errorLevel: ErrorLevel.Fatal)]));
+        fixture.AgvDb.Verify(r =>
+            r.Agvs.UpdateAgvAsync(It.Is((TransportOrder.Domain.Models.Agv.Agv a) => a.CorrelationId == agv.CorrelationId && a.HasError)), Times.Once());
+    }
+
+    [TestMethod]
+    public async Task Consume_UpdateErrorStatus_WithWarnings_DoesNotSetHasError()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+        await fixture.PublishMessageAsync(new UpdateErrorStatus(agv.CorrelationId, [AgvErrorGenerator.GenerateAgvError(errorLevel: ErrorLevel.Warning)]));
+        fixture.AgvDb.Verify(r =>
+            r.Agvs.UpdateAgvAsync(It.Is((TransportOrder.Domain.Models.Agv.Agv a) => a.CorrelationId == agv.CorrelationId && a.HasError)), Times.Never());
+    }
+
+    [TestMethod]
+    public async Task Consume_UpdateErrorStatus_WhenErrorResolveAndIdle_PublishesAgvBecameIdle()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv(hasError: true);
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+        await fixture.PublishMessageAsync(new UpdateErrorStatus(agv.CorrelationId, []));
+        (await fixture.TestHarness.Published.Any<AgvBecameIdle>()).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task Consume_UpdateErrorStatus_WhenErrorResolveButBusy_DoesNotPublishAgvBecameIdle()
+    {
+        var agv = AgvGenerator.GenerateBusyAgv(hasError: true);
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+        await fixture.PublishMessageAsync(new UpdateErrorStatus(agv.CorrelationId, []));
+        (await fixture.TestHarness.Published.Any<AgvBecameIdle>()).ShouldBeTrue();
+    }
+
+    [TestMethod]
     public async Task Consume_UpdateAgvData_KnownAgvDataUpdatedSuccessFully_AgvDataExist()
     {
         var fixture = new AgvCommandHandlerTestFixture();
@@ -526,10 +568,10 @@ public class AgvCommandHandlerTest
             .WithUnfinishedActionGroup(false)
             .WithActionGroups([])
             .AddChargingPointManager(new GraphNode(chargeNodeName));
-       
+
         var command = new PrepareChargingOfAgv(agv.CorrelationId);
         await fixture.TestHarness.Bus.Publish(command);
-       
+
         (await fixture.ConsumerHarness.Consumed.Any<PrepareChargingOfAgv>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<NodeStateChanged>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<ChargingNodeSelectedForAgv>()).ShouldBeTrue();

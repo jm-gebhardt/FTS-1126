@@ -6,6 +6,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Commands;
+using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 
@@ -17,7 +18,7 @@ public class ResetAgvErrorsRequestHandlerTestFixture : MediatorTestFixture<Reset
     private readonly Mock<IMessageAwaiter<AgvErrorChanged>> _agvErrorChangedAwaiter = new();
     private Action? _waitForMessageAction;
 
-    public ResetAgvErrorsRequestHandlerTestFixture()
+    public ResetAgvErrorsRequestHandlerTestFixture(IBus? bus = null)
     {
         _agvErrorChangedAwaiter.Setup(x => x.WaitAsync(It.IsAny<Guid>(), It.IsAny<Func<AgvErrorChanged, bool>>(), It.IsAny<CancellationToken>(), It.IsAny<Func<Task>>(), It.IsAny<bool>()))
             .Callback<Guid, Func<AgvErrorChanged, bool>, CancellationToken, Func<Task>, bool>((_, _, _, executeAfterListeningTask, _) =>
@@ -32,6 +33,15 @@ public class ResetAgvErrorsRequestHandlerTestFixture : MediatorTestFixture<Reset
             s.AddTransient(_ => _agvDb.Object);
             s.AddTransient(_ => _agvErrorChangedAwaiter.Object);
         });
+        if (bus != null)
+        {
+            AddServices(s => s.AddTransient(_ => bus));
+        }
+        else
+        {
+            var busMock = new Mock<IBus>();
+            AddServices(s => s.AddTransient(_ => busMock.Object));
+        }
     }
 
     public ResetAgvErrorsRequestHandlerTestFixture WithActiveAgvErrors(IList<AgvError> errors)

@@ -1,5 +1,5 @@
-﻿using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages.SimulateAgv;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Messages;
+﻿using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.Commands;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.MqttMessages.SimulateAgv;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;

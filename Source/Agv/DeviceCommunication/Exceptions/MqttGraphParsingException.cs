@@ -1,4 +1,4 @@
-﻿using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
+﻿using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.MqttMessages;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Exceptions;
 

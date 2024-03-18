@@ -7,16 +7,19 @@ using Gebhardt.StoreWare.Agv.Common.Logging;
 using Gebhardt.StoreWare.Agv.Common.Time;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Exceptions;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.MqttMessages;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.MqttMessages;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Graphs;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graphs;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Maps;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.States;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.WebApi;
 using MassTransit;
 using MassTransit.Configuration;
 using MassTransit.Serialization;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -80,6 +83,15 @@ try
                             configurator.AddConsumer<SimulatedAgvProvider>();
                         }, rabbitMqConfiguration: (_, cfg) => { cfg.UsePublishMessageScheduler(); });
                     services.AddOptions<MassTransitHostOptions>().Configure(options => { options.WaitUntilStarted = true; });
+                }).ConfigureWebHost(host =>
+                {
+                    host.UseKestrel()
+                        .AddDeviceCommunicationWebApi()
+                        .Configure(app =>
+                        {
+                            app.UseDeviceCommunicationWebApi();
+                            app.UseDeveloperExceptionPage();
+                        });
                 });
         })
         .WithParsed<ProductionOptions>(productionOptions =>

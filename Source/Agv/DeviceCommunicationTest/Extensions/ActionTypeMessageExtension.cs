@@ -1,6 +1,6 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Enums;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Extensions;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.Enums;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 

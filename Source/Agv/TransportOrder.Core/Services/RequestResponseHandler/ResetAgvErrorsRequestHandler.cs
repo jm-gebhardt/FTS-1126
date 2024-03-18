@@ -22,18 +22,23 @@ public class ResetAgvErrorsRequestHandler : IConsumer<ResetAgvErrors>
     private readonly IAgvDb _agvDb;
     private readonly IMessageAwaiter<AgvErrorChanged> _agvErrorChangedAwaiter;
 
+    private readonly IBus _bus;
+
     /// <inheritdoc cref="ResetAgvErrorsRequestHandler"/>
     /// <param name="agvDb"></param>
     /// <param name="agvErrorChangedAwaiter"></param>
     /// <param name="logger"></param>
+    /// <param name="bus"></param>
     public ResetAgvErrorsRequestHandler(
         IAgvDb agvDb,
         IMessageAwaiter<AgvErrorChanged> agvErrorChangedAwaiter,
+        IBus bus,
         ILogger<ResetAgvErrorsRequestHandler> logger)
     {
         _agvDb = agvDb;
         _agvErrorChangedAwaiter = agvErrorChangedAwaiter;
         _logger = logger;
+        _bus = bus;
     }
 
     private bool AreAllErrorsResolved(ICollection<Guid> errorIdsToReset, AgvErrorChanged errorChange)
@@ -87,7 +92,7 @@ public class ResetAgvErrorsRequestHandler : IConsumer<ResetAgvErrors>
             await _agvErrorChangedAwaiter.WaitAsync(correlationId,
                 errorChange => AreAllErrorsResolved(errorIdsToReset, errorChange),
                 cancellationToken,
-                executeAfterListeningTask: async () => { await context.Publish(new Common.Messages.AgvManagement.Commands.ResetAgvErrors(correlationId, errorIdsToReset), cancellationToken); });
+                executeAfterListeningTask: async () => { await _bus.Publish(new Common.Messages.AgvManagement.Commands.ResetAgvErrors(correlationId, errorIdsToReset), cancellationToken); });
 
             int numberOfResetErrors = errorIdsToReset.Count == 0 ? activeErrors.Count : errorIdsToReset.Count;
             await context.RespondAsync(new ResetAgvErrorsResult($"{numberOfResetErrors} error{(numberOfResetErrors == 1 ? "" : "s")} were reset successfully."));

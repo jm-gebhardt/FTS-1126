@@ -1,4 +1,4 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos;
+﻿using Gebhardt.StoreWare.Agv.Common.WebApi;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Filters;
 using Moq;
 

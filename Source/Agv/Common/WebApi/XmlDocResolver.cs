@@ -115,6 +115,30 @@ public static class XmlDocResolver
         return null;
     }
 
+    /// <summary>
+    /// Gets the resolved Xml documents from the current assembly.
+    /// </summary>
+    public static IEnumerable<XDocument> GetResolvedXmlDocs()
+    {
+        var xmlDocs = new List<XDocument>();
+        var assemblies = new List<Assembly>();
+
+        // Load assemblies and their corresponding XML documentation files
+        foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+        {
+            string path = Path.Combine(AppContext.BaseDirectory, $"{assembly.GetName().Name}.xml");
+            if (File.Exists(path))
+            {
+                xmlDocs.Add(XDocument.Load(path));
+                assemblies.Add(assembly);
+            }
+        }
+
+        // Resolve <inheritdoc/> comments, so they show up correctly in the API
+        IEnumerable<XDocument> resolvedXmlDocs = ResolveInheritedDocs(xmlDocs, assemblies);
+        return resolvedXmlDocs;
+    }
+
     private static string? GetMemberBaseType(Type memberType, string memberName)
     {
         IEnumerable<Type> parents = GetParentTypes(memberType);

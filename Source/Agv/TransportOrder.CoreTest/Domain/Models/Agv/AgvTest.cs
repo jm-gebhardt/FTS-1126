@@ -130,6 +130,15 @@ public class AgvTest
     }
 
     [TestMethod]
+    public void IsReady_WhenHasError_ShouldBeFalse()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        agv.IsReady.ShouldBeTrue();
+        agv.HasError = true;
+        agv.IsReady.ShouldBeFalse();
+    }
+
+    [TestMethod]
     public void ShouldRequestData_DataNeverRequestedNoData_ShouldRequestData()
     {
         var agv = new TransportOrder.Domain.Models.Agv.Agv("agvId")

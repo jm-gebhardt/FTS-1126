@@ -202,7 +202,8 @@ public class AgvCommandHandler :
     {
         (var correlationId, List<AgvError> errors) = context.Message;
         var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
-        bool agvHasError = errors.Any();
+        bool hadError = agv.HasError;
+        bool agvHasError = errors.HasAnyError();
 
         foreach (var agvError in errors.Where(e => e.ErrorLevel == ErrorLevel.Fatal))
         {
@@ -213,10 +214,15 @@ public class AgvCommandHandler :
             _logger.LogAgvWarning(LogCodes.AgvWarning, agv.CorrelationId, agvError.ErrorCode, "AGV Warning", $"AGV {agv.SerialNumber} threw warning {agvError.ErrorDescription}");
         }
 
-        if (agvHasError != agv.HasError)
+        if (agvHasError != hadError)
         {
             agv.HasError = agvHasError;
             await _agvDb.Agvs.UpdateAgvAsync(agv);
+        }
+
+        if (hadError && !agvHasError && agv.AgvStatus?.Busy == false)
+        {
+            await context.Publish(new AgvBecameIdle(agv.CorrelationId));
         }
     }
 

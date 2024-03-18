@@ -86,22 +86,7 @@ public static class WebHostBuilderExtensions
 
     private static void IncludeXmlComments(SwaggerGenOptions options)
     {
-        var xmlDocs = new List<XDocument>();
-        var assemblies = new List<Assembly>();
-
-        // Load assemblies and their corresponding XML documentation files
-        foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
-        {
-            string path = Path.Combine(AppContext.BaseDirectory, $"{assembly.GetName().Name}.xml");
-            if (File.Exists(path))
-            {
-                xmlDocs.Add(XDocument.Load(path));
-                assemblies.Add(assembly);
-            }
-        }
-
-        // Resolve <inheritdoc/> comments so they show up correctly in the API
-        IEnumerable<XDocument> resolvedXmlDocs = XmlDocResolver.ResolveInheritedDocs(xmlDocs, assemblies);
+        IEnumerable<XDocument> resolvedXmlDocs = XmlDocResolver.GetResolvedXmlDocs();
 
         // Add resolved XML docs to Swagger
         foreach (var doc in resolvedXmlDocs)

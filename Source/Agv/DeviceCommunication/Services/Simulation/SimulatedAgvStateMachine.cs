@@ -1,3 +1,4 @@
+using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
@@ -7,7 +8,7 @@ using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Models;
 using Gebhardt.StoreWare.Agv.Common.Time;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Messages;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.Commands;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.States;
 using JetBrains.Annotations;
 using MassTransit;
@@ -332,10 +333,10 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
 
     private static void SimulateErrors<T>(BehaviorContext<SimulatedAgvSaga, T> c, List<AgvError> errors) where T : class
     {
-        bool hadError = c.Saga.Errors.Any(e => e.ErrorLevel == ErrorLevel.Fatal);
+        bool hadError = c.Saga.Errors.HasAnyError();
         c.Saga.Errors.RemoveAll(error => errors.All(e => !e.IsSameError(error)));
         c.Saga.Errors.AddRange(errors.Where(e => c.Saga.Errors.All(e2 => !e2.IsSameError(e))));
-        bool hasError = c.Saga.Errors.Any(e => e.ErrorLevel == ErrorLevel.Fatal);
+        bool hasError = c.Saga.Errors.HasAnyError();
         if (!hadError && hasError)
         {
             c.Saga.TravelSimulator.Pause();

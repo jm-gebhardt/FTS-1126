@@ -1,5 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Enums;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.Enums;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Extensions;
 
