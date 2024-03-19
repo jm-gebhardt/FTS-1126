@@ -330,11 +330,13 @@ public class AgvCommandHandler :
 
             await context.Publish(new AgvBatteryChargeChanged(oldStatus!.BatteryCharge, agvBatteryStatus));
         }
+ 
         if (lastNodeIdChanged)
         {
             await context.Publish(new AgvLastNodeIdChanged(agv.CorrelationId, oldStatus!.LastNodeId, agvStatus.LastNodeId));
         }
-        if (agv.CurrentAgvState == AgvState.Idle && !agvStatus.Busy && oldStatus!.Busy)
+        bool isIdle = agv.CurrentAgvState == AgvState.Idle && !agvStatus.Busy;
+        if (isIdle && oldStatus!.Busy)
         {
             await context.Publish(new AgvBecameIdle(agv.CorrelationId));
         }
@@ -342,6 +344,11 @@ public class AgvCommandHandler :
         {
             await context.Publish(new AgvOnlineChanged(agv.CorrelationId, true));
             _logger.LogAgvInformation(LogCodes.AgvOnline, agvStatus.CorrelationId, "AGV Online", $"AGV {agv.SerialNumber} is online");
+
+            if (isIdle)
+            {
+                await context.Publish(new AgvBecameIdle(agv.CorrelationId));
+            }
         }
     }
 

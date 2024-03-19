@@ -211,7 +211,7 @@ public class AgvCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_UpdateAgvStatus_AliveStateChangedForIdleAgv_PublishesAgvOnlineChanged()
+    public async Task Consume_UpdateAgvStatus_AliveStateChangedForIdleAgv_PublishesAgvOnlineChangedAndBecameIdle()
     {
         var fixture = new AgvCommandHandlerTestFixture().WithGraphExists(true);
         var agv = AgvGenerator.GenerateIdleAgv();
@@ -222,7 +222,7 @@ public class AgvCommandHandlerTest
         var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, newAgvStatus);
         await fixture.PublishMessageAsync(updateAgvStatus);
         (await fixture.TestHarness.Published.Any<AgvOnlineChanged>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<AgvBecameIdle>()).ShouldBeFalse();
+        (await fixture.TestHarness.Published.Any<AgvBecameIdle>()).ShouldBeTrue();
     }
 
     [TestMethod]

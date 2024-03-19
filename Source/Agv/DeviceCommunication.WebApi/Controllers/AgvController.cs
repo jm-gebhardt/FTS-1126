@@ -68,4 +68,26 @@ public class AgvController : Controller
         }
         return Ok(new WarningGeneratedDto(warning));
     }
+
+    /// <summary>
+    /// Magically charges the agv in simulation mode to 50% battery level.
+    /// </summary>
+    /// <param name="correlationId">The correlation id of the agv.</param>
+    /// <response code="200">Ok</response>
+    /// <response code="404">No agv with this correlation id exists.</response>
+    [HttpPatch]
+    [Route("simulatedCharge")]
+    public async Task<ActionResult> SimulateCharge(Guid correlationId)
+    {
+        try
+        {
+            await _bus.Publish(new SimulateCharging(correlationId));
+        }
+        catch (SagaException ex)
+        {
+            _logger.LogWarning("Could not find agv {CorrelationId} in {Handler}, {Exception}", correlationId, nameof(SimulateCharge), ex);
+            return NotFound();
+        }
+        return Ok();
+    }
 }

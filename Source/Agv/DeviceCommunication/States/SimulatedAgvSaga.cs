@@ -367,7 +367,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
     private double GetBatteryCurrent()
     {
         // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
-        // for some reasons it is actually null at startup
+        // for some reason it is actually null at startup
         if (AgvStatus?.Charging ?? false)
         {
             return 50 + GetRandomNoise(1);
@@ -436,15 +436,46 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
             chargeDiff = timeDiffS * -batteryDischargeRate;
         }
 
+        SimulatedBatteryCharge = Math.Clamp(SimulatedBatteryCharge + chargeDiff, 0, MaxCharge);
+        bool wasOnline = IsOnline;
+        IsOnline = SimulatedBatteryCharge > AliveChargeThreshold;
+        switch (wasOnline)
+        {
+            case false when IsOnline:
+                TravelSimulator.Resume();
+                break;
+
+            case true when !IsOnline:
+                TravelSimulator.Pause();
+                break;
+        }
+        UpdatePosition();
+        SetAgvStatus(charging);
+    }
+
+    /// <summary>
+    /// Set agv battery to given level.
+    /// </summary>
+    /// <param name="batteryLevel">The battery level.</param>
+    public void SetBatteryLevel(double batteryLevel)
+    {
+        SimulatedBatteryCharge = Math.Clamp(batteryLevel, 0, MaxCharge);
+        bool wasOnline = IsOnline;
+        IsOnline = SimulatedBatteryCharge > AliveChargeThreshold;
+        if (!wasOnline && IsOnline)
+        {
+            TravelSimulator.Resume();
+        }
+        UpdatePosition();
+        SetAgvStatus(false);
+    }
+
+    private void SetAgvStatus(bool charging)
+    {
         bool busy = new[]
         {
             nameof(SimulatedAgvStateMachine.BusyMoving)
-        }.Any(c => c == CurrentState);
-
-        SimulatedBatteryCharge = Math.Clamp(SimulatedBatteryCharge + chargeDiff, 0, MaxCharge);
-        IsOnline = SimulatedBatteryCharge > AliveChargeThreshold;
-        UpdatePosition();
-
+        }.Contains(CurrentState);
         AgvStatus = new AgvStatus(
             AgvStatus.CorrelationId,
             GetOrderId(),

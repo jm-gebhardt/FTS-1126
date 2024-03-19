@@ -103,6 +103,11 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     /// ResetAgvErrors was received
     /// </summary>
     public Event<ResetAgvErrors> ResetAgvErrorsEvent { get; private set; } = default!;
+
+    /// <summary>
+    /// Simulate an immediate charge up to given level.
+    /// </summary>
+    public Event<SimulateCharging> SimulateChargingEvent { get; private set; } = default!;
     #endregion
 
     #region Schedules
@@ -174,6 +179,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         DuringAny(SetSignalPositionHandler());
         DuringAny(SimulateAgvErrorHandler());
         DuringAny(ResetAgvErrorsHandler());
+        DuringAny(SimulateChargingHandler());
 
         WhenEnterAny(UpdateTimeOfStateTransition);
 
@@ -369,19 +375,26 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
             })
             .ThenAsync(PublishAgvError);
     }
-    #endregion
 
-    #region Actions
-    /// <summary>
-    /// Gets the interval [ms] between requests given the number of requests that
-    /// are to be scheduled while the agv is on an edge.
-    /// </summary>
-    /// <param name="requestsOnEdge">Number of requests on the edge.</param>
-    /// <param name="lowerBound">The lower bound of the interval [ms].</param>
-    /// <param name="upperBound">The upper bound of the interval [ms].</param>
-    /// <param name="currentEdge">The current edge.</param>
-    /// <returns></returns>
-    private int GetRequestIntervalOnEdge(int requestsOnEdge, int lowerBound, int upperBound, Travel.BaseEdge? currentEdge)
+    private EventActivityBinder<SimulatedAgvSaga, SimulateCharging> SimulateChargingHandler()
+    {
+        return When(SimulateChargingEvent)
+            .Then(c => _logger.LogDebug("{MessageType} / {CorrelationId} received", nameof(SimulateCharging), c.Saga.CorrelationId))
+            .Then(c => c.Saga.SetBatteryLevel(c.Message.Level));
+    }
+        #endregion
+
+        #region Actions
+        /// <summary>
+        /// Gets the interval [ms] between requests given the number of requests that
+        /// are to be scheduled while the agv is on an edge.
+        /// </summary>
+        /// <param name="requestsOnEdge">Number of requests on the edge.</param>
+        /// <param name="lowerBound">The lower bound of the interval [ms].</param>
+        /// <param name="upperBound">The upper bound of the interval [ms].</param>
+        /// <param name="currentEdge">The current edge.</param>
+        /// <returns></returns>
+        private int GetRequestIntervalOnEdge(int requestsOnEdge, int lowerBound, int upperBound, Travel.BaseEdge? currentEdge)
     {
         int interval = _simulateOptions.SimulationSpeed / requestsOnEdge;
         if (currentEdge != null)
