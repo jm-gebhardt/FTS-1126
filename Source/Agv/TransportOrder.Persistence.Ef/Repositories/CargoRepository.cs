@@ -84,10 +84,10 @@ public class CargoRepository(IDbContextFactory<TransportOrderDbContext> dbContex
 
         List<Cargo> previousCargos = await dbSet
             .Where(existingCargo => existingCargo.AgvCorrelationId == agvCorrelationId)
-            .ToListAsync();
+            .AsNoTracking().ToListAsync();
 
-        IEnumerable<Cargo> cargosToAdd = cargos.Where(c => previousCargos.All(p => p.CorrelationId == c.CorrelationId));
-        IEnumerable<Cargo> cargosToUpdate = previousCargos.Where(p => cargos.Any(c => c.CorrelationId == p.CorrelationId));
+        IEnumerable<Cargo> cargosToAdd = cargos.Where(c => previousCargos.All(p => p.CorrelationId != c.CorrelationId));
+        IEnumerable<Cargo> cargosToUpdate = cargos.Where(c => previousCargos.Any(p => p.CorrelationId == c.CorrelationId));
         IEnumerable<Cargo> cargosToRemove = previousCargos.Where(p => cargos.All(c => c.CorrelationId != p.CorrelationId));
 
         await dbSet.AddRangeAsync(cargosToAdd);

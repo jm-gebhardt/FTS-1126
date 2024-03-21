@@ -2,10 +2,6 @@ using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
-using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;
-using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
@@ -14,30 +10,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Repositories;
 [TestClass]
 public class AgvEfRepositoryTest
 {
-    private class EfAgvRepositoryTestFixture
-    {
-        public AgvRepository Repository { get; }
-
-        private IDbContextFactory<TransportOrderDbContext> ContextFactory { get; }
-
-        private ServiceProvider Provider { get; }
-
-        public EfAgvRepositoryTestFixture()
-        {
-            var collection = new ServiceCollection()
-                .AddDbContextFactory<TransportOrderDbContext>(options => { options.UseInMemoryDatabase(Guid.NewGuid().ToString()); }
-                );
-            Provider = collection.BuildServiceProvider(true);
-            ContextFactory = Provider.GetService<IDbContextFactory<TransportOrderDbContext>>()!;
-            Repository = new AgvRepository(ContextFactory);
-        }
-
-        public async Task Add(TransportOrder.Domain.Models.Agv.Agv agv)
-        {
-            await Repository.AddAgvAsync(agv);
-        }
-    }
-
     [TestMethod]
     public void EmptyRepository_NoAGVAvailable()
     {

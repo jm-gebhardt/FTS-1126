@@ -169,4 +169,37 @@ public class AgvStateConsumerTest
                 r => r.ReferenceKey.ShouldBe(error.ErrorReferences!.First().ReferenceKey),
                 r => r.ReferenceValue.ShouldBe(error.ErrorReferences!.First().ReferenceValue)));
     }
+
+    /// <summary>
+    /// Test for consuming MqttState message with load/cargo.
+    /// </summary>
+    [TestMethod]
+    public async Task ReceiveStateWithLoad_ExpectAgvLoadStatusReceived()
+    {
+        var fixture = new AgvStateConsumerTestFixture().UseDefaultServices().Build();
+        const string agvTestIdentifier = "TestAgv-1";
+        const string orderId = "TestOrder123";
+        const string cargoId = "Cargo-";
+        const float dimensionHeight = 0.2f;
+
+        var loadList = new List<MqttLoad>
+        {
+            new() { LoadId = cargoId + "1", LoadPosition = "positionC1", LoadType = "Box", LoadDimensions = new MqttLoadDimensions{ Height = dimensionHeight, Width  = 0.8f, Length = 0.9f }, BoundingBoxReference = null },
+            new() { LoadId = cargoId + "2", LoadPosition = "positionC2", LoadType = "Box", LoadDimensions = new MqttLoadDimensions{ Height = dimensionHeight, Width  = 0.8f, Length = 0.9f }, BoundingBoxReference = null }
+        };
+
+        await fixture.TestHarness.Bus.PublishMqtt(new MqttState(agvTestIdentifier, orderId) { Loads = loadList }, null);
+        (await fixture.TestHarness.Published.Any<MqttState>()).ShouldBeTrue();
+
+        var consumedState = fixture.ConsumerHarness.Consumed.Select<MqttState>().First().Context.Message;
+        consumedState.SerialNumber.ShouldBe(agvTestIdentifier);
+
+        (await fixture.TestHarness.Published.Any<AgvStatusReceived>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<AgvLoadStatusReceived>()).ShouldBeTrue();
+
+        var publishedLoadStatus = fixture.TestHarness.Published.Select<AgvLoadStatusReceived>().First().Context.Message;
+        publishedLoadStatus.Cargos.Count.ShouldBe(2);
+        publishedLoadStatus.Cargos.First().LoadId.ShouldBe(cargoId + "1");
+        publishedLoadStatus.Cargos.First().Dimension!.Height.ShouldBe(dimensionHeight);
+    }
 }
