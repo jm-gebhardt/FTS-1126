@@ -14,6 +14,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Constants;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Metrics;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Routing;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.ActionGroup;
@@ -60,6 +61,7 @@ public class ActionCommandHandler :
     private readonly IActionGroupRetrievalService _actionGroupRetrievalService;
     private readonly IAgvDb _agvDb;
     private readonly IActionGroupDurationEstimationService _durationEstimationService;
+    private readonly IMetricCollectionService _metricCollectionService;
 
     /// <inheritdoc cref="ActionCommandHandler"/>
     public ActionCommandHandler(
@@ -71,6 +73,7 @@ public class ActionCommandHandler :
         ISemaphoreProvider<IAgvsSemaphore> actionManagerSemaphoreProvider,
         IActionGroupDurationEstimationService durationEstimationService,
         IAgvDb agvDb,
+        IMetricCollectionService metricCollectionService,
         ISettingsProvider<AgvSettings> settingsProvider,
         IMapper mapper,
         IBus bus,
@@ -85,6 +88,7 @@ public class ActionCommandHandler :
         _actionGroupValidationService = actionGroupValidationService;
         _actionGroupRetrievalService = actionGroupRetrievalService;
         _durationEstimationService = durationEstimationService;
+        _metricCollectionService = metricCollectionService;
         _settingsProvider = settingsProvider;
         _mapper = mapper;
         _bus = bus;
@@ -512,17 +516,16 @@ public class ActionCommandHandler :
 
         var actionGroupMessageContent = _mapper.Map<ActionGroup>(actionGroup);
         await context.Publish(new ActionGroupChanged(actionGroupMessageContent, actionGroup.CorrelationId), cancellationToken);
-        if (actionGroup.State == ActionGroupState.Completed)
-        {
-            await context.Publish(new ActionGroupCompleted(actionGroupMessageContent, actionGroup.CorrelationId, DateTime.UtcNow), cancellationToken);
-            _logger.LogOrderInformation(LogCodes.OrderCompleted, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Order Completed", $"Order {actionGroup.OrderId} was completed successfully");
-        }
-        else
+        await context.Publish(new NonChargingActionCompleted(agvCorrelationId), cancellationToken);
+
+        if (actionGroup.State != ActionGroupState.Completed)
         {
             _logger.LogOrderInformation(LogCodes.OrderActionCompleted, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Order Updated", $"{actionGroup.Actions.First(a => a.CorrelationId == correlationId).ActionType} of order {actionGroup.OrderId} has been completed");
+            return;
         }
-
-        await context.Publish(new NonChargingActionCompleted(agvCorrelationId), cancellationToken);
+        await context.Publish(new ActionGroupCompleted(actionGroupMessageContent, actionGroup.CorrelationId, DateTime.UtcNow), cancellationToken);
+        _logger.LogOrderInformation(LogCodes.OrderCompleted, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Order Completed", $"Order {actionGroup.OrderId} was completed successfully");
+        _metricCollectionService.CollectOrderCompletionMetrics(actionGroup);
     }
 
     /// <summary>

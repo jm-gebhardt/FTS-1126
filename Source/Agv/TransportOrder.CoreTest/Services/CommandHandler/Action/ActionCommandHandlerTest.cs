@@ -6,6 +6,7 @@ using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.CommandHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Metrics;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
@@ -161,6 +162,34 @@ public class ActionCommandHandlerTest
         (await fixture.ConsumerHarness.Consumed.Any<CompleteActionOfActionGroup>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<ActionGroupChanged>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<ActionGroupCompleted>()).ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public async Task Consume_CompleteActionOfActionGroup_ActionGroupNotComplete_DoesNotPublishActionGroupCompleted()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Started, dropActionState: ActionState.Created, assignedAgv: Guid.NewGuid());
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .AddActionGroup(actionGroup);
+        var command = new CompleteActionOfActionGroup(actionGroup.Actions.First().CorrelationId, actionGroup.CorrelationId);
+        await fixture.TestHarness.Bus.Publish(command);
+        (await fixture.ConsumerHarness.Consumed.Any<CompleteActionOfActionGroup>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<ActionGroupChanged>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<ActionGroupCompleted>()).ShouldBeFalse();
+        PrometheusMetricCollector.AgvCompletedOrdersCounter.WithLabels(actionGroup.AssignedAgv!.Value.ToString()).Value.ShouldBe(0);
+    }
+
+    [TestMethod]
+    public async Task Consume_CompleteActionOfActionGroup_ActionGroupComplete_PublishesActionGroupCompleted()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Completed, dropActionState: ActionState.Started, assignedAgv: Guid.NewGuid());
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .AddActionGroup(actionGroup);
+        var command = new CompleteActionOfActionGroup(actionGroup.Actions.Last().CorrelationId, actionGroup.CorrelationId);
+        await fixture.TestHarness.Bus.Publish(command);
+        (await fixture.ConsumerHarness.Consumed.Any<CompleteActionOfActionGroup>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<ActionGroupChanged>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<ActionGroupCompleted>()).ShouldBeTrue();
+        PrometheusMetricCollector.AgvCompletedOrdersCounter.WithLabels(actionGroup.AssignedAgv!.Value.ToString()).Value.ShouldBe(1);
     }
 
     [TestMethod]

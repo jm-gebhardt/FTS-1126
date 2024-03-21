@@ -6,7 +6,12 @@
 internal static class MetricNameConfiguration
 {
     /// <summary>
-    /// Metric name for <see cref="MetricCollector.BatteryChargeGauge"/>.
+    /// Metric name for <see cref="PrometheusMetricCollector.BatteryChargeGauge"/>.
     /// </summary>
     internal const string BatteryChargeMetric = "ACC_AGV_BATTERY_CHARGE";
+
+    /// <summary>
+    /// Metric name for <see cref="PrometheusMetricCollector.AgvCompletedOrdersCounter"/>.
+    /// </summary>
+    internal const string AgvCompletedOrdersCountMetric = "ACC_AGV_COMPLETED_ORDERS_COUNT";
 }

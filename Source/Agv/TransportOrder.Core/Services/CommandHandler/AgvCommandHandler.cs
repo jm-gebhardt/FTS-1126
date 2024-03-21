@@ -69,6 +69,7 @@ public class AgvCommandHandler :
     private readonly IParkPointService _parkPointService;
     private readonly INodeStateRepository _nodeStateRepository;
     private readonly IChargingPointManager _chargingPointManager;
+    private readonly IMetricCollectionService _metricCollectionService;
 
     /// <inheritdoc cref="AgvCommandHandler"/>
     public AgvCommandHandler(ISemaphoreProvider<IAgvsSemaphore> agvsSemaphore,
@@ -78,6 +79,7 @@ public class AgvCommandHandler :
         IParkPointService parkPointService,
         IChargingPointManager chargingPointManager,
         INodeStateRepository nodeStateRepository,
+        IMetricCollectionService metricCollectionService,
         IMapper mapper,
         ProductionOptions productionOptions,
         ILogger<AgvCommandHandler> logger
@@ -91,6 +93,7 @@ public class AgvCommandHandler :
         _nodeStateRepository = nodeStateRepository;
         _settingsProvider = settingsProvider;
         _mapper = mapper;
+        _metricCollectionService = metricCollectionService;
         _productionOptions = productionOptions;
         _chargingPointManager = chargingPointManager;
     }
@@ -265,7 +268,7 @@ public class AgvCommandHandler :
         bool isReady = agv.IsReady;
 
         LogBatteryStates(oldStatus, agv.AgvStatus);
-        PublishMetrics(agv.AgvStatus);
+        _metricCollectionService.CollectBatteryChargeMetrics(agvStatus);
 
         if (!wasReady && isReady)
         {
@@ -741,15 +744,6 @@ public class AgvCommandHandler :
         {
             _logger.LogBatteryInformation(LogCodes.BatteryStartedCharging, oldAgvStatus.CorrelationId, "Started Charging", $"Battery started charging at level {Math.Round(newAgvStatus.BatteryCharge)}%");
         }
-    }
-
-    private void PublishMetrics(AgvStatus? agvStatus)
-    {
-        if (agvStatus == null)
-        {
-            return;
-        }
-        MetricCollector.BatteryChargeGauge.WithLabels(agvStatus.CorrelationId.ToString()).Set(agvStatus.BatteryCharge);
     }
 
     private async Task PublishNodeStateChange(IPublishEndpoint context, string nodeId)
