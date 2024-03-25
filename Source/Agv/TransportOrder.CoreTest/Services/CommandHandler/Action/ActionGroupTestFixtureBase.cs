@@ -37,6 +37,7 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
     private readonly Mock<IAgvDb> _agvDb = new();
     private readonly Mock<IActionGroupValidationService> _actionGroupValidationService = new();
     private readonly Mock<IActionGroupRetrievalService> _actionGroupRetrievalService = new();
+    private readonly Mock<IMetricCollectionService> _metricCollectorServiceMock = new();
 
     protected Mock<IRouteService> RouteService { get; } = new();
 
@@ -59,7 +60,13 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
         collection.AddTransient(_ => _actionGroupValidationService.Object);
         collection.AddFakeSettings(() => _agvSettings);
         collection.AddTransient(_ => _actionGroupRetrievalService.Object);
-        collection.AddTransient<IMetricCollectionService, PrometheusMetricCollectionService>();
+        collection.AddTransient(_ => _metricCollectorServiceMock.Object);
+        _metricCollectorServiceMock.Setup( x => x.CollectOrderCompletionMetrics(It.IsAny<ActionGroup>())).Verifiable();
+    }
+
+    public void VerifyOrderCompletionMetricsCollected(Times callTimes)
+    {
+        _metricCollectorServiceMock.Verify(x => x.CollectOrderCompletionMetrics(It.IsAny<ActionGroup>()), callTimes);
     }
 
     protected ActionGroupTestFixtureBase(TimeSpan? inactivityTimeout = null, Action<IBusRegistrationConfigurator>? busRegistrationConfigurator = null,

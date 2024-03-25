@@ -6,7 +6,6 @@ using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.CommandHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Metrics;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
@@ -175,7 +174,7 @@ public class ActionCommandHandlerTest
         (await fixture.ConsumerHarness.Consumed.Any<CompleteActionOfActionGroup>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<ActionGroupChanged>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<ActionGroupCompleted>()).ShouldBeFalse();
-        PrometheusMetricCollector.AgvCompletedOrdersCounter.WithLabels(actionGroup.AssignedAgv!.Value.ToString()).Value.ShouldBe(0);
+        fixture.VerifyOrderCompletionMetricsCollected(Times.Never());
     }
 
     [TestMethod]
@@ -189,7 +188,7 @@ public class ActionCommandHandlerTest
         (await fixture.ConsumerHarness.Consumed.Any<CompleteActionOfActionGroup>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<ActionGroupChanged>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<ActionGroupCompleted>()).ShouldBeTrue();
-        PrometheusMetricCollector.AgvCompletedOrdersCounter.WithLabels(actionGroup.AssignedAgv!.Value.ToString()).Value.ShouldBe(1);
+        fixture.VerifyOrderCompletionMetricsCollected(Times.Once());
     }
 
     [TestMethod]
@@ -319,6 +318,7 @@ public class ActionCommandHandlerTest
         abortedMessage.Action.CorrelationId.ShouldBe(expectedAbortedAction.CorrelationId);
         (await fixture.TestHarness.Published.Any<ActionGroupChanged>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<AutomaticActionWithdrawn>()).ShouldBeFalse();
+        fixture.VerifyOrderCompletionMetricsCollected(Times.Once());
     }
 
     [TestMethod]
@@ -337,6 +337,7 @@ public class ActionCommandHandlerTest
         (await fixture.TestHarness.Published.Any<ActionAborted>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<ActionGroupChanged>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<AutomaticActionWithdrawn>()).ShouldBeTrue();
+        fixture.VerifyOrderCompletionMetricsCollected(Times.Once());
     }
 
     [TestMethod]
@@ -361,6 +362,7 @@ public class ActionCommandHandlerTest
         (await fixture.TestHarness.Published.Any<ActionAborted>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<ActionGroupChanged>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<AutomaticActionWithdrawn>()).ShouldBeTrue();
+        fixture.VerifyOrderCompletionMetricsCollected(Times.Once());
     }
 
     [TestMethod]
@@ -376,6 +378,7 @@ public class ActionCommandHandlerTest
         await fixture.TestHarness.Bus.Publish(new AbortActionGroup(actionGroup.CorrelationId, AbortReason.ReactivatedFromCharging));
         (await fixture.ConsumerHarness.Consumed.Any<AbortActionGroup>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<ActionAborted>()).ShouldBeFalse();
+        fixture.VerifyOrderCompletionMetricsCollected(Times.Never());
     }
 
     [TestMethod]
@@ -391,6 +394,7 @@ public class ActionCommandHandlerTest
         await fixture.TestHarness.Bus.Publish(new AbortActionGroup(actionGroup.CorrelationId, AbortReason.ReactivatedFromCharging));
         (await fixture.ConsumerHarness.Consumed.Any<AbortActionGroup>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<ActionAborted>()).ShouldBeFalse();
+        fixture.VerifyOrderCompletionMetricsCollected(Times.Never());
     }
 
     [TestMethod]

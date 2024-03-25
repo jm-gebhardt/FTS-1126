@@ -525,7 +525,7 @@ public class ActionCommandHandler :
         }
         await context.Publish(new ActionGroupCompleted(actionGroupMessageContent, actionGroup.CorrelationId, DateTime.UtcNow), cancellationToken);
         _logger.LogOrderInformation(LogCodes.OrderCompleted, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Order Completed", $"Order {actionGroup.OrderId} was completed successfully");
-        _metricCollectionService.CollectOrderCompletionMetrics(actionGroup);
+        await _metricCollectionService.CollectOrderCompletionMetrics(actionGroup);
     }
 
     /// <summary>
@@ -565,6 +565,7 @@ public class ActionCommandHandler :
             string serviceNode = actionGroupWithNodes.Actions.First(a => new[] { AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park }.Contains(a.TargetNodeType)).TargetNodeId;
             await context.Publish(new AutomaticActionWithdrawn(serviceNode));
         }
+        await _metricCollectionService.CollectOrderCompletionMetrics(actionGroup);
     }
 
     /// <summary>

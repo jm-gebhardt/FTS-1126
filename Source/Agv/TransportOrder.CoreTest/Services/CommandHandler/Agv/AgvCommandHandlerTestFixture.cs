@@ -48,6 +48,7 @@ public class AgvCommandHandlerTestFixture(
     private readonly Mock<IParkPointService> _parkPointService = new();
     private readonly Mock<INodeStateRepository> _nodeStateRepositoryMock = new();
     private readonly Mock<IActionGroupRetrievalService> _actionGroupRetrievalService = new();
+    private readonly Mock<IMetricCollectionService> _metricCollectorServiceMock = new();
 
     protected override void ConfigureServices(IServiceCollection collection)
     {
@@ -64,7 +65,13 @@ public class AgvCommandHandlerTestFixture(
         collection.AddTransient(_ => _parkPointService.Object);
         collection.AddTransient(_ => _nodeStateRepositoryMock.Object);
         collection.AddTransient(_ => _actionGroupRetrievalService.Object);
-        collection.AddTransient<IMetricCollectionService, PrometheusMetricCollectionService>();
+        collection.AddTransient(_ => _metricCollectorServiceMock.Object);
+        _metricCollectorServiceMock.Setup(x => x.CollectBatteryChargeMetrics(It.IsAny<AgvStatus>())).Verifiable();
+    }
+
+    public void VerifyBatteryMetricsCollected(Times callTimes)
+    {
+        _metricCollectorServiceMock.Verify(x => x.CollectBatteryChargeMetrics(It.IsAny<AgvStatus>()), callTimes);
     }
 
     public AgvCommandHandlerTestFixture AddAgvs(List<TransportOrder.Domain.Models.Agv.Agv> agvs)

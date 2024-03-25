@@ -8,14 +8,14 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Metrics;
 public interface IMetricCollectionService
 {
     /// <summary>
-    /// Collect metrics on order completion
+    /// Collect metrics on order completion.
     /// </summary>
-    /// <param name="actionGroup"></param>
-    void CollectOrderCompletionMetrics(Models.ActionGroup.ActionGroup actionGroup);
+    /// <param name="actionGroup">The action group.</param>
+    Task CollectOrderCompletionMetrics(Models.ActionGroup.ActionGroup actionGroup);
 
     /// <summary>
     /// Collect agv battery charge metrics.
     /// </summary>
-    /// <param name="agvStatus"></param>
+    /// <param name="agvStatus">The agv status.</param>
     void CollectBatteryChargeMetrics(AgvStatus? agvStatus);
 }

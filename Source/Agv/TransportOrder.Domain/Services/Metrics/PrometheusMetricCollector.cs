@@ -22,4 +22,12 @@ public static class PrometheusMetricCollector
     {
         LabelNames = [MetricLabelConfiguration.Id]
     });
+
+    /// <summary>
+    /// The agv travel distance gauge metric.
+    /// </summary>
+    public static readonly Gauge AgvTravelDistanceGauge = Prometheus.Metrics.CreateGauge(MetricNameConfiguration.AgvTravelDistance, "Agv travel distance", new GaugeConfiguration
+    {
+        LabelNames = [MetricLabelConfiguration.Id]
+    });
 }

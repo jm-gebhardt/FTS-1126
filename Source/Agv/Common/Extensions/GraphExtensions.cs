@@ -27,4 +27,22 @@ public static class GraphExtensions
             throw new ArgumentException("Duplicate Nodes. Node Ids must be unique.");
         }
     }
+
+    /// <summary>
+    /// Get the length [m] of a route given by node ids.
+    /// </summary>
+    /// <param name="graph">This graph.</param>
+    /// <param name="route">The route (collection of node ids).</param>
+    /// <returns>Length of the route [m].</returns>
+    /// <exception cref="ArgumentNullException">Ambiguous route.</exception>
+    /// <exception cref="InvalidOperationException">If any of the subsequent nodes do not match an edge.</exception>
+    public static double GetRouteLength(this IGraph graph, string[] route)
+    {
+        double totalLength = 0.0;
+        for (int i = 0; i < route.Length - 1; i++)
+        {
+            totalLength +=  graph.Edges.Single(edge => edge.FromNodeId == route[i] && edge.ToNodeId == route[i + 1]).Length;
+        }
+        return totalLength;
+    }
 }

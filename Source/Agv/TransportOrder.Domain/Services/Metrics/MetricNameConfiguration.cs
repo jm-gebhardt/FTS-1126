@@ -14,4 +14,9 @@ internal static class MetricNameConfiguration
     /// Metric name for <see cref="PrometheusMetricCollector.AgvCompletedOrdersCounter"/>.
     /// </summary>
     internal const string AgvCompletedOrdersCountMetric = "ACC_AGV_COMPLETED_ORDERS_COUNT";
+
+    /// <summary>
+    /// Metric name for <see cref="PrometheusMetricCollector.AgvTravelDistanceGauge"/>.
+    /// </summary>
+    internal const string AgvTravelDistance = "ACC_AGV_TRAVEL_DISTANCE";
 }

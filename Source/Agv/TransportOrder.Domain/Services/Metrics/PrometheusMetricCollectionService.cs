@@ -1,18 +1,29 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
+using Gebhardt.StoreWare.Agv.Common.Extensions;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Metrics;
 
 /// <inheritdoc cref="IMetricCollectionService"/>>
-public class PrometheusMetricCollectionService : IMetricCollectionService
+public class PrometheusMetricCollectionService(IAgvDb agvDb) : IMetricCollectionService
 {
     /// <inheritdoc cref="IMetricCollectionService"/>>
-    public void CollectOrderCompletionMetrics(Models.ActionGroup.ActionGroup actionGroup)
+    public async Task CollectOrderCompletionMetrics(Models.ActionGroup.ActionGroup actionGroup)
     {
-        if (!actionGroup.IsMovingCargo)
+        var agvCorrelationId = actionGroup.AssignedAgv!.Value;
+        await CollectTravelDistance(actionGroup, agvCorrelationId);
+        if (!actionGroup.IsMovingCargo || actionGroup.State == ActionGroupState.Aborted)
         {
             return;
         }
-        PrometheusMetricCollector.AgvCompletedOrdersCounter.WithLabels(actionGroup.AssignedAgv!.Value.ToString()).Inc();
+        PrometheusMetricCollector.AgvCompletedOrdersCounter.WithLabels(agvCorrelationId.ToString()).Inc();
+    }
+
+    private async Task CollectTravelDistance(Models.ActionGroup.ActionGroup actionGroup, Guid agvCorrelationId)
+    {
+        var graph = await agvDb.Graphs.GetAgvGraphAsync(agvCorrelationId);
+        double travelDistance = actionGroup.Actions.Sum(action => graph.GetRouteLength(action.Nodes));
+        PrometheusMetricCollector.AgvTravelDistanceGauge.WithLabels(agvCorrelationId.ToString()).Set(travelDistance);
     }
 
     /// <inheritdoc cref="IMetricCollectionService"/>>
