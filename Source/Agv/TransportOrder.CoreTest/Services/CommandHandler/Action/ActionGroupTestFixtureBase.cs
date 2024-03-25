@@ -61,12 +61,12 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
         collection.AddFakeSettings(() => _agvSettings);
         collection.AddTransient(_ => _actionGroupRetrievalService.Object);
         collection.AddTransient(_ => _metricCollectorServiceMock.Object);
-        _metricCollectorServiceMock.Setup( x => x.CollectOrderCompletionMetrics(It.IsAny<ActionGroup>())).Verifiable();
+        _metricCollectorServiceMock.Setup( x => x.CollectOrderCompletionMetrics(It.IsAny<ActionGroup>(), It.IsAny<string?>())).Verifiable();
     }
 
     public void VerifyOrderCompletionMetricsCollected(Times callTimes)
     {
-        _metricCollectorServiceMock.Verify(x => x.CollectOrderCompletionMetrics(It.IsAny<ActionGroup>()), callTimes);
+        _metricCollectorServiceMock.Verify(x => x.CollectOrderCompletionMetrics(It.IsAny<ActionGroup>(), It.IsAny<string?>()), callTimes);
     }
 
     protected ActionGroupTestFixtureBase(TimeSpan? inactivityTimeout = null, Action<IBusRegistrationConfigurator>? busRegistrationConfigurator = null,

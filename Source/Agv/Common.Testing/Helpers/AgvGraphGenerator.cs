@@ -31,7 +31,7 @@ public static class AgvGraphGenerator
     private const string Dst3 = "DST3"; // Destination unreachable
     public const string Prk1 = "PRK1"; // Parking spot close
     private const string Prk2 = "PRK2"; // Parking spot far
-    private const string Crg1 = "CRG1"; // Charging point close
+    public const string Crg1 = "CRG1"; // Charging point close
     private const string Crg2 = "CRG2"; // Charging point far
     public const string Way1 = "WAY1"; // Waypoint 1
     private const string Way2 = "WAY2"; // Waypoint 2

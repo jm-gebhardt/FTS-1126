@@ -17,6 +17,7 @@ public class ActionGroupEntityConfiguration : IEntityTypeConfiguration<ActionGro
         builder.HasKey(g => g.CorrelationId);
         builder.Ignore(e => e.FirstNotStartedAction);
         builder.Ignore(e => e.IsMovingCargo);
+        builder.Ignore(e => e.IsChargingOrder);
         builder.Property(g => g.State).HasMaxLength(MaxStateLength);
         builder.HasIndex(g => g.AssignedAgv);
         builder.Property(e => e.AssignedAgv);
@@ -26,6 +27,7 @@ public class ActionGroupEntityConfiguration : IEntityTypeConfiguration<ActionGro
         builder.OwnsMany(g => g.Actions, a =>
         {
             a.HasKey(o => o.CorrelationId);
+            a.Ignore(o => o.Duration);
             a.Property(e => e.Sequence);
             a.Property(e => e.Nodes).HasJsonConversion();
             a.Property(e => e.State).HasMaxLength(MaxStateLength);

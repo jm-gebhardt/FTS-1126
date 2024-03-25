@@ -19,4 +19,24 @@ internal static class MetricNameConfiguration
     /// Metric name for <see cref="PrometheusMetricCollector.AgvTravelDistanceGauge"/>.
     /// </summary>
     internal const string AgvTravelDistance = "ACC_AGV_TRAVEL_DISTANCE";
+
+    /// <summary>
+    /// Metric name for <see cref="PrometheusMetricCollector.AgvStateBusyGauge"/>.
+    /// </summary>
+    internal const string AgvStateBusy = "ACC_AGV_STATE_BUSY_DURATION";
+
+    /// <summary>
+    /// Metric name for <see cref="PrometheusMetricCollector.AgvStateBusyCargoGauge"/>.
+    /// </summary>
+    internal const string AgvStateBusyCargo = "ACC_AGV_STATE_BUSY_CARGO_DURATION";
+
+    /// <summary>
+    /// Metric name for <see cref="PrometheusMetricCollector.AgvStateChargingGauge"/>.
+    /// </summary>
+    internal const string AgvStateCharging = "ACC_AGV_STATE_CHARGING_DURATION";
+
+    /// <summary>
+    /// Metric name for <see cref="PrometheusMetricCollector.AgvStateIdleGauge"/>.
+    /// </summary>
+    internal const string AgvStateIdle = "ACC_AGV_STATE_IDLE_DURATION";
 }

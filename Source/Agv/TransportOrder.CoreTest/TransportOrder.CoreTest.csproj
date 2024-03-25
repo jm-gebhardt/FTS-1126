@@ -4,7 +4,7 @@
         <IsPackable>false</IsPackable>
         <NoWarn>1591</NoWarn>
     </PropertyGroup>
-    <Import Project="..\SharedProjectSettings.csproj"/>
+    <Import Project="..\SharedProjectSettings.csproj" />
     <ItemGroup>
         <PackageReference Include="AutoMapper" Version="13.0.1"/>
         <PackageReference Include="MassTransit.Prometheus" Version="8.1.3"/>
@@ -26,9 +26,12 @@
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3"/>
     </ItemGroup>
     <ItemGroup>
-        <ProjectReference Include="..\Common.Testing\Common.Testing.csproj"/>
-        <ProjectReference Include="..\TransportOrder.Core\TransportOrder.Core.csproj"/>
-        <ProjectReference Include="..\TransportOrder.Domain\TransportOrder.Domain.csproj"/>
-        <ProjectReference Include="..\TransportOrder.Routing\TransportOrder.Routing.csproj"/>
+        <ProjectReference Include="..\Common.Testing\Common.Testing.csproj" />
+        <ProjectReference Include="..\TransportOrder.Core\TransportOrder.Core.csproj" />
+        <ProjectReference Include="..\TransportOrder.Domain\TransportOrder.Domain.csproj" />
+        <ProjectReference Include="..\TransportOrder.Routing\TransportOrder.Routing.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+      <Folder Include="Domain\Services\Metrics\" />
     </ItemGroup>
 </Project>

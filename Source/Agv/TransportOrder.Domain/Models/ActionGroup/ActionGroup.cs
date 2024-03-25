@@ -55,6 +55,11 @@ public class ActionGroup
     /// </summary>
     public bool IsMovingCargo => Actions.Any(a => a.ActionType == ActionType.Pick || a.ActionType == ActionType.Drop);
 
+    /// <summary>
+    /// True, if the action group is a charging order.
+    /// </summary>
+    public bool IsChargingOrder => Actions.Any(a => a.ActionType == ActionType.Charge);
+
     private readonly List<AgvAction> _actions;
 
     /// <summary>
@@ -324,5 +329,23 @@ public class ActionGroup
     public string[] GetTargets()
     {
         return !Actions.Any() ? [] : Actions.Select(a => a.TargetNodeId).ToArray();
+    }
+
+    /// <summary>
+    /// Set dates from given duration values (for unit testing).
+    /// </summary>
+    /// <param name="actionDuration">The duration of each action [s].</param>
+    /// <param name="startDate">The start date.</param>
+    /// <param name="idleTimeBetweenActions">The idle time between actions [s].</param>
+    public void SetFixedDatesFromDurations(double actionDuration, DateTime startDate, double idleTimeBetweenActions)
+    {
+        StartedDate = startDate;
+        foreach (var action in _actions)
+        {
+            action.StartedDate = startDate;
+            action.CompletedDate = startDate.AddSeconds(actionDuration);
+            startDate = action.CompletedDate!.Value.AddSeconds(idleTimeBetweenActions);
+        }
+        CompletedDate = _actions.Last().CompletedDate;
     }
 }

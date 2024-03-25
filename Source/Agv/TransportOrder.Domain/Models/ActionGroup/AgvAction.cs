@@ -57,6 +57,11 @@ public class AgvAction : IParentedBy<Guid>
     public DateTime? CompletedDate { get; set; }
 
     /// <summary>
+    /// The duration of the action.
+    /// </summary>
+    public TimeSpan? Duration => CompletedDate - StartedDate;
+
+    /// <summary>
     /// Action is the first action of a group.
     /// </summary>
     public bool IsFirstAction => Sequence == 0;
@@ -119,6 +124,7 @@ public class AgvAction : IParentedBy<Guid>
                 break;
 
             case ActionState.Failed:
+            case ActionState.Aborted:
             case ActionState.Canceled:
             case ActionState.Invalid:
                 CompletedDate = now;

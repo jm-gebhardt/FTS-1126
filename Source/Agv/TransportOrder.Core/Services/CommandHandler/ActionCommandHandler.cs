@@ -565,7 +565,7 @@ public class ActionCommandHandler :
             string serviceNode = actionGroupWithNodes.Actions.First(a => new[] { AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park }.Contains(a.TargetNodeType)).TargetNodeId;
             await context.Publish(new AutomaticActionWithdrawn(serviceNode));
         }
-        await _metricCollectionService.CollectOrderCompletionMetrics(actionGroup);
+        await _metricCollectionService.CollectOrderCompletionMetrics(actionGroup, agv.AgvStatus!.LastNodeId);
     }
 
     /// <summary>
