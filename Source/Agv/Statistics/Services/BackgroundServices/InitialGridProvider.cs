@@ -26,12 +26,10 @@ public class InitialGridProvider : BackgroundService
         _db = db;
     }
 
-    private async Task<bool> CreateGridsAsync(CancellationToken stoppingToken)
+    private async Task<bool> CreateGridAsync(CancellationToken stoppingToken)
     {
-        foreach (int step in new[] { 1, 5 })
-        {
-            await _addGridClient.GetResponse<Success>(new AddGrid($"{step}x{step}", step, step), stoppingToken);
-        }
+        const int step = 1;
+        await _addGridClient.GetResponse<Success>(new AddGrid($"{step}x{step}", step, step), stoppingToken);
         return true;
     }
 
@@ -50,7 +48,7 @@ public class InitialGridProvider : BackgroundService
         {
             try
             {
-                gridCreated = await CreateGridsAsync(stoppingToken);
+                gridCreated = await CreateGridAsync(stoppingToken);
             }
             catch (RequestTimeoutException)
             {

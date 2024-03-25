@@ -295,7 +295,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             sc.AddTransient(_ => ActionGroupRepository.Object);
             sc.AddTransient(_ => QueueActionGroupRequestClient.Object);
             sc.AddTransient(_ => ChargingPointManager.Object);
-            sc.AddTransient<ISemaphoreProvider<IAgvsSemaphore>>(_ => _semaphoreProvider);
+            sc.AddSingleton<ISemaphoreProvider<IAgvsSemaphore>>(_ => _semaphoreProvider);
             sc.AddFakeSettings(AgvSettings);
             sc.AddTransient(_ => _mapRepository.Object);
             sc.AddTransient(_ => _productionOptions);

@@ -1,5 +1,5 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
+﻿using Gebhardt.StoreWare.Agv.Common.Dictionaries;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
 

@@ -1,6 +1,14 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Configurations;
 using Gebhardt.StoreWare.Agv.Common.Configurations.Extensions;
+using Gebhardt.StoreWare.Agv.Common.Dictionaries;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.Filters;
+using Gebhardt.StoreWare.Agv.Common.SemaphoreProviders;
+using Gebhardt.StoreWare.Agv.Common.Services;
+using Gebhardt.StoreWare.Agv.Common.Services.Filters;
+using Gebhardt.StoreWare.Agv.Common.Services.Significance;
+using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.Statistics.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.Statistics.Persistence.Ef.DataAccess;
 using Gebhardt.StoreWare.Agv.Statistics.Persistence.Ef.Repositories;
@@ -62,7 +70,23 @@ public static class HostBuilderExtension
             services.AddTransient<IMapRepository, EfMapRepository>();
             services.AddTransient<IGridRepository, EfGridRepository>();
             services.AddTransient<IAgvGridPositionRepository, EfAgvGridPositionRepository>();
+
+            RegisterFilters(services);
         });
         return hostBuilder;
+    }
+
+    private static void RegisterFilters(IServiceCollection services)
+    {
+        services.AddSingleton(new AgvPositionConfiguration(0.5, Mathematics.ConvertToRadians(5), 1000) { MinInterval = TimeSpan.FromSeconds(3), MaxInterval = TimeSpan.FromSeconds(20) });
+        services.AddSingleton<ISignificanceChecker<AgvPosition>, AgvPositionSignificanceChecker>();
+        services.AddSingleton<IMessageFilter<AgvPositionReceived>, AgvPositionReceivedFilter>();
+
+        services.AddSingleton<IConcurrentDictionaryProvider<IMessageFilter<AgvPositionReceived>>, AgvPositionReceivedDictionaryProvider>();
+        services.AddTransient<IMessageFilter<AgvPositionReceived>, AgvPositionReceivedInMemoryFilter>();
+        services.AddSingleton<ISemaphoreProvider<IAgvPositionsReceivedSemaphoreProvider>, SemaphoreProvider<IAgvPositionsReceivedSemaphoreProvider>>();
+        services.AddSingleton<IConcurrentDictionaryProvider<ISemaphoreProvider<IAgvPositionsReceivedSemaphoreProvider>>, ConcurrentDictionaryProvider<ISemaphoreProvider<IAgvPositionsReceivedSemaphoreProvider>>>();
+        services.AddSingleton<IKeyedSemaphoreProvider<IAgvPositionsReceivedSemaphoreProvider>, KeyedSemaphoreProvider<IAgvPositionsReceivedSemaphoreProvider>>();
+        services.AddSingleton<IKeyedSemaphoreDictionaryProvider<IAgvPositionsReceivedSemaphoreProvider>, KeyedSemaphoreDictionaryProvider<IAgvPositionsReceivedSemaphoreProvider>>();
     }
 }

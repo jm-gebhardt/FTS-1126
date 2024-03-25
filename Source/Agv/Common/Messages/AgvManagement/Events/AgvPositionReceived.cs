@@ -2,14 +2,13 @@
 using JetBrains.Annotations;
 using MassTransit;
 
-// ReSharper disable ConvertToPrimaryConstructor
 namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 
 /// <summary>
 /// An event reporting the current position of an AGV.
 /// </summary>
 [PublicAPI]
-public record AgvPositionReceived : CorrelatedBy<Guid>, IAgv
+public record AgvPositionReceived : CorrelatedBy<Guid>, IAgv, IMessageCreatedDate
 {
     /// <inheritdoc cref="IAgv.CorrelationId" />
     public Guid CorrelationId { get; }
@@ -21,6 +20,9 @@ public record AgvPositionReceived : CorrelatedBy<Guid>, IAgv
     /// Current AGV position
     /// </summary>
     public AgvPosition AgvPosition { get; }
+
+    /// <inheritdoc />
+    public DateTime MessageCreatedDate { get; } = DateTime.UtcNow;
 
     /// <inheritdoc cref="AgvPositionReceived"/>
     public AgvPositionReceived(Guid correlationId, string serialNumber, AgvPosition agvPosition)

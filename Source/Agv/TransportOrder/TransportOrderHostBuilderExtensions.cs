@@ -2,21 +2,24 @@
 using Gebhardt.StoreWare.Agv.Common.Configurations;
 using Gebhardt.StoreWare.Agv.Common.Configurations.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
+using Gebhardt.StoreWare.Agv.Common.Dictionaries;
 using Gebhardt.StoreWare.Agv.Common.MassTransit;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Services;
+using Gebhardt.StoreWare.Agv.Common.Services.Filters;
+using Gebhardt.StoreWare.Agv.Common.Services.Significance;
+using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.CmdOptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.BackgroundServices;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Dictionaries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Metrics;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Routing;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.SignificanceChecker;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Validators;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Configuration;
@@ -135,6 +138,7 @@ public static class TransportOrderHostBuilderExtensions
 
     private static void RegisterSignificanceCheckers(IServiceCollection services)
     {
+        services.AddSingleton(new AgvPositionConfiguration(0.005, Mathematics.ConvertToRadians(0.1), 0.001));
         services.AddSingleton<ISignificanceChecker<AgvPosition>, AgvPositionSignificanceChecker>();
     }
 

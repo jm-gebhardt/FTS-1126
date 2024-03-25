@@ -1,7 +1,6 @@
 ﻿using Gebhardt.StoreWare.Agv.Statistics.Domain.Models;
 using Gebhardt.StoreWare.Agv.Statistics.Domain.Repositories;
 using Moq;
-using Range = Moq.Range;
 
 namespace Gebhardt.StoreWare.Agv.Statistics.Test.Fixtures;
 
@@ -23,13 +22,26 @@ public static class MockDbExtension
     }
 
     /// <summary>
+    /// Verify a grid was added.
+    /// </summary>
+    /// <param name="dbMock">The db mock.</param>
+    public static void VerifyGridAdded(this Mock<IStatisticsDb> dbMock)
+    {
+        dbMock.Verify(x => x.Grids.Add(It.IsAny<Grid>()), Times.AtLeastOnce);
+        dbMock.Verify(x => x.SaveAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>
     /// Verify agv positions were added.
     /// </summary>
     /// <param name="dbMock"></param>
     /// <param name="count">The number of positions added.</param>
     public static void VerifyAgvPositionsAdded(this Mock<IStatisticsDb> dbMock, int count)
     {
-        dbMock.Verify(x => x.GridPositions.Add(It.IsAny<AgvGridPosition>()), Times.Between(1, count, Range.Inclusive));
-        dbMock.Verify(x => x.SaveAsync(It.IsAny<CancellationToken>()), Times.Once);
+        dbMock.Verify(x => x.GridPositions.Add(It.IsAny<AgvGridPosition>()), Times.Exactly(count));
+        if (count > 0)
+        {
+            dbMock.Verify(x => x.SaveAsync(It.IsAny<CancellationToken>()), Times.Once);
+        }
     }
 }

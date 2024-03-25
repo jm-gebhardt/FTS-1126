@@ -21,7 +21,7 @@ public class AgvBatteryStatusSignificanceChecker : ReflectionSignificanceChecker
         // just exclude EstimatedFullyChargedTime and LastBatteryReplacement, because they change with every init of AgvStatus, as this is not fully implemented yet.
         { nameof(AgvBatteryStatusDto.EstimatedFullyChargedTime), (_, _) => false },
         { nameof(AgvBatteryStatusDto.LastBatteryReplacement), (_, _) => false },
-        // message created date will be considered in the hub filter
+        // message created date will be considered in the message filter
         { nameof(AgvBatteryStatusDto.MessageCreatedDate), (_, _) => false }
     };
 }

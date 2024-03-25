@@ -52,7 +52,7 @@ public class AgvCommandHandlerTestFixture(
 
     protected override void ConfigureServices(IServiceCollection collection)
     {
-        collection.AddTransient<ISemaphoreProvider<IAgvsSemaphore>>(_ => _semaphoreProvider);
+        collection.AddSingleton<ISemaphoreProvider<IAgvsSemaphore>>(_ => _semaphoreProvider);
         collection.AddTransient(_ => _actionGroupRepository.Object);
         collection.AddTransient(_ => _logger.Object);
         collection.AddFakeSettings(new AgvSettings());

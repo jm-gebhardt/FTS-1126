@@ -1,8 +1,10 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
+using Gebhardt.StoreWare.Agv.Common.Services.Filters;
 using Gebhardt.StoreWare.Agv.Statistics.Domain.Models;
 using Gebhardt.StoreWare.Agv.Statistics.Domain.Repositories;
 using JetBrains.Annotations;
 using MassTransit;
+using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.StoreWare.Agv.Statistics.Services.EventHandler;
 
@@ -13,11 +15,19 @@ namespace Gebhardt.StoreWare.Agv.Statistics.Services.EventHandler;
 public class PositionEventHandler : IConsumer<AgvPositionReceived>
 {
     private readonly IStatisticsDb _db;
+    private readonly IMessageFilter<AgvPositionReceived> _agvPositionFilter;
+    private readonly ILogger<PositionEventHandler> _logger;
 
     /// <inheritdoc cref="PositionEventHandler" />
-    public PositionEventHandler(IStatisticsDb db)
+    public PositionEventHandler(
+        IStatisticsDb db,
+        IMessageFilter<AgvPositionReceived> agvPositionFilter,
+        ILogger<PositionEventHandler> logger
+    )
     {
         _db = db;
+        _agvPositionFilter = agvPositionFilter;
+        _logger = logger;
     }
 
     /// <summary>
@@ -27,6 +37,13 @@ public class PositionEventHandler : IConsumer<AgvPositionReceived>
     {
         var position = context.Message.AgvPosition;
         string agv = context.Message.SerialNumber;
+
+        if (!await _agvPositionFilter.ShouldActAsync(context.Message))
+        {
+            _logger.LogDebug($"{context.Message.SerialNumber}: skip AgvPosition.");
+            return;
+        }
+        _logger.LogDebug($"{context.Message.SerialNumber}: use AgvPosition.");
 
         ICollection<Grid> grids = await _db.Grids.GetAll();
         foreach (var grid in grids)

@@ -1,7 +1,7 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using Gebhardt.StoreWare.Agv.Common.Services;
+using Gebhardt.StoreWare.Agv.Common.Services.Filters;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Dictionaries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
 using MassTransit;
 using Moq;

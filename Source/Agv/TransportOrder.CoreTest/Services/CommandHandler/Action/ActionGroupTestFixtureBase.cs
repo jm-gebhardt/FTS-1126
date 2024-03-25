@@ -55,7 +55,7 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
         collection.AddTransient(_ => RouteService.Object);
         collection.AddTransient(_ => _chooseAgvActionGroupService.Object);
         collection.AddTransient(_ => GetMapper());
-        collection.AddTransient<ISemaphoreProvider<IAgvsSemaphore>>(_ => _semaphoreProvider);
+        collection.AddSingleton<ISemaphoreProvider<IAgvsSemaphore>>(_ => _semaphoreProvider);
         collection.AddTransient(_ => _agvDb.Object);
         collection.AddTransient(_ => _actionGroupValidationService.Object);
         collection.AddFakeSettings(() => _agvSettings);

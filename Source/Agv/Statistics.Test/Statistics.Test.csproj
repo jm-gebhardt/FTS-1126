@@ -31,7 +31,4 @@
         <ProjectReference Include="..\Statistics.WebApi\Statistics.WebApi.csproj"/>
         <ProjectReference Include="..\Statistics\Statistics.csproj"/>
     </ItemGroup>
-    <ItemGroup>
-        <Folder Include="EventHandler\"/>
-    </ItemGroup>
 </Project>

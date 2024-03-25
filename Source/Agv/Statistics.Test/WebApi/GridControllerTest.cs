@@ -29,6 +29,17 @@ public class GridControllerTest
     }
 
     [TestMethod]
+    public async Task AddGrid_ValidData_GridAdded()
+    {
+        var fixture = new GridControllerTestFixture()
+            .Setup();
+        var response = await fixture.Controller.AddGrid("name", 1, 1);
+        var result = response as OkResult;
+        result.ShouldNotBeNull();
+        fixture.VerifyGridAdded();
+    }
+
+    [TestMethod]
     public async Task GetPositionFrequency_ValidData_ReturnsPositionFrequencyDtos()
     {
         var gridId = Guid.NewGuid();

@@ -5,6 +5,9 @@ using System.Xml.Linq;
 using System.Xml.XPath;
 using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Services;
+using Gebhardt.StoreWare.Agv.Common.Services.Filters;
+using Gebhardt.StoreWare.Agv.Common.Services.Significance;
+using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.Common.WebApi;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
@@ -22,6 +25,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
+using AgvPositionSignificanceChecker = Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Filters.SignificanceCheckers.AgvPositionSignificanceChecker;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi;
 
@@ -46,12 +50,16 @@ public static class WebHostBuilderExtensions
             services.AddTransient<IAgvPublisher, AgvPublisher>();
             services.AddTransient<IMapPublisher, MapPublisher>();
 
-            services.AddSingleton<IHubFilter<AgvBatteryStatusDto>, AgvBatteryStatusChangedFilter>();
-            services.AddSingleton<IHubFilter<AgvPositionStatusDto>, AgvPositionStatusChangedFilter>();
+            services.AddTransient<IMessageFilter<AgvBatteryStatusDto>, AgvBatteryStatusChangedFilter>();
+            services.AddTransient<IMessageFilter<AgvPositionStatusDto>, AgvPositionStatusChangedFilter>();
+
+            services.AddSingleton<ISemaphoreProvider<AgvBatteryStatusChangedFilter>, SemaphoreProvider<AgvBatteryStatusChangedFilter>>();
+            services.AddSingleton<ISemaphoreProvider<AgvPositionStatusChangedFilter>, SemaphoreProvider<AgvPositionStatusChangedFilter>>();
 
             services.AddSingleton<ISignificanceChecker<AgvBatteryStatusDto>, AgvBatteryStatusSignificanceChecker>();
             services.AddSingleton<ISignificanceChecker<AgvPositionDto>, AgvPositionSignificanceChecker>();
-
+            services.AddSingleton(new AgvPositionConfiguration(0.5, Mathematics.ConvertToRadians(5), 1000));
+            
             services.AddScoped<ExceptionHandlerMiddleware>();
             services.AddMvc();
             services.AddControllers()
@@ -128,7 +136,7 @@ public static class WebHostBuilderExtensions
                 {
                     swaggerDoc.Servers = new List<OpenApiServer>()
                     {
-                        new() {Description = "Server behind Proxy", Url = serverPath}
+                        new() { Description = "Server behind Proxy", Url = serverPath }
                     };
                 }
             });

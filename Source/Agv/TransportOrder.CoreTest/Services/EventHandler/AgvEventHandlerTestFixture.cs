@@ -57,7 +57,7 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixtureWithSche
     {
         collection.AddTransient(_ => _actionGroupRepository.Object);
         collection.AddTransient(_ => _maintenanceService.Object);
-        collection.AddTransient<ISemaphoreProvider<IAgvsSemaphore>>(_ => _agvSemaphoreProvider);
+        collection.AddSingleton<ISemaphoreProvider<IAgvsSemaphore>>(_ => _agvSemaphoreProvider);
         collection.AddTransient(_ => _chooseAgvActionGroupService.Object);
         collection.AddFakeSettings(_agvSettings);
         collection.AddTransient(_ => _agvDb.Object);

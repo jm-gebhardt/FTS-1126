@@ -1,13 +1,15 @@
 ﻿using AutoMapper;
+using Gebhardt.StoreWare.Agv.Common.Dictionaries;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using Gebhardt.StoreWare.Agv.Common.Services;
+using Gebhardt.StoreWare.Agv.Common.Services.Filters;
+using Gebhardt.StoreWare.Agv.Common.Services.Significance;
 using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
+using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.EventHandler;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Dictionaries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.SignificanceChecker;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles;
@@ -61,6 +63,7 @@ internal class AgvPositionReceivedConsumerMassTransitTestFixture :
 
         services.AddTransient(_ => new Mock<IAgvPublisher>().Object);
         services.AddSingleton<ISignificanceChecker<AgvPosition>, AgvPositionSignificanceChecker>();
+        services.AddSingleton(new AgvPositionConfiguration(0.5, Mathematics.ConvertToRadians(5), 1000));
         services.AddTransient(_ => GetMapper());
     }
 

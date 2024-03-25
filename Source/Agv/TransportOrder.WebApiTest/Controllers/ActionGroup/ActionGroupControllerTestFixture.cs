@@ -75,7 +75,7 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
             sc.AddTransient(_ => _routeService.Object);
             sc.AddTransient(_ => _chooseAgvActionGroupService.Object);
             sc.AddTransient(_ => _maintenanceService.Object);
-            sc.AddTransient<ISemaphoreProvider<IAgvsSemaphore>>(_ => _semaphoreProvider);
+            sc.AddSingleton<ISemaphoreProvider<IAgvsSemaphore>>(_ => _semaphoreProvider);
             sc.AddTransient(_ => _agvDb.Object);
             sc.AddTransient(_ => _actionGroupValidationService.Object);
             sc.AddFakeSettings(new AgvSettings());

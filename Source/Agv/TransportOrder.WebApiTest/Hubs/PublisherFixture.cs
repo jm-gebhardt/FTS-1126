@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
+using Gebhardt.StoreWare.Agv.Common.Services.Filters;
+using Gebhardt.StoreWare.Agv.Common.Testing.Filters;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Filters;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Hubs.Filters;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -29,8 +29,8 @@ public class PublisherFixture<TPublisher, THub, TClient> where TPublisher : clas
         _serviceCollection.AddSingleton<IHubContext<THub, TClient>>(_ => HubContextMock.Object);
         _serviceCollection.AddSingleton<TPublisher>();
         _serviceCollection.AddSingleton<IMapper>(_ => MapperMock.Object);
-        _serviceCollection.AddSingleton<IHubFilter<AgvBatteryStatusDto>>(new FilterMock<AgvBatteryStatusDto>(true));
-        _serviceCollection.AddSingleton<IHubFilter<AgvPositionStatusDto>>(new FilterMock<AgvPositionStatusDto>(true));
+        _serviceCollection.AddSingleton<IMessageFilter<AgvBatteryStatusDto>>(new FilterMock<AgvBatteryStatusDto>(true));
+        _serviceCollection.AddSingleton<IMessageFilter<AgvPositionStatusDto>>(new FilterMock<AgvPositionStatusDto>(true));
     }
 
     public PublisherFixture<TPublisher, THub, TClient> Build()
