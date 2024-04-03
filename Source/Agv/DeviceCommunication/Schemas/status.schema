@@ -1,8 +1,8 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "title": "state",
+    "title": "status",
     "description": "All encompassing state of the agv.",
-    "subtopic": "/state",
+    "subtopic": "/status",
     "type": "object",
     "required": [
         "headerId",
