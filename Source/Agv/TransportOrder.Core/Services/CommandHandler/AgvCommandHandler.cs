@@ -57,7 +57,8 @@ public class AgvCommandHandler :
     IConsumer<UpdateCargo>,
     IConsumer<ResetOfflineWatchdog>,
     IConsumer<PrepareParkingOfAgv>,
-    IConsumer<PrepareChargingOfAgv>
+    IConsumer<PrepareChargingOfAgv>,
+    IConsumer<UpdateAgvSettingsGroupReference>
 {
     private readonly ILogger<AgvCommandHandler> _logger;
     private readonly ISemaphoreProvider<IAgvsSemaphore> _agvsSemaphore;
@@ -602,6 +603,17 @@ public class AgvCommandHandler :
         var agv = await _agvDb.Agvs.GetAgvAsync(context.Message.CorrelationId);
         var agvSettings = _agvDb.AgvSettings.GetSettingsForAgvGroup(agv.AgvSettingsGroup);
         await ResetOfflineWatchDog(context, agv, agvSettings);
+        await _agvDb.Agvs.UpdateAgvAsync(agv);
+    }
+
+    /// <summary>
+    /// Handles the <see cref="UpdateAgvSettingsGroupReference"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<UpdateAgvSettingsGroupReference> context)
+    {
+        var agv = await _agvDb.Agvs.GetAgvAsync(context.Message.CorrelationId);
+        var settingsGroup = await _agvDb.AgvSettings.GetSettingsGroupForAgv(agv);
+        agv.AgvSettingsGroup = settingsGroup.Id;
         await _agvDb.Agvs.UpdateAgvAsync(agv);
     }
 

@@ -3,7 +3,9 @@ using System.ComponentModel.DataAnnotations;
 using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Commands;
@@ -50,7 +52,9 @@ public class AgvController : Controller
     private readonly IRequestClient<GetCargosOfAgv> _getCargosOfAgvClient;
     private readonly IRequestClient<ResetAgvErrors> _resetAgvErrorsClient;
     private readonly IRequestClient<GetAgvSettings> _getAgvSettingsClient;
+    private readonly IRequestClient<UpdateAgvSettings> _updateAgvSettingsClient;
     private readonly IRequestClient<SendAgvToCharger> _sendAgvToChargerClient;
+    private readonly IRequestClient<ResetAgvSettingToDefault> _resetSettingToDefaultClient;
     private readonly IMapper _mapper;
 
     /// <summary>
@@ -77,7 +81,9 @@ public class AgvController : Controller
         IRequestClient<GetCargosOfAgv> getCargosOfAgvClient,
         IRequestClient<ResetAgvErrors> resetAgvErrorsClient,
         IRequestClient<GetAgvSettings> getAgvSettingsClient,
-        IRequestClient<SendAgvToCharger> sendAgvToChargerClient
+        IRequestClient<SendAgvToCharger> sendAgvToChargerClient,
+        IRequestClient<UpdateAgvSettings> updateAgvSettingsClient,
+        IRequestClient<ResetAgvSettingToDefault> resetSettingToDefaultClient
     )
     {
         _getAgvClient = getAgvClient;
@@ -103,6 +109,8 @@ public class AgvController : Controller
         _resetAgvErrorsClient = resetAgvErrorsClient;
         _getAgvSettingsClient = getAgvSettingsClient;
         _sendAgvToChargerClient = sendAgvToChargerClient;
+        _updateAgvSettingsClient = updateAgvSettingsClient;
+        _resetSettingToDefaultClient = resetSettingToDefaultClient;
     }
 
     /// <summary>
@@ -181,6 +189,37 @@ public class AgvController : Controller
         Response<GotAgvSettings> response = await _getAgvSettingsClient.GetResponse<GotAgvSettings>(new GetAgvSettings(correlationId));
         var dto = _mapper.Map<AgvSettingsResponseDto>(response.Message.AgvSettings);
         return Ok(dto);
+    }
+
+    /// <summary>
+    /// Update agv settings (only non-null properties are updated).
+    /// </summary>
+    /// <param name="correlationId">The agv correlation id.</param>
+    /// <param name="settings">The updated settings (Provide only setting properties to update).</param>
+    /// <response code="200">Ok</response>
+    /// <response code="404">Agv with given correlationId not found.</response>
+    [HttpPatch]
+    [Route("/agv/{correlationId:guid}/settings")]
+    public async Task<ActionResult> UpdateAgvSettings([FromRoute] Guid correlationId, [FromBody] AgvSettingsDto settings)
+    {
+        await _updateAgvSettingsClient.GetResponse<Success>(new UpdateAgvSettings(correlationId, _mapper.Map<AgvSettingsReadModel>(settings)));
+        return Ok();
+    }
+
+    /// <summary>
+    /// Reset agv settings property to default.
+    /// </summary>
+    /// <param name="correlationId">The agv correlation id.</param>
+    /// <param name="propertyName">The settings property name to reset to default.</param>
+    /// <response code="200">Ok</response>
+    /// <response code="404">Agv with given correlationId not found.</response>
+    /// <response code="400">Invalid (unknown) agv settings property name.</response>
+    [HttpPatch]
+    [Route("/agv/{correlationId:guid}/settings/reset")]
+    public async Task<ActionResult> ResetAgvSettingToDefault([FromRoute] Guid correlationId, [FromQuery] string propertyName)
+    {
+        await _resetSettingToDefaultClient.GetResponse<Success>(new ResetAgvSettingToDefault(correlationId, propertyName));
+        return Ok();
     }
 
     /// <summary>

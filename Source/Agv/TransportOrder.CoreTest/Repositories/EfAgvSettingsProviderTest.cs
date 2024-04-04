@@ -73,6 +73,7 @@ public class EfAgvSettingsProviderTest
             batteryLevelCritical: 1);
 
         await fixture.Repository.AddOrUpdateSettingsForAgvGroup(agvSettings, groupType, groupValue);
+        var defaultGroup = await fixture.Repository.GetSettingsGroupForAgv();
 
         var addedGroup = (await fixture.GetAddedAgvGroups(groupType, groupValue)).Single();
         var inMemorySettings = fixture.InMemorySettingsCache.ConcurrentDict[addedGroup.Id];
@@ -87,10 +88,13 @@ public class EfAgvSettingsProviderTest
         inMemorySettings.AgvOfflineTimeoutMsWhileBusy.ShouldBe(agvSettings.AgvOfflineTimeoutMsWhileBusy);
 
         addedGroup.AgvSetting.MinChargeUp.Value.ShouldBe(defaultSettings.MinChargeUp.ToString());
+        addedGroup.AgvSetting.MinChargeUp.Id.ShouldBe(defaultGroup.AgvSetting.MinChargeUp.Id);
         inMemorySettings.MinChargeUp.ShouldBe(defaultSettings.MinChargeUp);
         addedGroup.AgvSetting.AgvOfflineTimeoutMsWhileIdle.Value.ShouldBe(defaultSettings.AgvOfflineTimeoutMsWhileIdle.ToString());
+        addedGroup.AgvSetting.AgvOfflineTimeoutMsWhileIdle.Id.ShouldBe(defaultGroup.AgvSetting.AgvOfflineTimeoutMsWhileIdle.Id);
         inMemorySettings.AgvOfflineTimeoutMsWhileIdle.ShouldBe(defaultSettings.AgvOfflineTimeoutMsWhileIdle);
         addedGroup.AgvSetting.BatteryLevelLow.Value.ShouldBe(defaultSettings.BatteryLevelLow.ToString());
+        addedGroup.AgvSetting.BatteryLevelLow.Id.ShouldBe(defaultGroup.AgvSetting.BatteryLevelLow.Id);
         inMemorySettings.BatteryLevelLow.ShouldBe(defaultSettings.BatteryLevelLow);
     }
 
@@ -201,5 +205,44 @@ public class EfAgvSettingsProviderTest
         existingGroup.GroupType.ShouldBe(GroupType.SerialNumber);
         existingGroup.Identifier.ShouldBe(agv.SerialNumber);
         fixture.InMemorySettingsCache.ConcurrentDict[existingGroup.Id].ShouldBe(existingGroup.AgvSetting.ToReadModel());
+    }
+
+    [TestMethod]
+    public async Task ResetSettingsPropertyToDefaultAsync_ValidData_PropertyReset()
+    {
+        var defaultSettings = EfAgvSettingsProvider.DefaultSettings;
+        var agvSettings = new AgvSettingsReadModel(
+            agvOfflineTimeoutMsWhileIdle: EfAgvSettingsProvider.DefaultSettings.AgvOfflineTimeoutMsWhileIdle,
+            agvOfflineTimeoutMsWhileBusy: EfAgvSettingsProvider.DefaultSettings.AgvOfflineTimeoutMsWhileBusy,
+            batteryLevelCritical: 12,
+            batteryLevelLow: EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow,
+            minChargeUp: EfAgvSettingsProvider.DefaultSettings.MinChargeUp,
+            maxChargeUp: EfAgvSettingsProvider.DefaultSettings.MaxChargeUp);
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var fixture = await new EfAgvSettingsProviderTestFixture()
+            .WithAgvSettingsGroup(agvSettings, GroupType.SerialNumber, agv.SerialNumber)
+            .BuildAsync();
+
+        var agvSettingsGroup = await fixture.Repository.GetSettingsGroupForAgv(agv);
+        var defaultSettingsGroup = await fixture.Repository.GetSettingsGroupForAgv();
+
+        agvSettingsGroup.AgvSetting.BatteryLevelCritical.ShouldNotBe(defaultSettingsGroup.AgvSetting.BatteryLevelCritical);
+        fixture.InMemorySettingsCache.ConcurrentDict[agvSettingsGroup.Id].ShouldBeEquivalentTo(agvSettings);
+
+        await fixture.Repository.ResetSettingPropertyToDefaultAsync(agvSettingsGroup.Id, nameof(agvSettings.BatteryLevelCritical));
+        
+        agvSettingsGroup = await fixture.Repository.GetSettingsGroupForAgv(agv);
+        agvSettingsGroup.AgvSetting.BatteryLevelCritical.ShouldBeEquivalentTo(defaultSettingsGroup.AgvSetting.BatteryLevelCritical);
+        // As BatteryLevelCritical was the only one differing from the defaultSettings:
+        fixture.InMemorySettingsCache.ConcurrentDict[agvSettingsGroup.Id].ShouldBeEquivalentTo(defaultSettings);
+    }
+
+    [TestMethod]
+    public async Task ResetSettingsPropertyToDefaultAsync_GroupNotFound_ThrowsAgvSettingsNotFoundException()
+    {
+        var fixture = await new EfAgvSettingsProviderTestFixture()
+            .BuildAsync();
+
+        await Should.ThrowAsync<AgvSettingsNotFoundException>( () => fixture.Repository.ResetSettingPropertyToDefaultAsync("unknown".ToGuid(), "a known property"));
     }
 }

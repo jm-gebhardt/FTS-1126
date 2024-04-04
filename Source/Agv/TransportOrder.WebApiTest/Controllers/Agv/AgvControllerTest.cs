@@ -6,6 +6,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.CommandHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Commands;
@@ -448,5 +449,27 @@ public class AgvControllerTest
         fixture.AgvDb.Setup(x => x.Agvs.GetAgvAsync(It.Is<Guid>(g => g == correlationId))).Throws(new AgvNotFoundException(correlationId));
         var controller = fixture.Controller;
         await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await controller.SendAgvToCharger(correlationId));
+    }
+
+    [TestMethod]
+    public async Task UpdateAgvSettings_ValidData_Ok()
+    {
+        AgvControllerTestFixture<UpdateAgvSettings, AgvSettingsRequestHandler> fixture = new AgvControllerTestFixture<UpdateAgvSettings, AgvSettingsRequestHandler>()
+            .SetupAgvDbWithDefaultData()
+            .Build();
+        var actionResult = await fixture.Controller.UpdateAgvSettings(fixture.AgvSerialNumbers[2].ToGuid(), new AgvSettingsDto(batteryLevelCritical:13));
+        var result = actionResult as OkObjectResult;
+        result.ShouldBeAssignableTo<OkResult>();
+    }
+
+    [TestMethod]
+    public async Task ResetAgvSettingToDefault_ValidData_Ok()
+    {
+        AgvControllerTestFixture<ResetAgvSettingToDefault, AgvSettingsRequestHandler> fixture = new AgvControllerTestFixture<ResetAgvSettingToDefault, AgvSettingsRequestHandler>()
+            .SetupAgvDbWithDefaultData()
+            .Build();
+        var actionResult = await fixture.Controller.ResetAgvSettingToDefault(fixture.AgvSerialNumbers[2].ToGuid(), "BatterLevelCritical");
+        var result = actionResult as OkObjectResult;
+        result.ShouldBeAssignableTo<OkResult>();
     }
 }

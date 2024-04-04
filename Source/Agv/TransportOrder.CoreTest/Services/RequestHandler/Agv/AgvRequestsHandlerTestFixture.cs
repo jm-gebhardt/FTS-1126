@@ -48,6 +48,7 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
         AgvDb.Setup(x => x.AgvSettings.GetSettingsForAgvGroup(It.IsAny<Guid>())).Returns(EfAgvSettingsProvider.DefaultSettings);
         AgvDb.Setup(x => x.Agvs.GetAgvAsync(It.IsAny<Guid>())).ReturnsAsync(AgvGenerator.GenerateIdleAgv());
         AgvDb.Setup(x => x.AgvSettings.AddOrUpdateSettingsForAgvGroup(It.IsAny<AgvSettingsReadModel>(), It.IsAny<GroupType>(), It.IsAny<string>())).Verifiable();
+        AgvDb.Setup(x => x.AgvSettings.ResetSettingPropertyToDefaultAsync(It.IsAny<Guid>(), It.IsAny<string>())).Verifiable();
     }
 
     public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithEmptyGraphRepository()
@@ -162,5 +163,10 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
     public void VerifyAgvSettingsUpdated(GroupType groupType, string groupIdentifier, AgvSettingsReadModel settings)
     {
         AgvDb.Verify(x => x.AgvSettings.AddOrUpdateSettingsForAgvGroup(settings, groupType, groupIdentifier), Times.Once);
+    }
+    
+    public void VerifyAgvSettingsPropertyReset(Guid agvGroup, string propertyName)
+    {
+        AgvDb.Verify(x => x.AgvSettings.ResetSettingPropertyToDefaultAsync(agvGroup, propertyName), Times.Once);
     }
 }

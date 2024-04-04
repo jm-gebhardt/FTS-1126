@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agvs.Queries;
@@ -30,6 +31,8 @@ public class AgvsController : Controller
     private readonly IRequestClient<GetAgvsSettings> _getAgvsSettingsClient;
     private readonly IRequestClient<GetAgvsHasCargo> _getAgvsHasCargoClient;
     private readonly IRequestClient<UpdateDefaultAgvSettings> _updateDefaultSettingsClient;
+    private readonly IRequestClient<UpdateAgvsSettings> _updateAgvsSettingsClient;
+    private readonly IRequestClient<ResetAgvsSettingToDefault> _resetSettingsToDefaultClient;
 
     private readonly IMapper _mapper;
 
@@ -48,7 +51,9 @@ public class AgvsController : Controller
         IRequestClient<GetAgvsSettings> getAgvsSettingsClient,
         IRequestClient<GetCargosOfAgvs> getCargosOfAgvsClient,
         IRequestClient<GetAgvsHasCargo> getAgvsHasCargoClient,
-        IRequestClient<UpdateDefaultAgvSettings> updateDefaultSettingsClient
+        IRequestClient<UpdateDefaultAgvSettings> updateDefaultSettingsClient,
+        IRequestClient<UpdateAgvsSettings> updateAgvsSettingsClient,
+        IRequestClient<ResetAgvsSettingToDefault> resetSettingsToDefaultClient
     )
     {
         _getAgvsClient = getAgvsClient;
@@ -64,6 +69,8 @@ public class AgvsController : Controller
         _getAgvsSettingsClient = getAgvsSettingsClient;
         _getAgvsHasCargoClient = getAgvsHasCargoClient;
         _updateDefaultSettingsClient = updateDefaultSettingsClient;
+        _updateAgvsSettingsClient = updateAgvsSettingsClient;
+        _resetSettingsToDefaultClient = resetSettingsToDefaultClient;
     }
 
     /// <summary>
@@ -244,7 +251,7 @@ public class AgvsController : Controller
     }
 
     /// <summary>
-    /// Update the default settings for all agvs. All non-null properties get updated.
+    /// Set default value to new value for settings listed in request body.
     /// </summary>
     /// <param name="updatedSettings">The updated settings. </param>
     /// <response code="200">Settings updated.</response>
@@ -253,6 +260,37 @@ public class AgvsController : Controller
     public async Task<ActionResult> UpdateDefaultSettings([FromBody] AgvSettingsDto updatedSettings)
     {
         await _updateDefaultSettingsClient.GetResponse<Success>(new UpdateDefaultAgvSettings(_mapper.Map<AgvSettingsReadModel>(updatedSettings)));
+        return Ok();
+    }
+
+    /// <summary>
+    /// Update the settings for given agvs. All non-null properties get updated.
+    /// </summary>
+    /// <param name="correlationIds">Only Agvs contained in this list will be considered</param>
+    /// <param name="updatedSettings">The updated settings.</param>
+    /// <response code="400">One or more of given correlation ids is unknown.</response>
+    /// <response code="200">Settings updated.</response>
+    [HttpPatch]
+    [Route("/agvs/settings")]
+    public async Task<ActionResult> UpdateSettings([FromQuery] ICollection<Guid> correlationIds, [FromBody] AgvSettingsDto updatedSettings)
+    {
+        await _updateAgvsSettingsClient.GetResponse<Success>(new UpdateAgvsSettings(correlationIds, _mapper.Map<AgvSettingsReadModel>(updatedSettings)));
+        return Ok();
+    }
+
+    /// <summary>
+    /// Reset agv settings property to default for all given agvs.
+    /// </summary>
+    /// <param name="correlationIds">Only Agvs contained in this list will be considered</param>
+    /// <param name="propertyName">The settings property name to reset to default.</param>
+    /// <response code="200">Ok</response>
+    /// <response code="404">Agv with given correlationId not found.</response>
+    /// <response code="400">Invalid (unknown) agv settings property name.</response>
+    [HttpPatch]
+    [Route("/agvs/settings/reset")]
+    public async Task<ActionResult> ResetAgvsSettingToDefault([FromQuery] ICollection<Guid> correlationIds, [FromQuery] string propertyName)
+    {
+        await _resetSettingsToDefaultClient.GetResponse<Success>(new ResetAgvsSettingToDefault(correlationIds, propertyName));
         return Ok();
     }
 }

@@ -465,4 +465,61 @@ public class AgvSettingsTest
         agvSettings.UpdatePropertyId(nameof(agvSettings.AgvOfflineTimeoutMsWhileIdle), newId);
         agvSettings.AgvOfflineTimeoutMsWhileIdleId.ShouldBe(newId);
     }
+
+    [TestMethod]
+    public void ReplaceSetting_ValidData_SettingReplaced()
+    {
+        var agvSettings = new AgvSettings(Guid.NewGuid());
+        agvSettings.Update(EfAgvSettingsProvider.DefaultSettings, false);
+
+        var replacement = new AgvSettings(Guid.NewGuid());
+        replacement.Update(EfAgvSettingsProvider.DefaultSettings, false);
+
+        agvSettings.BatteryLevelLow.ShouldNotBe(replacement.BatteryLevelLow);
+        agvSettings.BatteryLevelLowId.ShouldNotBe(replacement.BatteryLevelLowId);
+
+        agvSettings.ReplaceSetting(replacement.BatteryLevelLow);
+
+        agvSettings.BatteryLevelLowId.ShouldBe(replacement.BatteryLevelLowId);
+        agvSettings.BatteryLevelLow.ShouldBe(replacement.BatteryLevelLow);
+    }
+
+    [TestMethod]
+    public void ReplaceSetting_UnknownSetting_ThrowsInvalidAgvSettingsPropertyException()
+    {
+        var agvSettings = new AgvSettings(Guid.NewGuid());
+        agvSettings.Update(EfAgvSettingsProvider.DefaultSettings, false);
+        
+        Should.Throw<InvalidAgvSettingsPropertyException>(() =>
+            agvSettings.ReplaceSetting(new Setting(Guid.NewGuid(), "unknown", "value", "type", false)));
+    }
+
+    [TestMethod]
+    public void GetAllSettings_ValidData_SettingsReturned()
+    {
+        var agvSettings = new AgvSettings(Guid.NewGuid());
+        agvSettings.Update(EfAgvSettingsProvider.DefaultSettings, false);
+
+        ICollection<Setting?> settings = agvSettings.GetAllSettings();
+
+        foreach ((string name, object? value) in EfAgvSettingsProvider.DefaultSettings.GetValidPropertiesInformation())
+        {
+            settings.Any(s => s!.Name == name).ShouldBeTrue();
+            settings.Any(s => s!.Value == value!.ToString()).ShouldBeTrue();
+        }
+    }
+
+    [TestMethod]
+    public void ReplaceAllSettings_ValidData_ReplacesSettings()
+    {
+        var agvSettings = new AgvSettings(Guid.NewGuid());
+        agvSettings.Update(EfAgvSettingsProvider.DefaultSettings, false);
+
+        var newSettings = new AgvSettings(Guid.NewGuid());
+        newSettings.Update(EfAgvSettingsProvider.DefaultSettings, false);
+        agvSettings.GetAllSettings().ShouldNotBeSameAs(newSettings.GetAllSettings());
+
+        agvSettings.ReplaceAllSettings(newSettings);
+        agvSettings.GetAllSettings().ShouldBe(newSettings.GetAllSettings(), ignoreOrder:true);
+    }
 }

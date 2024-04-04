@@ -23,7 +23,9 @@ public class AgvSettings
     /// Ctor for EfCore.
     /// </summary>
     [UsedImplicitly]
-    private AgvSettings() { }
+    private AgvSettings()
+    {
+    }
 
     /// <summary>
     /// The uid of the agv settings
@@ -120,6 +122,58 @@ public class AgvSettings
             .Select(p => (Setting?)p.GetValue(this))
             .SingleOrDefault(s => s?.Name.ToUpper() == name.ToUpper());
         return setting ?? throw new InvalidAgvSettingsPropertyException(name);
+    }
+
+    /// <summary>
+    /// Get all properties of type <see cref="Setting"/>.
+    /// </summary>
+    /// <returns></returns>
+    public ICollection<Setting?> GetAllSettings()
+    {
+        return GetType()
+            .GetProperties()
+            .Where(p => p.PropertyType == typeof(Setting))
+            .Select(p => (Setting?)p.GetValue(this)).ToList();
+    }
+
+    /// <summary>
+    /// Replace a property of type <see cref="Setting"/> with a new value.
+    /// </summary>
+    /// <param name="newSetting">The new value.</param>
+    /// <exception cref="InvalidAgvSettingsPropertyException">Thrown, if  the setting update failed. </exception>
+    public void ReplaceSetting(Setting newSetting)
+    {
+        var oldSetting = GetSettingByName(newSetting.Name);
+        if (oldSetting == null)
+        {
+            throw new InvalidAgvSettingsPropertyException(newSetting.Name);
+        }
+
+        var propertyInfo = GetType().GetProperty(newSetting.Name);
+
+        if (propertyInfo == null || propertyInfo.PropertyType != typeof(Setting))
+        {
+            throw new InvalidAgvSettingsPropertyException(newSetting.Name);
+        }
+        propertyInfo.SetValue(this, newSetting);
+
+        UpdatePropertyId(newSetting.Name, newSetting.Id);
+    }
+
+    /// <summary>
+    /// Replace all settings by values of the given settings.
+    /// </summary>
+    /// <param name="newSettings">The new settings.</param>
+    public void ReplaceAllSettings(AgvSettings newSettings)
+    {
+        foreach (var settingsProperty in GetType()
+                     .GetProperties()
+                     .Where(p => p.PropertyType == typeof(Setting)))
+        {
+            var newSetting = newSettings.GetSettingByName(settingsProperty.Name);
+            settingsProperty.SetValue(this, newSetting);
+            UpdatePropertyId(newSetting.Name, newSetting.Id);
+        }
     }
 
     /// <summary>

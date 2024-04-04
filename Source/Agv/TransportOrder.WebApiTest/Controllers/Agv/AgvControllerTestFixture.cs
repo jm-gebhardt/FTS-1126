@@ -19,6 +19,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Metrics;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Commands;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Routing;
@@ -227,6 +228,8 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         IRequestClient<ResetAgvErrors> resetAgvErrorsClient = GetRequestClient<ResetAgvErrors>();
         IRequestClient<GetAgvSettings> getAgvSettingsRequestClient = GetRequestClient<GetAgvSettings>();
         IRequestClient<SendAgvToCharger> sendAgvToChargerClient = GetRequestClient<SendAgvToCharger>();
+        IRequestClient<UpdateAgvSettings> updateAgvSettingsClient = GetRequestClient<UpdateAgvSettings>();
+        IRequestClient<ResetAgvSettingToDefault> resetAgvSettingsClient = GetRequestClient<ResetAgvSettingToDefault>();
 
         var controller = new AgvController(Mapper!,
             getAgvRequestClient,
@@ -250,7 +253,9 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             getCargosOfAgvClient,
             resetAgvErrorsClient,
             getAgvSettingsRequestClient,
-            sendAgvToChargerClient
+            sendAgvToChargerClient,
+            updateAgvSettingsClient,
+            resetAgvSettingsClient
         )
         {
             ControllerContext = new ControllerContext(

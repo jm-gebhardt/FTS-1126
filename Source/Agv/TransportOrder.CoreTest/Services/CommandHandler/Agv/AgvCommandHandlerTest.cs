@@ -636,4 +636,19 @@ public class AgvCommandHandlerTest
         (await fixture.TestHarness.Published.Any<NodeStateChanged>()).ShouldBeFalse();
         (await fixture.TestHarness.Published.Any<ChargingNodeSelectedForAgv>()).ShouldBeFalse();
     }
+
+    [TestMethod]
+    public async Task Consume_UpdateAgvSettingsGroupReference_ValidData_AgvSettingsGroupPropertyUpdated()
+    {
+        var previousGroupId = Guid.Empty;
+        var agv = AgvGenerator.GenerateIdleAgv();
+        agv.AgvSettingsGroup = previousGroupId;
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([agv]);
+        var command = new UpdateAgvSettingsGroupReference(agv.CorrelationId);
+        await fixture.TestHarness.Bus.Publish(command);
+
+        (await fixture.ConsumerHarness.Consumed.Any<UpdateAgvSettingsGroupReference>()).ShouldBeTrue();
+        agv.AgvSettingsGroup.ShouldNotBe(previousGroupId);
+    }
 }

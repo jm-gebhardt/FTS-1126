@@ -1,12 +1,16 @@
 ﻿using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agvs.Queries;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
+using Gebhardt.StoreWare.Agv.Common.Extensions;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Constants;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
 using AgvSettings = Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent.AgvSettings;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
@@ -18,19 +22,26 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHan
 public class AgvSettingsRequestHandler :
     IConsumer<GetAgvSettings>,
     IConsumer<GetAgvsSettings>,
-    IConsumer<UpdateDefaultAgvSettings>
+    IConsumer<UpdateDefaultAgvSettings>,
+    IConsumer<UpdateAgvSettings>,
+    IConsumer<UpdateAgvsSettings>,
+    IConsumer<ResetAgvSettingToDefault>,
+    IConsumer<ResetAgvsSettingToDefault>
 {
     private readonly IAgvDb _agvDb;
     private readonly IMapper _mapper;
+    private readonly IBus _bus;
     private readonly ILogger<AgvSettingsRequestHandler> _logger;
 
     /// <inheritdoc cref="AgvSettingsRequestHandler"/>
     public AgvSettingsRequestHandler(IAgvDb agvDb,
         ILogger<AgvSettingsRequestHandler> logger,
+        IBus bus,
         IMapper mapper)
     {
         _agvDb = agvDb;
         _mapper = mapper;
+        _bus = bus;
         _logger = logger;
     }
 
@@ -74,5 +85,74 @@ public class AgvSettingsRequestHandler :
         await _agvDb.AgvSettings.AddOrUpdateSettingsForAgvGroup(settings, defaultSettingsGroup.GroupType, defaultSettingsGroup.Identifier);
         _logger.LogInformation("Default agv settings changed." );
         await context.RespondAsync(new Success());
+    }
+
+    /// <summary>
+    /// Handles the <see cref="UpdateAgvSettings"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<UpdateAgvSettings> context)
+    {
+        var (correlationId, settings) = context.Message;
+        await UpdateAgvSetting(correlationId, settings);
+        await context.RespondAsync(new Success());
+    }
+
+    /// <summary>
+    /// Handles the <see cref="UpdateAgvsSettings"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<UpdateAgvsSettings> context)
+    {
+        (ICollection<Guid> correlationIds, var settings) = context.Message;
+        List<Task> updateTasks = correlationIds
+            .Select(correlationId => Task.Run(() => UpdateAgvSetting(correlationId, settings))).ToList();
+
+        await Task.WhenAll(updateTasks);
+        await context.RespondAsync(new Success());
+    }
+
+    /// <summary>
+    /// Handles the <see cref="ResetAgvSettingToDefault"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<ResetAgvSettingToDefault> context)
+    {
+        (var correlationId, string propertyName) = context.Message;
+        await ResetAgvSettingToDefault(correlationId, propertyName);
+        await context.RespondAsync(new Success());
+    }
+
+    /// <summary>
+    /// Handles the <see cref="ResetAgvsSettingToDefault"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<ResetAgvsSettingToDefault> context)
+    {
+        (ICollection<Guid> correlationIds, string propertyName) = context.Message;
+        List<Task> updateTasks = correlationIds
+            .Select(correlationId => Task.Run(() => ResetAgvSettingToDefault(correlationId, propertyName))).ToList();
+
+        await Task.WhenAll(updateTasks);
+        await context.RespondAsync(new Success());
+    }
+
+    private async Task ResetAgvSettingToDefault(Guid correlationId, string propertyName)
+    {
+        var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
+        await _agvDb.AgvSettings.ResetSettingPropertyToDefaultAsync(agv.AgvSettingsGroup, propertyName);
+        _logger.LogAgvInformation(LogCodes.AgvSettingsReset, agv.CorrelationId, "Agv setting reset", $"{propertyName} reset to default");
+    }
+
+    private async Task UpdateAgvSetting(Guid correlationId, AgvSettingsReadModel settings)
+    {
+        var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
+        await _agvDb.AgvSettings.AddOrUpdateSettingsForAgvGroup(settings, GroupType.SerialNumber, agv.SerialNumber);
+        await _bus.Publish(new UpdateAgvSettingsGroupReference(correlationId));
+        LogSettingsUpdateForAgv(correlationId, settings);
+    }
+
+    private void LogSettingsUpdateForAgv(Guid correlationId, AgvSettingsReadModel settings)
+    {
+        foreach ((string? name, object? value) in settings.GetValidPropertiesInformation())
+        {
+            _logger.LogAgvInformation(LogCodes.AgvSettingUpdated, correlationId, "Setting updated", $"{name} updated to {value}");
+        }
     }
 }

@@ -58,16 +58,26 @@ public class EfAgvSettingsProvider : IAgvSettingsProvider
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         var defaultGroup = await GetDefaultGroup();
-        var defaultSettings = GetSettingsForAgvGroup(defaultGroup.Id);
         var group = await context.Set<AgvSettingsGroup>().SingleOrDefaultAsync(g => g.GroupType == type && g.Identifier == identifier);
         
         // Add new settings group
         if (group == null)
         {
             group = new AgvSettingsGroup(type, identifier);
-            group.UpdateSettings(defaultSettings);
+            group.AgvSetting.ReplaceAllSettings(defaultGroup.AgvSetting);
             context.Set<AgvSettingsGroup>().Add(group);
+           
+            // Prevent settings to be added as new by marking them modified
+            foreach (var setting in group.AgvSetting.GetAllSettings())
+            {
+                if (setting == null)
+                {
+                    continue;
+                }
+                context.Entry(setting).State = EntityState.Modified;
+            }
         }
+
         group.UpdateSettings(newSettings);
 
         // Add or update settings
@@ -82,6 +92,36 @@ public class EfAgvSettingsProvider : IAgvSettingsProvider
             context.Set<Setting>().Update(setting);
         }
         await context.SaveChangesAsync();
+        await ReloadInMemorySettings();
+    }
+
+    /// <inheritdoc />
+    public async Task ResetSettingPropertyToDefaultAsync(Guid agvSettingsGroup, string propertyName)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        var group = await context.Set<AgvSettingsGroup>()
+            .AsNoTracking()
+            .SingleOrDefaultAsync(g => g.Id == agvSettingsGroup);
+        if (group == null)
+        {
+            throw new AgvSettingsNotFoundException();
+        }
+
+        var defaultGroup = await GetDefaultGroup();
+        var defaultSetting = defaultGroup.AgvSetting.GetSettingByName(propertyName);
+        var originalSetting = group.AgvSetting.GetSettingByName(propertyName);
+       
+        // if setting is already default do not do anything
+        if (originalSetting.Id == defaultSetting.Id)
+        {
+            return;
+        }
+       
+        group.AgvSetting.ReplaceSetting(defaultSetting);
+        context.Set<AgvSettingsGroup>().Update(group);
+        context.Set<Setting>().Remove(originalSetting);
+        await context.SaveChangesAsync();
+        await context.DisposeAsync();
         await ReloadInMemorySettings();
     }
 

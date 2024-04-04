@@ -1,4 +1,5 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
+﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 
@@ -35,4 +36,13 @@ public interface IAgvSettingsProvider
     /// <param name="type">The group type.</param>
     /// <param name="identifier">The group identifier.</param>
     Task AddOrUpdateSettingsForAgvGroup(AgvSettingsReadModel newSettings, GroupType type, string identifier);
+
+    /// <summary>
+    /// Resets the given property of the agv settings group to the default.
+    /// </summary>
+    /// <param name="agvSettingsGroup">The id of the agv settings group.</param>
+    /// <param name="propertyName">The property name.</param>
+    /// <exception cref="InvalidAgvSettingsPropertyException">Thrown, when the given property name does not match any settings property.</exception>
+    /// <exception cref="AgvSettingsNotFoundException">Thrown, when no group was found that corresponds to the given group id.</exception>
+    Task ResetSettingPropertyToDefaultAsync(Guid agvSettingsGroup, string propertyName);
 }

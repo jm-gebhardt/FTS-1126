@@ -56,6 +56,7 @@ public class ExceptionHandlerMiddleware : IMiddleware
             case NotInCorrectStateException:
             case ActionGroupStateInvalidException:
             case InvalidNodeTypeException:
+            case InvalidAgvSettingsPropertyException:
             case ActionGroupInvalidException:
             case NodeNotFoundException:
             case BadRequestException:

@@ -27,6 +27,8 @@ public static class LogCodes
     public const int AgvUnlocked = 309;
     public const int AgvCargoUpdated = 310;
     public const int AgvIdle = 311;
+    public const int AgvSettingUpdated = 312;
+    public const int AgvSettingsReset = 313;
 
     // Order
     public const int OrderCreated = 100;
