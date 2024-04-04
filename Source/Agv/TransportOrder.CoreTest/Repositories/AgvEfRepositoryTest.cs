@@ -2,6 +2,7 @@ using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
@@ -231,5 +232,15 @@ public class AgvEfRepositoryTest
         await fixture.Add(agv);
 
         await fixture.Repository.ThrowIfAgvsNotExistAsync(new List<Guid> { agv.CorrelationId });
+    }
+
+    [TestMethod]
+    public async Task GetReadyAgvsWithAtLeastLowBatteryLevel_ValidData_ReturnsAgvs()
+    {
+        var fixture = new EfAgvRepositoryTestFixture();
+        var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow);
+        await fixture.Add(agv);
+        ICollection<TransportOrder.Domain.Models.Agv.Agv> agvs = await fixture.Repository.GetReadyAgvsWithAtLeastLowBatteryLevel();
+        agvs.Single().CorrelationId.ShouldBe(agv.CorrelationId);
     }
 }

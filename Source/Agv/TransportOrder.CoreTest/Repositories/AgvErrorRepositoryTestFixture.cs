@@ -30,6 +30,7 @@ public class AgvErrorRepositoryTestFixture
     public async Task<AgvErrorRepositoryTestFixture> BuildAsync()
     {
         await Task.WhenAll(_tasks);
+
         return this;
     }
 }

@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
 using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
@@ -25,7 +24,8 @@ using System.Collections.ObjectModel;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Map;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Constants;
-using AgvSettings = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings.AgvSettings;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
+using AgvSettings = Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent.AgvSettings;
 using AgvStatus = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv.AgvStatus;
 using Cargo = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Cargo;
 using LockAgv = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv.LockAgv;
@@ -62,7 +62,6 @@ public class AgvCommandHandler :
     private readonly ILogger<AgvCommandHandler> _logger;
     private readonly ISemaphoreProvider<IAgvsSemaphore> _agvsSemaphore;
     private readonly IActionGroupRepository _actionGroupRepository;
-    private readonly ISettingsProvider<AgvSettings> _settingsProvider;
     private readonly IMapper _mapper;
     private readonly ProductionOptions _productionOptions;
     private readonly IAgvDb _agvDb;
@@ -74,7 +73,6 @@ public class AgvCommandHandler :
     /// <inheritdoc cref="AgvCommandHandler"/>
     public AgvCommandHandler(ISemaphoreProvider<IAgvsSemaphore> agvsSemaphore,
         IAgvDb agvDb,
-        ISettingsProvider<AgvSettings> settingsProvider,
         IActionGroupRepository actionGroupRepository,
         IParkPointService parkPointService,
         IChargingPointManager chargingPointManager,
@@ -91,7 +89,6 @@ public class AgvCommandHandler :
         _actionGroupRepository = actionGroupRepository;
         _parkPointService = parkPointService;
         _nodeStateRepository = nodeStateRepository;
-        _settingsProvider = settingsProvider;
         _mapper = mapper;
         _metricCollectionService = metricCollectionService;
         _productionOptions = productionOptions;
@@ -144,7 +141,7 @@ public class AgvCommandHandler :
     {
         var agvCorrelationId = context.Message.CorrelationId;
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
-        var agvSettings = _settingsProvider.GetSettings();
+        var agvSettings = _agvDb.AgvSettings.GetSettingsForAgvGroup(agv.AgvSettingsGroup);
 
         if (agv.CheckShouldCharge(agvSettings) || agv.IsLocked)
         {
@@ -170,8 +167,7 @@ public class AgvCommandHandler :
         var cancellationToken = context.CancellationToken;
         await _agvsSemaphore.ExecuteLockedAsync(async () =>
         {
-            var agvSettings = _settingsProvider.GetSettings();
-            ICollection<Domain.Models.Agv.Agv> goodAgvs = await _agvDb.Agvs.GetChargingAgvsWithMinBatteryLevelAsync(agvSettings.MinChargeUp);
+            ICollection<Domain.Models.Agv.Agv> goodAgvs = await _agvDb.Agvs.GetChargingAgvsWithMinBatteryLevelAsync();
 
             // preliminary logic: just go through all potential available Agvs and try to start a new action
             foreach (var agv in goodAgvs.OrderByDescending(a => a.AgvStatus!.BatteryCharge))
@@ -262,12 +258,13 @@ public class AgvCommandHandler :
         var oldStatus = agv.AgvStatus;
         bool wasOnline = agv.IsOnline;
 
-        await ResetOfflineWatchDog(context, agv);
+        var agvSettings = _agvDb.AgvSettings.GetSettingsForAgvGroup(agv.AgvSettingsGroup);
+        await ResetOfflineWatchDog(context, agv, agvSettings);
         bool wasReady = agv.IsReady;
         (bool batteryChargeChanged, bool lastNodeIdChanged) = agv.UpdateAgvStatus(agvStatus);
         bool isReady = agv.IsReady;
-
-        LogBatteryStates(oldStatus, agv.AgvStatus);
+        
+        LogBatteryStates(oldStatus, agv.AgvStatus, agvSettings);
         _metricCollectionService.CollectBatteryChargeMetrics(agvStatus);
 
         if (!wasReady && isReady)
@@ -298,12 +295,12 @@ public class AgvCommandHandler :
             _logger.LogDebug("{Command}: Could not update agv {AgvCorrelationId}", nameof(UpdateAgvStatus), agv.CorrelationId);
             return;
         }
-        await PublishAgvStatusUpdateEvents(context, agv, batteryChargeChanged, oldStatus, lastNodeIdChanged, wasOnline);
+        await PublishAgvStatusUpdateEvents(context, agv, batteryChargeChanged, oldStatus, lastNodeIdChanged, wasOnline, agvSettings);
 
         await TryAutoAccept(context, agv, context.CancellationToken);
     }
 
-    private async Task ResetOfflineWatchDog(ConsumeContext context, Domain.Models.Agv.Agv agv)
+    private async Task ResetOfflineWatchDog(ConsumeContext context, Domain.Models.Agv.Agv agv, AgvSettingsReadModel agvSettings)
     {
         if (agv.AgvOfflineTokenId != null)
         {
@@ -311,7 +308,6 @@ public class AgvCommandHandler :
             await scheduler.CancelScheduledPublish<AgvWentOffline>(agv.AgvOfflineTokenId.Value);
         }
 
-        var agvSettings = _settingsProvider.GetSettings();
         int delay = agv.CurrentAgvState == AgvState.Busy ? agvSettings.AgvOfflineTimeoutMsWhileBusy : agvSettings.AgvOfflineTimeoutMsWhileIdle;
         var creationTimeStamp = DateTime.UtcNow;
         ScheduledMessage<AgvWentOffline> delayedMessage = await context.SchedulePublish(creationTimeStamp.AddMilliseconds(delay), new AgvWentOffline(agv.CorrelationId, creationTimeStamp));
@@ -323,13 +319,17 @@ public class AgvCommandHandler :
         bool batteryChargeChanged,
         AgvStatus? oldStatus,
         bool lastNodeIdChanged,
-        bool wasOnline)
+        bool wasOnline,
+        AgvSettingsReadModel agvSettings)
     {
         var agvStatus = agv.AgvStatus!;
         if (batteryChargeChanged)
         {
-            var agvSettings = _settingsProvider.GetSettings();
-            var agvBatteryStatus = new AgvBatteryStatus(_mapper.Map<Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.AgvStatus>(agvStatus), _mapper.Map<Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent.AgvSettings>(agvSettings));
+            var agvBatteryStatus =
+                new AgvBatteryStatus(
+                    _mapper.Map<Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.AgvStatus>(agvStatus),
+                    _mapper.Map<AgvSettings>(
+                        agvSettings));
 
             await context.Publish(new AgvBatteryChargeChanged(oldStatus!.BatteryCharge, agvBatteryStatus));
         }
@@ -412,6 +412,8 @@ public class AgvCommandHandler :
         var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
         await _agvDb.Data.AddOrUpdateAsync(agvData);
         agv.DataExist = true;
+        var settingsGroup = await _agvDb.AgvSettings.GetSettingsGroupForAgv(agv);
+        agv.AgvSettingsGroup = settingsGroup.Id;
         if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
         {
             _logger.LogDebug("{Command}: Could not update agv {AgvCorrelationId}", nameof(UpdateAgvData), agv.CorrelationId);
@@ -598,7 +600,8 @@ public class AgvCommandHandler :
     public async Task Consume(ConsumeContext<ResetOfflineWatchdog> context)
     {
         var agv = await _agvDb.Agvs.GetAgvAsync(context.Message.CorrelationId);
-        await ResetOfflineWatchDog(context, agv);
+        var agvSettings = _agvDb.AgvSettings.GetSettingsForAgvGroup(agv.AgvSettingsGroup);
+        await ResetOfflineWatchDog(context, agv, agvSettings);
         await _agvDb.Agvs.UpdateAgvAsync(agv);
     }
 
@@ -672,9 +675,11 @@ public class AgvCommandHandler :
         (var correlationId, string agvSerialNumber, var agvStatus) = context.Message;
 
         _logger.LogAgvInformation(LogCodes.AgvDiscovered, correlationId, "AGV Discovered", $"AGV {agvSerialNumber} has been discovered");
-
-        var agv = new Domain.Models.Agv.Agv(correlationId, agvSerialNumber, _mapper.Map<AgvStatus>(agvStatus));
-
+       
+        var settingsGroup = await _agvDb.AgvSettings.GetSettingsGroupForAgv();
+        var agv = new Domain.Models.Agv.Agv(correlationId, settingsGroup.Id,  agvSerialNumber, _mapper.Map<AgvStatus>(agvStatus));
+        settingsGroup = await _agvDb.AgvSettings.GetSettingsGroupForAgv(agv);
+        agv.AgvSettingsGroup = settingsGroup.Id;
         bool graphExists = await _agvDb.Graphs.ExistsAsync(correlationId);
         if (!graphExists)
         {
@@ -690,13 +695,12 @@ public class AgvCommandHandler :
         await context.Publish(new AgvDiscovered(agvMessageContent));
     }
 
-    private void LogBatteryStates(AgvStatus? oldAgvStatus, AgvStatus? newAgvStatus)
+    private void LogBatteryStates(AgvStatus? oldAgvStatus, AgvStatus? newAgvStatus, AgvSettingsReadModel agvSettings)
     {
         if (newAgvStatus == null || oldAgvStatus == null)
         {
             return;
         }
-        var agvSettings = _settingsProvider.GetSettings();
         double oldSoc = oldAgvStatus.BatteryCharge;
         double newSoc = newAgvStatus.BatteryCharge;
 

@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using FluentValidation;
-using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
 using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
@@ -25,7 +24,6 @@ using MassTransit;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
 using AgvAction = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.AgvAction;
-using AgvSettings = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings.AgvSettings;
 using MessageAgvAction = Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.AgvAction;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.CommandHandler;
@@ -54,7 +52,6 @@ public class ActionCommandHandler :
     private readonly IActionGroupRepository _actionGroupRepository;
     private readonly IChooseAgvActionGroupService _chooseAgvActionGroupService;
     private readonly ISemaphoreProvider<IAgvsSemaphore> _actionManagerSemaphoreProvider;
-    private readonly ISettingsProvider<AgvSettings> _settingsProvider;
     private readonly IMapper _mapper;
     private readonly IBus _bus;
     private readonly IActionGroupValidationService _actionGroupValidationService;
@@ -74,7 +71,6 @@ public class ActionCommandHandler :
         IActionGroupDurationEstimationService durationEstimationService,
         IAgvDb agvDb,
         IMetricCollectionService metricCollectionService,
-        ISettingsProvider<AgvSettings> settingsProvider,
         IMapper mapper,
         IBus bus,
         ILogger<ActionCommandHandler> logger)
@@ -89,7 +85,6 @@ public class ActionCommandHandler :
         _actionGroupRetrievalService = actionGroupRetrievalService;
         _durationEstimationService = durationEstimationService;
         _metricCollectionService = metricCollectionService;
-        _settingsProvider = settingsProvider;
         _mapper = mapper;
         _bus = bus;
     }
@@ -301,7 +296,7 @@ public class ActionCommandHandler :
         var cancellationToken = context.CancellationToken;
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 
-        var agvSettings = _settingsProvider.GetSettings();
+        var agvSettings = _agvDb.AgvSettings.GetSettingsForAgvGroup(agv.AgvSettingsGroup);
         bool needsCharging = agv.CheckMustCharge(agvSettings);
         bool hasUnfinishedDropAction = await _actionGroupRepository.HasUnfinishedDropActionsAsync(agv.CorrelationId);
 
@@ -463,10 +458,9 @@ public class ActionCommandHandler :
             }
             else
             {
-                var agvSettings = _settingsProvider.GetSettings();
                 await _actionManagerSemaphoreProvider.ExecuteLockedAsync(async () =>
                 {
-                    ICollection<Domain.Models.Agv.Agv> goodAgvs = (await _agvDb.Agvs.GetReadyAgvsAsync(minBatteryLevel: agvSettings.BatteryLevelLow)).ToList();
+                    ICollection<Domain.Models.Agv.Agv> goodAgvs = (await _agvDb.Agvs.GetReadyAgvsWithAtLeastLowBatteryLevel()).ToList();
                     ICollection<AgvData> agvData = await _agvDb.Data.GetSelectedAgvDataAsync(goodAgvs.Select(a => a.CorrelationId).ToList());
                     agv = await _chooseAgvActionGroupService.GetAgvAsync(domainActionGroup, goodAgvs.ToList(), agvData.ToList(), cancellationToken);
                 }, cancellationToken);

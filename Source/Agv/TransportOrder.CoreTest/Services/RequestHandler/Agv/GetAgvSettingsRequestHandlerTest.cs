@@ -1,8 +1,9 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Configurations.Exceptions;
-using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agvs.Queries;
+using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
 using MassTransit;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
@@ -13,20 +14,10 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.RequestHandler
 public class GetAgvSettingsRequestHandlerTest
 {
     [TestMethod]
-    public async Task GetAgvDataRequest_AgvSettingsNotFound_ExceptionThrown()
-    {
-        AgvRequestsHandlerTestFixture<GetAgvSettings, GetAgvSettingsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvSettings, GetAgvSettingsRequestHandler>()
-            .WithAgvSettings(null)
-            .Build();
-
-        await MediatorShould.ThrowRequestExceptionAsync<NoSettingsFoundException>(async () => await fixture.GetResponseAsync<GotAgvSettings>(new GetAgvSettings(Guid.NewGuid())));
-    }
-
-    [TestMethod]
     public async Task Consume_GetAgvSettings_ValidData_ReturnsSelectedSettings()
     {
         var correlationId = Guid.NewGuid();
-        AgvRequestsHandlerTestFixture<GetAgvsSettings, GetAgvSettingsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvsSettings, GetAgvSettingsRequestHandler>()
+        AgvRequestsHandlerTestFixture<GetAgvsSettings, AgvSettingsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvsSettings, AgvSettingsRequestHandler>()
             .Build();
 
         Response<GotAgvsSettings> response = await fixture.GetResponseAsync<GotAgvsSettings>(new GetAgvsSettings(new List<Guid> { correlationId }));
@@ -37,5 +28,20 @@ public class GetAgvSettingsRequestHandlerTest
         message.BatteryLevelLow.ShouldBe(fixture.AgvSettings.BatteryLevelLow);
         message.MinChargeUp.ShouldBe(fixture.AgvSettings.MinChargeUp);
         message.MaxChargeUp.ShouldBe(fixture.AgvSettings.MaxChargeUp);
+    }
+
+    [TestMethod]
+    public async Task Consume_UpdateDefaultSettings_ValidData_SettingsUpdated()
+    {
+        var group = new AgvSettingsGroup(GroupType.All);
+        group.UpdateSettings(EfAgvSettingsProvider.DefaultSettings);
+        AgvRequestsHandlerTestFixture<UpdateDefaultAgvSettings, AgvSettingsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<UpdateDefaultAgvSettings, AgvSettingsRequestHandler>()
+            .WithSettingsGroup(group)
+            .Build();
+
+        var settings = new AgvSettingsReadModel(batteryLevelCritical: 10);
+        Response<Success> response = await fixture.GetResponseAsync<Success>(new UpdateDefaultAgvSettings(settings));
+        response.ShouldNotBeNull();
+        fixture.VerifyAgvSettingsUpdated(group.GroupType, group.Identifier, settings);
     }
 }

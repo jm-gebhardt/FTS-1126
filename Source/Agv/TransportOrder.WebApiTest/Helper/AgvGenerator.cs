@@ -37,7 +37,7 @@ public static class AgvGenerator
         string agvSerialNumber = GetAgvSerialNumber(index);
         var correlationId = agvSerialNumber.ToGuid();
         agvStatus ??= new AgvStatus(correlationId, "orderId", true, true, 1, charging, false, lastNodeId);
-        var agv = new Domain.Models.Agv.Agv(correlationId, agvSerialNumber, agvStatus);
+        var agv = new Domain.Models.Agv.Agv(correlationId, Guid.NewGuid(), agvSerialNumber, agvStatus);
         return SetAgvState(state, isLocked, agv);
     }
 

@@ -1,9 +1,7 @@
 using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agvs.Queries;
@@ -22,19 +20,16 @@ public class GetAgvBatteryRequestHandler :
 {
     private readonly IAgvDb _agvDb;
     private readonly IMapper _mapper;
-    private readonly ISettingsProvider<AgvSettings> _settingsProvider;
 
     /// <summary>
     /// Initializes a new <see cref="GetAgvDataRequestHandler"/> instance.
     /// </summary>
     public GetAgvBatteryRequestHandler(
         IAgvDb agvDb,
-        ISettingsProvider<AgvSettings> settingsProvider,
         IMapper mapper
     )
     {
         _agvDb = agvDb;
-        _settingsProvider = settingsProvider;
         _mapper = mapper;
     }
 
@@ -44,7 +39,7 @@ public class GetAgvBatteryRequestHandler :
         var correlationId = context.Message.CorrelationId;
         var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
 
-        var agvSettings = _mapper.Map<Messages.MessageContent.AgvSettings>(_settingsProvider.GetSettings());
+        var agvSettings = _mapper.Map<Messages.MessageContent.AgvSettings>(_agvDb.AgvSettings.GetSettingsForAgvGroup(agv.AgvSettingsGroup));
         var agvStatus = _mapper.Map<AgvStatus>(agv.AgvStatus);
         var agvBatteryStatus = new AgvBatteryStatus(agvStatus, agvSettings);
 
@@ -63,16 +58,14 @@ public class GetAgvBatteryRequestHandler :
             throw new AgvsNotFoundException(selectedAgvs.Except(agvCorrelationIds).ToList());
         }
 
-        List<Task<AgvBatteryStatus>> batteryStatus = agvs.Select(agv => Task.Run(() =>
+        List<AgvBatteryStatus> batteryStatus = agvs.Select(agv =>
         {
-            var agvSettings = _mapper.Map<Messages.MessageContent.AgvSettings>(_settingsProvider.GetSettings());
+            var agvSettings = _mapper.Map<Messages.MessageContent.AgvSettings>(_agvDb.AgvSettings.GetSettingsForAgvGroup(agv.AgvSettingsGroup));
             var agvStatus = _mapper.Map<AgvStatus>(agv.AgvStatus);
             var agvBatteryStatus = new AgvBatteryStatus(agvStatus, agvSettings);
             return agvBatteryStatus;
-        })).ToList();
+        }).ToList();
 
-        AgvBatteryStatus[] agvBatteryStatus = await Task.WhenAll(batteryStatus);
-
-        await context.RespondAsync(new GotAgvsBattery(agvBatteryStatus.ToList()));
+        await context.RespondAsync(new GotAgvsBattery(batteryStatus));
     }
 }

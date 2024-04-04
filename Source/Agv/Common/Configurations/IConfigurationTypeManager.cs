@@ -30,5 +30,6 @@ public interface IConfigurationTypeManager
     /// <summary>
     /// Returns the ConfigurationType based on the given name of the type
     /// </summary>
+    [PublicAPI]
     ConfigurationType? GetConfigurationTypeByTypeName(string configurationTypeName);
 }

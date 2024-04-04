@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
 
 /// <summary>
-/// Response to get the AgvSettings
+/// Response to get the AgvSettingsReadModel
 /// </summary>
 /// <param name="AgvSettings">The agv settings.</param>
 [UsedImplicitly]

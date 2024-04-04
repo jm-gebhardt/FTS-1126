@@ -1,9 +1,11 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agvs.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 using AgvError = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.AgvError;
@@ -55,11 +57,11 @@ public class AgvsControllerTest
     [TestMethod]
     public async Task GetAgvSettings_ReturnsAgvSettingsDtos()
     {
-        AgvsControllerTestFixture<GetAgvsSettings, GetAgvSettingsRequestHandler> fixture = new AgvsControllerTestFixture<GetAgvsSettings, GetAgvSettingsRequestHandler>()
+        AgvsControllerTestFixture<GetAgvsSettings, AgvSettingsRequestHandler> fixture = new AgvsControllerTestFixture<GetAgvsSettings, AgvSettingsRequestHandler>()
             .SetupAgvDbWithDefaultData()
             .Build();
 
-        List<AgvSettingsDto> dtos = (await fixture.GetControllerResultAsync(c => c.GetAgvSettings(new List<Guid> {Guid.NewGuid()}))).ToList();
+        List<AgvSettingsResponseDto> dtos = (await fixture.GetControllerResultAsync(c => c.GetAgvSettings(new List<Guid> { fixture.AgvSerialNumbers.Take(1).Single().ToGuid() }))).ToList();
 
         dtos.ShouldNotBeEmpty();
         dtos.Count.ShouldBe(1);
@@ -109,5 +111,17 @@ public class AgvsControllerTest
         dto.Count.ShouldBe(1);
         dto[0].CorrelationId.ShouldBe(hasCargoById.Keys.First());
         dto[0].HasCargo.ShouldBe(hasCargoById.Values.First());
+    }
+
+    [TestMethod]
+    public async Task UpdateDefaultSettings_ValidData_ReturnsOk()
+    {
+        AgvsControllerTestFixture<UpdateDefaultAgvSettings, AgvSettingsRequestHandler> fixture = new AgvsControllerTestFixture<UpdateDefaultAgvSettings, AgvSettingsRequestHandler>()
+            .SetupAgvDbWithDefaultData()
+            .Build();
+        var response = await fixture.Controller.UpdateDefaultSettings(new AgvSettingsDto(12));
+        response.ShouldNotBeNull();
+        var result = response as OkObjectResult;
+        result.ShouldBeNull();
     }
 }

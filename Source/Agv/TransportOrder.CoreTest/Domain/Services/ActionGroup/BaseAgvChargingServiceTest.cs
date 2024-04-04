@@ -19,20 +19,13 @@ public class BaseAgvChargingServiceTest
     private const int MinChargeUp = 80;
     private const int MaxChargeUp = 100;
 
-    private static readonly AgvSettings _agvSettings = new()
-    {
-        BatteryLevelCritical = BatteryLevelCritical,
-        MaxChargeUp = MaxChargeUp,
-        BatteryLevelLow = BatteryLevelLow,
-        AgvOfflineTimeoutMsWhileIdle = 15000,
-        AgvOfflineTimeoutMsWhileBusy = 20000
-    };
+    private static readonly AgvSettingsReadModel _agvSettingsReadModel = new(1500, 2000, BatteryLevelCritical, BatteryLevelLow, MinChargeUp, MaxChargeUp);
 
     private TransportOrder.Domain.Models.Agv.Agv CreateAgv(string serialNumber, int batteryCharge, bool charging)
     {
         var correlationId = serialNumber.ToGuid();
         var agvStatus = new AgvStatus(correlationId, "", true, true, batteryCharge, charging, false);
-        var agv = new TransportOrder.Domain.Models.Agv.Agv(correlationId, serialNumber, agvStatus);
+        var agv = new TransportOrder.Domain.Models.Agv.Agv(correlationId, Guid.NewGuid(), serialNumber, agvStatus);
         agv = AgvGenerator.SetAgvState(charging ? AgvState.Busy : AgvState.Idle, agv);
         return agv;
     }
@@ -46,7 +39,7 @@ public class BaseAgvChargingServiceTest
     public void Test_AgvNeedsCharging(int batteryCharge, bool needsCharging)
     {
         var agv = CreateAgv("AGV001", batteryCharge, false);
-        agv.CheckMustCharge(_agvSettings).ShouldBe(needsCharging);
+        agv.CheckMustCharge(_agvSettingsReadModel).ShouldBe(needsCharging);
     }
 
     [TestMethod]
@@ -56,6 +49,6 @@ public class BaseAgvChargingServiceTest
     public void Test_AgvIsEligibleForCharging(int batteryCharge, bool needsCharging)
     {
         var agv = CreateAgv("AGV001", batteryCharge, false);
-        agv.CheckShouldCharge(_agvSettings).ShouldBe(needsCharging);
+        agv.CheckShouldCharge(_agvSettingsReadModel).ShouldBe(needsCharging);
     }
 }

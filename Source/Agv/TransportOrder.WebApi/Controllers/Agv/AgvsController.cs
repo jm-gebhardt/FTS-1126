@@ -1,4 +1,7 @@
 ﻿using AutoMapper;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agvs.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
@@ -26,6 +29,7 @@ public class AgvsController : Controller
     private readonly IRequestClient<GetCargosOfAgvs> _getCargosOfAgvsClient;
     private readonly IRequestClient<GetAgvsSettings> _getAgvsSettingsClient;
     private readonly IRequestClient<GetAgvsHasCargo> _getAgvsHasCargoClient;
+    private readonly IRequestClient<UpdateDefaultAgvSettings> _updateDefaultSettingsClient;
 
     private readonly IMapper _mapper;
 
@@ -43,7 +47,8 @@ public class AgvsController : Controller
         IRequestClient<GetErrorHistoryForAgvs> getErrorHistoryClient,
         IRequestClient<GetAgvsSettings> getAgvsSettingsClient,
         IRequestClient<GetCargosOfAgvs> getCargosOfAgvsClient,
-        IRequestClient<GetAgvsHasCargo> getAgvsHasCargoClient
+        IRequestClient<GetAgvsHasCargo> getAgvsHasCargoClient,
+        IRequestClient<UpdateDefaultAgvSettings> updateDefaultSettingsClient
     )
     {
         _getAgvsClient = getAgvsClient;
@@ -58,6 +63,7 @@ public class AgvsController : Controller
         _getCargosOfAgvsClient = getCargosOfAgvsClient;
         _getAgvsSettingsClient = getAgvsSettingsClient;
         _getAgvsHasCargoClient = getAgvsHasCargoClient;
+        _updateDefaultSettingsClient = updateDefaultSettingsClient;
     }
 
     /// <summary>
@@ -147,21 +153,6 @@ public class AgvsController : Controller
     }
 
     /// <summary>
-    /// Get list of selected agvs' settings
-    /// </summary>
-    /// <param name="correlationIds">Only Agvs contained in this list will be considered</param>
-    /// <response code="200">Ok</response>
-    /// <response code="400">One or more of given correlation ids is unknown.</response>
-    [HttpPost]
-    [Route("/agvs/settings")]
-    public async Task<ActionResult<IEnumerable<AgvSettingsDto>>> GetAgvSettings([FromQuery] ICollection<Guid> correlationIds)
-    {
-        Response<GotAgvsSettings> response = await _getAgvsSettingsClient.GetResponse<GotAgvsSettings>(new GetAgvsSettings(correlationIds));
-        var dto = _mapper.Map<List<AgvSettingsDto>>(response.Message.AgvSettings);
-        return Ok(dto);
-    }
-
-    /// <summary>
     /// Get list of selected agvs' current routes.
     /// </summary>
     /// <param name="correlationIds">Only Agvs contained in this list will be considered</param>
@@ -235,5 +226,33 @@ public class AgvsController : Controller
         Response<GotAgvsHasCargo> response = await _getAgvsHasCargoClient.GetResponse<GotAgvsHasCargo>(new GetAgvsHasCargo(correlationIds));
         var dto = _mapper.Map<List<AgvHasCargoDto>>(response.Message.AgvsHasCargo);
         return Ok(dto);
+    }
+
+    /// <summary>
+    /// Get list of selected agvs' settings
+    /// </summary>
+    /// <param name="correlationIds">Only Agvs contained in this list will be considered</param>
+    /// <response code="200">Ok</response>
+    /// <response code="400">One or more of given correlation ids is unknown.</response>
+    [HttpPost]
+    [Route("/agvs/settings")]
+    public async Task<ActionResult<IEnumerable<AgvSettingsResponseDto>>> GetAgvSettings([FromQuery] ICollection<Guid> correlationIds)
+    {
+        Response<GotAgvsSettings> response = await _getAgvsSettingsClient.GetResponse<GotAgvsSettings>(new GetAgvsSettings(correlationIds));
+        var dto = _mapper.Map<List<AgvSettingsResponseDto>>(response.Message.AgvSettings);
+        return Ok(dto);
+    }
+
+    /// <summary>
+    /// Update the default settings for all agvs. All non-null properties get updated.
+    /// </summary>
+    /// <param name="updatedSettings">The updated settings. </param>
+    /// <response code="200">Settings updated.</response>
+    [HttpPatch]
+    [Route("/agvs/defaultSettings")]
+    public async Task<ActionResult> UpdateDefaultSettings([FromBody] AgvSettingsDto updatedSettings)
+    {
+        await _updateDefaultSettingsClient.GetResponse<Success>(new UpdateDefaultAgvSettings(_mapper.Map<AgvSettingsReadModel>(updatedSettings)));
+        return Ok();
     }
 }

@@ -173,17 +173,17 @@ public class AgvControllerTest
     [TestMethod]
     public async Task GetAgvSettings_ValidData_ReturnsAgvSettingsDto()
     {
-        AgvControllerTestFixture<GetAgvSettings, GetAgvSettingsRequestHandler> fixture = new AgvControllerTestFixture<GetAgvSettings, GetAgvSettingsRequestHandler>()
+        AgvControllerTestFixture<GetAgvSettings, AgvSettingsRequestHandler> fixture = new AgvControllerTestFixture<GetAgvSettings, AgvSettingsRequestHandler>()
             .SetupAgvDbWithDefaultData()
             .Build();
         var correlationId = fixture.AgvSerialNumbers[0].ToGuid();
         var dto = await fixture.GetControllerResultAsync(c => c.GetAgvSettings(correlationId));
 
         dto.CorrelationId.ShouldBe(correlationId);
-        dto.BatteryLevelCritical.ShouldBe(fixture.AgvSettings.BatteryLevelCritical);
-        dto.BatteryLevelLow.ShouldBe(fixture.AgvSettings.BatteryLevelLow);
-        dto.MinChargeUp.ShouldBe(fixture.AgvSettings.MinChargeUp);
-        dto.MaxChargeUp.ShouldBe(fixture.AgvSettings.MaxChargeUp);
+        dto.BatteryLevelCritical.ShouldBe(fixture.AgvSettingsReadModel.BatteryLevelCritical);
+        dto.BatteryLevelLow.ShouldBe(fixture.AgvSettingsReadModel.BatteryLevelLow);
+        dto.MinChargeUp.ShouldBe(fixture.AgvSettingsReadModel.MinChargeUp);
+        dto.MaxChargeUp.ShouldBe(fixture.AgvSettingsReadModel.MaxChargeUp);
     }
 
     [TestMethod]

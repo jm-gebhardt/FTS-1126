@@ -3,7 +3,6 @@ using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.Common.Testing;
-using Gebhardt.StoreWare.Agv.Common.Testing.Configurations;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.EventHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
@@ -33,24 +32,16 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixtureWithSche
     public const int MinChargeUp = 80;
     public const int MaxChargeUp = 100;
 
-    private static readonly AgvSettings _agvSettings = new()
-    {
-        BatteryLevelCritical = BatteryLevelCritical,
-        MaxChargeUp = MaxChargeUp,
-        MinChargeUp = MinChargeUp,
-        BatteryLevelLow = BatteryLevelLow,
-        AgvOfflineTimeoutMsWhileIdle = 15000,
-        AgvOfflineTimeoutMsWhileBusy = 20000
-    };
+    private static readonly AgvSettingsReadModel _agvSettingsReadModel = new(15000, 20000, BatteryLevelCritical,BatteryLevelLow, MinChargeUp, MaxChargeUp);
 
-    public static readonly Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent.AgvSettings AgvSettingsMessage = new()
+    public static readonly Messages.MessageContent.AgvSettings AgvSettingsMessage = new()
     {
-        BatteryLevelCritical = _agvSettings.BatteryLevelCritical,
-        MaxChargeUp = _agvSettings.MaxChargeUp,
-        MinChargeUp = _agvSettings.MinChargeUp,
-        BatteryLevelLow = _agvSettings.BatteryLevelLow,
-        AgvOfflineTimeoutMsWhileIdle = _agvSettings.AgvOfflineTimeoutMsWhileIdle,
-        AgvOfflineTimeoutMsWhileBusy = _agvSettings.AgvOfflineTimeoutMsWhileBusy
+        BatteryLevelCritical = _agvSettingsReadModel.BatteryLevelCritical,
+        MaxChargeUp = _agvSettingsReadModel.MaxChargeUp,
+        MinChargeUp = _agvSettingsReadModel.MinChargeUp,
+        BatteryLevelLow = _agvSettingsReadModel.BatteryLevelLow,
+        AgvOfflineTimeoutMsWhileIdle = _agvSettingsReadModel.AgvOfflineTimeoutMsWhileIdle,
+        AgvOfflineTimeoutMsWhileBusy = _agvSettingsReadModel.AgvOfflineTimeoutMsWhileBusy
     };
 
     protected override void ConfigureServices(IServiceCollection collection)
@@ -59,7 +50,6 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixtureWithSche
         collection.AddTransient(_ => _maintenanceService.Object);
         collection.AddSingleton<ISemaphoreProvider<IAgvsSemaphore>>(_ => _agvSemaphoreProvider);
         collection.AddTransient(_ => _chooseAgvActionGroupService.Object);
-        collection.AddFakeSettings(_agvSettings);
         collection.AddTransient(_ => _agvDb.Object);
     }
 

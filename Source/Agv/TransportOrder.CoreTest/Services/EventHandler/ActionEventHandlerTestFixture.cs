@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Testing;
-using Gebhardt.StoreWare.Agv.Common.Testing.Configurations;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.EventHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
@@ -17,7 +16,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.EventHandler;
 public class ActionEventHandlerTestFixture : MassTransitConsumerTestFixtureWithScheduler<ActionEventHandler>
 {
     private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
-    private AgvSettings _agvSettings = new();
     private readonly Mock<IAgvDb> _agvDb = new();
 
     protected override void ConfigureServices(IServiceCollection collection)
@@ -26,7 +24,6 @@ public class ActionEventHandlerTestFixture : MassTransitConsumerTestFixtureWithS
         collection.AddTransient(_ => GetMapper());
         collection.AddTransient(_ => _actionGroupRepository.Object);
         collection.AddTransient(_ => _agvDb.Object);
-        collection.AddFakeSettings(() => _agvSettings);
     }
 
     public ActionEventHandlerTestFixture()
@@ -67,9 +64,9 @@ public class ActionEventHandlerTestFixture : MassTransitConsumerTestFixtureWithS
         return this;
     }
 
-    public ActionEventHandlerTestFixture WithAgvSettings(AgvSettings agvSettings)
+    public ActionEventHandlerTestFixture WithAgvSettings(AgvSettingsReadModel agvSettingsReadModel)
     {
-        _agvSettings = agvSettings;
+        _agvDb.Setup(x => x.AgvSettings.GetSettingsForAgvGroup(It.IsAny<Guid>())).Returns(agvSettingsReadModel);
         return this;
     }
 }

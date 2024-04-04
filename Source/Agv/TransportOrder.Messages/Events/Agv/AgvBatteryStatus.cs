@@ -106,7 +106,7 @@ public record AgvBatteryStatus
     }
 
     /// <param name="agvStatus">The AgvStatus.</param>
-    /// <param name="agvSettings">The AgvSettings.</param>
+    /// <param name="agvSettings">The AgvSettingsReadModel.</param>
     public AgvBatteryStatus(
         AgvStatus agvStatus,
         AgvSettings agvSettings

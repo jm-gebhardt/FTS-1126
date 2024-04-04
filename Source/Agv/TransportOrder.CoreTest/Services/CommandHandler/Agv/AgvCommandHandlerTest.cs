@@ -228,7 +228,7 @@ public class AgvCommandHandlerTest
     public async Task Consume_UpdateAgvStatus_ShouldRequestData_PublishesRequestAgvData()
     {
         var fixture = new AgvCommandHandlerTestFixture().WithGraphExists(true);
-        var agv = new TransportOrder.Domain.Models.Agv.Agv("agvId")
+        var agv = new TransportOrder.Domain.Models.Agv.Agv("agvId", Guid.NewGuid())
         {
             DataExist = false,
             AgvDataRequestedLastTime = null,
@@ -245,7 +245,7 @@ public class AgvCommandHandlerTest
     [TestMethod]
     public async Task Consume_UpdateAgvStatus_ShouldRequestGraph_PublishesRequestAgvGraph()
     {
-        var agv = new TransportOrder.Domain.Models.Agv.Agv("agvId")
+        var agv = new TransportOrder.Domain.Models.Agv.Agv("agvId", Guid.NewGuid())
         {
             GraphExists = false,
             AgvGraphRequestedLastTime = null,

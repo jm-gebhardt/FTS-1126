@@ -176,10 +176,10 @@ public class AgvController : Controller
     /// <returns>The current settings of that agv.</returns>
     [HttpGet]
     [Route("/agv/{correlationId:guid}/settings")]
-    public async Task<ActionResult<AgvSettingsDto>> GetAgvSettings(Guid correlationId)
+    public async Task<ActionResult<AgvSettingsResponseDto>> GetAgvSettings(Guid correlationId)
     {
         Response<GotAgvSettings> response = await _getAgvSettingsClient.GetResponse<GotAgvSettings>(new GetAgvSettings(correlationId));
-        var dto = _mapper.Map<AgvSettingsDto>(response.Message.AgvSettings);
+        var dto = _mapper.Map<AgvSettingsResponseDto>(response.Message.AgvSettings);
         return Ok(dto);
     }
 

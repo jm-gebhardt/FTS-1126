@@ -1,6 +1,8 @@
 ﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
+using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
 using Moq;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
@@ -29,11 +31,13 @@ public static class AgvRepositoryExtensions
         repoMock.Setup(r => r.Agvs.Count).Returns(agvs.Count);
         repoMock.Setup(r => r.Agvs.CheckIfAgvExistsAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) => agvs.Any(a => a.CorrelationId == c));
         repoMock.Setup(r => r.Agvs.GetAllAgvsWithGraphAsync()).ReturnsAsync(agvs.Where(a => a.GraphExists).ToList());
-        repoMock.Setup(r => r.Agvs.GetChargingAgvsWithMinBatteryLevelAsync(It.IsAny<int>())).ReturnsAsync((int bl) => agvs.Where(a => a.AgvStatus?.BatteryCharge > bl).ToList());
+        repoMock.Setup(r => r.Agvs.GetChargingAgvsWithMinBatteryLevelAsync()).ReturnsAsync(() => agvs);
         repoMock.Setup(r => r.Agvs.GetIdleAgvsAsync()).ReturnsAsync(agvs.Where(a => a.CurrentAgvState == AgvState.Idle).ToList());
         repoMock.Setup(r => r.Agvs.GetReadyAgvsAsync(It.IsAny<int>())).ReturnsAsync((int minBatteryLevel) => agvs.Where(a => a.IsReady && a.AgvStatus!.BatteryCharge >= minBatteryLevel).ToList());
         repoMock.Setup(r => r.Agvs.SelectExistingAgvsAsync(It.IsAny<List<Guid>>())).ReturnsAsync((List<Guid> cs) => agvs.Where(a => !cs.Any() || cs.Contains(a.CorrelationId)).ToList());
         AddNonExistingAgvs(repoMock, agvs.Select(a => a.CorrelationId).ToArray());
+        repoMock.Setup(r => r.AgvSettings.GetSettingsForAgvGroup(It.IsAny<Guid>())).Returns(EfAgvSettingsProvider.DefaultSettings);
+        repoMock.Setup(r => r.AgvSettings.GetSettingsGroupForAgv(It.IsAny<TransportOrder.Domain.Models.Agv.Agv?>())).ReturnsAsync(new AgvSettingsGroup(GroupType.All));
     }
 
     private static void AddNonExistingAgvs(this Mock<IAgvDb> repoMock, params Guid[] agvCorrelationIds)

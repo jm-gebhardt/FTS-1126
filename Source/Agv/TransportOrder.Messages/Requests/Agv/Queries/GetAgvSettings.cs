@@ -3,7 +3,7 @@
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
 
 /// <summary>
-/// Represents the GetAgvSettings request which returns AgvSettings
+/// Represents the GetAgvSettings request which returns AgvSettingsReadModel
 /// </summary>
 public record GetAgvSettings : CorrelatedBy<Guid>
 {

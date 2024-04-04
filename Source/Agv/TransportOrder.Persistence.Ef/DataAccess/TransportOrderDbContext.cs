@@ -1,6 +1,7 @@
 using AppAny.Quartz.EntityFrameworkCore.Migrations;
 using AppAny.Quartz.EntityFrameworkCore.Migrations.SqlServer;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess.Configuration;
+using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess.Configuration.AgvSettings;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
@@ -42,8 +43,10 @@ public class TransportOrderDbContext : DbContext
         modelBuilder.ApplyConfiguration(new CuboidEntityConfiguration());
         modelBuilder.ApplyConfiguration(new Point3DEntityConfiguration());
         modelBuilder.ApplyConfiguration(new CargoEntityConfiguration());
-        modelBuilder.ApplyConfiguration(new ConfigurationSettingsEntityConfiguration());
         modelBuilder.ApplyConfiguration(new NodeLockEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new AgvSettingsGroupEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new AgvSettingEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new SettingEntityConfiguration());
         // Adds Quartz.NET SqlServer schema to EntityFrameworkCore
         modelBuilder.AddQuartz(builder => builder.UseSqlServer(schema: "dbo"));
     }

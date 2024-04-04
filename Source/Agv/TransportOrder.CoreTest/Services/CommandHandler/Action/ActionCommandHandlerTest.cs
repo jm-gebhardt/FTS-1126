@@ -572,7 +572,7 @@ public class ActionCommandHandlerTest
     public async Task Consume_TryStartNewActionGroup_AgvMustCharge_NodesSelectedForActionNotPublished()
     {
         var fixture = new ActionCommandHandlerTestFixture();
-        var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: fixture.Settings.BatteryLevelCritical - 1);
+        var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: fixture.SettingsReadModel.BatteryLevelCritical - 1);
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         fixture.AddAgv(agv);
         fixture.AddActionGroup(actionGroup, hasUnfinishedAction: false);

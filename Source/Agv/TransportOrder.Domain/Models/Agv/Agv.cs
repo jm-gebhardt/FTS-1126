@@ -17,6 +17,11 @@ public class Agv : IAgv
     /// <inheritdoc />
     public Guid CorrelationId { get; init; }
 
+    /// <summary>
+    /// The group of agv settings the agv belongs to.
+    /// </summary>
+    public Guid AgvSettingsGroup { get; set; }
+
     /// <inheritdoc />
     public string SerialNumber { get; init; }
 
@@ -160,6 +165,7 @@ public class Agv : IAgv
 
     /// <inheritdoc cref="Agv"/>
     public Agv(Guid correlationId,
+        Guid settingsGroup,
         string serialNumber,
         AgvStatus? agvStatus = null,
         bool isLocked = false,
@@ -170,6 +176,7 @@ public class Agv : IAgv
         {
             throw new InvalidOperationException($"{GetType()} requires correlation ID.");
         }
+        AgvSettingsGroup = settingsGroup;
         CorrelationId = correlationId;
         SerialNumber = serialNumber;
         Name = agvName ?? serialNumber;
@@ -183,9 +190,10 @@ public class Agv : IAgv
     /// EfCore ctor.
     /// </summary>
     [UsedImplicitly]
-    public Agv(string serialNumber, string? agvName = null)
+    public Agv(string serialNumber, Guid settingsGroup, string? agvName = null)
     {
         CorrelationId = serialNumber.ToGuid();
+        AgvSettingsGroup = settingsGroup;
         SerialNumber = serialNumber;
         Name = agvName ?? serialNumber;
         CurrentAgvState = AgvState.Initial;
@@ -204,27 +212,27 @@ public class Agv : IAgv
     /// <summary>
     /// Check if the agv is eligible for charging.
     /// </summary>
-    /// <param name="settings">The global agv settings.</param>
-    public bool CheckShouldCharge(AgvSettings settings)
+    /// <param name="settingsReadModel">The global agv settingsReadModel.</param>
+    public bool CheckShouldCharge(AgvSettingsReadModel settingsReadModel)
     {
         if (AgvStatus == null)
         {
             return false;
         }
-        return AgvStatus.BatteryCharge <= settings.BatteryLevelLow;
+        return AgvStatus.BatteryCharge <= settingsReadModel.BatteryLevelLow;
     }
 
     /// <summary>
     /// Check if the agv needs charging.
     /// </summary>
-    /// <param name="settings">The global agv settings.</param>
-    public bool CheckMustCharge(AgvSettings settings)
+    /// <param name="settingsReadModel">The global agv settingsReadModel.</param>
+    public bool CheckMustCharge(AgvSettingsReadModel settingsReadModel)
     {
         if (AgvStatus == null)
         {
             return false;
         }
-        return AgvStatus.BatteryCharge <= settings.BatteryLevelCritical;
+        return AgvStatus.BatteryCharge <= settingsReadModel.BatteryLevelCritical;
     }
 
     /// <summary>

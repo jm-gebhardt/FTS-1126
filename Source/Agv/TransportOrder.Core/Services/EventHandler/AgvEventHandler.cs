@@ -1,10 +1,8 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
@@ -40,20 +38,17 @@ public class AgvEventHandler :
     private readonly ILogger<AgvEventHandler> _logger;
     private readonly IActionGroupRepository _actionGroupRepository;
     private readonly ISemaphoreProvider<IAgvsSemaphore> _semaphoreProvider;
-    private readonly ISettingsProvider<AgvSettings> _settingsProvider;
     private readonly IAgvDb _agvDb;
 
     /// <inheritdoc cref="AgvEventHandler"/>
     public AgvEventHandler(
         IActionGroupRepository actionGroupRepository,
         ISemaphoreProvider<IAgvsSemaphore> semaphoreProvider,
-        ISettingsProvider<AgvSettings> settingsProvider,
         IAgvDb agvDb,
         ILogger<AgvEventHandler> logger)
     {
         _actionGroupRepository = actionGroupRepository;
         _semaphoreProvider = semaphoreProvider;
-        _settingsProvider = settingsProvider;
         _agvDb = agvDb;
         _logger = logger;
     }
@@ -77,7 +72,7 @@ public class AgvEventHandler :
         await _semaphoreProvider.ExecuteLockedAsync(async () =>
         {
             bool hasUnfinishedDropAction = await _actionGroupRepository.HasUnfinishedDropActionsAsync(agv.CorrelationId);
-            var agvSettings = _settingsProvider.GetSettings();
+            var agvSettings = _agvDb.AgvSettings.GetSettingsForAgvGroup(agv.AgvSettingsGroup);
 
             if (agv.IsLocked)
             {
@@ -132,7 +127,7 @@ public class AgvEventHandler :
                 return;
             }
 
-            var agvSettings = _settingsProvider.GetSettings();
+            var agvSettings = _agvDb.AgvSettings.GetSettingsForAgvGroup(agv.AgvSettingsGroup);
             bool needsCharging = agv.CheckMustCharge(agvSettings);
             if (!needsCharging)
             {

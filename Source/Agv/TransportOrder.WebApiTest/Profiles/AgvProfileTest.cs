@@ -5,6 +5,7 @@ using Gebhardt.StoreWare.Agv.Common.Models;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
@@ -20,7 +21,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Profiles;
 [TestClass]
 public class AgvProfileTest
 {
-    private static Mapper GetMapper() => MappingHelper.GetMapper(new AgvProfile(), new ActionProfile(), new AgvErrorProfile(), new AgvGraphProfile());
+    private static Mapper GetMapper() => MappingHelper.GetMapper(new AgvProfile(), new ActionProfile(), new AgvErrorProfile(), new AgvGraphProfile(), new AgvSettingsProfile());
 
     [TestMethod]
     public void Map_ShouldMapAllPropertiesCorrectly_WhereAgvIsMappedToAgvDto()
@@ -74,7 +75,7 @@ public class AgvProfileTest
         var agvSettings = new AgvSettings();
         var mapper = GetMapper();
 
-        var dto = mapper.Map<AgvSettingsDto>(agvSettings);
+        var dto = mapper.Map<AgvSettingsResponseDto>(agvSettings);
 
         dto.CorrelationId.ShouldBe(agvSettings.CorrelationId);
         dto.BatteryLevelCritical.ShouldBe(agvSettings.BatteryLevelCritical);
@@ -103,5 +104,18 @@ public class AgvProfileTest
         dto.BatteryTemperature.ShouldBe(agvBatteryStatus.BatteryTemperature);
         dto.EstimatedFullyChargedTime.ShouldBe(agvBatteryStatus.EstimatedFullyChargedTime);
         dto.LastBatteryReplacement.ShouldBe(agvBatteryStatus.LastBatteryReplacement);
+    }
+
+    [TestMethod]
+    public void Map_WhenBatterySettingsAreNull_ShouldMapToNegativeValue()
+    {
+        var settingsDto = new AgvSettingsDto(12);
+
+        var mapper = MappingHelper.GetMapper(new AgvSettingsProfile());
+        var settings = mapper.Map<AgvSettingsDto, AgvSettingsReadModel>(settingsDto);
+        settings.BatteryLevelCritical.ShouldBe((int)settingsDto.BatteryLevelCritical!);
+        settings.BatteryLevelLow.ShouldBeLessThan(0);
+        settings.MinChargeUp.ShouldBeLessThan(0);
+        settings.MaxChargeUp.ShouldBeLessThan(0);
     }
 }

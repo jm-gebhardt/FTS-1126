@@ -39,5 +39,6 @@ public class AgvEntityConfiguration : IEntityTypeConfiguration<Domain.Models.Agv
             }
         });
         builder.Navigation(e => e.AgvStatus).AutoInclude();
+        builder.Property(e => e.AgvSettingsGroup);
     }
 }

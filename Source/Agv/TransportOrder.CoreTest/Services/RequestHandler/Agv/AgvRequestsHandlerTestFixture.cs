@@ -1,7 +1,6 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Testing;
-using Gebhardt.StoreWare.Agv.Common.Testing.Configurations;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
@@ -10,6 +9,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles;
+using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -26,7 +26,7 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
     // ReSharper disable once MemberCanBePrivate.Global
     public readonly Mock<IActionGroupRetrievalService> ActionGroupRepository = new();
 
-    public AgvSettings? AgvSettings { get; private set; } = new();
+    public AgvSettingsReadModel? AgvSettings { get; } = EfAgvSettingsProvider.DefaultSettings;
 
     public AgvRequestsHandlerTestFixture(IBus? bus = null)
     {
@@ -41,17 +41,13 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
             {
                 s.AddTransient(_ => bus);
             }
-            s.AddFakeSettings(AgvSettings);
         });
 
         AgvDb.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(new List<AgvError>());
         AgvDb.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<IList<Guid>>())).ReturnsAsync(new List<AgvError>());
-    }
-
-    public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithAgvSettings(AgvSettings? agvSettings)
-    {
-        AgvSettings = agvSettings;
-        return this;
+        AgvDb.Setup(x => x.AgvSettings.GetSettingsForAgvGroup(It.IsAny<Guid>())).Returns(EfAgvSettingsProvider.DefaultSettings);
+        AgvDb.Setup(x => x.Agvs.GetAgvAsync(It.IsAny<Guid>())).ReturnsAsync(AgvGenerator.GenerateIdleAgv());
+        AgvDb.Setup(x => x.AgvSettings.AddOrUpdateSettingsForAgvGroup(It.IsAny<AgvSettingsReadModel>(), It.IsAny<GroupType>(), It.IsAny<string>())).Verifiable();
     }
 
     public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithEmptyGraphRepository()
@@ -69,7 +65,7 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
         AgvDb.Setup(r => r.Agvs.Count).Returns(0);
         AgvDb.Setup(r => r.Agvs.CheckIfAgvExistsAsync(It.IsAny<Guid>())).ReturnsAsync(false);
         AgvDb.Setup(r => r.Agvs.GetAllAgvsWithGraphAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>());
-        AgvDb.Setup(r => r.Agvs.GetChargingAgvsWithMinBatteryLevelAsync(It.IsAny<int>())).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>());
+        AgvDb.Setup(r => r.Agvs.GetChargingAgvsWithMinBatteryLevelAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>());
         AgvDb.Setup(r => r.Agvs.GetIdleAgvsAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>());
         AgvDb.Setup(r => r.Agvs.GetReadyAgvsAsync(It.IsAny<int>())).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>());
         AgvDb.Setup(r => r.Agvs.SelectExistingAgvsAsync(It.IsAny<List<Guid>>())).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>());
@@ -155,5 +151,16 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
     {
         base.Build();
         return this;
+    }
+
+    public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithSettingsGroup(AgvSettingsGroup group)
+    {
+        AgvDb.Setup(x => x.AgvSettings.GetSettingsGroupForAgv(It.IsAny<TransportOrder.Domain.Models.Agv.Agv?>())).ReturnsAsync(group);
+        return this;
+    }
+
+    public void VerifyAgvSettingsUpdated(GroupType groupType, string groupIdentifier, AgvSettingsReadModel settings)
+    {
+        AgvDb.Verify(x => x.AgvSettings.AddOrUpdateSettingsForAgvGroup(settings, groupType, groupIdentifier), Times.Once);
     }
 }

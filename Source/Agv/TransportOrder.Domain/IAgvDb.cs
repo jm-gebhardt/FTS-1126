@@ -33,4 +33,9 @@ public interface IAgvDb : IUnitOfWork
     /// Gets the <see cref="IAgvRepository"/>.
     /// </summary>
     IAgvRepository Agvs { get; }
+
+    /// <summary>
+    /// Gets the <see cref="IAgvSettingsProvider"/>.
+    /// </summary>
+    IAgvSettingsProvider AgvSettings { get; }
 }

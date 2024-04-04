@@ -6,6 +6,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.EventHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Commands;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
@@ -211,8 +212,9 @@ public static class CoreBusRegistrationExtensions
         configurator.AddRequestClient<GetCargosOfAgv>();
         configurator.AddRequestClient<GetCargosOfAgvs>();
 
-        configurator.AddConsumer<GetAgvSettingsRequestHandler>();
+        configurator.AddConsumer<AgvSettingsRequestHandler>();
         configurator.AddRequestClient<GetAgvSettings>();
+        configurator.AddRequestClient<UpdateDefaultAgvSettings>();
         configurator.AddRequestClient<GetAgvsSettings>();
 
         configurator.AddConsumer<SendAgvToChargerRequestHandler>();

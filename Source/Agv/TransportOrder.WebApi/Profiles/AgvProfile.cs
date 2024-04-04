@@ -1,7 +1,6 @@
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
 
@@ -17,7 +16,6 @@ public class AgvProfile : WebApiProfile
     {
         CreateMap<Messages.MessageContent.Agv, AgvDto>().ReverseMap();
         CreateMap<AgvData, AgvDataDto>().ReverseMap();
-        CreateMap<AgvSettings, AgvSettingsDto>();
         CreateMap<Messages.MessageContent.Agv, AgvStateDto>();
         CreateMap<CurrentAgvRouteReadModel, CurrentRouteDto>();
         CreateMap<CurrentAgvRouteReadModel, CurrentAgvRouteDto>()

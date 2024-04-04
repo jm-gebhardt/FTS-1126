@@ -5,7 +5,6 @@ using Gebhardt.StoreWare.Agv.Common.Logging;
 using Gebhardt.StoreWare.Agv.TransportOrder;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.CmdOptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations;
-using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Configuration;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi;
 using Microsoft.AspNetCore.Builder;
@@ -37,7 +36,6 @@ try
     // By using the generic overload of WithParsed above hostBuilder will be null for invalid command line arguments.
     if (hostBuilder != null)
     {
-        DatabaseConfigurationSource<TransportOrderDbContext>? databaseConfigurationSource = null;
         hostBuilder.ConfigureWebHost(host =>
         {
             host.UseKestrel()
@@ -46,8 +44,6 @@ try
                 {
                     ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
                     config.AddDefaultConfiguration(ConfigurationTypeManager.Instance);
-
-                    databaseConfigurationSource = config.AddDatabaseConfiguration<TransportOrderDbContext>(ConfigurationTypeManager.Instance, initialLogger, 0, true);
                 })
                 .Configure(app =>
                 {
@@ -63,13 +59,7 @@ try
         {
             var transportOrderDb = scope.ServiceProvider.GetRequiredService<TransportOrderDbContext>();
             await transportOrderDb.Database.MigrateAsync();
-
-            var dbConfigurationSeeder = scope.ServiceProvider.GetService<DatabaseConfigurationSeeder<TransportOrderDbContext>>()!;
-            await dbConfigurationSeeder.SeedDefaultConfigurationAsync();
         }
-
-        // we need to set the DbContext manually and after instantiation, because the AppConfiguration is built before the services (dbContext) are built
-        databaseConfigurationSource!.UpdateDbContextFactory(host.Services.GetRequiredService<IDbContextFactory<TransportOrderDbContext>>());
 
         host.Run();
         return 0;

@@ -1,6 +1,8 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+﻿using Gebhardt.StoreWare.Agv.Common.Dictionaries;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
+using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;
 using Microsoft.EntityFrameworkCore;
@@ -12,13 +14,15 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
 public class AgvRepository : IAgvRepository
 {
     private readonly IDbContextFactory<TransportOrderDbContext> _dbContextFactory;
+    private readonly IConcurrentDictionaryProvider<Guid, AgvSettingsReadModel> _agvSettingsProvider;
 
     /// <summary>
     /// Initializes a new <see cref="AgvRepository"/> instance.
     /// </summary>
-    public AgvRepository(IDbContextFactory<TransportOrderDbContext> dbContextFactory)
+    public AgvRepository(IDbContextFactory<TransportOrderDbContext> dbContextFactory, IConcurrentDictionaryProvider<Guid, AgvSettingsReadModel> agvSettingsProvider)
     {
         _dbContextFactory = dbContextFactory;
+        _agvSettingsProvider = agvSettingsProvider;
     }
 
     private IQueryable<Domain.Models.Agv.Agv> Agvs =>
@@ -122,7 +126,19 @@ public class AgvRepository : IAgvRepository
     }
 
     /// <inheritdoc />
-    public async Task<ICollection<Domain.Models.Agv.Agv>> GetChargingAgvsWithMinBatteryLevelAsync(int minBatteryLevel)
+    public async Task<ICollection<Domain.Models.Agv.Agv>> GetReadyAgvsWithAtLeastLowBatteryLevel()
+    {
+        List<Domain.Models.Agv.Agv> agvs = await Agvs.Where(Domain.Models.Agv.Agv.IsReadyStatic)
+            .Where(a => a.GraphExists &&
+                        !a.IsLocked &&
+                        a.CurrentAgvState == AgvState.Idle &&
+                        !a.AgvStatus!.Busy).ToListAsync();
+
+        return agvs.Where(a => a.AgvStatus!.BatteryCharge >= _agvSettingsProvider.ConcurrentDict[a.AgvSettingsGroup].BatteryLevelLow).ToList();
+    }
+
+    /// <inheritdoc />
+    public async Task<ICollection<Domain.Models.Agv.Agv>> GetChargingAgvsWithMinBatteryLevelAsync()
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>().AsNoTracking();
@@ -131,9 +147,8 @@ public class AgvRepository : IAgvRepository
         List<Domain.Models.Agv.Agv> agvs = await agvContext.Where(agv => agv.GraphExists &&
                                                                          actionGroups.Any(g => g.AssignedAgv == agv.CorrelationId && g.State == ActionGroupState.Started &&
                                                                                                g.Actions.Any(a => a.ActionType == ActionType.Charge && a.State == ActionState.Started)) &&
-                                                                         agv.CurrentAgvState == AgvState.Busy && agv.AgvStatus!.Charging &&
-                                                                         agv.AgvStatus!.BatteryCharge >= minBatteryLevel).ToListAsync();
-        return agvs;
+                                                                         agv.CurrentAgvState == AgvState.Busy && agv.AgvStatus!.Charging).ToListAsync();
+        return agvs.Where(a => a.AgvStatus!.BatteryCharge >= _agvSettingsProvider.ConcurrentDict[a.AgvSettingsGroup].MinChargeUp).ToList();
     }
 
     /// <inheritdoc />

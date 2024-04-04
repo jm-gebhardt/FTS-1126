@@ -76,7 +76,7 @@ public class MapsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
             var correlationId = _correlationIds[i];
             var agvStatus = new AgvStatus(correlationId, orderId, true, true, 10, true, true);
 
-            var agv = new Domain.Models.Agv.Agv(correlationId, agvSerialNumber, agvStatus);
+            var agv = new Domain.Models.Agv.Agv(correlationId, Guid.NewGuid(),  agvSerialNumber, agvStatus);
             agv = AgvGenerator.SetAgvState(state, false, agv);
 
             agvs.Add(agv);

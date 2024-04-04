@@ -3,7 +3,6 @@ using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
-using Gebhardt.StoreWare.Agv.Common.Testing.Configurations;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
@@ -11,8 +10,10 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agvs.Queries;
+using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Helper;
 using JetBrains.Annotations;
@@ -42,7 +43,7 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
 
     private string[] Ips { get; } = {"127.0.0.1", "127.0.0.2", "127.0.0.3"};
 
-    private readonly AgvSettings _agvSettings = new();
+    private readonly AgvSettingsReadModel _agvSettingsReadModel = EfAgvSettingsProvider.DefaultSettings;
 
     private Mock<IAgvDb> AgvDb { get; }
 
@@ -95,6 +96,7 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
         AgvDb.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<IList<Guid>>())).ReturnsAsync(new List<AgvError>());
         ActionGroupRepository.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvSerialNumbers.ToDictionary(GetGuid, _ => (Domain.Models.ActionGroup.ActionGroup?) null));
         AgvDb.Setup(x => x.Graphs.GetLastNodesForAgvsAsync(It.IsAny<Dictionary<Guid, string?>>())).ReturnsAsync(() => AgvSerialNumbers.ToDictionary(GetGuid, _ => (GraphNode?) null));
+        AgvDb.Setup(x => x.AgvSettings.GetSettingsForAgvGroup(It.IsAny<Guid>())).Returns(_agvSettingsReadModel);
     }
 
     [UsedImplicitly]
@@ -111,7 +113,7 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
             var correlationId = GetGuid(agvSerialNumber);
             var agvStatus = agvSerialNumber == "AGV003" ? null : new AgvStatus(correlationId, orderId, false, true, 10, true, true, lastNodeId: "Node");
             var agvData = AgvDataGenerator.GenerateAgvData(ipV4Address: ip);
-            var agv = new Domain.Models.Agv.Agv(correlationId, agvSerialNumber, agvStatus);
+            var agv = new Domain.Models.Agv.Agv(correlationId,Guid.NewGuid(), agvSerialNumber, agvStatus);
             agv = AgvGenerator.SetAgvState(state, false, agv);
 
             agvs.Add(agv);
@@ -135,7 +137,9 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
             .Callback((QueueActionGroup q, CancellationToken _, RequestTimeout _) => { SentQueueActionGroup = q.ActionGroup; });
 
         AgvDb.Setup(x => x.Graphs.GetLastNodesForAgvsAsync(It.IsAny<Dictionary<Guid, string?>>())).ReturnsAsync(() => AgvSerialNumbers.ToDictionary(GetGuid, _ => (GraphNode?) null));
-
+        AgvDb.Setup(x => x.AgvSettings.GetSettingsGroupForAgv(It.IsAny<Domain.Models.Agv.Agv>())).ReturnsAsync(new AgvSettingsGroup(GroupType.All));
+        AgvDb.Setup(x => x.AgvSettings.GetSettingsForAgvGroup(It.IsAny<Guid>())).Returns(EfAgvSettingsProvider.DefaultSettings);
+        AgvDb.Setup(x => x.AgvSettings.AddOrUpdateSettingsForAgvGroup(It.IsAny<AgvSettingsReadModel>(), It.IsAny<GroupType>(), It.IsAny<string>())).Verifiable();
         return this;
     }
 
@@ -181,6 +185,7 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
         _getCargosOfAgvsRequestClient ??= GetRequestClient<GetCargosOfAgvs>();
         _getAgvsSettingsRequestClient ??= GetRequestClient<GetAgvsSettings>();
         _getAgvsHasCargoRequestClient ??= GetRequestClient<GetAgvsHasCargo>();
+        IRequestClient<UpdateDefaultAgvSettings> updateDefaultSettingsRequestClient = GetRequestClient<UpdateDefaultAgvSettings>();
 
         var controller = new AgvsController(Mapper!,
             _getAgvsRequestClient,
@@ -193,7 +198,8 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
             _getErrorHistoryRequestClient,
             _getAgvsSettingsRequestClient,
             _getCargosOfAgvsRequestClient,
-            _getAgvsHasCargoRequestClient
+            _getAgvsHasCargoRequestClient,
+            updateDefaultSettingsRequestClient
         )
         {
             ControllerContext = new ControllerContext(
@@ -226,7 +232,6 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
             sc.AddTransient(_ => new Mock<IAgvPositionRepository>().Object);
             sc.AddTransient(_ => ActionGroupRepository.Object);
             sc.AddTransient(_ => QueueActionGroupRequestClient.Object);
-            sc.AddFakeSettings(_agvSettings);
         });
 
         base.Build();

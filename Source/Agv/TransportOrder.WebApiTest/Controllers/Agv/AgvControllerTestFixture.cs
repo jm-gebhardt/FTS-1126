@@ -5,7 +5,6 @@ using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.Common.Testing;
-using Gebhardt.StoreWare.Agv.Common.Testing.Configurations;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.CmdOptions;
@@ -23,6 +22,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Commands;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Routing;
+using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Helper;
 using JetBrains.Annotations;
@@ -87,7 +87,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
 
     private readonly IAgvPositionRepository _agvPositionRepository;
 
-    public AgvSettings AgvSettings { get; } = new();
+    public AgvSettingsReadModel AgvSettingsReadModel { get; } = EfAgvSettingsProvider.DefaultSettings;
 
     private readonly Domain.Models.ActionGroup.AgvAction _chargeAction = new(Guid.NewGuid(), ActionType.Charge, "Charger-1", Guid.NewGuid());
 
@@ -105,7 +105,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         ActionGroupRepository.Setup(r => r.GetCurrentAgvActionAsync(It.IsAny<Guid>())).ReturnsAsync(_chargeAction);
         AgvDb.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(new List<AgvError>());
         AgvDb.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<IList<Guid>>())).ReturnsAsync(new List<AgvError>());
-
+        AgvDb.Setup(x => x.AgvSettings.GetSettingsForAgvGroup(It.IsAny<Guid>())).Returns(AgvSettingsReadModel);
         ChargingPointManager = new Mock<IChargingPointManager>();
         ChargingPointManager.Setup(c => c.GetBestChargerAsync(It.IsAny<Domain.Models.Agv.Agv>(), It.IsAny<string>())).ReturnsAsync(new GraphNode("Charger-1"));
         ChargingPointManager.Setup(c => c.ReserveChargerAsync(It.IsAny<Domain.Models.Agv.Agv>(), It.IsAny<string>())).ReturnsAsync(new GraphNode("Charger-1"));
@@ -126,7 +126,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             var correlationId = GetGuid(agvSerialNumber);
             var agvStatus = agvSerialNumber == "AGV003" ? null : new AgvStatus(correlationId, orderId, true, true, 10, true, true, "WAY3");
             var agvData = AgvDataGenerator.GenerateAgvData(correlationId: correlationId, ipV4Address: ip);
-            var agv = new Domain.Models.Agv.Agv(correlationId, agvSerialNumber, agvStatus);
+            var agv = new Domain.Models.Agv.Agv(correlationId, Guid.NewGuid(), agvSerialNumber, agvStatus);
             agv = AgvGenerator.SetAgvState(state, false, agv);
 
             agvs.Add(agv);
@@ -296,7 +296,6 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             sc.AddTransient(_ => QueueActionGroupRequestClient.Object);
             sc.AddTransient(_ => ChargingPointManager.Object);
             sc.AddSingleton<ISemaphoreProvider<IAgvsSemaphore>>(_ => _semaphoreProvider);
-            sc.AddFakeSettings(AgvSettings);
             sc.AddTransient(_ => _mapRepository.Object);
             sc.AddTransient(_ => _productionOptions);
             sc.AddTransient(_ => busFixture.TestHarness.Bus);

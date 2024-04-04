@@ -22,13 +22,22 @@ public class AgvDb : IAgvDb
     public IAgvRepository Agvs { get; }
 
     /// <inheritdoc cref="IAgvDb"/>>
-    public AgvDb(IAgvDataRepository data, IAgvErrorRepository errors, ICargoRepository cargos, IGraphRepository graphs, IAgvRepository agvs)
+    public IAgvSettingsProvider AgvSettings { get; }
+
+    /// <inheritdoc cref="IAgvDb"/>>
+    public AgvDb(IAgvDataRepository data,
+        IAgvErrorRepository errors, 
+        ICargoRepository cargos,
+        IGraphRepository graphs,
+        IAgvRepository agvs,
+        IAgvSettingsProvider settings)
     {
         Data = data;
         Errors = errors;
         Cargos = cargos;
         Graphs = graphs;
         Agvs = agvs;
+        AgvSettings = settings;
     }
 
     /// <inheritdoc cref="IAgvDb"/>>

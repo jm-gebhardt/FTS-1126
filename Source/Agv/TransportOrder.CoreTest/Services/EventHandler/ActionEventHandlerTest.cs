@@ -59,7 +59,7 @@ public class ActionEventHandlerTest
             .AddActionGroup(actionGroup)
             .AddAgvs(agv)
             .WithCurrentAgvAction(chargeAction)
-            .WithAgvSettings(new AgvSettings {MinChargeUp = threshold});
+            .WithAgvSettings(new AgvSettingsReadModel (minChargeUp : threshold));
         var actionGroupCreatedForAgv = new ActionGroupCreatedForAgv(mapper.Map<ActionGroup>(actionGroup), agv.CorrelationId);
         await fixture.TestHarness.Bus.Publish(actionGroupCreatedForAgv);
 

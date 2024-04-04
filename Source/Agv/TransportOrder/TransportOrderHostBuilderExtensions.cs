@@ -1,7 +1,4 @@
 ﻿using FluentValidation;
-using Gebhardt.StoreWare.Agv.Common.Configurations;
-using Gebhardt.StoreWare.Agv.Common.Configurations.Extensions;
-using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
 using Gebhardt.StoreWare.Agv.Common.Dictionaries;
 using Gebhardt.StoreWare.Agv.Common.MassTransit;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
@@ -22,7 +19,6 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Metrics;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Routing;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Validators;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef;
-using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Configuration;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Routing.Base;
@@ -47,8 +43,6 @@ public static class TransportOrderHostBuilderExtensions
     /// <returns><see cref="IHostBuilder"/></returns>
     public static IHostBuilder AddTransportOrderCore(this IHostBuilder hostBuilder, ProductionOptions productionOptions)
     {
-        ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
-
         hostBuilder.ConfigureServices((context, services) =>
         {
             RegisterConfigurationServices(productionOptions, services, context);
@@ -74,12 +68,12 @@ public static class TransportOrderHostBuilderExtensions
     private static void RegisterConfigurationServices(ProductionOptions productionOptions, IServiceCollection services, HostBuilderContext context)
     {
         // Configuration
-        services.AddConfigurationTypeManager();
-        services.AddSettingsProviders(ConfigurationTypeManager.Instance);
         services.AddSingleton(_ => productionOptions);
-        services.AddSingleton<ISettingsProvider<AgvSettings>, SettingsProvider<AgvSettings>>();
+       
+        services.AddHostedService<AgvSettingsInitializer>();
+        services.AddSingleton<IConcurrentDictionaryProvider<Guid, AgvSettingsReadModel>, InMemoryAgvSettingsProvider>();
+        services.AddTransient<IAgvSettingsProvider, EfAgvSettingsProvider>();
         // -  database
-        services.AddScoped<DatabaseConfigurationSeeder<TransportOrderDbContext>>();
         services.AddDbContextFactory<TransportOrderDbContext>(builder =>
         {
             string? connectionString = context.Configuration.GetConnectionString(TransportOrderDbContext.ConfigSectionName);

@@ -11,7 +11,7 @@ public class AgvTest
     [TestMethod]
     public void GoOffline_ValidData_ResetsIsOnlineAndOfflineToken()
     {
-        var agv = new TransportOrder.Domain.Models.Agv.Agv("agvId");
+        var agv = new TransportOrder.Domain.Models.Agv.Agv("agvId", Guid.NewGuid());
         agv.SetOnline(Guid.NewGuid());
 
         agv.GoOffline(agv.AgvOfflineTokenId!.Value);
@@ -22,7 +22,7 @@ public class AgvTest
     [TestMethod]
     public void GoOffline_WrongToken_TokenAndIsOnlineUnchanged()
     {
-        var agv = new TransportOrder.Domain.Models.Agv.Agv("agvId");
+        var agv = new TransportOrder.Domain.Models.Agv.Agv("agvId", Guid.NewGuid());
         agv.SetOnline(Guid.NewGuid());
 
         agv.GoOffline(Guid.NewGuid());
@@ -34,7 +34,7 @@ public class AgvTest
     public void SetOnline_ValidData_SetsIsOnlineAndOfflineToken()
     {
         var offlineToken = Guid.NewGuid();
-        var agv = new TransportOrder.Domain.Models.Agv.Agv("agvId");
+        var agv = new TransportOrder.Domain.Models.Agv.Agv("agvId", Guid.NewGuid());
         agv.SetOnline(offlineToken);
         agv.IsOnline.ShouldBeTrue();
         agv.AgvOfflineTokenId.ShouldBe(offlineToken);
@@ -44,7 +44,7 @@ public class AgvTest
     public void UpdateAgvStatus_BatteryChanged_StatusUpdated()
     {
         var previousStatus = new AgvStatus(Guid.NewGuid(), null, false, false, 100.0d, false, false);
-        var agv = new TransportOrder.Domain.Models.Agv.Agv(previousStatus.CorrelationId, "agvId", previousStatus);
+        var agv = new TransportOrder.Domain.Models.Agv.Agv(previousStatus.CorrelationId, Guid.NewGuid(), "agvId", previousStatus);
         const double noticeableBatteryChange = TransportOrder.Domain.Models.Agv.Agv.BatteryChargeChangedThreshold * 1.01d;
         var newStatus = new AgvStatus(agv.CorrelationId, null, false, false, agv.AgvStatus!.BatteryCharge - noticeableBatteryChange, false, false);
 
@@ -59,7 +59,7 @@ public class AgvTest
     public void UpdateAgvStatus_BatteryChangedAndVoltageCurrentTemperature_StatusUpdated()
     {
         var previousStatus = new AgvStatus(Guid.NewGuid(), null, false, false, 100.0d, false, false, null, 10d, 30.5d, 20.2d);
-        var agv = new TransportOrder.Domain.Models.Agv.Agv(previousStatus.CorrelationId, "agvId", previousStatus);
+        var agv = new TransportOrder.Domain.Models.Agv.Agv(previousStatus.CorrelationId, Guid.NewGuid(), "agvId", previousStatus);
         const double noticeableBatteryChange = TransportOrder.Domain.Models.Agv.Agv.BatteryChargeChangedThreshold * 1.01d;
         var newStatus = new AgvStatus(agv.CorrelationId, null, false, false, agv.AgvStatus!.BatteryCharge - noticeableBatteryChange, false, false, null, 15d, 35.5d, 25.2d);
 
@@ -74,7 +74,7 @@ public class AgvTest
     public void UpdateAgvStatus_BatteryLevelChangedInsignificantly_StatusUpdated()
     {
         var previousStatus = new AgvStatus(Guid.NewGuid(), null, false, false, 100.0d, false, false);
-        var agv = new TransportOrder.Domain.Models.Agv.Agv(previousStatus.CorrelationId, "agvId", previousStatus);
+        var agv = new TransportOrder.Domain.Models.Agv.Agv(previousStatus.CorrelationId, Guid.NewGuid(), "agvId", previousStatus);
         const double insignificantBatteryChange = TransportOrder.Domain.Models.Agv.Agv.BatteryChargeChangedThreshold * 0.99d;
         var newStatus = new AgvStatus(agv.CorrelationId, "orderId", true, false, agv.AgvStatus!.BatteryCharge - insignificantBatteryChange, true, true);
 
@@ -94,7 +94,7 @@ public class AgvTest
     public void UpdateAgvStatus_LastNodeIdChanged_StatusUpdated()
     {
         var previousStatus = new AgvStatus(Guid.NewGuid(), null, false, false, 100.0d, false, false, lastNodeId: null);
-        var agv = new TransportOrder.Domain.Models.Agv.Agv(previousStatus.CorrelationId, "agvId", previousStatus);
+        var agv = new TransportOrder.Domain.Models.Agv.Agv(previousStatus.CorrelationId, Guid.NewGuid(), "agvId", previousStatus);
         var newStatus = new AgvStatus(agv.CorrelationId, null, false, false, agv.AgvStatus!.BatteryCharge, false, false, "node", estimatedFullyChargedTime: DateTime.UtcNow, lastBatteryReplacement: DateTime.UtcNow.AddHours(-5));
 
         (bool batteryChargeChanged, bool lastNodeIdChanged) = agv.UpdateAgvStatus(newStatus);
@@ -123,7 +123,7 @@ public class AgvTest
     [TestMethod]
     public void IsAvailable_IsNotReady_NotAvailable()
     {
-        var agv = new TransportOrder.Domain.Models.Agv.Agv("agvId");
+        var agv = new TransportOrder.Domain.Models.Agv.Agv("agvId", Guid.NewGuid());
 
         agv.IsAvailable().ShouldBeFalse();
         agv.IsReady.ShouldBeFalse();
@@ -141,7 +141,7 @@ public class AgvTest
     [TestMethod]
     public void ShouldRequestData_DataNeverRequestedNoData_ShouldRequestData()
     {
-        var agv = new TransportOrder.Domain.Models.Agv.Agv("agvId")
+        var agv = new TransportOrder.Domain.Models.Agv.Agv("agvId", Guid.NewGuid())
         {
             DataExist = false,
             AgvDataRequestedLastTime = null
@@ -153,7 +153,7 @@ public class AgvTest
     [TestMethod]
     public void ShouldRequestGraph_GraphNeverRequestedNoGraph_ShouldRequestGraph()
     {
-        var agv = new TransportOrder.Domain.Models.Agv.Agv("agvId")
+        var agv = new TransportOrder.Domain.Models.Agv.Agv("agvId", Guid.NewGuid())
         {
             GraphExists = false,
             AgvGraphRequestedLastTime = null,

@@ -5,7 +5,6 @@ using Gebhardt.StoreWare.Agv.Common.Models;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.Common.Testing;
-using Gebhardt.StoreWare.Agv.Common.Testing.Configurations;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
@@ -45,8 +44,7 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
 
     protected Mock<IActionGroupDurationEstimationService> ActionGroupDurationEstimationService { get; } = new();
 
-    public readonly AgvSettings Settings = new();
-    private readonly AgvSettings _agvSettings = new();
+    public readonly AgvSettingsReadModel SettingsReadModel = new();
 
     protected override void ConfigureServices(IServiceCollection collection)
     {
@@ -58,7 +56,6 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
         collection.AddSingleton<ISemaphoreProvider<IAgvsSemaphore>>(_ => _semaphoreProvider);
         collection.AddTransient(_ => _agvDb.Object);
         collection.AddTransient(_ => _actionGroupValidationService.Object);
-        collection.AddFakeSettings(() => _agvSettings);
         collection.AddTransient(_ => _actionGroupRetrievalService.Object);
         collection.AddTransient(_ => _metricCollectorServiceMock.Object);
         _metricCollectorServiceMock.Setup( x => x.CollectOrderCompletionMetrics(It.IsAny<ActionGroup>(), It.IsAny<string?>())).Verifiable();
@@ -73,7 +70,7 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
         Action<IBusRegistrationContext, IInMemoryBusFactoryConfigurator>? inMemoryConfiguration = null,
         params Action<IServiceCollection>[] services) : base(busRegistrationConfigurator, inMemoryConfiguration, services)
     {
-        _agvSettings = Settings;
+        _agvDb.Setup(x => x.AgvSettings.GetSettingsForAgvGroup(It.IsAny<Guid>())).Returns(SettingsReadModel);
         Build();
         if (inactivityTimeout != null)
         {

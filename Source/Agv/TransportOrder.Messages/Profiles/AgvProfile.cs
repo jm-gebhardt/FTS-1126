@@ -28,7 +28,7 @@ public class AgvProfile : Profile
 
         CreateMap<Guid, AgvSettings>(MemberList.None)
             .ForMember(d => d.CorrelationId, opt => opt.MapFrom(s => s));
-        CreateMap<Domain.Models.Settings.AgvSettings, AgvSettings>()
+        CreateMap<Domain.Models.Settings.AgvSettingsReadModel, AgvSettings>()
             .ForMember(d => d.CorrelationId, opt => opt.Ignore());
 
         CreateMap<Domain.Models.Agv.Agv, MessageContent.Agv>(MemberList.None)

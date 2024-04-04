@@ -27,7 +27,7 @@ public class AgvStateChangedConsumerTest
     public async Task Receiving_AgvStateChanged_WhenCurrentStateIsNotInitial_SendAgvStateChangedToAllClients(AgvState currentState, AgvState? previousState)
     {
         var agvStatus = new AgvStatus(Guid.NewGuid(), null, false, true, 100.0d, false, false, NodeGenerator.GenerateParkingNode().Id);
-        var agv = new Domain.Models.Agv.Agv(AgvSerialNumber.ToGuid(), AgvSerialNumber, agvStatus);
+        var agv = new Domain.Models.Agv.Agv(AgvSerialNumber.ToGuid(), Guid.NewGuid(), AgvSerialNumber, agvStatus);
         agv = AgvGenerator.SetAgvState(currentState, false, agv);
 
         var mapper = MappingHelper.GetMapper(new AgvProfile());
@@ -49,7 +49,7 @@ public class AgvStateChangedConsumerTest
     [DataRow(AgvState.Initial, null)]
     public async Task Receiving_AgvStateChanged_WhenCurrentStateIsInitial_SendAgvDiscoveredToAllClients(AgvState currentState, AgvState? previousState)
     {
-        var agv = new Domain.Models.Agv.Agv(AgvSerialNumber.ToGuid(), AgvSerialNumber);
+        var agv = new Domain.Models.Agv.Agv(AgvSerialNumber.ToGuid(), Guid.NewGuid(), AgvSerialNumber);
         agv = AgvGenerator.SetAgvState(currentState, false, agv);
 
         var mapper = MappingHelper.GetMapper(new AgvProfile());

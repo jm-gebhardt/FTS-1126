@@ -102,7 +102,7 @@ public class ChargingPointManagerTestFixture
     {
         var agvStatus = new AgvStatus(correlationId, order, true, true, 10, false, false, lastNodeId);
 
-        return new TransportOrder.Domain.Models.Agv.Agv(correlationId, serialNumber, agvStatus);
+        return new TransportOrder.Domain.Models.Agv.Agv(correlationId, Guid.NewGuid(), serialNumber, agvStatus);
     }
 
     public ChargingPointManagerTestFixture WithAvailableNodes(TransportOrder.Domain.Models.Agv.Agv agv, List<GraphNode> availableNodes)

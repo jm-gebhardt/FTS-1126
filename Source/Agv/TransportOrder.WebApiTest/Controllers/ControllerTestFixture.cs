@@ -41,6 +41,7 @@ public abstract class ControllerTestFixture<TRequest, TRequestHandler, TControll
         var mapper = MappingHelper.GetMapper(
             new AgvProfile(),
             new AgvStatusProfile(),
+            new AgvSettingsProfile(),
             new CargoProfile(),
             new AgvGraphProfile(),
             new AgvPositionProfile(),

@@ -1,8 +1,6 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
@@ -31,7 +29,6 @@ public class ActionEventHandler :
 {
     private readonly ILogger<ActionEventHandler> _logger;
     private readonly IActionGroupRepository _actionGroupRepository;
-    private readonly ISettingsProvider<AgvSettings> _settingsProvider;
     private readonly IAgvDb _agvDb;
 
     /// <summary>
@@ -40,13 +37,11 @@ public class ActionEventHandler :
     public ActionEventHandler(
         IActionGroupRepository actionGroupRepository,
         IAgvDb agvDb,
-        ISettingsProvider<AgvSettings> settingsProvider,
         ILogger<ActionEventHandler> logger
     )
     {
         _actionGroupRepository = actionGroupRepository;
         _agvDb = agvDb;
-        _settingsProvider = settingsProvider;
         _logger = logger;
     }
 
@@ -62,7 +57,7 @@ public class ActionEventHandler :
         if (chargeAction?.ActionType == ActionType.Charge)
         {
             var agv = await _agvDb.Agvs.GetAgvAsync(assignedAgv);
-            var agvSettings = _settingsProvider.GetSettings();
+            var agvSettings = _agvDb.AgvSettings.GetSettingsForAgvGroup(agv.AgvSettingsGroup);
             if (agv.AgvStatus?.BatteryCharge >= agvSettings.MinChargeUp)
             {
                 _logger.LogInformation("Aborting charging for action group: {ActionGroupCorrelationId}", chargeAction.ParentId);

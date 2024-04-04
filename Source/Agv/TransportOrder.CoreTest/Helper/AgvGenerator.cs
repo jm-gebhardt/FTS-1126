@@ -60,7 +60,7 @@ public static class AgvGenerator
         string agvSerialNumber = GetAgvSerialNumber(index);
         var correlationId = agvSerialNumber.ToGuid();
         agvStatus ??= new AgvStatus(correlationId, orderId, false, true, batteryCharge, charging, false, lastNodeId);
-        var agv = new TransportOrder.Domain.Models.Agv.Agv(correlationId, agvSerialNumber, agvStatus, isLocked)
+        var agv = new TransportOrder.Domain.Models.Agv.Agv(correlationId,  Guid.NewGuid(), agvSerialNumber, agvStatus, isLocked)
         {
             HasError = hasError
         };

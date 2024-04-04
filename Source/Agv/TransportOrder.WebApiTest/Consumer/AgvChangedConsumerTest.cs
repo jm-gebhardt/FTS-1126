@@ -24,7 +24,7 @@ public class AgvChangedConsumerTest
     [DataRow(false)]
     public async Task Receiving_AgvOnlineChanged_SendAgvStateToAllClients(bool alive)
     {
-        var agv = new Domain.Models.Agv.Agv(AgvSerialNumber.ToGuid(), AgvSerialNumber);
+        var agv = new Domain.Models.Agv.Agv(AgvSerialNumber.ToGuid(), Guid.NewGuid(), AgvSerialNumber);
         agv.TransitionToDiscovered(true);
         agv.TransitionToIdle();
         agv.SetOnline(Guid.NewGuid());
