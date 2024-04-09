@@ -35,5 +35,5 @@ public record MassTransitConfiguration : SettingsBase<MassTransitConfiguration>
     /// <summary>
     /// Create RabbitMQ URL
     /// </summary>
-    public string Url => $"amqp://{User}:{Password}@{Host}:{Port}";
+    public string Url => $"amqp://{User}:{Uri.EscapeDataString(Password!)}@{Host}:{Port}";
 }
