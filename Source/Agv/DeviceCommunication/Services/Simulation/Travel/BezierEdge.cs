@@ -63,9 +63,8 @@ public class BezierEdge : SimpleEdge
         double travelDistance = GetEdgeTravelDistance(agvData, now);
         double interValPosition = Math.Clamp(travelDistance / Length, 0, 1);
 
-        var position = _bezier.DeCasteljau(interValPosition, out var sourceVector, out _);
-        float theta = GetAgvOrientation(sourceVector, position);
-        theta = GetPartialOrientation(now, InitialTurnFinishTime, EntryTime, theta, previousOrientation);
+        var position = _bezier.DeCasteljau(interValPosition, out _, out _);
+        float theta = GetOrientation(now, interValPosition, previousOrientation);
         if (now >= InitialTurnFinishTime)
         {
             return new AgvPosition(true, position.X, position.Y, SourceNode.Z, theta);
@@ -73,5 +72,14 @@ public class BezierEdge : SimpleEdge
         position.X = SourceNode.X;
         position.Y = SourceNode.Y;
         return new AgvPosition(true, position.X, position.Y, SourceNode.Z, theta);
+    }
+
+    private float GetOrientation(DateTime now, double intervalPosition, float previousOrientation)
+    {
+        // ensure orientation is based on relative position on edge > 0
+        intervalPosition = Math.Clamp(intervalPosition, 0.01, 1);
+        var position = _bezier.DeCasteljau(intervalPosition, out var sourceVector, out _);
+        float theta = GetAgvOrientation(sourceVector, position);
+        return GetPartialOrientation(now, InitialTurnFinishTime, EntryTime, theta, previousOrientation);
     }
 }
