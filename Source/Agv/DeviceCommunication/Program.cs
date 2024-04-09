@@ -24,6 +24,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Quartz;
+using Prometheus;
 
 const string quartzSchedulerName = "MassTransit-DeviceCommunication";
 const string quartzSchedulerId = "AUTO";
@@ -89,6 +90,7 @@ try
                         .AddDeviceCommunicationWebApi()
                         .Configure(app =>
                         {
+                            app.UseMetricServer();
                             app.UseDeviceCommunicationWebApi();
                             app.UseDeveloperExceptionPage();
                         });
@@ -132,7 +134,14 @@ try
                             var serializerFactory = new SystemTextJsonRawMessageSerializerFactory();
                             configurator.AddSerializer(serializerFactory, false);
                         });
-                });
+                }).ConfigureWebHost(host =>
+                {
+                    host.UseKestrel()
+                        .Configure(app =>
+                        {
+                            app.UseMetricServer();
+                        });
+                }); 
         });
 
     // By using the generic overload of WithParsed above host will be null for invalid command line arguments.
