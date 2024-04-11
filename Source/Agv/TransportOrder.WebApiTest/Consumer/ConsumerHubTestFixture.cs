@@ -1,6 +1,5 @@
 using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Testing;
-using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
+using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Routing;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles;
@@ -12,7 +11,7 @@ using AgvPositionProfile = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Profiles
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Consumer;
 
-public class ConsumerHubTestFixture<TConsumer, THubContext>(params Action<IServiceCollection>[] services) : MassTransitConsumerTestFixture<TConsumer>(services: services)
+public class ConsumerHubTestFixture<TConsumer, THubContext> : MassTransitConsumerTestFixture<TConsumer>
     where TConsumer : class, IConsumer
     where THubContext : class
 {
@@ -21,35 +20,39 @@ public class ConsumerHubTestFixture<TConsumer, THubContext>(params Action<IServi
     public readonly Mock<THubContext> PublisherMock = new();
     public readonly Mock<INodeStateRepository> NodeStateRepositoryMock = new();
 
-    public Mock<IAgvRouteRetrievalService> AgvRouteServiceMock { get; } = new();
+    protected override IEnumerable<Profile> GetProfiles() =>
+    [
+        new AgvProfile(),
+        new AgvGraphProfile(),
+        new AgvPositionProfile(),
+        new MapProfile(),
+        new AgvErrorProfile(),
+        new WebApi.Profiles.ActionProfile(),
+        new Messages.Profiles.AgvProfile(),
+        new Messages.Profiles.AgvGraphProfile(),
+        new Messages.Profiles.AgvErrorProfile(),
+        new Messages.Profiles.MapProfile(),
+        new Messages.Profiles.AgvPositionProfile(),
+        new ActionProfile()
+    ];
 
-    private IMapper GetMapper()
+    public ConsumerHubTestFixture(params Action<IServiceCollection>[] services)
     {
-        var mapper = MappingHelper.GetMapper(
-            new AgvProfile(),
-            new AgvGraphProfile(),
-            new AgvPositionProfile(),
-            new MapProfile(),
-            new AgvErrorProfile(),
-            new WebApi.Profiles.ActionProfile(),
-            new Messages.Profiles.AgvProfile(),
-            new Messages.Profiles.AgvGraphProfile(),
-            new Messages.Profiles.AgvErrorProfile(),
-            new Messages.Profiles.MapProfile(),
-            new Messages.Profiles.AgvPositionProfile(),
-            new ActionProfile()
-        );
-        return mapper;
+        AddServices(services);
+        Build();
     }
 
-    protected override void ConfigureServices(IServiceCollection collection)
+    public Mock<IAgvRouteRetrievalService> AgvRouteServiceMock { get; } = new();
+
+    protected override MassTransitConsumerTestFixture<TConsumer> AddServices(IServiceCollection collection)
     {
-        collection.AddTransient(_ => GetMapper());
+        base.AddServices(collection);
         collection.AddTransient(_ => PublisherMock.Object);
         collection.AddTransient(_ => NodeStateRepositoryMock.Object);
         collection.AddTransient(_ => _actionGroupRetrievalServiceMock.Object);
         collection.AddTransient(_ => AgvRouteServiceMock.Object);
         collection.AddTransient(_ => _actionGroupRepositoryMock.Object);
         collection.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+        return this;
     }
 }

@@ -1,7 +1,6 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
 using Gebhardt.StoreWare.Agv.Common.Models;
-using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.CommandHandler;
@@ -26,7 +25,6 @@ public class ActionGroupControllerTest
         var startedDate = DateTime.Parse("2021-01-01T00:00:54Z").ToUniversalTime();
         var actionGroup = new ActionGroupReadModel(correlationId, "OrderId", null, DateTime.UtcNow, startedDate, null, TimeSpan.FromSeconds(6), ActionGroupState.Created, ActionGroupCreator.TransportOrder, new List<AgvActionReadModel>(), true, new List<Reason>());
         ActionGroupControllerTestFixture<GetActionGroup, ActionGroupRequestHandler> fixture = new ActionGroupControllerTestFixture<GetActionGroup, ActionGroupRequestHandler>()
-            .Setup()
             .AddActionGroup(actionGroup)
             .Build();
 
@@ -40,7 +38,6 @@ public class ActionGroupControllerTest
     public async Task GetSingleActionGroup_UnknownCorrelationId_ReturnsNotFound()
     {
         ActionGroupControllerTestFixture<GetActionGroup, ActionGroupRequestHandler> fixture = new ActionGroupControllerTestFixture<GetActionGroup, ActionGroupRequestHandler>()
-            .Setup()
             .Build();
 
         var correlationId = "INVALID".ToGuid();
@@ -54,7 +51,6 @@ public class ActionGroupControllerTest
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler> fixture = new ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler>()
-            .Setup()
             .AddActionGroup(actionGroup)
             .Build();
 
@@ -66,7 +62,6 @@ public class ActionGroupControllerTest
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler> fixture = new ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler>()
-            .Setup()
             .AddActionGroup(actionGroup)
             .Build();
 
@@ -79,7 +74,6 @@ public class ActionGroupControllerTest
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(ActionGroupState.Started);
 
         ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler> fixture = new ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler>()
-            .Setup()
             .AddActionGroup(actionGroup)
             .Build();
 
@@ -97,7 +91,6 @@ public class ActionGroupControllerTest
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(ActionGroupState.Completed);
 
         ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler> fixture = new ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler>()
-            .Setup()
             .AddActionGroup(actionGroup)
             .Build();
 
@@ -115,7 +108,6 @@ public class ActionGroupControllerTest
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(ActionGroupState.Failed);
 
         ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler> fixture = new ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler>()
-            .Setup()
             .AddActionGroup(actionGroup)
             .Build();
 
@@ -133,7 +125,6 @@ public class ActionGroupControllerTest
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(ActionGroupState.Canceled);
 
         ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler> fixture = new ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler>()
-            .Setup()
             .AddActionGroup(actionGroup)
             .Build();
 
@@ -149,9 +140,7 @@ public class ActionGroupControllerTest
     public async Task AbortActionGroup_ValidData_ReturnsOk()
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(ActionGroupState.Started);
-        var massTransitFixture = new MassTransitConsumerTestFixture<SuccessResponseConsumer<AbortActionGroup>>();
         ActionGroupControllerTestFixture<TriggerActionGroupAbortion, ActionGroupRequestHandler> fixture = new ActionGroupControllerTestFixture<TriggerActionGroupAbortion, ActionGroupRequestHandler>()
-            .Setup(massTransitFixture.TestHarness.Bus)
             .AddActionGroup(actionGroup)
             .Build();
 
@@ -166,7 +155,6 @@ public class ActionGroupControllerTest
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         ActionGroupControllerTestFixture<TriggerActionGroupAbortion, ActionGroupRequestHandler> fixture = new ActionGroupControllerTestFixture<TriggerActionGroupAbortion, ActionGroupRequestHandler>()
-            .Setup()
             .AddActionGroup(actionGroup)
             .Build();
 
@@ -178,7 +166,6 @@ public class ActionGroupControllerTest
     public async Task AbortActionGroup_UnknownCorrelationId_ReturnsNotFound()
     {
         ActionGroupControllerTestFixture<TriggerActionGroupAbortion, ActionGroupRequestHandler> fixture = new ActionGroupControllerTestFixture<TriggerActionGroupAbortion, ActionGroupRequestHandler>()
-            .Setup()
             .Build();
 
         var correlationId = "INVALID".ToGuid();
@@ -191,9 +178,7 @@ public class ActionGroupControllerTest
     public async Task ResetActionGroup_ValidData_ReturnsOk()
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(ActionGroupState.Started);
-        var massTransitFixture = new MassTransitConsumerTestFixture<SuccessResponseConsumer<ResetActionGroup>>();
         ActionGroupControllerTestFixture<TriggerActionGroupReset, ActionGroupRequestHandler> fixture = new ActionGroupControllerTestFixture<TriggerActionGroupReset, ActionGroupRequestHandler>()
-            .Setup(massTransitFixture.TestHarness.Bus)
             .AddActionGroup(actionGroup)
             .Build();
 
@@ -207,7 +192,6 @@ public class ActionGroupControllerTest
     public async Task ResetActionGroup_UnknownCorrelationId_ReturnsNotFound()
     {
         ActionGroupControllerTestFixture<TriggerActionGroupReset, ActionGroupRequestHandler> fixture = new ActionGroupControllerTestFixture<TriggerActionGroupReset, ActionGroupRequestHandler>()
-            .Setup()
             .Build();
 
         var correlationId = "Unknown".ToGuid();

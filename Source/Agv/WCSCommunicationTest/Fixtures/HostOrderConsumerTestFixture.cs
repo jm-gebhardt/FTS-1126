@@ -1,4 +1,4 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Testing;
+﻿using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
 using Gebhardt.StoreWare.Agv.WCSCommunication.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.WCSCommunication.Domain.Services;
 using MassTransit;
@@ -14,10 +14,12 @@ public class HostOrderConsumerTestFixture<TConsumer> : MassTransitConsumerTestFi
 
     public readonly Mock<IHostCommunicator> HostCommunicatorMock = new();
 
-    protected override void ConfigureServices(IServiceCollection collection)
+    protected override MassTransitConsumerTestFixture<TConsumer> AddServices(IServiceCollection collection)
     {
+        base.AddServices(collection);
         collection.AddTransient(_ => HostOrderRepositoryMock.Object);
         collection.AddTransient(_ => HostCommunicatorMock.Object);
+        return this;
     }
 
     public HostOrderConsumerTestFixture()

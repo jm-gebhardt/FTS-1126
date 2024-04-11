@@ -1,45 +1,28 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Services;
-using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
+﻿using AutoMapper;
+using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Map;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles;
-using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Repositories;
 
-public class EfMapRepositoryTestFixture
+public class EfMapRepositoryTestFixture : TransportOrderDbFixture
 {
     private const string SmallImage1 = "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIAQMAAAD+wSzIAAAABlBMVEX///+/v7+jQ3Y5AAAADklEQVQI12P4AIX8EAgALgAD/aNpbtEAAAAASUVORK5CYII=";
     public const string SmallImage2 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
 
     public EfMapRepository Repository { get; }
 
-    private IDbContextFactory<TransportOrderDbContext> ContextFactory { get; }
-
-    private ServiceProvider Provider { get; }
+    protected override IEnumerable<Profile> GetProfiles() => [new GraphProfile()];
 
     public EfMapRepositoryTestFixture()
     {
-        var mapper = MappingHelper.GetMapper(new GraphProfile());
-
         var mockLogger = new Mock<ILogger<EfMapRepository>>();
-        var collection = new ServiceCollection().AddDbContextFactory<TransportOrderDbContext>(options => options.UseInMemoryDatabase(Guid.NewGuid().ToString()));
-        Provider = collection.BuildServiceProvider(true);
-        ContextFactory = Provider.GetService<IDbContextFactory<TransportOrderDbContext>>()!;
-        Repository = new EfMapRepository(ContextFactory, mapper, new SemaphoreProvider<IMapRepositorySemaphore>(), mockLogger.Object);
-    }
-
-    public void Add(Map map)
-    {
-        using var context = ContextFactory.CreateDbContext();
-        context.Set<Map>().Add(map);
-        context.SaveChanges();
+        Repository = new EfMapRepository(ContextFactory, Mapper, new SemaphoreProvider<IMapRepositorySemaphore>(), mockLogger.Object);
     }
 
     public Map GetNewMap(string mapId = "default")

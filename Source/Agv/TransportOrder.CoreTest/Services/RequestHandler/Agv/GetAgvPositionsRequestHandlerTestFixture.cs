@@ -1,4 +1,4 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Testing;
+﻿using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using MassTransit;

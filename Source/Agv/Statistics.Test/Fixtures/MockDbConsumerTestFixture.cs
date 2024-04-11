@@ -1,4 +1,4 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Testing;
+﻿using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
 using Gebhardt.StoreWare.Agv.Statistics.Domain.Models;
 using Gebhardt.StoreWare.Agv.Statistics.Domain.Repositories;
 using JetBrains.Annotations;
@@ -17,16 +17,15 @@ public class MockDbConsumerTestFixture<TConsumer> : MassTransitConsumerTestFixtu
     [PublicAPI]
     public Mock<IStatisticsDb> StatisticsDbMock { get; set; } = new();
 
-    protected override void ConfigureServices(IServiceCollection collection)
+    protected override MassTransitConsumerTestFixture<TConsumer> AddServices(IServiceCollection collection)
     {
+        base.AddServices(collection);
         collection.AddTransient(_ => StatisticsDbMock.Object);
         StatisticsDbMock.SetupVerifiableMethods();
+        return this;
     }
 
-    public MockDbConsumerTestFixture(TimeSpan? inactivityTimeout = null,
-        Action<IBusRegistrationConfigurator>? busRegistrationConfigurator = null,
-        Action<IBusRegistrationContext, IInMemoryBusFactoryConfigurator>? inMemoryConfiguration = null,
-        params Action<IServiceCollection>[] services) : base(busRegistrationConfigurator, inMemoryConfiguration, services)
+    public MockDbConsumerTestFixture(TimeSpan? inactivityTimeout = null)
     {
         Build();
         if (inactivityTimeout != null)

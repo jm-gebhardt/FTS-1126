@@ -1,6 +1,6 @@
 using Gebhardt.StoreWare.Agv.Common.Services;
-using Gebhardt.StoreWare.Agv.Common.Testing;
-using MassTransit;
+using Gebhardt.StoreWare.Agv.Common.Testing.Extensions;
+using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -13,6 +13,8 @@ namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Fixtures;
 public class EfPollableServiceTestFixture<TPollable, TDbContext> : PollableServiceTestFixture<TPollable>
     where TPollable : class, IPollable where TDbContext : DbContext
 {
+    private readonly Guid _id = Guid.NewGuid();
+
     /// <summary>
     /// DbContextFactory used to create TDbContext instances
     /// </summary>
@@ -21,24 +23,10 @@ public class EfPollableServiceTestFixture<TPollable, TDbContext> : PollableServi
     /// <summary>
     /// MassTransit BackgroundService test fixture with EF DbContextFactory services added
     /// </summary>
-    /// <param name="services">Configure IServiceCollection</param>
-    /// <param name="busRegistrationConfigurator">Configure IBusRegistrationConfigurator</param>
-    public EfPollableServiceTestFixture(Action<IServiceCollection>? services = null, Action<IBusRegistrationConfigurator>? busRegistrationConfigurator = null) :
-        base(s =>
-        {
-            s.AddDbContextFactory<TDbContext>(options =>
-                options.UseInMemoryDatabase(Guid.NewGuid().ToString())
-            );
-            services?.Invoke(s);
-        }, busRegistrationConfigurator)
+    public EfPollableServiceTestFixture()
     {
-        DbContextFactory = Provider.GetService<IDbContextFactory<TDbContext>>()!;
-        EnsureDbCreated();
-    }
-
-    private void EnsureDbCreated()
-    {
-        using var context = DbContextFactory.CreateDbContext();
-        context.Database.EnsureCreated();
+        AddServices(s => s.AddTestingDb<TDbContext>(_id));
+        Build();
+        DbContextFactory = Provider.GetRequiredService<IDbContextFactory<TDbContext>>().EnsureDbCreated();
     }
 }

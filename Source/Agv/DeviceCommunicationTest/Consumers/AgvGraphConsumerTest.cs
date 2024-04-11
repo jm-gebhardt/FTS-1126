@@ -21,9 +21,8 @@ public class AgvGraphConsumerTest
     [TestMethod]
     public async Task ReceiveGraphMessage_WithValidInput_ExpectMessage()
     {
-        var fixture = new AgvGraphConsumerTestFixture()
-            .UseDefaultServices()
-            .Build();
+        var fixture = new AgvGraphConsumerTestFixture();
+
         var nodes = new MqttNode[]
         {
             new() { NodeId = 1, X = 0f, Y = 0f, Z = 0f },

@@ -1,10 +1,10 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using Gebhardt.StoreWare.Agv.Common.Testing;
+using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Routing;
-using Gebhardt.StoreWare.Agv.TransportOrder.Routing.Models;
+using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 
@@ -24,9 +24,10 @@ public class RouteRequestHandlerTestFixture<TRequestClient> : MediatorTestFixtur
         return this;
     }
 
+    [PublicAPI]
     public RouteRequestHandlerTestFixture<TRequestClient> WithRoute(TransportOrder.Domain.Models.Agv.Agv agv, string destinationNodeId, string[] nodes)
     {
-        _routeServiceMock.Setup(s => s.GetRouteAsync(agv, destinationNodeId, null, It.IsAny<AgvData>(), CancellationToken.None)).ReturnsAsync(new Route(0f, nodes));
+        _routeServiceMock.WithRoute(0f, nodes);
         return this;
     }
 

@@ -1,7 +1,7 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
-using Gebhardt.StoreWare.Agv.Common.Testing;
+using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.Events;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.MqttMessages;
@@ -25,8 +25,7 @@ public class AgvGraphBuilderStateMachineTest
     {
         var correlationId = AgvSerialNumber.ToGuid();
 
-        StateMachineTestFixture<AgvGraphBuilderStateMachine, AgvGraphBuilderSaga> fixture = new StateMachineTestFixture<AgvGraphBuilderStateMachine, AgvGraphBuilderSaga>()
-            .Build();
+        var fixture = new AgvGraphBuilderStateMachineFixture();
 
         await fixture.TestHarness.Bus.Publish(new RequestAgvGraph(correlationId, AgvSerialNumber));
         (await fixture.SagaHarness.Consumed.Any<RequestAgvGraph>()).ShouldBeTrue();
@@ -44,8 +43,7 @@ public class AgvGraphBuilderStateMachineTest
     {
         var correlationId = Guid.Empty;
 
-        StateMachineTestFixture<AgvGraphBuilderStateMachine, AgvGraphBuilderSaga> fixture = new StateMachineTestFixture<AgvGraphBuilderStateMachine, AgvGraphBuilderSaga>()
-            .Build();
+        var fixture = new AgvGraphBuilderStateMachineFixture();
 
         await fixture.TestHarness.Bus.Publish(new RequestAgvGraph(correlationId, AgvSerialNumber));
         (await fixture.SagaHarness.Consumed.Any<RequestAgvGraph>()).ShouldBeFalse();
@@ -61,8 +59,7 @@ public class AgvGraphBuilderStateMachineTest
     {
         var correlationId = AgvSerialNumber.ToGuid();
 
-        StateMachineTestFixture<AgvGraphBuilderStateMachine, AgvGraphBuilderSaga> fixture = new StateMachineTestFixture<AgvGraphBuilderStateMachine, AgvGraphBuilderSaga>()
-            .Build();
+        var fixture = new AgvGraphBuilderStateMachineFixture();
 
         // Publish RequestAgvGraph ...
         await fixture.TestHarness.Bus.Publish(new RequestAgvGraph(correlationId, AgvSerialNumber));
@@ -146,8 +143,7 @@ public class AgvGraphBuilderStateMachineTest
     {
         var correlationId = AgvSerialNumber.ToGuid();
 
-        StateMachineTestFixture<AgvGraphBuilderStateMachine, AgvGraphBuilderSaga> fixture = new StateMachineTestFixture<AgvGraphBuilderStateMachine, AgvGraphBuilderSaga>()
-            .Build();
+        var fixture = new AgvGraphBuilderStateMachineFixture();
 
         // Publish RequestAgvGraph ...
         await fixture.TestHarness.Bus.Publish(new RequestAgvGraph(correlationId, AgvSerialNumber));
@@ -204,5 +200,13 @@ public class AgvGraphBuilderStateMachineTest
 
         // Check for invalid usability due to duplicate nodes.
         publishedData.Graph.Usability.ShouldBe(AgvGraph.GraphUsability.InvalidStations);
+    }
+}
+
+public class AgvGraphBuilderStateMachineFixture : BaseStateMachineTestFixture<AgvGraphBuilderStateMachine, AgvGraphBuilderSaga>
+{
+    public AgvGraphBuilderStateMachineFixture()
+    {
+        Build();
     }
 }

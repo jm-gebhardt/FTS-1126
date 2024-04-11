@@ -1,11 +1,6 @@
-using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graphs;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Maps;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.States;
-using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -36,18 +31,12 @@ public class SimulatedAgvProviderTest
     {
         var options = GetSimulatedOptions();
 
-        StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga> fixture = new StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(
-                s =>
-                {
-                    s.AddSingleton(options);
-                    s.AddLogging();
-                    s.AddTransient<IGraphGenerator, GridGraphGenerator>(_ => new GridGraphGenerator(options, new GeneratedMapGenerator()));
-                    s.AddHostedService<SimulatedAgvProvider>();
-                },
-                inactivityTimeout: TimeSpan.FromSeconds(6))
+        var fixture = new SimulatedAgvProviderTestFixture()
+            .WithSimulateOptions(options)
             .Build();
 
-        (fixture.Provider.GetRequiredService<IHostedService>() as SimulatedAgvProvider).ShouldNotBeNull();
+        var services = fixture.Provider.GetRequiredService<IEnumerable<IHostedService>>();
+        services.Any(s => s is SimulatedAgvProvider).ShouldBeTrue();
         bool result = await fixture.SagaHarness.Consumed.Any<SimulatedAgvStateMachine.CreateAgv>();
         result.ShouldBeTrue();
     }
@@ -57,21 +46,12 @@ public class SimulatedAgvProviderTest
     {
         var options = GetSimulatedOptions(2);
 
-        StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga> fixture = new StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(
-                s =>
-                {
-                    s.AddSingleton(options);
-                    s.AddLogging();
-                    s.AddTransient<IGraphGenerator, GridGraphGenerator>(_ => new GridGraphGenerator(options, new GeneratedMapGenerator()));
-                    s.AddHostedService<SimulatedAgvProvider>();
-                },
-                inactivityTimeout: TimeSpan.FromSeconds(6),
-                inMemoryConfiguration: (_, cfg) => { cfg.UseDelayedMessageScheduler(); },
-                busRegistrationConfigurator:
-                x => { x.AddDelayedMessageScheduler(); })
+        var fixture = new SimulatedAgvProviderTestFixture()
+            .WithSimulateOptions(options)
             .Build();
-
-        (fixture.Provider.GetRequiredService<IHostedService>() as SimulatedAgvProvider).ShouldNotBeNull();
+        
+        var services = fixture.Provider.GetRequiredService<IEnumerable<IHostedService>>();
+        services.Any(s => s is SimulatedAgvProvider).ShouldBeTrue();
 
         (await fixture.SagaHarness.Consumed.Any<SimulatedAgvStateMachine.CreateAgv>()).ShouldBeTrue();
 

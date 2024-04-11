@@ -1,7 +1,7 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.Graphs.Requests;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
-using Gebhardt.StoreWare.Agv.Common.Testing;
+using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Graphs;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,13 +12,18 @@ internal class GraphMergerTestFixture : MassTransitConsumerTestFixture<GraphMerg
 {
     private Graph _gotGraph = null!;
 
+    public GraphMergerTestFixture()
+    {
+        Build();
+    }
+    
     public AgvGraphReceived AgvGraphReceived { get; } = new(Guid.NewGuid(), "agv", AgvGraphGenerator.CreateDefaultGraph());
 
-    protected override void ConfigureServices(IServiceCollection collection)
+    protected override MassTransitConsumerTestFixture<GraphMerger> AddServices(IServiceCollection collection)
     {
-        base.ConfigureServices(collection);
-
+        base.AddServices(collection);
         collection.AddSingleton(RequestClientGenerator<GetGraph>.CreateDummyRequestClient(() => new GotGraph(_gotGraph)));
+        return this;
     }
 
     public GraphMergerTestFixture WithCurrentGraph(Graph graph)

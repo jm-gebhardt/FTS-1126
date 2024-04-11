@@ -3,8 +3,7 @@ using Gebhardt.StoreWare.Agv.Common.Dictionaries;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Services.Filters;
 using Gebhardt.StoreWare.Agv.Common.Services.Significance;
-using Gebhardt.StoreWare.Agv.Common.Testing;
-using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
+using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.EventHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Dictionaries;
@@ -19,69 +18,60 @@ using Moq;
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApiTest.Consumer;
 
 internal class AgvPositionReceivedConsumerMassTransitTestFixture :
-    MassTransitConsumerTestFixture<AgvPositionReceivedEventHandler>, ITestFixtureBuilder<AgvPositionReceivedConsumerMassTransitTestFixture>
+    MassTransitConsumerTestFixture<AgvPositionReceivedEventHandler>
 {
-    private bool _useAgvPositionRepositoryMock;
+    private readonly Mock<IGraphRepository> _graphRepositoryMock = new();
 
     public Mock<IAgvPositionRepository>? AgvPositionRepositoryMock { get; private set; }
 
-    private Mock<IGraphRepository>? GraphRepositoryMock { get; set; }
+    protected override IEnumerable<Profile> GetProfiles() =>
+    [
+        new AgvProfile(),
+        new AgvGraphProfile(),
+        new AgvPositionProfile(),
+        new MapProfile(),
+        new AgvErrorProfile(),
+        new ActionProfile(),
+        new Messages.Profiles.AgvProfile(),
+        new Messages.Profiles.AgvGraphProfile(),
+        new Messages.Profiles.AgvErrorProfile(),
+        new Messages.Profiles.MapProfile(),
+        new Domain.Profiles.AgvPositionProfile()
+    ];
 
-    public AgvPositionReceivedConsumerMassTransitTestFixture()
+    public AgvPositionReceivedConsumerMassTransitTestFixture UseAgvPositionRepositoryMock()
     {
-        base.Build();
-    }
-
-    public ITestFixtureBuilder<AgvPositionReceivedConsumerMassTransitTestFixture> UseAgvPositionRepositoryMock()
-    {
-        _useAgvPositionRepositoryMock = true;
-        return this;
-    }
-
-    public AgvPositionReceivedConsumerMassTransitTestFixture Build()
-    {
-        base.Build();
-        return this;
-    }
-
-    protected override void ConfigureServices(IServiceCollection services)
-    {
-        GraphRepositoryMock = new Mock<IGraphRepository>();
-        services.AddSingleton<IConcurrentDictionaryProvider<Guid, AgvPositionStatus>, AgvPositionDictionaryProvider>();
-        if (_useAgvPositionRepositoryMock)
+        AddServices(s =>
         {
             AgvPositionRepositoryMock = new Mock<IAgvPositionRepository>();
 
-            services.AddSingleton(AgvPositionRepositoryMock.Object);
-            services.AddSingleton(GraphRepositoryMock.Object);
-        }
-        else
-        {
-            services.AddSingleton<IAgvPositionRepository, AgvPositionRepository>();
-            services.AddSingleton(GraphRepositoryMock.Object);
-        }
+            s.AddSingleton(AgvPositionRepositoryMock.Object);
+            s.AddSingleton(_graphRepositoryMock.Object);
+        });
 
-        services.AddTransient(_ => new Mock<IAgvPublisher>().Object);
-        services.AddSingleton<ISignificanceChecker<AgvPosition>, AgvPositionSignificanceChecker>();
-        services.AddSingleton(new AgvPositionConfiguration(0.5, Mathematics.ConvertToRadians(5), 1000));
-        services.AddTransient(_ => GetMapper());
+        return this;
     }
 
-    private IMapper GetMapper()
+    public new AgvPositionReceivedConsumerMassTransitTestFixture Build()
     {
-        var mapper = MappingHelper.GetMapper(
-            new AgvProfile(),
-            new AgvGraphProfile(),
-            new AgvPositionProfile(),
-            new MapProfile(),
-            new AgvErrorProfile(),
-            new ActionProfile(),
-            new Messages.Profiles.AgvProfile(),
-            new Messages.Profiles.AgvGraphProfile(),
-            new Messages.Profiles.AgvErrorProfile(),
-            new Messages.Profiles.MapProfile(),
-            new Domain.Profiles.AgvPositionProfile()
-        );
-        return mapper;
+        base.Build();
+        return this;
+    }
+
+    protected override MassTransitConsumerTestFixture<AgvPositionReceivedEventHandler> AddServices(IServiceCollection collection)
+    {
+        base.AddServices(collection);
+        collection.AddSingleton<IConcurrentDictionaryProvider<Guid, AgvPositionStatus>, AgvPositionDictionaryProvider>();
+        if (AgvPositionRepositoryMock is null)
+        {
+            collection.AddSingleton<IAgvPositionRepository, AgvPositionRepository>();
+            collection.AddSingleton(_graphRepositoryMock.Object);
+        }
+
+        collection.AddTransient(_ => new Mock<IAgvPublisher>().Object);
+        collection.AddSingleton<ISignificanceChecker<AgvPosition>, AgvPositionSignificanceChecker>();
+        collection.AddSingleton(new AgvPositionConfiguration(0.5, Mathematics.ConvertToRadians(5), 1000));
+
+        return this;
     }
 }

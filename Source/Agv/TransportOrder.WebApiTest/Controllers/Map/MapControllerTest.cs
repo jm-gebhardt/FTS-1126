@@ -30,7 +30,7 @@ public class MapControllerTest
         resultValue.ShouldNotBeEmpty();
         resultValue.ShouldBeEquivalentTo(imageByteArray);
 
-        var harness = fixture.TestHarness;
+        var harness = fixture.MediatorTestHarness;
 
         (await harness.Consumed.Any<GetMapImage>()).ShouldBeTrue();
         (await harness.Consumed.Any<GotMapImage>()).ShouldBeTrue();
@@ -43,16 +43,15 @@ public class MapControllerTest
     public async Task GetNodeStatesForMap_ValidData_RespondsNodeStates()
     {
         var nodeStates = new List<NodeLock> { new("NodeId", NodeLockState.Free, false, null, DateTime.UtcNow) };
-        MapControllerTestFixture<GetMapNodeStates, NodeStateRequestHandler> fixture = new MapControllerTestFixture<GetMapNodeStates, NodeStateRequestHandler>()
-            .AddNodeStates(nodeStates)
+        MapControllerTestFixture<GetMapNodeStates, NodeStateRequestHandler> fixture = new MapControllerTestFixture<GetMapNodeStates, NodeStateRequestHandler>(nodeStates)
             .Build();
 
         ICollection<NodeStateDto> actualNodeStates = fixture.GetControllerResultAsync(c => c.GetNodeStatesForMap(Guid.NewGuid())).Result;
         actualNodeStates.ShouldNotBeNull();
         actualNodeStates.Select(a => new { a.AgvCorrelationId, a.IsLocked, a.NodeId, a.NodeState })
-            .ShouldBe(fixture.Mapper!.Map<ICollection<NodeStateDto>>(nodeStates).Select(a => new { a.AgvCorrelationId, a.IsLocked, a.NodeId, a.NodeState }));
+            .ShouldBe(fixture.Mapper.Map<ICollection<NodeStateDto>>(nodeStates).Select(a => new { a.AgvCorrelationId, a.IsLocked, a.NodeId, a.NodeState }));
 
-        (await fixture.TestHarness.Published.Any<GetMapNodeStates>()).ShouldBeTrue();
-        (await fixture.TestHarness.Consumed.Any<GotMapNodeStates>()).ShouldBeTrue();
+        (await fixture.MediatorTestHarness.Published.Any<GetMapNodeStates>()).ShouldBeTrue();
+        (await fixture.MediatorTestHarness.Consumed.Any<GotMapNodeStates>()).ShouldBeTrue();
     }
 }

@@ -2,7 +2,6 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
-using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
@@ -50,14 +49,13 @@ public class MoveAgvRequestHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var targetNode = new GraphNode("target");
-        var busFixture = new MassTransitConsumerTestFixture<SuccessResponseConsumer<QueueActionGroup>>();
         MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler>()
             .AddAgvs([agv])
             .WithNode(targetNode)
-            .BuildAsync(busFixture.TestHarness.Bus);
+            .BuildAsync();
 
         await fixture.GetResponseAsync<AgvMoveSuccessful>(new MoveAgv(agv.CorrelationId, targetNode.Id, ActionGroupCreator.TransportOrderWebApi));
-        (await busFixture.TestHarness.Published.Any<QueueActionGroup>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<QueueActionGroup>()).ShouldBeTrue();
     }
 
     [TestMethod]
@@ -65,16 +63,15 @@ public class MoveAgvRequestHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var targetNode = new GraphNode("target") { Type = AgvGraph.NodeType.Park };
-        var busFixture = new MassTransitConsumerTestFixture<SuccessResponseConsumer<QueueActionGroup>>();
         MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler>()
             .AddAgvs([agv])
             .WithNode(targetNode)
-            .BuildAsync(busFixture.TestHarness.Bus);
+            .BuildAsync();
 
         await fixture.GetResponseAsync<AgvMoveSuccessful>(new MoveAgv(agv.CorrelationId, targetNode.Id, ActionGroupCreator.TransportOrderWebApi));
-        (await busFixture.TestHarness.Published.Any<QueueActionGroup>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<QueueActionGroup>()).ShouldBeTrue();
         fixture.VerifyNodeWasReserved(targetNode, agv.CorrelationId);
-        (await busFixture.TestHarness.Published.Any<NodeStateChanged>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<NodeStateChanged>()).ShouldBeTrue();
     }
 
     [TestMethod]
@@ -82,16 +79,15 @@ public class MoveAgvRequestHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var targetNode = new GraphNode("target") { Type = AgvGraph.NodeType.Park };
-        var busFixture = new MassTransitConsumerTestFixture<SuccessResponseConsumer<QueueActionGroup>>();
         MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler>()
             .AddAgvs([agv])
             .WithNode(targetNode)
-            .BuildAsync(busFixture.TestHarness.Bus);
+            .BuildAsync();
 
         await fixture.GetResponseAsync<AgvMoveSuccessful>(new MoveAgv(agv.CorrelationId, targetNode.Id, ActionGroupCreator.TransportOrderWebApi));
-        (await busFixture.TestHarness.Published.Any<QueueActionGroup>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<QueueActionGroup>()).ShouldBeTrue();
         fixture.VerifyNodeWasReserved(targetNode, agv.CorrelationId);
-        (await busFixture.TestHarness.Published.Any<NodeStateChanged>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<NodeStateChanged>()).ShouldBeTrue();
     }
 
     [TestMethod]
@@ -173,16 +169,14 @@ public class MoveAgvRequestHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var charger = new GraphNode("target") { Type = AgvGraph.NodeType.Charge };
-        var busFixture = new MassTransitConsumerTestFixture<SuccessResponseConsumer<QueueActionGroup>>();
         MoveAgvRequestHandlerTestFixture<ChargeAgv, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<ChargeAgv, MoveAgvRequestHandler>()
             .AddAgvs([agv])
             .WithNode(charger)
-            // .WithNodeState(new NodeLock(charger.Id, NodeLockState.Free, false, null, DateTime.UtcNow))
-            .BuildAsync(busFixture.TestHarness.Bus);
+            .BuildAsync();
 
         await fixture.GetResponseAsync<AgvMoveSuccessful>(new ChargeAgv(agv.CorrelationId, charger.Id));
-        (await busFixture.TestHarness.Published.Any<QueueActionGroup>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<QueueActionGroup>()).ShouldBeTrue();
         fixture.VerifyNodeWasReserved(charger, agv.CorrelationId);
-        (await busFixture.TestHarness.Published.Any<NodeStateChanged>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<NodeStateChanged>()).ShouldBeTrue();
     }
 }

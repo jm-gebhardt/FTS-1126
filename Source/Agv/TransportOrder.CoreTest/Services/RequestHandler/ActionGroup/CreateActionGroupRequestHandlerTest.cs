@@ -120,7 +120,7 @@ public class CreateActionGroupRequestHandlerTest
         dropAction.ActionType.ShouldBe(ActionType.Drop);
         dropAction.TargetNodeId.ShouldBe(targetNode.Id);
         (await fixture.MassTransitTestHarness.Published.Any<Common.Messages.ActionGroups.Events.ActionGroupCreated>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<ActionGroupCreated>()).ShouldBeTrue();
+        (await fixture.MediatorTestHarness.Published.Any<ActionGroupCreated>()).ShouldBeTrue();
 
         fixture.ActionGroupRepository.Verify(x => x.AddAsync(It.IsAny<TransportOrder.Domain.Models.ActionGroup.ActionGroup>()), Times.Once);
     }
@@ -146,7 +146,7 @@ public class CreateActionGroupRequestHandlerTest
         dropAction.ActionType.ShouldBe(ActionType.Drop);
         dropAction.TargetNodeId.ShouldBe(targetNode.Id);
         (await fixture.MassTransitTestHarness.Published.Any<Common.Messages.ActionGroups.Events.ActionGroupCreated>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<ActionGroupCreated>()).ShouldBeTrue();
+        (await fixture.MediatorTestHarness.Published.Any<ActionGroupCreated>()).ShouldBeTrue();
 
         fixture.ActionGroupRepository.Verify(x => x.AddAsync(It.IsAny<TransportOrder.Domain.Models.ActionGroup.ActionGroup>()), Times.Once);
     }

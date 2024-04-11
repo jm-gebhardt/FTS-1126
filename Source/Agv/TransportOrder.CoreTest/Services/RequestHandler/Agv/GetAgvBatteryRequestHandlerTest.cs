@@ -54,7 +54,7 @@ public class GetAgvBatteryRequestHandlerTest
         {
             actualData[i].CorrelationId.ShouldBe(agvs[i].CorrelationId);
             actualData[i].BatteryCharge.ShouldBe(agvs[i].AgvStatus!.BatteryCharge);
-            actualData[i].BatteryLevelLow.ShouldBe(fixture.AgvSettings!.BatteryLevelLow);
+            actualData[i].BatteryLevelLow.ShouldBe(fixture.AgvSettings.BatteryLevelLow);
         }
     }
 }

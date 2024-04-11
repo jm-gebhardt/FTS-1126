@@ -286,7 +286,7 @@ public class AgvControllerTest
         var result = await controller.UnlockAgv(correlationId) as OkResult;
         result.ShouldNotBeNull();
 
-        var harness = fixture.TestHarness;
+        var harness = fixture.MediatorTestHarness;
         (await harness.Consumed.Any<UnlockAgv>()).ShouldBeTrue();
         (await harness.Published.Any<UnlockAgv>()).ShouldBeTrue();
     }
@@ -303,7 +303,7 @@ public class AgvControllerTest
         var result = await controller.UnlockAgv(correlationId) as OkResult;
         result.ShouldNotBeNull();
 
-        var harness = fixture.TestHarness;
+        var harness = fixture.MediatorTestHarness;
         (await harness.Consumed.Any<UnlockAgv>()).ShouldBeTrue();
         (await harness.Published.Any<UnlockAgv>()).ShouldBeTrue();
     }
@@ -320,7 +320,7 @@ public class AgvControllerTest
         var result = await controller.LockAgv(correlationId) as OkResult;
         result.ShouldNotBeNull();
 
-        var harness = fixture.TestHarness;
+        var harness = fixture.MediatorTestHarness;
         (await harness.Consumed.Any<LockAgv>()).ShouldBeTrue();
         (await harness.Published.Any<LockAgv>()).ShouldBeTrue();
     }
@@ -349,7 +349,7 @@ public class AgvControllerTest
         var result = await controller.EmitRequestData(correlationId) as OkResult;
         result.ShouldNotBeNull();
 
-        var harness = fixture.TestHarness;
+        var harness = fixture.MediatorTestHarness;
         (await harness.Consumed.Any<RequestAgvData>()).ShouldBeTrue();
         (await harness.Published.Any<RequestAgvData>()).ShouldBeTrue();
     }
@@ -378,7 +378,7 @@ public class AgvControllerTest
         var result = await controller.EmitRequestGraph(correlationId) as OkResult;
         result.ShouldNotBeNull();
 
-        var harness = fixture.TestHarness;
+        var harness = fixture.MediatorTestHarness;
         (await harness.Consumed.Any<RequestAgvGraph>()).ShouldBeTrue();
         (await harness.Published.Any<RequestAgvGraph>()).ShouldBeTrue();
     }

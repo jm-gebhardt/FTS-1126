@@ -8,19 +8,19 @@ using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.CommandHandler.Action;
 
-public class ActionEstimationGroupTestFixture : ActionGroupTestFixtureBase<ActionCommandHandler>
+public class ActionGroupEstimationTestFixture : ActionGroupTestFixtureBase<ActionCommandHandler>
 {
     public TransportOrder.Domain.Models.Agv.Agv Agv { get; }
 
     public ActionGroup ActionGroup { get; private set; } = null!;
 
-    public ActionEstimationGroupTestFixture(int batteryCharge = 100)
+    public ActionGroupEstimationTestFixture(int batteryCharge = 100)
     {
         Agv = AgvGenerator.GenerateIdleAgv(batteryCharge: batteryCharge);
         AddAgv(Agv);
     }
 
-    public override ActionEstimationGroupTestFixture AddActionGroup(ActionGroup actionGroup, bool hasUnfinishedAction = true, bool hasNotStartedAction = true, bool existsPriorToTest = true)
+    public override ActionGroupEstimationTestFixture AddActionGroup(ActionGroup actionGroup, bool hasUnfinishedAction = true, bool hasNotStartedAction = true, bool existsPriorToTest = true)
     {
         base.AddActionGroup(actionGroup, hasUnfinishedAction, hasNotStartedAction, existsPriorToTest);
         ActionGroup = actionGroup;
@@ -32,7 +32,7 @@ public class ActionEstimationGroupTestFixture : ActionGroupTestFixtureBase<Actio
     }
 
     // ReSharper disable once UnusedMethodReturnValue.Global
-    public ActionEstimationGroupTestFixture AddRouteOnCosts(double onCosts)
+    public ActionGroupEstimationTestFixture AddRouteOnCosts(double onCosts)
     {
         string[] targetNodes = ActionGroup.Actions.Select(a => a.TargetNodeId).ToArray();
         RouteService.Setup(r => r.GetRouteAsync(Agv, targetNodes.ToArray(), null, It.IsAny<AgvData>()))
@@ -42,7 +42,7 @@ public class ActionEstimationGroupTestFixture : ActionGroupTestFixtureBase<Actio
     }
 
     // ReSharper disable once UnusedMethodReturnValue.Global
-    public ActionEstimationGroupTestFixture AddDurationEstimateDeviation(double deviation = 0)
+    public ActionGroupEstimationTestFixture AddDurationEstimateDeviation(double deviation = 0)
     {
         ActionGroupDurationEstimationService.Setup(x => x.GetAverageDurationEstimateDeviationAsync(It.IsAny<Guid>(), It.IsAny<string[]>())).ReturnsAsync(deviation);
         return this;

@@ -1,6 +1,5 @@
 using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Testing;
-using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
+using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Profiles;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles;
 using MassTransit;
@@ -8,7 +7,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using ActionProfile = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Profiles.ActionProfile;
 using AgvPositionProfile = Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles.AgvPositionProfile;
@@ -20,8 +18,6 @@ public abstract class ControllerTestFixture<TRequest, TRequestHandler, TControll
     where TRequestHandler : class, IConsumer
     where TController : Controller
 {
-    public IMapper? Mapper { get; } = GetMapper();
-
     private IRequestClient<TRequest> GetRequestClient()
     {
         return Mediator!.CreateRequestClient<TRequest>();
@@ -33,33 +29,29 @@ public abstract class ControllerTestFixture<TRequest, TRequestHandler, TControll
 
     protected IRequestClient<TClient> GetRequestClient<TClient>() where TClient : class
     {
-        return typeof(TRequest) == typeof(TClient) ? (IRequestClient<TClient>) GetRequestClient() : null!;
+        return typeof(TRequest) == typeof(TClient) ? (IRequestClient<TClient>)GetRequestClient() : null!;
     }
 
-    private static IMapper GetMapper()
-    {
-        var mapper = MappingHelper.GetMapper(
-            new AgvProfile(),
-            new AgvStatusProfile(),
-            new AgvSettingsProfile(),
+    protected override IEnumerable<Profile> GetProfiles() =>
+    [
+        new AgvProfile(),
+        new AgvStatusProfile(),
+        new AgvSettingsProfile(),
             new CargoProfile(),
-            new AgvGraphProfile(),
-            new AgvPositionProfile(),
-            new MapProfile(),
-            new AgvErrorProfile(),
-            new ActionProfile(),
-            new Messages.Profiles.AgvProfile(),
-            new Messages.Profiles.AgvGraphProfile(),
-            new Messages.Profiles.AgvErrorProfile(),
-            new Messages.Profiles.MapProfile(),
-            new Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles.ActionProfile()
-        );
-        return mapper;
-    }
+        new AgvGraphProfile(),
+        new AgvPositionProfile(),
+        new MapProfile(),
+        new AgvErrorProfile(),
+        new ActionProfile(),
+        new Messages.Profiles.AgvProfile(),
+        new Messages.Profiles.AgvGraphProfile(),
+        new Messages.Profiles.AgvErrorProfile(),
+        new Messages.Profiles.MapProfile(),
+        new Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles.ActionProfile()
+    ];
 
     public override MediatorTestFixture<TRequest, TRequestHandler> Build()
     {
-        AddServices(s => s.AddTransient(_ => Mapper!));
         base.Build();
 
         Controller = GetController();

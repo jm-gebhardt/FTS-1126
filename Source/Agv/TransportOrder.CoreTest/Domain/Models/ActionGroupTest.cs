@@ -1,23 +1,15 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Extensions;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
-using ActionGroup = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Domain.Models;
 
 [TestClass]
 public class ActionGroupTests
 {
-    private static void SetActionState(ActionGroup actionGroup, ActionState state)
-    {
-        foreach (var action in actionGroup.Actions)
-        {
-            action.UpdateActionState(state);
-        }
-    }
-
     [TestMethod]
     [DataRow(ActionState.Created, ActionState.Created, ActionGroupState.Created)]
     [DataRow(ActionState.Started, ActionState.Created, ActionGroupState.Started)]
@@ -83,7 +75,7 @@ public class ActionGroupTests
         var now = DateTime.UtcNow;
 
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
-        SetActionState(actionGroup, ActionState.Completed);
+        actionGroup.SetActionState(ActionState.Completed);
         actionGroup.CompletedDate.ShouldBeNull();
 
         actionGroup.UpdateActionGroupState();
@@ -99,7 +91,7 @@ public class ActionGroupTests
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         const ActionGroupState actionGroupState = ActionGroupState.Completed;
         var previousDate = DateTime.Today.AddDays(-10);
-        SetActionState(actionGroup, ActionState.Completed);
+        actionGroup.SetActionState(ActionState.Completed);
 
         actionGroup.UpdateActionGroupState();
 

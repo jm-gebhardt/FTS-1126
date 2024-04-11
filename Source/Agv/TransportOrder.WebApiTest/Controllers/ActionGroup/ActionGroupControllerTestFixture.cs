@@ -1,6 +1,7 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Models;
 using Gebhardt.StoreWare.Agv.Common.Services;
+using Gebhardt.StoreWare.Agv.Common.Testing.RequestHandlers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
@@ -38,7 +39,38 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
     private readonly List<ActionGroupReadModel> _actionGroupReadModels = new();
     private readonly List<Domain.Models.ActionGroup.ActionGroup> _actionGroups = new();
     private readonly Mock<IActionGroupDurationEstimationService> _actionGroupDurationEstimationService = new();
-    
+
+    public ActionGroupControllerTestFixture()
+    {
+        AddConsumers<SuccessRequestHandlerMock<AbortActionGroup>>();
+        AddConsumers<SuccessRequestHandlerMock<ResetActionGroup>>();
+        
+        AddServices(sc =>
+        {
+            sc.AddTransient(_ => _retrievalServiceMock.Object);
+            sc.AddTransient(_ => _actionGroupRepositoryMock.Object);
+            sc.AddTransient(_ => _actionGroupDurationEstimationService.Object);
+            sc.AddTransient(_ => _routeService.Object);
+            sc.AddTransient(_ => _chooseAgvActionGroupService.Object);
+            sc.AddTransient(_ => _maintenanceService.Object);
+            sc.AddSingleton<ISemaphoreProvider<IAgvsSemaphore>>(_ => _semaphoreProvider);
+            sc.AddTransient(_ => _agvDb.Object);
+            sc.AddTransient(_ => _actionGroupValidationService.Object);
+            sc.AddTransient<IMetricCollectionService, PrometheusMetricCollectionService>();
+        });
+
+        _retrievalServiceMock.Setup(x => x.GetActionGroupWithNodesAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) => _actionGroupReadModels.FirstOrDefault(a => a.CorrelationId == c));
+        _actionGroupRepositoryMock.Setup(x => x.GetRequiredActionGroupByIdAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) =>
+        {
+            var ag = _actionGroups.FirstOrDefault(a => a.CorrelationId == c);
+            return ag ?? throw new ActionGroupNotFoundException(c);
+        });
+        _actionGroupRepositoryMock.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) => _actionGroups.FirstOrDefault(a => a.CorrelationId == c));
+        _actionGroupRepositoryMock.Setup(x => x.UpdateActionAndGroupStateAsync(It.IsAny<AgvAction>(), It.IsAny<Domain.Models.Agv.Agv>(), It.IsAny<ActionState>(), It.IsAny<Reason?>()))!.ReturnsAsync(
+            (AgvAction action, Domain.Models.Agv.Agv _, ActionState _, Reason? _) => _actionGroups.FirstOrDefault(a => a.CorrelationId == action.ParentId));
+        _retrievalServiceMock.Setup(x => x.EnrichActionGroupWithNodesAsync(It.IsAny<Domain.Models.ActionGroup.ActionGroup>())).ReturnsAsync((Domain.Models.ActionGroup.ActionGroup ag) => ag.ConvertFromActionGroupWithFakeNodeType()!);
+    }
+
     protected override ActionGroupController GetController()
     {
         IRequestClient<GetActionGroup> getActionGroupRequestClient = GetRequestClient<GetActionGroup>();
@@ -47,7 +79,7 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
         IRequestClient<TriggerActionGroupReset> triggerResetRequestClient = GetRequestClient<TriggerActionGroupReset>();
         IRequestClient<CreatePickDropActionGroup> createActionGroupRequestClient = GetRequestClient<CreatePickDropActionGroup>();
 
-        var controller = new ActionGroupController(Mapper!,
+        var controller = new ActionGroupController(Mapper,
             getActionGroupRequestClient,
             cancelActionGroupRequestClient,
             abortionRequestClient,
@@ -63,45 +95,6 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
         return controller;
     }
 
-    public ActionGroupControllerTestFixture<TRequest, TRequestHandler> Setup(IBus? bus = null)
-    {
-        AddServices(sc =>
-        {
-            sc.AddTransient(_ => _retrievalServiceMock.Object);
-            sc.AddTransient(_ => _actionGroupRepositoryMock.Object);
-            sc.AddTransient(_ => _actionGroupDurationEstimationService.Object);
-            sc.AddTransient(_ => _routeService.Object);
-            sc.AddTransient(_ => _chooseAgvActionGroupService.Object);
-            sc.AddTransient(_ => _maintenanceService.Object);
-            sc.AddSingleton<ISemaphoreProvider<IAgvsSemaphore>>(_ => _semaphoreProvider);
-            sc.AddTransient(_ => _agvDb.Object);
-            sc.AddTransient(_ => _actionGroupValidationService.Object);
-          // sc.AddFakeSettings(new AgvSettingsReadModel());
-            sc.AddTransient<IMetricCollectionService, PrometheusMetricCollectionService>();
-            if (bus != null)
-            {
-                sc.AddTransient(_ => bus);
-            }
-            else
-            {
-                var busMock = new Mock<IBus>();
-                sc.AddTransient(_ => busMock.Object);
-            }
-        });
-
-        _retrievalServiceMock.Setup(x => x.GetActionGroupWithNodesAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) => _actionGroupReadModels.FirstOrDefault(a => a.CorrelationId == c));
-        _actionGroupRepositoryMock.Setup(x => x.GetRequiredActionGroupByIdAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) =>
-        {
-            var ag = _actionGroups.FirstOrDefault(a => a.CorrelationId == c);
-            return ag ?? throw new ActionGroupNotFoundException(c);
-        });
-        _actionGroupRepositoryMock.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) => _actionGroups.FirstOrDefault(a => a.CorrelationId == c));
-        _actionGroupRepositoryMock.Setup(x => x.UpdateActionAndGroupStateAsync(It.IsAny<AgvAction>(), It.IsAny<Domain.Models.Agv.Agv>(), It.IsAny<ActionState>(), It.IsAny<Reason?>()))!.ReturnsAsync(
-            (AgvAction action, Domain.Models.Agv.Agv _, ActionState _, Reason? _) => _actionGroups.FirstOrDefault(a => a.CorrelationId == action.ParentId));
-        _retrievalServiceMock.Setup(x => x.EnrichActionGroupWithNodesAsync(It.IsAny<Domain.Models.ActionGroup.ActionGroup>())).ReturnsAsync((Domain.Models.ActionGroup.ActionGroup ag) => ag.ConvertFromActionGroupWithFakeNodeType()!);
-        return this;
-    }
-
     public ActionGroupControllerTestFixture<TRequest, TRequestHandler> AddActionGroup(ActionGroupReadModel actionGroup)
     {
         _actionGroupReadModels.Add(actionGroup);
@@ -110,7 +103,7 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
 
     public ActionGroupControllerTestFixture<TRequest, TRequestHandler> AddActionGroup(Common.Messages.ActionGroups.ActionGroup actionGroup)
     {
-        _actionGroups.Add(Mapper!.Map<Domain.Models.ActionGroup.ActionGroup>(actionGroup));
+        _actionGroups.Add(Mapper.Map<Domain.Models.ActionGroup.ActionGroup>(actionGroup));
         return this;
     }
 

@@ -1,36 +1,46 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Testing;
+﻿using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graphs;
+using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Maps;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Travel;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.States;
 using Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Helper;
-using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation;
 
-public class SimulatedAgvStateMachineTestFixture(TimeSpan? inactivityTimeout = null) : StateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(_ => { },
-    x => x.AddDelayedMessageScheduler(),
-    (_, cfg) => cfg.UseDelayedMessageScheduler(),
-    inactivityTimeout: inactivityTimeout)
+public class SimulatedAgvStateMachineTestFixture(TimeSpan? inactivityTimeout = null) : BaseStateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(inactivityTimeout: inactivityTimeout)
 {
-    private SimulateOptions? _simulateOptions;
+    private SimulateOptions _simulateOptions = SimulateOptionsGenerator.GenerateSimulateOptions("S1", "D1", nodeTravelTime: 500);
     private readonly List<SimulatedAgvSaga> _agvSagas = new();
 
     public new SimulatedAgvStateMachineTestFixture Build()
     {
-        _simulateOptions ??= SimulateOptionsGenerator.GenerateSimulateOptions("S1", "D1", nodeTravelTime: 500);
-        AddServices(services => services.AddSingleton(_ => _simulateOptions));
+        AddServices(services =>
+        {
+            services.AddSingleton(_ => _simulateOptions);
+            services.AddLogging();
+            services.AddTransient<IGraphGenerator, GridGraphGenerator>(_ => new GridGraphGenerator(_simulateOptions, new GeneratedMapGenerator()));
+        });
 
         base.Build();
+
         foreach (var agvSaga in _agvSagas)
         {
             Add(agvSaga);
         }
+        
         Machine.SignalPositionIntervalMs = 500;
         Machine.StatusUpdateIntervalMs = 50;
 
+        return this;
+    }
+
+    public SimulatedAgvStateMachineTestFixture WithSimulateOptions(SimulateOptions options)
+    {
+        _simulateOptions = options;
         return this;
     }
 

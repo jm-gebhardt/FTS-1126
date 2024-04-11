@@ -1,6 +1,5 @@
 using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
-using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
@@ -10,6 +9,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Map;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using System.Linq.Expressions;
+using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using AgvData = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.AgvData;
 using Graph = Gebhardt.StoreWare.Agv.Common.Models.Graphs.Graph;

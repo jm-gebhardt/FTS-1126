@@ -1,4 +1,5 @@
 using System.Net;
+using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
 using Gebhardt.StoreWare.Agv.SmartLinkCommunication.Models;
 using Gebhardt.StoreWare.Agv.SmartLinkCommunication.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -8,7 +9,7 @@ using RestSharp;
 
 namespace Gebhardt.StoreWare.Agv.SmartLinkCommunicationTest.Services;
 
-public class ModulePollingServiceTestFixture
+public class ModulePollingServiceTestFixture : FixtureBase
 {
     private const string SmartLinkUrl = "http://localhost/smartLink/api";
     private readonly Mock<IServiceProvider> _serviceProvider = new();
@@ -46,15 +47,16 @@ public class ModulePollingServiceTestFixture
 
     public ModulePollingServiceTestFixture()
     {
-        var collection = new ServiceCollection()
-            .AddScoped(_ => _serviceScopeFactory.Object)
-            .AddScoped(_ => _serviceScope.Object)
-            .AddScoped(_ => _serviceProvider.Object);
+        AddServices(s =>
+            s.AddScoped(_ => _serviceScopeFactory.Object)
+                .AddScoped(_ => _serviceScope.Object)
+                .AddScoped(_ => _serviceProvider.Object)
+        );
 
-        collection.BuildServiceProvider(true);
+        Build();
     }
 
-    public ModulePollingServiceTestFixture Build()
+    public new ModulePollingServiceTestFixture Build()
     {
         _serviceScopeFactory.Setup(factory => factory.CreateScope(_moduleConfig))
             .Returns(_serviceScope.Object);

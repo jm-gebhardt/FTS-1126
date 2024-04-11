@@ -1,5 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
-using Gebhardt.StoreWare.Agv.Common.Testing;
+using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
@@ -12,20 +12,27 @@ using Moq;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.RequestHandler.Agv;
 
-public class SendAgvToChargerRequestHandlerTestFixture : MassTransitConsumerTestFixtureWithScheduler<SendAgvToChargerRequestHandler>
+public class SendAgvToChargerRequestHandlerTestFixture : MassTransitConsumerTestFixture<SendAgvToChargerRequestHandler>
 {
     private readonly Mock<IAgvDb> _agvDb = new();
     private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
     private readonly Mock<INodeStateRepository> _nodeStateRepository = new();
 
+    public SendAgvToChargerRequestHandlerTestFixture()
+    {
+        Build();
+    }
+    
     public Mock<IChargingPointManager> ChargingPointManager { get; } = new();
 
-    protected override void ConfigureServices(IServiceCollection collection)
+    protected override MassTransitConsumerTestFixture<SendAgvToChargerRequestHandler> AddServices(IServiceCollection collection)
     {
+        base.AddServices(collection);
         collection.AddTransient(_ => _agvDb.Object);
         collection.AddTransient(_ => _actionGroupRepository.Object);
         collection.AddTransient(_ => _nodeStateRepository.Object);
         collection.AddTransient(_ => ChargingPointManager.Object);
+        return this;
     }
 
     public SendAgvToChargerRequestHandlerTestFixture WithAgv(TransportOrder.Domain.Models.Agv.Agv agv)

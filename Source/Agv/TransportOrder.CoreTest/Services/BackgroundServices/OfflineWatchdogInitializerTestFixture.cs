@@ -1,4 +1,4 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Testing;
+﻿using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.BackgroundServices;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
 using Microsoft.Extensions.DependencyInjection;

@@ -1,31 +1,19 @@
-﻿using Gebhardt.StoreWare.Agv.WCSCommunication.Domain.Services;
+﻿using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
+using Gebhardt.StoreWare.Agv.WCSCommunication.Domain.Services;
 using Gebhardt.StoreWare.Agv.WCSCommunication.WcsApi.DbInterface;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Fixtures;
 
-public class WcsCommunicatorTestFixture
+public class WcsCommunicatorTestFixture : DbTestFixtureBase<WcsHostDbContext>
 {
-    public readonly IHostCommunicator Communicator;
-    public readonly IDbContextFactory<WcsHostDbContext> DbContextFactory;
+    public IHostCommunicator Communicator { get; }
 
     public WcsCommunicatorTestFixture()
     {
-        var collection = new ServiceCollection()
-            .AddDbContextFactory<WcsHostDbContext>(options =>
-                options.UseInMemoryDatabase(Guid.NewGuid().ToString()))
-            .AddTransient<IHostCommunicator, WcsDbCommunicator>();
+        AddServices(s => s.AddTransient<IHostCommunicator, WcsDbCommunicator>());
 
-        var provider = collection.BuildServiceProvider(true);
-        Communicator = provider.GetRequiredService<IHostCommunicator>();
-        DbContextFactory = provider.GetService<IDbContextFactory<WcsHostDbContext>>()!;
-        EnsureDbCreated();
-    }
-
-    private void EnsureDbCreated()
-    {
-        using var context = DbContextFactory.CreateDbContext();
-        context.Database.EnsureCreated();
+        Build();
+        Communicator = Provider.GetRequiredService<IHostCommunicator>();
     }
 }

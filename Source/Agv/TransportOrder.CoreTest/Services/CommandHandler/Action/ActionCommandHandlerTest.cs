@@ -215,7 +215,7 @@ public class ActionCommandHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv.CorrelationId);
-        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture(busRegistrationConfigurator: b => b.AddRequestClient<CancelActionGroup>())
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddAgv(agv)
             .AddActionGroup(actionGroup)
             .AddActionGroupTargetNodeType(actionGroup, AgvGraph.NodeType.Charge);
@@ -401,12 +401,11 @@ public class ActionCommandHandlerTest
     public async Task Consume_QueueActionGroup_InvalidActionGroupDoNotThrowException_SavesInvalidActionGroupAndPublishesActionGroupCreatedAndActionGroupInvalid()
     {
         var fixture = new ActionCommandHandlerTestFixture();
-        var mapper = ActionCommandHandlerTestFixture.GetMapper();
         const string failureReason = "reason";
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         fixture.SetupValidationResult(new ValidationResult(new List<ValidationFailure> { new("propertyName", failureReason) }));
 
-        await fixture.TestHarness.Bus.Publish(new QueueActionGroup(mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup), false));
+        await fixture.TestHarness.Bus.Publish(new QueueActionGroup(fixture.Mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup), false));
 
         (await fixture.ConsumerHarness.Consumed.Any<QueueActionGroup>()).ShouldBeTrue();
 
@@ -435,12 +434,11 @@ public class ActionCommandHandlerTest
     public async Task Consume_QueueActionGroup_InvalidActionGroupThrowException_DoesNotPublishEventsDoNotSaveActionGroup()
     {
         var fixture = new ActionCommandHandlerTestFixture();
-        var mapper = ActionCommandHandlerTestFixture.GetMapper();
         const string failureReason = "reason";
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         fixture.SetupValidationResult(new ValidationResult(new List<ValidationFailure> { new("propertyName", failureReason) }));
 
-        await fixture.TestHarness.Bus.Publish(new QueueActionGroup(mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup), true));
+        await fixture.TestHarness.Bus.Publish(new QueueActionGroup(fixture.Mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup), true));
         (await fixture.ConsumerHarness.Consumed.Any<QueueActionGroup>()).ShouldBeTrue();
 
         (await fixture.TestHarness.Published.Any<ActionGroupCreated>()).ShouldBeFalse();
@@ -456,13 +454,12 @@ public class ActionCommandHandlerTest
     public async Task Consume_QueueActionGroup_AssignedActionGroup_PublishesActionGroupCreatedForAgv()
     {
         var fixture = new ActionCommandHandlerTestFixture();
-        var mapper = ActionCommandHandlerTestFixture.GetMapper();
         var agv = AgvGenerator.GenerateIdleAgv();
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
         fixture.SetupValidationResult(new ValidationResult());
         fixture.AddAgv(agv);
 
-        await fixture.TestHarness.Bus.Publish(new QueueActionGroup(mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup), true));
+        await fixture.TestHarness.Bus.Publish(new QueueActionGroup(fixture.Mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup), true));
         (await fixture.ConsumerHarness.Consumed.Any<QueueActionGroup>()).ShouldBeTrue();
 
         (await fixture.TestHarness.Published.Any<ActionGroupCreated>()).ShouldBeTrue();
@@ -475,7 +472,6 @@ public class ActionCommandHandlerTest
     [TestMethod]
     public async Task Consume_SelectNodesForAction_ValidData_PublishesNodesSelectedForAction()
     {
-        var mapper = ActionCommandHandlerTestFixture.GetMapper();
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "NodeId");
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
@@ -483,7 +479,7 @@ public class ActionCommandHandlerTest
             .AddRoute(nodes: ["Node1", "Node2"])
             .AddActionGroup(actionGroup);
 
-        var selectNodesForAction = new SelectNodesForAction(mapper.Map<Common.Messages.ActionGroups.AgvAction>(actionGroup.Actions.First()), agv.CorrelationId);
+        var selectNodesForAction = new SelectNodesForAction(fixture.Mapper.Map<Common.Messages.ActionGroups.AgvAction>(actionGroup.Actions.First()), agv.CorrelationId);
 
         await fixture.TestHarness.Bus.Publish(selectNodesForAction);
         (await fixture.ConsumerHarness.Consumed.Any<SelectNodesForAction>()).ShouldBeTrue();

@@ -1,9 +1,8 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;
-using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
+﻿using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Repositories;
 
-public class ActionGroupRetrievalServiceTestFixture : DbTestFixtureBase<TransportOrderDbContext>
+public class ActionGroupRetrievalServiceTestFixture : TransportOrderDbFixture
 {
     public ActionGroupRetrievalService ActionGroupRetrievalService { get; }
 

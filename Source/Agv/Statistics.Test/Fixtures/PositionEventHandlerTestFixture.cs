@@ -1,5 +1,6 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Services.Filters;
+using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
 using Gebhardt.StoreWare.Agv.Statistics.Services.EventHandler;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -10,10 +11,11 @@ internal class PositionEventHandlerTestFixture : MockDbConsumerTestFixture<Posit
 {
     private readonly Mock<IMessageFilter<AgvPositionReceived>> _agvPositionFilterMock = new();
 
-    protected override void ConfigureServices(IServiceCollection collection)
+    protected override MassTransitConsumerTestFixture<PositionEventHandler> AddServices(IServiceCollection collection)
     {
-        base.ConfigureServices(collection);
+        base.AddServices(collection);
         collection.AddTransient(_ => _agvPositionFilterMock.Object);
+        return this;
     }
 
     public PositionEventHandlerTestFixture ShouldActReturns(bool shouldAct)

@@ -17,7 +17,7 @@ public class WcsCommunicatorTest
     public async Task TransmitHostOrderHandlingSucceeded_FromAgvEntryWritten_OrderStatusFinished(RecordType recordTyp)
     {
         var fixture = new WcsCommunicatorTestFixture();
-        await using var context = await fixture.DbContextFactory.CreateDbContextAsync();
+        await using var context = await fixture.ContextFactory.CreateDbContextAsync();
         context.ToAgv.Add(ToFromAgvGenerator.GenerateToAgvEntry());
         context.ToAgv.Add(ToFromAgvGenerator.GenerateToAgvEntry(recordType: RecordType.TransportOrderUpdate));
         var latestOrder = ToFromAgvGenerator.GenerateToAgvEntry(recordType: recordTyp);
@@ -41,7 +41,7 @@ public class WcsCommunicatorTest
     public async Task TransmitHostOrderHandlingSucceeded_OrderIdDoesNotExistInToAgv_ThrowsOrderNotFoundExceptionFromAgvEntryNotWritten()
     {
         var fixture = new WcsCommunicatorTestFixture();
-        await using var context = await fixture.DbContextFactory.CreateDbContextAsync();
+        await using var context = await fixture.ContextFactory.CreateDbContextAsync();
 
         const string orderId = "TestOrder123";
         Should.Throw<OrderNotFoundException>(async () => await fixture.Communicator.TransmitHostOrderHandlingSucceeded(orderId));
@@ -56,7 +56,7 @@ public class WcsCommunicatorTest
     public async Task TransmitHostOrderStarted_FromAgvEntryWritten_OrderStatusInProgress(RecordType recordTyp)
     {
         var fixture = new WcsCommunicatorTestFixture();
-        await using var context = await fixture.DbContextFactory.CreateDbContextAsync();
+        await using var context = await fixture.ContextFactory.CreateDbContextAsync();
         context.ToAgv.Add(ToFromAgvGenerator.GenerateToAgvEntry());
         context.ToAgv.Add(ToFromAgvGenerator.GenerateToAgvEntry(recordType: RecordType.TransportOrderUpdate));
         var latestOrder = ToFromAgvGenerator.GenerateToAgvEntry(recordType: recordTyp);
@@ -84,7 +84,7 @@ public class WcsCommunicatorTest
     public async Task TransmitHostOrderHandlingFailure_FromAgvEntryWritten_OrderStatusFinishedWithError(RecordType recordType)
     {
         var fixture = new WcsCommunicatorTestFixture();
-        await using var context = await fixture.DbContextFactory.CreateDbContextAsync();
+        await using var context = await fixture.ContextFactory.CreateDbContextAsync();
         context.ToAgv.Add(ToFromAgvGenerator.GenerateToAgvEntry());
         context.ToAgv.Add(ToFromAgvGenerator.GenerateToAgvEntry(recordType: RecordType.TransportOrderUpdate));
         var latestOrder = ToFromAgvGenerator.GenerateToAgvEntry(recordType: recordType);
@@ -111,7 +111,7 @@ public class WcsCommunicatorTest
     {
         var fixture = new WcsCommunicatorTestFixture();
 
-        await using var context = await fixture.DbContextFactory.CreateDbContextAsync();
+        await using var context = await fixture.ContextFactory.CreateDbContextAsync();
         context.ToAgv.Add(ToFromAgvGenerator.GenerateToAgvEntry());
         context.ToAgv.Add(ToFromAgvGenerator.GenerateToAgvEntry(recordType: RecordType.TransportOrderUpdate));
         var latestOrder = ToFromAgvGenerator.GenerateToAgvEntry(recordType: RecordType.OrderCancelAcknowledge);
@@ -135,7 +135,7 @@ public class WcsCommunicatorTest
     public async Task TransmitHostOrderCancellationSucceeded_OrderIdDoesNotExistInToAgv_ThrowsOrderNotFoundExceptionFromAgvEntryNotWritten()
     {
         var fixture = new WcsCommunicatorTestFixture();
-        await using var context = await fixture.DbContextFactory.CreateDbContextAsync();
+        await using var context = await fixture.ContextFactory.CreateDbContextAsync();
 
         const string orderId = "TestOrder123";
 
@@ -149,7 +149,7 @@ public class WcsCommunicatorTest
     {
         var fixture = new WcsCommunicatorTestFixture();
 
-        await using var context = await fixture.DbContextFactory.CreateDbContextAsync();
+        await using var context = await fixture.ContextFactory.CreateDbContextAsync();
         context.ToAgv.Add(ToFromAgvGenerator.GenerateToAgvEntry());
         context.ToAgv.Add(ToFromAgvGenerator.GenerateToAgvEntry(recordType: RecordType.TransportOrderUpdate));
         var latestOrder = ToFromAgvGenerator.GenerateToAgvEntry(recordType: RecordType.OrderCancelAcknowledge);
@@ -174,7 +174,7 @@ public class WcsCommunicatorTest
     {
         var fixture = new WcsCommunicatorTestFixture();
 
-        await using var context = await fixture.DbContextFactory.CreateDbContextAsync();
+        await using var context = await fixture.ContextFactory.CreateDbContextAsync();
 
         Should.Throw<OrderNotFoundException>(async () => await fixture.Communicator.TransmitHostOrderCancellationFailure("unknownOrder", HostOrderCancelFailedErrorCode.OrderAlreadyCanceled.ToString()));
 

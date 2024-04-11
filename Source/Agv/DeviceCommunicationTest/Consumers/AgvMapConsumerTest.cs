@@ -1,7 +1,7 @@
 ﻿using System.Globalization;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
-using Gebhardt.StoreWare.Agv.Common.Testing;
+using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.MqttMessages;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
@@ -49,7 +49,7 @@ public class AgvMapConsumerTest
     public async Task Consume_RequestAgvMap_and_Publish_MqttRequestMap()
     {
         // Arrange
-        var fixture = new MassTransitConsumerTestFixture<RequestAgvMapConsumer>();
+        var fixture = new RequestAgvMapConsumerTestFixture();
 
         // Act
         await fixture.TestHarness.Bus.Publish(new RequestAgvMap(AgvSerialNumber.ToGuid(), AgvSerialNumber, MapId.ToGuid(), MapId));
@@ -70,7 +70,7 @@ public class AgvMapConsumerTest
     public async Task Consume_MqttMap_and_Publish_AgvMapReceived()
     {
         // Arrange
-        var fixture = new MqttConsumerTestFixture<MqttMapConsumer>();
+        var fixture = new MqttMapConsumerFixture();
 
         // Act
         await fixture.TestHarness.Bus.Publish(_mqttMap);
@@ -107,7 +107,7 @@ public class AgvMapConsumerTest
                 break;
         }
 
-        var fixture = new MqttConsumerTestFixture<MqttMapConsumer>();
+        var fixture = new MqttMapConsumerFixture();
 
         // Act
         await fixture.TestHarness.Bus.Publish(_mqttMap);
@@ -117,5 +117,13 @@ public class AgvMapConsumerTest
         (await fixture.ConsumerHarness.Consumed.Any<MqttMap>()).ShouldBeTrue();
 
         (await fixture.TestHarness.Published.Any<AgvMapReceived>()).ShouldBeFalse();
+    }
+}
+
+public class MqttMapConsumerFixture : MqttConsumerTestFixture<MqttMapConsumer>
+{
+    public MqttMapConsumerFixture()
+    {
+        Build();
     }
 }

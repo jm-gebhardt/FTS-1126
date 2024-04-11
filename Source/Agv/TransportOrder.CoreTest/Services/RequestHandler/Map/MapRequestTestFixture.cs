@@ -1,11 +1,9 @@
 ﻿using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Testing;
-using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
+using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles;
-using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -23,9 +21,9 @@ public class MapRequestTestFixture<TRequestClient, TConsumer> : MediatorTestFixt
 {
     public const string Base64String = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
 
-    private readonly string[] _agvSerialNumbers = {"AGV001", "AGV002"};
-    private readonly string[] _orders = {"ORDER001", "ORDER002", ""};
-    private readonly AgvState[] _states = {AgvState.Busy, AgvState.Discovered};
+    private readonly string[] _agvSerialNumbers = { "AGV001", "AGV002" };
+    private readonly string[] _orders = { "ORDER001", "ORDER002", "" };
+    private readonly AgvState[] _states = { AgvState.Busy, AgvState.Discovered };
 
     private readonly Guid[] _correlationIds =
     {
@@ -38,6 +36,13 @@ public class MapRequestTestFixture<TRequestClient, TConsumer> : MediatorTestFixt
 
     public List<TransportOrder.Domain.Models.Map.Map> Maps { get; }
 
+    protected override IEnumerable<Profile> GetProfiles() =>
+    [
+        new AgvProfile(),
+        new AgvGraphProfile(),
+        new MapProfile()
+    ];
+
     public MapRequestTestFixture()
     {
         Maps = new List<TransportOrder.Domain.Models.Map.Map>
@@ -47,53 +52,13 @@ public class MapRequestTestFixture<TRequestClient, TConsumer> : MediatorTestFixt
             new(_correlationIds[2], "Area51_Floor1_Compartment49", Convert.FromBase64String(Base64String), 1, 1, 0.03, 2, 1, DateTime.UtcNow)
         };
         MapRepositoryMock = GetMapRepository();
-    }
-
-    /// <summary>
-    /// Adds the service to the service collection
-    /// </summary>
-    /// <param name="serviceAction">The action of the service to add</param>
-    /// <returns></returns>
-    [UsedImplicitly]
-    public MapRequestTestFixture<TRequestClient, TConsumer> AddService(Action<IServiceCollection> serviceAction)
-    {
-        AddServices(serviceAction);
-        return this;
-    }
-
-    /// <summary>
-    /// Uses the default services
-    /// </summary>
-    /// <returns></returns>
-    public MapRequestTestFixture<TRequestClient, TConsumer> UseDefaultServices()
-    {
         AddServices(sc =>
         {
             sc.AddTransient(_ => MapRepositoryMock.Object);
             sc.AddTransient(_ => GetAgvRepository().Object);
-            sc.AddTransient(_ => GetMapper());
         });
-        return this;
-    }
 
-    /// <summary>
-    /// Uses the default services
-    /// </summary>
-    /// <returns></returns>
-    public MapRequestTestFixture<TRequestClient, TConsumer> AddMapRepositoryMock(Action<Mock<IMapRepository>> mapRepositoryAction)
-    {
-        var mapRepositoryMock = new Mock<IMapRepository>();
-        mapRepositoryAction.Invoke(mapRepositoryMock);
-
-        AddServices(sc => sc.AddTransient(_ => mapRepositoryMock.Object));
-
-        return this;
-    }
-
-    public new MapRequestTestFixture<TRequestClient, TConsumer> Build()
-    {
         base.Build();
-        return this;
     }
 
     private Mock<IMapRepository> GetMapRepository()
@@ -134,13 +99,9 @@ public class MapRequestTestFixture<TRequestClient, TConsumer> : MediatorTestFixt
         return repositoryMock;
     }
 
-    private IMapper GetMapper()
+    public MapRequestTestFixture<TRequestClient, TConsumer> WithImage(string? image)
     {
-        var mapper = MappingHelper.GetMapper(
-            new AgvProfile(),
-            new AgvGraphProfile(),
-            new MapProfile()
-        );
-        return mapper;
+        MapRepositoryMock.Setup(x => x.GetMapImage(It.IsAny<Guid>())).Returns(image != null ? Convert.FromBase64String(image) : null);
+        return this;
     }
 }

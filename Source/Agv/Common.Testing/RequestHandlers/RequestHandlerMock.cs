@@ -1,7 +1,7 @@
 ﻿using JetBrains.Annotations;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.Common.Testing;
+namespace Gebhardt.StoreWare.Agv.Common.Testing.RequestHandlers;
 
 /// <summary>
 /// Directly responds with the saved object
@@ -9,15 +9,15 @@ namespace Gebhardt.StoreWare.Agv.Common.Testing;
 /// <typeparam name="TRequest">The request type to handle</typeparam>
 /// <typeparam name="TResponse">The response type to send</typeparam>
 [UsedImplicitly]
-public class ConstantRequestHandler<TRequest, TResponse> : IConsumer<TRequest> where TResponse : class where TRequest : class
+public class RequestHandlerMock<TRequest, TResponse> : IConsumer<TRequest> where TResponse : class where TRequest : class
 {
     private readonly TResponse _response;
 
     /// <summary>
-    /// <inheritdoc cref="ConstantRequestHandler{TRequest, TResponse}"/>
+    /// <inheritdoc cref="RequestHandlerMock{TRequest,TResponse}"/>
     /// </summary>
     /// <param name="response">The object to send when the request arrives</param>
-    public ConstantRequestHandler(TResponse response)
+    public RequestHandlerMock(TResponse response)
     {
         _response = response;
     }

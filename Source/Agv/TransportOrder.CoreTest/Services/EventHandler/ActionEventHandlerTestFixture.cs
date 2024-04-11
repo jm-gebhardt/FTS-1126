@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Testing;
+using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.EventHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
@@ -13,23 +13,24 @@ using Moq;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.EventHandler;
 
-public class ActionEventHandlerTestFixture : MassTransitConsumerTestFixtureWithScheduler<ActionEventHandler>
+public class ActionEventHandlerTestFixture : MassTransitConsumerTestFixture<ActionEventHandler>
 {
     private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
     private readonly Mock<IAgvDb> _agvDb = new();
 
-    protected override void ConfigureServices(IServiceCollection collection)
+    protected override MassTransitConsumerTestFixture<ActionEventHandler> AddServices(IServiceCollection collection)
     {
+        base.AddServices(collection);
         collection.AddTransient(_ => _actionGroupRepository.Object);
         collection.AddTransient(_ => GetMapper());
-        collection.AddTransient(_ => _actionGroupRepository.Object);
         collection.AddTransient(_ => _agvDb.Object);
+        return this;
     }
 
     public ActionEventHandlerTestFixture()
     {
         Build();
-        _actionGroupRepository.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync((ActionGroup?) null);
+        _actionGroupRepository.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync((ActionGroup?)null);
     }
 
     public ActionEventHandlerTestFixture AddAgvs(params TransportOrder.Domain.Models.Agv.Agv[] agvs)

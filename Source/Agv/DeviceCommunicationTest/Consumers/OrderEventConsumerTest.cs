@@ -1,6 +1,6 @@
 using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
-using Gebhardt.StoreWare.Agv.Common.Testing;
+using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.Enums;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.MqttMessages;
@@ -82,7 +82,7 @@ public class OrderEventConsumerTest
 
     private async Task<IPublishedMessageList> ConsumeMessage(MqttOrderEvent message)
     {
-        var fixture = new MqttConsumerTestFixture<OrderEventConsumer>();
+        var fixture = new OrderEventConsumerFixture();
         await fixture.TestHarness.Bus.PublishMqtt(message, null);
 
         var consumedMsg = fixture.ConsumerHarness.Consumed.Select<MqttOrderEvent>().First().Context.Message;
@@ -101,5 +101,13 @@ public class OrderEventConsumerTest
         IPublishedMessage<TMessage>? publishedEvent = await published.SelectAsync<TMessage>().First();
         var actionStatusEvent = publishedEvent.MessageObject as TMessage;
         actionStatusEvent.ShouldNotBeNull();
+    }
+}
+
+internal class OrderEventConsumerFixture : MqttConsumerTestFixture<OrderEventConsumer>
+{
+    public OrderEventConsumerFixture()
+    {
+        Build();
     }
 }

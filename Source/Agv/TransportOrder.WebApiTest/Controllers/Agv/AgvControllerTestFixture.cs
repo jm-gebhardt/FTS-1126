@@ -1,10 +1,8 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Services;
-using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.CmdOptions;
@@ -231,7 +229,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         IRequestClient<UpdateAgvSettings> updateAgvSettingsClient = GetRequestClient<UpdateAgvSettings>();
         IRequestClient<ResetAgvSettingToDefault> resetAgvSettingsClient = GetRequestClient<ResetAgvSettingToDefault>();
 
-        var controller = new AgvController(Mapper!,
+        var controller = new AgvController(Mapper,
             getAgvRequestClient,
             getAgvGraphRequestClient,
             getAgvDataRequestClient,
@@ -276,26 +274,18 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         return this;
     }
 
-    [UsedImplicitly]
-    public class FakeQueueActionGroupConsumer : IConsumer<QueueActionGroup>
-    {
-        public async Task Consume(ConsumeContext<QueueActionGroup> context)
-        {
-            await context.RespondAsync(new Success());
-        }
-    }
-
     public new AgvControllerTestFixture<TRequest, TRequestHandler> Build()
     {
-        var busFixture = new MassTransitConsumerTestFixture<FakeQueueActionGroupConsumer>();
         _nodeStateRepository.Setup(x => x.ReserveNodeAsync(It.IsAny<string>(), It.IsAny<Guid>())).Verifiable();
         _nodeStateRepository.Setup(x => x.GetNodeStateAsync(It.IsAny<string>())).ReturnsAsync((NodeLock?)null);
+
+        AddConsumers<FakeQueueActionGroupConsumer>();
+
         AddServices(sc =>
         {
             sc.AddTransient(_ => AgvDb.Object);
             sc.AddTransient(_ => ActionGroupRetrievalService.Object);
             sc.AddTransient(_ => _agvPositionRepository);
-            sc.AddTransient(_ => new Mock<IBus>().Object);
             sc.AddTransient(_ => new Mock<IAgvPositionRepository>().Object);
             sc.AddTransient(_ => ActionGroupRepository.Object);
             sc.AddTransient(_ => QueueActionGroupRequestClient.Object);
@@ -303,7 +293,6 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             sc.AddSingleton<ISemaphoreProvider<IAgvsSemaphore>>(_ => _semaphoreProvider);
             sc.AddTransient(_ => _mapRepository.Object);
             sc.AddTransient(_ => _productionOptions);
-            sc.AddTransient(_ => busFixture.TestHarness.Bus);
             sc.AddTransient(_ => _nodeStateRepository.Object);
             sc.AddTransient(_ => _parkPointService.Object);
             sc.AddTransient<IMetricCollectionService, PrometheusMetricCollectionService>();

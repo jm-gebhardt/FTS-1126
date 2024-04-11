@@ -25,7 +25,7 @@ public class AgvPositionReceivedConsumerTest
     [TestMethod]
     public async Task PublishPosition_RepositoryCreated_AccessWrongAgv_NotFound()
     {
-        var fixture = new AgvPositionReceivedConsumerMassTransitTestFixture();
+        var fixture = new AgvPositionReceivedConsumerMassTransitTestFixture().Build();
 
         await fixture.TestHarness.Bus.Publish(
             new AgvPositionReceived(
@@ -62,7 +62,7 @@ public class AgvPositionReceivedConsumerTest
         const float z2 = 0f;
         const float theta2 = 0f;
 
-        var fixture = new AgvPositionReceivedConsumerMassTransitTestFixture();
+        var fixture = new AgvPositionReceivedConsumerMassTransitTestFixture().Build();
 
         await fixture.TestHarness.Bus.Publish(
             new AgvPositionReceived(

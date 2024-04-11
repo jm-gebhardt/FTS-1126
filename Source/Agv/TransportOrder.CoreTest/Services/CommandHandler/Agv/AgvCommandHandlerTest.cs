@@ -170,7 +170,8 @@ public class AgvCommandHandlerTest
     [TestMethod]
     public async Task Consume_UpdateAgvStatus_BatteryChargeChanged_PublishesAgvBatteryChargeChangedUpdatesBatteryChargeGauge()
     {
-        var fixture = new AgvCommandHandlerTestFixture().WithGraphExists(true);
+        var fixture = new AgvCommandHandlerTestFixture()
+            .WithGraphExists(true);
         var agv = AgvGenerator.GenerateIdleAgv();
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
         double newBatteryCharge = agv.AgvStatus!.BatteryCharge - 2.0d * TransportOrder.Domain.Models.Agv.Agv.BatteryChargeChangedThreshold;
@@ -185,7 +186,8 @@ public class AgvCommandHandlerTest
     [TestMethod]
     public async Task Consume_UpdateAgvStatus_LastNodeIdChanged_PublishesAgvLastNodeIdChanged()
     {
-        var fixture = new AgvCommandHandlerTestFixture().WithGraphExists(true);
+        var fixture = new AgvCommandHandlerTestFixture()
+            .WithGraphExists(true);
         var agv = AgvGenerator.GenerateIdleAgv();
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
 
@@ -198,7 +200,8 @@ public class AgvCommandHandlerTest
     [TestMethod]
     public async Task Consume_UpdateAgvStatus_AliveStateChanged_PublishesAgvOnlineChanged()
     {
-        var fixture = new AgvCommandHandlerTestFixture().WithGraphExists(true);
+        var fixture = new AgvCommandHandlerTestFixture()
+            .WithGraphExists(true);
         var agv = AgvGenerator.GenerateChargingAgv();
         agv.IsOnline.ShouldBeFalse();
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
@@ -212,7 +215,8 @@ public class AgvCommandHandlerTest
     [TestMethod]
     public async Task Consume_UpdateAgvStatus_AliveStateChangedForIdleAgv_PublishesAgvOnlineChangedAndBecameIdle()
     {
-        var fixture = new AgvCommandHandlerTestFixture().WithGraphExists(true);
+        var fixture = new AgvCommandHandlerTestFixture()
+            .WithGraphExists(true);
         var agv = AgvGenerator.GenerateIdleAgv();
         agv.IsOnline.ShouldBeFalse();
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
@@ -227,7 +231,8 @@ public class AgvCommandHandlerTest
     [TestMethod]
     public async Task Consume_UpdateAgvStatus_ShouldRequestData_PublishesRequestAgvData()
     {
-        var fixture = new AgvCommandHandlerTestFixture().WithGraphExists(true);
+        var fixture = new AgvCommandHandlerTestFixture()
+            .WithGraphExists(true);
         var agv = new TransportOrder.Domain.Models.Agv.Agv("agvId", Guid.NewGuid())
         {
             DataExist = false,
@@ -330,7 +335,7 @@ public class AgvCommandHandlerTest
     [TestMethod]
     public async Task Consume_LockAgv_ValidData_LocksAgvPublishesAgvLockedChangedRespondsLockAgvResult()
     {
-        var fixture = new AgvCommandHandlerTestFixture(b => b.AddRequestClient<LockAgv>());
+        var fixture = new AgvCommandHandlerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv();
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
         Response<LockAgvResult> response = await fixture.GetResponseAsync<LockAgvResult, LockAgv>(new LockAgv(agv.CorrelationId));
@@ -344,7 +349,8 @@ public class AgvCommandHandlerTest
     public async Task Consume_LockAgv_AgvUnknown_RespondsAgvNotFoundResult()
     {
         var agvCorrelationId = Guid.NewGuid();
-        var fixture = new AgvCommandHandlerTestFixture(b => b.AddRequestClient<LockAgv>()).WithoutAgv();
+        var fixture = new AgvCommandHandlerTestFixture()
+            .WithoutAgv();
         Response<AgvNotFoundResult> response = await fixture.GetResponseAsync<AgvNotFoundResult, LockAgv>(new LockAgv(agvCorrelationId));
         response.Message.CorrelationId.ShouldBe(agvCorrelationId);
     }
@@ -352,7 +358,7 @@ public class AgvCommandHandlerTest
     [TestMethod]
     public async Task Consume_UnlockAgv_ValidData_UnlocksAgvPublishesAgvLockedChangedRespondsUnlockResult()
     {
-        var fixture = new AgvCommandHandlerTestFixture(b => b.AddRequestClient<UnlockAgv>());
+        var fixture = new AgvCommandHandlerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv();
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
         Response<UnlockAgvResult> response = await fixture.GetResponseAsync<UnlockAgvResult, UnlockAgv>(new UnlockAgv(agv.CorrelationId));
@@ -367,7 +373,8 @@ public class AgvCommandHandlerTest
     public async Task Consume_UnlockAgv_AgvUnknown_RespondsAgvNotFoundResult()
     {
         var agvCorrelationId = Guid.NewGuid();
-        var fixture = new AgvCommandHandlerTestFixture(b => b.AddRequestClient<UnlockAgv>()).WithoutAgv();
+        var fixture = new AgvCommandHandlerTestFixture()
+            .WithoutAgv();
         Response<AgvNotFoundResult> response = await fixture.GetResponseAsync<AgvNotFoundResult, UnlockAgv>(new UnlockAgv(agvCorrelationId));
         response.Message.CorrelationId.ShouldBe(agvCorrelationId);
     }
@@ -375,7 +382,7 @@ public class AgvCommandHandlerTest
     [TestMethod]
     public async Task Consume_SetAgvForceIdle_ExistingCorrelationId_RespondsWithCorrelationId()
     {
-        var fixture = new AgvCommandHandlerTestFixture(b => b.AddRequestClient<SetAgvForceIdle>());
+        var fixture = new AgvCommandHandlerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv();
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
         Response<SetAgvForceIdleResult> response = await fixture.GetResponseAsync<SetAgvForceIdleResult, SetAgvForceIdle>(new SetAgvForceIdle(agv.CorrelationId));
@@ -387,7 +394,8 @@ public class AgvCommandHandlerTest
     public async Task Consume_SetAgvForceIdle_AgvUnknown_RespondsAgvNotFoundResult()
     {
         var agvCorrelationId = Guid.NewGuid();
-        var fixture = new AgvCommandHandlerTestFixture(b => b.AddRequestClient<SetAgvForceIdle>()).WithoutAgv();
+        var fixture = new AgvCommandHandlerTestFixture()
+            .WithoutAgv();
         Response<AgvNotFoundResult> response = await fixture.GetResponseAsync<AgvNotFoundResult, SetAgvForceIdle>(new SetAgvForceIdle(agvCorrelationId));
         response.Message.CorrelationId.ShouldBe(agvCorrelationId);
     }
@@ -395,7 +403,8 @@ public class AgvCommandHandlerTest
     [TestMethod]
     public async Task Consume_HandleAgvActionStartFailure_ValidData_AgvBecameIdle()
     {
-        var fixture = new AgvCommandHandlerTestFixture().WithHasStartedAction(false);
+        var fixture = new AgvCommandHandlerTestFixture()
+            .WithHasStartedAction(false);
         var agv = AgvGenerator.GenerateBusyAgv();
         fixture.AddAgvs([agv]);
 
@@ -407,7 +416,8 @@ public class AgvCommandHandlerTest
     [TestMethod]
     public async Task Consume_HandleAgvActionStartFailure_AgvHasStartedAction_DoesNotPublishAgvBecameIdle()
     {
-        var fixture = new AgvCommandHandlerTestFixture().WithHasStartedAction(true);
+        var fixture = new AgvCommandHandlerTestFixture()
+            .WithHasStartedAction(true);
         var agv = AgvGenerator.GenerateBusyAgv();
         fixture.AddAgvs([agv]);
         await fixture.PublishMessageAsync(new HandleAgvActionStartFailure(agv.CorrelationId));

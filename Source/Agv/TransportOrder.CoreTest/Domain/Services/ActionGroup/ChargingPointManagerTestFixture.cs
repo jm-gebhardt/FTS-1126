@@ -9,6 +9,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Routing;
 using Microsoft.Extensions.Logging;
 using Moq;
 using System.Linq.Expressions;
+using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using AgvStatus = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv.AgvStatus;
 
 // ReSharper disable MemberCanBePrivate.Global
@@ -121,7 +122,7 @@ public class ChargingPointManagerTestFixture
 
     public ChargingPointManagerTestFixture WithLowestCostNode(TransportOrder.Domain.Models.Agv.Agv agv, IList<GraphNode> availableNodes, GraphNode node)
     {
-        RouteService.Setup(x => x.GetNodeWithLowestCostsAsync(agv, availableNodes, It.IsAny<AgvData>(), It.IsAny<string>())).ReturnsAsync(node);
+        RouteService.WithRouteLowestCostNode(agv, availableNodes, node);
         return this;
     }
 }

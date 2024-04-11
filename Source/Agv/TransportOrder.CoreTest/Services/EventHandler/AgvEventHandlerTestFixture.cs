@@ -2,8 +2,7 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Services;
-using Gebhardt.StoreWare.Agv.Common.Testing;
-using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
+using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.EventHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
@@ -19,7 +18,7 @@ using ActionGroup = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGr
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.EventHandler;
 
-public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixtureWithScheduler<AgvEventHandler>
+public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixture<AgvEventHandler>
 {
     private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
     private readonly Mock<IMaintenanceService> _maintenanceService = new();
@@ -34,6 +33,8 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixtureWithSche
 
     private static readonly AgvSettingsReadModel _agvSettingsReadModel = new(15000, 20000, BatteryLevelCritical,BatteryLevelLow, MinChargeUp, MaxChargeUp);
 
+    protected override IEnumerable<Profile> GetProfiles() => [new AgvStatusProfile()];
+
     public static readonly Messages.MessageContent.AgvSettings AgvSettingsMessage = new()
     {
         BatteryLevelCritical = _agvSettingsReadModel.BatteryLevelCritical,
@@ -44,13 +45,15 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixtureWithSche
         AgvOfflineTimeoutMsWhileBusy = _agvSettingsReadModel.AgvOfflineTimeoutMsWhileBusy
     };
 
-    protected override void ConfigureServices(IServiceCollection collection)
+    protected override MassTransitConsumerTestFixture<AgvEventHandler> AddServices(IServiceCollection collection)
     {
+        base.AddServices(collection);
         collection.AddTransient(_ => _actionGroupRepository.Object);
         collection.AddTransient(_ => _maintenanceService.Object);
         collection.AddSingleton<ISemaphoreProvider<IAgvsSemaphore>>(_ => _agvSemaphoreProvider);
         collection.AddTransient(_ => _chooseAgvActionGroupService.Object);
         collection.AddTransient(_ => _agvDb.Object);
+        return this;
     }
 
     public AgvEventHandlerTestFixture()
@@ -66,14 +69,14 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixtureWithSche
 
     public void AddAgv(TransportOrder.Domain.Models.Agv.Agv agv)
     {
-        _agvDb.AddAgvsToMockRepository(new List<TransportOrder.Domain.Models.Agv.Agv> {agv});
+        _agvDb.AddAgvsToMockRepository(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
     }
 
     public void AddChargeAction(ActionGroup actionGroup = null!, bool existsPriorToTest = true)
     {
         if (existsPriorToTest)
         {
-            _actionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<IList<ActionGroupState>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(), It.IsAny<bool?>(), It.IsAny<SortBy>(), It.IsAny<bool>())).ReturnsAsync(new List<ActionGroup> {actionGroup});
+            _actionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<IList<ActionGroupState>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(), It.IsAny<bool?>(), It.IsAny<SortBy>(), It.IsAny<bool>())).ReturnsAsync(new List<ActionGroup> { actionGroup });
         }
         else
         {
@@ -85,11 +88,5 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixtureWithSche
     {
         _actionGroupRepository.Setup(r => r.HasUnfinishedDropActionsAsync(It.Is<Guid>(c => c == correlationId))).ReturnsAsync(true);
         _actionGroupRepository.Setup(r => r.HasUnfinishedActionGroupAsync(It.Is<Guid>(c => c == correlationId))).ReturnsAsync(true);
-    }
-
-    public static IMapper GetMapper()
-    {
-        var mapper = MappingHelper.GetMapper(new AgvStatusProfile());
-        return mapper;
     }
 }

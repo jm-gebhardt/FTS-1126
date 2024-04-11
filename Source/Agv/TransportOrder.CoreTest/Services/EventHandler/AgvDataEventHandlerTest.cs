@@ -1,7 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
-using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.EventHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
@@ -14,7 +12,7 @@ public class AgvDataEventHandlerTest
     [TestMethod]
     public async Task Consume_AgvDataReceived_ValidData_PublishesUpdateAgvData()
     {
-        var fixture = new MassTransitConsumerTestFixture<AgvDataEventHandler>();
+        var fixture = new AgvDataEventHandlerTestFixture();
         var agvData = AgvDataGenerator.GenerateAgvData();
 
         await fixture.TestHarness.Bus.Publish(new AgvDataReceived(agvData.CorrelationId, "agvId", agvData));

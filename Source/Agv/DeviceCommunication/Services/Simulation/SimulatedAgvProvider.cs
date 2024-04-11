@@ -79,7 +79,7 @@ public class SimulatedAgvProvider : BackgroundService, IConsumer<GraphMissing>
                 _logger?.LogError("Could not create AGV[{AgvId}]", agv.SerialNumber);
             }
         }
-        _logger?.LogInformation("Create AGV finished");
+        
         return true;
     }
 
@@ -118,7 +118,6 @@ public class SimulatedAgvProvider : BackgroundService, IConsumer<GraphMissing>
         _logger.LogInformation("SimulatedAgvProvider started");
         // (global) graph must be existing before creating AGVs
         await PublishGraphAndMapsAsync();
-
         bool agvsCreated = false;
         while (!agvsCreated && !stoppingToken.IsCancellationRequested)
         {

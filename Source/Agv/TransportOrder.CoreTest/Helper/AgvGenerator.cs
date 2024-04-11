@@ -45,6 +45,12 @@ public static class AgvGenerator
         return GenerateAgv(AgvState.Busy, index, lastNodeId, charging: true, isLocked: isLocked, batteryCharge: batteryCharge, orderId: string.Empty);
     }
 
+    [UsedImplicitly]
+    public static TransportOrder.Domain.Models.Agv.Agv GenerateRawAgv(string serialNumber = "agvId", string? agvName = null)
+    {
+        return GenerateAgv(serialNumber, agvName);
+    }
+
     private static TransportOrder.Domain.Models.Agv.Agv GenerateAgv(
         AgvState agvState,
         int index,
@@ -60,11 +66,17 @@ public static class AgvGenerator
         string agvSerialNumber = GetAgvSerialNumber(index);
         var correlationId = agvSerialNumber.ToGuid();
         agvStatus ??= new AgvStatus(correlationId, orderId, false, true, batteryCharge, charging, false, lastNodeId);
-        var agv = new TransportOrder.Domain.Models.Agv.Agv(correlationId,  Guid.NewGuid(), agvSerialNumber, agvStatus, isLocked)
+        var agv = new TransportOrder.Domain.Models.Agv.Agv(correlationId, Guid.NewGuid(), agvSerialNumber, agvStatus, isLocked)
         {
             HasError = hasError
         };
         return SetAgvState(agvState, agv);
+    }
+
+    private static TransportOrder.Domain.Models.Agv.Agv GenerateAgv(string serialNumber, string? agvName = null)
+    {
+        var agv = new TransportOrder.Domain.Models.Agv.Agv(serialNumber, Guid.NewGuid(), agvName);
+        return agv;
     }
 
     public static TransportOrder.Domain.Models.Agv.Agv SetAgvState(AgvState agvState, TransportOrder.Domain.Models.Agv.Agv agv)

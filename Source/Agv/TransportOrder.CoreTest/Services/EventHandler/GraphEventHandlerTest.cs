@@ -1,8 +1,6 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.Graphs.Events;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
-using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.EventHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Graphs;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
@@ -15,7 +13,7 @@ public class GraphEventHandlerTest
     [TestMethod]
     public async Task Consume_GraphChanged_PublishesUpdateGraph()
     {
-        var fixture = new MassTransitConsumerTestFixture<GraphEventHandler>();
+        var fixture = new GraphEventHandlerTestFixture();
         var graphChanged = new GraphChanged(Guid.NewGuid(), GraphGenerator.CreateDefaultGraph(), new List<Map>());
 
         await fixture.PublishMessageAsync(graphChanged);

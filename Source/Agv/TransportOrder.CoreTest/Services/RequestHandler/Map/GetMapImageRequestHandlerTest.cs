@@ -3,7 +3,6 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Map;
 using MassTransit;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
 using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.RequestHandler.Map;
@@ -15,15 +14,14 @@ public class GetMapImageRequestHandlerTest
     public async Task GetMap_ShouldReturnByteArrayOfImage_WhenMapIsFound()
     {
         MapRequestTestFixture<GetMapImage, GetMapImageRequestHandler> fixture = new MapRequestTestFixture<GetMapImage, GetMapImageRequestHandler>()
-            .AddMapRepositoryMock(m => { m.Setup(x => x.GetMapImage(It.IsAny<Guid>())).Returns(Convert.FromBase64String(MapRequestTestFixture<GetMapImage, GetMapImageRequestHandler>.Base64String)); })
-            .Build();
+            .WithImage(MapRequestTestFixture<GetMapImage, GetMapImageRequestHandler>.Base64String);
 
         Response<GotMapImage> response = await fixture.GetResponseAsync<GotMapImage>(new GetMapImage(new Guid("7FE9372B-4219-4D09-8885-966EE125A350")));
         byte[] byteArrayOfImage = response.Message.Image;
 
         byteArrayOfImage.ShouldNotBeEmpty();
 
-        var harness = fixture.TestHarness;
+        var harness = fixture.MediatorTestHarness;
 
         (await harness.Consumed.Any<GetMapImage>()).ShouldBeTrue();
         (await harness.Consumed.Any<GotMapImage>()).ShouldBeTrue();
@@ -36,8 +34,7 @@ public class GetMapImageRequestHandlerTest
     public async Task GetMap_ShouldThrowMapNotFoundException_WhenMapIsNotFound()
     {
         MapRequestTestFixture<GetMapImage, GetMapImageRequestHandler> fixture = new MapRequestTestFixture<GetMapImage, GetMapImageRequestHandler>()
-            .AddMapRepositoryMock(m => { m.Setup(x => x.GetMapImage(It.IsAny<Guid>())).Returns(() => null); })
-            .Build();
+            .WithImage(null);
 
         var requestException = await Should.ThrowAsync<RequestException>(fixture.GetResponseAsync<GotMapImage>(new GetMapImage(new Guid("7FE9372B-4219-4D09-8885-966EE125A351"))));
         requestException.InnerException.ShouldBeOfType<MapNotFoundException>();

@@ -1,4 +1,4 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Testing;
+﻿using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.CommandHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Node;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
@@ -11,10 +11,17 @@ public class NodeCommandHandlerTestFixture : MassTransitConsumerTestFixture<Node
 {
     public readonly Mock<INodeStateRepository> NodeStateRepository = new();
 
-    protected override void ConfigureServices(IServiceCollection collection)
+    public NodeCommandHandlerTestFixture()
     {
+        Build();
+    }
+
+    protected override MassTransitConsumerTestFixture<NodeCommandHandler> AddServices(IServiceCollection collection)
+    {
+        base.AddServices(collection);
         collection.AddTransient(_ => NodeStateRepository.Object);
         NodeStateRepository.Setup(x => x.FreeNodeAsync(It.IsAny<string>())).Verifiable();
+        return this;
     }
 
     public NodeCommandHandlerTestFixture WithNodeState(NodeLock? nodeState)

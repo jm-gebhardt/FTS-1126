@@ -157,6 +157,11 @@ public class GridGraphGenerator : GraphGeneratorBase
     /// </summary>
     private void AddSourceNodes()
     {
+        if (_gridNodes.Count == 0)
+        {
+            return;
+        }
+        
         for (int index = 0; index < Sources.Length; index++)
         {
             string nodeId = Sources[index];
@@ -178,6 +183,11 @@ public class GridGraphGenerator : GraphGeneratorBase
     /// </summary>
     private void AddDestinationNodes()
     {
+        if (_gridNodes.Count == 0)
+        {
+            return;
+        }
+
         for (int index = 0; index < Destinations.Length; index++)
         {
             string nodeId = Destinations[Destinations.Length - index - 1];

@@ -225,7 +225,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         int maxDeviation = _simulateOptions.InitialBatteryChargeDeviation;
         int calculatedBatteryCharge = _simulateOptions.InitialBatteryCharge + Random.Shared.Next(-maxDeviation, maxDeviation + 1);
         const int safetyAgainstDeadBirth = 5;
-        int initialBatteryCharge = Math.Clamp(calculatedBatteryCharge, SimulatedAgvSaga.AliveChargeThreshold + safetyAgainstDeadBirth, (int) SimulatedAgvSaga.MaxCharge);
+        int initialBatteryCharge = Math.Clamp(calculatedBatteryCharge, SimulatedAgvSaga.AliveChargeThreshold + safetyAgainstDeadBirth, (int)SimulatedAgvSaga.MaxCharge);
         return initialBatteryCharge;
     }
     #endregion
@@ -234,7 +234,10 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     private EventActivityBinder<SimulatedAgvSaga, CreateAgv> SetInitialCreateAgvHandler()
     {
         return When(CreateAgvEvent)
-            .Then(c => _logger.LogDebug("{MessageType} {AgvId} / {CorrelationId} received", nameof(CreateAgv), c.Message.Agv.SerialNumber, c.Saga.CorrelationId))
+            .Then(c =>
+            {
+                _logger.LogDebug("{MessageType} {AgvId} / {CorrelationId} received", nameof(CreateAgv), c.Message.Agv.SerialNumber, c.Saga.CorrelationId);
+            })
             .TransitionTo(Idle)
             .ThenAsync(PublishStatusAsync)
             .ThenAsync(PublishPositionAsync)
@@ -382,24 +385,24 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
             .Then(c => _logger.LogDebug("{MessageType} / {CorrelationId} received", nameof(SimulateCharging), c.Saga.CorrelationId))
             .Then(c => c.Saga.SetBatteryLevel(c.Message.Level));
     }
-        #endregion
+    #endregion
 
-        #region Actions
-        /// <summary>
-        /// Gets the interval [ms] between requests given the number of requests that
-        /// are to be scheduled while the agv is on an edge.
-        /// </summary>
-        /// <param name="requestsOnEdge">Number of requests on the edge.</param>
-        /// <param name="lowerBound">The lower bound of the interval [ms].</param>
-        /// <param name="upperBound">The upper bound of the interval [ms].</param>
-        /// <param name="currentEdge">The current edge.</param>
-        /// <returns></returns>
-        private int GetRequestIntervalOnEdge(int requestsOnEdge, int lowerBound, int upperBound, Travel.BaseEdge? currentEdge)
+    #region Actions
+    /// <summary>
+    /// Gets the interval [ms] between requests given the number of requests that
+    /// are to be scheduled while the agv is on an edge.
+    /// </summary>
+    /// <param name="requestsOnEdge">Number of requests on the edge.</param>
+    /// <param name="lowerBound">The lower bound of the interval [ms].</param>
+    /// <param name="upperBound">The upper bound of the interval [ms].</param>
+    /// <param name="currentEdge">The current edge.</param>
+    /// <returns></returns>
+    private int GetRequestIntervalOnEdge(int requestsOnEdge, int lowerBound, int upperBound, Travel.BaseEdge? currentEdge)
     {
         int interval = _simulateOptions.SimulationSpeed / requestsOnEdge;
         if (currentEdge != null)
         {
-            interval = (int) (currentEdge.EstimatedExitTime - currentEdge.InitialTurnFinishTime).TotalMilliseconds / requestsOnEdge;
+            interval = (int)(currentEdge.EstimatedExitTime - currentEdge.InitialTurnFinishTime).TotalMilliseconds / requestsOnEdge;
         }
 
         return Math.Clamp(interval, lowerBound, upperBound);
@@ -535,7 +538,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
             ActionType.Drop => _simulateOptions.CargoUnloadingTime,
             ActionType.Pick => _simulateOptions.CargoLoadingTime,
             _ => 0
-        } /( float)_simulateOptions.SimulationSpeed;
+        } / (float)_simulateOptions.SimulationSpeed;
 
         await Task.Delay(TimeSpan.FromSeconds(delay));
     }

@@ -1,8 +1,6 @@
 ﻿using AutoMapper;
 using FluentValidation.Results;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
-using Gebhardt.StoreWare.Agv.Common.Testing;
-using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
@@ -14,6 +12,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.ActionGroup;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using System.Linq.Expressions;
+using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.RequestHandler.ActionGroup;
 
@@ -24,10 +23,7 @@ public class CreateActionGroupRequestHandlerTestFixture : MediatorTestFixture<Cr
     private readonly Mock<IAgvDb> _agvDb = new();
     private readonly Mock<IActionGroupValidationService> _actionGroupValidationService = new();
 
-    private static Mapper GetMapper()
-    {
-        return MappingHelper.GetMapper(new ActionProfile());
-    }
+    protected override IEnumerable<Profile> GetProfiles() => [new ActionProfile()];
 
     public CreateActionGroupRequestHandlerTestFixture WithAgvExists(bool agvExists)
     {
@@ -59,7 +55,6 @@ public class CreateActionGroupRequestHandlerTestFixture : MediatorTestFixture<Cr
 
     public new CreateActionGroupRequestHandlerTestFixture Build()
     {
-        AddServices(s => s.AddTransient<IMapper>(_ => GetMapper()));
         AddServices(s => s.AddTransient(_ => _agvDb.Object));
         AddServices(s => s.AddTransient(_ => _retrievalService.Object));
         AddServices(s => s.AddTransient(_ => ActionGroupRepository.Object));

@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+﻿using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.AspNetCore.Mvc;
@@ -11,25 +11,9 @@ namespace Gebhardt.StoreWare.Agv.Statistics.Test.Fixtures;
 /// Provides a controller test fixture with mock request clients.
 /// </summary>
 /// <typeparam name="TController"></typeparam>
-public class MockRequestClientControllerTestFixture<TController>
+public class MockRequestClientControllerTestFixture<TController> : FixtureBase
     where TController : Controller
 {
-    private readonly List<Action<IServiceCollection>> _serviceActions = new();
-    private ServiceProvider _provider = null!;
-
-    [UsedImplicitly]
-    protected MockRequestClientControllerTestFixture<TController> Build()
-    {
-        var collection = new ServiceCollection();
-        foreach (Action<IServiceCollection> service in _serviceActions)
-        {
-            service.Invoke(collection);
-        }
-        _provider = collection.BuildServiceProvider(true);
-        Controller = ActivatorUtilities.CreateInstance<TController>(_provider);
-        return this;
-    }
-
     /// <summary>
     /// Gets the controller.
     /// </summary>
@@ -39,14 +23,13 @@ public class MockRequestClientControllerTestFixture<TController>
     protected MockRequestClientControllerTestFixture<TController> AddRequestClientMock<TMessage>(Mock<IRequestClient<TMessage>> clientMock)
         where TMessage : class
     {
-        _serviceActions.Add(s => s.AddTransient<IRequestClient<TMessage>>(_ => clientMock.Object));
+        AddServices(s => s.AddTransient<IRequestClient<TMessage>>(_ => clientMock.Object));
         return this;
     }
 
-    [UsedImplicitly]
-    protected MockRequestClientControllerTestFixture<TController> AddMapper(IMapper mapper)
+    protected new void Build()
     {
-        _serviceActions.Add(s => s.AddTransient<IMapper>(_ => mapper));
-        return this;
+        base.Build();
+        Controller = ActivatorUtilities.CreateInstance<TController>(Provider);
     }
 }

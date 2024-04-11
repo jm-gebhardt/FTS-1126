@@ -1,5 +1,5 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
-using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
+﻿using AutoMapper;
+using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 using Gebhardt.StoreWare.Agv.Statistics.Domain.Models;
 using Gebhardt.StoreWare.Agv.Statistics.Domain.ReadModels;
 using Gebhardt.StoreWare.Agv.Statistics.Messages.Commands;
@@ -20,17 +20,15 @@ public class GridControllerTestFixture : MockRequestClientControllerTestFixture<
 
     private Mock<IRequestClient<AddGrid>> AddGridClient { get; } = new();
 
-    public GridControllerTestFixture Setup()
+    protected override IEnumerable<Profile> GetProfiles() => [new GridProfile(), new PositionFrequencyProfile()];
+
+    public GridControllerTestFixture()
     {
         AddGridClient.Setup(x => x.GetResponse<Success>(It.IsAny<AddGrid>(), default, default)).Verifiable();
-
-        AddMapper(MappingHelper.GetMapper(new GridProfile(),
-            new PositionFrequencyProfile()));
         AddRequestClientMock(GetPositionFrequencyClient);
         AddRequestClientMock(GetGridsClient);
         AddRequestClientMock(AddGridClient);
         Build();
-        return this;
     }
 
     public GridControllerTestFixture WithGrids(List<Grid> grids)

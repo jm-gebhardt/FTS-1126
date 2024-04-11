@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
@@ -20,8 +19,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.EventHandler;
 [TestClass]
 public class AgvEventHandlerTest
 {
-    private readonly IMapper _mapper = AgvEventHandlerTestFixture.GetMapper();
-
     [TestMethod]
     public async Task Consume_AgvNeedsCharging_AgvIsLocked_PublishesTryStartManualAction()
     {
@@ -207,7 +204,7 @@ public class AgvEventHandlerTest
         var agv = AgvGenerator.GenerateIdleAgv();
         fixture.AddAgv(agv);
 
-        await fixture.PublishMessageAsync(new AgvStatusReceived(agv.CorrelationId, agv.SerialNumber, _mapper.Map<AgvStatus>(agv.AgvStatus!)));
+        await fixture.PublishMessageAsync(new AgvStatusReceived(agv.CorrelationId, agv.SerialNumber, fixture.Mapper.Map<AgvStatus>(agv.AgvStatus!)));
 
         (await fixture.TestHarness.Published.Any<UpdateAgvStatus>()).ShouldBeTrue();
     }

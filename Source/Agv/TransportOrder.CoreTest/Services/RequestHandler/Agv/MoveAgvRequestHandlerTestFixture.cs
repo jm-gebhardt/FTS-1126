@@ -1,5 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
-using Gebhardt.StoreWare.Agv.Common.Testing;
+using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
@@ -21,7 +21,7 @@ public class MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> : Media
 
     public Mock<IChargingPointManager> ChargingPointManager { get; } = new();
 
-    public MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> BuildAsync(IBus? bus = null)
+    public new MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> BuildAsync()
     {
         AddServices(s =>
         {
@@ -31,15 +31,7 @@ public class MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> : Media
             s.AddTransient(_ => ChargingPointManager.Object);
         });
 
-        if (bus != null)
-        {
-            AddServices(s => s.AddTransient(_ => bus));
-        }
-        else
-        {
-            var busMock = new Mock<IBus>();
-            AddServices(s => s.AddTransient(_ => busMock.Object));
-        }
+        AddConsumers<SuccessQueueActionGroupRequestHandler>();
         _nodeStateRepository.Setup(x => x.ReserveNodeAsync(It.IsAny<string>(), It.IsAny<Guid>())).Verifiable();
         base.Build();
         return this;
@@ -66,7 +58,6 @@ public class MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> : Media
 
     public void VerifyNodeWasReserved(GraphNode targetNode, Guid agvId)
     {
-        // _nodeStateRepository.Verify(x => x.ReserveNodeAsync(It.Is<string>(n => n == targetNodeId), It.Is<Guid>(a => a == agvId)), Times.Once());
         switch (targetNode.Type)
         {
             case AgvGraph.NodeType.Charge:

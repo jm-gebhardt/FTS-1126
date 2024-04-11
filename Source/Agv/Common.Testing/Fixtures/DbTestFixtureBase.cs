@@ -1,20 +1,28 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;
+﻿using System.Collections;
+using Gebhardt.StoreWare.Agv.Common.Testing.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using System.Collections;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Repositories;
+namespace Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
 
-public class DbTestFixtureBase<TContext> : IAsyncDisposable where TContext : DbContext
+public class DbTestFixtureBase<TContext> : FixtureBase, IAsyncDisposable where TContext : DbContext
 {
-    protected IDbContextFactory<TContext> ContextFactory { get; }
+    private readonly Guid _id = Guid.NewGuid();
+
+    public IDbContextFactory<TContext> ContextFactory { get; }
 
     protected DbTestFixtureBase()
     {
-        var collection = new ServiceCollection()
-            .AddDbContextFactory<TransportOrderDbContext>(options => { options.UseInMemoryDatabase(Guid.NewGuid().ToString()); });
-        var provider = collection.BuildServiceProvider(true);
-        ContextFactory = provider.GetRequiredService<IDbContextFactory<TContext>>();
+        AddServices(s => s.AddTestingDb<TContext>(_id));
+        Build();
+        ContextFactory = Provider.GetRequiredService<IDbContextFactory<TContext>>().EnsureDbCreated();
+    }
+
+    public void Add<TEntity>(TEntity entity) where TEntity : class
+    {
+        using var context = ContextFactory.CreateDbContext();
+        context.Set<TEntity>().Add(entity);
+        context.SaveChanges();
     }
 
     public async Task AddAsync<TEntity>(TEntity entity, Action<TContext>? beforeAddAction = null) where TEntity : class
@@ -38,10 +46,17 @@ public class DbTestFixtureBase<TContext> : IAsyncDisposable where TContext : DbC
         await context.SaveChangesAsync();
     }
 
+    public void Dispose()
+    {
+        using var context = ContextFactory.CreateDbContext();
+        context.Database.EnsureDeleted();
+        Provider.Dispose();
+    }
+
     public async ValueTask DisposeAsync()
     {
         await using var context = await ContextFactory.CreateDbContextAsync();
-
         await context.Database.EnsureDeletedAsync();
+        await Provider.DisposeAsync();
     }
 }

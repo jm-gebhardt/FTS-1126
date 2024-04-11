@@ -4,7 +4,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Domain.Services.ActionGroup;
 
 [TestClass]
-public abstract class AgvGraphTestFixture
+public abstract class AgvGraphTestData
 {
     public AgvGraph Graph { get; } = new(Guid.Empty,
         new GraphNode[]

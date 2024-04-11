@@ -1,6 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
-using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
@@ -30,7 +29,7 @@ public class AgvSettingsRequestHandlerTest
 
         var message = response.Message.AgvSettings.Single();
         message.CorrelationId.ShouldBe(correlationId);
-        message.BatteryLevelCritical.ShouldBe(fixture.AgvSettings!.BatteryLevelCritical);
+        message.BatteryLevelCritical.ShouldBe(fixture.AgvSettings.BatteryLevelCritical);
         message.BatteryLevelLow.ShouldBe(fixture.AgvSettings.BatteryLevelLow);
         message.MinChargeUp.ShouldBe(fixture.AgvSettings.MinChargeUp);
         message.MaxChargeUp.ShouldBe(fixture.AgvSettings.MaxChargeUp);
@@ -39,54 +38,50 @@ public class AgvSettingsRequestHandlerTest
     [TestMethod]
     public async Task Consume_UpdateAgvSettings_ValidData_ReturnsSuccess()
     {
-        var busFixture = new MassTransitConsumerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv();
-        AgvRequestsHandlerTestFixture<UpdateAgvSettings, AgvSettingsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<UpdateAgvSettings, AgvSettingsRequestHandler>(bus: busFixture.TestHarness.Bus)
+        AgvRequestsHandlerTestFixture<UpdateAgvSettings, AgvSettingsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<UpdateAgvSettings, AgvSettingsRequestHandler>()
             .WithAgv(agv)
             .Build();
 
         (await fixture.GetResponseAsync<Success>(new UpdateAgvSettings(agv.CorrelationId, EfAgvSettingsProvider.DefaultSettings))).ShouldNotBeNull();
-        (await busFixture.TestHarness.Published.Any<UpdateAgvSettingsGroupReference>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<UpdateAgvSettingsGroupReference>()).ShouldBeTrue();
     }
 
     [TestMethod]
     public async Task Consume_UpdateAgvSettings_UnknownAgv_ThrowsAgvNotFoundException()
     {
-        var busFixture = new MassTransitConsumerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv();
-        AgvRequestsHandlerTestFixture<UpdateAgvSettings, AgvSettingsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<UpdateAgvSettings, AgvSettingsRequestHandler>(bus: busFixture.TestHarness.Bus)
+        AgvRequestsHandlerTestFixture<UpdateAgvSettings, AgvSettingsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<UpdateAgvSettings, AgvSettingsRequestHandler>()
             .WithAgv(agv)
             .Build();
 
         await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await fixture.GetResponseAsync<Success>(new UpdateAgvSettings("unknown".ToGuid(), EfAgvSettingsProvider.DefaultSettings)));
-        (await busFixture.TestHarness.Published.Any<UpdateAgvSettingsGroupReference>()).ShouldBeFalse();
+        (await fixture.TestHarness.Published.Any<UpdateAgvSettingsGroupReference>()).ShouldBeFalse();
     }
 
     [TestMethod]
     public async Task Consume_UpdateAgvsSettings_ValidData_ReturnsSuccess()
     {
-        var busFixture = new MassTransitConsumerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv();
-        AgvRequestsHandlerTestFixture<UpdateAgvsSettings, AgvSettingsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<UpdateAgvsSettings, AgvSettingsRequestHandler>(bus: busFixture.TestHarness.Bus)
+        AgvRequestsHandlerTestFixture<UpdateAgvsSettings, AgvSettingsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<UpdateAgvsSettings, AgvSettingsRequestHandler>()
             .WithAgv(agv)
             .Build();
 
         (await fixture.GetResponseAsync<Success>(new UpdateAgvsSettings([agv.CorrelationId], EfAgvSettingsProvider.DefaultSettings))).ShouldNotBeNull();
-        (await busFixture.TestHarness.Published.Any<UpdateAgvSettingsGroupReference>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<UpdateAgvSettingsGroupReference>()).ShouldBeTrue();
     }
 
     [TestMethod]
     public async Task Consume_UpdateAgvsSettings_UnknownAgv_ThrowsAgvNotFoundException()
     {
-        var busFixture = new MassTransitConsumerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv();
-        AgvRequestsHandlerTestFixture<UpdateAgvsSettings, AgvSettingsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<UpdateAgvsSettings, AgvSettingsRequestHandler>(bus: busFixture.TestHarness.Bus)
+        AgvRequestsHandlerTestFixture<UpdateAgvsSettings, AgvSettingsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<UpdateAgvsSettings, AgvSettingsRequestHandler>()
             .WithAgv(agv)
             .Build();
 
         await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await fixture.GetResponseAsync<Success>(new UpdateAgvsSettings(["unknown".ToGuid(), agv.CorrelationId], EfAgvSettingsProvider.DefaultSettings)));
-        (await busFixture.TestHarness.Published.Any<UpdateAgvSettingsGroupReference>( m => m.Context.Message == new UpdateAgvSettingsGroupReference("unknown".ToGuid()))).ShouldBeFalse();
-        (await busFixture.TestHarness.Published.Any<UpdateAgvSettingsGroupReference>( m => m.Context.Message == new UpdateAgvSettingsGroupReference(agv.CorrelationId))).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<UpdateAgvSettingsGroupReference>(m => m.Context.Message == new UpdateAgvSettingsGroupReference("unknown".ToGuid()))).ShouldBeFalse();
+        (await fixture.TestHarness.Published.Any<UpdateAgvSettingsGroupReference>(m => m.Context.Message == new UpdateAgvSettingsGroupReference(agv.CorrelationId))).ShouldBeTrue();
     }
 
     [TestMethod]
@@ -117,7 +112,7 @@ public class AgvSettingsRequestHandlerTest
     [TestMethod]
     public async Task Consume_ResetAgvsSettingToDefault_ValidData_SettingReset()
     {
-        List<TransportOrder.Domain.Models.Agv.Agv> agvs = [AgvGenerator.GenerateIdleAgv(), AgvGenerator.GenerateBusyAgv(index:2)];
+        List<TransportOrder.Domain.Models.Agv.Agv> agvs = [AgvGenerator.GenerateIdleAgv(), AgvGenerator.GenerateBusyAgv(index: 2)];
         AgvRequestsHandlerTestFixture<ResetAgvsSettingToDefault, AgvSettingsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<ResetAgvsSettingToDefault, AgvSettingsRequestHandler>()
             .WithAgvs(agvs)
             .Build();

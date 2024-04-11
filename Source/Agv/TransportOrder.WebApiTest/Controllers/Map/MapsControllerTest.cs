@@ -16,7 +16,7 @@ public class MapsControllerTest
 
         await fixture.GetControllerResultAsync(c => c.GetMaps());
 
-        var harness = fixture.TestHarness;
+        var harness = fixture.MediatorTestHarness;
 
         (await harness.Consumed.Any<GetMapList>()).ShouldBeTrue();
         (await harness.Consumed.Any<GotMapList>()).ShouldBeTrue();

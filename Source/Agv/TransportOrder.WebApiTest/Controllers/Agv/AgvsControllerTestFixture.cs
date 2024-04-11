@@ -1,4 +1,3 @@
-using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
@@ -190,7 +189,7 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
         IRequestClient<UpdateAgvsSettings> updateAgvsSettingsRequestClient = GetRequestClient<UpdateAgvsSettings>();
         IRequestClient<ResetAgvsSettingToDefault> resetAgvsSettingsRequestClient = GetRequestClient<ResetAgvsSettingToDefault>();
 
-        var controller = new AgvsController(Mapper!,
+        var controller = new AgvsController(Mapper,
             _getAgvsRequestClient,
             _getCurrentAgvRoutesRequestClient,
             _getAgvPositionsRequestClient,
@@ -232,7 +231,6 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
             sc.AddTransient(_ => ActionGroupRetrievalService.Object);
             sc.AddTransient(_ => AgvDb.Object);
             sc.AddTransient(_ => _agvPositionRepository);
-            sc.AddTransient<IMapper>(_ => Mapper!);
             sc.AddTransient(_ => new Mock<IBus>().Object);
             sc.AddTransient(_ => new Mock<IAgvPositionRepository>().Object);
             sc.AddTransient(_ => ActionGroupRepository.Object);

@@ -1,14 +1,15 @@
 using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
-using Gebhardt.StoreWare.Agv.Common.Testing;
+using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
+using Gebhardt.StoreWare.Agv.Common.Testing.RequestHandlers;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Graph;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
-using Moq;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.RequestHandler.ActionGroup;
 
@@ -45,7 +46,7 @@ public class ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> : M
         return this;
     }
 
-    public async Task<ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer>> BuildAsync(IBus? bus = null)
+    public new async Task<ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer>> BuildAsync()
     {
         if (_actionGroups != null)
         {
@@ -60,18 +61,28 @@ public class ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> : M
         await _actionGroupRepositoryFixture.BuildAsync();
         AddServices(s => s.AddTransient<IActionGroupRetrievalService>(_ => _actionGroupRetrievalServiceTestFixture.ActionGroupRetrievalService));
         AddServices(s => s.AddTransient<IActionGroupRepository>(_ => _actionGroupRepositoryFixture.ActionGroupRepository));
-        AddServices(s => s.AddTransient<IMapper>(_ => Mock.Of<IMapper>()));
-        if (bus != null)
-        {
-            AddServices(s => s.AddTransient(_ => bus));
-        }
-        else
-        {
-            var busMock = new Mock<IBus>();
-            AddServices(s => s.AddTransient(_ => busMock.Object));
-        }
-        base.Build();
 
+        await base.BuildAsync();
+        Build();
+
+        return this;
+    }
+
+    public ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> WithFakeFailedAbortAction()
+    {
+        AddConsumers<AbortActionGroupFailedRequestHandler>();
+        return this;
+    }
+
+    public ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> WithFakeTriggerredAbortAction()
+    {
+        AddConsumers<AbortActionGroupSuccessRequestHandler>();
+        return this;
+    }
+
+    public ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> WithFakeTriggerredResetAction()
+    {
+        AddConsumers<SuccessRequestHandlerMock<ResetActionGroup>>();
         return this;
     }
 }

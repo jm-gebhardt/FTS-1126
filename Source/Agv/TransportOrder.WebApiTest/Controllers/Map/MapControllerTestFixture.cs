@@ -33,7 +33,7 @@ public class MapControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         IRequestClient<GetMapNodeStates> getMapNodeStatesClient = GetRequestClient<GetMapNodeStates>();
         IRequestClient<GetStations> getStationsClient = GetRequestClient<GetStations>();
 
-        var controller = new MapController(Mapper!, getMapImageRequestClient, getMapRequestClient, getMapGraphClient, getMapNodeStatesClient, getStationsClient);
+        var controller = new MapController(Mapper, getMapImageRequestClient, getMapRequestClient, getMapGraphClient, getMapNodeStatesClient, getStationsClient);
         return controller;
     }
 
@@ -52,6 +52,17 @@ public class MapControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         return mapRepositoryMock;
     }
 
+    public MapControllerTestFixture(ICollection<NodeLock> nodeStates)
+    {
+        var nodeRepositoryMock = new Mock<INodeRepository>();
+        nodeRepositoryMock.Setup(x => x.GetNodeStatesForMapAsync(It.IsAny<Guid>())).ReturnsAsync(nodeStates);
+        AddServices(s => s.AddTransient(_ => nodeRepositoryMock.Object));
+    }
+
+    public MapControllerTestFixture()
+    {
+    }
+
     /// <summary>
     /// Adds the <see cref="IMapRepository"/> mock object
     /// </summary>
@@ -66,14 +77,6 @@ public class MapControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
     public new MapControllerTestFixture<TRequest, TRequestHandler> Build()
     {
         base.Build();
-        return this;
-    }
-
-    public MapControllerTestFixture<TRequest, TRequestHandler> AddNodeStates(ICollection<NodeLock> nodeStates)
-    {
-        var nodeRepositoryMock = new Mock<INodeRepository>();
-        nodeRepositoryMock.Setup(x => x.GetNodeStatesForMapAsync(It.IsAny<Guid>())).ReturnsAsync(nodeStates);
-        AddServices(s => s.AddTransient(_ => nodeRepositoryMock.Object));
         return this;
     }
 }

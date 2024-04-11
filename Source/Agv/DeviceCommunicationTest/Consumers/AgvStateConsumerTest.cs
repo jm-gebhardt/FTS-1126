@@ -19,9 +19,7 @@ public class AgvStateConsumerTest
     [TestMethod]
     public async Task ReceiveStatusMessage_WithInvalidContent_NoMessageSend()
     {
-        var fixture = new AgvStateConsumerTestFixture()
-            .UseDefaultServices()
-            .Build();
+        var fixture = new AgvStateConsumerTestFixture();
         await fixture.TestHarness.Bus.PublishMqtt(new MqttState("", ""), null);
 
         (await fixture.TestHarness.Published.Any<AgvStatusReceived>()).ShouldBeFalse();
@@ -33,7 +31,7 @@ public class AgvStateConsumerTest
     [TestMethod]
     public async Task ReceiveGraphMessage_WithValidInput_ExpectMessage()
     {
-        var fixture = new AgvStateConsumerTestFixture().UseDefaultServices().Build();
+        var fixture = new AgvStateConsumerTestFixture();
         const string agvTestIdentifier = "#0815#";
         const string orderId = "Order123";
 
@@ -59,7 +57,7 @@ public class AgvStateConsumerTest
     [DataRow("", null)]
     public async Task ReceiveStateWithLastNode_ExpectLastNodeTransferred(string sentLastNodeId, string receivedLastNodeId)
     {
-        var fixture = new AgvStateConsumerTestFixture().UseDefaultServices().Build();
+        var fixture = new AgvStateConsumerTestFixture();
         const string orderId = "Order123";
 
         await fixture.TestHarness.Bus.PublishMqtt(new MqttState(AgvSerialNumber, orderId)
@@ -84,7 +82,7 @@ public class AgvStateConsumerTest
     [DataRow(0.0123f, true, 4.56f, 7.89f, 3.14159f)]
     public async Task ReceiveStateWithPosition_ExpectAdditionalAgvPositionReceived(float? deviationRange, bool positionInitialized, float x, float y, float theta)
     {
-        var fixture = new AgvStateConsumerTestFixture().UseDefaultServices().Build();
+        var fixture = new AgvStateConsumerTestFixture();
         const string orderId = "Order123";
 
         await fixture.TestHarness.Bus.PublishMqtt(new MqttState(AgvSerialNumber, orderId)
@@ -131,9 +129,8 @@ public class AgvStateConsumerTest
         const string serialNumber = "AGV002";
         const string orderId = "Order123";
         var fixture = new AgvStateConsumerTestFixture()
-            .UseDefaultServices()
-            .WithAgvInformation(AgvInformationGenerator.GetAgvInformation(agvCorrelationId: serialNumber.ToGuid()))
-            .Build();
+            .WithAgvInformation(AgvInformationGenerator.GetAgvInformation(agvCorrelationId: serialNumber.ToGuid()));
+
         var error = new MqttError
         {
             ErrorDescription = "error description",
@@ -176,7 +173,7 @@ public class AgvStateConsumerTest
     [TestMethod]
     public async Task ReceiveStateWithLoad_ExpectAgvLoadStatusReceived()
     {
-        var fixture = new AgvStateConsumerTestFixture().UseDefaultServices().Build();
+        var fixture = new AgvStateConsumerTestFixture();
         const string agvTestIdentifier = "TestAgv-1";
         const string orderId = "TestOrder123";
         const string cargoId = "Cargo-";
@@ -184,8 +181,8 @@ public class AgvStateConsumerTest
 
         var loadList = new List<MqttLoad>
         {
-            new() { LoadId = cargoId + "1", LoadPosition = "positionC1", LoadType = "Box", LoadDimensions = new MqttLoadDimensions{ Height = dimensionHeight, Width  = 0.8f, Length = 0.9f }, BoundingBoxReference = null },
-            new() { LoadId = cargoId + "2", LoadPosition = "positionC2", LoadType = "Box", LoadDimensions = new MqttLoadDimensions{ Height = dimensionHeight, Width  = 0.8f, Length = 0.9f }, BoundingBoxReference = null }
+            new() { LoadId = cargoId + "1", LoadPosition = "positionC1", LoadType = "Box", LoadDimensions = new MqttLoadDimensions { Height = dimensionHeight, Width = 0.8f, Length = 0.9f }, BoundingBoxReference = null },
+            new() { LoadId = cargoId + "2", LoadPosition = "positionC2", LoadType = "Box", LoadDimensions = new MqttLoadDimensions { Height = dimensionHeight, Width = 0.8f, Length = 0.9f }, BoundingBoxReference = null }
         };
 
         await fixture.TestHarness.Bus.PublishMqtt(new MqttState(agvTestIdentifier, orderId) { Loads = loadList }, null);

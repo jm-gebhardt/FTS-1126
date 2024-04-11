@@ -1,12 +1,11 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
-using Gebhardt.StoreWare.Agv.Common.Testing;
+using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.Enums;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.MqttMessages;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
 using Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Helper;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
@@ -20,11 +19,9 @@ public class ActionEventHandlerTest
     {
         var agvInformation = AgvInformationGenerator.GetAgvInformation();
         var agvCorrelationId = agvInformation.AgvStatusReceived!.AgvStatus.CorrelationId;
-        var agvRepositoryTestFixture = new AgvRepositoryTestFixture()
+        MqttConsumerTestFixture<ActionEventConsumer> fixture = new ActionEventConsumerMqttFixture()
             .WithAgvInformation(agvInformation);
-        MqttConsumerTestFixture<ActionEventConsumer> fixture = new MqttConsumerTestFixture<ActionEventConsumer>(
-                services: s => s.AddTransient(_ => agvRepositoryTestFixture.AgvRepository))
-            .Build();
+
         var actionCorrelationId = Guid.NewGuid();
         const string orderId = "1234";
         var orderCorrelationId = orderId.ToGuid();
@@ -46,9 +43,7 @@ public class ActionEventHandlerTest
     [TestMethod]
     public async Task Consume_ActionAborted_EmptyAgvId_DoesNotPublishMqttOrder()
     {
-        MqttConsumerTestFixture<ActionEventConsumer> fixture = new MqttConsumerTestFixture<ActionEventConsumer>(
-                services: s => s.AddTransient(_ => new AgvRepositoryTestFixture().AgvRepository))
-            .Build();
+        MqttConsumerTestFixture<ActionEventConsumer> fixture = new ActionEventConsumerMqttFixture();
 
         var actionCorrelationId = Guid.NewGuid();
         const string orderId = "1234";

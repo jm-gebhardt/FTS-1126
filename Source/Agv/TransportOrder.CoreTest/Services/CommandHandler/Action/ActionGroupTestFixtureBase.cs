@@ -4,8 +4,7 @@ using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Models;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Services;
-using Gebhardt.StoreWare.Agv.Common.Testing;
-using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
+using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
 using Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Helper;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
@@ -18,7 +17,6 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Metrics;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Routing;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles;
-using Gebhardt.StoreWare.Agv.TransportOrder.Routing.Models;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -44,21 +42,24 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
 
     protected Mock<IActionGroupDurationEstimationService> ActionGroupDurationEstimationService { get; } = new();
 
+    protected override IEnumerable<Profile> GetProfiles() => [new ActionProfile(), new AgvProfile()];
+
     public readonly AgvSettingsReadModel SettingsReadModel = new();
 
-    protected override void ConfigureServices(IServiceCollection collection)
+    protected override MassTransitConsumerTestFixture<T> AddServices(IServiceCollection collection)
     {
+        base.AddServices(collection);
         collection.AddTransient(_ => ActionGroupRepository.Object);
         collection.AddTransient(_ => ActionGroupDurationEstimationService.Object);
         collection.AddTransient(_ => RouteService.Object);
         collection.AddTransient(_ => _chooseAgvActionGroupService.Object);
-        collection.AddTransient(_ => GetMapper());
         collection.AddSingleton<ISemaphoreProvider<IAgvsSemaphore>>(_ => _semaphoreProvider);
         collection.AddTransient(_ => _agvDb.Object);
         collection.AddTransient(_ => _actionGroupValidationService.Object);
         collection.AddTransient(_ => _actionGroupRetrievalService.Object);
         collection.AddTransient(_ => _metricCollectorServiceMock.Object);
-        _metricCollectorServiceMock.Setup( x => x.CollectOrderCompletionMetrics(It.IsAny<ActionGroup>(), It.IsAny<string?>())).Verifiable();
+        _metricCollectorServiceMock.Setup(x => x.CollectOrderCompletionMetrics(It.IsAny<ActionGroup>(), It.IsAny<string?>())).Verifiable();
+        return this;
     }
 
     public void VerifyOrderCompletionMetricsCollected(Times callTimes)
@@ -66,22 +67,10 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
         _metricCollectorServiceMock.Verify(x => x.CollectOrderCompletionMetrics(It.IsAny<ActionGroup>(), It.IsAny<string?>()), callTimes);
     }
 
-    protected ActionGroupTestFixtureBase(TimeSpan? inactivityTimeout = null, Action<IBusRegistrationConfigurator>? busRegistrationConfigurator = null,
-        Action<IBusRegistrationContext, IInMemoryBusFactoryConfigurator>? inMemoryConfiguration = null,
-        params Action<IServiceCollection>[] services) : base(busRegistrationConfigurator, inMemoryConfiguration, services)
-    {
-        _agvDb.Setup(x => x.AgvSettings.GetSettingsForAgvGroup(It.IsAny<Guid>())).Returns(SettingsReadModel);
-        Build();
-        if (inactivityTimeout != null)
-        {
-            TestHarness.TestInactivityTimeout = (TimeSpan)inactivityTimeout;
-        }
-        ActionGroupRepository.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync((ActionGroup?)null);
-        ActionGroupRepository.Setup(x => x.AddAsync(It.IsAny<ActionGroup>())).Verifiable();
-    }
-
     protected ActionGroupTestFixtureBase(TimeSpan? inactivityTimeout = null)
     {
+        _agvDb.Setup(x => x.AgvSettings.GetSettingsForAgvGroup(It.IsAny<Guid>())).Returns(SettingsReadModel);
+
         Build();
         if (inactivityTimeout != null)
         {
@@ -140,8 +129,7 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
     public ActionGroupTestFixtureBase<T> AddRoute(string[] nodes)
     {
         _agvDb.Setup(x => x.Data.GetAgvDataAsync(It.IsAny<Guid>())).ReturnsAsync((AgvData?)null);
-        RouteService.Setup(x => x.GetRouteAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<string>(), null, It.IsAny<AgvData>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Route(1f, nodes));
+        RouteService.WithRoute(0f, nodes);
         return this;
     }
 
@@ -153,12 +141,6 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
     public void IsActionGroupSaved(Times howOften)
     {
         ActionGroupRepository.Verify(x => x.AddAsync(It.IsAny<ActionGroup>()), howOften);
-    }
-
-    public static IMapper GetMapper()
-    {
-        var mapper = MappingHelper.GetMapper(new ActionProfile(), new AgvProfile());
-        return mapper;
     }
 
     public async Task<Response<TResult>> GetResponseAsync<TResult, TRequest>(TRequest request)

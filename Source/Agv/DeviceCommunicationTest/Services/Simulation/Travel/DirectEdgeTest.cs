@@ -33,10 +33,10 @@ public class DirectEdgeTest
     // 6                   Dst2          Dst3    //
     // |                                         //
     ///////////////////////////////////////////////
-    private GraphNode Way2 { get; } = new("Way2") { X = 3, Y = 3 };
+    private GraphNode Way2 { get; } = NodeGenerator.GenerateNode(nodeId: "Way2", x: 3, y: 3);
 
-    private GraphNode Target { get; } = new("Prk2") { X = 5, Y = 3 };
-
+    private GraphNode Target { get; } = NodeGenerator.GenerateNode(nodeId: "Prk2", x: 5, y: 3);
+    
     private GraphEdge Edge { get; } = GraphEdge.CreateDirect("Way2", "Prk2", 2);
 
     private AgvTravelSimulator WoodShopSimulator { get; set; } = null!;
@@ -71,26 +71,16 @@ public class DirectEdgeTest
     }
 
     [TestMethod]
-    public void GetAgvOrientation_SourceNodeAtZero_OrientationSet()
+    [DataRow("Source", "Target", 0, 0, 1, 0, 90, DisplayName = "SourceNodeAtZero_OrientationSet")]
+    [DataRow("Source", "Target", 1, 0, 0, 0, 270, DisplayName = "TargetNodeAtZero_OrientationSet")]
+    public void GetAgvOrientation(string source, string target, 
+        float sourceX, float sourceY, float targetX, float targetY, double angle)
     {
-        GraphNode sourceNode = new("Source") { X = 0, Y = 0 };
-        GraphNode targetNode = new("Target") { X = 1, Y = 0 };
-        var edge = GraphEdge.CreateDirect("Source", "Target");
+        var sourceNode = NodeGenerator.GenerateNode(nodeId: source, x: sourceX, y: sourceY);
+        var targetNode = NodeGenerator.GenerateNode(nodeId: target, x: targetX, y: targetY);
+        var edge = GraphEdge.CreateDirect(source, target);
         var directEdge = new DirectEdge(edge, sourceNode, targetNode);
-        directEdge.AgvOrientation.ShouldBe((float)Mathematics.ConvertToRadians(90));
-
-        float orientation = BaseEdge.GetAgvOrientation(sourceNode.AsVector2(), targetNode.AsVector2());
-        orientation.ShouldBe(directEdge.AgvOrientation);
-    }
-
-    [TestMethod]
-    public void GetAgvOrientation_TargetNodeAtZero_OrientationSet()
-    {
-        GraphNode targetNode = new("Target") { X = 0, Y = 0 };
-        GraphNode sourceNode = new("Source") { X = 1, Y = 0 };
-        var edge = GraphEdge.CreateDirect("Source", "Target");
-        var directEdge = new DirectEdge(edge, sourceNode, targetNode);
-        directEdge.AgvOrientation.ShouldBe((float)Mathematics.ConvertToRadians(270));
+        directEdge.AgvOrientation.ShouldBe((float)Mathematics.ConvertToRadians(angle));
 
         float orientation = BaseEdge.GetAgvOrientation(sourceNode.AsVector2(), targetNode.AsVector2());
         orientation.ShouldBe(directEdge.AgvOrientation);
@@ -101,7 +91,7 @@ public class DirectEdgeTest
     {
         var agvData = AgvDataGenerator.GenerateAgvData();
         var directEdge = new DirectEdge(Edge, Way2, Target);
-        directEdge.SetAngles(0, Target, new GraphNode("new") { X = Target.X + 1, Y = Target.Y, Z = Target.Z });
+        directEdge.SetAngles(0, Target, NodeGenerator.GenerateNode(nodeId: "new", x: Target.X + 1, y: Target.Y, z: Target.Z));
         var entryTime = DateTime.UtcNow;
         directEdge.EstimateTravelTime(agvData, 0, entryTime);
         var position = directEdge.GetCurrentPosition(directEdge.EstimatedExitTime, agvData, 0);
@@ -157,8 +147,8 @@ public class DirectEdgeTest
     [TestMethod]
     public void SetAngles_PrkWay1Src3_ExitAndEntryAngleSet()
     {
-        var nextSource = new GraphNode("ns") { X = 5, Y = 3 };
-        var nextTarget = new GraphNode("nt") { X = 5, Y = 1 };
+        var nextSource = NodeGenerator.GenerateNode(nodeId:"ns", x: 5, y: 3);
+        var nextTarget = NodeGenerator.GenerateNode(nodeId:"nt", x: 5, y: 1);
 
         var directEdge = new DirectEdge(Edge, Way2, Target);
         directEdge.ExitAngle.ShouldBe(0);
@@ -174,7 +164,7 @@ public class DirectEdgeTest
     public void EstimateTravelTime_NoAdjacentEdgesTargetIsStation_SectionsAndVelocitiesSet()
     {
         var agvData = AgvDataGenerator.GenerateAgvData();
-        var target = new GraphNode(Target.Id) { X = Target.X, Y = Target.Y, Z = Target.Z, Type = AgvGraph.NodeType.Charge };
+        var target = NodeGenerator.GenerateNode(nodeId: Target.Id, x: Target.X, y : Target.Y, z: Target.Z, nodeType: AgvGraph.NodeType.Charge);
         var directEdge = new DirectEdge(Edge, Way2, target);
         directEdge.SetAngles(0, null, null);
         var entryTime = DateTime.UtcNow;
@@ -189,7 +179,7 @@ public class DirectEdgeTest
         var agvData = AgvDataGenerator.GenerateAgvData();
         var directEdge = new DirectEdge(Edge, Way2, Target);
         var entryTime = DateTime.UtcNow;
-        directEdge.SetAngles(0, Target, new GraphNode("new") { X = Target.X + 1, Y = Target.Y, Z = Target.Z });
+        directEdge.SetAngles(0, Target, NodeGenerator.GenerateNode(nodeId: "new", x: Target.X + 1, y: Target.Y, z: Target.Z));
         directEdge.EstimateTravelTime(agvData, 0, entryTime);
         directEdge.Length.ShouldBe(directEdge.MaxVelocitySection + directEdge.AccelerationSection + directEdge.DecelerationSection, tolerance: 0.01);
         directEdge.ExitVelocity.ShouldBe(agvData.MaxVelocityStraight);
@@ -202,7 +192,7 @@ public class DirectEdgeTest
     {
         const double initialVelocity = 0;
         var directEdge = new DirectEdge(Edge, Way2, Target);
-        directEdge.SetAngles(0, Target, new GraphNode("new") { X = Target.X + 1, Y = Target.Y, Z = Target.Z });
+        directEdge.SetAngles(0, Target, NodeGenerator.GenerateNode(nodeId: "new", x: Target.X + 1, y: Target.Y, z: Target.Z));
         var karis = new KarisType1(Guid.NewGuid(), "ip address");
         var agvData = karis.SetSimulationSpeed(5);
         double distance = PhysicsHelper.DistanceToVelocityFromVelocity(agvData.Acceleration, agvData.MaxVelocityStraight, initialVelocity);

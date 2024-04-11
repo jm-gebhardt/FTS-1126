@@ -1,6 +1,6 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
-using Gebhardt.StoreWare.Agv.Common.Testing;
+using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.MqttMessages;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
@@ -23,7 +23,7 @@ public class AgvDataConsumerTest
     [TestMethod]
     public async Task ReceiveDataMessage_WithInvalidContent_NoMessageSend()
     {
-        var fixture = new MqttConsumerTestFixture<AgvDataConsumer>();
+        var fixture = new AgvDataConsumerMqttFixture();
 
         var message = new MqttAgvData("4711", "", "", null, null, 0.0, 0.0, null, null, null,
             0.0, null, null, null, Array.Empty<Sensor>());
@@ -39,7 +39,7 @@ public class AgvDataConsumerTest
     [TestMethod]
     public async Task ReceiveDataMessage_WithValidInput_ExpectMessage()
     {
-        var fixture = new MqttConsumerTestFixture<AgvDataConsumer>();
+        var fixture = new AgvDataConsumerMqttFixture();
         var sensors = new Sensor[]
         {
             new() { SensorIdentifier = "Back01" },
@@ -47,7 +47,7 @@ public class AgvDataConsumerTest
             new() { SensorIdentifier = "Back02" },
             new() { SensorIdentifier = "Front02" }
         };
-        var message = new MqttAgvData(AgvSerialNumber, "Karis", "BF1", "127.0.0.1", "v3.1",1.8, 120.0, 0.6, 0.8, 0.7, 0.9, 2.5, 1.5, 1000, sensors);
+        var message = new MqttAgvData(AgvSerialNumber, "Karis", "BF1", "127.0.0.1", "v3.1", 1.8, 120.0, 0.6, 0.8, 0.7, 0.9, 2.5, 1.5, 1000, sensors);
         await fixture.TestHarness.Bus.PublishMqtt(message, null);
         (await fixture.TestHarness.Published.Any<MqttAgvData>()).ShouldBeTrue();
 
@@ -72,5 +72,13 @@ public class AgvDataConsumerTest
         publishedData.Data.BatteryCapacity.ShouldBe(120.0);
         publishedData.Data.TurnOnSpotThreshold.ShouldBe(1.5);
         publishedData.Data.SoftwareVersion.ShouldBe("v3.1");
+    }
+}
+
+public class AgvDataConsumerMqttFixture : MqttConsumerTestFixture<AgvDataConsumer>
+{
+    public AgvDataConsumerMqttFixture()
+    {
+        Build();
     }
 }

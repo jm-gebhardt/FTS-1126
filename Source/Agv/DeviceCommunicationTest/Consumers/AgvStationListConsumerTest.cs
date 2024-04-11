@@ -1,5 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Extensions;
-using Gebhardt.StoreWare.Agv.Common.Testing;
+using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.Events;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.MqttMessages;
@@ -23,7 +23,7 @@ public class AgvStationListConsumerTest
     [TestMethod]
     public async Task ReceiveStationListMessage_WithValidInput_ExpectMessage()
     {
-        var fixture = new MqttConsumerTestFixture<AgvStationListConsumer>();
+        var fixture = new AgvStationListConsumerFixture();
 
         var stations = new Station[]
         {
@@ -49,5 +49,13 @@ public class AgvStationListConsumerTest
         published.StationList.Stations.Length.ShouldBe(2);
         published.StationList.Stations.Any(x => x.Identifier == "D1").ShouldBeTrue();
         published.StationList.Stations.Any(x => x.Identifier == "C1").ShouldBeTrue();
+    }
+}
+
+public class AgvStationListConsumerFixture : MqttConsumerTestFixture<AgvStationListConsumer>
+{
+    public AgvStationListConsumerFixture()
+    {
+        Build();
     }
 }

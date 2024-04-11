@@ -3,7 +3,6 @@ using Gebhardt.StoreWare.Agv.Common.Exceptions;
 using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
-using Gebhardt.StoreWare.Agv.Common.Testing;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.Enums;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.MqttMessages;
@@ -12,9 +11,7 @@ using MassTransit;
 using MassTransit.Serialization;
 using MassTransit.Testing;
 using MassTransit.Testing.Implementations;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
 using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers;
@@ -32,9 +29,7 @@ public class StartActionCommandConsumerTest
     [TestMethod]
     public async Task Test_Send_TransportOrder_To_AGV_Via_MQTT()
     {
-        MqttConsumerTestFixture<StartActionCommandConsumer> fixture = new MqttConsumerTestFixture<StartActionCommandConsumer>()
-            .AddServices(s => s.AddSingleton(Mock.Of<IAgvRepository>()))
-            .Build();
+        var fixture = new StartActionCommandConsumerTestFixture();
 
         // Create a publish observer
         var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
@@ -93,7 +88,7 @@ public class StartActionCommandConsumerTest
     [TestMethod]
     public async Task Test_StartAction_EmptyAssignedAgv_ThrowsException()
     {
-        var fixture = new MassTransitConsumerTestFixture<StartActionCommandConsumer>(s => { s.AddTransient<IAgvRepository>(_ => Mock.Of<IAgvRepository>()); });
+        var fixture = new StartActionCommandConsumerTestFixture();
         var action = new AgvAction(Guid.Empty, ActionType.Pick, string.Empty, Guid.Empty);
         await fixture.TestHarness.Bus.Publish(new StartActionCommand(Guid.Empty, "", action));
         (await fixture.TestHarness.Consumed.Any<StartActionCommand>()).ShouldBeTrue();
@@ -111,9 +106,7 @@ public class StartActionCommandConsumerTest
     [TestMethod]
     public async Task StartActionCommand_MoveAction_To_AGV_Via_MQTT()
     {
-        MqttConsumerTestFixture<StartActionCommandConsumer> fixture = new MqttConsumerTestFixture<StartActionCommandConsumer>()
-            .AddServices(s => s.AddSingleton(Mock.Of<IAgvRepository>()))
-            .Build();
+        var fixture = new StartActionCommandConsumerTestFixture();
 
         // Create a publish observer
         var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
@@ -176,9 +169,7 @@ public class StartActionCommandConsumerTest
     [TestMethod]
     public async Task StartActionCommand_ChargeAction_To_AGV_Via_MQTT()
     {
-        MqttConsumerTestFixture<StartActionCommandConsumer> fixture = new MqttConsumerTestFixture<StartActionCommandConsumer>()
-            .AddServices(s => s.AddSingleton(Mock.Of<IAgvRepository>()))
-            .Build();
+        var fixture = new StartActionCommandConsumerTestFixture();
 
         // Create a publish observer
         var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));

@@ -1,5 +1,5 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using Gebhardt.StoreWare.Agv.Common.Testing;
+using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.Commands;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.MqttMessages.SimulateAgv;
@@ -18,9 +18,7 @@ public class SimulatedAgvErrorConsumerTest
     [TestMethod]
     public async Task Consume_MqttSimulateAgvErrorWasReceived_PublishesSimulateAgvError()
     {
-        MqttConsumerTestFixture<SimulateAgvErrorConsumer> fixture = new MqttConsumerTestFixture<SimulateAgvErrorConsumer>(s
-                => s.AddTransient(_ => new Mock<ILogger<SimulateAgvErrorConsumer>>().Object))
-            .Build();
+        MqttConsumerTestFixture<SimulateAgvErrorConsumer> fixture = new SimulateAgvErrorConsumerFixture();
 
         var agvCorrelationId = Guid.NewGuid();
         var agvError = AgvErrorGenerator.GenerateAgvError(agvCorrelationId);
@@ -41,5 +39,14 @@ public class SimulatedAgvErrorConsumerTest
             e => e.ErrorReferences!.First().ShouldSatisfyAllConditions(
                 r => r.ReferenceKey.ShouldBe(agvError.ErrorReferences!.First().ReferenceKey),
                 r => r.ReferenceValue.ShouldBe(agvError.ErrorReferences!.First().ReferenceValue)));
+    }
+}
+
+public class SimulateAgvErrorConsumerFixture : MqttConsumerTestFixture<SimulateAgvErrorConsumer>
+{
+    public SimulateAgvErrorConsumerFixture()
+    {
+        AddServices(s => s.AddTransient(_ => new Mock<ILogger<SimulateAgvErrorConsumer>>().Object));
+        Build();
     }
 }

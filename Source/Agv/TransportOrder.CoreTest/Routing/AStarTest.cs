@@ -340,7 +340,7 @@ public class AStarTest
     [TestMethod]
     public void FindsShortestPossibleRoute_WhenAllPossibleRoutesBlocked_ReturnsNull()
     {
-        var agvGraphTextFixtureMock = new Mock<AgvGraphTestFixture>();
+        var agvGraphTextFixtureMock = new Mock<AgvGraphTestData>();
         agvGraphTextFixtureMock.Setup(method => method.GetAllPossibleRoutesOrdered())
             .Returns(new[]
             {
@@ -356,7 +356,7 @@ public class AStarTest
     [TestMethod]
     public void OnlyOnePossibleRoute_FindsRoute_WhenBlockedEdgeDoesNotFindRoute()
     {
-        var agvGraphTextFixtureMock = new Mock<AgvGraphTestFixture>();
+        var agvGraphTextFixtureMock = new Mock<AgvGraphTestData>();
         agvGraphTextFixtureMock.Setup(method => method.GetAllPossibleRoutesOrdered())
             .Returns(new[]
             {
@@ -367,7 +367,7 @@ public class AStarTest
         AssertFindsShortestPath("Nairobi", "LoneDestination", agvGraphTextFixture);
     }
 
-    private void AssertFindsShortestPath(string source, string destination, AgvGraphTestFixture agvGraphTextFixture)
+    private void AssertFindsShortestPath(string source, string destination, AgvGraphTestData agvGraphTextFixture)
     {
         var aStar = new AStar(agvGraphTextFixture.Graph, null, RoutingPlausibilityChecker);
         var route = aStar.CalculateRoute(source, destination);

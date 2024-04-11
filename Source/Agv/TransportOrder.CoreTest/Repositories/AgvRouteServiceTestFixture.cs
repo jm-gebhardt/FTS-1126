@@ -1,13 +1,12 @@
 ﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
-using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;
 using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
 using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Repositories;
 
-public class AgvRouteServiceTestFixture : DbTestFixtureBase<TransportOrderDbContext>
+public class AgvRouteServiceTestFixture : TransportOrderDbFixture
 {
     private readonly Mock<IAgvRepository> _agvRepositoryMock = new();
     private readonly Mock<ILogger<AgvRouteRetrievalService>> _loggerMock = new();
@@ -67,11 +66,18 @@ public class AgvRouteServiceTestFixture : DbTestFixtureBase<TransportOrderDbCont
         return this;
     }
 
-    public async Task<AgvRouteServiceTestFixture> BuildAsync()
+    private new void Build()
+    {
+        base.Build();
+    }
+
+    public new async Task<AgvRouteServiceTestFixture> BuildAsync()
     {
         SetupAgvs();
+        AddInitTask(AddRangeAsync(_actionsGroups));
 
-        await AddRangeAsync(_actionsGroups);
+        await base.BuildAsync();
+        Build();
         return this;
     }
 }

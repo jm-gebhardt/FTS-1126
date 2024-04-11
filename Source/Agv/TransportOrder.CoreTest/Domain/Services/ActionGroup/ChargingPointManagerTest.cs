@@ -97,12 +97,6 @@ public class ChargingPointManagerTest
         VerifyGraphNode(bestCharger, chargingNode);
     }
 
-    //
-    // [DataTestMethod]
-    // [DataRow(NodeLockState.Occupied)]
-    // [DataRow(NodeLockState.Reserved)]
-    // public async Task Consume_ChargeAgv_ChargeReservationThrows_ThrowsException(NodeLockState state)
-
     [TestMethod]
     public async Task ReserveCharger_WhenNodeIsNotChargerTypeAndFree_ReturnFalse()
     {

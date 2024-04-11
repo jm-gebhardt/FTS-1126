@@ -15,7 +15,6 @@ public class GridControllerTest
     {
         var grids = new List<Grid>() { new("a grid", 1, 1, 1, 1, 1, 1) };
         var fixture = new GridControllerTestFixture()
-            .Setup()
             .WithGrids(grids);
 
         ActionResult<IEnumerable<GridDto>> response = await fixture.Controller.GetGrids();
@@ -31,8 +30,7 @@ public class GridControllerTest
     [TestMethod]
     public async Task AddGrid_ValidData_GridAdded()
     {
-        var fixture = new GridControllerTestFixture()
-            .Setup();
+        var fixture = new GridControllerTestFixture();
         var response = await fixture.Controller.AddGrid("name", 1, 1);
         var result = response as OkResult;
         result.ShouldNotBeNull();
@@ -46,7 +44,6 @@ public class GridControllerTest
         var positionFrequency = new PositionFrequency(gridId, new List<ICollection<float>>());
 
         var fixture = new GridControllerTestFixture()
-            .Setup()
             .WithPositionFrequency(positionFrequency);
 
         ActionResult<PositionFrequencyDto> response = await fixture.Controller.GetPositionFrequency(gridId);

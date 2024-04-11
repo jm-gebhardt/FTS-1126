@@ -1,6 +1,5 @@
 using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Testing;
-using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
+using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
@@ -16,9 +15,12 @@ public class CargoRequestHandlerTestFixture<TRequest, TConsumer> : MediatorTestF
     where TConsumer : class, IConsumer
 {
     public readonly Mock<IAgvDb> AgvDb = new();
-    private readonly IMapper _mapper = MappingHelper.GetMapper(new CargoProfile());
     private readonly List<Guid> _existingAgvs = new();
     private readonly Dictionary<Guid, IReadOnlyCollection<Cargo>> _cargosByAgv = new();
+
+    private static IEnumerable<Profile> Profiles => [new CargoProfile()];
+
+    protected override IEnumerable<Profile> GetProfiles() => Profiles;
 
     public CargoRequestHandlerTestFixture()
     {
@@ -26,11 +28,7 @@ public class CargoRequestHandlerTestFixture<TRequest, TConsumer> : MediatorTestF
 
         SetupCargoRepositoryMock();
 
-        AddServices(s =>
-        {
-            s.AddTransient<IAgvDb>(_ => AgvDb.Object);
-            s.AddTransient(_ => _mapper);
-        });
+        AddServices(s => { s.AddTransient<IAgvDb>(_ => AgvDb.Object); });
     }
 
     private void SetupCargoRepositoryMock()
@@ -71,7 +69,7 @@ public class CargoRequestHandlerTestFixture<TRequest, TConsumer> : MediatorTestF
 
     public CargoRequestHandlerTestFixture<TRequest, TConsumer> WithCargo(Guid agvCorrelationId, ICollection<Common.Messages.AgvManagement.Cargo> cargos)
     {
-        var domainCargo = _mapper.Map<IReadOnlyCollection<Cargo>>(cargos);
+        var domainCargo = Mapper.Map<IReadOnlyCollection<Cargo>>(cargos);
         _cargosByAgv[agvCorrelationId] = domainCargo;
         SetupIsAgvLoaded(agvCorrelationId, domainCargo.ToList());
         WithAgvExisting(agvCorrelationId);

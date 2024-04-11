@@ -1,18 +1,8 @@
-﻿using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
-using Gebhardt.StoreWare.Agv.Common.Services;
+﻿using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles;
-using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;
-using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
 using Shouldly;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Repositories;
@@ -20,26 +10,6 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Repositories;
 [TestClass]
 public class EfAgvGraphRepositoryTest
 {
-    #region Setup
-    private class EfAgvGraphRepositoryTestFixture
-    {
-        private readonly SemaphoreProvider<IGraphRepositorySemaphore> _semaphoreProvider = new();
-
-        public EfGraphRepository Repository { get; }
-
-        public EfAgvGraphRepositoryTestFixture()
-        {
-            var mapper = MappingHelper.GetMapper(new GraphProfile());
-            var collection = new ServiceCollection()
-                .AddTransient<IMapper>(_ => mapper)
-                .AddDbContextFactory<TransportOrderDbContext>(options => { options.UseInMemoryDatabase(Guid.NewGuid().ToString()); }
-                );
-            var provider = collection.BuildServiceProvider(true);
-            var contextFactory = provider.GetService<IDbContextFactory<TransportOrderDbContext>>()!;
-            Repository = new EfGraphRepository(contextFactory, mapper, _semaphoreProvider, Mock.Of<ILogger<EfGraphRepository>>());
-        }
-    }
-
     private static void VerifyAgvGraph(AgvGraph actualAgvGraph, AgvGraph expectedAgvGraph)
     {
         actualAgvGraph.ShouldNotBeNull();
@@ -81,7 +51,6 @@ public class EfAgvGraphRepositoryTest
             n => n.Z.ShouldBe(expectedNode.Z),
             n => n.Theta.ShouldBe(expectedNode.Theta));
     }
-    #endregion
 
     [TestMethod]
     public async Task GetNodesAsync_WhenAgvGraphIsExisting_ReturnsNodes()

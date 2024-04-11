@@ -2,7 +2,7 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Services;
-using Gebhardt.StoreWare.Agv.Common.Testing;
+using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.CmdOptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.CommandHandler;
@@ -29,11 +29,7 @@ using AgvAction = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGrou
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.CoreTest.Services.CommandHandler.Agv;
 
-public class AgvCommandHandlerTestFixture(
-    Action<IBusRegistrationConfigurator>? busRegistrationConfigurator = null,
-    Action<IBusRegistrationContext, IInMemoryBusFactoryConfigurator>? inMemoryConfiguration = null,
-    params Action<IServiceCollection>[] services)
-    : MassTransitConsumerTestFixtureWithScheduler<AgvCommandHandler>(busRegistrationConfigurator, inMemoryConfiguration, services)
+public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCommandHandler>
 {
     private readonly SemaphoreProvider<IAgvsSemaphore> _semaphoreProvider = new();
     private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
@@ -48,12 +44,21 @@ public class AgvCommandHandlerTestFixture(
     private readonly Mock<IActionGroupRetrievalService> _actionGroupRetrievalService = new();
     private readonly Mock<IMetricCollectionService> _metricCollectorServiceMock = new();
 
-    protected override void ConfigureServices(IServiceCollection collection)
+    private static IEnumerable<Profile> Profiles => [new AgvStatusProfile(), new AgvProfile(), new CargoProfile()];
+
+    protected override IEnumerable<Profile> GetProfiles() => Profiles;
+
+    public AgvCommandHandlerTestFixture()
     {
+        Build();
+    }
+
+    protected override MassTransitConsumerTestFixture<AgvCommandHandler> AddServices(IServiceCollection collection)
+    {
+        base.AddServices(collection);
         collection.AddSingleton<ISemaphoreProvider<IAgvsSemaphore>>(_ => _semaphoreProvider);
         collection.AddTransient(_ => _actionGroupRepository.Object);
         collection.AddTransient(_ => _logger.Object);
-        collection.AddTransient(_ => GetMapper());
         collection.AddTransient(_ => _mapRepository.Object);
         collection.AddTransient(_ => _productionOptions);
         collection.AddTransient(_ => AgvDb.Object);
@@ -64,6 +69,7 @@ public class AgvCommandHandlerTestFixture(
         collection.AddTransient(_ => _actionGroupRetrievalService.Object);
         collection.AddTransient(_ => _metricCollectorServiceMock.Object);
         _metricCollectorServiceMock.Setup(x => x.CollectBatteryChargeMetrics(It.IsAny<AgvStatus>())).Verifiable();
+        return this;
     }
 
     public void VerifyBatteryMetricsCollected(Times callTimes)
@@ -140,7 +146,7 @@ public class AgvCommandHandlerTestFixture(
         return this;
     }
 
-    public AgvCommandHandlerTestFixture HasAlreadyReservedNode( bool hasNodeReserved)
+    public AgvCommandHandlerTestFixture HasAlreadyReservedNode(bool hasNodeReserved)
     {
         _parkPointService.Setup(x => x.AgvHasReservedParkingNodeAsync(It.IsAny<Guid>())).ReturnsAsync(hasNodeReserved);
         _chargingPointManager.Setup(x => x.AgvHasReservedChargerAsync(It.IsAny<Guid>())).ReturnsAsync(hasNodeReserved);
@@ -178,7 +184,7 @@ public class AgvCommandHandlerTestFixture(
 
     public static IMapper GetMapper()
     {
-        var mapper = MappingHelper.GetMapper(new AgvStatusProfile(), new AgvProfile(), new CargoProfile());
+        var mapper = MappingHelper.GetMapper(Profiles.ToArray());
         return mapper;
     }
 
