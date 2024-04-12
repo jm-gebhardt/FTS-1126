@@ -20,6 +20,6 @@ public static class MediatorRegistrationExtension
         cfg.AddRequestClient<AddGrid>();
         cfg.AddConsumer<GridRequestHandler>();
         cfg.AddRequestClient<GetGrids>();
-        cfg.AddRequestClient<GetPositionFrequenciesForGrid>();
+        cfg.AddRequestClient<GetPositionFrequencies>();
     }
 }

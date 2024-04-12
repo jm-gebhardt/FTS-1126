@@ -1,4 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Statistics.Domain.Exceptions;
+using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.Statistics.Domain.Models;
 
@@ -46,6 +47,18 @@ public class Grid(string gridName, int ySize, int xSize, double xStart, double x
     /// The grid size in y-direction.
     /// </summary>
     public int YSize { get; private set; } = ySize;
+    
+    /// <summary>
+    /// The list of AgvGridPositions related to this grid.
+    /// </summary>
+    [UsedImplicitly]
+    public ICollection<GridAgvPosition>? AgvGridPositions { get; init; } = new List<GridAgvPosition>();
+    
+    /// <summary>
+    /// The list of Maps related to this grid.
+    /// </summary>
+    [UsedImplicitly]
+    public ICollection<Map>? Maps { get; init; } = new List<Map>();
 
     /// <summary>
     /// Get the maximum x and y values.

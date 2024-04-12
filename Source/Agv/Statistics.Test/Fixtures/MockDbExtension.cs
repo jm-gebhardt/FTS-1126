@@ -17,7 +17,8 @@ public static class MockDbExtension
     {
         dbMock.Setup(x => x.Grids.Add(It.IsAny<Grid>())).Verifiable();
         dbMock.Setup(x => x.Maps.Add(It.IsAny<Map>())).Verifiable();
-        dbMock.Setup(x => x.GridPositions.Add(It.IsAny<AgvGridPosition>())).Verifiable();
+        dbMock.Setup(x => x.GridAgvPositions.Add(It.IsAny<GridAgvPosition>())).Verifiable();
+        dbMock.Setup(x => x.MapAgvPositions.Add(It.IsAny<MapAgvPositions>())).Verifiable();
         dbMock.Setup(x => x.SaveAsync(It.IsAny<CancellationToken>())).Verifiable();
     }
 
@@ -38,7 +39,21 @@ public static class MockDbExtension
     /// <param name="count">The number of positions added.</param>
     public static void VerifyAgvPositionsAdded(this Mock<IStatisticsDb> dbMock, int count)
     {
-        dbMock.Verify(x => x.GridPositions.Add(It.IsAny<AgvGridPosition>()), Times.Exactly(count));
+        dbMock.Verify(x => x.GridAgvPositions.Add(It.IsAny<GridAgvPosition>()), Times.Exactly(count));
+        if (count > 0)
+        {
+            dbMock.Verify(x => x.SaveAsync(It.IsAny<CancellationToken>()), Times.Once);
+        }
+    }
+    
+    /// <summary>
+    /// Verify map agv positions were added.
+    /// </summary>
+    /// <param name="dbMock"></param>
+    /// <param name="count">The number of positions added.</param>
+    public static void VerifyAgvMapPositionsAdded(this Mock<IStatisticsDb> dbMock, int count)
+    {
+        dbMock.Verify(x => x.MapAgvPositions.Add(It.IsAny<MapAgvPositions>()), Times.Exactly(count));
         if (count > 0)
         {
             dbMock.Verify(x => x.SaveAsync(It.IsAny<CancellationToken>()), Times.Once);

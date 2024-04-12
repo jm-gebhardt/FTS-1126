@@ -14,7 +14,7 @@ namespace Gebhardt.StoreWare.Agv.Statistics.Test.WebApi;
 
 public class GridControllerTestFixture : MockRequestClientControllerTestFixture<GridController>
 {
-    private Mock<IRequestClient<GetPositionFrequenciesForGrid>> GetPositionFrequencyClient { get; } = new();
+    private Mock<IRequestClient<GetPositionFrequencies>> GetPositionFrequencyClient { get; } = new();
 
     private Mock<IRequestClient<GetGrids>> GetGridsClient { get; } = new();
 
@@ -40,8 +40,8 @@ public class GridControllerTestFixture : MockRequestClientControllerTestFixture<
 
     public GridControllerTestFixture WithPositionFrequency(PositionFrequency positionFrequency)
     {
-        GetPositionFrequencyClient.Setup(x => x.GetResponse<GotPositionFrequenciesForGrid>(It.IsAny<GetPositionFrequenciesForGrid>(), default, default)
-            .Result.Message).Returns(new GotPositionFrequenciesForGrid(positionFrequency));
+        GetPositionFrequencyClient.Setup(x => x.GetResponse<GotPositionFrequencies>(It.IsAny<GetPositionFrequencies>(), default, default)
+            .Result.Message).Returns(new GotPositionFrequencies(positionFrequency));
         return this;
     }
 

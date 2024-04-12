@@ -3,7 +3,7 @@
 namespace Gebhardt.StoreWare.Agv.Statistics.Messages.Requests;
 
 /// <summary>
-/// Represents the response to the <see cref="GetPositionFrequenciesForGrid"/> request.
+/// Represents the response to the <see cref="GetPositionFrequencies"/> request.
 /// </summary>
 /// <param name="PositionFrequency"></param>
-public record GotPositionFrequenciesForGrid(PositionFrequency PositionFrequency);
+public record GotPositionFrequencies(PositionFrequency PositionFrequency);

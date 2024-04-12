@@ -39,4 +39,10 @@ public class MockDbConsumerTestFixture<TConsumer> : MassTransitConsumerTestFixtu
         StatisticsDbMock.Setup(x => x.Grids.GetAll()).ReturnsAsync(grids);
         return this;
     }
+    
+    public MockDbConsumerTestFixture<TConsumer> WithMaps(List<Map> maps)
+    {
+        StatisticsDbMock.Setup(x => x.Maps.GetMapsForGridAsync(It.IsAny<Guid>())).ReturnsAsync(maps);
+        return this;
+    }
 }

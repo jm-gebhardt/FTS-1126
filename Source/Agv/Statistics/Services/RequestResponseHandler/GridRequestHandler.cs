@@ -12,7 +12,7 @@ namespace Gebhardt.StoreWare.Agv.Statistics.Services.RequestResponseHandler;
 [UsedImplicitly]
 public class GridRequestHandler :
     IConsumer<GetGrids>,
-    IConsumer<GetPositionFrequenciesForGrid>
+    IConsumer<GetPositionFrequencies>
 {
     private readonly IStatisticsDb _db;
 
@@ -32,14 +32,17 @@ public class GridRequestHandler :
     }
 
     /// <summary>
-    /// Handles the <see cref="GetPositionFrequenciesForGrid"/> request.
+    /// Handles the <see cref="GetPositionFrequencies"/> request.
     /// </summary>
-    public async Task Consume(ConsumeContext<GetPositionFrequenciesForGrid> context)
+    public async Task Consume(ConsumeContext<GetPositionFrequencies> context)
     {
         var gridId = context.Message.GridId;
+        var mapId = context.Message.MapId;
+        DateTime? fromDate = context.Message.FromDate;
+        DateTime? toDate = context.Message.ToDate;
 
-        var positionFrequency = await _db.GridPositions.GetPositionFrequencyForGrid(gridId);
+        var positionFrequency = await _db.GridAgvPositions.GetPositionFrequency(gridId, mapId, fromDate, toDate);
 
-        await context.RespondAsync(new GotPositionFrequenciesForGrid(positionFrequency));
+        await context.RespondAsync(new GotPositionFrequencies(positionFrequency));
     }
 }

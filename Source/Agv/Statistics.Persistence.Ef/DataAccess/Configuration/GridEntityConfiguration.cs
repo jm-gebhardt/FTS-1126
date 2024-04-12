@@ -1,4 +1,5 @@
-﻿using Gebhardt.StoreWare.Agv.Statistics.Domain.Models;
+﻿using Gebhardt.StoreWare.Agv.Common.Persistence.Ef;
+using Gebhardt.StoreWare.Agv.Statistics.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -12,5 +13,15 @@ public class GridEntityConfiguration : IEntityTypeConfiguration<Grid>
     {
         builder.ToTable("StatisticsGrid");
         builder.HasKey(g => g.GridId);
+        
+        builder.HasMany(g => g.AgvGridPositions)
+            .WithOne(agp => agp.Grid)
+            .HasForeignKey(agp => agp.GridId);
+        
+        builder.HasMany(g => g.Maps)
+            .WithOne(agp => agp.Grid)
+            .HasForeignKey(agp => agp.GridId);
+        
+        builder.ConfigureAllProperties(except: new[] { nameof(Grid.AgvGridPositions), nameof(Grid.Maps) });
     }
 }

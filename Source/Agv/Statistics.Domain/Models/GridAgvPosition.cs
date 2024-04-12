@@ -5,10 +5,10 @@ namespace Gebhardt.StoreWare.Agv.Statistics.Domain.Models;
 /// <summary>
 /// Represents an agv position on a grid.
 /// </summary>
-public class AgvGridPosition
+public class GridAgvPosition
 {
     /// <summary>
-    /// The unique id of the <see cref="AgvGridPosition"/>.
+    /// The unique id of the <see cref="GridAgvPosition"/>.
     /// </summary>
     public Guid PositionId { get; init; }
 
@@ -16,6 +16,11 @@ public class AgvGridPosition
     /// The id of the grid the position is on.
     /// </summary>
     public Guid GridId { get; init; }
+    
+    /// <summary>
+    /// The Grid object.
+    /// </summary>
+    public Grid? Grid { get; init; }
 
     /// <summary>
     /// The index of the grid cell in x direction.
@@ -33,7 +38,7 @@ public class AgvGridPosition
     public float X { get; init; }
 
     /// <summary>
-    /// The y position
+    /// The y position.
     /// </summary>
     public float Y { get; init; }
 
@@ -52,8 +57,14 @@ public class AgvGridPosition
     /// </summary>
     public DateTime Timestamp { get; init; }
 
-    /// <inheritdoc cref="AgvGridPosition"/>>
-    public AgvGridPosition(Guid gridId, string serialNumber, float x, float y, int xIndex, int yIndex, DateTime time)
+    /// <summary>
+    /// The list of AgvMapPositions object.
+    /// </summary>
+    [UsedImplicitly]
+    public ICollection<MapAgvPositions>? MapAgvPositions { get; init; }
+
+    /// <inheritdoc cref="GridAgvPosition"/>>
+    public GridAgvPosition(Guid gridId, string serialNumber, float x, float y, int xIndex, int yIndex, DateTime time, Grid? grid)
     {
         PositionId = Guid.NewGuid();
         GridId = gridId;
@@ -63,10 +74,12 @@ public class AgvGridPosition
         XIndex = xIndex;
         YIndex = yIndex;
         Timestamp = time;
+        Grid = grid;
+        MapAgvPositions = new List<MapAgvPositions>();
     }
 
     [UsedImplicitly]
-    private AgvGridPosition()
+    private GridAgvPosition()
     {
         PositionId = Guid.NewGuid();
         SerialNumber = string.Empty;

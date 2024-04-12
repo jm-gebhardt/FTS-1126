@@ -15,9 +15,11 @@ public class PositionEventHandlerTest
     public async Task ConsumeAgvPositionReceived_SingleGrid_SinglePositionAdded()
     {
         var grids = new List<Grid> { new("a grid", 20, 20, 0, 0, 2, 2) };
+        var maps = new List<Map> { new(Guid.NewGuid(),  Guid.NewGuid(), 65,27,70,95)};
         MockDbConsumerTestFixture<PositionEventHandler> fixture = new PositionEventHandlerTestFixture()
             .ShouldActReturns(true)
-            .WithGrids(grids);
+            .WithGrids(grids)
+            .WithMaps(maps);
 
         await fixture.TestHarness.Bus.Publish(new AgvPositionReceived(Guid.NewGuid(), "agvId", new AgvPosition(true, 1, 1, 0, 0)));
         (await fixture.ConsumerHarness.Consumed.Any<AgvPositionReceived>()).ShouldBeTrue();
@@ -43,13 +45,49 @@ public class PositionEventHandlerTest
     public async Task ConsumeAgvPositionReceived_MultipleGrids_MultipleGridPositionsAdded()
     {
         var grids = new List<Grid> { new("a grid", 20, 20, 0, 0, 2, 2), new("a grid", 10, 10, 0, 0, 1, 1) };
+        var maps = new List<Map> { new(Guid.NewGuid(),  Guid.NewGuid(), 65,27,70,95)};
         MockDbConsumerTestFixture<PositionEventHandler> fixture = new PositionEventHandlerTestFixture()
             .ShouldActReturns(true)
-            .WithGrids(grids);
+            .WithGrids(grids)
+            .WithMaps(maps);
 
         await fixture.TestHarness.Bus.Publish(new AgvPositionReceived(Guid.NewGuid(), "agvId", new AgvPosition(true, 1, 1, 0, 0)));
         (await fixture.ConsumerHarness.Consumed.Any<AgvPositionReceived>()).ShouldBeTrue();
 
         fixture.StatisticsDbMock.VerifyAgvPositionsAdded(grids.Count);
+    }
+    
+    [TestMethod]
+    public async Task ConsumeAgvPositionReceived_SingleGrid_WhenWithinMapXYIndex_AgvMapPositionAdded()
+    {
+        var grids = new List<Grid> { new("a grid", 1, 1, 0, 1, 0, 1) };
+        var maps = new List<Map> { new(Guid.NewGuid(),  Guid.NewGuid(), 15,25,48,70)};
+        MockDbConsumerTestFixture<PositionEventHandler> fixture = new PositionEventHandlerTestFixture()
+            .ShouldActReturns(true)
+            .WithGrids(grids)
+            .WithMaps(maps);
+
+        await fixture.TestHarness.Bus.Publish(new AgvPositionReceived(Guid.NewGuid(), "agvId", new AgvPosition(true, 41,59, 0, 0)));
+        (await fixture.ConsumerHarness.Consumed.Any<AgvPositionReceived>()).ShouldBeTrue();
+
+        fixture.StatisticsDbMock.VerifyAgvPositionsAdded(grids.Count);
+        fixture.StatisticsDbMock.VerifyAgvMapPositionsAdded(grids.Count);
+    }
+    
+    [TestMethod]
+    public async Task ConsumeAgvPositionReceived_SingleGrid_WhenNotWithinMapXYIndex_AgvMapPositionAdded()
+    {
+        var grids = new List<Grid> { new("a grid", 1, 1, 0, 1, 0, 1) };
+        var maps = new List<Map> { new(Guid.NewGuid(),  Guid.NewGuid(), 65,27,70,95)};
+        MockDbConsumerTestFixture<PositionEventHandler> fixture = new PositionEventHandlerTestFixture()
+            .ShouldActReturns(true)
+            .WithGrids(grids)
+            .WithMaps(maps);
+
+        await fixture.TestHarness.Bus.Publish(new AgvPositionReceived(Guid.NewGuid(), "agvId", new AgvPosition(true, 41,59, 0, 0)));
+        (await fixture.ConsumerHarness.Consumed.Any<AgvPositionReceived>()).ShouldBeTrue();
+
+        fixture.StatisticsDbMock.VerifyAgvPositionsAdded(grids.Count);
+        fixture.StatisticsDbMock.VerifyAgvMapPositionsAdded(0);
     }
 }

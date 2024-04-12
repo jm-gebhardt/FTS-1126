@@ -19,7 +19,12 @@ public interface IStatisticsDb : IUnitOfWork
     IGridRepository Grids { get; }
 
     /// <summary>
-    /// The <see cref="AgvGridPosition"/> repository.
+    /// The <see cref="GridAgvPosition"/> repository.
     /// </summary>
-    IAgvGridPositionRepository GridPositions { get; }
+    IGridAgvPositionRepository GridAgvPositions { get; }
+    
+    /// <summary>
+    /// The <see cref="Models.MapAgvPositions"/> repository.
+    /// </summary>
+    IMapAgvPositionsRepository MapAgvPositions { get; }
 }

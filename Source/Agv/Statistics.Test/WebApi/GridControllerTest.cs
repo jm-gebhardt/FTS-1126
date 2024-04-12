@@ -41,12 +41,16 @@ public class GridControllerTest
     public async Task GetPositionFrequency_ValidData_ReturnsPositionFrequencyDtos()
     {
         var gridId = Guid.NewGuid();
-        var positionFrequency = new PositionFrequency(gridId, new List<ICollection<float>>());
+        var mapId = Guid.NewGuid();
+        DateTime? fromDate = DateTime.UtcNow;
+        DateTime? toDate = DateTime.UtcNow;
+        
+        var positionFrequency = new PositionFrequency(gridId, mapId, new List<ICollection<float>>());
 
         var fixture = new GridControllerTestFixture()
             .WithPositionFrequency(positionFrequency);
 
-        ActionResult<PositionFrequencyDto> response = await fixture.Controller.GetPositionFrequency(gridId);
+        ActionResult<PositionFrequencyDto> response = await fixture.Controller.GetPositionFrequency(gridId, mapId, fromDate, toDate);
 
         var result = response.Result as OkObjectResult;
         result.ShouldNotBeNull();
@@ -54,5 +58,6 @@ public class GridControllerTest
         var positionFrequencyDto = result.Value as PositionFrequencyDto;
         positionFrequencyDto.ShouldNotBeNull();
         positionFrequencyDto.GridId.ShouldBe(gridId);
+        positionFrequencyDto.MapId.ShouldBe(mapId);
     }
 }

@@ -1,4 +1,6 @@
-﻿namespace Gebhardt.StoreWare.Agv.Statistics.Domain.Models;
+﻿using JetBrains.Annotations;
+
+namespace Gebhardt.StoreWare.Agv.Statistics.Domain.Models;
 
 /// <summary>
 /// Represents a map
@@ -36,6 +38,17 @@ public class Map(Guid mapId, Guid gridId, int xMin, int yMin, int xMax, int yMax
     public int XMax { get; private set; } = xMax;
 
     /// <summary>
+    /// The Grid object.
+    /// </summary>
+    public Grid? Grid { get; init; }
+
+    /// <summary>
+    /// The list of AgvMapPositions object.
+    /// </summary>
+    [UsedImplicitly]
+    public ICollection<MapAgvPositions>? MapAgvPositions { get; init; } = new List<MapAgvPositions>();
+
+    /// <summary>
     /// Update the extent of a map.
     /// </summary>
     /// <param name="xMin">Minimum x index.</param>
@@ -48,5 +61,18 @@ public class Map(Guid mapId, Guid gridId, int xMin, int yMin, int xMax, int yMax
         XMax = Math.Max(xMax, XMax);
         YMin = Math.Min(yMin, YMin);
         YMax = Math.Max(yMax, YMax);
+    }
+
+    /// <summary>
+    /// Check if position is within this map.
+    /// </summary>
+    /// <param name="xIndex">Position x index.</param>
+    /// <param name="yIndex">Position y index.</param>
+    /// <returns>boolean</returns>
+    public bool IsPositionWithinMap(int xIndex, int yIndex)
+    {
+        bool isWithin = XMin <= xIndex && xIndex <= XMax &&
+                        YMin <= yIndex && yIndex <= YMax;
+        return isWithin;
     }
 }

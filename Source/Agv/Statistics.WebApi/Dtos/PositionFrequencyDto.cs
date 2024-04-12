@@ -15,6 +15,12 @@ public class PositionFrequencyDto
     public Guid GridId { get; init; }
 
     /// <summary>
+    /// The CorrelationId of the Map..
+    /// </summary>
+    [PublicAPI]
+    public Guid? MapId { get; init; }
+
+    /// <summary>
     /// The position frequencies.
     /// </summary>
     [PublicAPI]
@@ -23,11 +29,13 @@ public class PositionFrequencyDto
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="gridId"></param>
-    /// <param name="frequencies"></param>
-    public PositionFrequencyDto(Guid gridId, ICollection<ICollection<float>> frequencies)
+    /// <param name="gridId">The CorrelationId of the Grid.</param>
+    /// <param name="mapId">The CorrelationId of the Map.</param>
+    /// <param name="frequencies">The position frequencies [[xIndex, yIndex, value]].</param>
+    public PositionFrequencyDto(Guid gridId, Guid? mapId, ICollection<ICollection<float>> frequencies)
     {
         GridId = gridId;
+        MapId = mapId;
         Frequencies = frequencies;
     }
 

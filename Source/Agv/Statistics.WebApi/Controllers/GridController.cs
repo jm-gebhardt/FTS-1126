@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using System.ComponentModel.DataAnnotations;
+using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
 using Gebhardt.StoreWare.Agv.Statistics.Messages.Commands;
 using Gebhardt.StoreWare.Agv.Statistics.Messages.Requests;
@@ -14,7 +15,7 @@ namespace Gebhardt.StoreWare.Agv.Statistics.WebApi.Controllers;
 [ApiExplorerSettings(GroupName = RestApiGroup.GroupName)]
 public class GridController : Controller
 {
-    private readonly IRequestClient<GetPositionFrequenciesForGrid> _getPositionFrequencyClient;
+    private readonly IRequestClient<GetPositionFrequencies> _getPositionFrequencyClient;
     private readonly IRequestClient<GetGrids> _getGridsClient;
     private readonly IRequestClient<AddGrid> _addGridClient;
     private readonly IMapper _mapper;
@@ -23,7 +24,7 @@ public class GridController : Controller
     public GridController(
         IMapper mapper,
         IRequestClient<GetGrids> getGridsRequestClient,
-        IRequestClient<GetPositionFrequenciesForGrid> positionFrequencyClient,
+        IRequestClient<GetPositionFrequencies> positionFrequencyClient,
         IRequestClient<AddGrid> addGridRequestClient)
     {
         _mapper = mapper;
@@ -59,13 +60,17 @@ public class GridController : Controller
     /// <summary>
     /// Get the position frequencies heatmap for the given grid.
     /// </summary>
-    /// <param name="gridId">The grid id.</param>
+    /// <param name="gridId">The CorrelationId of the Grid.</param>
+    /// <param name="mapId">The CorrelationId of the Map.</param>
+    /// <param name="fromDate">The UTC from Date, only items with a greater CreatedDate will be considered.</param>
+    /// <param name="toDate">The UTC to Date, only items with a less CreatedDate will be considered.</param>
     /// <response code="200">Ok</response>
     [HttpGet]
     [Route("/grid/{gridId:guid}/positionFrequency")]
-    public async Task<ActionResult<PositionFrequencyDto>> GetPositionFrequency(Guid gridId)
+    public async Task<ActionResult<PositionFrequencyDto>> GetPositionFrequency(Guid gridId, [Required] Guid mapId, DateTime? fromDate, DateTime? toDate)
     {
-        Response<GotPositionFrequenciesForGrid> response = await _getPositionFrequencyClient.GetResponse<GotPositionFrequenciesForGrid>(new GetPositionFrequenciesForGrid(gridId));
+        Response<GotPositionFrequencies> response = await _getPositionFrequencyClient.GetResponse<GotPositionFrequencies>(
+            new GetPositionFrequencies(gridId, mapId, fromDate, toDate));
         var positionFrequency = _mapper.Map<PositionFrequencyDto>(response.Message.PositionFrequency);
         return Ok(positionFrequency);
     }

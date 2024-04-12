@@ -5,12 +5,12 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 namespace Gebhardt.StoreWare.Agv.Statistics.Persistence.Ef.DataAccess.Configuration;
 
 /// <inheritdoc />
-public class AgvGridPositionEntityConfiguration : IEntityTypeConfiguration<AgvGridPosition>
+public class AgvGridPositionEntityConfiguration : IEntityTypeConfiguration<GridAgvPosition>
 {
     /// <inheritdoc />
-    public void Configure(EntityTypeBuilder<AgvGridPosition> builder)
+    public void Configure(EntityTypeBuilder<GridAgvPosition> builder)
     {
-        builder.ToTable("StatisticsGridPositions");
+        builder.ToTable("StatisticsGridAgvPositions");
         builder.HasKey(a => a.PositionId);
         builder.Property(m => m.GridId);
     }
