@@ -1,3 +1,6 @@
+using System.Numerics;
+using Gebhardt.StoreWare.Agv.Common.Extensions;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 
 namespace Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
@@ -157,6 +160,25 @@ public static class AgvGraphGenerator
     public static AgvGraph Generate(IEnumerable<GraphNode> nodes, IEnumerable<GraphEdge> edges)
     {
         return new AgvGraph(Guid.NewGuid(), nodes.ToList(), edges.ToList());
+    }
+
+    public static GraphEdge CreateSlantedEdge(string fromNodeId, string toNodeId, float exitAngle, double exitDistance, GraphNode[] nodes)
+    {
+        var sourceNode = nodes.Single(n => n.Id == fromNodeId);
+        var targetNode = nodes.Single(n => n.Id == toNodeId);
+        double length = new Slanted(sourceNode.AsVector3(), targetNode.AsVector3(), exitAngle, exitDistance).GetLength();
+        return GraphEdge.CreateSlanted(fromNodeId, toNodeId, (float)length, exitAngle, exitDistance);
+    }
+
+    public static GraphEdge CreatePolypathEdge(string fromNodeId, string toNodeId, List<EdgeCoefficient> pathPoints, GraphNode[] nodes)
+    {
+        var sourceNode = nodes.Single(n => n.Id == fromNodeId).AsVector3();
+        var targetNode = nodes.Single(n => n.Id == toNodeId).AsVector3();
+        List<Vector3> points = [sourceNode];
+        points.AddRange(pathPoints.Select(c => new Vector3((float)c.X!, (float)c.Y!, 0f)));
+        points.Add(targetNode);
+        double length = new Polypath(points).GetLength();
+        return GraphEdge.CreatePolypath(fromNodeId, toNodeId, (float)length, pathPoints);
     }
 }
 

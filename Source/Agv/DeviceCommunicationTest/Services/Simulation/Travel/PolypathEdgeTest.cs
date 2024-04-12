@@ -4,12 +4,12 @@ using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
-using Polypath = Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Travel.Polypath;
+using Polypath = Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Travel.PolypathEdge;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation.Travel;
 
 [TestClass]
-public class PolypathTest
+public class PolypathEdgeTest
 {
     ///////// Graph with polypath /////////////////
     // 0 ---- 1 ---- 2 ---- 3 ---- 4 ---- 5 ---- //

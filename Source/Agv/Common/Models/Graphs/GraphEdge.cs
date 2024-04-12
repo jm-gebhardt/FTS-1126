@@ -1,4 +1,5 @@
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Utilities;
 using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.Common.Models.Graphs;
@@ -248,5 +249,66 @@ public class GraphEdge : IEquatable<GraphEdge>
             throw new ArgumentException($"Polypath definition has too many coefficients: {pathPoints.Count} > 10");
         }
         return new GraphEdge(fromNodeId, toNodeId, length, id ?? Guid.NewGuid(), EdgeType.Polypath, pathPoints);
+    }
+
+    /// <summary>
+    /// Get subsections of edge for <see cref="EdgeType.Polypath"/> and <see cref="EdgeType.Slanted"/>.
+    /// </summary>
+    /// <param name="sourceNode">The source <see cref="GraphNode"/>> of the edge.</param>
+    /// <param name="targetNode">The target <see cref="GraphNode"/>> of the edge.</param>
+    /// <returns></returns>
+    public (List<GraphEdge> sections, List<GraphNode> virtualNodes) GetSections(GraphNode sourceNode, GraphNode targetNode)
+    {
+        (List<GraphEdge> sections, List<GraphNode> virtualNodes) empty = new([], []);
+        return Variant switch
+        {
+            EdgeType.Polypath => GetPolyPathSections(sourceNode, targetNode),
+            EdgeType.Slanted => GetSlantedSections(sourceNode, targetNode),
+            _ => empty
+        };
+    }
+
+    private (List<GraphEdge> sections, List<GraphNode> virtualNodes) GetPolyPathSections(GraphNode sourceNode, GraphNode targetNode)
+    {
+        var source = sourceNode;
+        var sections = new List<GraphEdge>();
+        var virtualNodes = new List<GraphNode>();
+        List<EdgeCoefficient> controlPoints = VariantParameters.ToList();
+        GraphEdge? section;
+        foreach (var controlPoint in controlPoints.Select((edgeCoefficient, index) => new { edgeCoefficient, index }))
+        {
+            var target = new GraphNode(Guid.NewGuid().ToString()) { X = (float)controlPoint.edgeCoefficient.X!, Y = (float)controlPoint.edgeCoefficient.Y! };
+            virtualNodes.Add(target);
+            section = CreateDirect(source.Id, target.Id, (float)Mathematics.EuclideanDistance(source, target), Guid.NewGuid());
+            sections.Add(section);
+            source = target;
+        }
+        section = CreateDirect(source.Id, targetNode.Id, (float)Mathematics.EuclideanDistance(source, targetNode), Guid.NewGuid());
+        sections.Add(section);
+        return (sections, virtualNodes);
+    }
+
+    private (List<GraphEdge> sections, List<GraphNode> virtualNodes) GetSlantedSections(GraphNode sourceNode, GraphNode targetNode)
+    {
+        var source = sourceNode;
+        var sections = new List<GraphEdge>();
+        GraphEdge? section;
+        double angle = (double)VariantParameters.First().Scalar!;
+        double distance = (double)VariantParameters.Last().Scalar!;
+        double outAngle = 2 * Math.PI + angle; // 
+        List<GraphNode> virtualNodes =
+        [
+            new GraphNode(Guid.NewGuid().ToString()) { X = sourceNode.X - (float)(distance * Math.Sin(angle)), Y = sourceNode.Y - (float)(distance * Math.Cos(angle)) },
+            new GraphNode(Guid.NewGuid().ToString()) { X = targetNode.X + (float)(distance * Math.Sin(outAngle)), Y = targetNode.Y + (float)(distance * Math.Cos(outAngle)) }
+        ];
+        foreach (var virtualNode in virtualNodes)
+        {
+            section = CreateDirect(source.Id, virtualNode.Id, (float)Mathematics.EuclideanDistance(source, virtualNode), Guid.NewGuid());
+            sections.Add(section);
+            source = virtualNode;
+        }
+        section = CreateDirect(source.Id, targetNode.Id, (float)Mathematics.EuclideanDistance(source, targetNode), Guid.NewGuid());
+        sections.Add(section);
+        return (sections, virtualNodes);
     }
 }

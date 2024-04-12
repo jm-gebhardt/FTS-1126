@@ -507,4 +507,283 @@ public class AStarTest
         route.Nodes.Length.ShouldBe(3);
         route.Nodes.ShouldContain("Bez");
     }
+
+    [TestMethod]
+    public void CalculateRoute_LongerPolyPathRoute_UsesDirectEdges()
+    {
+        /*
+                Sketched graph:
+
+                       0      1      2      3
+
+                0      1--*
+                        \ |
+                          *--*
+                           \ |
+                1           D/P--*---3
+                               \ |
+                                 |
+                                 | \
+                2                *---4
+
+        
+                3
+
+                Key:
+                - "1", "P", "D", "3", "4" are nodes (representing "01", "02Poly", "02dir", "03", "04" respectively).
+                - "-", "\" and "|" represent edge connections.
+                - "*" represents a control point in a polypath edge.
+       */
+
+        var nodes = new List<GraphNode>
+        {
+            new("01") { X = 0, Y = 0, Z = 0 },
+            new("02Poly") { X = 1, Y = 1, Z = 0 }, // Node duplication to differentiate the chosen path.
+            new("02Dir") { X = 1, Y = 1, Z = 0 },
+            new("03") { X = 1, Y = 2, Z = 0 },
+            new("04") { X = 2, Y = 2, Z = 0 }
+        };
+        var graph = new AgvGraph(
+            Guid.NewGuid(),
+            nodes,
+            [
+                GraphEdge.CreateDirect("01", "02Dir", (float)Math.Sqrt(2)),
+                GraphEdge.CreateDirect("02Dir", "03"),
+                GraphEdge.CreateDirect("02Dir", "04", (float)Math.Sqrt(2)),
+                AgvGraphGenerator.CreatePolypathEdge("01",
+                    "02Poly",
+                    [
+                        new EdgeCoefficient(0.5, 0),
+                        new EdgeCoefficient(0.5, 0.5),
+                        new EdgeCoefficient(1, 0.5)
+                    ],
+                    [.. nodes]),
+                GraphEdge.CreateDirect("02Poly", "03"),
+                AgvGraphGenerator.CreatePolypathEdge("02Poly",
+                    "04",
+                    [
+                        new EdgeCoefficient(1.5, 1),
+                        new EdgeCoefficient(1.5, 2)
+                    ],
+                    [.. nodes])
+            ]
+        );
+
+        var aStar = new AStar(graph, _slowTurnAgvData);
+
+        var route = aStar.CalculateRoute("01", "03");
+
+        route.ShouldNotBeNull();
+        route.Nodes.Length.ShouldBe(3);
+        route.Nodes.ShouldContain("02Dir");
+
+        var route2 = aStar.CalculateRoute("01", "04");
+
+        route2.ShouldNotBeNull();
+        route2.Nodes.Length.ShouldBe(3);
+        route2.Nodes.ShouldContain("02Dir");
+    }
+
+    [TestMethod]
+    public void CalculateRoute_ShorterPolyPathRoute_UsesPolyPath()
+    {
+        /*
+                Sketched graph:
+
+                       0      1      2      3
+
+                0      1 -----5
+                        \     |
+                          *   |
+                           \  |
+                1           D/P------3
+                               \     |
+                                 *   |
+                                   \ |
+                2                    4
+
+        
+                3
+
+                Key:
+                - "1", "P", "D", "3", "4", "5" are nodes (representing "01", "02Poly", "02dir", "03", "04", "05" respectively).
+                - "-", "\" and "|" represent edge connections.
+                - "*" represents a control point in a polypath edge.
+       */
+
+        var nodes = new List<GraphNode>
+        {
+            new("01") { X = 0, Y = 0, Z = 0 },
+            new("02Poly") { X = 1, Y = 1, Z = 0 }, // Node duplication to differentiate the chosen path.
+            new("02Dir") { X = 1, Y = 1, Z = 0 },
+            new("03") { X = 1, Y = 2, Z = 0 },
+            new("04") { X = 2, Y = 2, Z = 0 },
+            new("05") { X = 1, Y = 0, Z = 0 }
+        };
+        var graph = new AgvGraph(
+            Guid.NewGuid(),
+            nodes,
+            [
+                GraphEdge.CreateDirect("01", "05"),
+                GraphEdge.CreateDirect("02Dir", "03"),
+                GraphEdge.CreateDirect("02Poly", "03"),
+                GraphEdge.CreateDirect("03", "04"),
+                GraphEdge.CreateDirect("05", "02Dir"),
+                AgvGraphGenerator.CreatePolypathEdge("01",
+                    "02Poly",
+                    [
+                        new EdgeCoefficient(0.5, 0.5)
+                    ],
+                    [.. nodes]),
+                AgvGraphGenerator.CreatePolypathEdge("02Poly",
+                    "04",
+                    [
+                        new EdgeCoefficient(1.5, 1.5)
+                    ],
+                    [.. nodes])
+            ]
+        );
+
+        var aStar = new AStar(graph, _slowTurnAgvData);
+
+        var route = aStar.CalculateRoute("01", "03");
+
+        route.ShouldNotBeNull();
+        route.Nodes.Length.ShouldBe(3);
+        route.Nodes.ShouldContain("02Poly");
+
+        var route2 = aStar.CalculateRoute("01", "04");
+
+        route2.ShouldNotBeNull();
+        route2.Nodes.Length.ShouldBe(3);
+        route2.Nodes.ShouldContain("02Poly");
+    }
+
+    [TestMethod]
+    public void CalculateRoute_LongerSlantedRoute_UsesDirectEdges()
+    {
+        /*
+                Sketched graph:
+
+                       0      1      2      3
+
+                0      1----*
+                        \  /
+                          \
+                         /  \
+                1       *----D/S---*-3
+                               \  /
+                                 \
+                                /  \
+                2              *-----4
+
+        
+                3
+
+                Key:
+                - "1", "S", "D", "3", "4" are nodes (representing "01", "02Slant", "02dir", "03", "04" respectively).
+                - "-", "\" and "|" represent edge connections.
+                - "*" the location of the exit distance in a slanted edge.
+       */
+        const float west = 3f * (float)Math.PI / 2f;
+        var nodes = new List<GraphNode>
+        {
+            new("01") { X = 0, Y = 0, Z = 0 },
+            new("02Slant") { X = 1, Y = 1, Z = 0 }, // Node duplication to differentiate the chosen path.
+            new("02Dir") { X = 1, Y = 1, Z = 0 },
+            new("03") { X = 1, Y = 2, Z = 0 },
+            new("04") { X = 2, Y = 2, Z = 0 }
+        };
+        var graph = new AgvGraph(
+            Guid.NewGuid(),
+            nodes,
+            [
+                GraphEdge.CreateDirect("01", "02Dir", (float)Math.Sqrt(2)),
+                GraphEdge.CreateDirect("02Dir", "03"),
+                GraphEdge.CreateDirect("02Dir", "04", (float)Math.Sqrt(2)),
+                AgvGraphGenerator.CreateSlantedEdge("01", "02Slant", west, 0.9, [.. nodes]),
+                GraphEdge.CreateDirect("02Slant", "03"),
+                AgvGraphGenerator.CreateSlantedEdge("02Slant", "04", west, 0.9, [.. nodes])
+            ]
+        );
+
+        var aStar = new AStar(graph, _slowTurnAgvData);
+
+        var route = aStar.CalculateRoute("01", "03");
+
+        route.ShouldNotBeNull();
+        route.Nodes.Length.ShouldBe(3);
+        route.Nodes.ShouldContain("02Dir");
+
+        var route2 = aStar.CalculateRoute("01", "04");
+
+        route2.ShouldNotBeNull();
+        route2.Nodes.Length.ShouldBe(3);
+        route2.Nodes.ShouldContain("02Dir");
+    }
+
+    [TestMethod]
+    public void CalculateRoute_ShorterSlantedRoute_UsesSlanted()
+    {
+        /*
+                Sketched graph:
+
+                       0      1      2      3
+
+                0      1 *----5
+                          \   |
+                           \  |
+                           \  |
+                1           *D/S*----3
+                                 \   |
+                                  \  |
+                                   \ |
+                2                   *4
+
+        
+                3
+
+                Key:
+                - "1", "S", "D", "3", "4", "5" are nodes (representing "01", "02Slant", "02dir", "03", "04", "05" respectively).
+                - "-", "\" and "|" represent edge connections.
+                - "*" represents the location of the exit distance in a slanted edge.
+       */
+        const float west = 3f * (float)Math.PI / 2f;
+        var nodes = new List<GraphNode>
+        {
+            new("01") { X = 0, Y = 0, Z = 0 },
+            new("02Slant") { X = 1, Y = 1, Z = 0 }, // Node duplication to differentiate the chosen path.
+            new("02Dir") { X = 1, Y = 1, Z = 0 },
+            new("03") { X = 1, Y = 2, Z = 0 },
+            new("04") { X = 2, Y = 2, Z = 0 },
+            new("05") { X = 1, Y = 0, Z = 0 }
+        };
+        var graph = new AgvGraph(
+            Guid.NewGuid(),
+            nodes,
+            [
+                GraphEdge.CreateDirect("01", "05"),
+                GraphEdge.CreateDirect("02Dir", "03"),
+                GraphEdge.CreateDirect("02Slant", "03"),
+                GraphEdge.CreateDirect("03", "04"),
+                GraphEdge.CreateDirect("05", "02Dir"),
+                AgvGraphGenerator.CreateSlantedEdge("01", "02Slant", west, 0.0, [.. nodes]),
+                AgvGraphGenerator.CreateSlantedEdge("02Slant", "04", west, 0.0, [.. nodes])
+            ]
+        );
+
+        var aStar = new AStar(graph, _slowTurnAgvData);
+
+        var route = aStar.CalculateRoute("01", "03");
+
+        route.ShouldNotBeNull();
+        route.Nodes.Length.ShouldBe(3);
+        route.Nodes.ShouldContain("02Slant");
+
+        var route2 = aStar.CalculateRoute("01", "04");
+
+        route2.ShouldNotBeNull();
+        route2.Nodes.Length.ShouldBe(3);
+        route2.Nodes.ShouldContain("02Slant");
+    }
 }

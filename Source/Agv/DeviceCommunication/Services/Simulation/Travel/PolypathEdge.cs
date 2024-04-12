@@ -1,13 +1,12 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
-using Gebhardt.StoreWare.Agv.Common.Utilities;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Travel;
 
 /// <summary>
 /// Represents a <see cref="BaseEdge"/> of type <see cref="EdgeType.Polypath"/>.
 /// </summary>
-public class Polypath : BaseEdge
+public class PolypathEdge : BaseEdge
 {
     /// <summary>
     /// The sections in-between the control points.
@@ -16,24 +15,18 @@ public class Polypath : BaseEdge
 
     private DirectEdge _currentSection;
 
-    /// <inheritdoc cref="Polypath"/>>
-    public Polypath(GraphEdge edge, GraphNode sourceNode, GraphNode targetNode, bool agvGoesBackwards = false) : base(edge, sourceNode, targetNode)
+    /// <inheritdoc cref="PolypathEdge"/>>
+    public PolypathEdge(GraphEdge edge, GraphNode sourceNode, GraphNode targetNode, bool agvGoesBackwards = false) : base(edge, sourceNode, targetNode)
     {
-        List<EdgeCoefficient> controlPoints = edge.VariantParameters.ToList();
-        var source = SourceNode;
-        GraphEdge? sectionEdge;
-        DirectEdge? section;
-        foreach (var controlPoint in controlPoints.Select((edgeCoefficient, index) => new { edgeCoefficient, index }))
+        (List<GraphEdge> sections, List<GraphNode> nodes) = edge.GetSections(sourceNode, targetNode);
+        nodes.AddRange([sourceNode, targetNode] );
+        foreach (var section in sections)
         {
-            var target = new GraphNode(controlPoint.index.ToString()) { X = (float)controlPoint.edgeCoefficient.X!, Y = (float)controlPoint.edgeCoefficient.Y! };
-            sectionEdge = CreateDirect(source.Id, target.Id, (float)Mathematics.EuclideanDistance(source, target), Guid.NewGuid());
-            section = new DirectEdge(sectionEdge, source, target, agvGoesBackwards && Sections.Count == 0);
-            Sections.Add(section);
-            source = target;
+            var source = nodes.Single(n => n.Id == section.FromNodeId);
+            var target = nodes.Single(n => n.Id == section.ToNodeId);
+            var directEdge = new DirectEdge(section, source, target, agvGoesBackwards && Sections.Count == 0);
+            Sections.Add(directEdge);
         }
-        sectionEdge = CreateDirect(source.Id, TargetNode.Id, (float)Mathematics.EuclideanDistance(source, TargetNode), Guid.NewGuid());
-        section = new DirectEdge(sectionEdge, source, TargetNode);
-        Sections.Add(section);
         _currentSection = Sections.First();
         ReferenceTarget = _currentSection.TargetNode;
         AgvOrientation = Sections.Last().AgvOrientation;

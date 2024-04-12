@@ -1,6 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
-using Gebhardt.StoreWare.Agv.Common.Utilities;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Travel;
 
@@ -15,27 +14,15 @@ public class SlantedEdge : BaseEdge
     /// <inheritdoc cref="SlantedEdge"/>>
     public SlantedEdge(GraphEdge edge, GraphNode sourceNode, GraphNode targetNode, bool agvGoesBackwards = false) : base(edge, sourceNode, targetNode)
     {
-        double angle = (double)edge.VariantParameters.First().Scalar!;
-        double distance = (double)edge.VariantParameters.Last().Scalar!;
-        double outAngle = 2 * Math.PI + angle; // 
-        var virtualNodes = new List<GraphNode>
+        (List<GraphEdge> sections, List<GraphNode> nodes) = edge.GetSections(sourceNode, targetNode);
+        nodes.AddRange([sourceNode, targetNode]);
+        foreach (var section in sections)
         {
-            new("1") { X = sourceNode.X - (float)(distance * Math.Sin(angle)), Y = sourceNode.Y - (float)(distance * Math.Cos(angle)) },
-            new("2") { X = targetNode.X + (float)(distance * Math.Sin(outAngle)), Y = targetNode.Y + (float)(distance * Math.Cos(outAngle)) }
-        };
-        var source = SourceNode;
-        GraphEdge? sectionEdge;
-        DirectEdge? section;
-        foreach (var virtualNode in virtualNodes)
-        {
-            sectionEdge = CreateDirect(source.Id, virtualNode.Id, (float)Mathematics.EuclideanDistance(source, virtualNode), Guid.NewGuid());
-            section = new DirectEdge(sectionEdge, source, virtualNode, agvGoesBackwards && _sections.Count == 0);
-            _sections.Add(section);
-            source = virtualNode;
+            var source = nodes.Single(n => n.Id == section.FromNodeId);
+            var target = nodes.Single(n => n.Id == section.ToNodeId);
+            var directEdge = new DirectEdge(section, source, target, agvGoesBackwards && _sections.Count == 0);
+            _sections.Add(directEdge);
         }
-        sectionEdge = CreateDirect(source.Id, TargetNode.Id, (float)Mathematics.EuclideanDistance(source, TargetNode), Guid.NewGuid());
-        section = new DirectEdge(sectionEdge, source, TargetNode);
-        _sections.Add(section);
         _currentSection = _sections.First();
         ReferenceTarget = _currentSection.TargetNode;
         AgvOrientation = _sections.Last().AgvOrientation;

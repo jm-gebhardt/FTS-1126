@@ -126,6 +126,8 @@ public class AStar : BaseRouteAlgorithm
 
     private readonly Dictionary<string, ANode> _nodes;
 
+    private Dictionary<string, ANode> _virtualNodes = new();
+
     private readonly AgvData? _agvData;
 
     private double MaxVelocityTurnOnSpot => _agvData?.MaxVelocityTurnOnSpot ?? MaxVelocityTurnOnSpotFallback;
@@ -174,6 +176,11 @@ public class AStar : BaseRouteAlgorithm
         return min;
     }
 
+    private ANode GetNodeById(string nodeId)
+    {
+        return _nodes.Keys.Contains(nodeId) ? _nodes[nodeId] : _virtualNodes[nodeId];
+    }
+
     /// <summary>
     /// Main function of the A* algorithm.
     /// </summary>
@@ -188,30 +195,74 @@ public class AStar : BaseRouteAlgorithm
                 continue;
             }
 
-            double time = CalculateCosts(current, edge, out double finalVelocity, out double decelerationCost);
-
-            double g = current.G + time;
-            var successor = _nodes[edge.ToNodeId];
-
-            if (_openList.ContainsKey(successor.Node.Id) && g >= successor.G)
+            (List<GraphEdge> sections, List<GraphNode> virtualNodes) = edge.GetSections(current.Node, _nodes[edge.ToNodeId].Node);
+            if (sections.Count == 0)
             {
+                CalculateCostsForSimpleEdge(current, destination, edge);
                 continue;
             }
+            CalculateCostsForCompositeEdge(current, destination, sections, virtualNodes);
+        }
+    }
 
-            successor.Predecessor = current.Node.Id;
-            successor.EntryVector = CalculateExitVector(edge);
-            successor.DecelerationCost = decelerationCost;
-            successor.EntryVelocity = finalVelocity;
-            successor.G = g;
+    private void CalculateCostsForSimpleEdge(ANode current, ANode destination, GraphEdge edge)
+    {
+        double time = CalculateCosts(current, edge, out double finalVelocity, out double decelerationCost);
+        double g = current.G + time;
+        var successor = _nodes[edge.ToNodeId];
 
-            if (successor.H == 0f && successor != destination)
+        if (_openList.ContainsKey(successor.Node.Id) && g >= successor.G)
+        {
+            return;
+        }
+
+        successor.Predecessor = current.Node.Id;
+        successor.EntryVector = CalculateExitVector(edge);
+        successor.DecelerationCost = decelerationCost;
+        successor.EntryVelocity = finalVelocity;
+        successor.G = g;
+
+        if (successor.H == 0f && successor != destination)
+        {
+            // Estimated time to final destination at maximum velocity.
+            successor.H = successor.DistanceTo(destination) / MaxVelocityStraight;
+        }
+
+        _openList.TryAdd(successor.Node.Id, successor);
+    }
+
+    private void CalculateCostsForCompositeEdge(ANode current, ANode destination, List<GraphEdge> sections, List<GraphNode> virtualNodes)
+    {
+        _virtualNodes = virtualNodes.ToDictionary(n => n.Id, n => new ANode(n));
+        var currentNode = current;
+        double time = 0;
+        foreach (var section in sections)
+        {
+            double sectionTime = CalculateCosts(currentNode, section, out double finalVelocity, out double decelerationCost);
+            time += sectionTime;
+            string previousNodeId = currentNode.Node.Id;
+            currentNode = GetNodeById(section.ToNodeId);
+
+            currentNode.Predecessor = previousNodeId;
+            currentNode.EntryVector = CalculateExitVector(section);
+            currentNode.DecelerationCost = decelerationCost;
+            currentNode.EntryVelocity = finalVelocity;
+            currentNode.G += sectionTime;
+            if (currentNode.H == 0f && currentNode != destination)
             {
                 // Estimated time to final destination at maximum velocity.
-                successor.H = successor.DistanceTo(destination) / MaxVelocityStraight;
+                currentNode.H = currentNode.DistanceTo(destination) / MaxVelocityStraight;
             }
-
-            _openList.TryAdd(successor.Node.Id, successor);
         }
+        currentNode.G = current.G;
+        currentNode.Predecessor = current.Node.Id;
+        double g = currentNode.G + time;
+        if (_openList.ContainsKey(currentNode.Node.Id) && g >= currentNode.G)
+        {
+            return;
+        }
+        currentNode.G = g;
+        _openList.TryAdd(currentNode.Node.Id, currentNode);
     }
 
     /// <summary>
@@ -321,8 +372,8 @@ public class AStar : BaseRouteAlgorithm
     /// <param name="edge">The edge.</param>
     private Vector2 CalculateExitVector(GraphEdge edge)
     {
-        var fromNodeVector = _nodes[edge.FromNodeId].AsVector2();
-        var toNodeVector = _nodes[edge.ToNodeId].AsVector2();
+        var fromNodeVector = GetNodeById(edge.FromNodeId).AsVector2();
+        var toNodeVector = GetNodeById(edge.ToNodeId).AsVector2();
         return edge.Variant switch
         {
             EdgeType.Direct => toNodeVector - fromNodeVector,
@@ -339,8 +390,8 @@ public class AStar : BaseRouteAlgorithm
     /// <param name="edge">The edge.</param>
     private Vector2 CalculateEntryVector(GraphEdge edge)
     {
-        var fromNodeVector = _nodes[edge.FromNodeId].AsVector2();
-        var toNodeVector = _nodes[edge.ToNodeId].AsVector2();
+        var fromNodeVector = GetNodeById(edge.FromNodeId).AsVector2();
+        var toNodeVector = GetNodeById(edge.ToNodeId).AsVector2();
         return edge.Variant switch
         {
             EdgeType.Direct => toNodeVector - fromNodeVector,
