@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
+using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
 using Graph = Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent.Graph;
 using GraphEdge = Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent.GraphEdge;
 

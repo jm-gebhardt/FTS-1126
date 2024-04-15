@@ -1,11 +1,11 @@
 ﻿using FluentValidation;
 using Gebhardt.StoreWare.Agv.Common.Dictionaries;
+using Gebhardt.StoreWare.Agv.Common.Domain.Models;
+using Gebhardt.StoreWare.Agv.Common.Domain.Utilities;
 using Gebhardt.StoreWare.Agv.Common.MassTransit;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.Common.Services.Filters;
 using Gebhardt.StoreWare.Agv.Common.Services.Significance;
-using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.CmdOptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.BackgroundServices;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain;

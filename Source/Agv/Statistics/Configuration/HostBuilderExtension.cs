@@ -1,14 +1,14 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Configurations;
 using Gebhardt.StoreWare.Agv.Common.Configurations.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Dictionaries;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Domain.Models;
+using Gebhardt.StoreWare.Agv.Common.Domain.SemaphoreProviders;
+using Gebhardt.StoreWare.Agv.Common.Domain.Utilities;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.Filters;
-using Gebhardt.StoreWare.Agv.Common.SemaphoreProviders;
 using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.Common.Services.Filters;
 using Gebhardt.StoreWare.Agv.Common.Services.Significance;
-using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.Statistics.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.Statistics.Persistence.Ef.DataAccess;
 using Gebhardt.StoreWare.Agv.Statistics.Persistence.Ef.Repositories;

@@ -1,4 +1,4 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Persistence;
+﻿using Gebhardt.StoreWare.Agv.Common.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.Statistics.Domain.Models;
 using Gebhardt.StoreWare.Agv.Statistics.Domain.ReadModels;
 

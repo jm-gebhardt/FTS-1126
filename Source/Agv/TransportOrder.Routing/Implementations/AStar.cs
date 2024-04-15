@@ -1,7 +1,7 @@
 ﻿using System.Numerics;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
-using Gebhardt.StoreWare.Agv.Common.Utilities;
+using Gebhardt.StoreWare.Agv.Common.Domain.Models;
+using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
+using Gebhardt.StoreWare.Agv.Common.Domain.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Routing.Base;
 using Gebhardt.StoreWare.Agv.TransportOrder.Routing.Models;
 using JetBrains.Annotations;

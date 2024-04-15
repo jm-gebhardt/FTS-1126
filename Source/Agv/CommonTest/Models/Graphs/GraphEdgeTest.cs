@@ -1,9 +1,8 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
-using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
+﻿using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 using System.Numerics;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
 
 namespace Gebhardt.StoreWare.Agv.CommonTest.Models.Graphs;
 

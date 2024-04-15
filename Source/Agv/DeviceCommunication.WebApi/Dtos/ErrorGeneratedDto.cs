@@ -1,5 +1,5 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using Gebhardt.StoreWare.Agv.Common.WebApi;
+﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models;
+using Gebhardt.StoreWare.Agv.Common.Messages;
 using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.DeviceCommunication.WebApi.Dtos;

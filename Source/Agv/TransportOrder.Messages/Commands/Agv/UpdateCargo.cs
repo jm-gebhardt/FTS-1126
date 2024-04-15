@@ -1,4 +1,4 @@
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Domain.Models;
 using MassTransit;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;

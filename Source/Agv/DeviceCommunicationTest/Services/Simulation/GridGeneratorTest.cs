@@ -1,4 +1,4 @@
-using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
+using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graphs;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Maps;
 using Microsoft.VisualStudio.TestTools.UnitTesting;

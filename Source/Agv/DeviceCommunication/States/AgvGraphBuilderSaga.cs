@@ -1,4 +1,4 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
+﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.MqttMessages;
 using JetBrains.Annotations;
@@ -69,7 +69,7 @@ public class AgvGraphBuilderSaga : SagaStateMachineInstance, CorrelatedBy<Guid>
     }
 
     /// <summary>
-    /// Merge graph and station list into an <see cref="Common.Models.Graphs.AgvGraph"/>.
+    /// Merge graph and station list into an <see cref="Common.Domain.Models.Graphs.AgvGraph"/>.
     /// </summary>
     /// <exception cref="InvalidOperationException">Station list/graph missing or validation issue..</exception>
     public void MergeGraph()

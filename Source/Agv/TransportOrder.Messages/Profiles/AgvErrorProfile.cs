@@ -1,5 +1,5 @@
 using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Domain.Models;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles;
 

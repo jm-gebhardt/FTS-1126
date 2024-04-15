@@ -1,5 +1,5 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Exceptions;
-using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
+﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
+using Gebhardt.StoreWare.Agv.Common.Exceptions;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Routing.Exceptions;
 

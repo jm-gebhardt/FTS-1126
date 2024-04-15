@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.WebApi;
+using Gebhardt.StoreWare.Agv.Common.Messages;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles;
 

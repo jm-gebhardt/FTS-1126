@@ -1,5 +1,5 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Exceptions;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models;
+using Gebhardt.StoreWare.Agv.Common.Exceptions;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
 

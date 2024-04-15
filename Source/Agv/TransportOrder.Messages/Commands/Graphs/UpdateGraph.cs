@@ -1,4 +1,4 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
+﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
 using MassTransit;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Graphs;
@@ -9,4 +9,4 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Graphs;
 /// <param name="CorrelationId"></param>
 /// <param name="Graph">The new (global) Graph.</param>
 /// <param name="Maps">Optionally you can already specify maps.</param>
-public record UpdateGraph(Guid CorrelationId, Graph Graph, List<Common.Models.Graphs.Map>? Maps = null) : CorrelatedBy<Guid>;
+public record UpdateGraph(Guid CorrelationId, Graph Graph, List<Common.Domain.Models.Graphs.Map>? Maps = null) : CorrelatedBy<Guid>;

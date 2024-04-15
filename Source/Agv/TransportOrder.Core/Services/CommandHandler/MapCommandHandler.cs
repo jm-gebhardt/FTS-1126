@@ -8,7 +8,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
-using Map = Gebhardt.StoreWare.Agv.Common.Models.Graphs.Map;
+using Map = Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs.Map;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.CommandHandler;
 

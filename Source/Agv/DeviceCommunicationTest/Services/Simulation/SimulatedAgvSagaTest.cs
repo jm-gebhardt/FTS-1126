@@ -1,4 +1,4 @@
-using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
+using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.Common.Testing.Time;
 using Gebhardt.StoreWare.Agv.Common.Time;

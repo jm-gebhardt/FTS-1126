@@ -54,7 +54,7 @@ public class GetAgvDataRequestHandler :
     public async Task Consume(ConsumeContext<GetAgvsData> context)
     {
         ICollection<Guid> selectedAgvs = context.Message.CorrelationIds;
-        ICollection<Common.Messages.AgvManagement.AgvData> fetchedData = await _agvDb.Data.GetSelectedAgvDataAsync(selectedAgvs);
+        ICollection<Common.Domain.Models.AgvData> fetchedData = await _agvDb.Data.GetSelectedAgvDataAsync(selectedAgvs);
         if (fetchedData.Count != selectedAgvs.Count)
         {
             throw new AgvsDataBatchQueryException(selectedAgvs.Except(fetchedData.Select(p => p.CorrelationId)).ToList());

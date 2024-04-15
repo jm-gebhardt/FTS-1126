@@ -4,4 +4,4 @@
 /// Provides a command to save a map.
 /// </summary>
 /// <param name="Map">The map.</param>
-public record SaveMap(Common.Models.Graphs.Map Map);
+public record SaveMap(Common.Domain.Models.Graphs.Map Map);

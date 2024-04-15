@@ -1,4 +1,4 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Extensions;
+﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Graphs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Map;

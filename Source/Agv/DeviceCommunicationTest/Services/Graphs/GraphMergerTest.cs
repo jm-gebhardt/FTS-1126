@@ -1,5 +1,5 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.Graphs.Events;
-using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
+﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
+using Gebhardt.StoreWare.Agv.Common.Messages.Graphs.Events;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 

@@ -11,6 +11,6 @@ public class AgvStatusProfile : Profile
     /// <inheritdoc />
     public AgvStatusProfile()
     {
-        CreateMap<AgvStatus, Common.Messages.AgvManagement.AgvStatus>().ReverseMap();
+        CreateMap<AgvStatus, Common.Domain.Models.AgvStatus>().ReverseMap();
     }
 }

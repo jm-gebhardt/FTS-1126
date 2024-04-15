@@ -1,6 +1,6 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
+﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
+using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Messages.Graphs.Requests;
-using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Graphs;

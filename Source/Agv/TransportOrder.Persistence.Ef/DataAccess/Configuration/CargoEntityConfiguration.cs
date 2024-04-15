@@ -1,8 +1,8 @@
-using Gebhardt.StoreWare.Agv.Common.Models;
+using Gebhardt.StoreWare.Agv.Common.Domain.Models;
 using Gebhardt.StoreWare.Agv.Common.Persistence.Ef;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Cargo = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv.Cargo;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess.Configuration;
 

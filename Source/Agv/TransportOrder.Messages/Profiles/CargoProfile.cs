@@ -13,6 +13,6 @@ public class CargoProfile : Profile
     /// <inheritdoc />
     public CargoProfile()
     {
-        CreateMap<Cargo, Common.Messages.AgvManagement.Cargo>().ReverseMap();
+        CreateMap<Cargo, Common.Domain.Models.Cargo>().ReverseMap();
     }
 }

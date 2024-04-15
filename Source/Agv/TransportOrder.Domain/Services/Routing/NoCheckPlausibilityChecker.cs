@@ -1,4 +1,4 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
+﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
 using Gebhardt.StoreWare.Agv.TransportOrder.Routing.Base;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Routing;

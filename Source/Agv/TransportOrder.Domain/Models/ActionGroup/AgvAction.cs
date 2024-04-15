@@ -1,5 +1,5 @@
-using Gebhardt.StoreWare.Agv.Common.Contracts;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+using Gebhardt.StoreWare.Agv.Common.Messages.Contracts;
 using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;

@@ -1,8 +1,8 @@
 ﻿using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Domain.Models;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
 using AgvSettings = Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent.AgvSettings;
-using GraphNode = Gebhardt.StoreWare.Agv.Common.Models.Graphs.GraphNode;
+using GraphNode = Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs.GraphNode;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles;
 

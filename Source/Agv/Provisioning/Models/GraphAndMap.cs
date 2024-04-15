@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
+using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.Provisioning.Models;
 
@@ -11,7 +12,7 @@ internal class GraphAndMap
     /// <summary>
     /// The Graph.
     /// </summary>
-    public Common.Models.Graphs.Graph Graph { get; }
+    public Graph Graph { get; }
 
     /// <summary>
     /// The Map.
@@ -21,7 +22,7 @@ internal class GraphAndMap
     /// <inheritdoc cref="GraphAndMap"/>
     /// <param name="graph">The graph.</param>
     /// <param name="maps">The map.</param>
-    public GraphAndMap(Common.Models.Graphs.Graph graph, List<Map> maps)
+    public GraphAndMap(Graph graph, List<Map> maps)
     {
         Graph = graph;
         Maps = maps;

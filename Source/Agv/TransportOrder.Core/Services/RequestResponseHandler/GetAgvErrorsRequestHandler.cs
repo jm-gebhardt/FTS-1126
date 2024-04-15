@@ -5,7 +5,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agvs.Queries;
 using JetBrains.Annotations;
 using MassTransit;
-using AgvError = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.AgvError;
+using AgvError = Gebhardt.StoreWare.Agv.Common.Domain.Models.AgvError;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
 

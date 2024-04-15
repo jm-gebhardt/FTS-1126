@@ -7,7 +7,7 @@ using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Map = Gebhardt.StoreWare.Agv.Common.Models.Graphs.Map;
+using Map = Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs.Map;
 
 namespace Gebhardt.StoreWare.Agv.Provisioning.Services;
 

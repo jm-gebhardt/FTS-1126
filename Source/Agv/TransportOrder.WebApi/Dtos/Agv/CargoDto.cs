@@ -1,4 +1,4 @@
-using Gebhardt.StoreWare.Agv.Common.Models;
+using Gebhardt.StoreWare.Agv.Common.Domain.Models;
 using JetBrains.Annotations;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;

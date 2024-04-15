@@ -1,4 +1,4 @@
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Domain.Models;
 using JetBrains.Annotations;
 using MassTransit;
 

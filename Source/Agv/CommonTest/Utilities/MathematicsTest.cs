@@ -1,6 +1,6 @@
 ﻿using System.Numerics;
-using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
-using Gebhardt.StoreWare.Agv.Common.Utilities;
+using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
+using Gebhardt.StoreWare.Agv.Common.Domain.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 

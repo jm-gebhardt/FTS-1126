@@ -1,5 +1,5 @@
 ﻿using System.Linq.Expressions;
-using Gebhardt.StoreWare.Agv.Common.Persistence;
+using Gebhardt.StoreWare.Agv.Common.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace Gebhardt.StoreWare.Agv.Statistics.Persistence.Ef.Repositories;

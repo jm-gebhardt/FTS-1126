@@ -1,0 +1,789 @@
+﻿using System.Diagnostics;
+using System.Numerics;
+using Gebhardt.StoreWare.Agv.Common.Domain.Models;
+using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
+using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
+using Gebhardt.StoreWare.Agv.TransportOrder.Routing.Base;
+using Gebhardt.StoreWare.Agv.TransportOrder.Routing.Implementations;
+using Gebhardt.StoreWare.Agv.TransportOrder.Routing.Models;
+using Gebhardt.StoreWare.Agv.TransportOrder.Test.Domain.Services.ActionGroup;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
+using Shouldly;
+
+namespace Gebhardt.StoreWare.Agv.TransportOrder.Test.Routing;
+
+/// <summary>
+/// Test for utility <see cref="AStar"/>.
+/// </summary>
+[TestClass]
+public class AStarTest
+{
+    private readonly AgvGraph? _graph;
+    private readonly AgvGraph? _grid;
+    private readonly AgvGraph _wikiExample;
+    private readonly Mock<IRoutingPlausibilityChecker> _routingPlausibilityCheckerMock;
+
+    private readonly AgvData _agvData = AgvDataGenerator.GenerateAgvData(acceleration: 1, maxVelocityStraight: 1, maxVelocityTurn: 0.9, maxVelocityTurnOnSpot: Math.PI, turnOnSpotThreshold: 0.08726646);
+    private readonly AgvData _slowTurnAgvData = AgvDataGenerator.GenerateAgvData(acceleration: 1, maxVelocityStraight: 1, maxVelocityTurn: 0.9, maxVelocityTurnOnSpot: 0.0174532, turnOnSpotThreshold: 0.08726646);
+
+    private IRoutingPlausibilityChecker RoutingPlausibilityChecker => _routingPlausibilityCheckerMock.Object;
+
+    public AStarTest()
+    {
+        _graph = new AgvGraph(Guid.Empty,
+            new GraphNode[]
+            {
+                new("1") { Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 5f, Z = 0f },
+                new("2") { Type = AgvGraph.NodeType.PickDrop, X = 1f, Y = 5f, Z = 0f },
+                new("3") { Type = AgvGraph.NodeType.PickDrop, X = 1f, Y = 2f, Z = 0f },
+                new("4") { Type = AgvGraph.NodeType.PickDrop, X = 3f, Y = 3f, Z = 0f },
+                new("5") { Type = AgvGraph.NodeType.PickDrop, X = 3f, Y = 6f, Z = 0f },
+                new("6") { Type = AgvGraph.NodeType.PickDrop, X = 3f, Y = 2f, Z = 0f },
+                new("7") { Type = AgvGraph.NodeType.PickDrop, X = 6f, Y = 0f, Z = 0f },
+                new("8") { Type = AgvGraph.NodeType.PickDrop, X = 7f, Y = 1f, Z = 0f },
+                new("9") { Type = AgvGraph.NodeType.PickDrop, X = 8f, Y = 2f, Z = 0f },
+                new("10") { Type = AgvGraph.NodeType.PickDrop, X = 8f, Y = 5f, Z = 0f }
+            },
+            new[]
+            {
+                GraphEdge.CreateDirect("1", "2"),
+                GraphEdge.CreateDirect("1", "4", 4f),
+                GraphEdge.CreateDirect("4", "1", 4f),
+                GraphEdge.CreateDirect("2", "5", 3f),
+                GraphEdge.CreateDirect("3", "5", 5f),
+                GraphEdge.CreateDirect("3", "4", 3f),
+                GraphEdge.CreateDirect("4", "3", 3f),
+                GraphEdge.CreateDirect("3", "6", 2f),
+                GraphEdge.CreateDirect("6", "3", 2f),
+                GraphEdge.CreateDirect("5", "8", 7f),
+                GraphEdge.CreateDirect("8", "5", 7f),
+                GraphEdge.CreateDirect("8", "7"),
+                GraphEdge.CreateDirect("7", "8"),
+                GraphEdge.CreateDirect("9", "8"),
+                GraphEdge.CreateDirect("7", "10", 6f)
+            });
+
+        var map = new List<string>
+        {
+            // --> x [1..50]
+            // 12345678901234567890123456789012345678901234567890
+            "           xxxxxx    xxx    xxx   xx  xx  x x x x ", // 01 |
+            "        x                                         ", // 02 |
+            "        x                                         ", // 03 v
+            "    xxxxx                                         ", // 04
+            "        x  ooooooooooooooooooooooo                ", // 05 y [1..25}
+            "        x  o   o   o   o   o   o o                ", // 06
+            "           o o o o o o o o o o o o                ", // 07
+            "           o o o o o o o o o o o o                ", // 08
+            "           o o o o o o o o o o o o                ", // 09
+            "           o o o o o o o o o o o o                ", // 10
+            "           o o o o o o o o o o o o                ", // 11
+            "           o o o o o o o o o o o o                ", // 12
+            "           o o o o o o o o o o o o                ", // 13
+            "           o o o o o o o o o o o o                ", // 14
+            "           o o o o o o o o o o o o                ", // 15
+            "           o o o o o o o o o o o o                ", // 16
+            "           o o   o   o   o   o   o                ", // 17
+            "           o ooooooooooooooooooooo                ", // 18
+            "                                                  ", // 19
+            "                                                  ", // 20
+            "                                                  ", // 21
+            "                                            xxxxx ", // 22
+            "                                            x   x ", // 23
+            "                                            xxxxx ", // 24
+            "                                                  " // 25
+        }; // 1030 nodes / 3548 edges
+        var nodes = new List<GraphNode>();
+        var edges = new List<GraphEdge>();
+        int x, y = 1;
+        foreach (string line in map)
+        {
+            x = 1;
+            foreach (char c in line)
+            {
+                if (c == ' ')
+                {
+                    var next = new GraphNode($"{x:D2}/{y:D2}") { X = x, Y = y, Z = 0f, Type = AgvGraph.NodeType.WayPoint };
+                    nodes.Add(next);
+                    var prev = nodes.SingleOrDefault(n => n.Id == $"{x - 1:D2}/{y:D2}");
+                    if (prev != null)
+                    {
+                        edges.Add(GraphEdge.CreateDirect(prev.Id, next.Id));
+                        edges.Add(GraphEdge.CreateDirect(next.Id, prev.Id));
+                    }
+                    prev = nodes.SingleOrDefault(n => n.Id == $"{x:D2}/{y - 1:D2}");
+                    if (prev != null)
+                    {
+                        edges.Add(GraphEdge.CreateDirect(prev.Id, next.Id));
+                        edges.Add(GraphEdge.CreateDirect(next.Id, prev.Id));
+                    }
+                }
+                ++x;
+            }
+            ++y;
+        }
+        _grid = new AgvGraph(Guid.Empty, nodes.ToArray(), edges.ToArray());
+
+        _wikiExample = new AgvGraph(Guid.Empty,
+            new GraphNode[]
+            {
+                new("Nairobi") { Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 0f, Z = 0f },
+                new("Tokyo") { Type = AgvGraph.NodeType.PickDrop, X = 42f, Y = 80f, Z = 0f },
+                new("Marseille") { Type = AgvGraph.NodeType.PickDrop, X = 104f, Y = 100f, Z = 0f },
+                new("Berlin") { Type = AgvGraph.NodeType.PickDrop, X = 96f, Y = 60f, Z = 0f },
+                new("Denver") { Type = AgvGraph.NodeType.PickDrop, X = 104f, Y = -10f, Z = 0f },
+                new("Helsinki") { Type = AgvGraph.NodeType.PickDrop, X = 150f, Y = 20f, Z = 0f },
+                new("Rio") { Type = AgvGraph.NodeType.PickDrop, X = 200f, Y = 92f, Z = 0f }
+            },
+            new[]
+            {
+                GraphEdge.CreateDirect("Nairobi", "Tokyo", 70f),
+                GraphEdge.CreateDirect("Nairobi", "Denver", 145f),
+                GraphEdge.CreateDirect("Denver", "Nairobi", 145f),
+                GraphEdge.CreateDirect("Tokyo", "Marseille", 103f),
+                GraphEdge.CreateDirect("Tokyo", "Berlin", 53f),
+                GraphEdge.CreateDirect("Denver", "Helsinki", 84f),
+                GraphEdge.CreateDirect("Marseille", "Rio", 116f),
+                GraphEdge.CreateDirect("Berlin", "Rio", 183f),
+                GraphEdge.CreateDirect("Helsinki", "Rio", 102f)
+            });
+
+        _routingPlausibilityCheckerMock = new Mock<IRoutingPlausibilityChecker>();
+        _routingPlausibilityCheckerMock.Setup(c => c.IsPlausible(It.IsAny<GraphNode>(), It.IsAny<GraphNode>()))
+            .Returns(true);
+    }
+
+    /// <summary>
+    /// Test sorting of <see cref="Route"/>.
+    /// </summary>
+    [TestMethod]
+    public void Test_RouteComparable()
+    {
+        var routes = new List<Route?>
+        {
+            new(9f, Array.Empty<string>()),
+            new(1f, Array.Empty<string>()),
+            null,
+            new(5f, Array.Empty<string>())
+        };
+
+        List<Route?> sorted = routes.OrderByDescending(n => n != null).ThenBy(n => n).ToList();
+        sorted[0]!.Costs.ShouldBe(routes[1]!.Costs, 0.00001f);
+        sorted[1]!.Costs.ShouldBe(routes[3]!.Costs, 0.00001f);
+        sorted[2]!.Costs.ShouldBe(routes[0]!.Costs, 0.00001f);
+        sorted[3].ShouldBeNull();
+    }
+
+    /// <summary>
+    /// Test AStar implementation with example from Wikipedia.
+    /// </summary>
+    [TestMethod]
+    public void Test_AStar_WikipediaExample()
+    {
+        var aStar = new AStar(_wikiExample, _agvData, RoutingPlausibilityChecker);
+
+        var route = aStar.CalculateRoute("Nairobi", "Rio");
+        route.ShouldNotBeNull();
+        route.Nodes.ShouldBe(new[] { "Nairobi", "Tokyo", "Marseille", "Rio" });
+        route.Costs.ShouldBe(291.8725786, 0.00001f);
+    }
+
+    [TestMethod]
+    public void Test_AStar_WikipediaExample_SameSourceDestination()
+    {
+        var aStar = new AStar(_wikiExample, null, RoutingPlausibilityChecker);
+
+        var route = aStar.CalculateRoute("Nairobi", "Nairobi");
+        route.ShouldNotBeNull();
+        route.Nodes.ShouldBe(new[] { "Nairobi" });
+        route.Costs.ShouldBe(0f, 0.00001f);
+    }
+
+    [TestMethod]
+    public void Test_AStar_WikipediaExample_WithCurrentNode()
+    {
+        var aStar = new AStar(_wikiExample, _agvData, RoutingPlausibilityChecker);
+
+        var route = aStar.CalculateRoute("Denver", "Nairobi", "Rio");
+        route.ShouldNotBeNull();
+        route.Nodes.ShouldBe(new[] { "Denver", "Nairobi", "Tokyo", "Marseille", "Rio" });
+        route.Costs.ShouldBe(289 + 145 + 3.3725786, 0.00001f);
+    }
+
+    [TestMethod]
+    public void Test_AStar_WikipediaExample_MultipleWaypoints()
+    {
+        var aStar = new AStar(_wikiExample, _agvData, RoutingPlausibilityChecker);
+
+        string[] waypoints = { "Denver", "Nairobi", "Nairobi", "Rio" }; // (Denver => Nairobi) + (Nairobi => Rio)
+
+        var route = aStar.CalculateRoute(waypoints);
+        route.ShouldNotBeNull();
+        route.Nodes.ShouldBe(new[] { "Denver", "Nairobi", "Tokyo", "Marseille", "Rio" });
+        route.Costs.ShouldBe(289 + 145 + 3.3725786, 0.00001f);
+    }
+
+    /// <summary>
+    /// Test AStar implementation with am example having bidirectional edges.
+    /// </summary>
+    [TestMethod]
+    public void Test_AStarBidirectional_UseGraphSeveralTimes()
+    {
+        var aStar = new AStar(_graph!, _agvData, RoutingPlausibilityChecker);
+
+        var route = aStar.CalculateRoute("1", "10");
+        route.ShouldNotBeNull();
+        route.Costs.ShouldBe(18f + 6.416286f, 0.00001f);
+
+        route = aStar.CalculateRoute("10", "1");
+        route.ShouldBeNull();
+
+        route = aStar.CalculateRoute("9", "5");
+        route.ShouldNotBeNull();
+        route.Costs.ShouldBe(8 + 2.03522328, 0.00001f);
+
+        route = aStar.CalculateRoute("4", "9");
+        route.ShouldBeNull();
+    }
+
+    /// <summary>
+    /// Intensive path test.
+    /// </summary>
+    [TestMethod]
+    public void Test_AStar_GridExample()
+    {
+        var aStar = new AStar(_grid!, _agvData, RoutingPlausibilityChecker);
+        // ReSharper disable JoinDeclarationAndInitializer
+        Route? c1, c2, c3, c4, costs;
+        // ReSharper restore JoinDeclarationAndInitializer
+
+        c1 = aStar.CalculateRoute("01/01", "11/01");
+        c1!.Costs.ShouldBe(10.5f, 0.00001f);
+        c2 = aStar.CalculateRoute("11/01", "11/02");
+        c2!.Costs.ShouldBe(1.5f, 0.00001f);
+        c3 = aStar.CalculateRoute("11/02", "50/02");
+        c3!.Costs.ShouldBe(39.5f, 0.00001f);
+        c4 = aStar.CalculateRoute("50/02", "50/01");
+        c4!.Costs.ShouldBe(1.5f, 0.00001f);
+
+        costs = aStar.CalculateRoute("01/01", "50/01");
+        costs!.Costs.ShouldBe(c1.Costs + c2.Costs + c3.Costs + c4.Costs + 3, 0.00001f);
+
+        c1 = aStar.CalculateRoute("50/01", "13/17");
+        c1!.Costs.ShouldBe(60.5f, 0.00001f);
+        c2 = aStar.CalculateRoute("13/17", "33/17");
+        c2!.Costs.ShouldBe(10f * 13f + 29f, 0.00001f);
+        c3 = aStar.CalculateRoute("33/17", "33/06");
+        c3!.Costs.ShouldBe(11.5f, 0.00001f);
+
+        var stopWatch = new Stopwatch();
+        stopWatch.Start();
+        costs = aStar.CalculateRoute("50/01", "33/06");
+        stopWatch.Stop();
+        Trace.WriteLine("Grid example duration: " + stopWatch.ElapsedMilliseconds + "ms.");
+        costs!.Costs.ShouldBe(c1.Costs + c2.Costs + c3.Costs + 0.5, 0.00001f);
+    }
+
+    /// <summary>
+    /// Test path to or from non existent node.
+    /// </summary>
+    [TestMethod]
+    [DataRow("01/01", "XX/XX")]
+    [DataRow("YY/YY", "01/01")]
+    [DataRow("YY/YY", "XX/XX")]
+    public void Test_AStarGrid_NonExistentSourceOrDestination_NoPath(string source, string destination)
+    {
+        var aStar = new AStar(_grid!, null, RoutingPlausibilityChecker);
+        aStar.CalculateRoute(source, destination).ShouldBeNull();
+    }
+
+    /// <summary>
+    /// Test path to unreachable node.
+    /// </summary>
+    [TestMethod]
+    public void Test_AStarGrid_UnreachableNode_NoPath()
+    {
+        var aStar = new AStar(_grid!, null, RoutingPlausibilityChecker);
+        var route = aStar.CalculateRoute("01/01", "47/23");
+        route.ShouldBeNull();
+    }
+
+    [TestMethod]
+    public void CalculateRoute_ReturnsNull_WhenRouteNotPlausible()
+    {
+        var graph = new AgvGraph(Guid.Empty,
+            new[]
+            {
+                new GraphNode("1") { Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 5f, Z = 0f },
+                new GraphNode("2") { Type = AgvGraph.NodeType.Drop, X = 1f, Y = 5f, Z = 0f }
+            },
+            new[]
+            {
+                GraphEdge.CreateDirect("1", "2"),
+                GraphEdge.CreateDirect("2", "1", 4f)
+            });
+
+        var routingPlausibilityCheckerMock = new Mock<IRoutingPlausibilityChecker>();
+        routingPlausibilityCheckerMock.Setup(r => r.IsPlausible(It.IsAny<GraphNode>(), It.IsAny<GraphNode>())).Returns(true);
+
+        var aStar = new AStar(graph, null, routingPlausibilityCheckerMock.Object);
+        var route = aStar.CalculateRoute("1", "2");
+        route.ShouldNotBeNull();
+
+        routingPlausibilityCheckerMock.Setup(r => r.IsPlausible(It.IsAny<GraphNode>(), It.IsAny<GraphNode>())).Returns(false);
+        aStar = new AStar(graph, null, routingPlausibilityCheckerMock.Object);
+        route = aStar.CalculateRoute("1", "2");
+        route.ShouldBeNull();
+    }
+
+    [TestMethod]
+    public void FindsShortestPossibleRoute_WhenAllPossibleRoutesBlocked_ReturnsNull()
+    {
+        var agvGraphTextFixtureMock = new Mock<AgvGraphTestData>();
+        agvGraphTextFixtureMock.Setup(method => method.GetAllPossibleRoutesOrdered())
+            .Returns(new[]
+            {
+                new[] { "Nairobi", "Tokyo", "Marseille", "Rio" },
+                new[] { "Nairobi", "Tokyo", "Berlin", "Rio" },
+                new[] { "Nairobi", "Denver", "Helsinki", "Rio" }
+            });
+        var agvGraphTextFixture = agvGraphTextFixtureMock.Object;
+
+        AssertFindsShortestPath("Nairobi", "Rio", agvGraphTextFixture);
+    }
+
+    [TestMethod]
+    public void OnlyOnePossibleRoute_FindsRoute_WhenBlockedEdgeDoesNotFindRoute()
+    {
+        var agvGraphTextFixtureMock = new Mock<AgvGraphTestData>();
+        agvGraphTextFixtureMock.Setup(method => method.GetAllPossibleRoutesOrdered())
+            .Returns(new[]
+            {
+                new[] { "Nairobi", "Oslo", "LoneDestination" }
+            });
+        var agvGraphTextFixture = agvGraphTextFixtureMock.Object;
+
+        AssertFindsShortestPath("Nairobi", "LoneDestination", agvGraphTextFixture);
+    }
+
+    private void AssertFindsShortestPath(string source, string destination, AgvGraphTestData agvGraphTextFixture)
+    {
+        var aStar = new AStar(agvGraphTextFixture.Graph, null, RoutingPlausibilityChecker);
+        var route = aStar.CalculateRoute(source, destination);
+
+        route.ShouldNotBeNull();
+        route.Nodes.ShouldBe(agvGraphTextFixture.GetAllPossibleRoutesOrdered().First());
+    }
+
+    [TestMethod]
+    [DataRow(true)]
+    [DataRow(false)]
+    public void TestStaticCalculateRoute_FindsRoute_And_NoRoute(bool isEdgePlausible)
+    {
+        var graph = new AgvGraph(Guid.Empty,
+            new GraphNode[]
+            {
+                new("1") { Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 5f, Z = 0f },
+                new("2") { Type = AgvGraph.NodeType.PickDrop, X = 1f, Y = 5f, Z = 0f },
+                new("3") { Type = AgvGraph.NodeType.PickDrop, X = 1f, Y = 2f, Z = 0f },
+                new("4") { Type = AgvGraph.NodeType.PickDrop, X = 3f, Y = 3f, Z = 0f },
+                new("5") { Type = AgvGraph.NodeType.PickDrop, X = 3f, Y = 6f, Z = 0f },
+                new("6") { Type = AgvGraph.NodeType.PickDrop, X = 3f, Y = 2f, Z = 0f },
+                new("7") { Type = AgvGraph.NodeType.PickDrop, X = 6f, Y = 0f, Z = 0f },
+                new("8") { Type = AgvGraph.NodeType.PickDrop, X = 7f, Y = 1f, Z = 0f },
+                new("9") { Type = AgvGraph.NodeType.PickDrop, X = 8f, Y = 2f, Z = 0f },
+                new("10") { Type = AgvGraph.NodeType.PickDrop, X = 8f, Y = 5f, Z = 0f }
+            },
+            new[]
+            {
+                GraphEdge.CreateDirect("1", "2"),
+                GraphEdge.CreateDirect("1", "4", 4f),
+                GraphEdge.CreateDirect("4", "1", 4f),
+                GraphEdge.CreateDirect("2", "5", 3f),
+                GraphEdge.CreateDirect("3", "5", 5f),
+                GraphEdge.CreateDirect("3", "4", 3f),
+                GraphEdge.CreateDirect("4", "3", 3f),
+                GraphEdge.CreateDirect("3", "6", 2f),
+                GraphEdge.CreateDirect("6", "3", 2f),
+                GraphEdge.CreateDirect("5", "8", 7f),
+                GraphEdge.CreateDirect("8", "5", 7f),
+                GraphEdge.CreateDirect("8", "7"),
+                GraphEdge.CreateDirect("7", "8"),
+                GraphEdge.CreateDirect("9", "8"),
+                GraphEdge.CreateDirect("7", "10", 6f)
+            });
+
+        var sourceNode = graph.Nodes.First(x => x.Id == "1");
+        var destinationNode = graph.Nodes.First(x => x.Id == "8");
+
+        var routingPlausibilityChecker = new Mock<IRoutingPlausibilityChecker>();
+        routingPlausibilityChecker.Setup(x => x.IsPlausible(sourceNode, destinationNode)).Returns(isEdgePlausible);
+        var aStar = new AStar(graph, null, routingPlausibilityChecker.Object);
+        var route = aStar.CalculateRoute(sourceNode.Id, destinationNode.Id);
+        bool hasRoute = route != null;
+        hasRoute.ShouldBe(isEdgePlausible);
+    }
+
+    [TestMethod]
+    public void CalculateRoute_BezierGraph_CorrectResult()
+    {
+        var bezier = new Bezier(new List<Vector2>
+        {
+            new(0, 0),
+            new(1, 0),
+            new(1, 1)
+        });
+
+        var graph = new AgvGraph(
+            Guid.NewGuid(),
+            new List<GraphNode>
+            {
+                new("01") { X = 0, Y = 0, Z = 0 },
+                new("02Bez") { X = 1, Y = 1, Z = 0 }, // Node duplication to differentiate the chosen path.
+                new("02Dir") { X = 1, Y = 1, Z = 0 },
+                new("03") { X = 1, Y = 2, Z = 0 },
+                new("04") { X = 2, Y = 2, Z = 0 }
+            },
+            new List<GraphEdge>
+            {
+                GraphEdge.CreateDirect("01", "02Dir", (float)Math.Sqrt(2)),
+                GraphEdge.CreateDirect("02Dir", "03"),
+                GraphEdge.CreateDirect("02Dir", "04", (float)Math.Sqrt(2)),
+                GraphEdge.CreateBezier1("01", "02Bez", (float)bezier.GetLength(100), 1, 0),
+                GraphEdge.CreateDirect("02Bez", "03"),
+                GraphEdge.CreateDirect("02Bez", "04", (float)Math.Sqrt(2))
+            }
+        );
+
+        var aStar = new AStar(graph, _slowTurnAgvData);
+
+        var route = aStar.CalculateRoute("01", "03");
+
+        route.ShouldNotBeNull();
+        route.Nodes.Length.ShouldBe(3);
+        route.Nodes.ShouldContain("02Bez");
+
+        var route2 = aStar.CalculateRoute("01", "04");
+
+        route2.ShouldNotBeNull();
+        route2.Nodes.Length.ShouldBe(3);
+        route2.Nodes.ShouldContain("02Dir");
+    }
+
+    [TestMethod]
+    public void CalculateRoute_BetterNodeHasWorseHeuristic_CorrectResult()
+    {
+        var bezier = new Bezier(new List<Vector2>
+        {
+            new(0, 0),
+            new(1, 0),
+            new(1, 1)
+        });
+
+        var graph = new AgvGraph(
+            Guid.NewGuid(),
+            new List<GraphNode>
+            {
+                new("01") { X = 0, Y = 0, Z = 0 },
+                new("Bez") { X = 1, Y = 1, Z = 0 },
+                new("Dir") { X = 0.9f, Y = 2, Z = 0 },
+                new("03") { X = 1, Y = 2, Z = 0 }
+            },
+            new List<GraphEdge>
+            {
+                GraphEdge.CreateDirect("01", "Dir", (float)Math.Sqrt(Math.Pow(0.9, 2) + 4)),
+                GraphEdge.CreateBezier1("01", "Bez", (float)bezier.GetLength(100), 1, 0),
+                GraphEdge.CreateDirect("Bez", "03"),
+                GraphEdge.CreateDirect("Dir", "03", 0.1f)
+            }
+        );
+
+        var aStar = new AStar(graph, _slowTurnAgvData);
+
+        var route = aStar.CalculateRoute("01", "03");
+
+        route.ShouldNotBeNull();
+        route.Nodes.Length.ShouldBe(3);
+        route.Nodes.ShouldContain("Bez");
+    }
+
+    [TestMethod]
+    public void CalculateRoute_LongerPolyPathRoute_UsesDirectEdges()
+    {
+        /*
+                Sketched graph:
+
+                       0      1      2      3
+
+                0      1--*
+                        \ |
+                          *--*
+                           \ |
+                1           D/P--*---3
+                               \ |
+                                 |
+                                 | \
+                2                *---4
+
+        
+                3
+
+                Key:
+                - "1", "P", "D", "3", "4" are nodes (representing "01", "02Poly", "02dir", "03", "04" respectively).
+                - "-", "\" and "|" represent edge connections.
+                - "*" represents a control point in a polypath edge.
+       */
+
+        var nodes = new List<GraphNode>
+        {
+            new("01") { X = 0, Y = 0, Z = 0 },
+            new("02Poly") { X = 1, Y = 1, Z = 0 }, // Node duplication to differentiate the chosen path.
+            new("02Dir") { X = 1, Y = 1, Z = 0 },
+            new("03") { X = 1, Y = 2, Z = 0 },
+            new("04") { X = 2, Y = 2, Z = 0 }
+        };
+        var graph = new AgvGraph(
+            Guid.NewGuid(),
+            nodes,
+            [
+                GraphEdge.CreateDirect("01", "02Dir", (float)Math.Sqrt(2)),
+                GraphEdge.CreateDirect("02Dir", "03"),
+                GraphEdge.CreateDirect("02Dir", "04", (float)Math.Sqrt(2)),
+                AgvGraphGenerator.CreatePolypathEdge("01",
+                    "02Poly",
+                    [
+                        new EdgeCoefficient(0.5, 0),
+                        new EdgeCoefficient(0.5, 0.5),
+                        new EdgeCoefficient(1, 0.5)
+                    ],
+                    [.. nodes]),
+                GraphEdge.CreateDirect("02Poly", "03"),
+                AgvGraphGenerator.CreatePolypathEdge("02Poly",
+                    "04",
+                    [
+                        new EdgeCoefficient(1.5, 1),
+                        new EdgeCoefficient(1.5, 2)
+                    ],
+                    [.. nodes])
+            ]
+        );
+
+        var aStar = new AStar(graph, _slowTurnAgvData);
+
+        var route = aStar.CalculateRoute("01", "03");
+
+        route.ShouldNotBeNull();
+        route.Nodes.Length.ShouldBe(3);
+        route.Nodes.ShouldContain("02Dir");
+
+        var route2 = aStar.CalculateRoute("01", "04");
+
+        route2.ShouldNotBeNull();
+        route2.Nodes.Length.ShouldBe(3);
+        route2.Nodes.ShouldContain("02Dir");
+    }
+
+    [TestMethod]
+    public void CalculateRoute_ShorterPolyPathRoute_UsesPolyPath()
+    {
+        /*
+                Sketched graph:
+
+                       0      1      2      3
+
+                0      1 -----5
+                        \     |
+                          *   |
+                           \  |
+                1           D/P------3
+                               \     |
+                                 *   |
+                                   \ |
+                2                    4
+
+        
+                3
+
+                Key:
+                - "1", "P", "D", "3", "4", "5" are nodes (representing "01", "02Poly", "02dir", "03", "04", "05" respectively).
+                - "-", "\" and "|" represent edge connections.
+                - "*" represents a control point in a polypath edge.
+       */
+
+        var nodes = new List<GraphNode>
+        {
+            new("01") { X = 0, Y = 0, Z = 0 },
+            new("02Poly") { X = 1, Y = 1, Z = 0 }, // Node duplication to differentiate the chosen path.
+            new("02Dir") { X = 1, Y = 1, Z = 0 },
+            new("03") { X = 1, Y = 2, Z = 0 },
+            new("04") { X = 2, Y = 2, Z = 0 },
+            new("05") { X = 1, Y = 0, Z = 0 }
+        };
+        var graph = new AgvGraph(
+            Guid.NewGuid(),
+            nodes,
+            [
+                GraphEdge.CreateDirect("01", "05"),
+                GraphEdge.CreateDirect("02Dir", "03"),
+                GraphEdge.CreateDirect("02Poly", "03"),
+                GraphEdge.CreateDirect("03", "04"),
+                GraphEdge.CreateDirect("05", "02Dir"),
+                AgvGraphGenerator.CreatePolypathEdge("01",
+                    "02Poly",
+                    [
+                        new EdgeCoefficient(0.5, 0.5)
+                    ],
+                    [.. nodes]),
+                AgvGraphGenerator.CreatePolypathEdge("02Poly",
+                    "04",
+                    [
+                        new EdgeCoefficient(1.5, 1.5)
+                    ],
+                    [.. nodes])
+            ]
+        );
+
+        var aStar = new AStar(graph, _slowTurnAgvData);
+
+        var route = aStar.CalculateRoute("01", "03");
+
+        route.ShouldNotBeNull();
+        route.Nodes.Length.ShouldBe(3);
+        route.Nodes.ShouldContain("02Poly");
+
+        var route2 = aStar.CalculateRoute("01", "04");
+
+        route2.ShouldNotBeNull();
+        route2.Nodes.Length.ShouldBe(3);
+        route2.Nodes.ShouldContain("02Poly");
+    }
+
+    [TestMethod]
+    public void CalculateRoute_LongerSlantedRoute_UsesDirectEdges()
+    {
+        /*
+                Sketched graph:
+
+                       0      1      2      3
+
+                0      1----*
+                        \  /
+                          \
+                         /  \
+                1       *----D/S---*-3
+                               \  /
+                                 \
+                                /  \
+                2              *-----4
+
+        
+                3
+
+                Key:
+                - "1", "S", "D", "3", "4" are nodes (representing "01", "02Slant", "02dir", "03", "04" respectively).
+                - "-", "\" and "|" represent edge connections.
+                - "*" the location of the exit distance in a slanted edge.
+       */
+        const float west = 3f * (float)Math.PI / 2f;
+        var nodes = new List<GraphNode>
+        {
+            new("01") { X = 0, Y = 0, Z = 0 },
+            new("02Slant") { X = 1, Y = 1, Z = 0 }, // Node duplication to differentiate the chosen path.
+            new("02Dir") { X = 1, Y = 1, Z = 0 },
+            new("03") { X = 1, Y = 2, Z = 0 },
+            new("04") { X = 2, Y = 2, Z = 0 }
+        };
+        var graph = new AgvGraph(
+            Guid.NewGuid(),
+            nodes,
+            [
+                GraphEdge.CreateDirect("01", "02Dir", (float)Math.Sqrt(2)),
+                GraphEdge.CreateDirect("02Dir", "03"),
+                GraphEdge.CreateDirect("02Dir", "04", (float)Math.Sqrt(2)),
+                AgvGraphGenerator.CreateSlantedEdge("01", "02Slant", west, 0.9, [.. nodes]),
+                GraphEdge.CreateDirect("02Slant", "03"),
+                AgvGraphGenerator.CreateSlantedEdge("02Slant", "04", west, 0.9, [.. nodes])
+            ]
+        );
+
+        var aStar = new AStar(graph, _slowTurnAgvData);
+
+        var route = aStar.CalculateRoute("01", "03");
+
+        route.ShouldNotBeNull();
+        route.Nodes.Length.ShouldBe(3);
+        route.Nodes.ShouldContain("02Dir");
+
+        var route2 = aStar.CalculateRoute("01", "04");
+
+        route2.ShouldNotBeNull();
+        route2.Nodes.Length.ShouldBe(3);
+        route2.Nodes.ShouldContain("02Dir");
+    }
+
+    [TestMethod]
+    public void CalculateRoute_ShorterSlantedRoute_UsesSlanted()
+    {
+        /*
+                Sketched graph:
+
+                       0      1      2      3
+
+                0      1 *----5
+                          \   |
+                           \  |
+                           \  |
+                1           *D/S*----3
+                                 \   |
+                                  \  |
+                                   \ |
+                2                   *4
+
+        
+                3
+
+                Key:
+                - "1", "S", "D", "3", "4", "5" are nodes (representing "01", "02Slant", "02dir", "03", "04", "05" respectively).
+                - "-", "\" and "|" represent edge connections.
+                - "*" represents the location of the exit distance in a slanted edge.
+       */
+        const float west = 3f * (float)Math.PI / 2f;
+        var nodes = new List<GraphNode>
+        {
+            new("01") { X = 0, Y = 0, Z = 0 },
+            new("02Slant") { X = 1, Y = 1, Z = 0 }, // Node duplication to differentiate the chosen path.
+            new("02Dir") { X = 1, Y = 1, Z = 0 },
+            new("03") { X = 1, Y = 2, Z = 0 },
+            new("04") { X = 2, Y = 2, Z = 0 },
+            new("05") { X = 1, Y = 0, Z = 0 }
+        };
+        var graph = new AgvGraph(
+            Guid.NewGuid(),
+            nodes,
+            [
+                GraphEdge.CreateDirect("01", "05"),
+                GraphEdge.CreateDirect("02Dir", "03"),
+                GraphEdge.CreateDirect("02Slant", "03"),
+                GraphEdge.CreateDirect("03", "04"),
+                GraphEdge.CreateDirect("05", "02Dir"),
+                AgvGraphGenerator.CreateSlantedEdge("01", "02Slant", west, 0.0, [.. nodes]),
+                AgvGraphGenerator.CreateSlantedEdge("02Slant", "04", west, 0.0, [.. nodes])
+            ]
+        );
+
+        var aStar = new AStar(graph, _slowTurnAgvData);
+
+        var route = aStar.CalculateRoute("01", "03");
+
+        route.ShouldNotBeNull();
+        route.Nodes.Length.ShouldBe(3);
+        route.Nodes.ShouldContain("02Slant");
+
+        var route2 = aStar.CalculateRoute("01", "04");
+
+        route2.ShouldNotBeNull();
+        route2.Nodes.Length.ShouldBe(3);
+        route2.Nodes.ShouldContain("02Slant");
+    }
+}

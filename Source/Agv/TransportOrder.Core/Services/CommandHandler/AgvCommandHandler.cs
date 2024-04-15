@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
 using Gebhardt.StoreWare.Agv.Common.Messages.Graphs.Events;
 using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.CmdOptions;
@@ -19,15 +18,16 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Commands;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
-using AgvError = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.AgvError;
+using AgvError = Gebhardt.StoreWare.Agv.Common.Domain.Models.AgvError;
 using System.Collections.ObjectModel;
+using Gebhardt.StoreWare.Agv.Common.Domain.Models;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Map;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Constants;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
 using AgvSettings = Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent.AgvSettings;
 using AgvStatus = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv.AgvStatus;
-using Cargo = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Cargo;
+using Cargo = Gebhardt.StoreWare.Agv.Common.Domain.Models.Cargo;
 using LockAgv = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv.LockAgv;
 using RequestAgvData = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands.RequestAgvData;
 using RequestAgvGraph = Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands.RequestAgvGraph;
@@ -328,7 +328,7 @@ public class AgvCommandHandler :
         {
             var agvBatteryStatus =
                 new AgvBatteryStatus(
-                    _mapper.Map<Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.AgvStatus>(agvStatus),
+                    _mapper.Map<Gebhardt.StoreWare.Agv.Common.Domain.Models.AgvStatus>(agvStatus),
                     _mapper.Map<AgvSettings>(
                         agvSettings));
 

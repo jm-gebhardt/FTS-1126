@@ -4,7 +4,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Map;
 using JetBrains.Annotations;
 using MassTransit;
-using GraphNode = Gebhardt.StoreWare.Agv.Common.Models.Graphs.GraphNode;
+using GraphNode = Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs.GraphNode;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
 

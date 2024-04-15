@@ -1,5 +1,5 @@
 using JetBrains.Annotations;
-using static Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.AgvData;
+using static Gebhardt.StoreWare.Agv.Common.Domain.Models.AgvData;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
 

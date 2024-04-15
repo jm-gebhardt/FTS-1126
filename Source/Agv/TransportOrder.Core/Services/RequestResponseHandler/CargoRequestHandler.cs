@@ -63,7 +63,7 @@ public class CargoRequestHandler :
         {
             await _agvDb.Agvs.ThrowIfAgvNotExistsAsync(agvCorrelationId);
         }
-        var message = _mapper.Map<ICollection<Common.Messages.AgvManagement.Cargo>>(cargos);
+        var message = _mapper.Map<ICollection<Common.Domain.Models.Cargo>>(cargos);
         await context.RespondAsync(new GotCargosOfAgv(message));
     }
 
@@ -78,7 +78,7 @@ public class CargoRequestHandler :
         {
             await _agvDb.Agvs.ThrowIfAgvsNotExistAsync(agvsWithoutCargo);
         }
-        var message = _mapper.Map<IReadOnlyDictionary<Guid, ICollection<Common.Messages.AgvManagement.Cargo>>>(cargosByAgvCorrelationId);
+        var message = _mapper.Map<IReadOnlyDictionary<Guid, ICollection<Common.Domain.Models.Cargo>>>(cargosByAgvCorrelationId);
         await context.RespondAsync(new GotCargosOfAgvs(message));
     }
 }

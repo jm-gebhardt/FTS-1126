@@ -57,7 +57,7 @@ public record AgvData
     public double TurnOnSpotThreshold { get; init; }
 
     /// <summary>The list of sensors in the agv</summary>
-    public Common.Messages.AgvManagement.AgvData.Sensor[] Sensors { get; init; }
+    public Common.Domain.Models.AgvData.Sensor[] Sensors { get; init; }
 
     /// <param name="correlationId">The CorrelationId of the agv</param>
     /// <param name="model">The model name of the AGV</param>
@@ -90,7 +90,7 @@ public record AgvData
         double? width,
         double? length,
         long? payload,
-        Common.Messages.AgvManagement.AgvData.Sensor[] sensors)
+        Common.Domain.Models.AgvData.Sensor[] sensors)
     {
         CorrelationId = correlationId;
         Model = model;

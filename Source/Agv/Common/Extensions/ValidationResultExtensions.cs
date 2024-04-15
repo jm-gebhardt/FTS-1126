@@ -1,5 +1,5 @@
 ﻿using FluentValidation.Results;
-using Gebhardt.StoreWare.Agv.Common.Models;
+using Gebhardt.StoreWare.Agv.Common.Domain.Models;
 
 namespace Gebhardt.StoreWare.Agv.Common.Extensions;
 

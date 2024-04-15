@@ -1,4 +1,4 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Models;
+﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 

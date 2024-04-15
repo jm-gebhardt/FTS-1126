@@ -1,7 +1,7 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Dictionaries;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.StoreWare.Agv.Common.Domain.Models;
+using Gebhardt.StoreWare.Agv.Common.Domain.SemaphoreProviders;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
-using Gebhardt.StoreWare.Agv.Common.SemaphoreProviders;
 using Gebhardt.StoreWare.Agv.Common.Services.Significance;
 
 namespace Gebhardt.StoreWare.Agv.Common.Services.Filters;

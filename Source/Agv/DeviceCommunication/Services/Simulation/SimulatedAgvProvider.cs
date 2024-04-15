@@ -1,3 +1,4 @@
+using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Messages.Graphs.Events;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
@@ -25,8 +26,8 @@ public class SimulatedAgvProvider : BackgroundService, IConsumer<GraphMissing>
     private readonly IAgvDataGenerator _agvDataGenerator;
 
     private readonly RequestTimeout _requestTimeOut = RequestTimeout.After(m: 1);
-    private readonly Common.Models.Graphs.Graph _graph;
-    private readonly List<Common.Models.Graphs.Map> _maps;
+    private readonly Graph _graph;
+    private readonly List<Map> _maps;
     private const int ExecutionDelayMs = 1000;
 
     /// <summary>

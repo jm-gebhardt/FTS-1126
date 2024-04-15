@@ -1,3 +1,4 @@
+using Gebhardt.StoreWare.Agv.Common.Domain.Utilities;
 using Gebhardt.StoreWare.Agv.Common.Extensions;
 using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
 using Gebhardt.StoreWare.Agv.Common.Utilities;

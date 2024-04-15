@@ -1,11 +1,11 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.Graphs.Events;
 using Gebhardt.StoreWare.Agv.Statistics.Domain.Exceptions;
-using Gebhardt.StoreWare.Agv.Statistics.Domain.Models;
 using Gebhardt.StoreWare.Agv.Statistics.Domain.Repositories;
 using Gebhardt.StoreWare.Agv.Statistics.Extensions;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
+using Map = Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs.Map;
 
 namespace Gebhardt.StoreWare.Agv.Statistics.Services.EventHandler;
 
@@ -31,7 +31,7 @@ public class GridEventHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<GraphChanged> context)
     {
-        List<Common.Models.Graphs.Map>? maps = context.Message.Maps;
+        List<Map>? maps = context.Message.Maps;
         var agvGraph = context.Message.Graph;
         ICollection<Guid> gridIds = await _db.Grids.GetAllIdsAsync();
 
@@ -52,7 +52,7 @@ public class GridEventHandler :
                 continue;
             }
 
-            ICollection<Map> mapsForGrid = await _db.Maps.GetMapsForGridAsync(grid.GridId);
+            ICollection<Domain.Models.Map> mapsForGrid = await _db.Maps.GetMapsForGridAsync(grid.GridId);
 
             //Create map objects for the grid based on the x and y index of the maximum and
             //minimum x and y positions covered by the map.
@@ -67,7 +67,7 @@ public class GridEventHandler :
 
                 if (map == null)
                 {
-                    _db.Maps.Add(new Map(agvMap.CorrelationId, grid.GridId, xiMin, yiMin, xiMax, yiMax));
+                    _db.Maps.Add(new Domain.Models.Map(agvMap.CorrelationId, grid.GridId, xiMin, yiMin, xiMax, yiMax));
                     continue;
                 }
                 map.UpdateExtent(xiMin, yiMin, xiMax, yiMax);

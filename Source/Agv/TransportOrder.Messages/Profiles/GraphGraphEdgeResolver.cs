@@ -1,8 +1,9 @@
 ﻿using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
+using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
 using JetBrains.Annotations;
-using GraphNode = Gebhardt.StoreWare.Agv.Common.Models.Graphs.GraphNode;
+using Graph = Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent.Graph;
+using GraphEdge = Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent.GraphEdge;
+using GraphNode = Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs.GraphNode;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles;
 

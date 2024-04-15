@@ -1,5 +1,5 @@
 ﻿using System.Linq.Expressions;
-using Gebhardt.StoreWare.Agv.Common.Contracts;
+using Gebhardt.StoreWare.Agv.Common.Messages.Contracts;
 using Gebhardt.StoreWare.Agv.Common.Utilities;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
 using JetBrains.Annotations;

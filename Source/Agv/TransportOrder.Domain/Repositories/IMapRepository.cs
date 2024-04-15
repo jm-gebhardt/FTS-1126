@@ -1,4 +1,4 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
+﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
 using JetBrains.Annotations;
 using Map = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Map.Map;
 

@@ -1,7 +1,6 @@
 using System.Numerics;
+using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Extensions;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
-using Gebhardt.StoreWare.Agv.Common.Models.Graphs;
 
 namespace Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 
