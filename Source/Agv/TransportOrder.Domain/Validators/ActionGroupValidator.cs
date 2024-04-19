@@ -175,7 +175,7 @@ public class ActionGroupValidator : AbstractValidator<ActionGroup>
         return _hasRoute;
     }
 
-    private static bool CheckPickDropSequence(IReadOnlyCollection<AgvAction> actions)
+    private static bool CheckPickDropSequence(IEnumerable<AgvAction> actions)
     {
         int stack = 0;
         foreach (var action in actions)

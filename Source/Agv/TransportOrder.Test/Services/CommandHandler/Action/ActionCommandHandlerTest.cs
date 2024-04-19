@@ -1,4 +1,5 @@
 using FluentValidation.Results;
+using Gebhardt.StoreWare.Agv.Common.Domain.Models;
 using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
@@ -298,6 +299,23 @@ public class ActionCommandHandlerTest
     }
 
     [TestMethod]
+    public async Task Consume_CancelActionGroup_ActionsInInvalidState_PublishesActionGroupCanceled()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Invalid, dropActionState: ActionState.Invalid);
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .AddAgv(agv)
+            .AddActionGroup(actionGroup)
+            .AddActionGroupTargetNodeType(actionGroup, AgvGraph.NodeType.Drop);
+
+        var command = new CancelActionGroup(actionGroup.CorrelationId, CancelReason.WebApi);
+        await fixture.TestHarness.Bus.Publish(command);
+        (await fixture.ConsumerHarness.Consumed.Any<CancelActionGroup>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<ActionGroupCanceled>()).ShouldBeTrue();
+        fixture.ActionGroupRepository.Verify(a => a.UpdateActionAndGroupStateAsync(actionGroup.Actions[0], null, ActionState.Canceled, It.Is<Reason>(r=>r.Template.Equals("ActionGroup was canceled manually"))));
+    }
+
+    [TestMethod]
     public async Task Consume_AbortActionGroup_ValidData_PublishesActionAbortedAndActionGroupChanged()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
@@ -349,7 +367,7 @@ public class ActionCommandHandlerTest
         var parkAction = AgvActionGenerator.GenerateParkAction(parentId: actionGroupId, actionState: ActionState.Started);
         var actionGroup = new ActionGroup(actionGroupId,
             string.Empty,
-            new List<AgvAction> { parkAction },
+            new List<AgvAction> {parkAction},
             ActionGroupCreator.TransportOrder,
             createdDate: DateTime.UtcNow, assignedAgv: agv.CorrelationId);
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
@@ -403,7 +421,7 @@ public class ActionCommandHandlerTest
         var fixture = new ActionCommandHandlerTestFixture();
         const string failureReason = "reason";
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
-        fixture.SetupValidationResult(new ValidationResult(new List<ValidationFailure> { new("propertyName", failureReason) }));
+        fixture.SetupValidationResult(new ValidationResult(new List<ValidationFailure> {new("propertyName", failureReason)}));
 
         await fixture.TestHarness.Bus.Publish(new QueueActionGroup(fixture.Mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup), false));
 
@@ -422,7 +440,7 @@ public class ActionCommandHandlerTest
         var actionGroupInvalidEvent = fixture.TestHarness.Published.Select<ActionGroupInvalid>().First().Context.Message;
         actionGroupInvalidEvent.CorrelationId.ShouldBe(actionGroup.CorrelationId);
         actionGroupInvalidEvent.ActionGroup.State.ShouldBe(ActionGroupState.Invalid);
-        actionGroupInvalidEvent.ValidationErrors.ShouldBe(new List<string> { failureReason });
+        actionGroupInvalidEvent.ValidationErrors.ShouldBe(new List<string> {failureReason});
 
         (await fixture.TestHarness.Published.Any<StartActionCommand>()).ShouldBeFalse();
         (await fixture.TestHarness.Published.Any<ActionGroupStarted>()).ShouldBeFalse();
@@ -436,7 +454,7 @@ public class ActionCommandHandlerTest
         var fixture = new ActionCommandHandlerTestFixture();
         const string failureReason = "reason";
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
-        fixture.SetupValidationResult(new ValidationResult(new List<ValidationFailure> { new("propertyName", failureReason) }));
+        fixture.SetupValidationResult(new ValidationResult(new List<ValidationFailure> {new("propertyName", failureReason)}));
 
         await fixture.TestHarness.Bus.Publish(new QueueActionGroup(fixture.Mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup), true));
         (await fixture.ConsumerHarness.Consumed.Any<QueueActionGroup>()).ShouldBeTrue();
@@ -551,7 +569,7 @@ public class ActionCommandHandlerTest
         var agv = AgvGenerator.GenerateIdleAgv();
         const string parkNodeName = "Park-1";
 
-        var parkActions = new List<AgvAction> { AgvActionGenerator.GenerateParkAction(targetNodeId: parkNodeName) };
+        var parkActions = new List<AgvAction> {AgvActionGenerator.GenerateParkAction(targetNodeId: parkNodeName)};
         var parkActionGroup = AgvActionGenerator.GenerateActionGroup(parkActions);
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddAgv(agv)

@@ -10,6 +10,8 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
 /// </summary>
 public class ActionGroup
 {
+    private readonly IReadOnlyList<AgvAction> _actions = new List<AgvAction>();
+
     /// <summary>
     /// The parenting id.
     /// </summary>
@@ -48,7 +50,7 @@ public class ActionGroup
     /// <summary>
     /// The first action to be executed.
     /// </summary>
-    public AgvAction? FirstNotStartedAction => Actions.OrderBy(a => a.Sequence).FirstOrDefault(a => a.State == ActionState.Created);
+    public AgvAction? FirstNotStartedAction => Actions.FirstOrDefault(a => a.State == ActionState.Created);
 
     /// <summary>
     /// True, if the action group is moving cargo.
@@ -60,12 +62,14 @@ public class ActionGroup
     /// </summary>
     public bool IsChargingOrder => Actions.Any(a => a.ActionType == ActionType.Charge);
 
-    private readonly List<AgvAction> _actions;
-
     /// <summary>
-    /// List of actions.
+    /// List of actions (ordered by sequence).
     /// </summary>
-    public IReadOnlyCollection<AgvAction> Actions => _actions.AsReadOnly();
+    public IReadOnlyList<AgvAction> Actions
+    {
+        get => _actions.OrderBy(a => a.Sequence).ToList();
+        init => _actions = value;
+    }
 
     /// <summary>
     /// If true, then this ActionGroup was created manually, not by the system.
@@ -101,7 +105,7 @@ public class ActionGroup
         AssignedAgv = assignedAgv;
         IsManual = isManual;
         CreatedDate = createdDate.GetValueOrDefault(DateTime.UtcNow);
-        _actions = actions.OrderBy(a => a.Sequence).ToList();
+        Actions = actions.ToList();
         Creator = creator;
     }
 
@@ -114,7 +118,6 @@ public class ActionGroup
     {
         CorrelationId = correlationId;
         OrderId = orderId;
-        _actions = new List<AgvAction>();
     }
 
     /// <summary>
@@ -123,7 +126,6 @@ public class ActionGroup
     public ActionGroup()
     {
         OrderId = "";
-        _actions = new List<AgvAction>();
     }
 
     /// <summary>
@@ -133,19 +135,19 @@ public class ActionGroup
     {
         var previousState = State;
 
-        if (!_actions.Any())
+        if (!Actions.Any())
         {
             throw new ActionsInActionGroupEmptyException(CorrelationId);
         }
 
-        State = _actions switch
+        State = Actions switch
         {
-            _ when _actions.All(a => a.State == ActionState.Completed) => ActionGroupState.Completed,
-            _ when _actions.All(a => a.State == ActionState.Created) => ActionGroupState.Created,
-            _ when _actions.Any(a => a.State == ActionState.Invalid) => ActionGroupState.Invalid,
-            _ when _actions.Any(a => a.State == ActionState.Failed) => ActionGroupState.Failed,
-            _ when _actions.Any(a => a.State == ActionState.Canceled) => ActionGroupState.Canceled,
-            _ when _actions.Any(a => a.State == ActionState.Aborted) => ActionGroupState.Aborted,
+            _ when Actions.All(a => a.State == ActionState.Completed) => ActionGroupState.Completed,
+            _ when Actions.All(a => a.State == ActionState.Created) => ActionGroupState.Created,
+            _ when Actions.Any(a => a.State == ActionState.Failed) => ActionGroupState.Failed,
+            _ when Actions.Any(a => a.State == ActionState.Canceled) => ActionGroupState.Canceled,
+            _ when Actions.Any(a => a.State == ActionState.Aborted) => ActionGroupState.Aborted,
+            _ when Actions.Any(a => a.State == ActionState.Invalid) => ActionGroupState.Invalid,
             _ => ActionGroupState.Started
         };
 
@@ -340,12 +342,12 @@ public class ActionGroup
     public void SetFixedDatesFromDurations(double actionDuration, DateTime startDate, double idleTimeBetweenActions)
     {
         StartedDate = startDate;
-        foreach (var action in _actions)
+        foreach (var action in Actions)
         {
             action.StartedDate = startDate;
             action.CompletedDate = startDate.AddSeconds(actionDuration);
             startDate = action.CompletedDate!.Value.AddSeconds(idleTimeBetweenActions);
         }
-        CompletedDate = _actions.Last().CompletedDate;
+        CompletedDate = Actions[^1].CompletedDate;
     }
 }

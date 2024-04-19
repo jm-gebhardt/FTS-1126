@@ -37,7 +37,7 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
 
     protected Mock<IRouteService> RouteService { get; } = new();
 
-    protected Mock<IActionGroupRepository> ActionGroupRepository { get; } = new();
+    public Mock<IActionGroupRepository> ActionGroupRepository { get; } = new();
 
     protected Mock<IActionGroupDurationEstimationService> ActionGroupDurationEstimationService { get; } = new();
 
