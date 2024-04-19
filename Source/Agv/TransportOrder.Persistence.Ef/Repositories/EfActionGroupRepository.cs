@@ -37,9 +37,53 @@ public class EfActionGroupRepository : IActionGroupRepository
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<ActionGroup>> GetActionGroupsAsync(ActionGroupState state, DateTime? fromDate = null, DateTime? toDate = null, int maxItems = 0, Guid? assignedAgvCorrelationId = null, bool? isManual = null)
+    public async Task<IReadOnlyList<ActionGroup>> GetActionGroupsAsync(ActionGroupState actionGroupState, DateTime? fromDate = null, DateTime? toDate = null, int maxItems = 0, Guid? assignedAgvCorrelationId = null, bool? isManual = null)
     {
-        return await GetActionGroupsAsync(new List<ActionGroupState> {state}, fromDate, toDate, maxItems, assignedAgvCorrelationId, isManual);
+        return await GetActionGroupsAsync(new List<ActionGroupState> { actionGroupState }, fromDate, toDate, maxItems, assignedAgvCorrelationId, isManual);
+    }
+
+    /// <inheritdoc />
+    public async Task<Dictionary<ActionType, ICollection<double>>> GetActionDurationsByTypeAsync(ActionGroupState actionGroupState, string? sourceNodeId = null, string? targetNodeId = null, int maxItems = 1000)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>()
+            .Where(a => a.State == actionGroupState)
+            .AsNoTracking();
+
+        if (sourceNodeId != null && targetNodeId == null)
+        {
+            actionGroups = actionGroups.Where(a => a.Actions.Any(action => action.TargetNodeId == sourceNodeId));
+        }
+
+        if (sourceNodeId == null && targetNodeId != null)
+        {
+            actionGroups = actionGroups.Where(a => a.Actions.Any(action => action.TargetNodeId == targetNodeId));
+        }
+
+        if (sourceNodeId != null && targetNodeId != null)
+        {
+            actionGroups = actionGroups.Where(a =>
+                a.Actions.Any(action => action.TargetNodeId == sourceNodeId) &&
+                a.Actions.Any(action => action.TargetNodeId == targetNodeId));
+        }
+
+        List<AgvAction> actions = await actionGroups
+            .Take(maxItems)
+            .SelectMany(a => a.Actions)
+            .ToListAsync();
+
+        if (actions.Count > 0)
+        {
+            return
+                actions
+                    .GroupBy(a => a.ActionType)
+                    .ToDictionary(
+                        g => g.Key,
+                        g => (ICollection<double>)g.Select(a => a.Duration!.Value.TotalSeconds).ToList()
+                    );
+        }
+
+        return new Dictionary<ActionType, ICollection<double>>();
     }
 
     /// <inheritdoc />

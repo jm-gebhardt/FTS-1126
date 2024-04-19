@@ -680,7 +680,7 @@ public class ActionGroupRepositoryTest
         var fixture = await new ActionGroupRepositoryTestFixture()
             .WithActionGroup(actionGroup)
             .BuildAsync();
-      
+
         (await fixture.ActionGroupRepository.GetAverageDurationEstimateDeviationAsync("a different agv".ToGuid(), actionGroup.GetTargets())).ShouldBe(0);
     }
 
@@ -727,5 +727,97 @@ public class ActionGroupRepositoryTest
             .BuildAsync();
 
         (await fixture.ActionGroupRepository.GetAverageDurationEstimateDeviationAsync(agv, uncompletedPickDropActionGroup.GetTargets())).ShouldBe(0);
+    }
+
+    [TestMethod]
+    public async Task GetActionDurationsByTypeAsync_NoActionGroupMatchingState_ReturnsEmptyDictionary()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(source: "source", destination: "target", pickActionState: ActionState.Completed, dropActionState: ActionState.Started);
+        var actionGroupSameSourceAndTarget = AgvActionGenerator.GeneratePickDropActionGroup(source: "source", destination: "target", pickActionState: ActionState.Created, dropActionState: ActionState.Created);
+        var actionGroupAnotherSource = AgvActionGenerator.GeneratePickDropActionGroup(source: "another source", destination: "target", pickActionState: ActionState.Started, dropActionState: ActionState.Created);
+
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([actionGroup, actionGroupSameSourceAndTarget, actionGroupAnotherSource])
+            .BuildAsync();
+
+        (await fixture.ActionGroupRepository.GetActionDurationsByTypeAsync(ActionGroupState.Completed, sourceNodeId: null, targetNodeId: "target")).ShouldBeEmpty();
+    }
+
+    [TestMethod]
+    public async Task GetActionDurationsByTypeAsync_SourceNotGiven_ReturnsActionDurationsOfGroupsMatchingStateAndTarget()
+    {
+        List<double> durations = Enumerable.Range(1, 3).ToList().Select(d => (double)d).ToList();
+        List<ActionGroup> actionGroups = durations[..^1]
+            .Select(duration => AgvActionGenerator.GeneratePickDropActionGroupWithActionDuration(source: "source",
+                destination: "target",
+                duration))
+            .ToList();
+
+        var actionGroupAnotherSource = AgvActionGenerator.GeneratePickDropActionGroupWithActionDuration(
+            source: "another source",
+            destination: "target",
+            durations.Last());
+
+        actionGroups.Add(actionGroupAnotherSource);
+
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups(actionGroups)
+            .BuildAsync();
+
+        Dictionary<ActionType, ICollection<double>> durationsByActionType = await fixture.ActionGroupRepository.GetActionDurationsByTypeAsync(ActionGroupState.Completed, sourceNodeId: null, targetNodeId: "target");
+        durationsByActionType[ActionType.Pick].ShouldBeEquivalentTo(durations);
+        durationsByActionType[ActionType.Drop].ShouldBeEquivalentTo(durations);
+    }
+
+    [TestMethod]
+    public async Task GetActionDurationsByTypeAsync_TargetNotGiven_ReturnsActionDurationsOfGroupsMatchingStateAndSource()
+    {
+        List<double> durations = Enumerable.Range(1, 3).ToList().Select(d => (double)d).ToList();
+        List<ActionGroup> actionGroups = durations[..^1]
+            .Select(duration => AgvActionGenerator.GeneratePickDropActionGroupWithActionDuration(source: "source",
+                destination: "target",
+                duration))
+            .ToList();
+
+        var actionGroupAnotherTarget = AgvActionGenerator.GeneratePickDropActionGroupWithActionDuration(
+            source: "source",
+            destination: "another target",
+            durations.Last());
+
+        actionGroups.Add(actionGroupAnotherTarget);
+
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups(actionGroups)
+            .BuildAsync();
+
+        Dictionary<ActionType, ICollection<double>> durationsByActionType = await fixture.ActionGroupRepository.GetActionDurationsByTypeAsync(ActionGroupState.Completed, sourceNodeId: "source", targetNodeId: null);
+        durationsByActionType[ActionType.Pick].ShouldBeEquivalentTo(durations);
+        durationsByActionType[ActionType.Drop].ShouldBeEquivalentTo(durations);
+    }
+
+    [TestMethod]
+    public async Task GetActionDurationsByTypeAsync_SourceAndTargetGiven_ReturnsActionDurationsOfGroupsMatchingStateSourceAndTarget()
+    {
+        List<double> durations = Enumerable.Range(1, 2).ToList().Select(d => (double)d).ToList();
+        List<ActionGroup> actionGroups = durations
+            .Select(duration => AgvActionGenerator.GeneratePickDropActionGroupWithActionDuration(source: "source",
+                destination: "target",
+                duration))
+            .ToList();
+
+        var actionGroupAnotherTarget = AgvActionGenerator.GeneratePickDropActionGroupWithActionDuration(
+            source: "source",
+            destination: "another target",
+            10);
+
+        actionGroups.Add(actionGroupAnotherTarget);
+
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups(actionGroups)
+            .BuildAsync();
+
+        Dictionary<ActionType, ICollection<double>> durationsByActionType = await fixture.ActionGroupRepository.GetActionDurationsByTypeAsync(ActionGroupState.Completed, sourceNodeId: "source", targetNodeId: "target");
+        durationsByActionType[ActionType.Pick].ShouldBeEquivalentTo(durations);
+        durationsByActionType[ActionType.Drop].ShouldBeEquivalentTo(durations);
     }
 }

@@ -1,10 +1,10 @@
 ﻿using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
+using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
 using Gebhardt.StoreWare.Agv.Statistics.Domain.Models;
 using Gebhardt.StoreWare.Agv.Statistics.Domain.ReadModels;
 using Gebhardt.StoreWare.Agv.Statistics.Messages.Commands;
 using Gebhardt.StoreWare.Agv.Statistics.Messages.Requests;
-using Gebhardt.StoreWare.Agv.Statistics.Test.Fixtures;
 using Gebhardt.StoreWare.Agv.Statistics.WebApi.Controllers;
 using Gebhardt.StoreWare.Agv.Statistics.WebApi.Profiles;
 using MassTransit;

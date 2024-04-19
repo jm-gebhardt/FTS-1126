@@ -165,6 +165,9 @@ public static class CoreBusRegistrationExtensions
         configurator.AddRequestClient<CreatePickDropActionGroup>();
         configurator.AddConsumer<ActionCommandHandler>();
         configurator.AddRequestClient<QueueActionGroup>();
+        
+        configurator.AddRequestClient<GetActionGroupStatistics>();
+        configurator.AddConsumer<ActionGroupStatisticsRequestHandler>();
     }
 
     private static void RegisterMediatorAgvCommandHandlers(IMediatorRegistrationConfigurator configurator)

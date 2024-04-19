@@ -1,6 +1,7 @@
 using AutoMapper;
 using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.AgvActions;
 
 namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles;
@@ -24,6 +25,7 @@ public class ActionProfile : WebApiProfile
         CreateMap<AgvAction, AgvActionDto>().ForMember(m => m.TargetNodeType, opt => opt.Ignore());
         CreateMap<DateTime, DateTime>().ConvertUsing(new CustomDateTimeConverter());
         CreateMap<DateTime?, DateTime?>().ConvertUsing(new CustomDateTimeConverter());
+        CreateMap<DurationStatistics, ActionDurationStatisticsDto>();
     }
 
     /// <summary>

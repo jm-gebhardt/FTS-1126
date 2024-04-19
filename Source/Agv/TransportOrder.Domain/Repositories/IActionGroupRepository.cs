@@ -22,7 +22,7 @@ public interface IActionGroupRepository
     /// <summary>
     /// Get a list of ActionGroup.
     /// </summary>
-    /// <param name="states">Can be one state filter or contain multiple states which should be included in the return. If null, the filter is inactive</param>
+    /// <param name="states">Can be one actionGroupState filter or contain multiple states which should be included in the return. If null, the filter is inactive</param>
     /// <param name="fromDate">The UTC from Date, only items with a greater CreatedDate will be considered</param>
     /// <param name="toDate">The UTC from Date, only items with a less CreatedDate will be considered</param>
     /// <param name="assignedAgvCorrelationId">Correlation Id of assigned Agv</param>
@@ -36,19 +36,30 @@ public interface IActionGroupRepository
     /// <summary>
     /// Get a list of ActionGroup.
     /// </summary>
-    /// <param name="state">One state filter which should be included in the return parameter.</param>
+    /// <param name="actionGroupState">One actionGroupState filter which should be included in the return parameter.</param>
     /// <param name="fromDate">The UTC from date, only items with a greater CreatedDate will be considered.</param>
     /// <param name="toDate">The UTC to date, only items with a less CreatedDate will be considered.</param>
     /// <param name="assignedAgvCorrelationId">The correlation id of assigned agv.</param>
     /// <param name="maxItems">The maximum number of items to return.</param>
     /// <param name="isManual">The action group was created manually or automatic. If null, the filter is not considered.</param>
     /// <returns></returns>
-    Task<IReadOnlyList<ActionGroup>> GetActionGroupsAsync(ActionGroupState state, DateTime? fromDate = null, DateTime? toDate = null, int maxItems = 0, Guid? assignedAgvCorrelationId = null, bool? isManual = null);
+    Task<IReadOnlyList<ActionGroup>> GetActionGroupsAsync(ActionGroupState actionGroupState, DateTime? fromDate = null, DateTime? toDate = null, int maxItems = 0, Guid? assignedAgvCorrelationId = null, bool? isManual = null);
 
     /// <summary>
-    /// Get ActionGroup count which have the given state (and date range filter).
+    /// Get the durations of actions in action groups that are in given actionGroupState and
+    /// go from a source node to a target node. Both source and target are optional.
     /// </summary>
-    /// <param name="states">Can be one state filter or contain multiple states which should be included in the return</param>
+    /// <param name="actionGroupState">The actionGroupState of the action groups.</param>
+    /// <param name="sourceNodeId">The source node id.</param>
+    /// <param name="targetNodeId">The target node id.</param>
+    /// <param name="maxItems">The maximum number of groups returned.</param>
+    /// <returns></returns>
+    Task<Dictionary<ActionType, ICollection<double>>> GetActionDurationsByTypeAsync(ActionGroupState actionGroupState, string? sourceNodeId=null, string? targetNodeId=null, int maxItems = 1000);
+
+    /// <summary>
+    /// Get ActionGroup count which have the given actionGroupState (and date range filter).
+    /// </summary>
+    /// <param name="states">Can be one actionGroupState filter or contain multiple states which should be included in the return</param>
     /// <param name="fromDate">The UTC from date, only items with a greater CreatedDate will be considered.</param>
     /// <param name="toDate">The UTC to date, only items with a less CreatedDate will be considered.</param>
     /// <returns></returns>
@@ -117,7 +128,7 @@ public interface IActionGroupRepository
     /// </summary>
     /// <param name="action">The action.</param>
     /// <param name="agv">The assigned agv.</param>
-    /// <param name="state">The new state.</param>
+    /// <param name="state">The new actionGroupState.</param>
     /// <param name="reason">If set it will be added to the Reasons of the ActionGroup as justification.</param>
     Task<ActionGroup> UpdateActionAndGroupStateAsync(AgvAction action, Models.Agv.Agv? agv, ActionState state, Reason? reason = null);
 

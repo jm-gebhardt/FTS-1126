@@ -52,6 +52,19 @@ public static class AgvActionGenerator
         return parkAction;
     }
 
+    public static ActionGroup GeneratePickDropActionGroupWithActionDuration(string? source = null, string? destination = null, double actionDuration = 0)
+    {
+        var actionGroup = GeneratePickDropActionGroup(source: source, destination: destination);
+        foreach (var action in actionGroup.Actions)
+        {
+            actionGroup.StartAction(action.CorrelationId, []);
+            action.CompletedDate = action.StartedDate!.Value.AddSeconds(actionDuration);
+            action.State = ActionState.Completed;
+        }
+        actionGroup.State = ActionGroupState.Completed;
+        return actionGroup;
+    }
+
     public static ActionGroup GeneratePickDropActionGroup(
         ActionState pickActionState = ActionState.Created,
         ActionState dropActionState = ActionState.Created,

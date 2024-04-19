@@ -1,6 +1,7 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
 using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.ActionGroup;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.AgvActions;
 using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -63,5 +64,19 @@ public class ActionProfileTest
         actionGroupDto.Actions.ShouldNotBeEmpty();
         actionGroupDto.Actions.Count.ShouldBe(actionGroup.Actions.Count);
         actionGroupDto.IsManual.ShouldBe(actionGroup.IsManual);
+    }
+
+    [TestMethod]
+    public void Map_DurationStatistics_MapsAllPropertiesCorrectly()
+    {
+        var mapper = MappingHelper.GetMapper(new TransportOrder.WebApi.Profiles.ActionProfile());
+        var durationStatistics = new DurationStatistics(ActionType.Pick, 12, 1, 42);
+
+        var dto = mapper.Map<ActionDurationStatisticsDto>(durationStatistics);
+       
+        dto.ActionType.ShouldBe(durationStatistics.ActionType);
+        dto.MaxDuration.ShouldBe(durationStatistics.MaxDuration);
+        dto.MinDuration.ShouldBe(durationStatistics.MinDuration);
+        dto.MedianDuration.ShouldBe(durationStatistics.MedianDuration);
     }
 }

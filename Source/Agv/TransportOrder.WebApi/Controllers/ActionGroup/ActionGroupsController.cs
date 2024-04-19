@@ -16,17 +16,21 @@ public class ActionGroupsController : Controller
 {
     private readonly IRequestClient<GetActionGroups> _getAgvActionGroupsRequest;
     private readonly IRequestClient<GetActionGroupCountsByState> _getAgvActionGroupCountsByStateRequest;
+    private readonly IRequestClient<GetActionGroupStatistics> _durationStatisticsRequest;
     private readonly IMapper _mapper;
 
     /// <summary>
     /// Initializes a new <see cref="ActionGroupsController" /> instance.
     /// </summary>
-    public ActionGroupsController(IMapper mapper, IRequestClient<GetActionGroups> getAgvActionGroupsRequest,
-        IRequestClient<GetActionGroupCountsByState> getAgvActionGroupCountsByStateRequest)
+    public ActionGroupsController(IMapper mapper,
+        IRequestClient<GetActionGroups> getAgvActionGroupsRequest,
+        IRequestClient<GetActionGroupCountsByState> getAgvActionGroupCountsByStateRequest,
+        IRequestClient<GetActionGroupStatistics> durationStatisticsRequest)
     {
         _mapper = mapper;
         _getAgvActionGroupsRequest = getAgvActionGroupsRequest;
         _getAgvActionGroupCountsByStateRequest = getAgvActionGroupCountsByStateRequest;
+        _durationStatisticsRequest = durationStatisticsRequest;
     }
 
     /// <summary>
@@ -60,5 +64,20 @@ public class ActionGroupsController : Controller
         Response<GotActionGroupCountsByState> response = await _getAgvActionGroupCountsByStateRequest.GetResponse<GotActionGroupCountsByState>(new GetActionGroupCountsByState());
         var actionGroupCountByState = _mapper.Map<List<AgvGroupCountByStateDto>>(response.Message.AgvGroupCountByState);
         return Ok(actionGroupCountByState);
+    }
+
+    /// <summary>
+    /// Get duration statistics by action type in group heading from source to target. Source and target are optional.
+    /// </summary>
+    /// <param name="source">The source node id (optional).</param>
+    /// <param name="target">The target node id (optional).</param>
+    /// <response code="200">Ok</response>
+    /// <returns>Duration statistics of actions in groups matching query parameters. Empty list if no matching groups where found.</returns>
+    [HttpGet]
+    [Route("/actionGroups/durationStatistics")]
+    public async Task<ActionResult<IEnumerable<ActionDurationStatisticsDto>>> GetDurationStatistics([FromQuery] string? source, [FromQuery] string? target)
+    {
+        Response<GotActionGroupStatistics> response = await _durationStatisticsRequest.GetResponse<GotActionGroupStatistics>(new GetActionGroupStatistics(source, target));
+        return Ok(_mapper.Map<List<ActionDurationStatisticsDto>>(response.Message.DurationStatistics));
     }
 }
