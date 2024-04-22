@@ -585,14 +585,14 @@ public class AgvCommandHandler :
         if (await _agvDb.Cargos.SetCargoAsync(agvCorrelationId, cargos))
         {
             await context.Publish(new CargoChanged(agvCorrelationId, receivedCargos));
+            var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+            _logger.LogAgvInformation(LogCodes.AgvCargoUpdated, agvCorrelationId, "Cargo Updated", $"AGV {agv.SerialNumber} cargo updated");
         }
         bool hasCargo = await _agvDb.Cargos.HasAgvCargoAsync(agvCorrelationId);
         if (hadCargo != hasCargo)
         {
             await context.Publish(new HasCargoChanged(agvCorrelationId, hasCargo));
         }
-        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
-        _logger.LogAgvInformation(LogCodes.AgvCargoUpdated, agvCorrelationId, "Cargo Updated", $"AGV {agv.SerialNumber} cargo updated");
     }
 
     /// <summary>
