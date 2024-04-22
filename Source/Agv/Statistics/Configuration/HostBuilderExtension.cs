@@ -37,12 +37,16 @@ public static class HostBuilderExtension
             try
             {
                 services.AddHostedService<InitialGridProvider>();
+                services.AddHostedService<HousekeepingStartup>();
                 services.ConfigureServicesMassTransit(context.Configuration, x =>
                 {
                     x.AddBusConsumers();
 
                     x.AddMediator(c => c.AddMediatorConsumers());
-                }, rabbitMqConfiguration: (ctx, cfg) => { cfg.UseConsumeFilter<AgvTracingConsumeFilters>(ctx); });
+                }, rabbitMqConfiguration: (ctx, cfg) =>
+                {
+                    cfg.UseConsumeFilter<AgvTracingConsumeFilters>(ctx);
+                });
             }
             catch (InvalidOperationException e)
             {

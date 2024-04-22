@@ -35,4 +35,10 @@ public class EfGridAgvPositionRepository(StatisticsDbContext context) : EfReposi
         
         return new PositionFrequency(gridId, mapId, frequencies);
     }
+
+    /// <inheritdoc cref="IGridAgvPositionRepository"/>
+    public async Task DeleteAgvPositionsOlderThan(DateTime timestamp)
+    {
+        await DbSet.Where(p => p.Timestamp < timestamp).ExecuteDeleteAsync();
+    }
 }

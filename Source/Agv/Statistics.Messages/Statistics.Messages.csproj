@@ -2,13 +2,14 @@
     <PropertyGroup>
         <AssemblyName>Gebhardt.StoreWare.Agv.Statistics.Messages</AssemblyName>
     </PropertyGroup>
-    <Import Project="..\SharedProjectSettings.csproj"/>
+    <Import Project="..\SharedProjectSettings.csproj" />
     <ItemGroup>
-        <PackageReference Include="JetBrains.Annotations" Version="2023.3.0"/>
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0"/>
-        <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="8.0.0"/>
+        <PackageReference Include="JetBrains.Annotations" Version="2023.3.0" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
+        <PackageReference Include="MassTransit.Quartz" Version="8.2.0" />
+        <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="8.0.0" />
     </ItemGroup>
     <ItemGroup>
-        <ProjectReference Include="..\Statistics.Domain\Statistics.Domain.csproj"/>
+        <ProjectReference Include="..\Statistics.Domain\Statistics.Domain.csproj" />
     </ItemGroup>
 </Project>

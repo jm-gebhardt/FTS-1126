@@ -1,4 +1,5 @@
 ﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
+using Gebhardt.StoreWare.Agv.Statistics.Services.CommandHandler;
 using Gebhardt.StoreWare.Agv.Statistics.Services.EventHandler;
 using JetBrains.Annotations;
 using MassTransit;
@@ -19,6 +20,7 @@ public static class BusRegistrationExtension
     public static IBusRegistrationConfigurator AddBusConsumers(this IBusRegistrationConfigurator cfg)
     {
         cfg.AddConsumer<GridEventHandler>().Endpoint(c => c.InstanceId = nameof(GridEventHandler));
+        cfg.AddConsumer<HousekeepingCommandHandler>().Endpoint(c => c.InstanceId = nameof(HousekeepingCommandHandler));
         cfg.AddConsumer<PositionEventHandler>(c =>
         {
             var partitioner = c.CreatePartitioner(PartitionCount);

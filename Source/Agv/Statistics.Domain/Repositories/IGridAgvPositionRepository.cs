@@ -17,4 +17,10 @@ public interface IGridAgvPositionRepository : IRepository<GridAgvPosition>
     /// <param name="fromDate">The UTC from Date, only items with a greater Timestamp will be considered.</param>
     /// <param name="toDate">The UTC to Date, only items with a less Timestamp will be considered.</param>
     Task<PositionFrequency> GetPositionFrequency(Guid gridId, Guid mapId, DateTime? fromDate, DateTime? toDate);
+
+    /// <summary>
+    /// Deletes any agv positions older than the given timestamp.
+    /// </summary>
+    /// <param name="timestamp">The timestamp</param>
+    Task DeleteAgvPositionsOlderThan(DateTime timestamp);
 }

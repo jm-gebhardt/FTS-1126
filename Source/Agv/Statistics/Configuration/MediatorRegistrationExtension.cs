@@ -17,6 +17,7 @@ public static class MediatorRegistrationExtension
     public static void AddMediatorConsumers(this IMediatorRegistrationConfigurator cfg)
     {     
         cfg.AddConsumer<GridCommandHandler>();
+        cfg.AddConsumer<HousekeepingCommandHandler>();
         cfg.AddRequestClient<AddGrid>();
         cfg.AddConsumer<GridRequestHandler>();
         cfg.AddRequestClient<GetGrids>();

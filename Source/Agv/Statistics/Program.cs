@@ -10,14 +10,28 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Prometheus;
+using Quartz;
 
 var initialLogger = InitialLogger.Create<Program>();
+
+const string quartzSchedulerName = "MassTransit-Statistics";
+const string quartzSchedulerId = "AUTO";
 
 try
 {
     var hostBuilder = GebhardtStartup.CreateHostBuilder(args)
         .AddMassTransit(initialLogger)
         .AddStatistics()
+        .ConfigureServices((_, services) =>
+        {
+            services.AddQuartz(q =>
+            {
+                q.SchedulerId = quartzSchedulerId;
+                q.SchedulerName = quartzSchedulerName;
+                q.UseTimeZoneConverter();
+            });
+            services.AddQuartzHostedService();
+        })
         .ConfigureWebHost(h =>
             h.UseKestrel()
                 .AddStatisticsWebApi()
