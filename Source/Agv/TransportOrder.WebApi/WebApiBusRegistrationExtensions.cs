@@ -9,7 +9,7 @@ namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi;
 public static class WebApiBusRegistrationExtensions
 {
     /// <summary>
-    /// 
+    /// Add WebApi consumer.
     /// </summary>
     /// <param name="busRegistrationConfigurator"></param>
     /// <returns></returns>

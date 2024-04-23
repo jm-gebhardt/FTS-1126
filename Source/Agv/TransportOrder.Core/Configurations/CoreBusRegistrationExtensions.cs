@@ -13,6 +13,7 @@ using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agvs.Queries;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Map;
 using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Routing;
+using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.System;
 using MassTransit;
 using LockAgv = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv.LockAgv;
 using RequestAgvData = Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv.RequestAgvData;
@@ -139,6 +140,8 @@ public static class CoreBusRegistrationExtensions
         RegisterMediatorActionGroupHandlers(configurator);
 
         RegisterMediatorErrorHandlers(configurator);
+
+        RegisterMediatorSystemHandlers(configurator);
     }
 
     private static void RegisterMediatorErrorHandlers(IMediatorRegistrationConfigurator configurator)
@@ -153,6 +156,12 @@ public static class CoreBusRegistrationExtensions
         configurator.AddRequestClient<ResetAgvErrors>();
     }
 
+    private static void RegisterMediatorSystemHandlers(IMediatorRegistrationConfigurator configurator)
+    {
+        configurator.AddConsumer<SystemRequestHandler>();
+        configurator.AddRequestClient<GetSystemTime>();
+    }
+
     private static void RegisterMediatorActionGroupHandlers(IMediatorRegistrationConfigurator configurator)
     {
         configurator.AddConsumer<ActionGroupRequestHandler>();
@@ -165,7 +174,7 @@ public static class CoreBusRegistrationExtensions
         configurator.AddRequestClient<CreatePickDropActionGroup>();
         configurator.AddConsumer<ActionCommandHandler>();
         configurator.AddRequestClient<QueueActionGroup>();
-        
+
         configurator.AddRequestClient<GetActionGroupStatistics>();
         configurator.AddConsumer<ActionGroupStatisticsRequestHandler>();
     }

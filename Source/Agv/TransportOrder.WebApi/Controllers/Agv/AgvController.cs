@@ -60,7 +60,9 @@ public class AgvController : Controller
     /// <summary>
     /// Init controller
     /// </summary>
-    public AgvController(IMapper mapper, IRequestClient<GetAgv> getAgvClient,
+    public AgvController(
+        IMapper mapper,
+        IRequestClient<GetAgv> getAgvClient,
         IRequestClient<GetAgvGraph> getAgvGraphClient,
         IRequestClient<GetAgvData> getAgvDataClient,
         IRequestClient<GetAgvBattery> getAgvBatteryClient,

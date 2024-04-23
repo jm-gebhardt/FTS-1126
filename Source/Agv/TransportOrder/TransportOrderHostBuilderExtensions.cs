@@ -6,6 +6,7 @@ using Gebhardt.StoreWare.Agv.Common.MassTransit;
 using Gebhardt.StoreWare.Agv.Common.Services;
 using Gebhardt.StoreWare.Agv.Common.Services.Filters;
 using Gebhardt.StoreWare.Agv.Common.Services.Significance;
+using Gebhardt.StoreWare.Agv.Common.Time;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.CmdOptions;
 using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.BackgroundServices;
 using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
@@ -70,6 +71,7 @@ public static class TransportOrderHostBuilderExtensions
         // Configuration
         services.AddSingleton(_ => productionOptions);
        
+        services.AddSingleton<ITimeProvider, DateTimeNowUtcProvider>();
         services.AddHostedService<AgvSettingsInitializer>();
         services.AddSingleton<IConcurrentDictionaryProvider<Guid, AgvSettingsReadModel>, InMemoryAgvSettingsProvider>();
         services.AddTransient<IAgvSettingsProvider, EfAgvSettingsProvider>();
