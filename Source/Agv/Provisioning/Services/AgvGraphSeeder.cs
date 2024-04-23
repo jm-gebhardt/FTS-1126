@@ -1,9 +1,9 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
+﻿using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.StoreWare.Agv.Provisioning.Services;
+namespace Gebhardt.Acc.Provisioning.Services;
 
 /// <inheritdoc />
 [UsedImplicitly]

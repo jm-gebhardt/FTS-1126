@@ -1,6 +1,6 @@
 using Swashbuckle.AspNetCore.SwaggerGen;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.WebApi.Swagger;
+namespace Gebhardt.Acc.DeviceCommunication.WebApi.Swagger;
 
 /// <summary>
 /// SwaggerGenOptions

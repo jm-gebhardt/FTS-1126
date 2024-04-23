@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.Provisioning.Models;
+namespace Gebhardt.Acc.Provisioning.Models;
 
 /// <summary>
 /// Contains the map and graph data.

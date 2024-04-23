@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.ActionGroup;
+﻿namespace Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
 
 /// <summary>
 /// Represents the event raised when reset of an action group was triggered.

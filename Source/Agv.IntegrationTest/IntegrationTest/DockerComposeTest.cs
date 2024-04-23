@@ -1,8 +1,8 @@
-using Gebhardt.StoreWare.Agv.IntegrationTest.Utils;
+using Gebhardt.Acc.IntegrationTest.Utils;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.IntegrationTest
+namespace Gebhardt.Acc.IntegrationTest
 {
     /// <summary>
     /// Starts and stops docker compose service

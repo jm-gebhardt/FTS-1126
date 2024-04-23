@@ -1,7 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.StoreWare.Agv.Provisioning.Services;
+namespace Gebhardt.Acc.Provisioning.Services;
 
 /// <summary>
 /// Factory for creating an <see cref="ISeeder"/> for creating an Agv.

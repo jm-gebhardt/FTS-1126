@@ -1,7 +1,7 @@
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
+namespace Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 
 /// <summary>
 /// Represents the event raised when an Agv is requested to move to a specific destination node.

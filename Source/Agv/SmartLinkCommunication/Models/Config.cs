@@ -1,6 +1,6 @@
 ﻿using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.SmartLinkCommunication.Models;
+namespace Gebhardt.Acc.SmartLinkCommunication.Models;
 
 /// <summary>
 /// The system configuration

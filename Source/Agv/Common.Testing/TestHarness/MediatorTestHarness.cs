@@ -4,7 +4,7 @@ using MassTransit.Mediator;
 using MassTransit.Testing;
 using MassTransit.Testing.Implementations;
 
-namespace Gebhardt.StoreWare.Agv.Common.Testing.TestHarness;
+namespace Gebhardt.Acc.Common.Testing.TestHarness;
 
 /// <summary>
 /// Provides a test harness for IMediator (adopted from

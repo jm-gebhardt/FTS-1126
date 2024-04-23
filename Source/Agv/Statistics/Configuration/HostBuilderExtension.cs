@@ -1,18 +1,18 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Configurations;
-using Gebhardt.StoreWare.Agv.Common.Configurations.Extensions;
-using Gebhardt.StoreWare.Agv.Common.Dictionaries;
-using Gebhardt.StoreWare.Agv.Common.Domain.Models;
-using Gebhardt.StoreWare.Agv.Common.Domain.SemaphoreProviders;
-using Gebhardt.StoreWare.Agv.Common.Domain.Utilities;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
-using Gebhardt.StoreWare.Agv.Common.Messages.Filters;
-using Gebhardt.StoreWare.Agv.Common.Services;
-using Gebhardt.StoreWare.Agv.Common.Services.Filters;
-using Gebhardt.StoreWare.Agv.Common.Services.Significance;
-using Gebhardt.StoreWare.Agv.Statistics.Domain.Repositories;
-using Gebhardt.StoreWare.Agv.Statistics.Persistence.Ef.DataAccess;
-using Gebhardt.StoreWare.Agv.Statistics.Persistence.Ef.Repositories;
-using Gebhardt.StoreWare.Agv.Statistics.Services.BackgroundServices;
+﻿using Gebhardt.Acc.Common.Configurations;
+using Gebhardt.Acc.Common.Configurations.Extensions;
+using Gebhardt.Acc.Common.Dictionaries;
+using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.SemaphoreProviders;
+using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
+using Gebhardt.Acc.Common.Messages.Filters;
+using Gebhardt.Acc.Common.Services;
+using Gebhardt.Acc.Common.Services.Filters;
+using Gebhardt.Acc.Common.Services.Significance;
+using Gebhardt.Acc.Statistics.Domain.Repositories;
+using Gebhardt.Acc.Statistics.Persistence.Ef.DataAccess;
+using Gebhardt.Acc.Statistics.Persistence.Ef.Repositories;
+using Gebhardt.Acc.Statistics.Services.BackgroundServices;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -20,7 +20,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.StoreWare.Agv.Statistics.Configuration;
+namespace Gebhardt.Acc.Statistics.Configuration;
 
 /// <summary>
 /// Provides extension method for <see cref="IHostBuilder"/>.

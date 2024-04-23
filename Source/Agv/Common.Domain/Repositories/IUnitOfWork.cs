@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.StoreWare.Agv.Common.Domain.Repositories;
+﻿namespace Gebhardt.Acc.Common.Domain.Repositories;
 
 /// <summary>
 /// Provides a unit-of-work to coordinate changes over multiple repositories.

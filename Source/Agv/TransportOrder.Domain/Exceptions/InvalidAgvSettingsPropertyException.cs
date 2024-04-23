@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
+﻿namespace Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 
 /// <summary>
 /// Represents the exception thrown when an invalid property name was provided.

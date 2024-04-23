@@ -1,13 +1,13 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
-using Gebhardt.StoreWare.Agv.Statistics.Messages.Commands;
-using Gebhardt.StoreWare.Agv.Statistics.Messages.Requests;
-using Gebhardt.StoreWare.Agv.Statistics.WebApi.Dtos;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.Statistics.Messages.Commands;
+using Gebhardt.Acc.Statistics.Messages.Requests;
+using Gebhardt.Acc.Statistics.WebApi.Dtos;
 using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Gebhardt.StoreWare.Agv.Statistics.WebApi.Controllers;
+namespace Gebhardt.Acc.Statistics.WebApi.Controllers;
 
 /// <summary>
 /// Single action group requests.

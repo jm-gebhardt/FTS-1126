@@ -1,10 +1,10 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.BackgroundServices;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
+﻿using Gebhardt.Acc.Common.Testing.Fixtures;
+using Gebhardt.Acc.TransportOrder.Core.Services.BackgroundServices;
+using Gebhardt.Acc.TransportOrder.Domain;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Test.Services.BackgroundServices;
+namespace Gebhardt.Acc.TransportOrder.Test.Services.BackgroundServices;
 
 /// <summary>
 /// Provides a test fixture for the <see cref="OfflineWatchdogInitializer"/>.

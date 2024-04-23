@@ -1,8 +1,8 @@
-using Gebhardt.StoreWare.Agv.SmartLinkCommunicationTest.Helpers;
+using Gebhardt.Acc.SmartLinkCommunicationTest.Helpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.SmartLinkCommunicationTest.Services;
+namespace Gebhardt.Acc.SmartLinkCommunicationTest.Services;
 
 [TestClass]
 public class SmartLinkResponseHandlerTest

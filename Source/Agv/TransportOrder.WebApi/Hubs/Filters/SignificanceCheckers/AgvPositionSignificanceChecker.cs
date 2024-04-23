@@ -1,8 +1,8 @@
-using Gebhardt.StoreWare.Agv.Common.Services;
-using Gebhardt.StoreWare.Agv.Common.Services.Significance;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
+using Gebhardt.Acc.Common.Services;
+using Gebhardt.Acc.Common.Services.Significance;
+using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Filters.SignificanceCheckers;
+namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs.Filters.SignificanceCheckers;
 
 /// <summary>
 /// Checks if <see cref="AgvPositionDto"/> has changed significantly.

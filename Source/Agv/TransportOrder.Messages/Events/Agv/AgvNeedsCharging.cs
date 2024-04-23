@@ -1,6 +1,6 @@
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
+namespace Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 
 /// <summary>
 /// Event sent when an agv needs to be moved to a charging station, when battery level is below

@@ -1,15 +1,15 @@
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.ActionGroup;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.ActionGroup;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
+using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
+using Gebhardt.Acc.TransportOrder.Messages.Events.ActionGroup;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
 using JetBrains.Annotations;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
+namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 
 /// <summary>
 /// Provides handlers for action group related requests.

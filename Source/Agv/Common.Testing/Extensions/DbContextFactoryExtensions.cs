@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace Gebhardt.StoreWare.Agv.Common.Testing.Extensions;
+namespace Gebhardt.Acc.Common.Testing.Extensions;
 
 public static class DbContextFactoryExtensions
 {

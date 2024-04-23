@@ -1,6 +1,6 @@
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 
-namespace Gebhardt.StoreWare.Agv.Common.Exceptions;
+namespace Gebhardt.Acc.Common.Exceptions;
 
 /// <summary>
 /// Assigned Agv was not found in <see cref="AgvAction"/>

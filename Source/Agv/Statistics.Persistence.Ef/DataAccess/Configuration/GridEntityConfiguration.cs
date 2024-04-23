@@ -1,9 +1,9 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Persistence.Ef;
-using Gebhardt.StoreWare.Agv.Statistics.Domain.Models;
+﻿using Gebhardt.Acc.Common.Persistence.Ef;
+using Gebhardt.Acc.Statistics.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Gebhardt.StoreWare.Agv.Statistics.Persistence.Ef.DataAccess.Configuration;
+namespace Gebhardt.Acc.Statistics.Persistence.Ef.DataAccess.Configuration;
 
 /// <inheritdoc />
 public class GridEntityConfiguration : IEntityTypeConfiguration<Grid>

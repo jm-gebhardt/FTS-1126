@@ -1,6 +1,6 @@
 using AutoMapper;
 
-namespace Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
+namespace Gebhardt.Acc.Common.Testing.Helpers;
 
 /// <summary>
 /// Helper class for getting mapper configuration for the profiles provided

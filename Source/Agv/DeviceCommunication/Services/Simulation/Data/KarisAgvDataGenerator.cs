@@ -1,6 +1,6 @@
-using Gebhardt.StoreWare.Agv.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Models;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Data;
+namespace Gebhardt.Acc.DeviceCommunication.Services.Simulation.Data;
 
 /// <summary>
 /// Karis Agv Data Generator where types are generated in a round robin fashion

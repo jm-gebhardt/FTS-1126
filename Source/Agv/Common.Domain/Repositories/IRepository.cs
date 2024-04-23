@@ -1,6 +1,6 @@
 ﻿using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.Common.Domain.Repositories;
+namespace Gebhardt.Acc.Common.Domain.Repositories;
 
 /// <summary>
 /// Provides a marker interface for repositories.

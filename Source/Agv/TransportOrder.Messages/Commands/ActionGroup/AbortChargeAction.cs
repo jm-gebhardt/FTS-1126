@@ -1,6 +1,6 @@
 ﻿using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
+namespace Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 
 /// <summary>
 /// Abort the currently running charge action.

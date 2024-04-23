@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Dictionaries;
-using Gebhardt.StoreWare.Agv.Common.Messages;
+﻿using Gebhardt.Acc.Common.Dictionaries;
+using Gebhardt.Acc.Common.Messages;
 
-namespace Gebhardt.StoreWare.Agv.Common.Services.Filters;
+namespace Gebhardt.Acc.Common.Services.Filters;
 
 /// <summary>
 /// A filter that keeps the filter for a given (Guid) key in memory.

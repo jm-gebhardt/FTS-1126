@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.ActionGroup;
+namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs.ActionGroup;
 
 /// <summary>
 /// Hub for ActionGroup related Dtos

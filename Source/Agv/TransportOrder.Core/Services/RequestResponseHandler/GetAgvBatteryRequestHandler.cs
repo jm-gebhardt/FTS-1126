@@ -1,14 +1,14 @@
 using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Domain.Models;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agvs.Queries;
+using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.TransportOrder.Domain;
+using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.Agvs.Queries;
 using JetBrains.Annotations;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
+namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 
 /// <summary>
 /// Provides handlers for agv specification-related requests.

@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.SmartLinkCommunication.Models;
+﻿using Gebhardt.Acc.SmartLinkCommunication.Models;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.StoreWare.Agv.SmartLinkCommunication.Services;
+namespace Gebhardt.Acc.SmartLinkCommunication.Services;
 
 /// <summary>
 /// Track state of io pins and trigger IIoActionExecutionService when it was satisfied

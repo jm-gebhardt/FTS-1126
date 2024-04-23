@@ -5,11 +5,11 @@
   "conversationId": "b0370000-56b8-0050-42f9-08da80226bd6",
   "initiatorId": null,
   "sourceAddress": "rabbitmq://localhost/202203IRSHV01_GebhardtStoreWareAgvWCSCommunication_bus_sy5oyynszyyfyfw6bdpey8c8n8?temporary=true",
-  "destinationAddress": "rabbitmq://localhost/Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Commands:HandleHostOrder",
+  "destinationAddress": "rabbitmq://localhost/Gebhardt.Acc.Common.Messages.HostOrder.Commands:HandleHostOrder",
   "responseAddress": null,
   "faultAddress": null,
   "messageType": [
-    "urn:message:Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Commands:HandleHostOrder"
+    "urn:message:Gebhardt.Acc.Common.Messages.HostOrder.Commands:HandleHostOrder"
   ],
   "message": {
     "correlationId": "5a32f8f8-97c0-c758-eb9f-6341aceadd21",
@@ -28,9 +28,9 @@
   "headers": {},
   "host": {
     "machineName": "202203-IRS-HV01",
-    "processName": "Gebhardt.StoreWare.Agv.WCSCommunication",
+    "processName": "Gebhardt.Acc.WCSCommunication",
     "processId": 14256,
-    "assembly": "Gebhardt.StoreWare.Agv.WCSCommunication",
+    "assembly": "Gebhardt.Acc.WCSCommunication",
     "assemblyVersion": "0.0.1.0",
     "frameworkVersion": "6.0.8",
     "massTransitVersion": "8.0.3.0",

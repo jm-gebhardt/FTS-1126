@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.StoreWare.Agv.SmartLinkCommunication.Models;
+﻿namespace Gebhardt.Acc.SmartLinkCommunication.Models;
 
 /// <summary>
 /// Action types for actions of the IOs of SmartLink module

@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <AssemblyName>Gebhardt.StoreWare.Agv.IntegrationTest</AssemblyName>
+        <AssemblyName>Gebhardt.Acc.IntegrationTest</AssemblyName>
         <Description></Description>
         <IsPackable>false</IsPackable>
     </PropertyGroup>

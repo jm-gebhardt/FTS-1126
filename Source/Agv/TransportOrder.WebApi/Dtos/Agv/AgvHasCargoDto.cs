@@ -1,6 +1,6 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages;
+﻿using Gebhardt.Acc.Common.Messages;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
+namespace Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 
 /// <summary>
 /// Agv has cargo.

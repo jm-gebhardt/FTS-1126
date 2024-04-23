@@ -2,7 +2,7 @@
 using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
-namespace Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Commands;
+namespace Gebhardt.Acc.Common.Messages.HostOrder.Commands;
 
 /// <summary>
 /// A command from the host system to update an existing transport order

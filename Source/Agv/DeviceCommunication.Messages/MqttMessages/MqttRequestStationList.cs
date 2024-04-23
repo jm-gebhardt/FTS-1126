@@ -1,8 +1,8 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Extensions;
+﻿using Gebhardt.Acc.Common.Extensions;
 using JetBrains.Annotations;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.MqttMessages;
+namespace Gebhardt.Acc.DeviceCommunication.Messages.MqttMessages;
 
 /// <summary>
 /// Requests the station list from the AGV

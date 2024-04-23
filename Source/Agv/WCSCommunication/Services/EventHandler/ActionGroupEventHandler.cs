@@ -1,10 +1,10 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
-using Gebhardt.StoreWare.Agv.WCSCommunication.Messages.Commands;
+﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.WCSCommunication.Messages.Commands;
 using JetBrains.Annotations;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services.EventHandler;
+namespace Gebhardt.Acc.WCSCommunication.Services.EventHandler;
 
 /// <summary>
 /// Provides handlers for action group related events.

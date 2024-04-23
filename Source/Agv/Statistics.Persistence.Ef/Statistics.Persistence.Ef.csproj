@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <AssemblyName>Gebhardt.StoreWare.Agv.Statistics.Persistence.Ef</AssemblyName>
+        <AssemblyName>Gebhardt.Acc.Statistics.Persistence.Ef</AssemblyName>
     </PropertyGroup>
     <Import Project="..\SharedProjectSettings.csproj" />
     <ItemGroup>

@@ -1,6 +1,6 @@
 ﻿using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
+namespace Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 
 /// <summary>
 /// Represents the route of an Agv.

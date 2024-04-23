@@ -29,4 +29,4 @@ ARG PROJECT
 ENV PROJECT=$PROJECT
 WORKDIR c:\\app
 COPY --from=build-env /app/out ./
-CMD dotnet /app/Gebhardt.StoreWare.Agv.%PROJECT%.dll
+CMD dotnet /app/Gebhardt.Acc.%PROJECT%.dll

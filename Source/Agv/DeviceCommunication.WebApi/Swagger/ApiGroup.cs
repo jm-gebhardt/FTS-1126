@@ -1,7 +1,7 @@
 using JetBrains.Annotations;
 using Microsoft.OpenApi.Models;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.WebApi.Swagger;
+namespace Gebhardt.Acc.DeviceCommunication.WebApi.Swagger;
 
 /// <summary>
 /// Api Group Interface

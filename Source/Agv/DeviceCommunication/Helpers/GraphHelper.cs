@@ -1,6 +1,6 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Utilities;
+﻿using Gebhardt.Acc.Common.Utilities;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Helpers;
+namespace Gebhardt.Acc.DeviceCommunication.Helpers;
 
 /// <summary>
 /// Helper class for graph related stuff.

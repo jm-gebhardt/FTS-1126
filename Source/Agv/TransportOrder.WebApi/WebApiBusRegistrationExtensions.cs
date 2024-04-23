@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Consumer;
+﻿using Gebhardt.Acc.TransportOrder.WebApi.Consumer;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi;
+namespace Gebhardt.Acc.TransportOrder.WebApi;
 
 /// <summary>
 /// IBusRegistrationExtensions extensions

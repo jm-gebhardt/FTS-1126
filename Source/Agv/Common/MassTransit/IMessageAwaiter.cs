@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.StoreWare.Agv.Common.MassTransit;
+﻿namespace Gebhardt.Acc.Common.MassTransit;
 
 /// <summary>
 /// Service to wait for a specific message with a specific condition to be received. Additionally it has a timeout.

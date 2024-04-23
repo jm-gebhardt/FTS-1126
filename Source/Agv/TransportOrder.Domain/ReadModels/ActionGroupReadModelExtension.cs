@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
+namespace Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 
 /// <summary>
 /// Provides extension methods for testing the action group read model.

@@ -1,11 +1,11 @@
 ﻿using CommandLine;
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
-using Gebhardt.StoreWare.Agv.SmartLinkCommunication.Converters;
-using Gebhardt.StoreWare.Agv.SmartLinkCommunication.Models;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.SmartLinkCommunication.Converters;
+using Gebhardt.Acc.SmartLinkCommunication.Models;
 using Microsoft.Extensions.Logging;
 using YamlDotNet.Serialization;
 
-namespace Gebhardt.StoreWare.Agv.SmartLinkCommunication;
+namespace Gebhardt.Acc.SmartLinkCommunication;
 
 /// <summary>
 /// Parses the command line arguments

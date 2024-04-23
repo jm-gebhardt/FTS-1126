@@ -1,10 +1,10 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
-using ActionGroup = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
+using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
+using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
+namespace Gebhardt.Acc.TransportOrder.Domain.Repositories;
 
 /// <summary>
 /// Provides a read-model repository for Action Group retrieval across tables.

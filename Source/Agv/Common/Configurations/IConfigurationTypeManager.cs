@@ -1,7 +1,7 @@
-using Gebhardt.StoreWare.Agv.Common.Configurations.Models;
+using Gebhardt.Acc.Common.Configurations.Models;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.Common.Configurations;
+namespace Gebhardt.Acc.Common.Configurations;
 
 /// <summary>
 /// Holds all configuration types of the initialized assembly(/ies)

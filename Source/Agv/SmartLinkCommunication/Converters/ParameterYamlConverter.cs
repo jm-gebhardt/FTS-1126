@@ -1,9 +1,9 @@
 ﻿using CommandLine;
-using Gebhardt.StoreWare.Agv.SmartLinkCommunication.Models;
+using Gebhardt.Acc.SmartLinkCommunication.Models;
 using YamlDotNet.Core;
 using YamlDotNet.Serialization;
 
-namespace Gebhardt.StoreWare.Agv.SmartLinkCommunication.Converters;
+namespace Gebhardt.Acc.SmartLinkCommunication.Converters;
 
 /// <summary>
 /// Custom converter for Parameter property of IoActionConfig which has an object type to be able to pass any parameters to it.

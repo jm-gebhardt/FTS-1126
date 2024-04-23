@@ -1,6 +1,6 @@
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
+using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
+namespace Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
 
 /// <summary>
 /// Defines a result for the <see cref="GetAgvPosition"/> request.

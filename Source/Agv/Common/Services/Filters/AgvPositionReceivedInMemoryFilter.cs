@@ -1,10 +1,10 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Dictionaries;
-using Gebhardt.StoreWare.Agv.Common.Domain.Models;
-using Gebhardt.StoreWare.Agv.Common.Domain.SemaphoreProviders;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
-using Gebhardt.StoreWare.Agv.Common.Services.Significance;
+﻿using Gebhardt.Acc.Common.Dictionaries;
+using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.SemaphoreProviders;
+using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
+using Gebhardt.Acc.Common.Services.Significance;
 
-namespace Gebhardt.StoreWare.Agv.Common.Services.Filters;
+namespace Gebhardt.Acc.Common.Services.Filters;
 
 /// <summary>
 /// Compares <see cref="AgvPositionReceived"/> (separated by Guid( in memory and uses <see cref="AgvPositionReceivedFilter"/> to detect if it should be acted on.

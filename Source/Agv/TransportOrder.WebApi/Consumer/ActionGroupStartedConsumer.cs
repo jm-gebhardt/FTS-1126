@@ -1,11 +1,11 @@
 ﻿using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Agv;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Agv;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Consumer;
+namespace Gebhardt.Acc.TransportOrder.WebApi.Consumer;
 
 /// <summary>
 /// Consumes <see cref="ActionGroupStarted"/> and sends message via <see cref="IAgvPublisher"/>

@@ -1,6 +1,6 @@
 ﻿using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.Common.Exceptions;
+namespace Gebhardt.Acc.Common.Exceptions;
 
 /// <summary>
 /// Represents errors that occur when the object is not in correct state

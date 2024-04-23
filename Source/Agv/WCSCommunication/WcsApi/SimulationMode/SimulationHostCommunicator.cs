@@ -1,8 +1,8 @@
-﻿using Gebhardt.StoreWare.Agv.WCSCommunication.Domain.Services;
+﻿using Gebhardt.Acc.WCSCommunication.Domain.Services;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.StoreWare.Agv.WCSCommunication.WcsApi.SimulationMode;
+namespace Gebhardt.Acc.WCSCommunication.WcsApi.SimulationMode;
 
 /// <summary>
 ///  Simulate finishing of host orders

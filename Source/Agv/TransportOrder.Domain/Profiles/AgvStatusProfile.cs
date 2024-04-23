@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Profiles;
+namespace Gebhardt.Acc.TransportOrder.Domain.Profiles;
 
 /// <summary>
 /// Provides mapping configurations for the agv status.

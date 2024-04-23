@@ -1,6 +1,6 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models;
+﻿using Gebhardt.Acc.Common.Domain.Models;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
+namespace Gebhardt.Acc.TransportOrder.Domain.Repositories;
 
 /// <summary>
 /// Abstracted interface for AgvDataRepository.

@@ -1,9 +1,9 @@
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Map;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Map;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
+using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Map;
 using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers.Map;
+namespace Gebhardt.Acc.TransportOrder.WebApi.Controllers.Map;
 
 /// <summary>
 /// Batch map requests.

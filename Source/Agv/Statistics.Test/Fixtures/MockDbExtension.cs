@@ -1,8 +1,8 @@
-﻿using Gebhardt.StoreWare.Agv.Statistics.Domain.Models;
-using Gebhardt.StoreWare.Agv.Statistics.Domain.Repositories;
+﻿using Gebhardt.Acc.Statistics.Domain.Models;
+using Gebhardt.Acc.Statistics.Domain.Repositories;
 using Moq;
 
-namespace Gebhardt.StoreWare.Agv.Statistics.Test.Fixtures;
+namespace Gebhardt.Acc.Statistics.Test.Fixtures;
 
 /// <summary>
 /// Provides extensions for the mock db.

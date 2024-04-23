@@ -1,17 +1,17 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
-using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
+﻿using Gebhardt.Acc.TransportOrder.Domain;
+using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
+using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 using Moq;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Test.Helper;
+namespace Gebhardt.Acc.TransportOrder.Test.Helper;
 
 public static class AgvRepositoryExtensions
 {
-    public static void AddAgvsToMockRepository(this Mock<IAgvDb> repoMock, List<TransportOrder.Domain.Models.Agv.Agv> agvs) => AddAgvsToMockRepository(repoMock, agvs.ToArray());
+    public static void AddAgvsToMockRepository(this Mock<IAgvDb> repoMock, List<Agv> agvs) => AddAgvsToMockRepository(repoMock, agvs.ToArray());
 
-    public static void AddAgvsToMockRepository(this Mock<IAgvDb> repoMock, params TransportOrder.Domain.Models.Agv.Agv[] agvs)
+    public static void AddAgvsToMockRepository(this Mock<IAgvDb> repoMock, params Agv[] agvs)
     {
         repoMock.Setup(s => s.Agvs.GetAllAgvsAsync()).ReturnsAsync(agvs);
 
@@ -37,7 +37,7 @@ public static class AgvRepositoryExtensions
         repoMock.Setup(r => r.Agvs.SelectExistingAgvsAsync(It.IsAny<List<Guid>>())).ReturnsAsync((List<Guid> cs) => agvs.Where(a => !cs.Any() || cs.Contains(a.CorrelationId)).ToList());
         AddNonExistingAgvs(repoMock, agvs.Select(a => a.CorrelationId).ToArray());
         repoMock.Setup(r => r.AgvSettings.GetSettingsForAgvGroup(It.IsAny<Guid>())).Returns(EfAgvSettingsProvider.DefaultSettings);
-        repoMock.Setup(r => r.AgvSettings.GetSettingsGroupForAgv(It.IsAny<TransportOrder.Domain.Models.Agv.Agv?>())).ReturnsAsync(new AgvSettingsGroup(GroupType.All));
+        repoMock.Setup(r => r.AgvSettings.GetSettingsGroupForAgv(It.IsAny<Agv?>())).ReturnsAsync(new AgvSettingsGroup(GroupType.All));
     }
 
     private static void AddNonExistingAgvs(this Mock<IAgvDb> repoMock, params Guid[] agvCorrelationIds)

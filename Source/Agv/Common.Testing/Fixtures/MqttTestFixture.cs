@@ -3,7 +3,7 @@ using MassTransit;
 using MassTransit.Configuration;
 using MassTransit.Serialization;
 
-namespace Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
+namespace Gebhardt.Acc.Common.Testing.Fixtures;
 
 /// <summary>
 /// Testing fixture to test MQTT.

@@ -1,13 +1,13 @@
 using System.Net;
-using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
-using Gebhardt.StoreWare.Agv.SmartLinkCommunication.Models;
-using Gebhardt.StoreWare.Agv.SmartLinkCommunication.Services;
+using Gebhardt.Acc.Common.Testing.Fixtures;
+using Gebhardt.Acc.SmartLinkCommunication.Models;
+using Gebhardt.Acc.SmartLinkCommunication.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
 using RestSharp;
 
-namespace Gebhardt.StoreWare.Agv.SmartLinkCommunicationTest.Services;
+namespace Gebhardt.Acc.SmartLinkCommunicationTest.Services;
 
 public class ModulePollingServiceTestFixture : FixtureBase
 {

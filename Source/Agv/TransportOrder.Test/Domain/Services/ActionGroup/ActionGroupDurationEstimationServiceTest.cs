@@ -1,7 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Test.Domain.Services.ActionGroup;
+namespace Gebhardt.Acc.TransportOrder.Test.Domain.Services.ActionGroup;
 
 [TestClass]
 public class ActionGroupDurationEstimationServiceTest

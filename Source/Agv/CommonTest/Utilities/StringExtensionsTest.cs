@@ -1,8 +1,8 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Utilities;
+﻿using Gebhardt.Acc.Common.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.CommonTest.Utilities;
+namespace Gebhardt.Acc.CommonTest.Utilities;
 
 [TestClass]
 public class StringExtensionsTest

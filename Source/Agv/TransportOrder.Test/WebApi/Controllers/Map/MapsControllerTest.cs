@@ -1,9 +1,9 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Map;
+﻿using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Test.WebApi.Controllers.Map;
+namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Controllers.Map;
 
 [TestClass]
 public class MapsControllerTest

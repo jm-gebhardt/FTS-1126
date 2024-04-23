@@ -1,6 +1,6 @@
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
+namespace Gebhardt.Acc.Common.Domain.Models.Graphs;
 
 /// <summary>
 /// Model for a node in the graph, it has X/Y/Z coordinates and a type.
@@ -113,7 +113,7 @@ public class GraphNode : IEquatable<GraphNode>
         {
             return true;
         }
-        if (obj.GetType() != this.GetType())
+        if (obj.GetType() != GetType())
         {
             return false;
         }

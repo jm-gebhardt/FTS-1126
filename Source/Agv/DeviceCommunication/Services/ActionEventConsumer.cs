@@ -1,15 +1,15 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Exceptions;
-using Gebhardt.StoreWare.Agv.Common.Extensions;
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Extensions;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.Enums;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.MqttMessages;
+﻿using Gebhardt.Acc.Common.Exceptions;
+using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.DeviceCommunication.Extensions;
+using Gebhardt.Acc.DeviceCommunication.Messages.Enums;
+using Gebhardt.Acc.DeviceCommunication.Messages.MqttMessages;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
+namespace Gebhardt.Acc.DeviceCommunication.Services;
 
 /// <summary>
 /// Provides handlers for action events triggered by other services.

@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Agv;
+namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs.Agv;
 
 /// <summary>
 /// Hub for Agv related Dtos

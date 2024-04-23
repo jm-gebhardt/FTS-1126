@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Messages;
+using Gebhardt.Acc.Common.Messages;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles;
+namespace Gebhardt.Acc.TransportOrder.WebApi.Profiles;
 
 /// <summary>
 /// Profile for WebApi project. Includes global ignore for <see cref="DatedMessage.MessageCreatedDate"/>

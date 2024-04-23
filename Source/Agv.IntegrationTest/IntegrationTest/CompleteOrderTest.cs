@@ -1,12 +1,12 @@
-using Gebhardt.StoreWare.Agv.IntegrationTest.Agv;
-using Gebhardt.StoreWare.Agv.IntegrationTest.Utils;
-using Gebhardt.StoreWare.Agv.IntegrationTest.Utils.Db;
-using Gebhardt.StoreWare.Agv.IntegrationTest.Utils.Db.Models;
+using Gebhardt.Acc.IntegrationTest.Agv;
+using Gebhardt.Acc.IntegrationTest.Utils;
+using Gebhardt.Acc.IntegrationTest.Utils.Db;
+using Gebhardt.Acc.IntegrationTest.Utils.Db.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 
-namespace Gebhardt.StoreWare.Agv.IntegrationTest
+namespace Gebhardt.Acc.IntegrationTest
 {
     /// <summary>
     /// CompleteOrderTest

@@ -1,6 +1,6 @@
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
+namespace Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 
 /// <summary>
 /// An event reporting the discovery of an Agv

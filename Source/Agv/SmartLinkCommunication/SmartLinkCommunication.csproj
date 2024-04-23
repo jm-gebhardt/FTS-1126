@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <AssemblyName>Gebhardt.StoreWare.Agv.SmartLinkCommunication</AssemblyName>
+        <AssemblyName>Gebhardt.Acc.SmartLinkCommunication</AssemblyName>
         <OutputType>Exe</OutputType>
     </PropertyGroup>
     <Import Project="..\SharedProjectSettings.csproj"/>

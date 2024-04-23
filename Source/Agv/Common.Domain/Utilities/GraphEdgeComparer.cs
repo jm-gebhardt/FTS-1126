@@ -1,7 +1,7 @@
-using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.Common.Domain.Utilities;
+namespace Gebhardt.Acc.Common.Domain.Utilities;
 
 /// <summary>
 /// Comparer to check for equal edges according to source and destination.

@@ -1,9 +1,9 @@
 ﻿using AutoMapper;
-using Gebhardt.StoreWare.Agv.Statistics.Domain.Models;
-using Gebhardt.StoreWare.Agv.Statistics.WebApi.Dtos;
+using Gebhardt.Acc.Statistics.Domain.Models;
+using Gebhardt.Acc.Statistics.WebApi.Dtos;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.Statistics.WebApi.Profiles;
+namespace Gebhardt.Acc.Statistics.WebApi.Profiles;
 
 /// <summary>
 /// Profile for mapping the <see cref="GridDto"/>.

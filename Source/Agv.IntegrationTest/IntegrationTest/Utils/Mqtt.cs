@@ -3,7 +3,7 @@ using MQTTnet.Client;
 using MQTTnet.Extensions.ManagedClient;
 using Newtonsoft.Json.Linq;
 
-namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
+namespace Gebhardt.Acc.IntegrationTest.Utils
 {
     /// <summary>
     /// MQTT Client

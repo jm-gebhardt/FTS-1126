@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Exceptions;
+﻿namespace Gebhardt.Acc.DeviceCommunication.Exceptions;
 
 /// <summary>
 /// Exception for map creation

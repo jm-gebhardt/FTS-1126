@@ -1,8 +1,8 @@
-﻿using Gebhardt.StoreWare.Agv.WCSCommunication.Domain.Models.HostOrder;
+﻿using Gebhardt.Acc.WCSCommunication.Domain.Models.HostOrder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Gebhardt.StoreWare.Agv.WCSCommunication.Persistence.DataAccess.Configuration;
+namespace Gebhardt.Acc.WCSCommunication.Persistence.DataAccess.Configuration;
 
 /// <inheritdoc />
 public class HostOrderEntityConfiguration : IEntityTypeConfiguration<HostOrder>

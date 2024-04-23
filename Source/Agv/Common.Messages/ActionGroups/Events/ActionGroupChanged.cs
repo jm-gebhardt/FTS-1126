@@ -1,7 +1,7 @@
 ﻿using JetBrains.Annotations;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
+namespace Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 
 /// <summary>
 /// An event reporting that an action group has changed

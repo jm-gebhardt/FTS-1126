@@ -1,8 +1,8 @@
 ﻿using System.Text;
-using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
+using Gebhardt.Acc.Common.Configurations.SettingsProviders;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.StoreWare.Agv.Common.Logging;
+namespace Gebhardt.Acc.Common.Logging;
 
 /// <summary>
 /// Implements a text file based logging class from ILogger

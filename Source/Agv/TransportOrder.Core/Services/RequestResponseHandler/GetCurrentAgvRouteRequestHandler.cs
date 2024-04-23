@@ -1,10 +1,10 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Routing;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
+﻿using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
+using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
 using JetBrains.Annotations;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
+namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 
 /// <summary>
 /// Defines a handler for GetAgvRoute request

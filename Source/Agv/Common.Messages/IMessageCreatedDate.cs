@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.StoreWare.Agv.Common.Messages;
+﻿namespace Gebhardt.Acc.Common.Messages;
 
 /// <summary>
 /// Marker interface for messages with creation date.

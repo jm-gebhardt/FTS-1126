@@ -1,16 +1,16 @@
 using System.Collections.ObjectModel;
 using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Domain.Models;
-using Gebhardt.StoreWare.Agv.Common.Domain.Utilities;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
-using Gebhardt.StoreWare.Agv.Common.Utilities;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Exceptions;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.MqttMessages;
+using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
+using Gebhardt.Acc.Common.Utilities;
+using Gebhardt.Acc.DeviceCommunication.Exceptions;
+using Gebhardt.Acc.DeviceCommunication.Messages.MqttMessages;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
+namespace Gebhardt.Acc.DeviceCommunication.Services;
 
 /// <summary>
 /// Simulate finishing of host orders

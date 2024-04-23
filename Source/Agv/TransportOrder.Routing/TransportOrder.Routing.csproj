@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <AssemblyName>Gebhardt.StoreWare.Agv.TransportOrder.Routing</AssemblyName>
+        <AssemblyName>Gebhardt.Acc.TransportOrder.Routing</AssemblyName>
     </PropertyGroup>
     <Import Project="..\SharedProjectSettings.csproj"/>
     <ItemGroup>

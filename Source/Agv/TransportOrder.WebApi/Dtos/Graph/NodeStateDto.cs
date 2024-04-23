@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Node;
+﻿using Gebhardt.Acc.Common.Messages;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Graph;
+namespace Gebhardt.Acc.TransportOrder.WebApi.Dtos.Graph;
 
 /// <summary>
 /// Provides a dto for node states.

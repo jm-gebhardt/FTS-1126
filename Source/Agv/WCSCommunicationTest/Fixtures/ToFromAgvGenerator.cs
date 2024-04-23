@@ -1,6 +1,6 @@
-using Gebhardt.StoreWare.Agv.WCSCommunication.WcsApi.DbInterface.Models;
+using Gebhardt.Acc.WCSCommunication.WcsApi.DbInterface.Models;
 
-namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Fixtures;
+namespace Gebhardt.Acc.WCSCommunicationTest.Fixtures;
 
 /// <summary>
 /// Generate ToFromAgv test entries

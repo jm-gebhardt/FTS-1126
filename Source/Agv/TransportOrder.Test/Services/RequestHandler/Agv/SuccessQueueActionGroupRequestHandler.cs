@@ -1,9 +1,9 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
+﻿using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using JetBrains.Annotations;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Test.Services.RequestHandler.Agv;
+namespace Gebhardt.Acc.TransportOrder.Test.Services.RequestHandler.Agv;
 
 [UsedImplicitly]
 public class SuccessQueueActionGroupRequestHandler : IConsumer<QueueActionGroup>

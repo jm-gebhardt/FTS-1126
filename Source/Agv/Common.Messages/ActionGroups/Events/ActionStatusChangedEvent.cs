@@ -1,6 +1,6 @@
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
+namespace Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 
 /// <summary>
 /// Signals that an action has been started

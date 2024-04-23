@@ -1,6 +1,6 @@
-﻿using Gebhardt.StoreWare.Agv.WCSCommunication.Domain.Models.HostOrder;
+﻿using Gebhardt.Acc.WCSCommunication.Domain.Models.HostOrder;
 
-namespace Gebhardt.StoreWare.Agv.WCSCommunication.Domain.Repositories;
+namespace Gebhardt.Acc.WCSCommunication.Domain.Repositories;
 
 /// <summary>
 /// Provides a repository for host order related queries.

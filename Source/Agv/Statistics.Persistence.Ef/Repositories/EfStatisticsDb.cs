@@ -1,8 +1,8 @@
-﻿using Gebhardt.StoreWare.Agv.Statistics.Domain.Repositories;
-using Gebhardt.StoreWare.Agv.Statistics.Persistence.Ef.DataAccess;
+﻿using Gebhardt.Acc.Statistics.Domain.Repositories;
+using Gebhardt.Acc.Statistics.Persistence.Ef.DataAccess;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.Statistics.Persistence.Ef.Repositories;
+namespace Gebhardt.Acc.Statistics.Persistence.Ef.Repositories;
 
 /// <inheritdoc cref="IStatisticsDb" />
 public class EfStatisticsDb : IStatisticsDb, IAsyncDisposable

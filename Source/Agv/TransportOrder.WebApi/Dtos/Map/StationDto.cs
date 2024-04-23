@@ -1,6 +1,6 @@
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Map;
+namespace Gebhardt.Acc.TransportOrder.WebApi.Dtos.Map;
 
 /// <summary>
 /// The station dto.

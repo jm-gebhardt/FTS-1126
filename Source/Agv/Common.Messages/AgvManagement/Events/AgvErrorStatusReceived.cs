@@ -1,7 +1,7 @@
-using Gebhardt.StoreWare.Agv.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Models;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
+namespace Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 
 /// <summary>
 /// An event reporting the error status of Agv

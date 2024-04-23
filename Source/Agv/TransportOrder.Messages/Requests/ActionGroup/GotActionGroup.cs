@@ -1,6 +1,6 @@
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
+using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.ActionGroup;
+namespace Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
 
 /// <summary>
 /// Represents the response to the command <see cref="GetActionGroup"/>.

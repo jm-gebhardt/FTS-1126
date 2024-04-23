@@ -1,10 +1,10 @@
-﻿using Gebhardt.StoreWare.Agv.Statistics.Domain.Models;
-using Gebhardt.StoreWare.Agv.Statistics.Domain.Repositories;
-using Gebhardt.StoreWare.Agv.Statistics.Messages.Requests;
+﻿using Gebhardt.Acc.Statistics.Domain.Models;
+using Gebhardt.Acc.Statistics.Domain.Repositories;
+using Gebhardt.Acc.Statistics.Messages.Requests;
 using JetBrains.Annotations;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.Statistics.Services.RequestResponseHandler;
+namespace Gebhardt.Acc.Statistics.Services.RequestResponseHandler;
 
 /// <summary>
 /// Provides handlers for grid-related requests.

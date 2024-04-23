@@ -1,11 +1,11 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.Filters;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
+﻿using Gebhardt.Acc.Common.Messages.Filters;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
+using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Filters;
+namespace Gebhardt.Acc.TransportOrder.Messages.Filters;
 
 /// <summary>
 /// Provides consume filters for messages relevant for

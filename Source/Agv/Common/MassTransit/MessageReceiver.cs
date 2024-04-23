@@ -1,6 +1,6 @@
 ﻿using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.Common.MassTransit;
+namespace Gebhardt.Acc.Common.MassTransit;
 
 /// <inheritdoc cref="IMessageReceiver{T}"/>
 public class MessageReceiver<TMessage> : IMessageReceiver<TMessage>, IAsyncDisposable where TMessage : class

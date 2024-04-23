@@ -1,10 +1,10 @@
-﻿using Gebhardt.StoreWare.Agv.Common.MassTransit;
+﻿using Gebhardt.Acc.Common.MassTransit;
 using MassTransit;
 using MassTransit.Context;
 using Moq;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.CommonTest.MassTransit;
+namespace Gebhardt.Acc.CommonTest.MassTransit;
 
 internal class MessageAwaiterTestFixture<TMessage> where TMessage : class
 {

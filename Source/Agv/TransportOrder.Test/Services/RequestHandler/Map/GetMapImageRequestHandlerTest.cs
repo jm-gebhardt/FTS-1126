@@ -1,11 +1,11 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Map;
+﻿using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
+using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
 using MassTransit;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Test.Services.RequestHandler.Map;
+namespace Gebhardt.Acc.TransportOrder.Test.Services.RequestHandler.Map;
 
 [TestClass]
 public class GetMapImageRequestHandlerTest

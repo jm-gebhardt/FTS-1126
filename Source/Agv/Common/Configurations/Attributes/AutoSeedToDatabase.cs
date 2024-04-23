@@ -1,4 +1,4 @@
-namespace Gebhardt.StoreWare.Agv.Common.Configurations.Attributes;
+namespace Gebhardt.Acc.Common.Configurations.Attributes;
 
 /// <summary>
 /// Attribute to specify if this class or property will be automatically seeded to the default database.

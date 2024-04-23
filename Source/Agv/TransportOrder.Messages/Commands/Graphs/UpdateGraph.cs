@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Graphs;
+namespace Gebhardt.Acc.TransportOrder.Messages.Commands.Graphs;
 
 /// <summary>
 /// Command to update the (global) graph.

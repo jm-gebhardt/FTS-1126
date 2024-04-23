@@ -1,4 +1,4 @@
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
+namespace Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
 
 /// <summary>
 /// Defines a result for GetAgvErrorHistory request

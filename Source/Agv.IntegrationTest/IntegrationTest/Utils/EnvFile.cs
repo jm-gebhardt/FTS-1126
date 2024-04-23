@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
+namespace Gebhardt.Acc.IntegrationTest.Utils
 {
     /// <summary>
     /// Generates Environment file from template

@@ -1,7 +1,7 @@
-using Gebhardt.StoreWare.Agv.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Models;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
+namespace Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 
 /// <summary>
 /// Cargo loaded on an agv.

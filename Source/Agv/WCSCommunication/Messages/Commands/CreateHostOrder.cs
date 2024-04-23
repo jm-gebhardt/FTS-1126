@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages;
+﻿using Gebhardt.Acc.Common.Messages;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.WCSCommunication.Messages.Commands;
+namespace Gebhardt.Acc.WCSCommunication.Messages.Commands;
 
 /// <summary>
 /// Internal message to signal new host order within WCSCommunication

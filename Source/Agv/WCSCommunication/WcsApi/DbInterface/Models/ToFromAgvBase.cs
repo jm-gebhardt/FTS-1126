@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.WCSCommunication.WcsApi.DbInterface.Models;
+namespace Gebhardt.Acc.WCSCommunication.WcsApi.DbInterface.Models;
 
 /// <summary>
 /// Order Status

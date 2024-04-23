@@ -1,9 +1,9 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
-using Gebhardt.StoreWare.Agv.WCSCommunication.Domain.Exceptions;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.WCSCommunication.Domain.Exceptions;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.WCSCommunication.Domain.Models.HostOrder;
+namespace Gebhardt.Acc.WCSCommunication.Domain.Models.HostOrder;
 
 /// <summary>
 /// Represents an incoming host order

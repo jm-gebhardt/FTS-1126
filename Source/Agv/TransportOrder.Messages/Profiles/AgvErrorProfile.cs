@@ -1,7 +1,7 @@
 using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Models;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles;
+namespace Gebhardt.Acc.TransportOrder.Messages.Profiles;
 
 /// <summary>
 /// Profile for <see cref="AgvError" />

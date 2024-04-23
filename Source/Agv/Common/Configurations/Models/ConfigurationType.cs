@@ -1,9 +1,9 @@
 using System.Reflection;
 using System.Text.Json;
-using Gebhardt.StoreWare.Agv.Common.Configurations.Attributes;
+using Gebhardt.Acc.Common.Configurations.Attributes;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.Common.Configurations.Models;
+namespace Gebhardt.Acc.Common.Configurations.Models;
 
 /// <summary>
 /// The model for the type of configuration holding all properties

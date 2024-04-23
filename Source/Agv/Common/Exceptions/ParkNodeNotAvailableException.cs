@@ -1,4 +1,4 @@
-namespace Gebhardt.StoreWare.Agv.Common.Exceptions;
+namespace Gebhardt.Acc.Common.Exceptions;
 
 /// <summary>
 /// Park node is not available.

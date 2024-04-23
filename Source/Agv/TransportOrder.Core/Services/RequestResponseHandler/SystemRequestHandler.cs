@@ -1,9 +1,9 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Time;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.System;
+﻿using Gebhardt.Acc.Common.Time;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.System;
 using JetBrains.Annotations;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
+namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 
 /// <summary>
 /// Provides handlers for system related requests.

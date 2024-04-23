@@ -1,6 +1,6 @@
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Graph;
+namespace Gebhardt.Acc.TransportOrder.WebApi.Dtos.Graph;
 
 /// <summary>
 /// Model for drawing a graph in the UI

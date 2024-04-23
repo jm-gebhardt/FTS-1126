@@ -1,12 +1,12 @@
 ﻿using AutoMapper;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Map;
+using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
 using JetBrains.Annotations;
 using MassTransit;
-using Map = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Map.Map;
+using Map = Gebhardt.Acc.TransportOrder.Domain.Models.Map.Map;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
+namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 
 /// <summary>
 /// Defines a handler for the GetMapList request

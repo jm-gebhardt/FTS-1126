@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <AssemblyName>Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef</AssemblyName>
+        <AssemblyName>Gebhardt.Acc.TransportOrder.Persistence.Ef</AssemblyName>
     </PropertyGroup>
     <Import Project="..\SharedProjectSettings.csproj" />
     <ItemGroup>

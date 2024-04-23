@@ -1,8 +1,8 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Services;
-using Gebhardt.StoreWare.Agv.SmartLinkCommunication.Models;
+﻿using Gebhardt.Acc.Common.Services;
+using Gebhardt.Acc.SmartLinkCommunication.Models;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Gebhardt.StoreWare.Agv.SmartLinkCommunication.Services;
+namespace Gebhardt.Acc.SmartLinkCommunication.Services;
 
 /// <summary>
 /// Fetches data from SmartLinkService and processes them

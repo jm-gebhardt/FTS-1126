@@ -1,11 +1,11 @@
 ﻿using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using JetBrains.Annotations;
-using Graph = Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent.Graph;
-using GraphEdge = Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent.GraphEdge;
-using GraphNode = Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs.GraphNode;
+using Graph = Gebhardt.Acc.TransportOrder.Messages.MessageContent.Graph;
+using GraphEdge = Gebhardt.Acc.TransportOrder.Messages.MessageContent.GraphEdge;
+using GraphNode = Gebhardt.Acc.Common.Domain.Models.Graphs.GraphNode;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles;
+namespace Gebhardt.Acc.TransportOrder.Messages.Profiles;
 
 /// <summary>
 /// The custom value resolver, maps from IGraph and the destination Graph to the GraphEdge property

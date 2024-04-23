@@ -1,12 +1,12 @@
-using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
-using Gebhardt.StoreWare.Agv.SmartLinkCommunication.Services;
+using Gebhardt.Acc.Common.Testing.Fixtures;
+using Gebhardt.Acc.SmartLinkCommunication.Services;
 using MassTransit;
 using MassTransit.Configuration;
 using MassTransit.Serialization;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 
-namespace Gebhardt.StoreWare.Agv.SmartLinkCommunicationTest.Services;
+namespace Gebhardt.Acc.SmartLinkCommunicationTest.Services;
 
 public class IoActionExecutionServiceTestFixture : MassTransitTestFixture
 {

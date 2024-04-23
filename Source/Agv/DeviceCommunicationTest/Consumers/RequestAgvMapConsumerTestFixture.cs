@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
+﻿using Gebhardt.Acc.Common.Testing.Fixtures;
+using Gebhardt.Acc.DeviceCommunication.Services;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers;
+namespace Gebhardt.Acc.DeviceCommunicationTest.Consumers;
 
 public class RequestAgvMapConsumerTestFixture : MassTransitConsumerTestFixture<RequestAgvMapConsumer>
 {

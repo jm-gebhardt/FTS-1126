@@ -1,6 +1,6 @@
 ﻿using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.Common.Extensions;
+namespace Gebhardt.Acc.Common.Extensions;
 
 /// <summary>
 /// Provides extension method for <see cref="ConsumeContext"/>.

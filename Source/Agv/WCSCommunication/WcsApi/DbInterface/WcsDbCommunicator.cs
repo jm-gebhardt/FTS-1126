@@ -1,10 +1,10 @@
-﻿using Gebhardt.StoreWare.Agv.WCSCommunication.Domain.Exceptions;
-using Gebhardt.StoreWare.Agv.WCSCommunication.Domain.Services;
-using Gebhardt.StoreWare.Agv.WCSCommunication.WcsApi.DbInterface.Models;
+﻿using Gebhardt.Acc.WCSCommunication.Domain.Exceptions;
+using Gebhardt.Acc.WCSCommunication.Domain.Services;
+using Gebhardt.Acc.WCSCommunication.WcsApi.DbInterface.Models;
 using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
 
-namespace Gebhardt.StoreWare.Agv.WCSCommunication.WcsApi.DbInterface;
+namespace Gebhardt.Acc.WCSCommunication.WcsApi.DbInterface;
 
 /// <summary>
 /// Repository service for communicating with the wcs host via

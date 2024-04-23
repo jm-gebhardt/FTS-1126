@@ -1,6 +1,6 @@
 ﻿using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Commands;
+namespace Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Commands;
 
 /// <summary>
 /// Represents the AcceptAgv request

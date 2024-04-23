@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models;
-using Gebhardt.StoreWare.Agv.Common.Exceptions;
+﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Exceptions;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
+namespace Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 
 /// <summary>
 /// Responsible for choosing the best Agv for an ActionGroup and also to choose the best ActionGroup for an Agv

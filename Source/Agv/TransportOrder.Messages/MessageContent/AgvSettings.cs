@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
+﻿namespace Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 
 /// <summary>
 /// Settings for the AGV.

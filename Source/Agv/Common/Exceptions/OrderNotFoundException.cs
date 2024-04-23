@@ -1,7 +1,7 @@
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement;
+using Gebhardt.Acc.Common.Messages.AgvManagement;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.Common.Exceptions;
+namespace Gebhardt.Acc.Common.Exceptions;
 
 /// <summary>
 /// Order not found

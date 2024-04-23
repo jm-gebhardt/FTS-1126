@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess.Configuration.AgvSettings;
+namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.AgvSettings;
 
 /// <inheritdoc />  
 public class AgvSettingEntityConfiguration: IEntityTypeConfiguration<Domain.Models.Settings.AgvSettings>

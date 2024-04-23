@@ -1,9 +1,9 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Persistence.Ef;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Map;
+﻿using Gebhardt.Acc.Common.Persistence.Ef;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Map;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess.Configuration;
+namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration;
 
 /// <inheritdoc />
 public class MapEntityConfiguration : IEntityTypeConfiguration<Map>

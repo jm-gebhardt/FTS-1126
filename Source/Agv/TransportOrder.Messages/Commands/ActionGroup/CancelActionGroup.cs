@@ -1,7 +1,7 @@
 using MassTransit;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
+using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
+namespace Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 
 /// <summary>
 /// Provides a command to cancel an action group.

@@ -1,7 +1,7 @@
-using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
+namespace Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 
 /// <summary>
 /// Message content for a graph edge.

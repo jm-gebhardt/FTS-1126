@@ -1,6 +1,6 @@
-using Gebhardt.StoreWare.Agv.Common.Messages;
+using Gebhardt.Acc.Common.Messages;
 
-namespace Gebhardt.StoreWare.Agv.Common.Services.Filters;
+namespace Gebhardt.Acc.Common.Services.Filters;
 
 /// <summary>
 /// Defines a filter mechanism to evaluate objects and determine their eligibility for further processing based on specific criteria.

@@ -1,8 +1,8 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
+﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.WCSCommunication.Configuration;
+namespace Gebhardt.Acc.WCSCommunication.Configuration;
 
 /// <summary>
 /// Provides a consume filter for action group events.

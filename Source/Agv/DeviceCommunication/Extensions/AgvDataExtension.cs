@@ -1,6 +1,6 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models;
+﻿using Gebhardt.Acc.Common.Domain.Models;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Extensions;
+namespace Gebhardt.Acc.DeviceCommunication.Extensions;
 
 /// <summary>
 /// Provides extension methods for the agv data.

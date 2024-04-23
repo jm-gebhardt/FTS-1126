@@ -1,6 +1,6 @@
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
+namespace Gebhardt.Acc.TransportOrder.Domain.Repositories;
 
 /// <summary>
 /// Repository for Cargos

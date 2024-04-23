@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models;
+﻿using Gebhardt.Acc.Common.Domain.Models;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
+namespace Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 
 /// <summary>
 /// Provides a command to update agv data.

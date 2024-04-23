@@ -1,10 +1,10 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Configurations;
-using Gebhardt.StoreWare.Agv.Common.Configurations.Exceptions;
-using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
+﻿using Gebhardt.Acc.Common.Configurations;
+using Gebhardt.Acc.Common.Configurations.Exceptions;
+using Gebhardt.Acc.Common.Configurations.SettingsProviders;
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Gebhardt.StoreWare.Agv.Common.Testing.Configurations;
+namespace Gebhardt.Acc.Common.Testing.Configurations;
 
 public class FakeSettingsProvider<TSettings> : ISettingsProvider<TSettings> where TSettings : class, ISettings<TSettings>
 {

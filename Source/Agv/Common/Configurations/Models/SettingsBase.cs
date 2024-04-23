@@ -1,6 +1,6 @@
-using Gebhardt.StoreWare.Agv.Common.Configurations.Attributes;
+using Gebhardt.Acc.Common.Configurations.Attributes;
 
-namespace Gebhardt.StoreWare.Agv.Common.Configurations.Models;
+namespace Gebhardt.Acc.Common.Configurations.Models;
 
 /// <summary>
 /// Abstract base record for settings

@@ -1,16 +1,16 @@
 ﻿using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
-using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
-using Gebhardt.StoreWare.Agv.Statistics.Domain.Models;
-using Gebhardt.StoreWare.Agv.Statistics.Domain.ReadModels;
-using Gebhardt.StoreWare.Agv.Statistics.Messages.Commands;
-using Gebhardt.StoreWare.Agv.Statistics.Messages.Requests;
-using Gebhardt.StoreWare.Agv.Statistics.WebApi.Controllers;
-using Gebhardt.StoreWare.Agv.Statistics.WebApi.Profiles;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.Common.Testing.Fixtures;
+using Gebhardt.Acc.Statistics.Domain.Models;
+using Gebhardt.Acc.Statistics.Domain.ReadModels;
+using Gebhardt.Acc.Statistics.Messages.Commands;
+using Gebhardt.Acc.Statistics.Messages.Requests;
+using Gebhardt.Acc.Statistics.WebApi.Controllers;
+using Gebhardt.Acc.Statistics.WebApi.Profiles;
 using MassTransit;
 using Moq;
 
-namespace Gebhardt.StoreWare.Agv.Statistics.Test.WebApi;
+namespace Gebhardt.Acc.Statistics.Test.WebApi;
 
 public class GridControllerTestFixture : MockRequestClientControllerTestFixture<GridController>
 {

@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
+﻿using Gebhardt.Acc.DeviceCommunication.Services.Simulation;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation;
+namespace Gebhardt.Acc.DeviceCommunicationTest.Services.Simulation;
 
 public class SimulatedAgvProviderTestFixture : SimulatedAgvStateMachineTestFixture
 {

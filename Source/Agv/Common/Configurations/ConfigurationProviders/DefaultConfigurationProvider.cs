@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Configuration;
 
-namespace Gebhardt.StoreWare.Agv.Common.Configurations.ConfigurationProviders;
+namespace Gebhardt.Acc.Common.Configurations.ConfigurationProviders;
 
 /// <summary>
 /// Provides the default value of all properties of configuration providers

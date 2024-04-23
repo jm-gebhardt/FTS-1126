@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
+﻿using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Microsoft.Extensions.Hosting;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.BackgroundServices;
+namespace Gebhardt.Acc.TransportOrder.Core.Services.BackgroundServices;
 
 /// <summary>
 /// Provides a service to initialize the agv settings.

@@ -1,6 +1,6 @@
-﻿using Gebhardt.StoreWare.Agv.SmartLinkCommunication.Models;
+﻿using Gebhardt.Acc.SmartLinkCommunication.Models;
 
-namespace Gebhardt.StoreWare.Agv.SmartLinkCommunication.Services;
+namespace Gebhardt.Acc.SmartLinkCommunication.Services;
 
 /// <summary>
 /// Provides access to the IoStateTrackers of the module in the current scope

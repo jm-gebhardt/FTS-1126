@@ -1,7 +1,7 @@
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
+using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.Common.Exceptions;
+namespace Gebhardt.Acc.Common.Exceptions;
 
 /// <summary>
 /// Agv Status Received was not found

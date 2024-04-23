@@ -1,8 +1,8 @@
-using Gebhardt.StoreWare.Agv.Common.Domain.Models;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
+using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
+namespace Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 
 /// <summary>
 /// Battery status of an AGV.

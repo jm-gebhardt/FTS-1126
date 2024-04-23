@@ -1,10 +1,10 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Node;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Graph;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Map;
+﻿using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
+using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Graph;
+using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Map;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Test.WebApi.Hubs;
+namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Hubs;
 
 [TestClass]
 public class MapPublisherTest

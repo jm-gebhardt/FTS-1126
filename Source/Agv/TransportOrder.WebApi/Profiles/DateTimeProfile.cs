@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles;
+namespace Gebhardt.Acc.TransportOrder.WebApi.Profiles;
 
 /// <summary>
 /// Profile for date times.

@@ -1,13 +1,13 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
-using Gebhardt.StoreWare.Agv.Common.Utilities;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Exceptions;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.Enums;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.MqttMessages;
+﻿using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.Common.Utilities;
+using Gebhardt.Acc.DeviceCommunication.Exceptions;
+using Gebhardt.Acc.DeviceCommunication.Messages.Enums;
+using Gebhardt.Acc.DeviceCommunication.Messages.MqttMessages;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
+namespace Gebhardt.Acc.DeviceCommunication.Services;
 
 /// <summary>
 /// Consumer for MqttOrderEvent messages

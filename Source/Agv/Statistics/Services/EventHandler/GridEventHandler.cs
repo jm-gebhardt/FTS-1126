@@ -1,13 +1,13 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.Graphs.Events;
-using Gebhardt.StoreWare.Agv.Statistics.Domain.Exceptions;
-using Gebhardt.StoreWare.Agv.Statistics.Domain.Repositories;
-using Gebhardt.StoreWare.Agv.Statistics.Extensions;
+﻿using Gebhardt.Acc.Common.Messages.Graphs.Events;
+using Gebhardt.Acc.Statistics.Domain.Exceptions;
+using Gebhardt.Acc.Statistics.Domain.Repositories;
+using Gebhardt.Acc.Statistics.Extensions;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
-using Map = Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs.Map;
+using Map = Gebhardt.Acc.Common.Domain.Models.Graphs.Map;
 
-namespace Gebhardt.StoreWare.Agv.Statistics.Services.EventHandler;
+namespace Gebhardt.Acc.Statistics.Services.EventHandler;
 
 /// <summary>
 /// Provides handlers for grid-related events.

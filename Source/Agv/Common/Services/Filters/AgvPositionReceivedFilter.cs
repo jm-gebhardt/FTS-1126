@@ -1,8 +1,8 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
-using Gebhardt.StoreWare.Agv.Common.Services.Significance;
+﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
+using Gebhardt.Acc.Common.Services.Significance;
 
-namespace Gebhardt.StoreWare.Agv.Common.Services.Filters;
+namespace Gebhardt.Acc.Common.Services.Filters;
 
 /// <summary>
 /// Filter by significant changes in the position.

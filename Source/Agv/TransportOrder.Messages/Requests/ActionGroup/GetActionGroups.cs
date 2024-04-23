@@ -1,7 +1,7 @@
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.ActionGroup;
+namespace Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
 
 /// <summary>
 /// Provides a request to get filtered action groups.

@@ -1,4 +1,4 @@
-namespace Gebhardt.StoreWare.Agv.Common.Domain.Models;
+namespace Gebhardt.Acc.Common.Domain.Models;
 
 /// <summary>
 /// 3D dimension of a cuboid

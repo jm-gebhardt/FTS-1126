@@ -1,6 +1,6 @@
-﻿using Gebhardt.StoreWare.Agv.Statistics.WebApi.Swagger;
+﻿using Gebhardt.Acc.Statistics.WebApi.Swagger;
 
-namespace Gebhardt.StoreWare.Agv.Statistics.WebApi.Controllers;
+namespace Gebhardt.Acc.Statistics.WebApi.Controllers;
 
 /// <summary>
 /// Api Group for REST

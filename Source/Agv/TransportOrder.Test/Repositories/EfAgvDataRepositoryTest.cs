@@ -1,10 +1,10 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models;
-using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
-using Gebhardt.StoreWare.Agv.Common.Utilities;
+﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Testing.Helpers;
+using Gebhardt.Acc.Common.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Test.Repositories;
+namespace Gebhardt.Acc.TransportOrder.Test.Repositories;
 
 [TestClass]
 public class EfAgvDataRepositoryTest

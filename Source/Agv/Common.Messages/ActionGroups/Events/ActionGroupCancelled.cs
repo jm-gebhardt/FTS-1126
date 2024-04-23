@@ -1,6 +1,6 @@
 ﻿using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
+namespace Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 
 /// <summary>
 /// Represents the event raised when an action group got canceled.

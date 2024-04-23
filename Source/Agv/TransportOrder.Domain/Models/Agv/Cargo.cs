@@ -1,8 +1,8 @@
-using Gebhardt.StoreWare.Agv.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Models;
 using JetBrains.Annotations;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
+namespace Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 
 /// <summary>
 /// Cargo loaded on an Agv

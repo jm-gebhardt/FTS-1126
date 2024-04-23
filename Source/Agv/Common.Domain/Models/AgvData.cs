@@ -2,7 +2,7 @@
 using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
-namespace Gebhardt.StoreWare.Agv.Common.Domain.Models;
+namespace Gebhardt.Acc.Common.Domain.Models;
 
 /// <summary>
 /// AGV Data

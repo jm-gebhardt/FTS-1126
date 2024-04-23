@@ -1,8 +1,8 @@
 ﻿using System.Globalization;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Exceptions;
+using Gebhardt.Acc.DeviceCommunication.Exceptions;
 using SkiaSharp;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Helpers;
+namespace Gebhardt.Acc.DeviceCommunication.Helpers;
 
 /// <summary>
 /// Helper class for map related stuff.

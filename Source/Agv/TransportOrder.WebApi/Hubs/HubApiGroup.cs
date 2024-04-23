@@ -1,6 +1,6 @@
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Swagger;
+using Gebhardt.Acc.TransportOrder.WebApi.Swagger;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs;
+namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs;
 
 /// <summary>
 /// Api Group for SignalR

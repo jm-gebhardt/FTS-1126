@@ -1,7 +1,7 @@
 ﻿using System.Numerics;
-using Gebhardt.StoreWare.Agv.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Domain.Utilities;
 
-namespace Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
+namespace Gebhardt.Acc.Common.Domain.Models.Graphs;
 
 /// <summary>
 /// Represents a direct edge.

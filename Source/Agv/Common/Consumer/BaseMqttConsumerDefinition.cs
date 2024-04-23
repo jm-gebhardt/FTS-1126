@@ -1,12 +1,12 @@
 ﻿using System.Reflection;
-using Gebhardt.StoreWare.Agv.Common.Extensions;
+using Gebhardt.Acc.Common.Extensions;
 using JetBrains.Annotations;
 using MassTransit;
 using MassTransit.InMemoryTransport.Configuration;
 using MassTransit.Serialization;
 using RabbitMQ.Client;
 
-namespace Gebhardt.StoreWare.Agv.Common.Consumer;
+namespace Gebhardt.Acc.Common.Consumer;
 
 /// <summary>
 /// A basic MQTT consumer definition that encapsulates all necessary steps to register a consumer for receiving plain MQTT messages

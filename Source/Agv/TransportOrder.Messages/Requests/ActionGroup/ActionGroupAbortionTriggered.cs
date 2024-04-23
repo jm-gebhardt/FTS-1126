@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.ActionGroup;
+﻿namespace Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
 
 /// <summary>
 /// Provides the response to the <see cref="TriggerActionGroupAbortion"/> request.

@@ -1,13 +1,13 @@
-using Gebhardt.StoreWare.Agv.WCSCommunication.Messages.Commands;
-using Gebhardt.StoreWare.Agv.WCSCommunication.WcsApi.DbInterface;
-using Gebhardt.StoreWare.Agv.WCSCommunication.WcsApi.DbInterface.Models;
-using Gebhardt.StoreWare.Agv.WCSCommunicationTest.Fixtures;
+using Gebhardt.Acc.WCSCommunication.Messages.Commands;
+using Gebhardt.Acc.WCSCommunication.WcsApi.DbInterface;
+using Gebhardt.Acc.WCSCommunication.WcsApi.DbInterface.Models;
+using Gebhardt.Acc.WCSCommunicationTest.Fixtures;
 using MassTransit.Testing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services;
+namespace Gebhardt.Acc.WCSCommunicationTest.Services;
 
 /// <summary>
 /// Wcs Host Order Service Tests

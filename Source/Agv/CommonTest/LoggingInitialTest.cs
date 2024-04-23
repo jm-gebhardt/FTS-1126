@@ -1,8 +1,8 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Logging;
+﻿using Gebhardt.Acc.Common.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.CommonTest;
+namespace Gebhardt.Acc.CommonTest;
 
 /// <summary>
 /// Test class for initial logging.

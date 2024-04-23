@@ -1,9 +1,9 @@
-using Gebhardt.StoreWare.Agv.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Models;
 using MassTransit.EntityFrameworkCoreIntegration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess.Configuration;
+namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration;
 
 /// <inheritdoc />
 public class AgvErrorEntityConfiguration : IEntityTypeConfiguration<AgvError>

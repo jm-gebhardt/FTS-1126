@@ -1,9 +1,9 @@
-﻿using Gebhardt.StoreWare.Agv.Common.WebApi;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
+﻿using Gebhardt.Acc.Common.WebApi;
+using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Test.WebApi;
+namespace Gebhardt.Acc.TransportOrder.Test.WebApi;
 
 [TestClass]
 public class CustomSchemaSelectorTest

@@ -1,6 +1,6 @@
 ﻿using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.Enums;
+namespace Gebhardt.Acc.DeviceCommunication.Messages.Enums;
 
 /// <summary>
 /// The type of transport an order describes

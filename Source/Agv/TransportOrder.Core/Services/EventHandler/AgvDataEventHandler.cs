@@ -1,10 +1,10 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
+﻿using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.EventHandler;
+namespace Gebhardt.Acc.TransportOrder.Core.Services.EventHandler;
 
 /// <summary>
 /// Consumer for <see cref="AgvDataReceived"/> messages

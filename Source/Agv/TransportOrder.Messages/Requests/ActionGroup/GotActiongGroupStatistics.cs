@@ -1,6 +1,6 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.ActionGroup;
+namespace Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
 
 /// <summary>
 /// Represents the response to a <see cref="GetActionGroupStatistics"/> request.

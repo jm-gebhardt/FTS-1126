@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
+namespace Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 
 /// <summary>
 /// Represents the event raised when a charging node was selected for an agv,

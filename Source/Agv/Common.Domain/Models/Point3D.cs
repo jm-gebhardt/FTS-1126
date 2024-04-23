@@ -1,4 +1,4 @@
-namespace Gebhardt.StoreWare.Agv.Common.Domain.Models;
+namespace Gebhardt.Acc.Common.Domain.Models;
 
 /// <summary>
 /// A 3D point with an angle (rotation).

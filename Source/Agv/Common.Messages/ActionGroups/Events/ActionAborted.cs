@@ -1,6 +1,6 @@
 ﻿using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
+namespace Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 
 /// <summary>
 /// Represents the event triggered, when an action group

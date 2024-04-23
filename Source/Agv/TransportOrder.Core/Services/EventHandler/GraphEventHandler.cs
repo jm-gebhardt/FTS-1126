@@ -1,10 +1,10 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.Graphs.Events;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Graphs;
+﻿using Gebhardt.Acc.Common.Messages.Graphs.Events;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.Graphs;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.EventHandler;
+namespace Gebhardt.Acc.TransportOrder.Core.Services.EventHandler;
 
 /// <summary>
 /// Consumer for <see cref="GraphChanged"/>.

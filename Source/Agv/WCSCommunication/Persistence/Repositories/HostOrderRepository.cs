@@ -1,10 +1,10 @@
-﻿using Gebhardt.StoreWare.Agv.WCSCommunication.Domain.Exceptions;
-using Gebhardt.StoreWare.Agv.WCSCommunication.Domain.Models.HostOrder;
-using Gebhardt.StoreWare.Agv.WCSCommunication.Domain.Repositories;
-using Gebhardt.StoreWare.Agv.WCSCommunication.Persistence.DataAccess;
+﻿using Gebhardt.Acc.WCSCommunication.Domain.Exceptions;
+using Gebhardt.Acc.WCSCommunication.Domain.Models.HostOrder;
+using Gebhardt.Acc.WCSCommunication.Domain.Repositories;
+using Gebhardt.Acc.WCSCommunication.Persistence.DataAccess;
 using Microsoft.EntityFrameworkCore;
 
-namespace Gebhardt.StoreWare.Agv.WCSCommunication.Persistence.Repositories;
+namespace Gebhardt.Acc.WCSCommunication.Persistence.Repositories;
 
 /// <summary>
 /// Provides a repository for host order related queries.

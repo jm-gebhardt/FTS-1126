@@ -1,7 +1,7 @@
 ﻿using JetBrains.Annotations;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.Common.Testing.RequestHandlers;
+namespace Gebhardt.Acc.Common.Testing.RequestHandlers;
 
 /// <summary>
 /// Directly responds with the saved object

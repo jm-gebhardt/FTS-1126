@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs;
+namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs;
 
 /// <summary>
 /// Base SignalR hub providing connect and disconnect.

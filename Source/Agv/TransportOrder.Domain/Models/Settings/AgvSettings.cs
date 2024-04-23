@@ -1,11 +1,11 @@
 ﻿using JetBrains.Annotations;
 using Microsoft.IdentityModel.Tokens;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
+using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 
 // Disabled because properties are reset by reflection (not visible to resharper)
 // ReSharper disable PropertyCanBeMadeInitOnly.Global
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
+namespace Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 
 /// <summary>
 /// Agv (group) specific settings.

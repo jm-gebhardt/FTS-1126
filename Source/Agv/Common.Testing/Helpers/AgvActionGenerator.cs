@@ -1,8 +1,8 @@
-using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
+namespace Gebhardt.Acc.Common.Testing.Helpers;
 
 public static class AgvActionGenerator
 {

@@ -1,6 +1,6 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
+﻿using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
+namespace Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 
 /// <summary>
 /// Represents the response to a successful <see cref="MoveAgv"/> command.

@@ -1,6 +1,6 @@
 ﻿using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Routing.Models;
+namespace Gebhardt.Acc.TransportOrder.Routing.Models;
 
 /// <summary>
 /// Represents the route costs.

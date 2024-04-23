@@ -1,7 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Test.WebApi.Filters;
+namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Filters;
 
 [TestClass]
 public class AgvBatteryStatusChangedFilterTests

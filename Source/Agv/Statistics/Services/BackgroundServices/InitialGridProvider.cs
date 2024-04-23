@@ -1,12 +1,12 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
-using Gebhardt.StoreWare.Agv.Statistics.Domain.Models;
-using Gebhardt.StoreWare.Agv.Statistics.Domain.Repositories;
-using Gebhardt.StoreWare.Agv.Statistics.Messages.Commands;
+﻿using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.Statistics.Domain.Models;
+using Gebhardt.Acc.Statistics.Domain.Repositories;
+using Gebhardt.Acc.Statistics.Messages.Commands;
 using MassTransit;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.StoreWare.Agv.Statistics.Services.BackgroundServices;
+namespace Gebhardt.Acc.Statistics.Services.BackgroundServices;
 
 /// <summary>
 /// Represents the background service that provides an initial grid.

@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <AssemblyName>Gebhardt.StoreWare.Agv.CommonTest</AssemblyName>
+        <AssemblyName>Gebhardt.Acc.CommonTest</AssemblyName>
         <IsPackable>false</IsPackable>
         <NoWarn>1591</NoWarn>
     </PropertyGroup>

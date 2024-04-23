@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
+﻿namespace Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 
 /// <summary>
 /// Provides a command to start a manual <see cref="Action"/> for an agv.

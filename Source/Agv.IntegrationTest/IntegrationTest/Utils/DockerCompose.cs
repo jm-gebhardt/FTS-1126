@@ -2,7 +2,7 @@ using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 
-namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
+namespace Gebhardt.Acc.IntegrationTest.Utils
 {
     /// <summary>
     /// Control docker compose 

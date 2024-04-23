@@ -1,8 +1,8 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models;
-using Gebhardt.StoreWare.Agv.Common.Utilities;
-using Cargo = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv.Cargo;
+﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Utilities;
+using Cargo = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.Cargo;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Test.Helper;
+namespace Gebhardt.Acc.TransportOrder.Test.Helper;
 
 public static class AgvCargoGenerator
 {

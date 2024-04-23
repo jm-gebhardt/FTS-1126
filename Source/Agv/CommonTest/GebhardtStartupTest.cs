@@ -1,8 +1,8 @@
-using Gebhardt.StoreWare.Agv.Common;
+using Gebhardt.Acc.Common;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.CommonTest;
+namespace Gebhardt.Acc.CommonTest;
 
 /// <summary>
 /// GebhardtStartup Test

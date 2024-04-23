@@ -1,7 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.CommonTest.Services.Filters;
+namespace Gebhardt.Acc.CommonTest.Services.Filters;
 
 [TestClass]
 public class InMemoryFilterTests

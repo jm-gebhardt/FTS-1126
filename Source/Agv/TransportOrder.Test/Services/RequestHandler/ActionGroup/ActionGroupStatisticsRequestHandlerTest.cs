@@ -1,11 +1,11 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Extensions;
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.ActionGroup;
+﻿using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
 using MassTransit;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Test.Services.RequestHandler.ActionGroup;
+namespace Gebhardt.Acc.TransportOrder.Test.Services.RequestHandler.ActionGroup;
 
 [TestClass]
 public class ActionGroupStatisticsRequestHandlerTest

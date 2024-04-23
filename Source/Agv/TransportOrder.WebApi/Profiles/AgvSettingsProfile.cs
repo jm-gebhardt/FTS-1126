@@ -1,9 +1,9 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles.Resolver;
-using AgvSettings = Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent.AgvSettings;
+﻿using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
+using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
+using Gebhardt.Acc.TransportOrder.WebApi.Profiles.Resolver;
+using AgvSettings = Gebhardt.Acc.TransportOrder.Messages.MessageContent.AgvSettings;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles;
+namespace Gebhardt.Acc.TransportOrder.WebApi.Profiles;
 
 /// <summary>
 /// Profile for agv settings.

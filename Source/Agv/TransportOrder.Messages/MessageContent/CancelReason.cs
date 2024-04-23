@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Constants;
+﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.TransportOrder.Domain.Constants;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
+namespace Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 
 /// <summary>
 /// Provides a reason why an action group was canceled.

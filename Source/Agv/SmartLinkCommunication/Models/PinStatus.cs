@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.SmartLinkCommunication.Models;
+namespace Gebhardt.Acc.SmartLinkCommunication.Models;
 
 #pragma warning disable CS1591 // we do not have any documentation from FlexLog on the API
 [method: UsedImplicitly]

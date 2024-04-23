@@ -1,6 +1,6 @@
 ﻿using System.Numerics;
 
-namespace Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
+namespace Gebhardt.Acc.Common.Domain.Models.Graphs;
 
 /// <summary>
 /// Contains helper functions for Bezier curves.

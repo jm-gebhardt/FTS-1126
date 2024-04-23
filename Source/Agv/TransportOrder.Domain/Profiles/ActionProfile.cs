@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Profiles;
+namespace Gebhardt.Acc.TransportOrder.Domain.Profiles;
 
 /// <summary>
 /// Profile for ActionGroup

@@ -1,9 +1,9 @@
-﻿using Gebhardt.StoreWare.Agv.Statistics.Domain.Models;
-using Gebhardt.StoreWare.Agv.Statistics.Domain.Repositories;
-using Gebhardt.StoreWare.Agv.Statistics.Persistence.Ef.DataAccess;
+﻿using Gebhardt.Acc.Statistics.Domain.Models;
+using Gebhardt.Acc.Statistics.Domain.Repositories;
+using Gebhardt.Acc.Statistics.Persistence.Ef.DataAccess;
 using Microsoft.EntityFrameworkCore;
 
-namespace Gebhardt.StoreWare.Agv.Statistics.Persistence.Ef.Repositories;
+namespace Gebhardt.Acc.Statistics.Persistence.Ef.Repositories;
 
 /// <inheritdoc cref="IGridRepository"/>>.
 public class EfGridRepository(StatisticsDbContext context) : EfRepository<Grid, StatisticsDbContext>(context), IGridRepository

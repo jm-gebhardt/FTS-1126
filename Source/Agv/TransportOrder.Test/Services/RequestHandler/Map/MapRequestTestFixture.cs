@@ -1,14 +1,14 @@
 ﻿using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles;
-using Gebhardt.StoreWare.Agv.TransportOrder.Test.Helper;
+using Gebhardt.Acc.Common.Testing.Fixtures;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
+using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using Gebhardt.Acc.TransportOrder.Messages.Profiles;
+using Gebhardt.Acc.TransportOrder.Test.Helper;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Test.Services.RequestHandler.Map;
+namespace Gebhardt.Acc.TransportOrder.Test.Services.RequestHandler.Map;
 
 /// <summary>
 /// Testing fixture to test map request

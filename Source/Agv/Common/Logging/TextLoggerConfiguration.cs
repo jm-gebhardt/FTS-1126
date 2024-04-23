@@ -1,9 +1,9 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Configurations.Attributes;
-using Gebhardt.StoreWare.Agv.Common.Configurations.Models;
+﻿using Gebhardt.Acc.Common.Configurations.Attributes;
+using Gebhardt.Acc.Common.Configurations.Models;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.StoreWare.Agv.Common.Logging;
+namespace Gebhardt.Acc.Common.Logging;
 
 /// <summary>
 /// Basic configuration for TextLogger

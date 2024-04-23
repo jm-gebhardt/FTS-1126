@@ -1,8 +1,8 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models;
+﻿using Gebhardt.Acc.Common.Domain.Models;
 using JetBrains.Annotations;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+namespace Gebhardt.Acc.Common.Messages.ActionGroups;
 
 /// <summary>
 /// Grouping actions and sending them across service modules

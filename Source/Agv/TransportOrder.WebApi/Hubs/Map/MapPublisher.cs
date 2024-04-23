@@ -1,9 +1,9 @@
 ﻿using AutoMapper;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Node;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Graph;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
+using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Graph;
 using Microsoft.AspNetCore.SignalR;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Map;
+namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs.Map;
 
 /// <inheritdoc cref="IMapPublisher"/>
 public class MapPublisher : IMapPublisher

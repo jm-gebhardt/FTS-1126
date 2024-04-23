@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
+﻿using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
+namespace Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
 
 /// <summary>
 /// Response to get the AgvSettingsReadModel

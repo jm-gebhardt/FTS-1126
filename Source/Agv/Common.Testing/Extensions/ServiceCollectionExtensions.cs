@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Gebhardt.StoreWare.Agv.Common.Testing.Extensions;
+namespace Gebhardt.Acc.Common.Testing.Extensions;
 
 public static class ServiceCollectionExtensions
 {

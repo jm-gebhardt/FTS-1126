@@ -1,6 +1,6 @@
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.Provisioning.Models;
+namespace Gebhardt.Acc.Provisioning.Models;
 
 /// <summary>
 /// Base data of the map.

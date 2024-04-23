@@ -1,8 +1,8 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
-using Gebhardt.StoreWare.Agv.Common.Testing.RequestHandlers;
+﻿using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
+using Gebhardt.Acc.Common.Testing.RequestHandlers;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Test.WebApi.Controllers.Agv;
+namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Controllers.Agv;
 
 [UsedImplicitly]
 public class FakeQueueActionGroupConsumer : SuccessRequestHandlerMock<QueueActionGroup>;

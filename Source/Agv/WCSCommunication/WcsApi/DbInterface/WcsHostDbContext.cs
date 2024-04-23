@@ -1,10 +1,10 @@
-using Gebhardt.StoreWare.Agv.WCSCommunication.WcsApi.DbInterface.Models;
+using Gebhardt.Acc.WCSCommunication.WcsApi.DbInterface.Models;
 using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.StoreWare.Agv.WCSCommunication.WcsApi.DbInterface;
+namespace Gebhardt.Acc.WCSCommunication.WcsApi.DbInterface;
 
 /// <summary>
 /// The WCS database context (connection to host database)

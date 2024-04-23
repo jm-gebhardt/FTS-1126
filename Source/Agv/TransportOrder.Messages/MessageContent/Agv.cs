@@ -1,10 +1,10 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models;
-using Gebhardt.StoreWare.Agv.Common.Messages.Contracts;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
+﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Messages.Contracts;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
+using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
+namespace Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 
 /// <summary>
 /// Represents a message content for an agv.

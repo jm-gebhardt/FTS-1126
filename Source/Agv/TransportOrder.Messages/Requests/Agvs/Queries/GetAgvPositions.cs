@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agvs.Queries;
+﻿namespace Gebhardt.Acc.TransportOrder.Messages.Requests.Agvs.Queries;
 
 /// <summary>
 /// Provides a request to get the position of the selected agvs.

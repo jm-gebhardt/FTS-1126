@@ -1,6 +1,6 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
+﻿using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Test.Repositories;
+namespace Gebhardt.Acc.TransportOrder.Test.Repositories;
 
 public class ActionGroupRetrievalServiceTestFixture : TransportOrderDbFixture
 {

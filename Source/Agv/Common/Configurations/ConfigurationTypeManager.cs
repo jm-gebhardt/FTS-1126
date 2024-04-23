@@ -1,8 +1,8 @@
 using System.Reflection;
-using Gebhardt.StoreWare.Agv.Common.Configurations.Attributes;
-using Gebhardt.StoreWare.Agv.Common.Configurations.Models;
+using Gebhardt.Acc.Common.Configurations.Attributes;
+using Gebhardt.Acc.Common.Configurations.Models;
 
-namespace Gebhardt.StoreWare.Agv.Common.Configurations;
+namespace Gebhardt.Acc.Common.Configurations;
 
 /// <summary>
 /// Manages the configuration types from different assemblies

@@ -1,7 +1,7 @@
 ﻿using System.Text.RegularExpressions;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.Common.Domain.Models;
+namespace Gebhardt.Acc.Common.Domain.Models;
 
 /// <summary>
 /// The reason contains a template and parameters to create a reason message. In case of an error, the reason message can be used to create a localized error message.

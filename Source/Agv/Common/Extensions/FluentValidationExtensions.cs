@@ -1,8 +1,8 @@
 ﻿using FluentValidation;
-using Gebhardt.StoreWare.Agv.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Models;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.Common.Extensions;
+namespace Gebhardt.Acc.Common.Extensions;
 
 /// <summary>
 /// Extensions for FluentValidation

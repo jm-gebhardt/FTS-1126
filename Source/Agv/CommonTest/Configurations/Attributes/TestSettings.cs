@@ -1,8 +1,8 @@
-using Gebhardt.StoreWare.Agv.Common.Configurations.Attributes;
-using Gebhardt.StoreWare.Agv.Common.Configurations.Models;
+using Gebhardt.Acc.Common.Configurations.Attributes;
+using Gebhardt.Acc.Common.Configurations.Models;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.CommonTest.Configurations.Attributes;
+namespace Gebhardt.Acc.CommonTest.Configurations.Attributes;
 
 [AutoSeedToDatabase(false)]
 [UsedImplicitly]

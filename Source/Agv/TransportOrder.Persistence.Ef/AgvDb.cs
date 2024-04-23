@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
+﻿using Gebhardt.Acc.TransportOrder.Domain;
+using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef;
+namespace Gebhardt.Acc.TransportOrder.Persistence.Ef;
 
 /// <inheritdoc cref="IAgvDb"/>>
 public class AgvDb : IAgvDb

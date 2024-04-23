@@ -1,10 +1,10 @@
 ﻿using System.Numerics;
-using Gebhardt.StoreWare.Agv.Common.Domain.Models;
-using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
-using Gebhardt.StoreWare.Agv.Common.Domain.Utilities;
-using Gebhardt.StoreWare.Agv.Common.Extensions;
+using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Extensions;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Travel;
+namespace Gebhardt.Acc.DeviceCommunication.Services.Simulation.Travel;
 
 /// <summary>
 /// Provides an abstract base class for edge travel calculations.

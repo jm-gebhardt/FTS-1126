@@ -2,7 +2,7 @@ using JetBrains.Annotations;
 using MassTransit;
 using RabbitMQ.Client;
 
-namespace Gebhardt.StoreWare.Agv.Common.Extensions;
+namespace Gebhardt.Acc.Common.Extensions;
 
 /// <summary>
 /// A message topology extension for the RabbitMQ bus to allow raw messages to be published to a topic exchange

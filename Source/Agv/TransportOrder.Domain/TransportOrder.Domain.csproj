@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <AssemblyName>Gebhardt.StoreWare.Agv.TransportOrder.Domain</AssemblyName>
+        <AssemblyName>Gebhardt.Acc.TransportOrder.Domain</AssemblyName>
     </PropertyGroup>
     <Import Project="..\SharedProjectSettings.csproj" />
     <ItemGroup>

@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
-namespace Gebhardt.StoreWare.Agv.Common.Messages;
+namespace Gebhardt.Acc.Common.Messages;
 
 /// <summary>
 /// Order object used by all messages that require the order details

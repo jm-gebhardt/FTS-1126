@@ -1,10 +1,10 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Services.Significance;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
+﻿using Gebhardt.Acc.Common.Services.Significance;
+using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
-using AgvPositionSignificanceChecker = Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Filters.SignificanceCheckers.AgvPositionSignificanceChecker;
+using AgvPositionSignificanceChecker = Gebhardt.Acc.TransportOrder.WebApi.Hubs.Filters.SignificanceCheckers.AgvPositionSignificanceChecker;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Test.WebApi.Filters.SignificanceCheckers;
+namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Filters.SignificanceCheckers;
 
 [TestClass]
 public class AgvPositionSignificanceCheckerTests

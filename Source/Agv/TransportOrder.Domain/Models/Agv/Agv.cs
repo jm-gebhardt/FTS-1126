@@ -1,10 +1,10 @@
 ﻿using System.Linq.Expressions;
-using Gebhardt.StoreWare.Agv.Common.Messages.Contracts;
-using Gebhardt.StoreWare.Agv.Common.Utilities;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
+using Gebhardt.Acc.Common.Messages.Contracts;
+using Gebhardt.Acc.Common.Utilities;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
+namespace Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 
 /// <summary>
 /// Represents the agv.

@@ -1,7 +1,7 @@
-using Gebhardt.StoreWare.Agv.Common.Domain.Models;
-using Gebhardt.StoreWare.Agv.Common.Utilities;
+using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Utilities;
 
-namespace Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
+namespace Gebhardt.Acc.Common.Testing.Helpers;
 
 public static class CargoGenerator
 {

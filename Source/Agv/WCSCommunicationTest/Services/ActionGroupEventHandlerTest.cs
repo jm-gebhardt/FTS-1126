@@ -1,15 +1,15 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
-using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
-using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
-using Gebhardt.StoreWare.Agv.WCSCommunication.Domain.Models.HostOrder;
-using Gebhardt.StoreWare.Agv.WCSCommunication.Messages.Commands;
-using Gebhardt.StoreWare.Agv.WCSCommunication.Services.EventHandler;
-using Gebhardt.StoreWare.Agv.WCSCommunicationTest.Fixtures;
+﻿using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.Common.Messages.HostOrder.Events;
+using Gebhardt.Acc.Common.Testing.Helpers;
+using Gebhardt.Acc.WCSCommunication.Domain.Models.HostOrder;
+using Gebhardt.Acc.WCSCommunication.Messages.Commands;
+using Gebhardt.Acc.WCSCommunication.Services.EventHandler;
+using Gebhardt.Acc.WCSCommunicationTest.Fixtures;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services;
+namespace Gebhardt.Acc.WCSCommunicationTest.Services;
 
 [TestClass]
 public class ActionGroupEventHandlerTest

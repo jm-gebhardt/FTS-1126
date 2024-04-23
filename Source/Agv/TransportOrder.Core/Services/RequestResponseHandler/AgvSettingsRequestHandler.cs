@@ -1,19 +1,19 @@
 ﻿using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Settings;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agvs.Queries;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.TransportOrder.Domain;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.Settings;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.Agvs.Queries;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
-using Gebhardt.StoreWare.Agv.Common.Extensions;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Constants;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
-using AgvSettings = Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent.AgvSettings;
+using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.TransportOrder.Domain.Constants;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
+using AgvSettings = Gebhardt.Acc.TransportOrder.Messages.MessageContent.AgvSettings;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
+namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 
 /// <summary>
 /// Provides handlers for agv settings requests.

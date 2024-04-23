@@ -1,7 +1,7 @@
 ﻿using System.Numerics;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
+namespace Gebhardt.Acc.Common.Domain.Models.Graphs;
 
 /// <summary>
 /// Coefficient for a <see cref="GraphEdge"/>.
@@ -106,7 +106,7 @@ public class EdgeCoefficient : IEquatable<EdgeCoefficient>
         {
             return true;
         }
-        if (obj.GetType() != this.GetType())
+        if (obj.GetType() != GetType())
         {
             return false;
         }

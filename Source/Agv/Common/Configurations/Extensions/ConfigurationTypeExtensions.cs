@@ -1,7 +1,7 @@
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Gebhardt.StoreWare.Agv.Common.Configurations.Extensions;
+namespace Gebhardt.Acc.Common.Configurations.Extensions;
 
 /// <summary>
 /// Extension methods for ConfigurationTypes

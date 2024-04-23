@@ -1,10 +1,10 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.MqttMessages;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.DeviceCommunication.MessageParsers;
+using Gebhardt.Acc.DeviceCommunication.Messages.MqttMessages;
 using JetBrains.Annotations;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States;
+namespace Gebhardt.Acc.DeviceCommunication.States;
 
 /// <summary>
 /// Saga instance for <see cref="Services.AgvGraphBuilderStateMachine"/>

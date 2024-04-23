@@ -1,9 +1,9 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Filters.SignificanceCheckers;
+﻿using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
+using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Filters.SignificanceCheckers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Test.WebApi.Filters.SignificanceCheckers;
+namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Filters.SignificanceCheckers;
 
 [TestClass]
 public class AgvBatteryStatusSignificanceCheckerTests

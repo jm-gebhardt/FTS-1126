@@ -1,6 +1,6 @@
 ﻿using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.SmartLinkCommunication.Models;
+namespace Gebhardt.Acc.SmartLinkCommunication.Models;
 
 /// <summary>
 /// Configuration on how an IO should behave. E.g. what action should be executed when the IO is in a certain state for a certain time

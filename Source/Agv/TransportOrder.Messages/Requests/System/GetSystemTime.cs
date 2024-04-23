@@ -1,6 +1,6 @@
 ﻿using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.System;
+namespace Gebhardt.Acc.TransportOrder.Messages.Requests.System;
 
 /// <summary>
 /// Represents the request which returns the system time.

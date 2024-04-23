@@ -1,8 +1,8 @@
-﻿using Gebhardt.StoreWare.Agv.IntegrationTest.Utils;
+﻿using Gebhardt.Acc.IntegrationTest.Utils;
 using JetBrains.Annotations;
 using Newtonsoft.Json.Linq;
 
-namespace Gebhardt.StoreWare.Agv.IntegrationTest.Agv
+namespace Gebhardt.Acc.IntegrationTest.Agv
 {
     /// <summary>
     /// Test AGV Implementation

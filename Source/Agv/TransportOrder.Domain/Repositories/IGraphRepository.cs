@@ -1,9 +1,9 @@
 ﻿using System.Linq.Expressions;
-using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Graph;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
+namespace Gebhardt.Acc.TransportOrder.Domain.Repositories;
 
 /// <summary>
 /// Interface for the graph repository.

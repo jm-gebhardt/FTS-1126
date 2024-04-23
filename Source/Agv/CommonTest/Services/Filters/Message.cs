@@ -1,6 +1,6 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages;
+﻿using Gebhardt.Acc.Common.Messages;
 
-namespace Gebhardt.StoreWare.Agv.CommonTest.Services.Filters;
+namespace Gebhardt.Acc.CommonTest.Services.Filters;
 
 public class Message : IMessageCreatedDate
 {

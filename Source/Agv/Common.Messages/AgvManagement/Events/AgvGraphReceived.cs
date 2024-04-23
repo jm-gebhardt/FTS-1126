@@ -1,10 +1,10 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
-using Gebhardt.StoreWare.Agv.Common.Messages.Contracts;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Messages.Contracts;
 using JetBrains.Annotations;
 using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
-namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
+namespace Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 
 /// <summary>
 /// An event reporting the graph of an AGV.

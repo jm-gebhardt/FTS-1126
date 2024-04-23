@@ -1,7 +1,7 @@
 ﻿using JetBrains.Annotations;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Routing;
+namespace Gebhardt.Acc.TransportOrder.Messages.Requests.Routing;
 
 /// <summary>
 /// Represents the request which returns the route for the given Agv from it's current node to the destination node.

@@ -1,6 +1,6 @@
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
+namespace Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 
 /// <summary>
 /// Represents the command sent when the agv errors should be reset.

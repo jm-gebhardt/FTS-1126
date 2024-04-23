@@ -1,11 +1,11 @@
-﻿using Gebhardt.StoreWare.Agv.Statistics.Domain.Models;
-using Gebhardt.StoreWare.Agv.Statistics.Domain.Repositories;
-using Gebhardt.StoreWare.Agv.Statistics.Messages.Commands;
+﻿using Gebhardt.Acc.Statistics.Domain.Models;
+using Gebhardt.Acc.Statistics.Domain.Repositories;
+using Gebhardt.Acc.Statistics.Messages.Commands;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.StoreWare.Agv.Statistics.Services.CommandHandler;
+namespace Gebhardt.Acc.Statistics.Services.CommandHandler;
 
 /// <summary>
 /// Handles housekeeping related commands.

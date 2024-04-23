@@ -1,9 +1,9 @@
 using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
+using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
+using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
+using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles;
+namespace Gebhardt.Acc.TransportOrder.Messages.Profiles;
 
 /// <summary>
 /// Profile for AgvPosition

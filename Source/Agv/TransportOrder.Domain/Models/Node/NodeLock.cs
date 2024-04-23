@@ -1,4 +1,4 @@
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Node;
+namespace Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 
 /// <summary>
 /// Node State

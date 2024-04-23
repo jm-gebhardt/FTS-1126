@@ -1,11 +1,11 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
-using Gebhardt.StoreWare.Agv.Common.Domain.Utilities;
-using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Travel;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Testing.Helpers;
+using Gebhardt.Acc.DeviceCommunication.Services.Simulation.Travel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation.Travel;
+namespace Gebhardt.Acc.DeviceCommunicationTest.Services.Simulation.Travel;
 
 [TestClass]
 public class BezierTest

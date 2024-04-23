@@ -1,11 +1,11 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
+﻿using Gebhardt.Acc.Common.Testing.Fixtures;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
+using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Test.Services.RequestHandler.Agv;
+namespace Gebhardt.Acc.TransportOrder.Test.Services.RequestHandler.Agv;
 
 public class GetAgvPositionsRequestHandlerTestFixture<TRequestClient, TConsumer> : MediatorTestFixture<TRequestClient, TConsumer>
     where TRequestClient : class

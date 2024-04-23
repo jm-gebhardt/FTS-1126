@@ -1,11 +1,11 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs;
+﻿using Gebhardt.Acc.TransportOrder.WebApi.Hubs;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Test.WebApi.Hubs;
+namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Hubs;
 
 /// <summary>
 /// Test for SignalR hub instantiation

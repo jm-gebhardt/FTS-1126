@@ -1,6 +1,6 @@
 ﻿using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.Common.Extensions;
+namespace Gebhardt.Acc.Common.Extensions;
 
 /// <summary>
 /// Provides extension methods for the <see cref="IPartitioner"/>.

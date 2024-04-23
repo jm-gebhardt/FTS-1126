@@ -1,6 +1,6 @@
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
+namespace Gebhardt.Acc.Common.Configurations.SettingsProviders;
 
 /// <summary>
 /// Provides settings

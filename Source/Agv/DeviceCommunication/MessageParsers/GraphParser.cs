@@ -1,13 +1,13 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
-using Gebhardt.StoreWare.Agv.Common.Domain.Utilities;
-using Gebhardt.StoreWare.Agv.Common.Utilities;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Exceptions;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Extensions;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Helpers;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.MqttMessages;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Utilities;
+using Gebhardt.Acc.DeviceCommunication.Exceptions;
+using Gebhardt.Acc.DeviceCommunication.Extensions;
+using Gebhardt.Acc.DeviceCommunication.Helpers;
+using Gebhardt.Acc.DeviceCommunication.Messages.MqttMessages;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers;
+namespace Gebhardt.Acc.DeviceCommunication.MessageParsers;
 
 /// <summary>
 /// Parse <see cref="MqttGraph"/> message.

@@ -1,7 +1,7 @@
 ﻿using CommandLine;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
+namespace Gebhardt.Acc.DeviceCommunication.CmdOptions;
 
 /// <summary>
 /// CommandLine Options for Simulation Mode

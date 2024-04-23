@@ -1,7 +1,7 @@
 ﻿using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.StoreWare.Agv.Common.Logging;
+namespace Gebhardt.Acc.Common.Logging;
 
 /// <summary>
 /// Factory to provide reliable logger instance used for initial logging

@@ -1,10 +1,10 @@
-using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graphs;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Maps;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.DeviceCommunication.Services.Simulation.Graphs;
+using Gebhardt.Acc.DeviceCommunication.Services.Simulation.Maps;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation;
+namespace Gebhardt.Acc.DeviceCommunicationTest.Services.Simulation;
 
 [TestClass]
 public class GridGeneratorTest

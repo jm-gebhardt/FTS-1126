@@ -1,7 +1,7 @@
 using JetBrains.Annotations;
-using static Gebhardt.StoreWare.Agv.Common.Domain.Models.AgvData;
+using static Gebhardt.Acc.Common.Domain.Models.AgvData;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
+namespace Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 
 /// <summary>
 /// Agv Data model

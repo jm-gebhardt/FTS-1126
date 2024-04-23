@@ -1,6 +1,6 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
-using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;
+﻿using Gebhardt.Acc.Common.Testing.Fixtures;
+using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Test.Repositories;
+namespace Gebhardt.Acc.TransportOrder.Test.Repositories;
 
 public class TransportOrderDbFixture : DbTestFixtureBase<TransportOrderDbContext>;

@@ -1,12 +1,12 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
-using Gebhardt.StoreWare.Agv.Common.Messages.Graphs.Requests;
-using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
-using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Graphs;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
+using Gebhardt.Acc.Common.Messages.Graphs.Requests;
+using Gebhardt.Acc.Common.Testing.Fixtures;
+using Gebhardt.Acc.Common.Testing.Helpers;
+using Gebhardt.Acc.DeviceCommunication.Services.Graphs;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Graphs;
+namespace Gebhardt.Acc.DeviceCommunicationTest.Services.Graphs;
 
 internal class GraphMergerTestFixture : MassTransitConsumerTestFixture<GraphMerger>
 {

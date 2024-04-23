@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <AssemblyName>Gebhardt.StoreWare.Agv.TransportOrder.Test</AssemblyName>
+        <AssemblyName>Gebhardt.Acc.TransportOrder.Test</AssemblyName>
         <IsPackable>false</IsPackable>
         <NoWarn>1591</NoWarn>
     </PropertyGroup>

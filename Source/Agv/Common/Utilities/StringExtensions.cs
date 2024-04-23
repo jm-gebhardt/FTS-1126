@@ -2,7 +2,7 @@
 using System.Text;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.Common.Utilities;
+namespace Gebhardt.Acc.Common.Utilities;
 
 /// <summary>
 /// Extension methods to strings.

@@ -1,10 +1,10 @@
 ﻿using System.Numerics;
-using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
-using Gebhardt.StoreWare.Agv.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.CommonTest.Utilities;
+namespace Gebhardt.Acc.CommonTest.Utilities;
 
 [TestClass]
 public class MathematicsTest

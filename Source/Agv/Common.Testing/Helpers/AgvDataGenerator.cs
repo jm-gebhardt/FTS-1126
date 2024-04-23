@@ -1,6 +1,6 @@
-using Gebhardt.StoreWare.Agv.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Models;
 
-namespace Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
+namespace Gebhardt.Acc.Common.Testing.Helpers;
 
 public static class AgvDataGenerator
 {

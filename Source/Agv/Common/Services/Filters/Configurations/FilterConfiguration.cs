@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.StoreWare.Agv.Common.Services.Filters.Configurations;
+﻿namespace Gebhardt.Acc.Common.Services.Filters.Configurations;
 
 /// <summary>
 /// Provides Min/MaxInterval configuration for filters.

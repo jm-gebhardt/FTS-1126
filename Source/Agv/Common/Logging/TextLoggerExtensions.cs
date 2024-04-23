@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Configuration;
 
-namespace Gebhardt.StoreWare.Agv.Common.Logging;
+namespace Gebhardt.Acc.Common.Logging;
 
 /// <summary>
 /// Extends the logging provider TextLogger

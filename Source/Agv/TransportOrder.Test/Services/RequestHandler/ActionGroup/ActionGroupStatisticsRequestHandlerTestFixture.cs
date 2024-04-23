@@ -1,12 +1,12 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
-using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.RequestResponseHandler;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.ActionGroup;
+﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.Common.Testing.Fixtures;
+using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
+using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Test.Services.RequestHandler.ActionGroup;
+namespace Gebhardt.Acc.TransportOrder.Test.Services.RequestHandler.ActionGroup;
 
 /// <summary>
 /// Provides a test fixture for <see cref="ActionGroupStatisticsRequestHandler"/> .

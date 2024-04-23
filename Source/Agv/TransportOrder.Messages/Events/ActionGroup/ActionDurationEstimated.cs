@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
+﻿using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.ActionGroup;
+namespace Gebhardt.Acc.TransportOrder.Messages.Events.ActionGroup;
 
 /// <summary>
 /// Event raised when an ActionGroup has been estimated.

@@ -1,10 +1,10 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Utilities;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.WebApi.Dtos;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.Commands;
+﻿using Gebhardt.Acc.Common.Utilities;
+using Gebhardt.Acc.DeviceCommunication.WebApi.Dtos;
+using Gebhardt.Acc.DeviceCommunication.Messages.Commands;
 using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.WebApi.Controllers;
+namespace Gebhardt.Acc.DeviceCommunication.WebApi.Controllers;
 
 /// <summary>
 /// Contains agv related endpoints.

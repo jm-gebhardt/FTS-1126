@@ -1,9 +1,9 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.Contracts;
+﻿using Gebhardt.Acc.Common.Messages.Contracts;
 using JetBrains.Annotations;
 using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
-namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
+namespace Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 
 /// <summary>
 /// Command to request the assignment of an AGV for a specific order.

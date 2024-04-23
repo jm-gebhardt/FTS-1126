@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.StoreWare.Agv.Common.Exceptions;
+﻿namespace Gebhardt.Acc.Common.Exceptions;
 
 /// <summary>
 /// Represents errors that occur when the request to an e.g. request handler was not valid

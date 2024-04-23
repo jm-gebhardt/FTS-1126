@@ -1,18 +1,18 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
-using Gebhardt.StoreWare.Agv.Common.Utilities;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agvs.Queries;
-using Gebhardt.StoreWare.Agv.TransportOrder.Test.Helper;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Consumer;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Agv;
+﻿using Gebhardt.Acc.Common.Testing.Helpers;
+using Gebhardt.Acc.Common.Utilities;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
+using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
+using Gebhardt.Acc.TransportOrder.Messages.Profiles;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.Agvs.Queries;
+using Gebhardt.Acc.TransportOrder.Test.Helper;
+using Gebhardt.Acc.TransportOrder.WebApi.Consumer;
+using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Agv;
 using MassTransit;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Test.WebApi.Consumer;
+namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Consumer;
 
 [TestClass]
 public class AgvStateChangedConsumerTest
@@ -27,7 +27,7 @@ public class AgvStateChangedConsumerTest
     public async Task Receiving_AgvStateChanged_WhenCurrentStateIsNotInitial_SendAgvStateChangedToAllClients(AgvState currentState, AgvState? previousState)
     {
         var agvStatus = new AgvStatus(Guid.NewGuid(), null, false, true, 100.0d, false, false, NodeGenerator.GenerateParkingNode().Id);
-        var agv = new TransportOrder.Domain.Models.Agv.Agv(AgvSerialNumber.ToGuid(), Guid.NewGuid(), AgvSerialNumber, agvStatus);
+        var agv = new Agv(AgvSerialNumber.ToGuid(), Guid.NewGuid(), AgvSerialNumber, agvStatus);
         agv = AgvGenerator.SetAgvState(currentState, agv, false);
 
         var mapper = MappingHelper.GetMapper(new AgvProfile());
@@ -49,7 +49,7 @@ public class AgvStateChangedConsumerTest
     [DataRow(AgvState.Initial, null)]
     public async Task Receiving_AgvStateChanged_WhenCurrentStateIsInitial_SendAgvDiscoveredToAllClients(AgvState currentState, AgvState? previousState)
     {
-        var agv = new TransportOrder.Domain.Models.Agv.Agv(AgvSerialNumber.ToGuid(), Guid.NewGuid(), AgvSerialNumber);
+        var agv = new Agv(AgvSerialNumber.ToGuid(), Guid.NewGuid(), AgvSerialNumber);
         agv = AgvGenerator.SetAgvState(currentState, agv, false);
 
         var mapper = MappingHelper.GetMapper(new AgvProfile());

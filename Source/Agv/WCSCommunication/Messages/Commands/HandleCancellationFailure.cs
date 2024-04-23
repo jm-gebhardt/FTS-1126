@@ -1,9 +1,9 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
+﻿using Gebhardt.Acc.Common.Messages.HostOrder.Events;
 using JetBrains.Annotations;
 using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
-namespace Gebhardt.StoreWare.Agv.WCSCommunication.Messages.Commands;
+namespace Gebhardt.Acc.WCSCommunication.Messages.Commands;
 
 /// <summary>
 ///Provides a command to handle the failure of the host order cancellation.

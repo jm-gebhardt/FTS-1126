@@ -1,8 +1,8 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Consumer;
+﻿using Gebhardt.Acc.Common.Consumer;
 using JetBrains.Annotations;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.Common.Extensions;
+namespace Gebhardt.Acc.Common.Extensions;
 
 /// <summary>
 /// A bus configurator extension that allows to register a Mqtt consumer. The specific consumer definition is generated automatically.

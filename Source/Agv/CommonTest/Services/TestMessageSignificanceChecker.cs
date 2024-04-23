@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Services;
+﻿using Gebhardt.Acc.Common.Services;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.CommonTest.Services;
+namespace Gebhardt.Acc.CommonTest.Services;
 
 internal class TestMessageSignificanceChecker : ReflectionSignificanceChecker<TestMessage?>
 {

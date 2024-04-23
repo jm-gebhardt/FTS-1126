@@ -1,7 +1,7 @@
 ﻿using MassTransit;
-using ActionGroupCreator = Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.ActionGroupCreator;
+using ActionGroupCreator = Gebhardt.Acc.Common.Messages.ActionGroups.ActionGroupCreator;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
+namespace Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 
 /// <summary>
 /// Provides a command to create a charging <see cref="ActionGroup"/> for an agv.

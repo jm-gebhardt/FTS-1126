@@ -1,8 +1,8 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
+﻿using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using JetBrains.Annotations;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
+namespace Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 
 /// <summary>
 /// An event reporting that the current position of an AGV has changed

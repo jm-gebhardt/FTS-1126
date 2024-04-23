@@ -1,9 +1,9 @@
 using System.Collections.Concurrent;
-using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
+namespace Gebhardt.Acc.DeviceCommunication.Services;
 
 /// <summary>
 /// Agv repository in memory to retrieve or modify last agvStatus and agvMap of an agv.

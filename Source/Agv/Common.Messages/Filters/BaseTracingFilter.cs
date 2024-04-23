@@ -1,7 +1,7 @@
 ﻿using MassTransit;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.StoreWare.Agv.Common.Messages.Filters;
+namespace Gebhardt.Acc.Common.Messages.Filters;
 
 /// <summary>
 /// Provides a base class for tracing consume/publish filters

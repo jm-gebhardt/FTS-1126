@@ -1,7 +1,7 @@
-using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Graphs;
+namespace Gebhardt.Acc.DeviceCommunication.Services.Simulation.Graphs;
 
 /// <summary>
 /// Graph Generator

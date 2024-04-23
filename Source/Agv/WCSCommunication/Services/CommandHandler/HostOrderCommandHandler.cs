@@ -1,14 +1,14 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
-using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
-using Gebhardt.StoreWare.Agv.WCSCommunication.Domain.Models.HostOrder;
-using Gebhardt.StoreWare.Agv.WCSCommunication.Domain.Repositories;
-using Gebhardt.StoreWare.Agv.WCSCommunication.Domain.Services;
-using Gebhardt.StoreWare.Agv.WCSCommunication.Messages.Commands;
+﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
+using Gebhardt.Acc.Common.Messages.HostOrder.Events;
+using Gebhardt.Acc.WCSCommunication.Domain.Models.HostOrder;
+using Gebhardt.Acc.WCSCommunication.Domain.Repositories;
+using Gebhardt.Acc.WCSCommunication.Domain.Services;
+using Gebhardt.Acc.WCSCommunication.Messages.Commands;
 using JetBrains.Annotations;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.WCSCommunication.Services.CommandHandler;
+namespace Gebhardt.Acc.WCSCommunication.Services.CommandHandler;
 
 /// <summary>
 /// Provides handlers for host order related commands.

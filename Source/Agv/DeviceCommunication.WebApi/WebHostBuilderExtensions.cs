@@ -2,13 +2,13 @@
 using System.Text.Json.Serialization;
 using System.Xml.Linq;
 using System.Xml.XPath;
-using Gebhardt.StoreWare.Agv.Common.WebApi;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.WebApi.Controllers;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.WebApi.Swagger;
+using Gebhardt.Acc.Common.WebApi;
+using Gebhardt.Acc.DeviceCommunication.WebApi.Controllers;
+using Gebhardt.Acc.DeviceCommunication.WebApi.Swagger;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.WebApi;
+namespace Gebhardt.Acc.DeviceCommunication.WebApi;
 
 /// <summary>
 /// Provides extension methods for <see cref="IWebHostBuilder"/>

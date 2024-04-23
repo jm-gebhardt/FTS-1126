@@ -1,9 +1,9 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
-using Gebhardt.StoreWare.Agv.Statistics.Extensions;
+﻿using Gebhardt.Acc.Common.Testing.Helpers;
+using Gebhardt.Acc.Statistics.Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.Statistics.Test.Extensions;
+namespace Gebhardt.Acc.Statistics.Test.Extensions;
 
 [TestClass]
 public class NodesExtensionTest

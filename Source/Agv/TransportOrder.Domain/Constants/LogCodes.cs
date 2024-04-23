@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Constants;
+﻿namespace Gebhardt.Acc.TransportOrder.Domain.Constants;
 
 /// <summary>
 /// Provides static log codes 

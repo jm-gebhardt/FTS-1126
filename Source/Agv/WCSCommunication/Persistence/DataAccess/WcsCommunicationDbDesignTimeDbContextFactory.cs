@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Persistence.Ef;
+﻿using Gebhardt.Acc.Common.Persistence.Ef;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.WCSCommunication.Persistence.DataAccess;
+namespace Gebhardt.Acc.WCSCommunication.Persistence.DataAccess;
 
 /// <inheritdoc />
 [UsedImplicitly]

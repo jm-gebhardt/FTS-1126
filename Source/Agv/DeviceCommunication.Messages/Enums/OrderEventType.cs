@@ -1,6 +1,6 @@
 ﻿using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.Enums;
+namespace Gebhardt.Acc.DeviceCommunication.Messages.Enums;
 
 /// <summary>
 /// Order event types for of a transport order (see 'order_event.schema')

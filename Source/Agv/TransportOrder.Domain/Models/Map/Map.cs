@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Graph;
+﻿using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Map;
+namespace Gebhardt.Acc.TransportOrder.Domain.Models.Map;
 
 /// <summary>
 /// class representing the Map table in Database

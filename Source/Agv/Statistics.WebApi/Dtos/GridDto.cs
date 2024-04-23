@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.Statistics.Domain.Models;
+﻿using Gebhardt.Acc.Statistics.Domain.Models;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.Statistics.WebApi.Dtos;
+namespace Gebhardt.Acc.Statistics.WebApi.Dtos;
 
 /// <summary>
 /// Provides a dto for <see cref="Grid"/>.

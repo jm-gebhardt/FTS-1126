@@ -1,8 +1,8 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models;
-using Gebhardt.StoreWare.Agv.Common.Messages;
+﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Messages;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.WebApi.Dtos;
+namespace Gebhardt.Acc.DeviceCommunication.WebApi.Dtos;
 
 /// <summary>
 /// Represents a dto that is returned when an <see cref="AgvError"/> has been generated with fatal level.

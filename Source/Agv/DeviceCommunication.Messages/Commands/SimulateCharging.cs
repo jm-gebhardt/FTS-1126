@@ -1,6 +1,6 @@
 ﻿using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.Commands;
+namespace Gebhardt.Acc.DeviceCommunication.Messages.Commands;
 
 /// <summary>
 /// Provides a command to simulate agv charging.

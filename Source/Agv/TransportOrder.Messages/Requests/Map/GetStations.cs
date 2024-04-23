@@ -1,6 +1,6 @@
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Map;
+namespace Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
 
 /// <summary>
 /// Provides a request to get all stations of a map. A station is a node which is not a waypoint.

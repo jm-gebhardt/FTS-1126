@@ -1,6 +1,6 @@
 ﻿using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
+namespace Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 
 /// <summary>
 /// Provides a command to reset the offline watchdog of an agv.

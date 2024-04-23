@@ -1,12 +1,12 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
-using Gebhardt.StoreWare.Agv.Statistics.Domain.Models;
-using Gebhardt.StoreWare.Agv.Statistics.Domain.Repositories;
+﻿using Gebhardt.Acc.Common.Testing.Fixtures;
+using Gebhardt.Acc.Statistics.Domain.Models;
+using Gebhardt.Acc.Statistics.Domain.Repositories;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 
-namespace Gebhardt.StoreWare.Agv.Statistics.Test.Fixtures;
+namespace Gebhardt.Acc.Statistics.Test.Fixtures;
 
 /// <summary>
 /// Provides a consumer test fixture with a mock db.

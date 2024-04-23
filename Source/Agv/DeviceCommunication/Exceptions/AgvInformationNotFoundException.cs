@@ -1,8 +1,8 @@
-using Gebhardt.StoreWare.Agv.Common.Exceptions;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
+using Gebhardt.Acc.Common.Exceptions;
+using Gebhardt.Acc.DeviceCommunication.Services;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Exceptions;
+namespace Gebhardt.Acc.DeviceCommunication.Exceptions;
 
 /// <summary>
 /// Agv Information was not found

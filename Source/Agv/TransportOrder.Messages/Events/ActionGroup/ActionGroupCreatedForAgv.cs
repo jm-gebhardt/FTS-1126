@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.ActionGroup;
+﻿namespace Gebhardt.Acc.TransportOrder.Messages.Events.ActionGroup;
 
 /// <summary>
 /// Represents the event triggered when a new <see cref="ActionGroup"/> was created for an agv.

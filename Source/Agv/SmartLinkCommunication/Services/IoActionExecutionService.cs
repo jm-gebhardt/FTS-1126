@@ -1,9 +1,9 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
-using Gebhardt.StoreWare.Agv.SmartLinkCommunication.Models;
+﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
+using Gebhardt.Acc.SmartLinkCommunication.Models;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.SmartLinkCommunication.Services;
+namespace Gebhardt.Acc.SmartLinkCommunication.Services;
 
 /// <summary>
 /// Service to execute assigned actions in SmartLink modules

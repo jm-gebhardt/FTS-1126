@@ -1,8 +1,8 @@
-using Gebhardt.StoreWare.Agv.Common.Exceptions;
-using Gebhardt.StoreWare.Agv.SmartLinkCommunication.Models;
+using Gebhardt.Acc.Common.Exceptions;
+using Gebhardt.Acc.SmartLinkCommunication.Models;
 using RestSharp;
 
-namespace Gebhardt.StoreWare.Agv.SmartLinkCommunication.Services;
+namespace Gebhardt.Acc.SmartLinkCommunication.Services;
 
 /// <summary>
 /// Service that requests data from SmartLink Rest API

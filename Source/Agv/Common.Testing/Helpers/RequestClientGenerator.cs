@@ -2,7 +2,7 @@ using MassTransit;
 using Moq;
 
 // ReSharper disable UnusedMember.Global
-namespace Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
+namespace Gebhardt.Acc.Common.Testing.Helpers;
 
 #region DummyResponse
 /// <summary>

@@ -1,6 +1,6 @@
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.Common.Domain.Models;
+namespace Gebhardt.Acc.Common.Domain.Models;
 
 /// <summary>
 /// warning: AGV is ready to drive without human intervention

@@ -1,12 +1,12 @@
 using AppAny.Quartz.EntityFrameworkCore.Migrations;
 using AppAny.Quartz.EntityFrameworkCore.Migrations.SqlServer;
-using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess.Configuration;
-using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess.Configuration.AgvSettings;
+using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration;
+using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.AgvSettings;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;
+namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
 
 /// <summary>
 /// TransportOrder DB Context 

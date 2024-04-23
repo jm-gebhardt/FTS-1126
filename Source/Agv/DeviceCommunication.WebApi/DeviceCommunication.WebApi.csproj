@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
    <PropertyGroup>
-        <AssemblyName>Gebhardt.StoreWare.Agv.DeviceCommunication.WebApi</AssemblyName>
+        <AssemblyName>Gebhardt.Acc.DeviceCommunication.WebApi</AssemblyName>
         <OutputType>Library</OutputType>
     </PropertyGroup>
     <Import Project="..\SharedProjectSettings.csproj" />

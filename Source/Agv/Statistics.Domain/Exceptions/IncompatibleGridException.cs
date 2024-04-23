@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.StoreWare.Agv.Statistics.Domain.Exceptions;
+﻿namespace Gebhardt.Acc.Statistics.Domain.Exceptions;
 
 /// <summary>
 /// Represents the exception thrown when two grids are incompatible

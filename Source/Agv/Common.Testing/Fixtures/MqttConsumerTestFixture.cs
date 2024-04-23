@@ -1,8 +1,8 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Extensions;
+﻿using Gebhardt.Acc.Common.Extensions;
 using JetBrains.Annotations;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
+namespace Gebhardt.Acc.Common.Testing.Fixtures;
 
 /// <summary>
 /// Testing fixture to test MQTT consumers.

@@ -1,6 +1,6 @@
 ﻿using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
+namespace Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
 
 /// <summary>
 /// Represents the GetAgvSettings request which returns AgvSettingsReadModel

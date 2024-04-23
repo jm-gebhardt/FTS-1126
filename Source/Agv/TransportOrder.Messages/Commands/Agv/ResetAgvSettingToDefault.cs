@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
+﻿namespace Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 
 /// <summary>
 /// Provides a command to set property of the setting of an agv to default.

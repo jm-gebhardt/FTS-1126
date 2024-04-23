@@ -1,7 +1,7 @@
 using System.Reflection;
-using Gebhardt.StoreWare.Agv.Common.Services.Filters;
+using Gebhardt.Acc.Common.Services.Filters;
 
-namespace Gebhardt.StoreWare.Agv.Common.Services;
+namespace Gebhardt.Acc.Common.Services;
 
 /// <summary>
 /// Uses reflection to check for equals changes in objects. If a custom action is defined for a property, it will be executed instead.

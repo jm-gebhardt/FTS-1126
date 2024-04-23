@@ -3,7 +3,7 @@ using MassTransit.Saga;
 using MassTransit.Testing;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
+namespace Gebhardt.Acc.Common.Testing.Fixtures;
 
 /// <summary>
 /// Abstract base class for testing MassTransit state machines

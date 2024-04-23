@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.StoreWare.Agv.Provisioning.Services;
+namespace Gebhardt.Acc.Provisioning.Services;
 
 /// <inheritdoc />
 internal class AgvSeeder : ISeeder

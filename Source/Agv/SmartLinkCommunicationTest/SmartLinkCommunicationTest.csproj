@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <AssemblyName>Gebhardt.StoreWare.Agv.SmartLinkCommunicationTest</AssemblyName>
+        <AssemblyName>Gebhardt.Acc.SmartLinkCommunicationTest</AssemblyName>
         <IsPackable>false</IsPackable>
         <NoWarn>1591</NoWarn>
     </PropertyGroup>

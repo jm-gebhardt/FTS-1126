@@ -1,7 +1,7 @@
 using JetBrains.Annotations;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
+namespace Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
 
 /// <summary>
 /// Represents the request which returns list of unresolved AgvError

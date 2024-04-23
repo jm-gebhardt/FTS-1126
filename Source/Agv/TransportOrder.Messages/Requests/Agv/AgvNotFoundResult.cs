@@ -1,6 +1,6 @@
 ﻿using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv;
+namespace Gebhardt.Acc.TransportOrder.Messages.Requests.Agv;
 
 /// <summary>
 /// Defines a result for the case that an agv for a request was not found

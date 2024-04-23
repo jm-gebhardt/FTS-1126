@@ -1,9 +1,9 @@
 ﻿using System.Collections;
-using Gebhardt.StoreWare.Agv.Common.Testing.Extensions;
+using Gebhardt.Acc.Common.Testing.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
+namespace Gebhardt.Acc.Common.Testing.Fixtures;
 
 public class DbTestFixtureBase<TContext> : FixtureBase, IAsyncDisposable where TContext : DbContext
 {

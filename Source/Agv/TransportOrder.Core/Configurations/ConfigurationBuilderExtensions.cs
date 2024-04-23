@@ -1,9 +1,9 @@
-using Gebhardt.StoreWare.Agv.Common.Configurations;
-using Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
+using Gebhardt.Acc.Common.Configurations;
+using Gebhardt.Acc.Common.Configurations.SettingsProviders;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Configuration;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations;
+namespace Gebhardt.Acc.TransportOrder.Core.Configurations;
 
 /// <summary>
 /// Extensions for building the configuration provider

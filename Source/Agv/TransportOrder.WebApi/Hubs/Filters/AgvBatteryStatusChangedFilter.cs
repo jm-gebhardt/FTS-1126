@@ -1,8 +1,8 @@
-using Gebhardt.StoreWare.Agv.Common.Services;
-using Gebhardt.StoreWare.Agv.Common.Services.Filters;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
+using Gebhardt.Acc.Common.Services;
+using Gebhardt.Acc.Common.Services.Filters;
+using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Filters;
+namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs.Filters;
 
 /// <summary>
 /// Filter by significant changes in the battery charge.

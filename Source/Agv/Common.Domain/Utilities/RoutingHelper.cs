@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.StoreWare.Agv.Common.Domain.Utilities;
+﻿namespace Gebhardt.Acc.Common.Domain.Utilities;
 
 /// <summary>
 /// Collection of utility functions to work with routes/nodes.

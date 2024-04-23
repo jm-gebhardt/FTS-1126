@@ -1,11 +1,11 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Utilities;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
-using Gebhardt.StoreWare.Agv.TransportOrder.Test.Helper;
+﻿using Gebhardt.Acc.Common.Utilities;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
+using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Test.Domain.Services.ActionGroup;
+namespace Gebhardt.Acc.TransportOrder.Test.Domain.Services.ActionGroup;
 
 /// <summary>
 /// Tests for <see cref="BaseAgvChargingServiceTest"/>
@@ -21,11 +21,11 @@ public class BaseAgvChargingServiceTest
 
     private static readonly AgvSettingsReadModel _agvSettingsReadModel = new(1500, 2000, BatteryLevelCritical, BatteryLevelLow, MinChargeUp, MaxChargeUp);
 
-    private TransportOrder.Domain.Models.Agv.Agv CreateAgv(string serialNumber, int batteryCharge, bool charging)
+    private Agv CreateAgv(string serialNumber, int batteryCharge, bool charging)
     {
         var correlationId = serialNumber.ToGuid();
         var agvStatus = new AgvStatus(correlationId, "", true, true, batteryCharge, charging, false);
-        var agv = new TransportOrder.Domain.Models.Agv.Agv(correlationId, Guid.NewGuid(), serialNumber, agvStatus);
+        var agv = new Agv(correlationId, Guid.NewGuid(), serialNumber, agvStatus);
         agv = AgvGenerator.SetAgvState(charging ? AgvState.Busy : AgvState.Idle, agv);
         return agv;
     }

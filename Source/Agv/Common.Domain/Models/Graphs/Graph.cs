@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
+﻿namespace Gebhardt.Acc.Common.Domain.Models.Graphs;
 
 /// <summary>
 /// Model for the (global) graph

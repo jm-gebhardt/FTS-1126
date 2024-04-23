@@ -3,7 +3,7 @@ using JetBrains.Annotations;
 using MassTransit;
 using MassTransit.Serialization;
 
-namespace Gebhardt.StoreWare.Agv.Common.Extensions;
+namespace Gebhardt.Acc.Common.Extensions;
 
 /// <summary>
 /// An extension for the MassTransit IPublishEndpoint. Tells the endpoint on the fly to send raw JSON messages

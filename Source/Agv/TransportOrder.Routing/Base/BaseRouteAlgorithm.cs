@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
-using Gebhardt.StoreWare.Agv.TransportOrder.Routing.Models;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.TransportOrder.Routing.Models;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Routing.Base;
+namespace Gebhardt.Acc.TransportOrder.Routing.Base;
 
 /// <summary>
 /// This base class implements the basic construct of a graph algorithm

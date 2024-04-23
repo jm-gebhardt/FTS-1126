@@ -1,5 +1,5 @@
 ﻿using System.Reflection;
-using Gebhardt.StoreWare.Agv.Common.Extensions;
+using Gebhardt.Acc.Common.Extensions;
 using JetBrains.Annotations;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 using Prometheus;
 using static System.String;
 
-namespace Gebhardt.StoreWare.Agv.Common;
+namespace Gebhardt.Acc.Common;
 
 /// <summary>
 /// Encapsulates startup procedure.

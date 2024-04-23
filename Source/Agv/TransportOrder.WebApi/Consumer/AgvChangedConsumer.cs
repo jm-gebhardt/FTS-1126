@@ -1,11 +1,11 @@
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Agv;
+using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
+using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
+using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Agv;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Consumer;
+namespace Gebhardt.Acc.TransportOrder.WebApi.Consumer;
 
 /// <summary>
 /// Consumes <see cref="AgvStateChanged"/>, <see cref="AgvRemoved" />, <see cref="AgvErrorChanged" />, <see cref="AgvLockedChanged" />, <see cref="AgvOnlineChanged" /> and sends messages via <see cref="IAgvPublisher"/>

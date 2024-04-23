@@ -1,8 +1,8 @@
 ﻿using System.Numerics;
-using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.Common.Extensions;
+namespace Gebhardt.Acc.Common.Extensions;
 
 /// <summary>
 /// Extensions for <see cref="GraphNode"/>

@@ -1,6 +1,6 @@
-using Gebhardt.StoreWare.Agv.Common.Exceptions;
+using Gebhardt.Acc.Common.Exceptions;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
+namespace Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 
 /// <summary>
 /// Agv Action was not found

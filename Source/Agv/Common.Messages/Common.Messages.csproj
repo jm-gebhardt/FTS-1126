@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <AssemblyName>Gebhardt.StoreWare.Agv.Common.Messages</AssemblyName>
+        <AssemblyName>Gebhardt.Acc.Common.Messages</AssemblyName>
         <OutputType>Library</OutputType>
     </PropertyGroup>
     <Import Project="..\SharedProjectSettings.csproj" />

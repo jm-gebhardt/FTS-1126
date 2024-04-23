@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Graph;
+namespace Gebhardt.Acc.TransportOrder.WebApi.Dtos.Graph;
 
 /// <summary>
 /// Model for a node in the graph, it has X/Y/Z coordinates and a type.

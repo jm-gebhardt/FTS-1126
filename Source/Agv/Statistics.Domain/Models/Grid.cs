@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.Statistics.Domain.Exceptions;
+﻿using Gebhardt.Acc.Statistics.Domain.Exceptions;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.Statistics.Domain.Models;
+namespace Gebhardt.Acc.Statistics.Domain.Models;
 
 /// <summary>
 /// Represents a grid.

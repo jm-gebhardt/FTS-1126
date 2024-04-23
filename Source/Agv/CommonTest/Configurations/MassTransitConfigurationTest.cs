@@ -1,8 +1,8 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Configurations;
+﻿using Gebhardt.Acc.Common.Configurations;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.CommonTest.Configurations;
+namespace Gebhardt.Acc.CommonTest.Configurations;
 
 [TestClass]
 public class MassTransitConfigurationTest

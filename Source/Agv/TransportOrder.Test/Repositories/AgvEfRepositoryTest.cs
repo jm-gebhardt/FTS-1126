@@ -1,12 +1,12 @@
-using Gebhardt.StoreWare.Agv.Common.Utilities;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
-using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
-using Gebhardt.StoreWare.Agv.TransportOrder.Test.Helper;
+using Gebhardt.Acc.Common.Utilities;
+using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
+using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
+using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Test.Repositories;
+namespace Gebhardt.Acc.TransportOrder.Test.Repositories;
 
 [TestClass]
 public class AgvEfRepositoryTest
@@ -152,8 +152,8 @@ public class AgvEfRepositoryTest
 
         fixture.Repository.Count.ShouldBe(2);
 
-        IEnumerable<TransportOrder.Domain.Models.Agv.Agv> allAgvs = await agvRepository.GetAllAgvsAsync();
-        IEnumerable<TransportOrder.Domain.Models.Agv.Agv> readyAgvs = await agvRepository.GetIdleAgvsAsync();
+        IEnumerable<Agv> allAgvs = await agvRepository.GetAllAgvsAsync();
+        IEnumerable<Agv> readyAgvs = await agvRepository.GetIdleAgvsAsync();
 
         // ReSharper disable PossibleMultipleEnumeration
         allAgvs.Count().ShouldBe(2);
@@ -240,7 +240,7 @@ public class AgvEfRepositoryTest
         var fixture = new EfAgvRepositoryTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow);
         await fixture.Add(agv);
-        ICollection<TransportOrder.Domain.Models.Agv.Agv> agvs = await fixture.Repository.GetReadyAgvsWithAtLeastLowBatteryLevel();
+        ICollection<Agv> agvs = await fixture.Repository.GetReadyAgvsWithAtLeastLowBatteryLevel();
         agvs.Single().CorrelationId.ShouldBe(agv.CorrelationId);
     }
 }

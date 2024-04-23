@@ -1,11 +1,11 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Dictionaries;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
-using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;
-using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
+﻿using Gebhardt.Acc.TransportOrder.Domain.Dictionaries;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
+using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
+using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Test.Repositories;
+namespace Gebhardt.Acc.TransportOrder.Test.Repositories;
 
 public class EfAgvSettingsProviderTestFixture
 {

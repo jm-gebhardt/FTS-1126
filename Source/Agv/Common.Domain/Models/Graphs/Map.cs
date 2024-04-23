@@ -1,7 +1,7 @@
 ﻿using JetBrains.Annotations;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
+namespace Gebhardt.Acc.Common.Domain.Models.Graphs;
 
 /// <summary>
 /// AGV Map

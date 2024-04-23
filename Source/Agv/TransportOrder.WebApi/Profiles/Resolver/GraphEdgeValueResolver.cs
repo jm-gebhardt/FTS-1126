@@ -1,8 +1,8 @@
 ﻿using AutoMapper;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Graph;
+using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
+using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Graph;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles.Resolver;
+namespace Gebhardt.Acc.TransportOrder.WebApi.Profiles.Resolver;
 
 /// <summary>
 /// The custom value resolver.

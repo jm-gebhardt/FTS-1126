@@ -1,12 +1,12 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
-using Gebhardt.StoreWare.Agv.Common.Utilities;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.MqttMessages;
+﻿using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
+using Gebhardt.Acc.Common.Utilities;
+using Gebhardt.Acc.DeviceCommunication.MessageParsers;
+using Gebhardt.Acc.DeviceCommunication.Messages.MqttMessages;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
+namespace Gebhardt.Acc.DeviceCommunication.Services;
 
 /// <summary>
 /// Handle data information from AGV.

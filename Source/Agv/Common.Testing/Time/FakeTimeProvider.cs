@@ -1,6 +1,6 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Time;
+﻿using Gebhardt.Acc.Common.Time;
 
-namespace Gebhardt.StoreWare.Agv.Common.Testing.Time;
+namespace Gebhardt.Acc.Common.Testing.Time;
 
 public class FakeTimeProvider : ITimeProvider
 {

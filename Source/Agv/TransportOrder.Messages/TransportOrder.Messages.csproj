@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <AssemblyName>Gebhardt.StoreWare.Agv.TransportOrder.Messages</AssemblyName>
+        <AssemblyName>Gebhardt.Acc.TransportOrder.Messages</AssemblyName>
     </PropertyGroup>
     <Import Project="..\SharedProjectSettings.csproj" />
     <ItemGroup>

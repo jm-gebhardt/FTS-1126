@@ -1,8 +1,8 @@
 using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Domain.Models;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.MqttMessages;
+using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.DeviceCommunication.Messages.MqttMessages;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Profiles;
+namespace Gebhardt.Acc.DeviceCommunication.Profiles;
 
 /// <summary>
 /// Profile for AgvError

@@ -1,9 +1,9 @@
-using Gebhardt.StoreWare.Agv.SmartLinkCommunication.Models;
+using Gebhardt.Acc.SmartLinkCommunication.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.SmartLinkCommunicationTest.Services;
+namespace Gebhardt.Acc.SmartLinkCommunicationTest.Services;
 
 [TestClass]
 public class DeserializationTest

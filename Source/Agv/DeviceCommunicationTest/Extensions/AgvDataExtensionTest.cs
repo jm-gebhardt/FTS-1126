@@ -1,9 +1,9 @@
-﻿using Gebhardt.StoreWare.Agv.DeviceCommunication.Extensions;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Data;
+﻿using Gebhardt.Acc.DeviceCommunication.Extensions;
+using Gebhardt.Acc.DeviceCommunication.Services.Simulation.Data;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Extensions;
+namespace Gebhardt.Acc.DeviceCommunicationTest.Extensions;
 
 [TestClass]
 public class AgvDataExtensionTest

@@ -1,6 +1,6 @@
 ﻿using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Graph;
+namespace Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 
 /// <summary>
 /// AGV Graph. This model is for EF only

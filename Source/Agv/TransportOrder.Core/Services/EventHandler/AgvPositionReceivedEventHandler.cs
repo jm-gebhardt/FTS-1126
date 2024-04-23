@@ -1,12 +1,12 @@
 ﻿using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
+using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
+using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.EventHandler;
+namespace Gebhardt.Acc.TransportOrder.Core.Services.EventHandler;
 
 /// <summary>
 /// Consumes <see cref="AgvPositionReceived"/> and populates <see cref="IAgvPositionRepository"/>.

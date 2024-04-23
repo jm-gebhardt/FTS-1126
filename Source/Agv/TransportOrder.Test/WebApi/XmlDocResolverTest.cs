@@ -1,11 +1,11 @@
 ﻿using System.Reflection;
 using System.Xml.Linq;
-using Gebhardt.StoreWare.Agv.Common.WebApi;
+using Gebhardt.Acc.Common.WebApi;
 using MassTransit;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Test.WebApi;
+namespace Gebhardt.Acc.TransportOrder.Test.WebApi;
 
 [TestClass]
 public class XmlDocResolverTest
@@ -14,37 +14,37 @@ public class XmlDocResolverTest
     private const string XmlDocIn = @"<?xml version=""1.0"" encoding=""utf-8""?>
             <doc>
               <assembly>
-               <name>Gebhardt.StoreWare.Agv.TransportOrder.Test</name>
+               <name>Gebhardt.Acc.TransportOrder.Test</name>
               </assembly>
               <members>
-                <member name = ""T:Gebhardt.StoreWare.Agv.TransportOrder.Test.WebApi.XmlDocResolverTest+Interface1"">
+                <member name = ""T:Gebhardt.Acc.TransportOrder.Test.WebApi.XmlDocResolverTest+Interface1"">
                   <summary>Interface1</summary>
                 </member>
-                <member name=""M:Gebhardt.StoreWare.Agv.TransportOrder.Test.WebApi.XmlDocResolverTest+Interface1.Method1"">
+                <member name=""M:Gebhardt.Acc.TransportOrder.Test.WebApi.XmlDocResolverTest+Interface1.Method1"">
                   <summary>Description for Method1</summary>
                 </member>
-                <member name = ""M:Gebhardt.StoreWare.Agv.TransportOrder.Test.WebApi.XmlDocResolverTest+Interface1.Method2"">
+                <member name = ""M:Gebhardt.Acc.TransportOrder.Test.WebApi.XmlDocResolverTest+Interface1.Method2"">
                   <summary>Description for Method2</summary>
                 </member>
-                <member name=""M:Gebhardt.StoreWare.Agv.TransportOrder.Test.WebApi.XmlDocResolverTest+Interface1.Method3"">
+                <member name=""M:Gebhardt.Acc.TransportOrder.Test.WebApi.XmlDocResolverTest+Interface1.Method3"">
                   <summary>Description for Method3</summary>
                 </member>
-                <member name=""M:Gebhardt.StoreWare.Agv.TransportOrder.Test.WebApi.XmlDocResolverTest+Interface1.CorrelationId"">
+                <member name=""M:Gebhardt.Acc.TransportOrder.Test.WebApi.XmlDocResolverTest+Interface1.CorrelationId"">
                   <summary>Used to identify a message as correlated so that the CorrelationId can be returned</summary>
                 </member>
-                <member name = ""T:Gebhardt.StoreWare.Agv.TransportOrder.Test.WebApi.XmlDocResolverTest+Class1"">
+                <member name = ""T:Gebhardt.Acc.TransportOrder.Test.WebApi.XmlDocResolverTest+Class1"">
                   <summary>Class1</summary>
                 </member>
-                <member name=""M:Gebhardt.StoreWare.Agv.TransportOrder.Test.WebApi.XmlDocResolverTest+Class1.Method1"">
-                  <summary>Description for <see cref=""M:Gebhardt.StoreWare.Agv.TransportOrder.Test.WebApi.XmlDocResolverTest+Interface1.Method1""/></summary>
+                <member name=""M:Gebhardt.Acc.TransportOrder.Test.WebApi.XmlDocResolverTest+Class1.Method1"">
+                  <summary>Description for <see cref=""M:Gebhardt.Acc.TransportOrder.Test.WebApi.XmlDocResolverTest+Interface1.Method1""/></summary>
                 </member>
-                <member name = ""M:Gebhardt.StoreWare.Agv.TransportOrder.Test.WebApi.XmlDocResolverTest+Class1.Method2"">
-                  <inheritdoc cref=""M:Gebhardt.StoreWare.Agv.TransportOrder.Test.WebApi.XmlDocResolverTest+Interface1.Method2""/>
+                <member name = ""M:Gebhardt.Acc.TransportOrder.Test.WebApi.XmlDocResolverTest+Class1.Method2"">
+                  <inheritdoc cref=""M:Gebhardt.Acc.TransportOrder.Test.WebApi.XmlDocResolverTest+Interface1.Method2""/>
                 </member>
-                <member name = ""M:Gebhardt.StoreWare.Agv.TransportOrder.Test.WebApi.XmlDocResolverTest+Class1.Method3"">
+                <member name = ""M:Gebhardt.Acc.TransportOrder.Test.WebApi.XmlDocResolverTest+Class1.Method3"">
                   <inheritdoc/>
                 </member>
-                <member name = ""M:Gebhardt.StoreWare.Agv.TransportOrder.Test.WebApi.XmlDocResolverTest+Class1.CorrelationId"">
+                <member name = ""M:Gebhardt.Acc.TransportOrder.Test.WebApi.XmlDocResolverTest+Class1.CorrelationId"">
                   <inheritdoc/>
                 </member>
               </members>
@@ -53,37 +53,37 @@ public class XmlDocResolverTest
     private const string XmlDocOut = @"<?xml version=""1.0"" encoding=""utf-8""?>
             <doc>
               <assembly>
-               <name>Gebhardt.StoreWare.Agv.TransportOrder.Test</name>
+               <name>Gebhardt.Acc.TransportOrder.Test</name>
               </assembly>
               <members>
-                <member name = ""T:Gebhardt.StoreWare.Agv.TransportOrder.Test.WebApi.XmlDocResolverTest+Interface1"">
+                <member name = ""T:Gebhardt.Acc.TransportOrder.Test.WebApi.XmlDocResolverTest+Interface1"">
                   <summary>Interface1</summary>
                 </member>
-                <member name=""M:Gebhardt.StoreWare.Agv.TransportOrder.Test.WebApi.XmlDocResolverTest+Interface1.Method1"">
+                <member name=""M:Gebhardt.Acc.TransportOrder.Test.WebApi.XmlDocResolverTest+Interface1.Method1"">
                   <summary>Description for Method1</summary>
                 </member>
-                <member name = ""M:Gebhardt.StoreWare.Agv.TransportOrder.Test.WebApi.XmlDocResolverTest+Interface1.Method2"">
+                <member name = ""M:Gebhardt.Acc.TransportOrder.Test.WebApi.XmlDocResolverTest+Interface1.Method2"">
                   <summary>Description for Method2</summary>
                 </member>
-                <member name=""M:Gebhardt.StoreWare.Agv.TransportOrder.Test.WebApi.XmlDocResolverTest+Interface1.Method3"">
+                <member name=""M:Gebhardt.Acc.TransportOrder.Test.WebApi.XmlDocResolverTest+Interface1.Method3"">
                   <summary>Description for Method3</summary>
                 </member>
-                <member name=""M:Gebhardt.StoreWare.Agv.TransportOrder.Test.WebApi.XmlDocResolverTest+Interface1.CorrelationId"">
+                <member name=""M:Gebhardt.Acc.TransportOrder.Test.WebApi.XmlDocResolverTest+Interface1.CorrelationId"">
                   <summary>Used to identify a message as correlated so that the CorrelationId can be returned</summary>
                 </member>
-                <member name = ""T:Gebhardt.StoreWare.Agv.TransportOrder.Test.WebApi.XmlDocResolverTest+Class1"">
+                <member name = ""T:Gebhardt.Acc.TransportOrder.Test.WebApi.XmlDocResolverTest+Class1"">
                   <summary>Class1</summary>
                 </member>
-                <member name=""M:Gebhardt.StoreWare.Agv.TransportOrder.Test.WebApi.XmlDocResolverTest+Class1.Method1"">
+                <member name=""M:Gebhardt.Acc.TransportOrder.Test.WebApi.XmlDocResolverTest+Class1.Method1"">
                   <summary>Description for Method1()</summary>
                 </member>
-                <member name = ""M:Gebhardt.StoreWare.Agv.TransportOrder.Test.WebApi.XmlDocResolverTest+Class1.Method2"">
+                <member name = ""M:Gebhardt.Acc.TransportOrder.Test.WebApi.XmlDocResolverTest+Class1.Method2"">
                   <summary>Description for Method2</summary>
                 </member>
-                <member name = ""M:Gebhardt.StoreWare.Agv.TransportOrder.Test.WebApi.XmlDocResolverTest+Class1.Method3"">
+                <member name = ""M:Gebhardt.Acc.TransportOrder.Test.WebApi.XmlDocResolverTest+Class1.Method3"">
                   <summary>Description for Method3</summary>
                 </member>
-                <member name = ""M:Gebhardt.StoreWare.Agv.TransportOrder.Test.WebApi.XmlDocResolverTest+Class1.CorrelationId"">
+                <member name = ""M:Gebhardt.Acc.TransportOrder.Test.WebApi.XmlDocResolverTest+Class1.CorrelationId"">
                   <summary>Used to identify a message as correlated so that the CorrelationId can be returned</summary>
                 </member>
               </members>

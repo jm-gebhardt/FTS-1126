@@ -1,6 +1,6 @@
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.Common.Messages;
+namespace Gebhardt.Acc.Common.Messages;
 
 /// <summary>
 /// Defines the creator of a host order 

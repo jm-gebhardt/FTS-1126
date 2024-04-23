@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
 
-namespace Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
+namespace Gebhardt.Acc.Common.Testing.Fixtures;
 
 /// <summary>
 /// Testing fixture to test MassTransit Consumers

@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Swashbuckle.AspNetCore.SwaggerUI;
 
-namespace Gebhardt.StoreWare.Agv.Statistics.WebApi.Swagger;
+namespace Gebhardt.Acc.Statistics.WebApi.Swagger;
 
 /// <summary>
 /// SwaggerUIOptions Extensions

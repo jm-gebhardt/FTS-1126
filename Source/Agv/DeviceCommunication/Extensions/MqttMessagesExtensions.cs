@@ -1,9 +1,9 @@
 ﻿using System.Numerics;
-using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.MqttMessages;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.DeviceCommunication.Messages.MqttMessages;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Extensions;
+namespace Gebhardt.Acc.DeviceCommunication.Extensions;
 
 /// <summary>
 /// Contains extension methods for mqtt message related records.

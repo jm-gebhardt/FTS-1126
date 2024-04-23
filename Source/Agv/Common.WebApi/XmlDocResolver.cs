@@ -2,7 +2,7 @@
 using System.Xml.Linq;
 using System.Xml.XPath;
 
-namespace Gebhardt.StoreWare.Agv.Common.WebApi;
+namespace Gebhardt.Acc.Common.WebApi;
 
 /// <summary>
 /// Helper class to resolve inherited comments in xml docs
@@ -146,7 +146,7 @@ public static class XmlDocResolver
         foreach (var parent in parents)
         {
             // Only look for our own parent types
-            if (!parent.Namespace!.StartsWith("Gebhardt.StoreWare.Agv"))
+            if (!parent.Namespace!.StartsWith("Gebhardt.Acc"))
             {
                 continue;
             }

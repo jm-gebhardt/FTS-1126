@@ -1,9 +1,9 @@
-﻿using Gebhardt.StoreWare.Agv.Statistics.Domain.Models;
+﻿using Gebhardt.Acc.Statistics.Domain.Models;
 using JetBrains.Annotations;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.Statistics.Test.Models;
+namespace Gebhardt.Acc.Statistics.Test.Models;
 
 [TestClass]
 [TestSubject(typeof(Map))]

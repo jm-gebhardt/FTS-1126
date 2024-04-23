@@ -1,9 +1,9 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Services.Filters;
-using Gebhardt.StoreWare.Agv.Common.Testing.Filters;
+﻿using Gebhardt.Acc.Common.Services.Filters;
+using Gebhardt.Acc.Common.Testing.Filters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.CommonTest.Services.Filters;
+namespace Gebhardt.Acc.CommonTest.Services.Filters;
 
 [TestClass]
 public class KeyedInMemoryFilterTest

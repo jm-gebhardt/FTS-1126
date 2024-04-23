@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.SmartLinkCommunication.Models;
+namespace Gebhardt.Acc.SmartLinkCommunication.Models;
 
 /// <summary>
 /// Definition of an AgvAction to create for an ActionGroup

@@ -1,10 +1,10 @@
-using Gebhardt.StoreWare.Agv.Common.Services;
+using Gebhardt.Acc.Common.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.CommonTest.Services;
+namespace Gebhardt.Acc.CommonTest.Services;
 
 /// <summary>
 /// Test implementation

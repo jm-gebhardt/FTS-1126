@@ -1,10 +1,10 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Exceptions;
-using Gebhardt.StoreWare.Agv.Common.Extensions;
+﻿using Gebhardt.Acc.Common.Exceptions;
+using Gebhardt.Acc.Common.Extensions;
 using JetBrains.Annotations;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.CommonTest.Extensions;
+namespace Gebhardt.Acc.CommonTest.Extensions;
 
 [TestClass]
 public class QueryableExtensionTest

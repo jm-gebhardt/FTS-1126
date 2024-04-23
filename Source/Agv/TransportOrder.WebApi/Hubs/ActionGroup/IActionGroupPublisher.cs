@@ -1,6 +1,6 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
+﻿using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.ActionGroup;
+namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs.ActionGroup;
 
 /// <summary>
 /// Publishes ActionGroup related Dtos

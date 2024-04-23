@@ -1,6 +1,6 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
+﻿using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.ActionGroup;
+namespace Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
 
 /// <summary>
 /// Provides a command to trigger abortion of an action group.

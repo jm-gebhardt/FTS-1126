@@ -1,9 +1,9 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Agv;
+﻿using Gebhardt.Acc.TransportOrder.Domain;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using MassTransit;
 using Microsoft.Extensions.Hosting;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.BackgroundServices;
+namespace Gebhardt.Acc.TransportOrder.Core.Services.BackgroundServices;
 
 /// <summary>
 /// Provides a service to initialize the offline watchdog of agvs.

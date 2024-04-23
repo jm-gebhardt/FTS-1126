@@ -1,7 +1,7 @@
 ﻿using FluentValidation.Results;
-using Gebhardt.StoreWare.Agv.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Models;
 
-namespace Gebhardt.StoreWare.Agv.Common.Extensions;
+namespace Gebhardt.Acc.Common.Extensions;
 
 /// <summary>
 /// Extensions for the <see cref="ValidationResult"/> class.

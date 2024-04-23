@@ -1,8 +1,8 @@
 ﻿using System.Linq.Expressions;
 using System.Reflection;
-using Gebhardt.StoreWare.Agv.Common.Exceptions;
+using Gebhardt.Acc.Common.Exceptions;
 
-namespace Gebhardt.StoreWare.Agv.Common.Extensions;
+namespace Gebhardt.Acc.Common.Extensions;
 
 /// <summary>
 /// Provides extension methods for sorting a queryable.

@@ -1,14 +1,14 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Configurations.Extensions;
-using Gebhardt.StoreWare.Agv.TransportOrder.Core.Configurations;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Filters;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi;
+﻿using Gebhardt.Acc.Common.Configurations.Extensions;
+using Gebhardt.Acc.TransportOrder.Core.Configurations;
+using Gebhardt.Acc.TransportOrder.Messages.Filters;
+using Gebhardt.Acc.TransportOrder.WebApi;
 using MassTransit;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Quartz;
 
 // ReSharper disable once CheckNamespace
-namespace Gebhardt.StoreWare.Agv.TransportOrder;
+namespace Gebhardt.Acc.TransportOrder;
 
 /// <summary>
 /// IHostBuilder extensions

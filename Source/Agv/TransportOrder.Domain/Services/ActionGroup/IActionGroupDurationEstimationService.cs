@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
+﻿namespace Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 
 /// <summary>
 /// Provides methods to estimate action group duration estimates.

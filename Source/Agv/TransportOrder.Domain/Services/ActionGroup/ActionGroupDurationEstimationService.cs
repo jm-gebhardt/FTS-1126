@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Dictionaries;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
+﻿using Gebhardt.Acc.Common.Dictionaries;
+using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
+namespace Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 
 /// <inheritdoc/>
 public class ActionGroupDurationEstimationService : IActionGroupDurationEstimationService

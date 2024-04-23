@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Services;
-using Gebhardt.StoreWare.Agv.Common.Services.Filters;
+﻿using Gebhardt.Acc.Common.Services;
+using Gebhardt.Acc.Common.Services.Filters;
 
-namespace Gebhardt.StoreWare.Agv.CommonTest.Services.Filters;
+namespace Gebhardt.Acc.CommonTest.Services.Filters;
 
 internal class TestInMemoryFilter(bool shouldPublishBasedOnReturnValue) : InMemoryFilter<Message>(new SemaphoreProvider())
 {

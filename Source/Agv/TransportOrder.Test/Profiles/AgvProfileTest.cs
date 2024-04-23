@@ -1,12 +1,12 @@
-using Gebhardt.StoreWare.Agv.Common.Domain.Models;
-using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles;
-using Gebhardt.StoreWare.Agv.TransportOrder.Test.Helper;
+using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Testing.Helpers;
+using Gebhardt.Acc.TransportOrder.Messages.Profiles;
+using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
-using AgvStatus = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv.AgvStatus;
+using AgvStatus = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.AgvStatus;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Test.Profiles;
+namespace Gebhardt.Acc.TransportOrder.Test.Profiles;
 
 [TestClass]
 public class AgvProfileTest

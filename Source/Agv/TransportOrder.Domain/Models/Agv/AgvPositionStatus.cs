@@ -1,8 +1,8 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models;
-using Gebhardt.StoreWare.Agv.Common.Messages.Contracts;
+﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Messages.Contracts;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
+namespace Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 
 /// <summary>
 /// Model for the status of the agv position.

@@ -1,6 +1,6 @@
 ﻿using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.Common.Messages.Graphs.Requests;
+namespace Gebhardt.Acc.Common.Messages.Graphs.Requests;
 
 /// <summary>
 /// Request to get the current (global) graph.

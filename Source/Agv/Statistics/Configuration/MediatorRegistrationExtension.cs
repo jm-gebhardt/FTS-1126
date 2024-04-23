@@ -1,10 +1,10 @@
-﻿using Gebhardt.StoreWare.Agv.Statistics.Messages.Commands;
-using Gebhardt.StoreWare.Agv.Statistics.Messages.Requests;
-using Gebhardt.StoreWare.Agv.Statistics.Services.CommandHandler;
-using Gebhardt.StoreWare.Agv.Statistics.Services.RequestResponseHandler;
+﻿using Gebhardt.Acc.Statistics.Messages.Commands;
+using Gebhardt.Acc.Statistics.Messages.Requests;
+using Gebhardt.Acc.Statistics.Services.CommandHandler;
+using Gebhardt.Acc.Statistics.Services.RequestResponseHandler;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.Statistics.Configuration;
+namespace Gebhardt.Acc.Statistics.Configuration;
 
 /// <summary>
 /// Provides extension methods for the mediator registration.

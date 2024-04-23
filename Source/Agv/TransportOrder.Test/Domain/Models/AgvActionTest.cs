@@ -1,9 +1,9 @@
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
-using Gebhardt.StoreWare.Agv.TransportOrder.Test.Helper;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Test.Domain.Models;
+namespace Gebhardt.Acc.TransportOrder.Test.Domain.Models;
 
 [TestClass]
 public class AgvActionTest

@@ -1,10 +1,10 @@
-﻿using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.Commands;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.MqttMessages.SimulateAgv;
+﻿using Gebhardt.Acc.DeviceCommunication.Messages.Commands;
+using Gebhardt.Acc.DeviceCommunication.Messages.MqttMessages.SimulateAgv;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
+namespace Gebhardt.Acc.DeviceCommunication.Services.Simulation;
 
 /// <summary>
 /// Receive <see cref="MqttSimulateAgvError" />

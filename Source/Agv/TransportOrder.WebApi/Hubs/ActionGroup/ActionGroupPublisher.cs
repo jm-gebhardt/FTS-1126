@@ -1,9 +1,9 @@
 ﻿using AutoMapper;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.AgvActions;
+using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
+using Gebhardt.Acc.TransportOrder.WebApi.Dtos.AgvActions;
 using Microsoft.AspNetCore.SignalR;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.ActionGroup;
+namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs.ActionGroup;
 
 /// <summary>
 /// Publishes ActionGroup related Dtos via <see cref="ActionGroupHub"/>

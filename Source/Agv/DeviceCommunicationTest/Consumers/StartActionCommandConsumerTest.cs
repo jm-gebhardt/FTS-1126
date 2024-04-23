@@ -1,12 +1,12 @@
 ﻿using System.Reflection;
-using Gebhardt.StoreWare.Agv.Common.Exceptions;
-using Gebhardt.StoreWare.Agv.Common.Extensions;
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
-using Gebhardt.StoreWare.Agv.Common.Utilities;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.Enums;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.MqttMessages;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
+using Gebhardt.Acc.Common.Exceptions;
+using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
+using Gebhardt.Acc.Common.Utilities;
+using Gebhardt.Acc.DeviceCommunication.Messages.Enums;
+using Gebhardt.Acc.DeviceCommunication.Messages.MqttMessages;
+using Gebhardt.Acc.DeviceCommunication.Services;
 using MassTransit;
 using MassTransit.Serialization;
 using MassTransit.Testing;
@@ -14,7 +14,7 @@ using MassTransit.Testing.Implementations;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers;
+namespace Gebhardt.Acc.DeviceCommunicationTest.Consumers;
 
 /// <summary>
 /// Test class for consuming an ExecuteOrder message and publish an MqttOrder Mqtt message with proper bus configuration

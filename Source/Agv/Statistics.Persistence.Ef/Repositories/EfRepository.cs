@@ -1,8 +1,8 @@
 ﻿using System.Linq.Expressions;
-using Gebhardt.StoreWare.Agv.Common.Domain.Repositories;
+using Gebhardt.Acc.Common.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 
-namespace Gebhardt.StoreWare.Agv.Statistics.Persistence.Ef.Repositories;
+namespace Gebhardt.Acc.Statistics.Persistence.Ef.Repositories;
 
 /// <summary>
 /// Provides an abstract base class for all repository implementations.

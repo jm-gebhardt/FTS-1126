@@ -1,6 +1,6 @@
 ﻿using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
+namespace Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 
 /// <summary>
 /// The current route of the Agv. It is null when the Agv has completed the last action.

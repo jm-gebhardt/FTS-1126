@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <AssemblyName>Gebhardt.StoreWare.Agv.Common.Domain</AssemblyName>
+        <AssemblyName>Gebhardt.Acc.Common.Domain</AssemblyName>
         <OutputType>Library</OutputType>
     </PropertyGroup>
     <Import Project="..\SharedProjectSettings.csproj" />

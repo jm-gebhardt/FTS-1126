@@ -1,9 +1,9 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models;
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
+﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
+namespace Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 
 /// <summary>
 /// Grouping actions and sending them across service modules

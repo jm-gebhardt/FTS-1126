@@ -1,6 +1,6 @@
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
+using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Queries;
+namespace Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
 
 /// <summary>
 /// Defines a result for the GetAgvBattery request.

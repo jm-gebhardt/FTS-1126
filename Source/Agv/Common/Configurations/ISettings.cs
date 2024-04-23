@@ -1,4 +1,4 @@
-namespace Gebhardt.StoreWare.Agv.Common.Configurations;
+namespace Gebhardt.Acc.Common.Configurations;
 
 /// <summary>
 /// A marker interface for the <see cref="ISettings{TSettings}"/>

@@ -1,7 +1,7 @@
 ﻿using JetBrains.Annotations;
-using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 
-namespace Gebhardt.StoreWare.Agv.Common.Domain.Utilities;
+namespace Gebhardt.Acc.Common.Domain.Utilities;
 
 /// <summary>
 /// Comparer to check for equal node ID.

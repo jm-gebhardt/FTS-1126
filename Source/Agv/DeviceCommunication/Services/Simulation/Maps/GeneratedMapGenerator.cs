@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using SkiaSharp;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Maps;
+namespace Gebhardt.Acc.DeviceCommunication.Services.Simulation.Maps;
 
 /// <summary>
 /// Generates PNG map for simulation purpose based on a given graph.

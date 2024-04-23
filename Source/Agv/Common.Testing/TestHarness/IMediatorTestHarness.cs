@@ -2,7 +2,7 @@
 using MassTransit.Mediator;
 using MassTransit.Testing;
 
-namespace Gebhardt.StoreWare.Agv.Common.Testing.TestHarness;
+namespace Gebhardt.Acc.Common.Testing.TestHarness;
 
 /// <summary>
 /// Provides an interface for mediator test harness (adopted from MassTransit's <see cref="IBaseTestHarness" />).

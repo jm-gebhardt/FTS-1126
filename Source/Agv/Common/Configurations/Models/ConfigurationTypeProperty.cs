@@ -1,4 +1,4 @@
-namespace Gebhardt.StoreWare.Agv.Common.Configurations.Models;
+namespace Gebhardt.Acc.Common.Configurations.Models;
 
 /// <summary>
 /// The model for the property of a configuration

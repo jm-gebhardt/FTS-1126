@@ -1,6 +1,6 @@
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.WCSCommunication.WcsApi.DbInterface.Models;
+namespace Gebhardt.Acc.WCSCommunication.WcsApi.DbInterface.Models;
 
 /// <summary>
 /// WCS writes actions for us to consume into this table

@@ -1,4 +1,4 @@
-namespace Gebhardt.StoreWare.Agv.Common.Services.Filters;
+namespace Gebhardt.Acc.Common.Services.Filters;
 
 /// <summary>
 /// Checks if a property has changed significantly based on a set of rules.

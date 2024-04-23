@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Dictionaries;
+﻿using Gebhardt.Acc.Common.Dictionaries;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.Common.Services;
+namespace Gebhardt.Acc.Common.Services;
 
 /// <summary>
 /// Provides an interface for semaphore services

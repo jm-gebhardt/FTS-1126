@@ -1,10 +1,10 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Dictionaries;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Dictionaries;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
+﻿using Gebhardt.Acc.Common.Dictionaries;
+using Gebhardt.Acc.TransportOrder.Domain.Dictionaries;
+using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 using Moq;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Test.Domain.Services.ActionGroup;
+namespace Gebhardt.Acc.TransportOrder.Test.Domain.Services.ActionGroup;
 
 public class ActionGroupDurationEstimationServiceTestFixture
 {

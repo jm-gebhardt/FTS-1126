@@ -1,6 +1,6 @@
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
+using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Map;
+namespace Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
 
 /// <summary>
 /// Defines a result for the <see cref="GetStations" />.

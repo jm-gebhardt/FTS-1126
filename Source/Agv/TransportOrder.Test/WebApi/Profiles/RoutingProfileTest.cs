@@ -1,12 +1,12 @@
 ﻿using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Routing;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles;
+using Gebhardt.Acc.Common.Testing.Helpers;
+using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
+using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Routing;
+using Gebhardt.Acc.TransportOrder.WebApi.Profiles;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Test.WebApi.Profiles;
+namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Profiles;
 
 [TestClass]
 public class RoutingProfileTest

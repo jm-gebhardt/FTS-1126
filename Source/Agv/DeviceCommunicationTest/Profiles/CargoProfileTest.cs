@@ -1,12 +1,12 @@
 using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Domain.Models;
-using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.MqttMessages;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Profiles;
+using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Testing.Helpers;
+using Gebhardt.Acc.DeviceCommunication.Messages.MqttMessages;
+using Gebhardt.Acc.DeviceCommunication.Profiles;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Profiles;
+namespace Gebhardt.Acc.DeviceCommunicationTest.Profiles;
 
 [TestClass]
 public class CargoProfileTest

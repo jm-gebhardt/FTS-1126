@@ -1,8 +1,8 @@
 using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Domain.Models;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
+using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles;
+namespace Gebhardt.Acc.TransportOrder.WebApi.Profiles;
 
 /// <summary>
 /// Profile for <see cref="AgvError" />

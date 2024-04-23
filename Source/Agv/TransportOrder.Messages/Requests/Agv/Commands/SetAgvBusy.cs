@@ -1,7 +1,7 @@
 using JetBrains.Annotations;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Commands;
+namespace Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Commands;
 
 /// <summary>
 /// Request an AGV to transition to busy state

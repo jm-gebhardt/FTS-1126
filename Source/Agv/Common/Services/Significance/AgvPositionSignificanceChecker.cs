@@ -1,6 +1,6 @@
-using Gebhardt.StoreWare.Agv.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Models;
 
-namespace Gebhardt.StoreWare.Agv.Common.Services.Significance;
+namespace Gebhardt.Acc.Common.Services.Significance;
 
 /// <summary>
 /// Checks if <see cref="AgvPosition"/> has changed significantly.

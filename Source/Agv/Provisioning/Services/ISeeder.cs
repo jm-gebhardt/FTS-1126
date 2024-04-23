@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.StoreWare.Agv.Provisioning.Services;
+﻿namespace Gebhardt.Acc.Provisioning.Services;
 
 /// <summary>
 /// Seeds data to the main system.

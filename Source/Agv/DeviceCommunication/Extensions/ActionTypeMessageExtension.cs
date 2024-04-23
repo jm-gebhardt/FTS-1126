@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.Enums;
+﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.DeviceCommunication.Messages.Enums;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Extensions;
+namespace Gebhardt.Acc.DeviceCommunication.Extensions;
 
 /// <summary>
 /// Provides extension method for <see cref="ActionType"/>

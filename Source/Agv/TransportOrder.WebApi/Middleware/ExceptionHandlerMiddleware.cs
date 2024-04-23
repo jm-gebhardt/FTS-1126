@@ -1,13 +1,13 @@
 ﻿using System.Net;
 using System.Text.Json;
-using Gebhardt.StoreWare.Agv.Common.Exceptions;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
+using Gebhardt.Acc.Common.Exceptions;
+using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using MassTransit;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Middleware;
+namespace Gebhardt.Acc.TransportOrder.WebApi.Middleware;
 
 /// <summary>
 /// Handler for exceptions that can occur during execution of controllers

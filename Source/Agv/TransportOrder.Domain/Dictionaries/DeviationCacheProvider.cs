@@ -1,6 +1,6 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Dictionaries;
+﻿using Gebhardt.Acc.Common.Dictionaries;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Dictionaries;
+namespace Gebhardt.Acc.TransportOrder.Domain.Dictionaries;
 
 /// <inheritdoc />
 public class DeviationCacheProvider : ConcurrentDictionaryProvider<string, (double value, DateTime lastUpdated)>;

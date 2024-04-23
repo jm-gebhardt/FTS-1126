@@ -1,9 +1,9 @@
-﻿using Gebhardt.StoreWare.Agv.Statistics.Persistence.Ef.DataAccess.Configuration;
+﻿using Gebhardt.Acc.Statistics.Persistence.Ef.DataAccess.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.StoreWare.Agv.Statistics.Persistence.Ef.DataAccess;
+namespace Gebhardt.Acc.Statistics.Persistence.Ef.DataAccess;
 
 /// <summary>
 /// Db Context for Statistics

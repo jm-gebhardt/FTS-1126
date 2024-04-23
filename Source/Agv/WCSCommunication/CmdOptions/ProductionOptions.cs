@@ -1,7 +1,7 @@
 using CommandLine;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.WCSCommunication.CmdOptions;
+namespace Gebhardt.Acc.WCSCommunication.CmdOptions;
 
 /// <summary>
 /// Production Mode Options

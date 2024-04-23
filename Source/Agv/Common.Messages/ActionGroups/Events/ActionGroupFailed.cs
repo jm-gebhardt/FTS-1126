@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
+﻿using Gebhardt.Acc.Common.Messages.HostOrder.Events;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
+namespace Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 
 /// <summary>
 /// Represents the event raised when an action group failed.

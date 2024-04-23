@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <AssemblyName>Gebhardt.StoreWare.Agv.WCSCommunication</AssemblyName>
+        <AssemblyName>Gebhardt.Acc.WCSCommunication</AssemblyName>
         <OutputType>Exe</OutputType>
     </PropertyGroup>
     <Import Project="..\SharedProjectSettings.csproj" />
@@ -36,7 +36,7 @@
     </ItemGroup>
     <ItemGroup>
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
-            <_Parameter1>Gebhardt.StoreWare.Agv.$(MSBuildProjectName)Test</_Parameter1>
+            <_Parameter1>Gebhardt.Acc.$(MSBuildProjectName)Test</_Parameter1>
         </AssemblyAttribute>
     </ItemGroup>
 </Project>

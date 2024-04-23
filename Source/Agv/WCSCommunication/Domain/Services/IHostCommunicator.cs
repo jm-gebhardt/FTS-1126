@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.StoreWare.Agv.WCSCommunication.Domain.Services;
+﻿namespace Gebhardt.Acc.WCSCommunication.Domain.Services;
 
 /// <summary>
 /// Provides a service to communicate with host system

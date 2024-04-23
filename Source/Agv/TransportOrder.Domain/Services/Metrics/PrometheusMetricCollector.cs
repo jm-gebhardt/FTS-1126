@@ -1,6 +1,6 @@
 ﻿using Prometheus;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Metrics;
+namespace Gebhardt.Acc.TransportOrder.Domain.Services.Metrics;
 
 /// <summary>
 /// Provides metrics exposed at prometheus endpoint.

@@ -1,8 +1,8 @@
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Node;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Test.Repositories;
+namespace Gebhardt.Acc.TransportOrder.Test.Repositories;
 
 [TestClass]
 public class EfNodeStateRepositoryTest

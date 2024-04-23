@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Graph;
+namespace Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 
 /// <summary>
 /// An edge in the graph connects two nodes. This model is for EF only

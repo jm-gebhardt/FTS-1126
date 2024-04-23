@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Map;
+﻿namespace Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
 
 /// <summary>
 /// Provides a request to get information of a map.

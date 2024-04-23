@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <AssemblyName>Gebhardt.StoreWare.Agv.DeviceCommunicationTest</AssemblyName>
+        <AssemblyName>Gebhardt.Acc.DeviceCommunicationTest</AssemblyName>
         <IsPackable>false</IsPackable>
         <NoWarn>1591</NoWarn>
     </PropertyGroup>

@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.StoreWare.Agv.Statistics.Messages.Commands;
+﻿namespace Gebhardt.Acc.Statistics.Messages.Commands;
 
 /// <summary>
 /// Represents a command to housekeep all the agv positions.

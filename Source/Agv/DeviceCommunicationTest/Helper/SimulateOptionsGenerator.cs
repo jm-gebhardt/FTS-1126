@@ -1,6 +1,6 @@
-﻿using Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
+﻿using Gebhardt.Acc.DeviceCommunication.CmdOptions;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Helper;
+namespace Gebhardt.Acc.DeviceCommunicationTest.Helper;
 
 public static class SimulateOptionsGenerator
 {

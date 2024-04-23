@@ -1,6 +1,6 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models;
+﻿using Gebhardt.Acc.Common.Domain.Models;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
+namespace Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 
 /// <summary>
 /// Thrown when resetting agv errors failed.

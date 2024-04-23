@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
-using Gebhardt.StoreWare.Agv.Common.Services.Filters;
+﻿using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
+using Gebhardt.Acc.Common.Services.Filters;
 
-namespace Gebhardt.StoreWare.Agv.Common.Dictionaries;
+namespace Gebhardt.Acc.Common.Dictionaries;
 
 /// <summary>
 /// A dictionary provider for <see cref="AgvPositionReceived"/>.

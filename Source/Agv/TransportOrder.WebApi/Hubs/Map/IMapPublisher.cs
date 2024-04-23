@@ -1,6 +1,6 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Node;
+﻿using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Map;
+namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs.Map;
 
 /// <summary>
 /// Represents the publisher of map/node/graph related notifications.

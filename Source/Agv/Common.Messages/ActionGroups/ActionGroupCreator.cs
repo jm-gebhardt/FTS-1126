@@ -1,6 +1,6 @@
 ﻿using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+namespace Gebhardt.Acc.Common.Messages.ActionGroups;
 
 /// <summary>
 /// Defines the creator of an <see cref="ActionGroup"/>.

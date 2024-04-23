@@ -1,12 +1,12 @@
 ﻿using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Testing.Helpers;
-using Gebhardt.StoreWare.Agv.Common.Testing.Time;
-using Gebhardt.StoreWare.Agv.Common.Time;
+using Gebhardt.Acc.Common.Testing.Helpers;
+using Gebhardt.Acc.Common.Testing.Time;
+using Gebhardt.Acc.Common.Time;
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 
-namespace Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
+namespace Gebhardt.Acc.Common.Testing.Fixtures;
 
 /// <summary>
 /// Provides a ServiceCollection and Provider.

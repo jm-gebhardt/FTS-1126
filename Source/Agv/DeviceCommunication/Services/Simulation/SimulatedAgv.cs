@@ -1,9 +1,9 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models;
-using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
+﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using JetBrains.Annotations;
 
 // ReSharper disable InvalidUsage
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
+namespace Gebhardt.Acc.DeviceCommunication.Services.Simulation;
 
 /// <summary>
 /// Represents a simulated agv.

@@ -1,6 +1,6 @@
-using Gebhardt.StoreWare.Agv.Common.Configurations.Models;
+using Gebhardt.Acc.Common.Configurations.Models;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
+namespace Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 
 /// <summary>
 /// The settings for an agv (group).

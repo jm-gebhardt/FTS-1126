@@ -1,9 +1,9 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Extensions;
+﻿using Gebhardt.Acc.Common.Extensions;
 using JetBrains.Annotations;
 using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.MqttMessages;
+namespace Gebhardt.Acc.DeviceCommunication.Messages.MqttMessages;
 
 /// <summary>
 /// All encompassing state of the AGV.

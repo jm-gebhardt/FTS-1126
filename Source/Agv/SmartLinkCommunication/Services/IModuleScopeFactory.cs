@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.SmartLinkCommunication.Models;
+﻿using Gebhardt.Acc.SmartLinkCommunication.Models;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Gebhardt.StoreWare.Agv.SmartLinkCommunication.Services;
+namespace Gebhardt.Acc.SmartLinkCommunication.Services;
 
 /// <summary>
 /// Creates a <see cref="IServiceScope"/> scope with it's corresponding <see cref="ModuleConfig"/> registered.

@@ -1,4 +1,4 @@
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Agv.Commands;
+namespace Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Commands;
 
 /// <summary>
 /// Defines a successful result for <see cref="ResetAgvErrors"/> command

@@ -1,8 +1,8 @@
 ﻿using System.Numerics;
-using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.Common.Domain.Utilities;
+namespace Gebhardt.Acc.Common.Domain.Utilities;
 
 /// <summary>
 /// A collection of useful mathematical functions
@@ -30,7 +30,7 @@ public static class Mathematics
     }
 
     /// <summary>
-    /// Calculates the euclidean distance between two <see cref="Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs.GraphNode"/>.
+    /// Calculates the euclidean distance between two <see cref="Gebhardt.Acc.Common.Domain.Models.Graphs.GraphNode"/>.
     /// </summary>
     /// <param name="first">The first node.</param>
     /// <param name="second">The second node.</param>

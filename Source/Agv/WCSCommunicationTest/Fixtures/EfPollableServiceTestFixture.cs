@@ -1,10 +1,10 @@
-using Gebhardt.StoreWare.Agv.Common.Services;
-using Gebhardt.StoreWare.Agv.Common.Testing.Extensions;
-using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
+using Gebhardt.Acc.Common.Services;
+using Gebhardt.Acc.Common.Testing.Extensions;
+using Gebhardt.Acc.Common.Testing.Fixtures;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Fixtures;
+namespace Gebhardt.Acc.WCSCommunicationTest.Fixtures;
 
 /// <summary>
 ///  MassTransit BackgroundService test fixture with EF DbContextFactory services added

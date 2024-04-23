@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
+﻿namespace Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
 
 /// <summary>
 /// Provides an interface for an action semaphore provider.

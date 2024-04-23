@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Gebhardt.StoreWare.Agv.WCSCommunication.Migrations
+namespace Gebhardt.Acc.WCSCommunication.Migrations
 {
     public partial class WCSInit : Migration
     {

@@ -1,12 +1,12 @@
-using Gebhardt.StoreWare.Agv.Common.Utilities;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.CmdOptions;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
+using Gebhardt.Acc.Common.Utilities;
+using Gebhardt.Acc.DeviceCommunication.CmdOptions;
+using Gebhardt.Acc.DeviceCommunication.Services.Simulation;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation;
+namespace Gebhardt.Acc.DeviceCommunicationTest.Services.Simulation;
 
 /// <summary>
 /// SimulatedAgvProviderTest

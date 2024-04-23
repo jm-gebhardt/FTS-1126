@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.AgvActions;
+﻿using Gebhardt.Acc.TransportOrder.WebApi.Dtos.AgvActions;
 using SignalRSwaggerGen.Attributes;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.ActionGroup;
+namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs.ActionGroup;
 
 /// <summary>
 /// ActionGroup related SignalR methods

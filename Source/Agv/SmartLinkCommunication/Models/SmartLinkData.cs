@@ -1,4 +1,4 @@
-namespace Gebhardt.StoreWare.Agv.SmartLinkCommunication.Models;
+namespace Gebhardt.Acc.SmartLinkCommunication.Models;
 
 /// <summary>
 /// Data of all IOs from SmartLink module

@@ -1,6 +1,6 @@
 ﻿using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.Common.Logging;
+namespace Gebhardt.Acc.Common.Logging;
 
 /// <summary>
 /// Static class assembling every constant related to logging

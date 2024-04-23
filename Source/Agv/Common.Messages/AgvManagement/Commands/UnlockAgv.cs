@@ -2,7 +2,7 @@
 using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
-namespace Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
+namespace Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 
 /// <summary>
 /// Request an AGV to unlock

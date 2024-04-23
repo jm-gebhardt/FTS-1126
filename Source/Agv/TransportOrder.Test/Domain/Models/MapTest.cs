@@ -1,9 +1,9 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Utilities;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Map;
+﻿using Gebhardt.Acc.Common.Utilities;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Map;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Test.Domain.Models;
+namespace Gebhardt.Acc.TransportOrder.Test.Domain.Models;
 
 [TestClass]
 public class MapTest

@@ -1,6 +1,6 @@
 ﻿using FluentValidation.Results;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
+namespace Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 
 /// <summary>
 /// Implements a service to validate <see cref="Models.ActionGroup.ActionGroup"/>.

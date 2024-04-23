@@ -1,10 +1,10 @@
-using Gebhardt.StoreWare.Agv.SmartLinkCommunication.Models;
-using Gebhardt.StoreWare.Agv.SmartLinkCommunicationTest.Helpers;
+using Gebhardt.Acc.SmartLinkCommunication.Models;
+using Gebhardt.Acc.SmartLinkCommunicationTest.Helpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.SmartLinkCommunicationTest.Services;
+namespace Gebhardt.Acc.SmartLinkCommunicationTest.Services;
 
 [TestClass]
 public class ModulePollingServiceTest

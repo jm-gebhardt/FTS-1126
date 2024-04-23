@@ -1,9 +1,9 @@
-﻿using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.MqttMessages;
+﻿using Gebhardt.Acc.DeviceCommunication.Messages.MqttMessages;
 using JetBrains.Annotations;
 using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.Events;
+namespace Gebhardt.Acc.DeviceCommunication.Messages.Events;
 
 /// <summary>
 /// Transformation of <see cref="MqttGraph"/> into MassTransit message.

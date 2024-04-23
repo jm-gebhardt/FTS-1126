@@ -1,12 +1,12 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Testing.TestHarness;
+﻿using Gebhardt.Acc.Common.Testing.TestHarness;
 using JetBrains.Annotations;
 using MassTransit;
 using MassTransit.Mediator;
 using MassTransit.Testing;
 using Microsoft.Extensions.DependencyInjection;
-using MediatorTestHarness = Gebhardt.StoreWare.Agv.Common.Testing.TestHarness.MediatorTestHarness;
+using MediatorTestHarness = Gebhardt.Acc.Common.Testing.TestHarness.MediatorTestHarness;
 
-namespace Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
+namespace Gebhardt.Acc.Common.Testing.Fixtures;
 
 /// <summary>
 /// Testing fixture to test MassTransit Consumers and Request Client

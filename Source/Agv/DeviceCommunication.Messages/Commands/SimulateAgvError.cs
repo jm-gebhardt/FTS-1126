@@ -1,8 +1,8 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models;
+﻿using Gebhardt.Acc.Common.Domain.Models;
 using JetBrains.Annotations;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.Commands;
+namespace Gebhardt.Acc.DeviceCommunication.Messages.Commands;
 
 /// <summary>
 /// Simulate agv error in simulated agv.

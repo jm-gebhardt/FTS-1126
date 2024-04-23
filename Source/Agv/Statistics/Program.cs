@@ -1,8 +1,8 @@
-﻿using Gebhardt.StoreWare.Agv.Common;
-using Gebhardt.StoreWare.Agv.Common.Logging;
-using Gebhardt.StoreWare.Agv.Statistics.Configuration;
-using Gebhardt.StoreWare.Agv.Statistics.Persistence.Ef.DataAccess;
-using Gebhardt.StoreWare.Agv.Statistics.WebApi;
+﻿using Gebhardt.Acc.Common;
+using Gebhardt.Acc.Common.Logging;
+using Gebhardt.Acc.Statistics.Configuration;
+using Gebhardt.Acc.Statistics.Persistence.Ef.DataAccess;
+using Gebhardt.Acc.Statistics.WebApi;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;

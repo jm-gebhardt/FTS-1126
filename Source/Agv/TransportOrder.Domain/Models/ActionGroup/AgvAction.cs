@@ -1,8 +1,8 @@
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
-using Gebhardt.StoreWare.Agv.Common.Messages.Contracts;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.Common.Messages.Contracts;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
+namespace Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 
 /// <summary>
 /// Agv Action

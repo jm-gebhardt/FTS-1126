@@ -1,9 +1,9 @@
 ﻿using AutoMapper;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
+using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles.Resolver;
+namespace Gebhardt.Acc.TransportOrder.WebApi.Profiles.Resolver;
 
 /// <summary>
 /// Provides a converter type converter for converting <see cref="AgvSettingsDto"/> to <see cref="AgvSettingsReadModel"/>.

@@ -1,6 +1,6 @@
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Swagger;
+using Gebhardt.Acc.TransportOrder.WebApi.Swagger;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Controllers;
+namespace Gebhardt.Acc.TransportOrder.WebApi.Controllers;
 
 /// <summary>
 /// Api Group for REST

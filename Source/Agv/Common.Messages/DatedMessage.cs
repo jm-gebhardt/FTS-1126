@@ -1,4 +1,4 @@
-namespace Gebhardt.StoreWare.Agv.Common.Messages;
+namespace Gebhardt.Acc.Common.Messages;
 
 /// <inheritdoc />
 public record DatedMessage : IMessageCreatedDate

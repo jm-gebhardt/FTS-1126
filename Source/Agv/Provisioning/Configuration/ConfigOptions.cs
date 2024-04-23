@@ -1,4 +1,4 @@
-namespace Gebhardt.StoreWare.Agv.Provisioning.Configuration;
+namespace Gebhardt.Acc.Provisioning.Configuration;
 
 /// <summary>
 /// The configuration options for the provisioning.

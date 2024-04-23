@@ -1,7 +1,7 @@
-using Gebhardt.StoreWare.Agv.Common.Configurations.Exceptions;
+using Gebhardt.Acc.Common.Configurations.Exceptions;
 using Microsoft.Extensions.Configuration;
 
-namespace Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
+namespace Gebhardt.Acc.Common.Configurations.SettingsProviders;
 
 /// <summary>
 /// Provides the settings from the configuration

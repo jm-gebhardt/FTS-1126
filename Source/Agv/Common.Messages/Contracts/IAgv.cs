@@ -1,6 +1,6 @@
 ﻿using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.Common.Messages.Contracts;
+namespace Gebhardt.Acc.Common.Messages.Contracts;
 
 /// <summary>
 /// Interface for AGV identification for better generalization and simplification of documentation.

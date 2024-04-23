@@ -1,6 +1,6 @@
 ﻿using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Map;
+namespace Gebhardt.Acc.TransportOrder.Domain.Models.Map;
 
 /// <summary>
 /// The join entity for Map and Agv

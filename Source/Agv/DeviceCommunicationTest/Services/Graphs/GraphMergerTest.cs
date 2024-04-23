@@ -1,9 +1,9 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
-using Gebhardt.StoreWare.Agv.Common.Messages.Graphs.Events;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Messages.Graphs.Events;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Graphs;
+namespace Gebhardt.Acc.DeviceCommunicationTest.Services.Graphs;
 
 [TestClass]
 public class GraphMergerTest

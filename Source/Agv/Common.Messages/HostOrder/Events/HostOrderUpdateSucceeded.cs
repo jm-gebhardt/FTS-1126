@@ -2,7 +2,7 @@
 using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
-namespace Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
+namespace Gebhardt.Acc.Common.Messages.HostOrder.Events;
 
 /// <summary>
 /// An event that reports a successful update of an order

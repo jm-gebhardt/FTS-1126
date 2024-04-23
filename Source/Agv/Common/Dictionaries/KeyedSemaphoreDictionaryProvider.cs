@@ -1,7 +1,7 @@
 ﻿using System.Collections.Concurrent;
-using Gebhardt.StoreWare.Agv.Common.Services;
+using Gebhardt.Acc.Common.Services;
 
-namespace Gebhardt.StoreWare.Agv.Common.Dictionaries;
+namespace Gebhardt.Acc.Common.Dictionaries;
 
 /// <inheritdoc />
 public class KeyedSemaphoreDictionaryProvider<TSemaphore> : IKeyedSemaphoreDictionaryProvider<TSemaphore> where TSemaphore : class

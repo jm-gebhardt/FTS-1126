@@ -2,7 +2,7 @@ using JetBrains.Annotations;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.StoreWare.Agv.Common.Services;
+namespace Gebhardt.Acc.Common.Services;
 
 /// <summary>
 /// A Polling Background Service that calls <see cref="IPollable.Poll" /> and repeats every <see cref="IPollable.PollingInterval"/>

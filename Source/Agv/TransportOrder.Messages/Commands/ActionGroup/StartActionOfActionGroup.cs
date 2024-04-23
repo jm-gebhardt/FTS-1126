@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
+﻿using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
+namespace Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 
 /// <summary>
 /// Provides a command to start an individual <see cref="Action"/> of an action group.

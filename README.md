@@ -149,11 +149,11 @@ The software is designed to run as a Windows Service.
 
 ### Register Service (Registry):
 ```
-admin> sc.exe create "Gebhardt.StoreWare.Agv.<service>" binpath= "<binary> [options..]"
+admin> sc.exe create "Gebhardt.Acc.<service>" binpath= "<binary> [options..]"
 ```
 ### Remove Service
 ```
-admin> sc.exe delete "Gebhardt.StoreWare.Agv.<service>"
+admin> sc.exe delete "Gebhardt.Acc.<service>"
 ```
 
 Note: If MMC/Taskmgr/ProcExp are running, service removal may not have immediate effect and the following message will be shown "Der angegebene Dienst wurde zum Löschen markiert."

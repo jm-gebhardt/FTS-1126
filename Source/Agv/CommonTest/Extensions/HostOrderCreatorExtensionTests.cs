@@ -1,9 +1,9 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages;
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+﻿using Gebhardt.Acc.Common.Messages;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.CommonTest.Extensions;
+namespace Gebhardt.Acc.CommonTest.Extensions;
 
 [TestClass]
 public class HostOrderCreatorExtensionTests

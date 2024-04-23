@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Node;
+﻿namespace Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
 
 /// <summary>
 /// Provides a command to free a node.

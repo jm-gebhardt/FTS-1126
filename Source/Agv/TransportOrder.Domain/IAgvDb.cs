@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Domain.Repositories;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
+﻿using Gebhardt.Acc.Common.Domain.Repositories;
+using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain;
+namespace Gebhardt.Acc.TransportOrder.Domain;
 
 /// <summary>
 /// Provides a unit-of-work for agv access.

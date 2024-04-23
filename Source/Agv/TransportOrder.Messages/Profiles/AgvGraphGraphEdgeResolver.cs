@@ -1,9 +1,9 @@
 ﻿using AutoMapper;
-using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
-using Graph = Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent.Graph;
-using GraphEdge = Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent.GraphEdge;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Graph = Gebhardt.Acc.TransportOrder.Messages.MessageContent.Graph;
+using GraphEdge = Gebhardt.Acc.TransportOrder.Messages.MessageContent.GraphEdge;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Profiles;
+namespace Gebhardt.Acc.TransportOrder.Messages.Profiles;
 
 /// <summary>
 /// The custom value resolver, maps from AgvGraph and the destination Graph to the GraphEdges property

@@ -1,6 +1,6 @@
 ﻿using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Map;
+namespace Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
 
 /// <summary>
 /// Represents the GetMapImage request which returns an image of the map as byte[]

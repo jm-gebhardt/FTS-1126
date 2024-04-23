@@ -1,6 +1,6 @@
-﻿using Gebhardt.StoreWare.Agv.DeviceCommunication.WebApi.Swagger;
+﻿using Gebhardt.Acc.DeviceCommunication.WebApi.Swagger;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.WebApi.Controllers;
+namespace Gebhardt.Acc.DeviceCommunication.WebApi.Controllers;
 
 /// <summary>
 /// Api Group for REST

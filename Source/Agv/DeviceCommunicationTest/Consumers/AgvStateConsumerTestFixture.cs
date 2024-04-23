@@ -1,9 +1,9 @@
-using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
-using Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services;
+using Gebhardt.Acc.Common.Testing.Fixtures;
+using Gebhardt.Acc.DeviceCommunication.Services;
+using Gebhardt.Acc.DeviceCommunicationTest.Services;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers;
+namespace Gebhardt.Acc.DeviceCommunicationTest.Consumers;
 
 public class AgvStateConsumerTestFixture : MqttConsumerTestFixture<AgvStateConsumer>
 {

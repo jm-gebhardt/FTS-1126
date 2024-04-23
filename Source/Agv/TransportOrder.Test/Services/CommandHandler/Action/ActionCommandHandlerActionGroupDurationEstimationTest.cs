@@ -1,13 +1,13 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Utilities;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Constants;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.ActionGroup;
-using Gebhardt.StoreWare.Agv.TransportOrder.Test.Helper;
+﻿using Gebhardt.Acc.Common.Utilities;
+using Gebhardt.Acc.TransportOrder.Domain.Constants;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
+using Gebhardt.Acc.TransportOrder.Messages.Events.ActionGroup;
+using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Test.Services.CommandHandler.Action;
+namespace Gebhardt.Acc.TransportOrder.Test.Services.CommandHandler.Action;
 
 [TestClass]
 public class ActionCommandHandlerActionGroupDurationEstimationTest

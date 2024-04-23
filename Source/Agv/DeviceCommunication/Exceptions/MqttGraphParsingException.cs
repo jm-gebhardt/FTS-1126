@@ -1,6 +1,6 @@
-﻿using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.MqttMessages;
+﻿using Gebhardt.Acc.DeviceCommunication.Messages.MqttMessages;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Exceptions;
+namespace Gebhardt.Acc.DeviceCommunication.Exceptions;
 
 /// <summary>
 /// Represents the exception thrown when parsing the <see cref="MqttGraph"/> failed.

@@ -1,10 +1,10 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Extensions;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.Enums;
+﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.DeviceCommunication.Extensions;
+using Gebhardt.Acc.DeviceCommunication.Messages.Enums;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Extensions;
+namespace Gebhardt.Acc.DeviceCommunicationTest.Extensions;
 
 [TestClass]
 public class ActionTypeMessageExtension

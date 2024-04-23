@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.System;
+﻿namespace Gebhardt.Acc.TransportOrder.Messages.Requests.System;
 
 /// <summary>
 /// Defines a result for the <see cref="GetSystemTime"/>

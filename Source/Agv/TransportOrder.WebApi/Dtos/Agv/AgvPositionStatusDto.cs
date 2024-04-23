@@ -1,7 +1,7 @@
-using Gebhardt.StoreWare.Agv.Common.Messages;
+using Gebhardt.Acc.Common.Messages;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
+namespace Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 
 /// <summary>
 /// Model for the status of the agv position.

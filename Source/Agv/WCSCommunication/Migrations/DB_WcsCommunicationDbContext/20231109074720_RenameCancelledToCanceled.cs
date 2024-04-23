@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace Gebhardt.StoreWare.Agv.WCSCommunication.Migrations.DBWcsCommunicationDbContext
+namespace Gebhardt.Acc.WCSCommunication.Migrations.DBWcsCommunicationDbContext
 {
     /// <inheritdoc />
     public partial class RenameCancelledToCanceled : Migration

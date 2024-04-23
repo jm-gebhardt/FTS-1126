@@ -5,11 +5,11 @@
   "conversationId": "2c2c0000-56b8-0050-273e-08da8059ab60",
   "initiatorId": "99bff92f-d56e-cfac-a7de-09ff584f4115",
   "sourceAddress": "rabbitmq://localhost/Agv",
-  "destinationAddress": "rabbitmq://localhost/Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands:RequestAgvGraph",
+  "destinationAddress": "rabbitmq://localhost/Gebhardt.Acc.Common.Messages.AgvManagement.Commands:RequestAgvGraph",
   "responseAddress": null,
   "faultAddress": null,
   "messageType": [
-    "urn:message:Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands:RequestAgvGraph"
+    "urn:message:Gebhardt.Acc.Common.Messages.AgvManagement.Commands:RequestAgvGraph"
   ],
   "message": {
     "correlationId": "99bff92f-d56e-cfac-a7de-09ff584f4115",
@@ -20,9 +20,9 @@
   "headers": {},
   "host": {
     "machineName": "202203-IRS-HV01",
-    "processName": "Gebhardt.StoreWare.Agv.TransportOrder",
+    "processName": "Gebhardt.Acc.TransportOrder",
     "processId": 7220,
-    "assembly": "Gebhardt.StoreWare.Agv.TransportOrder",
+    "assembly": "Gebhardt.Acc.TransportOrder",
     "assemblyVersion": "0.0.1.0",
     "frameworkVersion": "6.0.8",
     "massTransitVersion": "8.0.3.0",

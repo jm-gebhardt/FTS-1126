@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Persistence.Ef;
+﻿using Gebhardt.Acc.Common.Persistence.Ef;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.DataAccess;
+namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
 
 /// <inheritdoc />
 [UsedImplicitly]

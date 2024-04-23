@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
+﻿namespace Gebhardt.Acc.Common.Messages.HostOrder.Events;
 
 /// <summary>
 /// Error code that can occur during handling of host orders

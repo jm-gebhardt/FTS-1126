@@ -1,9 +1,9 @@
-﻿using Gebhardt.StoreWare.Agv.Provisioning.Configuration;
+﻿using Gebhardt.Acc.Provisioning.Configuration;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace Gebhardt.StoreWare.Agv.Provisioning.Services;
+namespace Gebhardt.Acc.Provisioning.Services;
 
 /// <inheritdoc />
 [UsedImplicitly]

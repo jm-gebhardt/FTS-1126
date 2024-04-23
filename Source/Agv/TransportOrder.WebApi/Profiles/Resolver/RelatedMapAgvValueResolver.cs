@@ -1,10 +1,10 @@
 ﻿using System.Collections.Immutable;
 using AutoMapper;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Requests.Map;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Map;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
+using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Map;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles.Resolver;
+namespace Gebhardt.Acc.TransportOrder.WebApi.Profiles.Resolver;
 
 /// <summary>
 /// The custom value resolver, maps from Persistence model of Map and the destination Dto Map to the RelatedAgvs property

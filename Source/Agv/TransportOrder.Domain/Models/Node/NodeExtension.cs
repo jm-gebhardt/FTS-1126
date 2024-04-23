@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Node;
+namespace Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 
 /// <summary>
 /// Domain internal extensions for <see cref="GraphNode"/>

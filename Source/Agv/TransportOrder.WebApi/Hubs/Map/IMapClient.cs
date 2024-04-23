@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Graph;
+﻿using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Graph;
 using SignalRSwaggerGen.Attributes;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Map;
+namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs.Map;
 
 /// <summary>
 /// Map related SignalR methods

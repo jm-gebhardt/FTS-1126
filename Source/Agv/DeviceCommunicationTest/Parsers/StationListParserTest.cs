@@ -1,11 +1,11 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
-using Gebhardt.StoreWare.Agv.Common.Utilities;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.MqttMessages;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Utilities;
+using Gebhardt.Acc.DeviceCommunication.MessageParsers;
+using Gebhardt.Acc.DeviceCommunication.Messages.MqttMessages;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Parsers;
+namespace Gebhardt.Acc.DeviceCommunicationTest.Parsers;
 
 /// <summary>
 /// Tests for <see cref="StationListParser"/>.

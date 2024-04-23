@@ -1,10 +1,10 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Commands;
-using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
+﻿using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
+using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.StoreWare.Agv.Common.Messages.Filters;
+namespace Gebhardt.Acc.Common.Messages.Filters;
 
 /// <summary>
 /// Provides consume filters for messages relevant for

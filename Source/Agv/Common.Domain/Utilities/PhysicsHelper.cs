@@ -1,6 +1,6 @@
 ﻿using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.Common.Domain.Utilities;
+namespace Gebhardt.Acc.Common.Domain.Utilities;
 
 /// <summary>
 /// Contains helper functions for physics related problems.

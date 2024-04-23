@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
+﻿namespace Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 
 /// <summary>
 /// Provides sorting criteria.

@@ -1,6 +1,6 @@
 ﻿using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.AgvActions;
+namespace Gebhardt.Acc.TransportOrder.WebApi.Dtos.AgvActions;
 
 /// <summary>
 /// Represents the sorting direction

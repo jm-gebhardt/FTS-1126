@@ -1,6 +1,6 @@
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.AgvActions;
+namespace Gebhardt.Acc.TransportOrder.WebApi.Dtos.AgvActions;
 
 /// <summary>
 /// Provides a dto for action group counts by state.

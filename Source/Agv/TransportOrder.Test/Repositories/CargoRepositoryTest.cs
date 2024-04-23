@@ -1,10 +1,10 @@
 ﻿using System.Collections.ObjectModel;
-using Gebhardt.StoreWare.Agv.TransportOrder.Test.Helper;
+using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
-using Cargo = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv.Cargo;
+using Cargo = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.Cargo;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Test.Repositories;
+namespace Gebhardt.Acc.TransportOrder.Test.Repositories;
 
 [TestClass]
 public class CargoRepositoryTest

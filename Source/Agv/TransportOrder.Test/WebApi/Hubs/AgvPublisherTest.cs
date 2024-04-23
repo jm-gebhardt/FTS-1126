@@ -1,15 +1,15 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.ReadModels;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.AgvActions;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Agv;
+﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
+using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
+using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
+using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
+using Gebhardt.Acc.TransportOrder.WebApi.Dtos.AgvActions;
+using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Agv;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Test.WebApi.Hubs;
+namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Hubs;
 
 [TestClass]
 public class AgvPublisherTest
@@ -18,10 +18,10 @@ public class AgvPublisherTest
     public async Task SendAgvStateChangedAsync_SendsAgvStateDto_To_AgvStateChanged()
     {
         PublisherFixture<AgvPublisher, AgvHub, IAgvClient> fixture = new PublisherFixture<AgvPublisher, AgvHub, IAgvClient>().Build();
-        var data = Mock.Of<Messages.MessageContent.Agv>();
+        var data = Mock.Of<Agv>();
         var expectedDto = Mock.Of<AgvStateDto>();
 
-        fixture.MapperMock.Setup(m => m.Map<AgvStateDto>(It.IsAny<Messages.MessageContent.Agv>())).Returns(expectedDto);
+        fixture.MapperMock.Setup(m => m.Map<AgvStateDto>(It.IsAny<Agv>())).Returns(expectedDto);
 
         await fixture.Publisher.SendAgvStateChangedAsync(data);
 
@@ -32,10 +32,10 @@ public class AgvPublisherTest
     public async Task SendAgvStateAsync_SendsAgvDto_To_AgvDiscovered()
     {
         PublisherFixture<AgvPublisher, AgvHub, IAgvClient> fixture = new PublisherFixture<AgvPublisher, AgvHub, IAgvClient>().Build();
-        var data = Mock.Of<Messages.MessageContent.Agv>();
+        var data = Mock.Of<Agv>();
         var expectedDto = Mock.Of<AgvDto>();
 
-        fixture.MapperMock.Setup(m => m.Map<AgvDto>(It.IsAny<Messages.MessageContent.Agv>())).Returns(expectedDto);
+        fixture.MapperMock.Setup(m => m.Map<AgvDto>(It.IsAny<Agv>())).Returns(expectedDto);
 
         await fixture.Publisher.SendAgvDiscoveredAsync(data);
 
@@ -50,7 +50,7 @@ public class AgvPublisherTest
         var data = new AgvPositionStatus(Guid.NewGuid(), "agv", new AgvPosition(true, 2, 3, 4, 5, 6));
         var expectedDto = new AgvPositionStatusDto(Guid.NewGuid(), "agv", new AgvPositionDto(true, 2, 3, 4, 5, 6));
 
-        fixture.MapperMock.Setup(m => m.Map<AgvPositionStatusDto>(It.IsAny<Messages.MessageContent.Agv>())).Returns(expectedDto);
+        fixture.MapperMock.Setup(m => m.Map<AgvPositionStatusDto>(It.IsAny<Agv>())).Returns(expectedDto);
 
         await fixture.Publisher.SendAgvPositionAsync(data);
 

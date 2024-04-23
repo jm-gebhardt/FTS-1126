@@ -1,10 +1,10 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
-using Gebhardt.StoreWare.Agv.TransportOrder.Persistence.Ef.Repositories;
+﻿using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
+using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Test.Domain.Models.Settings;
+namespace Gebhardt.Acc.TransportOrder.Test.Domain.Models.Settings;
 
 [TestClass]
 public class AgvSettingsTest

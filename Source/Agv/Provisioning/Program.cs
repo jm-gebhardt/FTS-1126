@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Configurations.Extensions;
-using Gebhardt.StoreWare.Agv.Common.Logging;
-using Gebhardt.StoreWare.Agv.Provisioning.Configuration;
-using Gebhardt.StoreWare.Agv.Provisioning.Services;
+﻿using Gebhardt.Acc.Common.Configurations.Extensions;
+using Gebhardt.Acc.Common.Logging;
+using Gebhardt.Acc.Provisioning.Configuration;
+using Gebhardt.Acc.Provisioning.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;

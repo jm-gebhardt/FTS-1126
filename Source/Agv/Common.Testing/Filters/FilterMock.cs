@@ -1,8 +1,8 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages;
-using Gebhardt.StoreWare.Agv.Common.Services.Filters;
+﻿using Gebhardt.Acc.Common.Messages;
+using Gebhardt.Acc.Common.Services.Filters;
 using Moq;
 
-namespace Gebhardt.StoreWare.Agv.Common.Testing.Filters;
+namespace Gebhardt.Acc.Common.Testing.Filters;
 
 public class FilterMock<T> : IMessageFilter<T> where T : IMessageCreatedDate
 {

@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.StoreWare.Agv.SmartLinkCommunication.Models;
+﻿namespace Gebhardt.Acc.SmartLinkCommunication.Models;
 
 /// <summary>
 /// Tracks the state of an IO and executes a timer when the state has been stable for a certain amount of time

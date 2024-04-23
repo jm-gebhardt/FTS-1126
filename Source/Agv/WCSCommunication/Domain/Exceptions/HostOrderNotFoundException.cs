@@ -1,6 +1,6 @@
-﻿using Gebhardt.StoreWare.Agv.WCSCommunication.Domain.Models.HostOrder;
+﻿using Gebhardt.Acc.WCSCommunication.Domain.Models.HostOrder;
 
-namespace Gebhardt.StoreWare.Agv.WCSCommunication.Domain.Exceptions;
+namespace Gebhardt.Acc.WCSCommunication.Domain.Exceptions;
 
 /// <summary>
 /// Represents the exception thrown when a <see cref="HostOrder"/> could not be found.

@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <AssemblyName>Gebhardt.StoreWare.Agv.Statistics.Domain</AssemblyName>
+        <AssemblyName>Gebhardt.Acc.Statistics.Domain</AssemblyName>
     </PropertyGroup>
     <Import Project="..\SharedProjectSettings.csproj"/>
     <ItemGroup>

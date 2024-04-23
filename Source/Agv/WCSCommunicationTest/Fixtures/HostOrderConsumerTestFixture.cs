@@ -1,11 +1,11 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
-using Gebhardt.StoreWare.Agv.WCSCommunication.Domain.Repositories;
-using Gebhardt.StoreWare.Agv.WCSCommunication.Domain.Services;
+﻿using Gebhardt.Acc.Common.Testing.Fixtures;
+using Gebhardt.Acc.WCSCommunication.Domain.Repositories;
+using Gebhardt.Acc.WCSCommunication.Domain.Services;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 
-namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Fixtures;
+namespace Gebhardt.Acc.WCSCommunicationTest.Fixtures;
 
 public class HostOrderConsumerTestFixture<TConsumer> : MassTransitConsumerTestFixture<TConsumer>, IDisposable
     where TConsumer : class, IConsumer

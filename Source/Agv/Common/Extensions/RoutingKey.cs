@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.StoreWare.Agv.Common.Extensions;
+﻿namespace Gebhardt.Acc.Common.Extensions;
 
 /// <summary>
 /// A routing key attribute to specify routing from a topic exchange to a queue in an MQTT context

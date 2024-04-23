@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
-namespace Gebhardt.StoreWare.Agv.Provisioning.Services;
+namespace Gebhardt.Acc.Provisioning.Services;
 
 /// <summary>
 /// Seeds for json file.

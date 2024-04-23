@@ -1,6 +1,6 @@
 ﻿using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.Common.Messages.Contracts;
+namespace Gebhardt.Acc.Common.Messages.Contracts;
 
 /// <summary>
 /// Used to identify a message as correlated so that the CorrelationId can be returned

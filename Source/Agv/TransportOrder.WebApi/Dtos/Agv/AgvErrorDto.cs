@@ -1,6 +1,6 @@
-using Gebhardt.StoreWare.Agv.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Models;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
+namespace Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 
 /// <summary>
 /// Agv Error model

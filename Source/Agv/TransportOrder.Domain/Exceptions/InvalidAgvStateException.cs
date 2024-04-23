@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
+﻿using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
+namespace Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 
 /// <summary>
 /// Represents the exception thrown when an invalid <see cref="AgvState"/> was constructed.

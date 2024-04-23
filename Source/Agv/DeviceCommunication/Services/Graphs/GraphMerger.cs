@@ -1,11 +1,11 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
-using Gebhardt.StoreWare.Agv.Common.Messages.Graphs.Events;
-using Gebhardt.StoreWare.Agv.Common.Messages.Graphs.Requests;
+﻿using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
+using Gebhardt.Acc.Common.Messages.Graphs.Events;
+using Gebhardt.Acc.Common.Messages.Graphs.Requests;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Graphs;
+namespace Gebhardt.Acc.DeviceCommunication.Services.Graphs;
 
 /// <summary>
 /// Gets the current (global) graph from the main system and merges it with the graph received from the Agv into a global Graph and publishes it back to the main system.

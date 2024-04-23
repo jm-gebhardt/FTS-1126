@@ -1,12 +1,12 @@
 ﻿using System.Text.Json.Serialization;
-using Gebhardt.StoreWare.Agv.Common.Messages.Filters;
+using Gebhardt.Acc.Common.Messages.Filters;
 using JetBrains.Annotations;
 using MassTransit;
 using MassTransit.Serialization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Gebhardt.StoreWare.Agv.Common.Configurations.Extensions;
+namespace Gebhardt.Acc.Common.Configurations.Extensions;
 
 /// <summary>
 /// MassTransit configurations

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Concurrent;
-using Gebhardt.StoreWare.Agv.Common.Services;
+using Gebhardt.Acc.Common.Services;
 
-namespace Gebhardt.StoreWare.Agv.Common.Dictionaries;
+namespace Gebhardt.Acc.Common.Dictionaries;
 
 /// <summary>
 /// Provides an interface for a provider of a concurrent dictionary.

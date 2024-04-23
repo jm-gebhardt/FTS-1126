@@ -1,9 +1,9 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
-using Gebhardt.StoreWare.Agv.WCSCommunication.Domain.Services;
-using Gebhardt.StoreWare.Agv.WCSCommunication.WcsApi.DbInterface;
+﻿using Gebhardt.Acc.Common.Testing.Fixtures;
+using Gebhardt.Acc.WCSCommunication.Domain.Services;
+using Gebhardt.Acc.WCSCommunication.WcsApi.DbInterface;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Fixtures;
+namespace Gebhardt.Acc.WCSCommunicationTest.Fixtures;
 
 public class WcsCommunicatorTestFixture : DbTestFixtureBase<WcsHostDbContext>
 {

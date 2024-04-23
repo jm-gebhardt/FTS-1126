@@ -1,9 +1,9 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Map;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Map;
+﻿using Gebhardt.Acc.TransportOrder.Messages.Events.Map;
+using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Map;
 using JetBrains.Annotations;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Consumer;
+namespace Gebhardt.Acc.TransportOrder.WebApi.Consumer;
 
 /// <summary>
 /// Represents the handler for node state changes.

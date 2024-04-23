@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Gebhardt.StoreWare.Agv.WCSCommunication.Migrations.WcsCommunicationDb
+namespace Gebhardt.Acc.WCSCommunication.Migrations.WcsCommunicationDb
 {
     /// <inheritdoc />
     public partial class Initial : Migration

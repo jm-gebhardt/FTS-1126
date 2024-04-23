@@ -1,7 +1,7 @@
 using JetBrains.Annotations;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Map;
+namespace Gebhardt.Acc.TransportOrder.WebApi.Dtos.Map;
 
 /// <summary>
 /// Map Model

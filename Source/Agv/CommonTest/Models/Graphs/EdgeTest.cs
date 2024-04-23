@@ -1,9 +1,9 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Numerics;
-using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.CommonTest.Models.Graphs;
+namespace Gebhardt.Acc.CommonTest.Models.Graphs;
 
 [TestClass]
 public class EdgeTest

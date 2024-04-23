@@ -1,12 +1,12 @@
 ﻿using System.Numerics;
-using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
-using Gebhardt.StoreWare.Agv.Common.Domain.Utilities;
-using Gebhardt.StoreWare.Agv.Common.Extensions;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Helpers;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.MqttMessages;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.DeviceCommunication.Helpers;
+using Gebhardt.Acc.DeviceCommunication.Messages.MqttMessages;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.MessageParsers;
+namespace Gebhardt.Acc.DeviceCommunication.MessageParsers;
 
 /// <summary>
 /// Parse <see cref="MqttStationList"/>.

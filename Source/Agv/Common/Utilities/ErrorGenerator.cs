@@ -1,6 +1,6 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models;
+﻿using Gebhardt.Acc.Common.Domain.Models;
 
-namespace Gebhardt.StoreWare.Agv.Common.Utilities;
+namespace Gebhardt.Acc.Common.Utilities;
 
 /// <summary>
 /// Contains helper functions to generate errors and warnings.

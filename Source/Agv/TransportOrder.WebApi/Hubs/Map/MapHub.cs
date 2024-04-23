@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Map;
+namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs.Map;
 
 /// <summary>
 /// Hub for map/graph/node related notifications.

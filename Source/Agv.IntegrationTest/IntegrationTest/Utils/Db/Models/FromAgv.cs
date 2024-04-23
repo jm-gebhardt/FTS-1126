@@ -1,4 +1,4 @@
-namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils.Db.Models
+namespace Gebhardt.Acc.IntegrationTest.Utils.Db.Models
 {
     /// <summary>
     /// Write status to WCS

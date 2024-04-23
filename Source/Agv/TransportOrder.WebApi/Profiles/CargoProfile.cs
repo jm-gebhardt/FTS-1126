@@ -1,9 +1,9 @@
-using Gebhardt.StoreWare.Agv.Common.Domain.Models;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
+using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
+using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Profiles;
+namespace Gebhardt.Acc.TransportOrder.WebApi.Profiles;
 
 /// <summary>
 /// Profile for Cargo types

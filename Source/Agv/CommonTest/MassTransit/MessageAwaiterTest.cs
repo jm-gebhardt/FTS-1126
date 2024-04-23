@@ -1,8 +1,8 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Exceptions;
+﻿using Gebhardt.Acc.Common.Exceptions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.CommonTest.MassTransit;
+namespace Gebhardt.Acc.CommonTest.MassTransit;
 
 [TestClass]
 public class MessageAwaiterTest

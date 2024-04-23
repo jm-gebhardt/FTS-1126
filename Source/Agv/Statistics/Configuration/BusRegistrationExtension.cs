@@ -1,10 +1,10 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.AgvManagement.Events;
-using Gebhardt.StoreWare.Agv.Statistics.Services.CommandHandler;
-using Gebhardt.StoreWare.Agv.Statistics.Services.EventHandler;
+using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
+using Gebhardt.Acc.Statistics.Services.EventHandler;
+using Gebhardt.Acc.Statistics.Services.CommandHandler;
 using JetBrains.Annotations;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.Statistics.Configuration;
+namespace Gebhardt.Acc.Statistics.Configuration;
 
 /// <summary>
 /// Provides extension methods for the bus registration.

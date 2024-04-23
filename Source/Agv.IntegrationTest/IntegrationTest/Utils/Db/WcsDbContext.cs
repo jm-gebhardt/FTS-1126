@@ -1,10 +1,10 @@
-using Gebhardt.StoreWare.Agv.IntegrationTest.Utils.Db.Models;
+using Gebhardt.Acc.IntegrationTest.Utils.Db.Models;
 using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils.Db
+namespace Gebhardt.Acc.IntegrationTest.Utils.Db
 {
 
     /// <summary>

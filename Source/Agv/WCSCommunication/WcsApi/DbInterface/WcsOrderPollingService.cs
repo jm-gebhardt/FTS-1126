@@ -1,15 +1,15 @@
-using Gebhardt.StoreWare.Agv.Common.Messages;
-using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Commands;
-using Gebhardt.StoreWare.Agv.Common.Services;
-using Gebhardt.StoreWare.Agv.Common.Utilities;
-using Gebhardt.StoreWare.Agv.WCSCommunication.Messages.Commands;
-using Gebhardt.StoreWare.Agv.WCSCommunication.WcsApi.DbInterface.Models;
+using Gebhardt.Acc.Common.Messages;
+using Gebhardt.Acc.Common.Messages.HostOrder.Commands;
+using Gebhardt.Acc.Common.Services;
+using Gebhardt.Acc.Common.Utilities;
+using Gebhardt.Acc.WCSCommunication.Messages.Commands;
+using Gebhardt.Acc.WCSCommunication.WcsApi.DbInterface.Models;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.StoreWare.Agv.WCSCommunication.WcsApi.DbInterface;
+namespace Gebhardt.Acc.WCSCommunication.WcsApi.DbInterface;
 
 /// <summary>
 /// Service that checks database for new host orders

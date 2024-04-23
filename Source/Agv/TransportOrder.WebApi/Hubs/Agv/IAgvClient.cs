@@ -1,8 +1,8 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.AgvActions;
+﻿using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
+using Gebhardt.Acc.TransportOrder.WebApi.Dtos.AgvActions;
 using SignalRSwaggerGen.Attributes;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Hubs.Agv;
+namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs.Agv;
 
 /// <summary>
 /// Provides client methods for agv-related events.

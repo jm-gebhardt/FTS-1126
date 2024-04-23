@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.StoreWare.Agv.Common.Time;
+﻿namespace Gebhardt.Acc.Common.Time;
 
 /// <summary>
 /// Provides the current time

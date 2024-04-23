@@ -1,6 +1,6 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
+﻿using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Test.WebApi.Filters;
+namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Filters;
 
 public static class AgvBatteryStatusDtoGenerator
 {

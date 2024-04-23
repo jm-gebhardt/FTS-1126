@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Map;
+﻿namespace Gebhardt.Acc.TransportOrder.Messages.Commands.Map;
 
 /// <summary>
 /// Provides a command to save a map.

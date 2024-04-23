@@ -1,6 +1,6 @@
 ﻿using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.Common.MassTransit;
+namespace Gebhardt.Acc.Common.MassTransit;
 
 /// <summary>
 /// Receiver for a specific message.

@@ -1,6 +1,6 @@
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
+using Gebhardt.Acc.DeviceCommunication.Services;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services;
+namespace Gebhardt.Acc.DeviceCommunicationTest.Services;
 
 // ReSharper disable ConvertConstructorToMemberInitializers
 public class AgvRepositoryTestFixture

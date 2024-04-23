@@ -1,9 +1,9 @@
-using Gebhardt.StoreWare.Agv.WCSCommunication.Messages.Commands;
+using Gebhardt.Acc.WCSCommunication.Messages.Commands;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.Services;
+namespace Gebhardt.Acc.WCSCommunicationTest.Services;
 
 /// <summary>
 /// Test for WorkerHostOrderSim

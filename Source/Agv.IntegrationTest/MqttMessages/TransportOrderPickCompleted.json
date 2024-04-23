@@ -5,11 +5,11 @@
   "conversationId": "04430000-56b8-0050-82ed-08da81ce9bb4",
   "initiatorId": null,
   "sourceAddress": "rabbitmq://localhost/OrderEvent",
-  "destinationAddress": "rabbitmq://localhost/Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Events:TransportOrderPickCompleted",
+  "destinationAddress": "rabbitmq://localhost/Gebhardt.Acc.Common.Messages.TransportOrder.Events:TransportOrderPickCompleted",
   "responseAddress": null,
   "faultAddress": null,
   "messageType": [
-    "urn:message:Gebhardt.StoreWare.Agv.Common.Messages.TransportOrder.Events:TransportOrderPickCompleted"
+    "urn:message:Gebhardt.Acc.Common.Messages.TransportOrder.Events:TransportOrderPickCompleted"
   ],
   "message": {
     "correlationId": "5a32f8f8-97c0-c758-eb9f-6341aceadd21",
@@ -20,9 +20,9 @@
   "headers": {},
   "host": {
     "machineName": "202203-IRS-HV01",
-    "processName": "Gebhardt.StoreWare.Agv.DeviceCommunication",
+    "processName": "Gebhardt.Acc.DeviceCommunication",
     "processId": 17156,
-    "assembly": "Gebhardt.StoreWare.Agv.DeviceCommunication",
+    "assembly": "Gebhardt.Acc.DeviceCommunication",
     "assemblyVersion": "0.0.1.0",
     "frameworkVersion": "6.0.8",
     "massTransitVersion": "8.0.3.0",

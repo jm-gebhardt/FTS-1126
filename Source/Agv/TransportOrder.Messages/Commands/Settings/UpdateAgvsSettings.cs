@@ -1,6 +1,6 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
+﻿using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.Settings;
+namespace Gebhardt.Acc.TransportOrder.Messages.Commands.Settings;
 
 /// <summary>
 /// Provides a command to update the settings of given agvs.

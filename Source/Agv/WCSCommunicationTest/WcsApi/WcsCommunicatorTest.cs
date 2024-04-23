@@ -1,11 +1,11 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
-using Gebhardt.StoreWare.Agv.WCSCommunication.Domain.Exceptions;
-using Gebhardt.StoreWare.Agv.WCSCommunication.WcsApi.DbInterface.Models;
-using Gebhardt.StoreWare.Agv.WCSCommunicationTest.Fixtures;
+﻿using Gebhardt.Acc.Common.Messages.HostOrder.Events;
+using Gebhardt.Acc.WCSCommunication.Domain.Exceptions;
+using Gebhardt.Acc.WCSCommunication.WcsApi.DbInterface.Models;
+using Gebhardt.Acc.WCSCommunicationTest.Fixtures;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.WCSCommunicationTest.WcsApi;
+namespace Gebhardt.Acc.WCSCommunicationTest.WcsApi;
 
 [TestClass]
 public class WcsCommunicatorTest

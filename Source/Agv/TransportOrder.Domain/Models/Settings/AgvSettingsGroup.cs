@@ -1,6 +1,6 @@
 ﻿using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Settings;
+namespace Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 
 /// <summary>
 /// Represents an agv group that shares a setting.

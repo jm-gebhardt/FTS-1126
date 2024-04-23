@@ -1,8 +1,8 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Services;
+﻿using Gebhardt.Acc.Common.Services;
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
+namespace Gebhardt.Acc.Common.Testing.Fixtures;
 
 /// <summary>
 /// Testing fixture to test pollable service

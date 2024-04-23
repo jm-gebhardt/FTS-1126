@@ -1,7 +1,7 @@
-using Gebhardt.StoreWare.Agv.Common.Domain.Models;
-using Gebhardt.StoreWare.Agv.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Utilities;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Data;
+namespace Gebhardt.Acc.DeviceCommunication.Services.Simulation.Data;
 
 /// <inheritdoc cref="AgvData" />
 public record KarisType1 : AgvData

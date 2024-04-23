@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <AssemblyName>Gebhardt.StoreWare.Agv.Statistics.Test</AssemblyName>
+        <AssemblyName>Gebhardt.Acc.Statistics.Test</AssemblyName>
         <NoWarn>1591</NoWarn>
     </PropertyGroup>
     <Import Project="..\SharedProjectSettings.csproj"/>

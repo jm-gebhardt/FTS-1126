@@ -1,10 +1,10 @@
-using Gebhardt.StoreWare.Agv.Common.Configurations;
-using Gebhardt.StoreWare.Agv.Common.Configurations.Extensions;
+using Gebhardt.Acc.Common.Configurations;
+using Gebhardt.Acc.Common.Configurations.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Gebhardt.StoreWare.Agv.CommonTest;
+namespace Gebhardt.Acc.CommonTest;
 
 /// <summary>
 /// Tests for ServiceCollectionExtensions

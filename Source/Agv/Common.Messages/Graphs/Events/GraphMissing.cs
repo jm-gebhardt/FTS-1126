@@ -1,6 +1,6 @@
 ﻿using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.Common.Messages.Graphs.Events;
+namespace Gebhardt.Acc.Common.Messages.Graphs.Events;
 
 /// <summary>
 /// Event that is published when there is no (global) and it is needed.

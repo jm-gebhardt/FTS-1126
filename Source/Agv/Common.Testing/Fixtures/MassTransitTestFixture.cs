@@ -4,7 +4,7 @@ using MassTransit.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
+namespace Gebhardt.Acc.Common.Testing.Fixtures;
 
 public abstract class MassTransitTestFixture : FixtureBase
 {

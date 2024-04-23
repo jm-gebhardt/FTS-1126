@@ -1,6 +1,6 @@
 ﻿using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.Common.Configurations.Exceptions;
+namespace Gebhardt.Acc.Common.Configurations.Exceptions;
 
 /// <summary>
 /// Settings were not found by given key

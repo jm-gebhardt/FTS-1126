@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Exceptions;
+﻿namespace Gebhardt.Acc.DeviceCommunication.Exceptions;
 
 /// <summary>
 /// Exception thrown when the serial number is not set.

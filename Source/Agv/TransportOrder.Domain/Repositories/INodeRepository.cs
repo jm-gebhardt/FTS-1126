@@ -1,6 +1,6 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Node;
+﻿using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
+namespace Gebhardt.Acc.TransportOrder.Domain.Repositories;
 
 /// <summary>
 /// Provides a repository for node-related queries across db tables.

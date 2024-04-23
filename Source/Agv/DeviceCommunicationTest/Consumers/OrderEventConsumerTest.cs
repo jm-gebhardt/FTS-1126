@@ -1,15 +1,15 @@
-using Gebhardt.StoreWare.Agv.Common.Extensions;
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
-using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
-using Gebhardt.StoreWare.Agv.Common.Utilities;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.Enums;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.MqttMessages;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
+using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.Common.Testing.Fixtures;
+using Gebhardt.Acc.Common.Utilities;
+using Gebhardt.Acc.DeviceCommunication.Messages.Enums;
+using Gebhardt.Acc.DeviceCommunication.Messages.MqttMessages;
+using Gebhardt.Acc.DeviceCommunication.Services;
 using MassTransit.Testing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Consumers;
+namespace Gebhardt.Acc.DeviceCommunicationTest.Consumers;
 
 /// <summary>
 /// Test for OrderEventConsumer

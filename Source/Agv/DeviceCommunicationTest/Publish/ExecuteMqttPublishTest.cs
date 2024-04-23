@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
-using Gebhardt.StoreWare.Agv.Common.Extensions;
-using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.MqttMessages;
+using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.Common.Testing.Fixtures;
+using Gebhardt.Acc.DeviceCommunication.Messages.MqttMessages;
 using MassTransit;
 using MassTransit.Serialization;
 using MassTransit.Testing;
@@ -9,7 +9,7 @@ using MassTransit.Testing.Implementations;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Publish;
+namespace Gebhardt.Acc.DeviceCommunicationTest.Publish;
 
 /// <summary>
 /// Test class for publishing a MQTT message with proper bus configuration

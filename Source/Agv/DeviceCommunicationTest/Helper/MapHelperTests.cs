@@ -1,10 +1,10 @@
 ﻿using System.Globalization;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Exceptions;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Helpers;
+using Gebhardt.Acc.DeviceCommunication.Exceptions;
+using Gebhardt.Acc.DeviceCommunication.Helpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Helper;
+namespace Gebhardt.Acc.DeviceCommunicationTest.Helper;
 
 [TestClass]
 public class MapHelperTests

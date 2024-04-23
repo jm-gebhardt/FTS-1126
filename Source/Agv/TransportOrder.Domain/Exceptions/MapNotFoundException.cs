@@ -1,6 +1,6 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Exceptions;
+﻿using Gebhardt.Acc.Common.Exceptions;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
+namespace Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 
 /// <summary>
 /// Represents errors that occur when the map is not found in the e.g. repository

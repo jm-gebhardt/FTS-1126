@@ -1,9 +1,9 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Messages;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.AgvActions;
-using Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Graph;
+﻿using Gebhardt.Acc.Common.Messages;
+using Gebhardt.Acc.TransportOrder.WebApi.Dtos.AgvActions;
+using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Graph;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.Agv;
+namespace Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 
 /// <summary>
 /// AGV model dto.

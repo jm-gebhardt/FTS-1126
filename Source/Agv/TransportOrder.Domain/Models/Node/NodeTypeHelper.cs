@@ -1,6 +1,6 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Node;
+namespace Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 
 /// <summary>
 /// Helper methods for dealing with node types

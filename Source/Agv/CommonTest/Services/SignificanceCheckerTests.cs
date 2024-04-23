@@ -1,7 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.CommonTest.Services;
+namespace Gebhardt.Acc.CommonTest.Services;
 
 [TestClass]
 public class SignificanceCheckerTests

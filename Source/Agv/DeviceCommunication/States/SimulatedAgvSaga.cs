@@ -1,16 +1,16 @@
-using Gebhardt.StoreWare.Agv.Common.Domain.Models;
-using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
-using Gebhardt.StoreWare.Agv.Common.Extensions;
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
-using Gebhardt.StoreWare.Agv.Common.Messages.Contracts;
-using Gebhardt.StoreWare.Agv.Common.Time;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Extensions;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Travel;
+using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.Common.Messages.Contracts;
+using Gebhardt.Acc.Common.Time;
+using Gebhardt.Acc.DeviceCommunication.Extensions;
+using Gebhardt.Acc.DeviceCommunication.Services.Simulation;
+using Gebhardt.Acc.DeviceCommunication.Services.Simulation.Travel;
 using JetBrains.Annotations;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.States;
+namespace Gebhardt.Acc.DeviceCommunication.States;
 
 /// <summary>
 /// Agv Saga for simulated AGVs
@@ -55,28 +55,45 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
     /// <inheritdoc/>
     public string SerialNumber { get; }
 
-    /// <inheritdoc cref="Agv" />
+    /// <summary>
+    /// The current state of the agv.
+    /// </summary>
     public string CurrentState { get; set; }
 
-    /// <inheritdoc cref="Agv" />
+    /// <summary>
+    /// Returns true when there is a sign of life of the agv in regular time intervals,
+    /// returns false when there is no sign of life of the agv for a certain time.
+    /// </summary>
     public bool IsOnline { get; set; } = true;
 
-    /// <inheritdoc cref="Agv" />
+    /// <summary>
+    /// Is the agv locked?
+    /// </summary>
     public bool IsLocked { get; set; }
 
-    /// <inheritdoc cref="Agv" />
+    /// <summary>
+    /// Returns true if the agv has any error and or is not ready to drive.
+    /// </summary>
     public bool HasError { get; }
 
-    /// <inheritdoc cref="Agv" />
+    /// <summary>
+    /// Returns true if the graph of this agv exists.
+    /// </summary>
     public bool GraphExists { get; set; }
 
-    /// <inheritdoc cref="Agv" />
+    /// <summary>
+    /// Gets the time of the last state transition.
+    /// </summary>
     public DateTime TimeOfStateTransition { get; set; } = DateTime.UtcNow;
 
-    /// <inheritdoc cref="Agv" />
+    /// <summary>
+    /// Gets the time of the last lock state change.
+    /// </summary>
     public DateTime TimeOfLockStateChanged { get; set; } = DateTime.UtcNow;
 
-    /// <inheritdoc cref="Agv" />
+    /// <summary>
+    /// Last received agv status.
+    /// </summary>
     public AgvStatus AgvStatus { get; private set; }
 
     /// <summary>
@@ -151,7 +168,9 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
         return graphNode.IsStation() ? BaseEdge.GetAgvOrientation(otherNode, graphNode) : BaseEdge.GetAgvOrientation(graphNode, otherNode);
     }
 
-    /// <inheritdoc cref="Agv" />
+    /// <summary>
+    /// The data of the agv.
+    /// </summary>
     public AgvData? AgvData { get; }
 
     /// <summary>

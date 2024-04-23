@@ -1,4 +1,4 @@
-namespace Gebhardt.StoreWare.Agv.Common.Services;
+namespace Gebhardt.Acc.Common.Services;
 
 /// <summary>
 ///  IPollable interface used by <see cref="PollingBackgroundService{T}"/>

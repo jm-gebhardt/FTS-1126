@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
-using Gebhardt.StoreWare.Agv.Statistics.Domain.Models;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Statistics.Domain.Models;
 
-namespace Gebhardt.StoreWare.Agv.Statistics.Extensions;
+namespace Gebhardt.Acc.Statistics.Extensions;
 
 /// <summary>
 /// Provides extension methods to <see cref="GraphNode"/>

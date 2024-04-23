@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Exceptions;
+﻿using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
+namespace Gebhardt.Acc.TransportOrder.Domain.Repositories;
 
 /// <summary>
 /// Interface for accessing the AGV repository.
@@ -40,7 +40,7 @@ public interface IAgvRepository
     /// Get specific AGV
     /// </summary>
     /// <returns>Agv object or null.</returns>
-    Task<Domain.Models.Agv.Agv?> TryGetAgvAsync(Guid correlationId);
+    Task<Models.Agv.Agv?> TryGetAgvAsync(Guid correlationId);
 
     /// <summary>
     /// Checks if the agv matching the correlation id exists.

@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.Common.Messages.Graphs.Events;
+namespace Gebhardt.Acc.Common.Messages.Graphs.Events;
 
 /// <summary>
 /// Event that is published when the (global) graph has changed.

@@ -1,7 +1,7 @@
-using Gebhardt.StoreWare.Agv.Common.Messages;
-using Gebhardt.StoreWare.Agv.Common.Services.Filters.Configurations;
+using Gebhardt.Acc.Common.Messages;
+using Gebhardt.Acc.Common.Services.Filters.Configurations;
 
-namespace Gebhardt.StoreWare.Agv.Common.Services.Filters;
+namespace Gebhardt.Acc.Common.Services.Filters;
 
 /// <summary>
 /// Manages an in-memory comparison of sequential objects to determine if the latest object meets specified criteria for action, based on its content and creation time relative to the previously stored object.

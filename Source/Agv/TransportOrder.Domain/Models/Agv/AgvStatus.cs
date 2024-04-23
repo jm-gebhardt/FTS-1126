@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.Agv;
+namespace Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 
 /// <summary>
 /// AGV Status

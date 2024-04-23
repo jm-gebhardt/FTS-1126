@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.StoreWare.Agv.Common.WebApi;
+﻿namespace Gebhardt.Acc.Common.WebApi;
 
 /// <summary>
 /// Class for generating type names

@@ -1,7 +1,7 @@
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Travel;
+using Gebhardt.Acc.DeviceCommunication.Services.Simulation.Travel;
 using Moq;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services.Simulation.Travel;
+namespace Gebhardt.Acc.DeviceCommunicationTest.Services.Simulation.Travel;
 
 public class AgvTravelSimulatorMock
 {

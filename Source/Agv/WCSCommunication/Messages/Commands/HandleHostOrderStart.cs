@@ -1,6 +1,6 @@
 ﻿using MassTransit;
 
-namespace Gebhardt.StoreWare.Agv.WCSCommunication.Messages.Commands;
+namespace Gebhardt.Acc.WCSCommunication.Messages.Commands;
 
 /// <summary>
 /// Provides a command to handle the start of a host order.

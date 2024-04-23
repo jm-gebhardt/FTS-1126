@@ -1,8 +1,8 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Domain.Repositories;
-using Gebhardt.StoreWare.Agv.Statistics.Domain.Models;
-using Gebhardt.StoreWare.Agv.Statistics.Domain.ReadModels;
+﻿using Gebhardt.Acc.Common.Domain.Repositories;
+using Gebhardt.Acc.Statistics.Domain.Models;
+using Gebhardt.Acc.Statistics.Domain.ReadModels;
 
-namespace Gebhardt.StoreWare.Agv.Statistics.Domain.Repositories;
+namespace Gebhardt.Acc.Statistics.Domain.Repositories;
 
 /// <summary>
 /// Provides a repository for agv grid position related queries.

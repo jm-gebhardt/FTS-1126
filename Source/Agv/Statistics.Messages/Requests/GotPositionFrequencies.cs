@@ -1,6 +1,6 @@
-﻿using Gebhardt.StoreWare.Agv.Statistics.Domain.ReadModels;
+﻿using Gebhardt.Acc.Statistics.Domain.ReadModels;
 
-namespace Gebhardt.StoreWare.Agv.Statistics.Messages.Requests;
+namespace Gebhardt.Acc.Statistics.Messages.Requests;
 
 /// <summary>
 /// Represents the response to the <see cref="GetPositionFrequencies"/> request.

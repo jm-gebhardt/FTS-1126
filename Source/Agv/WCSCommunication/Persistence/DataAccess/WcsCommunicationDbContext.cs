@@ -1,11 +1,11 @@
-﻿using Gebhardt.StoreWare.Agv.WCSCommunication.Domain.Models.HostOrder;
-using Gebhardt.StoreWare.Agv.WCSCommunication.Persistence.DataAccess.Configuration;
+﻿using Gebhardt.Acc.WCSCommunication.Domain.Models.HostOrder;
+using Gebhardt.Acc.WCSCommunication.Persistence.DataAccess.Configuration;
 using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.StoreWare.Agv.WCSCommunication.Persistence.DataAccess;
+namespace Gebhardt.Acc.WCSCommunication.Persistence.DataAccess;
 
 /// <inheritdoc />
 [PublicAPI]

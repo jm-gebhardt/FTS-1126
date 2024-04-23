@@ -2,7 +2,7 @@
 using FluentValidation.Results;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
+namespace Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 
 /// <inheritdoc />
 public class ActionGroupValidationService : IActionGroupValidationService

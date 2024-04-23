@@ -1,9 +1,9 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Domain.Models;
-using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
-using Gebhardt.StoreWare.Agv.Common.Extensions;
-using Gebhardt.StoreWare.Agv.Common.Time;
+﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.Common.Time;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Services.Simulation.Travel;
+namespace Gebhardt.Acc.DeviceCommunication.Services.Simulation.Travel;
 
 /// <inheritdoc />
 public class AgvTravelSimulator : IAgvTravelSimulator

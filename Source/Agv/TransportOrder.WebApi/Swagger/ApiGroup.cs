@@ -1,7 +1,7 @@
 using JetBrains.Annotations;
 using Microsoft.OpenApi.Models;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Swagger;
+namespace Gebhardt.Acc.TransportOrder.WebApi.Swagger;
 
 /// <summary>
 /// Api Group Interface

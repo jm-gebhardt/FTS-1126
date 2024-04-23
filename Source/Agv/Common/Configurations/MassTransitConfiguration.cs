@@ -1,7 +1,7 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Configurations.Attributes;
-using Gebhardt.StoreWare.Agv.Common.Configurations.Models;
+﻿using Gebhardt.Acc.Common.Configurations.Attributes;
+using Gebhardt.Acc.Common.Configurations.Models;
 
-namespace Gebhardt.StoreWare.Agv.Common.Configurations;
+namespace Gebhardt.Acc.Common.Configurations;
 
 /// <summary>
 /// MassTransit Configuration required for RabbitMQ

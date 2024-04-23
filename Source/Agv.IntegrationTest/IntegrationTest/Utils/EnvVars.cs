@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.StoreWare.Agv.IntegrationTest.Utils
+﻿namespace Gebhardt.Acc.IntegrationTest.Utils
 {
     /// <summary>
     /// Env Variable names

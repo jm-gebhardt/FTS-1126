@@ -1,6 +1,6 @@
-﻿using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup;
+﻿using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.ActionGroup;
+namespace Gebhardt.Acc.TransportOrder.Messages.Events.ActionGroup;
 
 /// <summary>
 /// Represents the event raised after nodes have been selected for an agv action.

@@ -1,4 +1,4 @@
-namespace Gebhardt.StoreWare.Agv.WCSCommunication.WcsApi.DbInterface.Models;
+namespace Gebhardt.Acc.WCSCommunication.WcsApi.DbInterface.Models;
 
 /// <summary>
 /// Write status to WCS

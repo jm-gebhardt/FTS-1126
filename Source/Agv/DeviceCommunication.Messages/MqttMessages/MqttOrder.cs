@@ -1,10 +1,10 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Extensions;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.Enums;
+﻿using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.DeviceCommunication.Messages.Enums;
 using JetBrains.Annotations;
 using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.Messages.MqttMessages;
+namespace Gebhardt.Acc.DeviceCommunication.Messages.MqttMessages;
 
 /// <summary>
 /// The order object to be sent to the TAR/Karis AGV ((see 'order.schema'))

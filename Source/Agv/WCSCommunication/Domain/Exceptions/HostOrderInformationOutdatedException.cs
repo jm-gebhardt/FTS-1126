@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.StoreWare.Agv.WCSCommunication.Domain.Exceptions;
+﻿namespace Gebhardt.Acc.WCSCommunication.Domain.Exceptions;
 
 /// <summary>
 /// Represents the exception thrown when order information are outdated.

@@ -1,8 +1,8 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Extensions;
+﻿using Gebhardt.Acc.Common.Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.StoreWare.Agv.CommonTest;
+namespace Gebhardt.Acc.CommonTest;
 
 /// <summary>
 /// Test <see cref="Common.Extensions.CollectionExtensions.AddRange{T}(HashSet{T}, IEnumerable{T})"/>.

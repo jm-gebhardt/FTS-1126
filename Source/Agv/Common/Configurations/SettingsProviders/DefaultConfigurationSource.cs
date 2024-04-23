@@ -1,7 +1,7 @@
-using Gebhardt.StoreWare.Agv.Common.Configurations.ConfigurationProviders;
+using Gebhardt.Acc.Common.Configurations.ConfigurationProviders;
 using Microsoft.Extensions.Configuration;
 
-namespace Gebhardt.StoreWare.Agv.Common.Configurations.SettingsProviders;
+namespace Gebhardt.Acc.Common.Configurations.SettingsProviders;
 
 /// <summary>
 /// Config Entity Configuration Source

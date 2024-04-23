@@ -1,6 +1,6 @@
 using Swashbuckle.AspNetCore.SwaggerUI;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunication.WebApi.Swagger;
+namespace Gebhardt.Acc.DeviceCommunication.WebApi.Swagger;
 
 /// <summary>
 /// SwaggerUIOptions Extensions

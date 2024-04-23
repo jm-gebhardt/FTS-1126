@@ -1,8 +1,8 @@
-﻿using Gebhardt.StoreWare.Agv.Common.Testing.Fixtures;
-using Gebhardt.StoreWare.Agv.DeviceCommunication.Services;
+﻿using Gebhardt.Acc.Common.Testing.Fixtures;
+using Gebhardt.Acc.DeviceCommunication.Services;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Gebhardt.StoreWare.Agv.DeviceCommunicationTest.Services;
+namespace Gebhardt.Acc.DeviceCommunicationTest.Services;
 
 public class ActionEventConsumerMqttFixture : MqttConsumerTestFixture<ActionEventConsumer>
 {

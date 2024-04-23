@@ -1,6 +1,6 @@
-﻿using Gebhardt.StoreWare.Agv.SmartLinkCommunication.Models;
+﻿using Gebhardt.Acc.SmartLinkCommunication.Models;
 
-namespace Gebhardt.StoreWare.Agv.SmartLinkCommunication.Exceptions;
+namespace Gebhardt.Acc.SmartLinkCommunication.Exceptions;
 
 /// <summary>
 /// Thrown when the <see cref="ModuleConfig"/> is not set in the scope.

@@ -1,32 +1,32 @@
 ﻿using AutoMapper;
 using FluentValidation;
-using Gebhardt.StoreWare.Agv.Common.Domain.Models;
-using Gebhardt.StoreWare.Agv.Common.Domain.Models.Graphs;
-using Gebhardt.StoreWare.Agv.Common.Extensions;
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Commands;
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.Events;
-using Gebhardt.StoreWare.Agv.Common.Messages.HostOrder.Events;
-using Gebhardt.StoreWare.Agv.Common.Services;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Constants;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Repositories;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.SemaphoreProvider;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.ActionGroup;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Metrics;
-using Gebhardt.StoreWare.Agv.TransportOrder.Domain.Services.Routing;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Commands.ActionGroup;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.ActionGroup;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.Events.Agv;
-using Gebhardt.StoreWare.Agv.TransportOrder.Messages.MessageContent;
+using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.Common.Messages.HostOrder.Events;
+using Gebhardt.Acc.Common.Services;
+using Gebhardt.Acc.TransportOrder.Domain;
+using Gebhardt.Acc.TransportOrder.Domain.Constants;
+using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
+using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
+using Gebhardt.Acc.TransportOrder.Domain.Services.Metrics;
+using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
+using Gebhardt.Acc.TransportOrder.Messages.Events.ActionGroup;
+using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
+using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
-using AgvAction = Gebhardt.StoreWare.Agv.TransportOrder.Domain.Models.ActionGroup.AgvAction;
-using MessageAgvAction = Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups.AgvAction;
+using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
+using MessageAgvAction = Gebhardt.Acc.Common.Messages.ActionGroups.AgvAction;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.Core.Services.CommandHandler;
+namespace Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 
 /// <summary>
 /// Provides handlers for <see cref="Action"/> related commands.
@@ -676,7 +676,7 @@ public class ActionCommandHandler :
 
     private async Task PublishStateChange(Domain.Models.Agv.Agv agv)
     {
-        var agvMessageContent = _mapper.Map<Messages.MessageContent.Agv>(agv);
+        var agvMessageContent = _mapper.Map<Agv>(agv);
         await _bus.Publish(new AgvStateChanged(agv.CorrelationId, agv.CurrentAgvState, agv.PreviousAgvState, agvMessageContent));
     }
 

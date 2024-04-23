@@ -1,8 +1,8 @@
 ﻿using System.Reflection;
-using Gebhardt.StoreWare.Agv.Common.Utilities;
+using Gebhardt.Acc.Common.Utilities;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Gebhardt.StoreWare.Agv.Common.Extensions;
+namespace Gebhardt.Acc.Common.Extensions;
 
 /// <summary>
 /// <inheritdoc cref="EventLogHelper.ConfigureEventLogSettings"/>

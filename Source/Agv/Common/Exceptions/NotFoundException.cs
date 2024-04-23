@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.StoreWare.Agv.Common.Exceptions;
+﻿namespace Gebhardt.Acc.Common.Exceptions;
 
 /// <summary>
 /// Represents errors that occur when something is not found, e.g. an object in the e.g. repository

@@ -1,9 +1,9 @@
-using Gebhardt.StoreWare.Agv.Common.Domain.Models;
-using Gebhardt.StoreWare.Agv.Common.Messages;
-using Gebhardt.StoreWare.Agv.Common.Messages.ActionGroups;
+using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Messages;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 using JetBrains.Annotations;
 
-namespace Gebhardt.StoreWare.Agv.TransportOrder.WebApi.Dtos.AgvActions;
+namespace Gebhardt.Acc.TransportOrder.WebApi.Dtos.AgvActions;
 
 /// <summary>
 /// Provides a dto for action groups.

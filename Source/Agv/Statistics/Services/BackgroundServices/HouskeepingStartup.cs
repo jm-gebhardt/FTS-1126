@@ -1,9 +1,9 @@
-﻿using Gebhardt.StoreWare.Agv.Statistics.Messages.Commands;
+﻿using Gebhardt.Acc.Statistics.Messages.Commands;
 using MassTransit;
 using Microsoft.Extensions.Hosting;
 using Quartz;
 
-namespace Gebhardt.StoreWare.Agv.Statistics.Services.BackgroundServices;
+namespace Gebhardt.Acc.Statistics.Services.BackgroundServices;
 
 /// <summary>
 /// Background service for agv position housekeeping.
